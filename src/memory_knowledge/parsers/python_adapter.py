@@ -19,8 +19,12 @@ def parse_python_file(file_path: str, source: str) -> FileParseOutput:
             file_path=file_path, language="python", parse_error=str(e)
         )
 
+    # Extract only top-level symbols (module-level functions and classes).
+    # Using iter_child_nodes instead of ast.walk avoids extracting methods
+    # nested inside classes as separate symbols — the class chunk already
+    # contains the full class body including methods.
     symbols: list[SymbolInfo] = []
-    for node in ast.walk(tree):
+    for node in ast.iter_child_nodes(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
             kind = (
                 "async_function"

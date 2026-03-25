@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import hashlib
 import time
 import uuid
@@ -84,12 +85,14 @@ async def run(
             pool, repository_id, commit_sha, branch_name, run_type="full"
         )
 
-        # Step 2: Clone/fetch repo, checkout commit
-        repo = ensure_repo(repository_key, origin_url, settings.repo_clone_base_path)
-        checkout_commit(repo, commit_sha)
+        # Step 2: Clone/fetch repo, checkout commit (run in thread to avoid blocking event loop)
+        repo = await asyncio.to_thread(
+            ensure_repo, repository_key, origin_url, settings.repo_clone_base_path
+        )
+        await asyncio.to_thread(checkout_commit, repo, commit_sha)
 
         # Step 3: List Python files
-        py_files = list_python_files(repo)
+        py_files = await asyncio.to_thread(list_python_files, repo)
         logger.info("python_files_found", count=len(py_files))
 
         # Step 4: Register revision

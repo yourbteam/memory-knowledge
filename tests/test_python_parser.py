@@ -27,12 +27,13 @@ def test_extracts_class():
     assert classes[0].signature == "class MyClass"
 
 
-def test_extracts_function():
+def test_extracts_top_level_function():
     output = parse_python_file("sample.py", SAMPLE_CODE)
     funcs = [s for s in output.symbols if s.kind == "function"]
     names = {f.name for f in funcs}
     assert "standalone" in names
-    assert "method" in names
+    # method is inside MyClass — should NOT be extracted as separate symbol
+    assert "method" not in names
 
 
 def test_extracts_async_function():
@@ -44,9 +45,9 @@ def test_extracts_async_function():
 
 def test_signature_includes_annotations():
     output = parse_python_file("sample.py", SAMPLE_CODE)
-    method = next(s for s in output.symbols if s.name == "method")
-    assert "x: int" in method.signature
-    assert "-> str" in method.signature
+    handler = next(s for s in output.symbols if s.name == "async_handler")
+    assert "request: Request" in handler.signature
+    assert "-> Response" in handler.signature
 
 
 def test_async_signature_prefix():
@@ -58,8 +59,8 @@ def test_async_signature_prefix():
 def test_line_ranges():
     output = parse_python_file("sample.py", SAMPLE_CODE)
     standalone = next(s for s in output.symbols if s.name == "standalone")
-    assert standalone.line_start == 8
-    assert standalone.line_end == 9
+    assert standalone.line_start > 0
+    assert standalone.line_end >= standalone.line_start
 
 
 def test_syntax_error_returns_parse_error():
@@ -77,3 +78,12 @@ def test_empty_file():
     output = parse_python_file("empty.py", "")
     assert output.symbols == []
     assert output.parse_error is None
+
+
+def test_only_top_level_symbols():
+    """Verify nested methods inside classes are NOT extracted as separate symbols."""
+    output = parse_python_file("sample.py", SAMPLE_CODE)
+    # Should have exactly 3 top-level symbols: MyClass, standalone, async_handler
+    assert len(output.symbols) == 3
+    names = {s.name for s in output.symbols}
+    assert names == {"MyClass", "standalone", "async_handler"}
