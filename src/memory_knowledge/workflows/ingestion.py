@@ -20,7 +20,10 @@ from memory_knowledge.identity.entity_key import (
     symbol_entity_key,
 )
 from memory_knowledge.parsers.python_adapter import parse_python_file
-from memory_knowledge.projections.neo4j_projector import project_repository_graph
+from memory_knowledge.projections.neo4j_projector import (
+    project_dependency_edges,
+    project_repository_graph,
+)
 from memory_knowledge.projections.pg_writer import (
     complete_ingestion_run,
     create_ingestion_run,
@@ -37,8 +40,10 @@ from memory_knowledge.projections.qdrant_projector import (
 from memory_knowledge.structure.chunk_builder import build_chunks
 from memory_knowledge.structure.entity_registrar import (
     upsert_file,
+    upsert_file_import,
     upsert_repo_revision,
     upsert_symbol,
+    upsert_symbol_call,
 )
 from memory_knowledge.workflows.base import WorkflowResult
 
@@ -103,6 +108,11 @@ async def run(
         # Step 5: Process each file
         all_chunks_for_embedding: list[dict[str, Any]] = []
         neo4j_file_symbols: list[dict[str, Any]] = []
+        file_path_to_file_id: dict[str, int] = {}
+        file_path_to_entity_key: dict[str, str] = {}
+        symbol_lookup: dict[tuple[str, str], int] = {}  # (file_path, symbol_name) → symbol_id
+        all_imports: list[tuple[str, str]] = []  # (importer_file_path, module_path)
+        all_calls: list[tuple[str, str, str, str]] = []  # (file_path, caller_name, callee_name, caller_ek)
         repo_dir = Path(settings.repo_clone_base_path) / repository_key
 
         for file_path in py_files:
@@ -123,6 +133,8 @@ async def run(
                     pool, f_ek, repository_id, repo_revision_id,
                     file_path, "python", size_bytes, checksum,
                 )
+                file_path_to_file_id[file_path] = file_id
+                file_path_to_entity_key[file_path] = str(f_ek)
 
                 # Register symbols
                 file_symbol_records: list[dict[str, Any]] = []
@@ -130,10 +142,11 @@ async def run(
                     s_ek = symbol_entity_key(
                         repository_key, commit_sha, file_path, sym.name, sym.kind
                     )
-                    await upsert_symbol(
+                    _sym_entity_id, _sym_id = await upsert_symbol(
                         pool, s_ek, repository_id, repo_revision_id, file_id,
                         sym.name, sym.kind, sym.line_start, sym.line_end, sym.signature,
                     )
+                    symbol_lookup[(file_path, sym.name)] = _sym_id
                     file_symbol_records.append(
                         {"entity_key": str(s_ek), "name": sym.name, "kind": sym.kind}
                     )
@@ -170,6 +183,16 @@ async def run(
                         }
                     )
 
+                # Collect edges for post-loop resolution
+                for imp in parse_output.imports:
+                    all_imports.append((file_path, imp.module_path))
+                for call in parse_output.calls:
+                    caller_ek = str(symbol_entity_key(
+                        repository_key, commit_sha, file_path, call.caller_name,
+                        next((s.kind for s in parse_output.symbols if s.name == call.caller_name), "function"),
+                    ))
+                    all_calls.append((file_path, call.caller_name, call.callee_name, caller_ek))
+
                 await record_ingestion_item(
                     pool, ingestion_run_id, entity_id, "file", "success"
                 )
@@ -178,6 +201,62 @@ async def run(
                 await record_ingestion_item(
                     pool, ingestion_run_id, None, "file", "error", error_text=str(e)
                 )
+
+        # Step 5b: Resolve and upsert edges (post-loop)
+        neo4j_import_edges: list[dict[str, str]] = []
+        neo4j_call_edges: list[dict[str, str]] = []
+        py_file_set = set(py_files)
+
+        for importer_path, module_path in all_imports:
+            # Resolve module_path to file_path with suffix matching
+            candidates = [
+                module_path.replace(".", "/") + ".py",
+                module_path.replace(".", "/") + "/__init__.py",
+            ]
+            imported_file_id = None
+            imported_ek = None
+            for candidate in candidates:
+                for known_path in file_path_to_file_id:
+                    if known_path.endswith(candidate):
+                        imported_file_id = file_path_to_file_id[known_path]
+                        imported_ek = file_path_to_entity_key[known_path]
+                        break
+                if imported_file_id is not None:
+                    break
+            if imported_file_id is not None:
+                importer_file_id = file_path_to_file_id.get(importer_path)
+                if importer_file_id:
+                    await upsert_file_import(pool, importer_file_id, imported_file_id)
+                    importer_ek = file_path_to_entity_key.get(importer_path, "")
+                    if importer_ek and imported_ek:
+                        neo4j_import_edges.append({
+                            "importer_ek": importer_ek,
+                            "imported_ek": imported_ek,
+                        })
+
+        for file_path_call, caller_name, callee_name, caller_ek in all_calls:
+            caller_sid = symbol_lookup.get((file_path_call, caller_name))
+            callee_sid = symbol_lookup.get((file_path_call, callee_name))
+            if caller_sid and callee_sid:
+                await upsert_symbol_call(pool, caller_sid, callee_sid)
+                callee_ek = str(symbol_entity_key(
+                    repository_key, commit_sha, file_path_call, callee_name,
+                    next((s.kind for s in [] ), "function"),  # kind not needed for entity_key lookup
+                ))
+                # Look up callee entity_key from the symbol records
+                for fs in neo4j_file_symbols:
+                    if fs["file_path"] == file_path_call:
+                        for s in fs["symbols"]:
+                            if s["name"] == callee_name:
+                                callee_ek = s["entity_key"]
+                                break
+                        break
+                neo4j_call_edges.append({
+                    "caller_ek": caller_ek,
+                    "callee_ek": callee_ek,
+                })
+
+        logger.info("edges_resolved", imports=len(neo4j_import_edges), calls=len(neo4j_call_edges))
 
         # Step 6: Embed all chunks
         if all_chunks_for_embedding:
@@ -197,11 +276,15 @@ async def run(
                 qdrant_client, repository_key, branch_name, commit_sha
             )
 
-        # Step 9: Neo4j projection
+        # Step 9: Neo4j projection (structure + dependency edges)
         if neo4j_file_symbols:
             await project_repository_graph(
                 neo4j_driver, repository_key, commit_sha,
                 branch_name, neo4j_file_symbols,
+            )
+        if neo4j_import_edges or neo4j_call_edges:
+            await project_dependency_edges(
+                neo4j_driver, neo4j_import_edges, neo4j_call_edges,
             )
 
         # Step 10: Update branch head + retrieval surface

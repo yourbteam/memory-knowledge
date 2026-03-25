@@ -100,7 +100,13 @@ async def run_impact_analysis_workflow(
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_impact_analysis_workflow")
     try:
-        result = await _impact_analysis.run(repository_key, query, run_id)
+        result = await _impact_analysis.run(
+            repository_key, query, run_id,
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+            neo4j_driver=get_neo4j_driver(),
+            settings=get_settings(),
+        )
         return result.model_dump_json()
     finally:
         clear_run_context()
@@ -180,7 +186,10 @@ async def run_blueprint_refinement_workflow(
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_blueprint_refinement_workflow")
     try:
-        result = await _blueprint_refinement.run(repository_key, query, run_id)
+        result = await _blueprint_refinement.run(
+            repository_key, query, run_id,
+            settings=get_settings(),
+        )
         return result.model_dump_json()
     finally:
         clear_run_context()

@@ -269,6 +269,10 @@ ALTER TABLE memory.learned_records ALTER COLUMN evidence_chunk_id SET NOT NULL;
 ALTER TABLE memory.learned_records ADD CONSTRAINT uq_learned_records_entity UNIQUE (entity_id);
 CREATE INDEX idx_learned_records_body_tsv ON memory.learned_records USING GIN (body_tsv);
 
+-- Phase 5 edge table constraints
+ALTER TABLE catalog.file_imports_file ADD CONSTRAINT uq_file_imports UNIQUE (importer_file_id, imported_file_id);
+ALTER TABLE catalog.symbol_calls_symbol ADD CONSTRAINT uq_symbol_calls UNIQUE (caller_symbol_id, callee_symbol_id);
+
 -- ============================================================================
 -- Seed data — default route policies
 -- ============================================================================

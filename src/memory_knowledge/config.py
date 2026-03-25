@@ -31,6 +31,7 @@ class Settings(BaseSettings):
     openai_api_key: str | None = None
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = 1536
+    completion_model: str = "gpt-4o"
 
     # Ingestion
     repo_clone_base_path: str = "/tmp/memory-knowledge/repos"

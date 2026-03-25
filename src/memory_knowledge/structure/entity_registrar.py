@@ -92,8 +92,8 @@ async def upsert_symbol(
     line_start: int | None,
     line_end: int | None,
     signature: str | None,
-) -> int:
-    """Upsert entity + symbol. Returns entity_id."""
+) -> tuple[int, int]:
+    """Upsert entity + symbol. Returns (entity_id, symbol_id)."""
     # Upsert entity
     entity_row = await pool.fetchrow(
         """
@@ -110,7 +110,7 @@ async def upsert_symbol(
     entity_id = entity_row["id"]
 
     # Upsert symbol
-    await pool.execute(
+    symbol_row = await pool.fetchrow(
         """
         INSERT INTO catalog.symbols (entity_id, file_id, symbol_name, symbol_kind, line_start, line_end, signature)
         VALUES ($1, $2, $3, $4, $5, $6, $7)
@@ -121,6 +121,7 @@ async def upsert_symbol(
                 line_start = EXCLUDED.line_start,
                 line_end = EXCLUDED.line_end,
                 signature = EXCLUDED.signature
+        RETURNING id
         """,
         entity_id,
         file_id,
@@ -130,4 +131,38 @@ async def upsert_symbol(
         line_end,
         signature,
     )
-    return entity_id
+    return entity_id, symbol_row["id"]
+
+
+async def upsert_file_import(
+    pool: asyncpg.Pool,
+    importer_file_id: int,
+    imported_file_id: int,
+) -> None:
+    """Register a file-imports-file edge. Idempotent."""
+    await pool.execute(
+        """
+        INSERT INTO catalog.file_imports_file (importer_file_id, imported_file_id)
+        VALUES ($1, $2)
+        ON CONFLICT ON CONSTRAINT uq_file_imports DO NOTHING
+        """,
+        importer_file_id,
+        imported_file_id,
+    )
+
+
+async def upsert_symbol_call(
+    pool: asyncpg.Pool,
+    caller_symbol_id: int,
+    callee_symbol_id: int,
+) -> None:
+    """Register a symbol-calls-symbol edge. Idempotent."""
+    await pool.execute(
+        """
+        INSERT INTO catalog.symbol_calls_symbol (caller_symbol_id, callee_symbol_id)
+        VALUES ($1, $2)
+        ON CONFLICT ON CONSTRAINT uq_symbol_calls DO NOTHING
+        """,
+        caller_symbol_id,
+        callee_symbol_id,
+    )

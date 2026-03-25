@@ -65,3 +65,34 @@ async def project_repository_graph(
         "neo4j_projection_complete",
         file_count=len(file_symbols),
     )
+
+
+async def project_dependency_edges(
+    driver: neo4j.AsyncDriver,
+    file_imports: list[dict[str, str]],
+    symbol_calls: list[dict[str, str]],
+) -> None:
+    """MERGE IMPORTS and CALLS edges between existing File/Symbol nodes."""
+    if file_imports:
+        await driver.execute_query(
+            """
+            UNWIND $edges AS e
+            MATCH (f1:File {entity_key: e.importer_ek})
+            MATCH (f2:File {entity_key: e.imported_ek})
+            MERGE (f1)-[:IMPORTS]->(f2)
+            """,
+            edges=file_imports,
+        )
+        logger.info("neo4j_imports_projected", count=len(file_imports))
+
+    if symbol_calls:
+        await driver.execute_query(
+            """
+            UNWIND $edges AS e
+            MATCH (s1:Symbol {entity_key: e.caller_ek})
+            MATCH (s2:Symbol {entity_key: e.callee_ek})
+            MERGE (s1)-[:CALLS]->(s2)
+            """,
+            edges=symbol_calls,
+        )
+        logger.info("neo4j_calls_projected", count=len(symbol_calls))
