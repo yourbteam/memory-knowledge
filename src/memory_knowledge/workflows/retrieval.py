@@ -301,11 +301,13 @@ async def assemble_context_bundle(
             "symbol_kind": row["symbol_kind"],
         }
 
-    # Merge ranked scores with hydrated data
+    # Merge ranked scores with hydrated data — only include valid entity_keys
     evidence = []
     for r in ranked_results[:20]:
         key = r["entity_key"]
-        item = hydrated.get(key, {"entity_key": key})
+        if key not in entity_keys:
+            continue
+        item = dict(hydrated.get(key, {"entity_key": key}))
         item["retrieval_score"] = r.get("combined_score", 0)
         item["source_store"] = r.get("source", "unknown")
         evidence.append(item)
