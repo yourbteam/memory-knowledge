@@ -114,34 +114,42 @@ async def repair(
                 rev_id,
             )
 
-            file_symbols: list[dict[str, Any]] = []
-            for fr in file_rows:
-                symbol_rows = await pool.fetch(
-                    """
-                    SELECT e.entity_key, s.symbol_name, s.symbol_kind
-                    FROM catalog.symbols s
-                    JOIN catalog.entities e ON s.entity_id = e.id
-                    WHERE s.file_id = (
-                        SELECT f2.id FROM catalog.files f2
-                        JOIN catalog.entities e2 ON f2.entity_id = e2.id
-                        WHERE e2.entity_key = $1
-                        LIMIT 1
-                    )
-                    """,
-                    fr["file_entity_key"],
-                )
-                file_symbols.append({
+            # Batch-fetch all symbols for this revision in one query
+            all_symbols = await pool.fetch(
+                """
+                SELECT e_file.entity_key AS file_entity_key,
+                       e_sym.entity_key AS symbol_entity_key,
+                       s.symbol_name, s.symbol_kind
+                FROM catalog.symbols s
+                JOIN catalog.entities e_sym ON s.entity_id = e_sym.id
+                JOIN catalog.files f ON s.file_id = f.id
+                JOIN catalog.entities e_file ON f.entity_id = e_file.id
+                WHERE e_file.repository_id = $1 AND e_file.repo_revision_id = $2
+                """,
+                repo_id,
+                rev_id,
+            )
+
+            # Group symbols by file entity_key
+            symbols_by_file: dict[str, list[dict[str, str]]] = {}
+            for sr in all_symbols:
+                fek = str(sr["file_entity_key"])
+                if fek not in symbols_by_file:
+                    symbols_by_file[fek] = []
+                symbols_by_file[fek].append({
+                    "entity_key": str(sr["symbol_entity_key"]),
+                    "name": sr["symbol_name"],
+                    "kind": sr["symbol_kind"],
+                })
+
+            file_symbols: list[dict[str, Any]] = [
+                {
                     "file_path": fr["file_path"],
                     "file_entity_key": str(fr["file_entity_key"]),
-                    "symbols": [
-                        {
-                            "entity_key": str(sr["entity_key"]),
-                            "name": sr["symbol_name"],
-                            "kind": sr["symbol_kind"],
-                        }
-                        for sr in symbol_rows
-                    ],
-                })
+                    "symbols": symbols_by_file.get(str(fr["file_entity_key"]), []),
+                }
+                for fr in file_rows
+            ]
 
             if file_symbols:
                 await project_repository_graph(
