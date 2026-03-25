@@ -127,10 +127,27 @@ async def run(
         )
         repository_id = row["id"] if row else 0
 
-        # Step 3: Fetch applicable learned rules
-        entity_keys = [e["entity_key"] for e in evidence if e.get("entity_key")]
+        # Step 3: Resolve file/symbol entity_keys for learned rules lookup
+        # Retrieval returns chunk entity_keys, but learned rules APPLY_TO
+        # file/symbol entities. Resolve via file_path → catalog.files → entity_key.
+        file_paths = list({e["file_path"] for e in evidence if e.get("file_path")})
+        scope_entity_keys: list[str] = []
+        if file_paths:
+            scope_rows = await pool.fetch(
+                """
+                SELECT DISTINCT e.entity_key
+                FROM catalog.files f
+                JOIN catalog.entities e ON f.entity_id = e.id
+                WHERE f.file_path = ANY($1::text[])
+                  AND e.repository_id = $2
+                """,
+                file_paths,
+                repository_id,
+            )
+            scope_entity_keys = [str(r["entity_key"]) for r in scope_rows]
+
         learned_rules = await _fetch_applicable_learned_rules(
-            pool, neo4j_driver, entity_keys, repository_id,
+            pool, neo4j_driver, scope_entity_keys, repository_id,
         )
 
         # Step 4: Assemble structured bundle

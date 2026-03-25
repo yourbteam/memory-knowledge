@@ -202,20 +202,27 @@ async def run_commit(
         learned_record_id = row["id"]
         entity_key_str = str(row["entity_key"])
 
-        if approval_status == "approve":
-            # Update verification status
+        # Resolve scope and evidence entity_keys once (shared by approve + supersede)
+        scope_ek_row = await pool.fetchrow(
+            "SELECT entity_key FROM catalog.entities WHERE id = $1",
+            row["scope_entity_id"],
+        )
+        scope_ek = str(scope_ek_row["entity_key"]) if scope_ek_row else ""
+
+        evidence_ek_row = await pool.fetchrow(
+            "SELECT e2.entity_key FROM memory.learned_records lr "
+            "JOIN catalog.entities e2 ON lr.evidence_entity_id = e2.id "
+            "WHERE lr.id = $1",
+            learned_record_id,
+        )
+        evidence_ek = str(evidence_ek_row["entity_key"]) if evidence_ek_row else None
+
+        async def _approve_and_project() -> None:
+            """Shared logic: verify status, embed to Qdrant, project to Neo4j."""
             await update_verification_status(
                 pool, learned_record_id, "verified", verification_notes
             )
-
-            # Embed to Qdrant
             if qdrant_client is not None and settings is not None:
-                scope_ek_row = await pool.fetchrow(
-                    "SELECT entity_key FROM catalog.entities WHERE id = $1",
-                    row["scope_entity_id"],
-                )
-                scope_ek = str(scope_ek_row["entity_key"]) if scope_ek_row else ""
-
                 await embed_and_upsert_learned_record(
                     client=qdrant_client,
                     entity_key=entity_key_str,
@@ -227,31 +234,18 @@ async def run_commit(
                     scope_entity_key=scope_ek,
                     settings=settings,
                 )
-
-            # Project to Neo4j
             if neo4j_driver is not None:
-                evidence_ek_row = await pool.fetchrow(
-                    "SELECT e2.entity_key FROM memory.learned_records lr "
-                    "JOIN catalog.entities e2 ON lr.evidence_entity_id = e2.id "
-                    "WHERE lr.id = $1",
-                    learned_record_id,
-                )
-                evidence_ek = str(evidence_ek_row["entity_key"]) if evidence_ek_row else None
-                scope_ek_row2 = await pool.fetchrow(
-                    "SELECT entity_key FROM catalog.entities WHERE id = $1",
-                    row["scope_entity_id"],
-                )
-                scope_ek2 = str(scope_ek_row2["entity_key"]) if scope_ek_row2 else ""
-
                 await project_learned_rule(
                     driver=neo4j_driver,
                     entity_key=entity_key_str,
                     memory_type=row["memory_type"],
                     title=row["title"],
-                    scope_entity_key=scope_ek2,
+                    scope_entity_key=scope_ek,
                     evidence_entity_key=evidence_ek,
                 )
 
+        if approval_status == "approve":
+            await _approve_and_project()
             logger.info("proposal_approved", entity_key=entity_key_str)
             result_data: dict[str, Any] = {"status": "verified", "entity_key": entity_key_str}
 
@@ -266,43 +260,7 @@ async def run_commit(
             if supersedes_id is None:
                 raise ValueError("supersedes_id is required for approval_status='supersede'")
 
-            # Approve the new proposal (same as approve branch)
-            await update_verification_status(
-                pool, learned_record_id, "verified", verification_notes
-            )
-
-            # Embed + project the new record
-            if qdrant_client is not None and settings is not None:
-                scope_ek_row3 = await pool.fetchrow(
-                    "SELECT entity_key FROM catalog.entities WHERE id = $1",
-                    row["scope_entity_id"],
-                )
-                scope_ek3 = str(scope_ek_row3["entity_key"]) if scope_ek_row3 else ""
-                await embed_and_upsert_learned_record(
-                    client=qdrant_client,
-                    entity_key=entity_key_str,
-                    body_text=row["body_text"],
-                    repository_key=repository_key,
-                    memory_type=row["memory_type"],
-                    confidence=float(row["confidence"]) if row["confidence"] else 0.5,
-                    applicability_mode=row["applicability_mode"] or "repository",
-                    scope_entity_key=scope_ek3,
-                    settings=settings,
-                )
-
-            if neo4j_driver is not None:
-                scope_ek_row4 = await pool.fetchrow(
-                    "SELECT entity_key FROM catalog.entities WHERE id = $1",
-                    row["scope_entity_id"],
-                )
-                scope_ek4 = str(scope_ek_row4["entity_key"]) if scope_ek_row4 else ""
-                await project_learned_rule(
-                    driver=neo4j_driver,
-                    entity_key=entity_key_str,
-                    memory_type=row["memory_type"],
-                    title=row["title"],
-                    scope_entity_key=scope_ek4,
-                )
+            await _approve_and_project()
 
             # Resolve and supersede old record
             old_row = await pool.fetchrow(

@@ -56,7 +56,6 @@ async def upsert_learned_record(
                 body_tsv = to_tsvector('english', EXCLUDED.body_text),
                 confidence = EXCLUDED.confidence,
                 verification_status = EXCLUDED.verification_status,
-                verification_notes = EXCLUDED.verification_notes,
                 is_active = EXCLUDED.is_active
         RETURNING id
         """,
