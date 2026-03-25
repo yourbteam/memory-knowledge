@@ -254,6 +254,16 @@ CREATE INDEX idx_files_repo_revision_id ON catalog.files (repo_revision_id);
 CREATE INDEX idx_entities_repository_id ON catalog.entities (repository_id);
 
 -- ============================================================================
+-- Unique constraints for upsert idempotency
+-- ============================================================================
+
+ALTER TABLE catalog.repo_revisions ADD CONSTRAINT uq_repo_revisions_repo_commit UNIQUE (repository_id, commit_sha);
+ALTER TABLE catalog.files ADD CONSTRAINT uq_files_revision_path UNIQUE (repo_revision_id, file_path);
+ALTER TABLE catalog.symbols ADD CONSTRAINT uq_symbols_entity UNIQUE (entity_id);
+ALTER TABLE catalog.chunks ADD CONSTRAINT uq_chunks_entity UNIQUE (entity_id);
+ALTER TABLE catalog.retrieval_surfaces ADD CONSTRAINT uq_retrieval_surfaces UNIQUE NULLS NOT DISTINCT (repository_id, surface_type, branch_name);
+
+-- ============================================================================
 -- Seed data — default route policies
 -- ============================================================================
 

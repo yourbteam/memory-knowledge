@@ -39,6 +39,21 @@ async def ensure_collections(
                 ),
             )
 
+    # Ensure payload indexes for filtered queries
+    for name in COLLECTIONS:
+        for field, schema in [
+            ("repository_key", models.PayloadSchemaType.KEYWORD),
+            ("is_active", models.PayloadSchemaType.KEYWORD),
+        ]:
+            try:
+                await client.create_payload_index(
+                    collection_name=name,
+                    field_name=field,
+                    field_schema=schema,
+                )
+            except Exception:
+                pass  # index may already exist
+
 
 def get_qdrant_client() -> AsyncQdrantClient:
     if _client is None:

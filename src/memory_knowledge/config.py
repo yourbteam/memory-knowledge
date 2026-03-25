@@ -32,6 +32,9 @@ class Settings(BaseSettings):
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = 1536
 
+    # Ingestion
+    repo_clone_base_path: str = "/tmp/memory-knowledge/repos"
+
     # Server
     server_port: int = 8000
 

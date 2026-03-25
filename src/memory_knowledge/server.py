@@ -154,7 +154,11 @@ async def run_repo_ingestion_workflow(
     bind_run_context(run_id, correlation_id, "run_repo_ingestion_workflow")
     try:
         result = await _ingestion.run(
-            repository_key, commit_sha, branch_name, run_id
+            repository_key, commit_sha, branch_name, run_id,
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+            neo4j_driver=get_neo4j_driver(),
+            settings=get_settings(),
         )
         return result.model_dump_json()
     finally:
