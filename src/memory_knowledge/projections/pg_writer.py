@@ -178,3 +178,28 @@ async def record_ingestion_item(
         status,
         error_text,
     )
+
+
+async def record_route_feedback(
+    pool: asyncpg.Pool,
+    route_execution_id: int,
+    usefulness_score: float | None = None,
+    precision_score: float | None = None,
+    expansion_needed: bool | None = None,
+    notes: str | None = None,
+) -> int:
+    """Record feedback for a route execution."""
+    row = await pool.fetchrow(
+        """
+        INSERT INTO routing.route_feedback
+            (route_execution_id, usefulness_score, precision_score, expansion_needed, notes)
+        VALUES ($1, $2, $3, $4, $5)
+        RETURNING id
+        """,
+        route_execution_id,
+        usefulness_score,
+        precision_score,
+        expansion_needed,
+        notes,
+    )
+    return row["id"]

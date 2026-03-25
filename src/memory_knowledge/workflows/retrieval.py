@@ -249,6 +249,8 @@ async def assemble_context_bundle(
     pool: asyncpg.Pool,
     ranked_results: list[dict[str, Any]],
     repository_key: str,
+    commit_sha: str | None = None,
+    branch_name: str | None = None,
 ) -> dict[str, Any]:
     # Filter to valid UUID strings only — Qdrant payloads may have None or malformed keys
     raw_keys = [r["entity_key"] for r in ranked_results[:20]]
@@ -309,7 +311,12 @@ async def assemble_context_bundle(
             continue
         item = dict(hydrated.get(key, {"entity_key": key}))
         item["retrieval_score"] = r.get("combined_score", 0)
+        item["retrieval_reason"] = r.get("source", "unknown")
         item["source_store"] = r.get("source", "unknown")
+        if commit_sha:
+            item["commit_sha"] = commit_sha
+        if branch_name:
+            item["branch_name"] = branch_name
         evidence.append(item)
 
     return {
@@ -390,29 +397,57 @@ async def run(
         prompt_class = classify_prompt(query)
         logger.info("prompt_classified", prompt_class=prompt_class)
 
-        # Step 2: Load route policy
+        # Step 2: Load route policy and retrieval surfaces
         policy = await load_route_policy(pool, prompt_class)
+        surfaces = await load_retrieval_surfaces(pool, repository_id)
         policy_id = policy["id"] if policy else None
         first_store = policy["first_store"] if policy else "postgres"
+        second_store = policy["second_store"] if policy else None
+        allow_fanout = policy["allow_fanout"] if policy else False
         allow_graph = policy["allow_graph_expansion"] if policy else False
         logger.info("policy_loaded", policy_name=policy["policy_name"] if policy else "none")
 
-        # Step 3: PG full-text search
-        stores_queried = ["postgres"]
-        pg_results = await pg_fulltext_search(pool, query, repository_id)
-        logger.info("pg_search_complete", result_count=len(pg_results))
+        # Extract active surface metadata for context bundle
+        active_surface = next((s for s in surfaces if s["is_default"]), None)
+        surface_commit_sha = active_surface["commit_sha"] if active_surface else None
+        surface_branch_name = active_surface["branch_name"] if active_surface else None
 
-        # Step 4: Embed query
-        query_embedding = await embed_query(query, settings)
+        # Step 3: Query first store
+        FANOUT_THRESHOLD = 5
+        stores_queried = [first_store]
+        pg_results: list[dict[str, Any]] = []
+        qdrant_results: list[dict[str, Any]] = []
+        query_embedding: list[float] | None = None
 
-        # Step 5: Qdrant semantic search
-        stores_queried.append("qdrant")
-        qdrant_results = await qdrant_semantic_search(
-            qdrant_client, query_embedding, repository_key
-        )
-        logger.info("qdrant_search_complete", result_count=len(qdrant_results))
+        if first_store == "postgres":
+            pg_results = await pg_fulltext_search(pool, query, repository_id)
+            logger.info("pg_search_complete", result_count=len(pg_results))
+        elif first_store == "qdrant":
+            query_embedding = await embed_query(query, settings)
+            qdrant_results = await qdrant_semantic_search(
+                qdrant_client, query_embedding, repository_key
+            )
+            logger.info("qdrant_search_complete", result_count=len(qdrant_results))
 
-        # Step 6: Optional Neo4j graph expansion
+        # Step 4: Conditional fan-out to second store
+        first_store_count = len(pg_results) + len(qdrant_results)
+        fanout_used = False
+
+        if allow_fanout and first_store_count < FANOUT_THRESHOLD and second_store:
+            fanout_used = True
+            stores_queried.append(second_store)
+            if second_store == "postgres" and not pg_results:
+                pg_results = await pg_fulltext_search(pool, query, repository_id)
+                logger.info("fanout_pg_search", result_count=len(pg_results))
+            elif second_store == "qdrant" and not qdrant_results:
+                if query_embedding is None:
+                    query_embedding = await embed_query(query, settings)
+                qdrant_results = await qdrant_semantic_search(
+                    qdrant_client, query_embedding, repository_key
+                )
+                logger.info("fanout_qdrant_search", result_count=len(qdrant_results))
+
+        # Step 5: Optional Neo4j graph expansion
         graph_entity_keys: list[str] | None = None
         graph_expansion_used = False
         if allow_graph and neo4j_driver is not None:
@@ -430,14 +465,18 @@ async def run(
                 graph_expansion_used = True
                 logger.info("graph_expansion_complete", expanded_count=len(graph_entity_keys))
 
-        # Step 7: Rerank and fuse
+        # Step 6: Rerank and fuse
         ranked = rerank_results(pg_results, qdrant_results, graph_entity_keys)
         logger.info("rerank_complete", result_count=len(ranked))
 
-        # Step 8: Assemble context bundle
-        context_bundle = await assemble_context_bundle(pool, ranked, repository_key)
+        # Step 7: Assemble context bundle with surface metadata
+        context_bundle = await assemble_context_bundle(
+            pool, ranked, repository_key,
+            commit_sha=surface_commit_sha,
+            branch_name=surface_branch_name,
+        )
 
-        # Step 9: Persist route execution
+        # Step 8: Persist route execution
         duration_ms = int((time.monotonic() - start) * 1000)
         await persist_route_execution(
             pool=pool,
@@ -448,7 +487,7 @@ async def run(
             route_policy_id=policy_id,
             first_store_queried=first_store,
             stores_queried=stores_queried,
-            fanout_used=False,
+            fanout_used=fanout_used,
             graph_expansion_used=graph_expansion_used,
             rerank_strategy="score_sort",
             result_count=context_bundle["count"],

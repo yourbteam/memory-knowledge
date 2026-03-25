@@ -263,6 +263,12 @@ ALTER TABLE catalog.symbols ADD CONSTRAINT uq_symbols_entity UNIQUE (entity_id);
 ALTER TABLE catalog.chunks ADD CONSTRAINT uq_chunks_entity UNIQUE (entity_id);
 ALTER TABLE catalog.retrieval_surfaces ADD CONSTRAINT uq_retrieval_surfaces UNIQUE NULLS NOT DISTINCT (repository_id, surface_type, branch_name);
 
+-- Phase 3 learned memory constraints
+ALTER TABLE memory.learned_records ALTER COLUMN evidence_entity_id SET NOT NULL;
+ALTER TABLE memory.learned_records ALTER COLUMN evidence_chunk_id SET NOT NULL;
+ALTER TABLE memory.learned_records ADD CONSTRAINT uq_learned_records_entity UNIQUE (entity_id);
+CREATE INDEX idx_learned_records_body_tsv ON memory.learned_records USING GIN (body_tsv);
+
 -- ============================================================================
 -- Seed data — default route policies
 -- ============================================================================

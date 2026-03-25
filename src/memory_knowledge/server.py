@@ -80,7 +80,13 @@ async def run_context_assembly_workflow(
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_context_assembly_workflow")
     try:
-        result = await _context_assembly.run(repository_key, query, run_id)
+        result = await _context_assembly.run(
+            repository_key, query, run_id,
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+            neo4j_driver=get_neo4j_driver(),
+            settings=get_settings(),
+        )
         return result.model_dump_json()
     finally:
         clear_run_context()
@@ -102,13 +108,35 @@ async def run_impact_analysis_workflow(
 
 @mcp.tool()
 async def run_learned_memory_proposal_workflow(
-    repository_key: str, query: str, correlation_id: str | None = None
+    repository_key: str,
+    memory_type: str,
+    title: str,
+    body_text: str,
+    evidence_entity_key: str,
+    scope_entity_key: str,
+    confidence: float = 0.5,
+    applicability_mode: str = "repository",
+    correlation_id: str | None = None,
 ) -> str:
-    """Propose a learned-memory candidate for review."""
+    """Propose a learned-memory candidate backed by evidence."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_learned_memory_proposal_workflow")
     try:
-        result = await _learned_memory.run_proposal(repository_key, query, run_id)
+        result = await _learned_memory.run_proposal(
+            repository_key=repository_key,
+            memory_type=memory_type,
+            title=title,
+            body_text=body_text,
+            evidence_entity_key=evidence_entity_key,
+            scope_entity_key=scope_entity_key,
+            confidence=confidence,
+            applicability_mode=applicability_mode,
+            run_id=run_id,
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+            neo4j_driver=get_neo4j_driver(),
+            settings=get_settings(),
+        )
         return result.model_dump_json()
     finally:
         clear_run_context()
@@ -116,13 +144,29 @@ async def run_learned_memory_proposal_workflow(
 
 @mcp.tool()
 async def run_learned_memory_commit_workflow(
-    repository_key: str, proposal_id: str, correlation_id: str | None = None
+    repository_key: str,
+    proposal_id: str,
+    approval_status: str,
+    verification_notes: str | None = None,
+    supersedes_id: str | None = None,
+    correlation_id: str | None = None,
 ) -> str:
-    """Store an approved learned-memory record."""
+    """Approve, reject, or supersede a learned-memory proposal."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_learned_memory_commit_workflow")
     try:
-        result = await _learned_memory.run_commit(repository_key, proposal_id, run_id)
+        result = await _learned_memory.run_commit(
+            repository_key=repository_key,
+            proposal_id=proposal_id,
+            approval_status=approval_status,
+            verification_notes=verification_notes,
+            supersedes_id=supersedes_id,
+            run_id=run_id,
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+            neo4j_driver=get_neo4j_driver(),
+            settings=get_settings(),
+        )
         return result.model_dump_json()
     finally:
         clear_run_context()
@@ -201,7 +245,10 @@ async def run_route_intelligence_workflow(
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_route_intelligence_workflow")
     try:
-        result = await _route_intelligence.run(repository_key, query, run_id)
+        result = await _route_intelligence.run(
+            repository_key, query, run_id,
+            pool=get_pg_pool(),
+        )
         return result.model_dump_json()
     finally:
         clear_run_context()
