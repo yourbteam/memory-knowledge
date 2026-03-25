@@ -178,14 +178,16 @@ async def neo4j_graph_expansion(
 ) -> list[dict[str, Any]]:
     if not entity_keys:
         return []
+    # Neo4j does not support parameter substitution in relationship length
+    # patterns — depth must be inlined. int() cast prevents injection.
+    query = (
+        f"MATCH (n)-[:CONTAINS|HAS_FILE*1..{int(depth)}]-(m) "
+        f"WHERE n.entity_key IN $entity_keys "
+        f"RETURN DISTINCT m.entity_key AS entity_key, labels(m) AS labels"
+    )
     records, _, _ = await driver.execute_query(
-        """
-        MATCH (n)-[r:CONTAINS|HAS_FILE*1..$depth]-(m)
-        WHERE n.entity_key IN $entity_keys
-        RETURN DISTINCT m.entity_key AS entity_key, labels(m) AS labels
-        """,
+        query,
         entity_keys=entity_keys,
-        depth=depth,
     )
     return [{"entity_key": r["entity_key"], "labels": r["labels"]} for r in records]
 
@@ -248,7 +250,17 @@ async def assemble_context_bundle(
     ranked_results: list[dict[str, Any]],
     repository_key: str,
 ) -> dict[str, Any]:
-    entity_keys = [r["entity_key"] for r in ranked_results[:20]]
+    # Filter to valid UUID strings only — Qdrant payloads may have None or malformed keys
+    raw_keys = [r["entity_key"] for r in ranked_results[:20]]
+    entity_keys = []
+    for k in raw_keys:
+        if k is None:
+            continue
+        try:
+            uuid.UUID(str(k))
+            entity_keys.append(str(k))
+        except ValueError:
+            continue
     if not entity_keys:
         return {"repository_key": repository_key, "evidence": [], "count": 0}
 
@@ -376,9 +388,8 @@ async def run(
         prompt_class = classify_prompt(query)
         logger.info("prompt_classified", prompt_class=prompt_class)
 
-        # Step 2: Load route policy and retrieval surfaces
+        # Step 2: Load route policy
         policy = await load_route_policy(pool, prompt_class)
-        surfaces = await load_retrieval_surfaces(pool, repository_id)
         policy_id = policy["id"] if policy else None
         first_store = policy["first_store"] if policy else "postgres"
         allow_graph = policy["allow_graph_expansion"] if policy else False
