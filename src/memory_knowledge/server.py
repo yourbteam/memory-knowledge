@@ -217,7 +217,13 @@ async def run_integrity_audit_workflow(
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_integrity_audit_workflow")
     try:
-        result = await _integrity_audit.run(repository_key, run_id)
+        result = await _integrity_audit.run(
+            repository_key, run_id,
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+            neo4j_driver=get_neo4j_driver(),
+            settings=get_settings(),
+        )
         return result.model_dump_json()
     finally:
         clear_run_context()
@@ -225,13 +231,22 @@ async def run_integrity_audit_workflow(
 
 @mcp.tool()
 async def run_repair_rebuild_workflow(
-    repository_key: str, correlation_id: str | None = None
+    repository_key: str,
+    repair_scope: str = "full",
+    correlation_id: str | None = None,
 ) -> str:
-    """Repair drift or rebuild a memory slice."""
+    """Repair drift or rebuild a memory slice. Scope: full, qdrant, or neo4j."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_repair_rebuild_workflow")
     try:
-        result = await _repair_rebuild.run(repository_key, run_id)
+        result = await _repair_rebuild.run(
+            repository_key, run_id,
+            repair_scope=repair_scope,
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+            neo4j_driver=get_neo4j_driver(),
+            settings=get_settings(),
+        )
         return result.model_dump_json()
     finally:
         clear_run_context()
@@ -262,8 +277,8 @@ async def run_route_intelligence_workflow(
 @asynccontextmanager
 async def app_lifespan(app: Starlette):
     # STARTUP — DB pools owned by Starlette, not MCP
-    configure_logging()
     settings = Settings()
+    configure_logging(settings.log_level)
     init_settings(settings)
 
     # Validate auth configuration — fail fast

@@ -37,6 +37,8 @@ class Settings(BaseSettings):
 
     # Server
     server_port: int = 8000
+    log_level: str = "INFO"
+    environment: str = "development"
 
 
 _settings: Settings | None = None
