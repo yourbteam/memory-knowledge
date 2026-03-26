@@ -173,6 +173,7 @@ async def run(
                     file_path_to_entity_id[fp] = ef["entity_id"]
 
         # Step 5: Process each file
+        file_path_to_parse_output: dict[str, Any] = {}
         repo_dir = Path(settings.repo_clone_base_path) / repository_key
 
         for file_path in py_files:
@@ -215,6 +216,7 @@ async def run(
 
                 # Parse
                 parse_output = parse_python_file(file_path, source)
+                file_path_to_parse_output[file_path] = parse_output
 
                 # Register file entity
                 f_ek = file_entity_key(repository_key, commit_sha, file_path)
@@ -383,10 +385,16 @@ async def run(
                     source_lines = source.splitlines()
                     for sym_rec in fs["symbols"]:
                         try:
-                            # Find symbol line range from parse data
+                            # Extract symbol source using cached parse output
                             sym_source = source[:4000]  # fallback
-                            for parsed_sym in []:
-                                pass  # Symbol source extracted from stored data
+                            cached_parse = file_path_to_parse_output.get(fp)
+                            if cached_parse:
+                                for psym in cached_parse.symbols:
+                                    if psym.name == sym_rec["name"]:
+                                        sym_source = "\n".join(
+                                            source_lines[psym.line_start - 1 : psym.line_end]
+                                        )
+                                        break
                             sym_ek = sym_rec["entity_key"]
                             s_ek = summary_entity_key(
                                 repository_key, commit_sha, sym_ek, "symbol"
