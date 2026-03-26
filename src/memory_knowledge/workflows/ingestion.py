@@ -14,9 +14,10 @@ from qdrant_client import AsyncQdrantClient
 
 from qdrant_client import models as qdrant_models
 
-from memory_knowledge.config import Settings
-from memory_knowledge.git.clone import checkout_commit, ensure_repo, list_python_files
+from memory_knowledge.config import Settings, get_supported_extensions
+from memory_knowledge.git.clone import checkout_commit, ensure_repo, list_source_files
 from memory_knowledge.git.diff import changed_files
+from memory_knowledge.parsers.factory import detect_language, get_import_resolver, get_parser
 from memory_knowledge.identity.entity_key import (
     chunk_entity_key,
     file_entity_key,
@@ -24,7 +25,7 @@ from memory_knowledge.identity.entity_key import (
     symbol_entity_key,
 )
 from memory_knowledge.llm.complete import llm_complete
-from memory_knowledge.parsers.python_adapter import parse_python_file
+# Parser dispatch via factory — no direct adapter import
 from memory_knowledge.projections.neo4j_projector import (
     project_dependency_edges,
     project_repository_graph,
@@ -61,10 +62,11 @@ logger = structlog.get_logger()
 
 TOOL_NAME = "run_repo_ingestion_workflow"
 
-SUMMARY_SYSTEM_PROMPT = (
-    "Summarize the following Python code in 2-3 sentences. "
-    "Focus on what it does, its inputs/outputs, and key behaviors."
-)
+def _summary_prompt(language: str) -> str:
+    return (
+        f"Summarize the following {language} code in 2-3 sentences. "
+        "Focus on what it does, its inputs/outputs, and key behaviors."
+    )
 
 
 async def run(
@@ -121,7 +123,8 @@ async def run(
 
         # Step 2: Determine file list (incremental or full)
         if old_sha is not None:
-            diff_files = await asyncio.to_thread(changed_files, repo, old_sha, commit_sha)
+            extensions = get_supported_extensions(settings.supported_languages)
+            diff_files = await asyncio.to_thread(changed_files, repo, old_sha, commit_sha, extensions)
         else:
             diff_files = None
 
@@ -129,7 +132,8 @@ async def run(
             py_files = diff_files
             run_type = "incremental"
         else:
-            py_files = await asyncio.to_thread(list_python_files, repo)
+            extensions = get_supported_extensions(settings.supported_languages)
+            py_files = await asyncio.to_thread(list_source_files, repo, extensions)
             run_type = "full"
 
         logger.info("files_determined", count=len(py_files), run_type=run_type)
@@ -215,14 +219,14 @@ async def run(
                 checksum = hashlib.sha256(source.encode("utf-8")).hexdigest()
 
                 # Parse
-                parse_output = parse_python_file(file_path, source)
+                parse_output = get_parser(file_path)(file_path, source)
                 file_path_to_parse_output[file_path] = parse_output
 
                 # Register file entity
                 f_ek = file_entity_key(repository_key, commit_sha, file_path)
                 entity_id, file_id = await upsert_file(
                     pool, f_ek, repository_id, repo_revision_id,
-                    file_path, "python", size_bytes, checksum,
+                    file_path, detect_language(file_path), size_bytes, checksum,
                 )
                 file_path_to_file_id[file_path] = file_id
                 file_path_to_entity_key[file_path] = str(f_ek)
@@ -300,22 +304,14 @@ async def run(
         neo4j_call_edges: list[dict[str, str]] = []
 
         for importer_path, module_path in all_imports:
-            # Resolve module_path to file_path with suffix matching
-            candidates = [
-                module_path.replace(".", "/") + ".py",
-                module_path.replace(".", "/") + "/__init__.py",
-            ]
-            imported_file_id = None
-            imported_ek = None
-            for candidate in candidates:
-                for known_path in file_path_to_file_id:
-                    if known_path.endswith(candidate):
-                        imported_file_id = file_path_to_file_id[known_path]
-                        imported_ek = file_path_to_entity_key[known_path]
-                        break
-                if imported_file_id is not None:
-                    break
-            if imported_file_id is not None:
+            # Per-language import resolution via factory
+            language = detect_language(importer_path)
+            resolver = get_import_resolver(language)
+            if resolver is None:
+                continue  # Language has no file-based imports (e.g., C#, SQL)
+            result = resolver(module_path, file_path_to_file_id, file_path_to_entity_key)
+            if result is not None:
+                imported_file_id, imported_ek = result
                 importer_file_id = file_path_to_file_id.get(importer_path)
                 if importer_file_id:
                     await upsert_file_import(pool, importer_file_id, imported_file_id)
@@ -348,6 +344,44 @@ async def run(
 
         logger.info("edges_resolved", imports=len(neo4j_import_edges), calls=len(neo4j_call_edges))
 
+        # Step 5c-pre: Check and invalidate stale learned records
+        changed_file_paths = list(file_path_to_source.keys())
+        if changed_file_paths:
+            try:
+                stale_rows = await pool.fetch(
+                    """
+                    SELECT lr.id, e.entity_key
+                    FROM memory.learned_records lr
+                    JOIN catalog.entities scope_e ON lr.scope_entity_id = scope_e.id
+                    JOIN catalog.files f ON f.entity_id = scope_e.id
+                    WHERE f.file_path = ANY($1::text[])
+                      AND lr.is_active = TRUE
+                      AND scope_e.repository_id = $2
+                    """,
+                    changed_file_paths,
+                    repository_id,
+                )
+                if stale_rows:
+                    from memory_knowledge.lifecycle.staleness_checker import mark_stale
+                    from memory_knowledge.projections.learned_memory_neo4j import deactivate_learned_rule
+                    from memory_knowledge.projections.learned_memory_qdrant import deactivate_learned_record_point
+
+                    stale_ids = [r["id"] for r in stale_rows]
+                    await mark_stale(pool, stale_ids)
+                    for r in stale_rows:
+                        ek = str(r["entity_key"])
+                        try:
+                            await deactivate_learned_record_point(qdrant_client, ek)
+                        except Exception:
+                            pass
+                        try:
+                            await deactivate_learned_rule(neo4j_driver, ek)
+                        except Exception:
+                            pass
+                    logger.info("stale_records_invalidated", count=len(stale_ids))
+            except Exception as exc:
+                logger.warning("staleness_check_failed", error=str(exc))
+
         # Step 5c: Generate summaries (if enabled)
         all_summaries_for_embedding: list[dict[str, Any]] = []
         summaries_created = 0
@@ -362,7 +396,7 @@ async def run(
                 # File-level summary
                 try:
                     file_summary = await llm_complete(
-                        source[:8000], settings, system_prompt=SUMMARY_SYSTEM_PROMPT
+                        source[:8000], settings, system_prompt=_summary_prompt(detect_language(fp))
                     )
                     s_ek = summary_entity_key(repository_key, commit_sha, file_ek, "file")
                     await upsert_summary(pool, s_ek, file_eid, "file", file_summary)
@@ -402,7 +436,7 @@ async def run(
                             sym_summary = await llm_complete(
                                 f"Symbol: {sym_rec['name']} ({sym_rec['kind']})\n\n{sym_source[:4000]}",
                                 settings,
-                                system_prompt=SUMMARY_SYSTEM_PROMPT,
+                                system_prompt=_summary_prompt(detect_language(fp)),
                             )
                             # Look up symbol entity_id
                             sym_eid_row = await pool.fetchrow(

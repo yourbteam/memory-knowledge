@@ -33,7 +33,7 @@ async def _fetch_applicable_learned_rules(
             records, _, _ = await neo4j_driver.execute_query(
                 """
                 MATCH (lr:LearnedRule)-[:APPLIES_TO]->(scope)
-                WHERE scope.entity_key IN $entity_keys
+                WHERE scope.entity_key IN $entity_keys AND lr.is_active = true
                 RETURN lr.entity_key AS entity_key, lr.title AS title,
                        lr.memory_type AS memory_type
                 """,

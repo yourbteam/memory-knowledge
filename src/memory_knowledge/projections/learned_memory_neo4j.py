@@ -19,7 +19,7 @@ async def project_learned_rule(
     await driver.execute_query(
         """
         MERGE (lr:LearnedRule {entity_key: $entity_key})
-        SET lr.memory_type = $memory_type, lr.title = $title
+        SET lr.memory_type = $memory_type, lr.title = $title, lr.is_active = true
 
         WITH lr
         MATCH (scope {entity_key: $scope_entity_key})
@@ -44,3 +44,14 @@ async def project_learned_rule(
         )
 
     logger.info("learned_rule_projected", entity_key=entity_key)
+
+
+async def deactivate_learned_rule(
+    driver: neo4j.AsyncDriver, entity_key: str
+) -> None:
+    """Set is_active=false on a LearnedRule node in Neo4j."""
+    await driver.execute_query(
+        "MATCH (lr:LearnedRule {entity_key: $ek}) SET lr.is_active = false",
+        ek=entity_key,
+    )
+    logger.info("learned_rule_deactivated", entity_key=entity_key)

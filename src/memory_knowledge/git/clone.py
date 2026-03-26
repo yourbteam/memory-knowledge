@@ -38,10 +38,22 @@ def checkout_commit(repo: Repo, commit_sha: str) -> None:
     logger.info("git_checkout", commit_sha=commit_sha)
 
 
-def list_python_files(repo: Repo) -> list[str]:
-    """Return repo-relative paths of all .py files tracked at HEAD."""
+def list_source_files(
+    repo: Repo, extensions: set[str] | None = None
+) -> list[str]:
+    """Return repo-relative paths of source files tracked at HEAD.
+
+    If extensions is None, returns all blob files.
+    Otherwise filters by file extension (e.g., {".py", ".ts"}).
+    """
     return [
         item.path
         for item in repo.head.commit.tree.traverse()
-        if item.type == "blob" and item.path.endswith(".py")
+        if item.type == "blob"
+        and (extensions is None or any(item.path.endswith(ext) for ext in extensions))
     ]
+
+
+def list_python_files(repo: Repo) -> list[str]:
+    """Deprecated: use list_source_files(repo, {".py"}) instead."""
+    return list_source_files(repo, {".py"})

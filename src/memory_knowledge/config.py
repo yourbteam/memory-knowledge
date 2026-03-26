@@ -36,6 +36,7 @@ class Settings(BaseSettings):
     # Ingestion
     repo_clone_base_path: str = "/tmp/memory-knowledge/repos"
     generate_summaries: bool = True
+    supported_languages: list[str] = ["python"]
 
     # Job orchestration
     max_job_retries: int = 3
@@ -59,3 +60,20 @@ def get_settings() -> Settings:
     if _settings is None:
         raise RuntimeError("Settings not initialized")
     return _settings
+
+
+# Language → file extension mapping
+LANGUAGE_EXTENSIONS: dict[str, list[str]] = {
+    "python": [".py"],
+    "typescript": [".ts", ".tsx", ".js", ".jsx"],
+    "csharp": [".cs"],
+    "sql": [".sql"],
+}
+
+
+def get_supported_extensions(languages: list[str]) -> set[str]:
+    """Flatten configured languages into a set of file extensions."""
+    extensions: set[str] = set()
+    for lang in languages:
+        extensions.update(LANGUAGE_EXTENSIONS.get(lang, []))
+    return extensions

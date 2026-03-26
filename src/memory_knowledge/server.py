@@ -395,6 +395,78 @@ async def get_memory_stats(
 
 
 @mcp.tool()
+async def create_working_session(
+    repository_key: str, correlation_id: str | None = None
+) -> str:
+    """Create a new working session for tracking investigation state."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "create_working_session")
+    try:
+        from memory_knowledge.admin.working_memory import create_session
+
+        session_key = await create_session(get_pg_pool(), repository_key)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="create_working_session",
+            status="success",
+            data={"session_key": str(session_key)},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+async def record_working_observation(
+    session_key: str,
+    entity_key: str,
+    observation_type: str,
+    observation_text: str,
+    correlation_id: str | None = None,
+) -> str:
+    """Record an observation (inspection, hypothesis, plan note) in a working session."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "record_working_observation")
+    try:
+        from memory_knowledge.admin.working_memory import record_observation
+
+        obs_id = await record_observation(
+            get_pg_pool(), uuid.UUID(session_key),
+            entity_key, observation_type, observation_text,
+        )
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="record_working_observation",
+            status="success",
+            data={"observation_id": obs_id},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+async def get_working_session_context(
+    session_key: str, correlation_id: str | None = None
+) -> str:
+    """Get all observations from a working session."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "get_working_session_context")
+    try:
+        from memory_knowledge.admin.working_memory import get_session_observations
+
+        observations = await get_session_observations(
+            get_pg_pool(), uuid.UUID(session_key)
+        )
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="get_working_session_context",
+            status="success",
+            data={"session_key": session_key, "observations": observations},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 async def run_route_intelligence_workflow(
     repository_key: str, query: str, correlation_id: str | None = None
 ) -> str:
