@@ -1,7 +1,7 @@
 # Agent Integration Specification
 ## Memory-Knowledge MCP Server + mcp-agents-workflow Framework
 
-**Version:** 1.0.0
+**Version:** 1.1.0
 **Date:** 2026-03-26
 **Status:** Ready for Implementation
 **Target Project:** mcp-agents-workflow
@@ -24,28 +24,31 @@ The memory-knowledge server provides 12 MCP tools that agents call for retrieval
 
 Add to `.mcp.json` in the mcp-agents-workflow project:
 
-```json
-{
-  "mcpServers": {
-    "memory-knowledge": {
-      "type": "stdio",
-      "command": "uvicorn",
-      "args": ["memory_knowledge.server:app", "--host", "127.0.0.1", "--port", "8000"],
-      "cwd": "/path/to/memory-knowledge",
-      "env": {
-        "DATABASE_URL": "postgresql://...",
-        "QDRANT_URL": "http://localhost:6333",
-        "NEO4J_URI": "bolt://localhost:7687",
-        "NEO4J_USER": "neo4j",
-        "NEO4J_PASSWORD": "...",
-        "AUTH_MODE": "codex"
-      }
-    }
-  }
-}
+**IMPORTANT:** The memory-knowledge server runs as a Starlette HTTP app with MCP streamable-http transport. It does NOT support stdio. You must start the server separately and connect via HTTP.
+
+**Step 1: Start the memory-knowledge server:**
+```bash
+cd /path/to/memory-knowledge
+# Set required env vars (or use .env file)
+export DATABASE_URL="postgresql://memoryknowledge:memoryknowledge@localhost:5432/memoryknowledge"
+export QDRANT_URL="http://localhost:6333"
+export NEO4J_URI="bolt://localhost:7687"
+export NEO4J_USER="neo4j"
+export NEO4J_PASSWORD="password"
+export AUTH_MODE="codex"  # or "api_key" with OPENAI_API_KEY set
+# Optional:
+# export OPENAI_API_KEY="sk-..." (required when AUTH_MODE=api_key)
+# export EMBEDDING_MODEL="text-embedding-3-small"
+# export COMPLETION_MODEL="gpt-4o"
+# export GENERATE_SUMMARIES="true"
+# export REPO_CLONE_BASE_PATH="/tmp/memory-knowledge/repos"
+# export SERVER_PORT="8000"
+# export LOG_LEVEL="INFO"
+
+uvicorn memory_knowledge.server:app --host 0.0.0.0 --port 8000
 ```
 
-**Alternative (HTTP mode):** If the memory-knowledge server is already running:
+**Step 2: Register in `.mcp.json`:**
 ```json
 {
   "mcpServers": {
@@ -56,6 +59,10 @@ Add to `.mcp.json` in the mcp-agents-workflow project:
   }
 }
 ```
+
+The MCP endpoint is at `/mcp/` (Starlette mount with `streamable_http_path="/"`).
+Health check: `GET http://localhost:8000/health`
+Readiness check: `GET http://localhost:8000/ready`
 
 ### 2.2 MCP Tool Namespace
 
@@ -85,7 +92,7 @@ All tools return JSON with this base structure:
 {
   "run_id": "uuid",
   "tool_name": "string",
-  "status": "success" | "error" | "submitted",
+  "status": "success" | "error" | "not_implemented" | "submitted",
   "data": { ... },
   "error": "string or null",
   "duration_ms": 123
@@ -149,7 +156,7 @@ All tools return JSON with this base structure:
   "repository_key": "string",
   "exact_matches": [ ...evidence items... ],
   "semantic_matches": [ ...evidence items... ],
-  "graph_expansions": [ ...evidence items... ],
+  "graph_expansions": [ ...evidence items found in BOTH PG and Qdrant (source_store=="both")... ],
   "summary_evidence": [ ...evidence items... ],
   "applicable_learned_rules": [
     {
@@ -261,14 +268,21 @@ All tools return JSON with this base structure:
 | `supersedes_id` | string | no | UUID of old record (required for "supersede") |
 | `correlation_id` | string | no | Tracing ID |
 
-**Response `data`:**
+**Response `data` (varies by approval_status):**
+
+When `approval_status="approve"`:
 ```json
-{
-  "status": "verified | rejected | superseded",
-  "entity_key": "uuid",
-  "new_entity_key": "uuid | null",
-  "old_entity_key": "uuid | null"
-}
+{ "status": "verified", "entity_key": "uuid" }
+```
+
+When `approval_status="reject"`:
+```json
+{ "status": "rejected", "entity_key": "uuid" }
+```
+
+When `approval_status="supersede"`:
+```json
+{ "status": "superseded", "new_entity_key": "uuid", "old_entity_key": "uuid" }
 ```
 
 **Usage Notes:**
@@ -1045,8 +1059,7 @@ phases:
   - id: respond
     name: Final Response
     agent: final-response
-    depends_on: [critique]
-    skip_on_clean: critique
+    depends_on: [critique, edit]
 
 settings:
   max_fix_iterations: 8
@@ -1084,6 +1097,10 @@ phases:
 
   - id: approve
     name: Approval Gate
+    description: >
+      The ORCHESTRATOR (not the Curator) decides whether to approve.
+      If approved, the Orchestrator calls run_learned_memory_commit_workflow
+      with approval_status="approve". The Curator can only PROPOSE (unverified).
     agent: orchestrator
     depends_on: [critique]
     artifacts: [approval-decision.json]
@@ -1091,7 +1108,6 @@ phases:
 settings:
   max_fix_iterations: 3
   timeout_minutes: 15
-  require_approval: true
 ```
 
 ### 5.6 repair-and-resume
