@@ -209,19 +209,24 @@ async def _run_ingestion_background(
     """Background task for ingestion job execution."""
     from memory_knowledge.jobs.job_worker import execute_job
 
+    # execute_job uses its own pool/settings for manifest writes.
+    # The workflow's pool/qdrant/neo4j/settings are passed via **kwargs.
+    pool = get_pg_pool()
+    settings = get_settings()
     await execute_job(
-        pool=get_pg_pool(),
+        manifest_pool=pool,
         job_id=job_id,
         job_fn=_ingestion.run,
-        settings=get_settings(),
+        worker_settings=settings,
+        # These kwargs are forwarded to _ingestion.run()
         repository_key=repository_key,
         commit_sha=commit_sha,
         branch_name=branch_name,
         run_id=run_id,
-        pool_=get_pg_pool(),
+        pool=pool,
         qdrant_client=get_qdrant_client(),
         neo4j_driver=get_neo4j_driver(),
-        settings_=get_settings(),
+        settings=settings,
     )
 
 
@@ -232,18 +237,20 @@ async def _run_repair_background(
     """Background task for repair job execution."""
     from memory_knowledge.jobs.job_worker import execute_job
 
+    pool = get_pg_pool()
+    settings = get_settings()
     await execute_job(
-        pool=get_pg_pool(),
+        manifest_pool=pool,
         job_id=job_id,
         job_fn=_repair_rebuild.run,
-        settings=get_settings(),
+        worker_settings=settings,
         repository_key=repository_key,
         run_id=run_id,
         repair_scope=repair_scope,
-        pool_=get_pg_pool(),
+        pool=pool,
         qdrant_client=get_qdrant_client(),
         neo4j_driver=get_neo4j_driver(),
-        settings_=get_settings(),
+        settings=settings,
     )
 
 

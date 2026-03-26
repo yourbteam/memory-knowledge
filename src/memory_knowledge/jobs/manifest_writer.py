@@ -66,7 +66,7 @@ async def update_job_state(
             """
             UPDATE ops.job_manifests
             SET state_code = $2, completed_utc = NOW(),
-                checkpoint_data = COALESCE($3::jsonb, checkpoint_data),
+                checkpoint_data = COALESCE($3, checkpoint_data),
                 error_code = $4, error_text = $5
             WHERE job_id = $1
             """,
@@ -81,7 +81,7 @@ async def update_job_state(
             """
             UPDATE ops.job_manifests
             SET state_code = $2,
-                checkpoint_data = COALESCE($3::jsonb, checkpoint_data),
+                checkpoint_data = COALESCE($3, checkpoint_data),
                 error_code = $4, error_text = $5
             WHERE job_id = $1
             """,
