@@ -37,6 +37,9 @@ async def embed(
     texts: list[str], settings: Settings
 ) -> list[list[float]]:
     """Embed texts using OpenAI with retry on transient errors. Batches at 100."""
+    if not texts:
+        return []
+
     api_key = await _get_api_key(settings)
     client = AsyncOpenAI(api_key=api_key)
     all_embeddings: list[list[float]] = []
@@ -49,7 +52,12 @@ async def embed(
                 input=batch,
                 dimensions=settings.embedding_dimensions,
             )
-            all_embeddings.extend([d.embedding for d in response.data])
+            batch_embeddings = [d.embedding for d in response.data]
+            if len(batch_embeddings) != len(batch):
+                raise ValueError(
+                    f"Embedding count mismatch: expected {len(batch)}, got {len(batch_embeddings)}"
+                )
+            all_embeddings.extend(batch_embeddings)
         except openai.AuthenticationError:
             if settings.auth_mode == "codex":
                 raise RuntimeError(
@@ -62,7 +70,11 @@ async def embed(
 
 async def embed_single(text: str, settings: Settings) -> list[float]:
     """Embed a single text string. Returns one embedding vector."""
+    if not text:
+        raise ValueError("Cannot embed empty text")
     result = await embed([text], settings)
+    if not result:
+        raise ValueError("Empty embedding response for single text")
     return result[0]
 
 

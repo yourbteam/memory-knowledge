@@ -6,8 +6,10 @@ import structlog
 
 from memory_knowledge.parsers.base import (
     CallInfo,
+    DocBlock,
     FileParseOutput,
     ImportInfo,
+    RouteInfo,
     SymbolInfo,
 )
 
@@ -58,6 +60,8 @@ def parse_php_file(file_path: str, source: str) -> FileParseOutput:
         symbols = _extract_symbols(source, lines)
         imports = _extract_imports(source)
         calls = _extract_calls(source, symbols)
+        routes = _extract_routes(source)
+        doc_blocks = _extract_doc_blocks(source, symbols)
 
         return FileParseOutput(
             file_path=file_path,
@@ -65,6 +69,8 @@ def parse_php_file(file_path: str, source: str) -> FileParseOutput:
             symbols=symbols,
             imports=imports,
             calls=calls,
+            routes=routes,
+            doc_blocks=doc_blocks,
         )
     except Exception as e:
         logger.warning("php_parse_error", file_path=file_path, error=str(e))
@@ -226,3 +232,44 @@ def _extract_calls(source: str, symbols: list[SymbolInfo]) -> list[CallInfo]:
                     CallInfo(caller_name=enclosing, callee_name=name, line_no=line_no)
                 )
     return calls
+
+
+_PHP_ROUTE_PATTERN = re.compile(
+    r"Route::(get|post|put|delete|patch)\s*\(\s*['\"]([^'\"]+)['\"]",
+    re.IGNORECASE,
+)
+
+
+def _extract_routes(source: str) -> list[RouteInfo]:
+    """Extract Laravel route definitions."""
+    routes: list[RouteInfo] = []
+    for match in _PHP_ROUTE_PATTERN.finditer(source):
+        line_no = source[: match.start()].count("\n") + 1
+        routes.append(RouteInfo(
+            method=match.group(1).upper(),
+            path=match.group(2),
+            handler_name="",
+            line_start=line_no,
+        ))
+    return routes
+
+
+_PHPDOC_PATTERN = re.compile(r"/\*\*(.*?)\*/", re.DOTALL)
+
+
+def _extract_doc_blocks(source: str, symbols: list[SymbolInfo]) -> list[DocBlock]:
+    """Extract PHPDoc comment blocks."""
+    doc_blocks: list[DocBlock] = []
+    for match in _PHPDOC_PATTERN.finditer(source):
+        line_no = source[: match.start()].count("\n") + 1
+        text = match.group(1).strip()
+        text = re.sub(r"^\s*\*\s?", "", text, flags=re.MULTILINE).strip()
+        if not text:
+            continue
+        sym_name = None
+        for sym in symbols:
+            if sym.line_start >= line_no and sym.line_start <= line_no + 5:
+                sym_name = sym.name
+                break
+        doc_blocks.append(DocBlock(symbol_name=sym_name, text=text, line_start=line_no))
+    return doc_blocks

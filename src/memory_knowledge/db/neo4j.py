@@ -6,7 +6,10 @@ from memory_knowledge.config import Settings
 
 _driver: neo4j.AsyncDriver | None = None
 
-NODE_LABELS = ["Repository", "Revision", "File", "Symbol", "LearnedRule", "WorkingSession"]
+NODE_LABELS = [
+    "Repository", "Revision", "File", "Symbol", "LearnedRule", "WorkingSession",
+    "Module", "DbTable", "StoredProcedure", "ApiEndpoint",
+]
 
 
 async def init_neo4j(settings: Settings) -> neo4j.AsyncDriver:

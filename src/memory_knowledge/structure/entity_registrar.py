@@ -42,20 +42,23 @@ async def upsert_file(
     language: str | None,
     size_bytes: int | None,
     checksum: str | None,
+    external_hash: str | None = None,
 ) -> tuple[int, int]:
     """Upsert entity + file. Returns (entity_id, file_id)."""
     # Upsert entity
     entity_row = await pool.fetchrow(
         """
-        INSERT INTO catalog.entities (entity_key, entity_type, repository_id, repo_revision_id)
-        VALUES ($1, 'file', $2, $3)
+        INSERT INTO catalog.entities (entity_key, entity_type, repository_id, repo_revision_id, external_hash)
+        VALUES ($1, 'file', $2, $3, $4)
         ON CONFLICT (entity_key) DO UPDATE
-            SET repo_revision_id = EXCLUDED.repo_revision_id
+            SET repo_revision_id = EXCLUDED.repo_revision_id,
+                external_hash = EXCLUDED.external_hash
         RETURNING id
         """,
         entity_key,
         repository_id,
         repo_revision_id,
+        external_hash,
     )
     entity_id = entity_row["id"]
 
@@ -92,20 +95,23 @@ async def upsert_symbol(
     line_start: int | None,
     line_end: int | None,
     signature: str | None,
+    external_hash: str | None = None,
 ) -> tuple[int, int]:
     """Upsert entity + symbol. Returns (entity_id, symbol_id)."""
     # Upsert entity
     entity_row = await pool.fetchrow(
         """
-        INSERT INTO catalog.entities (entity_key, entity_type, repository_id, repo_revision_id)
-        VALUES ($1, 'symbol', $2, $3)
+        INSERT INTO catalog.entities (entity_key, entity_type, repository_id, repo_revision_id, external_hash)
+        VALUES ($1, 'symbol', $2, $3, $4)
         ON CONFLICT (entity_key) DO UPDATE
-            SET repo_revision_id = EXCLUDED.repo_revision_id
+            SET repo_revision_id = EXCLUDED.repo_revision_id,
+                external_hash = EXCLUDED.external_hash
         RETURNING id
         """,
         entity_key,
         repository_id,
         repo_revision_id,
+        external_hash,
     )
     entity_id = entity_row["id"]
 

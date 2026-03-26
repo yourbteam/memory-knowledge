@@ -6,8 +6,10 @@ import structlog
 
 from memory_knowledge.parsers.base import (
     CallInfo,
+    DocBlock,
     FileParseOutput,
     ImportInfo,
+    RouteInfo,
     SymbolInfo,
 )
 
@@ -35,6 +37,8 @@ def parse_csharp_file(file_path: str, source: str) -> FileParseOutput:
         symbols = _extract_symbols(source, lines)
         imports = _extract_imports(source)
         calls = _extract_calls(source, symbols)
+        routes = _extract_routes(source)
+        doc_blocks = _extract_doc_blocks(source, symbols)
 
         return FileParseOutput(
             file_path=file_path,
@@ -42,6 +46,8 @@ def parse_csharp_file(file_path: str, source: str) -> FileParseOutput:
             symbols=symbols,
             imports=imports,
             calls=calls,
+            routes=routes,
+            doc_blocks=doc_blocks,
         )
     except Exception as e:
         logger.warning("csharp_parse_error", file_path=file_path, error=str(e))
@@ -138,3 +144,45 @@ def _extract_calls(source: str, symbols: list[SymbolInfo]) -> list[CallInfo]:
             if enclosing:
                 calls.append(CallInfo(caller_name=enclosing, callee_name=name, line_no=line_no))
     return calls
+
+
+_CS_ROUTE_PATTERN = re.compile(
+    r"\[(Http(?:Get|Post|Put|Delete|Patch))\s*\(\s*['\"]([^'\"]*)['\"]",
+)
+_CS_ROUTE_ATTR = re.compile(
+    r"\[Route\s*\(\s*['\"]([^'\"]+)['\"]\s*\)\]",
+)
+
+
+def _extract_routes(source: str) -> list[RouteInfo]:
+    """Extract ASP.NET route attributes."""
+    routes: list[RouteInfo] = []
+    for match in _CS_ROUTE_PATTERN.finditer(source):
+        line_no = source[: match.start()].count("\n") + 1
+        method = match.group(1).replace("Http", "").upper()
+        path = match.group(2) or ""
+        routes.append(RouteInfo(method=method, path=path, handler_name="", line_start=line_no))
+    for match in _CS_ROUTE_ATTR.finditer(source):
+        line_no = source[: match.start()].count("\n") + 1
+        routes.append(RouteInfo(method="ANY", path=match.group(1), handler_name="", line_start=line_no))
+    return routes
+
+
+_XML_DOC_PATTERN = re.compile(r"((?:^\s*///.*\n)+)", re.MULTILINE)
+
+
+def _extract_doc_blocks(source: str, symbols: list[SymbolInfo]) -> list[DocBlock]:
+    """Extract XML documentation comments (/// blocks)."""
+    doc_blocks: list[DocBlock] = []
+    for match in _XML_DOC_PATTERN.finditer(source):
+        line_no = source[: match.start()].count("\n") + 1
+        text = re.sub(r"^\s*///\s?", "", match.group(1), flags=re.MULTILINE).strip()
+        if not text:
+            continue
+        sym_name = None
+        for sym in symbols:
+            if sym.line_start >= line_no and sym.line_start <= line_no + 10:
+                sym_name = sym.name
+                break
+        doc_blocks.append(DocBlock(symbol_name=sym_name, text=text, line_start=line_no))
+    return doc_blocks

@@ -27,8 +27,12 @@ from memory_knowledge.identity.entity_key import (
 from memory_knowledge.llm.complete import llm_complete
 # Parser dispatch via factory — no direct adapter import
 from memory_knowledge.projections.neo4j_projector import (
+    project_additive_labels,
+    project_api_endpoints,
     project_dependency_edges,
+    project_modules,
     project_repository_graph,
+    project_sql_edges,
 )
 from memory_knowledge.projections.pg_writer import (
     complete_ingestion_run,
@@ -227,6 +231,7 @@ async def run(
                 entity_id, file_id = await upsert_file(
                     pool, f_ek, repository_id, repo_revision_id,
                     file_path, detect_language(file_path), size_bytes, checksum,
+                    external_hash=checksum,
                 )
                 file_path_to_file_id[file_path] = file_id
                 file_path_to_entity_key[file_path] = str(f_ek)
@@ -239,9 +244,14 @@ async def run(
                     s_ek = symbol_entity_key(
                         repository_key, commit_sha, file_path, sym.name, sym.kind
                     )
+                    sym_source = "\n".join(
+                        source_lines[sym.line_start - 1 : sym.line_end]
+                    )
+                    sym_hash = hashlib.sha256(sym_source.encode("utf-8")).hexdigest()
                     _sym_entity_id, _sym_id = await upsert_symbol(
                         pool, s_ek, repository_id, repo_revision_id, file_id,
                         sym.name, sym.kind, sym.line_start, sym.line_end, sym.signature,
+                        external_hash=sym_hash,
                     )
                     symbol_lookup[(file_path, sym.name)] = _sym_id
                     file_symbol_records.append(
@@ -252,7 +262,16 @@ async def run(
                     {
                         "file_path": file_path,
                         "file_entity_key": str(f_ek),
+                        "language": detect_language(file_path),
                         "symbols": file_symbol_records,
+                        "routes": [
+                            {"method": r.method, "path": r.path, "handler_name": r.handler_name}
+                            for r in parse_output.routes
+                        ],
+                        "sql_refs": [
+                            {"object_name": sr.object_name, "operation": sr.operation}
+                            for sr in parse_output.sql_refs
+                        ],
                     }
                 )
 
@@ -531,6 +550,76 @@ async def run(
             await project_dependency_edges(
                 neo4j_driver, neo4j_import_edges, neo4j_call_edges,
             )
+
+        # Step 9b: Additive labels (DbTable, StoredProcedure) + Modules + Endpoints
+        if neo4j_file_symbols:
+            await project_additive_labels(neo4j_driver, neo4j_file_symbols)
+
+            # Module detection: directories with 2+ source files or __init__.py
+            from collections import defaultdict
+            import os
+            dir_files: dict[str, list[str]] = defaultdict(list)
+            has_init: set[str] = set()
+            for fs in neo4j_file_symbols:
+                fp = fs["file_path"]
+                dir_path = os.path.dirname(fp)
+                if dir_path:
+                    dir_files[dir_path].append(fs["file_entity_key"])
+                    if os.path.basename(fp) == "__init__.py":
+                        has_init.add(dir_path)
+
+            modules_data = []
+            for dir_path, file_keys in dir_files.items():
+                if len(file_keys) >= 2 or dir_path in has_init:
+                    mod_ek = str(uuid.uuid5(
+                        uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
+                        f"{repository_key}:module:{dir_path}",
+                    ))
+                    modules_data.append({
+                        "entity_key": mod_ek,
+                        "path": dir_path,
+                        "name": os.path.basename(dir_path) or dir_path,
+                        "file_keys": file_keys,
+                    })
+            await project_modules(neo4j_driver, repository_key, modules_data)
+
+            # ApiEndpoint projection from route data
+            endpoints_data = []
+            for fs in neo4j_file_symbols:
+                for route in fs.get("routes", []):
+                    ep_ek = str(uuid.uuid5(
+                        uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
+                        f"{repository_key}:endpoint:{route['method']}:{route['path']}",
+                    ))
+                    endpoints_data.append({
+                        "entity_key": ep_ek,
+                        "method": route["method"],
+                        "path": route["path"],
+                        "file_entity_key": fs["file_entity_key"],
+                    })
+            await project_api_endpoints(neo4j_driver, endpoints_data)
+
+            # SQL READS_TABLE/WRITES_TABLE edges
+            sql_edge_data: list[dict[str, str]] = []
+            for fs in neo4j_file_symbols:
+                for sr in fs.get("sql_refs", []):
+                    # Find DbTable entity_key by matching symbol name
+                    table_ek = None
+                    for fs2 in neo4j_file_symbols:
+                        for s in fs2.get("symbols", []):
+                            if s["name"].lower() == sr["object_name"].lower() and s["kind"] in ("table", "view"):
+                                table_ek = s["entity_key"]
+                                break
+                        if table_ek:
+                            break
+                    if table_ek:
+                        rel = "READS_TABLE" if sr["operation"] == "select" else "WRITES_TABLE"
+                        sql_edge_data.append({
+                            "source_ek": fs["file_entity_key"],
+                            "target_ek": table_ek,
+                            "rel_type": rel,
+                        })
+            await project_sql_edges(neo4j_driver, sql_edge_data)
 
         # Step 10: Update branch head + retrieval surface
         await upsert_branch_head(pool, repository_id, branch_name, repo_revision_id)

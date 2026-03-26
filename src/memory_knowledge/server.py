@@ -8,7 +8,7 @@ from contextlib import asynccontextmanager
 import structlog
 from starlette.applications import Starlette
 from starlette.requests import Request
-from starlette.responses import JSONResponse
+from starlette.responses import JSONResponse, Response
 from starlette.routing import Mount, Route
 
 from mcp.server.fastmcp import FastMCP
@@ -598,6 +598,82 @@ async def submit_route_feedback(
         clear_run_context()
 
 
+@mcp.tool()
+async def export_repo_memory_tool(
+    repository_key: str, correlation_id: str | None = None
+) -> str:
+    """Export repository memory as JSONL for backup or migration."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "export_repo_memory")
+    try:
+        from memory_knowledge.admin.export_import import export_repo_memory
+
+        lines = await export_repo_memory(get_pg_pool(), repository_key)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="export_repo_memory",
+            status="success",
+            data={"repository_key": repository_key, "lines": lines, "line_count": len(lines)},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+async def import_repo_memory_tool(
+    data: str, correlation_id: str | None = None
+) -> str:
+    """Import repository memory from JSONL data."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "import_repo_memory")
+    try:
+        from memory_knowledge.admin.export_import import import_repo_memory
+
+        lines = [line for line in data.strip().split("\n") if line.strip()]
+        result = await import_repo_memory(get_pg_pool(), lines)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="import_repo_memory",
+            status="success",
+            data=result,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+async def rebuild_revision_workflow(
+    repository_key: str,
+    commit_sha: str,
+    repair_scope: str = "full",
+    correlation_id: str | None = None,
+) -> str:
+    """Re-project PG canonical data for a specific revision to Qdrant and/or Neo4j."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "rebuild_revision_workflow")
+    try:
+        from memory_knowledge.integrity.repair_drift import rebuild_revision
+
+        report = await rebuild_revision(
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+            neo4j_driver=get_neo4j_driver(),
+            settings=get_settings(),
+            repository_key=repository_key,
+            commit_sha=commit_sha,
+            repair_scope=repair_scope,
+        )
+        status = "success" if not report.errors else "partial"
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="rebuild_revision_workflow",
+            status=status,
+            data=report.model_dump(),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
 # ---------------------------------------------------------------------------
 # Starlette lifecycle
 # ---------------------------------------------------------------------------
@@ -677,11 +753,18 @@ async def readiness_endpoint(request: Request) -> JSONResponse:
     return JSONResponse(result, status_code=status_code)
 
 
+async def metrics_endpoint(request: Request) -> Response:
+    from prometheus_client import CONTENT_TYPE_LATEST, generate_latest
+
+    return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
+
+
 # Starlette app with health routes + mounted MCP sub-app
 app = Starlette(
     routes=[
         Route("/health", health_endpoint),
         Route("/ready", readiness_endpoint),
+        Route("/metrics", metrics_endpoint),
         Mount("/mcp", app=mcp.streamable_http_app()),
     ],
     lifespan=app_lifespan,

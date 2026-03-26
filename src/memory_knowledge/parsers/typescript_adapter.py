@@ -7,8 +7,10 @@ import structlog
 
 from memory_knowledge.parsers.base import (
     CallInfo,
+    DocBlock,
     FileParseOutput,
     ImportInfo,
+    RouteInfo,
     SymbolInfo,
 )
 
@@ -53,6 +55,8 @@ def parse_typescript_file(file_path: str, source: str) -> FileParseOutput:
         symbols = _extract_symbols(source, lines)
         imports = _extract_imports(source)
         calls = _extract_calls(source, symbols)
+        routes = _extract_routes(source)
+        doc_blocks = _extract_doc_blocks(source, symbols)
 
         return FileParseOutput(
             file_path=file_path,
@@ -60,6 +64,8 @@ def parse_typescript_file(file_path: str, source: str) -> FileParseOutput:
             symbols=symbols,
             imports=imports,
             calls=calls,
+            routes=routes,
+            doc_blocks=doc_blocks,
         )
     except Exception as e:
         logger.warning("ts_parse_error", file_path=file_path, error=str(e))
@@ -178,3 +184,57 @@ def _extract_calls(source: str, symbols: list[SymbolInfo]) -> list[CallInfo]:
             if enclosing:
                 calls.append(CallInfo(caller_name=enclosing, callee_name=name, line_no=line_no))
     return calls
+
+
+_TS_ROUTE_PATTERN = re.compile(
+    r"(?:app|router)\.(get|post|put|delete|patch|head|options)\s*\(\s*['\"]([^'\"]+)['\"]",
+    re.IGNORECASE,
+)
+_NESTJS_ROUTE_PATTERN = re.compile(
+    r"@(Get|Post|Put|Delete|Patch)\s*\(\s*['\"]([^'\"]+)['\"]",
+)
+
+
+def _extract_routes(source: str) -> list[RouteInfo]:
+    """Extract Express/NestJS route definitions."""
+    routes: list[RouteInfo] = []
+    for match in _TS_ROUTE_PATTERN.finditer(source):
+        line_no = source[: match.start()].count("\n") + 1
+        routes.append(RouteInfo(
+            method=match.group(1).upper(),
+            path=match.group(2),
+            handler_name="",
+            line_start=line_no,
+        ))
+    for match in _NESTJS_ROUTE_PATTERN.finditer(source):
+        line_no = source[: match.start()].count("\n") + 1
+        routes.append(RouteInfo(
+            method=match.group(1).upper(),
+            path=match.group(2),
+            handler_name="",
+            line_start=line_no,
+        ))
+    return routes
+
+
+_JSDOC_PATTERN = re.compile(r"/\*\*(.*?)\*/", re.DOTALL)
+
+
+def _extract_doc_blocks(source: str, symbols: list[SymbolInfo]) -> list[DocBlock]:
+    """Extract JSDoc comment blocks."""
+    doc_blocks: list[DocBlock] = []
+    for match in _JSDOC_PATTERN.finditer(source):
+        line_no = source[: match.start()].count("\n") + 1
+        text = match.group(1).strip()
+        # Clean JSDoc formatting
+        text = re.sub(r"^\s*\*\s?", "", text, flags=re.MULTILINE).strip()
+        if not text:
+            continue
+        # Find nearest symbol after this doc block
+        sym_name = None
+        for sym in symbols:
+            if sym.line_start >= line_no and sym.line_start <= line_no + 5:
+                sym_name = sym.name
+                break
+        doc_blocks.append(DocBlock(symbol_name=sym_name, text=text, line_start=line_no))
+    return doc_blocks
