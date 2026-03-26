@@ -154,6 +154,7 @@ async def run(
         exact_matches = [e for e in evidence if e.get("source_store") == "postgres"]
         semantic_matches = [e for e in evidence if e.get("source_store") == "qdrant"]
         graph_expansions = [e for e in evidence if e.get("source_store") == "both"]
+        summary_evidence = [e for e in evidence if e.get("source_store") == "summary"]
 
         duration_ms = int((time.monotonic() - start) * 1000)
 
@@ -162,6 +163,7 @@ async def run(
             "exact_matches": exact_matches,
             "semantic_matches": semantic_matches,
             "graph_expansions": graph_expansions,
+            "summary_evidence": summary_evidence,
             "applicable_learned_rules": learned_rules,
             "route_metadata": {
                 "query": query,

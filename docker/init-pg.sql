@@ -273,6 +273,11 @@ CREATE INDEX idx_learned_records_body_tsv ON memory.learned_records USING GIN (b
 ALTER TABLE catalog.file_imports_file ADD CONSTRAINT uq_file_imports UNIQUE (importer_file_id, imported_file_id);
 ALTER TABLE catalog.symbol_calls_symbol ADD CONSTRAINT uq_symbol_calls UNIQUE (caller_symbol_id, callee_symbol_id);
 
+-- Phase 6 summary constraints and indexes
+ALTER TABLE catalog.summaries ADD COLUMN IF NOT EXISTS summary_tsv TSVECTOR;
+CREATE INDEX IF NOT EXISTS idx_summaries_tsv ON catalog.summaries USING GIN (summary_tsv);
+ALTER TABLE catalog.summaries ADD CONSTRAINT uq_summaries UNIQUE (entity_id, summary_level);
+
 -- ============================================================================
 -- Seed data — default route policies
 -- ============================================================================

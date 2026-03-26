@@ -35,3 +35,15 @@ def learned_record_entity_key(
     repo_key: str, memory_type: str, title_hash: str
 ) -> uuid.UUID:
     return uuid.uuid5(NAMESPACE_MK, f"{repo_key}:{memory_type}:{title_hash}")
+
+
+def summary_entity_key(
+    repo_key: str,
+    commit_sha: str,
+    entity_key_str: str,
+    summary_level: str,
+) -> uuid.UUID:
+    return uuid.uuid5(
+        NAMESPACE_MK,
+        f"{repo_key}:{commit_sha}:{entity_key_str}:summary:{summary_level}",
+    )

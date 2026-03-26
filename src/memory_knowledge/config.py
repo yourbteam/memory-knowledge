@@ -35,6 +35,7 @@ class Settings(BaseSettings):
 
     # Ingestion
     repo_clone_base_path: str = "/tmp/memory-knowledge/repos"
+    generate_summaries: bool = True
 
     # Server
     server_port: int = 8000

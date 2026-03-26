@@ -171,6 +171,69 @@ async def qdrant_semantic_search(
     ]
 
 
+async def pg_summary_search(
+    pool: asyncpg.Pool,
+    query: str,
+    repository_id: int,
+    limit: int = 10,
+) -> list[dict[str, Any]]:
+    """Full-text search on catalog.summaries."""
+    rows = await pool.fetch(
+        """
+        SELECT e.entity_key,
+               s.summary_text,
+               s.summary_level,
+               ts_rank(s.summary_tsv, plainto_tsquery('english', $1)) AS rank
+        FROM catalog.summaries s
+        JOIN catalog.entities e ON s.entity_id = e.id
+        WHERE e.repository_id = $2
+          AND s.summary_tsv @@ plainto_tsquery('english', $1)
+        ORDER BY rank DESC
+        LIMIT $3
+        """,
+        query,
+        repository_id,
+        limit,
+    )
+    return [dict(r) for r in rows]
+
+
+async def qdrant_summary_search(
+    client: AsyncQdrantClient,
+    query_embedding: list[float],
+    repository_key: str,
+    limit: int = 10,
+) -> list[dict[str, Any]]:
+    """Semantic search on summary_units Qdrant collection."""
+    results = await client.query_points(
+        collection_name="summary_units",
+        query=query_embedding,
+        query_filter=models.Filter(
+            must=[
+                models.FieldCondition(
+                    key="repository_key",
+                    match=models.MatchValue(value=repository_key),
+                ),
+                models.FieldCondition(
+                    key="is_active",
+                    match=models.MatchValue(value=True),
+                ),
+            ]
+        ),
+        limit=limit,
+        with_payload=True,
+    )
+    return [
+        {
+            "entity_key": p.payload.get("entity_key") if p.payload else None,
+            "score": p.score,
+            "summary_level": p.payload.get("summary_level") if p.payload else None,
+            "payload": p.payload or {},
+        }
+        for p in results.points
+    ]
+
+
 async def neo4j_graph_expansion(
     driver: neo4j.AsyncDriver,
     entity_keys: list[str],
@@ -196,6 +259,8 @@ def rerank_results(
     pg_results: list[dict[str, Any]],
     qdrant_results: list[dict[str, Any]],
     graph_entity_keys: list[str] | None = None,
+    summary_pg_results: list[dict[str, Any]] | None = None,
+    summary_qdrant_results: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
     scores: dict[str, dict[str, Any]] = {}
 
@@ -235,6 +300,41 @@ def rerank_results(
             if key in scores:
                 scores[key]["graph_boost"] = 0.1
 
+    # Add summary results with 0.8x weight
+    SUMMARY_WEIGHT = 0.8
+    if summary_pg_results:
+        max_srank = max((r["rank"] for r in summary_pg_results), default=0) or 1e-9
+        for r in summary_pg_results:
+            key = str(r["entity_key"])
+            norm = float(r["rank"]) / max_srank * SUMMARY_WEIGHT
+            if key not in scores:
+                scores[key] = {
+                    "entity_key": key,
+                    "pg_score": norm,
+                    "qdrant_score": 0.0,
+                    "graph_boost": 0.0,
+                    "source": "summary",
+                    "data": r,
+                }
+            else:
+                scores[key]["pg_score"] = max(scores[key]["pg_score"], norm)
+
+    if summary_qdrant_results:
+        for r in summary_qdrant_results:
+            key = str(r["entity_key"])
+            score = float(r["score"]) * SUMMARY_WEIGHT
+            if key not in scores:
+                scores[key] = {
+                    "entity_key": key,
+                    "pg_score": 0.0,
+                    "qdrant_score": score,
+                    "graph_boost": 0.0,
+                    "source": "summary",
+                    "data": r.get("payload", {}),
+                }
+            else:
+                scores[key]["qdrant_score"] = max(scores[key]["qdrant_score"], score)
+
     # Combined score and sort
     for entry in scores.values():
         entry["combined_score"] = (
@@ -266,7 +366,7 @@ async def assemble_context_bundle(
     if not entity_keys:
         return {"repository_key": repository_key, "evidence": [], "count": 0}
 
-    # Hydrate with full chunk data from PG
+    # Hydrate: chunks from PG
     rows = await pool.fetch(
         """
         SELECT e.entity_key,
@@ -287,7 +387,20 @@ async def assemble_context_bundle(
         entity_keys,
     )
 
-    # Build lookup from hydration
+    # Hydrate: summaries from PG (for summary entity_keys that have no chunks)
+    summary_rows = await pool.fetch(
+        """
+        SELECT e.entity_key,
+               sm.summary_text,
+               sm.summary_level
+        FROM catalog.summaries sm
+        JOIN catalog.entities e ON sm.entity_id = e.id
+        WHERE e.entity_key = ANY($1::uuid[])
+        """,
+        entity_keys,
+    )
+
+    # Build lookup from chunk hydration
     hydrated = {}
     for row in rows:
         key = str(row["entity_key"])
@@ -302,6 +415,17 @@ async def assemble_context_bundle(
             "symbol_name": row["symbol_name"],
             "symbol_kind": row["symbol_kind"],
         }
+
+    # Add summary hydration (for entity_keys not found in chunks)
+    for row in summary_rows:
+        key = str(row["entity_key"])
+        if key not in hydrated:
+            hydrated[key] = {
+                "entity_key": key,
+                "content_text": row["summary_text"],
+                "content_kind": "summary",
+                "summary_level": row["summary_level"],
+            }
 
     # Merge ranked scores with hydrated data — only include valid entity_keys
     evidence = []
@@ -465,8 +589,20 @@ async def run(
                 graph_expansion_used = True
                 logger.info("graph_expansion_complete", expanded_count=len(graph_entity_keys))
 
-        # Step 6: Rerank and fuse
-        ranked = rerank_results(pg_results, qdrant_results, graph_entity_keys)
+        # Step 5.5: Summary searches
+        summary_pg = await pg_summary_search(pool, query, repository_id)
+        summary_qdrant: list[dict[str, Any]] = []
+        if query_embedding is not None:
+            summary_qdrant = await qdrant_summary_search(
+                qdrant_client, query_embedding, repository_key
+            )
+
+        # Step 6: Rerank and fuse (including summaries at 0.8x weight)
+        ranked = rerank_results(
+            pg_results, qdrant_results, graph_entity_keys,
+            summary_pg_results=summary_pg if summary_pg else None,
+            summary_qdrant_results=summary_qdrant if summary_qdrant else None,
+        )
         logger.info("rerank_complete", result_count=len(ranked))
 
         # Step 7: Assemble context bundle with surface metadata
