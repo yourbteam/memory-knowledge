@@ -243,6 +243,26 @@ CREATE TABLE ops.ingestion_run_items (
     created_utc      TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 
+CREATE TABLE ops.job_manifests (
+    id               BIGSERIAL PRIMARY KEY,
+    run_id           UUID NOT NULL,
+    job_id           UUID NOT NULL UNIQUE,
+    repository_key   VARCHAR(255) NOT NULL,
+    commit_sha       VARCHAR(40),
+    branch_name      VARCHAR(255),
+    tool_name        VARCHAR(100) NOT NULL,
+    state_code       VARCHAR(50) NOT NULL DEFAULT 'pending',
+    job_type         VARCHAR(50) NOT NULL,
+    attempt_number   INT NOT NULL DEFAULT 1,
+    checkpoint_data  JSONB,
+    started_utc      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    completed_utc    TIMESTAMPTZ,
+    error_code       VARCHAR(50),
+    error_text       TEXT,
+    correlation_id   VARCHAR(255),
+    created_utc      TIMESTAMPTZ NOT NULL DEFAULT NOW()
+);
+
 -- ============================================================================
 -- Indexes
 -- ============================================================================
@@ -252,6 +272,8 @@ CREATE INDEX idx_chunks_entity_id ON catalog.chunks (entity_id);
 CREATE INDEX idx_chunks_file_id ON catalog.chunks (file_id);
 CREATE INDEX idx_files_repo_revision_id ON catalog.files (repo_revision_id);
 CREATE INDEX idx_entities_repository_id ON catalog.entities (repository_id);
+CREATE INDEX idx_job_manifests_run_id ON ops.job_manifests (run_id);
+CREATE INDEX idx_job_manifests_repo_state ON ops.job_manifests (repository_key, state_code);
 
 -- ============================================================================
 -- Unique constraints for upsert idempotency

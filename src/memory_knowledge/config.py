@@ -37,6 +37,10 @@ class Settings(BaseSettings):
     repo_clone_base_path: str = "/tmp/memory-knowledge/repos"
     generate_summaries: bool = True
 
+    # Job orchestration
+    max_job_retries: int = 3
+    job_retry_delay_seconds: float = 5.0
+
     # Server
     server_port: int = 8000
     log_level: str = "INFO"

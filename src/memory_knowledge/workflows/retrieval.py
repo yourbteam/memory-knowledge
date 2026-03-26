@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import re
 import time
 import uuid
 from typing import Any
@@ -19,17 +18,7 @@ logger = structlog.get_logger()
 
 TOOL_NAME = "run_retrieval_workflow"
 
-# Prompt classification patterns — match code-like identifiers
-_EXACT_PATTERNS = re.compile(
-    r"\b[a-z]+[A-Z][a-zA-Z]*\b"  # camelCase (getUserById)
-    r"|\b[A-Z][a-z]+(?:[A-Z][a-z]+)+\b"  # PascalCase (UserService, but not PostgreSQL-style)
-    r"|[a-zA-Z_]+\.[a-zA-Z_]+\.[a-zA-Z_]+"  # dotted path (foo.bar.baz)
-    r'|"[^"]+"'  # quoted identifiers
-    r"|'[^']+'"
-)
-_IMPACT_KEYWORDS = {"impact", "affect", "change", "break", "breaking", "depends"}
-_PATTERN_KEYWORDS = {"pattern", "how does", "approach", "design", "architecture"}
-_DECISION_KEYWORDS = {"decision", "why did", "history", "chose", "rationale"}
+from memory_knowledge.routing.prompt_feature_extractor import extract_prompt_features
 
 
 # ---------------------------------------------------------------------------
@@ -48,14 +37,15 @@ async def resolve_repository(pool: asyncpg.Pool, repository_key: str) -> int:
 
 
 def classify_prompt(query: str) -> str:
-    q = query.lower()
-    if _EXACT_PATTERNS.search(query):
+    """Classify a prompt into a routing category. Returns a str prompt_class."""
+    features = extract_prompt_features(query)
+    if features["identifier_count"] > 0:
         return "exact_lookup"
-    if any(kw in q for kw in _IMPACT_KEYWORDS):
+    if features["has_impact_keywords"]:
         return "impact_analysis"
-    if any(kw in q for kw in _DECISION_KEYWORDS):
+    if features["has_decision_keywords"]:
         return "decision_history"
-    if any(kw in q for kw in _PATTERN_KEYWORDS):
+    if features["has_pattern_keywords"]:
         return "pattern_search"
     return "conceptual_lookup"
 

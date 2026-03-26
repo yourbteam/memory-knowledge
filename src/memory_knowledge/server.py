@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import asyncio
 import os
+import uuid
 from contextlib import asynccontextmanager
 
 import structlog
@@ -17,6 +19,7 @@ from memory_knowledge.db.neo4j import apply_constraints, close_neo4j, init_neo4j
 from memory_knowledge.db.postgres import close_postgres, init_postgres
 from memory_knowledge.db.qdrant import close_qdrant, ensure_collections, init_qdrant
 from memory_knowledge.observability.logging import configure_logging
+from memory_knowledge.workflows.base import WorkflowResult
 from memory_knowledge.observability.run_context import (
     bind_run_context,
     clear_run_context,
@@ -195,6 +198,61 @@ async def run_blueprint_refinement_workflow(
         clear_run_context()
 
 
+# Background task tracking for graceful shutdown
+_background_tasks: set[asyncio.Task] = set()
+
+
+async def _run_ingestion_background(
+    job_id: uuid.UUID, run_id: uuid.UUID,
+    repository_key: str, commit_sha: str, branch_name: str,
+) -> None:
+    """Background task for ingestion job execution."""
+    from memory_knowledge.jobs.job_worker import execute_job
+
+    await execute_job(
+        pool=get_pg_pool(),
+        job_id=job_id,
+        job_fn=_ingestion.run,
+        settings=get_settings(),
+        repository_key=repository_key,
+        commit_sha=commit_sha,
+        branch_name=branch_name,
+        run_id=run_id,
+        pool_=get_pg_pool(),
+        qdrant_client=get_qdrant_client(),
+        neo4j_driver=get_neo4j_driver(),
+        settings_=get_settings(),
+    )
+
+
+async def _run_repair_background(
+    job_id: uuid.UUID, run_id: uuid.UUID,
+    repository_key: str, repair_scope: str,
+) -> None:
+    """Background task for repair job execution."""
+    from memory_knowledge.jobs.job_worker import execute_job
+
+    await execute_job(
+        pool=get_pg_pool(),
+        job_id=job_id,
+        job_fn=_repair_rebuild.run,
+        settings=get_settings(),
+        repository_key=repository_key,
+        run_id=run_id,
+        repair_scope=repair_scope,
+        pool_=get_pg_pool(),
+        qdrant_client=get_qdrant_client(),
+        neo4j_driver=get_neo4j_driver(),
+        settings_=get_settings(),
+    )
+
+
+def _track_task(task: asyncio.Task) -> None:
+    """Add task to tracking set, remove on completion."""
+    _background_tasks.add(task)
+    task.add_done_callback(_background_tasks.discard)
+
+
 @mcp.tool()
 async def run_repo_ingestion_workflow(
     repository_key: str,
@@ -202,18 +260,27 @@ async def run_repo_ingestion_workflow(
     branch_name: str,
     correlation_id: str | None = None,
 ) -> str:
-    """Seed or refresh repository knowledge from a commit."""
+    """Seed or refresh repository knowledge from a commit. Returns job_id for polling."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_repo_ingestion_workflow")
     try:
-        result = await _ingestion.run(
-            repository_key, commit_sha, branch_name, run_id,
-            pool=get_pg_pool(),
-            qdrant_client=get_qdrant_client(),
-            neo4j_driver=get_neo4j_driver(),
-            settings=get_settings(),
+        from memory_knowledge.jobs.manifest_writer import create_job
+
+        pool = get_pg_pool()
+        job_id = await create_job(
+            pool, run_id, "ingestion", "run_repo_ingestion_workflow",
+            repository_key, commit_sha, branch_name, str(correlation_id) if correlation_id else None,
         )
-        return result.model_dump_json()
+        task = asyncio.create_task(
+            _run_ingestion_background(job_id, run_id, repository_key, commit_sha, branch_name)
+        )
+        _track_task(task)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="run_repo_ingestion_workflow",
+            status="submitted",
+            data={"job_id": str(job_id)},
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -244,19 +311,78 @@ async def run_repair_rebuild_workflow(
     repair_scope: str = "full",
     correlation_id: str | None = None,
 ) -> str:
-    """Repair drift or rebuild a memory slice. Scope: full, qdrant, or neo4j."""
+    """Repair drift or rebuild a memory slice. Returns job_id for polling. Scope: full, qdrant, or neo4j."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_repair_rebuild_workflow")
     try:
-        result = await _repair_rebuild.run(
-            repository_key, run_id,
-            repair_scope=repair_scope,
-            pool=get_pg_pool(),
-            qdrant_client=get_qdrant_client(),
-            neo4j_driver=get_neo4j_driver(),
-            settings=get_settings(),
+        from memory_knowledge.jobs.manifest_writer import create_job
+
+        pool = get_pg_pool()
+        job_id = await create_job(
+            pool, run_id, "repair", "run_repair_rebuild_workflow",
+            repository_key, correlation_id=str(correlation_id) if correlation_id else None,
         )
-        return result.model_dump_json()
+        task = asyncio.create_task(
+            _run_repair_background(job_id, run_id, repository_key, repair_scope)
+        )
+        _track_task(task)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="run_repair_rebuild_workflow",
+            status="submitted",
+            data={"job_id": str(job_id)},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+async def check_job_status(
+    job_id: str, correlation_id: str | None = None
+) -> str:
+    """Check the current status of a background job. Returns manifest state + result data."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "check_job_status")
+    try:
+        from memory_knowledge.jobs.manifest_reader import get_job_by_id
+
+        job = await get_job_by_id(get_pg_pool(), uuid.UUID(job_id))
+        if job is None:
+            return WorkflowResult(
+                run_id=str(run_id),
+                tool_name="check_job_status",
+                status="error",
+                error=f"Job not found: {job_id}",
+            ).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="check_job_status",
+            status="success",
+            data=job,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+async def get_memory_stats(
+    repository_key: str, correlation_id: str | None = None
+) -> str:
+    """Get comprehensive statistics about the memory architecture for a repository."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "get_memory_stats")
+    try:
+        from memory_knowledge.admin.memory_stats import collect_memory_stats
+
+        stats = await collect_memory_stats(
+            get_pg_pool(), get_qdrant_client(), get_neo4j_driver(), repository_key
+        )
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="get_memory_stats",
+            status="success",
+            data=stats,
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -325,8 +451,11 @@ async def app_lifespan(app: Starlette):
     async with mcp.session_manager.run():
         yield
 
-    # SHUTDOWN (reverse of startup order)
+    # SHUTDOWN — drain background tasks before closing connections
     logger.info("shutdown_begin")
+    if _background_tasks:
+        logger.info("draining_background_tasks", count=len(_background_tasks))
+        await asyncio.gather(*_background_tasks, return_exceptions=True)
     await close_qdrant()
     await close_neo4j()
     await close_postgres()

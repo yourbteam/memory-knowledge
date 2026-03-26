@@ -9,8 +9,10 @@ from pydantic import BaseModel
 from qdrant_client import AsyncQdrantClient
 
 from memory_knowledge.config import Settings
+from memory_knowledge.projections.learned_memory_qdrant import embed_and_upsert_learned_record
 from memory_knowledge.projections.neo4j_projector import project_repository_graph
 from memory_knowledge.projections.qdrant_projector import embed_chunks, upsert_points
+from memory_knowledge.projections.summary_qdrant import embed_and_upsert_summaries
 
 logger = structlog.get_logger()
 
@@ -18,6 +20,8 @@ logger = structlog.get_logger()
 class RepairReport(BaseModel):
     scope: str
     qdrant_points_repaired: int = 0
+    summary_points_repaired: int = 0
+    learned_records_repaired: int = 0
     neo4j_nodes_repaired: int = 0
     errors: list[str] = []
 
@@ -99,6 +103,70 @@ async def repair(
         except Exception as exc:
             report.errors.append(f"Qdrant repair failed: {exc}")
             logger.error("qdrant_repair_failed", error=str(exc))
+
+    # Summary repair (summary_units collection)
+    if repair_scope in ("full", "qdrant"):
+        try:
+            summary_rows = await pool.fetch(
+                """
+                SELECT e.entity_key, s.summary_text, s.summary_level
+                FROM catalog.summaries s
+                JOIN catalog.entities e ON s.entity_id = e.id
+                WHERE e.repository_id = $1
+                """,
+                repo_id,
+            )
+            if summary_rows:
+                summaries_list = [
+                    {
+                        "entity_key": str(r["entity_key"]),
+                        "summary_text": r["summary_text"],
+                        "summary_level": r["summary_level"],
+                    }
+                    for r in summary_rows
+                ]
+                await embed_and_upsert_summaries(
+                    qdrant_client, summaries_list, repository_key, commit_sha, settings,
+                )
+                report.summary_points_repaired = len(summaries_list)
+                logger.info("summary_repair_complete", points=report.summary_points_repaired)
+        except Exception as exc:
+            report.errors.append(f"Summary repair failed: {exc}")
+            logger.error("summary_repair_failed", error=str(exc))
+
+    # Learned memory repair (learned_memory collection)
+    if repair_scope in ("full", "qdrant"):
+        try:
+            lr_rows = await pool.fetch(
+                """
+                SELECT e.entity_key, lr.body_text, lr.memory_type, lr.confidence,
+                       lr.applicability_mode,
+                       scope_e.entity_key AS scope_entity_key
+                FROM memory.learned_records lr
+                JOIN catalog.entities e ON lr.entity_id = e.id
+                JOIN catalog.entities scope_e ON lr.scope_entity_id = scope_e.id
+                WHERE e.repository_id = $1 AND lr.is_active = TRUE
+                  AND lr.verification_status = 'verified'
+                """,
+                repo_id,
+            )
+            for lr in lr_rows:
+                await embed_and_upsert_learned_record(
+                    client=qdrant_client,
+                    entity_key=str(lr["entity_key"]),
+                    body_text=lr["body_text"],
+                    repository_key=repository_key,
+                    memory_type=lr["memory_type"],
+                    confidence=float(lr["confidence"]) if lr["confidence"] else 0.5,
+                    applicability_mode=lr["applicability_mode"] or "repository",
+                    scope_entity_key=str(lr["scope_entity_key"]),
+                    settings=settings,
+                )
+            report.learned_records_repaired = len(lr_rows)
+            logger.info("learned_memory_repair_complete", records=report.learned_records_repaired)
+        except Exception as exc:
+            report.errors.append(f"Learned memory repair failed: {exc}")
+            logger.error("learned_memory_repair_failed", error=str(exc))
 
     # Neo4j repair
     if repair_scope in ("full", "neo4j"):
