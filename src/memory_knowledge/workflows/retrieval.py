@@ -6,19 +6,21 @@ from typing import Any
 
 import asyncpg
 import neo4j
-import openai
 import structlog
-from openai import AsyncOpenAI
 from qdrant_client import AsyncQdrantClient, models
 
 from memory_knowledge.config import Settings
+from memory_knowledge.llm.openai_client import embed_single
 from memory_knowledge.workflows.base import WorkflowResult
 
 logger = structlog.get_logger()
 
 TOOL_NAME = "run_retrieval_workflow"
 
-from memory_knowledge.routing.prompt_feature_extractor import extract_prompt_features
+from memory_knowledge.routing.prompt_feature_extractor import (
+    extract_prompt_features,
+    match_archetype,
+)
 
 
 # ---------------------------------------------------------------------------
@@ -36,18 +38,22 @@ async def resolve_repository(pool: asyncpg.Pool, repository_key: str) -> int:
     return row["id"]
 
 
-def classify_prompt(query: str) -> str:
-    """Classify a prompt into a routing category. Returns a str prompt_class."""
+def classify_prompt(query: str) -> tuple[str, float]:
+    """Classify a prompt into a routing category.
+
+    Returns (prompt_class, confidence) where confidence is 0.0-1.0.
+    Strong keyword matches get 1.0, default fallback gets 0.5.
+    """
     features = extract_prompt_features(query)
     if features["identifier_count"] > 0:
-        return "exact_lookup"
+        return "exact_lookup", 1.0
     if features["has_impact_keywords"]:
-        return "impact_analysis"
+        return "impact_analysis", 1.0
     if features["has_decision_keywords"]:
-        return "decision_history"
+        return "decision_history", 1.0
     if features["has_pattern_keywords"]:
-        return "pattern_search"
-    return "conceptual_lookup"
+        return "pattern_search", 1.0
+    return "conceptual_lookup", 0.5
 
 
 async def load_route_policy(
@@ -104,27 +110,8 @@ async def pg_fulltext_search(
 
 
 async def embed_query(query: str, settings: Settings) -> list[float]:
-    if settings.auth_mode == "codex":
-        from memory_knowledge.auth.codex import codex_token_provider
-
-        api_key = await codex_token_provider(settings.codex_auth_path)
-    else:
-        api_key = settings.openai_api_key
-    client = AsyncOpenAI(api_key=api_key)
-    try:
-        response = await client.embeddings.create(
-            model=settings.embedding_model,
-            input=query,
-            dimensions=settings.embedding_dimensions,
-        )
-    except openai.AuthenticationError:
-        if settings.auth_mode == "codex":
-            raise RuntimeError(
-                "Codex OAuth token rejected by OpenAI API — run 'codex auth' to re-authenticate, "
-                "or check that your ChatGPT Pro subscription includes API embedding access"
-            )
-        raise
-    return response.data[0].embedding
+    """Embed a single query string with retry."""
+    return await embed_single(query, settings)
 
 
 async def qdrant_semantic_search(
@@ -454,14 +441,15 @@ async def persist_route_execution(
     rerank_strategy: str,
     result_count: int,
     duration_ms: int,
-) -> None:
-    await pool.execute(
+) -> int | None:
+    row = await pool.fetchrow(
         """
         INSERT INTO routing.route_executions
             (run_id, repository_id, prompt_text, prompt_class, route_policy_id,
              first_store_queried, stores_queried, fanout_used, graph_expansion_used,
              rerank_strategy, result_count, duration_ms)
         VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+        RETURNING id
         """,
         run_id,
         repository_id,
@@ -476,6 +464,7 @@ async def persist_route_execution(
         result_count,
         duration_ms,
     )
+    return row["id"] if row else None
 
 
 # ---------------------------------------------------------------------------
@@ -507,8 +496,21 @@ async def run(
         repository_id = await resolve_repository(pool, repository_key)
         logger.info("repository_resolved", repository_key=repository_key, repository_id=repository_id)
 
-        # Step 1: Classify prompt
-        prompt_class = classify_prompt(query)
+        # Step 1: Classify prompt (keyword-based + optional archetype override)
+        prompt_class, keyword_confidence = classify_prompt(query)
+
+        # Try semantic archetype matching as override for low-confidence classification
+        archetype = await match_archetype(query, qdrant_client, settings)
+        if archetype and archetype.get("archetype_score", 0) > keyword_confidence:
+            original_class = prompt_class
+            prompt_class = archetype["prompt_class"]
+            logger.info(
+                "archetype_override",
+                keyword_class=original_class,
+                archetype_class=archetype["prompt_class"],
+                archetype_score=archetype["archetype_score"],
+            )
+
         logger.info("prompt_classified", prompt_class=prompt_class)
 
         # Step 2: Load route policy and retrieval surfaces
@@ -604,7 +606,7 @@ async def run(
 
         # Step 8: Persist route execution
         duration_ms = int((time.monotonic() - start) * 1000)
-        await persist_route_execution(
+        route_exec_id = await persist_route_execution(
             pool=pool,
             run_id=run_id,
             repository_id=repository_id,
@@ -621,6 +623,9 @@ async def run(
         )
 
         logger.info("retrieval_complete", duration_ms=duration_ms, result_count=context_bundle["count"])
+
+        if route_exec_id is not None:
+            context_bundle["route_execution_id"] = route_exec_id
 
         return WorkflowResult(
             run_id=str(run_id),

@@ -4,6 +4,7 @@ import uuid
 from typing import Any
 
 import asyncpg
+import neo4j
 import structlog
 
 logger = structlog.get_logger()
@@ -94,8 +95,12 @@ async def record_observation(
     return row["id"]
 
 
-async def end_session(pool: asyncpg.Pool, session_key: uuid.UUID) -> None:
-    """End a working session."""
+async def end_session(
+    pool: asyncpg.Pool,
+    session_key: uuid.UUID,
+    neo4j_driver: neo4j.AsyncDriver | None = None,
+) -> None:
+    """End a working session and optionally project to Neo4j."""
     result = await pool.execute(
         "UPDATE memory.working_sessions SET ended_utc = NOW() "
         "WHERE session_key = $1 AND ended_utc IS NULL",
@@ -106,6 +111,31 @@ async def end_session(pool: asyncpg.Pool, session_key: uuid.UUID) -> None:
             f"Session not found or already ended: {session_key}"
         )
     logger.info("working_session_ended", session_key=str(session_key))
+
+    # Project to Neo4j if driver is available
+    if neo4j_driver is not None:
+        from memory_knowledge.projections.working_memory_neo4j import (
+            project_working_session,
+        )
+
+        observations = await get_session_observations(pool, session_key)
+        # Look up repository_key for the session
+        repo_row = await pool.fetchrow(
+            """
+            SELECT r.repository_key
+            FROM memory.working_sessions ws
+            JOIN catalog.repositories r ON ws.repository_id = r.id
+            WHERE ws.session_key = $1
+            """,
+            session_key,
+        )
+        if repo_row:
+            await project_working_session(
+                neo4j_driver,
+                str(session_key),
+                repo_row["repository_key"],
+                observations,
+            )
 
 
 async def get_session_observations(

@@ -322,20 +322,52 @@ async def run(
                             "imported_ek": imported_ek,
                         })
 
+        # Build cross-file lookup indices
+        name_to_symbols: dict[str, list[tuple[str, int]]] = {}
+        for (fp, sname), sid in symbol_lookup.items():
+            name_to_symbols.setdefault(sname, []).append((fp, sid))
+
+        # Build file import target mapping for disambiguation
+        file_import_targets: dict[str, set[str]] = {}
+        for importer_path, module_path in all_imports:
+            language = detect_language(importer_path)
+            resolver = get_import_resolver(language)
+            if resolver is None:
+                continue
+            result = resolver(module_path, file_path_to_file_id, file_path_to_entity_key)
+            if result is not None:
+                imported_fid, _ = result
+                for fp, fid in file_path_to_file_id.items():
+                    if fid == imported_fid:
+                        file_import_targets.setdefault(importer_path, set()).add(fp)
+                        break
+
+        # Build symbol entity_key lookup from neo4j_file_symbols
+        symbol_ek_lookup: dict[tuple[str, str], str] = {}
+        for fs in neo4j_file_symbols:
+            for s in fs["symbols"]:
+                symbol_ek_lookup[(fs["file_path"], s["name"])] = s["entity_key"]
+
         for file_path_call, caller_name, callee_name, caller_ek in all_calls:
             caller_sid = symbol_lookup.get((file_path_call, caller_name))
             callee_sid = symbol_lookup.get((file_path_call, callee_name))
+            callee_file = file_path_call  # assume same file initially
+
+            # Cross-file resolution if same-file lookup fails
+            if callee_sid is None:
+                candidates = name_to_symbols.get(callee_name, [])
+                if len(candidates) == 1:
+                    callee_file, callee_sid = candidates[0]
+                elif len(candidates) > 1:
+                    imported = file_import_targets.get(file_path_call, set())
+                    for cand_fp, cand_sid in candidates:
+                        if cand_fp in imported:
+                            callee_file, callee_sid = cand_fp, cand_sid
+                            break
+
             if caller_sid and callee_sid:
                 await upsert_symbol_call(pool, caller_sid, callee_sid)
-                # Look up callee entity_key from the symbol records
-                callee_ek: str | None = None
-                for fs in neo4j_file_symbols:
-                    if fs["file_path"] == file_path_call:
-                        for s in fs["symbols"]:
-                            if s["name"] == callee_name:
-                                callee_ek = s["entity_key"]
-                                break
-                        break
+                callee_ek = symbol_ek_lookup.get((callee_file, callee_name))
                 if callee_ek:
                     neo4j_call_edges.append({
                         "caller_ek": caller_ek,

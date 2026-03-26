@@ -3,6 +3,13 @@ from __future__ import annotations
 import re
 from typing import Any
 
+import structlog
+from qdrant_client import AsyncQdrantClient, models
+
+from memory_knowledge.config import Settings
+
+logger = structlog.get_logger()
+
 # These are the EXACT same patterns from retrieval.py's classify_prompt.
 # Moved here for reusability while preserving behavioral equivalence.
 
@@ -44,3 +51,35 @@ def extract_prompt_features(query: str) -> dict[str, Any]:
         "token_count": len(tokens),
         "has_quoted_strings": bool(re.search(r'["\']', query)),
     }
+
+
+async def match_archetype(
+    query: str,
+    qdrant_client: AsyncQdrantClient | None,
+    settings: Settings,
+) -> dict[str, Any] | None:
+    """Match a query against routing archetypes via semantic search.
+
+    Returns the best-matching archetype payload if score >= 0.75, else None.
+    """
+    if qdrant_client is None:
+        return None
+
+    from memory_knowledge.llm.openai_client import embed_single
+
+    try:
+        query_embedding = await embed_single(query, settings)
+        results = await qdrant_client.search(
+            collection_name="routing_archetypes",
+            query_vector=query_embedding,
+            limit=1,
+            score_threshold=0.75,
+        )
+        if results:
+            payload = dict(results[0].payload or {})
+            payload["archetype_score"] = results[0].score
+            return payload
+    except Exception:
+        logger.debug("archetype_match_failed", exc_info=True)
+
+    return None

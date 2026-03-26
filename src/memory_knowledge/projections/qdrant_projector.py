@@ -2,12 +2,11 @@ from __future__ import annotations
 
 from typing import Any
 
-import openai
 import structlog
-from openai import AsyncOpenAI
 from qdrant_client import AsyncQdrantClient, models
 
 from memory_knowledge.config import Settings
+from memory_knowledge.llm.openai_client import embed
 
 logger = structlog.get_logger()
 
@@ -17,33 +16,8 @@ BATCH_SIZE = 100
 async def embed_chunks(
     chunks_text: list[str], settings: Settings
 ) -> list[list[float]]:
-    """Batch embed chunk texts using OpenAI. Uses auth_mode branching."""
-    if settings.auth_mode == "codex":
-        from memory_knowledge.auth.codex import codex_token_provider
-
-        api_key = await codex_token_provider(settings.codex_auth_path)
-    else:
-        api_key = settings.openai_api_key
-
-    client = AsyncOpenAI(api_key=api_key)
-    all_embeddings: list[list[float]] = []
-
-    for i in range(0, len(chunks_text), BATCH_SIZE):
-        batch = chunks_text[i : i + BATCH_SIZE]
-        try:
-            response = await client.embeddings.create(
-                model=settings.embedding_model,
-                input=batch,
-                dimensions=settings.embedding_dimensions,
-            )
-            all_embeddings.extend([d.embedding for d in response.data])
-        except openai.AuthenticationError:
-            if settings.auth_mode == "codex":
-                raise RuntimeError(
-                    "Codex OAuth token rejected — run 'codex auth' to re-authenticate"
-                )
-            raise
-
+    """Batch embed chunk texts using OpenAI with retry."""
+    all_embeddings = await embed(chunks_text, settings)
     logger.info("chunks_embedded", total=len(all_embeddings))
     return all_embeddings
 

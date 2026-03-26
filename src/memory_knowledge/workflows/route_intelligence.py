@@ -14,6 +14,45 @@ logger = structlog.get_logger()
 TOOL_NAME = "run_route_intelligence_workflow"
 
 
+async def _compute_policy_recommendations(
+    pool: asyncpg.Pool, repository_id: int
+) -> list[dict[str, Any]]:
+    """Compute policy recommendations based on feedback trends."""
+    rows = await pool.fetch(
+        """
+        SELECT re.prompt_class,
+               AVG(rf.usefulness_score) AS avg_usefulness,
+               AVG(rf.precision_score) AS avg_precision,
+               COUNT(*) AS feedback_count
+        FROM routing.route_feedback rf
+        JOIN routing.route_executions re ON rf.route_execution_id = re.id
+        WHERE re.repository_id = $1
+        GROUP BY re.prompt_class
+        HAVING COUNT(*) >= 3
+        """,
+        repository_id,
+    )
+    recommendations: list[dict[str, Any]] = []
+    for r in rows:
+        avg_u = float(r["avg_usefulness"]) if r["avg_usefulness"] else None
+        avg_p = float(r["avg_precision"]) if r["avg_precision"] else None
+        rec: dict[str, Any] = {
+            "prompt_class": r["prompt_class"],
+            "avg_usefulness": round(avg_u, 2) if avg_u is not None else None,
+            "avg_precision": round(avg_p, 2) if avg_p is not None else None,
+            "feedback_count": r["feedback_count"],
+        }
+        if avg_u is not None and avg_u < 0.3:
+            rec["recommendation"] = "needs_review"
+            rec["reason"] = f"Low usefulness score ({rec['avg_usefulness']})"
+        elif avg_u is not None and avg_u >= 0.7:
+            rec["recommendation"] = "performing_well"
+        else:
+            rec["recommendation"] = "monitoring"
+        recommendations.append(rec)
+    return recommendations
+
+
 async def run(
     repository_key: str,
     query: str,
@@ -44,7 +83,7 @@ async def run(
         # Classify the query to determine prompt_class
         from memory_knowledge.workflows.retrieval import classify_prompt
 
-        prompt_class = classify_prompt(query)
+        prompt_class, _ = classify_prompt(query)
 
         # Query recent route executions
         recent_rows = await pool.fetch(
@@ -95,6 +134,9 @@ async def run(
 
         duration_ms = int((time.monotonic() - start) * 1000)
 
+        # Compute policy recommendations across all prompt classes
+        policy_recs = await _compute_policy_recommendations(pool, repository_id)
+
         data: dict[str, Any] = {
             "prompt_class": prompt_class,
             "total_executions": total_execs,
@@ -121,6 +163,7 @@ async def run(
                     feedback_row["feedback_count"] if feedback_row else 0
                 ),
             },
+            "policy_recommendations": policy_recs,
         }
 
         return WorkflowResult(

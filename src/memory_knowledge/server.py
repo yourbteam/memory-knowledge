@@ -483,6 +483,121 @@ async def run_route_intelligence_workflow(
         clear_run_context()
 
 
+@mcp.tool()
+async def register_repository(
+    repository_key: str,
+    name: str,
+    origin_url: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Register or update a repository in the catalog. Must be called before ingestion."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "register_repository")
+    try:
+        pool = get_pg_pool()
+        row = await pool.fetchrow(
+            """
+            INSERT INTO catalog.repositories (repository_key, name, origin_url)
+            VALUES ($1, $2, $3)
+            ON CONFLICT (repository_key) DO UPDATE
+                SET name = EXCLUDED.name,
+                    origin_url = EXCLUDED.origin_url,
+                    updated_utc = NOW()
+            RETURNING id, (xmax = 0) AS is_insert
+            """,
+            repository_key,
+            name,
+            origin_url,
+        )
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="register_repository",
+            status="success",
+            data={
+                "repository_key": repository_key,
+                "repository_id": row["id"],
+                "created": row["is_insert"],
+            },
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+async def end_working_session(
+    session_key: str, correlation_id: str | None = None
+) -> str:
+    """End a working session, marking it as completed."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "end_working_session")
+    try:
+        from memory_knowledge.admin.working_memory import end_session
+
+        await end_session(
+            get_pg_pool(),
+            uuid.UUID(session_key),
+            neo4j_driver=get_neo4j_driver(),
+        )
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="end_working_session",
+            status="success",
+            data={"session_key": session_key},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+async def submit_route_feedback(
+    route_execution_id: int,
+    usefulness_score: float | None = None,
+    precision_score: float | None = None,
+    expansion_needed: bool | None = None,
+    notes: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Submit feedback on a retrieval route execution to improve routing."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "submit_route_feedback")
+    try:
+        pool = get_pg_pool()
+        # Validate execution exists
+        row = await pool.fetchrow(
+            "SELECT id FROM routing.route_executions WHERE id = $1",
+            route_execution_id,
+        )
+        if row is None:
+            return WorkflowResult(
+                run_id=str(run_id),
+                tool_name="submit_route_feedback",
+                status="error",
+                error=f"Route execution not found: {route_execution_id}",
+            ).model_dump_json()
+
+        await pool.execute(
+            """
+            INSERT INTO routing.route_feedback
+                (route_execution_id, usefulness_score, precision_score,
+                 expansion_needed, notes)
+            VALUES ($1, $2, $3, $4, $5)
+            """,
+            route_execution_id,
+            usefulness_score,
+            precision_score,
+            expansion_needed,
+            notes,
+        )
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="submit_route_feedback",
+            status="success",
+            data={"route_execution_id": route_execution_id},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
 # ---------------------------------------------------------------------------
 # Starlette lifecycle
 # ---------------------------------------------------------------------------
@@ -522,6 +637,15 @@ async def app_lifespan(app: Starlette):
     qdrant_client = await init_qdrant(settings)
     await ensure_collections(qdrant_client, settings)
     logger.info("qdrant_connected")
+
+    # Load routing archetypes into Qdrant (requires OpenAI — skip on failure)
+    try:
+        from memory_knowledge.routing.archetype_loader import load_archetypes
+
+        count = await load_archetypes(get_pg_pool(), qdrant_client, settings)
+        logger.info("routing_archetypes_loaded", count=count)
+    except Exception as e:
+        logger.warning("archetype_loading_skipped", error=str(e))
 
     logger.info("startup_complete")
 

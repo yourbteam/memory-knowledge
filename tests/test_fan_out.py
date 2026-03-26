@@ -3,17 +3,17 @@ from memory_knowledge.workflows.retrieval import classify_prompt
 
 def test_exact_lookup_first_store_is_postgres():
     """exact_lookup policy has first_store='postgres' in seed data."""
-    assert classify_prompt("find getUserById") == "exact_lookup"
+    assert classify_prompt("find getUserById")[0] == "exact_lookup"
 
 
 def test_conceptual_lookup_first_store_is_qdrant():
     """conceptual_lookup policy has first_store='qdrant' in seed data."""
-    assert classify_prompt("tell me about logging") == "conceptual_lookup"
+    assert classify_prompt("tell me about logging")[0] == "conceptual_lookup"
 
 
 def test_impact_analysis_allows_fanout():
     """impact_analysis policy has allow_fanout=TRUE in seed data."""
-    assert classify_prompt("what would break if I change the schema") == "impact_analysis"
+    assert classify_prompt("what would break if I change the schema")[0] == "impact_analysis"
 
 
 def test_assemble_context_bundle_includes_provenance():

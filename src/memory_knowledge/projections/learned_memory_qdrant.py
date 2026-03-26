@@ -1,11 +1,10 @@
 from __future__ import annotations
 
-import openai
 import structlog
-from openai import AsyncOpenAI
 from qdrant_client import AsyncQdrantClient, models
 
 from memory_knowledge.config import Settings
+from memory_knowledge.llm.openai_client import embed_single
 
 logger = structlog.get_logger()
 
@@ -22,29 +21,7 @@ async def embed_and_upsert_learned_record(
     settings: Settings,
 ) -> None:
     """Embed body_text and upsert to learned_memory collection."""
-    # Embed
-    if settings.auth_mode == "codex":
-        from memory_knowledge.auth.codex import codex_token_provider
-
-        api_key = await codex_token_provider(settings.codex_auth_path)
-    else:
-        api_key = settings.openai_api_key
-
-    openai_client = AsyncOpenAI(api_key=api_key)
-    try:
-        response = await openai_client.embeddings.create(
-            model=settings.embedding_model,
-            input=body_text,
-            dimensions=settings.embedding_dimensions,
-        )
-    except openai.AuthenticationError:
-        if settings.auth_mode == "codex":
-            raise RuntimeError(
-                "Codex OAuth token rejected — run 'codex auth' to re-authenticate"
-            )
-        raise
-
-    embedding = response.data[0].embedding
+    embedding = await embed_single(body_text, settings)
 
     # Upsert point
     await client.upsert(
