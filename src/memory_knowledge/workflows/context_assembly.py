@@ -125,7 +125,14 @@ async def run(
             "SELECT id FROM catalog.repositories WHERE repository_key = $1",
             repository_key,
         )
-        repository_id = row["id"] if row else 0
+        if row is None:
+            return WorkflowResult(
+                run_id=str(run_id),
+                tool_name=TOOL_NAME,
+                status="error",
+                error=f"Repository not found: {repository_key}",
+            )
+        repository_id = row["id"]
 
         # Step 3: Resolve file/symbol entity_keys for learned rules lookup
         # Retrieval returns chunk entity_keys, but learned rules APPLY_TO

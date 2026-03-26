@@ -67,11 +67,17 @@ async def record_observation(
     session_id = session_row["id"]
 
     # Resolve entity_id
+    try:
+        parsed_entity_key = uuid.UUID(entity_key)
+    except ValueError:
+        raise ValueError(f"Invalid entity_key format: {entity_key}")
     entity_row = await pool.fetchrow(
         "SELECT id FROM catalog.entities WHERE entity_key = $1",
-        uuid.UUID(entity_key),
+        parsed_entity_key,
     )
-    entity_id = entity_row["id"] if entity_row else None
+    if entity_row is None:
+        raise ValueError(f"Entity not found: {entity_key}")
+    entity_id = entity_row["id"]
 
     row = await pool.fetchrow(
         """
@@ -90,10 +96,15 @@ async def record_observation(
 
 async def end_session(pool: asyncpg.Pool, session_key: uuid.UUID) -> None:
     """End a working session."""
-    await pool.execute(
-        "UPDATE memory.working_sessions SET ended_utc = NOW() WHERE session_key = $1",
+    result = await pool.execute(
+        "UPDATE memory.working_sessions SET ended_utc = NOW() "
+        "WHERE session_key = $1 AND ended_utc IS NULL",
         session_key,
     )
+    if result == "UPDATE 0":
+        raise ValueError(
+            f"Session not found or already ended: {session_key}"
+        )
     logger.info("working_session_ended", session_key=str(session_key))
 
 

@@ -533,8 +533,9 @@ async def app_lifespan(app: Starlette):
     # SHUTDOWN — drain background tasks before closing connections
     logger.info("shutdown_begin")
     if _background_tasks:
-        logger.info("draining_background_tasks", count=len(_background_tasks))
-        await asyncio.gather(*_background_tasks, return_exceptions=True)
+        tasks = list(_background_tasks)
+        logger.info("draining_background_tasks", count=len(tasks))
+        await asyncio.gather(*tasks, return_exceptions=True)
     await close_qdrant()
     await close_neo4j()
     await close_postgres()
