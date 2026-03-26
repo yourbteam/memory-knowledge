@@ -67,6 +67,7 @@ LANGUAGE_EXTENSIONS: dict[str, list[str]] = {
     "python": [".py"],
     "typescript": [".ts", ".tsx", ".js", ".jsx"],
     "csharp": [".cs"],
+    "php": [".php"],
     "sql": [".sql"],
 }
 

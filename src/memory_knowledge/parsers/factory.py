@@ -15,6 +15,7 @@ _EXTENSION_MAP: dict[str, tuple[str, str]] = {
     ".js": ("memory_knowledge.parsers.typescript_adapter", "parse_typescript_file"),
     ".jsx": ("memory_knowledge.parsers.typescript_adapter", "parse_typescript_file"),
     ".cs": ("memory_knowledge.parsers.csharp_adapter", "parse_csharp_file"),
+    ".php": ("memory_knowledge.parsers.php_adapter", "parse_php_file"),
     ".sql": ("memory_knowledge.parsers.sql_adapter", "parse_sql_file"),
 }
 
@@ -25,6 +26,7 @@ _EXTENSION_TO_LANGUAGE: dict[str, str] = {
     ".js": "javascript",
     ".jsx": "javascript",
     ".cs": "csharp",
+    ".php": "php",
     ".sql": "sql",
 }
 
