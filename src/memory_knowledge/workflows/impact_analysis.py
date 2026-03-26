@@ -130,6 +130,7 @@ async def run(
             MATCH path = (start)-[:CALLS|IMPORTS|CONTAINS|HAS_FILE*1..3]-(affected)
             WHERE (start:File OR start:Symbol) AND start.entity_key = $ek
               AND (affected:File OR affected:Symbol)
+              AND start <> affected
             RETURN DISTINCT affected.entity_key AS entity_key,
                    labels(affected) AS labels,
                    length(path) AS distance

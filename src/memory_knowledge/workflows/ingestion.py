@@ -205,7 +205,6 @@ async def run(
         # Step 5b: Resolve and upsert edges (post-loop)
         neo4j_import_edges: list[dict[str, str]] = []
         neo4j_call_edges: list[dict[str, str]] = []
-        py_file_set = set(py_files)
 
         for importer_path, module_path in all_imports:
             # Resolve module_path to file_path with suffix matching
@@ -239,11 +238,8 @@ async def run(
             callee_sid = symbol_lookup.get((file_path_call, callee_name))
             if caller_sid and callee_sid:
                 await upsert_symbol_call(pool, caller_sid, callee_sid)
-                callee_ek = str(symbol_entity_key(
-                    repository_key, commit_sha, file_path_call, callee_name,
-                    next((s.kind for s in [] ), "function"),  # kind not needed for entity_key lookup
-                ))
                 # Look up callee entity_key from the symbol records
+                callee_ek: str | None = None
                 for fs in neo4j_file_symbols:
                     if fs["file_path"] == file_path_call:
                         for s in fs["symbols"]:
@@ -251,10 +247,11 @@ async def run(
                                 callee_ek = s["entity_key"]
                                 break
                         break
-                neo4j_call_edges.append({
-                    "caller_ek": caller_ek,
-                    "callee_ek": callee_ek,
-                })
+                if callee_ek:
+                    neo4j_call_edges.append({
+                        "caller_ek": caller_ek,
+                        "callee_ek": callee_ek,
+                    })
 
         logger.info("edges_resolved", imports=len(neo4j_import_edges), calls=len(neo4j_call_edges))
 
