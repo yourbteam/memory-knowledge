@@ -102,8 +102,12 @@ def _resolve_ts_import(
     if not import_path.startswith("."):
         return None  # npm package — skip
 
-    # Strip leading ./ or ../
-    clean = import_path.lstrip("./")
+    # Strip leading ./ or ../ prefixes properly (not character-based lstrip)
+    clean = import_path
+    while clean.startswith("../"):
+        clean = clean[3:]
+    if clean.startswith("./"):
+        clean = clean[2:]
 
     # Try with various extensions
     suffixes = [".ts", ".tsx", ".js", ".jsx", "/index.ts", "/index.js"]
