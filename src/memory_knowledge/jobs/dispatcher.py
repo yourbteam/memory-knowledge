@@ -40,6 +40,7 @@ class JobDispatcher:
         self._task: asyncio.Task | None = None
         self._pool: asyncpg.Pool | None = None
         self._settings: Settings | None = None
+        self._dispatched: set[uuid.UUID] = set()  # prevent duplicate dispatch
 
     async def start(self, pool: asyncpg.Pool, settings: Settings) -> None:
         """Start the polling loop."""
@@ -78,11 +79,15 @@ class JobDispatcher:
                     self.max_concurrent,
                 )
                 for row in rows:
+                    job_id = row["job_id"]
+                    if job_id in self._dispatched:
+                        continue  # already dispatched, skip
                     job_type = row["job_type"]
                     workflow_fn = JOB_TYPE_REGISTRY.get(job_type)
                     if workflow_fn is None:
                         logger.warning("unknown_job_type", job_type=job_type)
                         continue
+                    self._dispatched.add(job_id)
                     asyncio.create_task(self._dispatch_job(row, workflow_fn))
             except Exception as exc:
                 logger.error("dispatcher_poll_error", error=str(exc))
@@ -103,11 +108,17 @@ class JobDispatcher:
                 except (json.JSONDecodeError, TypeError):
                     pass
 
+            from memory_knowledge.db.neo4j import get_neo4j_driver
+            from memory_knowledge.db.qdrant import get_qdrant_client
+
             run_id = uuid.uuid4()
             kwargs: dict[str, Any] = {
                 "repository_key": row["repository_key"],
                 "run_id": run_id,
                 "pool": self._pool,
+                "qdrant_client": get_qdrant_client(),
+                "neo4j_driver": get_neo4j_driver(),
+                "settings": self._settings,
             }
             if row["commit_sha"]:
                 kwargs["commit_sha"] = row["commit_sha"]
@@ -118,10 +129,13 @@ class JobDispatcher:
             if self._pool is None or self._settings is None:
                 return
 
-            await execute_job(
-                manifest_pool=self._pool,
-                job_id=job_id,
-                job_fn=workflow_fn,
-                worker_settings=self._settings,
-                **kwargs,
-            )
+            try:
+                await execute_job(
+                    manifest_pool=self._pool,
+                    job_id=job_id,
+                    job_fn=workflow_fn,
+                    worker_settings=self._settings,
+                    **kwargs,
+                )
+            finally:
+                self._dispatched.discard(job_id)

@@ -88,13 +88,15 @@ async def _backfill_collection(
     entity_keys = [str(r["entity_key"]) for r in rows]
     stats[f"{stats_prefix}_checked"] = len(entity_keys)
 
-    # Check which exist in Qdrant
+    # Check which exist in Qdrant (batched to avoid request size limits)
     found_ids: set[str] = set()
     try:
-        found = await qdrant_client.retrieve(
-            collection_name=collection, ids=entity_keys,
-        )
-        found_ids = {str(p.id) for p in found}
+        for i in range(0, len(entity_keys), BATCH_SIZE):
+            batch_ids = entity_keys[i : i + BATCH_SIZE]
+            found = await qdrant_client.retrieve(
+                collection_name=collection, ids=batch_ids,
+            )
+            found_ids.update(str(p.id) for p in found)
     except Exception:
         logger.warning("backfill_retrieve_failed", collection=collection)
 

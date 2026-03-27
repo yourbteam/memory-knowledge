@@ -251,7 +251,7 @@ async def project_inheritance_edges(
             """
             UNWIND $edges AS e
             MATCH (child:Symbol {entity_key: e.child_ek})
-            MATCH (parent:Symbol {entity_key: e.parent_ek})
+            MATCH (parent:Symbol {entity_key: e.target_ek})
             MERGE (child)-[:EXTENDS]->(parent)
             """,
             edges=extends,
@@ -261,7 +261,7 @@ async def project_inheritance_edges(
             """
             UNWIND $edges AS e
             MATCH (child:Symbol {entity_key: e.child_ek})
-            MATCH (iface:Symbol {entity_key: e.iface_ek})
+            MATCH (iface:Symbol {entity_key: e.target_ek})
             MERGE (child)-[:IMPLEMENTS]->(iface)
             """,
             edges=implements,

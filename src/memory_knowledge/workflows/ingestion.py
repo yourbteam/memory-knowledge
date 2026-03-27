@@ -677,15 +677,11 @@ async def run(
                         if parent_ek:
                             is_interface = base_name.startswith("I") and len(base_name) > 1 and base_name[1].isupper()
                             rel_type = "IMPLEMENTS" if is_interface else "EXTENDS"
-                            edge: dict[str, str] = {
+                            inheritance_edges.append({
                                 "child_ek": child_ek,
+                                "target_ek": parent_ek,
                                 "rel_type": rel_type,
-                            }
-                            if rel_type == "EXTENDS":
-                                edge["parent_ek"] = parent_ek
-                            else:
-                                edge["iface_ek"] = parent_ek
-                            inheritance_edges.append(edge)
+                            })
             await project_inheritance_edges(neo4j_driver, inheritance_edges)
 
         # Step 10: Update branch head + retrieval surface
