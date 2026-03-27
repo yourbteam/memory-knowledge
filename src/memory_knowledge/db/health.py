@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 from typing import Any
 
 import structlog
@@ -18,10 +19,12 @@ async def health_check() -> dict[str, str]:
 async def readiness_check() -> dict[str, Any]:
     results: dict[str, Any] = {"status": "ready"}
 
+    _TIMEOUT = 5.0  # seconds per store check
+
     # PostgreSQL
     try:
         pool = get_pg_pool()
-        val = await pool.fetchval("SELECT 1")
+        val = await asyncio.wait_for(pool.fetchval("SELECT 1"), timeout=_TIMEOUT)
         results["postgres"] = "ok" if val == 1 else "error"
     except Exception as exc:
         results["postgres"] = f"error: {exc}"
@@ -30,7 +33,7 @@ async def readiness_check() -> dict[str, Any]:
     # Qdrant
     try:
         client = get_qdrant_client()
-        await client.get_collections()
+        await asyncio.wait_for(client.get_collections(), timeout=_TIMEOUT)
         results["qdrant"] = "ok"
     except Exception as exc:
         results["qdrant"] = f"error: {exc}"
@@ -39,7 +42,7 @@ async def readiness_check() -> dict[str, Any]:
     # Neo4j
     try:
         driver = get_neo4j_driver()
-        await driver.verify_connectivity()
+        await asyncio.wait_for(driver.verify_connectivity(), timeout=_TIMEOUT)
         results["neo4j"] = "ok"
     except Exception as exc:
         results["neo4j"] = f"error: {exc}"

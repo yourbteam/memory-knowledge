@@ -37,6 +37,8 @@ async def codex_token_provider(auth_path: str) -> str:
     if last_refresh:
         try:
             refreshed_at = datetime.fromisoformat(last_refresh)
+            if refreshed_at.tzinfo is None:
+                refreshed_at = refreshed_at.replace(tzinfo=timezone.utc)
             age_days = (datetime.now(timezone.utc) - refreshed_at).days
             if age_days >= _WARNING_AGE_DAYS:
                 logger.warning(
