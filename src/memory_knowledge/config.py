@@ -30,6 +30,14 @@ class Settings(BaseSettings):
     codex_auth_path: str = "~/.codex/auth.json"
     mcp_api_key: str | None = None  # Bearer token for MCP endpoint auth
 
+    # Codex token refresh
+    azure_keyvault_name: str = ""  # empty = KV disabled
+    codex_refresh_enabled: bool = True
+    codex_refresh_after_days: int = 6
+    codex_check_interval: int = 300  # seconds between staleness checks
+    codex_daily_refresh_hour: int = 5  # UTC hour for daily refresh
+    codex_kv_writeback_enabled: bool = True
+
     # OpenAI
     openai_api_key: str | None = None
     embedding_model: str = "text-embedding-3-small"

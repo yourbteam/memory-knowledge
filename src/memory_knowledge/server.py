@@ -840,6 +840,21 @@ async def app_lifespan(app: Starlette):
     _dispatcher = JobDispatcher(poll_interval=15.0, max_concurrent=3)
     await _dispatcher.start(get_pg_pool(), settings)
 
+    # Start Codex token refresh manager
+    _token_manager = None
+    if settings.auth_mode == "codex" and settings.codex_refresh_enabled:
+        from memory_knowledge.auth.credential_refresh import CodexTokenManager
+
+        _token_manager = CodexTokenManager(
+            codex_auth_path=settings.codex_auth_path,
+            keyvault_name=settings.azure_keyvault_name or None,
+            check_interval=settings.codex_check_interval,
+            refresh_after_days=settings.codex_refresh_after_days,
+            daily_refresh_utc_hour=settings.codex_daily_refresh_hour,
+            writeback_enabled=settings.codex_kv_writeback_enabled,
+        )
+        await _token_manager.start()
+
     logger.info("startup_complete")
 
     # MCP session manager must run in outer lifespan because Starlette
@@ -847,8 +862,10 @@ async def app_lifespan(app: Starlette):
     async with mcp.session_manager.run():
         yield
 
-    # SHUTDOWN — stop dispatcher, drain background tasks, close connections
+    # SHUTDOWN — stop token manager, dispatcher, drain tasks, close connections
     logger.info("shutdown_begin")
+    if _token_manager:
+        await _token_manager.stop()
     await _dispatcher.stop()
     if _background_tasks:
         tasks = list(_background_tasks)

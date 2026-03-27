@@ -30,6 +30,10 @@ dev = [
     "pytest-asyncio",
     "ruff",
 ]
+keyvault = [
+    "azure-identity>=1.12.0",
+    "azure-keyvault-secrets>=4.4.0",
+]
 
 [project.scripts]
 memory-knowledge = "memory_knowledge.server:main"
