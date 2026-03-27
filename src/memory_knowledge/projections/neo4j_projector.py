@@ -194,7 +194,7 @@ async def project_sql_edges(
         await driver.execute_query(
             """
             UNWIND $edges AS e
-            MATCH (src {entity_key: e.source_ek})
+            MATCH (src:File {entity_key: e.source_ek})
             MATCH (tbl:DbTable {entity_key: e.target_ek})
             MERGE (src)-[:READS_TABLE]->(tbl)
             """,
@@ -204,7 +204,7 @@ async def project_sql_edges(
         await driver.execute_query(
             """
             UNWIND $edges AS e
-            MATCH (src {entity_key: e.source_ek})
+            MATCH (src:File {entity_key: e.source_ek})
             MATCH (tbl:DbTable {entity_key: e.target_ek})
             MERGE (src)-[:WRITES_TABLE]->(tbl)
             """,

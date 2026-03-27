@@ -68,7 +68,7 @@ def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
 
 
 _DML_PATTERN = re.compile(
-    r"\b(SELECT\s+[\s\S]*?\s+FROM|JOIN|INSERT\s+INTO|UPDATE|DELETE\s+FROM)"
+    r"\b(SELECT\s+[^;]*?\s+FROM|JOIN|INSERT\s+INTO|UPDATE|DELETE\s+FROM)"
     r"\s+(?:\[?[\w.]+\]?\.)?(\[?\w+\]?)",
     re.IGNORECASE,
 )
