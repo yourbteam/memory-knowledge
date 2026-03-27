@@ -561,6 +561,16 @@ async def submit_route_feedback(
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "submit_route_feedback")
     try:
+        # Validate score ranges
+        for name, val in [("usefulness_score", usefulness_score), ("precision_score", precision_score)]:
+            if val is not None and not (0.0 <= val <= 1.0):
+                return WorkflowResult(
+                    run_id=str(run_id),
+                    tool_name="submit_route_feedback",
+                    status="error",
+                    error=f"{name} must be between 0.0 and 1.0, got {val}",
+                ).model_dump_json()
+
         pool = get_pg_pool()
         # Validate execution exists
         row = await pool.fetchrow(

@@ -92,11 +92,11 @@ async def load_archetypes(
 
     # Upsert as points
     points = []
-    for i, (emb, meta) in enumerate(zip(embeddings, all_metadata)):
-        # Deterministic point ID from prompt_class + template index
+    for emb, meta in zip(embeddings, all_metadata):
+        # Deterministic point ID from prompt_class + template text (stable across reordering)
         point_id = str(uuid.uuid5(
             uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
-            f"archetype:{meta['prompt_class']}:{i}",
+            f"archetype:{meta['prompt_class']}:{meta['template_text']}",
         ))
         points.append(
             models.PointStruct(
