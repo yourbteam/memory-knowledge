@@ -403,6 +403,7 @@ async def run(
                     """
                     SELECT lr.id, e.entity_key
                     FROM memory.learned_records lr
+                    JOIN catalog.entities e ON lr.entity_id = e.id
                     JOIN catalog.entities scope_e ON lr.scope_entity_id = scope_e.id
                     JOIN catalog.files f ON f.entity_id = scope_e.id
                     WHERE f.file_path = ANY($1::text[])
