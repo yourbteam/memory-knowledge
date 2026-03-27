@@ -127,7 +127,7 @@ async def run(
         # Step 2: Scoped Neo4j traversal
         records, _, _ = await neo4j_driver.execute_query(
             """
-            MATCH path = (start)-[:CALLS|IMPORTS|CONTAINS|HAS_FILE*1..3]-(affected)
+            MATCH path = (start)-[:CALLS|IMPORTS*1..3]->(affected)
             WHERE (start:File OR start:Symbol) AND start.entity_key = $ek
               AND (affected:File OR affected:Symbol)
               AND start <> affected
@@ -145,6 +145,7 @@ async def run(
         # Step 3: Hydrate from PG
         affected: list[dict[str, Any]] = []
         if affected_keys:
+            affected_uuids = [uuid.UUID(k) for k in affected_keys]
             hydrated_rows = await pool.fetch(
                 """
                 SELECT e.entity_key, e.entity_type,
@@ -154,7 +155,7 @@ async def run(
                 LEFT JOIN catalog.symbols s ON s.entity_id = e.id AND e.entity_type = 'symbol'
                 WHERE e.entity_key = ANY($1::uuid[])
                 """,
-                affected_keys,
+                affected_uuids,
             )
             hydrated_map = {str(r["entity_key"]): r for r in hydrated_rows}
 
