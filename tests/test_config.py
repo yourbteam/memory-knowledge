@@ -12,6 +12,7 @@ def _set_base_env(monkeypatch):
 
 def test_settings_api_key_mode(monkeypatch):
     _set_base_env(monkeypatch)
+    monkeypatch.setenv("AUTH_MODE", "api_key")
     monkeypatch.setenv("OPENAI_API_KEY", "sk-test")
 
     s = Settings()
@@ -24,7 +25,7 @@ def test_settings_api_key_mode(monkeypatch):
 
 def test_settings_codex_mode(monkeypatch):
     _set_base_env(monkeypatch)
-    monkeypatch.setenv("AUTH_MODE", "codex")
+    # codex is now the default — no need to set AUTH_MODE
 
     s = Settings()
     assert s.auth_mode == "codex"
@@ -43,7 +44,7 @@ def test_settings_defaults(monkeypatch):
     assert s.embedding_dimensions == 1536
     assert s.server_port == 8000
     assert s.qdrant_api_key is None
-    assert s.auth_mode == "api_key"
+    assert s.auth_mode == "codex"
     assert s.codex_auth_path == "~/.codex/auth.json"
 
 

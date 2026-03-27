@@ -5,8 +5,10 @@ services:
       - "8000:8000"
     env_file:
       - .env
+    volumes:
+      - ~/.codex:/home/appuser/.codex:ro  # mount Codex CLI auth tokens (read-only)
     environment:
-      AUTH_MODE: api_key  # override .env — codex auth not available in containers
+      CODEX_AUTH_PATH: /home/appuser/.codex/auth.json
     depends_on:
       postgres:
         condition: service_healthy

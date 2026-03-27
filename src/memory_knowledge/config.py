@@ -26,7 +26,7 @@ class Settings(BaseSettings):
     neo4j_max_pool_size: int = 50
 
     # Auth
-    auth_mode: Literal["api_key", "codex"] = "api_key"
+    auth_mode: Literal["api_key", "codex"] = "codex"
     codex_auth_path: str = "~/.codex/auth.json"
     mcp_api_key: str | None = None  # Bearer token for MCP endpoint auth
 
