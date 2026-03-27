@@ -18,7 +18,6 @@ from memory_knowledge.projections.learned_memory_qdrant import (
     embed_and_upsert_learned_record,
 )
 from memory_knowledge.projections.learned_memory_writer import (
-    deactivate_learned_record,
     supersede_learned_record,
     update_verification_status,
     upsert_learned_record,

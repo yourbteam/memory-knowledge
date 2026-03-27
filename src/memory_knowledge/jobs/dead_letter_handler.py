@@ -6,7 +6,6 @@ from typing import Any
 import asyncpg
 import structlog
 
-from memory_knowledge.config import Settings
 
 logger = structlog.get_logger()
 

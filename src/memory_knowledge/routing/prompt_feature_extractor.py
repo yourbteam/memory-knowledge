@@ -4,7 +4,7 @@ import re
 from typing import Any
 
 import structlog
-from qdrant_client import AsyncQdrantClient, models
+from qdrant_client import AsyncQdrantClient
 
 from memory_knowledge.config import Settings
 
