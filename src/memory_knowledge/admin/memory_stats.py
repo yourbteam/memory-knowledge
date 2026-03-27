@@ -108,19 +108,26 @@ async def collect_memory_stats(
             qdrant_stats[coll_name] = -1  # error indicator
     stats["qdrant_points"] = qdrant_stats
 
-    # Neo4j: Node and edge counts
+    # Neo4j: Node and edge counts (scoped to repository)
     try:
         neo4j_records, _, _ = await neo4j_driver.execute_query(
             """
-            MATCH (n)
+            MATCH (repo:Repository {entity_key: $repository_key})
+            MATCH (repo)-[*1..3]->(n)
             WHERE n.entity_key IS NOT NULL
-            RETURN labels(n)[0] AS label, COUNT(n) AS cnt
+            RETURN labels(n)[0] AS label, COUNT(DISTINCT n) AS cnt
             """,
+            repository_key=repository_key,
         )
         stats["neo4j_nodes"] = {r["label"]: r["cnt"] for r in neo4j_records}
 
         edge_records, _, _ = await neo4j_driver.execute_query(
-            "MATCH ()-[r]->() RETURN type(r) AS rel_type, COUNT(r) AS cnt",
+            """
+            MATCH (repo:Repository {entity_key: $repository_key})
+            MATCH (repo)-[*1..3]->(n)-[r]->()
+            RETURN type(r) AS rel_type, COUNT(DISTINCT r) AS cnt
+            """,
+            repository_key=repository_key,
         )
         stats["neo4j_edges"] = {r["rel_type"]: r["cnt"] for r in edge_records}
     except Exception as exc:

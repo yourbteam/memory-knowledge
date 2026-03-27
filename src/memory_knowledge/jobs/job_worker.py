@@ -54,15 +54,9 @@ async def execute_job(
 
         # Store result in checkpoint_data for check_job_status retrieval
         result_json = result.model_dump_json()
-        await manifest_pool.execute(
-            """
-            UPDATE ops.job_manifests
-            SET state_code = 'completed', completed_utc = NOW(),
-                checkpoint_data = $2
-            WHERE job_id = $1
-            """,
-            job_id,
-            result_json,
+        await update_job_state(
+            manifest_pool, job_id, "completed",
+            checkpoint_data=result_json,
         )
         return result
 

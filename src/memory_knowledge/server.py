@@ -254,10 +254,17 @@ async def _run_repair_background(
     )
 
 
+def _on_task_done(task: asyncio.Task) -> None:
+    """Remove task from tracking set and log any unhandled exceptions."""
+    _background_tasks.discard(task)
+    if not task.cancelled() and task.exception():
+        logger.error("background_task_failed", error=str(task.exception()))
+
+
 def _track_task(task: asyncio.Task) -> None:
     """Add task to tracking set, remove on completion."""
     _background_tasks.add(task)
-    task.add_done_callback(_background_tasks.discard)
+    task.add_done_callback(_on_task_done)
 
 
 @mcp.tool()
