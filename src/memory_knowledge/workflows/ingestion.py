@@ -450,6 +450,9 @@ async def run(
                     file_summary = await llm_complete(
                         source[:8000], settings, system_prompt=_summary_prompt(detect_language(fp))
                     )
+                    if not file_summary or not file_summary.strip():
+                        logger.warning("empty_file_summary_skipped", file_path=fp)
+                        continue
                     s_ek = summary_entity_key(repository_key, commit_sha, file_ek, "file")
                     await upsert_summary(pool, s_ek, file_eid, "file", file_summary)
                     all_summaries_for_embedding.append({
@@ -472,7 +475,7 @@ async def run(
                     for sym_rec in fs["symbols"]:
                         try:
                             # Extract symbol source using cached parse output
-                            sym_source = source[:4000]  # fallback
+                            sym_source = None
                             cached_parse = file_path_to_parse_output.get(fp)
                             if cached_parse:
                                 for psym in cached_parse.symbols:
@@ -481,6 +484,8 @@ async def run(
                                             source_lines[psym.line_start - 1 : psym.line_end]
                                         )
                                         break
+                            if not sym_source:
+                                continue  # skip summary if symbol source not found
                             sym_ek = sym_rec["entity_key"]
                             s_ek = summary_entity_key(
                                 repository_key, commit_sha, sym_ek, "symbol"
@@ -490,6 +495,8 @@ async def run(
                                 settings,
                                 system_prompt=_summary_prompt(detect_language(fp)),
                             )
+                            if not sym_summary or not sym_summary.strip():
+                                continue
                             # Look up symbol entity_id
                             sym_eid_row = await pool.fetchrow(
                                 "SELECT id FROM catalog.entities WHERE entity_key = $1",
