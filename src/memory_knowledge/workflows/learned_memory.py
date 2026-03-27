@@ -243,6 +243,16 @@ async def run_commit(
                     scope_entity_key=scope_ek,
                     evidence_entity_key=evidence_ek,
                 )
+                from memory_knowledge.projections.learned_memory_neo4j import (
+                    project_conflicts,
+                )
+
+                await project_conflicts(
+                    driver=neo4j_driver,
+                    entity_key=entity_key_str,
+                    scope_entity_key=scope_ek,
+                    memory_type=row["memory_type"],
+                )
 
         if approval_status == "approve":
             await _approve_and_project()

@@ -55,3 +55,27 @@ async def deactivate_learned_rule(
         ek=entity_key,
     )
     logger.info("learned_rule_deactivated", entity_key=entity_key)
+
+
+async def project_conflicts(
+    driver: neo4j.AsyncDriver,
+    entity_key: str,
+    scope_entity_key: str,
+    memory_type: str,
+) -> None:
+    """MERGE CONFLICTS_WITH edges for rules with same scope+type."""
+    await driver.execute_query(
+        """
+        MATCH (new:LearnedRule {entity_key: $entity_key})
+        MATCH (existing:LearnedRule)
+        WHERE existing.entity_key <> $entity_key
+          AND existing.is_active = true
+          AND existing.memory_type = $memory_type
+        MATCH (existing)-[:APPLIES_TO]->(scope {entity_key: $scope_entity_key})
+        MERGE (new)-[:CONFLICTS_WITH]-(existing)
+        """,
+        entity_key=entity_key,
+        memory_type=memory_type,
+        scope_entity_key=scope_entity_key,
+    )
+    logger.info("conflicts_projected", entity_key=entity_key)

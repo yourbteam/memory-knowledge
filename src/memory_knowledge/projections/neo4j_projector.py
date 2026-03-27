@@ -135,6 +135,32 @@ async def project_additive_labels(
         )
         logger.info("neo4j_storedproc_labels_set", count=len(stored_proc_keys))
 
+    # Service label: symbols named *Service or *Provider, or in services/ paths
+    service_keys: list[str] = []
+    for fs in file_symbols:
+        for s in fs.get("symbols", []):
+            if s["kind"] == "class" and (
+                s["name"].endswith("Service") or s["name"].endswith("Provider")
+            ):
+                service_keys.append(str(s["entity_key"]))
+        if "services/" in fs.get("file_path", ""):
+            for s in fs.get("symbols", []):
+                if s["kind"] == "class":
+                    ek = str(s["entity_key"])
+                    if ek not in service_keys:
+                        service_keys.append(ek)
+
+    if service_keys:
+        await driver.execute_query(
+            """
+            UNWIND $keys AS ek
+            MATCH (s:Symbol {entity_key: ek})
+            SET s:Service
+            """,
+            keys=service_keys,
+        )
+        logger.info("neo4j_service_labels_set", count=len(service_keys))
+
 
 async def project_modules(
     driver: neo4j.AsyncDriver,
@@ -210,3 +236,35 @@ async def project_sql_edges(
             """,
             edges=writes,
         )
+
+
+async def project_inheritance_edges(
+    driver: neo4j.AsyncDriver,
+    inheritance_edges: list[dict[str, str]],
+) -> None:
+    """MERGE EXTENDS and IMPLEMENTS edges between Symbol nodes."""
+    extends = [e for e in inheritance_edges if e["rel_type"] == "EXTENDS"]
+    implements = [e for e in inheritance_edges if e["rel_type"] == "IMPLEMENTS"]
+
+    if extends:
+        await driver.execute_query(
+            """
+            UNWIND $edges AS e
+            MATCH (child:Symbol {entity_key: e.child_ek})
+            MATCH (parent:Symbol {entity_key: e.parent_ek})
+            MERGE (child)-[:EXTENDS]->(parent)
+            """,
+            edges=extends,
+        )
+    if implements:
+        await driver.execute_query(
+            """
+            UNWIND $edges AS e
+            MATCH (child:Symbol {entity_key: e.child_ek})
+            MATCH (iface:Symbol {entity_key: e.iface_ek})
+            MERGE (child)-[:IMPLEMENTS]->(iface)
+            """,
+            edges=implements,
+        )
+    if extends or implements:
+        logger.info("neo4j_inheritance_projected", extends=len(extends), implements=len(implements))

@@ -57,6 +57,12 @@ async def embed(
                 raise ValueError(
                     f"Embedding count mismatch: expected {len(batch)}, got {len(batch_embeddings)}"
                 )
+            for emb in batch_embeddings:
+                if len(emb) != settings.embedding_dimensions:
+                    raise ValueError(
+                        f"Embedding dimension mismatch: expected {settings.embedding_dimensions}, "
+                        f"got {len(emb)}"
+                    )
             all_embeddings.extend(batch_embeddings)
         except openai.AuthenticationError:
             if settings.auth_mode == "codex":

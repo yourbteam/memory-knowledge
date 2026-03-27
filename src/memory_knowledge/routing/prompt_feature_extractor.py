@@ -25,6 +25,16 @@ IMPACT_KEYWORDS = {"impact", "affect", "change", "break", "breaking", "depends"}
 PATTERN_KEYWORDS = {"pattern", "how does", "approach", "design", "architecture"}
 DECISION_KEYWORDS = {"decision", "why did", "history", "chose", "rationale"}
 
+STACK_TRACE_PATTERN = re.compile(
+    r"Traceback|File\s+\"[^\"]+\",\s+line\s+\d+|at\s+\w+\.\w+\s*\(",
+    re.IGNORECASE,
+)
+SQL_KEYWORDS_PATTERN = re.compile(
+    r"\b(SELECT|INSERT|UPDATE|DELETE|CREATE\s+TABLE)\b",
+    re.IGNORECASE,
+)
+TRAVERSAL_PHRASES = {"what calls", "depends on", "callers of", "called by", "who uses", "imports of"}
+
 
 def extract_prompt_features(query: str) -> dict[str, Any]:
     """Extract features from a prompt for routing decisions.
@@ -50,6 +60,9 @@ def extract_prompt_features(query: str) -> dict[str, Any]:
         "has_pattern_keywords": has_pattern,
         "token_count": len(tokens),
         "has_quoted_strings": bool(re.search(r'["\']', query)),
+        "has_stack_trace": bool(STACK_TRACE_PATTERN.search(query)),
+        "has_sql_keywords": bool(SQL_KEYWORDS_PATTERN.search(query)),
+        "has_traversal_phrases": any(phrase in q for phrase in TRAVERSAL_PHRASES),
     }
 
 

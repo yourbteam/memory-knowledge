@@ -30,6 +30,7 @@ from memory_knowledge.projections.neo4j_projector import (
     project_additive_labels,
     project_api_endpoints,
     project_dependency_edges,
+    project_inheritance_edges,
     project_modules,
     project_repository_graph,
     project_sql_edges,
@@ -651,6 +652,41 @@ async def run(
                             "rel_type": rel,
                         })
             await project_sql_edges(neo4j_driver, sql_edge_data)
+
+            # Inheritance edges (EXTENDS/IMPLEMENTS)
+            inheritance_edges: list[dict[str, str]] = []
+            for fs in neo4j_file_symbols:
+                cached = file_path_to_parse_output.get(fs["file_path"])
+                if not cached:
+                    continue
+                for sym in cached.symbols:
+                    if sym.kind != "class" or not sym.base_classes:
+                        continue
+                    child_ek = symbol_ek_lookup.get((fs["file_path"], sym.name))
+                    if not child_ek:
+                        continue
+                    for base_name in sym.base_classes:
+                        parent_ek = None
+                        for fs2 in neo4j_file_symbols:
+                            for s in fs2["symbols"]:
+                                if s["name"] == base_name:
+                                    parent_ek = s["entity_key"]
+                                    break
+                            if parent_ek:
+                                break
+                        if parent_ek:
+                            is_interface = base_name.startswith("I") and len(base_name) > 1 and base_name[1].isupper()
+                            rel_type = "IMPLEMENTS" if is_interface else "EXTENDS"
+                            edge: dict[str, str] = {
+                                "child_ek": child_ek,
+                                "rel_type": rel_type,
+                            }
+                            if rel_type == "EXTENDS":
+                                edge["parent_ek"] = parent_ek
+                            else:
+                                edge["iface_ek"] = parent_ek
+                            inheritance_edges.append(edge)
+            await project_inheritance_edges(neo4j_driver, inheritance_edges)
 
         # Step 10: Update branch head + retrieval surface
         await upsert_branch_head(pool, repository_id, branch_name, repo_revision_id)

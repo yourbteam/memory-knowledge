@@ -51,6 +51,12 @@ def parse_python_file(file_path: str, source: str) -> FileParseOutput:
                 )
             )
         elif isinstance(node, ast.ClassDef):
+            bases = []
+            for base in node.bases:
+                if isinstance(base, ast.Name):
+                    bases.append(base.id)
+                elif isinstance(base, ast.Attribute):
+                    bases.append(ast.unparse(base))
             symbols.append(
                 SymbolInfo(
                     name=node.name,
@@ -58,6 +64,7 @@ def parse_python_file(file_path: str, source: str) -> FileParseOutput:
                     line_start=node.lineno,
                     line_end=node.end_lineno or node.lineno,
                     signature=f"class {node.name}",
+                    base_classes=bases,
                 )
             )
 

@@ -19,6 +19,7 @@ from memory_knowledge.db.neo4j import apply_constraints, close_neo4j, init_neo4j
 from memory_knowledge.db.postgres import close_postgres, init_postgres
 from memory_knowledge.db.qdrant import close_qdrant, ensure_collections, init_qdrant
 from memory_knowledge.observability.logging import configure_logging
+from memory_knowledge.observability.metrics import track_tool_metrics
 from memory_knowledge.workflows.base import WorkflowResult
 from memory_knowledge.observability.run_context import (
     bind_run_context,
@@ -56,6 +57,7 @@ mcp = FastMCP(
 
 
 @mcp.tool()
+@track_tool_metrics("run_retrieval_workflow")
 async def run_retrieval_workflow(
     repository_key: str, query: str, correlation_id: str | None = None
 ) -> str:
@@ -76,6 +78,7 @@ async def run_retrieval_workflow(
 
 
 @mcp.tool()
+@track_tool_metrics("run_context_assembly_workflow")
 async def run_context_assembly_workflow(
     repository_key: str, query: str, correlation_id: str | None = None
 ) -> str:
@@ -96,6 +99,7 @@ async def run_context_assembly_workflow(
 
 
 @mcp.tool()
+@track_tool_metrics("run_impact_analysis_workflow")
 async def run_impact_analysis_workflow(
     repository_key: str, query: str, correlation_id: str | None = None
 ) -> str:
@@ -116,6 +120,7 @@ async def run_impact_analysis_workflow(
 
 
 @mcp.tool()
+@track_tool_metrics("run_learned_memory_proposal_workflow")
 async def run_learned_memory_proposal_workflow(
     repository_key: str,
     memory_type: str,
@@ -152,6 +157,7 @@ async def run_learned_memory_proposal_workflow(
 
 
 @mcp.tool()
+@track_tool_metrics("run_learned_memory_commit_workflow")
 async def run_learned_memory_commit_workflow(
     repository_key: str,
     proposal_id: str,
@@ -182,6 +188,7 @@ async def run_learned_memory_commit_workflow(
 
 
 @mcp.tool()
+@track_tool_metrics("run_blueprint_refinement_workflow")
 async def run_blueprint_refinement_workflow(
     repository_key: str, query: str, correlation_id: str | None = None
 ) -> str:
@@ -254,6 +261,29 @@ async def _run_repair_background(
     )
 
 
+async def _run_integrity_background(
+    job_id: uuid.UUID, run_id: uuid.UUID,
+    repository_key: str,
+) -> None:
+    """Background task for integrity audit job execution."""
+    from memory_knowledge.jobs.job_worker import execute_job
+
+    pool = get_pg_pool()
+    settings = get_settings()
+    await execute_job(
+        manifest_pool=pool,
+        job_id=job_id,
+        job_fn=_integrity_audit.run,
+        worker_settings=settings,
+        repository_key=repository_key,
+        run_id=run_id,
+        pool=pool,
+        qdrant_client=get_qdrant_client(),
+        neo4j_driver=get_neo4j_driver(),
+        settings=settings,
+    )
+
+
 def _on_task_done(task: asyncio.Task) -> None:
     """Remove task from tracking set and log any unhandled exceptions."""
     _background_tasks.discard(task)
@@ -268,6 +298,7 @@ def _track_task(task: asyncio.Task) -> None:
 
 
 @mcp.tool()
+@track_tool_metrics("run_repo_ingestion_workflow")
 async def run_repo_ingestion_workflow(
     repository_key: str,
     commit_sha: str,
@@ -300,26 +331,37 @@ async def run_repo_ingestion_workflow(
 
 
 @mcp.tool()
+@track_tool_metrics("run_integrity_audit_workflow")
 async def run_integrity_audit_workflow(
     repository_key: str, correlation_id: str | None = None
 ) -> str:
-    """Check mechanical layer trustworthiness across stores."""
+    """Check mechanical layer trustworthiness across stores. Returns job_id for polling."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_integrity_audit_workflow")
     try:
-        result = await _integrity_audit.run(
-            repository_key, run_id,
-            pool=get_pg_pool(),
-            qdrant_client=get_qdrant_client(),
-            neo4j_driver=get_neo4j_driver(),
-            settings=get_settings(),
+        from memory_knowledge.jobs.manifest_writer import create_job
+
+        pool = get_pg_pool()
+        job_id = await create_job(
+            pool, run_id, "integrity_audit", "run_integrity_audit_workflow",
+            repository_key, correlation_id=str(correlation_id) if correlation_id else None,
         )
-        return result.model_dump_json()
+        task = asyncio.create_task(
+            _run_integrity_background(job_id, run_id, repository_key)
+        )
+        _track_task(task)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="run_integrity_audit_workflow",
+            status="submitted",
+            data={"job_id": str(job_id)},
+        ).model_dump_json()
     finally:
         clear_run_context()
 
 
 @mcp.tool()
+@track_tool_metrics("run_repair_rebuild_workflow")
 async def run_repair_rebuild_workflow(
     repository_key: str,
     repair_scope: str = "full",
@@ -351,6 +393,7 @@ async def run_repair_rebuild_workflow(
 
 
 @mcp.tool()
+@track_tool_metrics("check_job_status")
 async def check_job_status(
     job_id: str, correlation_id: str | None = None
 ) -> str:
@@ -379,6 +422,7 @@ async def check_job_status(
 
 
 @mcp.tool()
+@track_tool_metrics("get_memory_stats")
 async def get_memory_stats(
     repository_key: str, correlation_id: str | None = None
 ) -> str:
@@ -402,6 +446,7 @@ async def get_memory_stats(
 
 
 @mcp.tool()
+@track_tool_metrics("create_working_session")
 async def create_working_session(
     repository_key: str, correlation_id: str | None = None
 ) -> str:
@@ -423,6 +468,7 @@ async def create_working_session(
 
 
 @mcp.tool()
+@track_tool_metrics("record_working_observation")
 async def record_working_observation(
     session_key: str,
     entity_key: str,
@@ -451,6 +497,7 @@ async def record_working_observation(
 
 
 @mcp.tool()
+@track_tool_metrics("get_working_session_context")
 async def get_working_session_context(
     session_key: str, correlation_id: str | None = None
 ) -> str:
@@ -474,6 +521,7 @@ async def get_working_session_context(
 
 
 @mcp.tool()
+@track_tool_metrics("run_route_intelligence_workflow")
 async def run_route_intelligence_workflow(
     repository_key: str, query: str, correlation_id: str | None = None
 ) -> str:
@@ -491,6 +539,7 @@ async def run_route_intelligence_workflow(
 
 
 @mcp.tool()
+@track_tool_metrics("register_repository")
 async def register_repository(
     repository_key: str,
     name: str,
@@ -531,6 +580,7 @@ async def register_repository(
 
 
 @mcp.tool()
+@track_tool_metrics("end_working_session")
 async def end_working_session(
     session_key: str, correlation_id: str | None = None
 ) -> str:
@@ -556,6 +606,7 @@ async def end_working_session(
 
 
 @mcp.tool()
+@track_tool_metrics("submit_route_feedback")
 async def submit_route_feedback(
     route_execution_id: int,
     usefulness_score: float | None = None,
@@ -616,6 +667,7 @@ async def submit_route_feedback(
 
 
 @mcp.tool()
+@track_tool_metrics("export_repo_memory_tool")
 async def export_repo_memory_tool(
     repository_key: str, correlation_id: str | None = None
 ) -> str:
@@ -637,6 +689,7 @@ async def export_repo_memory_tool(
 
 
 @mcp.tool()
+@track_tool_metrics("import_repo_memory_tool")
 async def import_repo_memory_tool(
     data: str, correlation_id: str | None = None
 ) -> str:
@@ -659,6 +712,7 @@ async def import_repo_memory_tool(
 
 
 @mcp.tool()
+@track_tool_metrics("rebuild_revision_workflow")
 async def rebuild_revision_workflow(
     repository_key: str,
     commit_sha: str,
@@ -686,6 +740,33 @@ async def rebuild_revision_workflow(
             tool_name="rebuild_revision_workflow",
             status=status,
             data=report.model_dump(),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("run_embedding_backfill")
+async def run_embedding_backfill(
+    repository_key: str, correlation_id: str | None = None
+) -> str:
+    """Backfill missing Qdrant embeddings from PG canonical data."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "run_embedding_backfill")
+    try:
+        from memory_knowledge.integrity.embedding_backfill import backfill_embeddings
+
+        stats = await backfill_embeddings(
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+            settings=get_settings(),
+            repository_key=repository_key,
+        )
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="run_embedding_backfill",
+            status="success",
+            data=stats,
         ).model_dump_json()
     finally:
         clear_run_context()
@@ -740,6 +821,16 @@ async def app_lifespan(app: Starlette):
     except Exception as e:
         logger.warning("archetype_loading_skipped", error=str(e))
 
+    # Start job dispatcher
+    from memory_knowledge.jobs.dispatcher import JobDispatcher, register_job_type
+
+    register_job_type("ingestion", _ingestion.run)
+    register_job_type("repair", _repair_rebuild.run)
+    register_job_type("integrity_audit", _integrity_audit.run)
+
+    _dispatcher = JobDispatcher(poll_interval=15.0, max_concurrent=3)
+    await _dispatcher.start(get_pg_pool(), settings)
+
     logger.info("startup_complete")
 
     # MCP session manager must run in outer lifespan because Starlette
@@ -747,8 +838,9 @@ async def app_lifespan(app: Starlette):
     async with mcp.session_manager.run():
         yield
 
-    # SHUTDOWN — drain background tasks before closing connections
+    # SHUTDOWN — stop dispatcher, drain background tasks, close connections
     logger.info("shutdown_begin")
+    await _dispatcher.stop()
     if _background_tasks:
         tasks = list(_background_tasks)
         logger.info("draining_background_tasks", count=len(tasks))

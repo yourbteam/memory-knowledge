@@ -58,8 +58,26 @@ async def project_working_session(
             entity_key=entity_key,
         )
 
+    # Create Task nodes from plan_note observations
+    plan_notes = [o for o in observations if o.get("observation_type") == "plan_note"]
+    for note in plan_notes:
+        task_key = f"task:{session_key}:{note.get('id', '')}"
+        await driver.execute_query(
+            """
+            MERGE (t:Task {entity_key: $task_key})
+            SET t.description = $description
+            WITH t
+            MATCH (ws:WorkingSession {entity_key: $session_key})
+            MERGE (t)-[:EXECUTED_IN]->(ws)
+            """,
+            task_key=task_key,
+            description=note.get("observation_text", ""),
+            session_key=session_key,
+        )
+
     logger.info(
         "working_session_projected",
         session_key=session_key,
         observation_count=len(observations),
+        task_count=len(plan_notes),
     )

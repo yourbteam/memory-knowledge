@@ -8,7 +8,7 @@ _driver: neo4j.AsyncDriver | None = None
 
 NODE_LABELS = [
     "Repository", "Revision", "File", "Symbol", "LearnedRule", "WorkingSession",
-    "Module", "DbTable", "StoredProcedure", "ApiEndpoint",
+    "Module", "DbTable", "StoredProcedure", "ApiEndpoint", "Service", "Task",
 ]
 
 

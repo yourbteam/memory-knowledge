@@ -38,7 +38,12 @@ def test_decision_history():
 
 
 def test_decision_history_rationale():
-    assert classify_prompt("what was the rationale for this approach") == ("decision_history", 1.0)
+    # "rationale" (decision) + "approach" (pattern) = mixed
+    assert classify_prompt("what was the rationale for this approach") == ("mixed", 0.7)
+
+
+def test_decision_history_pure():
+    assert classify_prompt("why did we choose this solution") == ("decision_history", 1.0)
 
 
 def test_conceptual_lookup_default():
@@ -47,3 +52,15 @@ def test_conceptual_lookup_default():
 
 def test_conceptual_lookup_simple():
     assert classify_prompt("explain error handling") == ("conceptual_lookup", 0.5)
+
+
+def test_mixed_impact_and_pattern():
+    assert classify_prompt("what is the impact of the design pattern change") == ("mixed", 0.7)
+
+
+def test_traversal_query():
+    assert classify_prompt("what calls the auth middleware") == ("impact_analysis", 1.0)
+
+
+def test_traversal_with_identifier():
+    assert classify_prompt("who uses getUserById") == ("impact_analysis", 1.0)

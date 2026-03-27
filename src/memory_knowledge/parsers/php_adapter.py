@@ -16,7 +16,9 @@ from memory_knowledge.parsers.base import (
 logger = structlog.get_logger()
 
 _CLASS_PATTERN = re.compile(
-    r"^\s*(?:abstract\s+|final\s+|readonly\s+)*class\s+(\w+)",
+    r"^\s*(?:abstract\s+|final\s+|readonly\s+)*class\s+(\w+)"
+    r"(?:\s+extends\s+(\w+))?"
+    r"(?:\s+implements\s+([\w\s,\\]+))?",
     re.MULTILINE,
 )
 _INTERFACE_PATTERN = re.compile(
@@ -84,6 +86,11 @@ def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
 
     for match in _CLASS_PATTERN.finditer(source):
         line_no = source[: match.start()].count("\n") + 1
+        bases = []
+        if match.group(2):
+            bases.append(match.group(2))
+        if match.group(3):
+            bases.extend(n.strip() for n in match.group(3).split(",") if n.strip())
         symbols.append(
             SymbolInfo(
                 name=match.group(1),
@@ -91,6 +98,7 @@ def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
                 line_start=line_no,
                 line_end=_find_block_end(lines, line_no),
                 signature=match.group(0).strip(),
+                base_classes=bases,
             )
         )
 

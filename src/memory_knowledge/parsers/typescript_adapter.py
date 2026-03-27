@@ -24,7 +24,9 @@ _FUNC_PATTERN = re.compile(
     re.MULTILINE,
 )
 _CLASS_PATTERN = re.compile(
-    r"^(?:export\s+)?(?:abstract\s+)?class\s+(\w+)",
+    r"^(?:export\s+)?(?:abstract\s+)?class\s+(\w+)"
+    r"(?:\s+extends\s+(\w+))?"
+    r"(?:\s+implements\s+([\w\s,]+))?",
     re.MULTILINE,
 )
 _INTERFACE_PATTERN = re.compile(
@@ -91,6 +93,11 @@ def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
 
     for match in _CLASS_PATTERN.finditer(source):
         line_no = source[: match.start()].count("\n") + 1
+        bases = []
+        if match.group(2):
+            bases.append(match.group(2))
+        if match.group(3):
+            bases.extend(n.strip() for n in match.group(3).split(",") if n.strip())
         symbols.append(
             SymbolInfo(
                 name=match.group(1),
@@ -98,6 +105,7 @@ def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
                 line_start=line_no,
                 line_end=_find_block_end(lines, line_no),
                 signature=f"class {match.group(1)}",
+                base_classes=bases,
             )
         )
 

@@ -45,6 +45,17 @@ def classify_prompt(query: str) -> tuple[str, float]:
     Strong keyword matches get 1.0, default fallback gets 0.5.
     """
     features = extract_prompt_features(query)
+    # Graph-first for traversal queries
+    if features.get("has_traversal_phrases"):
+        return "impact_analysis", 1.0
+    # Mixed when multiple keyword categories match
+    keyword_hits = sum([
+        features["has_impact_keywords"],
+        features["has_decision_keywords"],
+        features["has_pattern_keywords"],
+    ])
+    if keyword_hits >= 2:
+        return "mixed", 0.7
     if features["identifier_count"] > 0:
         return "exact_lookup", 1.0
     if features["has_impact_keywords"]:

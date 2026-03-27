@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import json
 import uuid
 
 import asyncpg
@@ -19,15 +20,17 @@ async def create_job(
     commit_sha: str | None = None,
     branch_name: str | None = None,
     correlation_id: str | None = None,
+    job_params: dict | None = None,
 ) -> uuid.UUID:
     """Create a new job manifest entry. Returns job_id."""
     job_id = uuid.uuid4()
+    checkpoint_data = json.dumps(job_params) if job_params else None
     await pool.execute(
         """
         INSERT INTO ops.job_manifests
             (run_id, job_id, repository_key, commit_sha, branch_name,
-             tool_name, state_code, job_type, correlation_id)
-        VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7, $8)
+             tool_name, state_code, job_type, correlation_id, checkpoint_data)
+        VALUES ($1, $2, $3, $4, $5, $6, 'pending', $7, $8, $9::jsonb)
         """,
         run_id,
         job_id,
@@ -37,6 +40,7 @@ async def create_job(
         tool_name,
         job_type,
         correlation_id,
+        checkpoint_data,
     )
     logger.info("job_created", job_id=str(job_id), job_type=job_type)
     return job_id
