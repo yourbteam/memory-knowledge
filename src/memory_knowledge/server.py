@@ -900,14 +900,12 @@ async def metrics_endpoint(request: Request) -> Response:
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
-import os as _os
-
 from starlette.middleware import Middleware
 from starlette.middleware.cors import CORSMiddleware
 
 from memory_knowledge.middleware.auth import ApiKeyAuthMiddleware
 
-_cors_origins = _os.environ.get("CORS_ALLOWED_ORIGINS", "*").split(",")
+_cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "*").split(",")
 
 # Starlette app with health routes + mounted MCP sub-app
 app = Starlette(

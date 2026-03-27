@@ -15,6 +15,7 @@ import json
 import os
 import tempfile
 import time
+from datetime import timedelta
 import urllib.parse
 import urllib.request
 import urllib.error
@@ -354,6 +355,7 @@ class CodexTokenManager:
         self._check_task: asyncio.Task | None = None
         self._daily_task: asyncio.Task | None = None
         self._consecutive_failures = 0
+        self._refresh_lock = asyncio.Lock()
 
     async def start(self) -> None:
         """Start background refresh loops. Optionally seed from Key Vault."""
@@ -412,7 +414,7 @@ class CodexTokenManager:
                 minute=0, second=0, microsecond=0,
             )
             if target <= now:
-                target = target.replace(day=target.day + 1)
+                target = target + timedelta(days=1)
             wait_seconds = (target - now).total_seconds()
 
             try:
@@ -427,6 +429,13 @@ class CodexTokenManager:
             await self._do_refresh()
 
     async def _do_refresh(self) -> None:
+        if self._refresh_lock.locked():
+            logger.debug("refresh_skipped_lock_held")
+            return
+        async with self._refresh_lock:
+            await self._do_refresh_inner()
+
+    async def _do_refresh_inner(self) -> None:
         success, error = await refresh_codex_token(self.codex_auth_path)
         if success:
             self._consecutive_failures = 0

@@ -40,6 +40,7 @@ class JobDispatcher:
         self._task: asyncio.Task | None = None
         self._pool: asyncpg.Pool | None = None
         self._settings: Settings | None = None
+        self._active_tasks: set[asyncio.Task] = set()
 
     async def start(self, pool: asyncpg.Pool, settings: Settings) -> None:
         """Start the polling loop."""
@@ -50,7 +51,7 @@ class JobDispatcher:
         logger.info("job_dispatcher_started", poll_interval=self.poll_interval)
 
     async def stop(self) -> None:
-        """Stop the polling loop."""
+        """Stop the polling loop and drain active dispatch tasks."""
         self._running = False
         if self._task:
             self._task.cancel()
@@ -58,6 +59,9 @@ class JobDispatcher:
                 await self._task
             except asyncio.CancelledError:
                 pass
+        if self._active_tasks:
+            logger.info("draining_dispatch_tasks", count=len(self._active_tasks))
+            await asyncio.gather(*self._active_tasks, return_exceptions=True)
         logger.info("job_dispatcher_stopped")
 
     async def _poll_loop(self) -> None:
@@ -89,7 +93,9 @@ class JobDispatcher:
                     if workflow_fn is None:
                         logger.warning("unknown_job_type", job_type=job_type)
                         continue
-                    asyncio.create_task(self._dispatch_job(row, workflow_fn))
+                    task = asyncio.create_task(self._dispatch_job(row, workflow_fn))
+                    self._active_tasks.add(task)
+                    task.add_done_callback(self._active_tasks.discard)
             except Exception as exc:
                 logger.error("dispatcher_poll_error", error=str(exc))
 
