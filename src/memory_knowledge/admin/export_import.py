@@ -323,10 +323,10 @@ async def import_repo_memory(
             """
             INSERT INTO catalog.summaries (entity_id, summary_level, summary_text,
                                            summary_tsv)
-            VALUES ($1, $2, $3, to_tsvector('english', $3))
+            VALUES ($1, $2, $3, to_tsvector('english', COALESCE($3, '')))
             ON CONFLICT (entity_id, summary_level) DO UPDATE
                 SET summary_text = EXCLUDED.summary_text,
-                    summary_tsv = to_tsvector('english', EXCLUDED.summary_text)
+                    summary_tsv = to_tsvector('english', COALESCE(EXCLUDED.summary_text, ''))
             """,
             entity_id, row["summary_level"], row.get("summary_text"),
         )
@@ -452,11 +452,11 @@ async def import_repo_memory(
                      evidence_entity_id, evidence_chunk_id,
                      verification_status, verification_notes, is_active,
                      supersedes_learned_record_id)
-                VALUES ($1, $2, $3, $4, $5, to_tsvector('english', $5), $6, $7, $8,
+                VALUES ($1, $2, $3, $4, $5, to_tsvector('english', COALESCE($5, '')), $6, $7, $8,
                         $9, $10, $11, $12, $13, $14, $15, $16)
                 ON CONFLICT (entity_id) DO UPDATE
                     SET body_text = EXCLUDED.body_text,
-                        body_tsv = to_tsvector('english', EXCLUDED.body_text),
+                        body_tsv = to_tsvector('english', COALESCE(EXCLUDED.body_text, '')),
                         verification_status = EXCLUDED.verification_status,
                         is_active = EXCLUDED.is_active
                 RETURNING id
