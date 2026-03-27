@@ -124,8 +124,8 @@ async def supersede_learned_record(
     """Link new record as superseding old, deactivate old."""
     await pool.execute(
         "UPDATE memory.learned_records SET supersedes_learned_record_id = $2 WHERE id = $1",
-        new_record_id,
         old_record_id,
+        new_record_id,
     )
     await deactivate_learned_record(pool, old_record_id)
     logger.info("learned_record_superseded", old_id=old_record_id, new_id=new_record_id)

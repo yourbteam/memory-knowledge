@@ -275,6 +275,12 @@ async def run_commit(
                 await supersede_learned_record(pool, old_row["id"], learned_record_id)
                 if qdrant_client is not None:
                     await deactivate_learned_record_point(qdrant_client, supersedes_id)
+                if neo4j_driver is not None:
+                    from memory_knowledge.projections.learned_memory_neo4j import (
+                        deactivate_learned_rule,
+                    )
+
+                    await deactivate_learned_rule(neo4j_driver, supersedes_id)
 
             logger.info(
                 "proposal_superseded",
