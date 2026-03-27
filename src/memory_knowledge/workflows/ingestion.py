@@ -215,6 +215,29 @@ async def run(
                     )
                     continue
 
+                # Deactivate old Qdrant points for this file (incremental)
+                if run_type == "incremental":
+                    await qdrant_client.set_payload(
+                        collection_name="code_chunks",
+                        payload={"is_active": False},
+                        points=qdrant_models.Filter(
+                            must=[
+                                qdrant_models.FieldCondition(
+                                    key="repository_key",
+                                    match=qdrant_models.MatchValue(value=repository_key),
+                                ),
+                                qdrant_models.FieldCondition(
+                                    key="file_path",
+                                    match=qdrant_models.MatchValue(value=file_path),
+                                ),
+                                qdrant_models.FieldCondition(
+                                    key="is_active",
+                                    match=qdrant_models.MatchValue(value=True),
+                                ),
+                            ]
+                        ),
+                    )
+
                 source = full_path.read_text(
                     encoding="utf-8", errors="replace"
                 )
