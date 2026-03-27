@@ -104,8 +104,8 @@ _EXPORT_TABLES = [
         JOIN catalog.entities e ON lr.entity_id = e.id
         JOIN catalog.entities scope_e ON lr.scope_entity_id = scope_e.id
         LEFT JOIN catalog.entities ev_e ON lr.evidence_entity_id = ev_e.id
-        JOIN catalog.chunks ev_c ON lr.evidence_chunk_id = ev_c.id
-        JOIN catalog.entities ev_ce ON ev_c.entity_id = ev_ce.id
+        LEFT JOIN catalog.chunks ev_c ON lr.evidence_chunk_id = ev_c.id
+        LEFT JOIN catalog.entities ev_ce ON ev_c.entity_id = ev_ce.id
         LEFT JOIN (
             memory.learned_records lr2
             JOIN catalog.entities sup_e ON lr2.entity_id = sup_e.id
@@ -217,6 +217,8 @@ async def import_repo_memory(
             continue
         commit_sha = row.get("_revision_commit_sha")
         rev_id = rev_key_to_id.get((rk, commit_sha)) if commit_sha else None
+        if commit_sha and not rev_id:
+            continue  # revision not imported, skip entity
         ek = row["entity_key"]
         r = await pool.fetchrow(
             """
@@ -239,18 +241,20 @@ async def import_repo_memory(
         if not entity_id:
             continue
         commit_sha = row.get("_revision_commit_sha")
-        # Find rev_id from any repo key
+        # Resolve rev_id using repo_key + commit_sha
         rev_id = None
-        for (rk, cs), rid in rev_key_to_id.items():
-            if cs == commit_sha:
-                rev_id = rid
+        for rk in repo_key_to_id:
+            rev_id = rev_key_to_id.get((rk, commit_sha))
+            if rev_id:
                 break
+        if not rev_id:
+            continue
         r = await pool.fetchrow(
             """
             INSERT INTO catalog.files (entity_id, repo_revision_id, file_path, language, size_bytes, checksum)
             VALUES ($1, $2, $3, $4, $5, $6)
-            ON CONFLICT (entity_id) DO UPDATE
-                SET file_path = EXCLUDED.file_path, language = EXCLUDED.language,
+            ON CONFLICT ON CONSTRAINT uq_files_revision_path DO UPDATE
+                SET entity_id = EXCLUDED.entity_id, language = EXCLUDED.language,
                     size_bytes = EXCLUDED.size_bytes, checksum = EXCLUDED.checksum
             RETURNING id
             """,
@@ -426,11 +430,11 @@ async def import_repo_memory(
             vt_sha = row.get("_valid_to_commit_sha")
             vf_rev_id = None
             vt_rev_id = None
-            for (rk, cs), rid in rev_key_to_id.items():
-                if cs == vf_sha:
-                    vf_rev_id = rid
-                if cs == vt_sha:
-                    vt_rev_id = rid
+            for rk in repo_key_to_id:
+                if vf_sha:
+                    vf_rev_id = vf_rev_id or rev_key_to_id.get((rk, vf_sha))
+                if vt_sha:
+                    vt_rev_id = vt_rev_id or rev_key_to_id.get((rk, vt_sha))
 
             # Resolve supersedes
             sup_ek = row.get("_supersedes_entity_key")
@@ -466,8 +470,9 @@ async def import_repo_memory(
                 row.get("verification_notes"),
                 row.get("is_active", True), sup_lr_id,
             )
-            ek_to_lr_id[ek] = r["id"]
-            _inc("memory.learned_records")
+            if r:
+                ek_to_lr_id[ek] = r["id"]
+                _inc("memory.learned_records")
 
     logger.info(
         "import_complete",

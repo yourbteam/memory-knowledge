@@ -2,9 +2,7 @@ from __future__ import annotations
 
 from typing import Any
 
-import openai
 import structlog
-from openai import AsyncOpenAI
 from qdrant_client import AsyncQdrantClient, models
 
 from memory_knowledge.config import Settings
