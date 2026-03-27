@@ -23,24 +23,25 @@ async def embed_and_upsert_learned_record(
     """Embed body_text and upsert to learned_memory collection."""
     embedding = await embed_single(body_text, settings)
 
-    # Upsert point
+    # Validate and upsert point
+    from memory_knowledge.projections.qdrant_payload_schemas import LearnedMemoryPayload
+
+    payload = {
+        "entity_key": entity_key,
+        "repository_key": repository_key,
+        "memory_type": memory_type,
+        "confidence": confidence,
+        "applicability_mode": applicability_mode,
+        "scope_entity_key": scope_entity_key,
+        "is_active": True,
+        "content_kind": "learned_rule",
+    }
+    LearnedMemoryPayload.model_validate(payload)
+
     await client.upsert(
         collection_name="learned_memory",
         points=[
-            models.PointStruct(
-                id=entity_key,
-                vector=embedding,
-                payload={
-                    "entity_key": entity_key,
-                    "repository_key": repository_key,
-                    "memory_type": memory_type,
-                    "confidence": confidence,
-                    "applicability_mode": applicability_mode,
-                    "scope_entity_key": scope_entity_key,
-                    "is_active": True,
-                    "content_kind": "learned_rule",
-                },
-            )
+            models.PointStruct(id=entity_key, vector=embedding, payload=payload)
         ],
     )
     logger.info("learned_record_embedded", entity_key=entity_key)

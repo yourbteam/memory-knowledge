@@ -528,6 +528,20 @@ async def run(
         surface_commit_sha = active_surface["commit_sha"] if active_surface else None
         surface_branch_name = active_surface["branch_name"] if active_surface else None
 
+        # Freshness check
+        from datetime import datetime, timezone, timedelta
+
+        freshness_warning = None
+        if active_surface is not None and active_surface.get("updated_utc"):
+            age = datetime.now(timezone.utc) - active_surface["updated_utc"]
+            if age > timedelta(hours=settings.max_surface_age_hours):
+                hours_old = int(age.total_seconds() / 3600)
+                freshness_warning = (
+                    f"Data is {hours_old} hours old. "
+                    f"Last ingestion: {active_surface['updated_utc'].isoformat()}"
+                )
+                logger.warning("stale_retrieval_surface", hours_old=hours_old)
+
         # Step 3: Query first store
         FANOUT_THRESHOLD = 5
         stores_queried = [first_store]
@@ -626,6 +640,8 @@ async def run(
 
         if route_exec_id is not None:
             context_bundle["route_execution_id"] = route_exec_id
+        if freshness_warning:
+            context_bundle["freshness_warning"] = freshness_warning
 
         return WorkflowResult(
             run_id=str(run_id),

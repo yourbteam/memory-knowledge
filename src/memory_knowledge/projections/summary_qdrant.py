@@ -29,21 +29,22 @@ async def embed_and_upsert_summaries(
     texts = [s["summary_text"] for s in summaries_list]
     embeddings = await embed_chunks(texts, settings)
 
-    points = [
-        models.PointStruct(
-            id=s["entity_key"],
-            vector=emb,
-            payload={
-                "entity_key": s["entity_key"],
-                "repository_key": repository_key,
-                "commit_sha": commit_sha,
-                "summary_level": s["summary_level"],
-                "is_active": True,
-                "content_kind": "summary",
-            },
+    from memory_knowledge.projections.qdrant_payload_schemas import SummaryPayload
+
+    points = []
+    for s, emb in zip(summaries_list, embeddings):
+        payload = {
+            "entity_key": s["entity_key"],
+            "repository_key": repository_key,
+            "commit_sha": commit_sha,
+            "summary_level": s["summary_level"],
+            "is_active": True,
+            "content_kind": "summary",
+        }
+        SummaryPayload.model_validate(payload)
+        points.append(
+            models.PointStruct(id=s["entity_key"], vector=emb, payload=payload)
         )
-        for s, emb in zip(summaries_list, embeddings)
-    ]
 
     for i in range(0, len(points), BATCH_SIZE):
         await client.upsert(

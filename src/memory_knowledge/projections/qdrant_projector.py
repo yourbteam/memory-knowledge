@@ -30,24 +30,30 @@ async def upsert_points(
     branch_name: str,
 ) -> None:
     """Upsert points to code_chunks collection. Point ID = entity_key UUID string."""
-    points = [
-        models.PointStruct(
-            id=c["entity_key"],  # UUID string — Qdrant accepts this natively
-            vector=c["embedding"],
-            payload={
-                "entity_key": c["entity_key"],
-                "repository_key": repository_key,
-                "commit_sha": commit_sha,
-                "branch_name": branch_name,
-                "file_path": c["file_path"],
-                "symbol_name": c.get("symbol_name"),
-                "chunk_type": c["chunk_type"],
-                "is_active": True,
-                "retrieval_surface": f"live_branch:{branch_name}",
-            },
+    from memory_knowledge.projections.qdrant_payload_schemas import CodeChunkPayload
+
+    points = []
+    for c in chunks_with_embeddings:
+        payload = {
+            "entity_key": c["entity_key"],
+            "repository_key": repository_key,
+            "commit_sha": commit_sha,
+            "branch_name": branch_name,
+            "file_path": c["file_path"],
+            "symbol_name": c.get("symbol_name"),
+            "chunk_type": c["chunk_type"],
+            "is_active": True,
+            "retrieval_surface": f"live_branch:{branch_name}",
+            "content_kind": "code_chunk",
+        }
+        CodeChunkPayload.model_validate(payload)
+        points.append(
+            models.PointStruct(
+                id=c["entity_key"],
+                vector=c["embedding"],
+                payload=payload,
+            )
         )
-        for c in chunks_with_embeddings
-    ]
 
     for i in range(0, len(points), BATCH_SIZE):
         await client.upsert(

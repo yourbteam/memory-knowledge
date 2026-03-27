@@ -21,6 +21,7 @@ dependencies = [
     "tenacity>=8.0",
     "gitpython>=3.1.0",
     "prometheus-client>=0.20",
+    "alembic>=1.13",
 ]
 
 [project.optional-dependencies]

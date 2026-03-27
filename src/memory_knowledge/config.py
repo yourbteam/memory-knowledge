@@ -38,6 +38,9 @@ class Settings(BaseSettings):
     generate_summaries: bool = True
     supported_languages: list[str] = ["python"]
 
+    # Freshness
+    max_surface_age_hours: int = 168  # 7 days
+
     # Job orchestration
     max_job_retries: int = 3
     job_retry_delay_seconds: float = 5.0
