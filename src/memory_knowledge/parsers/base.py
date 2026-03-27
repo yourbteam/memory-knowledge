@@ -11,6 +11,7 @@ class SymbolInfo:
     line_end: int
     signature: str
     base_classes: list[str] = field(default_factory=list)
+    implements: list[str] = field(default_factory=list)
 
 
 @dataclass

@@ -37,23 +37,35 @@ def test_typescript_extends():
     code = "export class UserService extends BaseService {\n}\n"
     output = parse_typescript_file("user.ts", code)
     cls = next(s for s in output.symbols if s.name == "UserService")
-    assert "BaseService" in cls.base_classes
+    assert cls.base_classes == ["BaseService"]
+    assert cls.implements == []
 
 
 def test_typescript_implements():
     code = "class Handler implements IHandler, Serializable {\n}\n"
     output = parse_typescript_file("handler.ts", code)
     cls = next(s for s in output.symbols if s.name == "Handler")
-    assert "IHandler" in cls.base_classes
-    assert "Serializable" in cls.base_classes
+    assert cls.base_classes == []
+    assert "IHandler" in cls.implements
+    assert "Serializable" in cls.implements
+
+
+def test_typescript_extends_and_implements():
+    code = "class Foo extends Bar implements Baz, Qux {\n}\n"
+    output = parse_typescript_file("foo.ts", code)
+    cls = next(s for s in output.symbols if s.name == "Foo")
+    assert cls.base_classes == ["Bar"]
+    assert set(cls.implements) == {"Baz", "Qux"}
 
 
 def test_csharp_inheritance():
     code = "public class UserController : BaseController, IDisposable\n{\n}\n"
     output = parse_csharp_file("UserController.cs", code)
     cls = next(s for s in output.symbols if s.name == "UserController")
+    # C# uses single : group — both go into base_classes
     assert "BaseController" in cls.base_classes
     assert "IDisposable" in cls.base_classes
+    assert cls.implements == []  # C# can't syntactically separate
 
 
 def test_php_extends_implements():
@@ -64,9 +76,9 @@ class UserService extends BaseService implements Cacheable, Loggable
 """
     output = parse_php_file("UserService.php", code)
     cls = next(s for s in output.symbols if s.name == "UserService")
-    assert "BaseService" in cls.base_classes
-    assert "Cacheable" in cls.base_classes
-    assert "Loggable" in cls.base_classes
+    assert cls.base_classes == ["BaseService"]
+    assert "Cacheable" in cls.implements
+    assert "Loggable" in cls.implements
 
 
 # --- Prompt feature extractor ---

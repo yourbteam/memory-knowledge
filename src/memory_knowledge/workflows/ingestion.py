@@ -655,33 +655,47 @@ async def run(
 
             # Inheritance edges (EXTENDS/IMPLEMENTS)
             inheritance_edges: list[dict[str, str]] = []
+
+            def _find_symbol_ek(name: str) -> str | None:
+                for fs2 in neo4j_file_symbols:
+                    for s in fs2["symbols"]:
+                        if s["name"] == name:
+                            return s["entity_key"]
+                return None
+
             for fs in neo4j_file_symbols:
                 cached = file_path_to_parse_output.get(fs["file_path"])
                 if not cached:
                     continue
                 for sym in cached.symbols:
-                    if sym.kind != "class" or not sym.base_classes:
+                    if sym.kind != "class":
                         continue
                     child_ek = symbol_ek_lookup.get((fs["file_path"], sym.name))
                     if not child_ek:
                         continue
+
+                    # EXTENDS edges from base_classes
                     for base_name in sym.base_classes:
-                        parent_ek = None
-                        for fs2 in neo4j_file_symbols:
-                            for s in fs2["symbols"]:
-                                if s["name"] == base_name:
-                                    parent_ek = s["entity_key"]
-                                    break
-                            if parent_ek:
-                                break
-                        if parent_ek:
-                            is_interface = base_name.startswith("I") and len(base_name) > 1 and base_name[1].isupper()
-                            rel_type = "IMPLEMENTS" if is_interface else "EXTENDS"
+                        # For C#, base_classes may include interfaces (: Base, IFoo)
+                        if cached.language == "csharp":
+                            is_iface = base_name.startswith("I") and len(base_name) > 1 and base_name[1].isupper()
+                            rel = "IMPLEMENTS" if is_iface else "EXTENDS"
+                        else:
+                            rel = "EXTENDS"
+                        target_ek = _find_symbol_ek(base_name)
+                        if target_ek:
                             inheritance_edges.append({
-                                "child_ek": child_ek,
-                                "target_ek": parent_ek,
-                                "rel_type": rel_type,
+                                "child_ek": child_ek, "target_ek": target_ek, "rel_type": rel,
                             })
+
+                    # IMPLEMENTS edges from implements field (TS, PHP)
+                    for iface_name in sym.implements:
+                        target_ek = _find_symbol_ek(iface_name)
+                        if target_ek:
+                            inheritance_edges.append({
+                                "child_ek": child_ek, "target_ek": target_ek, "rel_type": "IMPLEMENTS",
+                            })
+
             await project_inheritance_edges(neo4j_driver, inheritance_edges)
 
         # Step 10: Update branch head + retrieval surface

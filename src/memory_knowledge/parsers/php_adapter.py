@@ -87,10 +87,11 @@ def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
     for match in _CLASS_PATTERN.finditer(source):
         line_no = source[: match.start()].count("\n") + 1
         bases = []
+        ifaces = []
         if match.group(2):
             bases.append(match.group(2))
         if match.group(3):
-            bases.extend(n.strip() for n in match.group(3).split(",") if n.strip())
+            ifaces.extend(n.strip() for n in match.group(3).split(",") if n.strip())
         symbols.append(
             SymbolInfo(
                 name=match.group(1),
@@ -99,6 +100,7 @@ def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
                 line_end=_find_block_end(lines, line_no),
                 signature=match.group(0).strip(),
                 base_classes=bases,
+                implements=ifaces,
             )
         )
 
