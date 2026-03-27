@@ -103,10 +103,15 @@ async def check_pg_neo4j(
         try:
             records, _, _ = await neo4j_driver.execute_query(
                 """
-                MATCH (f:File)
-                WHERE NOT (f)<-[:HAS_FILE]-(:Revision)
+                MATCH (repo:Repository {entity_key: $repository_key})
+                      -[:HAS_REVISION]->(rev:Revision)
+                OPTIONAL MATCH (rev)-[:HAS_FILE]->(f:File)
+                      -[:CONTAINS]->(s:Symbol)
+                WITH f, count(s) AS sym_count
+                WHERE f IS NOT NULL AND sym_count = 0
                 RETURN count(f) AS orphan_count
                 """,
+                repository_key=repository_key,
             )
             report.missing_edges = records[0]["orphan_count"] if records else 0
         except Exception as exc:

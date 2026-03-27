@@ -29,11 +29,15 @@ def classify_error(exc: Exception) -> str:
         for kw in ("connection", "timeout", "refused", "unreachable")
     ):
         return STORE_UNREACHABLE
-    if "asyncpg" in exc_module and "PostgresError" in exc_type:
+    if "asyncpg" in exc_module and exc_type in (
+        "InterfaceError", "InternalClientError", "ConnectionDoesNotExistError",
+    ):
         return STORE_UNREACHABLE
-    if "qdrant" in exc_module.lower():
+    if "qdrant" in exc_module.lower() and any(
+        kw in exc_type for kw in ("Connection", "Timeout", "Unreachable")
+    ):
         return STORE_UNREACHABLE
-    if "neo4j" in exc_module.lower() and "ServiceUnavailable" in exc_type:
+    if "neo4j" in exc_module.lower() and exc_type in ("ServiceUnavailable",):
         return STORE_UNREACHABLE
 
     # OpenAI / embedding errors
