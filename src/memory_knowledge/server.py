@@ -697,6 +697,15 @@ async def import_repo_memory_tool(
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "import_repo_memory")
     try:
+        max_bytes = get_settings().max_import_size_mb * 1024 * 1024
+        if len(data.encode("utf-8")) > max_bytes:
+            return WorkflowResult(
+                run_id=str(run_id),
+                tool_name="import_repo_memory",
+                status="error",
+                error=f"Import data exceeds {get_settings().max_import_size_mb}MB limit",
+            ).model_dump_json()
+
         from memory_knowledge.admin.export_import import import_repo_memory
 
         lines = [line for line in data.strip().split("\n") if line.strip()]
@@ -844,7 +853,13 @@ async def app_lifespan(app: Starlette):
     if _background_tasks:
         tasks = list(_background_tasks)
         logger.info("draining_background_tasks", count=len(tasks))
-        await asyncio.gather(*tasks, return_exceptions=True)
+        try:
+            await asyncio.wait_for(
+                asyncio.gather(*tasks, return_exceptions=True),
+                timeout=30.0,
+            )
+        except asyncio.TimeoutError:
+            logger.warning("shutdown_drain_timeout", remaining=len(tasks))
     await close_qdrant()
     await close_neo4j()
     await close_postgres()
@@ -868,6 +883,15 @@ async def metrics_endpoint(request: Request) -> Response:
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
+import os as _os
+
+from starlette.middleware import Middleware
+from starlette.middleware.cors import CORSMiddleware
+
+from memory_knowledge.middleware.auth import ApiKeyAuthMiddleware
+
+_cors_origins = _os.environ.get("CORS_ALLOWED_ORIGINS", "*").split(",")
+
 # Starlette app with health routes + mounted MCP sub-app
 app = Starlette(
     routes=[
@@ -875,6 +899,11 @@ app = Starlette(
         Route("/ready", readiness_endpoint),
         Route("/metrics", metrics_endpoint),
         Mount("/mcp", app=mcp.streamable_http_app()),
+    ],
+    middleware=[
+        Middleware(ApiKeyAuthMiddleware),
+        Middleware(CORSMiddleware, allow_origins=_cors_origins,
+                  allow_methods=["*"], allow_headers=["*"]),
     ],
     lifespan=app_lifespan,
 )

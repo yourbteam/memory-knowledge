@@ -40,7 +40,6 @@ class JobDispatcher:
         self._task: asyncio.Task | None = None
         self._pool: asyncpg.Pool | None = None
         self._settings: Settings | None = None
-        self._dispatched: set[uuid.UUID] = set()  # prevent duplicate dispatch
 
     async def start(self, pool: asyncpg.Pool, settings: Settings) -> None:
         """Start the polling loop."""
@@ -67,27 +66,29 @@ class JobDispatcher:
             try:
                 if self._pool is None:
                     break
+                # Atomically claim jobs: SELECT FOR UPDATE SKIP LOCKED + transition to running
                 rows = await self._pool.fetch(
                     """
-                    SELECT job_id, job_type, repository_key, commit_sha,
-                           branch_name, checkpoint_data
-                    FROM ops.job_manifests
-                    WHERE state_code IN ('pending', 'retrying')
-                    ORDER BY created_utc
-                    LIMIT $1
+                    UPDATE ops.job_manifests
+                    SET state_code = 'running'
+                    WHERE job_id IN (
+                        SELECT job_id FROM ops.job_manifests
+                        WHERE state_code IN ('pending', 'retrying')
+                        ORDER BY created_utc
+                        LIMIT $1
+                        FOR UPDATE SKIP LOCKED
+                    )
+                    RETURNING job_id, job_type, repository_key, commit_sha,
+                              branch_name, checkpoint_data
                     """,
                     self.max_concurrent,
                 )
                 for row in rows:
-                    job_id = row["job_id"]
-                    if job_id in self._dispatched:
-                        continue  # already dispatched, skip
                     job_type = row["job_type"]
                     workflow_fn = JOB_TYPE_REGISTRY.get(job_type)
                     if workflow_fn is None:
                         logger.warning("unknown_job_type", job_type=job_type)
                         continue
-                    self._dispatched.add(job_id)
                     asyncio.create_task(self._dispatch_job(row, workflow_fn))
             except Exception as exc:
                 logger.error("dispatcher_poll_error", error=str(exc))
@@ -129,13 +130,10 @@ class JobDispatcher:
             if self._pool is None or self._settings is None:
                 return
 
-            try:
-                await execute_job(
-                    manifest_pool=self._pool,
-                    job_id=job_id,
-                    job_fn=workflow_fn,
-                    worker_settings=self._settings,
-                    **kwargs,
-                )
-            finally:
-                self._dispatched.discard(job_id)
+            await execute_job(
+                manifest_pool=self._pool,
+                job_id=job_id,
+                job_fn=workflow_fn,
+                worker_settings=self._settings,
+                **kwargs,
+            )

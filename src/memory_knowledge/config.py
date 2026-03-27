@@ -12,6 +12,8 @@ class Settings(BaseSettings):
     database_url: str
     pg_pool_min_size: int = 5
     pg_pool_max_size: int = 20
+    pg_ssl: bool = False
+    pg_command_timeout: int = 30
 
     # Qdrant
     qdrant_url: str
@@ -26,17 +28,20 @@ class Settings(BaseSettings):
     # Auth
     auth_mode: Literal["api_key", "codex"] = "api_key"
     codex_auth_path: str = "~/.codex/auth.json"
+    mcp_api_key: str | None = None  # Bearer token for MCP endpoint auth
 
     # OpenAI
     openai_api_key: str | None = None
     embedding_model: str = "text-embedding-3-small"
     embedding_dimensions: int = 1536
     completion_model: str = "gpt-4o"
+    max_completion_tokens: int = 4096
 
     # Ingestion
     repo_clone_base_path: str = "/tmp/memory-knowledge/repos"
     generate_summaries: bool = True
     supported_languages: list[str] = ["python"]
+    max_import_size_mb: int = 50
 
     # Freshness
     max_surface_age_hours: int = 168  # 7 days
@@ -44,6 +49,9 @@ class Settings(BaseSettings):
     # Job orchestration
     max_job_retries: int = 3
     job_retry_delay_seconds: float = 5.0
+
+    # HTTP
+    cors_allowed_origins: str = "*"
 
     # Server
     server_port: int = 8000

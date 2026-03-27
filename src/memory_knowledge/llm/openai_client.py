@@ -108,6 +108,7 @@ async def complete(
         response = await client.chat.completions.create(
             model=settings.completion_model,
             messages=messages,
+            max_tokens=settings.max_completion_tokens,
         )
     except openai.AuthenticationError:
         if settings.auth_mode == "codex":
