@@ -9,7 +9,7 @@ from memory_knowledge.config import Settings
 
 logger = structlog.get_logger()
 
-EMBED_BATCH_SIZE = 100
+EMBED_BATCH_SIZE = 32  # ~8K chars per chunk × 32 = ~256K chars ≈ 64K tokens, well under 300K limit
 
 _RETRYABLE_ERRORS = (
     openai.RateLimitError,
