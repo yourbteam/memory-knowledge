@@ -4,7 +4,7 @@ from dataclasses import dataclass
 
 from memory_knowledge.parsers.base import FileParseOutput, SymbolInfo
 
-MAX_CHUNK_CHARS = 4000
+MAX_CHUNK_CHARS = 8000
 OVERLAP_CHARS = 500
 
 

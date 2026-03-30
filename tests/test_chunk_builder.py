@@ -39,7 +39,7 @@ def test_file_level_fallback():
 
 
 def test_oversized_symbol_splits():
-    big_body = "x = 1\n" * 1000  # well over 4000 chars
+    big_body = "x = 1\n" * 2000  # well over 8000 chars
     lines = big_body.splitlines()
     symbols = [SymbolInfo("big_func", "function", 1, len(lines), "def big_func()")]
     chunks = build_chunks(_make_parse_output(symbols), lines)
@@ -52,7 +52,7 @@ def test_oversized_symbol_splits():
 
 
 def test_oversized_file_splits():
-    big_content = "x = 1\n" * 1000
+    big_content = "x = 1\n" * 2000
     lines = big_content.splitlines()
     chunks = build_chunks(_make_parse_output(), lines)
     assert len(chunks) > 1
