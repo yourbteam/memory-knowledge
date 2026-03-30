@@ -25,7 +25,7 @@ _INTERFACE_PATTERN = re.compile(
     re.MULTILINE,
 )
 _METHOD_PATTERN = re.compile(
-    r"^\s*(?:public|private|internal|protected)\s+(?:static\s+)?(?:async\s+)?(?:virtual\s+)?(?:override\s+)?\w+(?:<[^>]+>)?\s+(\w+)\s*\(",
+    r"^\s*(?:public|private|internal|protected)\s+(?:static\s+)?(?:async\s+)?(?:virtual\s+)?(?:override\s+)?[\w.]+(?:<[^<>]*(?:<[^<>]*>[^<>]*)?>)?\s+(\w+)\s*\(",
     re.MULTILINE,
 )
 _USING_PATTERN = re.compile(r"^\s*using\s+([\w.]+)\s*;", re.MULTILINE)
@@ -134,20 +134,29 @@ def _extract_imports(source: str) -> list[ImportInfo]:
     return imports
 
 
+_CS_CALL_EXCLUDE = {
+    "if", "for", "while", "switch", "catch", "using", "class", "foreach",
+    "return", "throw", "new", "typeof", "nameof", "sizeof", "await", "async",
+    "get", "set", "var", "string", "int", "bool", "void", "object", "Task",
+    "List", "Dictionary", "Array", "Console", "Math", "Convert", "String",
+}
+
+
 def _extract_calls(source: str, symbols: list[SymbolInfo]) -> list[CallInfo]:
-    known = {s.name for s in symbols}
+    """Extract all method calls — cross-file resolution handled by ingestion pipeline."""
     calls: list[CallInfo] = []
     call_pattern = re.compile(r"\b(\w+)\s*\(")
     for match in call_pattern.finditer(source):
         name = match.group(1)
-        if name in known and name not in ("if", "for", "while", "switch", "catch", "using", "class"):
-            line_no = source[: match.start()].count("\n") + 1
-            enclosing = None
-            for sym in symbols:
-                if sym.line_start <= line_no <= sym.line_end and sym.name != name:
-                    enclosing = sym.name
-            if enclosing:
-                calls.append(CallInfo(caller_name=enclosing, callee_name=name, line_no=line_no))
+        if name in _CS_CALL_EXCLUDE or len(name) < 2:
+            continue
+        line_no = source[: match.start()].count("\n") + 1
+        enclosing = None
+        for sym in symbols:
+            if sym.line_start <= line_no <= sym.line_end and sym.name != name:
+                enclosing = sym.name
+        if enclosing:
+            calls.append(CallInfo(caller_name=enclosing, callee_name=name, line_no=line_no))
     return calls
 
 

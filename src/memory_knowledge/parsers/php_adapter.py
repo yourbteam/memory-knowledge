@@ -221,26 +221,32 @@ def _extract_imports(source: str) -> list[ImportInfo]:
     return imports
 
 
+_PHP_CALL_EXCLUDE = {
+    "if", "for", "while", "switch", "catch", "foreach",
+    "class", "function", "use", "require", "include",
+    "require_once", "include_once", "array", "list",
+    "return", "throw", "new", "echo", "print", "isset",
+    "empty", "unset", "count", "strlen", "substr",
+}
+
+
 def _extract_calls(source: str, symbols: list[SymbolInfo]) -> list[CallInfo]:
-    known = {s.name for s in symbols}
+    """Extract all function/method calls — cross-file resolution handled by ingestion pipeline."""
     calls: list[CallInfo] = []
     call_pattern = re.compile(r"\b(\w+)\s*\(")
     for match in call_pattern.finditer(source):
         name = match.group(1)
-        if name in known and name not in (
-            "if", "for", "while", "switch", "catch", "foreach",
-            "class", "function", "use", "require", "include",
-            "require_once", "include_once", "array", "list",
-        ):
-            line_no = source[: match.start()].count("\n") + 1
-            enclosing = None
-            for sym in symbols:
-                if sym.line_start <= line_no <= sym.line_end and sym.name != name:
-                    enclosing = sym.name
-            if enclosing:
-                calls.append(
-                    CallInfo(caller_name=enclosing, callee_name=name, line_no=line_no)
-                )
+        if name in _PHP_CALL_EXCLUDE or len(name) < 2:
+            continue
+        line_no = source[: match.start()].count("\n") + 1
+        enclosing = None
+        for sym in symbols:
+            if sym.line_start <= line_no <= sym.line_end and sym.name != name:
+                enclosing = sym.name
+        if enclosing:
+            calls.append(
+                CallInfo(caller_name=enclosing, callee_name=name, line_no=line_no)
+            )
     return calls
 
 

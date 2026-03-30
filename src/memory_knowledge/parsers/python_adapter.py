@@ -125,11 +125,20 @@ def _extract_imports(tree: ast.Module) -> list[ImportInfo]:
     return imports
 
 
+_PY_CALL_EXCLUDE = {
+    "print", "len", "range", "str", "int", "float", "bool", "list", "dict",
+    "set", "tuple", "type", "isinstance", "issubclass", "hasattr", "getattr",
+    "setattr", "delattr", "super", "property", "staticmethod", "classmethod",
+    "enumerate", "zip", "map", "filter", "sorted", "reversed", "any", "all",
+    "min", "max", "sum", "abs", "round", "open", "input", "format", "repr",
+    "id", "hash", "callable", "iter", "next", "vars", "dir",
+}
+
+
 def _extract_calls(
     tree: ast.Module, symbols: list[SymbolInfo]
 ) -> list[CallInfo]:
-    """Extract intra-file function calls (only ast.Name calls to known symbols)."""
-    known_names = {s.name for s in symbols}
+    """Extract all function/method calls — cross-file resolution handled by ingestion pipeline."""
     calls: list[CallInfo] = []
 
     for top_node in ast.iter_child_nodes(tree):
@@ -141,10 +150,18 @@ def _extract_calls(
         for child in ast.walk(top_node):
             if not isinstance(child, ast.Call):
                 continue
-            if not isinstance(child.func, ast.Name):
-                continue  # skip attribute calls (self.foo(), obj.bar())
-            callee = child.func.id
-            if callee in known_names and callee != caller_name:
+            # Extract callee name from both simple calls and attribute calls
+            callee: str | None = None
+            if isinstance(child.func, ast.Name):
+                callee = child.func.id
+            elif isinstance(child.func, ast.Attribute):
+                callee = child.func.attr  # obj.method() → "method"
+            if (
+                callee
+                and callee != caller_name
+                and callee not in _PY_CALL_EXCLUDE
+                and len(callee) >= 2
+            ):
                 calls.append(
                     CallInfo(
                         caller_name=caller_name,
