@@ -7,6 +7,7 @@ services:
       - .env
     volumes:
       - ~/.codex:/home/appuser/.codex:ro  # mount Codex CLI auth tokens (read-only)
+      - /Users/kamenkamenov/FCSAPI:/tmp/memory-knowledge/repos/fcsapi  # mount FCSAPI repo
     environment:
       CODEX_AUTH_PATH: /home/appuser/.codex/auth.json
     depends_on:

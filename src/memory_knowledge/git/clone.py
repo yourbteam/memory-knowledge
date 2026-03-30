@@ -17,9 +17,13 @@ def ensure_repo(
     """Clone if missing, fetch if present. Returns a gitpython Repo."""
     repo_dir = Path(clone_base_path) / repository_key
     if repo_dir.exists() and (repo_dir / ".git").exists():
-        logger.info("git_fetch", repository_key=repository_key, path=str(repo_dir))
+        logger.info("git_repo_found", repository_key=repository_key, path=str(repo_dir))
         repo = Repo(repo_dir)
-        repo.remotes.origin.fetch()
+        try:
+            repo.remotes.origin.fetch()
+            logger.info("git_fetch_complete", repository_key=repository_key)
+        except Exception as e:
+            logger.warning("git_fetch_skipped", repository_key=repository_key, error=str(e))
         return repo
     if origin_url is None:
         raise ValueError(
