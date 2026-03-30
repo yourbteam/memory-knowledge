@@ -23,6 +23,9 @@ def build_chunks(
     parse_output: FileParseOutput, source_lines: list[str]
 ) -> list[ChunkSpec]:
     """Build chunks from parsed symbols. Falls back to file-level if no symbols."""
+    if not source_lines or not any(line.strip() for line in source_lines):
+        return []  # skip empty files
+
     if not parse_output.symbols:
         return _file_level_chunks(parse_output.file_path, source_lines)
 

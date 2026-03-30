@@ -68,6 +68,4 @@ def test_chunk_titles():
 
 def test_empty_file():
     chunks = build_chunks(_make_parse_output(), [])
-    assert len(chunks) == 1
-    assert chunks[0].content_text == ""
-    assert chunks[0].chunk_type == "file"
+    assert len(chunks) == 0  # empty files produce no chunks
