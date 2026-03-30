@@ -10,6 +10,7 @@ services:
       - /Users/kamenkamenov/FCSAPI:/tmp/memory-knowledge/repos/fcsapi  # mount FCSAPI repo
     environment:
       CODEX_AUTH_PATH: /home/appuser/.codex/auth.json
+      SUPPORTED_LANGUAGES: '["python","csharp","sql","typescript"]'
     depends_on:
       postgres:
         condition: service_healthy

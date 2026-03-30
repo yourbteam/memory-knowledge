@@ -48,7 +48,7 @@ class Settings(BaseSettings):
     # Ingestion
     repo_clone_base_path: str = "/tmp/memory-knowledge/repos"
     generate_summaries: bool = True
-    supported_languages: list[str] = ["python"]
+    supported_languages: list[str] = ["python", "csharp", "sql", "typescript", "php"]
     max_import_size_mb: int = 50
 
     # Freshness
