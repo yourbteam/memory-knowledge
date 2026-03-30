@@ -225,19 +225,22 @@ async def qdrant_summary_search(
 async def neo4j_graph_expansion(
     driver: neo4j.AsyncDriver,
     entity_keys: list[str],
-    depth: int = 1,
+    depth: int = 2,
 ) -> list[dict[str, Any]]:
     if not entity_keys:
         return []
-    # Neo4j does not support parameter substitution in relationship length
-    # patterns — depth must be inlined. int() cast prevents injection.
-    query = (
-        f"MATCH (n)-[:CONTAINS|HAS_FILE*1..{int(depth)}]-(m) "
-        f"WHERE n.entity_key IN $entity_keys "
-        f"RETURN DISTINCT m.entity_key AS entity_key, labels(m) AS labels"
-    )
+    # Two traversals: structural (siblings) + dependency (callees)
+    # Structural: undirected CONTAINS/HAS_FILE for sibling symbols and parent files
+    # Dependency: directed CALLS/IMPORTS outbound to find what the code depends on
+    d = int(depth)
     records, _, _ = await driver.execute_query(
-        query,
+        f"MATCH (n)-[:CONTAINS|HAS_FILE*1..{d}]-(m) "
+        f"WHERE n.entity_key IN $entity_keys AND m.entity_key IS NOT NULL "
+        f"RETURN DISTINCT m.entity_key AS entity_key, labels(m) AS labels "
+        f"UNION "
+        f"MATCH (n)-[:CALLS|IMPORTS*1..{d}]->(m) "
+        f"WHERE n.entity_key IN $entity_keys AND m.entity_key IS NOT NULL "
+        f"RETURN DISTINCT m.entity_key AS entity_key, labels(m) AS labels",
         entity_keys=entity_keys,
     )
     return [{"entity_key": r["entity_key"], "labels": r["labels"]} for r in records]
@@ -282,11 +285,21 @@ def rerank_results(
                 "data": r.get("payload", {}),
             }
 
-    # Small boost for graph-connected results
+    # Boost graph-connected results AND add new graph-discovered entities
     if graph_entity_keys:
         for key in graph_entity_keys:
             if key in scores:
                 scores[key]["graph_boost"] = 0.1
+            else:
+                # New entity discovered via graph traversal — add with graph-only score
+                scores[key] = {
+                    "entity_key": key,
+                    "pg_score": 0.0,
+                    "qdrant_score": 0.0,
+                    "graph_boost": 0.3,
+                    "source": "graph",
+                    "data": {},
+                }
 
     # Add summary results with 0.8x weight
     SUMMARY_WEIGHT = 0.8

@@ -157,10 +157,74 @@ async def run(
             pool, neo4j_driver, scope_entity_keys, repository_id,
         )
 
+        # Step 3.5: Follow CALLS edges from evidence symbols to get callee code
+        call_chain: list[dict[str, Any]] = []
+        if neo4j_driver is not None:
+            # Extract symbol names from evidence to find what they call
+            evidence_symbol_keys = [
+                e["entity_key"] for e in evidence
+                if e.get("entity_key") and e.get("symbol_name")
+            ]
+            if evidence_symbol_keys:
+                try:
+                    # Find callees via Neo4j CALLS edges
+                    call_records, _, _ = await neo4j_driver.execute_query(
+                        """
+                        MATCH (caller:Symbol)-[:CALLS]->(callee:Symbol)
+                        WHERE caller.entity_key IN $keys
+                        RETURN DISTINCT callee.entity_key AS entity_key,
+                               callee.symbol_name AS symbol_name
+                        """,
+                        keys=evidence_symbol_keys,
+                    )
+                    callee_keys = [str(r["entity_key"]) for r in call_records]
+
+                    # Filter out callees already in evidence
+                    existing_keys = {e.get("entity_key") for e in evidence}
+                    new_callee_keys = [k for k in callee_keys if k not in existing_keys]
+
+                    if new_callee_keys:
+                        # Hydrate callee chunks from PG
+                        import uuid as _uuid
+                        valid_keys = []
+                        for k in new_callee_keys[:10]:  # limit to avoid huge queries
+                            try:
+                                _uuid.UUID(k)
+                                valid_keys.append(k)
+                            except ValueError:
+                                continue
+
+                        if valid_keys:
+                            callee_rows = await pool.fetch(
+                                """
+                                SELECT e.entity_key, c.title, c.content_text,
+                                       c.chunk_type, c.line_start, c.line_end,
+                                       f.file_path, s.symbol_name, s.symbol_kind
+                                FROM catalog.chunks c
+                                JOIN catalog.entities e ON c.entity_id = e.id
+                                JOIN catalog.files f ON c.file_id = f.id
+                                LEFT JOIN catalog.symbols s ON s.entity_id = e.id
+                                WHERE e.entity_key = ANY($1::uuid[])
+                                """,
+                                valid_keys,
+                            )
+                            for row in callee_rows:
+                                call_chain.append({
+                                    "entity_key": str(row["entity_key"]),
+                                    "file_path": row["file_path"],
+                                    "symbol_name": row["symbol_name"],
+                                    "symbol_kind": row["symbol_kind"],
+                                    "title": row["title"],
+                                    "content_text": row["content_text"],
+                                    "source_store": "call_chain",
+                                })
+                except Exception:
+                    logger.debug("call_chain_expansion_failed", exc_info=True)
+
         # Step 4: Assemble structured bundle
         exact_matches = [e for e in evidence if e.get("source_store") == "postgres"]
         semantic_matches = [e for e in evidence if e.get("source_store") == "qdrant"]
-        graph_expansions = [e for e in evidence if e.get("source_store") == "both"]
+        graph_expansions = [e for e in evidence if e.get("source_store") in ("both", "graph")]
         summary_evidence = [e for e in evidence if e.get("source_store") == "summary"]
 
         duration_ms = int((time.monotonic() - start) * 1000)
@@ -170,6 +234,7 @@ async def run(
             "exact_matches": exact_matches,
             "semantic_matches": semantic_matches,
             "graph_expansions": graph_expansions,
+            "call_chain": call_chain,
             "summary_evidence": summary_evidence,
             "applicable_learned_rules": learned_rules,
             "route_metadata": {
