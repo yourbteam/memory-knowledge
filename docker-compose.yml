@@ -11,7 +11,7 @@ services:
       - /Users/kamenkamenov/taggable-server:/tmp/memory-knowledge/repos/taggable-server  # mount Taggable repo
     environment:
       CODEX_AUTH_PATH: /home/appuser/.codex/auth.json
-      SUPPORTED_LANGUAGES: '["python","csharp","sql","typescript"]'
+      SUPPORTED_LANGUAGES: '["python","csharp","sql","typescript","php"]'
     depends_on:
       postgres:
         condition: service_healthy
