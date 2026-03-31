@@ -913,6 +913,8 @@ app = Starlette(
         Route("/health", health_endpoint),
         Route("/ready", readiness_endpoint),
         Route("/metrics", metrics_endpoint),
+        Route("/.well-known/oauth-authorization-server",
+              lambda r: JSONResponse({"error": "oauth_not_supported"}, status_code=404)),
         Mount("/mcp", app=mcp.streamable_http_app()),
     ],
     middleware=[
