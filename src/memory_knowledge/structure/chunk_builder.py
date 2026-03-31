@@ -29,8 +29,25 @@ def build_chunks(
     if not parse_output.symbols:
         return _file_level_chunks(parse_output.file_path, source_lines)
 
+    # Sort symbols by line_start to find gaps
+    sorted_syms = sorted(parse_output.symbols, key=lambda s: s.line_start)
+
     chunks: list[ChunkSpec] = []
-    for sym in parse_output.symbols:
+
+    # Chunk regions BETWEEN symbols (and before first / after last)
+    covered_end = 0
+    for sym in sorted_syms:
+        # Gap before this symbol?
+        if sym.line_start > covered_end + 1:
+            gap_text = "\n".join(source_lines[covered_end : sym.line_start - 1])
+            if gap_text.strip():
+                gap_chunks = _gap_chunks(
+                    parse_output.file_path, gap_text,
+                    covered_end + 1, sym.line_start - 1, len(chunks),
+                )
+                chunks.extend(gap_chunks)
+
+        # The symbol itself
         text = "\n".join(source_lines[sym.line_start - 1 : sym.line_end])
         if len(text) <= MAX_CHUNK_CHARS:
             chunks.append(
@@ -46,6 +63,19 @@ def build_chunks(
             )
         else:
             chunks.extend(_split_oversized(text, sym, len(chunks)))
+
+        covered_end = max(covered_end, sym.line_end)
+
+    # Gap after last symbol?
+    if covered_end < len(source_lines):
+        gap_text = "\n".join(source_lines[covered_end:])
+        if gap_text.strip():
+            gap_chunks = _gap_chunks(
+                parse_output.file_path, gap_text,
+                covered_end + 1, len(source_lines), len(chunks),
+            )
+            chunks.extend(gap_chunks)
+
     return chunks
 
 
@@ -74,6 +104,37 @@ def _file_level_chunks(
             content_text=part,
             line_start=1,
             line_end=len(source_lines),
+            symbol_name=None,
+        )
+        for i, part in enumerate(parts)
+    ]
+
+
+def _gap_chunks(
+    file_path: str, text: str, line_start: int, line_end: int, start_idx: int,
+) -> list[ChunkSpec]:
+    """Create file-level chunks for content between/outside symbols."""
+    if len(text) <= MAX_CHUNK_CHARS:
+        return [
+            ChunkSpec(
+                chunk_index=start_idx,
+                chunk_type="file",
+                title=f"{file_path}:{line_start}-{line_end}",
+                content_text=text,
+                line_start=line_start,
+                line_end=line_end,
+                symbol_name=None,
+            )
+        ]
+    parts = _split_with_overlap(text)
+    return [
+        ChunkSpec(
+            chunk_index=start_idx + i,
+            chunk_type="file",
+            title=f"{file_path}:{line_start}-{line_end}[{i}]",
+            content_text=part,
+            line_start=line_start,
+            line_end=line_end,
             symbol_name=None,
         )
         for i, part in enumerate(parts)

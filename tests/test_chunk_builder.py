@@ -17,16 +17,28 @@ def _make_parse_output(symbols=None):
 def test_symbol_chunks():
     symbols = [
         SymbolInfo("foo", "function", 1, 3, "def foo()"),
-        SymbolInfo("bar", "function", 5, 7, "def bar()"),
+        SymbolInfo("bar", "function", 4, 6, "def bar()"),
     ]
-    source = ["def foo():", "    pass", "", "def bar():", "    pass", "", ""]
+    source = ["def foo():", "    pass", "", "def bar():", "    pass", ""]
     chunks = build_chunks(_make_parse_output(symbols), source)
-    assert len(chunks) == 2
-    assert chunks[0].chunk_type == "symbol"
-    assert chunks[0].symbol_name == "foo"
-    assert chunks[1].symbol_name == "bar"
-    assert chunks[0].chunk_index == 0
-    assert chunks[1].chunk_index == 1
+    symbol_chunks = [c for c in chunks if c.chunk_type == "symbol"]
+    assert len(symbol_chunks) == 2
+    assert symbol_chunks[0].symbol_name == "foo"
+    assert symbol_chunks[1].symbol_name == "bar"
+
+
+def test_gap_between_symbols_chunked():
+    """Content between symbols should be captured as file-level chunks."""
+    symbols = [
+        SymbolInfo("foo", "function", 1, 2, "def foo()"),
+        SymbolInfo("bar", "function", 10, 12, "def bar()"),
+    ]
+    source = ["def foo():", "    pass"] + ["# html line"] * 7 + ["def bar():", "    pass", ""]
+    chunks = build_chunks(_make_parse_output(symbols), source)
+    assert any(c.chunk_type == "file" for c in chunks)  # gap chunk exists
+    gap_chunks = [c for c in chunks if c.chunk_type == "file"]
+    gap_text = " ".join(c.content_text for c in gap_chunks)
+    assert "html line" in gap_text  # gap content is captured
 
 
 def test_file_level_fallback():
