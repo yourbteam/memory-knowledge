@@ -103,7 +103,7 @@ async def pg_fulltext_search(
     pool: asyncpg.Pool,
     query: str,
     repository_id: int,
-    limit: int = 20,
+    limit: int = 40,
 ) -> list[dict[str, Any]]:
     # Extract file paths from query for path-based matching
     import re
@@ -166,7 +166,7 @@ async def qdrant_semantic_search(
     client: AsyncQdrantClient,
     query_embedding: list[float],
     repository_key: str,
-    limit: int = 20,
+    limit: int = 40,
 ) -> list[dict[str, Any]]:
     results = await client.query_points(
         collection_name="code_chunks",
@@ -200,7 +200,7 @@ async def pg_summary_search(
     pool: asyncpg.Pool,
     query: str,
     repository_id: int,
-    limit: int = 10,
+    limit: int = 20,
 ) -> list[dict[str, Any]]:
     """Full-text search on catalog.summaries."""
     search_text = _clean_query_for_fulltext(query)
@@ -230,7 +230,7 @@ async def qdrant_summary_search(
     client: AsyncQdrantClient,
     query_embedding: list[float],
     repository_key: str,
-    limit: int = 10,
+    limit: int = 20,
 ) -> list[dict[str, Any]]:
     """Semantic search on summary_units Qdrant collection."""
     results = await client.query_points(
@@ -277,10 +277,12 @@ async def neo4j_graph_expansion(
         f"MATCH (n)-[:CONTAINS|HAS_FILE*1..{d}]-(m) "
         f"WHERE n.entity_key IN $entity_keys AND m.entity_key IS NOT NULL "
         f"RETURN DISTINCT m.entity_key AS entity_key, labels(m) AS labels "
+        f"LIMIT 100 "
         f"UNION "
         f"MATCH (n)-[:CALLS|IMPORTS*1..{d}]->(m) "
         f"WHERE n.entity_key IN $entity_keys AND m.entity_key IS NOT NULL "
-        f"RETURN DISTINCT m.entity_key AS entity_key, labels(m) AS labels",
+        f"RETURN DISTINCT m.entity_key AS entity_key, labels(m) AS labels "
+        f"LIMIT 100",
         entity_keys=entity_keys,
     )
     return [{"entity_key": r["entity_key"], "labels": r["labels"]} for r in records]
@@ -394,7 +396,7 @@ async def assemble_context_bundle(
     branch_name: str | None = None,
 ) -> dict[str, Any]:
     # Filter to valid UUID strings only — Qdrant payloads may have None or malformed keys
-    raw_keys = [r["entity_key"] for r in ranked_results[:20]]
+    raw_keys = [r["entity_key"] for r in ranked_results[:40]]
     entity_keys = []
     for k in raw_keys:
         if k is None:
@@ -470,7 +472,7 @@ async def assemble_context_bundle(
 
     # Merge ranked scores with hydrated data — only include valid entity_keys
     evidence = []
-    for r in ranked_results[:20]:
+    for r in ranked_results[:40]:
         key = r["entity_key"]
         if key not in entity_keys:
             continue
@@ -653,7 +655,7 @@ async def run(
             if all_entity_keys:
                 stores_queried.append("neo4j")
                 graph_results = await neo4j_graph_expansion(
-                    neo4j_driver, all_entity_keys[:10]
+                    neo4j_driver, all_entity_keys[:20]
                 )
                 graph_entity_keys = [r["entity_key"] for r in graph_results]
                 graph_expansion_used = True

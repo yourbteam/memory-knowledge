@@ -60,7 +60,7 @@ async def _fetch_applicable_learned_rules(
             WHERE e.repository_id = $1 AND lr.is_active = TRUE
               AND lr.verification_status = 'verified'
             ORDER BY lr.confidence DESC
-            LIMIT 20
+            LIMIT 40
             """,
             repository_id,
         )
@@ -187,7 +187,7 @@ async def run(
                         # Hydrate callee chunks from PG
                         import uuid as _uuid
                         valid_keys = []
-                        for k in new_callee_keys[:10]:  # limit to avoid huge queries
+                        for k in new_callee_keys[:20]:  # limit to avoid huge queries
                             try:
                                 _uuid.UUID(k)
                                 valid_keys.append(k)
