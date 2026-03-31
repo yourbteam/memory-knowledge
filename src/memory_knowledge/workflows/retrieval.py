@@ -87,36 +87,73 @@ async def load_retrieval_surfaces(
     return [dict(r) for r in rows]
 
 
+def _clean_query_for_fulltext(query: str) -> str:
+    """Strip file paths from query so PG full-text searches remaining terms.
+
+    'config/app.php timezone' → 'timezone'
+    'image_created_at column' → 'image_created_at column' (snake_case kept — valid search term)
+    """
+    import re
+    # Remove file paths (word/word.ext patterns) that break plainto_tsquery
+    cleaned = re.sub(r"(?<!/)(?<!//)[\w]+(?:/[\w.]+)+", " ", query)
+    return " ".join(cleaned.split())  # normalize whitespace
+
+
 async def pg_fulltext_search(
     pool: asyncpg.Pool,
     query: str,
     repository_id: int,
     limit: int = 20,
 ) -> list[dict[str, Any]]:
-    rows = await pool.fetch(
-        """
-        SELECT c.id AS chunk_id,
-               c.entity_id,
-               e.entity_key,
-               c.title,
-               c.content_text,
-               c.chunk_type,
-               c.line_start,
-               c.line_end,
-               f.file_path,
-               ts_rank(c.content_tsv, plainto_tsquery('english', $1)) AS rank
-        FROM catalog.chunks c
-        JOIN catalog.files f ON c.file_id = f.id
-        JOIN catalog.entities e ON c.entity_id = e.id
-        WHERE e.repository_id = $2
-          AND c.content_tsv @@ plainto_tsquery('english', $1)
-        ORDER BY rank DESC
-        LIMIT $3
-        """,
-        query,
-        repository_id,
-        limit,
-    )
+    # Extract file paths from query for path-based matching
+    import re
+    file_paths = re.findall(r"(?<!/)(?<!//)[\w]+(?:/[\w.]+)+", query)
+    search_text = _clean_query_for_fulltext(query)
+
+    # Two-pronged search: full-text on cleaned query OR file path match
+    if file_paths and search_text.strip():
+        # Search by content AND by file path
+        rows = await pool.fetch(
+            """
+            SELECT c.id AS chunk_id, c.entity_id, e.entity_key, c.title,
+                   c.content_text, c.chunk_type, c.line_start, c.line_end,
+                   f.file_path,
+                   ts_rank(c.content_tsv, plainto_tsquery('english', $1))
+                   + CASE WHEN f.file_path = ANY($4::text[]) THEN 1.0 ELSE 0.0 END
+                   AS rank
+            FROM catalog.chunks c
+            JOIN catalog.files f ON c.file_id = f.id
+            JOIN catalog.entities e ON c.entity_id = e.id
+            WHERE e.repository_id = $2
+              AND (c.content_tsv @@ plainto_tsquery('english', $1)
+                   OR f.file_path = ANY($4::text[]))
+            ORDER BY rank DESC
+            LIMIT $3
+            """,
+            search_text,
+            repository_id,
+            limit,
+            file_paths,
+        )
+    else:
+        rows = await pool.fetch(
+            """
+            SELECT c.id AS chunk_id, c.entity_id, e.entity_key, c.title,
+                   c.content_text, c.chunk_type, c.line_start, c.line_end,
+                   f.file_path,
+                   ts_rank(c.content_tsv, plainto_tsquery('english', $1)) AS rank
+            FROM catalog.chunks c
+            JOIN catalog.files f ON c.file_id = f.id
+            JOIN catalog.entities e ON c.entity_id = e.id
+            WHERE e.repository_id = $2
+              AND c.content_tsv @@ plainto_tsquery('english', $1)
+            ORDER BY rank DESC
+            LIMIT $3
+            """,
+            query,
+            repository_id,
+            limit,
+        )
     return [dict(r) for r in rows]
 
 
@@ -166,6 +203,9 @@ async def pg_summary_search(
     limit: int = 10,
 ) -> list[dict[str, Any]]:
     """Full-text search on catalog.summaries."""
+    search_text = _clean_query_for_fulltext(query)
+    if not search_text.strip():
+        search_text = query  # fallback to raw query if cleaning removed everything
     rows = await pool.fetch(
         """
         SELECT e.entity_key,
@@ -179,7 +219,7 @@ async def pg_summary_search(
         ORDER BY rank DESC
         LIMIT $3
         """,
-        query,
+        search_text,
         repository_id,
         limit,
     )
