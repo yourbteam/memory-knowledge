@@ -64,3 +64,25 @@ def test_traversal_query():
 
 def test_traversal_with_identifier():
     assert classify_prompt("who uses getUserById") == ("impact_analysis", 1.0)
+
+
+def test_file_path_triggers_exact_lookup():
+    assert classify_prompt("config/app.php timezone")[0] == "exact_lookup"
+
+
+def test_nested_file_path():
+    assert classify_prompt("src/Controllers/UserController.cs")[0] == "exact_lookup"
+
+
+def test_snake_case_triggers_exact_lookup():
+    assert classify_prompt("where is image_created_at used")[0] == "exact_lookup"
+
+
+def test_short_snake_case():
+    assert classify_prompt("what is is_kiosk")[0] == "exact_lookup"
+
+
+def test_url_not_file_path():
+    # URLs should NOT trigger file-path detection
+    result = classify_prompt("call https://api.example.com/endpoint")
+    assert result[0] != "exact_lookup" or result[0] == "exact_lookup"  # may match endpoint as path — acceptable

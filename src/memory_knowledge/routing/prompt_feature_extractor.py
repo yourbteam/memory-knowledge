@@ -19,6 +19,8 @@ EXACT_PATTERNS = re.compile(
     r"|[a-zA-Z_]+\.[a-zA-Z_]+\.[a-zA-Z_]+"  # dotted path (foo.bar.baz)
     r'|"[^"]+"'  # quoted identifiers
     r"|'[^']+'"
+    r"|(?<!/)(?<!//)[\w]+(?:/[\w.]+)+"  # file paths (config/app.php) but not URLs
+    r"|\b[a-z]+(?:_[a-z]+)+\b"  # snake_case (image_created_at, is_kiosk, created_at)
 )
 
 IMPACT_KEYWORDS = {"impact", "affect", "change", "break", "breaking", "depends"}

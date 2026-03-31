@@ -310,7 +310,7 @@ INSERT INTO routing.route_policies
      confidence_threshold, fusion_strategy, rerank_strategy)
 VALUES
     ('exact_lookup_default',      'exact_lookup',      'postgres', 'neo4j',   'qdrant',  FALSE, FALSE, FALSE, 0.80, 'score_merge', 'score_sort'),
-    ('conceptual_lookup_default', 'conceptual_lookup', 'qdrant',   'postgres', 'neo4j',  FALSE, TRUE,  TRUE,  0.50, 'score_merge', 'score_sort'),
+    ('conceptual_lookup_default', 'conceptual_lookup', 'qdrant',   'postgres', 'neo4j',  TRUE,  TRUE,  TRUE,  0.50, 'score_merge', 'score_sort'),
     ('impact_analysis_default',   'impact_analysis',   'neo4j',    'postgres', 'qdrant', TRUE,  TRUE,  FALSE, 0.60, 'score_merge', 'score_sort'),
     ('pattern_search_default',    'pattern_search',    'qdrant',   'postgres', 'neo4j',  FALSE, FALSE, TRUE,  0.50, 'score_merge', 'score_sort'),
     ('decision_history_default',  'decision_history',  'postgres', 'qdrant',   'neo4j',  FALSE, FALSE, TRUE,  0.50, 'score_merge', 'score_sort'),
