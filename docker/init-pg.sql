@@ -230,6 +230,7 @@ CREATE TABLE routing.route_feedback (
     precision_score    NUMERIC(3,2),
     expansion_needed   BOOLEAN,
     notes              TEXT,
+    is_auto            BOOLEAN NOT NULL DEFAULT FALSE,
     created_utc        TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

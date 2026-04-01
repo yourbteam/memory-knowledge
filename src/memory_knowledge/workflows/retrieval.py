@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import asyncio
 import time
 import uuid
 from typing import Any
@@ -11,6 +12,7 @@ from qdrant_client import AsyncQdrantClient, models
 
 from memory_knowledge.config import Settings
 from memory_knowledge.llm.openai_client import embed_single
+from memory_knowledge.projections.pg_writer import record_route_feedback
 from memory_knowledge.workflows.base import WorkflowResult
 
 logger = structlog.get_logger()
@@ -493,6 +495,113 @@ async def assemble_context_bundle(
     }
 
 
+# ── Auto-feedback heuristics ────────────────────────────────────────
+
+_CLASS_PROFILES: dict[str, dict[str, tuple[int, int]]] = {
+    "exact_lookup":      {"ideal_range": (1, 5)},
+    "conceptual_lookup": {"ideal_range": (5, 20)},
+    "impact_analysis":   {"ideal_range": (3, 15)},
+    "pattern_search":    {"ideal_range": (5, 20)},
+    "decision_history":  {"ideal_range": (1, 10)},
+    "mixed":             {"ideal_range": (5, 20)},
+}
+
+
+def compute_auto_feedback(
+    ranked_results: list[dict[str, Any]],
+    result_count: int,
+    fanout_used: bool,
+    graph_expansion_used: bool,
+    stores_queried: list[str],
+    prompt_class: str,
+    duration_ms: int,
+) -> dict[str, Any]:
+    """Compute heuristic feedback signals from retrieval results.
+
+    Pure function — no DB, no LLM, no async. Returns a dict with keys:
+    usefulness_score, precision_score, expansion_needed, notes.
+    """
+    profile = _CLASS_PROFILES.get(prompt_class, _CLASS_PROFILES["mixed"])
+    low, high = profile["ideal_range"]
+
+    # ── usefulness_score (0.00–0.85) ──
+    if result_count == 0:
+        usefulness = 0.05
+    elif low <= result_count <= high:
+        usefulness = 0.70
+    elif result_count < low:
+        usefulness = 0.25 + 0.35 * (result_count / low)
+    else:
+        usefulness = 0.55 - 0.10 * min((result_count - high) / high, 1.0)
+
+    if len(ranked_results) >= 3:
+        avg_top3 = sum(r["combined_score"] for r in ranked_results[:3]) / 3
+        if avg_top3 >= 1.0:
+            usefulness = min(usefulness + 0.10, 0.85)
+
+    # ── precision_score (0.00–0.85) ──
+    top_5 = [r["combined_score"] for r in ranked_results[:5]]
+    if not top_5:
+        precision = 0.05
+    else:
+        avg_top5 = sum(top_5) / len(top_5)
+        max_possible = max(len(stores_queried), 1)
+        precision = min(avg_top5 / max_possible, 1.0) * 0.85
+
+        if len(top_5) >= 2:
+            spread = top_5[0] - top_5[-1]
+            if spread > 0.5:
+                precision = min(precision + 0.10, 0.85)
+
+    # ── expansion_needed ──
+    expansion_needed = (
+        result_count < low
+        and not fanout_used
+        and not graph_expansion_used
+    )
+
+    # ── notes ──
+    top_score = ranked_results[0]["combined_score"] if ranked_results else 0.0
+    notes = (
+        f"[auto] class={prompt_class} results={result_count} "
+        f"stores={','.join(stores_queried)} "
+        f"fanout={'Y' if fanout_used else 'N'} "
+        f"graph={'Y' if graph_expansion_used else 'N'} "
+        f"top_score={top_score:.2f} duration={duration_ms}ms"
+    )
+
+    return {
+        "usefulness_score": round(usefulness, 2),
+        "precision_score": round(precision, 2),
+        "expansion_needed": expansion_needed,
+        "notes": notes,
+    }
+
+
+async def _persist_auto_feedback(
+    pool: asyncpg.Pool,
+    route_execution_id: int,
+    feedback: dict[str, Any],
+) -> None:
+    """Fire-and-forget wrapper — logs warnings on failure, never raises."""
+    try:
+        await record_route_feedback(
+            pool, route_execution_id,
+            usefulness_score=feedback["usefulness_score"],
+            precision_score=feedback["precision_score"],
+            expansion_needed=feedback["expansion_needed"],
+            notes=feedback["notes"],
+            is_auto=True,
+        )
+        logger.debug("auto_feedback_recorded", route_execution_id=route_execution_id)
+    except Exception:
+        logger.warning(
+            "auto_feedback_failed",
+            route_execution_id=route_execution_id,
+            exc_info=True,
+        )
+
+
 async def persist_route_execution(
     pool: asyncpg.Pool,
     run_id: uuid.UUID,
@@ -706,6 +815,17 @@ async def run(
 
         if route_exec_id is not None:
             context_bundle["route_execution_id"] = route_exec_id
+            # Auto-generate heuristic feedback (fire-and-forget)
+            feedback = compute_auto_feedback(
+                ranked_results=ranked,
+                result_count=context_bundle["count"],
+                fanout_used=fanout_used,
+                graph_expansion_used=graph_expansion_used,
+                stores_queried=stores_queried,
+                prompt_class=prompt_class,
+                duration_ms=duration_ms,
+            )
+            asyncio.create_task(_persist_auto_feedback(pool, route_exec_id, feedback))
         if freshness_warning:
             context_bundle["freshness_warning"] = freshness_warning
 

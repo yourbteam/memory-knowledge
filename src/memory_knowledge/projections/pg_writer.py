@@ -187,13 +187,15 @@ async def record_route_feedback(
     precision_score: float | None = None,
     expansion_needed: bool | None = None,
     notes: str | None = None,
+    is_auto: bool = False,
 ) -> int:
     """Record feedback for a route execution."""
     row = await pool.fetchrow(
         """
         INSERT INTO routing.route_feedback
-            (route_execution_id, usefulness_score, precision_score, expansion_needed, notes)
-        VALUES ($1, $2, $3, $4, $5)
+            (route_execution_id, usefulness_score, precision_score,
+             expansion_needed, notes, is_auto)
+        VALUES ($1, $2, $3, $4, $5, $6)
         RETURNING id
         """,
         route_execution_id,
@@ -201,5 +203,6 @@ async def record_route_feedback(
         precision_score,
         expansion_needed,
         notes,
+        is_auto,
     )
     return row["id"]
