@@ -12,7 +12,7 @@ _CREATE_PATTERN = re.compile(
     r"CREATE\s+(?:OR\s+REPLACE\s+)?(?:TEMP(?:ORARY)?\s+)?"
     r"(TABLE|PROCEDURE|FUNCTION|VIEW|TRIGGER|INDEX|TYPE)"
     r"\s+(?:IF\s+NOT\s+EXISTS\s+)?"
-    r"(?:\[?[\w.]+\]?\.)?(\[?[\w]+\]?)",
+    r"(?:(?:`[\w.]+`|\[?[\w.]+\]?)\.)?(`[\w]+`|\[?[\w]+\]?)",
     re.IGNORECASE | re.MULTILINE,
 )
 
@@ -44,7 +44,7 @@ def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
 
     for match in _CREATE_PATTERN.finditer(source):
         obj_type = match.group(1).lower()
-        obj_name = match.group(2).strip("[]")
+        obj_name = match.group(2).strip("[]`")
         line_no = source[: match.start()].count("\n") + 1
 
         # Estimate end: next CREATE or EOF
@@ -69,7 +69,7 @@ def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
 
 _DML_PATTERN = re.compile(
     r"\b(SELECT\s+[^;]*?\s+FROM|JOIN|INSERT\s+INTO|UPDATE|DELETE\s+FROM)"
-    r"\s+(?:\[?[\w.]+\]?\.)?(\[?\w+\]?)",
+    r"\s+(?:(?:`[\w.]+`|\[?[\w.]+\]?)\.)?(`[\w]+`|\[?\w+\]?)",
     re.IGNORECASE,
 )
 
@@ -80,7 +80,7 @@ def _extract_sql_refs(source: str) -> list[SqlObjectRef]:
     seen: set[tuple[str, str]] = set()
     for match in _DML_PATTERN.finditer(source):
         operation_raw = match.group(1).strip().split()[0].lower()
-        obj_name = match.group(2).strip("[]")
+        obj_name = match.group(2).strip("[]`")
         if obj_name.upper() in ("SET", "VALUES", "AS", "ON", "WHERE", "AND", "OR"):
             continue
         op_map = {"select": "select", "join": "select", "insert": "insert", "update": "update", "delete": "delete"}

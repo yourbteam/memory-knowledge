@@ -216,3 +216,65 @@ def test_new_fields_have_defaults():
     assert output.routes == []
     assert output.sql_refs == []
     assert output.doc_blocks == []
+
+
+# --- MySQL backtick support ---
+
+SQL_MYSQL_BACKTICKS = """\
+CREATE TABLE `wp_posts` (
+  `ID` bigint UNSIGNED NOT NULL,
+  `post_title` text NOT NULL
+) ENGINE=InnoDB;
+
+CREATE TABLE `wp_options` (
+  `option_id` bigint UNSIGNED NOT NULL,
+  `option_name` varchar(191) NOT NULL
+) ENGINE=InnoDB;
+
+SELECT `post_title` FROM `wp_posts` WHERE `ID` = 1;
+
+INSERT INTO `wp_postmeta` (`post_id`, `meta_key`) VALUES (1, 'color');
+
+DELETE FROM `wp_options` WHERE `option_name` = 'transient';
+"""
+
+
+def test_sql_mysql_backtick_create():
+    output = parse_sql_file("schema.sql", SQL_MYSQL_BACKTICKS)
+    names = {s.name for s in output.symbols}
+    assert "wp_posts" in names
+    assert "wp_options" in names
+    assert len(output.symbols) == 2
+
+
+def test_sql_mysql_backtick_dml():
+    output = parse_sql_file("schema.sql", SQL_MYSQL_BACKTICKS)
+    names = {r.object_name.lower() for r in output.sql_refs}
+    assert "wp_posts" in names
+    assert "wp_postmeta" in names
+    assert "wp_options" in names
+
+
+def test_sql_mysql_backtick_operations():
+    output = parse_sql_file("schema.sql", SQL_MYSQL_BACKTICKS)
+    ops = {(r.object_name.lower(), r.operation) for r in output.sql_refs}
+    assert ("wp_posts", "select") in ops
+    assert ("wp_postmeta", "insert") in ops
+    assert ("wp_options", "delete") in ops
+
+
+# --- Mixed identifier styles (regression) ---
+
+SQL_MIXED_QUOTES = """\
+CREATE TABLE [dbo].[Users] (id INT);
+CREATE TABLE `wp_users` (id INT);
+CREATE TABLE plain_table (id INT);
+"""
+
+
+def test_sql_mixed_identifier_styles():
+    output = parse_sql_file("mixed.sql", SQL_MIXED_QUOTES)
+    names = {s.name for s in output.symbols}
+    assert "Users" in names
+    assert "wp_users" in names
+    assert "plain_table" in names
