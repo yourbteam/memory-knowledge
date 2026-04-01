@@ -386,14 +386,23 @@ class CodexTokenManager:
         logger.info("codex_token_manager_stopped")
 
     async def _check_loop(self) -> None:
-        """Periodically check token age and refresh if stale."""
+        """Periodically check token expiry and refresh proactively."""
         while not self._stop_event.is_set():
             try:
-                last_refresh = parse_codex_last_refresh(self.codex_auth_path)
-                if last_refresh:
-                    age_days = (datetime.now(timezone.utc) - last_refresh).days
-                    if age_days >= self.refresh_after_days:
-                        await self._do_refresh()
+                # Check actual JWT expiry, not just file age
+                expires_soon = self._token_expires_within(
+                    self.codex_auth_path, buffer_seconds=600
+                )
+                if expires_soon:
+                    logger.info("codex_token_expiring_soon", buffer_seconds=600)
+                    await self._do_refresh()
+                else:
+                    # Fall back to age-based check
+                    last_refresh = parse_codex_last_refresh(self.codex_auth_path)
+                    if last_refresh:
+                        age_days = (datetime.now(timezone.utc) - last_refresh).days
+                        if age_days >= self.refresh_after_days:
+                            await self._do_refresh()
             except Exception as e:
                 logger.error("codex_check_failed", error=str(e))
 
@@ -427,6 +436,31 @@ class CodexTokenManager:
 
             logger.info("daily_codex_refresh_triggered")
             await self._do_refresh()
+
+    @staticmethod
+    def _token_expires_within(auth_path: str, buffer_seconds: int = 600) -> bool:
+        """Check if the access_token JWT expires within buffer_seconds."""
+        import base64
+        data = _read_json_file(auth_path)
+        if not data:
+            return True
+        tokens = data.get("tokens", {})
+        for key in ("access_token", "id_token"):
+            token = tokens.get(key)
+            if not token:
+                continue
+            try:
+                payload = token.split(".")[1]
+                payload += "=" * (4 - len(payload) % 4)
+                claims = json.loads(base64.urlsafe_b64decode(payload))
+                exp = claims.get("exp")
+                if exp and time.time() > (exp - buffer_seconds):
+                    return True
+                if exp:
+                    return False
+            except (IndexError, ValueError, json.JSONDecodeError):
+                continue
+        return True  # no parseable expiry found, assume stale
 
     async def _do_refresh(self) -> None:
         if self._refresh_lock.locked():

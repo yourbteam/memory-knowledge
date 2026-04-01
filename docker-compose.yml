@@ -6,10 +6,11 @@ services:
     env_file:
       - .env
     volumes:
-      - ~/.codex:/home/appuser/.codex:ro  # mount Codex CLI auth tokens (read-only)
+      - ~/.codex:/home/appuser/.codex  # mount Codex CLI auth tokens (read-write for token refresh)
       - /Users/kamenkamenov/FCSAPI:/tmp/memory-knowledge/repos/fcsapi  # mount FCSAPI repo
       - /Users/kamenkamenov/taggable-server:/tmp/memory-knowledge/repos/taggable-server  # mount Taggable repo
       - /Users/kamenkamenov/CSS-FE:/tmp/memory-knowledge/repos/css-fe  # mount CSS-FE repo
+      - /Users/kamenkamenov/millennium-curated:/tmp/memory-knowledge/repos/millennium-wp  # mount Millennium WordPress repo
     environment:
       CODEX_AUTH_PATH: /home/appuser/.codex/auth.json
       SUPPORTED_LANGUAGES: '["python","csharp","sql","typescript","php"]'

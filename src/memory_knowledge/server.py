@@ -643,18 +643,14 @@ async def submit_route_feedback(
                 error=f"Route execution not found: {route_execution_id}",
             ).model_dump_json()
 
-        await pool.execute(
-            """
-            INSERT INTO routing.route_feedback
-                (route_execution_id, usefulness_score, precision_score,
-                 expansion_needed, notes)
-            VALUES ($1, $2, $3, $4, $5)
-            """,
-            route_execution_id,
-            usefulness_score,
-            precision_score,
-            expansion_needed,
-            notes,
+        from memory_knowledge.projections.pg_writer import record_route_feedback
+        await record_route_feedback(
+            pool, route_execution_id,
+            usefulness_score=usefulness_score,
+            precision_score=precision_score,
+            expansion_needed=expansion_needed,
+            notes=notes,
+            is_auto=False,
         )
         return WorkflowResult(
             run_id=str(run_id),
@@ -862,8 +858,10 @@ async def app_lifespan(app: Starlette):
     async with mcp.session_manager.run():
         yield
 
-    # SHUTDOWN — stop token manager, dispatcher, drain tasks, close connections
+    # SHUTDOWN — stop Codex MCP client, token manager, dispatcher, drain tasks, close connections
     logger.info("shutdown_begin")
+    from memory_knowledge.llm.codex_mcp import CodexMcpClient
+    await CodexMcpClient.get().shutdown()
     if _token_manager:
         await _token_manager.stop()
     await _dispatcher.stop()

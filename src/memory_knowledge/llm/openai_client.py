@@ -27,6 +27,18 @@ async def _get_api_key(settings: Settings) -> str:
     return settings.openai_api_key or ""
 
 
+async def _refresh_and_get_api_key(settings: Settings) -> str:
+    """Force-refresh the Codex token and return the new key."""
+    from memory_knowledge.auth.credential_refresh import refresh_codex_token
+
+    success, error = await refresh_codex_token(settings.codex_auth_path)
+    if success:
+        logger.info("codex_token_refreshed_on_401")
+    else:
+        logger.error("codex_token_refresh_failed_on_401", error=error)
+    return await _get_api_key(settings)
+
+
 @retry(
     retry=retry_if_exception_type(_RETRYABLE_ERRORS),
     wait=wait_exponential(min=1, max=30),
@@ -66,9 +78,21 @@ async def embed(
             all_embeddings.extend(batch_embeddings)
         except openai.AuthenticationError:
             if settings.auth_mode == "codex":
-                raise RuntimeError(
-                    "Codex OAuth token rejected — run 'codex auth' to re-authenticate"
-                )
+                api_key = await _refresh_and_get_api_key(settings)
+                client = AsyncOpenAI(api_key=api_key)
+                try:
+                    response = await client.embeddings.create(
+                        model=settings.embedding_model,
+                        input=batch,
+                        dimensions=settings.embedding_dimensions,
+                    )
+                    batch_embeddings = [d.embedding for d in response.data]
+                    all_embeddings.extend(batch_embeddings)
+                    continue
+                except openai.AuthenticationError:
+                    raise RuntimeError(
+                        "Codex OAuth token rejected after refresh — run 'codex auth' to re-authenticate"
+                    )
             raise
 
     return all_embeddings
@@ -95,7 +119,10 @@ async def complete(
     settings: Settings,
     system_prompt: str | None = None,
 ) -> str:
-    """Call OpenAI chat completions with retry on transient errors."""
+    """Call LLM for text completion. Uses Codex CLI in codex mode, OpenAI API otherwise."""
+    if settings.auth_mode == "codex":
+        return await _complete_via_codex(prompt, system_prompt)
+
     api_key = await _get_api_key(settings)
     client = AsyncOpenAI(api_key=api_key)
 
@@ -104,17 +131,21 @@ async def complete(
         messages.append({"role": "system", "content": system_prompt})
     messages.append({"role": "user", "content": prompt})
 
-    try:
-        response = await client.chat.completions.create(
-            model=settings.completion_model,
-            messages=messages,
-            max_tokens=settings.max_completion_tokens,
-        )
-    except openai.AuthenticationError:
-        if settings.auth_mode == "codex":
-            raise RuntimeError(
-                "Codex OAuth token rejected — run 'codex auth' to re-authenticate"
-            )
-        raise
-
+    response = await client.chat.completions.create(
+        model=settings.completion_model,
+        messages=messages,
+        max_tokens=settings.max_completion_tokens,
+    )
     return response.choices[0].message.content or ""
+
+
+async def _complete_via_codex(prompt: str, system_prompt: str | None = None) -> str:
+    """Route completions through the Codex CLI MCP server subprocess."""
+    from memory_knowledge.llm.codex_mcp import CodexMcpClient
+
+    full_prompt = prompt
+    if system_prompt:
+        full_prompt = f"{system_prompt}\n\n{prompt}"
+
+    client = CodexMcpClient.get()
+    return await client.complete(full_prompt)
