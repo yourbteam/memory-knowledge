@@ -16,6 +16,7 @@ VALID_OBSERVATION_TYPES = {
     "issue_found",
     "plan_note",
     "rejected_path",
+    "query_rewrite",
 }
 
 

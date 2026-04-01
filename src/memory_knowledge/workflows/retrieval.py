@@ -793,6 +793,37 @@ async def run(
             branch_name=surface_branch_name,
         )
 
+        # Step 7.5: Surface applicable learned rules (best-effort, never crashes retrieval)
+        learned_rules: list[dict[str, Any]] = []
+        try:
+            from memory_knowledge.workflows.context_assembly import (
+                _fetch_applicable_learned_rules,
+            )
+            file_paths = list({
+                e["file_path"] for e in context_bundle.get("evidence", [])
+                if e.get("file_path")
+            })
+            if file_paths:
+                scope_rows = await pool.fetch(
+                    """
+                    SELECT DISTINCT e.entity_key
+                    FROM catalog.files f
+                    JOIN catalog.entities e ON f.entity_id = e.id
+                    WHERE f.file_path = ANY($1::text[])
+                      AND e.repository_id = $2
+                    """,
+                    file_paths,
+                    repository_id,
+                )
+                scope_entity_keys = [str(r["entity_key"]) for r in scope_rows]
+                if scope_entity_keys:
+                    learned_rules = await _fetch_applicable_learned_rules(
+                        pool, neo4j_driver, scope_entity_keys, repository_id,
+                    )
+        except Exception:
+            logger.warning("learned_rules_fetch_failed", exc_info=True)
+        context_bundle["applicable_learned_rules"] = learned_rules
+
         # Step 8: Persist route execution
         duration_ms = int((time.monotonic() - start) * 1000)
         route_exec_id = await persist_route_execution(

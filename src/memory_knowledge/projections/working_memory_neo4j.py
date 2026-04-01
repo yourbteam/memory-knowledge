@@ -15,6 +15,7 @@ _OBSERVATION_TYPE_TO_REL = {
     "issue_found": "FOUND_ISSUE_IN",
     "plan_note": "PLANNED_FOR",
     "rejected_path": "REJECTED_PATH_IN",
+    "query_rewrite": "REWROTE_QUERY_FOR",
 }
 
 

@@ -26,6 +26,15 @@ from memory_knowledge.workflows.base import WorkflowResult
 
 logger = structlog.get_logger()
 
+VALID_MEMORY_TYPES = {
+    "prompt_pattern",
+    "retrieval_strategy",
+    "common_issue",
+    "entity_relationship",
+    "naming_convention",
+    "architectural_pattern",
+}
+
 
 async def _resolve_entity_key_to_id(
     pool: asyncpg.Pool, entity_key_str: str
@@ -72,6 +81,15 @@ async def run_proposal(
         if repo_row is None:
             raise ValueError(f"Repository not found: {repository_key}")
         repository_id = repo_row["id"]
+
+        # Step 1.5: Validate memory_type
+        if memory_type not in VALID_MEMORY_TYPES:
+            return WorkflowResult(
+                run_id=str(run_id),
+                tool_name="run_learned_memory_proposal_workflow",
+                status="error",
+                error=f"Invalid memory_type: {memory_type}. Must be one of: {', '.join(sorted(VALID_MEMORY_TYPES))}",
+            )
 
         # Step 2: Validate evidence entity exists
         evidence_entity_id = await _resolve_entity_key_to_id(pool, evidence_entity_key)
