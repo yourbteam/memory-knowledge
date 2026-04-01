@@ -59,7 +59,7 @@ create_working_session(repository_key) → session_key (UUID)
 
 record_working_observation(session_key, entity_key, observation_type, observation_text)
   observation_types: inspected, hypothesized_about, proposed_change_to,
-                     issue_found, plan_note, rejected_path
+                     issue_found, plan_note, rejected_path, query_rewrite
 
 end_working_session(session_key) → projects to Neo4j graph
 ```
@@ -72,7 +72,7 @@ Two-phase pipeline: propose → commit
 
 **Proposal** requires:
 - `repository_key` — which repository the pattern applies to
-- `memory_type` — category of pattern (freeform VARCHAR(50), no enforced vocabulary — e.g., "prompt_pattern", "retrieval_strategy", "common_issue")
+- `memory_type` — category of pattern (validated against VALID_MEMORY_TYPES: "prompt_pattern", "retrieval_strategy", "common_issue", "entity_relationship", "naming_convention", "architectural_pattern")
 - `title` — human-readable summary
 - `body_text` — full pattern description (gets embedded for semantic search)
 - `evidence_entity_key` — UUID of entity that proves the pattern
@@ -169,7 +169,7 @@ Option C — Human review: A human reviews session transcripts and proposes patt
 
 Once patterns are approved via `run_learned_memory_commit_workflow`, they automatically appear in future retrievals via `context_assembly._fetch_applicable_learned_rules()`.
 
-**Important:** `run_retrieval_workflow` does NOT return learned rules. Agents must call `run_context_assembly_workflow` to get them. Alternatively, retrieval could be extended to surface rules (see Gap 4).
+**Status (implemented):** `run_retrieval_workflow` now returns `applicable_learned_rules` in its response (added in commit 7530689). Agents no longer need a separate `run_context_assembly_workflow` call.
 
 The context bundle from `run_context_assembly_workflow` includes:
 
@@ -227,17 +227,17 @@ The system captures WHETHER a query worked (usefulness score) but not HOW the ag
 - A `query_rewrite` observation_type that agents use to log the before/after
 - Or automated detection: same session + same entity intersection between two queries = likely rewrite
 
-### Gap 4: No Context Assembly Integration for Agents
+### Gap 4: No Context Assembly Integration for Agents — RESOLVED
 
-`run_context_assembly_workflow` exists and includes learned rules, but the standard agent workflow uses `run_retrieval_workflow` (which does NOT surface learned rules). Agents would need to switch to context_assembly or retrieval would need to surface rules.
+~~`run_retrieval_workflow` did not surface learned rules.~~
 
-**What's needed:** Check whether `run_retrieval_workflow` should surface applicable learned rules in its response, or whether agents should use `run_context_assembly_workflow` instead.
+**Resolved:** `run_retrieval_workflow` now includes `applicable_learned_rules` in its response (commit 7530689). Agents get learned rules alongside evidence in a single call.
 
-### Gap 5: No Defined Vocabulary for memory_type
+### Gap 5: No Defined Vocabulary for memory_type — RESOLVED
 
-The `memory_type` field in learned_records is freeform VARCHAR(50) with no validation. Agents can write any string. Without a defined vocabulary, different agents may use inconsistent types ("prompt_pattern" vs "query_pattern" vs "search_tip") making aggregation and mining impossible.
+~~`memory_type` was freeform VARCHAR(50) with no validation.~~
 
-**What's needed:** A defined set of memory_types with clear semantics, enforced either in code validation or documented in the protocol spec. Candidate types: `prompt_pattern`, `retrieval_strategy`, `common_issue`, `entity_relationship`, `naming_convention`.
+**Resolved:** `VALID_MEMORY_TYPES` defined in `learned_memory.py` with validation in `run_proposal()` (commit 7530689). Valid types: `prompt_pattern`, `retrieval_strategy`, `common_issue`, `entity_relationship`, `naming_convention`, `architectural_pattern`.
 
 ### Gap 6: No Feedback on Learned Rule Quality
 
@@ -267,7 +267,7 @@ AGENT TASK
   │   ├─ run_retrieval_workflow(query)
   │   │   ├─ [auto] route_execution logged
   │   │   ├─ [auto] auto_feedback generated
-  │   │   └─ returns evidence + route_execution_id (NO learned_rules — use context_assembly for those)
+  │   │   └─ returns evidence + route_execution_id + applicable_learned_rules
   │   │
   │   ├─ Agent inspects results
   │   │   └─ record_working_observation(session, entity, "inspected", notes)
