@@ -87,6 +87,16 @@ async def embed(
                         dimensions=settings.embedding_dimensions,
                     )
                     batch_embeddings = [d.embedding for d in response.data]
+                    if len(batch_embeddings) != len(batch):
+                        raise ValueError(
+                            f"Embedding count mismatch: expected {len(batch)}, got {len(batch_embeddings)}"
+                        )
+                    for emb in batch_embeddings:
+                        if len(emb) != settings.embedding_dimensions:
+                            raise ValueError(
+                                f"Embedding dimension mismatch: expected {settings.embedding_dimensions}, "
+                                f"got {len(emb)}"
+                            )
                     all_embeddings.extend(batch_embeddings)
                     continue
                 except openai.AuthenticationError:
