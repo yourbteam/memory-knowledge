@@ -20,6 +20,7 @@ from memory_knowledge.db.postgres import close_postgres, init_postgres
 from memory_knowledge.db.qdrant import close_qdrant, ensure_collections, init_qdrant
 from memory_knowledge.observability.logging import configure_logging
 from memory_knowledge.observability.metrics import track_tool_metrics
+from memory_knowledge.guards import check_remote_write_guard
 from memory_knowledge.workflows.base import WorkflowResult
 from memory_knowledge.observability.run_context import (
     bind_run_context,
@@ -135,6 +136,10 @@ async def run_learned_memory_proposal_workflow(
     """Propose a learned-memory candidate backed by evidence."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_learned_memory_proposal_workflow")
+    guard = check_remote_write_guard(get_settings(), "run_learned_memory_proposal_workflow")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         result = await _learned_memory.run_proposal(
             repository_key=repository_key,
@@ -169,6 +174,10 @@ async def run_learned_memory_commit_workflow(
     """Approve, reject, or supersede a learned-memory proposal."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_learned_memory_commit_workflow")
+    guard = check_remote_write_guard(get_settings(), "run_learned_memory_commit_workflow")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         result = await _learned_memory.run_commit(
             repository_key=repository_key,
@@ -308,6 +317,10 @@ async def run_repo_ingestion_workflow(
     """Seed or refresh repository knowledge from a commit. Returns job_id for polling."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_repo_ingestion_workflow")
+    guard = check_remote_write_guard(get_settings(), "run_repo_ingestion_workflow")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         from memory_knowledge.jobs.manifest_writer import create_job
 
@@ -338,6 +351,10 @@ async def run_integrity_audit_workflow(
     """Check mechanical layer trustworthiness across stores. Returns job_id for polling."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_integrity_audit_workflow")
+    guard = check_remote_write_guard(get_settings(), "run_integrity_audit_workflow")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         from memory_knowledge.jobs.manifest_writer import create_job
 
@@ -370,6 +387,10 @@ async def run_repair_rebuild_workflow(
     """Repair drift or rebuild a memory slice. Returns job_id for polling. Scope: full, qdrant, or neo4j."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_repair_rebuild_workflow")
+    guard = check_remote_write_guard(get_settings(), "run_repair_rebuild_workflow", is_destructive=True)
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         from memory_knowledge.jobs.manifest_writer import create_job
 
@@ -453,6 +474,10 @@ async def create_working_session(
     """Create a new working session for tracking investigation state."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "create_working_session")
+    guard = check_remote_write_guard(get_settings(), "create_working_session")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         from memory_knowledge.admin.working_memory import create_session
 
@@ -479,6 +504,10 @@ async def record_working_observation(
     """Record an observation (inspection, hypothesis, plan note) in a working session."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "record_working_observation")
+    guard = check_remote_write_guard(get_settings(), "record_working_observation")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         from memory_knowledge.admin.working_memory import record_observation
 
@@ -549,6 +578,10 @@ async def register_repository(
     """Register or update a repository in the catalog. Must be called before ingestion."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "register_repository")
+    guard = check_remote_write_guard(get_settings(), "register_repository")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         pool = get_pg_pool()
         row = await pool.fetchrow(
@@ -587,6 +620,10 @@ async def end_working_session(
     """End a working session, marking it as completed."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "end_working_session")
+    guard = check_remote_write_guard(get_settings(), "end_working_session")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         from memory_knowledge.admin.working_memory import end_session
 
@@ -618,6 +655,10 @@ async def submit_route_feedback(
     """Submit feedback on a retrieval route execution to improve routing."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "submit_route_feedback")
+    guard = check_remote_write_guard(get_settings(), "submit_route_feedback")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         # Validate score ranges
         for name, val in [("usefulness_score", usefulness_score), ("precision_score", precision_score)]:
@@ -692,6 +733,10 @@ async def import_repo_memory_tool(
     """Import repository memory from JSONL data."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "import_repo_memory")
+    guard = check_remote_write_guard(get_settings(), "import_repo_memory")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         max_bytes = get_settings().max_import_size_mb * 1024 * 1024
         if len(data.encode("utf-8")) > max_bytes:
@@ -727,6 +772,10 @@ async def rebuild_revision_workflow(
     """Re-project PG canonical data for a specific revision to Qdrant and/or Neo4j."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "rebuild_revision_workflow")
+    guard = check_remote_write_guard(get_settings(), "rebuild_revision_workflow", is_destructive=True)
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         from memory_knowledge.integrity.repair_drift import rebuild_revision
 
@@ -758,6 +807,10 @@ async def run_embedding_backfill(
     """Backfill missing Qdrant embeddings from PG canonical data."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_embedding_backfill")
+    guard = check_remote_write_guard(get_settings(), "run_embedding_backfill", is_destructive=True)
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
     try:
         from memory_knowledge.integrity.embedding_backfill import backfill_embeddings
 
@@ -780,6 +833,18 @@ async def run_embedding_backfill(
 # ---------------------------------------------------------------------------
 # Starlette lifecycle
 # ---------------------------------------------------------------------------
+
+
+def _mask_url(url: str) -> str:
+    """Show host:port but mask credentials in URLs."""
+    from urllib.parse import urlparse
+    parsed = urlparse(url)
+    if parsed.password:
+        masked = parsed._replace(
+            netloc=f"***:***@{parsed.hostname}" + (f":{parsed.port}" if parsed.port else "")
+        )
+        return masked.geturl()
+    return url
 
 
 @asynccontextmanager
@@ -806,6 +871,23 @@ async def app_lifespan(app: Starlette):
 
     logger.info("startup_begin")
 
+    # Seed DB secrets from Azure Key Vault if configured
+    if settings.azure_keyvault_name and settings.data_mode == "remote":
+        from memory_knowledge.auth.credential_refresh import fetch_kv_secret
+        for env_var, secret_name in [
+            ("DATABASE_URL", settings.kv_pg_secret_name),
+            ("QDRANT_API_KEY", settings.kv_qdrant_secret_name),
+            ("NEO4J_PASSWORD", settings.kv_neo4j_secret_name),
+        ]:
+            if not os.environ.get(env_var):
+                value = await fetch_kv_secret(settings.azure_keyvault_name, secret_name)
+                if value:
+                    os.environ[env_var] = value
+                    logger.info("kv_secret_seeded", env_var=env_var)
+        # Re-create settings to pick up seeded values
+        settings = Settings()
+        init_settings(settings)
+
     await init_postgres(settings)
     logger.info("postgres_connected")
 
@@ -816,6 +898,37 @@ async def app_lifespan(app: Starlette):
     qdrant_client = await init_qdrant(settings)
     await ensure_collections(qdrant_client, settings)
     logger.info("qdrant_connected")
+
+    # Startup mode summary
+    logger.info(
+        "startup_mode_summary",
+        data_mode=settings.data_mode,
+        pg_mode=settings.effective_mode("pg"),
+        pg_url=_mask_url(settings.database_url),
+        pg_ssl=settings.pg_ssl,
+        qdrant_mode=settings.effective_mode("qdrant"),
+        qdrant_url=settings.qdrant_url,
+        qdrant_api_key_set=settings.qdrant_api_key is not None,
+        neo4j_mode=settings.effective_mode("neo4j"),
+        neo4j_uri=settings.neo4j_uri,
+        allow_remote_writes=settings.allow_remote_writes,
+        allow_remote_rebuilds=settings.allow_remote_rebuilds,
+    )
+
+    # Environment fingerprinting
+    try:
+        pg_ver = await get_pg_pool().fetchval("SELECT version()")
+        logger.info("db_fingerprint_pg", version=pg_ver[:60])
+    except Exception:
+        pass
+    try:
+        neo4j_result = await neo4j_driver.execute_query(
+            "CALL dbms.components() YIELD versions RETURN versions[0] AS v"
+        )
+        logger.info("db_fingerprint_neo4j",
+                     version=neo4j_result.records[0]["v"] if neo4j_result.records else "?")
+    except Exception:
+        pass
 
     # Load routing archetypes into Qdrant (requires OpenAI — skip on failure)
     try:

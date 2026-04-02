@@ -66,6 +66,33 @@ class Settings(BaseSettings):
     log_level: str = "INFO"
     environment: str = "development"
 
+    # Data mode
+    data_mode: Literal["local", "remote"] = "local"
+    pg_mode: Literal["local", "remote"] | None = None
+    qdrant_mode: Literal["local", "remote"] | None = None
+    neo4j_mode: Literal["local", "remote"] | None = None
+
+    # Remote safety guards
+    allow_remote_writes: bool = False
+    allow_remote_rebuilds: bool = False
+
+    # Azure KV secret names for DB credentials
+    kv_pg_secret_name: str = "db-postgres-url"
+    kv_qdrant_secret_name: str = "db-qdrant-apikey"
+    kv_neo4j_secret_name: str = "db-neo4j-password"
+
+    def effective_mode(self, db: str) -> str:
+        """Resolve effective mode for a specific database."""
+        override = getattr(self, f"{db}_mode", None)
+        return override if override is not None else self.data_mode
+
+    def is_any_remote(self) -> bool:
+        """True if any database is in remote mode."""
+        return any(
+            self.effective_mode(db) == "remote"
+            for db in ("pg", "qdrant", "neo4j")
+        )
+
 
 _settings: Settings | None = None
 

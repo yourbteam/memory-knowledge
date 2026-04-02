@@ -824,23 +824,25 @@ async def run(
             logger.warning("learned_rules_fetch_failed", exc_info=True)
         context_bundle["applicable_learned_rules"] = learned_rules
 
-        # Step 8: Persist route execution
+        # Step 8: Persist route execution (skipped in remote read-only mode)
         duration_ms = int((time.monotonic() - start) * 1000)
-        route_exec_id = await persist_route_execution(
-            pool=pool,
-            run_id=run_id,
-            repository_id=repository_id,
-            prompt_text=query,
-            prompt_class=prompt_class,
-            route_policy_id=policy_id,
-            first_store_queried=first_store,
-            stores_queried=stores_queried,
-            fanout_used=fanout_used,
-            graph_expansion_used=graph_expansion_used,
-            rerank_strategy="score_sort",
-            result_count=context_bundle["count"],
-            duration_ms=duration_ms,
-        )
+        route_exec_id = None
+        if not (settings and settings.is_any_remote() and not settings.allow_remote_writes):
+            route_exec_id = await persist_route_execution(
+                pool=pool,
+                run_id=run_id,
+                repository_id=repository_id,
+                prompt_text=query,
+                prompt_class=prompt_class,
+                route_policy_id=policy_id,
+                first_store_queried=first_store,
+                stores_queried=stores_queried,
+                fanout_used=fanout_used,
+                graph_expansion_used=graph_expansion_used,
+                rerank_strategy="score_sort",
+                result_count=context_bundle["count"],
+                duration_ms=duration_ms,
+            )
 
         logger.info("retrieval_complete", duration_ms=duration_ms, result_count=context_bundle["count"])
 

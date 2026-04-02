@@ -194,6 +194,47 @@ async def refresh_codex_token(path: str) -> tuple[bool, str | None]:
 
 # ── Key Vault integration ────────────────────────────────────────────
 
+async def fetch_kv_secret(vault_name: str, secret_name: str) -> str | None:
+    """Fetch a single secret value from Azure Key Vault. Returns None on failure."""
+    if not _keyvault_available():
+        return None
+
+    loop = asyncio.get_running_loop()
+
+    def _fetch():
+        from azure.identity import DefaultAzureCredential
+        from azure.keyvault.secrets import SecretClient
+
+        vault_url = f"https://{vault_name}.vault.azure.net"
+        kv_token = os.environ.get("AZURE_KEYVAULT_TOKEN")
+        if kv_token:
+            from azure.core.credentials import AccessToken
+
+            class _StaticTokenCredential:
+                def get_token(self, *scopes, **kwargs):
+                    return AccessToken(kv_token, int(time.time()) + 3600)
+                def close(self):
+                    pass
+
+            credential = _StaticTokenCredential()
+        else:
+            credential = DefaultAzureCredential()
+
+        client = SecretClient(vault_url=vault_url, credential=credential)
+        try:
+            secret = client.get_secret(secret_name)
+            return secret.value
+        finally:
+            client.close()
+            credential.close()
+
+    try:
+        return await loop.run_in_executor(None, _fetch)
+    except Exception as e:
+        logger.warning("kv_secret_fetch_failed", secret_name=secret_name, error=str(e))
+        return None
+
+
 def _keyvault_available() -> bool:
     try:
         import azure.identity  # noqa: F401

@@ -54,3 +54,42 @@ def test_init_get_settings(monkeypatch):
     s = Settings()
     init_settings(s)
     assert get_settings() is s
+
+
+# ── Data mode tests ──
+
+
+def test_data_mode_defaults_to_local(monkeypatch):
+    _set_base_env(monkeypatch)
+    s = Settings()
+    assert s.data_mode == "local"
+    assert s.allow_remote_writes is False
+    assert s.allow_remote_rebuilds is False
+    assert s.is_any_remote() is False
+
+
+def test_data_mode_remote(monkeypatch):
+    _set_base_env(monkeypatch)
+    monkeypatch.setenv("DATA_MODE", "remote")
+    s = Settings()
+    assert s.data_mode == "remote"
+    assert s.is_any_remote() is True
+
+
+def test_per_db_mode_override(monkeypatch):
+    _set_base_env(monkeypatch)
+    monkeypatch.setenv("PG_MODE", "remote")
+    s = Settings()
+    assert s.effective_mode("pg") == "remote"
+    assert s.effective_mode("qdrant") == "local"
+    assert s.effective_mode("neo4j") == "local"
+    assert s.is_any_remote() is True
+
+
+def test_all_local_not_remote(monkeypatch):
+    _set_base_env(monkeypatch)
+    s = Settings()
+    assert s.effective_mode("pg") == "local"
+    assert s.effective_mode("qdrant") == "local"
+    assert s.effective_mode("neo4j") == "local"
+    assert s.is_any_remote() is False
