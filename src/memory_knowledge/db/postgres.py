@@ -11,9 +11,16 @@ async def init_postgres(settings: Settings) -> asyncpg.Pool:
     global _pool
     connect_kwargs: dict = {}
     if settings.pg_ssl:
-        connect_kwargs["ssl"] = "require"
+        import ssl
+        ctx = ssl.create_default_context()
+        ctx.check_hostname = False
+        ctx.verify_mode = ssl.CERT_NONE
+        connect_kwargs["ssl"] = ctx
     if settings.pg_command_timeout:
         connect_kwargs["command_timeout"] = settings.pg_command_timeout
+    # Disable prepared statement cache for PgBouncer/Supabase pooler connections
+    if "pooler.supabase.com" in settings.database_url:
+        connect_kwargs["statement_cache_size"] = 0
     _pool = await asyncpg.create_pool(
         dsn=settings.database_url,
         min_size=settings.pg_pool_min_size,
