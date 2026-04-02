@@ -28,7 +28,8 @@ class CodexMcpClient:
         self._process: asyncio.subprocess.Process | None = None
         self._request_id = 0
         self._initialized = False
-        self._lock = asyncio.Lock()
+        self._lock = asyncio.Lock()       # guards subprocess startup
+        self._req_lock = asyncio.Lock()   # serializes requests — one in-flight at a time
 
     @classmethod
     def get(cls) -> CodexMcpClient:
@@ -105,7 +106,17 @@ class CodexMcpClient:
     async def _send_request(
         self, method: str, params: dict, timeout: float = _REQUEST_TIMEOUT
     ) -> dict:
-        """Send a JSON-RPC request and wait for the matching response."""
+        """Send a JSON-RPC request and wait for the matching response.
+
+        Serialized via _req_lock — only one request in-flight at a time
+        to prevent concurrent readline() on the same stdout pipe.
+        """
+        async with self._req_lock:
+            return await self._send_request_inner(method, params, timeout)
+
+    async def _send_request_inner(
+        self, method: str, params: dict, timeout: float
+    ) -> dict:
         if not self._process or not self._process.stdin or not self._process.stdout:
             raise RuntimeError("Codex MCP subprocess not started")
 
