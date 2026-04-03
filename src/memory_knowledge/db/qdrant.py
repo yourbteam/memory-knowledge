@@ -43,7 +43,7 @@ async def ensure_collections(
     for name in COLLECTIONS:
         for field, schema in [
             ("repository_key", models.PayloadSchemaType.KEYWORD),
-            ("is_active", models.PayloadSchemaType.KEYWORD),
+            ("is_active", models.PayloadSchemaType.BOOL),
             ("branch_name", models.PayloadSchemaType.KEYWORD),
             ("commit_sha", models.PayloadSchemaType.KEYWORD),
         ]:
