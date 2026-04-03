@@ -44,6 +44,8 @@ async def ensure_collections(
         for field, schema in [
             ("repository_key", models.PayloadSchemaType.KEYWORD),
             ("is_active", models.PayloadSchemaType.KEYWORD),
+            ("branch_name", models.PayloadSchemaType.KEYWORD),
+            ("commit_sha", models.PayloadSchemaType.KEYWORD),
         ]:
             try:
                 await client.create_payload_index(
