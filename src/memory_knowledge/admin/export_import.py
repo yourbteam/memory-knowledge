@@ -154,7 +154,11 @@ async def export_repo_memory(
 async def import_repo_memory(
     pool: asyncpg.Pool, lines: list[str]
 ) -> dict[str, Any]:
-    """Import repository memory from JSONL lines with full FK remapping."""
+    """Import repository memory from JSONL lines with full FK remapping.
+
+    Uses batched writes (executemany) for speed — ~100x faster than individual
+    INSERT queries against remote databases.
+    """
     rows_by_table: dict[str, list[dict]] = {}
     for line in lines:
         record = json.loads(line)
@@ -162,54 +166,79 @@ async def import_repo_memory(
         rows_by_table.setdefault(table, []).append(record["data"])
 
     imported: dict[str, int] = {}
+    BATCH = 500
 
-    def _inc(table: str) -> None:
-        imported[table] = imported.get(table, 0) + 1
+    def _log(table: str, done: int, total: int) -> None:
+        imported[table] = done
+        logger.info("import_progress", table=table, done=done, total=total)
 
     # Maps for FK remapping
     repo_key_to_id: dict[str, int] = {}
-    rev_key_to_id: dict[tuple[str, str], int] = {}  # (repo_key, commit_sha) -> rev_id
+    rev_key_to_id: dict[tuple[str, str], int] = {}
     ek_to_entity_id: dict[str, int] = {}
     ek_to_file_id: dict[str, int] = {}
     ek_to_symbol_id: dict[str, int] = {}
     ek_to_chunk_id: dict[str, int] = {}
     ek_to_lr_id: dict[str, int] = {}
 
-    # 1. Repositories
+    # Helper: batch INSERT using UNNEST arrays with RETURNING
+    async def _batch_unnest(
+        sql: str, args_list: list[tuple], table: str, cast_types: list[str],
+    ) -> list[asyncpg.Record]:
+        """Batch INSERT using UNNEST arrays. Each batch sends N rows in 1 query.
+
+        sql: INSERT ... SELECT * FROM UNNEST($1::type[], $2::type[], ...) ON CONFLICT ... RETURNING ...
+        args_list: list of tuples, one per row
+        cast_types: PostgreSQL array type casts matching the UNNEST columns
+        """
+        results: list[asyncpg.Record] = []
+        for i in range(0, len(args_list), BATCH):
+            batch = args_list[i : i + BATCH]
+            # Transpose rows into column arrays
+            columns = list(zip(*batch))
+            arrays = [list(col) for col in columns]
+            batch_results = await pool.fetch(sql, *arrays)
+            results.extend(batch_results)
+            _log(table, len(results), len(args_list))
+        return results
+
+    # Helper: batch executemany (no RETURNING needed)
+    async def _batch_execute(sql: str, args_list: list[tuple], table: str) -> None:
+        for i in range(0, len(args_list), BATCH):
+            batch = args_list[i : i + BATCH]
+            await pool.executemany(sql, batch)
+            _log(table, min(i + BATCH, len(args_list)), len(args_list))
+
+    # 1. Repositories (tiny, keep individual)
     for row in rows_by_table.get("catalog.repositories", []):
         r = await pool.fetchrow(
-            """
-            INSERT INTO catalog.repositories (repository_key, name, origin_url)
+            """INSERT INTO catalog.repositories (repository_key, name, origin_url)
             VALUES ($1, $2, $3)
-            ON CONFLICT (repository_key) DO UPDATE
-                SET name = EXCLUDED.name, origin_url = EXCLUDED.origin_url
-            RETURNING id
-            """,
+            ON CONFLICT (repository_key) DO UPDATE SET name = EXCLUDED.name, origin_url = EXCLUDED.origin_url
+            RETURNING id""",
             row["repository_key"], row["name"], row.get("origin_url"),
         )
         repo_key_to_id[row["repository_key"]] = r["id"]
-        _inc("catalog.repositories")
+    _log("catalog.repositories", len(repo_key_to_id), len(rows_by_table.get("catalog.repositories", [])))
 
-    # 2. Repo revisions
+    # 2. Repo revisions (tiny, keep individual)
     for row in rows_by_table.get("catalog.repo_revisions", []):
         rk = row.get("_repository_key", "")
         repo_id = repo_key_to_id.get(rk)
         if not repo_id:
             continue
         r = await pool.fetchrow(
-            """
-            INSERT INTO catalog.repo_revisions (repository_id, commit_sha, branch_name, parent_sha)
+            """INSERT INTO catalog.repo_revisions (repository_id, commit_sha, branch_name, parent_sha)
             VALUES ($1, $2, $3, $4)
-            ON CONFLICT (repository_id, commit_sha) DO UPDATE
-                SET branch_name = EXCLUDED.branch_name
-            RETURNING id
-            """,
+            ON CONFLICT (repository_id, commit_sha) DO UPDATE SET branch_name = EXCLUDED.branch_name
+            RETURNING id""",
             repo_id, row["commit_sha"], row.get("branch_name"), row.get("parent_sha"),
         )
         rev_key_to_id[(rk, row["commit_sha"])] = r["id"]
-        _inc("catalog.repo_revisions")
+    _log("catalog.repo_revisions", len(rev_key_to_id), len(rows_by_table.get("catalog.repo_revisions", [])))
 
-    # 3. Entities
+    # 3. Entities — UNNEST batched (largest table)
+    entity_args = []
     for row in rows_by_table.get("catalog.entities", []):
         rk = row.get("_repository_key", "")
         repo_id = repo_key_to_id.get(rk)
@@ -218,30 +247,28 @@ async def import_repo_memory(
         commit_sha = row.get("_revision_commit_sha")
         rev_id = rev_key_to_id.get((rk, commit_sha)) if commit_sha else None
         if commit_sha and not rev_id:
-            continue  # revision not imported, skip entity
-        ek = row["entity_key"]
-        r = await pool.fetchrow(
-            """
-            INSERT INTO catalog.entities (entity_key, entity_type, repository_id, repo_revision_id, external_hash)
-            VALUES ($1, $2, $3, $4, $5)
-            ON CONFLICT (entity_key) DO UPDATE
-                SET repo_revision_id = EXCLUDED.repo_revision_id,
-                    external_hash = EXCLUDED.external_hash
-            RETURNING id
-            """,
-            uuid.UUID(ek), row["entity_type"], repo_id, rev_id, row.get("external_hash"),
-        )
-        ek_to_entity_id[ek] = r["id"]
-        _inc("catalog.entities")
+            continue
+        entity_args.append((uuid.UUID(row["entity_key"]), row["entity_type"], repo_id, rev_id, row.get("external_hash")))
 
-    # 4. Files
+    results = await _batch_unnest(
+        """INSERT INTO catalog.entities (entity_key, entity_type, repository_id, repo_revision_id, external_hash)
+        SELECT * FROM UNNEST($1::uuid[], $2::text[], $3::bigint[], $4::bigint[], $5::text[])
+        ON CONFLICT (entity_key) DO UPDATE SET repo_revision_id = EXCLUDED.repo_revision_id, external_hash = EXCLUDED.external_hash
+        RETURNING id, entity_key""",
+        entity_args, "catalog.entities", [],
+    )
+    for r in results:
+        ek_to_entity_id[str(r["entity_key"])] = r["id"]
+
+    # 4. Files — UNNEST batched
+    file_args = []
+    file_ek_order = []
     for row in rows_by_table.get("catalog.files", []):
         ek = row.get("_entity_key")
         entity_id = ek_to_entity_id.get(ek)
         if not entity_id:
             continue
         commit_sha = row.get("_revision_commit_sha")
-        # Resolve rev_id using repo_key + commit_sha
         rev_id = None
         for rk in repo_key_to_id:
             rev_id = rev_key_to_id.get((rk, commit_sha))
@@ -249,22 +276,26 @@ async def import_repo_memory(
                 break
         if not rev_id:
             continue
-        r = await pool.fetchrow(
-            """
-            INSERT INTO catalog.files (entity_id, repo_revision_id, file_path, language, size_bytes, checksum)
-            VALUES ($1, $2, $3, $4, $5, $6)
-            ON CONFLICT ON CONSTRAINT uq_files_revision_path DO UPDATE
-                SET entity_id = EXCLUDED.entity_id, language = EXCLUDED.language,
-                    size_bytes = EXCLUDED.size_bytes, checksum = EXCLUDED.checksum
-            RETURNING id
-            """,
-            entity_id, rev_id, row["file_path"], row.get("language"),
-            row.get("size_bytes"), row.get("checksum"),
-        )
-        ek_to_file_id[ek] = r["id"]
-        _inc("catalog.files")
+        file_args.append((entity_id, rev_id, row["file_path"], row.get("language"), row.get("size_bytes"), row.get("checksum")))
+        file_ek_order.append(ek)
 
-    # 5. Symbols
+    results = await _batch_unnest(
+        """INSERT INTO catalog.files (entity_id, repo_revision_id, file_path, language, size_bytes, checksum)
+        SELECT * FROM UNNEST($1::bigint[], $2::bigint[], $3::text[], $4::text[], $5::bigint[], $6::text[])
+        ON CONFLICT ON CONSTRAINT uq_files_revision_path DO UPDATE
+            SET entity_id = EXCLUDED.entity_id, language = EXCLUDED.language, size_bytes = EXCLUDED.size_bytes, checksum = EXCLUDED.checksum
+        RETURNING id, entity_id""",
+        file_args, "catalog.files", [],
+    )
+    eid_to_ek = {ek_to_entity_id[ek]: ek for ek in file_ek_order if ek in ek_to_entity_id}
+    for r in results:
+        file_ek = eid_to_ek.get(r["entity_id"])
+        if file_ek:
+            ek_to_file_id[file_ek] = r["id"]
+
+    # 5. Symbols — UNNEST batched
+    sym_args = []
+    sym_ek_order = []
     for row in rows_by_table.get("catalog.symbols", []):
         ek = row.get("_entity_key")
         entity_id = ek_to_entity_id.get(ek)
@@ -272,23 +303,26 @@ async def import_repo_memory(
         file_id = ek_to_file_id.get(file_ek)
         if not entity_id or not file_id:
             continue
-        r = await pool.fetchrow(
-            """
-            INSERT INTO catalog.symbols (entity_id, file_id, symbol_name, symbol_kind,
-                                         line_start, line_end, signature)
-            VALUES ($1, $2, $3, $4, $5, $6, $7)
-            ON CONFLICT (entity_id) DO UPDATE
-                SET file_id = EXCLUDED.file_id, symbol_name = EXCLUDED.symbol_name,
-                    symbol_kind = EXCLUDED.symbol_kind
-            RETURNING id
-            """,
-            entity_id, file_id, row["symbol_name"], row["symbol_kind"],
-            row.get("line_start"), row.get("line_end"), row.get("signature"),
-        )
-        ek_to_symbol_id[ek] = r["id"]
-        _inc("catalog.symbols")
+        sym_args.append((entity_id, file_id, row["symbol_name"], row["symbol_kind"],
+                         row.get("line_start"), row.get("line_end"), row.get("signature")))
+        sym_ek_order.append(ek)
 
-    # 6. Chunks
+    results = await _batch_unnest(
+        """INSERT INTO catalog.symbols (entity_id, file_id, symbol_name, symbol_kind, line_start, line_end, signature)
+        SELECT * FROM UNNEST($1::bigint[], $2::bigint[], $3::text[], $4::text[], $5::int[], $6::int[], $7::text[])
+        ON CONFLICT (entity_id) DO UPDATE SET file_id = EXCLUDED.file_id, symbol_name = EXCLUDED.symbol_name, symbol_kind = EXCLUDED.symbol_kind
+        RETURNING id, entity_id""",
+        sym_args, "catalog.symbols", [],
+    )
+    sym_eid_to_ek = {ek_to_entity_id[ek]: ek for ek in sym_ek_order if ek in ek_to_entity_id}
+    for r in results:
+        sym_ek = sym_eid_to_ek.get(r["entity_id"])
+        if sym_ek:
+            ek_to_symbol_id[sym_ek] = r["id"]
+
+    # 6. Chunks — UNNEST batched (largest data table)
+    chunk_args = []
+    chunk_ek_order = []
     for row in rows_by_table.get("catalog.chunks", []):
         ek = row.get("_entity_key")
         entity_id = ek_to_entity_id.get(ek)
@@ -296,191 +330,152 @@ async def import_repo_memory(
         file_id = ek_to_file_id.get(file_ek)
         if not entity_id or not file_id:
             continue
-        r = await pool.fetchrow(
-            """
-            INSERT INTO catalog.chunks (entity_id, file_id, title, content_text,
-                                        content_tsv, chunk_type, line_start, line_end, checksum)
-            VALUES ($1, $2, $3, $4, to_tsvector('english', $4), $5, $6, $7, $8)
-            ON CONFLICT (entity_id) DO UPDATE
-                SET content_text = EXCLUDED.content_text,
-                    content_tsv = to_tsvector('english', EXCLUDED.content_text)
-            RETURNING id
-            """,
-            entity_id, file_id, row.get("title"), row.get("content_text"),
-            row.get("chunk_type"), row.get("line_start"), row.get("line_end"),
-            row.get("checksum"),
-        )
-        ek_to_chunk_id[ek] = r["id"]
-        _inc("catalog.chunks")
+        chunk_args.append((entity_id, file_id, row.get("title"), row.get("content_text"),
+                           row.get("chunk_type"), row.get("line_start"), row.get("line_end"), row.get("checksum")))
+        chunk_ek_order.append(ek)
 
-    # 7. Summaries
+    results = await _batch_unnest(
+        """INSERT INTO catalog.chunks (entity_id, file_id, title, content_text, content_tsv, chunk_type, line_start, line_end, checksum)
+        SELECT e, f, t, c, to_tsvector('english', c), ct, ls, le, cs
+        FROM UNNEST($1::bigint[], $2::bigint[], $3::text[], $4::text[], $5::text[], $6::int[], $7::int[], $8::text[])
+            AS t(e, f, t, c, ct, ls, le, cs)
+        ON CONFLICT (entity_id) DO UPDATE SET content_text = EXCLUDED.content_text, content_tsv = to_tsvector('english', EXCLUDED.content_text)
+        RETURNING id, entity_id""",
+        chunk_args, "catalog.chunks", [],
+    )
+    chunk_eid_to_ek = {ek_to_entity_id[ek]: ek for ek in chunk_ek_order if ek in ek_to_entity_id}
+    for r in results:
+        chunk_ek = chunk_eid_to_ek.get(r["entity_id"])
+        if chunk_ek:
+            ek_to_chunk_id[chunk_ek] = r["id"]
+
+    # 7. Summaries — BATCHED with executemany
+    summary_args = []
     for row in rows_by_table.get("catalog.summaries", []):
         ek = row.get("_entity_key")
         entity_id = ek_to_entity_id.get(ek)
-        if not entity_id:
-            continue
-        await pool.execute(
-            """
-            INSERT INTO catalog.summaries (entity_id, summary_level, summary_text,
-                                           summary_tsv)
+        if entity_id:
+            summary_args.append((entity_id, row["summary_level"], row.get("summary_text")))
+    if summary_args:
+        await _batch_execute(
+            """INSERT INTO catalog.summaries (entity_id, summary_level, summary_text, summary_tsv)
             VALUES ($1, $2, $3, to_tsvector('english', COALESCE($3, '')))
             ON CONFLICT (entity_id, summary_level) DO UPDATE
-                SET summary_text = EXCLUDED.summary_text,
-                    summary_tsv = to_tsvector('english', COALESCE(EXCLUDED.summary_text, ''))
-            """,
-            entity_id, row["summary_level"], row.get("summary_text"),
+                SET summary_text = EXCLUDED.summary_text, summary_tsv = to_tsvector('english', COALESCE(EXCLUDED.summary_text, ''))""",
+            summary_args, "catalog.summaries",
         )
-        _inc("catalog.summaries")
 
-    # 8. Branch heads
+    # 8. Branch heads — executemany
+    bh_args = []
     for row in rows_by_table.get("catalog.branch_heads", []):
         rk = row.get("_repository_key", "")
         repo_id = repo_key_to_id.get(rk)
         commit_sha = row.get("_revision_commit_sha")
         rev_id = rev_key_to_id.get((rk, commit_sha)) if commit_sha else None
-        if not repo_id or not rev_id:
-            continue
-        await pool.execute(
-            """
-            INSERT INTO catalog.branch_heads (repository_id, branch_name, repo_revision_id)
-            VALUES ($1, $2, $3)
-            ON CONFLICT (repository_id, branch_name) DO UPDATE
-                SET repo_revision_id = EXCLUDED.repo_revision_id
-            """,
-            repo_id, row["branch_name"], rev_id,
+        if repo_id and rev_id:
+            bh_args.append((repo_id, row["branch_name"], rev_id))
+    if bh_args:
+        await _batch_execute(
+            """INSERT INTO catalog.branch_heads (repository_id, branch_name, repo_revision_id)
+            VALUES ($1, $2, $3) ON CONFLICT (repository_id, branch_name) DO UPDATE SET repo_revision_id = EXCLUDED.repo_revision_id""",
+            bh_args, "catalog.branch_heads",
         )
-        _inc("catalog.branch_heads")
 
-    # 9. Retrieval surfaces
+    # 9. Retrieval surfaces — executemany
+    rs_args = []
     for row in rows_by_table.get("catalog.retrieval_surfaces", []):
         rk = row.get("_repository_key", "")
         repo_id = repo_key_to_id.get(rk)
         commit_sha = row.get("_revision_commit_sha")
         rev_id = rev_key_to_id.get((rk, commit_sha)) if commit_sha else None
-        if not repo_id or not rev_id:
-            continue
-        await pool.execute(
-            """
-            INSERT INTO catalog.retrieval_surfaces
-                (repository_id, surface_type, branch_name, commit_sha,
-                 repo_revision_id, is_default)
+        if repo_id and rev_id:
+            rs_args.append((repo_id, row.get("surface_type", "live_branch"), row.get("branch_name"),
+                            row.get("commit_sha"), rev_id, row.get("is_default", False)))
+    if rs_args:
+        await _batch_execute(
+            """INSERT INTO catalog.retrieval_surfaces (repository_id, surface_type, branch_name, commit_sha, repo_revision_id, is_default)
             VALUES ($1, $2, $3, $4, $5, $6)
             ON CONFLICT (repository_id, surface_type, branch_name) DO UPDATE
-                SET commit_sha = EXCLUDED.commit_sha,
-                    repo_revision_id = EXCLUDED.repo_revision_id
-            """,
-            repo_id, row.get("surface_type", "live_branch"),
-            row.get("branch_name"), row.get("commit_sha"), rev_id,
-            row.get("is_default", False),
+                SET commit_sha = EXCLUDED.commit_sha, repo_revision_id = EXCLUDED.repo_revision_id""",
+            rs_args, "catalog.retrieval_surfaces",
         )
-        _inc("catalog.retrieval_surfaces")
 
-    # 10. File imports
+    # 10. File imports — executemany
+    fi_args = []
     for row in rows_by_table.get("catalog.file_imports_file", []):
-        imp_ek = row.get("importer_entity_key")
-        imported_ek = row.get("imported_entity_key")
-        imp_fid = ek_to_file_id.get(imp_ek)
-        imported_fid = ek_to_file_id.get(imported_ek)
+        imp_fid = ek_to_file_id.get(row.get("importer_entity_key"))
+        imported_fid = ek_to_file_id.get(row.get("imported_entity_key"))
         if imp_fid and imported_fid:
-            await pool.execute(
-                """
-                INSERT INTO catalog.file_imports_file (importer_file_id, imported_file_id)
-                VALUES ($1, $2)
-                ON CONFLICT ON CONSTRAINT uq_file_imports DO NOTHING
-                """,
-                imp_fid, imported_fid,
-            )
-            _inc("catalog.file_imports_file")
+            fi_args.append((imp_fid, imported_fid))
+    if fi_args:
+        await _batch_execute(
+            """INSERT INTO catalog.file_imports_file (importer_file_id, imported_file_id)
+            VALUES ($1, $2) ON CONFLICT ON CONSTRAINT uq_file_imports DO NOTHING""",
+            fi_args, "catalog.file_imports_file",
+        )
 
-    # 11. Symbol calls
+    # 11. Symbol calls — executemany
+    sc_args = []
     for row in rows_by_table.get("catalog.symbol_calls_symbol", []):
-        caller_ek = row.get("caller_entity_key")
-        callee_ek = row.get("callee_entity_key")
-        caller_sid = ek_to_symbol_id.get(caller_ek)
-        callee_sid = ek_to_symbol_id.get(callee_ek)
+        caller_sid = ek_to_symbol_id.get(row.get("caller_entity_key"))
+        callee_sid = ek_to_symbol_id.get(row.get("callee_entity_key"))
         if caller_sid and callee_sid:
-            await pool.execute(
-                """
-                INSERT INTO catalog.symbol_calls_symbol (caller_symbol_id, callee_symbol_id)
-                VALUES ($1, $2)
-                ON CONFLICT ON CONSTRAINT uq_symbol_calls DO NOTHING
-                """,
-                caller_sid, callee_sid,
-            )
-            _inc("catalog.symbol_calls_symbol")
+            sc_args.append((caller_sid, callee_sid))
+    if sc_args:
+        await _batch_execute(
+            """INSERT INTO catalog.symbol_calls_symbol (caller_symbol_id, callee_symbol_id)
+            VALUES ($1, $2) ON CONFLICT ON CONSTRAINT uq_symbol_calls DO NOTHING""",
+            sc_args, "catalog.symbol_calls_symbol",
+        )
 
     # 12. Learned records (non-superseding first, then superseding)
     lr_rows = rows_by_table.get("memory.learned_records", [])
     non_superseding = [r for r in lr_rows if not r.get("_supersedes_entity_key")]
     superseding = [r for r in lr_rows if r.get("_supersedes_entity_key")]
 
-    for batch in [non_superseding, superseding]:
-        for row in batch:
+    for batch_rows in [non_superseding, superseding]:
+        for row in batch_rows:
             ek = row.get("_entity_key")
             entity_id = ek_to_entity_id.get(ek)
-            scope_ek = row.get("_scope_entity_key")
-            scope_id = ek_to_entity_id.get(scope_ek)
-            ev_ek = row.get("_evidence_entity_key")
-            ev_id = ek_to_entity_id.get(ev_ek) if ev_ek else None
-            ev_chunk_ek = row.get("_evidence_chunk_entity_key")
-            ev_chunk_id = ek_to_chunk_id.get(ev_chunk_ek) if ev_chunk_ek else None
-
-            # Resolve revision FKs
+            scope_id = ek_to_entity_id.get(row.get("_scope_entity_key"))
+            ev_id = ek_to_entity_id.get(row.get("_evidence_entity_key")) if row.get("_evidence_entity_key") else None
+            ev_chunk_id = ek_to_chunk_id.get(row.get("_evidence_chunk_entity_key")) if row.get("_evidence_chunk_entity_key") else None
             vf_sha = row.get("_valid_from_commit_sha")
             vt_sha = row.get("_valid_to_commit_sha")
-            vf_rev_id = None
-            vt_rev_id = None
+            vf_rev_id = vt_rev_id = None
             for rk in repo_key_to_id:
                 if vf_sha:
                     vf_rev_id = vf_rev_id or rev_key_to_id.get((rk, vf_sha))
                 if vt_sha:
                     vt_rev_id = vt_rev_id or rev_key_to_id.get((rk, vt_sha))
-
-            # Resolve supersedes
-            sup_ek = row.get("_supersedes_entity_key")
-            sup_lr_id = ek_to_lr_id.get(sup_ek) if sup_ek else None
-
+            sup_lr_id = ek_to_lr_id.get(row.get("_supersedes_entity_key")) if row.get("_supersedes_entity_key") else None
             if not entity_id or not scope_id:
                 continue
-
             r = await pool.fetchrow(
-                """
-                INSERT INTO memory.learned_records
+                """INSERT INTO memory.learned_records
                     (entity_id, scope_entity_id, memory_type, title, body_text,
                      body_tsv, source_kind, confidence, applicability_mode,
                      valid_from_revision_id, valid_to_revision_id,
                      evidence_entity_id, evidence_chunk_id,
                      verification_status, verification_notes, is_active,
                      supersedes_learned_record_id)
-                VALUES ($1, $2, $3, $4, $5, to_tsvector('english', COALESCE($5, '')), $6, $7, $8,
-                        $9, $10, $11, $12, $13, $14, $15, $16)
+                VALUES ($1,$2,$3,$4,$5,to_tsvector('english',COALESCE($5,'')),$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
                 ON CONFLICT (entity_id) DO UPDATE
-                    SET body_text = EXCLUDED.body_text,
-                        body_tsv = to_tsvector('english', COALESCE(EXCLUDED.body_text, '')),
-                        verification_status = EXCLUDED.verification_status,
-                        is_active = EXCLUDED.is_active
-                RETURNING id
-                """,
+                    SET body_text=EXCLUDED.body_text, body_tsv=to_tsvector('english',COALESCE(EXCLUDED.body_text,'')),
+                        verification_status=EXCLUDED.verification_status, is_active=EXCLUDED.is_active
+                RETURNING id""",
                 entity_id, scope_id, row.get("memory_type"), row.get("title"),
                 row.get("body_text"), row.get("source_kind"),
                 float(row["confidence"]) if row.get("confidence") else 0.5,
                 row.get("applicability_mode", "repository"),
                 vf_rev_id, vt_rev_id, ev_id, ev_chunk_id,
                 row.get("verification_status", "unverified"),
-                row.get("verification_notes"),
-                row.get("is_active", True), sup_lr_id,
+                row.get("verification_notes"), row.get("is_active", True), sup_lr_id,
             )
             if r:
                 ek_to_lr_id[ek] = r["id"]
-                _inc("memory.learned_records")
+    _log("memory.learned_records", len(ek_to_lr_id), len(lr_rows))
 
-    logger.info(
-        "import_complete",
-        tables=list(imported.keys()),
-        total_rows=sum(imported.values()),
-    )
-    return {
-        "tables_imported": list(imported.keys()),
-        "rows_imported": sum(imported.values()),
-        "detail": imported,
-    }
+    total = sum(imported.values())
+    logger.info("import_complete", tables=list(imported.keys()), total_rows=total)
+    return {"tables_imported": list(imported.keys()), "rows_imported": total, "detail": imported}

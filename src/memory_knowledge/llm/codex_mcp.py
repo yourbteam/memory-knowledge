@@ -160,7 +160,7 @@ class CodexMcpClient:
                     )
                 return response.get("result", {})
 
-    async def complete(self, prompt: str) -> str:
+    async def complete(self, prompt: str, timeout: float = _REQUEST_TIMEOUT) -> str:
         """Send a prompt to Codex and return the text response."""
         await self._ensure_started()
 
@@ -174,7 +174,7 @@ class CodexMcpClient:
                     "sandbox": "read-only",
                 },
             },
-            timeout=_REQUEST_TIMEOUT,
+            timeout=timeout,
         )
 
         # Parse MCP tool result: {"content": [{"type": "text", "text": "..."}]}

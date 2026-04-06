@@ -24,7 +24,11 @@ from memory_knowledge.identity.entity_key import (
     summary_entity_key,
     symbol_entity_key,
 )
+import os
+from itertools import groupby
+
 from memory_knowledge.llm.complete import llm_complete
+from memory_knowledge.llm.openai_client import complete_batch_summaries
 # Parser dispatch via factory — no direct adapter import
 from memory_knowledge.projections.neo4j_projector import (
     project_additive_labels,
@@ -458,88 +462,139 @@ async def run(
             except Exception as exc:
                 logger.warning("staleness_check_failed", error=str(exc))
 
-        # Step 5c: Generate summaries (if enabled)
+        # Step 5c: Generate summaries (if enabled) — batched for speed
         all_summaries_for_embedding: list[dict[str, Any]] = []
         summaries_created = 0
 
         if settings.generate_summaries:
+            # Query existing summaries to skip re-generation
+            existing_summary_keys: set[str] = set()
+            try:
+                rows = await pool.fetch(
+                    """SELECT e.entity_key FROM catalog.summaries s
+                       JOIN catalog.entities e ON s.entity_id = e.id
+                       WHERE e.repository_id = $1""",
+                    repository_id,
+                )
+                existing_summary_keys = {str(r["entity_key"]) for r in rows}
+                if existing_summary_keys:
+                    logger.info("existing_summaries_found", count=len(existing_summary_keys))
+            except Exception:
+                pass  # proceed without skip optimization
+
+            # Collect all items needing summaries
+            summary_items: list[dict[str, Any]] = []
+            item_index = 1
+
             for fp, source in file_path_to_source.items():
-                file_eid = file_path_to_entity_id.get(fp)
                 file_ek = file_path_to_entity_key.get(fp, "")
-                if not file_eid:
+                if not file_ek:
                     continue
 
-                # File-level summary
-                try:
-                    file_summary = await llm_complete(
-                        source[:8000], settings, system_prompt=_summary_prompt(detect_language(fp))
-                    )
-                    if not file_summary or not file_summary.strip():
-                        logger.warning("empty_file_summary_skipped", file_path=fp)
-                        continue
-                    s_ek = summary_entity_key(repository_key, commit_sha, file_ek, "file")
-                    await upsert_summary(pool, s_ek, file_eid, "file", file_summary)
-                    all_summaries_for_embedding.append({
-                        "entity_key": str(s_ek),
-                        "summary_text": file_summary,
+                # File-level item
+                s_ek = str(summary_entity_key(repository_key, commit_sha, file_ek, "file"))
+                if s_ek not in existing_summary_keys:
+                    summary_items.append({
+                        "index": item_index,
+                        "name": os.path.basename(fp),
+                        "kind": "file",
+                        "file": fp,
+                        "source": source[:8000],
+                        "entity_key": file_ek,
                         "summary_level": "file",
+                        "language": detect_language(fp),
                     })
-                    summaries_created += 1
-                except Exception as exc:
-                    logger.warning("file_summary_failed", file_path=fp, error=str(exc))
-                    await record_ingestion_item(
-                        pool, ingestion_run_id, file_eid, "summary", "error", error_text=str(exc)
-                    )
+                    item_index += 1
 
-                # Symbol-level summaries
+                # Symbol-level items
                 for fs in neo4j_file_symbols:
                     if fs["file_path"] != fp:
                         continue
+                    cached_parse = file_path_to_parse_output.get(fp)
+                    if not cached_parse:
+                        continue
                     source_lines = source.splitlines()
                     for sym_rec in fs["symbols"]:
-                        try:
-                            # Extract symbol source using cached parse output
-                            sym_source = None
-                            cached_parse = file_path_to_parse_output.get(fp)
-                            if cached_parse:
-                                for psym in cached_parse.symbols:
-                                    if psym.name == sym_rec["name"]:
-                                        sym_source = "\n".join(
-                                            source_lines[psym.line_start - 1 : psym.line_end]
-                                        )
-                                        break
-                            if not sym_source:
-                                continue  # skip summary if symbol source not found
-                            sym_ek = sym_rec["entity_key"]
-                            s_ek = summary_entity_key(
-                                repository_key, commit_sha, sym_ek, "symbol"
-                            )
-                            sym_summary = await llm_complete(
-                                f"Symbol: {sym_rec['name']} ({sym_rec['kind']})\n\n{sym_source[:4000]}",
-                                settings,
-                                system_prompt=_summary_prompt(detect_language(fp)),
-                            )
-                            if not sym_summary or not sym_summary.strip():
-                                continue
-                            # Look up symbol entity_id
-                            sym_eid_row = await pool.fetchrow(
+                        sym_ek = sym_rec["entity_key"]
+                        s_ek = str(summary_entity_key(repository_key, commit_sha, sym_ek, "symbol"))
+                        if s_ek in existing_summary_keys:
+                            continue
+                        sym_source = None
+                        for psym in cached_parse.symbols:
+                            if psym.name == sym_rec["name"]:
+                                sym_source = "\n".join(
+                                    source_lines[psym.line_start - 1 : psym.line_end]
+                                )
+                                break
+                        if not sym_source:
+                            continue
+                        summary_items.append({
+                            "index": item_index,
+                            "name": sym_rec["name"],
+                            "kind": sym_rec.get("kind", "symbol"),
+                            "file": fp,
+                            "source": sym_source[:4000],
+                            "entity_key": sym_ek,
+                            "summary_level": "symbol",
+                            "language": detect_language(fp),
+                        })
+                        item_index += 1
+
+            logger.info(
+                "summary_items_collected",
+                total=len(summary_items),
+                skipped=len(existing_summary_keys),
+            )
+
+            # Group by language and batch-generate, persisting each batch immediately
+            if summary_items:
+                summary_items.sort(key=lambda x: x["language"])
+                by_language = {}
+                for lang, items_iter in groupby(summary_items, key=lambda x: x["language"]):
+                    by_language[lang] = list(items_iter)
+
+                index_to_item = {item["index"]: item for item in summary_items}
+
+                async def _persist_batch_results(results: list[dict[str, Any]]) -> None:
+                    nonlocal summaries_created
+                    for result in results:
+                        item = index_to_item.get(result["index"])
+                        if not item or not result.get("summary"):
+                            continue
+                        s_ek = summary_entity_key(
+                            repository_key, commit_sha, item["entity_key"], item["summary_level"]
+                        )
+                        if item["summary_level"] == "file":
+                            entity_id = file_path_to_entity_id.get(item["file"])
+                        else:
+                            row = await pool.fetchrow(
                                 "SELECT id FROM catalog.entities WHERE entity_key = $1",
-                                uuid.UUID(sym_ek),
+                                uuid.UUID(item["entity_key"]),
                             )
-                            if sym_eid_row:
-                                await upsert_summary(pool, s_ek, sym_eid_row["id"], "symbol", sym_summary)
+                            entity_id = row["id"] if row else None
+                        if entity_id:
+                            try:
+                                await upsert_summary(
+                                    pool, s_ek, entity_id, item["summary_level"], result["summary"]
+                                )
                                 all_summaries_for_embedding.append({
                                     "entity_key": str(s_ek),
-                                    "summary_text": sym_summary,
-                                    "summary_level": "symbol",
+                                    "summary_text": result["summary"],
+                                    "summary_level": item["summary_level"],
                                 })
                                 summaries_created += 1
-                        except Exception as exc:
-                            logger.warning(
-                                "symbol_summary_failed",
-                                symbol=sym_rec["name"],
-                                error=str(exc),
-                            )
+                            except Exception as exc:
+                                logger.warning(
+                                    "summary_upsert_failed", name=item["name"], error=str(exc),
+                                )
+
+                for language, lang_items in by_language.items():
+                    results = await complete_batch_summaries(
+                        lang_items, settings, language, batch_size=50,
+                        on_batch_complete=_persist_batch_results,
+                    )
+                    # Any results not yet persisted (shouldn't happen but safety net)
+                    await _persist_batch_results(results)
 
             logger.info("summaries_generated", count=summaries_created)
 
@@ -589,7 +644,6 @@ async def run(
 
             # Module detection: directories with 2+ source files or __init__.py
             from collections import defaultdict
-            import os
             dir_files: dict[str, list[str]] = defaultdict(list)
             has_init: set[str] = set()
             for fs in neo4j_file_symbols:

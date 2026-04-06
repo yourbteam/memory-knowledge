@@ -1,0 +1,118 @@
+# Backlog
+
+## High Priority
+
+### 1. Orphaned background jobs after server restart
+**Problem:** When the server restarts (docker restart, deploy, crash), in-flight background ingestion/repair/audit jobs die silently. Their `ops.job_manifests` record stays `state_code='running'` permanently. The job dispatcher only polls for `pending` jobs — it never re-picks orphaned `running` ones.
+
+**Impact:** The next ingestion submission for the same repo works, but the orphaned record pollutes the job history and can cause confusion when checking job status.
+
+**Fix:** On startup, the dispatcher should scan for `running` jobs that have no active process behind them (e.g., `started_utc` older than a configurable timeout like 1 hour) and either:
+- Reset them to `pending` for automatic retry
+- Mark them as `failed` with `error_text = "orphaned by server restart"`
+
+**Files:** `src/memory_knowledge/jobs/dispatcher.py`
+
+**Discovered:** 2026-04-03 — CSS-FE ingestion orphaned twice by server restarts during remote database testing.
+
+---
+
+### 2. Ingestion performance on remote PostgreSQL
+**Problem:** Ingesting large repos (2,580 files for CSS-FE) against remote Supabase PG is extremely slow — ~10 files/minute vs hundreds/minute locally. Each file involves multiple sequential INSERT round-trips over transatlantic latency (~100ms per query).
+
+**Impact:** A 2,580-file repo takes ~4-5 hours just for the parse phase. With summaries, total ingestion could take 12+ hours.
+
+**Fix options:**
+- Batch INSERTs using `executemany` or `COPY` instead of individual INSERT per entity/file/chunk/symbol
+- Use asyncpg's pipeline mode for write batching
+- Buffer chunks in memory and flush in batches of 50-100
+
+**Files:** `src/memory_knowledge/workflows/ingestion.py`
+
+---
+
+## Medium Priority
+
+### 3. No per-file progress logging during ingestion
+**Problem:** The ingestion workflow logs phase transitions (files_determined, edges_resolved, ingestion_complete) but not per-file progress. During a 2,580-file ingestion, there are no logs for 30+ minutes between `revision_upserted` and `edges_resolved`, making it impossible to distinguish "slow but working" from "hung."
+
+**Fix:** Add periodic progress logging — e.g., every 50 files: `{"event": "ingestion_progress", "files_processed": 150, "total_files": 2580}`
+
+**Files:** `src/memory_knowledge/workflows/ingestion.py`
+
+---
+
+### 4. Qdrant Cloud requires explicit payload indexes
+**Problem:** The `ensure_collections` function creates `is_active` as `KEYWORD` type, but the retrieval filter uses it as a `BOOL` match. Local Qdrant auto-handles this, but Qdrant Cloud requires explicit type-matched indexes. Same issue with `branch_name` and `commit_sha` which are needed for `deactivate_old_points` but weren't indexed.
+
+**Status:** Code fix committed in `db/qdrant.py` for `is_active` (bool) and `branch_name`/`commit_sha` (keyword). But indexes keep getting lost after repair workflows — the repair may recreate collections without re-running `ensure_collections`. The `ensure_collections` function runs at startup but NOT after repair. Fix: call `ensure_collections` at the end of any repair workflow, or make indexes idempotent in the repair code itself.
+
+**Files:** `src/memory_knowledge/db/qdrant.py`
+
+---
+
+### 5. No repo data reset/purge MCP tool
+**Problem:** Resetting a repo's data across all 3 databases requires manual SQL + Qdrant API + Neo4j Cypher with careful FK ordering. There's no MCP tool to do this safely.
+
+**Fix:** Add a `purge_repository` MCP tool that deletes all data for a repo across PG, Qdrant, and Neo4j in the correct dependency order. Should require `ALLOW_REMOTE_REBUILDS=true` for remote mode.
+
+**Files:** `src/memory_knowledge/server.py`, new function in `src/memory_knowledge/admin/`
+
+---
+
+### 8. Local ingestion → remote export/import pipeline
+**Problem:** Ingesting large repos (2,580+ files) directly against remote Supabase PG is extremely slow (~10 files/min). The heavy parse+chunk+embed phase does thousands of sequential INSERT round-trips over transatlantic latency.
+
+**Proposed solution:** Ingest locally (fast), then export and import to remote:
+1. Switch to `DATA_MODE=local`, run ingestion against local PG (hundreds of files/min)
+2. `export_repo_memory_tool` → JSON dump of all repo data
+3. Switch to `DATA_MODE=remote`
+4. `import_repo_memory_tool` → bulk load into Supabase
+5. `run_repair_rebuild_workflow` → project embeddings to Qdrant Cloud + graph to Neo4j Aura
+
+**Investigation complete:**
+- Export covers all 12 PG tables in FK-safe order (entities, files, chunks, symbols, edges, summaries, learned_records, etc.)
+- Import handles FK remapping with 5 ID maps, uses UPSERT for idempotency
+- Export is JSONL format, does NOT include embeddings or graph data — those are re-projected via `run_repair_rebuild_workflow`
+- Import size limit is 50 MB (`max_import_size_mb` in config) — may need increasing for large repos
+- Full pipeline: local ingest → export → import to Supabase → repair (re-embeds to Qdrant + projects to Neo4j)
+
+**Remaining work:**
+- Test the full pipeline end-to-end with a real repo
+- Verify repair workflow re-embeds ALL chunks (not just missing ones)
+- Consider increasing `max_import_size_mb` for large repos or adding streaming import
+
+**Files:** `src/memory_knowledge/server.py` (export/import tools), investigate scope
+
+**Discovered:** 2026-04-03 — CSS-FE remote ingestion taking hours due to PG latency.
+
+---
+
+### 9. Import function needs batched writes, incremental commits, and progress logging
+**Problem:** `import_repo_memory` writes 87K+ rows one at a time with individual INSERT round-trips. Against remote PG (~100ms/query), a 87K row import takes ~2.5 hours. Also no progress logging and no incremental commits.
+
+**Fix:**
+- Use `executemany` or `COPY` for bulk INSERTs instead of individual queries
+- Batch commits every 1,000 rows
+- Log progress per table
+- This is the #1 blocker for the export/import pipeline to be practical with remote databases
+
+**Files:** `src/memory_knowledge/admin/export_import.py`
+
+---
+
+## Low Priority
+
+### 6. Docker Compose override file management for local/remote mode
+**Problem:** Switching between local and remote mode requires manually renaming `docker-compose.override.yml` to enable/disable `depends_on`. This is error-prone.
+
+**Fix:** Use a script or Makefile target: `make local` / `make remote` that manages the override file and .env symlink.
+
+---
+
+### 7. Supabase direct connection DNS propagation
+**Problem:** New Supabase projects on Nano tier may take hours for the `db.[project-ref].supabase.co` direct connection hostname to propagate. The pooler endpoint (`aws-0-[region].pooler.supabase.com`) is available immediately.
+
+**Status:** Using pooler endpoint (port 6543) with `statement_cache_size=0`. Direct connection can be used once DNS propagates, for better performance (no PgBouncer overhead).
+
+**No code change needed** — just a configuration note.
