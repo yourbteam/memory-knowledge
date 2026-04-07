@@ -544,6 +544,345 @@ async def list_repositories(correlation_id: str | None = None) -> str:
         clear_run_context()
 
 
+# ---------------------------------------------------------------------------
+# Workflow tracking tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+@track_tool_metrics("save_workflow_run")
+async def save_workflow_run(
+    repository_key: str,
+    run_id: str,
+    workflow_name: str | None = None,
+    task_description: str | None = None,
+    status: str | None = None,
+    current_phase: str | None = None,
+    iteration_count: int | None = None,
+    context_json: str | None = None,
+    error_text: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Create or update a workflow run record. Upserts on run_id."""
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "save_workflow_run")
+    guard = check_remote_write_guard(get_settings(), "save_workflow_run")
+    if guard is not None:
+        guard.run_id = str(rid)
+        return guard.model_dump_json()
+    try:
+        import json as _json
+        pool = get_pg_pool()
+        # Resolve repository_key → repository_id
+        repo_row = await pool.fetchrow(
+            "SELECT id FROM catalog.repositories WHERE repository_key = $1",
+            repository_key,
+        )
+        if not repo_row:
+            return WorkflowResult(
+                run_id=str(rid), tool_name="save_workflow_run",
+                status="error", error=f"Repository '{repository_key}' not found",
+            ).model_dump_json()
+        repo_id = repo_row["id"]
+        ctx = _json.loads(context_json) if context_json else None
+
+        row = await pool.fetchrow(
+            """
+            INSERT INTO ops.workflow_runs
+                (run_id, repository_id, workflow_name, task_description,
+                 status, current_phase, iteration_count, context_json,
+                 error_text, correlation_id)
+            VALUES ($1, $2, $3, $4, COALESCE($5, 'pending'), $6,
+                    COALESCE($7, 0), $8, $9, $10::uuid)
+            ON CONFLICT (run_id) DO UPDATE SET
+                workflow_name   = COALESCE(EXCLUDED.workflow_name, ops.workflow_runs.workflow_name),
+                task_description = COALESCE(EXCLUDED.task_description, ops.workflow_runs.task_description),
+                status          = COALESCE(EXCLUDED.status, ops.workflow_runs.status),
+                current_phase   = COALESCE(EXCLUDED.current_phase, ops.workflow_runs.current_phase),
+                iteration_count = COALESCE(EXCLUDED.iteration_count, ops.workflow_runs.iteration_count),
+                context_json    = COALESCE(EXCLUDED.context_json, ops.workflow_runs.context_json),
+                error_text      = COALESCE(EXCLUDED.error_text, ops.workflow_runs.error_text),
+                completed_utc   = CASE WHEN EXCLUDED.status IN ('completed', 'failed', 'cancelled')
+                                       THEN NOW() ELSE ops.workflow_runs.completed_utc END
+            RETURNING id, (xmax = 0) AS is_insert, status
+            """,
+            uuid.UUID(run_id), repo_id, workflow_name, task_description,
+            status, current_phase, iteration_count,
+            _json.dumps(ctx) if ctx else None,
+            error_text,
+            correlation_id,
+        )
+        return WorkflowResult(
+            run_id=str(rid), tool_name="save_workflow_run", status="success",
+            data={"run_id": run_id, "status": row["status"], "created": row["is_insert"]},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("save_workflow_artifact")
+async def save_workflow_artifact(
+    run_id: str,
+    artifact_name: str,
+    artifact_type: str,
+    content_text: str,
+    phase_id: str | None = None,
+    iteration: int = 1,
+    is_final: bool = False,
+    correlation_id: str | None = None,
+) -> str:
+    """Upsert an artifact for a workflow run. Updates in place on (run_id, artifact_name)."""
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "save_workflow_artifact")
+    guard = check_remote_write_guard(get_settings(), "save_workflow_artifact")
+    if guard is not None:
+        guard.run_id = str(rid)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        # Resolve run_id → workflow_run_id
+        wr = await pool.fetchrow(
+            "SELECT id FROM ops.workflow_runs WHERE run_id = $1",
+            uuid.UUID(run_id),
+        )
+        if not wr:
+            return WorkflowResult(
+                run_id=str(rid), tool_name="save_workflow_artifact",
+                status="error", error=f"Workflow run '{run_id}' not found",
+            ).model_dump_json()
+        wf_id = wr["id"]
+
+        row = await pool.fetchrow(
+            """
+            INSERT INTO ops.workflow_artifacts
+                (workflow_run_id, artifact_name, artifact_type, content_text,
+                 phase_id, iteration, is_final)
+            VALUES ($1, $2, $3, $4, $5, $6, $7)
+            ON CONFLICT (workflow_run_id, artifact_name) DO UPDATE SET
+                artifact_type = EXCLUDED.artifact_type,
+                content_text  = EXCLUDED.content_text,
+                phase_id      = COALESCE(EXCLUDED.phase_id, ops.workflow_artifacts.phase_id),
+                iteration     = EXCLUDED.iteration,
+                is_final      = EXCLUDED.is_final,
+                updated_utc   = NOW()
+            RETURNING id, (xmax = 0) AS is_insert, iteration, is_final
+            """,
+            wf_id, artifact_name, artifact_type, content_text,
+            phase_id, iteration, is_final,
+        )
+        return WorkflowResult(
+            run_id=str(rid), tool_name="save_workflow_artifact", status="success",
+            data={
+                "artifact_id": row["id"],
+                "artifact_name": artifact_name,
+                "iteration": row["iteration"],
+                "is_final": row["is_final"],
+                "created_or_updated": "created" if row["is_insert"] else "updated",
+            },
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_workflow_run")
+async def get_workflow_run(
+    run_id: str, correlation_id: str | None = None
+) -> str:
+    """Retrieve a workflow run by run_id, including phase states and artifact metadata."""
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_workflow_run")
+    try:
+        pool = get_pg_pool()
+        row = await pool.fetchrow(
+            """
+            SELECT wr.run_id, r.repository_key, wr.workflow_name,
+                   wr.task_description, wr.status, wr.current_phase,
+                   wr.iteration_count, wr.context_json,
+                   wr.started_utc, wr.completed_utc, wr.error_text
+            FROM ops.workflow_runs wr
+            JOIN catalog.repositories r ON r.id = wr.repository_id
+            WHERE wr.run_id = $1
+            """,
+            uuid.UUID(run_id),
+        )
+        if not row:
+            return WorkflowResult(
+                run_id=str(rid), tool_name="get_workflow_run",
+                status="error", error=f"Workflow run '{run_id}' not found",
+            ).model_dump_json()
+
+        phases = await pool.fetch(
+            """
+            SELECT phase_id, status, decision, attempts,
+                   started_utc, completed_utc
+            FROM ops.workflow_phase_states
+            WHERE workflow_run_id = (SELECT id FROM ops.workflow_runs WHERE run_id = $1)
+            ORDER BY id
+            """,
+            uuid.UUID(run_id),
+        )
+        artifacts = await pool.fetch(
+            """
+            SELECT artifact_name, artifact_type, iteration, is_final, updated_utc
+            FROM ops.workflow_artifacts
+            WHERE workflow_run_id = (SELECT id FROM ops.workflow_runs WHERE run_id = $1)
+            ORDER BY id
+            """,
+            uuid.UUID(run_id),
+        )
+        import json as _json
+        ctx = _json.loads(row["context_json"]) if row["context_json"] else None
+        return WorkflowResult(
+            run_id=str(rid), tool_name="get_workflow_run", status="success",
+            data={
+                "run_id": str(row["run_id"]),
+                "repository_key": row["repository_key"],
+                "workflow_name": row["workflow_name"],
+                "task_description": row["task_description"],
+                "status": row["status"],
+                "current_phase": row["current_phase"],
+                "iteration_count": row["iteration_count"],
+                "context_json": ctx,
+                "started_utc": row["started_utc"].isoformat() if row["started_utc"] else None,
+                "completed_utc": row["completed_utc"].isoformat() if row["completed_utc"] else None,
+                "error_text": row["error_text"],
+                "phases": [
+                    {
+                        "phase_id": p["phase_id"],
+                        "status": p["status"],
+                        "decision": p["decision"],
+                        "attempts": p["attempts"],
+                        "started_utc": p["started_utc"].isoformat() if p["started_utc"] else None,
+                        "completed_utc": p["completed_utc"].isoformat() if p["completed_utc"] else None,
+                    }
+                    for p in phases
+                ],
+                "artifacts": [
+                    {
+                        "artifact_name": a["artifact_name"],
+                        "artifact_type": a["artifact_type"],
+                        "iteration": a["iteration"],
+                        "is_final": a["is_final"],
+                        "updated_utc": a["updated_utc"].isoformat() if a["updated_utc"] else None,
+                    }
+                    for a in artifacts
+                ],
+            },
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_workflow_artifact")
+async def get_workflow_artifact(
+    run_id: str,
+    artifact_name: str,
+    correlation_id: str | None = None,
+) -> str:
+    """Retrieve the full content of a specific workflow artifact."""
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_workflow_artifact")
+    try:
+        pool = get_pg_pool()
+        row = await pool.fetchrow(
+            """
+            SELECT a.artifact_name, a.artifact_type, a.content_text,
+                   a.phase_id, a.iteration, a.is_final, a.updated_utc
+            FROM ops.workflow_artifacts a
+            JOIN ops.workflow_runs wr ON wr.id = a.workflow_run_id
+            WHERE wr.run_id = $1 AND a.artifact_name = $2
+            """,
+            uuid.UUID(run_id), artifact_name,
+        )
+        if not row:
+            return WorkflowResult(
+                run_id=str(rid), tool_name="get_workflow_artifact",
+                status="error",
+                error=f"Artifact '{artifact_name}' not found for run '{run_id}'",
+            ).model_dump_json()
+
+        return WorkflowResult(
+            run_id=str(rid), tool_name="get_workflow_artifact", status="success",
+            data={
+                "artifact_name": row["artifact_name"],
+                "artifact_type": row["artifact_type"],
+                "content_text": row["content_text"],
+                "phase_id": row["phase_id"],
+                "iteration": row["iteration"],
+                "is_final": row["is_final"],
+                "updated_utc": row["updated_utc"].isoformat() if row["updated_utc"] else None,
+            },
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_workflow_runs")
+async def list_workflow_runs(
+    repository_key: str,
+    status: str | None = None,
+    limit: int = 20,
+    correlation_id: str | None = None,
+) -> str:
+    """List workflow runs for a repository, with optional status filter."""
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "list_workflow_runs")
+    try:
+        pool = get_pg_pool()
+        if status:
+            rows = await pool.fetch(
+                """
+                SELECT wr.run_id, wr.workflow_name, wr.status,
+                       wr.iteration_count, wr.started_utc, wr.completed_utc,
+                       (SELECT COUNT(*) FROM ops.workflow_artifacts wa
+                        WHERE wa.workflow_run_id = wr.id) AS artifact_count
+                FROM ops.workflow_runs wr
+                JOIN catalog.repositories r ON r.id = wr.repository_id
+                WHERE r.repository_key = $1 AND wr.status = $2
+                ORDER BY wr.started_utc DESC
+                LIMIT $3
+                """,
+                repository_key, status, limit,
+            )
+        else:
+            rows = await pool.fetch(
+                """
+                SELECT wr.run_id, wr.workflow_name, wr.status,
+                       wr.iteration_count, wr.started_utc, wr.completed_utc,
+                       (SELECT COUNT(*) FROM ops.workflow_artifacts wa
+                        WHERE wa.workflow_run_id = wr.id) AS artifact_count
+                FROM ops.workflow_runs wr
+                JOIN catalog.repositories r ON r.id = wr.repository_id
+                WHERE r.repository_key = $1
+                ORDER BY wr.started_utc DESC
+                LIMIT $2
+                """,
+                repository_key, limit,
+            )
+        runs = [
+            {
+                "run_id": str(r["run_id"]),
+                "workflow_name": r["workflow_name"],
+                "status": r["status"],
+                "iteration_count": r["iteration_count"],
+                "started_utc": r["started_utc"].isoformat() if r["started_utc"] else None,
+                "completed_utc": r["completed_utc"].isoformat() if r["completed_utc"] else None,
+                "artifact_count": r["artifact_count"],
+            }
+            for r in rows
+        ]
+        return WorkflowResult(
+            run_id=str(rid), tool_name="list_workflow_runs", status="success",
+            data={"runs": runs, "count": len(runs)},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
 @mcp.tool()
 @track_tool_metrics("create_working_session")
 async def create_working_session(
