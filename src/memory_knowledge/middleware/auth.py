@@ -7,12 +7,17 @@ from starlette.responses import JSONResponse
 # Paths that do not require authentication
 _PUBLIC_PATHS = {"/health", "/ready", "/metrics", "/register"}
 
-# Prefixes that do not require authentication (OAuth/OIDC discovery)
-_PUBLIC_PREFIXES = ("/.well-known/",)
+# Prefixes that bypass auth.
+# - /.well-known/  → OAuth/OIDC discovery (RFC 9728)
+# - /mcp           → MCP streamable-HTTP endpoint; must be unauthenticated
+#                    because the MCP spec requires the client to probe without
+#                    auth first and attempt OAuth discovery on 401.  Claude Code
+#                    never sends static Bearer headers on the initial request.
+_PUBLIC_PREFIXES = ("/.well-known/", "/mcp")
 
 
 class ApiKeyAuthMiddleware(BaseHTTPMiddleware):
-    """Validates Bearer token on MCP endpoints. Skips health/ready/metrics."""
+    """Validates Bearer token on non-MCP endpoints. MCP auth is open (see above)."""
 
     async def dispatch(self, request: Request, call_next):
         path = request.url.path
