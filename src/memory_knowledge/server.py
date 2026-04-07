@@ -471,6 +471,80 @@ async def get_memory_stats(
 
 
 @mcp.tool()
+@track_tool_metrics("list_repositories")
+async def list_repositories(correlation_id: str | None = None) -> str:
+    """List all registered repositories with their latest ingestion state."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "list_repositories")
+    try:
+        pool = get_pg_pool()
+        rows = await pool.fetch(
+            """
+            SELECT
+                r.repository_key,
+                r.name,
+                r.origin_url,
+                r.created_utc,
+                r.updated_utc,
+                bh.branch_name   AS latest_branch,
+                rv.commit_sha    AS latest_commit,
+                rv.committed_utc AS latest_commit_utc,
+                COALESCE(ec.file_count, 0)    AS file_count,
+                COALESCE(ec.symbol_count, 0)  AS symbol_count,
+                COALESCE(ec.chunk_count, 0)   AS chunk_count,
+                ir.status         AS last_ingestion_status,
+                ir.completed_utc  AS last_ingestion_utc
+            FROM catalog.repositories r
+            LEFT JOIN LATERAL (
+                SELECT bh2.branch_name, bh2.repo_revision_id
+                FROM catalog.branch_heads bh2
+                WHERE bh2.repository_id = r.id
+                ORDER BY bh2.updated_utc DESC LIMIT 1
+            ) bh ON TRUE
+            LEFT JOIN catalog.repo_revisions rv ON rv.id = bh.repo_revision_id
+            LEFT JOIN LATERAL (
+                SELECT
+                    COUNT(*) FILTER (WHERE e2.entity_type = 'file')   AS file_count,
+                    COUNT(*) FILTER (WHERE e2.entity_type = 'symbol') AS symbol_count,
+                    COUNT(*) FILTER (WHERE e2.entity_type = 'chunk')  AS chunk_count
+                FROM catalog.entities e2
+                WHERE e2.repository_id = r.id
+            ) ec ON TRUE
+            LEFT JOIN LATERAL (
+                SELECT ir2.status, ir2.completed_utc
+                FROM ops.ingestion_runs ir2
+                WHERE ir2.repository_id = r.id
+                ORDER BY ir2.id DESC LIMIT 1
+            ) ir ON TRUE
+            ORDER BY r.name
+            """
+        )
+        repos = []
+        for row in rows:
+            repos.append({
+                "repository_key": row["repository_key"],
+                "name": row["name"],
+                "origin_url": row["origin_url"],
+                "latest_branch": row["latest_branch"],
+                "latest_commit": row["latest_commit"],
+                "latest_commit_utc": row["latest_commit_utc"].isoformat() if row["latest_commit_utc"] else None,
+                "file_count": row["file_count"],
+                "symbol_count": row["symbol_count"],
+                "chunk_count": row["chunk_count"],
+                "last_ingestion_status": row["last_ingestion_status"],
+                "last_ingestion_utc": row["last_ingestion_utc"].isoformat() if row["last_ingestion_utc"] else None,
+            })
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="list_repositories",
+            status="success",
+            data={"repositories": repos, "count": len(repos)},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("create_working_session")
 async def create_working_session(
     repository_key: str, correlation_id: str | None = None
