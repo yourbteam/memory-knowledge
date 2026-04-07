@@ -5,7 +5,7 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 # Paths that do not require authentication
-_PUBLIC_PATHS = {"/health", "/ready", "/metrics"}
+_PUBLIC_PATHS = {"/health", "/ready", "/metrics", "/.well-known/oauth-authorization-server"}
 
 
 class ApiKeyAuthMiddleware(BaseHTTPMiddleware):
