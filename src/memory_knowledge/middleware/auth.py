@@ -5,14 +5,18 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse
 
 # Paths that do not require authentication
-_PUBLIC_PATHS = {"/health", "/ready", "/metrics", "/.well-known/oauth-authorization-server"}
+_PUBLIC_PATHS = {"/health", "/ready", "/metrics", "/register"}
+
+# Prefixes that do not require authentication (OAuth/OIDC discovery)
+_PUBLIC_PREFIXES = ("/.well-known/",)
 
 
 class ApiKeyAuthMiddleware(BaseHTTPMiddleware):
     """Validates Bearer token on MCP endpoints. Skips health/ready/metrics."""
 
     async def dispatch(self, request: Request, call_next):
-        if request.url.path in _PUBLIC_PATHS:
+        path = request.url.path
+        if path in _PUBLIC_PATHS or path.startswith(_PUBLIC_PREFIXES):
             return await call_next(request)
 
         from memory_knowledge.config import get_settings
