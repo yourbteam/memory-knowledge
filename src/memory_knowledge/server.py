@@ -44,11 +44,15 @@ logger = structlog.get_logger()
 
 # MCP server instance — tools are registered on this via @mcp.tool()
 # streamable_http_path="/" so the endpoint is at /mcp/ (not /mcp/mcp)
+# transport_security disabled to allow non-localhost hosts (Azure, etc.)
+from mcp.server.transport_security import TransportSecuritySettings
+
 mcp = FastMCP(
     "memory-knowledge",
     stateless_http=True,
     json_response=True,
     streamable_http_path="/",
+    transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
 )
 
 
@@ -853,6 +857,15 @@ async def app_lifespan(app: Starlette):
     settings = Settings()
     configure_logging(settings.log_level)
     init_settings(settings)
+
+    # Seed Codex auth from Key Vault before validation (required for Azure deployment)
+    if settings.auth_mode == "codex" and settings.azure_keyvault_name:
+        from memory_knowledge.auth.credential_refresh import seed_from_keyvault
+
+        seed_status = await seed_from_keyvault(
+            settings.azure_keyvault_name, settings.codex_auth_path
+        )
+        logger.info("codex_kv_seed_result", status=seed_status)
 
     # Validate auth configuration — fail fast
     if settings.auth_mode == "codex":
