@@ -22,6 +22,7 @@ from memory_knowledge.observability.logging import configure_logging
 from memory_knowledge.observability.metrics import track_tool_metrics
 from memory_knowledge.guards import check_remote_write_guard
 from memory_knowledge.workflows.base import WorkflowResult
+from memory_knowledge.admin import planning as _planning
 from memory_knowledge.observability.run_context import (
     bind_run_context,
     clear_run_context,
@@ -601,6 +602,24 @@ async def _resolve_workflow_run_status(pool, status_code: str | None) -> dict | 
     return await _resolve_reference_value(pool, WORKFLOW_RUN_STATUS_TYPE, code)
 
 
+async def _require_reference_value(
+    pool,
+    type_code: str,
+    value_code: str,
+    tool_name: str,
+    run_id: uuid.UUID,
+) -> dict | str:
+    row = await _resolve_reference_value(pool, type_code, value_code)
+    if row is None:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name=tool_name,
+            status="error",
+            error=f"Invalid {type_code} value: {value_code}",
+        ).model_dump_json()
+    return row
+
+
 def _legacy_workflow_run_status_name(status_code: str) -> str:
     return WORKFLOW_RUN_STATUS_LEGACY_NAMES.get(status_code, status_code.lower())
 
@@ -1116,6 +1135,329 @@ async def list_workflow_runs_by_actor(
             tool_name="list_workflow_runs_by_actor",
             status="success",
             data={"actor_email": actor_email, "runs": runs, "count": len(runs)},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("create_project")
+async def create_project(
+    name: str,
+    description: str | None = None,
+    project_status_code: str = "PROJ_ACTIVE",
+    repository_keys: list[str] | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Create a project and optionally link it to repositories."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "create_project")
+    guard = check_remote_write_guard(get_settings(), "create_project")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        status_row = await _require_reference_value(pool, "PROJECT_STATUS", project_status_code, "create_project", run_id)
+        if isinstance(status_row, str):
+            return status_row
+        result = await _planning.create_project(
+            pool,
+            project_status_id=status_row["id"],
+            name=name,
+            description=description,
+            repository_keys=repository_keys,
+        )
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="create_project",
+            status="success",
+            data=result,
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="create_project",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_projects")
+async def list_projects(
+    project_status_code: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """List projects with optional status filter."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "list_projects")
+    try:
+        pool = get_pg_pool()
+        status_id = None
+        if project_status_code is not None:
+            status_row = await _require_reference_value(pool, "PROJECT_STATUS", project_status_code, "list_projects", run_id)
+            if isinstance(status_row, str):
+                return status_row
+            status_id = status_row["id"]
+        projects = await _planning.list_projects(pool, status_id)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="list_projects",
+            status="success",
+            data={"projects": projects, "count": len(projects)},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("create_feature")
+async def create_feature(
+    project_key: str,
+    title: str,
+    description: str | None = None,
+    feature_status_code: str = "FEAT_IDEA",
+    priority_code: str = "PRIO_MEDIUM",
+    repository_keys: list[str] | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Create a feature within a project."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "create_feature")
+    guard = check_remote_write_guard(get_settings(), "create_feature")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        project_id = await _planning.resolve_project_id(pool, project_key)
+        status_row = await _require_reference_value(pool, "FEATURE_STATUS", feature_status_code, "create_feature", run_id)
+        if isinstance(status_row, str):
+            return status_row
+        priority_row = await _require_reference_value(pool, "PRIORITY", priority_code, "create_feature", run_id)
+        if isinstance(priority_row, str):
+            return priority_row
+        result = await _planning.create_feature(
+            pool,
+            project_id=project_id,
+            feature_status_id=status_row["id"],
+            priority_id=priority_row["id"],
+            title=title,
+            description=description,
+            repository_keys=repository_keys,
+        )
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="create_feature",
+            status="success",
+            data=result,
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="create_feature",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_features")
+async def list_features(
+    project_key: str | None = None,
+    repository_key: str | None = None,
+    feature_status_code: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """List features with optional project, repository, and status filters."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "list_features")
+    try:
+        pool = get_pg_pool()
+        project_id = await _planning.resolve_project_id(pool, project_key) if project_key else None
+        status_id = None
+        if feature_status_code is not None:
+            status_row = await _require_reference_value(pool, "FEATURE_STATUS", feature_status_code, "list_features", run_id)
+            if isinstance(status_row, str):
+                return status_row
+            status_id = status_row["id"]
+        features = await _planning.list_features(pool, project_id, repository_key, status_id)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="list_features",
+            status="success",
+            data={"features": features, "count": len(features)},
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="list_features",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("create_task")
+async def create_task(
+    feature_key: str,
+    title: str,
+    description: str | None = None,
+    task_status_code: str = "TASK_TODO",
+    priority_code: str = "PRIO_MEDIUM",
+    repository_keys: list[str] | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Create a task within a feature."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "create_task")
+    guard = check_remote_write_guard(get_settings(), "create_task")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        feature_id = await _planning.resolve_feature_id(pool, feature_key)
+        status_row = await _require_reference_value(pool, "TASK_STATUS", task_status_code, "create_task", run_id)
+        if isinstance(status_row, str):
+            return status_row
+        priority_row = await _require_reference_value(pool, "PRIORITY", priority_code, "create_task", run_id)
+        if isinstance(priority_row, str):
+            return priority_row
+        result = await _planning.create_task(
+            pool,
+            feature_id=feature_id,
+            task_status_id=status_row["id"],
+            priority_id=priority_row["id"],
+            title=title,
+            description=description,
+            repository_keys=repository_keys,
+        )
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="create_task",
+            status="success",
+            data=result,
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="create_task",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_tasks")
+async def list_tasks(
+    feature_key: str | None = None,
+    repository_key: str | None = None,
+    task_status_code: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """List tasks with optional feature, repository, and status filters."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "list_tasks")
+    try:
+        pool = get_pg_pool()
+        feature_id = await _planning.resolve_feature_id(pool, feature_key) if feature_key else None
+        status_id = None
+        if task_status_code is not None:
+            status_row = await _require_reference_value(pool, "TASK_STATUS", task_status_code, "list_tasks", run_id)
+            if isinstance(status_row, str):
+                return status_row
+            status_id = status_row["id"]
+        tasks = await _planning.list_tasks(pool, feature_id, repository_key, status_id)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="list_tasks",
+            status="success",
+            data={"tasks": tasks, "count": len(tasks)},
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="list_tasks",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("link_task_to_workflow_run")
+async def link_task_to_workflow_run(
+    task_key: str,
+    workflow_run_id: str,
+    relation_type: str = "implements",
+    correlation_id: str | None = None,
+) -> str:
+    """Link a planning task to a workflow run."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "link_task_to_workflow_run")
+    guard = check_remote_write_guard(get_settings(), "link_task_to_workflow_run")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        task_id = await _planning.resolve_task_id(pool, task_key)
+        result = await _planning.link_task_to_workflow_run(pool, task_id, workflow_run_id, relation_type)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="link_task_to_workflow_run",
+            status="success",
+            data=result,
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="link_task_to_workflow_run",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_backlog")
+async def get_backlog(
+    project_key: str | None = None,
+    repository_key: str | None = None,
+    limit: int = 100,
+    correlation_id: str | None = None,
+) -> str:
+    """Return backlog-shaped features and tasks for a project or repository."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "get_backlog")
+    try:
+        pool = get_pg_pool()
+        project_id = await _planning.resolve_project_id(pool, project_key) if project_key else None
+        backlog = await _planning.get_backlog(pool, project_id=project_id, repository_key=repository_key, limit=limit)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="get_backlog",
+            status="success",
+            data=backlog,
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="get_backlog",
+            status="error",
+            error=str(exc),
         ).model_dump_json()
     finally:
         clear_run_context()
