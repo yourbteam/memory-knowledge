@@ -47,6 +47,29 @@ async def test_create_project_tool_uses_reference_lookup(monkeypatch, planning_e
 
 
 @pytest.mark.asyncio
+async def test_create_feature_tool_accepts_project_external_ref(monkeypatch, planning_env):
+    async def fake_resolve_project_id_by_external(pool, external_system, external_id):
+        assert external_system == "clickup"
+        assert external_id == "proj-ext-1"
+        return 20
+
+    async def fake_create_feature(pool, project_id, feature_status_id, priority_id, title, description=None, repository_keys=None):
+        assert project_id == 20
+        return {"feature_id": 11, "feature_key": str(uuid.uuid4()), "repository_count": 1}
+
+    monkeypatch.setattr(server._planning, "resolve_project_id_by_external", fake_resolve_project_id_by_external)
+    monkeypatch.setattr(server._planning, "create_feature", fake_create_feature)
+    result = await server.create_feature(
+        title="Feature A",
+        repository_keys=["repo-a"],
+        project_external_system="clickup",
+        project_external_id="proj-ext-1",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+
+
+@pytest.mark.asyncio
 async def test_create_feature_tool_resolves_project(monkeypatch, planning_env):
     async def fake_resolve_project_id(pool, project_key):
         assert project_key == "proj-key"
@@ -137,6 +160,40 @@ async def test_create_task_tool_allows_project_only_task(monkeypatch, planning_e
 
 
 @pytest.mark.asyncio
+async def test_create_task_tool_accepts_external_refs(monkeypatch, planning_env):
+    async def fake_resolve_project_id_by_external(pool, external_system, external_id):
+        assert external_system == "clickup"
+        assert external_id == "proj-ext-1"
+        return 20
+
+    async def fake_resolve_feature_context_by_external(pool, external_system, external_id):
+        assert external_system == "clickup"
+        assert external_id == "feat-ext-1"
+        return {"feature_id": 30, "project_id": 20}
+
+    async def fake_create_task(pool, project_id, repository_id, feature_id, task_status_id, priority_id, title, description=None):
+        assert project_id == 20
+        assert repository_id == 99
+        assert feature_id == 30
+        return {"task_id": 14, "task_key": str(uuid.uuid4()), "repository_id": 99}
+
+    monkeypatch.setattr(server._planning, "resolve_project_id_by_external", fake_resolve_project_id_by_external)
+    monkeypatch.setattr(server._planning, "resolve_feature_context_by_external", fake_resolve_feature_context_by_external)
+    monkeypatch.setattr(server._planning, "create_task", fake_create_task)
+    result = await server.create_task(
+        project_external_system="clickup",
+        project_external_id="proj-ext-1",
+        feature_external_system="clickup",
+        feature_external_id="feat-ext-1",
+        repository_key="repo-a",
+        title="External Task",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["task_id"] == 14
+
+
+@pytest.mark.asyncio
 async def test_link_task_to_workflow_run_tool(monkeypatch, planning_env):
     async def fake_resolve_task_id(pool, task_key):
         assert task_key == "task-key"
@@ -154,6 +211,53 @@ async def test_link_task_to_workflow_run_tool(monkeypatch, planning_env):
     payload = json.loads(result)
     assert payload["status"] == "success"
     assert payload["data"]["relation_type"] == "implements"
+
+
+@pytest.mark.asyncio
+async def test_link_project_external_ref_tool(monkeypatch, planning_env):
+    async def fake_resolve_project_id(pool, project_key):
+        assert project_key == "proj-key"
+        return 20
+
+    async def fake_create_external_link(pool, table_name, owner_column, owner_id, external_system, external_object_type, external_id, external_parent_id=None, external_url=None):
+        assert table_name == "planning.project_external_links"
+        assert owner_column == "project_id"
+        assert owner_id == 20
+        return {"link_id": 1, "external_system": external_system, "external_object_type": external_object_type, "external_id": external_id}
+
+    monkeypatch.setattr(server._planning, "resolve_project_id", fake_resolve_project_id)
+    monkeypatch.setattr(server._planning, "create_external_link", fake_create_external_link)
+    result = await server.link_project_external_ref(
+        project_key="proj-key",
+        external_system="clickup",
+        external_object_type="space",
+        external_id="proj-ext-1",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["external_id"] == "proj-ext-1"
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_tool_accepts_feature_external_filter(monkeypatch, planning_env):
+    async def fake_resolve_feature_context_by_external(pool, external_system, external_id):
+        assert external_system == "clickup"
+        assert external_id == "feat-ext-1"
+        return {"feature_id": 30, "project_id": 20}
+
+    async def fake_list_tasks(pool, project_id=None, feature_id=None, repository_key=None, task_status_id=None):
+        assert feature_id == 30
+        return [{"task_key": "t1", "project_key": "proj-key"}]
+
+    monkeypatch.setattr(server._planning, "resolve_feature_context_by_external", fake_resolve_feature_context_by_external)
+    monkeypatch.setattr(server._planning, "list_tasks", fake_list_tasks)
+    result = await server.list_tasks(
+        feature_external_system="clickup",
+        feature_external_id="feat-ext-1",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["tasks"][0]["task_key"] == "t1"
 
 
 @pytest.mark.asyncio

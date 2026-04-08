@@ -624,6 +624,44 @@ def _legacy_workflow_run_status_name(status_code: str) -> str:
     return WORKFLOW_RUN_STATUS_LEGACY_NAMES.get(status_code, status_code.lower())
 
 
+async def _resolve_project_identifier(
+    pool,
+    *,
+    project_key: str | None,
+    project_external_system: str | None,
+    project_external_id: str | None,
+) -> int:
+    if project_key is not None:
+        project_id = await _planning.resolve_project_id(pool, project_key)
+        if project_external_system and project_external_id:
+            ext_id = await _planning.resolve_project_id_by_external(pool, project_external_system, project_external_id)
+            if ext_id != project_id:
+                raise ValueError("project_key and external project reference resolve to different projects")
+        return project_id
+    if project_external_system and project_external_id:
+        return await _planning.resolve_project_id_by_external(pool, project_external_system, project_external_id)
+    raise ValueError("project_key or project external reference is required")
+
+
+async def _resolve_feature_identifier(
+    pool,
+    *,
+    feature_key: str | None,
+    feature_external_system: str | None,
+    feature_external_id: str | None,
+) -> dict[str, int] | None:
+    if feature_key is None and not (feature_external_system and feature_external_id):
+        return None
+    if feature_key is not None:
+        ctx = await _planning.resolve_feature_context(pool, feature_key)
+        if feature_external_system and feature_external_id:
+            ext_ctx = await _planning.resolve_feature_context_by_external(pool, feature_external_system, feature_external_id)
+            if ext_ctx != ctx:
+                raise ValueError("feature_key and external feature reference resolve to different features")
+        return ctx
+    return await _planning.resolve_feature_context_by_external(pool, feature_external_system, feature_external_id)
+
+
 @mcp.tool()
 @track_tool_metrics("save_workflow_run")
 async def save_workflow_run(
@@ -1186,6 +1224,45 @@ async def create_project(
 
 
 @mcp.tool()
+@track_tool_metrics("link_project_external_ref")
+async def link_project_external_ref(
+    project_key: str,
+    external_system: str,
+    external_object_type: str,
+    external_id: str,
+    external_parent_id: str | None = None,
+    external_url: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Link a project to an external PM entity."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "link_project_external_ref")
+    guard = check_remote_write_guard(get_settings(), "link_project_external_ref")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        project_id = await _planning.resolve_project_id(pool, project_key)
+        result = await _planning.create_external_link(
+            pool,
+            "planning.project_external_links",
+            "project_id",
+            project_id,
+            external_system,
+            external_object_type,
+            external_id,
+            external_parent_id,
+            external_url,
+        )
+        return WorkflowResult(run_id=str(run_id), tool_name="link_project_external_ref", status="success", data=result).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(run_id), tool_name="link_project_external_ref", status="error", error=str(exc)).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("list_projects")
 async def list_projects(
     project_status_code: str | None = None,
@@ -1216,11 +1293,14 @@ async def list_projects(
 @mcp.tool()
 @track_tool_metrics("create_feature")
 async def create_feature(
-    project_key: str,
     title: str,
+    *,
+    project_key: str | None = None,
     description: str | None = None,
     feature_status_code: str = "FEAT_IDEA",
     priority_code: str = "PRIO_MEDIUM",
+    project_external_system: str | None = None,
+    project_external_id: str | None = None,
     repository_keys: list[str] | None = None,
     correlation_id: str | None = None,
 ) -> str:
@@ -1233,7 +1313,12 @@ async def create_feature(
         return guard.model_dump_json()
     try:
         pool = get_pg_pool()
-        project_id = await _planning.resolve_project_id(pool, project_key)
+        project_id = await _resolve_project_identifier(
+            pool,
+            project_key=project_key,
+            project_external_system=project_external_system,
+            project_external_id=project_external_id,
+        )
         status_row = await _require_reference_value(pool, "FEATURE_STATUS", feature_status_code, "create_feature", run_id)
         if isinstance(status_row, str):
             return status_row
@@ -1267,11 +1352,52 @@ async def create_feature(
 
 
 @mcp.tool()
+@track_tool_metrics("link_feature_external_ref")
+async def link_feature_external_ref(
+    feature_key: str,
+    external_system: str,
+    external_object_type: str,
+    external_id: str,
+    external_parent_id: str | None = None,
+    external_url: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Link a feature to an external PM entity."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "link_feature_external_ref")
+    guard = check_remote_write_guard(get_settings(), "link_feature_external_ref")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        feature_id = await _planning.resolve_feature_id(pool, feature_key)
+        result = await _planning.create_external_link(
+            pool,
+            "planning.feature_external_links",
+            "feature_id",
+            feature_id,
+            external_system,
+            external_object_type,
+            external_id,
+            external_parent_id,
+            external_url,
+        )
+        return WorkflowResult(run_id=str(run_id), tool_name="link_feature_external_ref", status="success", data=result).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(run_id), tool_name="link_feature_external_ref", status="error", error=str(exc)).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("list_features")
 async def list_features(
     project_key: str | None = None,
     repository_key: str | None = None,
     feature_status_code: str | None = None,
+    project_external_system: str | None = None,
+    project_external_id: str | None = None,
     correlation_id: str | None = None,
 ) -> str:
     """List features with optional project, repository, and status filters."""
@@ -1279,7 +1405,14 @@ async def list_features(
     bind_run_context(run_id, correlation_id, "list_features")
     try:
         pool = get_pg_pool()
-        project_id = await _planning.resolve_project_id(pool, project_key) if project_key else None
+        project_id = None
+        if project_key or (project_external_system and project_external_id):
+            project_id = await _resolve_project_identifier(
+                pool,
+                project_key=project_key,
+                project_external_system=project_external_system,
+                project_external_id=project_external_id,
+            )
         status_id = None
         if feature_status_code is not None:
             status_row = await _require_reference_value(pool, "FEATURE_STATUS", feature_status_code, "list_features", run_id)
@@ -1307,14 +1440,18 @@ async def list_features(
 @mcp.tool()
 @track_tool_metrics("create_task")
 async def create_task(
-    project_key: str,
-    repository_key: str,
     title: str,
+    *,
+    project_key: str | None = None,
+    repository_key: str,
     description: str | None = None,
     feature_key: str | None = None,
     task_status_code: str = "TASK_TODO",
     priority_code: str = "PRIO_MEDIUM",
-    repository_keys: list[str] | None = None,
+    project_external_system: str | None = None,
+    project_external_id: str | None = None,
+    feature_external_system: str | None = None,
+    feature_external_id: str | None = None,
     correlation_id: str | None = None,
 ) -> str:
     """Create a task within a feature."""
@@ -1326,11 +1463,21 @@ async def create_task(
         return guard.model_dump_json()
     try:
         pool = get_pg_pool()
-        project_id = await _planning.resolve_project_id(pool, project_key)
+        project_id = await _resolve_project_identifier(
+            pool,
+            project_key=project_key,
+            project_external_system=project_external_system,
+            project_external_id=project_external_id,
+        )
         repository_id = await _planning.resolve_repository_id(pool, repository_key)
         feature_id = None
-        if feature_key is not None:
-            feature_ctx = await _planning.resolve_feature_context(pool, feature_key)
+        feature_ctx = await _resolve_feature_identifier(
+            pool,
+            feature_key=feature_key,
+            feature_external_system=feature_external_system,
+            feature_external_id=feature_external_id,
+        )
+        if feature_ctx is not None:
             if feature_ctx["project_id"] != project_id:
                 return WorkflowResult(
                     run_id=str(run_id),
@@ -1373,12 +1520,55 @@ async def create_task(
 
 
 @mcp.tool()
+@track_tool_metrics("link_task_external_ref")
+async def link_task_external_ref(
+    task_key: str,
+    external_system: str,
+    external_object_type: str,
+    external_id: str,
+    external_parent_id: str | None = None,
+    external_url: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Link a task to an external PM entity."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "link_task_external_ref")
+    guard = check_remote_write_guard(get_settings(), "link_task_external_ref")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        task_id = await _planning.resolve_task_id(pool, task_key)
+        result = await _planning.create_external_link(
+            pool,
+            "planning.task_external_links",
+            "task_id",
+            task_id,
+            external_system,
+            external_object_type,
+            external_id,
+            external_parent_id,
+            external_url,
+        )
+        return WorkflowResult(run_id=str(run_id), tool_name="link_task_external_ref", status="success", data=result).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(run_id), tool_name="link_task_external_ref", status="error", error=str(exc)).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("list_tasks")
 async def list_tasks(
     project_key: str | None = None,
     feature_key: str | None = None,
     repository_key: str | None = None,
     task_status_code: str | None = None,
+    project_external_system: str | None = None,
+    project_external_id: str | None = None,
+    feature_external_system: str | None = None,
+    feature_external_id: str | None = None,
     correlation_id: str | None = None,
 ) -> str:
     """List tasks with optional feature, repository, and status filters."""
@@ -1386,8 +1576,21 @@ async def list_tasks(
     bind_run_context(run_id, correlation_id, "list_tasks")
     try:
         pool = get_pg_pool()
-        project_id = await _planning.resolve_project_id(pool, project_key) if project_key else None
-        feature_id = await _planning.resolve_feature_id(pool, feature_key) if feature_key else None
+        project_id = None
+        if project_key or (project_external_system and project_external_id):
+            project_id = await _resolve_project_identifier(
+                pool,
+                project_key=project_key,
+                project_external_system=project_external_system,
+                project_external_id=project_external_id,
+            )
+        feature_ctx = await _resolve_feature_identifier(
+            pool,
+            feature_key=feature_key,
+            feature_external_system=feature_external_system,
+            feature_external_id=feature_external_id,
+        )
+        feature_id = feature_ctx["feature_id"] if feature_ctx else None
         status_id = None
         if task_status_code is not None:
             status_row = await _require_reference_value(pool, "TASK_STATUS", task_status_code, "list_tasks", run_id)
@@ -1408,6 +1611,45 @@ async def list_tasks(
             status="error",
             error=str(exc),
         ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("link_repository_external_ref")
+async def link_repository_external_ref(
+    repository_key: str,
+    external_system: str,
+    external_object_type: str,
+    external_id: str,
+    external_parent_id: str | None = None,
+    external_url: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Link a repository to an external PM entity."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "link_repository_external_ref")
+    guard = check_remote_write_guard(get_settings(), "link_repository_external_ref")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        repository_id = await _planning.resolve_repository_id(pool, repository_key)
+        result = await _planning.create_external_link(
+            pool,
+            "catalog.repository_external_links",
+            "repository_id",
+            repository_id,
+            external_system,
+            external_object_type,
+            external_id,
+            external_parent_id,
+            external_url,
+        )
+        return WorkflowResult(run_id=str(run_id), tool_name="link_repository_external_ref", status="success", data=result).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(run_id), tool_name="link_repository_external_ref", status="error", error=str(exc)).model_dump_json()
     finally:
         clear_run_context()
 

@@ -82,6 +82,24 @@ async def resolve_project_id(pool: asyncpg.Pool, project_key: str) -> int:
     return row["id"]
 
 
+async def resolve_project_id_by_external(
+    pool: asyncpg.Pool, external_system: str, external_id: str
+) -> int:
+    row = await pool.fetchrow(
+        """
+        SELECT p.id
+        FROM planning.project_external_links pel
+        JOIN planning.projects p ON p.id = pel.project_id
+        WHERE pel.external_system = $1 AND pel.external_id = $2
+        """,
+        external_system,
+        external_id,
+    )
+    if row is None:
+        raise ValueError(f"Project external reference not found: {external_system}:{external_id}")
+    return row["id"]
+
+
 async def resolve_feature_id(pool: asyncpg.Pool, feature_key: str) -> int:
     row = await pool.fetchrow(
         "SELECT id FROM planning.features WHERE feature_key = $1",
@@ -90,6 +108,24 @@ async def resolve_feature_id(pool: asyncpg.Pool, feature_key: str) -> int:
     if row is None:
         raise ValueError(f"Feature not found: {feature_key}")
     return row["id"]
+
+
+async def resolve_feature_context_by_external(
+    pool: asyncpg.Pool, external_system: str, external_id: str
+) -> dict[str, int]:
+    row = await pool.fetchrow(
+        """
+        SELECT f.id, f.project_id
+        FROM planning.feature_external_links fel
+        JOIN planning.features f ON f.id = fel.feature_id
+        WHERE fel.external_system = $1 AND fel.external_id = $2
+        """,
+        external_system,
+        external_id,
+    )
+    if row is None:
+        raise ValueError(f"Feature external reference not found: {external_system}:{external_id}")
+    return {"feature_id": row["id"], "project_id": row["project_id"]}
 
 
 async def resolve_feature_context(pool: asyncpg.Pool, feature_key: str) -> dict[str, int]:
@@ -143,6 +179,44 @@ async def create_project(
             repo_id,
         )
     return {"project_id": row["id"], "project_key": str(row["project_key"]), "repository_count": len(repo_ids)}
+
+
+async def create_external_link(
+    pool: asyncpg.Pool,
+    table_name: str,
+    owner_column: str,
+    owner_id: int,
+    external_system: str,
+    external_object_type: str,
+    external_id: str,
+    external_parent_id: str | None = None,
+    external_url: str | None = None,
+) -> dict[str, Any]:
+    row = await pool.fetchrow(
+        f"""
+        INSERT INTO {table_name}
+            ({owner_column}, external_system, external_object_type, external_id, external_parent_id, external_url)
+        VALUES ($1, $2, $3, $4, $5, $6)
+        ON CONFLICT ({owner_column}, external_system, external_object_type) DO UPDATE SET
+            external_id = EXCLUDED.external_id,
+            external_parent_id = EXCLUDED.external_parent_id,
+            external_url = EXCLUDED.external_url,
+            updated_utc = NOW()
+        RETURNING id, external_system, external_object_type, external_id
+        """,
+        owner_id,
+        external_system,
+        external_object_type,
+        external_id,
+        external_parent_id,
+        external_url,
+    )
+    return {
+        "link_id": row["id"],
+        "external_system": row["external_system"],
+        "external_object_type": row["external_object_type"],
+        "external_id": row["external_id"],
+    }
 
 
 async def create_feature(
