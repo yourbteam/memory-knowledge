@@ -74,6 +74,12 @@ class FakePool:
                     "status_code": "RUN_RUNNING",
                     "status_display_name": "Running",
                     "is_terminal": False,
+                    "task_key": uuid.uuid4(),
+                    "planning_task_title": "Recover task",
+                    "feature_key": uuid.uuid4(),
+                    "feature_title": "Recover feature",
+                    "project_key": uuid.uuid4(),
+                    "project_name": "Recover project",
                     "current_phase": "phase-a",
                     "iteration_count": 2,
                     "started_utc": None,
@@ -89,6 +95,12 @@ class FakePool:
                     "status_code": "RUN_SUCCESS",
                     "status_display_name": "Success",
                     "is_terminal": True,
+                    "task_key": None,
+                    "planning_task_title": None,
+                    "feature_key": None,
+                    "feature_title": None,
+                    "project_key": None,
+                    "project_name": None,
                     "current_phase": "phase-b",
                     "iteration_count": 1,
                     "started_utc": None,
@@ -177,6 +189,9 @@ async def test_list_workflow_runs_by_actor_filters_terminal_by_default(fake_pool
     assert payload["status"] == "success"
     assert payload["data"]["count"] == 1
     assert payload["data"]["runs"][0]["status_code"] == "RUN_RUNNING"
+    assert payload["data"]["runs"][0]["task_title"] == "Recover task"
+    assert payload["data"]["runs"][0]["feature_title"] == "Recover feature"
+    assert payload["data"]["runs"][0]["project_name"] == "Recover project"
 
 
 @pytest.mark.asyncio

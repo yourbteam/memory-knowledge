@@ -1133,6 +1133,12 @@ async def list_workflow_runs_by_actor(
                 wr.iteration_count,
                 wr.started_utc,
                 wr.completed_utc,
+                t.task_key,
+                t.title AS planning_task_title,
+                f.feature_key,
+                f.title AS feature_title,
+                p.project_key,
+                p.name AS project_name,
                 (
                     SELECT COUNT(*)
                     FROM ops.workflow_artifacts wa
@@ -1141,6 +1147,10 @@ async def list_workflow_runs_by_actor(
             FROM ops.workflow_runs wr
             JOIN catalog.repositories r ON r.id = wr.repository_id
             JOIN core.reference_values rv ON rv.id = wr.status_id
+            LEFT JOIN planning.task_workflow_runs twr ON twr.workflow_run_id = wr.id
+            LEFT JOIN planning.tasks t ON t.id = twr.task_id
+            LEFT JOIN planning.features f ON f.id = t.feature_id
+            LEFT JOIN planning.projects p ON p.id = t.project_id
             WHERE wr.actor_email = $1
               AND ($2::boolean = TRUE OR rv.is_terminal = FALSE)
             ORDER BY wr.started_utc DESC
@@ -1160,6 +1170,12 @@ async def list_workflow_runs_by_actor(
                 "status_code": r["status_code"],
                 "status_display_name": r["status_display_name"],
                 "is_terminal": r["is_terminal"],
+                "task_key": str(r["task_key"]) if r["task_key"] else None,
+                "task_title": r["planning_task_title"],
+                "feature_key": str(r["feature_key"]) if r["feature_key"] else None,
+                "feature_title": r["feature_title"],
+                "project_key": str(r["project_key"]) if r["project_key"] else None,
+                "project_name": r["project_name"],
                 "current_phase": r["current_phase"],
                 "iteration_count": r["iteration_count"],
                 "started_utc": r["started_utc"].isoformat() if r["started_utc"] else None,
