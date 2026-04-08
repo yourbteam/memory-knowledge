@@ -57,11 +57,12 @@ async def test_create_feature_tool_resolves_project(monkeypatch, planning_env):
         assert feature_status_id == 2
         assert priority_id == 4
         assert title == "Feature A"
+        assert repository_keys == ["repo-a"]
         return {"feature_id": 11, "feature_key": str(uuid.uuid4()), "repository_count": 0}
 
     monkeypatch.setattr(server._planning, "resolve_project_id", fake_resolve_project_id)
     monkeypatch.setattr(server._planning, "create_feature", fake_create_feature)
-    result = await server.create_feature(project_key="proj-key", title="Feature A")
+    result = await server.create_feature(project_key="proj-key", title="Feature A", repository_keys=["repo-a"])
     payload = json.loads(result)
     assert payload["status"] == "success"
     assert payload["data"]["feature_id"] == 11
@@ -92,6 +93,27 @@ async def test_create_task_tool_resolves_feature(monkeypatch, planning_env):
     payload = json.loads(result)
     assert payload["status"] == "success"
     assert payload["data"]["task_id"] == 12
+
+
+@pytest.mark.asyncio
+async def test_create_task_tool_rejects_feature_from_another_project(monkeypatch, planning_env):
+    async def fake_resolve_project_id(pool, project_key):
+        return 20
+
+    async def fake_resolve_feature_context(pool, feature_key):
+        return {"feature_id": 30, "project_id": 21}
+
+    monkeypatch.setattr(server._planning, "resolve_project_id", fake_resolve_project_id)
+    monkeypatch.setattr(server._planning, "resolve_feature_context", fake_resolve_feature_context)
+    result = await server.create_task(
+        project_key="proj-key",
+        repository_key="repo-a",
+        feature_key="feat-key",
+        title="Task A",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "does not belong to the given project_key" in payload["error"]
 
 
 @pytest.mark.asyncio

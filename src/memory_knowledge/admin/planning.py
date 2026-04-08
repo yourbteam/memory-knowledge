@@ -36,6 +36,42 @@ async def resolve_repository_id(pool: asyncpg.Pool, repository_key: str) -> int:
     return row["id"]
 
 
+async def ensure_project_has_repository(
+    pool: asyncpg.Pool,
+    project_id: int,
+    repository_id: int,
+) -> None:
+    row = await pool.fetchrow(
+        """
+        SELECT 1
+        FROM planning.project_repositories
+        WHERE project_id = $1 AND repository_id = $2
+        """,
+        project_id,
+        repository_id,
+    )
+    if row is None:
+        raise ValueError("Repository is not linked to the project")
+
+
+async def ensure_feature_has_repository(
+    pool: asyncpg.Pool,
+    feature_id: int,
+    repository_id: int,
+) -> None:
+    row = await pool.fetchrow(
+        """
+        SELECT 1
+        FROM planning.feature_repositories
+        WHERE feature_id = $1 AND repository_id = $2
+        """,
+        feature_id,
+        repository_id,
+    )
+    if row is None:
+        raise ValueError("Repository is not linked to the feature")
+
+
 async def resolve_project_id(pool: asyncpg.Pool, project_key: str) -> int:
     row = await pool.fetchrow(
         "SELECT id FROM planning.projects WHERE project_key = $1",
@@ -118,7 +154,12 @@ async def create_feature(
     description: str | None = None,
     repository_keys: list[str] | None = None,
 ) -> dict[str, Any]:
+    if not repository_keys:
+        raise ValueError("create_feature requires at least one repository_key")
     feature_key = uuid.uuid4()
+    repo_ids = await resolve_repository_ids(pool, repository_keys)
+    for repo_id in repo_ids:
+        await ensure_project_has_repository(pool, project_id, repo_id)
     row = await pool.fetchrow(
         """
         INSERT INTO planning.features
@@ -133,7 +174,6 @@ async def create_feature(
         feature_status_id,
         priority_id,
     )
-    repo_ids = await resolve_repository_ids(pool, repository_keys or [])
     for repo_id in repo_ids:
         await pool.execute(
             """
@@ -157,6 +197,9 @@ async def create_task(
     title: str,
     description: str | None = None,
 ) -> dict[str, Any]:
+    await ensure_project_has_repository(pool, project_id, repository_id)
+    if feature_id is not None:
+        await ensure_feature_has_repository(pool, feature_id, repository_id)
     task_key = uuid.uuid4()
     row = await pool.fetchrow(
         """
