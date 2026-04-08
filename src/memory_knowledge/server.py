@@ -42,6 +42,9 @@ from memory_knowledge.workflows import route_intelligence as _route_intelligence
 
 logger = structlog.get_logger()
 
+WORKFLOW_RUN_STATUS_TYPE = "WORKFLOW_RUN_STATUS"
+DEFAULT_WORKFLOW_RUN_STATUS = "RUN_PENDING"
+
 # MCP server instance — tools are registered on this via @mcp.tool()
 # streamable_http_path="/" so the endpoint is at /mcp/ (not /mcp/mcp)
 # transport_security disabled to allow non-localhost hosts (Azure, etc.)
@@ -549,6 +552,33 @@ async def list_repositories(correlation_id: str | None = None) -> str:
 # ---------------------------------------------------------------------------
 
 
+async def _resolve_reference_type_id(pool, internal_code: str) -> int | None:
+    row = await pool.fetchrow(
+        "SELECT id FROM core.reference_types WHERE internal_code = $1",
+        internal_code,
+    )
+    return row["id"] if row else None
+
+
+async def _resolve_reference_value(pool, type_code: str, value_code: str) -> dict | None:
+    row = await pool.fetchrow(
+        """
+        SELECT rv.id, rv.internal_code, rv.display_name, rv.is_terminal
+        FROM core.reference_values rv
+        JOIN core.reference_types rt ON rt.id = rv.reference_type_id
+        WHERE rt.internal_code = $1 AND rv.internal_code = $2
+        """,
+        type_code,
+        value_code,
+    )
+    return dict(row) if row else None
+
+
+async def _resolve_workflow_run_status(pool, status_code: str | None) -> dict | None:
+    code = status_code or DEFAULT_WORKFLOW_RUN_STATUS
+    return await _resolve_reference_value(pool, WORKFLOW_RUN_STATUS_TYPE, code)
+
+
 @mcp.tool()
 @track_tool_metrics("save_workflow_run")
 async def save_workflow_run(
@@ -556,7 +586,8 @@ async def save_workflow_run(
     run_id: str,
     workflow_name: str | None = None,
     task_description: str | None = None,
-    status: str | None = None,
+    status_code: str | None = None,
+    actor_email: str | None = None,
     current_phase: str | None = None,
     iteration_count: int | None = None,
     context_json: str | None = None,
@@ -585,36 +616,51 @@ async def save_workflow_run(
             ).model_dump_json()
         repo_id = repo_row["id"]
         ctx = _json.loads(context_json) if context_json else None
+        status_row = await _resolve_workflow_run_status(pool, status_code)
+        if status_row is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_run",
+                status="error",
+                error=f"Invalid workflow run status_code: {status_code}",
+            ).model_dump_json()
 
         row = await pool.fetchrow(
             """
             INSERT INTO ops.workflow_runs
                 (run_id, repository_id, workflow_name, task_description,
-                 status, current_phase, iteration_count, context_json,
-                 error_text, correlation_id)
-            VALUES ($1, $2, $3, $4, COALESCE($5, 'pending'), $6,
-                    COALESCE($7, 0), $8, $9, $10::uuid)
+                 status_id, actor_email, current_phase, iteration_count,
+                 context_json, error_text, correlation_id)
+            VALUES ($1, $2, $3, $4, $5, $6, $7,
+                    COALESCE($8, 0), $9, $10, $11::uuid)
             ON CONFLICT (run_id) DO UPDATE SET
                 workflow_name   = COALESCE(EXCLUDED.workflow_name, ops.workflow_runs.workflow_name),
                 task_description = COALESCE(EXCLUDED.task_description, ops.workflow_runs.task_description),
-                status          = COALESCE(EXCLUDED.status, ops.workflow_runs.status),
+                status_id       = COALESCE(EXCLUDED.status_id, ops.workflow_runs.status_id),
+                actor_email     = COALESCE(EXCLUDED.actor_email, ops.workflow_runs.actor_email),
                 current_phase   = COALESCE(EXCLUDED.current_phase, ops.workflow_runs.current_phase),
                 iteration_count = COALESCE(EXCLUDED.iteration_count, ops.workflow_runs.iteration_count),
                 context_json    = COALESCE(EXCLUDED.context_json, ops.workflow_runs.context_json),
                 error_text      = COALESCE(EXCLUDED.error_text, ops.workflow_runs.error_text),
-                completed_utc   = CASE WHEN EXCLUDED.status IN ('completed', 'failed', 'cancelled')
-                                       THEN NOW() ELSE ops.workflow_runs.completed_utc END
-            RETURNING id, (xmax = 0) AS is_insert, status
+                completed_utc   = CASE WHEN $12 THEN NOW() ELSE ops.workflow_runs.completed_utc END
+            RETURNING id, (xmax = 0) AS is_insert
             """,
-            uuid.UUID(run_id), repo_id, workflow_name, task_description,
-            status, current_phase, iteration_count,
+            uuid.UUID(run_id), repo_id, workflow_name, task_description, status_row["id"],
+            actor_email, current_phase, iteration_count,
             _json.dumps(ctx) if ctx else None,
             error_text,
             correlation_id,
+            status_row["is_terminal"],
         )
         return WorkflowResult(
             run_id=str(rid), tool_name="save_workflow_run", status="success",
-            data={"run_id": run_id, "status": row["status"], "created": row["is_insert"]},
+            data={
+                "run_id": run_id,
+                "status_code": status_row["internal_code"],
+                "status_display_name": status_row["display_name"],
+                "is_terminal": status_row["is_terminal"],
+                "created": row["is_insert"],
+            },
         ).model_dump_json()
     finally:
         clear_run_context()
@@ -698,11 +744,14 @@ async def get_workflow_run(
         row = await pool.fetchrow(
             """
             SELECT wr.run_id, r.repository_key, wr.workflow_name,
-                   wr.task_description, wr.status, wr.current_phase,
+                   wr.task_description, rv.internal_code AS status_code,
+                   rv.display_name AS status_display_name, rv.is_terminal,
+                   wr.actor_email, wr.current_phase,
                    wr.iteration_count, wr.context_json,
                    wr.started_utc, wr.completed_utc, wr.error_text
             FROM ops.workflow_runs wr
             JOIN catalog.repositories r ON r.id = wr.repository_id
+            JOIN core.reference_values rv ON rv.id = wr.status_id
             WHERE wr.run_id = $1
             """,
             uuid.UUID(run_id),
@@ -741,7 +790,10 @@ async def get_workflow_run(
                 "repository_key": row["repository_key"],
                 "workflow_name": row["workflow_name"],
                 "task_description": row["task_description"],
-                "status": row["status"],
+                "status_code": row["status_code"],
+                "status_display_name": row["status_display_name"],
+                "is_terminal": row["is_terminal"],
+                "actor_email": row["actor_email"],
                 "current_phase": row["current_phase"],
                 "iteration_count": row["iteration_count"],
                 "context_json": ctx,
@@ -824,39 +876,53 @@ async def get_workflow_artifact(
 @track_tool_metrics("list_workflow_runs")
 async def list_workflow_runs(
     repository_key: str,
-    status: str | None = None,
+    status_code: str | None = None,
     limit: int = 20,
     correlation_id: str | None = None,
 ) -> str:
-    """List workflow runs for a repository, with optional status filter."""
+    """List workflow runs for a repository, with optional status_code filter."""
     rid = new_run_id()
     bind_run_context(rid, correlation_id, "list_workflow_runs")
     try:
         pool = get_pg_pool()
-        if status:
+        if status_code:
+            status_row = await _resolve_workflow_run_status(pool, status_code)
+            if status_row is None:
+                return WorkflowResult(
+                    run_id=str(rid),
+                    tool_name="list_workflow_runs",
+                    status="error",
+                    error=f"Invalid workflow run status_code: {status_code}",
+                ).model_dump_json()
             rows = await pool.fetch(
                 """
-                SELECT wr.run_id, wr.workflow_name, wr.status,
+                SELECT wr.run_id, wr.workflow_name,
+                       rv.internal_code AS status_code, rv.display_name AS status_display_name,
+                       rv.is_terminal,
                        wr.iteration_count, wr.started_utc, wr.completed_utc,
                        (SELECT COUNT(*) FROM ops.workflow_artifacts wa
                         WHERE wa.workflow_run_id = wr.id) AS artifact_count
                 FROM ops.workflow_runs wr
                 JOIN catalog.repositories r ON r.id = wr.repository_id
-                WHERE r.repository_key = $1 AND wr.status = $2
+                JOIN core.reference_values rv ON rv.id = wr.status_id
+                WHERE r.repository_key = $1 AND wr.status_id = $2
                 ORDER BY wr.started_utc DESC
                 LIMIT $3
                 """,
-                repository_key, status, limit,
+                repository_key, status_row["id"], limit,
             )
         else:
             rows = await pool.fetch(
                 """
-                SELECT wr.run_id, wr.workflow_name, wr.status,
+                SELECT wr.run_id, wr.workflow_name,
+                       rv.internal_code AS status_code, rv.display_name AS status_display_name,
+                       rv.is_terminal,
                        wr.iteration_count, wr.started_utc, wr.completed_utc,
                        (SELECT COUNT(*) FROM ops.workflow_artifacts wa
                         WHERE wa.workflow_run_id = wr.id) AS artifact_count
                 FROM ops.workflow_runs wr
                 JOIN catalog.repositories r ON r.id = wr.repository_id
+                JOIN core.reference_values rv ON rv.id = wr.status_id
                 WHERE r.repository_key = $1
                 ORDER BY wr.started_utc DESC
                 LIMIT $2
@@ -867,7 +933,9 @@ async def list_workflow_runs(
             {
                 "run_id": str(r["run_id"]),
                 "workflow_name": r["workflow_name"],
-                "status": r["status"],
+                "status_code": r["status_code"],
+                "status_display_name": r["status_display_name"],
+                "is_terminal": r["is_terminal"],
                 "iteration_count": r["iteration_count"],
                 "started_utc": r["started_utc"].isoformat() if r["started_utc"] else None,
                 "completed_utc": r["completed_utc"].isoformat() if r["completed_utc"] else None,
@@ -878,6 +946,128 @@ async def list_workflow_runs(
         return WorkflowResult(
             run_id=str(rid), tool_name="list_workflow_runs", status="success",
             data={"runs": runs, "count": len(runs)},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_reference_values")
+async def list_reference_values(
+    reference_type_code: str, correlation_id: str | None = None
+) -> str:
+    """List values for a reference type by internal_code."""
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "list_reference_values")
+    try:
+        pool = get_pg_pool()
+        type_id = await _resolve_reference_type_id(pool, reference_type_code)
+        if type_id is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="list_reference_values",
+                status="error",
+                error=f"Reference type not found: {reference_type_code}",
+            ).model_dump_json()
+        rows = await pool.fetch(
+            """
+            SELECT rv.id, rv.internal_code, rv.display_name, rv.description,
+                   rv.sort_order, rv.is_active, rv.is_terminal
+            FROM core.reference_values rv
+            WHERE rv.reference_type_id = $1
+            ORDER BY rv.sort_order, rv.id
+            """,
+            type_id,
+        )
+        values = [
+            {
+                "id": r["id"],
+                "internal_code": r["internal_code"],
+                "display_name": r["display_name"],
+                "description": r["description"],
+                "sort_order": r["sort_order"],
+                "is_active": r["is_active"],
+                "is_terminal": r["is_terminal"],
+            }
+            for r in rows
+        ]
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="list_reference_values",
+            status="success",
+            data={"reference_type_code": reference_type_code, "values": values, "count": len(values)},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_workflow_runs_by_actor")
+async def list_workflow_runs_by_actor(
+    actor_email: str,
+    include_terminal: bool = False,
+    limit: int = 20,
+    correlation_id: str | None = None,
+) -> str:
+    """List workflow runs for an actor email, optionally excluding terminal runs."""
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "list_workflow_runs_by_actor")
+    try:
+        rows = await get_pg_pool().fetch(
+            """
+            SELECT
+                wr.run_id,
+                r.repository_key,
+                wr.workflow_name,
+                wr.task_description,
+                rv.id AS status_id,
+                rv.internal_code AS status_code,
+                rv.display_name AS status_display_name,
+                rv.is_terminal,
+                wr.current_phase,
+                wr.iteration_count,
+                wr.started_utc,
+                wr.completed_utc,
+                (
+                    SELECT COUNT(*)
+                    FROM ops.workflow_artifacts wa
+                    WHERE wa.workflow_run_id = wr.id
+                ) AS artifact_count
+            FROM ops.workflow_runs wr
+            JOIN catalog.repositories r ON r.id = wr.repository_id
+            JOIN core.reference_values rv ON rv.id = wr.status_id
+            WHERE wr.actor_email = $1
+              AND ($2::boolean = TRUE OR rv.is_terminal = FALSE)
+            ORDER BY wr.started_utc DESC
+            LIMIT $3
+            """,
+            actor_email,
+            include_terminal,
+            limit,
+        )
+        runs = [
+            {
+                "run_id": str(r["run_id"]),
+                "repository_key": r["repository_key"],
+                "workflow_name": r["workflow_name"],
+                "task_description": r["task_description"],
+                "status_id": r["status_id"],
+                "status_code": r["status_code"],
+                "status_display_name": r["status_display_name"],
+                "is_terminal": r["is_terminal"],
+                "current_phase": r["current_phase"],
+                "iteration_count": r["iteration_count"],
+                "started_utc": r["started_utc"].isoformat() if r["started_utc"] else None,
+                "completed_utc": r["completed_utc"].isoformat() if r["completed_utc"] else None,
+                "artifact_count": r["artifact_count"],
+            }
+            for r in rows
+        ]
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="list_workflow_runs_by_actor",
+            status="success",
+            data={"actor_email": actor_email, "runs": runs, "count": len(runs)},
         ).model_dump_json()
     finally:
         clear_run_context()

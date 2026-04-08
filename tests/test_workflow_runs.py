@@ -1,0 +1,154 @@
+import json
+import uuid
+from types import SimpleNamespace
+
+import pytest
+
+from memory_knowledge import server
+
+
+class FakePool:
+    def __init__(self):
+        self.fetchrow_calls: list[tuple[str, tuple]] = []
+        self.fetch_calls: list[tuple[str, tuple]] = []
+
+    async def fetchrow(self, query, *args):
+        self.fetchrow_calls.append((query, args))
+        if "FROM catalog.repositories WHERE repository_key = $1" in query:
+            return {"id": 7}
+        if "FROM core.reference_values rv" in query and "WHERE rt.internal_code = $1 AND rv.internal_code = $2" in query:
+            type_code, value_code = args
+            if type_code == server.WORKFLOW_RUN_STATUS_TYPE and value_code == "RUN_RUNNING":
+                return {
+                    "id": 11,
+                    "internal_code": "RUN_RUNNING",
+                    "display_name": "Running",
+                    "is_terminal": False,
+                }
+            if type_code == server.WORKFLOW_RUN_STATUS_TYPE and value_code == server.DEFAULT_WORKFLOW_RUN_STATUS:
+                return {
+                    "id": 10,
+                    "internal_code": server.DEFAULT_WORKFLOW_RUN_STATUS,
+                    "display_name": "Pending",
+                    "is_terminal": False,
+                }
+            return None
+        if "INSERT INTO ops.workflow_runs" in query:
+            return {"id": 1, "is_insert": True}
+        if "FROM core.reference_types WHERE internal_code = $1" in query:
+            return {"id": 101} if args[0] == "WORKFLOW_RUN_STATUS" else None
+        return None
+
+    async def fetch(self, query, *args):
+        self.fetch_calls.append((query, args))
+        if "FROM core.reference_values rv" in query and "WHERE rv.reference_type_id = $1" in query:
+            return [
+                {
+                    "id": 10,
+                    "internal_code": "RUN_PENDING",
+                    "display_name": "Pending",
+                    "description": None,
+                    "sort_order": 10,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                {
+                    "id": 11,
+                    "internal_code": "RUN_RUNNING",
+                    "display_name": "Running",
+                    "description": None,
+                    "sort_order": 20,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+            ]
+        if "FROM ops.workflow_runs wr" in query and "WHERE wr.actor_email = $1" in query:
+            actor_email, include_terminal, _limit = args
+            rows = [
+                {
+                    "run_id": uuid.uuid4(),
+                    "repository_key": "repo-a",
+                    "workflow_name": "wf-a",
+                    "task_description": "recover me",
+                    "status_id": 11,
+                    "status_code": "RUN_RUNNING",
+                    "status_display_name": "Running",
+                    "is_terminal": False,
+                    "current_phase": "phase-a",
+                    "iteration_count": 2,
+                    "started_utc": None,
+                    "completed_utc": None,
+                    "artifact_count": 3,
+                },
+                {
+                    "run_id": uuid.uuid4(),
+                    "repository_key": "repo-a",
+                    "workflow_name": "wf-b",
+                    "task_description": "done",
+                    "status_id": 12,
+                    "status_code": "RUN_SUCCESS",
+                    "status_display_name": "Success",
+                    "is_terminal": True,
+                    "current_phase": "phase-b",
+                    "iteration_count": 1,
+                    "started_utc": None,
+                    "completed_utc": None,
+                    "artifact_count": 1,
+                },
+            ]
+            return rows if include_terminal else [r for r in rows if not r["is_terminal"]]
+        return []
+
+
+@pytest.fixture
+def fake_pool(monkeypatch):
+    pool = FakePool()
+    monkeypatch.setattr(server, "get_pg_pool", lambda: pool)
+    monkeypatch.setattr(server, "get_settings", lambda: SimpleNamespace())
+    monkeypatch.setattr(server, "check_remote_write_guard", lambda settings, tool_name: None)
+    return pool
+
+
+@pytest.mark.asyncio
+async def test_save_workflow_run_resolves_status_code_and_actor_email(fake_pool):
+    result = await server.save_workflow_run(
+        repository_key="repo-a",
+        run_id=str(uuid.uuid4()),
+        workflow_name="wf-a",
+        status_code="RUN_RUNNING",
+        actor_email="user@example.com",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["status_code"] == "RUN_RUNNING"
+    insert_query, insert_args = next(
+        (q, a) for q, a in fake_pool.fetchrow_calls if "INSERT INTO ops.workflow_runs" in q
+    )
+    assert "status_id, actor_email" in insert_query
+    assert insert_args[5] == "user@example.com"
+
+
+@pytest.mark.asyncio
+async def test_list_reference_values_returns_lookup_rows(fake_pool):
+    result = await server.list_reference_values("WORKFLOW_RUN_STATUS")
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["count"] == 2
+    assert payload["data"]["values"][0]["internal_code"] == "RUN_PENDING"
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_runs_by_actor_filters_terminal_by_default(fake_pool):
+    result = await server.list_workflow_runs_by_actor("user@example.com")
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["count"] == 1
+    assert payload["data"]["runs"][0]["status_code"] == "RUN_RUNNING"
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_runs_by_actor_can_include_terminal(fake_pool):
+    result = await server.list_workflow_runs_by_actor("user@example.com", include_terminal=True)
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["count"] == 2
