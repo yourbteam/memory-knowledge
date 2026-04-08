@@ -1307,9 +1307,10 @@ async def list_features(
 @mcp.tool()
 @track_tool_metrics("create_task")
 async def create_task(
-    feature_key: str,
+    project_key: str,
     title: str,
     description: str | None = None,
+    feature_key: str | None = None,
     task_status_code: str = "TASK_TODO",
     priority_code: str = "PRIO_MEDIUM",
     repository_keys: list[str] | None = None,
@@ -1324,7 +1325,18 @@ async def create_task(
         return guard.model_dump_json()
     try:
         pool = get_pg_pool()
-        feature_id = await _planning.resolve_feature_id(pool, feature_key)
+        project_id = await _planning.resolve_project_id(pool, project_key)
+        feature_id = None
+        if feature_key is not None:
+            feature_ctx = await _planning.resolve_feature_context(pool, feature_key)
+            if feature_ctx["project_id"] != project_id:
+                return WorkflowResult(
+                    run_id=str(run_id),
+                    tool_name="create_task",
+                    status="error",
+                    error="feature_key does not belong to the given project_key",
+                ).model_dump_json()
+            feature_id = feature_ctx["feature_id"]
         status_row = await _require_reference_value(pool, "TASK_STATUS", task_status_code, "create_task", run_id)
         if isinstance(status_row, str):
             return status_row
@@ -1333,6 +1345,7 @@ async def create_task(
             return priority_row
         result = await _planning.create_task(
             pool,
+            project_id=project_id,
             feature_id=feature_id,
             task_status_id=status_row["id"],
             priority_id=priority_row["id"],
@@ -1360,6 +1373,7 @@ async def create_task(
 @mcp.tool()
 @track_tool_metrics("list_tasks")
 async def list_tasks(
+    project_key: str | None = None,
     feature_key: str | None = None,
     repository_key: str | None = None,
     task_status_code: str | None = None,
@@ -1370,6 +1384,7 @@ async def list_tasks(
     bind_run_context(run_id, correlation_id, "list_tasks")
     try:
         pool = get_pg_pool()
+        project_id = await _planning.resolve_project_id(pool, project_key) if project_key else None
         feature_id = await _planning.resolve_feature_id(pool, feature_key) if feature_key else None
         status_id = None
         if task_status_code is not None:
@@ -1377,7 +1392,7 @@ async def list_tasks(
             if isinstance(status_row, str):
                 return status_row
             status_id = status_row["id"]
-        tasks = await _planning.list_tasks(pool, feature_id, repository_key, status_id)
+        tasks = await _planning.list_tasks(pool, project_id, feature_id, repository_key, status_id)
         return WorkflowResult(
             run_id=str(run_id),
             tool_name="list_tasks",

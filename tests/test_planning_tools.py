@@ -67,22 +67,47 @@ async def test_create_feature_tool_resolves_project(monkeypatch, planning_env):
 
 @pytest.mark.asyncio
 async def test_create_task_tool_resolves_feature(monkeypatch, planning_env):
-    async def fake_resolve_feature_id(pool, feature_key):
-        assert feature_key == "feat-key"
-        return 30
+    async def fake_resolve_project_id(pool, project_key):
+        assert project_key == "proj-key"
+        return 20
 
-    async def fake_create_task(pool, feature_id, task_status_id, priority_id, title, description=None, repository_keys=None):
+    async def fake_resolve_feature_context(pool, feature_key):
+        assert feature_key == "feat-key"
+        return {"feature_id": 30, "project_id": 20}
+
+    async def fake_create_task(pool, project_id, feature_id, task_status_id, priority_id, title, description=None, repository_keys=None):
+        assert project_id == 20
         assert feature_id == 30
         assert task_status_id == 3
         assert priority_id == 4
         return {"task_id": 12, "task_key": str(uuid.uuid4()), "repository_count": 0}
 
-    monkeypatch.setattr(server._planning, "resolve_feature_id", fake_resolve_feature_id)
+    monkeypatch.setattr(server._planning, "resolve_project_id", fake_resolve_project_id)
+    monkeypatch.setattr(server._planning, "resolve_feature_context", fake_resolve_feature_context)
     monkeypatch.setattr(server._planning, "create_task", fake_create_task)
-    result = await server.create_task(feature_key="feat-key", title="Task A")
+    result = await server.create_task(project_key="proj-key", feature_key="feat-key", title="Task A")
     payload = json.loads(result)
     assert payload["status"] == "success"
     assert payload["data"]["task_id"] == 12
+
+
+@pytest.mark.asyncio
+async def test_create_task_tool_allows_project_only_task(monkeypatch, planning_env):
+    async def fake_resolve_project_id(pool, project_key):
+        assert project_key == "proj-key"
+        return 20
+
+    async def fake_create_task(pool, project_id, feature_id, task_status_id, priority_id, title, description=None, repository_keys=None):
+        assert project_id == 20
+        assert feature_id is None
+        return {"task_id": 13, "task_key": str(uuid.uuid4()), "repository_count": 0}
+
+    monkeypatch.setattr(server._planning, "resolve_project_id", fake_resolve_project_id)
+    monkeypatch.setattr(server._planning, "create_task", fake_create_task)
+    result = await server.create_task(project_key="proj-key", title="Standalone Task")
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["task_id"] == 13
 
 
 @pytest.mark.asyncio
@@ -117,3 +142,22 @@ async def test_get_backlog_tool(monkeypatch, planning_env):
     payload = json.loads(result)
     assert payload["status"] == "success"
     assert payload["data"]["features"][0]["feature_key"] == "f1"
+
+
+@pytest.mark.asyncio
+async def test_list_tasks_tool_accepts_project_filter(monkeypatch, planning_env):
+    async def fake_resolve_project_id(pool, project_key):
+        assert project_key == "proj-key"
+        return 20
+
+    async def fake_list_tasks(pool, project_id=None, feature_id=None, repository_key=None, task_status_id=None):
+        assert project_id == 20
+        assert feature_id is None
+        return [{"task_key": "t1", "project_key": "proj-key"}]
+
+    monkeypatch.setattr(server._planning, "resolve_project_id", fake_resolve_project_id)
+    monkeypatch.setattr(server._planning, "list_tasks", fake_list_tasks)
+    result = await server.list_tasks(project_key="proj-key")
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["tasks"][0]["task_key"] == "t1"

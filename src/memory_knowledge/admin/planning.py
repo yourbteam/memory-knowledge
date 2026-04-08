@@ -46,6 +46,16 @@ async def resolve_feature_id(pool: asyncpg.Pool, feature_key: str) -> int:
     return row["id"]
 
 
+async def resolve_feature_context(pool: asyncpg.Pool, feature_key: str) -> dict[str, int]:
+    row = await pool.fetchrow(
+        "SELECT id, project_id FROM planning.features WHERE feature_key = $1",
+        uuid.UUID(feature_key),
+    )
+    if row is None:
+        raise ValueError(f"Feature not found: {feature_key}")
+    return {"feature_id": row["id"], "project_id": row["project_id"]}
+
+
 async def resolve_task_id(pool: asyncpg.Pool, task_key: str) -> int:
     row = await pool.fetchrow(
         "SELECT id FROM planning.tasks WHERE task_key = $1",
@@ -129,7 +139,8 @@ async def create_feature(
 
 async def create_task(
     pool: asyncpg.Pool,
-    feature_id: int,
+    project_id: int,
+    feature_id: int | None,
     task_status_id: int,
     priority_id: int,
     title: str,
@@ -140,11 +151,12 @@ async def create_task(
     row = await pool.fetchrow(
         """
         INSERT INTO planning.tasks
-            (task_key, feature_id, title, description, task_status_id, priority_id)
-        VALUES ($1, $2, $3, $4, $5, $6)
+            (task_key, project_id, feature_id, title, description, task_status_id, priority_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7)
         RETURNING id, task_key
         """,
         task_key,
+        project_id,
         feature_id,
         title,
         description,
@@ -295,12 +307,16 @@ async def list_features(
 
 async def list_tasks(
     pool: asyncpg.Pool,
+    project_id: int | None = None,
     feature_id: int | None = None,
     repository_key: str | None = None,
     task_status_id: int | None = None,
 ) -> list[dict[str, Any]]:
     conditions: list[str] = []
     args: list[Any] = []
+    if project_id is not None:
+        args.append(project_id)
+        conditions.append(f"t.project_id = ${len(args)}")
     if feature_id is not None:
         args.append(feature_id)
         conditions.append(f"t.feature_id = ${len(args)}")
@@ -314,12 +330,14 @@ async def list_tasks(
     rows = await pool.fetch(
         f"""
         SELECT DISTINCT t.task_key, t.title, t.description,
+               proj.project_key,
                f.feature_key,
                s.internal_code AS status_code, s.display_name AS status_display_name,
                p.internal_code AS priority_code, p.display_name AS priority_display_name,
                t.created_utc, t.updated_utc
         FROM planning.tasks t
-        JOIN planning.features f ON f.id = t.feature_id
+        JOIN planning.projects proj ON proj.id = t.project_id
+        LEFT JOIN planning.features f ON f.id = t.feature_id
         JOIN core.reference_values s ON s.id = t.task_status_id
         JOIN core.reference_values p ON p.id = t.priority_id
         LEFT JOIN planning.task_repositories tr ON tr.task_id = t.id
@@ -332,7 +350,8 @@ async def list_tasks(
     return [
         {
             "task_key": str(r["task_key"]),
-            "feature_key": str(r["feature_key"]),
+            "project_key": str(r["project_key"]),
+            "feature_key": str(r["feature_key"]) if r["feature_key"] else None,
             "title": r["title"],
             "description": r["description"],
             "status_code": r["status_code"],
@@ -387,7 +406,8 @@ async def get_backlog(
         SELECT DISTINCT t.task_key, t.title, s.internal_code AS status_code,
                p.internal_code AS priority_code, t.created_utc
         FROM planning.tasks t
-        JOIN planning.features f ON f.id = t.feature_id
+        JOIN planning.projects proj ON proj.id = t.project_id
+        LEFT JOIN planning.features f ON f.id = t.feature_id
         JOIN core.reference_values s ON s.id = t.task_status_id
         JOIN core.reference_values p ON p.id = t.priority_id
         LEFT JOIN planning.task_repositories tr ON tr.task_id = t.id
