@@ -44,6 +44,26 @@ logger = structlog.get_logger()
 
 WORKFLOW_RUN_STATUS_TYPE = "WORKFLOW_RUN_STATUS"
 DEFAULT_WORKFLOW_RUN_STATUS = "RUN_PENDING"
+LEGACY_WORKFLOW_RUN_STATUS_MAP = {
+    "pending": "RUN_PENDING",
+    "submitted": "RUN_SUBMITTED",
+    "running": "RUN_RUNNING",
+    "success": "RUN_SUCCESS",
+    "completed": "RUN_SUCCESS",
+    "partial": "RUN_PARTIAL",
+    "error": "RUN_ERROR",
+    "failed": "RUN_ERROR",
+    "cancelled": "RUN_CANCELLED",
+}
+WORKFLOW_RUN_STATUS_LEGACY_NAMES = {
+    "RUN_PENDING": "pending",
+    "RUN_SUBMITTED": "submitted",
+    "RUN_RUNNING": "running",
+    "RUN_SUCCESS": "success",
+    "RUN_PARTIAL": "partial",
+    "RUN_ERROR": "error",
+    "RUN_CANCELLED": "cancelled",
+}
 
 # MCP server instance — tools are registered on this via @mcp.tool()
 # streamable_http_path="/" so the endpoint is at /mcp/ (not /mcp/mcp)
@@ -575,8 +595,14 @@ async def _resolve_reference_value(pool, type_code: str, value_code: str) -> dic
 
 
 async def _resolve_workflow_run_status(pool, status_code: str | None) -> dict | None:
-    code = status_code or DEFAULT_WORKFLOW_RUN_STATUS
+    if status_code is None:
+        return None
+    code = LEGACY_WORKFLOW_RUN_STATUS_MAP.get(status_code, status_code)
     return await _resolve_reference_value(pool, WORKFLOW_RUN_STATUS_TYPE, code)
+
+
+def _legacy_workflow_run_status_name(status_code: str) -> str:
+    return WORKFLOW_RUN_STATUS_LEGACY_NAMES.get(status_code, status_code.lower())
 
 
 @mcp.tool()
@@ -586,6 +612,7 @@ async def save_workflow_run(
     run_id: str,
     workflow_name: str | None = None,
     task_description: str | None = None,
+    status: str | None = None,
     status_code: str | None = None,
     actor_email: str | None = None,
     current_phase: str | None = None,
@@ -616,13 +643,22 @@ async def save_workflow_run(
             ).model_dump_json()
         repo_id = repo_row["id"]
         ctx = _json.loads(context_json) if context_json else None
-        status_row = await _resolve_workflow_run_status(pool, status_code)
-        if status_row is None:
+        effective_status_code = status_code or status
+        status_row = await _resolve_workflow_run_status(pool, effective_status_code)
+        if effective_status_code is not None and status_row is None:
             return WorkflowResult(
                 run_id=str(rid),
                 tool_name="save_workflow_run",
                 status="error",
-                error=f"Invalid workflow run status_code: {status_code}",
+                error=f"Invalid workflow run status or status_code: {effective_status_code}",
+            ).model_dump_json()
+        default_status_row = await _resolve_workflow_run_status(pool, DEFAULT_WORKFLOW_RUN_STATUS)
+        if default_status_row is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_run",
+                status="error",
+                error=f"Default workflow run status not found: {DEFAULT_WORKFLOW_RUN_STATUS}",
             ).model_dump_json()
 
         row = await pool.fetchrow(
@@ -631,7 +667,7 @@ async def save_workflow_run(
                 (run_id, repository_id, workflow_name, task_description,
                  status_id, actor_email, current_phase, iteration_count,
                  context_json, error_text, correlation_id)
-            VALUES ($1, $2, $3, $4, $5, $6, $7,
+            VALUES ($1, $2, $3, $4, COALESCE($5, $13), $6, $7,
                     COALESCE($8, 0), $9, $10, $11::uuid)
             ON CONFLICT (run_id) DO UPDATE SET
                 workflow_name   = COALESCE(EXCLUDED.workflow_name, ops.workflow_runs.workflow_name),
@@ -642,23 +678,31 @@ async def save_workflow_run(
                 iteration_count = COALESCE(EXCLUDED.iteration_count, ops.workflow_runs.iteration_count),
                 context_json    = COALESCE(EXCLUDED.context_json, ops.workflow_runs.context_json),
                 error_text      = COALESCE(EXCLUDED.error_text, ops.workflow_runs.error_text),
-                completed_utc   = CASE WHEN $12 THEN NOW() ELSE ops.workflow_runs.completed_utc END
-            RETURNING id, (xmax = 0) AS is_insert
+                completed_utc   = CASE
+                    WHEN $5 IS NULL THEN ops.workflow_runs.completed_utc
+                    WHEN $12 THEN NOW()
+                    ELSE ops.workflow_runs.completed_utc
+                END
+            RETURNING id, (xmax = 0) AS is_insert, status_id
             """,
-            uuid.UUID(run_id), repo_id, workflow_name, task_description, status_row["id"],
+            uuid.UUID(run_id), repo_id, workflow_name, task_description,
+            status_row["id"] if status_row else None,
             actor_email, current_phase, iteration_count,
             _json.dumps(ctx) if ctx else None,
             error_text,
             correlation_id,
-            status_row["is_terminal"],
+            status_row["is_terminal"] if status_row else False,
+            default_status_row["id"],
         )
+        persisted_status = status_row or default_status_row
         return WorkflowResult(
             run_id=str(rid), tool_name="save_workflow_run", status="success",
             data={
                 "run_id": run_id,
-                "status_code": status_row["internal_code"],
-                "status_display_name": status_row["display_name"],
-                "is_terminal": status_row["is_terminal"],
+                "status": _legacy_workflow_run_status_name(persisted_status["internal_code"]),
+                "status_code": persisted_status["internal_code"],
+                "status_display_name": persisted_status["display_name"],
+                "is_terminal": persisted_status["is_terminal"],
                 "created": row["is_insert"],
             },
         ).model_dump_json()
@@ -790,6 +834,7 @@ async def get_workflow_run(
                 "repository_key": row["repository_key"],
                 "workflow_name": row["workflow_name"],
                 "task_description": row["task_description"],
+                "status": _legacy_workflow_run_status_name(row["status_code"]),
                 "status_code": row["status_code"],
                 "status_display_name": row["status_display_name"],
                 "is_terminal": row["is_terminal"],
@@ -876,6 +921,7 @@ async def get_workflow_artifact(
 @track_tool_metrics("list_workflow_runs")
 async def list_workflow_runs(
     repository_key: str,
+    status: str | None = None,
     status_code: str | None = None,
     limit: int = 20,
     correlation_id: str | None = None,
@@ -885,14 +931,15 @@ async def list_workflow_runs(
     bind_run_context(rid, correlation_id, "list_workflow_runs")
     try:
         pool = get_pg_pool()
-        if status_code:
-            status_row = await _resolve_workflow_run_status(pool, status_code)
+        effective_status_code = status_code or status
+        if effective_status_code:
+            status_row = await _resolve_workflow_run_status(pool, effective_status_code)
             if status_row is None:
                 return WorkflowResult(
                     run_id=str(rid),
                     tool_name="list_workflow_runs",
                     status="error",
-                    error=f"Invalid workflow run status_code: {status_code}",
+                    error=f"Invalid workflow run status or status_code: {effective_status_code}",
                 ).model_dump_json()
             rows = await pool.fetch(
                 """
@@ -933,6 +980,7 @@ async def list_workflow_runs(
             {
                 "run_id": str(r["run_id"]),
                 "workflow_name": r["workflow_name"],
+                "status": _legacy_workflow_run_status_name(r["status_code"]),
                 "status_code": r["status_code"],
                 "status_display_name": r["status_display_name"],
                 "is_terminal": r["is_terminal"],

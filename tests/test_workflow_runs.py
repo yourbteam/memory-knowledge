@@ -34,7 +34,7 @@ class FakePool:
                 }
             return None
         if "INSERT INTO ops.workflow_runs" in query:
-            return {"id": 1, "is_insert": True}
+            return {"id": 1, "is_insert": True, "status_id": args[4] or args[12]}
         if "FROM core.reference_types WHERE internal_code = $1" in query:
             return {"id": 101} if args[0] == "WORKFLOW_RUN_STATUS" else None
         return None
@@ -120,12 +120,45 @@ async def test_save_workflow_run_resolves_status_code_and_actor_email(fake_pool)
     )
     payload = json.loads(result)
     assert payload["status"] == "success"
+    assert payload["data"]["status"] == "running"
     assert payload["data"]["status_code"] == "RUN_RUNNING"
     insert_query, insert_args = next(
         (q, a) for q, a in fake_pool.fetchrow_calls if "INSERT INTO ops.workflow_runs" in q
     )
     assert "status_id, actor_email" in insert_query
     assert insert_args[5] == "user@example.com"
+
+
+@pytest.mark.asyncio
+async def test_save_workflow_run_accepts_legacy_status_input(fake_pool):
+    result = await server.save_workflow_run(
+        repository_key="repo-a",
+        run_id=str(uuid.uuid4()),
+        workflow_name="wf-a",
+        status="running",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["status"] == "running"
+    assert payload["data"]["status_code"] == "RUN_RUNNING"
+
+
+@pytest.mark.asyncio
+async def test_save_workflow_run_does_not_reset_status_on_partial_update(fake_pool):
+    result = await server.save_workflow_run(
+        repository_key="repo-a",
+        run_id=str(uuid.uuid4()),
+        current_phase="phase-b",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    insert_query, insert_args = next(
+        (q, a) for q, a in fake_pool.fetchrow_calls if "INSERT INTO ops.workflow_runs" in q
+    )
+    assert "COALESCE($5, $13)" in insert_query
+    assert insert_args[4] is None
+    assert insert_args[12] == 10
+    assert payload["data"]["status"] == "pending"
 
 
 @pytest.mark.asyncio
@@ -152,3 +185,28 @@ async def test_list_workflow_runs_by_actor_can_include_terminal(fake_pool):
     payload = json.loads(result)
     assert payload["status"] == "success"
     assert payload["data"]["count"] == 2
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_runs_preserves_legacy_status_field(fake_pool):
+    async def fake_fetch(query, *args):
+        return [
+            {
+                "run_id": uuid.uuid4(),
+                "workflow_name": "wf-a",
+                "status_code": "RUN_RUNNING",
+                "status_display_name": "Running",
+                "is_terminal": False,
+                "iteration_count": 1,
+                "started_utc": None,
+                "completed_utc": None,
+                "artifact_count": 0,
+            }
+        ]
+
+    fake_pool.fetch = fake_fetch
+    result = await server.list_workflow_runs("repo-a")
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["runs"][0]["status"] == "running"
+    assert payload["data"]["runs"][0]["status_code"] == "RUN_RUNNING"
