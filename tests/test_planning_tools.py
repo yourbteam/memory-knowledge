@@ -9,6 +9,8 @@ from memory_knowledge import server
 
 class PlanningPool:
     async def fetchrow(self, query, *args):
+        if "SELECT id FROM catalog.repositories WHERE repository_key = $1" in query:
+            return {"id": 99}
         if "FROM core.reference_values rv" in query and "WHERE rt.internal_code = $1 AND rv.internal_code = $2" in query:
             type_code, value_code = args
             lookup = {
@@ -75,8 +77,9 @@ async def test_create_task_tool_resolves_feature(monkeypatch, planning_env):
         assert feature_key == "feat-key"
         return {"feature_id": 30, "project_id": 20}
 
-    async def fake_create_task(pool, project_id, feature_id, task_status_id, priority_id, title, description=None, repository_keys=None):
+    async def fake_create_task(pool, project_id, repository_id, feature_id, task_status_id, priority_id, title, description=None):
         assert project_id == 20
+        assert repository_id == 99
         assert feature_id == 30
         assert task_status_id == 3
         assert priority_id == 4
@@ -85,7 +88,7 @@ async def test_create_task_tool_resolves_feature(monkeypatch, planning_env):
     monkeypatch.setattr(server._planning, "resolve_project_id", fake_resolve_project_id)
     monkeypatch.setattr(server._planning, "resolve_feature_context", fake_resolve_feature_context)
     monkeypatch.setattr(server._planning, "create_task", fake_create_task)
-    result = await server.create_task(project_key="proj-key", feature_key="feat-key", title="Task A")
+    result = await server.create_task(project_key="proj-key", repository_key="repo-a", feature_key="feat-key", title="Task A")
     payload = json.loads(result)
     assert payload["status"] == "success"
     assert payload["data"]["task_id"] == 12
@@ -97,14 +100,15 @@ async def test_create_task_tool_allows_project_only_task(monkeypatch, planning_e
         assert project_key == "proj-key"
         return 20
 
-    async def fake_create_task(pool, project_id, feature_id, task_status_id, priority_id, title, description=None, repository_keys=None):
+    async def fake_create_task(pool, project_id, repository_id, feature_id, task_status_id, priority_id, title, description=None):
         assert project_id == 20
+        assert repository_id == 99
         assert feature_id is None
         return {"task_id": 13, "task_key": str(uuid.uuid4()), "repository_count": 0}
 
     monkeypatch.setattr(server._planning, "resolve_project_id", fake_resolve_project_id)
     monkeypatch.setattr(server._planning, "create_task", fake_create_task)
-    result = await server.create_task(project_key="proj-key", title="Standalone Task")
+    result = await server.create_task(project_key="proj-key", repository_key="repo-a", title="Standalone Task")
     payload = json.loads(result)
     assert payload["status"] == "success"
     assert payload["data"]["task_id"] == 13

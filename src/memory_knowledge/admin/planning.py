@@ -26,6 +26,16 @@ async def resolve_repository_ids(
     return [found[key] for key in repository_keys]
 
 
+async def resolve_repository_id(pool: asyncpg.Pool, repository_key: str) -> int:
+    row = await pool.fetchrow(
+        "SELECT id FROM catalog.repositories WHERE repository_key = $1",
+        repository_key,
+    )
+    if row is None:
+        raise ValueError(f"Repository not found: {repository_key}")
+    return row["id"]
+
+
 async def resolve_project_id(pool: asyncpg.Pool, project_key: str) -> int:
     row = await pool.fetchrow(
         "SELECT id FROM planning.projects WHERE project_key = $1",
@@ -140,41 +150,31 @@ async def create_feature(
 async def create_task(
     pool: asyncpg.Pool,
     project_id: int,
+    repository_id: int,
     feature_id: int | None,
     task_status_id: int,
     priority_id: int,
     title: str,
     description: str | None = None,
-    repository_keys: list[str] | None = None,
 ) -> dict[str, Any]:
     task_key = uuid.uuid4()
     row = await pool.fetchrow(
         """
         INSERT INTO planning.tasks
-            (task_key, project_id, feature_id, title, description, task_status_id, priority_id)
-        VALUES ($1, $2, $3, $4, $5, $6, $7)
+            (task_key, project_id, repository_id, feature_id, title, description, task_status_id, priority_id)
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
         RETURNING id, task_key
         """,
         task_key,
         project_id,
+        repository_id,
         feature_id,
         title,
         description,
         task_status_id,
         priority_id,
     )
-    repo_ids = await resolve_repository_ids(pool, repository_keys or [])
-    for repo_id in repo_ids:
-        await pool.execute(
-            """
-            INSERT INTO planning.task_repositories (task_id, repository_id)
-            VALUES ($1, $2)
-            ON CONFLICT (task_id, repository_id) DO NOTHING
-            """,
-            row["id"],
-            repo_id,
-        )
-    return {"task_id": row["id"], "task_key": str(row["task_key"]), "repository_count": len(repo_ids)}
+    return {"task_id": row["id"], "task_key": str(row["task_key"]), "repository_id": repository_id}
 
 
 async def link_task_to_workflow_run(
@@ -331,17 +331,18 @@ async def list_tasks(
         f"""
         SELECT DISTINCT t.task_key, t.title, t.description,
                proj.project_key,
+               repo.repository_key,
                f.feature_key,
                s.internal_code AS status_code, s.display_name AS status_display_name,
                p.internal_code AS priority_code, p.display_name AS priority_display_name,
                t.created_utc, t.updated_utc
         FROM planning.tasks t
         JOIN planning.projects proj ON proj.id = t.project_id
+        JOIN catalog.repositories repo ON repo.id = t.repository_id
         LEFT JOIN planning.features f ON f.id = t.feature_id
         JOIN core.reference_values s ON s.id = t.task_status_id
         JOIN core.reference_values p ON p.id = t.priority_id
-        LEFT JOIN planning.task_repositories tr ON tr.task_id = t.id
-        LEFT JOIN catalog.repositories r ON r.id = tr.repository_id
+        LEFT JOIN catalog.repositories r ON r.id = t.repository_id
         {where_sql}
         ORDER BY t.created_utc DESC
         """,
@@ -351,6 +352,7 @@ async def list_tasks(
         {
             "task_key": str(r["task_key"]),
             "project_key": str(r["project_key"]),
+            "repository_key": r["repository_key"],
             "feature_key": str(r["feature_key"]) if r["feature_key"] else None,
             "title": r["title"],
             "description": r["description"],
@@ -410,8 +412,7 @@ async def get_backlog(
         LEFT JOIN planning.features f ON f.id = t.feature_id
         JOIN core.reference_values s ON s.id = t.task_status_id
         JOIN core.reference_values p ON p.id = t.priority_id
-        LEFT JOIN planning.task_repositories tr ON tr.task_id = t.id
-        LEFT JOIN catalog.repositories r ON r.id = tr.repository_id
+        LEFT JOIN catalog.repositories r ON r.id = t.repository_id
         WHERE {' AND '.join(task_conditions)}
         ORDER BY p.sort_order DESC, t.created_utc DESC
         LIMIT {limit}
