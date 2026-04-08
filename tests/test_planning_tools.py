@@ -239,6 +239,88 @@ async def test_link_project_external_ref_tool(monkeypatch, planning_env):
 
 
 @pytest.mark.asyncio
+async def test_add_repository_to_project_tool(monkeypatch, planning_env):
+    async def fake_resolve_project_id(pool, project_key):
+        assert project_key == "proj-key"
+        return 20
+
+    calls = {}
+
+    async def fake_add_repository_to_project(pool, project_id, repository_id):
+        calls["project_id"] = project_id
+        calls["repository_id"] = repository_id
+
+    monkeypatch.setattr(server._planning, "resolve_project_id", fake_resolve_project_id)
+    monkeypatch.setattr(server._planning, "add_repository_to_project", fake_add_repository_to_project)
+    result = await server.add_repository_to_project(project_key="proj-key", repository_key="repo-a")
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert calls == {"project_id": 20, "repository_id": 99}
+
+
+@pytest.mark.asyncio
+async def test_remove_repository_from_project_tool(monkeypatch, planning_env):
+    async def fake_resolve_project_id(pool, project_key):
+        return 20
+
+    async def fake_remove_repository_from_project(pool, project_id, repository_id):
+        assert project_id == 20
+        assert repository_id == 99
+        return {"feature_count": 0, "task_count": 0}
+
+    monkeypatch.setattr(server._planning, "resolve_project_id", fake_resolve_project_id)
+    monkeypatch.setattr(server._planning, "remove_repository_from_project", fake_remove_repository_from_project)
+    result = await server.remove_repository_from_project(project_key="proj-key", repository_key="repo-a")
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["repository_key"] == "repo-a"
+
+
+@pytest.mark.asyncio
+async def test_add_repository_to_feature_tool(monkeypatch, planning_env):
+    async def fake_resolve_feature_context(pool, feature_key=None, feature_external_system=None, feature_external_id=None):
+        return {"feature_id": 30, "project_id": 20}
+
+    calls = {"project_check": False, "feature_add": False}
+
+    async def fake_ensure_project_has_repository(pool, project_id, repository_id):
+        assert project_id == 20
+        assert repository_id == 99
+        calls["project_check"] = True
+
+    async def fake_add_repository_to_feature(pool, feature_id, repository_id):
+        assert feature_id == 30
+        assert repository_id == 99
+        calls["feature_add"] = True
+
+    monkeypatch.setattr(server, "_resolve_feature_identifier", fake_resolve_feature_context)
+    monkeypatch.setattr(server._planning, "ensure_project_has_repository", fake_ensure_project_has_repository)
+    monkeypatch.setattr(server._planning, "add_repository_to_feature", fake_add_repository_to_feature)
+    result = await server.add_repository_to_feature(feature_key="feat-key", repository_key="repo-a")
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert calls == {"project_check": True, "feature_add": True}
+
+
+@pytest.mark.asyncio
+async def test_remove_repository_from_feature_tool(monkeypatch, planning_env):
+    async def fake_resolve_feature_context(pool, feature_key=None, feature_external_system=None, feature_external_id=None):
+        return {"feature_id": 30, "project_id": 20}
+
+    async def fake_remove_repository_from_feature(pool, feature_id, repository_id):
+        assert feature_id == 30
+        assert repository_id == 99
+        return {"task_count": 0}
+
+    monkeypatch.setattr(server, "_resolve_feature_identifier", fake_resolve_feature_context)
+    monkeypatch.setattr(server._planning, "remove_repository_from_feature", fake_remove_repository_from_feature)
+    result = await server.remove_repository_from_feature(feature_key="feat-key", repository_key="repo-a")
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    assert payload["data"]["repository_key"] == "repo-a"
+
+
+@pytest.mark.asyncio
 async def test_list_tasks_tool_accepts_feature_external_filter(monkeypatch, planning_env):
     async def fake_resolve_feature_context_by_external(pool, external_system, external_id):
         assert external_system == "clickup"

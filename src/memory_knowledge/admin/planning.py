@@ -219,6 +219,165 @@ async def create_external_link(
     }
 
 
+async def add_repository_to_project(
+    pool: asyncpg.Pool,
+    project_id: int,
+    repository_id: int,
+) -> None:
+    await pool.execute(
+        """
+        INSERT INTO planning.project_repositories (project_id, repository_id)
+        VALUES ($1, $2)
+        ON CONFLICT (project_id, repository_id) DO NOTHING
+        """,
+        project_id,
+        repository_id,
+    )
+
+
+async def list_project_repositories(
+    pool: asyncpg.Pool,
+    project_id: int,
+) -> list[dict[str, Any]]:
+    rows = await pool.fetch(
+        """
+        SELECT r.repository_key, r.name,
+               COUNT(DISTINCT f.id) FILTER (WHERE fr.repository_id = r.id) AS feature_count,
+               COUNT(DISTINCT t.id) FILTER (WHERE t.repository_id = r.id) AS task_count
+        FROM planning.project_repositories pr
+        JOIN catalog.repositories r ON r.id = pr.repository_id
+        LEFT JOIN planning.features f ON f.project_id = pr.project_id
+        LEFT JOIN planning.feature_repositories fr ON fr.feature_id = f.id
+        LEFT JOIN planning.tasks t ON t.project_id = pr.project_id
+        WHERE pr.project_id = $1
+        GROUP BY r.id
+        ORDER BY r.name
+        """,
+        project_id,
+    )
+    return [
+        {
+            "repository_key": r["repository_key"],
+            "name": r["name"],
+            "feature_count": r["feature_count"],
+            "task_count": r["task_count"],
+        }
+        for r in rows
+    ]
+
+
+async def remove_repository_from_project(
+    pool: asyncpg.Pool,
+    project_id: int,
+    repository_id: int,
+) -> dict[str, int]:
+    feature_count = await pool.fetchval(
+        """
+        SELECT COUNT(*)
+        FROM planning.features f
+        JOIN planning.feature_repositories fr ON fr.feature_id = f.id
+        WHERE f.project_id = $1 AND fr.repository_id = $2
+        """,
+        project_id,
+        repository_id,
+    )
+    task_count = await pool.fetchval(
+        """
+        SELECT COUNT(*)
+        FROM planning.tasks
+        WHERE project_id = $1 AND repository_id = $2
+        """,
+        project_id,
+        repository_id,
+    )
+    if feature_count or task_count:
+        raise ValueError(
+            f"Repository cannot be removed from project because {feature_count} features "
+            f"and {task_count} tasks still reference it"
+        )
+    await pool.execute(
+        """
+        DELETE FROM planning.project_repositories
+        WHERE project_id = $1 AND repository_id = $2
+        """,
+        project_id,
+        repository_id,
+    )
+    return {"feature_count": feature_count, "task_count": task_count}
+
+
+async def add_repository_to_feature(
+    pool: asyncpg.Pool,
+    feature_id: int,
+    repository_id: int,
+) -> None:
+    await pool.execute(
+        """
+        INSERT INTO planning.feature_repositories (feature_id, repository_id)
+        VALUES ($1, $2)
+        ON CONFLICT (feature_id, repository_id) DO NOTHING
+        """,
+        feature_id,
+        repository_id,
+    )
+
+
+async def list_feature_repositories(
+    pool: asyncpg.Pool,
+    feature_id: int,
+) -> list[dict[str, Any]]:
+    rows = await pool.fetch(
+        """
+        SELECT r.repository_key, r.name,
+               COUNT(DISTINCT t.id) FILTER (WHERE t.repository_id = r.id) AS task_count
+        FROM planning.feature_repositories fr
+        JOIN catalog.repositories r ON r.id = fr.repository_id
+        LEFT JOIN planning.tasks t ON t.feature_id = fr.feature_id
+        WHERE fr.feature_id = $1
+        GROUP BY r.id
+        ORDER BY r.name
+        """,
+        feature_id,
+    )
+    return [
+        {
+            "repository_key": r["repository_key"],
+            "name": r["name"],
+            "task_count": r["task_count"],
+        }
+        for r in rows
+    ]
+
+
+async def remove_repository_from_feature(
+    pool: asyncpg.Pool,
+    feature_id: int,
+    repository_id: int,
+) -> dict[str, int]:
+    task_count = await pool.fetchval(
+        """
+        SELECT COUNT(*)
+        FROM planning.tasks
+        WHERE feature_id = $1 AND repository_id = $2
+        """,
+        feature_id,
+        repository_id,
+    )
+    if task_count:
+        raise ValueError(
+            f"Repository cannot be removed from feature because {task_count} tasks still reference it"
+        )
+    await pool.execute(
+        """
+        DELETE FROM planning.feature_repositories
+        WHERE feature_id = $1 AND repository_id = $2
+        """,
+        feature_id,
+        repository_id,
+    )
+    return {"task_count": task_count}
+
+
 async def create_feature(
     pool: asyncpg.Pool,
     project_id: int,

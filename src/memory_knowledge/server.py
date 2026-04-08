@@ -1291,6 +1291,114 @@ async def list_projects(
 
 
 @mcp.tool()
+@track_tool_metrics("add_repository_to_project")
+async def add_repository_to_project(
+    repository_key: str,
+    project_key: str | None = None,
+    project_external_system: str | None = None,
+    project_external_id: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Add a repository to a project's scope."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "add_repository_to_project")
+    guard = check_remote_write_guard(get_settings(), "add_repository_to_project")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        resolved_project_id = await _resolve_project_identifier(
+            pool,
+            project_key=project_key,
+            project_external_system=project_external_system,
+            project_external_id=project_external_id,
+        )
+        repository_id = await _planning.resolve_repository_id(pool, repository_key)
+        await _planning.add_repository_to_project(pool, resolved_project_id, repository_id)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="add_repository_to_project",
+            status="success",
+            data={"repository_key": repository_key},
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(run_id), tool_name="add_repository_to_project", status="error", error=str(exc)).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_project_repositories")
+async def list_project_repositories(
+    project_key: str | None = None,
+    project_external_system: str | None = None,
+    project_external_id: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """List repositories linked to a project."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "list_project_repositories")
+    try:
+        pool = get_pg_pool()
+        resolved_project_id = await _resolve_project_identifier(
+            pool,
+            project_key=project_key,
+            project_external_system=project_external_system,
+            project_external_id=project_external_id,
+        )
+        repos = await _planning.list_project_repositories(pool, resolved_project_id)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="list_project_repositories",
+            status="success",
+            data={"repositories": repos, "count": len(repos)},
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(run_id), tool_name="list_project_repositories", status="error", error=str(exc)).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("remove_repository_from_project")
+async def remove_repository_from_project(
+    repository_key: str,
+    project_key: str | None = None,
+    project_external_system: str | None = None,
+    project_external_id: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Remove a repository from a project's scope if no planning items still use it."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "remove_repository_from_project")
+    guard = check_remote_write_guard(get_settings(), "remove_repository_from_project")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        resolved_project_id = await _resolve_project_identifier(
+            pool,
+            project_key=project_key,
+            project_external_system=project_external_system,
+            project_external_id=project_external_id,
+        )
+        repository_id = await _planning.resolve_repository_id(pool, repository_key)
+        result = await _planning.remove_repository_from_project(pool, resolved_project_id, repository_id)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="remove_repository_from_project",
+            status="success",
+            data={"repository_key": repository_key, **result},
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(run_id), tool_name="remove_repository_from_project", status="error", error=str(exc)).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("create_feature")
 async def create_feature(
     title: str,
@@ -1433,6 +1541,121 @@ async def list_features(
             status="error",
             error=str(exc),
         ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("add_repository_to_feature")
+async def add_repository_to_feature(
+    repository_key: str,
+    feature_key: str | None = None,
+    feature_external_system: str | None = None,
+    feature_external_id: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Add a repository to a feature's scope."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "add_repository_to_feature")
+    guard = check_remote_write_guard(get_settings(), "add_repository_to_feature")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        feature_ctx = await _resolve_feature_identifier(
+            pool,
+            feature_key=feature_key,
+            feature_external_system=feature_external_system,
+            feature_external_id=feature_external_id,
+        )
+        if feature_ctx is None:
+            raise ValueError("feature_key or feature external reference is required")
+        repository_id = await _planning.resolve_repository_id(pool, repository_key)
+        await _planning.ensure_project_has_repository(pool, feature_ctx["project_id"], repository_id)
+        await _planning.add_repository_to_feature(pool, feature_ctx["feature_id"], repository_id)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="add_repository_to_feature",
+            status="success",
+            data={"repository_key": repository_key},
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(run_id), tool_name="add_repository_to_feature", status="error", error=str(exc)).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_feature_repositories")
+async def list_feature_repositories(
+    feature_key: str | None = None,
+    feature_external_system: str | None = None,
+    feature_external_id: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """List repositories linked to a feature."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "list_feature_repositories")
+    try:
+        pool = get_pg_pool()
+        feature_ctx = await _resolve_feature_identifier(
+            pool,
+            feature_key=feature_key,
+            feature_external_system=feature_external_system,
+            feature_external_id=feature_external_id,
+        )
+        if feature_ctx is None:
+            raise ValueError("feature_key or feature external reference is required")
+        repos = await _planning.list_feature_repositories(pool, feature_ctx["feature_id"])
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="list_feature_repositories",
+            status="success",
+            data={"repositories": repos, "count": len(repos)},
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(run_id), tool_name="list_feature_repositories", status="error", error=str(exc)).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("remove_repository_from_feature")
+async def remove_repository_from_feature(
+    repository_key: str,
+    feature_key: str | None = None,
+    feature_external_system: str | None = None,
+    feature_external_id: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Remove a repository from a feature's scope if no tasks still use it."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "remove_repository_from_feature")
+    guard = check_remote_write_guard(get_settings(), "remove_repository_from_feature")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        feature_ctx = await _resolve_feature_identifier(
+            pool,
+            feature_key=feature_key,
+            feature_external_system=feature_external_system,
+            feature_external_id=feature_external_id,
+        )
+        if feature_ctx is None:
+            raise ValueError("feature_key or feature external reference is required")
+        repository_id = await _planning.resolve_repository_id(pool, repository_key)
+        result = await _planning.remove_repository_from_feature(pool, feature_ctx["feature_id"], repository_id)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="remove_repository_from_feature",
+            status="success",
+            data={"repository_key": repository_key, **result},
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(run_id), tool_name="remove_repository_from_feature", status="error", error=str(exc)).model_dump_json()
     finally:
         clear_run_context()
 
