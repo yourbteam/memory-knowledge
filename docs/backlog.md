@@ -1,5 +1,46 @@
 # Backlog
 
+## Critical — Fix Before Next Ingestion
+
+### 11. Same-commit retry treated as incremental with empty diff — skips all file processing
+**Problem:** When an ingestion fails mid-run but updates `branch_heads`, retrying the same `commit_sha` causes the workflow to compute a git diff between the commit and itself. The diff is empty, so `py_files` is empty, so zero files are processed and zero summaries are generated. The run reports `summaries_created: 0` and completes "successfully" while leaving summaries incomplete.
+
+**Root cause:** `ingestion.py` lines 134-146 — if `old_sha` (from `branch_heads`) is not None, it always does an incremental diff. It does not check whether `old_sha == commit_sha`, which would produce an empty diff by definition.
+
+**Impact:** FCSAPI had 3,393 summaries generated in a failed first run. The retry run created 0 summaries because it saw the same commit and diffed it against itself. 243 new files from the latest commit have no summaries.
+
+**Fix:** If `old_sha == commit_sha`, force a full run:
+```python
+if old_sha is not None and old_sha != commit_sha:
+    diff_files = await asyncio.to_thread(changed_files, repo, old_sha, commit_sha, extensions)
+else:
+    diff_files = None
+```
+
+**Files:** `src/memory_knowledge/workflows/ingestion.py` lines 134-146
+
+**Discovered:** 2026-04-09 — FCSAPI retry run completed with `summaries_created: 0` despite ~2,200 missing summaries.
+
+---
+
+### 12. Existing summaries query not scoped to current revision
+**Problem:** The query at `ingestion.py` lines 473-479 that builds `existing_summary_keys` fetches ALL summaries for a repository across all revisions, not filtered by the current `commit_sha` or `repo_revision_id`. This loads unnecessary data into memory and could cause incorrect skip decisions if entity keys collide across revisions.
+
+**Impact:** Latent — doesn't cause incorrect behavior in most cases since per-item checks still work, but wastes memory on large repos with multiple revisions and could mask missing summaries if entity keys are reused.
+
+**Fix:** Add `commit_sha` or `repo_revision_id` filter to the existing summaries query:
+```sql
+SELECT e.entity_key FROM catalog.summaries s
+JOIN catalog.entities e ON s.entity_id = e.id
+WHERE e.repository_id = $1 AND e.repo_revision_id = $2
+```
+
+**Files:** `src/memory_knowledge/workflows/ingestion.py` lines 473-479
+
+**Discovered:** 2026-04-09 — found during investigation of backlog item #11.
+
+---
+
 ## High Priority
 
 ### 1. Orphaned background jobs after server restart
@@ -28,6 +69,19 @@
 - Buffer chunks in memory and flush in batches of 50-100
 
 **Files:** `src/memory_knowledge/workflows/ingestion.py`
+
+---
+
+### 10. Ingestion workflow lacks checkpoint/resume — re-runs repeat completed phases
+**Problem:** When ingestion fails mid-execution (e.g., during summarization), re-running restarts the entire pipeline from step 1. File scanning, chunk registration, edge resolution, and embedding all re-execute even though their data is already persisted. Only the summarization step has skip logic for existing records. The `job_manifests.checkpoint_data` JSONB column exists for exactly this purpose but is only written at completion/error — never during execution as a progress checkpoint.
+
+**Impact:** FCSAPI ingestion failed at ~61% through summarization after 2 hours. The re-run spent ~30 minutes re-scanning all 486 files and 5,600 chunks before reaching the summary phase again.
+
+**Fix:** After each major phase completes, write a checkpoint to `job_manifests.checkpoint_data` with the completed phase name and any state needed to resume. On startup, read the checkpoint and skip to the next incomplete phase. Phases to checkpoint: clone, file scan, chunk registration, edge resolution, summarization (with batch offset), chunk embedding, summary embedding, neo4j projection.
+
+**Files:** `src/memory_knowledge/workflows/ingestion.py`, `src/memory_knowledge/jobs/dispatcher.py`
+
+**Discovered:** 2026-04-09 — FCSAPI ingestion failed twice mid-summarization; each re-run wasted ~30 min on already-completed phases.
 
 ---
 
