@@ -1,6 +1,6 @@
 # Remote Rollout Runbook
 
-This runbook is for the remote rollout of the locally validated planning, workflow-run status, actor-email, and run-recovery changes.
+This runbook is for the remote rollout of the locally validated planning, workflow-run status, actor-email, workflow telemetry, and analytics changes.
 
 ## Scope
 
@@ -15,12 +15,14 @@ Commits included:
 - `3ba78f1` `feat: add external reference resolution for planning tools`
 - `2781d2c` `feat: add planning scope management tools`
 - `85c803f` `feat: enrich actor run recovery with planning context`
+- analytics upgrade working tree or commit set containing migration `008_analytics_schema` and the workflow telemetry / analytics MCP tool changes
 
 Database migrations included:
 
 - `005_planning_schema`
 - `006_task_project_scope`
 - `007_task_single_repository`
+- `008_analytics_schema`
 
 ## Important Notes
 
@@ -28,6 +30,8 @@ Database migrations included:
 - Do not remove legacy `ops.workflow_runs.status` in this rollout.
 - Planning data is operational state. It is intentionally not part of the repo memory export/import pipeline.
 - If migration succeeds but the app deployment has issues, roll back app code first and leave the additive schema in place.
+- The supported analytics-ready bootstrap path is `alembic upgrade head`.
+- Treat `docker/init-pg.sql` as a legacy seed snapshot only. Do not treat raw init-script bootstrap by itself as analytics-ready.
 
 ## 1. Pre-Checks
 
@@ -61,6 +65,7 @@ Expected migrations:
 - `005_planning_schema`
 - `006_task_project_scope`
 - `007_task_single_repository`
+- `008_analytics_schema`
 
 ## 3. Verify Remote Database State
 
@@ -79,7 +84,7 @@ PY
 
 Expected:
 
-- `007_task_single_repository`
+- `008_analytics_schema`
 
 ### Check `ops.workflow_runs` Columns
 
@@ -167,6 +172,33 @@ Expected values:
 - `RUN_ERROR`
 - `RUN_CANCELLED`
 
+### Check Seeded Workflow Validator Status Values
+
+```bash
+uv run python - <<'PY'
+import os, psycopg2
+conn = psycopg2.connect(os.environ["DATABASE_URL"])
+cur = conn.cursor()
+cur.execute("""
+SELECT rv.internal_code
+FROM core.reference_types rt
+JOIN core.reference_values rv ON rv.reference_type_id = rt.id
+WHERE rt.internal_code='WORKFLOW_VALIDATOR_STATUS'
+ORDER BY rv.sort_order
+""")
+print([r[0] for r in cur.fetchall()])
+conn.close()
+PY
+```
+
+Expected values:
+
+- `VAL_PENDING`
+- `VAL_RUNNING`
+- `VAL_PASSED`
+- `VAL_FAILED`
+- `VAL_ERROR`
+
 ## 4. Deploy Server Code
 
 Use the normal remote deploy path after the database verification succeeds.
@@ -198,8 +230,10 @@ Run smoke checks in this order.
 ### Read-Only Checks
 
 1. `list_reference_values("WORKFLOW_RUN_STATUS")`
-2. `list_reference_values("PROJECT_STATUS")`
-3. `list_workflow_runs_by_actor("<known-email>", false)`
+2. `list_reference_values("WORKFLOW_VALIDATOR_STATUS")`
+3. `list_reference_values("PROJECT_STATUS")`
+4. `list_repositories()`
+5. `list_workflow_runs_by_actor("<known-email>", false)`
 
 ### Low-Risk Write Checks
 
@@ -220,19 +254,39 @@ Use a disposable project name for these checks.
 ### Reconnect Flow Checks
 
 1. `save_workflow_run` with `actor_email`
-2. `list_workflow_runs_by_actor`
+2. `save_workflow_phase_state`
+3. `save_workflow_validator_result`
+4. `get_workflow_run`
+5. `list_workflow_runs_by_actor`
 
 Confirm the run shows:
 
 - normalized status fields
 - `actor_email`
-- linked planning context where available:
-  - `task_key`
-  - `task_title`
-  - `feature_key`
-  - `feature_title`
-  - `project_key`
-  - `project_name`
+- `phases`
+- `validator_results`
+- nested `planning_context` where available:
+  - `tasks`
+  - `features`
+  - `projects`
+
+### Analytics Smoke Checks
+
+Use a small repo/date window where at least one known workflow run exists.
+
+1. `get_agent_performance_summary`
+2. `get_phase_quality_summary`
+3. `get_validator_failure_summary`
+4. `get_loop_pattern_summary`
+5. `get_quality_grade_summary`
+6. `list_entropy_sweep_targets`
+
+Confirm:
+
+- each tool returns `status: "success"` for a valid filter window, even when zero eligible runs match
+- zero-match cases return empty arrays rather than transport errors
+- planning enrichment is present only when requested and remains nested under `planning_context`
+- analytics reads do not require write authorization
 
 ## 7. What to Watch For
 
@@ -240,8 +294,11 @@ Watch application logs for:
 
 - reference lookup failures
 - invalid `status_code` errors
+- invalid validator status or validator code errors
 - project/repo/feature invariant violations
+- repo-mismatch task/run link rejections
 - unexpected auth failures on MCP writes
+- analytics query failures or response-shape mismatches
 
 ## 8. Rollback Guidance
 

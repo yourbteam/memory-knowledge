@@ -3,13 +3,14 @@
 ## In Progress
 
 ### Analytics Tools Upgrade
-**Status:** Plan verified, ready for implementation.
+**Status:** Core implementation in place; docs/bootstrap reconciliation in progress.
 **Plan:** `Tasks/analytics-tools/plan.md`
 **Scope:**
 - 2 new MCP write tools (`save_workflow_phase_state`, `save_workflow_validator_result`)
 - 6 new MCP analytics query tools (agent performance, phase quality, validator failures, loop patterns, quality grades, entropy sweep)
 - Migration 008: new table, reference values, schema fixes, indexes
 - Test coverage and AGENT_INTEGRATION_SPEC reconciliation
+- Bootstrap-path clarification for analytics-ready startup
 
 ---
 
@@ -39,6 +40,6 @@
 ---
 
 ### init-pg.sql Deprecation or Reconciliation
-**Problem:** `docker/init-pg.sql` is frozen at migration-004 level. Missing `core` schema, `planning` schema, post-004 columns, and all reference seed data. It creates a schema that the server code cannot operate against.
-**Options:** Either deprecate it entirely (Alembic-only bootstrap) or auto-generate it from the migration chain.
-**Depends on:** Nothing, but low urgency since `alembic upgrade head` is the supported path.
+**Problem:** `docker/init-pg.sql` is frozen at migration-004 level. Missing `core` schema, `planning` schema, post-004 columns, and all reference seed data. It is not a complete analytics-ready bootstrap source.
+**Current direction:** Keep `alembic upgrade head` as the supported path and treat raw `init-pg.sql` bootstrap as legacy until a full reconciliation exists.
+**Depends on:** Analytics upgrade docs/bootstrap cleanup.

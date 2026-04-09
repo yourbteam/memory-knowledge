@@ -1,9 +1,9 @@
 # Agent Integration Specification
 ## Memory-Knowledge MCP Server + mcp-agents-workflow Framework
 
-**Version:** 1.1.0
-**Date:** 2026-03-26
-**Status:** Ready for Implementation
+**Version:** 1.2.0
+**Date:** 2026-04-09
+**Status:** Integration Reference
 **Target Project:** mcp-agents-workflow
 
 ---
@@ -12,7 +12,7 @@
 
 This specification defines how to integrate the **memory-knowledge MCP server** (mechanical plane — deterministic code intelligence operations) with the **mcp-agents-workflow framework** (judgment plane — multi-agent LLM orchestration).
 
-The memory-knowledge server provides 12 MCP tools that agents call for retrieval, ingestion, impact analysis, learned memory management, integrity checks, and operational statistics. The agent framework orchestrates 11 persona agents that reason about codebases using these tools.
+The memory-knowledge server currently exposes 56 MCP tools. The mcp-agents-workflow integration uses a focused subset of those tools for retrieval, orchestration, review loops, workflow telemetry, and analytics, but this spec now treats the live server surface as broader than the original 12-tool subset.
 
 **Key Principle:** Python handles facts (the MCP server). LLMs handle judgment (the agent personas). Agents invoke workflow-level capabilities, never low-level scripts.
 
@@ -66,26 +66,30 @@ Readiness check: `GET http://localhost:8000/ready`
 
 ### 2.2 MCP Tool Namespace
 
-All memory-knowledge tools are prefixed with `mcp__memory-knowledge__` when called from agents:
+All memory-knowledge tools are prefixed with `mcp__memory-knowledge__` when called from agents.
 
-| MCP Tool Name | Agent Capability Declaration |
-|---|---|
-| `run_retrieval_workflow` | `mcp__memory-knowledge__run_retrieval_workflow` |
-| `run_context_assembly_workflow` | `mcp__memory-knowledge__run_context_assembly_workflow` |
-| `run_impact_analysis_workflow` | `mcp__memory-knowledge__run_impact_analysis_workflow` |
-| `run_learned_memory_proposal_workflow` | `mcp__memory-knowledge__run_learned_memory_proposal_workflow` |
-| `run_learned_memory_commit_workflow` | `mcp__memory-knowledge__run_learned_memory_commit_workflow` |
-| `run_blueprint_refinement_workflow` | `mcp__memory-knowledge__run_blueprint_refinement_workflow` |
-| `run_repo_ingestion_workflow` | `mcp__memory-knowledge__run_repo_ingestion_workflow` |
-| `run_integrity_audit_workflow` | `mcp__memory-knowledge__run_integrity_audit_workflow` |
-| `run_repair_rebuild_workflow` | `mcp__memory-knowledge__run_repair_rebuild_workflow` |
-| `check_job_status` | `mcp__memory-knowledge__check_job_status` |
-| `get_memory_stats` | `mcp__memory-knowledge__get_memory_stats` |
-| `run_route_intelligence_workflow` | `mcp__memory-knowledge__run_route_intelligence_workflow` |
+The live server categories after the analytics upgrade are:
+
+| Category | Tool Count | Tool Names |
+|---|---:|---|
+| Retrieval and reasoning | 7 | `run_retrieval_workflow`, `run_context_assembly_workflow`, `run_impact_analysis_workflow`, `run_blueprint_refinement_workflow`, `run_route_intelligence_workflow`, `check_job_status`, `get_memory_stats` |
+| Learned-memory lifecycle | 2 | `run_learned_memory_proposal_workflow`, `run_learned_memory_commit_workflow` |
+| Ingestion and repair | 5 | `run_repo_ingestion_workflow`, `run_integrity_audit_workflow`, `run_repair_rebuild_workflow`, `rebuild_revision_workflow`, `run_embedding_backfill` |
+| Repository administration | 2 | `list_repositories`, `register_repository` |
+| Workflow tracking writes | 4 | `save_workflow_run`, `save_workflow_artifact`, `save_workflow_phase_state`, `save_workflow_validator_result` |
+| Workflow tracking reads | 5 | `get_workflow_run`, `get_workflow_artifact`, `list_workflow_runs`, `list_workflow_runs_by_actor`, `list_reference_values` |
+| Analytics | 6 | `get_agent_performance_summary`, `get_phase_quality_summary`, `get_validator_failure_summary`, `get_loop_pattern_summary`, `get_quality_grade_summary`, `list_entropy_sweep_targets` |
+| Planning | 18 | `create_project`, `link_project_external_ref`, `list_projects`, `add_repository_to_project`, `list_project_repositories`, `remove_repository_from_project`, `create_feature`, `link_feature_external_ref`, `list_features`, `add_repository_to_feature`, `list_feature_repositories`, `remove_repository_from_feature`, `create_task`, `link_task_external_ref`, `list_tasks`, `link_repository_external_ref`, `link_task_to_workflow_run`, `get_backlog` |
+| Working memory and feedback | 5 | `create_working_session`, `record_working_observation`, `get_working_session_context`, `end_working_session`, `submit_route_feedback` |
+| Export and import | 2 | `export_repo_memory_tool`, `import_repo_memory_tool` |
+
+The full live MCP surface therefore totals 56 tools.
 
 ---
 
 ## 3. MCP Tool Reference
+
+This section documents the workflow-integration subset in detail. It does not restate every planning and maintenance contract, but its counts and category boundaries match the live server surface.
 
 All tools return JSON with this base structure:
 ```json
@@ -399,6 +403,40 @@ Poll `check_job_status` for completion. Final result includes `files_processed`,
 | `correlation_id` | string | no | Tracing ID |
 
 **Response `data`:** prompt_class, total_executions, avg_result_count, avg_duration_ms, fanout_rate, graph_expansion_rate, feedback averages.
+
+---
+
+### 3.13 Workflow Tracking and Analytics Tools
+
+These tools are now part of the supported integration surface for workflow observability and post-run analysis.
+
+**Workflow tracking writes**
+- `save_workflow_run`
+- `save_workflow_artifact`
+- `save_workflow_phase_state`
+- `save_workflow_validator_result`
+
+**Workflow tracking reads**
+- `get_workflow_run`
+- `get_workflow_artifact`
+- `list_workflow_runs`
+- `list_workflow_runs_by_actor`
+- `list_reference_values`
+
+**Analytics reads**
+- `get_agent_performance_summary`
+- `get_phase_quality_summary`
+- `get_validator_failure_summary`
+- `get_loop_pattern_summary`
+- `get_quality_grade_summary`
+- `list_entropy_sweep_targets`
+
+Operational notes:
+- all workflow and analytics tools return the standard `WorkflowResult` envelope
+- analytics tools are read-only and do not use the remote write guard
+- `list_workflow_runs_by_actor` returns nested `planning_context` arrays instead of legacy flat planning fields
+- `get_workflow_run` includes persisted `phases` and `validator_results`
+- `save_workflow_phase_state` and `save_workflow_validator_result` are the canonical producer write surfaces for phase and validator telemetry
 
 ---
 
@@ -1209,19 +1247,28 @@ Validates that memory proposals include all required fields and evidence referen
 
 ## 9. Persona-to-Tool Permissions Matrix
 
-| Persona | retrieval | context | impact | proposal | commit | refinement | ingestion | audit | repair | job_status | stats | route_intel |
-|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
-| Intake Router | ✓ | ✓ | | | | | ✓ | | | | | ✓ |
-| Context Strategist | ✓ | ✓ | | | | | | | | | | ✓ |
-| Codebase Analyst | ✓ | ✓ | ✓ | | | | | | | | | |
-| Architecture Agent | ✓ | ✓ | ✓ | | | | | | | | | |
-| Impl Planner | ✓ | ✓ | ✓ | | | | | | | | | |
-| Verifier | ✓ | ✓ | | | | | | ✓ | | | | |
-| Critic | | | | | | | | | | | | |
-| Editor | | | | | | ✓ | | | | | | |
-| LM Curator | ✓ | ✓ | | ✓ | | | | | | | | |
-| Orchestrator | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Final Response | ✓ | | | | | | | | | | | |
+This matrix is grouped by live tool category rather than the obsolete 12-tool list.
+
+| Persona | retrieval | context | impact | proposal | commit | refinement | ingestion | audit | repair | job_status | stats | route_intel | workflow_reads | workflow_writes | analytics | planning | admin_maintenance |
+|---|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|:-:|
+| Intake Router | ✓ | ✓ | | | | | ✓ | | | | | ✓ | | | | | |
+| Context Strategist | ✓ | ✓ | | | | | | | | | | ✓ | | | | | |
+| Codebase Analyst | ✓ | ✓ | ✓ | | | | | | | | | | ✓ | | ✓ | | |
+| Architecture Agent | ✓ | ✓ | ✓ | | | | | | | | | | ✓ | | ✓ | | |
+| Impl Planner | ✓ | ✓ | ✓ | | | | | | | | | | ✓ | | ✓ | ✓ | |
+| Verifier | ✓ | ✓ | | | | | | ✓ | | | | | ✓ | | ✓ | | |
+| Critic | | | | | | | | | | | | | | | | | |
+| Editor | | | | | | ✓ | | | | | | | | | | | |
+| LM Curator | ✓ | ✓ | | ✓ | | | | | | | | | | | | | |
+| Orchestrator | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ | ✓ |
+| Final Response | ✓ | | | | | | | | | | | | ✓ | | | | |
+
+Category notes:
+- `workflow_reads` covers `get_workflow_run`, `get_workflow_artifact`, `list_workflow_runs`, `list_workflow_runs_by_actor`, and `list_reference_values`
+- `workflow_writes` covers `save_workflow_run`, `save_workflow_artifact`, `save_workflow_phase_state`, and `save_workflow_validator_result`
+- `analytics` covers the 6 post-run summary tools
+- `planning` covers project, feature, task, linking, and backlog tools
+- `admin_maintenance` covers repository registration, export/import, embedding backfill, revision rebuild, and related maintenance operations
 
 ---
 
@@ -1251,6 +1298,10 @@ Validates that memory proposals include all required fields and evidence referen
 ### In `memory-knowledge` project:
 
 - [ ] Ensure MCP server starts cleanly via command line (`python -m memory_knowledge.server` or `uvicorn`)
-- [ ] Verify all 12 tools respond correctly
+- [ ] Verify the workflow-integration subset matches the live server implementation and category counts
+- [ ] Verify workflow tracking writes and reads respond correctly
+- [ ] Verify all 6 analytics tools respond correctly
+- [ ] Verify planning-context reads use nested `planning_context` instead of legacy flat planning fields
+- [ ] Verify the supported bootstrap path remains `alembic upgrade head`, not raw `docker/init-pg.sql`
 - [ ] Ensure `.env.example` documents all required environment variables
 - [ ] Test with at least one ingested Python repository

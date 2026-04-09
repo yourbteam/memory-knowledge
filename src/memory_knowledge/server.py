@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import json
 import os
 import uuid
 from contextlib import asynccontextmanager
@@ -22,6 +23,7 @@ from memory_knowledge.observability.logging import configure_logging
 from memory_knowledge.observability.metrics import track_tool_metrics
 from memory_knowledge.guards import check_remote_write_guard
 from memory_knowledge.workflows.base import WorkflowResult
+from memory_knowledge.admin import analytics as _analytics
 from memory_knowledge.admin import planning as _planning
 from memory_knowledge.observability.run_context import (
     bind_run_context,
@@ -44,7 +46,20 @@ from memory_knowledge.workflows import route_intelligence as _route_intelligence
 logger = structlog.get_logger()
 
 WORKFLOW_RUN_STATUS_TYPE = "WORKFLOW_RUN_STATUS"
+WORKFLOW_VALIDATOR_STATUS_TYPE = "WORKFLOW_VALIDATOR_STATUS"
 DEFAULT_WORKFLOW_RUN_STATUS = "RUN_PENDING"
+VALIDATOR_CODE_SET = {
+    "OUTPUT_CONTRACT",
+    "EVIDENCE_GROUNDING",
+    "MEMORY_PROPOSAL",
+}
+PHASE_STATUS_SET = {
+    "pending",
+    "running",
+    "success",
+    "error",
+    "cancelled",
+}
 LEGACY_WORKFLOW_RUN_STATUS_MAP = {
     "pending": "RUN_PENDING",
     "submitted": "RUN_SUBMITTED",
@@ -624,6 +639,22 @@ def _legacy_workflow_run_status_name(status_code: str) -> str:
     return WORKFLOW_RUN_STATUS_LEGACY_NAMES.get(status_code, status_code.lower())
 
 
+def _isoformat(value) -> str | None:
+    return value.isoformat() if value else None
+
+
+async def _resolve_workflow_run_row(pool, run_id: str) -> dict | None:
+    row = await pool.fetchrow(
+        """
+        SELECT wr.id, wr.repository_id, wr.run_id
+        FROM ops.workflow_runs wr
+        WHERE wr.run_id = $1
+        """,
+        uuid.UUID(run_id),
+    )
+    return dict(row) if row else None
+
+
 async def _resolve_project_identifier(
     pool,
     *,
@@ -833,6 +864,272 @@ async def save_workflow_artifact(
 
 
 @mcp.tool()
+@track_tool_metrics("save_workflow_phase_state")
+async def save_workflow_phase_state(
+    run_id: str,
+    phase_id: str,
+    status: str | None = None,
+    decision: str | None = None,
+    handoff_text: str | None = None,
+    attempts: int | None = None,
+    started_utc: str | None = None,
+    completed_utc: str | None = None,
+    error_text: str | None = None,
+    clear_error_text: bool = False,
+    metrics_json: dict | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Create or update workflow phase state by (run_id, phase_id)."""
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "save_workflow_phase_state")
+    guard = check_remote_write_guard(get_settings(), "save_workflow_phase_state")
+    if guard is not None:
+        guard.run_id = str(rid)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        run_row = await _resolve_workflow_run_row(pool, run_id)
+        if run_row is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_phase_state",
+                status="error",
+                error=f"Workflow run '{run_id}' not found",
+            ).model_dump_json()
+        if status is not None and status not in PHASE_STATUS_SET:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_phase_state",
+                status="error",
+                error=f"Invalid phase status: {status}",
+            ).model_dump_json()
+        if attempts is not None and attempts < 1:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_phase_state",
+                status="error",
+                error="attempts must be >= 1",
+            ).model_dump_json()
+        if clear_error_text and error_text is not None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_phase_state",
+                status="error",
+                error="error_text and clear_error_text cannot both be set",
+            ).model_dump_json()
+        if status is None:
+            existing = await pool.fetchrow(
+                """
+                SELECT 1
+                FROM ops.workflow_phase_states
+                WHERE workflow_run_id = $1 AND phase_id = $2
+                """,
+                run_row["id"],
+                phase_id,
+            )
+            if existing is None:
+                return WorkflowResult(
+                    run_id=str(rid),
+                    tool_name="save_workflow_phase_state",
+                    status="error",
+                    error="status is required on first phase-state write",
+                ).model_dump_json()
+
+        row = await pool.fetchrow(
+            """
+            INSERT INTO ops.workflow_phase_states (
+                workflow_run_id, phase_id, status, decision, handoff_text, attempts,
+                started_utc, completed_utc, error_text, metrics_json
+            )
+            VALUES (
+                $1, $2, $3, $4, $5, COALESCE($6, 1),
+                $7::timestamptz, $8::timestamptz, $9, $10::jsonb
+            )
+            ON CONFLICT (workflow_run_id, phase_id) DO UPDATE SET
+                status = COALESCE(EXCLUDED.status, ops.workflow_phase_states.status),
+                decision = COALESCE(EXCLUDED.decision, ops.workflow_phase_states.decision),
+                handoff_text = COALESCE(EXCLUDED.handoff_text, ops.workflow_phase_states.handoff_text),
+                attempts = COALESCE(EXCLUDED.attempts, ops.workflow_phase_states.attempts),
+                started_utc = COALESCE(EXCLUDED.started_utc, ops.workflow_phase_states.started_utc),
+                completed_utc = COALESCE(EXCLUDED.completed_utc, ops.workflow_phase_states.completed_utc),
+                error_text = CASE
+                    WHEN $11 THEN NULL
+                    WHEN $9 IS NOT NULL THEN EXCLUDED.error_text
+                    ELSE ops.workflow_phase_states.error_text
+                END,
+                metrics_json = COALESCE(EXCLUDED.metrics_json, ops.workflow_phase_states.metrics_json),
+                updated_utc = NOW()
+            RETURNING phase_id
+            """,
+            run_row["id"],
+            phase_id,
+            status,
+            decision,
+            handoff_text,
+            attempts,
+            started_utc,
+            completed_utc,
+            error_text,
+            json.dumps(metrics_json) if metrics_json is not None else None,
+            clear_error_text,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="save_workflow_phase_state",
+            status="success",
+            data={"run_id": run_id, "phase_id": row["phase_id"], "saved": True},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("save_workflow_validator_result")
+async def save_workflow_validator_result(
+    run_id: str,
+    phase_id: str,
+    validator_code: str,
+    validator_name: str,
+    attempt_number: int,
+    status_code: str,
+    failure_reason_code: str | None = None,
+    failure_reason: str | None = None,
+    clear_failure_reason_code: bool = False,
+    clear_failure_reason: bool = False,
+    details_json: dict | None = None,
+    clear_details_json: bool = False,
+    started_utc: str | None = None,
+    completed_utc: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Create or update workflow validator result by run/phase/code/attempt."""
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "save_workflow_validator_result")
+    guard = check_remote_write_guard(get_settings(), "save_workflow_validator_result")
+    if guard is not None:
+        guard.run_id = str(rid)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        run_row = await _resolve_workflow_run_row(pool, run_id)
+        if run_row is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_validator_result",
+                status="error",
+                error=f"Workflow run '{run_id}' not found",
+            ).model_dump_json()
+        if validator_code not in VALIDATOR_CODE_SET:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_validator_result",
+                status="error",
+                error=f"Invalid validator_code: {validator_code}",
+            ).model_dump_json()
+        if attempt_number < 1:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_validator_result",
+                status="error",
+                error="attempt_number must be >= 1",
+            ).model_dump_json()
+        if failure_reason_code is not None and clear_failure_reason_code:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_validator_result",
+                status="error",
+                error="failure_reason_code and clear_failure_reason_code cannot both be set",
+            ).model_dump_json()
+        if failure_reason is not None and clear_failure_reason:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_validator_result",
+                status="error",
+                error="failure_reason and clear_failure_reason cannot both be set",
+            ).model_dump_json()
+        if details_json is not None and clear_details_json:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_validator_result",
+                status="error",
+                error="details_json and clear_details_json cannot both be set",
+            ).model_dump_json()
+        status_row = await _resolve_reference_value(pool, WORKFLOW_VALIDATOR_STATUS_TYPE, status_code)
+        if status_row is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_validator_result",
+                status="error",
+                error=f"Invalid {WORKFLOW_VALIDATOR_STATUS_TYPE} value: {status_code}",
+            ).model_dump_json()
+
+        row = await pool.fetchrow(
+            """
+            INSERT INTO ops.workflow_validator_results (
+                workflow_run_id, phase_id, validator_code, validator_name, attempt_number,
+                status_id, failure_reason_code, failure_reason, details_json,
+                correlation_id, started_utc, completed_utc
+            )
+            VALUES (
+                $1, $2, $3, $4, $5, $6,
+                $7, $8, $9::jsonb, $10::uuid, $11::timestamptz, $12::timestamptz
+            )
+            ON CONFLICT (workflow_run_id, phase_id, validator_code, attempt_number) DO UPDATE SET
+                validator_name = EXCLUDED.validator_name,
+                status_id = EXCLUDED.status_id,
+                failure_reason_code = CASE
+                    WHEN $13 THEN NULL
+                    WHEN $7 IS NOT NULL THEN EXCLUDED.failure_reason_code
+                    ELSE ops.workflow_validator_results.failure_reason_code
+                END,
+                failure_reason = CASE
+                    WHEN $14 THEN NULL
+                    WHEN $8 IS NOT NULL THEN EXCLUDED.failure_reason
+                    ELSE ops.workflow_validator_results.failure_reason
+                END,
+                details_json = CASE
+                    WHEN $15 THEN NULL
+                    WHEN $9::jsonb IS NOT NULL THEN EXCLUDED.details_json
+                    ELSE ops.workflow_validator_results.details_json
+                END,
+                started_utc = COALESCE(EXCLUDED.started_utc, ops.workflow_validator_results.started_utc),
+                completed_utc = COALESCE(EXCLUDED.completed_utc, ops.workflow_validator_results.completed_utc),
+                updated_utc = NOW()
+            RETURNING phase_id, validator_code, attempt_number
+            """,
+            run_row["id"],
+            phase_id,
+            validator_code,
+            validator_name,
+            attempt_number,
+            status_row["id"],
+            failure_reason_code,
+            failure_reason,
+            json.dumps(details_json) if details_json is not None else None,
+            correlation_id,
+            started_utc,
+            completed_utc,
+            clear_failure_reason_code,
+            clear_failure_reason,
+            clear_details_json,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="save_workflow_validator_result",
+            status="success",
+            data={
+                "run_id": run_id,
+                "phase_id": row["phase_id"],
+                "validator_code": row["validator_code"],
+                "attempt_number": row["attempt_number"],
+                "saved": True,
+            },
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("get_workflow_run")
 async def get_workflow_run(
     run_id: str, correlation_id: str | None = None
@@ -866,7 +1163,7 @@ async def get_workflow_run(
         phases = await pool.fetch(
             """
             SELECT phase_id, status, decision, attempts,
-                   started_utc, completed_utc
+                   started_utc, completed_utc, error_text, metrics_json
             FROM ops.workflow_phase_states
             WHERE workflow_run_id = (SELECT id FROM ops.workflow_runs WHERE run_id = $1)
             ORDER BY id
@@ -882,8 +1179,27 @@ async def get_workflow_run(
             """,
             uuid.UUID(run_id),
         )
-        import json as _json
-        ctx = _json.loads(row["context_json"]) if row["context_json"] else None
+        validator_results = await pool.fetch(
+            """
+            SELECT wvr.phase_id,
+                   wvr.validator_code,
+                   wvr.validator_name,
+                   wvr.attempt_number,
+                   rv.internal_code AS status_code,
+                   wvr.failure_reason_code,
+                   wvr.failure_reason,
+                   wvr.details_json,
+                   wvr.started_utc,
+                   wvr.completed_utc,
+                   wvr.created_utc
+            FROM ops.workflow_validator_results wvr
+            JOIN core.reference_values rv ON rv.id = wvr.status_id
+            WHERE wvr.workflow_run_id = (SELECT id FROM ops.workflow_runs WHERE run_id = $1)
+            ORDER BY wvr.phase_id, wvr.validator_code, wvr.attempt_number, wvr.created_utc
+            """,
+            uuid.UUID(run_id),
+        )
+        ctx = json.loads(row["context_json"]) if row["context_json"] else None
         return WorkflowResult(
             run_id=str(rid), tool_name="get_workflow_run", status="success",
             data={
@@ -899,8 +1215,8 @@ async def get_workflow_run(
                 "current_phase": row["current_phase"],
                 "iteration_count": row["iteration_count"],
                 "context_json": ctx,
-                "started_utc": row["started_utc"].isoformat() if row["started_utc"] else None,
-                "completed_utc": row["completed_utc"].isoformat() if row["completed_utc"] else None,
+                "started_utc": _isoformat(row["started_utc"]),
+                "completed_utc": _isoformat(row["completed_utc"]),
                 "error_text": row["error_text"],
                 "phases": [
                     {
@@ -908,10 +1224,28 @@ async def get_workflow_run(
                         "status": p["status"],
                         "decision": p["decision"],
                         "attempts": p["attempts"],
-                        "started_utc": p["started_utc"].isoformat() if p["started_utc"] else None,
-                        "completed_utc": p["completed_utc"].isoformat() if p["completed_utc"] else None,
+                        "started_utc": _isoformat(p["started_utc"]),
+                        "completed_utc": _isoformat(p["completed_utc"]),
+                        "error_text": p["error_text"],
+                        "metrics_json": p["metrics_json"],
                     }
                     for p in phases
+                ],
+                "validator_results": [
+                    {
+                        "phase_id": v["phase_id"],
+                        "validator_code": v["validator_code"],
+                        "validator_name": v["validator_name"],
+                        "attempt_number": v["attempt_number"],
+                        "status_code": v["status_code"],
+                        "failure_reason_code": v["failure_reason_code"],
+                        "failure_reason": v["failure_reason"],
+                        "details_json": v["details_json"],
+                        "started_utc": _isoformat(v["started_utc"]),
+                        "completed_utc": _isoformat(v["completed_utc"]),
+                        "created_utc": _isoformat(v["created_utc"]),
+                    }
+                    for v in validator_results
                 ],
                 "artifacts": [
                     {
@@ -919,7 +1253,7 @@ async def get_workflow_run(
                         "artifact_type": a["artifact_type"],
                         "iteration": a["iteration"],
                         "is_final": a["is_final"],
-                        "updated_utc": a["updated_utc"].isoformat() if a["updated_utc"] else None,
+                        "updated_utc": _isoformat(a["updated_utc"]),
                     }
                     for a in artifacts
                 ],
@@ -1118,9 +1452,11 @@ async def list_workflow_runs_by_actor(
     rid = new_run_id()
     bind_run_context(rid, correlation_id, "list_workflow_runs_by_actor")
     try:
-        rows = await get_pg_pool().fetch(
+        pool = get_pg_pool()
+        base_rows = await pool.fetch(
             """
             SELECT
+                wr.id AS workflow_run_id,
                 wr.run_id,
                 r.repository_key,
                 wr.workflow_name,
@@ -1133,12 +1469,6 @@ async def list_workflow_runs_by_actor(
                 wr.iteration_count,
                 wr.started_utc,
                 wr.completed_utc,
-                t.task_key,
-                t.title AS planning_task_title,
-                f.feature_key,
-                f.title AS feature_title,
-                p.project_key,
-                p.name AS project_name,
                 (
                     SELECT COUNT(*)
                     FROM ops.workflow_artifacts wa
@@ -1147,10 +1477,6 @@ async def list_workflow_runs_by_actor(
             FROM ops.workflow_runs wr
             JOIN catalog.repositories r ON r.id = wr.repository_id
             JOIN core.reference_values rv ON rv.id = wr.status_id
-            LEFT JOIN planning.task_workflow_runs twr ON twr.workflow_run_id = wr.id
-            LEFT JOIN planning.tasks t ON t.id = twr.task_id
-            LEFT JOIN planning.features f ON f.id = t.feature_id
-            LEFT JOIN planning.projects p ON p.id = t.project_id
             WHERE wr.actor_email = $1
               AND ($2::boolean = TRUE OR rv.is_terminal = FALSE)
             ORDER BY wr.started_utc DESC
@@ -1160,6 +1486,73 @@ async def list_workflow_runs_by_actor(
             include_terminal,
             limit,
         )
+        run_ids = [row["workflow_run_id"] for row in base_rows]
+        planning_rows = []
+        if run_ids:
+            planning_rows = await pool.fetch(
+                """
+                SELECT
+                    twr.workflow_run_id,
+                    t.task_key,
+                    t.title AS task_title,
+                    f.feature_key,
+                    f.title AS feature_title,
+                    p.project_key,
+                    p.name AS project_name
+                FROM planning.task_workflow_runs twr
+                JOIN planning.tasks t ON t.id = twr.task_id
+                LEFT JOIN planning.features f ON f.id = t.feature_id
+                LEFT JOIN planning.projects p ON p.id = t.project_id
+                JOIN ops.workflow_runs wr ON wr.id = twr.workflow_run_id
+                WHERE twr.workflow_run_id = ANY($1::bigint[])
+                  AND wr.repository_id = t.repository_id
+                ORDER BY twr.workflow_run_id, p.project_key, f.feature_key, t.task_key
+                """,
+                run_ids,
+            )
+
+        planning_context_by_run: dict[int, dict[str, list[dict[str, str]]]] = {}
+        seen_keys_by_run: dict[int, dict[str, set[str]]] = {}
+        for row in planning_rows:
+            workflow_run_id = row["workflow_run_id"]
+            if workflow_run_id not in planning_context_by_run:
+                planning_context_by_run[workflow_run_id] = {
+                    "projects": [],
+                    "features": [],
+                    "tasks": [],
+                }
+                seen_keys_by_run[workflow_run_id] = {
+                    "projects": set(),
+                    "features": set(),
+                    "tasks": set(),
+                }
+            ctx = planning_context_by_run[workflow_run_id]
+            seen = seen_keys_by_run[workflow_run_id]
+            if row["project_key"] and str(row["project_key"]) not in seen["projects"]:
+                seen["projects"].add(str(row["project_key"]))
+                ctx["projects"].append(
+                    {
+                        "project_key": str(row["project_key"]),
+                        "project_name": row["project_name"],
+                    }
+                )
+            if row["feature_key"] and str(row["feature_key"]) not in seen["features"]:
+                seen["features"].add(str(row["feature_key"]))
+                ctx["features"].append(
+                    {
+                        "feature_key": str(row["feature_key"]),
+                        "feature_title": row["feature_title"],
+                    }
+                )
+            if row["task_key"] and str(row["task_key"]) not in seen["tasks"]:
+                seen["tasks"].add(str(row["task_key"]))
+                ctx["tasks"].append(
+                    {
+                        "task_key": str(row["task_key"]),
+                        "task_title": row["task_title"],
+                    }
+                )
+
         runs = [
             {
                 "run_id": str(r["run_id"]),
@@ -1170,25 +1563,233 @@ async def list_workflow_runs_by_actor(
                 "status_code": r["status_code"],
                 "status_display_name": r["status_display_name"],
                 "is_terminal": r["is_terminal"],
-                "task_key": str(r["task_key"]) if r["task_key"] else None,
-                "task_title": r["planning_task_title"],
-                "feature_key": str(r["feature_key"]) if r["feature_key"] else None,
-                "feature_title": r["feature_title"],
-                "project_key": str(r["project_key"]) if r["project_key"] else None,
-                "project_name": r["project_name"],
                 "current_phase": r["current_phase"],
                 "iteration_count": r["iteration_count"],
-                "started_utc": r["started_utc"].isoformat() if r["started_utc"] else None,
-                "completed_utc": r["completed_utc"].isoformat() if r["completed_utc"] else None,
+                "started_utc": _isoformat(r["started_utc"]),
+                "completed_utc": _isoformat(r["completed_utc"]),
                 "artifact_count": r["artifact_count"],
+                "planning_context": planning_context_by_run.get(
+                    r["workflow_run_id"],
+                    {"projects": [], "features": [], "tasks": []},
+                ),
             }
-            for r in rows
+            for r in base_rows
         ]
         return WorkflowResult(
             run_id=str(rid),
             tool_name="list_workflow_runs_by_actor",
             status="success",
             data={"actor_email": actor_email, "runs": runs, "count": len(runs)},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_agent_performance_summary")
+async def get_agent_performance_summary(
+    repository_key: str | None = None,
+    workflow_name: str | None = None,
+    actor_email: str | None = None,
+    since_utc: str | None = None,
+    until_utc: str | None = None,
+    include_planning_context: bool = False,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_agent_performance_summary")
+    try:
+        data = await _analytics.get_agent_performance_summary(
+            get_pg_pool(),
+            repository_key=repository_key,
+            workflow_name=workflow_name,
+            actor_email=actor_email,
+            since_utc=since_utc,
+            until_utc=until_utc,
+            include_planning_context=include_planning_context,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_agent_performance_summary",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_phase_quality_summary")
+async def get_phase_quality_summary(
+    repository_key: str | None = None,
+    workflow_name: str | None = None,
+    phase_id: str | None = None,
+    since_utc: str | None = None,
+    until_utc: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_phase_quality_summary")
+    try:
+        data = await _analytics.get_phase_quality_summary(
+            get_pg_pool(),
+            repository_key=repository_key,
+            workflow_name=workflow_name,
+            phase_id=phase_id,
+            since_utc=since_utc,
+            until_utc=until_utc,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_phase_quality_summary",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_validator_failure_summary")
+async def get_validator_failure_summary(
+    repository_key: str | None = None,
+    workflow_name: str | None = None,
+    validator_code: str | None = None,
+    since_utc: str | None = None,
+    until_utc: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_validator_failure_summary")
+    try:
+        data = await _analytics.get_validator_failure_summary(
+            get_pg_pool(),
+            repository_key=repository_key,
+            workflow_name=workflow_name,
+            validator_code=validator_code,
+            since_utc=since_utc,
+            until_utc=until_utc,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_validator_failure_summary",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_loop_pattern_summary")
+async def get_loop_pattern_summary(
+    repository_key: str | None = None,
+    workflow_name: str | None = None,
+    since_utc: str | None = None,
+    until_utc: str | None = None,
+    loop_thresholds: list[int] | None = None,
+    include_planning_context: bool = False,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_loop_pattern_summary")
+    try:
+        data = await _analytics.get_loop_pattern_summary(
+            get_pg_pool(),
+            repository_key=repository_key,
+            workflow_name=workflow_name,
+            since_utc=since_utc,
+            until_utc=until_utc,
+            loop_thresholds=loop_thresholds,
+            include_planning_context=include_planning_context,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_loop_pattern_summary",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_loop_pattern_summary",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_quality_grade_summary")
+async def get_quality_grade_summary(
+    repository_key: str | None = None,
+    workflow_name: str | None = None,
+    actor_email: str | None = None,
+    since_utc: str | None = None,
+    until_utc: str | None = None,
+    include_planning_context: bool = False,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_quality_grade_summary")
+    try:
+        data = await _analytics.get_quality_grade_summary(
+            get_pg_pool(),
+            repository_key=repository_key,
+            workflow_name=workflow_name,
+            actor_email=actor_email,
+            since_utc=since_utc,
+            until_utc=until_utc,
+            include_planning_context=include_planning_context,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_quality_grade_summary",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_entropy_sweep_targets")
+async def list_entropy_sweep_targets(
+    repository_key: str | None = None,
+    workflow_name: str | None = None,
+    actor_email: str | None = None,
+    since_utc: str | None = None,
+    until_utc: str | None = None,
+    limit: int = 20,
+    include_planning_context: bool = False,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "list_entropy_sweep_targets")
+    try:
+        data = await _analytics.list_entropy_sweep_targets(
+            get_pg_pool(),
+            repository_key=repository_key,
+            workflow_name=workflow_name,
+            actor_email=actor_email,
+            since_utc=since_utc,
+            until_utc=until_utc,
+            limit=limit,
+            include_planning_context=include_planning_context,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="list_entropy_sweep_targets",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="list_entropy_sweep_targets",
+            status="error",
+            error=str(exc),
         ).model_dump_json()
     finally:
         clear_run_context()

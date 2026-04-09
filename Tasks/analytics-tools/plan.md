@@ -45,6 +45,10 @@ These existing tools already cover:
 - actor-email run recovery
 - lookup resolution for normalized reference/status values
 
+Compatibility note for this upgrade:
+
+- once `save_workflow_validator_result` exists, `get_workflow_run` must also surface persisted validator-result rows so direct per-run inspection/recovery remains complete instead of hiding newly persisted workflow telemetry
+
 The new work in this task is specifically the missing aggregated analytics layer and the missing persistence required to support the more advanced summaries.
 
 ## Staged Delivery
@@ -208,6 +212,7 @@ Bucket scoring:
 - compute run-level entropy score first
 - group by `(repository_key, workflow_name, actor_email)`
 - bucket `score` is the maximum run-level score in that bucket
+- the bucket's representative "max-score run" is chosen by `score DESC`, then `started_utc DESC`, then `run_id DESC` as the deterministic tiebreaker
 - bucket `latest_started_utc` is the most recent run start time in that bucket
 - sort by `score DESC`, then `latest_started_utc DESC`
 
@@ -333,6 +338,36 @@ Fields:
 - `grade`
 - component breakdown used to compute the score
 
+### Fact-query implementation structure
+
+Implementation preference for v1:
+
+- `src/memory_knowledge/admin/analytics.py` should own the analytics query layer
+- each canonical fact should have one clearly named base query/helper rather than duplicating near-identical SQL across MCP tools
+- preferred helper split:
+  - one helper for `run_fact`
+  - one helper for `phase_fact`
+  - one helper for `validator_fact`
+  - one helper for `artifact_latest_fact`
+  - one helper for `run_grade_fact`
+- per-tool helpers may compose those base helpers, but tools should not each redefine the fact SQL independently
+
+Query-shape guidance:
+
+- prefer raw SQL in `analytics.py` that mirrors the fact grains and response contracts in this plan
+- do not hide core analytics semantics behind overly generic query-builder abstractions
+- keep fact-building SQL and response-shaping Python separate:
+  - SQL defines fact grain, joins, filters, buckets, ordering, and aggregates
+  - Python maps rows into the MCP response envelopes and nested collection shapes
+- planning enrichment should be implemented as a post-aggregation helper over the final bucket rows, not fused into every base fact query
+
+Anti-patterns to avoid:
+
+- copy-pasting slightly different fact SQL into multiple MCP tool handlers
+- letting MCP tool handlers own the primary analytics SQL instead of `analytics.py`
+- mixing planning many-to-many joins into the base aggregate SQL in a way that can change counts
+- encoding caller-visible ordering or tie-break rules only in Python if the SQL can return non-deterministic row order
+
 ## Eligibility Matrix
 
 Every tool must state which runs are eligible.
@@ -452,7 +487,7 @@ Write contract:
   - `started_utc` — preserved when omitted
   - `completed_utc` — preserved when omitted, never cleared in v1
   - `error_text` — preserved when omitted, cleared only by explicit `clear_error_text = true`
-  - `metrics_json` — preserved when omitted
+  - `metrics_json` — preserved when omitted; replaced when explicitly provided; explicit `null` is invalid in v1 and must return an explicit `WorkflowResult` error
   - `updated_utc` — `NOW()` (always overwritten)
 
 Server behavior must match existing workflow write tools:
@@ -506,9 +541,12 @@ Request shape:
   "validator_name": "string",
   "attempt_number": 1,
   "status_code": "VAL_PENDING|VAL_PASSED|VAL_FAILED|VAL_SKIPPED|VAL_ERROR",
-  "failure_reason_code": "string|null",
-  "failure_reason": "string|null",
+  "failure_reason_code": "string",
+  "failure_reason": "string",
+  "clear_failure_reason_code": false,
+  "clear_failure_reason": false,
   "details_json": {},
+  "clear_details_json": false,
   "started_utc": "ISO-8601|null",
   "completed_utc": "ISO-8601|null",
   "correlation_id": "uuid|null"
@@ -551,8 +589,57 @@ Write semantics:
   - `validator_name`
   - `attempt_number`
   - `status_code`
-- optional fields preserve existing values when omitted unless an explicit replacement is provided
+- `validator_name` is display text for the canonical `validator_code`
+- for a given persisted `(workflow_run_id, phase_id, validator_code, attempt_number)` row, `validator_name` may be updated on upsert, but analytics grouping remains keyed by canonical `validator_code`, not by `validator_name`
+- implementations must not infer validator identity from `validator_name`; canonical identity is always `validator_code`
+- optional field rules for v1:
+  - `failure_reason_code` — preserved when omitted; replaced when explicitly provided; cleared only by explicit `clear_failure_reason_code = true`
+  - `failure_reason` — preserved when omitted; replaced when explicitly provided; cleared only by explicit `clear_failure_reason = true`
+  - `details_json` — preserved when omitted; replaced when explicitly provided; cleared only by explicit `clear_details_json = true`
+  - `started_utc` — preserved when omitted; replaced when explicitly provided; never cleared in v1
+  - `completed_utc` — preserved when omitted; replaced when explicitly provided; never cleared in v1
+- explicit `null` for `failure_reason_code`, `failure_reason`, or `details_json` without the matching `clear_*` flag is invalid and must return an explicit `WorkflowResult` error
+- if both a replacement value and its matching `clear_*` flag are provided, the request is invalid and must return an explicit `WorkflowResult` error
 - `updated_utc` changes on every successful upsert of an existing row
+
+### 4. `get_workflow_run` validator-result readback
+
+Compatibility purpose:
+
+- once validator-result writes exist, direct operational run inspection must return them without requiring callers to infer analytics state indirectly
+
+Response contract addition:
+
+- `get_workflow_run.data.validator_results` must be present
+- if a run has no validator-result rows, `validator_results` is an empty array
+
+Validator-result row shape:
+
+```json
+{
+  "phase_id": "string",
+  "validator_code": "string",
+  "validator_name": "string",
+  "attempt_number": 1,
+  "status_code": "VAL_PENDING|VAL_PASSED|VAL_FAILED|VAL_SKIPPED|VAL_ERROR",
+  "failure_reason_code": "string|null",
+  "failure_reason": "string|null",
+  "details_json": {},
+  "started_utc": "ISO-8601|null",
+  "completed_utc": "ISO-8601|null",
+  "created_utc": "ISO-8601"
+}
+```
+
+Ordering:
+
+- `validator_results` sorts by `phase_id ASC`, then `validator_code ASC`, then `attempt_number ASC`, then `created_utc ASC`
+
+Semantics:
+
+- `status_code` is the canonical normalized validator status from `core.reference_values`
+- `validator_results` is direct operational readback from `ops.workflow_validator_results`, not an aggregate
+- `validator_results` must not change the existing `phases` or `artifacts` payload contracts
 
 ## Analytics Tool Contracts
 
@@ -576,6 +663,19 @@ Time-window contract:
 - run-level summaries (`get_agent_performance_summary`, `get_loop_pattern_summary`, `get_quality_grade_summary`, `list_entropy_sweep_targets`) filter by `run_fact.started_utc`
 - phase-level summaries (`get_phase_quality_summary`) filter by `COALESCE(phase_fact.started_utc, phase_fact.completed_utc)`
 - validator-level summaries (`get_validator_failure_summary`) filter by `COALESCE(validator_fact.started_utc, validator_fact.completed_utc, validator_fact.created_utc)`
+
+No-match contract:
+
+- if filters produce zero eligible rows, tools return `status = "success"` with an empty result collection (`summary: []` or `targets: []`)
+- zero-match responses are not errors
+- zero-match responses return `eligible_run_count = 0`
+- zero-match responses return `excluded_run_count = 0`
+
+Average-field contract:
+
+- every `avg_duration_ms` averages only across rows in the bucket where duration is computable from both timestamps
+- the denominator for `avg_duration_ms` is the count of rows with non-null computed duration, not total rows in the bucket
+- if a bucket has no rows with computable duration, `avg_duration_ms = 0.0`
 
 Nested collection determinism contract:
 
@@ -968,6 +1068,12 @@ Ordering:
 - `repository_key`
 - `workflow_name`
 
+Semantics:
+
+- `phase_retry_counts` is grouped by `phase_id` within each `(repository_key, workflow_name)` bucket
+- `runs_with_attempts_ge_2` counts distinct `run_id` values whose latest `phase_fact` row for that `phase_id` has `attempts >= 2`
+- `max_attempts` is the maximum latest-row `attempts` value observed for that `phase_id` across all runs in the bucket
+
 Top-level `data` envelope:
 
 ```json
@@ -1001,6 +1107,7 @@ Grouped output rule:
 
 - compute run-level grades first
 - then group by `(repository_key, workflow_name, actor_email)`
+- `latest_run_grade` is taken from the latest run in the bucket by `started_utc DESC`, then `run_id DESC` as the deterministic tiebreaker
 
 Response rows:
 
@@ -1143,7 +1250,7 @@ Reason-code vocabulary for v1:
 
 Semantics:
 
-- `score` and `supporting_metrics` describe the max-score run in the bucket
+- `score`, `reason_codes`, and `supporting_metrics` describe the bucket's deterministic max-score run, using the same tiebreaker defined in the entropy ranking contract above
 - `latest_started_utc` is the most recent run start in the bucket and may belong to a different run
 
 Top-level `data` envelope:
@@ -1197,6 +1304,11 @@ Population rule:
 
 - each object array contains distinct objects keyed by the local canonical key
 - values are collected from workflow runs in the aggregate bucket after the bucket's base metrics are fully computed
+- enrichment join path is:
+  - `ops.workflow_runs.id -> planning.task_workflow_runs.workflow_run_id`
+  - `planning.task_workflow_runs.task_id -> planning.tasks.id`
+  - `planning.tasks.feature_id -> planning.features.id`
+  - `planning.features.project_id -> planning.projects.id`
 - all persisted `planning.task_workflow_runs.relation_type` values are eligible in v1
 - `relation_type` does not filter or weight enrichment in v1 and is not surfaced in analytics responses
 
@@ -1206,6 +1318,8 @@ Rules:
 - never let a many-to-many planning join change the base summary counts
 - if planning context is attached, attach it after the core aggregation is complete
 - task-run links used for enrichment must already satisfy the write-side repo-match invariant below
+- the `planning_context` object is always present for supported tools
+- if no linked planning data exists for a bucket, `planning_context.projects`, `planning_context.features`, and `planning_context.tasks` are empty arrays
 - repo-safe enrichment requires:
   - workflow run repository matches `planning.tasks.repository_id`
 
@@ -1216,6 +1330,8 @@ This analytics upgrade also tightens the existing task/run link contract because
 Write-side invariant:
 
 - reject any link unless `ops.workflow_runs.repository_id = planning.tasks.repository_id`
+- the write-path enforcement must live in the actual `link_task_to_workflow_run` implementation path (`src/memory_knowledge/server.py` and/or `src/memory_knowledge/admin/planning.py`), not only in tests or migration cleanup notes
+- cross-repo link attempts must return an explicit `WorkflowResult` error from the MCP tool surface
 
 Read-side invariant:
 
@@ -1337,12 +1453,25 @@ This repo owns:
      - `ALTER TABLE ops.workflow_phase_states DROP COLUMN updated_utc`
      - `ALTER TABLE ops.workflow_phase_states DROP COLUMN created_utc`
      - `ALTER TABLE ops.workflow_phase_states ALTER COLUMN attempts SET DEFAULT 0`
+   - downgrade scope is schema/reference ownership only
+   - downgrade does not define rollback behavior for live server code; write-path validation behavior, repo-match enforcement, and MCP request-contract rules remain governed by the application code present in the checked-out repo revision
 2. analytics helper module
    - `src/memory_knowledge/admin/analytics.py`
+   - structure `analytics.py` around reusable fact-query helpers plus thin per-tool response mappers
+   - preferred layout:
+     - fact-query helpers for `run_fact`, `phase_fact`, `validator_fact`, `artifact_latest_fact`, `run_grade_fact`
+     - per-tool helpers for each of the 6 analytics responses
+     - one planning-enrichment helper used only after base aggregates are complete
+   - MCP tool handlers in `src/memory_knowledge/server.py` should stay thin:
+     - validate inputs
+     - call analytics helpers
+     - wrap results in `WorkflowResult`
+   - avoid placing primary analytics SQL directly in the MCP tool handlers
 3. persistence helpers
    - phase-state writes
    - validator-result writes
    - task/run link validation for repo-safe planning joins
+   - `get_workflow_run` validator-result readback so operational inspection stays aligned with the new write surface
 4. MCP write tools
    - `save_workflow_phase_state`
    - `save_workflow_validator_result`
@@ -1350,13 +1479,62 @@ This repo owns:
 5. MCP analytics tools
    - all six analytics tools
 6. tests
-   - extend `tests/test_workflow_runs.py` for `save_workflow_phase_state`, `save_workflow_validator_result`, and the deduped `list_workflow_runs_by_actor` response contract (persistence behavior, guard/error behavior, sparse update behavior, attempt contract, one-row-per-run semantics)
-   - create `tests/test_analytics.py` for all 6 analytics tools (aggregation behavior, coverage behavior, eligibility counts, repo-safety rules, grading determinism, entropy determinism, nested ordering, threshold normalization)
-   - extend planning-link tests to reject cross-repo task/run links and verify repo-safe enrichment inputs
+   - extend `tests/test_workflow_runs.py` for `save_workflow_phase_state`, `save_workflow_validator_result`, `get_workflow_run` validator-result readback, and the deduped `list_workflow_runs_by_actor` response contract (persistence behavior, guard/error behavior, sparse update behavior, attempt contract, one-row-per-run semantics)
+   - create `tests/test_analytics.py` for all 6 analytics tools
+   - preferred test organization in `tests/test_analytics.py`:
+     - one focused section/group per tool
+     - shared fixtures only for setup/common fake rows, not for hiding tool-specific assertions
+   - minimum per-tool test matrix:
+     - `get_agent_performance_summary`
+       - status-count aggregation
+       - `avg_duration_ms` denominator behavior
+       - actor `unknown` bucketing
+       - zero-match success behavior
+       - planning enrichment on/off behavior
+     - `get_phase_quality_summary`
+       - latest-row status bucketing
+       - `execution_count` as sum of persisted attempts
+       - `decision_counts` ordering and `unknown` bucketing
+       - coverage envelope semantics
+       - zero-match success behavior
+     - `get_validator_failure_summary`
+       - validator status counts
+       - `failure_reason_counts` ordering and `unknown` bucketing
+       - canonical validator-code behavior
+       - coverage envelope semantics
+       - zero-match success behavior
+     - `get_loop_pattern_summary`
+       - threshold normalization
+       - threshold-count aggregation
+       - `phase_retry_counts` grouping semantics
+       - latest-artifact iteration behavior
+       - planning enrichment on/off behavior
+       - zero-match success behavior
+     - `get_quality_grade_summary`
+       - score calculation from the v1 rubric
+       - grade distribution
+       - deterministic `latest_run_grade`
+       - component-average behavior
+       - coverage and eligibility semantics
+       - zero-match success behavior
+     - `list_entropy_sweep_targets`
+       - entropy-score calculation from the v1 rubric
+       - deterministic representative max-score run behavior
+       - `reason_codes` ordering
+       - final bucket ordering and `limit` behavior
+       - planning enrichment on/off behavior
+       - zero-match success behavior
+   - cross-tool analytics tests must also cover:
+     - repo-safe planning enrichment rules
+     - deterministic nested ordering for all nested collections
+     - historical coverage flags/basis fields
+     - `eligible_run_count` and `excluded_run_count` semantics
+   - extend `tests/test_planning_tools.py` to reject cross-repo task/run links and verify repo-safe enrichment inputs
 7. documentation updates to `docs/AGENT_INTEGRATION_SPEC.md`:
    - reconcile the doc to the actual MCP surface implemented in `src/memory_knowledge/server.py`, not to a stale 12->20 count delta
    - update the tool inventory, tool namespace table, tool detail sections, permissions matrix, and any count references so they match the live server surface after this upgrade
 8. deployment/setup prerequisite documentation
+   - update `docs/remote-rollout-runbook.md` so its expected migration list, smoke checks, and actor-run recovery notes match the post-analytics MCP surface and supported bootstrap path
 9. bootstrap reconciliation for analytics-ready startup
    - preferred fix: make `docker/init-pg.sql` schema-bootstrap-safe and compatible with Alembic ownership
    - acceptable alternative: explicit Alembic stamping/bootstrap path documented and validated
@@ -1384,6 +1562,8 @@ This plan requires explicit bootstrap reconciliation work between:
 - `docker/init-pg.sql`
 - `migrations/versions/004_workflow_tracking.py`
 - `migrations/versions/005_planning_schema.py`
+- `migrations/versions/006_task_project_scope.py`
+- `migrations/versions/007_task_single_repository.py`
 
 Known ownership drift:
 
@@ -1413,9 +1593,11 @@ This is a deployment/setup prerequisite, not core analytics business logic, but 
 - `src/memory_knowledge/server.py`
 - `tests/...` analytics-focused tests
 - `docs/AGENT_INTEGRATION_SPEC.md`
+- `docs/remote-rollout-runbook.md`
 - `docker/init-pg.sql`
 - `migrations/versions/004_workflow_tracking.py` if ownership drift is resolved in-repo
 - `migrations/versions/005_planning_schema.py` if ownership drift is resolved in-repo
+- `migrations/versions/006_task_project_scope.py` and `migrations/versions/007_task_single_repository.py` as verification references for the current planning repository-scope model
 
 ## Validation
 
@@ -1431,6 +1613,13 @@ This is a deployment/setup prerequisite, not core analytics business logic, but 
 6. Unit-test grading and entropy determinism from the v1 contract.
 7. Verify docs/tool inventory updates are consistent with the new MCP surface.
 8. Validate the chosen analytics-ready bootstrap/setup path, including the reconciliation or stamping strategy.
+
+Implementation-readiness validation detail:
+
+- validate that `src/memory_knowledge/server.py` MCP handlers remain thin wrappers over helpers in `src/memory_knowledge/admin/analytics.py`
+- validate that canonical fact SQL is not duplicated across multiple tool handlers or helper paths
+- validate that planning enrichment is applied post-aggregation and cannot change base counts
+- validate that tool-level tests assert the caller-visible contracts defined in this plan, not only happy-path row presence
 
 ## Completion Criteria
 
@@ -1463,3 +1652,130 @@ This rewritten plan resolves those classes structurally by:
 - separating repo-ready completion from producer adoption
 - defining per-tool row schemas and ordering
 - making planning enrichment post-aggregation only
+
+## Plan Verification Iteration 2
+
+Verifier loops on this task surfaced additional repo-grounded gaps:
+
+- bootstrap reconciliation text was still under-scoped to migrations `004` and `005` even though the current planning repository-scope model is finalized in `006` and `007`
+- the plan claimed existing operational inspection was sufficient without explicitly updating `get_workflow_run` to show the new validator-result telemetry
+- deployment/runbook documentation scope did not explicitly include `docs/remote-rollout-runbook.md`, which already documents the supported Alembic path and `list_workflow_runs_by_actor` smoke checks
+- planning-link test work was described generically instead of naming the actual current test file that owns that surface
+
+These fixes tighten the plan to the repo's real current state without expanding scope beyond the analytics upgrade.
+
+--- Plan Verification Iteration 2 ---
+Findings from verifier: 4
+FIX NOW: 4 (plan updated)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, plan updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 0 (no change)
+
+## Plan Verification Iteration 3
+
+Reviewer/critic re-check of the latest plan text found that the last verifier findings were already resolved in the current file:
+
+- `get_workflow_run` validator-result readback is now explicitly called out in the compatibility note and repo-owned delivery scope
+- deployment/setup prerequisites now reference the full migration chain through `007_task_single_repository`
+- repo-owned documentation scope now explicitly includes `docs/remote-rollout-runbook.md`
+- planning-link test scope now names `tests/test_planning_tools.py`
+
+No additional plan edits were required in this iteration.
+
+--- Plan Verification Iteration 3 ---
+Findings from verifier: 4
+FIX NOW: 0 (no change)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, plan updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 4 (already resolved in current plan text)
+
+## Plan Verification Iteration 4
+
+Targeted contract review found additional plan-level ambiguities that would force implementers or callers to guess:
+
+- `save_workflow_validator_result` optional sparse-update rules were still underspecified compared with `save_workflow_phase_state`
+- planning enrichment described post-aggregation behavior but not the exact join path
+- planning-context presence for supported tools needed an explicit empty-array contract when no linked planning rows exist
+- `get_loop_pattern_summary.phase_retry_counts` needed explicit bucket aggregation semantics
+- `avg_duration_ms` needed an explicit denominator rule
+- zero-match behavior needed to be stated as a success contract rather than left implicit in examples
+- `get_quality_grade_summary.latest_run_grade` needed a deterministic "latest" rule
+
+These fixes tighten caller-visible contracts without expanding implementation scope.
+
+--- Plan Verification Iteration 4 ---
+Findings from verifier: 7
+FIX NOW: 7 (plan updated)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, plan updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 0 (no change)
+
+## Plan Verification Iteration 5
+
+Adversarial re-check of the hardened plan surfaced narrower second-order issues:
+
+- `list_entropy_sweep_targets` still needed a deterministic rule for choosing the representative max-score run when multiple runs in a bucket tie on entropy score
+- the repo-match tightening for `link_task_to_workflow_run` needed to say explicitly that enforcement belongs in the real write path and must surface a caller-visible MCP error, not just appear in tests or cleanup notes
+
+These fixes keep the plan caller-deterministic and implementation-grounded without expanding scope.
+
+--- Plan Verification Iteration 5 ---
+Findings from verifier: 2
+FIX NOW: 2 (plan updated)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, plan updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 0 (no change)
+
+## Plan Verification Iteration 6
+
+Verifier/critic reconvergence on the Iteration 5 text found one remaining actionable contract gap:
+
+- `save_workflow_validator_result` required a preserve-vs-clear distinction for nullable optional fields, but the plan still relied on explicit `null` even though the repo's MCP tool boundary uses optional parameters that collapse omission and `null` to the same runtime value
+
+The plan now fixes that by using explicit clear flags for the validator fields that may be cleared in v1, matching the repo's existing pattern of using explicit clear controls when omission and clearing must be distinguished.
+
+--- Plan Verification Iteration 6 ---
+Findings from verifier: 2
+FIX NOW: 1 (plan updated)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, plan updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 1 (no change)
+
+## Plan Verification Iteration 7
+
+Fresh verifier/critic reconvergence on the Iteration 6 text found no remaining actionable issues.
+
+The verifier returned `NO_FINDINGS`, and the separate critic independently confirmed `NO_ACTIONABLE_FINDINGS` against the live plan and repo context.
+
+--- Plan Verification Iteration 7 ---
+Findings from verifier: 0
+FIX NOW: 0 (no change)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, plan updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 0 (no change)
+
+## Plan Verification Iteration 8
+
+Fresh verifier/critic reconvergence under the updated implementer-focused skill found no remaining actionable issues in the current live plan.
+
+The verifier returned `NO_FINDINGS`, and the separate critic independently confirmed `NO_ACTIONABLE_FINDINGS` against the live plan and repo context.
+
+--- Plan Verification Iteration 8 ---
+Findings from verifier: 0
+FIX NOW: 0 (no change)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, plan updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 0 (no change)
+
+## Plan Verification Iteration 9
+
+Fresh verifier/critic reconvergence on the post-polish plan additions found no remaining actionable issues.
+
+The verifier returned `NO_FINDINGS`, and the separate critic independently confirmed `NO_ACTIONABLE_FINDINGS` against the live plan and repo context, including the new guidance around `analytics.py` structure, fact-query organization, and the expanded test matrix.
+
+--- Plan Verification Iteration 9 ---
+Findings from verifier: 0
+FIX NOW: 0 (no change)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, plan updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 0 (no change)

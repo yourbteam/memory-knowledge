@@ -214,6 +214,22 @@ async def test_link_task_to_workflow_run_tool(monkeypatch, planning_env):
 
 
 @pytest.mark.asyncio
+async def test_link_task_to_workflow_run_tool_surfaces_repo_mismatch(monkeypatch, planning_env):
+    async def fake_resolve_task_id(pool, task_key):
+        return 40
+
+    async def fake_link(pool, task_id, workflow_run_id, relation_type):
+        raise ValueError("Task repository does not match workflow run repository")
+
+    monkeypatch.setattr(server._planning, "resolve_task_id", fake_resolve_task_id)
+    monkeypatch.setattr(server._planning, "link_task_to_workflow_run", fake_link)
+    result = await server.link_task_to_workflow_run(task_key="task-key", workflow_run_id="run-uuid")
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "does not match" in payload["error"]
+
+
+@pytest.mark.asyncio
 async def test_link_project_external_ref_tool(monkeypatch, planning_env):
     async def fake_resolve_project_id(pool, project_key):
         assert project_key == "proj-key"

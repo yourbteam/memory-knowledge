@@ -1,6 +1,10 @@
 -- ============================================================================
 -- Memory Knowledge — PostgreSQL Init Script
--- Creates all schemas, tables, indexes, and seed data for Phase 1
+-- Legacy bootstrap snapshot for the pre-planning / pre-analytics schema line.
+-- This file is NOT a complete analytics-ready schema bootstrap.
+-- Supported fresh-install path for the current server is: alembic upgrade head
+-- Do not treat this file alone as sufficient for workflow telemetry, planning,
+-- reference-value seeding, or analytics features added after migration 004.
 -- ============================================================================
 
 -- Schemas

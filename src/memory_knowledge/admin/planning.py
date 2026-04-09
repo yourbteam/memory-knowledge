@@ -459,12 +459,20 @@ async def link_task_to_workflow_run(
     workflow_run_uuid: str,
     relation_type: str,
 ) -> dict[str, Any]:
+    task_row = await pool.fetchrow(
+        "SELECT repository_id FROM planning.tasks WHERE id = $1",
+        task_id,
+    )
+    if task_row is None:
+        raise ValueError(f"Task not found: {task_id}")
     run_row = await pool.fetchrow(
-        "SELECT id FROM ops.workflow_runs WHERE run_id = $1",
+        "SELECT id, repository_id FROM ops.workflow_runs WHERE run_id = $1",
         uuid.UUID(workflow_run_uuid),
     )
     if run_row is None:
         raise ValueError(f"Workflow run not found: {workflow_run_uuid}")
+    if run_row["repository_id"] != task_row["repository_id"]:
+        raise ValueError("Task repository does not match workflow run repository")
     await pool.execute(
         """
         INSERT INTO planning.task_workflow_runs (task_id, workflow_run_id, relation_type)
