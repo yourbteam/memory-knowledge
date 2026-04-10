@@ -24,6 +24,7 @@ from memory_knowledge.observability.metrics import track_tool_metrics
 from memory_knowledge.guards import check_remote_write_guard
 from memory_knowledge.workflows.base import WorkflowResult
 from memory_knowledge.admin import analytics as _analytics
+from memory_knowledge.admin import findings as _findings
 from memory_knowledge.admin import planning as _planning
 from memory_knowledge.observability.run_context import (
     bind_run_context,
@@ -47,7 +48,14 @@ logger = structlog.get_logger()
 
 WORKFLOW_RUN_STATUS_TYPE = "WORKFLOW_RUN_STATUS"
 WORKFLOW_VALIDATOR_STATUS_TYPE = "WORKFLOW_VALIDATOR_STATUS"
+WORKFLOW_FINDING_KIND_TYPE = "WORKFLOW_FINDING_KIND"
+WORKFLOW_FINDING_DECISION_BUCKET_TYPE = "WORKFLOW_FINDING_DECISION_BUCKET"
+WORKFLOW_FINDING_SUPPRESSION_SCOPE_TYPE = "WORKFLOW_FINDING_SUPPRESSION_SCOPE"
+WORKFLOW_FINDING_STATUS_TYPE = "WORKFLOW_FINDING_STATUS"
 DEFAULT_WORKFLOW_RUN_STATUS = "RUN_PENDING"
+DEFAULT_WORKFLOW_FINDING_KIND = "UNKNOWN"
+DEFAULT_WORKFLOW_FINDING_STATUS = "OPEN"
+DEFAULT_WORKFLOW_FINDING_SUPPRESSION_SCOPE = "RUN_LOCAL"
 VALIDATOR_CODE_SET = {
     "OUTPUT_CONTRACT",
     "EVIDENCE_GROUNDING",
@@ -274,7 +282,7 @@ async def _run_ingestion_background(
     settings = get_settings()
     await execute_job(
         manifest_pool=pool,
-        job_id=job_id,
+        manifest_job_id=job_id,
         job_fn=_ingestion.run,
         worker_settings=settings,
         # These kwargs are forwarded to _ingestion.run()
@@ -282,6 +290,7 @@ async def _run_ingestion_background(
         commit_sha=commit_sha,
         branch_name=branch_name,
         run_id=run_id,
+        job_id=job_id,
         pool=pool,
         qdrant_client=get_qdrant_client(),
         neo4j_driver=get_neo4j_driver(),
@@ -366,11 +375,23 @@ async def run_repo_ingestion_workflow(
         return guard.model_dump_json()
     try:
         from memory_knowledge.jobs.manifest_writer import create_job
+        from memory_knowledge.jobs.manifest_reader import get_latest_resume_checkpoint
 
         pool = get_pg_pool()
+        resume_checkpoint = await get_latest_resume_checkpoint(
+            pool,
+            repository_key=repository_key,
+            commit_sha=commit_sha,
+            branch_name=branch_name,
+            tool_name="run_repo_ingestion_workflow",
+        )
         job_id = await create_job(
             pool, run_id, "ingestion", "run_repo_ingestion_workflow",
-            repository_key, commit_sha, branch_name, str(correlation_id) if correlation_id else None,
+            repository_key,
+            commit_sha,
+            branch_name,
+            str(correlation_id) if correlation_id else None,
+            job_params={"checkpoint": resume_checkpoint} if resume_checkpoint else None,
         )
         task = asyncio.create_task(
             _run_ingestion_background(job_id, run_id, repository_key, commit_sha, branch_name)
@@ -1147,6 +1168,411 @@ async def save_workflow_validator_result(
 
 
 @mcp.tool()
+@track_tool_metrics("save_workflow_finding")
+async def save_workflow_finding(
+    repository_key: str,
+    run_id: str,
+    workflow_name: str,
+    phase_id: str,
+    agent_name: str,
+    attempt_number: int,
+    finding_fingerprint: str,
+    finding_title: str,
+    finding_message: str,
+    artifact_name: str | None = None,
+    artifact_iteration: int | None = None,
+    artifact_hash: str | None = None,
+    location: str | None = None,
+    evidence_text: str | None = None,
+    finding_kind_code: str | None = None,
+    severity: str | None = None,
+    source_kind: str | None = None,
+    status_code: str | None = None,
+    actor_email: str | None = None,
+    context_json: dict | str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "save_workflow_finding")
+    guard = check_remote_write_guard(get_settings(), "save_workflow_finding")
+    if guard is not None:
+        guard.run_id = str(rid)
+        return guard.model_dump_json()
+    try:
+        if attempt_number < 1:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding",
+                status="error",
+                error="attempt_number must be >= 1",
+            ).model_dump_json()
+        if not finding_fingerprint or not finding_fingerprint.strip():
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding",
+                status="error",
+                error="finding_fingerprint must be non-empty",
+            ).model_dump_json()
+        pool = get_pg_pool()
+        repo_row = await pool.fetchrow(
+            "SELECT id FROM catalog.repositories WHERE repository_key = $1",
+            repository_key,
+        )
+        if repo_row is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding",
+                status="error",
+                error=f"Repository '{repository_key}' not found",
+            ).model_dump_json()
+        run_row = await pool.fetchrow(
+            """
+            SELECT wr.id, wr.repository_id, wr.workflow_name
+            FROM ops.workflow_runs wr
+            WHERE wr.run_id = $1
+            """,
+            uuid.UUID(run_id),
+        )
+        if run_row is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding",
+                status="error",
+                error=f"Workflow run '{run_id}' not found",
+            ).model_dump_json()
+        if run_row["repository_id"] != repo_row["id"]:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding",
+                status="error",
+                error="repository_key does not match the workflow run repository",
+            ).model_dump_json()
+        if workflow_name != run_row["workflow_name"]:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding",
+                status="error",
+                error="workflow_name does not match the workflow run",
+            ).model_dump_json()
+        finding_kind = await _require_reference_value(
+            pool,
+            WORKFLOW_FINDING_KIND_TYPE,
+            finding_kind_code or DEFAULT_WORKFLOW_FINDING_KIND,
+            "save_workflow_finding",
+            rid,
+        )
+        if isinstance(finding_kind, str):
+            return finding_kind
+        status_row = await _require_reference_value(
+            pool,
+            WORKFLOW_FINDING_STATUS_TYPE,
+            status_code or DEFAULT_WORKFLOW_FINDING_STATUS,
+            "save_workflow_finding",
+            rid,
+        )
+        if isinstance(status_row, str):
+            return status_row
+        if isinstance(context_json, str):
+            normalized_context = context_json
+        elif context_json is not None:
+            normalized_context = json.dumps(context_json)
+        else:
+            normalized_context = None
+        row = await _findings.save_workflow_finding(
+            pool,
+            repository_id=repo_row["id"],
+            workflow_run_id=run_row["id"],
+            workflow_name=workflow_name,
+            phase_id=phase_id,
+            agent_name=agent_name,
+            attempt_number=attempt_number,
+            artifact_name=artifact_name,
+            artifact_iteration=artifact_iteration,
+            artifact_hash=artifact_hash,
+            finding_fingerprint=finding_fingerprint.strip(),
+            finding_title=finding_title,
+            finding_message=finding_message,
+            location=location,
+            evidence_text=evidence_text,
+            finding_kind_id=finding_kind["id"],
+            severity=severity,
+            source_kind=source_kind,
+            status_id=status_row["id"],
+            actor_email=actor_email,
+            context_json=normalized_context,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="save_workflow_finding",
+            status="success",
+            data={
+                "finding_id": row["id"],
+                "run_id": run_id,
+                "phase_id": row["phase_id"],
+                "attempt_number": row["attempt_number"],
+                "finding_fingerprint": row["finding_fingerprint"],
+                "saved": True,
+            },
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("save_workflow_finding_decision")
+async def save_workflow_finding_decision(
+    repository_key: str,
+    run_id: str,
+    workflow_name: str,
+    critic_phase_id: str,
+    critic_agent_name: str,
+    attempt_number: int,
+    finding_fingerprint: str,
+    decision_bucket_code: str,
+    actionable: bool,
+    suppress_on_rerun: bool,
+    reason_text: str | None = None,
+    evidence_text: str | None = None,
+    suppression_scope_code: str | None = None,
+    finding_phase_id: str | None = None,
+    artifact_name: str | None = None,
+    artifact_iteration: int | None = None,
+    artifact_hash: str | None = None,
+    actor_email: str | None = None,
+    context_json: dict | str | None = None,
+    created_utc: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "save_workflow_finding_decision")
+    guard = check_remote_write_guard(get_settings(), "save_workflow_finding_decision")
+    if guard is not None:
+        guard.run_id = str(rid)
+        return guard.model_dump_json()
+    try:
+        if attempt_number < 1:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding_decision",
+                status="error",
+                error="attempt_number must be >= 1",
+            ).model_dump_json()
+        if not finding_fingerprint or not finding_fingerprint.strip():
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding_decision",
+                status="error",
+                error="finding_fingerprint must be non-empty",
+            ).model_dump_json()
+        pool = get_pg_pool()
+        repo_row = await pool.fetchrow(
+            "SELECT id FROM catalog.repositories WHERE repository_key = $1",
+            repository_key,
+        )
+        if repo_row is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding_decision",
+                status="error",
+                error=f"Repository '{repository_key}' not found",
+            ).model_dump_json()
+        run_row = await pool.fetchrow(
+            """
+            SELECT wr.id, wr.repository_id, wr.workflow_name
+            FROM ops.workflow_runs wr
+            WHERE wr.run_id = $1
+            """,
+            uuid.UUID(run_id),
+        )
+        if run_row is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding_decision",
+                status="error",
+                error=f"Workflow run '{run_id}' not found",
+            ).model_dump_json()
+        if run_row["repository_id"] != repo_row["id"]:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding_decision",
+                status="error",
+                error="repository_key does not match the workflow run repository",
+            ).model_dump_json()
+        if workflow_name != run_row["workflow_name"]:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding_decision",
+                status="error",
+                error="workflow_name does not match the workflow run",
+            ).model_dump_json()
+        decision_bucket = await _require_reference_value(
+            pool,
+            WORKFLOW_FINDING_DECISION_BUCKET_TYPE,
+            decision_bucket_code,
+            "save_workflow_finding_decision",
+            rid,
+        )
+        if isinstance(decision_bucket, str):
+            return decision_bucket
+        suppression_scope = await _require_reference_value(
+            pool,
+            WORKFLOW_FINDING_SUPPRESSION_SCOPE_TYPE,
+            suppression_scope_code or DEFAULT_WORKFLOW_FINDING_SUPPRESSION_SCOPE,
+            "save_workflow_finding_decision",
+            rid,
+        )
+        if isinstance(suppression_scope, str):
+            return suppression_scope
+        finding_id = await _findings.resolve_workflow_finding_id(
+            pool,
+            workflow_run_id=run_row["id"],
+            attempt_number=attempt_number,
+            finding_fingerprint=finding_fingerprint.strip(),
+            finding_phase_id=finding_phase_id,
+        )
+        if finding_id is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding_decision",
+                status="error",
+                error="No matching workflow finding found for this decision",
+            ).model_dump_json()
+        if finding_id == "ambiguous":
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding_decision",
+                status="error",
+                error="Multiple findings match this run/attempt/fingerprint; provide finding_phase_id",
+            ).model_dump_json()
+        if isinstance(context_json, str):
+            normalized_context = context_json
+        elif context_json is not None:
+            normalized_context = json.dumps(context_json)
+        else:
+            normalized_context = None
+        row = await _findings.save_workflow_finding_decision(
+            pool,
+            repository_id=repo_row["id"],
+            workflow_run_id=run_row["id"],
+            workflow_finding_id=finding_id,
+            workflow_name=workflow_name,
+            critic_phase_id=critic_phase_id,
+            critic_agent_name=critic_agent_name,
+            attempt_number=attempt_number,
+            finding_fingerprint=finding_fingerprint.strip(),
+            decision_bucket_id=decision_bucket["id"],
+            actionable=actionable,
+            reason_text=reason_text,
+            evidence_text=evidence_text,
+            suppression_scope_id=suppression_scope["id"],
+            suppress_on_rerun=suppress_on_rerun,
+            artifact_name=artifact_name,
+            artifact_iteration=artifact_iteration,
+            artifact_hash=artifact_hash,
+            actor_email=actor_email,
+            context_json=normalized_context,
+            created_utc=created_utc,
+        )
+        if row is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding_decision",
+                status="error",
+                error="Duplicate workflow finding decision",
+            ).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="save_workflow_finding_decision",
+            status="success",
+            data={
+                "decision_id": row["id"],
+                "workflow_finding_id": row["workflow_finding_id"],
+                "saved": True,
+            },
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_workflow_finding_suppressions")
+async def list_workflow_finding_suppressions(
+    repository_key: str,
+    run_id: str,
+    workflow_name: str,
+    phase_id: str,
+    artifact_name: str | None = None,
+    artifact_iteration: int | None = None,
+    artifact_hash: str | None = None,
+    limit: int = 50,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "list_workflow_finding_suppressions")
+    try:
+        pool = get_pg_pool()
+        repo_row = await pool.fetchrow(
+            "SELECT id FROM catalog.repositories WHERE repository_key = $1",
+            repository_key,
+        )
+        if repo_row is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="list_workflow_finding_suppressions",
+                status="error",
+                error=f"Repository '{repository_key}' not found",
+            ).model_dump_json()
+        run_row = await pool.fetchrow(
+            """
+            SELECT wr.id, wr.repository_id, wr.workflow_name
+            FROM ops.workflow_runs wr
+            WHERE wr.run_id = $1
+            """,
+            uuid.UUID(run_id),
+        )
+        if run_row is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="list_workflow_finding_suppressions",
+                status="error",
+                error=f"Workflow run '{run_id}' not found",
+            ).model_dump_json()
+        if run_row["repository_id"] != repo_row["id"]:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="list_workflow_finding_suppressions",
+                status="error",
+                error="repository_key does not match the workflow run repository",
+            ).model_dump_json()
+        if workflow_name != run_row["workflow_name"]:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="list_workflow_finding_suppressions",
+                status="error",
+                error="workflow_name does not match the workflow run",
+            ).model_dump_json()
+        data = await _findings.list_workflow_finding_suppressions(
+            pool,
+            repository_id=repo_row["id"],
+            workflow_run_id=run_row["id"],
+            workflow_name=workflow_name,
+            phase_id=phase_id,
+            artifact_name=artifact_name,
+            artifact_iteration=artifact_iteration,
+            artifact_hash=artifact_hash,
+            limit=limit,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="list_workflow_finding_suppressions",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("get_workflow_run")
 async def get_workflow_run(
     run_id: str, correlation_id: str | None = None
@@ -1807,6 +2233,78 @@ async def list_entropy_sweep_targets(
             tool_name="list_entropy_sweep_targets",
             status="error",
             error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_finding_pattern_summary")
+async def get_finding_pattern_summary(
+    repository_key: str,
+    workflow_name: str | None = None,
+    phase_id: str | None = None,
+    agent_name: str | None = None,
+    finding_kind_code: str | None = None,
+    since_utc: str | None = None,
+    until_utc: str | None = None,
+    limit: int = 50,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_finding_pattern_summary")
+    try:
+        data = await _findings.get_finding_pattern_summary(
+            get_pg_pool(),
+            repository_key=repository_key,
+            workflow_name=workflow_name,
+            phase_id=phase_id,
+            agent_name=agent_name,
+            finding_kind_code=finding_kind_code,
+            since_utc=since_utc,
+            until_utc=until_utc,
+            limit=limit,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_finding_pattern_summary",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_agent_failure_mode_summary")
+async def get_agent_failure_mode_summary(
+    repository_key: str,
+    workflow_name: str | None = None,
+    phase_id: str | None = None,
+    agent_name: str | None = None,
+    since_utc: str | None = None,
+    until_utc: str | None = None,
+    limit: int = 50,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_agent_failure_mode_summary")
+    try:
+        data = await _findings.get_agent_failure_mode_summary(
+            get_pg_pool(),
+            repository_key=repository_key,
+            workflow_name=workflow_name,
+            phase_id=phase_id,
+            agent_name=agent_name,
+            since_utc=since_utc,
+            until_utc=until_utc,
+            limit=limit,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_agent_failure_mode_summary",
+            status="success",
+            data=data,
         ).model_dump_json()
     finally:
         clear_run_context()
@@ -2869,6 +3367,44 @@ async def import_repo_memory_tool(
             tool_name="import_repo_memory",
             status="success",
             data=result,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("purge_repository")
+async def purge_repository(
+    repository_key: str, correlation_id: str | None = None
+) -> str:
+    """Purge all repo-owned data across PostgreSQL, Qdrant, and Neo4j."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "purge_repository")
+    guard = check_remote_write_guard(get_settings(), "purge_repository", is_destructive=True)
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        from memory_knowledge.admin.purge import purge_repository as _purge_repository
+
+        result = await _purge_repository(
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+            neo4j_driver=get_neo4j_driver(),
+            repository_key=repository_key,
+        )
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="purge_repository",
+            status="success",
+            data=result,
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="purge_repository",
+            status="error",
+            error=str(exc),
         ).model_dump_json()
     finally:
         clear_run_context()

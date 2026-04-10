@@ -28,10 +28,15 @@ It now has four integration surfaces that matter to an external LLM:
    - workflow runs
    - workflow phase states
    - workflow validator results
+   - workflow findings
+   - workflow critic decisions
+   - suppression lookup for later verifier rounds
    - task-to-run linkage
    - actor-email run recovery
 4. **Analytics**
    - aggregated workflow quality summaries
+   - repeated finding-pattern summaries
+   - agent failure-mode summaries
    - phase quality summaries
    - validator failure summaries
    - loop pattern summaries
@@ -71,6 +76,12 @@ Do **not** reimplement these data models in the external agent system if you can
   - phase
   - validator code
   - attempt number
+- A run can have multiple **findings**, keyed by:
+  - run
+  - phase
+  - attempt
+  - finding fingerprint
+- A finding can have multiple append-only **critic decisions** over time.
 - A task can be linked to one or more workflow runs.
 
 ### 2.3 Analytics hierarchy

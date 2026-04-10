@@ -1,8 +1,8 @@
 # Agent Integration Specification
 ## Memory-Knowledge MCP Server + mcp-agents-workflow Framework
 
-**Version:** 1.2.0
-**Date:** 2026-04-09
+**Version:** 1.3.0
+**Date:** 2026-04-10
 **Status:** Integration Reference
 **Target Project:** mcp-agents-workflow
 
@@ -12,7 +12,7 @@
 
 This specification defines how to integrate the **memory-knowledge MCP server** (mechanical plane — deterministic code intelligence operations) with the **mcp-agents-workflow framework** (judgment plane — multi-agent LLM orchestration).
 
-The memory-knowledge server currently exposes 56 MCP tools. The mcp-agents-workflow integration uses a focused subset of those tools for retrieval, orchestration, review loops, workflow telemetry, and analytics, but this spec now treats the live server surface as broader than the original 12-tool subset.
+The memory-knowledge server currently exposes 61 MCP tools. The mcp-agents-workflow integration uses a focused subset of those tools for retrieval, orchestration, review loops, workflow telemetry, findings/critic persistence, and analytics, but this spec now treats the live server surface as broader than the original 12-tool subset.
 
 **Key Principle:** Python handles facts (the MCP server). LLMs handle judgment (the agent personas). Agents invoke workflow-level capabilities, never low-level scripts.
 
@@ -76,14 +76,14 @@ The live server categories after the analytics upgrade are:
 | Learned-memory lifecycle | 2 | `run_learned_memory_proposal_workflow`, `run_learned_memory_commit_workflow` |
 | Ingestion and repair | 5 | `run_repo_ingestion_workflow`, `run_integrity_audit_workflow`, `run_repair_rebuild_workflow`, `rebuild_revision_workflow`, `run_embedding_backfill` |
 | Repository administration | 2 | `list_repositories`, `register_repository` |
-| Workflow tracking writes | 4 | `save_workflow_run`, `save_workflow_artifact`, `save_workflow_phase_state`, `save_workflow_validator_result` |
-| Workflow tracking reads | 5 | `get_workflow_run`, `get_workflow_artifact`, `list_workflow_runs`, `list_workflow_runs_by_actor`, `list_reference_values` |
-| Analytics | 6 | `get_agent_performance_summary`, `get_phase_quality_summary`, `get_validator_failure_summary`, `get_loop_pattern_summary`, `get_quality_grade_summary`, `list_entropy_sweep_targets` |
+| Workflow tracking writes | 6 | `save_workflow_run`, `save_workflow_artifact`, `save_workflow_phase_state`, `save_workflow_validator_result`, `save_workflow_finding`, `save_workflow_finding_decision` |
+| Workflow tracking reads | 6 | `get_workflow_run`, `get_workflow_artifact`, `list_workflow_runs`, `list_workflow_runs_by_actor`, `list_reference_values`, `list_workflow_finding_suppressions` |
+| Analytics | 8 | `get_agent_performance_summary`, `get_phase_quality_summary`, `get_validator_failure_summary`, `get_loop_pattern_summary`, `get_quality_grade_summary`, `list_entropy_sweep_targets`, `get_finding_pattern_summary`, `get_agent_failure_mode_summary` |
 | Planning | 18 | `create_project`, `link_project_external_ref`, `list_projects`, `add_repository_to_project`, `list_project_repositories`, `remove_repository_from_project`, `create_feature`, `link_feature_external_ref`, `list_features`, `add_repository_to_feature`, `list_feature_repositories`, `remove_repository_from_feature`, `create_task`, `link_task_external_ref`, `list_tasks`, `link_repository_external_ref`, `link_task_to_workflow_run`, `get_backlog` |
 | Working memory and feedback | 5 | `create_working_session`, `record_working_observation`, `get_working_session_context`, `end_working_session`, `submit_route_feedback` |
 | Export and import | 2 | `export_repo_memory_tool`, `import_repo_memory_tool` |
 
-The full live MCP surface therefore totals 56 tools.
+The full live MCP surface therefore totals 61 tools.
 
 ---
 
