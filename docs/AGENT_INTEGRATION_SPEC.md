@@ -75,7 +75,7 @@ The live server categories after the analytics upgrade are:
 | Retrieval and reasoning | 7 | `run_retrieval_workflow`, `run_context_assembly_workflow`, `run_impact_analysis_workflow`, `run_blueprint_refinement_workflow`, `run_route_intelligence_workflow`, `check_job_status`, `get_memory_stats` |
 | Learned-memory lifecycle | 2 | `run_learned_memory_proposal_workflow`, `run_learned_memory_commit_workflow` |
 | Ingestion and repair | 5 | `run_repo_ingestion_workflow`, `run_integrity_audit_workflow`, `run_repair_rebuild_workflow`, `rebuild_revision_workflow`, `run_embedding_backfill` |
-| Repository administration | 2 | `list_repositories`, `register_repository` |
+| Repository administration | 3 | `list_repositories`, `register_repository`, `purge_repository` |
 | Workflow tracking writes | 6 | `save_workflow_run`, `save_workflow_artifact`, `save_workflow_phase_state`, `save_workflow_validator_result`, `save_workflow_finding`, `save_workflow_finding_decision` |
 | Workflow tracking reads | 6 | `get_workflow_run`, `get_workflow_artifact`, `list_workflow_runs`, `list_workflow_runs_by_actor`, `list_reference_values`, `list_workflow_finding_suppressions` |
 | Analytics | 8 | `get_agent_performance_summary`, `get_phase_quality_summary`, `get_validator_failure_summary`, `get_loop_pattern_summary`, `get_quality_grade_summary`, `list_entropy_sweep_targets`, `get_finding_pattern_summary`, `get_agent_failure_mode_summary` |
@@ -83,7 +83,7 @@ The live server categories after the analytics upgrade are:
 | Working memory and feedback | 5 | `create_working_session`, `record_working_observation`, `get_working_session_context`, `end_working_session`, `submit_route_feedback` |
 | Export and import | 2 | `export_repo_memory_tool`, `import_repo_memory_tool` |
 
-The full live MCP surface therefore totals 61 tools.
+The full live MCP surface therefore totals 62 tools.
 
 ---
 
