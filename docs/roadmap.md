@@ -3,43 +3,54 @@
 ## In Progress
 
 ### Analytics Tools Upgrade
-**Status:** Core implementation in place; docs/bootstrap reconciliation in progress.
+**Status:** Implemented and shipped.
 **Plan:** `Tasks/analytics-tools/plan.md`
-**Scope:**
+**Delivered:**
 - 2 new MCP write tools (`save_workflow_phase_state`, `save_workflow_validator_result`)
 - 6 new MCP analytics query tools (agent performance, phase quality, validator failures, loop patterns, quality grades, entropy sweep)
 - Migration 008: new table, reference values, schema fixes, indexes
-- Test coverage and AGENT_INTEGRATION_SPEC reconciliation
+- Test coverage for workflow/planning/analytics contracts
+- `get_workflow_run` validator-result readback
+- AGENT_INTEGRATION_SPEC reconciliation for the analytics/tooling surface
 - Bootstrap-path clarification for analytics-ready startup
+
+### Workflow Findings + LLM Integration
+**Status:** Implemented and in active rollout hardening.
+**Plan:** `Tasks/memory-knowledge-prerequisites/plan.md`
+**Scope:**
+- Migration 009 workflow findings persistence
+- findings administration/query layer
+- LLM integration guide and workflow findings operator docs
+- server integration for findings and related ingestion/runtime support
+- expanded ingestion/runtime tests and auth/clone support work that landed with this slice
 
 ---
 
 ## Planned
 
-### Ingestion Checkpoint/Resume
-**Problem:** Ingestion restarts from step 1 on every run. Only the summarization step has skip logic for existing data. A 2-hour ingestion that fails at 90% in the summary phase re-does all file scanning, chunk registration, and edge resolution before reaching summaries again.
-**Goal:** True checkpoint-based resume using the existing `job_manifests.checkpoint_data` column. Each completed phase writes a checkpoint; on retry, the workflow reads the checkpoint and jumps to the failed phase.
-**Depends on:** Nothing — infrastructure (`checkpoint_data` column) already exists but is unused during execution.
-**Discovered:** 2026-04-09 — FCSAPI ingestion failed twice mid-summarization, each re-run wasted ~30 min re-scanning already-processed files.
+### Live Remote Rollout Validation
+**Problem:** The analytics upgrade and newer findings/runtime changes are implemented, but final confidence still depends on executing the remote rollout runbook against the real office environment and verifying health, migrations, and MCP smoke checks end-to-end.
+**Goal:** Run the remote deployment and validation sequence using the supported `alembic upgrade head` path and capture a rollout report with migration, health, and smoke-test results.
+**Depends on:** Office network access and real remote credentials.
 
 ---
 
-### Remote Ingestion Auth
-**Problem:** The remote MCP server cannot clone private GitHub repos — `git clone` fails with `could not read Password`. The `origin_url` is set but no credentials are available on the remote host. Current workaround is running ingestion via the local MCP server which has filesystem access to the cloned repos.
-**Goal:** Either (a) deploy key / PAT-based auth for the remote server's git operations, or (b) formalize the local-ingest-then-sync pattern as the supported workflow.
-**Discovered:** 2026-04-09 — FCSAPI remote ingestion failed with git auth error; local server used as workaround.
+### External Workflow Producer Adoption
+**Problem:** The canonical workflow telemetry write surfaces now exist in this repo, but the external workflow producer still needs to adopt them before phase and validator analytics become populated in real usage.
+**Goal:** Update the external orchestrator to call `save_workflow_phase_state` and `save_workflow_validator_result` during execution and validator passes.
+**Depends on:** An up-to-date external producer repo and separate implementation work outside this repository.
 
 ---
 
 ## Future
 
 ### AGENT_INTEGRATION_SPEC Full Reconciliation
-**Problem:** The spec documents 12 MCP tools but the server has 49. The analytics upgrade adds 8 more. The spec needs a full reconciliation pass, not just incremental additions.
-**Depends on:** Analytics tools upgrade (adds the last batch of tools before reconciliation makes sense).
+**Problem:** The spec has already been updated past the original 12-tool narrative, but it is still a workflow-integration document rather than a full one-to-one reference for every server tool and newer findings/runtime surface.
+**Depends on:** Stabilizing the post-migration-009 server surface before doing a complete reference-style reconciliation.
 
 ---
 
 ### init-pg.sql Deprecation or Reconciliation
-**Problem:** `docker/init-pg.sql` is frozen at migration-004 level. Missing `core` schema, `planning` schema, post-004 columns, and all reference seed data. It is not a complete analytics-ready bootstrap source.
-**Current direction:** Keep `alembic upgrade head` as the supported path and treat raw `init-pg.sql` bootstrap as legacy until a full reconciliation exists.
-**Depends on:** Analytics upgrade docs/bootstrap cleanup.
+**Problem:** `docker/init-pg.sql` remains a legacy bootstrap snapshot and still does not reflect the modern planning/reference/workflow/findings schema line.
+**Current direction:** Keep `alembic upgrade head` as the supported path and treat raw `init-pg.sql` bootstrap as legacy until a future full reconciliation or removal decision.
+**Depends on:** Separate bootstrap ownership work, not the completed analytics docs cleanup.
