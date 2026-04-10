@@ -741,7 +741,7 @@ capabilities:
 **Skills:** `critic-categorization`, `prioritization`
 
 **Responsibilities:**
-1. Bucket findings into: FIX NOW, FIX LATER, ACKNOWLEDGE, DISMISS
+1. Bucket findings into: FIX NOW, FIX NOW PROMOTED, VALID, ACKNOWLEDGE OK, DISMISS, FILTERED
 2. Assess impact of each finding
 3. Reduce noise
 4. Prevent overcorrection

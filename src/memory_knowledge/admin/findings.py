@@ -266,7 +266,6 @@ async def list_workflow_finding_suppressions(
           AND wf.workflow_name = $3
           AND wf.phase_id = $4
           AND ld.suppress_on_rerun = TRUE
-          AND ld.decision_bucket IN ('ACKNOWLEDGE_OK', 'DISMISS', 'FILTERED')
         ORDER BY ld.created_utc DESC NULLS LAST, wf.finding_fingerprint ASC
         LIMIT $8
         """,

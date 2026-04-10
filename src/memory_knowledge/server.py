@@ -1234,13 +1234,22 @@ async def save_workflow_finding(
                 status="error",
                 error=f"Repository '{repository_key}' not found",
             ).model_dump_json()
+        try:
+            run_uuid = uuid.UUID(run_id)
+        except ValueError:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding",
+                status="error",
+                error=f"Invalid run_id: {run_id}",
+            ).model_dump_json()
         run_row = await pool.fetchrow(
             """
             SELECT wr.id, wr.repository_id, wr.workflow_name
             FROM ops.workflow_runs wr
             WHERE wr.run_id = $1
             """,
-            uuid.UUID(run_id),
+            run_uuid,
         )
         if run_row is None:
             return WorkflowResult(
@@ -1385,13 +1394,22 @@ async def save_workflow_finding_decision(
                 status="error",
                 error=f"Repository '{repository_key}' not found",
             ).model_dump_json()
+        try:
+            run_uuid = uuid.UUID(run_id)
+        except ValueError:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding_decision",
+                status="error",
+                error=f"Invalid run_id: {run_id}",
+            ).model_dump_json()
         run_row = await pool.fetchrow(
             """
             SELECT wr.id, wr.repository_id, wr.workflow_name
             FROM ops.workflow_runs wr
             WHERE wr.run_id = $1
             """,
-            uuid.UUID(run_id),
+            run_uuid,
         )
         if run_row is None:
             return WorkflowResult(
@@ -1531,13 +1549,22 @@ async def list_workflow_finding_suppressions(
                 status="error",
                 error=f"Repository '{repository_key}' not found",
             ).model_dump_json()
+        try:
+            run_uuid = uuid.UUID(run_id)
+        except ValueError:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="list_workflow_finding_suppressions",
+                status="error",
+                error=f"Invalid run_id: {run_id}",
+            ).model_dump_json()
         run_row = await pool.fetchrow(
             """
             SELECT wr.id, wr.repository_id, wr.workflow_name
             FROM ops.workflow_runs wr
             WHERE wr.run_id = $1
             """,
-            uuid.UUID(run_id),
+            run_uuid,
         )
         if run_row is None:
             return WorkflowResult(

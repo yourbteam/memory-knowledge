@@ -227,6 +227,7 @@ async def test_list_workflow_finding_suppressions_picks_latest_decision_before_f
     )
     assert "wfd.suppress_on_rerun = TRUE" not in pool.query
     assert "ld.suppress_on_rerun = TRUE" in pool.query
+    assert "ld.decision_bucket IN" not in pool.query
 
 
 @pytest.mark.asyncio
@@ -265,3 +266,47 @@ async def test_save_workflow_finding_decision_dedupes_without_created_utc_in_con
     )
     assert "decision_bucket_id, created_utc\n        ) DO NOTHING" not in pool.query
     assert "decision_bucket_id\n        ) DO NOTHING" in pool.query
+
+
+@pytest.mark.asyncio
+async def test_new_finding_wrappers_reject_invalid_run_id(findings_pool):
+    result = await server.save_workflow_finding(
+        repository_key="repo-a",
+        run_id="not-a-uuid",
+        workflow_name="wf-a",
+        phase_id="review",
+        agent_name="verifier",
+        attempt_number=1,
+        finding_fingerprint="fp-1",
+        finding_title="Title",
+        finding_message="Message",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "Invalid run_id" in payload["error"]
+
+    result = await server.save_workflow_finding_decision(
+        repository_key="repo-a",
+        run_id="not-a-uuid",
+        workflow_name="wf-a",
+        critic_phase_id="critic",
+        critic_agent_name="critic-1",
+        attempt_number=1,
+        finding_fingerprint="fp-1",
+        decision_bucket_code="DISMISS",
+        actionable=False,
+        suppress_on_rerun=True,
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "Invalid run_id" in payload["error"]
+
+    result = await server.list_workflow_finding_suppressions(
+        repository_key="repo-a",
+        run_id="not-a-uuid",
+        workflow_name="wf-a",
+        phase_id="review",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "Invalid run_id" in payload["error"]
