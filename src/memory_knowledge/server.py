@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import datetime as dt
 import json
 import os
 import uuid
@@ -673,6 +674,16 @@ def _isoformat(value) -> str | None:
     return value.isoformat() if value else None
 
 
+def _is_valid_timestamp(value: str | None) -> bool:
+    if value is None:
+        return True
+    try:
+        dt.datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError:
+        return False
+    return True
+
+
 async def _resolve_workflow_run_row(pool, run_id: str) -> dict | None:
     row = await pool.fetchrow(
         """
@@ -1292,7 +1303,15 @@ async def save_workflow_finding(
         if isinstance(status_row, str):
             return status_row
         if isinstance(context_json, str):
-            normalized_context = _json.dumps(_json.loads(context_json)) if context_json else None
+            try:
+                normalized_context = _json.dumps(_json.loads(context_json)) if context_json else None
+            except json.JSONDecodeError:
+                return WorkflowResult(
+                    run_id=str(rid),
+                    tool_name="save_workflow_finding",
+                    status="error",
+                    error="context_json must be valid JSON",
+                ).model_dump_json()
         elif context_json is not None:
             normalized_context = _json.dumps(context_json)
         else:
@@ -1434,6 +1453,13 @@ async def save_workflow_finding_decision(
                 status="error",
                 error="workflow_name does not match the workflow run",
             ).model_dump_json()
+        if not _is_valid_timestamp(created_utc):
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding_decision",
+                status="error",
+                error="created_utc must be a valid ISO-8601 timestamp",
+            ).model_dump_json()
         decision_bucket = await _require_reference_value(
             pool,
             WORKFLOW_FINDING_DECISION_BUCKET_TYPE,
@@ -1474,7 +1500,15 @@ async def save_workflow_finding_decision(
                 error="Multiple findings match this run/attempt/fingerprint; provide finding_phase_id",
             ).model_dump_json()
         if isinstance(context_json, str):
-            normalized_context = _json.dumps(_json.loads(context_json)) if context_json else None
+            try:
+                normalized_context = _json.dumps(_json.loads(context_json)) if context_json else None
+            except json.JSONDecodeError:
+                return WorkflowResult(
+                    run_id=str(rid),
+                    tool_name="save_workflow_finding_decision",
+                    status="error",
+                    error="context_json must be valid JSON",
+                ).model_dump_json()
         elif context_json is not None:
             normalized_context = _json.dumps(context_json)
         else:
@@ -2306,6 +2340,13 @@ async def get_finding_pattern_summary(
                 status="error",
                 error="limit must be >= 0",
             ).model_dump_json()
+        if not _is_valid_timestamp(since_utc) or not _is_valid_timestamp(until_utc):
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_finding_pattern_summary",
+                status="error",
+                error="since_utc and until_utc must be valid ISO-8601 timestamps",
+            ).model_dump_json()
         data = await _findings.get_finding_pattern_summary(
             get_pg_pool(),
             repository_key=repository_key,
@@ -2348,6 +2389,13 @@ async def get_agent_failure_mode_summary(
                 tool_name="get_agent_failure_mode_summary",
                 status="error",
                 error="limit must be >= 0",
+            ).model_dump_json()
+        if not _is_valid_timestamp(since_utc) or not _is_valid_timestamp(until_utc):
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_agent_failure_mode_summary",
+                status="error",
+                error="since_utc and until_utc must be valid ISO-8601 timestamps",
             ).model_dump_json()
         data = await _findings.get_agent_failure_mode_summary(
             get_pg_pool(),

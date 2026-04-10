@@ -152,6 +152,25 @@ async def test_save_workflow_finding_parses_string_context_json(findings_pool):
 
 
 @pytest.mark.asyncio
+async def test_save_workflow_finding_rejects_invalid_context_json(findings_pool):
+    result = await server.save_workflow_finding(
+        repository_key="repo-a",
+        run_id=str(uuid.uuid4()),
+        workflow_name="wf-a",
+        phase_id="review",
+        agent_name="verifier",
+        attempt_number=1,
+        finding_fingerprint="fp-1",
+        finding_title="Title",
+        finding_message="Message",
+        context_json="{bad",  # type: ignore[arg-type]
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "context_json must be valid JSON" in payload["error"]
+
+
+@pytest.mark.asyncio
 async def test_save_workflow_finding_decision_parses_string_context_json(findings_pool):
     result = await server.save_workflow_finding_decision(
         repository_key="repo-a",
@@ -172,6 +191,26 @@ async def test_save_workflow_finding_decision_parses_string_context_json(finding
         (q, a) for q, a in findings_pool.fetchrow_calls if "INSERT INTO ops.workflow_finding_decisions" in q
     )
     assert json.loads(insert_args[18]) == {"source": "critic"}
+
+
+@pytest.mark.asyncio
+async def test_save_workflow_finding_decision_rejects_invalid_context_json(findings_pool):
+    result = await server.save_workflow_finding_decision(
+        repository_key="repo-a",
+        run_id=str(uuid.uuid4()),
+        workflow_name="wf-a",
+        critic_phase_id="critic",
+        critic_agent_name="critic-1",
+        attempt_number=1,
+        finding_fingerprint="fp-1",
+        decision_bucket_code="DISMISS",
+        actionable=False,
+        suppress_on_rerun=True,
+        context_json="{bad",  # type: ignore[arg-type]
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "context_json must be valid JSON" in payload["error"]
 
 
 @pytest.mark.asyncio
@@ -208,6 +247,42 @@ async def test_findings_read_tools_reject_negative_limit(findings_pool):
     payload = json.loads(result)
     assert payload["status"] == "error"
     assert "limit must be >= 0" in payload["error"]
+
+
+@pytest.mark.asyncio
+async def test_findings_tools_reject_invalid_timestamps(findings_pool):
+    result = await server.save_workflow_finding_decision(
+        repository_key="repo-a",
+        run_id=str(uuid.uuid4()),
+        workflow_name="wf-a",
+        critic_phase_id="critic",
+        critic_agent_name="critic-1",
+        attempt_number=1,
+        finding_fingerprint="fp-1",
+        decision_bucket_code="DISMISS",
+        actionable=False,
+        suppress_on_rerun=True,
+        created_utc="bad-timestamp",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "created_utc must be a valid ISO-8601 timestamp" in payload["error"]
+
+    result = await server.get_finding_pattern_summary(
+        repository_key="repo-a",
+        since_utc="bad-timestamp",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "must be valid ISO-8601 timestamps" in payload["error"]
+
+    result = await server.get_agent_failure_mode_summary(
+        repository_key="repo-a",
+        until_utc="bad-timestamp",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "must be valid ISO-8601 timestamps" in payload["error"]
 
     result = await server.get_finding_pattern_summary(repository_key="repo-a", limit=-1)
     payload = json.loads(result)
