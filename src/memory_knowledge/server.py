@@ -290,7 +290,6 @@ async def _run_ingestion_background(
         commit_sha=commit_sha,
         branch_name=branch_name,
         run_id=run_id,
-        job_id=job_id,
         pool=pool,
         qdrant_client=get_qdrant_client(),
         neo4j_driver=get_neo4j_driver(),

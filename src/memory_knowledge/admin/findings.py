@@ -187,7 +187,7 @@ async def save_workflow_finding_decision(
         )
         ON CONFLICT (
             workflow_finding_id, critic_phase_id, critic_agent_name, attempt_number,
-            decision_bucket_id, created_utc
+            decision_bucket_id
         ) DO NOTHING
         RETURNING id, workflow_finding_id
         """,
@@ -243,8 +243,6 @@ async def list_workflow_finding_suppressions(
             WHERE wfd.repository_id = $1
               AND wfd.workflow_run_id = $2
               AND wfd.workflow_name = $3
-              AND wfd.suppress_on_rerun = TRUE
-              AND rv.internal_code IN ('ACKNOWLEDGE_OK', 'DISMISS', 'FILTERED')
               AND ($5::text IS NULL OR wfd.artifact_name = $5)
               AND ($6::int IS NULL OR wfd.artifact_iteration = $6)
               AND ($7::text IS NULL OR wfd.artifact_hash = $7)
@@ -267,6 +265,8 @@ async def list_workflow_finding_suppressions(
           AND wf.workflow_run_id = $2
           AND wf.workflow_name = $3
           AND wf.phase_id = $4
+          AND ld.suppress_on_rerun = TRUE
+          AND ld.decision_bucket IN ('ACKNOWLEDGE_OK', 'DISMISS', 'FILTERED')
         ORDER BY ld.created_utc DESC NULLS LAST, wf.finding_fingerprint ASC
         LIMIT $8
         """,

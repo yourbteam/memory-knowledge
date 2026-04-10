@@ -6,6 +6,7 @@ import pytest
 
 from memory_knowledge import server
 from memory_knowledge.admin import findings
+from memory_knowledge.jobs import job_worker
 
 
 class FindingsPool:
@@ -172,3 +173,86 @@ async def test_get_agent_failure_mode_summary_returns_empty_summary():
     assert data["summary"] == []
     assert data["eligible_run_count"] == 0
     assert data["excluded_run_count"] == 0
+
+
+@pytest.mark.asyncio
+async def test_run_ingestion_background_uses_manifest_job_id_only(monkeypatch):
+    captured = {}
+
+    async def fake_execute_job(**kwargs):
+        captured.update(kwargs)
+
+    monkeypatch.setattr(job_worker, "execute_job", fake_execute_job)
+    monkeypatch.setattr(server, "get_pg_pool", lambda: object())
+    monkeypatch.setattr(server, "get_settings", lambda: SimpleNamespace())
+    monkeypatch.setattr(server, "get_qdrant_client", lambda: object())
+    monkeypatch.setattr(server, "get_neo4j_driver", lambda: object())
+
+    await server._run_ingestion_background(uuid.uuid4(), uuid.uuid4(), "repo-a", "abc", "main")
+
+    assert "job_id" not in captured
+    assert "manifest_job_id" in captured
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_finding_suppressions_picks_latest_decision_before_filtering():
+    class Pool:
+        def __init__(self):
+            self.query = ""
+
+        async def fetch(self, query, *args):
+            self.query = query
+            return []
+
+    pool = Pool()
+    await findings.list_workflow_finding_suppressions(
+        pool,
+        repository_id=1,
+        workflow_run_id=2,
+        workflow_name="wf-a",
+        phase_id="review",
+        artifact_name=None,
+        artifact_iteration=None,
+        artifact_hash=None,
+        limit=10,
+    )
+    assert "wfd.suppress_on_rerun = TRUE" not in pool.query
+    assert "ld.suppress_on_rerun = TRUE" in pool.query
+
+
+@pytest.mark.asyncio
+async def test_save_workflow_finding_decision_dedupes_without_created_utc_in_conflict_target():
+    class Pool:
+        def __init__(self):
+            self.query = ""
+
+        async def fetchrow(self, query, *args):
+            self.query = query
+            return {"id": 1, "workflow_finding_id": 99}
+
+    pool = Pool()
+    await findings.save_workflow_finding_decision(
+        pool,
+        repository_id=1,
+        workflow_run_id=2,
+        workflow_finding_id=99,
+        workflow_name="wf-a",
+        critic_phase_id="critic",
+        critic_agent_name="critic-1",
+        attempt_number=1,
+        finding_fingerprint="fp-1",
+        decision_bucket_id=3,
+        actionable=False,
+        reason_text=None,
+        evidence_text=None,
+        suppression_scope_id=4,
+        suppress_on_rerun=True,
+        artifact_name=None,
+        artifact_iteration=None,
+        artifact_hash=None,
+        actor_email=None,
+        context_json=None,
+        created_utc=None,
+    )
+    assert "decision_bucket_id, created_utc\n        ) DO NOTHING" not in pool.query
+    assert "decision_bucket_id\n        ) DO NOTHING" in pool.query
