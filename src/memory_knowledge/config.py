@@ -49,7 +49,7 @@ class Settings(BaseSettings):
     repo_clone_base_path: str = "/tmp/memory-knowledge/repos"
     generate_summaries: bool = True
     supported_languages: list[str] = ["python", "csharp", "sql", "typescript", "php"]
-    max_import_size_mb: int = 50
+    max_import_size_mb: int = 250
 
     # Freshness
     max_surface_age_hours: int = 168  # 7 days

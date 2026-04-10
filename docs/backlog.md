@@ -3,6 +3,8 @@
 ## Critical — Fix Before Next Ingestion
 
 ### 11. Same-commit retry treated as incremental with empty diff — skips all file processing
+**Status:** Resolved 2026-04-10
+
 **Problem:** When an ingestion fails mid-run but updates `branch_heads`, retrying the same `commit_sha` causes the workflow to compute a git diff between the commit and itself. The diff is empty, so `py_files` is empty, so zero files are processed and zero summaries are generated. The run reports `summaries_created: 0` and completes "successfully" while leaving summaries incomplete.
 
 **Root cause:** `ingestion.py` lines 134-146 — if `old_sha` (from `branch_heads`) is not None, it always does an incremental diff. It does not check whether `old_sha == commit_sha`, which would produce an empty diff by definition.
@@ -24,6 +26,8 @@ else:
 ---
 
 ### 12. Existing summaries query not scoped to current revision
+**Status:** Resolved 2026-04-10
+
 **Problem:** The query at `ingestion.py` lines 473-479 that builds `existing_summary_keys` fetches ALL summaries for a repository across all revisions, not filtered by the current `commit_sha` or `repo_revision_id`. This loads unnecessary data into memory and could cause incorrect skip decisions if entity keys collide across revisions.
 
 **Impact:** Latent — doesn't cause incorrect behavior in most cases since per-item checks still work, but wastes memory on large repos with multiple revisions and could mask missing summaries if entity keys are reused.
@@ -44,6 +48,8 @@ WHERE e.repository_id = $1 AND e.repo_revision_id = $2
 ## High Priority
 
 ### 1. Orphaned background jobs after server restart
+**Status:** Resolved 2026-04-10
+
 **Problem:** When the server restarts (docker restart, deploy, crash), in-flight background ingestion/repair/audit jobs die silently. Their `ops.job_manifests` record stays `state_code='running'` permanently. The job dispatcher only polls for `pending` jobs — it never re-picks orphaned `running` ones.
 
 **Impact:** The next ingestion submission for the same repo works, but the orphaned record pollutes the job history and can cause confusion when checking job status.
@@ -59,6 +65,8 @@ WHERE e.repository_id = $1 AND e.repo_revision_id = $2
 ---
 
 ### 2. Ingestion performance on remote PostgreSQL
+**Status:** Resolved 2026-04-10
+
 **Problem:** Ingesting large repos (2,580 files for CSS-FE) against remote Supabase PG is extremely slow — ~10 files/minute vs hundreds/minute locally. Each file involves multiple sequential INSERT round-trips over transatlantic latency (~100ms per query).
 
 **Impact:** A 2,580-file repo takes ~4-5 hours just for the parse phase. With summaries, total ingestion could take 12+ hours.
@@ -70,14 +78,33 @@ WHERE e.repository_id = $1 AND e.repo_revision_id = $2
 
 **Files:** `src/memory_knowledge/workflows/ingestion.py`
 
+**Resolution:** The canonical ingestion path now batches PostgreSQL writes for:
+- file entities and files
+- symbol entities and symbols
+- chunk entities and chunks
+- file import edges
+- symbol call edges
+- ingestion item status rows
+- summary entities and summaries
+
+The parse phase no longer does one PG round-trip per symbol/chunk, and the summary phase no longer does one PG round-trip per generated summary.
+
 ---
 
 ### 10. Ingestion workflow lacks checkpoint/resume — re-runs repeat completed phases
+**Status:** Resolved 2026-04-10
+
 **Problem:** When ingestion fails mid-execution (e.g., during summarization), re-running restarts the entire pipeline from step 1. File scanning, chunk registration, edge resolution, and embedding all re-execute even though their data is already persisted. Only the summarization step has skip logic for existing records. The `job_manifests.checkpoint_data` JSONB column exists for exactly this purpose but is only written at completion/error — never during execution as a progress checkpoint.
 
 **Impact:** FCSAPI ingestion failed at ~61% through summarization after 2 hours. The re-run spent ~30 minutes re-scanning all 486 files and 5,600 chunks before reaching the summary phase again.
 
 **Fix:** After each major phase completes, write a checkpoint to `job_manifests.checkpoint_data` with the completed phase name and any state needed to resume. On startup, read the checkpoint and skip to the next incomplete phase. Phases to checkpoint: clone, file scan, chunk registration, edge resolution, summarization (with batch offset), chunk embedding, summary embedding, neo4j projection.
+
+**Resolution:** Ingestion jobs now:
+- persist phase checkpoints during execution
+- seed new submissions from the latest failed/dead-letter checkpoint for the same repo+commit+branch
+- skip canonical PG write phases once `canonical_complete` is reached
+- persist summary progress so resumed summarization continues from the last completed batch window
 
 **Files:** `src/memory_knowledge/workflows/ingestion.py`, `src/memory_knowledge/jobs/dispatcher.py`
 
@@ -88,6 +115,8 @@ WHERE e.repository_id = $1 AND e.repo_revision_id = $2
 ## Medium Priority
 
 ### 13. Settings/guard tests are polluted by ambient env and `.env` defaults
+**Status:** Resolved 2026-04-10
+
 **Problem:** The config and guard test suites are not hermetic against the office shell / `.env` baseline. During local analytics verification after applying `008_analytics_schema`, the broad suite failed in `tests/test_config.py` and `tests/test_guards.py` because ambient values leaked into `Settings()`. Observed symptoms included:
 - `qdrant_api_key` resolving to a non-`None` value when tests expected `None`
 - `data_mode` / per-DB effective mode resolving unexpectedly
@@ -109,6 +138,8 @@ WHERE e.repository_id = $1 AND e.repo_revision_id = $2
 ---
 
 ### 3. No per-file progress logging during ingestion
+**Status:** Resolved 2026-04-10
+
 **Problem:** The ingestion workflow logs phase transitions (files_determined, edges_resolved, ingestion_complete) but not per-file progress. During a 2,580-file ingestion, there are no logs for 30+ minutes between `revision_upserted` and `edges_resolved`, making it impossible to distinguish "slow but working" from "hung."
 
 **Fix:** Add periodic progress logging — e.g., every 50 files: `{"event": "ingestion_progress", "files_processed": 150, "total_files": 2580}`
@@ -118,15 +149,19 @@ WHERE e.repository_id = $1 AND e.repo_revision_id = $2
 ---
 
 ### 4. Qdrant Cloud requires explicit payload indexes
+**Status:** Resolved 2026-04-10
+
 **Problem:** The `ensure_collections` function creates `is_active` as `KEYWORD` type, but the retrieval filter uses it as a `BOOL` match. Local Qdrant auto-handles this, but Qdrant Cloud requires explicit type-matched indexes. Same issue with `branch_name` and `commit_sha` which are needed for `deactivate_old_points` but weren't indexed.
 
-**Status:** Code fix committed in `db/qdrant.py` for `is_active` (bool) and `branch_name`/`commit_sha` (keyword). But indexes keep getting lost after repair workflows — the repair may recreate collections without re-running `ensure_collections`. The `ensure_collections` function runs at startup but NOT after repair. Fix: call `ensure_collections` at the end of any repair workflow, or make indexes idempotent in the repair code itself.
+**Resolution:** Repair flows now re-run `ensure_collections` before Qdrant repair/rebuild work so payload indexes are restored in the supported repair paths.
 
 **Files:** `src/memory_knowledge/db/qdrant.py`
 
 ---
 
 ### 5. No repo data reset/purge MCP tool
+**Status:** Resolved 2026-04-10
+
 **Problem:** Resetting a repo's data across all 3 databases requires manual SQL + Qdrant API + Neo4j Cypher with careful FK ordering. There's no MCP tool to do this safely.
 
 **Fix:** Add a `purge_repository` MCP tool that deletes all data for a repo across PG, Qdrant, and Neo4j in the correct dependency order. Should require `ALLOW_REMOTE_REBUILDS=true` for remote mode.
@@ -136,6 +171,8 @@ WHERE e.repository_id = $1 AND e.repo_revision_id = $2
 ---
 
 ### 8. Local ingestion → remote export/import pipeline
+**Status:** Resolved 2026-04-10
+
 **Problem:** Ingesting large repos (2,580+ files) directly against remote Supabase PG is extremely slow (~10 files/min). The heavy parse+chunk+embed phase does thousands of sequential INSERT round-trips over transatlantic latency.
 
 **Proposed solution:** Ingest locally (fast), then export and import to remote:
@@ -152,10 +189,10 @@ WHERE e.repository_id = $1 AND e.repo_revision_id = $2
 - Import size limit is 50 MB (`max_import_size_mb` in config) — may need increasing for large repos
 - Full pipeline: local ingest → export → import to Supabase → repair (re-embeds to Qdrant + projects to Neo4j)
 
-**Remaining work:**
-- Test the full pipeline end-to-end with a real repo
-- Verify repair workflow re-embeds ALL chunks (not just missing ones)
-- Consider increasing `max_import_size_mb` for large repos or adding streaming import
+**Resolution:** The pipeline is now hardened enough to use as the primary large-repo path:
+- `max_import_size_mb` default increased from `50` to `250`
+- repair/rebuild test coverage now verifies that rebuild consumes all canonical chunk rows and all canonical summary rows when reprojecting from PostgreSQL
+- the remote-ingestion bottleneck in `#2` was reduced as well, making the local-export/import path an option rather than the only viable route
 
 **Files:** `src/memory_knowledge/server.py` (export/import tools), investigate scope
 
@@ -164,13 +201,11 @@ WHERE e.repository_id = $1 AND e.repo_revision_id = $2
 ---
 
 ### 9. Import function needs batched writes, incremental commits, and progress logging
+**Status:** Resolved earlier; backlog item is stale
+
 **Problem:** `import_repo_memory` writes 87K+ rows one at a time with individual INSERT round-trips. Against remote PG (~100ms/query), a 87K row import takes ~2.5 hours. Also no progress logging and no incremental commits.
 
-**Fix:**
-- Use `executemany` or `COPY` for bulk INSERTs instead of individual queries
-- Batch commits every 1,000 rows
-- Log progress per table
-- This is the #1 blocker for the export/import pipeline to be practical with remote databases
+**Resolution:** `import_repo_memory` already uses batched `UNNEST`/`executemany` writes and emits `import_progress` logs per table. Incremental transaction chunking is still a possible future optimization, but the one-row-per-insert blocker described here is no longer present.
 
 **Files:** `src/memory_knowledge/admin/export_import.py`
 
@@ -179,15 +214,19 @@ WHERE e.repository_id = $1 AND e.repo_revision_id = $2
 ## Low Priority
 
 ### 6. Docker Compose override file management for local/remote mode
+**Status:** Resolved 2026-04-10
+
 **Problem:** Switching between local and remote mode requires manually renaming `docker-compose.override.yml` to enable/disable `depends_on`. This is error-prone.
 
-**Fix:** Use a script or Makefile target: `make local` / `make remote` that manages the override file and .env symlink.
+**Resolution:** Added `Makefile` targets `local`, `remote`, and `mode-status` to manage the active compose override without manual renames.
 
 ---
 
 ### 7. Supabase direct connection DNS propagation
+**Status:** Resolved as documentation 2026-04-10
+
 **Problem:** New Supabase projects on Nano tier may take hours for the `db.[project-ref].supabase.co` direct connection hostname to propagate. The pooler endpoint (`aws-0-[region].pooler.supabase.com`) is available immediately.
 
-**Status:** Using pooler endpoint (port 6543) with `statement_cache_size=0`. Direct connection can be used once DNS propagates, for better performance (no PgBouncer overhead).
+**Resolution:** Documented the pooler-first fallback and direct-host follow-up in `README.md`.
 
 **No code change needed** — just a configuration note.

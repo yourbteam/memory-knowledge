@@ -1,11 +1,19 @@
 from __future__ import annotations
 
 import uuid
+from typing import Any
 
 import asyncpg
 import structlog
 
 logger = structlog.get_logger()
+BATCH_SIZE = 250
+
+
+def _column_arrays(rows: list[tuple[Any, ...]]) -> list[list[Any]]:
+    if not rows:
+        return []
+    return [list(col) for col in zip(*rows)]
 
 
 async def upsert_chunk(
@@ -60,6 +68,74 @@ async def upsert_chunk(
         checksum,
     )
     return row["id"]
+
+
+async def bulk_upsert_chunks(
+    pool: asyncpg.Pool,
+    rows: list[dict[str, Any]],
+) -> None:
+    """Batch upsert chunk entities and chunks."""
+    if not rows:
+        return
+
+    entity_rows = [
+        (
+            row["entity_key"],
+            "chunk",
+            row["repository_id"],
+            row["repo_revision_id"],
+        )
+        for row in rows
+    ]
+    entity_ids_by_key: dict[str, int] = {}
+    for i in range(0, len(entity_rows), BATCH_SIZE):
+        batch = entity_rows[i : i + BATCH_SIZE]
+        arrays = _column_arrays(batch)
+        results = await pool.fetch(
+            """
+            INSERT INTO catalog.entities (entity_key, entity_type, repository_id, repo_revision_id)
+            SELECT * FROM UNNEST($1::uuid[], $2::text[], $3::bigint[], $4::bigint[])
+            ON CONFLICT (entity_key) DO UPDATE
+                SET repo_revision_id = EXCLUDED.repo_revision_id
+            RETURNING id, entity_key
+            """,
+            *arrays,
+        )
+        entity_ids_by_key.update({str(result["entity_key"]): result["id"] for result in results})
+
+    chunk_rows = [
+        (
+            entity_ids_by_key[str(row["entity_key"])],
+            row["file_id"],
+            row.get("title"),
+            row["content_text"],
+            row.get("chunk_type"),
+            row.get("line_start"),
+            row.get("line_end"),
+            row.get("checksum"),
+        )
+        for row in rows
+    ]
+    for i in range(0, len(chunk_rows), BATCH_SIZE):
+        batch = chunk_rows[i : i + BATCH_SIZE]
+        arrays = _column_arrays(batch)
+        await pool.execute(
+            """
+            INSERT INTO catalog.chunks
+                (entity_id, file_id, title, content_text, content_tsv, chunk_type,
+                 line_start, line_end, checksum)
+            SELECT entity_id, file_id, title, content_text, to_tsvector('english', content_text), chunk_type,
+                   line_start, line_end, checksum
+            FROM UNNEST($1::bigint[], $2::bigint[], $3::text[], $4::text[], $5::text[], $6::int[], $7::int[], $8::text[])
+                AS t(entity_id, file_id, title, content_text, chunk_type, line_start, line_end, checksum)
+            ON CONFLICT (entity_id) DO UPDATE
+                SET content_text = EXCLUDED.content_text,
+                    content_tsv = to_tsvector('english', EXCLUDED.content_text),
+                    checksum = EXCLUDED.checksum,
+                    title = EXCLUDED.title
+            """,
+            *arrays,
+        )
 
 
 async def upsert_branch_head(
@@ -178,6 +254,26 @@ async def record_ingestion_item(
         status,
         error_text,
     )
+
+
+async def bulk_record_ingestion_items(
+    pool: asyncpg.Pool,
+    rows: list[tuple[int, int | None, str, str, str | None]],
+) -> None:
+    """Batch record ingestion item statuses."""
+    if not rows:
+        return
+    for i in range(0, len(rows), BATCH_SIZE):
+        batch = rows[i : i + BATCH_SIZE]
+        arrays = _column_arrays(batch)
+        await pool.execute(
+            """
+            INSERT INTO ops.ingestion_run_items
+                (ingestion_run_id, entity_id, item_type, status, error_text)
+            SELECT * FROM UNNEST($1::bigint[], $2::bigint[], $3::text[], $4::text[], $5::text[])
+            """,
+            *arrays,
+        )
 
 
 async def record_route_feedback(

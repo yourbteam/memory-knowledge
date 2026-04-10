@@ -40,6 +40,8 @@ from memory_knowledge.projections.neo4j_projector import (
     project_sql_edges,
 )
 from memory_knowledge.projections.pg_writer import (
+    bulk_record_ingestion_items,
+    bulk_upsert_chunks,
     complete_ingestion_run,
     create_ingestion_run,
     record_ingestion_item,
@@ -56,20 +58,33 @@ from memory_knowledge.projections.summary_qdrant import (
     deactivate_old_summary_points,
     embed_and_upsert_summaries,
 )
-from memory_knowledge.projections.summary_writer import upsert_summary
+from memory_knowledge.projections.summary_writer import bulk_upsert_summaries, upsert_summary
 from memory_knowledge.structure.chunk_builder import build_chunks
 from memory_knowledge.structure.entity_registrar import (
+    bulk_upsert_file_imports,
+    bulk_upsert_files,
+    bulk_upsert_symbol_calls,
+    bulk_upsert_symbols,
     upsert_file,
     upsert_file_import,
     upsert_repo_revision,
     upsert_symbol,
     upsert_symbol_call,
 )
+from memory_knowledge.jobs.job_checkpoint_manager import save_checkpoint
 from memory_knowledge.workflows.base import WorkflowResult
 
 logger = structlog.get_logger()
 
 TOOL_NAME = "run_repo_ingestion_workflow"
+CHECKPOINT_PHASE_ORDER = {
+    "initialized": 0,
+    "canonical_complete": 1,
+    "summaries_complete": 2,
+    "chunk_embeddings_complete": 3,
+    "summary_embeddings_complete": 4,
+    "neo4j_complete": 5,
+}
 
 def _summary_prompt(language: str) -> str:
     return (
@@ -78,11 +93,369 @@ def _summary_prompt(language: str) -> str:
     )
 
 
+async def _determine_diff_files(
+    *,
+    old_sha: str | None,
+    commit_sha: str,
+    repo: Any,
+    settings: Settings,
+) -> list[str] | None:
+    """Return incremental diff files or None to signal a full ingestion run."""
+    if old_sha is None or old_sha == commit_sha:
+        return None
+    extensions = get_supported_extensions(settings.supported_languages)
+    return await asyncio.to_thread(changed_files, repo, old_sha, commit_sha, extensions)
+
+
+async def _fetch_existing_summary_keys(
+    pool: asyncpg.Pool,
+    *,
+    repository_id: int,
+    repo_revision_id: int,
+) -> set[str]:
+    rows = await pool.fetch(
+        """SELECT e.entity_key
+           FROM catalog.summaries s
+           JOIN catalog.entities e ON s.entity_id = e.id
+           WHERE e.repository_id = $1 AND e.repo_revision_id = $2""",
+        repository_id,
+        repo_revision_id,
+    )
+    return {str(r["entity_key"]) for r in rows}
+
+
+def _checkpoint_phase_at_or_beyond(
+    checkpoint: dict[str, Any] | None,
+    phase: str,
+) -> bool:
+    if not checkpoint:
+        return False
+    current_phase = checkpoint.get("phase")
+    if not isinstance(current_phase, str):
+        return False
+    return CHECKPOINT_PHASE_ORDER.get(current_phase, -1) >= CHECKPOINT_PHASE_ORDER.get(phase, 10_000)
+
+
+async def _save_ingestion_checkpoint(
+    pool: asyncpg.Pool | None,
+    job_id: uuid.UUID | None,
+    checkpoint: dict[str, Any],
+    *,
+    phase: str,
+    **extra: Any,
+) -> dict[str, Any]:
+    checkpoint.update(extra)
+    checkpoint["phase"] = phase
+    if pool is not None and job_id is not None:
+        await save_checkpoint(pool, job_id, {"checkpoint": checkpoint})
+    return checkpoint
+
+
+async def _load_resume_parse_context(
+    *,
+    pool: asyncpg.Pool,
+    repository_id: int,
+    repo_revision_id: int,
+    repository_key: str,
+    commit_sha: str,
+    py_files: list[str],
+    repo_dir: Path,
+) -> dict[str, Any]:
+    file_rows = await pool.fetch(
+        """
+        SELECT f.file_path, f.id AS file_id, e.entity_key AS file_entity_key, e.id AS entity_id
+        FROM catalog.files f
+        JOIN catalog.entities e ON f.entity_id = e.id
+        WHERE e.repository_id = $1
+          AND e.repo_revision_id = $2
+          AND f.file_path = ANY($3::text[])
+        """,
+        repository_id,
+        repo_revision_id,
+        py_files,
+    )
+    file_rows_by_path = {row["file_path"]: row for row in file_rows}
+    symbol_rows = await pool.fetch(
+        """
+        SELECT
+            f.file_path,
+            s.id AS symbol_id,
+            e.id AS symbol_entity_id,
+            s.symbol_name,
+            s.symbol_kind,
+            s.line_start,
+            s.line_end,
+            e.entity_key AS symbol_entity_key
+        FROM catalog.symbols s
+        JOIN catalog.entities e ON s.entity_id = e.id
+        JOIN catalog.files f ON s.file_id = f.id
+        JOIN catalog.entities f_e ON f.entity_id = f_e.id
+        WHERE f_e.repository_id = $1
+          AND f_e.repo_revision_id = $2
+          AND f.file_path = ANY($3::text[])
+        ORDER BY f.file_path, s.line_start, s.id
+        """,
+        repository_id,
+        repo_revision_id,
+        py_files,
+    )
+    symbols_by_file: dict[str, list[dict[str, Any]]] = {}
+    symbol_lookup: dict[tuple[str, str], int] = {}
+    symbol_ek_by_name: dict[tuple[str, str], str] = {}
+    symbol_entity_key_to_entity_id: dict[str, int] = {}
+    for row in symbol_rows:
+        file_path = row["file_path"]
+        symbol_lookup[(file_path, row["symbol_name"])] = row["symbol_id"]
+        symbol_ek_by_name[(file_path, row["symbol_name"])] = str(row["symbol_entity_key"])
+        symbol_entity_key_to_entity_id[str(row["symbol_entity_key"])] = row["symbol_entity_id"]
+        symbols_by_file.setdefault(file_path, []).append(
+            {
+                "entity_key": str(row["symbol_entity_key"]),
+                "name": row["symbol_name"],
+                "kind": row["symbol_kind"],
+                "line_start": row["line_start"],
+                "line_end": row["line_end"],
+            }
+        )
+
+    file_path_to_entity_key: dict[str, str] = {}
+    file_path_to_entity_id: dict[str, int] = {}
+    file_path_to_file_id: dict[str, int] = {}
+    file_path_to_source: dict[str, str] = {}
+    file_path_to_parse_output: dict[str, Any] = {}
+    neo4j_file_symbols: list[dict[str, Any]] = []
+    all_imports: list[tuple[str, str]] = []
+    all_calls: list[tuple[str, str, str, str]] = []
+
+    for file_path in py_files:
+        row = file_rows_by_path.get(file_path)
+        if row is None:
+            continue
+        full_path = repo_dir / file_path
+        if not full_path.exists():
+            continue
+        source = full_path.read_text(encoding="utf-8", errors="replace")
+        parse_output = get_parser(file_path)(file_path, source)
+        file_path_to_entity_key[file_path] = str(row["file_entity_key"])
+        file_path_to_entity_id[file_path] = row["entity_id"]
+        file_path_to_file_id[file_path] = row["file_id"]
+        file_path_to_source[file_path] = source
+        file_path_to_parse_output[file_path] = parse_output
+        file_symbols = [
+            {
+                "entity_key": symbol["entity_key"],
+                "name": symbol["name"],
+                "kind": symbol["kind"],
+            }
+            for symbol in symbols_by_file.get(file_path, [])
+        ]
+        neo4j_file_symbols.append(
+            {
+                "file_path": file_path,
+                "file_entity_key": str(row["file_entity_key"]),
+                "language": detect_language(file_path),
+                "symbols": file_symbols,
+                "routes": [
+                    {"method": r.method, "path": r.path, "handler_name": r.handler_name}
+                    for r in parse_output.routes
+                ],
+                "sql_refs": [
+                    {"object_name": sr.object_name, "operation": sr.operation}
+                    for sr in parse_output.sql_refs
+                ],
+            }
+        )
+        for imp in parse_output.imports:
+            all_imports.append((file_path, imp.module_path))
+        for call in parse_output.calls:
+            caller_ek = symbol_ek_by_name.get((file_path, call.caller_name))
+            if caller_ek is None:
+                caller_ek = str(
+                    symbol_entity_key(
+                        repository_key,
+                        commit_sha,
+                        file_path,
+                        call.caller_name,
+                        next((s.kind for s in parse_output.symbols if s.name == call.caller_name), "function"),
+                    )
+                )
+            all_calls.append((file_path, call.caller_name, call.callee_name, caller_ek))
+
+    return {
+        "file_path_to_entity_key": file_path_to_entity_key,
+        "file_path_to_entity_id": file_path_to_entity_id,
+        "file_path_to_file_id": file_path_to_file_id,
+        "file_path_to_source": file_path_to_source,
+        "file_path_to_parse_output": file_path_to_parse_output,
+        "neo4j_file_symbols": neo4j_file_symbols,
+        "symbol_lookup": symbol_lookup,
+        "symbol_entity_key_to_entity_id": symbol_entity_key_to_entity_id,
+        "all_imports": all_imports,
+        "all_calls": all_calls,
+    }
+
+
+async def _load_chunks_for_embedding(
+    pool: asyncpg.Pool,
+    *,
+    repository_id: int,
+    repo_revision_id: int,
+) -> list[dict[str, Any]]:
+    rows = await pool.fetch(
+        """
+        SELECT e.entity_key, c.content_text, c.chunk_type, c.title, f.file_path
+        FROM catalog.chunks c
+        JOIN catalog.entities e ON c.entity_id = e.id
+        JOIN catalog.files f ON c.file_id = f.id
+        WHERE e.repository_id = $1 AND e.repo_revision_id = $2
+        ORDER BY c.id
+        """,
+        repository_id,
+        repo_revision_id,
+    )
+    chunks: list[dict[str, Any]] = []
+    for row in rows:
+        symbol_name = None
+        title = row["title"] or ""
+        if row["chunk_type"] == "symbol" and ":" in title:
+            symbol_name = title.split(":", 1)[1].split("[")[0]
+        chunks.append(
+            {
+                "entity_key": str(row["entity_key"]),
+                "content_text": row["content_text"],
+                "file_path": row["file_path"],
+                "symbol_name": symbol_name,
+                "chunk_type": row["chunk_type"],
+            }
+        )
+    return chunks
+
+
+async def _load_summaries_for_embedding(
+    pool: asyncpg.Pool,
+    *,
+    repository_id: int,
+    repo_revision_id: int,
+) -> list[dict[str, Any]]:
+    rows = await pool.fetch(
+        """
+        SELECT e.entity_key, s.summary_text, s.summary_level
+        FROM catalog.summaries s
+        JOIN catalog.entities e ON s.entity_id = e.id
+        WHERE e.repository_id = $1 AND e.repo_revision_id = $2
+        ORDER BY s.id
+        """,
+        repository_id,
+        repo_revision_id,
+    )
+    return [
+        {
+            "entity_key": str(row["entity_key"]),
+            "summary_text": row["summary_text"],
+            "summary_level": row["summary_level"],
+        }
+        for row in rows
+    ]
+
+
+async def _resolve_dependency_edges(
+    *,
+    pool: asyncpg.Pool,
+    repository_key: str,
+    commit_sha: str,
+    file_path_to_file_id: dict[str, int],
+    file_path_to_entity_key: dict[str, str],
+    neo4j_file_symbols: list[dict[str, Any]],
+    symbol_lookup: dict[tuple[str, str], int],
+    all_imports: list[tuple[str, str]],
+    all_calls: list[tuple[str, str, str, str]],
+    persist_to_pg: bool,
+) -> tuple[list[dict[str, str]], list[dict[str, str]]]:
+    neo4j_import_edges: list[dict[str, str]] = []
+    neo4j_call_edges: list[dict[str, str]] = []
+    pg_import_rows: list[tuple[int, int]] = []
+    pg_call_rows: list[tuple[int, int]] = []
+
+    for importer_path, module_path in all_imports:
+        language = detect_language(importer_path)
+        resolver = get_import_resolver(language)
+        if resolver is None:
+            continue
+        result = resolver(module_path, file_path_to_file_id, file_path_to_entity_key)
+        if result is not None:
+            imported_file_id, imported_ek = result
+            importer_file_id = file_path_to_file_id.get(importer_path)
+            if importer_file_id:
+                if persist_to_pg:
+                    pg_import_rows.append((importer_file_id, imported_file_id))
+                importer_ek = file_path_to_entity_key.get(importer_path, "")
+                if importer_ek and imported_ek:
+                    neo4j_import_edges.append(
+                        {"importer_ek": importer_ek, "imported_ek": imported_ek}
+                    )
+
+    name_to_symbols: dict[str, list[tuple[str, int]]] = {}
+    for (fp, sname), sid in symbol_lookup.items():
+        name_to_symbols.setdefault(sname, []).append((fp, sid))
+
+    file_import_targets: dict[str, set[str]] = {}
+    for importer_path, module_path in all_imports:
+        language = detect_language(importer_path)
+        resolver = get_import_resolver(language)
+        if resolver is None:
+            continue
+        result = resolver(module_path, file_path_to_file_id, file_path_to_entity_key)
+        if result is not None:
+            imported_fid, _ = result
+            for fp, fid in file_path_to_file_id.items():
+                if fid == imported_fid:
+                    file_import_targets.setdefault(importer_path, set()).add(fp)
+                    break
+
+    symbol_ek_lookup: dict[tuple[str, str], str] = {}
+    for fs in neo4j_file_symbols:
+        for s in fs["symbols"]:
+            symbol_ek_lookup[(fs["file_path"], s["name"])] = s["entity_key"]
+
+    for file_path_call, caller_name, callee_name, caller_ek in all_calls:
+        caller_sid = symbol_lookup.get((file_path_call, caller_name))
+        callee_sid = symbol_lookup.get((file_path_call, callee_name))
+        callee_file = file_path_call
+
+        if callee_sid is None:
+            candidates = name_to_symbols.get(callee_name, [])
+            if len(candidates) == 1:
+                callee_file, callee_sid = candidates[0]
+            elif len(candidates) > 1:
+                imported = file_import_targets.get(file_path_call, set())
+                for cand_fp, cand_sid in candidates:
+                    if cand_fp in imported:
+                        callee_file, callee_sid = cand_fp, cand_sid
+                        break
+
+        if caller_sid and callee_sid:
+            if persist_to_pg:
+                pg_call_rows.append((caller_sid, callee_sid))
+            callee_ek = symbol_ek_lookup.get((callee_file, callee_name))
+            if callee_ek:
+                neo4j_call_edges.append({"caller_ek": caller_ek, "callee_ek": callee_ek})
+
+    if persist_to_pg and pg_import_rows:
+        await bulk_upsert_file_imports(pool, pg_import_rows)
+    if persist_to_pg and pg_call_rows:
+        await bulk_upsert_symbol_calls(pool, pg_call_rows)
+
+    logger.info("edges_resolved", imports=len(neo4j_import_edges), calls=len(neo4j_call_edges))
+    return neo4j_import_edges, neo4j_call_edges
+
+
 async def run(
     repository_key: str,
     commit_sha: str,
     branch_name: str,
     run_id: uuid.UUID,
+    manifest_job_id: uuid.UUID | None = None,
+    checkpoint: dict[str, Any] | None = None,
     pool: asyncpg.Pool | None = None,
     qdrant_client: AsyncQdrantClient | None = None,
     neo4j_driver: neo4j.AsyncDriver | None = None,
@@ -129,13 +502,15 @@ async def run(
             ensure_repo, repository_key, origin_url, settings.repo_clone_base_path
         )
         await asyncio.to_thread(checkout_commit, repo, commit_sha)
+        repo_dir = Path(settings.repo_clone_base_path) / repository_key
 
         # Step 2: Determine file list (incremental or full)
-        if old_sha is not None:
-            extensions = get_supported_extensions(settings.supported_languages)
-            diff_files = await asyncio.to_thread(changed_files, repo, old_sha, commit_sha, extensions)
-        else:
-            diff_files = None
+        diff_files = await _determine_diff_files(
+            old_sha=old_sha,
+            commit_sha=commit_sha,
+            repo=repo,
+            settings=settings,
+        )
 
         if diff_files is not None:
             py_files = diff_files
@@ -156,6 +531,14 @@ async def run(
         repo_revision_id = await upsert_repo_revision(
             pool, repository_id, commit_sha, branch_name
         )
+        checkpoint_state = dict(checkpoint or {})
+        checkpoint_state = await _save_ingestion_checkpoint(
+            pool,
+            manifest_job_id,
+            checkpoint_state,
+            phase=checkpoint_state.get("phase", "initialized") or "initialized",
+            run_type=run_type,
+        )
 
         # Step 4.5: Pre-load existing file maps for incremental edge resolution
         all_chunks_for_embedding: list[dict[str, Any]] = []
@@ -167,8 +550,32 @@ async def run(
         symbol_lookup: dict[tuple[str, str], int] = {}
         all_imports: list[tuple[str, str]] = []
         all_calls: list[tuple[str, str, str, str]] = []
+        canonical_complete = _checkpoint_phase_at_or_beyond(
+            checkpoint_state, "canonical_complete"
+        )
 
-        if run_type == "incremental":
+        if canonical_complete:
+            resume_context = await _load_resume_parse_context(
+                pool=pool,
+                repository_id=repository_id,
+                repo_revision_id=repo_revision_id,
+                repository_key=repository_key,
+                commit_sha=commit_sha,
+                py_files=py_files,
+                repo_dir=repo_dir,
+            )
+            file_path_to_entity_key = resume_context["file_path_to_entity_key"]
+            file_path_to_entity_id = resume_context["file_path_to_entity_id"]
+            file_path_to_file_id = resume_context["file_path_to_file_id"]
+            file_path_to_source = resume_context["file_path_to_source"]
+            file_path_to_parse_output = resume_context["file_path_to_parse_output"]
+            neo4j_file_symbols = resume_context["neo4j_file_symbols"]
+            symbol_lookup = resume_context["symbol_lookup"]
+            symbol_entity_key_to_entity_id = resume_context["symbol_entity_key_to_entity_id"]
+            all_imports = resume_context["all_imports"]
+            all_calls = resume_context["all_calls"]
+            logger.info("ingestion_resume_loaded", phase=checkpoint_state.get("phase"), files=len(file_path_to_source))
+        elif run_type == "incremental":
             existing_files = await pool.fetch(
                 """
                 SELECT f.file_path, f.id, e.entity_key, e.id AS entity_id
@@ -185,298 +592,300 @@ async def run(
                     file_path_to_entity_key[fp] = str(ef["entity_key"])
                     file_path_to_entity_id[fp] = ef["entity_id"]
 
-        # Step 5: Process each file
-        file_path_to_parse_output: dict[str, Any] = {}
-        repo_dir = Path(settings.repo_clone_base_path) / repository_key
+        neo4j_import_edges: list[dict[str, str]] = []
+        neo4j_call_edges: list[dict[str, str]] = []
+        symbol_entity_key_to_entity_id: dict[str, int] = {}
 
-        for file_path in py_files:
-            try:
-                # Handle deleted files in incremental mode
-                full_path = repo_dir / file_path
-                if not full_path.exists():
-                    logger.info("file_deleted", file_path=file_path)
-                    await qdrant_client.set_payload(
-                        collection_name="code_chunks",
-                        payload={"is_active": False},
-                        points=qdrant_models.Filter(
-                            must=[
-                                qdrant_models.FieldCondition(
-                                    key="repository_key",
-                                    match=qdrant_models.MatchValue(value=repository_key),
-                                ),
-                                qdrant_models.FieldCondition(
-                                    key="file_path",
-                                    match=qdrant_models.MatchValue(value=file_path),
-                                ),
-                                qdrant_models.FieldCondition(
-                                    key="is_active",
-                                    match=qdrant_models.MatchValue(value=True),
-                                ),
-                            ]
-                        ),
-                    )
-                    await record_ingestion_item(
-                        pool, ingestion_run_id, None, "file", "deleted"
-                    )
-                    continue
+        if not canonical_complete:
+            # Step 5: Process each file
+            file_path_to_parse_output = {}
+            pending_file_rows: list[dict[str, Any]] = []
+            pending_symbol_rows: list[dict[str, Any]] = []
+            pending_chunk_rows: list[dict[str, Any]] = []
+            ingestion_item_rows: list[tuple[int, int | None, str, str, str | None]] = []
 
-                # Deactivate old Qdrant points for this file (incremental)
-                if run_type == "incremental":
-                    await qdrant_client.set_payload(
-                        collection_name="code_chunks",
-                        payload={"is_active": False},
-                        points=qdrant_models.Filter(
-                            must=[
-                                qdrant_models.FieldCondition(
-                                    key="repository_key",
-                                    match=qdrant_models.MatchValue(value=repository_key),
-                                ),
-                                qdrant_models.FieldCondition(
-                                    key="file_path",
-                                    match=qdrant_models.MatchValue(value=file_path),
-                                ),
-                                qdrant_models.FieldCondition(
-                                    key="is_active",
-                                    match=qdrant_models.MatchValue(value=True),
-                                ),
-                            ]
-                        ),
-                    )
+            for file_path in py_files:
+                try:
+                    # Handle deleted files in incremental mode
+                    full_path = repo_dir / file_path
+                    if not full_path.exists():
+                        logger.info("file_deleted", file_path=file_path)
+                        await qdrant_client.set_payload(
+                            collection_name="code_chunks",
+                            payload={"is_active": False},
+                            points=qdrant_models.Filter(
+                                must=[
+                                    qdrant_models.FieldCondition(
+                                        key="repository_key",
+                                        match=qdrant_models.MatchValue(value=repository_key),
+                                    ),
+                                    qdrant_models.FieldCondition(
+                                        key="file_path",
+                                        match=qdrant_models.MatchValue(value=file_path),
+                                    ),
+                                    qdrant_models.FieldCondition(
+                                        key="is_active",
+                                        match=qdrant_models.MatchValue(value=True),
+                                    ),
+                                ]
+                            ),
+                        )
+                        ingestion_item_rows.append((ingestion_run_id, None, "file", "deleted", None))
+                        continue
 
-                source = full_path.read_text(
-                    encoding="utf-8", errors="replace"
-                )
-                source_lines = source.splitlines()
-                size_bytes = len(source.encode("utf-8"))
-                checksum = hashlib.sha256(source.encode("utf-8")).hexdigest()
+                    # Deactivate old Qdrant points for this file (incremental)
+                    if run_type == "incremental":
+                        await qdrant_client.set_payload(
+                            collection_name="code_chunks",
+                            payload={"is_active": False},
+                            points=qdrant_models.Filter(
+                                must=[
+                                    qdrant_models.FieldCondition(
+                                        key="repository_key",
+                                        match=qdrant_models.MatchValue(value=repository_key),
+                                    ),
+                                    qdrant_models.FieldCondition(
+                                        key="file_path",
+                                        match=qdrant_models.MatchValue(value=file_path),
+                                    ),
+                                    qdrant_models.FieldCondition(
+                                        key="is_active",
+                                        match=qdrant_models.MatchValue(value=True),
+                                    ),
+                                ]
+                            ),
+                        )
 
-                # Parse
-                parse_output = get_parser(file_path)(file_path, source)
-                file_path_to_parse_output[file_path] = parse_output
+                    source = full_path.read_text(
+                        encoding="utf-8", errors="replace"
+                    )
+                    source_lines = source.splitlines()
+                    size_bytes = len(source.encode("utf-8"))
+                    checksum = hashlib.sha256(source.encode("utf-8")).hexdigest()
 
-                # Register file entity
-                f_ek = file_entity_key(repository_key, commit_sha, file_path)
-                entity_id, file_id = await upsert_file(
-                    pool, f_ek, repository_id, repo_revision_id,
-                    file_path, detect_language(file_path), size_bytes, checksum,
-                    external_hash=checksum,
-                )
-                file_path_to_file_id[file_path] = file_id
-                file_path_to_entity_key[file_path] = str(f_ek)
-                file_path_to_entity_id[file_path] = entity_id
-                file_path_to_source[file_path] = source
+                    # Parse
+                    parse_output = get_parser(file_path)(file_path, source)
+                    file_path_to_parse_output[file_path] = parse_output
 
-                # Register symbols
-                file_symbol_records: list[dict[str, Any]] = []
-                for sym in parse_output.symbols:
-                    s_ek = symbol_entity_key(
-                        repository_key, commit_sha, file_path, sym.name, sym.kind
-                    )
-                    sym_source = "\n".join(
-                        source_lines[sym.line_start - 1 : sym.line_end]
-                    )
-                    sym_hash = hashlib.sha256(sym_source.encode("utf-8")).hexdigest()
-                    _sym_entity_id, _sym_id = await upsert_symbol(
-                        pool, s_ek, repository_id, repo_revision_id, file_id,
-                        sym.name, sym.kind, sym.line_start, sym.line_end, sym.signature,
-                        external_hash=sym_hash,
-                    )
-                    symbol_lookup[(file_path, sym.name)] = _sym_id
-                    file_symbol_records.append(
-                        {"entity_key": str(s_ek), "name": sym.name, "kind": sym.kind}
-                    )
-
-                neo4j_file_symbols.append(
-                    {
-                        "file_path": file_path,
-                        "file_entity_key": str(f_ek),
-                        "language": detect_language(file_path),
-                        "symbols": file_symbol_records,
-                        "routes": [
-                            {"method": r.method, "path": r.path, "handler_name": r.handler_name}
-                            for r in parse_output.routes
-                        ],
-                        "sql_refs": [
-                            {"object_name": sr.object_name, "operation": sr.operation}
-                            for sr in parse_output.sql_refs
-                        ],
-                    }
-                )
-
-                # Build chunks
-                chunks = build_chunks(parse_output, source_lines)
-                for chunk in chunks:
-                    c_ek = chunk_entity_key(
-                        repository_key, commit_sha, file_path, chunk.chunk_index
-                    )
-                    chunk_checksum = hashlib.sha256(
-                        chunk.content_text.encode("utf-8")
-                    ).hexdigest()
-                    await upsert_chunk(
-                        pool, c_ek, entity_id, file_id, chunk.title,
-                        chunk.content_text, chunk.chunk_type,
-                        chunk.line_start, chunk.line_end, chunk_checksum,
-                    )
-                    all_chunks_for_embedding.append(
+                    # Register file entity
+                    f_ek = file_entity_key(repository_key, commit_sha, file_path)
+                    file_path_to_entity_key[file_path] = str(f_ek)
+                    file_path_to_source[file_path] = source
+                    pending_file_rows.append(
                         {
-                            "entity_key": str(c_ek),
-                            "content_text": chunk.content_text,
+                            "entity_key": f_ek,
+                            "repository_id": repository_id,
+                            "repo_revision_id": repo_revision_id,
                             "file_path": file_path,
-                            "symbol_name": chunk.symbol_name,
-                            "chunk_type": chunk.chunk_type,
+                            "language": detect_language(file_path),
+                            "size_bytes": size_bytes,
+                            "checksum": checksum,
+                            "external_hash": checksum,
                         }
                     )
 
-                # Collect edges for post-loop resolution
-                for imp in parse_output.imports:
-                    all_imports.append((file_path, imp.module_path))
-                for call in parse_output.calls:
-                    caller_ek = str(symbol_entity_key(
-                        repository_key, commit_sha, file_path, call.caller_name,
-                        next((s.kind for s in parse_output.symbols if s.name == call.caller_name), "function"),
-                    ))
-                    all_calls.append((file_path, call.caller_name, call.callee_name, caller_ek))
+                    # Register symbols
+                    file_symbol_records: list[dict[str, Any]] = []
+                    for sym in parse_output.symbols:
+                        s_ek = symbol_entity_key(
+                            repository_key, commit_sha, file_path, sym.name, sym.kind
+                        )
+                        sym_source = "\n".join(
+                            source_lines[sym.line_start - 1 : sym.line_end]
+                        )
+                        sym_hash = hashlib.sha256(sym_source.encode("utf-8")).hexdigest()
+                        file_symbol_records.append(
+                            {"entity_key": str(s_ek), "name": sym.name, "kind": sym.kind}
+                        )
+                        pending_symbol_rows.append(
+                            {
+                                "entity_key": s_ek,
+                                "repository_id": repository_id,
+                                "repo_revision_id": repo_revision_id,
+                                "file_path": file_path,
+                                "symbol_name": sym.name,
+                                "symbol_kind": sym.kind,
+                                "line_start": sym.line_start,
+                                "line_end": sym.line_end,
+                                "signature": sym.signature,
+                                "external_hash": sym_hash,
+                            }
+                        )
 
-                await record_ingestion_item(
-                    pool, ingestion_run_id, entity_id, "file", "success"
-                )
-            except Exception as e:
-                logger.error("file_ingestion_failed", file_path=file_path, error=str(e))
-                await record_ingestion_item(
-                    pool, ingestion_run_id, None, "file", "error", error_text=str(e)
-                )
+                    neo4j_file_symbols.append(
+                        {
+                            "file_path": file_path,
+                            "file_entity_key": str(f_ek),
+                            "language": detect_language(file_path),
+                            "symbols": file_symbol_records,
+                            "routes": [
+                                {"method": r.method, "path": r.path, "handler_name": r.handler_name}
+                                for r in parse_output.routes
+                            ],
+                            "sql_refs": [
+                                {"object_name": sr.object_name, "operation": sr.operation}
+                                for sr in parse_output.sql_refs
+                            ],
+                        }
+                    )
 
-        # Step 5b: Resolve and upsert edges (post-loop)
-        neo4j_import_edges: list[dict[str, str]] = []
-        neo4j_call_edges: list[dict[str, str]] = []
+                    # Build chunks
+                    chunks = build_chunks(parse_output, source_lines)
+                    for chunk in chunks:
+                        c_ek = chunk_entity_key(
+                            repository_key, commit_sha, file_path, chunk.chunk_index
+                        )
+                        chunk_checksum = hashlib.sha256(
+                            chunk.content_text.encode("utf-8")
+                        ).hexdigest()
+                        all_chunks_for_embedding.append(
+                            {
+                                "entity_key": str(c_ek),
+                                "content_text": chunk.content_text,
+                                "file_path": file_path,
+                                "symbol_name": chunk.symbol_name,
+                                "chunk_type": chunk.chunk_type,
+                            }
+                        )
+                        pending_chunk_rows.append(
+                            {
+                                "entity_key": c_ek,
+                                "repository_id": repository_id,
+                                "repo_revision_id": repo_revision_id,
+                                "file_path": file_path,
+                                "title": chunk.title,
+                                "content_text": chunk.content_text,
+                                "chunk_type": chunk.chunk_type,
+                                "line_start": chunk.line_start,
+                                "line_end": chunk.line_end,
+                                "checksum": chunk_checksum,
+                            }
+                        )
 
-        for importer_path, module_path in all_imports:
-            # Per-language import resolution via factory
-            language = detect_language(importer_path)
-            resolver = get_import_resolver(language)
-            if resolver is None:
-                continue  # Language has no file-based imports (e.g., C#, SQL)
-            result = resolver(module_path, file_path_to_file_id, file_path_to_entity_key)
-            if result is not None:
-                imported_file_id, imported_ek = result
-                importer_file_id = file_path_to_file_id.get(importer_path)
-                if importer_file_id:
-                    await upsert_file_import(pool, importer_file_id, imported_file_id)
-                    importer_ek = file_path_to_entity_key.get(importer_path, "")
-                    if importer_ek and imported_ek:
-                        neo4j_import_edges.append({
-                            "importer_ek": importer_ek,
-                            "imported_ek": imported_ek,
-                        })
+                    # Collect edges for post-loop resolution
+                    for imp in parse_output.imports:
+                        all_imports.append((file_path, imp.module_path))
+                    for call in parse_output.calls:
+                        caller_ek = str(symbol_entity_key(
+                            repository_key, commit_sha, file_path, call.caller_name,
+                            next((s.kind for s in parse_output.symbols if s.name == call.caller_name), "function"),
+                        ))
+                        all_calls.append((file_path, call.caller_name, call.callee_name, caller_ek))
 
-        # Build cross-file lookup indices
-        name_to_symbols: dict[str, list[tuple[str, int]]] = {}
-        for (fp, sname), sid in symbol_lookup.items():
-            name_to_symbols.setdefault(sname, []).append((fp, sid))
+                    processed_files = len(file_path_to_source)
+                    if processed_files % 50 == 0 or processed_files == len(py_files):
+                        logger.info(
+                            "ingestion_progress",
+                            files_processed=processed_files,
+                            total_files=len(py_files),
+                        )
+                except Exception as e:
+                    logger.error("file_ingestion_failed", file_path=file_path, error=str(e))
+                    ingestion_item_rows.append((ingestion_run_id, None, "file", "error", str(e)))
 
-        # Build file import target mapping for disambiguation
-        file_import_targets: dict[str, set[str]] = {}
-        for importer_path, module_path in all_imports:
-            language = detect_language(importer_path)
-            resolver = get_import_resolver(language)
-            if resolver is None:
-                continue
-            result = resolver(module_path, file_path_to_file_id, file_path_to_entity_key)
-            if result is not None:
-                imported_fid, _ = result
-                for fp, fid in file_path_to_file_id.items():
-                    if fid == imported_fid:
-                        file_import_targets.setdefault(importer_path, set()).add(fp)
-                        break
+            saved_files = await bulk_upsert_files(pool, pending_file_rows)
+            for saved in saved_files:
+                file_path_to_file_id[saved["file_path"]] = saved["file_id"]
+                file_path_to_entity_id[saved["file_path"]] = saved["entity_id"]
+                file_path_to_entity_key[saved["file_path"]] = saved["entity_key"]
+                ingestion_item_rows.append((ingestion_run_id, saved["entity_id"], "file", "success", None))
 
-        # Build symbol entity_key lookup from neo4j_file_symbols
-        symbol_ek_lookup: dict[tuple[str, str], str] = {}
-        for fs in neo4j_file_symbols:
-            for s in fs["symbols"]:
-                symbol_ek_lookup[(fs["file_path"], s["name"])] = s["entity_key"]
+            for row in pending_symbol_rows:
+                row["file_id"] = file_path_to_file_id[row["file_path"]]
+            saved_symbols = await bulk_upsert_symbols(pool, pending_symbol_rows)
+            for saved in saved_symbols:
+                symbol_lookup[(saved["file_path"], saved["symbol_name"])] = saved["symbol_id"]
+                symbol_entity_key_to_entity_id[saved["entity_key"]] = saved["entity_id"]
 
-        for file_path_call, caller_name, callee_name, caller_ek in all_calls:
-            caller_sid = symbol_lookup.get((file_path_call, caller_name))
-            callee_sid = symbol_lookup.get((file_path_call, callee_name))
-            callee_file = file_path_call  # assume same file initially
+            for row in pending_chunk_rows:
+                row["file_id"] = file_path_to_file_id[row["file_path"]]
+            await bulk_upsert_chunks(pool, pending_chunk_rows)
+            await bulk_record_ingestion_items(pool, ingestion_item_rows)
 
-            # Cross-file resolution if same-file lookup fails
-            if callee_sid is None:
-                candidates = name_to_symbols.get(callee_name, [])
-                if len(candidates) == 1:
-                    callee_file, callee_sid = candidates[0]
-                elif len(candidates) > 1:
-                    imported = file_import_targets.get(file_path_call, set())
-                    for cand_fp, cand_sid in candidates:
-                        if cand_fp in imported:
-                            callee_file, callee_sid = cand_fp, cand_sid
-                            break
+            neo4j_import_edges, neo4j_call_edges = await _resolve_dependency_edges(
+                pool=pool,
+                repository_key=repository_key,
+                commit_sha=commit_sha,
+                file_path_to_file_id=file_path_to_file_id,
+                file_path_to_entity_key=file_path_to_entity_key,
+                neo4j_file_symbols=neo4j_file_symbols,
+                symbol_lookup=symbol_lookup,
+                all_imports=all_imports,
+                all_calls=all_calls,
+                persist_to_pg=True,
+            )
 
-            if caller_sid and callee_sid:
-                await upsert_symbol_call(pool, caller_sid, callee_sid)
-                callee_ek = symbol_ek_lookup.get((callee_file, callee_name))
-                if callee_ek:
-                    neo4j_call_edges.append({
-                        "caller_ek": caller_ek,
-                        "callee_ek": callee_ek,
-                    })
+            changed_file_paths = list(file_path_to_source.keys())
+            if changed_file_paths:
+                try:
+                    stale_rows = await pool.fetch(
+                        """
+                        SELECT lr.id, e.entity_key
+                        FROM memory.learned_records lr
+                        JOIN catalog.entities e ON lr.entity_id = e.id
+                        JOIN catalog.entities scope_e ON lr.scope_entity_id = scope_e.id
+                        JOIN catalog.files f ON f.entity_id = scope_e.id
+                        WHERE f.file_path = ANY($1::text[])
+                          AND lr.is_active = TRUE
+                          AND scope_e.repository_id = $2
+                        """,
+                        changed_file_paths,
+                        repository_id,
+                    )
+                    if stale_rows:
+                        from memory_knowledge.lifecycle.staleness_checker import mark_stale
+                        from memory_knowledge.projections.learned_memory_neo4j import deactivate_learned_rule
+                        from memory_knowledge.projections.learned_memory_qdrant import deactivate_learned_record_point
 
-        logger.info("edges_resolved", imports=len(neo4j_import_edges), calls=len(neo4j_call_edges))
+                        stale_ids = [r["id"] for r in stale_rows]
+                        await mark_stale(pool, stale_ids)
+                        for r in stale_rows:
+                            ek = str(r["entity_key"])
+                            try:
+                                await deactivate_learned_record_point(qdrant_client, ek)
+                            except Exception:
+                                pass
+                            try:
+                                await deactivate_learned_rule(neo4j_driver, ek)
+                            except Exception:
+                                pass
+                        logger.info("stale_records_invalidated", count=len(stale_ids))
+                except Exception as exc:
+                    logger.warning("staleness_check_failed", error=str(exc))
 
-        # Step 5c-pre: Check and invalidate stale learned records
-        changed_file_paths = list(file_path_to_source.keys())
-        if changed_file_paths:
-            try:
-                stale_rows = await pool.fetch(
-                    """
-                    SELECT lr.id, e.entity_key
-                    FROM memory.learned_records lr
-                    JOIN catalog.entities e ON lr.entity_id = e.id
-                    JOIN catalog.entities scope_e ON lr.scope_entity_id = scope_e.id
-                    JOIN catalog.files f ON f.entity_id = scope_e.id
-                    WHERE f.file_path = ANY($1::text[])
-                      AND lr.is_active = TRUE
-                      AND scope_e.repository_id = $2
-                    """,
-                    changed_file_paths,
-                    repository_id,
-                )
-                if stale_rows:
-                    from memory_knowledge.lifecycle.staleness_checker import mark_stale
-                    from memory_knowledge.projections.learned_memory_neo4j import deactivate_learned_rule
-                    from memory_knowledge.projections.learned_memory_qdrant import deactivate_learned_record_point
-
-                    stale_ids = [r["id"] for r in stale_rows]
-                    await mark_stale(pool, stale_ids)
-                    for r in stale_rows:
-                        ek = str(r["entity_key"])
-                        try:
-                            await deactivate_learned_record_point(qdrant_client, ek)
-                        except Exception:
-                            pass
-                        try:
-                            await deactivate_learned_rule(neo4j_driver, ek)
-                        except Exception:
-                            pass
-                    logger.info("stale_records_invalidated", count=len(stale_ids))
-            except Exception as exc:
-                logger.warning("staleness_check_failed", error=str(exc))
+            checkpoint_state = await _save_ingestion_checkpoint(
+                pool,
+                manifest_job_id,
+                checkpoint_state,
+                phase="canonical_complete",
+            )
+        else:
+            neo4j_import_edges, neo4j_call_edges = await _resolve_dependency_edges(
+                pool=pool,
+                repository_key=repository_key,
+                commit_sha=commit_sha,
+                file_path_to_file_id=file_path_to_file_id,
+                file_path_to_entity_key=file_path_to_entity_key,
+                neo4j_file_symbols=neo4j_file_symbols,
+                symbol_lookup=symbol_lookup,
+                all_imports=all_imports,
+                all_calls=all_calls,
+                persist_to_pg=False,
+            )
 
         # Step 5c: Generate summaries (if enabled) — batched for speed
         all_summaries_for_embedding: list[dict[str, Any]] = []
         summaries_created = 0
 
-        if settings.generate_summaries:
+        if settings.generate_summaries and not _checkpoint_phase_at_or_beyond(checkpoint_state, "summaries_complete"):
             # Query existing summaries to skip re-generation
             existing_summary_keys: set[str] = set()
             try:
-                rows = await pool.fetch(
-                    """SELECT e.entity_key FROM catalog.summaries s
-                       JOIN catalog.entities e ON s.entity_id = e.id
-                       WHERE e.repository_id = $1""",
-                    repository_id,
+                existing_summary_keys = await _fetch_existing_summary_keys(
+                    pool,
+                    repository_id=repository_id,
+                    repo_revision_id=repo_revision_id,
                 )
-                existing_summary_keys = {str(r["entity_key"]) for r in rows}
                 if existing_summary_keys:
                     logger.info("existing_summaries_found", count=len(existing_summary_keys))
             except Exception:
@@ -540,6 +949,19 @@ async def run(
                         })
                         item_index += 1
 
+            summary_items.sort(
+                key=lambda item: (
+                    item["language"],
+                    item["file"],
+                    item["summary_level"],
+                    item["name"],
+                    item["entity_key"],
+                )
+            )
+            summary_cursor = int(checkpoint_state.get("summary_items_completed", 0) or 0)
+            if summary_cursor > 0:
+                summary_items = summary_items[summary_cursor:]
+
             logger.info(
                 "summary_items_collected",
                 total=len(summary_items),
@@ -554,9 +976,11 @@ async def run(
                     by_language[lang] = list(items_iter)
 
                 index_to_item = {item["index"]: item for item in summary_items}
+                summary_cursor_box = [summary_cursor]
 
                 async def _persist_batch_results(results: list[dict[str, Any]]) -> None:
                     nonlocal summaries_created
+                    summary_rows: list[dict[str, Any]] = []
                     for result in results:
                         item = index_to_item.get(result["index"])
                         if not item or not result.get("summary"):
@@ -567,39 +991,75 @@ async def run(
                         if item["summary_level"] == "file":
                             entity_id = file_path_to_entity_id.get(item["file"])
                         else:
-                            row = await pool.fetchrow(
-                                "SELECT id FROM catalog.entities WHERE entity_key = $1",
-                                uuid.UUID(item["entity_key"]),
-                            )
-                            entity_id = row["id"] if row else None
+                            entity_id = symbol_entity_key_to_entity_id.get(item["entity_key"])
                         if entity_id:
-                            try:
-                                await upsert_summary(
-                                    pool, s_ek, entity_id, item["summary_level"], result["summary"]
-                                )
-                                all_summaries_for_embedding.append({
-                                    "entity_key": str(s_ek),
-                                    "summary_text": result["summary"],
+                            summary_rows.append(
+                                {
+                                    "entity_key": s_ek,
+                                    "repository_id": repository_id,
+                                    "repo_revision_id": repo_revision_id,
+                                    "parent_entity_id": entity_id,
                                     "summary_level": item["summary_level"],
-                                })
-                                summaries_created += 1
-                            except Exception as exc:
-                                logger.warning(
-                                    "summary_upsert_failed", name=item["name"], error=str(exc),
-                                )
+                                    "summary_text": result["summary"],
+                                }
+                            )
+                    try:
+                        await bulk_upsert_summaries(pool, summary_rows)
+                    except Exception as exc:
+                        for row in summary_rows:
+                            logger.warning(
+                                "summary_upsert_failed", entity_key=str(row["entity_key"]), error=str(exc),
+                            )
+                        return
+                    for row in summary_rows:
+                        all_summaries_for_embedding.append({
+                            "entity_key": str(row["entity_key"]),
+                            "summary_text": row["summary_text"],
+                            "summary_level": row["summary_level"],
+                        })
+                    summaries_created += len(summary_rows)
+                    if len(summary_rows) == len(results) and summary_rows:
+                        next_cursor = summary_cursor_box[0] + len(summary_rows)
+                        checkpoint_state.update({"summary_items_completed": next_cursor})
+                        await _save_ingestion_checkpoint(
+                            pool,
+                            manifest_job_id,
+                            checkpoint_state,
+                            phase="canonical_complete",
+                        )
+                        summary_cursor_box[0] = next_cursor
 
                 for language, lang_items in by_language.items():
-                    results = await complete_batch_summaries(
+                    await complete_batch_summaries(
                         lang_items, settings, language, batch_size=50,
                         on_batch_complete=_persist_batch_results,
                     )
-                    # Any results not yet persisted (shouldn't happen but safety net)
-                    await _persist_batch_results(results)
+                    summary_cursor = summary_cursor_box[0]
 
             logger.info("summaries_generated", count=summaries_created)
+            checkpoint_state = await _save_ingestion_checkpoint(
+                pool,
+                manifest_job_id,
+                checkpoint_state,
+                phase="summaries_complete",
+                summary_items_completed=0,
+            )
+        elif _checkpoint_phase_at_or_beyond(checkpoint_state, "summaries_complete"):
+            all_summaries_for_embedding = await _load_summaries_for_embedding(
+                pool,
+                repository_id=repository_id,
+                repo_revision_id=repo_revision_id,
+            )
 
         # Step 6: Embed all chunks
-        if all_chunks_for_embedding:
+        if not _checkpoint_phase_at_or_beyond(checkpoint_state, "chunk_embeddings_complete"):
+            if not all_chunks_for_embedding:
+                all_chunks_for_embedding = await _load_chunks_for_embedding(
+                    pool,
+                    repository_id=repository_id,
+                    repo_revision_id=repo_revision_id,
+                )
+        if all_chunks_for_embedding and not _checkpoint_phase_at_or_beyond(checkpoint_state, "chunk_embeddings_complete"):
             texts = [c["content_text"] for c in all_chunks_for_embedding]
             embeddings = await embed_chunks(texts, settings)
             for c, emb in zip(all_chunks_for_embedding, embeddings):
@@ -610,12 +1070,31 @@ async def run(
                 qdrant_client, all_chunks_for_embedding,
                 repository_key, commit_sha, branch_name,
             )
+            checkpoint_state = await _save_ingestion_checkpoint(
+                pool,
+                manifest_job_id,
+                checkpoint_state,
+                phase="chunk_embeddings_complete",
+            )
 
         # Step 7b: Embed and upsert summaries to Qdrant
-        if all_summaries_for_embedding:
+        if not _checkpoint_phase_at_or_beyond(checkpoint_state, "summary_embeddings_complete"):
+            if not all_summaries_for_embedding:
+                all_summaries_for_embedding = await _load_summaries_for_embedding(
+                    pool,
+                    repository_id=repository_id,
+                    repo_revision_id=repo_revision_id,
+                )
+        if all_summaries_for_embedding and not _checkpoint_phase_at_or_beyond(checkpoint_state, "summary_embeddings_complete"):
             await embed_and_upsert_summaries(
                 qdrant_client, all_summaries_for_embedding,
                 repository_key, commit_sha, settings,
+            )
+            checkpoint_state = await _save_ingestion_checkpoint(
+                pool,
+                manifest_job_id,
+                checkpoint_state,
+                phase="summary_embeddings_complete",
             )
 
         # Step 8: Deactivate old points (only for full runs)
@@ -628,18 +1107,18 @@ async def run(
             )
 
         # Step 9: Neo4j projection (structure + dependency edges)
-        if neo4j_file_symbols:
+        if neo4j_file_symbols and not _checkpoint_phase_at_or_beyond(checkpoint_state, "neo4j_complete"):
             await project_repository_graph(
                 neo4j_driver, repository_key, commit_sha,
                 branch_name, neo4j_file_symbols,
             )
-        if neo4j_import_edges or neo4j_call_edges:
+        if (neo4j_import_edges or neo4j_call_edges) and not _checkpoint_phase_at_or_beyond(checkpoint_state, "neo4j_complete"):
             await project_dependency_edges(
                 neo4j_driver, neo4j_import_edges, neo4j_call_edges,
             )
 
         # Step 9b: Additive labels (DbTable, StoredProcedure) + Modules + Endpoints
-        if neo4j_file_symbols:
+        if neo4j_file_symbols and not _checkpoint_phase_at_or_beyond(checkpoint_state, "neo4j_complete"):
             await project_additive_labels(neo4j_driver, neo4j_file_symbols)
 
             # Module detection: directories with 2+ source files or __init__.py
@@ -751,6 +1230,12 @@ async def run(
                             })
 
             await project_inheritance_edges(neo4j_driver, inheritance_edges)
+            checkpoint_state = await _save_ingestion_checkpoint(
+                pool,
+                manifest_job_id,
+                checkpoint_state,
+                phase="neo4j_complete",
+            )
 
         # Step 10: Update branch head + retrieval surface
         await upsert_branch_head(pool, repository_id, branch_name, repo_revision_id)

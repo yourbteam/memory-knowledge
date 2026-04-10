@@ -9,6 +9,7 @@ from pydantic import BaseModel
 from qdrant_client import AsyncQdrantClient
 
 from memory_knowledge.config import Settings
+from memory_knowledge.db.qdrant import ensure_collections
 from memory_knowledge.projections.learned_memory_qdrant import embed_and_upsert_learned_record
 from memory_knowledge.projections.neo4j_projector import project_repository_graph
 from memory_knowledge.projections.qdrant_projector import embed_chunks, upsert_points
@@ -61,6 +62,7 @@ async def repair(
     # Qdrant repair
     if repair_scope in ("full", "qdrant"):
         try:
+            await ensure_collections(qdrant_client, settings)
             chunk_rows = await pool.fetch(
                 """
                 SELECT e.entity_key, c.content_text, c.chunk_type,
@@ -265,6 +267,7 @@ async def rebuild_revision(
 
     if repair_scope in ("full", "qdrant"):
         try:
+            await ensure_collections(qdrant_client, settings)
             chunk_rows = await pool.fetch(
                 """
                 SELECT e.entity_key, c.content_text, c.chunk_type,
