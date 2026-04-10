@@ -130,6 +130,51 @@ async def test_save_workflow_finding_decision_rejects_duplicate(monkeypatch, fin
 
 
 @pytest.mark.asyncio
+async def test_save_workflow_finding_parses_string_context_json(findings_pool):
+    result = await server.save_workflow_finding(
+        repository_key="repo-a",
+        run_id=str(uuid.uuid4()),
+        workflow_name="wf-a",
+        phase_id="review",
+        agent_name="verifier",
+        attempt_number=1,
+        finding_fingerprint="fp-1",
+        finding_title="Title",
+        finding_message="Message",
+        context_json='{"nested": {"ok": true}}',  # type: ignore[arg-type]
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    insert_query, insert_args = next(
+        (q, a) for q, a in findings_pool.fetchrow_calls if "INSERT INTO ops.workflow_findings" in q
+    )
+    assert json.loads(insert_args[19]) == {"nested": {"ok": True}}
+
+
+@pytest.mark.asyncio
+async def test_save_workflow_finding_decision_parses_string_context_json(findings_pool):
+    result = await server.save_workflow_finding_decision(
+        repository_key="repo-a",
+        run_id=str(uuid.uuid4()),
+        workflow_name="wf-a",
+        critic_phase_id="critic",
+        critic_agent_name="critic-1",
+        attempt_number=1,
+        finding_fingerprint="fp-1",
+        decision_bucket_code="DISMISS",
+        actionable=False,
+        suppress_on_rerun=True,
+        context_json='{"source": "critic"}',  # type: ignore[arg-type]
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    insert_query, insert_args = next(
+        (q, a) for q, a in findings_pool.fetchrow_calls if "INSERT INTO ops.workflow_finding_decisions" in q
+    )
+    assert json.loads(insert_args[18]) == {"source": "critic"}
+
+
+@pytest.mark.asyncio
 async def test_list_workflow_finding_suppressions_returns_payload_under_data(monkeypatch, findings_pool):
     async def fake_list(*args, **kwargs):
         return {
@@ -149,6 +194,30 @@ async def test_list_workflow_finding_suppressions_returns_payload_under_data(mon
     payload = json.loads(result)
     assert payload["status"] == "success"
     assert payload["data"]["items"][0]["finding_fingerprint"] == "fp-1"
+
+
+@pytest.mark.asyncio
+async def test_findings_read_tools_reject_negative_limit(findings_pool):
+    result = await server.list_workflow_finding_suppressions(
+        repository_key="repo-a",
+        run_id=str(uuid.uuid4()),
+        workflow_name="wf-a",
+        phase_id="review",
+        limit=-1,
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "limit must be >= 0" in payload["error"]
+
+    result = await server.get_finding_pattern_summary(repository_key="repo-a", limit=-1)
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "limit must be >= 0" in payload["error"]
+
+    result = await server.get_agent_failure_mode_summary(repository_key="repo-a", limit=-1)
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "limit must be >= 0" in payload["error"]
 
 
 @pytest.mark.asyncio

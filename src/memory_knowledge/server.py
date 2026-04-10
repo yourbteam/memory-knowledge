@@ -1208,6 +1208,7 @@ async def save_workflow_finding(
         guard.run_id = str(rid)
         return guard.model_dump_json()
     try:
+        import json as _json
         if attempt_number < 1:
             return WorkflowResult(
                 run_id=str(rid),
@@ -1291,9 +1292,9 @@ async def save_workflow_finding(
         if isinstance(status_row, str):
             return status_row
         if isinstance(context_json, str):
-            normalized_context = context_json
+            normalized_context = _json.dumps(_json.loads(context_json)) if context_json else None
         elif context_json is not None:
-            normalized_context = json.dumps(context_json)
+            normalized_context = _json.dumps(context_json)
         else:
             normalized_context = None
         row = await _findings.save_workflow_finding(
@@ -1368,6 +1369,7 @@ async def save_workflow_finding_decision(
         guard.run_id = str(rid)
         return guard.model_dump_json()
     try:
+        import json as _json
         if attempt_number < 1:
             return WorkflowResult(
                 run_id=str(rid),
@@ -1472,9 +1474,9 @@ async def save_workflow_finding_decision(
                 error="Multiple findings match this run/attempt/fingerprint; provide finding_phase_id",
             ).model_dump_json()
         if isinstance(context_json, str):
-            normalized_context = context_json
+            normalized_context = _json.dumps(_json.loads(context_json)) if context_json else None
         elif context_json is not None:
-            normalized_context = json.dumps(context_json)
+            normalized_context = _json.dumps(context_json)
         else:
             normalized_context = None
         row = await _findings.save_workflow_finding_decision(
@@ -1537,6 +1539,13 @@ async def list_workflow_finding_suppressions(
     rid = new_run_id()
     bind_run_context(rid, correlation_id, "list_workflow_finding_suppressions")
     try:
+        if limit < 0:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="list_workflow_finding_suppressions",
+                status="error",
+                error="limit must be >= 0",
+            ).model_dump_json()
         pool = get_pg_pool()
         repo_row = await pool.fetchrow(
             "SELECT id FROM catalog.repositories WHERE repository_key = $1",
@@ -2290,6 +2299,13 @@ async def get_finding_pattern_summary(
     rid = new_run_id()
     bind_run_context(rid, correlation_id, "get_finding_pattern_summary")
     try:
+        if limit < 0:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_finding_pattern_summary",
+                status="error",
+                error="limit must be >= 0",
+            ).model_dump_json()
         data = await _findings.get_finding_pattern_summary(
             get_pg_pool(),
             repository_key=repository_key,
@@ -2326,6 +2342,13 @@ async def get_agent_failure_mode_summary(
     rid = new_run_id()
     bind_run_context(rid, correlation_id, "get_agent_failure_mode_summary")
     try:
+        if limit < 0:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_agent_failure_mode_summary",
+                status="error",
+                error="limit must be >= 0",
+            ).model_dump_json()
         data = await _findings.get_agent_failure_mode_summary(
             get_pg_pool(),
             repository_key=repository_key,
