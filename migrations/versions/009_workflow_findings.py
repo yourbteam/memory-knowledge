@@ -120,7 +120,7 @@ def upgrade() -> None:
             created_utc TIMESTAMPTZ NOT NULL DEFAULT NOW(),
             CONSTRAINT uq_workflow_finding_decision UNIQUE (
                 workflow_finding_id, critic_phase_id, critic_agent_name, attempt_number,
-                decision_bucket_id
+                decision_bucket_id, created_utc
             )
         )
         """

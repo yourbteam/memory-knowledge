@@ -187,7 +187,7 @@ async def save_workflow_finding_decision(
         )
         ON CONFLICT (
             workflow_finding_id, critic_phase_id, critic_agent_name, attempt_number,
-            decision_bucket_id
+            decision_bucket_id, created_utc
         ) DO NOTHING
         RETURNING id, workflow_finding_id
         """,

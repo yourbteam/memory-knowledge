@@ -375,7 +375,7 @@ async def test_list_workflow_finding_suppressions_picks_latest_decision_before_f
 
 
 @pytest.mark.asyncio
-async def test_save_workflow_finding_decision_dedupes_without_created_utc_in_conflict_target():
+async def test_save_workflow_finding_decision_dedupes_only_on_exact_created_utc_replay():
     class Pool:
         def __init__(self):
             self.query = ""
@@ -406,10 +406,9 @@ async def test_save_workflow_finding_decision_dedupes_without_created_utc_in_con
         artifact_hash=None,
         actor_email=None,
         context_json=None,
-        created_utc=None,
+        created_utc="2026-04-10T12:00:00Z",
     )
-    assert "decision_bucket_id, created_utc\n        ) DO NOTHING" not in pool.query
-    assert "decision_bucket_id\n        ) DO NOTHING" in pool.query
+    assert "decision_bucket_id, created_utc\n        ) DO NOTHING" in pool.query
 
 
 @pytest.mark.asyncio
