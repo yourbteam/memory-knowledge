@@ -61,6 +61,20 @@ def _atomic_write_json(path: str, data: dict) -> None:
         raise
 
 
+def _atomic_write_text(path: str, data: str) -> None:
+    path = os.path.expanduser(path)
+    dir_path = os.path.dirname(path)
+    os.makedirs(dir_path, exist_ok=True)
+    fd, temp_path = tempfile.mkstemp(dir=dir_path, suffix=".tmp")
+    try:
+        with os.fdopen(fd, "w", encoding="utf-8") as f:
+            f.write(data)
+        os.replace(temp_path, path)
+    except Exception:
+        os.unlink(temp_path)
+        raise
+
+
 def _locked_update_json(
     path: str, fallback_data: dict, updater, label: str
 ) -> tuple[bool, str | None]:
@@ -314,6 +328,76 @@ async def seed_from_keyvault(
         logger.info("codex_credentials_seeded_from_keyvault")
         return "seeded"
     except (json.JSONDecodeError, OSError) as e:
+        return f"error: {e}"
+
+
+async def seed_github_app_secrets_from_keyvault(
+    vault_name: str,
+    github_app_config_path: str,
+    *,
+    config_secret_name: str = "github-app-config",
+) -> str:
+    """Seed GitHub App config + PEMs from Azure Key Vault."""
+    if not _keyvault_available():
+        return "skipped (azure SDK not installed)"
+
+    loop = asyncio.get_running_loop()
+    config_path = os.path.expanduser(github_app_config_path)
+
+    def _fetch_and_write() -> str:
+        from azure.identity import DefaultAzureCredential
+        from azure.keyvault.secrets import SecretClient
+
+        vault_url = f"https://{vault_name}.vault.azure.net"
+        kv_token = os.environ.get("AZURE_KEYVAULT_TOKEN")
+        if kv_token:
+            from azure.core.credentials import AccessToken
+
+            class _StaticTokenCredential:
+                def get_token(self, *scopes, **kwargs):
+                    return AccessToken(kv_token, int(time.time()) + 3600)
+
+                def close(self):
+                    pass
+
+            credential = _StaticTokenCredential()
+        else:
+            credential = DefaultAzureCredential()
+
+        client = SecretClient(vault_url=vault_url, credential=credential)
+        try:
+            secret = client.get_secret(config_secret_name)
+            value = secret.value
+            if not value:
+                return "skipped (empty placeholder)"
+
+            configs = json.loads(value)
+            if not isinstance(configs, list):
+                return "error: github-app-config is not a JSON array"
+
+            github_dir = os.path.dirname(config_path)
+            for entry in configs:
+                pem_secret = entry.get("pem_secret")
+                if not pem_secret:
+                    continue
+                pem_local_path = os.path.join(github_dir, f"{pem_secret}.pem")
+                pem_obj = client.get_secret(pem_secret)
+                if not pem_obj.value:
+                    continue
+                _atomic_write_text(pem_local_path, pem_obj.value)
+                os.chmod(os.path.expanduser(pem_local_path), 0o600)
+                entry["pem_path"] = pem_local_path
+
+            _atomic_write_text(config_path, json.dumps(configs, indent=2))
+            os.chmod(os.path.expanduser(config_path), 0o600)
+            return "seeded+enriched"
+        finally:
+            client.close()
+            credential.close()
+
+    try:
+        return await loop.run_in_executor(None, _fetch_and_write)
+    except Exception as e:
         return f"error: {e}"
 
 

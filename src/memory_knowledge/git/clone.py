@@ -36,6 +36,7 @@ def ensure_repo(
     origin_url: str | None,
     clone_base_path: str,
     *,
+    authenticated_origin_url: str | None = None,
     github_token: str | None = None,
     github_https_username: str = "x-access-token",
 ) -> Repo:
@@ -45,7 +46,7 @@ def ensure_repo(
         logger.info("git_repo_found", repository_key=repository_key, path=str(repo_dir))
         repo = Repo(repo_dir)
         original_remote_url = repo.remotes.origin.url
-        fetch_url = _inject_github_token(
+        fetch_url = authenticated_origin_url or _inject_github_token(
             origin_url or original_remote_url,
             github_token,
             default_username=github_https_username,
@@ -69,7 +70,7 @@ def ensure_repo(
         "git_clone", repository_key=repository_key, origin_url=origin_url
     )
     os.makedirs(repo_dir.parent, exist_ok=True)
-    clone_url = _inject_github_token(
+    clone_url = authenticated_origin_url or _inject_github_token(
         origin_url,
         github_token,
         default_username=github_https_username,

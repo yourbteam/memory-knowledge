@@ -3626,6 +3626,18 @@ async def app_lifespan(app: Starlette):
         )
         logger.info("codex_kv_seed_result", status=seed_status)
 
+    if settings.azure_keyvault_name:
+        from memory_knowledge.auth.credential_refresh import (
+            seed_github_app_secrets_from_keyvault,
+        )
+
+        github_seed_status = await seed_github_app_secrets_from_keyvault(
+            settings.azure_keyvault_name,
+            settings.github_app_config_path,
+            config_secret_name=settings.kv_github_app_config_secret_name,
+        )
+        logger.info("github_app_kv_seed_result", status=github_seed_status)
+
     # Validate auth configuration — fail fast
     if settings.auth_mode == "codex":
         from memory_knowledge.auth.codex import codex_token_provider
@@ -3642,6 +3654,15 @@ async def app_lifespan(app: Starlette):
         )
 
     logger.info("startup_begin")
+
+    from memory_knowledge.auth.github_auth import init_github_auth_registry
+
+    github_registry = init_github_auth_registry(settings)
+    logger.info(
+        "github_auth_registry_initialized",
+        configured=github_registry.is_configured(),
+        org_count=len(github_registry.orgs) if hasattr(github_registry, "orgs") else 0,
+    )
 
     # Seed DB secrets from Azure Key Vault if configured
     if settings.azure_keyvault_name and settings.data_mode == "remote":

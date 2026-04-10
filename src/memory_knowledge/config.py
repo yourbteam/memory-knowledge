@@ -52,6 +52,8 @@ class Settings(BaseSettings):
     max_import_size_mb: int = 250
     github_access_token: str | None = None
     github_https_username: str = "x-access-token"
+    github_app_config_path: str = "~/.codex/.github/app-config.json"
+    kv_github_app_config_secret_name: str = "github-app-config"
 
     # Freshness
     max_surface_age_hours: int = 168  # 7 days

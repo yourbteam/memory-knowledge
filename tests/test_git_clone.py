@@ -106,10 +106,10 @@ def test_ensure_repo_clone_uses_temp_authenticated_url_and_restores_origin(monke
         "fcsapi",
         "https://yourbteam@github.com/thebteambg/FCSAPI.git",
         str(clone_base),
-        github_token="secret",
+        authenticated_origin_url="https://x-access-token:secret@github.com/thebteambg/FCSAPI.git",
     )
 
-    assert captured["url"] == "https://yourbteam:secret@github.com/thebteambg/FCSAPI.git"
+    assert captured["url"] == "https://x-access-token:secret@github.com/thebteambg/FCSAPI.git"
     assert fake_origin.url == "https://yourbteam@github.com/thebteambg/FCSAPI.git"
 
 
@@ -137,10 +137,10 @@ def test_ensure_repo_fetch_uses_temp_authenticated_url_and_restores_origin(monke
         "fcsapi",
         "https://yourbteam@github.com/thebteambg/FCSAPI.git",
         str(tmp_path / "clones"),
-        github_token="secret",
+        authenticated_origin_url="https://x-access-token:secret@github.com/thebteambg/FCSAPI.git",
     )
 
-    assert fetch_calls == ["https://yourbteam:secret@github.com/thebteambg/FCSAPI.git"]
+    assert fetch_calls == ["https://x-access-token:secret@github.com/thebteambg/FCSAPI.git"]
     assert set_urls[-1] == "https://yourbteam@github.com/thebteambg/FCSAPI.git"
 
 

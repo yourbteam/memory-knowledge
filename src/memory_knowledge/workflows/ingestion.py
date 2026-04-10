@@ -15,6 +15,7 @@ from qdrant_client import AsyncQdrantClient
 from qdrant_client import models as qdrant_models
 
 from memory_knowledge.config import Settings, get_supported_extensions
+from memory_knowledge.auth.github_auth import get_authenticated_git_url
 from memory_knowledge.git.clone import checkout_commit, ensure_repo, list_source_files
 from memory_knowledge.git.diff import changed_files
 from memory_knowledge.parsers.factory import detect_language, get_import_resolver, get_parser
@@ -498,11 +499,13 @@ async def run(
         old_sha = old_sha_row["commit_sha"] if old_sha_row else None
 
         # Step 1: Clone/fetch repo, checkout commit
+        authenticated_origin_url = await get_authenticated_git_url(origin_url, settings)
         repo = await asyncio.to_thread(
             ensure_repo,
             repository_key,
             origin_url,
             settings.repo_clone_base_path,
+            authenticated_origin_url=authenticated_origin_url,
             github_token=settings.github_access_token,
             github_https_username=settings.github_https_username,
         )
