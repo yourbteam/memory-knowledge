@@ -188,10 +188,19 @@ async def test_run_ingestion_background_uses_manifest_job_id_only(monkeypatch):
     monkeypatch.setattr(server, "get_qdrant_client", lambda: object())
     monkeypatch.setattr(server, "get_neo4j_driver", lambda: object())
 
-    await server._run_ingestion_background(uuid.uuid4(), uuid.uuid4(), "repo-a", "abc", "main")
+    checkpoint = {"phase": "canonical_complete"}
+    await server._run_ingestion_background(
+        uuid.uuid4(),
+        uuid.uuid4(),
+        "repo-a",
+        "abc",
+        "main",
+        checkpoint=checkpoint,
+    )
 
-    assert "job_id" not in captured
+    assert "job_id" in captured
     assert "manifest_job_id" in captured
+    assert captured["checkpoint"] == checkpoint
 
 
 @pytest.mark.asyncio

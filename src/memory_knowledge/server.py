@@ -272,6 +272,7 @@ _background_tasks: set[asyncio.Task] = set()
 async def _run_ingestion_background(
     job_id: uuid.UUID, run_id: uuid.UUID,
     repository_key: str, commit_sha: str, branch_name: str,
+    checkpoint: dict | None = None,
 ) -> None:
     """Background task for ingestion job execution."""
     from memory_knowledge.jobs.job_worker import execute_job
@@ -282,7 +283,7 @@ async def _run_ingestion_background(
     settings = get_settings()
     await execute_job(
         manifest_pool=pool,
-        manifest_job_id=job_id,
+        job_id=job_id,
         job_fn=_ingestion.run,
         worker_settings=settings,
         # These kwargs are forwarded to _ingestion.run()
@@ -290,6 +291,8 @@ async def _run_ingestion_background(
         commit_sha=commit_sha,
         branch_name=branch_name,
         run_id=run_id,
+        manifest_job_id=job_id,
+        checkpoint=checkpoint,
         pool=pool,
         qdrant_client=get_qdrant_client(),
         neo4j_driver=get_neo4j_driver(),
@@ -393,7 +396,14 @@ async def run_repo_ingestion_workflow(
             job_params={"checkpoint": resume_checkpoint} if resume_checkpoint else None,
         )
         task = asyncio.create_task(
-            _run_ingestion_background(job_id, run_id, repository_key, commit_sha, branch_name)
+            _run_ingestion_background(
+                job_id,
+                run_id,
+                repository_key,
+                commit_sha,
+                branch_name,
+                checkpoint=resume_checkpoint,
+            )
         )
         _track_task(task)
         return WorkflowResult(
