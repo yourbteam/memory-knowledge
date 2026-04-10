@@ -207,6 +207,23 @@ async def test_save_workflow_run_accepts_legacy_status_input(fake_pool):
 
 
 @pytest.mark.asyncio
+async def test_save_workflow_run_accepts_dict_context_json(fake_pool):
+    result = await server.save_workflow_run(
+        repository_key="repo-a",
+        run_id=str(uuid.uuid4()),
+        workflow_name="wf-a",
+        status_code="RUN_RUNNING",
+        context_json={"smoke": True, "path": "mcp"},
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    _insert_query, insert_args = next(
+        (q, a) for q, a in fake_pool.fetchrow_calls if "INSERT INTO ops.workflow_runs" in q
+    )
+    assert json.loads(insert_args[8]) == {"smoke": True, "path": "mcp"}
+
+
+@pytest.mark.asyncio
 async def test_save_workflow_run_does_not_reset_status_on_partial_update(fake_pool):
     original_fetchrow = fake_pool.fetchrow
 

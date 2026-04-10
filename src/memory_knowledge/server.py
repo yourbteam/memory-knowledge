@@ -705,7 +705,7 @@ async def save_workflow_run(
     actor_email: str | None = None,
     current_phase: str | None = None,
     iteration_count: int | None = None,
-    context_json: str | None = None,
+    context_json: str | dict | None = None,
     error_text: str | None = None,
     correlation_id: str | None = None,
 ) -> str:
@@ -730,7 +730,10 @@ async def save_workflow_run(
                 status="error", error=f"Repository '{repository_key}' not found",
             ).model_dump_json()
         repo_id = repo_row["id"]
-        ctx = _json.loads(context_json) if context_json else None
+        if isinstance(context_json, str):
+            ctx = _json.loads(context_json) if context_json else None
+        else:
+            ctx = context_json
         existing_run_row = await pool.fetchrow(
             "SELECT workflow_name FROM ops.workflow_runs WHERE run_id = $1",
             uuid.UUID(run_id),
