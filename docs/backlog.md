@@ -64,6 +64,39 @@ WHERE e.repository_id = $1 AND e.repo_revision_id = $2
 
 ---
 
+### 14. Remote private-repo ingestion cannot clone GitHub repositories
+**Status:** Resolved 2026-04-10
+
+**Problem:** Remote-triggered ingestion jobs for private GitHub repositories failed during clone/fetch because the Azure-hosted app had no non-interactive GitHub auth path. Stored repository URLs used username-only HTTPS origins such as `https://yourbteam@github.com/thebteambg/FCSAPI.git`, which work locally with interactive credentials but fail in the remote runtime. The failure appeared live when `fcsapi` ingestion returned:
+
+```text
+fatal: could not read Password for 'https://yourbteam@github.com': No such device or address
+```
+
+**Impact:** Remote ingestion for private repos was not operational even though local ingestion and remote DB writes were otherwise working. This blocked validation and production use of remote-triggered updates for repos such as `fcsapi`.
+
+**Resolution:** Copied the GitHub App auth pattern already used in `mcp-agents-workflow` and integrated it into `memory-knowledge`:
+- seed `github-app-config` plus referenced PEM secrets from Azure Key Vault at startup
+- build an in-process GitHub auth registry from the seeded config
+- generate temporary authenticated HTTPS clone/fetch URLs at runtime
+- restore the plain stored origin after clone/fetch so credentials are not persisted into `.git/config`
+
+This was deployed and verified live. Azure startup logs now show:
+- `github_app_kv_seed_result = seeded+enriched`
+- `github_auth_registry_initialized = configured: true`
+
+Remote retest succeeded:
+- `run_repo_ingestion_workflow(repository_key="fcsapi", commit_sha="d8391dda6b6074ef88b09eb46425537bd70d0c5a", branch_name="main")`
+- job `ffac88cb-4794-4726-979a-e2fa00b196b7`
+- final result `status = success`
+- `run_type = incremental`
+
+**Files:** `src/memory_knowledge/auth/github_auth.py`, `src/memory_knowledge/auth/credential_refresh.py`, `src/memory_knowledge/git/clone.py`, `src/memory_knowledge/workflows/ingestion.py`, `src/memory_knowledge/server.py`
+
+**Discovered:** 2026-04-10 — live remote `fcsapi` update failed on private GitHub clone.
+
+---
+
 ### 2. Ingestion performance on remote PostgreSQL
 **Status:** Resolved 2026-04-10
 
