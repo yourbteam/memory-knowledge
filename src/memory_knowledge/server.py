@@ -705,7 +705,7 @@ async def save_workflow_run(
     actor_email: str | None = None,
     current_phase: str | None = None,
     iteration_count: int | None = None,
-    context_json: str | dict | None = None,
+    context_json: dict | None = None,
     error_text: str | None = None,
     correlation_id: str | None = None,
 ) -> str:
