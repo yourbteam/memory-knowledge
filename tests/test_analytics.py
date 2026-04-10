@@ -136,6 +136,11 @@ class AnalyticsPool:
         return []
 
 
+class EmptyAnalyticsPool:
+    async def fetch(self, query, *args):
+        return []
+
+
 @pytest.mark.asyncio
 async def test_agent_performance_summary_uses_duration_denominator_and_unknown_actor_bucket():
     data = await analytics.get_agent_performance_summary(
@@ -188,3 +193,38 @@ async def test_loop_pattern_summary_normalizes_thresholds_and_phase_retry_counts
     assert row["phase_retry_counts"][0]["phase_id"] == "validate"
     assert row["phase_retry_counts"][0]["runs_with_attempts_ge_2"] == 1
     assert row["phase_retry_counts"][0]["max_attempts"] == 3
+
+
+@pytest.mark.asyncio
+async def test_analytics_tools_return_successful_empty_collections_for_zero_match_cases():
+    pool = EmptyAnalyticsPool()
+
+    agent_data = await analytics.get_agent_performance_summary(pool)
+    assert agent_data["summary"] == []
+    assert agent_data["eligible_run_count"] == 0
+    assert agent_data["excluded_run_count"] == 0
+
+    phase_data = await analytics.get_phase_quality_summary(pool)
+    assert phase_data["summary"] == []
+    assert phase_data["eligible_run_count"] == 0
+    assert phase_data["excluded_run_count"] == 0
+
+    validator_data = await analytics.get_validator_failure_summary(pool)
+    assert validator_data["summary"] == []
+    assert validator_data["eligible_run_count"] == 0
+    assert validator_data["excluded_run_count"] == 0
+
+    loop_data = await analytics.get_loop_pattern_summary(pool)
+    assert loop_data["summary"] == []
+    assert loop_data["eligible_run_count"] == 0
+    assert loop_data["excluded_run_count"] == 0
+
+    grade_data = await analytics.get_quality_grade_summary(pool)
+    assert grade_data["summary"] == []
+    assert grade_data["eligible_run_count"] == 0
+    assert grade_data["excluded_run_count"] == 0
+
+    entropy_data = await analytics.list_entropy_sweep_targets(pool)
+    assert entropy_data["targets"] == []
+    assert entropy_data["eligible_run_count"] == 0
+    assert entropy_data["excluded_run_count"] == 0

@@ -194,9 +194,9 @@ PY
 Expected values:
 
 - `VAL_PENDING`
-- `VAL_RUNNING`
 - `VAL_PASSED`
 - `VAL_FAILED`
+- `VAL_SKIPPED`
 - `VAL_ERROR`
 
 ## 4. Deploy Server Code

@@ -87,6 +87,27 @@ WHERE e.repository_id = $1 AND e.repo_revision_id = $2
 
 ## Medium Priority
 
+### 13. Settings/guard tests are polluted by ambient env and `.env` defaults
+**Problem:** The config and guard test suites are not hermetic against the office shell / `.env` baseline. During local analytics verification after applying `008_analytics_schema`, the broad suite failed in `tests/test_config.py` and `tests/test_guards.py` because ambient values leaked into `Settings()`. Observed symptoms included:
+- `qdrant_api_key` resolving to a non-`None` value when tests expected `None`
+- `data_mode` / per-DB effective mode resolving unexpectedly
+- `check_remote_write_guard()` not tripping when tests set `DATA_MODE=remote`
+
+**Impact:** Full-suite local verification can report unrelated failures even when the analytics upgrade itself is working. This makes rollout readiness harder to assess and weakens confidence in config/guard coverage.
+
+**Likely root cause:** `Settings()` is still reading values from the ambient environment and/or `.env` file in a way that the tests’ helper `_set_base_env()` does not fully neutralize. The tests assume a clean local baseline, but the real office environment is remote-oriented.
+
+**Fix options:**
+- make the config/guard tests explicitly clear or override all mode/auth/secret env vars they depend on
+- or provide a test-only settings construction path that does not read ambient `.env`
+- or make empty-string secret values normalize to `None` consistently if that is intended behavior
+
+**Files:** `src/memory_knowledge/config.py`, `src/memory_knowledge/guards.py`, `tests/test_config.py`, `tests/test_guards.py`
+
+**Discovered:** 2026-04-10 — during local post-migration analytics verification, the focused analytics/workflow tests passed but the broad suite still failed on config/guard expectations unrelated to the analytics upgrade surface.
+
+---
+
 ### 3. No per-file progress logging during ingestion
 **Problem:** The ingestion workflow logs phase transitions (files_determined, edges_resolved, ingestion_complete) but not per-file progress. During a 2,580-file ingestion, there are no logs for 30+ minutes between `revision_upserted` and `edges_resolved`, making it impossible to distinguish "slow but working" from "hung."
 

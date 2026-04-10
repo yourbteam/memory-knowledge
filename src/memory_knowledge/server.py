@@ -731,6 +731,20 @@ async def save_workflow_run(
             ).model_dump_json()
         repo_id = repo_row["id"]
         ctx = _json.loads(context_json) if context_json else None
+        existing_run_row = await pool.fetchrow(
+            "SELECT workflow_name FROM ops.workflow_runs WHERE run_id = $1",
+            uuid.UUID(run_id),
+        )
+        effective_workflow_name = workflow_name or (
+            existing_run_row["workflow_name"] if existing_run_row else None
+        )
+        if effective_workflow_name is None:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_run",
+                status="error",
+                error="workflow_name is required on first workflow-run write",
+            ).model_dump_json()
         effective_status_code = status_code or status
         status_row = await _resolve_workflow_run_status(pool, effective_status_code)
         if effective_status_code is not None and status_row is None:
@@ -755,7 +769,7 @@ async def save_workflow_run(
                 (run_id, repository_id, workflow_name, task_description,
                  status_id, actor_email, current_phase, iteration_count,
                  context_json, error_text, correlation_id)
-            VALUES ($1, $2, $3, $4, COALESCE($5, $13), $6, $7,
+            VALUES ($1, $2, $3, $4, COALESCE($5::bigint, $13::bigint), $6, $7,
                     COALESCE($8, 0), $9, $10, $11::uuid)
             ON CONFLICT (run_id) DO UPDATE SET
                 workflow_name   = COALESCE(EXCLUDED.workflow_name, ops.workflow_runs.workflow_name),
@@ -773,7 +787,7 @@ async def save_workflow_run(
                 END
             RETURNING id, (xmax = 0) AS is_insert, status_id
             """,
-            uuid.UUID(run_id), repo_id, workflow_name, task_description,
+            uuid.UUID(run_id), repo_id, effective_workflow_name, task_description,
             status_row["id"] if status_row else None,
             actor_email, current_phase, iteration_count,
             _json.dumps(ctx) if ctx else None,
