@@ -107,6 +107,24 @@ async def test_save_workflow_finding_rejects_workflow_name_mismatch(findings_poo
 
 
 @pytest.mark.asyncio
+async def test_save_workflow_finding_rejects_empty_phase_id(findings_pool):
+    result = await server.save_workflow_finding(
+        repository_key="repo-a",
+        run_id=str(uuid.uuid4()),
+        workflow_name="wf-a",
+        phase_id="   ",
+        agent_name="verifier",
+        attempt_number=1,
+        finding_fingerprint="fp-1",
+        finding_title="Title",
+        finding_message="Message",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "error"
+    assert "phase_id must be non-empty" in payload["error"]
+
+
+@pytest.mark.asyncio
 async def test_save_workflow_finding_decision_rejects_duplicate(monkeypatch, findings_pool):
     async def fake_save_decision(*args, **kwargs):
         return None
@@ -371,7 +389,8 @@ async def test_list_workflow_finding_suppressions_picks_latest_decision_before_f
     )
     assert "wfd.suppress_on_rerun = TRUE" not in pool.query
     assert "ld.suppress_on_rerun = TRUE" in pool.query
-    assert "ld.decision_bucket IN" not in pool.query
+    assert "ld.decision_bucket IN ('ACKNOWLEDGE_OK', 'DISMISS', 'FILTERED')" in pool.query
+    assert "DISTINCT ON (wf.finding_fingerprint)" in pool.query
 
 
 @pytest.mark.asyncio

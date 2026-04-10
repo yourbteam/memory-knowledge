@@ -229,9 +229,12 @@ async def list_workflow_finding_suppressions(
     rows = await pool.fetch(
         """
         WITH latest_decisions AS (
-            SELECT DISTINCT ON (wfd.workflow_finding_id)
+            SELECT DISTINCT ON (wf.finding_fingerprint)
+                wf.finding_fingerprint,
                 wfd.workflow_finding_id,
                 rv.internal_code AS decision_bucket,
+                wf.finding_title,
+                wf.location,
                 wfd.reason_text,
                 wfd.suppress_on_rerun,
                 wfd.artifact_name,
@@ -239,19 +242,21 @@ async def list_workflow_finding_suppressions(
                 wfd.artifact_hash,
                 wfd.created_utc
             FROM ops.workflow_finding_decisions wfd
+            JOIN ops.workflow_findings wf ON wf.id = wfd.workflow_finding_id
             JOIN core.reference_values rv ON rv.id = wfd.decision_bucket_id
             WHERE wfd.repository_id = $1
               AND wfd.workflow_run_id = $2
               AND wfd.workflow_name = $3
+              AND wf.phase_id = $4
               AND ($5::text IS NULL OR wfd.artifact_name = $5)
               AND ($6::int IS NULL OR wfd.artifact_iteration = $6)
               AND ($7::text IS NULL OR wfd.artifact_hash = $7)
-            ORDER BY wfd.workflow_finding_id, wfd.created_utc DESC, wfd.id DESC
+            ORDER BY wf.finding_fingerprint, wfd.created_utc DESC, wfd.id DESC
         )
         SELECT
-            wf.finding_fingerprint,
-            wf.finding_title,
-            wf.location,
+            ld.finding_fingerprint,
+            ld.finding_title,
+            ld.location,
             ld.decision_bucket,
             ld.reason_text,
             ld.suppress_on_rerun,
@@ -260,13 +265,9 @@ async def list_workflow_finding_suppressions(
             ld.artifact_hash,
             ld.created_utc
         FROM latest_decisions ld
-        JOIN ops.workflow_findings wf ON wf.id = ld.workflow_finding_id
-        WHERE wf.repository_id = $1
-          AND wf.workflow_run_id = $2
-          AND wf.workflow_name = $3
-          AND wf.phase_id = $4
-          AND ld.suppress_on_rerun = TRUE
-        ORDER BY ld.created_utc DESC NULLS LAST, wf.finding_fingerprint ASC
+        WHERE ld.suppress_on_rerun = TRUE
+          AND ld.decision_bucket IN ('ACKNOWLEDGE_OK', 'DISMISS', 'FILTERED')
+        ORDER BY ld.created_utc DESC NULLS LAST, ld.finding_fingerprint ASC
         LIMIT $8
         """,
         repository_id,

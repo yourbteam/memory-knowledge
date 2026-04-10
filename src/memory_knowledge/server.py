@@ -1234,6 +1234,13 @@ async def save_workflow_finding(
                 status="error",
                 error="finding_fingerprint must be non-empty",
             ).model_dump_json()
+        if not phase_id or not phase_id.strip():
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_workflow_finding",
+                status="error",
+                error="phase_id must be non-empty",
+            ).model_dump_json()
         pool = get_pg_pool()
         repo_row = await pool.fetchrow(
             "SELECT id FROM catalog.repositories WHERE repository_key = $1",
