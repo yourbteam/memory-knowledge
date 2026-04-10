@@ -499,7 +499,12 @@ async def run(
 
         # Step 1: Clone/fetch repo, checkout commit
         repo = await asyncio.to_thread(
-            ensure_repo, repository_key, origin_url, settings.repo_clone_base_path
+            ensure_repo,
+            repository_key,
+            origin_url,
+            settings.repo_clone_base_path,
+            github_token=settings.github_access_token,
+            github_https_username=settings.github_https_username,
         )
         await asyncio.to_thread(checkout_commit, repo, commit_sha)
         repo_dir = Path(settings.repo_clone_base_path) / repository_key

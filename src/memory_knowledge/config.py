@@ -50,6 +50,8 @@ class Settings(BaseSettings):
     generate_summaries: bool = True
     supported_languages: list[str] = ["python", "csharp", "sql", "typescript", "php"]
     max_import_size_mb: int = 250
+    github_access_token: str | None = None
+    github_https_username: str = "x-access-token"
 
     # Freshness
     max_surface_age_hours: int = 168  # 7 days
@@ -57,6 +59,7 @@ class Settings(BaseSettings):
     # Job orchestration
     max_job_retries: int = 3
     job_retry_delay_seconds: float = 5.0
+    job_orphan_timeout_seconds: int = 3600
 
     # HTTP
     cors_allowed_origins: str = "*"

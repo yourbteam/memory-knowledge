@@ -1,9 +1,11 @@
 import os
+from types import SimpleNamespace
 
 import pytest
 from git import Repo
 
 from memory_knowledge.git.clone import (
+    _inject_github_token,
     checkout_commit,
     ensure_repo,
     list_python_files,
@@ -61,6 +63,85 @@ def test_ensure_repo_fetch_existing(tmp_path, temp_git_repo):
 def test_ensure_repo_no_url_raises(tmp_path):
     with pytest.raises(ValueError, match="No origin_url"):
         ensure_repo("missing-repo", None, str(tmp_path))
+
+
+def test_inject_github_token_preserves_non_github_urls():
+    url = "https://gitlab.example.com/team/repo.git"
+    assert _inject_github_token(url, "token") == url
+
+
+def test_inject_github_token_uses_existing_username():
+    url = "https://yourbteam@github.com/thebteambg/FCSAPI.git"
+    assert _inject_github_token(url, "secret") == "https://yourbteam:secret@github.com/thebteambg/FCSAPI.git"
+
+
+def test_inject_github_token_uses_default_username_when_missing():
+    url = "https://github.com/thebteambg/FCSAPI.git"
+    assert _inject_github_token(url, "secret") == "https://x-access-token:secret@github.com/thebteambg/FCSAPI.git"
+
+
+def test_ensure_repo_clone_uses_temp_authenticated_url_and_restores_origin(monkeypatch, tmp_path):
+    clone_base = tmp_path / "clones"
+    clone_base.mkdir()
+    captured: dict[str, str] = {}
+
+    class FakeOrigin:
+        def __init__(self):
+            self.url = ""
+
+        def set_url(self, url):
+            self.url = url
+
+    fake_origin = FakeOrigin()
+    fake_repo = SimpleNamespace(remotes=SimpleNamespace(origin=fake_origin))
+
+    def fake_clone_from(url, dest):
+        captured["url"] = url
+        captured["dest"] = dest
+        return fake_repo
+
+    monkeypatch.setattr("memory_knowledge.git.clone.Repo.clone_from", fake_clone_from)
+
+    ensure_repo(
+        "fcsapi",
+        "https://yourbteam@github.com/thebteambg/FCSAPI.git",
+        str(clone_base),
+        github_token="secret",
+    )
+
+    assert captured["url"] == "https://yourbteam:secret@github.com/thebteambg/FCSAPI.git"
+    assert fake_origin.url == "https://yourbteam@github.com/thebteambg/FCSAPI.git"
+
+
+def test_ensure_repo_fetch_uses_temp_authenticated_url_and_restores_origin(monkeypatch, tmp_path):
+    repo_dir = tmp_path / "clones" / "fcsapi" / ".git"
+    repo_dir.mkdir(parents=True)
+    fetch_calls: list[str] = []
+    set_urls: list[str] = []
+
+    class FakeOrigin:
+        def __init__(self):
+            self.url = "https://yourbteam@github.com/thebteambg/FCSAPI.git"
+
+        def set_url(self, url):
+            self.url = url
+            set_urls.append(url)
+
+        def fetch(self):
+            fetch_calls.append(self.url)
+
+    fake_repo = SimpleNamespace(remotes=SimpleNamespace(origin=FakeOrigin()))
+    monkeypatch.setattr("memory_knowledge.git.clone.Repo", lambda path: fake_repo)
+
+    ensure_repo(
+        "fcsapi",
+        "https://yourbteam@github.com/thebteambg/FCSAPI.git",
+        str(tmp_path / "clones"),
+        github_token="secret",
+    )
+
+    assert fetch_calls == ["https://yourbteam:secret@github.com/thebteambg/FCSAPI.git"]
+    assert set_urls[-1] == "https://yourbteam@github.com/thebteambg/FCSAPI.git"
 
 
 def test_list_python_files(temp_git_repo):

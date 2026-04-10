@@ -51,8 +51,18 @@ async def execute_job(
 
         result = await _run_with_retry()
 
-        # Store result in checkpoint_data for check_job_status retrieval
         result_json = result.model_dump_json()
+        if result.status == "error":
+            await update_job_state(
+                manifest_pool,
+                job_id,
+                "failed",
+                checkpoint_data=result_json,
+                error_text=(result.error or "Workflow returned error result")[:2000],
+            )
+            return result
+
+        # Store result in checkpoint_data for check_job_status retrieval
         await update_job_state(
             manifest_pool, job_id, "completed",
             checkpoint_data=result_json,
