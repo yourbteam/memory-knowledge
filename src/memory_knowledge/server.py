@@ -27,6 +27,7 @@ from memory_knowledge.workflows.base import WorkflowResult
 from memory_knowledge.admin import analytics as _analytics
 from memory_knowledge.admin import findings as _findings
 from memory_knowledge.admin import planning as _planning
+from memory_knowledge import triage_memory as _triage_memory
 from memory_knowledge.observability.run_context import (
     bind_run_context,
     clear_run_context,
@@ -1182,6 +1183,224 @@ async def save_workflow_validator_result(
                 "attempt_number": row["attempt_number"],
                 "saved": True,
             },
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("save_triage_case")
+async def save_triage_case(
+    repository_key: str,
+    prompt_text: str,
+    request_kind: str,
+    execution_mode: str,
+    knowledge_mode: str,
+    suggested_workflows: list[str],
+    requires_clarification: bool,
+    clarifying_questions: list[str],
+    selected_workflow_name: str | None = None,
+    selected_run_action: str | None = None,
+    fallback_route: str | None = None,
+    confidence: float | None = None,
+    reasoning_summary: str | None = None,
+    project_key: str | None = None,
+    feature_key: str | None = None,
+    task_key: str | None = None,
+    actor_email: str | None = None,
+    policy_version: str | None = None,
+    workflow_catalog_version: str | None = None,
+    decision_source: str | None = None,
+    matched_case_ids: list[str] | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "save_triage_case")
+    guard = check_remote_write_guard(get_settings(), "save_triage_case")
+    if guard is not None:
+        guard.run_id = str(rid)
+        return guard.model_dump_json()
+    try:
+        required_map = {
+            "prompt_text": prompt_text,
+            "request_kind": request_kind,
+            "execution_mode": execution_mode,
+            "knowledge_mode": knowledge_mode,
+            "repository_key": repository_key,
+        }
+        for name, value in required_map.items():
+            if not str(value or "").strip():
+                return WorkflowResult(
+                    run_id=str(rid),
+                    tool_name="save_triage_case",
+                    status="error",
+                    error=f"{name} is required",
+                ).model_dump_json()
+        if not isinstance(suggested_workflows, list):
+            return WorkflowResult(run_id=str(rid), tool_name="save_triage_case", status="error", error="suggested_workflows must be a list").model_dump_json()
+        if not isinstance(clarifying_questions, list):
+            return WorkflowResult(run_id=str(rid), tool_name="save_triage_case", status="error", error="clarifying_questions must be a list").model_dump_json()
+        if matched_case_ids is not None and not isinstance(matched_case_ids, list):
+            return WorkflowResult(run_id=str(rid), tool_name="save_triage_case", status="error", error="matched_case_ids must be a list").model_dump_json()
+
+        triage_case_id = await _triage_memory.save_triage_case(
+            get_pg_pool(),
+            get_settings(),
+            repository_key=repository_key,
+            prompt_text=prompt_text,
+            request_kind=request_kind,
+            execution_mode=execution_mode,
+            knowledge_mode=knowledge_mode,
+            selected_workflow_name=selected_workflow_name,
+            suggested_workflows=suggested_workflows,
+            selected_run_action=selected_run_action if request_kind == "run_operation" else None,
+            requires_clarification=requires_clarification,
+            clarifying_questions=clarifying_questions,
+            fallback_route=fallback_route,
+            confidence=confidence,
+            reasoning_summary=reasoning_summary,
+            project_key=project_key,
+            feature_key=feature_key,
+            task_key=task_key,
+            actor_email=actor_email,
+            policy_version=policy_version,
+            workflow_catalog_version=workflow_catalog_version,
+            decision_source=decision_source,
+            matched_case_ids=matched_case_ids or [],
+            qdrant_client=get_qdrant_client(),
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="save_triage_case",
+            status="success",
+            data={"triage_case_id": triage_case_id, "saved": True},
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(rid), tool_name="save_triage_case", status="error", error=str(exc)).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("search_triage_cases")
+async def search_triage_cases(
+    prompt_text: str,
+    repository_key: str | None = None,
+    project_key: str | None = None,
+    feature_key: str | None = None,
+    request_kind: str | None = None,
+    execution_mode: str | None = None,
+    selected_workflow_name: str | None = None,
+    selected_run_action: str | None = None,
+    policy_version: str | None = None,
+    limit: int = 5,
+    min_similarity: float = 0.65,
+    prefer_same_repository: bool = True,
+    include_corrected: bool = True,
+    max_age_days: int = 180,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "search_triage_cases")
+    try:
+        if not str(prompt_text or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="search_triage_cases", status="error", error="prompt_text is required").model_dump_json()
+        data = await _triage_memory.search_triage_cases(
+            get_pg_pool(),
+            get_settings(),
+            prompt_text=prompt_text,
+            repository_key=repository_key,
+            project_key=project_key,
+            feature_key=feature_key,
+            request_kind=request_kind,
+            execution_mode=execution_mode,
+            selected_workflow_name=selected_workflow_name,
+            selected_run_action=selected_run_action,
+            policy_version=policy_version,
+            limit=limit,
+            min_similarity=min_similarity,
+            prefer_same_repository=prefer_same_repository,
+            include_corrected=include_corrected,
+            max_age_days=max_age_days,
+            qdrant_client=get_qdrant_client(),
+        )
+        return WorkflowResult(run_id=str(rid), tool_name="search_triage_cases", status="success", data=data).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("record_triage_case_feedback")
+async def record_triage_case_feedback(
+    triage_case_id: str,
+    outcome_status: str,
+    successful_execution: bool | None = None,
+    human_override: bool | None = None,
+    correction_reason: str | None = None,
+    corrected_request_kind: str | None = None,
+    corrected_execution_mode: str | None = None,
+    corrected_selected_workflow_name: str | None = None,
+    feedback_notes: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "record_triage_case_feedback")
+    guard = check_remote_write_guard(get_settings(), "record_triage_case_feedback")
+    if guard is not None:
+        guard.run_id = str(rid)
+        return guard.model_dump_json()
+    try:
+        if not str(triage_case_id or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="record_triage_case_feedback", status="error", error="triage_case_id is required").model_dump_json()
+        if not str(outcome_status or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="record_triage_case_feedback", status="error", error="outcome_status is required").model_dump_json()
+        try:
+            uuid.UUID(str(triage_case_id))
+        except ValueError:
+            return WorkflowResult(run_id=str(rid), tool_name="record_triage_case_feedback", status="error", error="triage_case_id must be a valid UUID").model_dump_json()
+        updated = await _triage_memory.record_triage_case_feedback(
+            get_pg_pool(),
+            triage_case_id=triage_case_id,
+            outcome_status=outcome_status,
+            successful_execution=successful_execution,
+            human_override=human_override,
+            correction_reason=correction_reason,
+            corrected_request_kind=corrected_request_kind,
+            corrected_execution_mode=corrected_execution_mode,
+            corrected_selected_workflow_name=corrected_selected_workflow_name,
+            feedback_notes=feedback_notes,
+        )
+        if not updated:
+            return WorkflowResult(run_id=str(rid), tool_name="record_triage_case_feedback", status="error", error=f"Triage case '{triage_case_id}' not found").model_dump_json()
+        return WorkflowResult(run_id=str(rid), tool_name="record_triage_case_feedback", status="success", data={"triage_case_id": triage_case_id, "updated": True}).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_triage_feedback_summary")
+async def get_triage_feedback_summary(
+    repository_key: str | None = None,
+    project_key: str | None = None,
+    lookback_days: int = 30,
+    request_kind: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_triage_feedback_summary")
+    try:
+        data = await _triage_memory.get_triage_feedback_summary(
+            get_pg_pool(),
+            repository_key=repository_key,
+            project_key=project_key,
+            request_kind=request_kind,
+            lookback_days=lookback_days,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_triage_feedback_summary",
+            status="success",
+            data=data,
         ).model_dump_json()
     finally:
         clear_run_context()

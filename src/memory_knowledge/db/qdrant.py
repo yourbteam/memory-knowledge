@@ -11,6 +11,7 @@ COLLECTIONS = [
     "summary_units",
     "learned_memory",
     "routing_archetypes",
+    "triage_cases",
 ]
 
 
@@ -43,6 +44,11 @@ async def ensure_collections(
     for name in COLLECTIONS:
         for field, schema in [
             ("repository_key", models.PayloadSchemaType.KEYWORD),
+            ("project_key", models.PayloadSchemaType.KEYWORD),
+            ("feature_key", models.PayloadSchemaType.KEYWORD),
+            ("request_kind", models.PayloadSchemaType.KEYWORD),
+            ("selected_workflow_name", models.PayloadSchemaType.KEYWORD),
+            ("policy_version", models.PayloadSchemaType.KEYWORD),
             ("is_active", models.PayloadSchemaType.BOOL),
             ("branch_name", models.PayloadSchemaType.KEYWORD),
             ("commit_sha", models.PayloadSchemaType.KEYWORD),
