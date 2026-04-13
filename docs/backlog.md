@@ -269,7 +269,7 @@ The parse phase no longer does one PG round-trip per symbol/chunk, and the summa
 ## Triage Memory Follow-ups
 
 ### 15. Triage outcome statuses are not normalized through `core.reference_values`
-**Status:** Open
+**Status:** Resolved
 
 **Problem:** The triage-memory upgrade introduced outcome semantics such as `pending`, `confirmed_correct`, `corrected`, and `overridden_by_human`, but they are currently stored as freeform strings in `ops.triage_case_feedback.outcome_status`. This is inconsistent with the rest of the workflow/planning/analytics model, which already normalizes statuses through `core.reference_types` and `core.reference_values`.
 
@@ -279,12 +279,14 @@ The parse phase no longer does one PG round-trip per symbol/chunk, and the summa
 
 **Files:** `migrations/versions/010_triage_memory.py`, `src/memory_knowledge/triage_memory.py`, `src/memory_knowledge/server.py`, tests under `tests/`
 
+**Resolution:** Completed via `011_triage_outcome_status_reference_values`, normalized `status_id` writes in triage feedback, raw-text fallback retention for unknown accepted statuses, and `list_reference_values("TRIAGE_OUTCOME_STATUS")` coverage.
+
 **Discovered:** 2026-04-13 — post-pull implementation review of triage-memory upgrade.
 
 ---
 
 ### 16. Historic triage cases have no dedicated re-embedding/backfill path
-**Status:** Open
+**Status:** Resolved
 
 **Problem:** New triage cases attempt a best-effort Qdrant upsert at write time, but there is no dedicated repair/backfill flow for historic `ops.triage_cases` rows. If Qdrant was unavailable, embedding dimensions changed, or the collection was recreated, old cases would remain undiscoverable semantically.
 
@@ -294,12 +296,14 @@ The parse phase no longer does one PG round-trip per symbol/chunk, and the summa
 
 **Files:** `src/memory_knowledge/triage_memory.py`, `src/memory_knowledge/db/qdrant.py`, possible repair/rebuild/admin hooks, tests under `tests/`
 
+**Resolution:** Completed via shared triage reprojection helpers, repair-path triage case backfill counts, partial-status handling for skipped reprojections, and focused tests covering repair counts plus restored retrieval with widened `max_age_days`.
+
 **Discovered:** 2026-04-13 — post-pull implementation review of triage-memory upgrade.
 
 ---
 
 ### 17. Triage memory lacks confusion-cluster and clarification-recommendation tools
-**Status:** Open
+**Status:** Resolved 2026-04-13
 
 **Problem:** The current upgrade provides case save/search/feedback/summary only. There is no tooling to identify prompt clusters that repeatedly misroute, and no helper to surface prompts that frequently require clarification.
 
@@ -308,6 +312,8 @@ The parse phase no longer does one PG round-trip per symbol/chunk, and the summa
 **Expected fix:** Add focused triage analysis tools for confusion clusters and clarification recommendations, with deterministic ranking and empty-result behavior.
 
 **Files:** `src/memory_knowledge/triage_memory.py`, `src/memory_knowledge/server.py`, tests under `tests/`, docs as needed
+
+**Resolution:** Completed via the read-only MCP tools `get_triage_confusion_clusters` and `get_triage_clarification_recommendations`, PostgreSQL-backed deterministic aggregation/ranking helpers, stable empty-result payloads, and focused wrapper/behavior coverage in `tests/test_triage_memory.py`.
 
 **Discovered:** 2026-04-13 — post-pull implementation review of triage-memory upgrade.
 
@@ -329,7 +335,7 @@ The parse phase no longer does one PG round-trip per symbol/chunk, and the summa
 ---
 
 ### 19. Triage search uses only simple score nudges rather than a stronger hybrid ranking model
-**Status:** Open
+**Status:** Resolved 2026-04-13
 
 **Problem:** `search_triage_cases` currently starts from Qdrant similarity and applies small additive adjustments for repository, project, and outcome quality. There is no more advanced hybrid ranking layer using stronger recency decay, explicit policy-version weighting, clarification penalties/boosts, or calibrated outcome weighting.
 
@@ -338,5 +344,7 @@ The parse phase no longer does one PG round-trip per symbol/chunk, and the summa
 **Expected fix:** Design and implement a more explicit hybrid ranking model for triage retrieval, with documented weighting and tests covering ordering behavior.
 
 **Files:** `src/memory_knowledge/triage_memory.py`, `tests/test_triage_memory.py`, docs/task artifacts as needed
+
+**Resolution:** Completed via an explicit hybrid scoring helper for `search_triage_cases`, deterministic tie-break ordering, preserved lexical/zero-hit contracts, and focused tests covering semantic and lexical ranking behavior, outcome and clarification weighting, recency effects, ordering stability, and `retrieval_summary.consensus_strength`. Under the current API, `policy_version` remains a retrieval-scope filter rather than a soft ranking weight.
 
 **Discovered:** 2026-04-13 — post-pull implementation review of triage-memory upgrade.

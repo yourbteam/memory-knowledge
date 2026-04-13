@@ -1407,6 +1407,88 @@ async def get_triage_feedback_summary(
 
 
 @mcp.tool()
+@track_tool_metrics("get_triage_confusion_clusters")
+async def get_triage_confusion_clusters(
+    repository_key: str | None = None,
+    project_key: str | None = None,
+    request_kind: str | None = None,
+    selected_workflow_name: str | None = None,
+    selected_run_action: str | None = None,
+    lookback_days: int = 30,
+    limit: int = 10,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_triage_confusion_clusters")
+    try:
+        if lookback_days < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_triage_confusion_clusters", status="error", error="lookback_days must be >= 1").model_dump_json()
+        if limit < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_triage_confusion_clusters", status="error", error="limit must be >= 1").model_dump_json()
+        data = await _triage_memory.get_triage_confusion_clusters(
+            get_pg_pool(),
+            repository_key=repository_key,
+            project_key=project_key,
+            request_kind=request_kind,
+            selected_workflow_name=selected_workflow_name,
+            selected_run_action=selected_run_action,
+            lookback_days=lookback_days,
+            limit=limit,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_triage_confusion_clusters",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_triage_clarification_recommendations")
+async def get_triage_clarification_recommendations(
+    repository_key: str | None = None,
+    project_key: str | None = None,
+    request_kind: str | None = None,
+    selected_workflow_name: str | None = None,
+    selected_run_action: str | None = None,
+    lookback_days: int = 30,
+    limit: int = 10,
+    min_case_count: int = 2,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_triage_clarification_recommendations")
+    try:
+        if lookback_days < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_triage_clarification_recommendations", status="error", error="lookback_days must be >= 1").model_dump_json()
+        if limit < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_triage_clarification_recommendations", status="error", error="limit must be >= 1").model_dump_json()
+        if min_case_count < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_triage_clarification_recommendations", status="error", error="min_case_count must be >= 1").model_dump_json()
+        data = await _triage_memory.get_triage_clarification_recommendations(
+            get_pg_pool(),
+            repository_key=repository_key,
+            project_key=project_key,
+            request_kind=request_kind,
+            selected_workflow_name=selected_workflow_name,
+            selected_run_action=selected_run_action,
+            lookback_days=lookback_days,
+            limit=limit,
+            min_case_count=min_case_count,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_triage_clarification_recommendations",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("save_workflow_finding")
 async def save_workflow_finding(
     repository_key: str,

@@ -44,6 +44,12 @@ _LEGACY_OUTCOME_TO_REFERENCE_CODE = {
     "overridden_by_human": TRIAGE_OUTCOME_OVERRIDDEN_BY_HUMAN,
 }
 
+LEXICAL_FALLBACK_BASELINE = 0.65
+PROJECT_PREFERENCE_BOOST = 0.03
+OUTCOME_CONFIDENCE_WEIGHT = 0.08
+CLARIFICATION_PENALTY = 0.04
+RECENCY_WEIGHT = 0.04
+
 
 def _prompt_hash(prompt_text: str) -> str:
     return hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()
@@ -58,6 +64,55 @@ def _canonicalize_outcome_status(status: str | None) -> str | None:
     if not normalized:
         return None
     return normalized
+
+
+def _recency_score(created_utc: dt.datetime | None, max_age_days: int) -> float:
+    if created_utc is None or max_age_days <= 0:
+        return 0.0
+    now = dt.datetime.now(dt.timezone.utc)
+    if created_utc.tzinfo is None:
+        created_utc = created_utc.replace(tzinfo=dt.timezone.utc)
+    age_seconds = max((now - created_utc).total_seconds(), 0.0)
+    horizon_seconds = max(float(max_age_days) * 86400.0, 1.0)
+    freshness = max(0.0, 1.0 - min(age_seconds / horizon_seconds, 1.0))
+    return round(freshness, 4)
+
+
+def _hybrid_similarity_score(
+    row: dict[str, Any],
+    *,
+    candidate_scores: dict[str, float],
+    project_key: str | None,
+    max_age_days: int,
+    lexical_fallback: bool,
+) -> float:
+    triage_case_id = str(row["triage_case_id"])
+    baseline = candidate_scores.get(triage_case_id, LEXICAL_FALLBACK_BASELINE if lexical_fallback else 0.0)
+    score = float(baseline)
+    if project_key and row["project_key"] == project_key:
+        score += PROJECT_PREFERENCE_BOOST
+    outcome_confidence = _outcome_confidence(str(row.get("outcome_status") or "pending"))
+    if outcome_confidence is not None:
+        score += (float(outcome_confidence) - 0.5) * OUTCOME_CONFIDENCE_WEIGHT
+    if row.get("requires_clarification"):
+        score -= CLARIFICATION_PENALTY
+    score += _recency_score(row.get("created_utc"), max_age_days) * RECENCY_WEIGHT
+    return round(max(score, 0.0), 4)
+
+
+def _search_sort_key(
+    item: dict[str, Any],
+) -> tuple[float, float, int, int, str, str, str]:
+    created_utc = str(item.get("created_utc") or "")
+    return (
+        float(item["similarity_score"]),
+        float(item.get("outcome_confidence") or -1.0),
+        1 if item.get("requires_clarification") is False else 0,
+        1 if created_utc else 0,
+        created_utc,
+        str(item.get("repository_key") or ""),
+        str(item.get("triage_case_id") or ""),
+    )
 
 
 async def _resolve_triage_outcome_status_id(
@@ -403,6 +458,9 @@ async def search_triage_cases(
     candidates: list[tuple[str, float]] = []
     fallback_to_lexical = qdrant_client is None
 
+    if prefer_same_repository is False:
+        warnings.append("prefer_same_repository is retained for compatibility and does not change ranking under the current search contract.")
+
     if qdrant_client is not None:
         try:
             query_embedding = await embed_single(prompt_text, settings)
@@ -452,7 +510,6 @@ async def search_triage_cases(
         policy_version=policy_version,
         include_corrected=include_corrected,
         max_age_days=max_age_days,
-        prefer_same_repository=prefer_same_repository,
         limit=limit,
         lexical_fallback=fallback_to_lexical,
     )
@@ -482,7 +539,6 @@ async def _fetch_search_rows(
     policy_version: str | None,
     include_corrected: bool,
     max_age_days: int,
-    prefer_same_repository: bool,
     limit: int,
     lexical_fallback: bool,
 ) -> list[dict[str, Any]]:
@@ -559,20 +615,18 @@ async def _fetch_search_rows(
     for row in rows:
         triage_case_id = str(row["triage_case_id"])
         outcome_status = str(row["outcome_status"] or "pending")
-        score = candidate_scores.get(triage_case_id, 0.65 if lexical_fallback else 0.0)
-        if prefer_same_repository and repository_key and row["repository_key"] == repository_key:
-            score += 0.05
-        if project_key and row["project_key"] == project_key:
-            score += 0.03
-        if outcome_status == "confirmed_correct":
-            score += 0.02
-        if include_corrected and outcome_status in {"corrected", "overridden_by_human"}:
-            score -= 0.1
+        score = _hybrid_similarity_score(
+            row,
+            candidate_scores=candidate_scores,
+            project_key=project_key,
+            max_age_days=max_age_days,
+            lexical_fallback=lexical_fallback,
+        )
         enriched.append(
             {
                 "triage_case_id": triage_case_id,
                 "prompt_text": row["prompt_text"],
-                "similarity_score": round(max(score, 0.0), 4),
+                "similarity_score": score,
                 "request_kind": row["request_kind"],
                 "execution_mode": row["execution_mode"],
                 "knowledge_mode": row["knowledge_mode"],
@@ -590,18 +644,7 @@ async def _fetch_search_rows(
             }
         )
 
-    def _sort_key(item: dict[str, Any]) -> tuple[float, int, int, str]:
-        created_utc = str(item.get("created_utc") or "")
-        policy_match = 1 if policy_version and item.get("policy_version") == policy_version else 0
-        repo_match = 1 if repository_key and item.get("repository_key") == repository_key else 0
-        return (
-            float(item["similarity_score"]),
-            policy_match + repo_match,
-            1 if created_utc else 0,
-            created_utc,
-        )
-
-    enriched.sort(key=_sort_key, reverse=True)
+    enriched.sort(key=_search_sort_key, reverse=True)
     return enriched[:limit]
 
 
@@ -620,6 +663,316 @@ def _build_retrieval_summary(rows: list[dict[str, Any]]) -> dict[str, Any]:
         "consensus_request_kind": max(request_kinds, key=request_kinds.get) if request_kinds else None,
         "consensus_workflow": max(workflows, key=workflows.get) if workflows else None,
         "consensus_strength": round(total_score / len(rows), 4) if rows else 0.0,
+    }
+
+
+async def _fetch_triage_analysis_rows(
+    pool: asyncpg.Pool,
+    *,
+    repository_key: str | None,
+    project_key: str | None,
+    request_kind: str | None,
+    selected_workflow_name: str | None,
+    selected_run_action: str | None,
+    lookback_days: int,
+) -> list[dict[str, Any]]:
+    rows = await pool.fetch(
+        """
+        /* triage_analysis_rows */
+        SELECT
+            tc.prompt_text,
+            tc.request_kind,
+            tc.selected_workflow_name,
+            tc.selected_run_action,
+            tc.requires_clarification,
+            tc.created_utc,
+            COALESCE(fb.effective_outcome_status, 'pending') AS outcome_status,
+            fb.corrected_request_kind
+        FROM ops.triage_cases tc
+        JOIN catalog.repositories r ON r.id = tc.repository_id
+        LEFT JOIN LATERAL (
+            SELECT
+                CASE
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_PENDING' THEN 'pending'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_CONFIRMED_CORRECT' THEN 'confirmed_correct'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_EXECUTION_FAILED_AFTER_ROUTE' THEN 'execution_failed_after_route'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_INSUFFICIENT_CONTEXT' THEN 'insufficient_context'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_CORRECTED' THEN 'corrected'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_OVERRIDDEN_BY_HUMAN' THEN 'overridden_by_human'
+                    WHEN fb.outcome_status IS NOT NULL THEN lower(btrim(fb.outcome_status))
+                    ELSE NULL
+                END AS effective_outcome_status,
+                fb.corrected_request_kind
+            FROM ops.triage_case_feedback fb
+            LEFT JOIN core.reference_values rv ON rv.id = fb.status_id
+            WHERE fb.triage_case_id = tc.triage_case_id
+            ORDER BY fb.created_utc DESC, fb.id DESC
+            LIMIT 1
+        ) fb ON TRUE
+        WHERE ($1::text IS NULL OR r.repository_key = $1)
+          AND ($2::text IS NULL OR tc.project_key = $2)
+          AND ($3::text IS NULL OR tc.request_kind = $3)
+          AND ($4::text IS NULL OR tc.selected_workflow_name = $4)
+          AND ($5::text IS NULL OR tc.selected_run_action = $5)
+          AND tc.created_utc >= NOW() - make_interval(days => $6)
+        ORDER BY tc.created_utc DESC, tc.triage_case_id DESC
+        """,
+        repository_key,
+        project_key,
+        request_kind,
+        selected_workflow_name,
+        selected_run_action,
+        lookback_days,
+    )
+    return [dict(row) for row in rows]
+
+
+def _triage_cluster_sort_key(item: dict[str, Any]) -> tuple[int, int, str, str, str, str, str, str]:
+    return (
+        int(item["case_count"]),
+        int(item["clarification_count"]),
+        str(item.get("latest_seen_utc") or ""),
+        str(item.get("request_kind") or ""),
+        str(item.get("selected_workflow_name") or ""),
+        str(item.get("selected_run_action") or ""),
+        str(item.get("corrected_request_kind") or ""),
+        str(item.get("outcome_status") or ""),
+    )
+
+
+async def get_triage_confusion_clusters(
+    pool: asyncpg.Pool,
+    *,
+    repository_key: str | None = None,
+    project_key: str | None = None,
+    request_kind: str | None = None,
+    selected_workflow_name: str | None = None,
+    selected_run_action: str | None = None,
+    lookback_days: int = DEFAULT_LOOKBACK_DAYS,
+    limit: int = 10,
+) -> dict[str, Any]:
+    rows = await _fetch_triage_analysis_rows(
+        pool,
+        repository_key=repository_key,
+        project_key=project_key,
+        request_kind=request_kind,
+        selected_workflow_name=selected_workflow_name,
+        selected_run_action=selected_run_action,
+        lookback_days=lookback_days,
+    )
+    filtered_rows = [
+        row
+        for row in rows
+        if row.get("corrected_request_kind")
+        or row.get("outcome_status") in {"corrected", "overridden_by_human", "execution_failed_after_route", "insufficient_context"}
+        or row.get("requires_clarification")
+    ]
+    base_data = {
+        "filters": {
+            "repository_key": repository_key,
+            "project_key": project_key,
+            "request_kind": request_kind,
+            "selected_workflow_name": selected_workflow_name,
+            "selected_run_action": selected_run_action,
+            "lookback_days": lookback_days,
+            "limit": limit,
+        },
+        "analyzed_case_count": len(rows),
+        "cluster_count": 0,
+        "clusters": [],
+    }
+    if not filtered_rows:
+        return base_data
+
+    grouped: dict[tuple[str | None, str | None, str | None, str | None, str], dict[str, Any]] = {}
+    for row in filtered_rows:
+        conditional_run_action = row.get("selected_run_action") if row.get("request_kind") == "run_operation" else None
+        outcome_status = str(row.get("outcome_status") or "pending")
+        corrected_request_kind = row.get("corrected_request_kind")
+        key = (
+            row.get("request_kind"),
+            row.get("selected_workflow_name"),
+            conditional_run_action,
+            corrected_request_kind,
+            outcome_status,
+        )
+        bucket = grouped.setdefault(
+            key,
+            {
+                "request_kind": row.get("request_kind"),
+                "selected_workflow_name": row.get("selected_workflow_name"),
+                "selected_run_action": conditional_run_action,
+                "outcome_status": outcome_status,
+                "corrected_request_kind": corrected_request_kind,
+                "case_count": 0,
+                "clarification_count": 0,
+                "latest_seen_utc": None,
+                "example_prompts": [],
+            },
+        )
+        bucket["case_count"] += 1
+        if row.get("requires_clarification"):
+            bucket["clarification_count"] += 1
+        created = row.get("created_utc")
+        latest_seen = bucket.get("latest_seen_utc")
+        if isinstance(created, dt.datetime):
+            created_iso = created.isoformat()
+            if latest_seen is None or created_iso > latest_seen:
+                bucket["latest_seen_utc"] = created_iso
+        prompt = str(row.get("prompt_text") or "")
+        if prompt and prompt not in bucket["example_prompts"] and len(bucket["example_prompts"]) < 3:
+            bucket["example_prompts"].append(prompt)
+
+    clusters = []
+    for bucket in grouped.values():
+        cluster_key = "|".join(
+            [
+                str(bucket.get("request_kind") or ""),
+                str(bucket.get("selected_workflow_name") or ""),
+                str(bucket.get("selected_run_action") or ""),
+                str(bucket.get("corrected_request_kind") or ""),
+                str(bucket.get("outcome_status") or ""),
+            ]
+        )
+        bucket["cluster_key"] = cluster_key
+        clusters.append(bucket)
+
+    clusters.sort(key=_triage_cluster_sort_key, reverse=True)
+    return {
+        **base_data,
+        "cluster_count": len(clusters),
+        "clusters": clusters[:limit],
+    }
+
+
+def _triage_recommendation_sort_key(item: dict[str, Any]) -> tuple[float, int, int, str, str, str, str]:
+    return (
+        float(item["clarification_rate"]),
+        int(item["clarification_count"]),
+        int(item["case_count"]),
+        str(item.get("latest_seen_utc") or ""),
+        str(item.get("request_kind") or ""),
+        str(item.get("selected_workflow_name") or ""),
+        str(item.get("selected_run_action") or ""),
+    )
+
+
+async def get_triage_clarification_recommendations(
+    pool: asyncpg.Pool,
+    *,
+    repository_key: str | None = None,
+    project_key: str | None = None,
+    request_kind: str | None = None,
+    selected_workflow_name: str | None = None,
+    selected_run_action: str | None = None,
+    lookback_days: int = DEFAULT_LOOKBACK_DAYS,
+    limit: int = 10,
+    min_case_count: int = 2,
+) -> dict[str, Any]:
+    rows = await _fetch_triage_analysis_rows(
+        pool,
+        repository_key=repository_key,
+        project_key=project_key,
+        request_kind=request_kind,
+        selected_workflow_name=selected_workflow_name,
+        selected_run_action=selected_run_action,
+        lookback_days=lookback_days,
+    )
+    base_data = {
+        "filters": {
+            "repository_key": repository_key,
+            "project_key": project_key,
+            "request_kind": request_kind,
+            "selected_workflow_name": selected_workflow_name,
+            "selected_run_action": selected_run_action,
+            "lookback_days": lookback_days,
+            "limit": limit,
+            "min_case_count": min_case_count,
+        },
+        "analyzed_case_count": len(rows),
+        "recommendation_count": 0,
+        "recommendations": [],
+    }
+    if not rows:
+        return base_data
+
+    grouped: dict[tuple[str | None, str | None, str | None], dict[str, Any]] = {}
+    for row in rows:
+        conditional_run_action = row.get("selected_run_action") if row.get("request_kind") == "run_operation" else None
+        key = (
+            row.get("request_kind"),
+            row.get("selected_workflow_name"),
+            conditional_run_action,
+        )
+        bucket = grouped.setdefault(
+            key,
+            {
+                "request_kind": row.get("request_kind"),
+                "selected_workflow_name": row.get("selected_workflow_name"),
+                "selected_run_action": conditional_run_action,
+                "case_count": 0,
+                "clarification_count": 0,
+                "latest_seen_utc": None,
+                "sample_prompts": [],
+            },
+        )
+        bucket["case_count"] += 1
+        if row.get("requires_clarification"):
+            bucket["clarification_count"] += 1
+        created = row.get("created_utc")
+        if isinstance(created, dt.datetime):
+            created_iso = created.isoformat()
+            latest_seen = bucket.get("latest_seen_utc")
+            if latest_seen is None or created_iso > latest_seen:
+                bucket["latest_seen_utc"] = created_iso
+        if row.get("requires_clarification"):
+            prompt = str(row.get("prompt_text") or "")
+            if prompt and prompt not in bucket["sample_prompts"] and len(bucket["sample_prompts"]) < 3:
+                bucket["sample_prompts"].append(prompt)
+
+    recommendations = []
+    for bucket in grouped.values():
+        case_count = int(bucket["case_count"])
+        clarification_count = int(bucket["clarification_count"])
+        if case_count < min_case_count or clarification_count == 0:
+            continue
+        clarification_rate = round(clarification_count / case_count, 4)
+        workflow_name = bucket.get("selected_workflow_name")
+        run_action = bucket.get("selected_run_action")
+        request_kind_value = bucket.get("request_kind")
+        recommendation_parts = [f"Add clarification guidance for {request_kind_value or 'unknown'} requests"]
+        if workflow_name:
+            recommendation_parts.append(f"before routing to {workflow_name}")
+        if run_action:
+            recommendation_parts.append(f"with run action {run_action}")
+        recommendation = " ".join(recommendation_parts)
+        recommendation_key = "|".join(
+            [
+                str(request_kind_value or ""),
+                str(workflow_name or ""),
+                str(run_action or ""),
+            ]
+        )
+        recommendations.append(
+            {
+                "recommendation_key": recommendation_key,
+                "request_kind": request_kind_value,
+                "selected_workflow_name": workflow_name,
+                "selected_run_action": run_action,
+                "case_count": case_count,
+                "clarification_count": clarification_count,
+                "clarification_rate": clarification_rate,
+                "latest_seen_utc": bucket.get("latest_seen_utc"),
+                "sample_prompts": bucket["sample_prompts"],
+                "recommendation": recommendation,
+            }
+        )
+
+    recommendations.sort(key=_triage_recommendation_sort_key, reverse=True)
+    return {
+        **base_data,
+        "recommendation_count": len(recommendations),
+        "recommendations": recommendations[:limit],
     }
 
 
