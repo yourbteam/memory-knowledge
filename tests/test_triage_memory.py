@@ -500,3 +500,50 @@ async def test_search_triage_cases_restored_point_is_searchable_with_widened_max
         if "FROM ops.triage_cases tc" in query and "tc.execution_mode" in query
     )
     assert args[10] == 800
+
+
+@pytest.mark.asyncio
+async def test_reproject_triage_cases_counts_missing_embeddings_as_skipped(monkeypatch):
+    class ProjectionPool(TriagePool):
+        async def fetch(self, query, *args):
+            if "ORDER BY tc.created_utc, tc.id" in query:
+                return [
+                    {
+                        "triage_case_id": uuid.UUID("cccccccc-cccc-cccc-cccc-cccccccccccc"),
+                        "repository_key": "repo-a",
+                        "prompt_text": "Prompt A",
+                        "request_kind": "task",
+                        "selected_workflow_name": "planning-workflow",
+                        "project_key": "PAY",
+                        "feature_key": "payments",
+                        "policy_version": "v1",
+                        "created_utc": datetime(2024, 1, 15, tzinfo=timezone.utc),
+                    },
+                    {
+                        "triage_case_id": uuid.UUID("dddddddd-dddd-dddd-dddd-dddddddddddd"),
+                        "repository_key": "repo-a",
+                        "prompt_text": "Prompt B",
+                        "request_kind": "task",
+                        "selected_workflow_name": "planning-workflow",
+                        "project_key": "PAY",
+                        "feature_key": "payments",
+                        "policy_version": "v1",
+                        "created_utc": datetime(2024, 1, 16, tzinfo=timezone.utc),
+                    },
+                ]
+            return await super().fetch(query, *args)
+
+    pool = ProjectionPool()
+    qdrant = ReprojectableQdrant()
+    monkeypatch.setattr("memory_knowledge.triage_memory.embed", lambda texts, settings: asyncio.sleep(0, result=[[0.3] * 8]))
+
+    result = await triage_memory.reproject_triage_cases(
+        pool=pool,
+        qdrant_client=qdrant,
+        settings=SimpleNamespace(embedding_dimensions=8),
+        repository_key="repo-a",
+    )
+
+    assert result["repaired"] == 1
+    assert result["skipped"] == 1
+    assert "embedding missing" in result["errors"][0]

@@ -179,6 +179,13 @@ async def reproject_triage_cases(
             errors.append(message)
             continue
 
+        if len(embeddings) != len(batch):
+            for row in batch[len(embeddings):]:
+                skipped += 1
+                message = f"Triage case {row.get('triage_case_id')} projection skipped: embedding missing"
+                logger.warning("triage_case_projection_embedding_missing", error=message)
+                errors.append(message)
+
         points: list[models.PointStruct] = []
         for row, embedding in zip(batch, embeddings):
             try:
