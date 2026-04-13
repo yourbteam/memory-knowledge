@@ -48,12 +48,19 @@ async def run(
         )
 
         duration_ms = int((time.monotonic() - start) * 1000)
-        status = "success" if not report.errors else "error"
+        if report.errors:
+            status = "error"
+        elif getattr(report, "triage_cases_skipped", 0):
+            status = "partial"
+        else:
+            status = "success"
 
         logger.info(
             "repair_complete",
             scope=repair_scope,
             qdrant=report.qdrant_points_repaired,
+            triage=report.triage_cases_repaired,
+            triage_skipped=report.triage_cases_skipped,
             neo4j=report.neo4j_nodes_repaired,
             errors=len(report.errors),
             duration_ms=duration_ms,

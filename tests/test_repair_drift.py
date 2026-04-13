@@ -1,8 +1,10 @@
+import uuid
 from types import SimpleNamespace
 
 import pytest
 
 from memory_knowledge.integrity import repair_drift
+from memory_knowledge.workflows import repair_rebuild
 
 
 class FakePool:
@@ -187,3 +189,99 @@ async def test_rebuild_revision_reprojects_all_revision_chunks(monkeypatch):
     assert report.qdrant_points_repaired == 2
     assert captured["texts"] == ["a", "b"]
     assert len(captured["chunks"]) == 2
+
+
+@pytest.mark.asyncio
+async def test_repair_reprojects_triage_cases_and_tracks_skipped_rows(monkeypatch):
+    class Pool:
+        async def fetchrow(self, query, *args):
+            return {
+                "repo_id": 1,
+                "rev_id": 2,
+                "commit_sha": "abc123",
+                "branch_name": "main",
+            }
+
+        async def fetch(self, query, *args):
+            return []
+
+    async def fake_ensure_collections(client, settings):
+        return None
+
+    async def fake_reproject_triage_cases(pool, qdrant_client, settings, repository_key):
+        return {"repaired": 3, "skipped": 1, "errors": ["row skipped"]}
+
+    monkeypatch.setattr(repair_drift, "ensure_collections", fake_ensure_collections)
+    monkeypatch.setattr(repair_drift._triage_memory, "reproject_triage_cases", fake_reproject_triage_cases)
+
+    report = await repair_drift.repair(
+        pool=Pool(),
+        qdrant_client=object(),
+        neo4j_driver=object(),
+        settings=SimpleNamespace(),
+        repository_key="repo-a",
+        repair_scope="qdrant",
+    )
+
+    assert report.errors == []
+    assert report.triage_cases_repaired == 3
+    assert report.triage_cases_skipped == 1
+
+
+@pytest.mark.asyncio
+async def test_rebuild_revision_reprojects_triage_cases(monkeypatch):
+    class Pool:
+        async def fetchrow(self, query, *args):
+            return {"repo_id": 1, "rev_id": 2, "branch_name": "main"}
+
+        async def fetch(self, query, *args):
+            return []
+
+    async def fake_ensure_collections(client, settings):
+        return None
+
+    async def fake_reproject_triage_cases(pool, qdrant_client, settings, repository_key):
+        return {"repaired": 2, "skipped": 0, "errors": []}
+
+    monkeypatch.setattr(repair_drift, "ensure_collections", fake_ensure_collections)
+    monkeypatch.setattr(repair_drift._triage_memory, "reproject_triage_cases", fake_reproject_triage_cases)
+
+    report = await repair_drift.rebuild_revision(
+        pool=Pool(),
+        qdrant_client=object(),
+        neo4j_driver=object(),
+        settings=SimpleNamespace(),
+        repository_key="repo-a",
+        commit_sha="abc123",
+        repair_scope="qdrant",
+    )
+
+    assert report.errors == []
+    assert report.triage_cases_repaired == 2
+    assert report.triage_cases_skipped == 0
+
+
+@pytest.mark.asyncio
+async def test_repair_rebuild_returns_partial_when_triage_rows_are_skipped(monkeypatch):
+    async def fake_repair(pool, qdrant_client, neo4j_driver, settings, repository_key, repair_scope):
+        return repair_drift.RepairReport(
+            scope=repair_scope,
+            triage_cases_repaired=4,
+            triage_cases_skipped=1,
+        )
+
+    monkeypatch.setattr(repair_rebuild, "repair", fake_repair)
+
+    result = await repair_rebuild.run(
+        repository_key="repo-a",
+        run_id=uuid.uuid4(),
+        repair_scope="qdrant",
+        pool=object(),
+        qdrant_client=object(),
+        neo4j_driver=object(),
+        settings=SimpleNamespace(),
+    )
+
+    assert result.status == "partial"
+    assert result.data["triage_cases_repaired"] == 4
+    assert result.data["triage_cases_skipped"] == 1

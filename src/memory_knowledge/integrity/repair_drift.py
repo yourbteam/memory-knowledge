@@ -10,6 +10,7 @@ from qdrant_client import AsyncQdrantClient
 
 from memory_knowledge.config import Settings
 from memory_knowledge.db.qdrant import ensure_collections
+from memory_knowledge import triage_memory as _triage_memory
 from memory_knowledge.projections.learned_memory_qdrant import embed_and_upsert_learned_record
 from memory_knowledge.projections.neo4j_projector import project_repository_graph
 from memory_knowledge.projections.qdrant_projector import embed_chunks, upsert_points
@@ -23,6 +24,8 @@ class RepairReport(BaseModel):
     qdrant_points_repaired: int = 0
     summary_points_repaired: int = 0
     learned_records_repaired: int = 0
+    triage_cases_repaired: int = 0
+    triage_cases_skipped: int = 0
     neo4j_nodes_repaired: int = 0
     errors: list[str] = []
 
@@ -170,6 +173,24 @@ async def repair(
             report.errors.append(f"Learned memory repair failed: {exc}")
             logger.error("learned_memory_repair_failed", error=str(exc))
 
+        try:
+            triage_result = await _triage_memory.reproject_triage_cases(
+                pool=pool,
+                qdrant_client=qdrant_client,
+                settings=settings,
+                repository_key=repository_key,
+            )
+            report.triage_cases_repaired = int(triage_result["repaired"])
+            report.triage_cases_skipped = int(triage_result["skipped"])
+            logger.info(
+                "triage_case_repair_complete",
+                repaired=report.triage_cases_repaired,
+                skipped=report.triage_cases_skipped,
+            )
+        except Exception as exc:
+            report.errors.append(f"Triage case repair failed: {exc}")
+            logger.error("triage_case_repair_failed", error=str(exc))
+
     # Neo4j repair
     if repair_scope in ("full", "neo4j"):
         try:
@@ -303,6 +324,18 @@ async def rebuild_revision(
                 report.qdrant_points_repaired = len(chunks_with_embeddings)
         except Exception as exc:
             report.errors.append(f"Qdrant rebuild failed: {exc}")
+
+        try:
+            triage_result = await _triage_memory.reproject_triage_cases(
+                pool=pool,
+                qdrant_client=qdrant_client,
+                settings=settings,
+                repository_key=repository_key,
+            )
+            report.triage_cases_repaired = int(triage_result["repaired"])
+            report.triage_cases_skipped = int(triage_result["skipped"])
+        except Exception as exc:
+            report.errors.append(f"Triage case rebuild failed: {exc}")
 
     if repair_scope in ("full", "neo4j"):
         try:

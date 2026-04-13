@@ -11,12 +11,13 @@ import structlog
 from qdrant_client import AsyncQdrantClient, models
 
 from memory_knowledge.config import Settings
-from memory_knowledge.llm.openai_client import embed_single
+from memory_knowledge.llm.openai_client import embed, embed_single
 
 logger = structlog.get_logger()
 
 TRIAGE_CASES_COLLECTION = "triage_cases"
 DEFAULT_LOOKBACK_DAYS = 30
+TRIAGE_REPROJECTION_BATCH_SIZE = 50
 TRIAGE_OUTCOME_STATUS_TYPE = "TRIAGE_OUTCOME_STATUS"
 TRIAGE_OUTCOME_PENDING = "TRIAGE_OUTCOME_PENDING"
 TRIAGE_OUTCOME_CONFIRMED_CORRECT = "TRIAGE_OUTCOME_CONFIRMED_CORRECT"
@@ -97,6 +98,112 @@ async def _resolve_repository_id(pool: asyncpg.Pool, repository_key: str) -> int
     return row["id"] if row else None
 
 
+def _triage_case_payload_from_row(row: dict[str, Any]) -> dict[str, Any]:
+    created_utc = row.get("created_utc")
+    if isinstance(created_utc, dt.datetime):
+        created_utc_value = created_utc.isoformat()
+    else:
+        created_utc_value = str(created_utc) if created_utc is not None else None
+    return {
+        "triage_case_id": str(row["triage_case_id"]),
+        "repository_key": row["repository_key"],
+        "project_key": row.get("project_key"),
+        "feature_key": row.get("feature_key"),
+        "request_kind": row.get("request_kind"),
+        "selected_workflow_name": row.get("selected_workflow_name"),
+        "policy_version": row.get("policy_version"),
+        "created_utc": created_utc_value,
+    }
+
+
+def _triage_case_point_from_row(
+    row: dict[str, Any],
+    embedding: list[float],
+) -> models.PointStruct:
+    return models.PointStruct(
+        id=str(row["triage_case_id"]),
+        vector=embedding,
+        payload=_triage_case_payload_from_row(row),
+    )
+
+
+async def _fetch_triage_case_projection_rows(
+    pool: asyncpg.Pool,
+    repository_key: str,
+) -> list[dict[str, Any]]:
+    rows = await pool.fetch(
+        """
+        SELECT
+            tc.triage_case_id,
+            r.repository_key,
+            tc.prompt_text,
+            tc.request_kind,
+            tc.selected_workflow_name,
+            tc.project_key,
+            tc.feature_key,
+            tc.policy_version,
+            tc.created_utc
+        FROM ops.triage_cases tc
+        JOIN catalog.repositories r ON r.id = tc.repository_id
+        WHERE r.repository_key = $1
+        ORDER BY tc.created_utc, tc.id
+        """,
+        repository_key,
+    )
+    return [dict(row) for row in rows]
+
+
+async def reproject_triage_cases(
+    pool: asyncpg.Pool,
+    qdrant_client: AsyncQdrantClient,
+    settings: Settings,
+    repository_key: str,
+) -> dict[str, Any]:
+    rows = await _fetch_triage_case_projection_rows(pool, repository_key)
+    if not rows:
+        return {"repaired": 0, "skipped": 0, "errors": []}
+
+    repaired = 0
+    skipped = 0
+    errors: list[str] = []
+
+    for index in range(0, len(rows), TRIAGE_REPROJECTION_BATCH_SIZE):
+        batch = rows[index : index + TRIAGE_REPROJECTION_BATCH_SIZE]
+        texts = [str(row["prompt_text"]) for row in batch]
+        try:
+            embeddings = await embed(texts, settings)
+        except Exception as exc:
+            message = f"Triage reprojection batch failed for {len(batch)} rows: {exc}"
+            logger.warning("triage_case_reprojection_batch_failed", error=message)
+            skipped += len(batch)
+            errors.append(message)
+            continue
+
+        points: list[models.PointStruct] = []
+        for row, embedding in zip(batch, embeddings):
+            try:
+                points.append(_triage_case_point_from_row(row, embedding))
+            except Exception as exc:
+                skipped += 1
+                message = f"Triage case {row.get('triage_case_id')} projection skipped: {exc}"
+                logger.warning("triage_case_projection_skipped", error=message)
+                errors.append(message)
+
+        if not points:
+            continue
+
+        try:
+            await qdrant_client.upsert(collection_name=TRIAGE_CASES_COLLECTION, points=points)
+            repaired += len(points)
+        except Exception as exc:
+            skipped += len(points)
+            message = f"Triage reprojection upsert failed for {len(points)} rows: {exc}"
+            logger.warning("triage_case_reprojection_upsert_failed", error=message)
+            errors.append(message)
+
+    return {"repaired": repaired, "skipped": skipped, "errors": errors}
+
+
 async def save_triage_case(
     pool: asyncpg.Pool,
     settings: Settings,
@@ -129,7 +236,7 @@ async def save_triage_case(
         raise ValueError(f"Repository '{repository_key}' not found")
 
     triage_case_id = str(uuid.uuid4())
-    await pool.fetchrow(
+    inserted = await pool.fetchrow(
         """
         INSERT INTO ops.triage_cases (
             triage_case_id, repository_id, prompt_text, prompt_hash,
@@ -144,7 +251,14 @@ async def save_triage_case(
             $9::jsonb, $10, $11, $12::jsonb, $13, $14, $15,
             $16, $17, $18, $19, $20, $21, $22, $23::jsonb
         )
-        RETURNING triage_case_id
+        RETURNING
+            triage_case_id,
+            request_kind,
+            selected_workflow_name,
+            project_key,
+            feature_key,
+            policy_version,
+            created_utc
         """,
         triage_case_id,
         repository_id,
@@ -171,27 +285,15 @@ async def save_triage_case(
         json.dumps(matched_case_ids or []),
     )
 
-    if qdrant_client is not None:
+    if qdrant_client is not None and inserted is not None:
         try:
+            projection_row = dict(inserted)
+            projection_row["repository_key"] = repository_key
+            projection_row["prompt_text"] = prompt_text
             embedding = await embed_single(prompt_text, settings)
             await qdrant_client.upsert(
                 collection_name=TRIAGE_CASES_COLLECTION,
-                points=[
-                    models.PointStruct(
-                        id=triage_case_id,
-                        vector=embedding,
-                        payload={
-                            "triage_case_id": triage_case_id,
-                            "repository_key": repository_key,
-                            "project_key": project_key,
-                            "feature_key": feature_key,
-                            "request_kind": request_kind,
-                            "selected_workflow_name": selected_workflow_name,
-                            "policy_version": policy_version,
-                            "created_utc": dt.datetime.now(dt.timezone.utc).isoformat(),
-                        },
-                    )
-                ],
+                points=[_triage_case_point_from_row(projection_row, embedding)],
             )
         except Exception:
             logger.warning("triage_case_embedding_upsert_failed", triage_case_id=triage_case_id, exc_info=True)

@@ -7,6 +7,7 @@ from types import SimpleNamespace
 import pytest
 
 from memory_knowledge import server
+from memory_knowledge import triage_memory
 
 
 class FakeQdrant:
@@ -28,6 +29,15 @@ class EmptySearchQdrant(FakeQdrant):
         return []
 
 
+class ReprojectableQdrant(FakeQdrant):
+    async def search(self, **kwargs):
+        self.search_calls.append(kwargs)
+        if not self.upserts:
+            return []
+        point = self.upserts[-1][1][0]
+        return [SimpleNamespace(id=str(point.id), score=0.91, payload={})]
+
+
 class TriagePool:
     def __init__(self):
         self.fetchrow_calls = []
@@ -38,7 +48,15 @@ class TriagePool:
         if "SELECT id FROM catalog.repositories WHERE repository_key = $1" in query:
             return {"id": 7} if args[0] == "repo-a" else None
         if "INSERT INTO ops.triage_cases" in query:
-            return {"triage_case_id": uuid.UUID(str(args[0]))}
+            return {
+                "triage_case_id": uuid.UUID(str(args[0])),
+                "request_kind": args[4],
+                "selected_workflow_name": args[7],
+                "project_key": args[15],
+                "feature_key": args[16],
+                "policy_version": args[19],
+                "created_utc": datetime(2026, 4, 13, tzinfo=timezone.utc),
+            }
         if "SELECT triage_case_id FROM ops.triage_cases" in query:
             return {"triage_case_id": uuid.UUID(args[0])} if args[0] == "11111111-1111-1111-1111-111111111111" else None
         if "FROM core.reference_values rv" in query and "WHERE rt.internal_code = $1 AND rv.internal_code = $2" in query:
@@ -370,3 +388,115 @@ async def test_list_reference_values_returns_triage_outcome_domain(monkeypatch):
     assert payload["status"] == "success"
     assert payload["data"]["count"] == 2
     assert payload["data"]["values"][0]["internal_code"] == "TRIAGE_OUTCOME_PENDING"
+
+
+@pytest.mark.asyncio
+async def test_reproject_triage_cases_uses_pg_created_utc_in_payload(monkeypatch):
+    class ProjectionPool(TriagePool):
+        async def fetch(self, query, *args):
+            if "ORDER BY tc.created_utc, tc.id" in query:
+                return [
+                    {
+                        "triage_case_id": uuid.UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+                        "repository_key": "repo-a",
+                        "prompt_text": "Historic prompt",
+                        "request_kind": "task",
+                        "selected_workflow_name": "planning-workflow",
+                        "project_key": "PAY",
+                        "feature_key": "payments",
+                        "policy_version": "v1",
+                        "created_utc": datetime(2024, 1, 15, tzinfo=timezone.utc),
+                    }
+                ]
+            return await super().fetch(query, *args)
+
+    pool = ProjectionPool()
+    qdrant = ReprojectableQdrant()
+    monkeypatch.setattr("memory_knowledge.triage_memory.embed", lambda texts, settings: asyncio.sleep(0, result=[[0.3] * 8 for _ in texts]))
+
+    result = await triage_memory.reproject_triage_cases(
+        pool=pool,
+        qdrant_client=qdrant,
+        settings=SimpleNamespace(embedding_dimensions=8),
+        repository_key="repo-a",
+    )
+
+    assert result["repaired"] == 1
+    assert result["skipped"] == 0
+    point = qdrant.upserts[0][1][0]
+    assert point.payload["created_utc"] == "2024-01-15T00:00:00+00:00"
+
+
+@pytest.mark.asyncio
+async def test_search_triage_cases_restored_point_is_searchable_with_widened_max_age(monkeypatch):
+    class SearchableProjectionPool(TriagePool):
+        async def fetch(self, query, *args):
+            self.fetch_calls.append((query, args))
+            if "ORDER BY tc.created_utc, tc.id" in query:
+                return [
+                    {
+                        "triage_case_id": uuid.UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+                        "repository_key": "repo-a",
+                        "prompt_text": "Historic prompt",
+                        "request_kind": "task",
+                        "selected_workflow_name": "planning-workflow",
+                        "project_key": "PAY",
+                        "feature_key": "payments",
+                        "policy_version": "v1",
+                        "created_utc": datetime(2024, 1, 15, tzinfo=timezone.utc),
+                    }
+                ]
+            if "FROM ops.triage_cases tc" in query and "tc.execution_mode" in query:
+                return [
+                    {
+                        "triage_case_id": uuid.UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+                        "prompt_text": "Historic prompt",
+                        "request_kind": "task",
+                        "execution_mode": "autonomous_safe",
+                        "knowledge_mode": "memory_knowledge",
+                        "selected_workflow_name": "planning-workflow",
+                        "selected_run_action": None,
+                        "requires_clarification": False,
+                        "confidence": 0.7,
+                        "project_key": "PAY",
+                        "feature_key": "payments",
+                        "repository_key": "repo-a",
+                        "policy_version": "v1",
+                        "created_utc": datetime(2024, 1, 15, tzinfo=timezone.utc),
+                        "outcome_status": "confirmed_correct",
+                        "corrected_request_kind": None,
+                    }
+                ]
+            return await super().fetch(query, *args)
+
+    pool = SearchableProjectionPool()
+    qdrant = ReprojectableQdrant()
+    monkeypatch.setattr(server, "get_pg_pool", lambda: pool)
+    monkeypatch.setattr(server, "get_qdrant_client", lambda: qdrant)
+    monkeypatch.setattr(server, "get_settings", lambda: SimpleNamespace(embedding_dimensions=8))
+    monkeypatch.setattr("memory_knowledge.triage_memory.embed", lambda texts, settings: asyncio.sleep(0, result=[[0.3] * 8 for _ in texts]))
+    monkeypatch.setattr("memory_knowledge.triage_memory.embed_single", lambda text, settings: asyncio.sleep(0, result=[0.1] * 8))
+
+    reprojection = await triage_memory.reproject_triage_cases(
+        pool=pool,
+        qdrant_client=qdrant,
+        settings=SimpleNamespace(embedding_dimensions=8),
+        repository_key="repo-a",
+    )
+    assert reprojection["repaired"] == 1
+
+    result = await server.search_triage_cases(
+        prompt_text="Historic prompt",
+        repository_key="repo-a",
+        max_age_days=800,
+    )
+    payload = json.loads(result)
+
+    assert payload["status"] == "success"
+    assert payload["data"]["rows"][0]["triage_case_id"] == "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"
+    _query, args = next(
+        (query, args)
+        for query, args in reversed(pool.fetch_calls)
+        if "FROM ops.triage_cases tc" in query and "tc.execution_mode" in query
+    )
+    assert args[10] == 800
