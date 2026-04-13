@@ -50,6 +50,38 @@
 
 ## Planned
 
+### Triage + Workflow Intelligence V3
+**Problem:** The server now persists triage cases, workflow telemetry, planning context, and analytics, but it still mostly reports history rather than adapting behavior from that history. Integrators must manually interpret triage outcomes, confusion patterns, and workflow failure signals.
+**Goal:** Upgrade the platform from passive memory plus analytics into a controlled closed-loop decision system that can synthesize routing guidance, generate clarification policies, improve ranking, and connect workflow outcomes back into future triage behavior.
+**Target v3 scope:**
+- decision policy synthesis from triage history
+  - produce reusable routing guidance from prior successful and failed cases
+  - surface repo-scoped and project-scoped routing heuristics instead of only raw case matches
+- stronger triage lifecycle modeling
+  - expand outcome normalization and make triage state transitions more explicit
+  - support clearer separation between proposed, executed, validated, corrected, and superseded decisions
+- first-class historic repair and reindex operations
+  - make triage backfill, re-embedding, and recovery workflows operationally explicit
+  - support safer selective refresh of historic triage data after schema or ranking changes
+- stronger hybrid ranking
+  - combine semantic similarity with repository affinity, project affinity, historical success rate, recency, clarification cost, and workflow priors
+  - improve result ordering for `search_triage_cases` beyond the current lightweight score adjustments
+- policy-oriented confusion intelligence
+  - turn confusion clusters and clarification recommendations into concrete suggested intake prompts, question templates, and guardrails
+- repository-aware behavioral profiles
+  - allow routing behavior to differ by repository or project when history shows different successful patterns
+- evaluator-assisted feedback loops
+  - add automatic evaluators that can score triage decisions against retrieved evidence or later workflow results
+  - reduce dependence on purely manual or downstream feedback
+- higher-level integrator tools
+  - add composed tools such as a memory-aware triage helper and outcome finalization helper so integrators do less manual orchestration
+- planning and workflow convergence
+  - let repeated validator failures, phase quality patterns, and finding patterns feed back into routing and clarification advice
+- governance and trust controls
+  - add confidence thresholds, drift tracking, and reversible policy rollout for learned decision guidance
+**Expected outcome:** Future integrator LLMs should be able to ask the server not only what happened before, but what behavior is currently recommended based on prior evidence and measured outcomes.
+**Depends on:** Stable adoption of the current triage, workflow telemetry, planning, and analytics tools by integrator clients so V3 has enough real operational signal to learn from.
+
 ### Live Remote Rollout Validation
 **Problem:** The analytics upgrade and newer findings/runtime changes are implemented, but final confidence still depends on executing the remote rollout runbook against the real office environment and verifying health, migrations, and MCP smoke checks end-to-end.
 **Goal:** Run the remote deployment and validation sequence using the supported `alembic upgrade head` path and capture a rollout report with migration, health, and smoke-test results.
