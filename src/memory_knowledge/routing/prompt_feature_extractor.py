@@ -7,6 +7,7 @@ import structlog
 from qdrant_client import AsyncQdrantClient
 
 from memory_knowledge.config import Settings
+from memory_knowledge.db.qdrant import semantic_query_points
 
 logger = structlog.get_logger()
 
@@ -84,7 +85,8 @@ async def match_archetype(
 
     try:
         query_embedding = await embed_single(query, settings)
-        results = await qdrant_client.search(
+        results = await semantic_query_points(
+            qdrant_client,
             collection_name="routing_archetypes",
             query_vector=query_embedding,
             limit=1,

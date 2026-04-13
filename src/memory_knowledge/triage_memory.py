@@ -11,6 +11,7 @@ import structlog
 from qdrant_client import AsyncQdrantClient, models
 
 from memory_knowledge.config import Settings
+from memory_knowledge.db.qdrant import semantic_query_points
 from memory_knowledge.llm.openai_client import embed, embed_single
 
 logger = structlog.get_logger()
@@ -464,7 +465,8 @@ async def search_triage_cases(
     if qdrant_client is not None:
         try:
             query_embedding = await embed_single(prompt_text, settings)
-            results = await qdrant_client.search(
+            results = await semantic_query_points(
+                qdrant_client,
                 collection_name=TRIAGE_CASES_COLLECTION,
                 query_vector=query_embedding,
                 limit=max(limit * 5, limit),

@@ -38,6 +38,14 @@ class ReprojectableQdrant(FakeQdrant):
         return [SimpleNamespace(id=str(point.id), score=0.91, payload={})]
 
 
+class QueryPointsQdrant(FakeQdrant):
+    async def query_points(self, **kwargs):
+        self.search_calls.append(kwargs)
+        return SimpleNamespace(
+            points=[SimpleNamespace(id="11111111-1111-1111-1111-111111111111", score=0.91, payload={})]
+        )
+
+
 class TriagePool:
     def __init__(self):
         self.fetchrow_calls = []
@@ -240,6 +248,26 @@ async def test_search_triage_cases_tool_returns_advisory_shape(triage_env):
     assert payload["status"] == "success"
     assert payload["data"]["advisory_only"] is True
     assert payload["data"]["rows"][0]["triage_case_id"] == "11111111-1111-1111-1111-111111111111"
+    assert qdrant.search_calls
+
+
+@pytest.mark.asyncio
+async def test_search_triage_cases_tool_uses_query_points_when_available(monkeypatch):
+    pool = TriagePool()
+    qdrant = QueryPointsQdrant()
+    settings = SimpleNamespace(embedding_dimensions=8)
+    monkeypatch.setattr(server, "get_pg_pool", lambda: pool)
+    monkeypatch.setattr(server, "get_qdrant_client", lambda: qdrant)
+    monkeypatch.setattr(server, "get_settings", lambda: settings)
+    monkeypatch.setattr(
+        "memory_knowledge.triage_memory.embed_single",
+        lambda text, settings: asyncio.sleep(0, result=[0.1] * 8),
+    )
+
+    result = await server.search_triage_cases(prompt_text="Need planning help", repository_key="repo-a")
+
+    payload = json.loads(result)
+    assert payload["status"] == "success"
     assert qdrant.search_calls
 
 

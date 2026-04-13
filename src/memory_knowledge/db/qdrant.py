@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+from typing import Any
+
 from qdrant_client import AsyncQdrantClient, models
 
 from memory_knowledge.config import Settings
@@ -61,6 +63,41 @@ async def ensure_collections(
                 )
             except Exception:
                 pass  # index may already exist
+
+
+async def semantic_query_points(
+    client: AsyncQdrantClient,
+    *,
+    collection_name: str,
+    query_vector: list[float],
+    limit: int,
+    score_threshold: float | None = None,
+    query_filter: models.Filter | None = None,
+    with_payload: bool = True,
+) -> list[Any]:
+    """Bridge Qdrant async client query API differences across versions."""
+    query_points = getattr(client, "query_points", None)
+    if callable(query_points):
+        result = await query_points(
+            collection_name=collection_name,
+            query=query_vector,
+            query_filter=query_filter,
+            limit=limit,
+            score_threshold=score_threshold,
+            with_payload=with_payload,
+        )
+        return list(result.points)
+
+    return list(
+        await client.search(
+            collection_name=collection_name,
+            query_vector=query_vector,
+            query_filter=query_filter,
+            limit=limit,
+            score_threshold=score_threshold,
+            with_payload=with_payload,
+        )
+    )
 
 
 def get_qdrant_client() -> AsyncQdrantClient:
