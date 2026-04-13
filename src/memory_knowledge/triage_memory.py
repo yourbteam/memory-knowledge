@@ -17,6 +17,13 @@ logger = structlog.get_logger()
 
 TRIAGE_CASES_COLLECTION = "triage_cases"
 DEFAULT_LOOKBACK_DAYS = 30
+TRIAGE_OUTCOME_STATUS_TYPE = "TRIAGE_OUTCOME_STATUS"
+TRIAGE_OUTCOME_PENDING = "TRIAGE_OUTCOME_PENDING"
+TRIAGE_OUTCOME_CONFIRMED_CORRECT = "TRIAGE_OUTCOME_CONFIRMED_CORRECT"
+TRIAGE_OUTCOME_EXECUTION_FAILED_AFTER_ROUTE = "TRIAGE_OUTCOME_EXECUTION_FAILED_AFTER_ROUTE"
+TRIAGE_OUTCOME_INSUFFICIENT_CONTEXT = "TRIAGE_OUTCOME_INSUFFICIENT_CONTEXT"
+TRIAGE_OUTCOME_CORRECTED = "TRIAGE_OUTCOME_CORRECTED"
+TRIAGE_OUTCOME_OVERRIDDEN_BY_HUMAN = "TRIAGE_OUTCOME_OVERRIDDEN_BY_HUMAN"
 
 _OUTCOME_CONFIDENCE = {
     "pending": None,
@@ -27,6 +34,15 @@ _OUTCOME_CONFIDENCE = {
     "overridden_by_human": 0.0,
 }
 
+_LEGACY_OUTCOME_TO_REFERENCE_CODE = {
+    "pending": TRIAGE_OUTCOME_PENDING,
+    "confirmed_correct": TRIAGE_OUTCOME_CONFIRMED_CORRECT,
+    "execution_failed_after_route": TRIAGE_OUTCOME_EXECUTION_FAILED_AFTER_ROUTE,
+    "insufficient_context": TRIAGE_OUTCOME_INSUFFICIENT_CONTEXT,
+    "corrected": TRIAGE_OUTCOME_CORRECTED,
+    "overridden_by_human": TRIAGE_OUTCOME_OVERRIDDEN_BY_HUMAN,
+}
+
 
 def _prompt_hash(prompt_text: str) -> str:
     return hashlib.sha256(prompt_text.encode("utf-8")).hexdigest()
@@ -34,6 +50,43 @@ def _prompt_hash(prompt_text: str) -> str:
 
 def _outcome_confidence(status: str | None) -> float | None:
     return _OUTCOME_CONFIDENCE.get((status or "pending").strip().lower(), None)
+
+
+def _canonicalize_outcome_status(status: str | None) -> str | None:
+    normalized = (status or "").strip().lower()
+    if not normalized:
+        return None
+    return normalized
+
+
+async def _resolve_triage_outcome_status_id(
+    pool: asyncpg.Pool,
+    outcome_status: str,
+) -> int | None:
+    canonical_status = _canonicalize_outcome_status(outcome_status)
+    if canonical_status is None:
+        return None
+    reference_code = _LEGACY_OUTCOME_TO_REFERENCE_CODE.get(canonical_status)
+    if reference_code is None:
+        return None
+    row = await pool.fetchrow(
+        """
+        SELECT rv.id
+        FROM core.reference_values rv
+        JOIN core.reference_types rt ON rt.id = rv.reference_type_id
+        WHERE rt.internal_code = $1 AND rv.internal_code = $2
+        """,
+        TRIAGE_OUTCOME_STATUS_TYPE,
+        reference_code,
+    )
+    if row is None:
+        logger.warning(
+            "triage_outcome_reference_value_missing",
+            outcome_status=canonical_status,
+            reference_code=reference_code,
+        )
+        return None
+    return int(row["id"])
 
 
 async def _resolve_repository_id(pool: asyncpg.Pool, repository_key: str) -> int | None:
@@ -165,18 +218,20 @@ async def record_triage_case_feedback(
     )
     if existing is None:
         return False
+    status_id = await _resolve_triage_outcome_status_id(pool, outcome_status)
     await pool.fetchrow(
         """
         INSERT INTO ops.triage_case_feedback (
-            triage_case_id, outcome_status, successful_execution, human_override,
+            triage_case_id, outcome_status, status_id, successful_execution, human_override,
             correction_reason, corrected_request_kind, corrected_execution_mode,
             corrected_selected_workflow_name, feedback_notes
         )
-        VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9)
+        VALUES ($1::uuid, $2, $3, $4, $5, $6, $7, $8, $9, $10)
         RETURNING id
         """,
         triage_case_id,
         outcome_status,
+        status_id,
         successful_execution,
         human_override,
         correction_reason,
@@ -339,13 +394,25 @@ async def _fetch_search_rows(
             r.repository_key,
             tc.policy_version,
             tc.created_utc,
-            COALESCE(fb.outcome_status, 'pending') AS outcome_status,
+            COALESCE(fb.effective_outcome_status, 'pending') AS outcome_status,
             fb.corrected_request_kind
         FROM ops.triage_cases tc
         JOIN catalog.repositories r ON r.id = tc.repository_id
         LEFT JOIN LATERAL (
-            SELECT outcome_status, corrected_request_kind
+            SELECT
+                CASE
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_PENDING' THEN 'pending'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_CONFIRMED_CORRECT' THEN 'confirmed_correct'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_EXECUTION_FAILED_AFTER_ROUTE' THEN 'execution_failed_after_route'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_INSUFFICIENT_CONTEXT' THEN 'insufficient_context'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_CORRECTED' THEN 'corrected'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_OVERRIDDEN_BY_HUMAN' THEN 'overridden_by_human'
+                    WHEN fb.outcome_status IS NOT NULL THEN lower(btrim(fb.outcome_status))
+                    ELSE NULL
+                END AS effective_outcome_status,
+                fb.corrected_request_kind
             FROM ops.triage_case_feedback fb
+            LEFT JOIN core.reference_values rv ON rv.id = fb.status_id
             WHERE fb.triage_case_id = tc.triage_case_id
             ORDER BY fb.created_utc DESC, fb.id DESC
             LIMIT 1
@@ -360,7 +427,7 @@ async def _fetch_search_rows(
           AND ($9::text IS NULL OR tc.selected_run_action = $9)
           AND ($10::text IS NULL OR tc.policy_version = $10)
           AND tc.created_utc >= NOW() - make_interval(days => $11)
-          AND ($12::boolean = TRUE OR COALESCE(fb.outcome_status, 'pending') NOT IN ('corrected', 'overridden_by_human'))
+          AND ($12::boolean = TRUE OR COALESCE(fb.effective_outcome_status, 'pending') NOT IN ('corrected', 'overridden_by_human'))
           AND ($13::boolean = FALSE OR tc.prompt_text ILIKE $14)
         """,
         bool(candidate_ids),
@@ -462,13 +529,25 @@ async def get_triage_feedback_summary(
             tc.request_kind,
             tc.requires_clarification,
             tc.created_utc,
-            COALESCE(fb.outcome_status, 'pending') AS outcome_status,
+            COALESCE(fb.effective_outcome_status, 'pending') AS outcome_status,
             fb.corrected_request_kind
         FROM ops.triage_cases tc
         JOIN catalog.repositories r ON r.id = tc.repository_id
         LEFT JOIN LATERAL (
-            SELECT outcome_status, corrected_request_kind
+            SELECT
+                CASE
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_PENDING' THEN 'pending'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_CONFIRMED_CORRECT' THEN 'confirmed_correct'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_EXECUTION_FAILED_AFTER_ROUTE' THEN 'execution_failed_after_route'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_INSUFFICIENT_CONTEXT' THEN 'insufficient_context'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_CORRECTED' THEN 'corrected'
+                    WHEN rv.internal_code = 'TRIAGE_OUTCOME_OVERRIDDEN_BY_HUMAN' THEN 'overridden_by_human'
+                    WHEN fb.outcome_status IS NOT NULL THEN lower(btrim(fb.outcome_status))
+                    ELSE NULL
+                END AS effective_outcome_status,
+                fb.corrected_request_kind
             FROM ops.triage_case_feedback fb
+            LEFT JOIN core.reference_values rv ON rv.id = fb.status_id
             WHERE fb.triage_case_id = tc.triage_case_id
             ORDER BY fb.created_utc DESC, fb.id DESC
             LIMIT 1

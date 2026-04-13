@@ -41,6 +41,13 @@ class TriagePool:
             return {"triage_case_id": uuid.UUID(str(args[0]))}
         if "SELECT triage_case_id FROM ops.triage_cases" in query:
             return {"triage_case_id": uuid.UUID(args[0])} if args[0] == "11111111-1111-1111-1111-111111111111" else None
+        if "FROM core.reference_values rv" in query and "WHERE rt.internal_code = $1 AND rv.internal_code = $2" in query:
+            type_code, value_code = args
+            if type_code == "TRIAGE_OUTCOME_STATUS" and value_code == "TRIAGE_OUTCOME_CORRECTED":
+                return {"id": 201}
+            if type_code == "TRIAGE_OUTCOME_STATUS" and value_code == "TRIAGE_OUTCOME_CONFIRMED_CORRECT":
+                return {"id": 202}
+            return None
         if "INSERT INTO ops.triage_case_feedback" in query:
             return {"id": 1}
         return None
@@ -218,6 +225,40 @@ async def test_record_triage_case_feedback_tool_rejects_malformed_uuid(triage_en
 
 
 @pytest.mark.asyncio
+async def test_record_triage_case_feedback_tool_resolves_canonical_status_id(triage_env):
+    pool, _qdrant = triage_env
+    result = await server.record_triage_case_feedback(
+        triage_case_id="11111111-1111-1111-1111-111111111111",
+        outcome_status=" corrected ",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    insert_query, insert_args = next(
+        (query, args) for query, args in pool.fetchrow_calls if "INSERT INTO ops.triage_case_feedback" in query
+    )
+    assert "status_id" in insert_query
+    assert insert_args[2] == 201
+
+
+@pytest.mark.asyncio
+async def test_record_triage_case_feedback_tool_preserves_unknown_status_without_reference_id(triage_env):
+    pool, _qdrant = triage_env
+    result = await server.record_triage_case_feedback(
+        triage_case_id="11111111-1111-1111-1111-111111111111",
+        outcome_status="custom_status_from_integrator",
+    )
+    payload = json.loads(result)
+    assert payload["status"] == "success"
+    _insert_query, insert_args = next(
+        (query, args)
+        for query, args in reversed(pool.fetchrow_calls)
+        if "INSERT INTO ops.triage_case_feedback" in query
+    )
+    assert insert_args[1] == "custom_status_from_integrator"
+    assert insert_args[2] is None
+
+
+@pytest.mark.asyncio
 async def test_get_triage_feedback_summary_tool_success(triage_env):
     result = await server.get_triage_feedback_summary(repository_key="repo-a")
     payload = json.loads(result)
@@ -285,3 +326,47 @@ async def test_get_triage_feedback_summary_problem_prompt_recency_uses_only_prob
 
     assert payload["status"] == "success"
     assert payload["data"]["top_problem_prompts"][:2] == ["Prompt B", "Prompt A"]
+
+
+@pytest.mark.asyncio
+async def test_list_reference_values_returns_triage_outcome_domain(monkeypatch):
+    class ReferencePool(TriagePool):
+        async def fetchrow(self, query, *args):
+            if "FROM core.reference_types WHERE internal_code = $1" in query:
+                return {"id": 301} if args[0] == "TRIAGE_OUTCOME_STATUS" else None
+            return await super().fetchrow(query, *args)
+
+        async def fetch(self, query, *args):
+            if "FROM core.reference_values rv" in query and "WHERE rv.reference_type_id = $1" in query:
+                return [
+                    {
+                        "id": 301,
+                        "internal_code": "TRIAGE_OUTCOME_PENDING",
+                        "display_name": "Pending",
+                        "description": None,
+                        "sort_order": 10,
+                        "is_active": True,
+                        "is_terminal": False,
+                    },
+                    {
+                        "id": 302,
+                        "internal_code": "TRIAGE_OUTCOME_CORRECTED",
+                        "display_name": "Corrected",
+                        "description": None,
+                        "sort_order": 50,
+                        "is_active": True,
+                        "is_terminal": True,
+                    },
+                ]
+            return await super().fetch(query, *args)
+
+    pool = ReferencePool()
+    monkeypatch.setattr(server, "get_pg_pool", lambda: pool)
+    monkeypatch.setattr(server, "get_settings", lambda: SimpleNamespace())
+
+    result = await server.list_reference_values("TRIAGE_OUTCOME_STATUS")
+    payload = json.loads(result)
+
+    assert payload["status"] == "success"
+    assert payload["data"]["count"] == 2
+    assert payload["data"]["values"][0]["internal_code"] == "TRIAGE_OUTCOME_PENDING"
