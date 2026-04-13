@@ -263,3 +263,80 @@ The parse phase no longer does one PG round-trip per symbol/chunk, and the summa
 **Resolution:** Documented the pooler-first fallback and direct-host follow-up in `README.md`.
 
 **No code change needed** — just a configuration note.
+
+---
+
+## Triage Memory Follow-ups
+
+### 15. Triage outcome statuses are not normalized through `core.reference_values`
+**Status:** Open
+
+**Problem:** The triage-memory upgrade introduced outcome semantics such as `pending`, `confirmed_correct`, `corrected`, and `overridden_by_human`, but they are currently stored as freeform strings in `ops.triage_case_feedback.outcome_status`. This is inconsistent with the rest of the workflow/planning/analytics model, which already normalizes statuses through `core.reference_types` and `core.reference_values`.
+
+**Impact:** Callers can write inconsistent status values, summary/search logic has to trust raw text, and the platform cannot expose triage outcome values through `list_reference_values(...)` the same way it does for workflow, planning, and findings domains.
+
+**Expected fix:** Introduce a `TRIAGE_OUTCOME_STATUS` reference type and migrate triage feedback to use a foreign-key-backed status model, while preserving stable MCP contracts.
+
+**Files:** `migrations/versions/010_triage_memory.py`, `src/memory_knowledge/triage_memory.py`, `src/memory_knowledge/server.py`, tests under `tests/`
+
+**Discovered:** 2026-04-13 — post-pull implementation review of triage-memory upgrade.
+
+---
+
+### 16. Historic triage cases have no dedicated re-embedding/backfill path
+**Status:** Open
+
+**Problem:** New triage cases attempt a best-effort Qdrant upsert at write time, but there is no dedicated repair/backfill flow for historic `ops.triage_cases` rows. If Qdrant was unavailable, embedding dimensions changed, or the collection was recreated, old cases would remain undiscoverable semantically.
+
+**Impact:** Semantic triage search can silently degrade over time or after infrastructure repair, with no supported recovery path analogous to the repo’s existing embedding/reprojection workflows.
+
+**Expected fix:** Add a supported backfill/re-embedding path for `triage_cases`, including collection repair/reprojection behavior and validation coverage.
+
+**Files:** `src/memory_knowledge/triage_memory.py`, `src/memory_knowledge/db/qdrant.py`, possible repair/rebuild/admin hooks, tests under `tests/`
+
+**Discovered:** 2026-04-13 — post-pull implementation review of triage-memory upgrade.
+
+---
+
+### 17. Triage memory lacks confusion-cluster and clarification-recommendation tools
+**Status:** Open
+
+**Problem:** The current upgrade provides case save/search/feedback/summary only. There is no tooling to identify prompt clusters that repeatedly misroute, and no helper to surface prompts that frequently require clarification.
+
+**Impact:** Operators can retrieve specific similar cases, but cannot ask higher-level triage questions such as “what kinds of prompts are repeatedly confusing?” or “which request patterns most often require clarification?” Those are the next useful operational views on top of triage memory.
+
+**Expected fix:** Add focused triage analysis tools for confusion clusters and clarification recommendations, with deterministic ranking and empty-result behavior.
+
+**Files:** `src/memory_knowledge/triage_memory.py`, `src/memory_knowledge/server.py`, tests under `tests/`, docs as needed
+
+**Discovered:** 2026-04-13 — post-pull implementation review of triage-memory upgrade.
+
+---
+
+### 18. Roadmap does not mention the triage-memory upgrade or follow-up phases
+**Status:** Resolved 2026-04-13
+
+**Problem:** The triage-memory feature is now present in code, schema, and tests, but there is no corresponding roadmap entry in `docs/roadmap.md`.
+
+**Impact:** The project roadmap does not reflect the new triage-memory capability or the remaining follow-up phases, making status and sequencing harder to communicate.
+
+**Expected fix:** Add a roadmap entry for the triage-memory rollout and the planned follow-up phases.
+
+**Files:** `docs/roadmap.md`
+
+**Discovered:** 2026-04-13 — direct roadmap search after triage-memory implementation pull showed no `triage` references.
+
+---
+
+### 19. Triage search uses only simple score nudges rather than a stronger hybrid ranking model
+**Status:** Open
+
+**Problem:** `search_triage_cases` currently starts from Qdrant similarity and applies small additive adjustments for repository, project, and outcome quality. There is no more advanced hybrid ranking layer using stronger recency decay, explicit policy-version weighting, clarification penalties/boosts, or calibrated outcome weighting.
+
+**Impact:** Retrieval works, but ranking quality may plateau on more ambiguous prompts because the scoring model is intentionally shallow.
+
+**Expected fix:** Design and implement a more explicit hybrid ranking model for triage retrieval, with documented weighting and tests covering ordering behavior.
+
+**Files:** `src/memory_knowledge/triage_memory.py`, `tests/test_triage_memory.py`, docs/task artifacts as needed
+
+**Discovered:** 2026-04-13 — post-pull implementation review of triage-memory upgrade.

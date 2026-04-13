@@ -24,6 +24,26 @@
 - server integration for findings and related ingestion/runtime support
 - expanded ingestion/runtime tests and auth/clone support work that landed with this slice
 
+### Triage Memory
+**Status:** Implemented as v1; follow-up phases planned.
+**Plan:** `Tasks/triage-memory-server-implementation/plan.md`
+**Delivered v1:**
+- migration `010_triage_memory`
+- 4 MCP tools:
+  - `save_triage_case`
+  - `search_triage_cases`
+  - `record_triage_case_feedback`
+  - `get_triage_feedback_summary`
+- canonical PostgreSQL persistence for triage cases and feedback
+- best-effort Qdrant-backed semantic retrieval for similar-case search
+- lexical fallback only when semantic retrieval is unavailable
+- feedback-summary aggregation and focused server-side test coverage
+**Next follow-up phases:**
+- normalize triage outcome statuses through `core.reference_values`
+- add triage-case re-embedding/backfill support
+- add confusion-cluster and clarification-recommendation tooling
+- strengthen hybrid ranking for `search_triage_cases`
+
 ---
 
 ## Planned
