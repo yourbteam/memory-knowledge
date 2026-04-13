@@ -26,6 +26,7 @@ class RepairReport(BaseModel):
     learned_records_repaired: int = 0
     triage_cases_repaired: int = 0
     triage_cases_skipped: int = 0
+    triage_case_warnings: list[str] = []
     neo4j_nodes_repaired: int = 0
     errors: list[str] = []
 
@@ -182,6 +183,7 @@ async def repair(
             )
             report.triage_cases_repaired = int(triage_result["repaired"])
             report.triage_cases_skipped = int(triage_result["skipped"])
+            report.triage_case_warnings.extend(list(triage_result["errors"]))
             logger.info(
                 "triage_case_repair_complete",
                 repaired=report.triage_cases_repaired,
@@ -324,18 +326,6 @@ async def rebuild_revision(
                 report.qdrant_points_repaired = len(chunks_with_embeddings)
         except Exception as exc:
             report.errors.append(f"Qdrant rebuild failed: {exc}")
-
-        try:
-            triage_result = await _triage_memory.reproject_triage_cases(
-                pool=pool,
-                qdrant_client=qdrant_client,
-                settings=settings,
-                repository_key=repository_key,
-            )
-            report.triage_cases_repaired = int(triage_result["repaired"])
-            report.triage_cases_skipped = int(triage_result["skipped"])
-        except Exception as exc:
-            report.errors.append(f"Triage case rebuild failed: {exc}")
 
     if repair_scope in ("full", "neo4j"):
         try:

@@ -226,10 +226,11 @@ async def test_repair_reprojects_triage_cases_and_tracks_skipped_rows(monkeypatc
     assert report.errors == []
     assert report.triage_cases_repaired == 3
     assert report.triage_cases_skipped == 1
+    assert report.triage_case_warnings == ["row skipped"]
 
 
 @pytest.mark.asyncio
-async def test_rebuild_revision_reprojects_triage_cases(monkeypatch):
+async def test_rebuild_revision_does_not_reproject_repository_scoped_triage_cases(monkeypatch):
     class Pool:
         async def fetchrow(self, query, *args):
             return {"repo_id": 1, "rev_id": 2, "branch_name": "main"}
@@ -241,7 +242,7 @@ async def test_rebuild_revision_reprojects_triage_cases(monkeypatch):
         return None
 
     async def fake_reproject_triage_cases(pool, qdrant_client, settings, repository_key):
-        return {"repaired": 2, "skipped": 0, "errors": []}
+        raise AssertionError("rebuild_revision should not reproject repository-scoped triage cases")
 
     monkeypatch.setattr(repair_drift, "ensure_collections", fake_ensure_collections)
     monkeypatch.setattr(repair_drift._triage_memory, "reproject_triage_cases", fake_reproject_triage_cases)
@@ -257,7 +258,7 @@ async def test_rebuild_revision_reprojects_triage_cases(monkeypatch):
     )
 
     assert report.errors == []
-    assert report.triage_cases_repaired == 2
+    assert report.triage_cases_repaired == 0
     assert report.triage_cases_skipped == 0
 
 
