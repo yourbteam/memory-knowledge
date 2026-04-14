@@ -7,6 +7,8 @@
 **Primary audience:** another LLM or agent framework integrating with the live `memory-knowledge` MCP server  
 **Target external project:** `mcp-agents-workflow`
 
+For the focused implementation handoff for `mcp-agents-workflow`, see `docs/MCP_AGENTS_WORKFLOW_V4_INTEGRATION.md`.
+
 ---
 
 ## 1. Purpose

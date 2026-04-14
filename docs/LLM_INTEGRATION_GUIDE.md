@@ -5,6 +5,8 @@
 **Status:** live and deployed  
 **Scope:** repo-owned integration surface after planning, workflow telemetry, and analytics upgrades
 
+For the focused `mcp-agents-workflow` adoption guide for the V4 adaptive guidance surface, see `docs/MCP_AGENTS_WORKFLOW_V4_INTEGRATION.md`.
+
 ---
 
 ## 1. What This Server Now Does
