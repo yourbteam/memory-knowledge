@@ -2,7 +2,7 @@ import os
 from logging.config import fileConfig
 
 from alembic import context
-from sqlalchemy import create_engine
+from sqlalchemy import create_engine, text
 
 config = context.config
 
@@ -22,9 +22,30 @@ def run_migrations_offline() -> None:
 def run_migrations_online() -> None:
     connectable = create_engine(url)
     with connectable.connect() as connection:
+        # Alembic defaults version_num to VARCHAR(32), but this repo uses
+        # descriptive revision ids that are longer than 32 characters.
+        connection.execute(
+            text(
+                """
+                CREATE TABLE IF NOT EXISTS alembic_version (
+                    version_num VARCHAR(255) NOT NULL PRIMARY KEY
+                )
+                """
+            )
+        )
+        connection.execute(
+            text(
+                """
+                ALTER TABLE alembic_version
+                ALTER COLUMN version_num TYPE VARCHAR(255)
+                """
+            )
+        )
+        connection.commit()
         context.configure(connection=connection, target_metadata=None)
         with context.begin_transaction():
             context.run_migrations()
+        connection.commit()
 
 
 if context.is_offline_mode():

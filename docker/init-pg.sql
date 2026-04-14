@@ -1,10 +1,17 @@
 -- ============================================================================
 -- Memory Knowledge — PostgreSQL Init Script
--- Legacy bootstrap snapshot for the pre-planning / pre-analytics schema line.
--- This file is NOT a complete analytics-ready schema bootstrap.
--- Supported fresh-install path for the current server is: alembic upgrade head
+-- DEPRECATED historical bootstrap snapshot for the pre-planning /
+-- pre-analytics schema line.
+--
+-- This file is NOT the supported current bootstrap path and is no longer
+-- mounted by the active Docker Compose local PostgreSQL service.
+--
+-- Supported fresh-install path for the current server is:
+--   alembic upgrade head
+--
 -- Do not treat this file alone as sufficient for workflow telemetry, planning,
--- reference-value seeding, or analytics features added after migration 004.
+-- reference-value seeding, findings, analytics, or triage features added after
+-- the early migration line.
 -- ============================================================================
 
 -- Schemas

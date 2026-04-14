@@ -1,110 +1,106 @@
 # Roadmap
 
-## In Progress
+## Recently Completed
 
 ### Analytics Tools Upgrade
 **Status:** Implemented and shipped.
 **Plan:** `Tasks/analytics-tools/plan.md`
 **Delivered:**
-- 2 new MCP write tools (`save_workflow_phase_state`, `save_workflow_validator_result`)
-- 6 new MCP analytics query tools (agent performance, phase quality, validator failures, loop patterns, quality grades, entropy sweep)
-- Migration 008: new table, reference values, schema fixes, indexes
-- Test coverage for workflow/planning/analytics contracts
+- 2 new MCP write tools: `save_workflow_phase_state`, `save_workflow_validator_result`
+- 6 analytics tools:
+  - `get_agent_performance_summary`
+  - `get_phase_quality_summary`
+  - `get_validator_failure_summary`
+  - `get_loop_pattern_summary`
+  - `get_quality_grade_summary`
+  - `list_entropy_sweep_targets`
+- migration `008_analytics_schema`
+- workflow/planning/analytics test coverage
 - `get_workflow_run` validator-result readback
-- AGENT_INTEGRATION_SPEC reconciliation for the analytics/tooling surface
-- Bootstrap-path clarification for analytics-ready startup
+- analytics-facing `AGENT_INTEGRATION_SPEC` reconciliation
+- analytics rollout runbook and supported bootstrap-path clarification
 
 ### Workflow Findings + LLM Integration
-**Status:** Implemented and in active rollout hardening.
+**Status:** Implemented.
 **Plan:** `Tasks/memory-knowledge-prerequisites/plan.md`
-**Scope:**
-- Migration 009 workflow findings persistence
+**Delivered:**
+- migration `009` workflow findings persistence
 - findings administration/query layer
-- LLM integration guide and workflow findings operator docs
-- server integration for findings and related ingestion/runtime support
-- expanded ingestion/runtime tests and auth/clone support work that landed with this slice
+- server integration for findings surfaces
+- LLM integration guide and workflow findings operator documentation
+- auth/clone/runtime support required for external workflow producer adoption
 
-### Triage Memory
+### Triage Memory v1
 **Status:** Implemented.
 **Plan:** `Tasks/triage-memory-server-implementation/plan.md`
-**Delivered v1:**
+**Delivered:**
 - migration `010_triage_memory`
-- 4 MCP tools:
+- core triage tools:
   - `save_triage_case`
   - `search_triage_cases`
   - `record_triage_case_feedback`
   - `get_triage_feedback_summary`
-- 2 triage analysis tools:
+- triage analysis tools:
   - `get_triage_confusion_clusters`
   - `get_triage_clarification_recommendations`
-- canonical PostgreSQL persistence for triage cases and feedback
-- normalized triage outcome statuses through `core.reference_values`
-- best-effort Qdrant-backed semantic retrieval for similar-case search
-- lexical fallback only when semantic retrieval is unavailable
-- triage-case re-embedding/backfill support for historic recovery
-- feedback-summary aggregation and focused server-side test coverage
-- deterministic confusion-cluster and clarification-recommendation aggregation over triage history
+- normalized triage outcome statuses via `core.reference_values`
+- historic triage re-embedding/backfill support
 - explicit hybrid ranking for `search_triage_cases`
 
----
-
-## Planned
-
 ### Triage + Workflow Intelligence V3
-**Problem:** The server now persists triage cases, workflow telemetry, planning context, and analytics, but it still mostly reports history rather than adapting behavior from that history. Integrators must manually interpret triage outcomes, confusion patterns, and workflow failure signals.
-**Goal:** Upgrade the platform from passive memory plus analytics into a controlled closed-loop decision system that can synthesize routing guidance, generate clarification policies, improve ranking, and connect workflow outcomes back into future triage behavior.
-**Target v3 scope:**
-- decision policy synthesis from triage history
-  - produce reusable routing guidance from prior successful and failed cases
-  - surface repo-scoped and project-scoped routing heuristics instead of only raw case matches
+**Status:** Implemented and rolled out.
+**Plans:**
+- `Tasks/triage-lifecycle-normalization-v3/plan.md`
+- `Tasks/triage-policy-synthesis-v3/plan.md`
+- `Tasks/triage-adaptive-ranking-v3/plan.md`
+- `Tasks/triage-governance-composed-tools-v3/plan.md`
+**Delivered:**
 - stronger triage lifecycle modeling
-  - expand outcome normalization and make triage state transitions more explicit
-  - support clearer separation between proposed, executed, validated, corrected, and superseded decisions
-- first-class historic repair and reindex operations
-  - make triage backfill, re-embedding, and recovery workflows operationally explicit
-  - support safer selective refresh of historic triage data after schema or ranking changes
-- stronger hybrid ranking
-  - combine semantic similarity with repository affinity, project affinity, historical success rate, recency, clarification cost, and workflow priors
-  - improve result ordering for `search_triage_cases` beyond the current lightweight score adjustments
-- policy-oriented confusion intelligence
-  - turn confusion clusters and clarification recommendations into concrete suggested intake prompts, question templates, and guardrails
+- routing policy synthesis and clarification policy synthesis
 - repository-aware behavioral profiles
-  - allow routing behavior to differ by repository or project when history shows different successful patterns
-- evaluator-assisted feedback loops
-  - add automatic evaluators that can score triage decisions against retrieved evidence or later workflow results
-  - reduce dependence on purely manual or downstream feedback
-- higher-level integrator tools
-  - add composed tools such as a memory-aware triage helper and outcome finalization helper so integrators do less manual orchestration
-- planning and workflow convergence
-  - let repeated validator failures, phase quality patterns, and finding patterns feed back into routing and clarification advice
-- governance and trust controls
-  - add confidence thresholds, drift tracking, and reversible policy rollout for learned decision guidance
-**Expected outcome:** Future integrator LLMs should be able to ask the server not only what happened before, but what behavior is currently recommended based on prior evidence and measured outcomes.
-**Depends on:** Stable adoption of the current triage, workflow telemetry, planning, and analytics tools by integrator clients so V3 has enough real operational signal to learn from.
+- governance metadata and persisted policy artifacts
+- higher-level integrator tools:
+  - `refresh_triage_policy_artifacts`
+  - `get_behavior_policy_status`
+  - `triage_request_with_memory`
+  - `finalize_triage_outcome`
+- adaptive ranking improvements connected to prior outcomes and clarification signals
 
 ### Live Remote Rollout Validation
-**Problem:** The analytics upgrade and newer findings/runtime changes are implemented, but final confidence still depends on executing the remote rollout runbook against the real office environment and verifying health, migrations, and MCP smoke checks end-to-end.
-**Goal:** Run the remote deployment and validation sequence using the supported `alembic upgrade head` path and capture a rollout report with migration, health, and smoke-test results.
-**Depends on:** Office network access and real remote credentials.
+**Status:** Completed.
+**Delivered:**
+- remote migrations applied successfully
+- live app deployed and restarted successfully
+- `/health` and `/ready` verified
+- live MCP smoke checks completed against the deployed server
 
----
+## Next Up
+
+### `docker/init-pg.sql` Deprecation or Full Reconciliation
+**Problem:** `docker/init-pg.sql` remains a legacy bootstrap snapshot and does not reflect the current planning, reference-value, workflow, findings, analytics, and triage schema line.
+**Goal:** Decide and implement one supported direction:
+- either fully reconcile `docker/init-pg.sql` with the modern schema line
+- or formally deprecate/remove it in favor of `alembic upgrade head`
+**Why next:** This is the most important remaining repo-owned bootstrap/operations ambiguity.
+
+### `docs/AGENT_INTEGRATION_SPEC.md` Full Reconciliation
+**Problem:** `docs/AGENT_INTEGRATION_SPEC.md` is materially improved, but it is still not a full one-to-one reference for the current live server surface, including newer findings and triage V3 capabilities.
+**Goal:** Bring the integration spec up to a complete, stable reference-quality document for external LLM integrators.
+**Depends on:** Finalizing the bootstrap/support stance around the current server surface so the document does not need another structural rewrite immediately after.
+
+## External / Depends On Other Repos
 
 ### External Workflow Producer Adoption
-**Problem:** The canonical workflow telemetry write surfaces now exist in this repo, but the external workflow producer still needs to adopt them before phase and validator analytics become populated in real usage.
+**Problem:** The canonical workflow telemetry write surfaces exist in this repo, but the external workflow producer must adopt them before phase and validator analytics become richly populated in production usage.
 **Goal:** Update the external orchestrator to call `save_workflow_phase_state` and `save_workflow_validator_result` during execution and validator passes.
-**Depends on:** An up-to-date external producer repo and separate implementation work outside this repository.
-
----
+**Depends on:** Separate implementation work outside this repository.
 
 ## Future
 
-### AGENT_INTEGRATION_SPEC Full Reconciliation
-**Problem:** The spec has already been updated past the original 12-tool narrative, but it is still a workflow-integration document rather than a full one-to-one reference for every server tool and newer findings/runtime surface.
-**Depends on:** Stabilizing the post-migration-009 server surface before doing a complete reference-style reconciliation.
+### Deeper Workflow/Triage Feedback Automation
+**Problem:** The platform now supports triage policy synthesis and workflow analytics, but evaluator-assisted automatic feedback loops are still limited compared with the long-term closed-loop direction.
+**Goal:** Add stronger evaluator-driven scoring and convergence feedback so future routing and clarification guidance can be refined with less manual intervention.
 
----
-
-### init-pg.sql Deprecation or Reconciliation
-**Problem:** `docker/init-pg.sql` remains a legacy bootstrap snapshot and still does not reflect the modern planning/reference/workflow/findings schema line.
-**Current direction:** Keep `alembic upgrade head` as the supported path and treat raw `init-pg.sql` bootstrap as legacy until a future full reconciliation or removal decision.
-**Depends on:** Separate bootstrap ownership work, not the completed analytics docs cleanup.
+### Workflow Process Tooling
+**Problem:** The internal task-process ergonomics have been improved through the new task intake and size-aware workflow skills, but the repository does not yet include templates or examples for `light`, `standard`, and `heavy` task artifacts.
+**Goal:** Add reusable examples/templates if the team finds repeated task-authoring friction in practice.

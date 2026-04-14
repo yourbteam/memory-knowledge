@@ -11,16 +11,10 @@ services:
       - /Users/kamenkamenov/taggable-server:/tmp/memory-knowledge/repos/taggable-server  # mount Taggable repo
       - /Users/kamenkamenov/CSS-FE:/tmp/memory-knowledge/repos/css-fe  # mount CSS-FE repo
       - /Users/kamenkamenov/millennium-curated:/tmp/memory-knowledge/repos/millennium-wp  # mount Millennium WordPress repo
+      - /Users/kamenkamenov/FoodCycleScience-admin:/tmp/memory-knowledge/repos/fcs-admin  # mount FCS Admin repo
     environment:
       CODEX_AUTH_PATH: /home/appuser/.codex/auth.json
       SUPPORTED_LANGUAGES: '["python","csharp","sql","typescript","php"]'
-    depends_on:
-      postgres:
-        condition: service_healthy
-      qdrant:
-        condition: service_healthy
-      neo4j:
-        condition: service_healthy
     restart: unless-stopped
 
   postgres:
@@ -34,7 +28,6 @@ services:
       - "5432:5432"
     volumes:
       - pgdata:/var/lib/postgresql/data
-      - ./docker/init-pg.sql:/docker-entrypoint-initdb.d/init.sql
     healthcheck:
       test: ["CMD-SHELL", "pg_isready -U memoryknowledge"]
       interval: 5s
