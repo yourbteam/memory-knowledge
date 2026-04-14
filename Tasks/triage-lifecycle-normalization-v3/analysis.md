@@ -4,15 +4,13 @@ Prepare V3 work that hardens the triage lifecycle model so cases, outcomes, and 
 
 # Current-State Findings
 
-- Triage case persistence exists, but the base triage case row is still primarily a captured decision snapshot plus append-only feedback history.
-- Outcome normalization exists through `status_id`, but there is no richer lifecycle state machine for the triage decision itself.
-- Feedback writes are append-only and useful, but the server does not distinguish concepts such as proposed, executed, validated, superseded, or rejected by human.
-- Existing analytics infer effective status from the latest feedback row rather than from a first-class lifecycle model.
-- The system currently mixes:
-  - decision capture
-  - outcome feedback
-  - implied state derivation
-  without an explicit lifecycle contract.
+- Triage case persistence exists in `ops.triage_cases`, but that row is still primarily a captured decision snapshot rather than a first-class lifecycle record.
+- Outcome normalization exists in `ops.triage_case_feedback.status_id` through migration `011_triage_outcome_status_reference_values`, but that normalization covers feedback outcomes only, not a richer decision lifecycle state machine.
+- Feedback writes are append-only and already capture some operational signals such as `successful_execution`, `human_override`, and correction fields, but there is still no canonical lifecycle layer for concepts such as proposed, executed, validated, superseded, or explicitly rejected.
+- Current-state reads still derive effective truth from the latest feedback row. `search_triage_cases`, `_fetch_triage_analysis_rows`, and `get_triage_feedback_summary` each use a lateral join over `ops.triage_case_feedback` ordered by `created_utc DESC, id DESC` and map that latest row into an effective status.
+- The system currently mixes decision capture, outcome feedback, and implied state derivation without a single explicit lifecycle contract that all read paths consume from a shared state model.
+- The repo already includes descriptive triage analytics through `get_triage_feedback_summary`, `get_triage_confusion_clusters`, and `get_triage_clarification_recommendations`, but those tools still depend on latest-feedback interpretation rather than a canonical lifecycle projection.
+- The repo already includes triage reprojection support for persisted cases via `reproject_triage_cases`, but that path repairs vector search projection state only and does not define lifecycle-state backfill semantics.
 
 # Source Artifacts Inspected
 
@@ -42,9 +40,10 @@ Prepare V3 work that hardens the triage lifecycle model so cases, outcomes, and 
 
 1. No first-class triage lifecycle state machine exists.
 2. Outcome state and decision state are not clearly separated.
-3. Reads derive current state from ad hoc latest-feedback logic.
+3. Reads derive current state from repeated latest-feedback logic rather than a dedicated shared lifecycle projection.
 4. There is no canonical notion of superseded or invalidated triage decisions.
 5. Historic backfill semantics for richer lifecycle state are not defined.
+6. Existing tests cover outcome normalization and analytics behavior, but not first-class lifecycle transitions because no dedicated lifecycle model exists yet.
 
 # Constraints
 
@@ -52,6 +51,7 @@ Prepare V3 work that hardens the triage lifecycle model so cases, outcomes, and 
 - Lifecycle changes should be additive and migration-safe.
 - Historical rows will need backfill rules rather than manual rewrite assumptions.
 - State transitions need canonical reference values instead of free-text expansion.
+- Existing analytics and search tools already depend on outcome values such as `pending`, `confirmed_correct`, `execution_failed_after_route`, `insufficient_context`, `corrected`, and `overridden_by_human`, so lifecycle work has to preserve or compatibly reinterpret those semantics.
 
 # Risks
 
@@ -59,12 +59,13 @@ Prepare V3 work that hardens the triage lifecycle model so cases, outcomes, and 
 - Over-normalization can make integrator writes too heavy.
 - If transition rules are underspecified, analytics and policy tools will disagree about “current truth.”
 - Backfill rules may misclassify historic cases if not carefully defined.
+- If lifecycle semantics are introduced in parallel with existing outcome feedback fields without a shared projection helper, the codebase will keep duplicating state derivation logic in search and analytics queries.
 
 # Recommended Approach
 
 - Introduce explicit decision lifecycle state separate from outcome status.
 - Use `core.reference_values` for any new lifecycle domains.
-- Preserve append-only feedback, but make read models compute current state through clearer canonical rules.
+- Preserve append-only feedback as historical evidence, but make read models compute current state through a clearer canonical projection helper or materialized lifecycle representation.
 - Define backfill behavior as part of the migration plan, not as an afterthought.
 - Add explicit compatibility rules for legacy rows and existing tool callers.
 
@@ -72,7 +73,7 @@ Prepare V3 work that hardens the triage lifecycle model so cases, outcomes, and 
 
 - new lifecycle reference domains
 - additive columns or tables for triage decision state
-- updated triage read-model helpers
+- updated triage read-model helpers so search and analytics do not each restate lifecycle CASE logic
 - backfill and reconciliation logic for historic rows
 - tests covering lifecycle transitions and historic compatibility
 
@@ -80,3 +81,10 @@ Prepare V3 work that hardens the triage lifecycle model so cases, outcomes, and 
 
 - This task should precede or run alongside policy synthesis because policy confidence depends on reliable state semantics.
 - It should land before stronger automation or enforcement is attempted.
+
+--- Analysis Verification Iteration 1 ---
+Findings from verifier: 2
+FIX NOW: 2 (analysis updated)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, analysis updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 0 (no change)

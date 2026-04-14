@@ -28,6 +28,7 @@ from memory_knowledge.admin import analytics as _analytics
 from memory_knowledge.admin import findings as _findings
 from memory_knowledge.admin import planning as _planning
 from memory_knowledge import triage_memory as _triage_memory
+from memory_knowledge import triage_policy as _triage_policy
 from memory_knowledge.observability.run_context import (
     bind_run_context,
     clear_run_context,
@@ -1484,6 +1485,291 @@ async def get_triage_clarification_recommendations(
             status="success",
             data=data,
         ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_routing_policy_recommendations")
+async def get_routing_policy_recommendations(
+    repository_key: str,
+    project_key: str | None = None,
+    request_kind: str | None = None,
+    lookback_days: int = 90,
+    limit: int = 10,
+    min_case_count: int = 3,
+    min_confidence: float = 0.6,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_routing_policy_recommendations")
+    try:
+        if not str(repository_key or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="error", error="repository_key is required").model_dump_json()
+        if lookback_days < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="error", error="lookback_days must be >= 1").model_dump_json()
+        if limit < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="error", error="limit must be >= 1").model_dump_json()
+        if min_case_count < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="error", error="min_case_count must be >= 1").model_dump_json()
+        try:
+            min_confidence_value = float(min_confidence)
+        except (TypeError, ValueError):
+            return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="error", error="min_confidence must be between 0 and 1").model_dump_json()
+        if not 0.0 <= min_confidence_value <= 1.0:
+            return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="error", error="min_confidence must be between 0 and 1").model_dump_json()
+        data = await _triage_policy.get_routing_policy_recommendations(
+            get_pg_pool(),
+            repository_key=repository_key,
+            project_key=project_key,
+            request_kind=request_kind,
+            lookback_days=lookback_days,
+            limit=limit,
+            min_case_count=min_case_count,
+            min_confidence=min_confidence_value,
+        )
+        return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="success", data=data).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_clarification_policy")
+async def get_clarification_policy(
+    repository_key: str,
+    project_key: str | None = None,
+    request_kind: str | None = None,
+    selected_workflow_name: str | None = None,
+    selected_run_action: str | None = None,
+    lookback_days: int = 90,
+    limit: int = 10,
+    min_case_count: int = 2,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_clarification_policy")
+    try:
+        if not str(repository_key or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="get_clarification_policy", status="error", error="repository_key is required").model_dump_json()
+        if lookback_days < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_clarification_policy", status="error", error="lookback_days must be >= 1").model_dump_json()
+        if limit < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_clarification_policy", status="error", error="limit must be >= 1").model_dump_json()
+        if min_case_count < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_clarification_policy", status="error", error="min_case_count must be >= 1").model_dump_json()
+        data = await _triage_policy.get_clarification_policy(
+            get_pg_pool(),
+            repository_key=repository_key,
+            project_key=project_key,
+            request_kind=request_kind,
+            selected_workflow_name=selected_workflow_name,
+            selected_run_action=selected_run_action,
+            lookback_days=lookback_days,
+            limit=limit,
+            min_case_count=min_case_count,
+        )
+        return WorkflowResult(run_id=str(rid), tool_name="get_clarification_policy", status="success", data=data).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_triage_behavior_profiles")
+async def list_triage_behavior_profiles(
+    repository_key: str,
+    project_key: str | None = None,
+    lookback_days: int = 90,
+    limit: int = 10,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "list_triage_behavior_profiles")
+    try:
+        if not str(repository_key or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="list_triage_behavior_profiles", status="error", error="repository_key is required").model_dump_json()
+        if lookback_days < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="list_triage_behavior_profiles", status="error", error="lookback_days must be >= 1").model_dump_json()
+        if limit < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="list_triage_behavior_profiles", status="error", error="limit must be >= 1").model_dump_json()
+        data = await _triage_policy.list_triage_behavior_profiles(
+            get_pg_pool(),
+            repository_key=repository_key,
+            project_key=project_key,
+            lookback_days=lookback_days,
+            limit=limit,
+        )
+        return WorkflowResult(run_id=str(rid), tool_name="list_triage_behavior_profiles", status="success", data=data).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("refresh_triage_policy_artifacts")
+async def refresh_triage_policy_artifacts(
+    repository_key: str,
+    project_key: str | None = None,
+    lookback_days: int = 90,
+    routing_min_case_count: int = 3,
+    routing_min_confidence: float = 0.6,
+    clarification_min_case_count: int = 2,
+    limit: int = 50,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "refresh_triage_policy_artifacts")
+    guard = check_remote_write_guard(get_settings(), "refresh_triage_policy_artifacts")
+    if guard is not None:
+        guard.run_id = str(rid)
+        return guard.model_dump_json()
+    try:
+        if not str(repository_key or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="repository_key is required").model_dump_json()
+        if lookback_days < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="lookback_days must be >= 1").model_dump_json()
+        if routing_min_case_count < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="routing_min_case_count must be >= 1").model_dump_json()
+        if clarification_min_case_count < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="clarification_min_case_count must be >= 1").model_dump_json()
+        if limit < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="limit must be >= 1").model_dump_json()
+        try:
+            routing_min_confidence_value = float(routing_min_confidence)
+        except (TypeError, ValueError):
+            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="routing_min_confidence must be between 0 and 1").model_dump_json()
+        if not 0.0 <= routing_min_confidence_value <= 1.0:
+            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="routing_min_confidence must be between 0 and 1").model_dump_json()
+        data = await _triage_policy.refresh_triage_policy_artifacts(
+            get_pg_pool(),
+            repository_key=repository_key,
+            project_key=project_key,
+            lookback_days=lookback_days,
+            routing_min_case_count=routing_min_case_count,
+            routing_min_confidence=routing_min_confidence_value,
+            clarification_min_case_count=clarification_min_case_count,
+            limit=limit,
+        )
+        return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="success", data=data).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error=str(exc)).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_behavior_policy_status")
+async def get_behavior_policy_status(
+    repository_key: str,
+    project_key: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_behavior_policy_status")
+    try:
+        if not str(repository_key or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="get_behavior_policy_status", status="error", error="repository_key is required").model_dump_json()
+        data = await _triage_policy.get_behavior_policy_status(
+            get_pg_pool(),
+            repository_key=repository_key,
+            project_key=project_key,
+        )
+        return WorkflowResult(run_id=str(rid), tool_name="get_behavior_policy_status", status="success", data=data).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("triage_request_with_memory")
+async def triage_request_with_memory(
+    repository_key: str,
+    prompt_text: str,
+    project_key: str | None = None,
+    feature_key: str | None = None,
+    request_kind: str | None = None,
+    execution_mode: str | None = None,
+    selected_workflow_name: str | None = None,
+    selected_run_action: str | None = None,
+    limit: int = 5,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "triage_request_with_memory")
+    try:
+        if not str(repository_key or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="triage_request_with_memory", status="error", error="repository_key is required").model_dump_json()
+        if not str(prompt_text or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="triage_request_with_memory", status="error", error="prompt_text is required").model_dump_json()
+        if limit < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="triage_request_with_memory", status="error", error="limit must be >= 1").model_dump_json()
+        data = await _triage_policy.triage_request_with_memory(
+            get_pg_pool(),
+            get_settings(),
+            prompt_text=prompt_text,
+            repository_key=repository_key,
+            project_key=project_key,
+            feature_key=feature_key,
+            request_kind=request_kind,
+            execution_mode=execution_mode,
+            selected_workflow_name=selected_workflow_name,
+            selected_run_action=selected_run_action,
+            limit=limit,
+        )
+        return WorkflowResult(run_id=str(rid), tool_name="triage_request_with_memory", status="success", data=data).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("finalize_triage_outcome")
+async def finalize_triage_outcome(
+    triage_case_id: str,
+    outcome_status: str,
+    repository_key: str,
+    project_key: str | None = None,
+    successful_execution: bool | None = None,
+    human_override: bool | None = None,
+    correction_reason: str | None = None,
+    corrected_request_kind: str | None = None,
+    corrected_execution_mode: str | None = None,
+    corrected_selected_workflow_name: str | None = None,
+    feedback_notes: str | None = None,
+    refresh_policy_artifacts_after_write: bool = True,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "finalize_triage_outcome")
+    guard = check_remote_write_guard(get_settings(), "finalize_triage_outcome")
+    if guard is not None:
+        guard.run_id = str(rid)
+        return guard.model_dump_json()
+    try:
+        if not str(triage_case_id or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error="triage_case_id is required").model_dump_json()
+        if not str(repository_key or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error="repository_key is required").model_dump_json()
+        if not str(outcome_status or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error="outcome_status is required").model_dump_json()
+        try:
+            uuid.UUID(str(triage_case_id))
+        except ValueError:
+            return WorkflowResult(run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error="triage_case_id must be a valid UUID").model_dump_json()
+        data = await _triage_policy.finalize_triage_outcome(
+            get_pg_pool(),
+            triage_case_id=triage_case_id,
+            outcome_status=outcome_status,
+            repository_key=repository_key,
+            project_key=project_key,
+            successful_execution=successful_execution,
+            human_override=human_override,
+            correction_reason=correction_reason,
+            corrected_request_kind=corrected_request_kind,
+            corrected_execution_mode=corrected_execution_mode,
+            corrected_selected_workflow_name=corrected_selected_workflow_name,
+            feedback_notes=feedback_notes,
+            refresh_policy_artifacts=refresh_policy_artifacts_after_write,
+        )
+        return WorkflowResult(run_id=str(rid), tool_name="finalize_triage_outcome", status="success", data=data).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error=str(exc)).model_dump_json()
     finally:
         clear_run_context()
 

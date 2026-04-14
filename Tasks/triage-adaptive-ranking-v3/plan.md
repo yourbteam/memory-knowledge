@@ -35,9 +35,13 @@ Upgrade `search_triage_cases` from the current lightweight hybrid ranking into a
 2. Add ranking-profile support.
 - Allow default global weights plus repo-scoped overrides.
 - Keep the first implementation static and configuration-backed or code-backed rather than learned online.
+- This increment may consume lightweight policy priors that already exist in `triage_policy.py`, but it should do so through deterministic local weighting rather than remote tool calls or runtime policy writes.
 
 3. Integrate additional historic signals.
-- Pull in workflow success/failure priors where those can be joined safely.
+- Pull in concrete first-pass priors from the current repo surface:
+  - lifecycle state and lifecycle recency from `triage_memory.py`
+  - lightweight policy-aligned behavior priors derived from the same local triage history
+  - existing workflow/outcome success signals already persisted on triage cases and feedback rows
 - Ensure low-signal or missing-prior cases degrade back to current behavior rather than failing.
 
 4. Refactor ranking internals.
@@ -51,8 +55,10 @@ Upgrade `search_triage_cases` from the current lightweight hybrid ranking into a
 6. Expand regression tests.
 - repo-preference scenario
 - project-preference scenario
+- lifecycle-aware ordering scenario
 - strong semantic match with poor historic outcomes
 - weaker semantic match with consistently successful historic outcomes
+- optional policy-prior ordering scenario if lightweight policy priors are consumed in this increment
 - deterministic ties across multiple similar rows
 - lexical fallback under missing semantic path
 
@@ -68,10 +74,20 @@ Upgrade `search_triage_cases` from the current lightweight hybrid ranking into a
 - existing triage search contract remains stable
 - ranking remains deterministic
 - stronger historic-success signals improve ordering in covered test scenarios
+- lifecycle-aware ranking signals improve ordering in covered test scenarios
+- policy-prior signals, if enabled in this increment, improve ordering in covered test scenarios
 - missing optional signals do not break search behavior
 - lexical fallback still works when semantic retrieval is unavailable
 
 # Dependencies And Sequencing
 
-- may begin before lifecycle work finishes, but should be reconciled with final lifecycle semantics
+- should consume the lifecycle baseline already established in the current repo
+- should explicitly keep policy-prior use lightweight and local to this ranking increment
 - should be available before policy synthesis is treated as high-confidence guidance
+
+--- Plan Verification Iteration 1 ---
+Findings from verifier: 4
+FIX NOW: 4 (plan updated)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, plan updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 0 (no change)

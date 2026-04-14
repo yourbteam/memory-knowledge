@@ -26,21 +26,24 @@ Define and implement V3 triage policy synthesis so integrators can query recomme
   - routing policy recommendations
   - clarification policy recommendations
   - behavior profile metadata
-- Include scope fields such as `repository_key`, optional `project_key`, policy kind, version, confidence, case count, and evidence summary.
+- Follow the repo's existing relational pattern by storing `repository_id` as a foreign key to `catalog.repositories`, then expose `repository_key` at the API layer.
+- Include scope fields such as `repository_id`, optional `project_key`, policy kind, version, confidence, case count, and evidence summary.
 
 2. Add a dedicated synthesis module.
 - Create a module such as `src/memory_knowledge/triage_policy.py`.
-- Implement deterministic aggregation over existing triage case and feedback data.
+- Implement deterministic aggregation over existing triage case, lifecycle projection, and feedback data.
 - Generate recommendations only when minimum evidence thresholds are satisfied.
 
 3. Define synthesized recommendation rules.
 - Routing recommendations should consider:
+  - canonical lifecycle state and lifecycle recency
   - dominant successful request kind
   - dominant successful workflow
   - correction frequency
   - clarification frequency
   - minimum sample count
 - Clarification recommendations should identify patterns where clarification materially improved outcomes or prevented repeated correction.
+- Build policy evidence from the current lifecycle projection instead of re-deriving decision state from outcome feedback alone.
 
 4. Add MCP read tools in `server.py`.
 - Register tools for synthesized outputs.
@@ -60,7 +63,8 @@ Define and implement V3 triage policy synthesis so integrators can query recomme
 
 6. Add sparse-signal safeguards.
 - Return empty recommendations when evidence thresholds are not met.
-- Reject scope combinations that do not exist or do not have enough cases.
+- Keep empty or sparse scopes as successful responses with empty arrays so the contract stays aligned with existing triage analytics.
+- Reject only invalid request parameters, not valid scopes that simply lack enough evidence.
 - Ensure deterministic ordering across ties.
 
 7. Document the integrator contract.
@@ -77,7 +81,7 @@ Define and implement V3 triage policy synthesis so integrators can query recomme
 
 # Validation
 
-- migration applies cleanly after `011_triage_outcome_status_reference_values`
+- migration applies cleanly after `012_triage_decision_lifecycle_state`
 - synthesized tools return empty arrays on sparse-signal scopes
 - deterministic ordering is stable under repeated execution
 - recommendations include confidence and evidence metadata
@@ -86,6 +90,13 @@ Define and implement V3 triage policy synthesis so integrators can query recomme
 # Dependencies And Sequencing
 
 - depends on the current triage persistence and analytics surface already shipped
-- should follow the lifecycle-normalization work enough to use canonical current-state semantics
+- should consume the canonical lifecycle projection already established by `012_triage_decision_lifecycle_state`
 - should be completed before governance-enforcement work
 - can proceed in parallel with adaptive-ranking work if schema ownership is coordinated
+
+--- Plan Verification Iteration 1 ---
+Findings from verifier: 4
+FIX NOW: 4 (plan updated)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, plan updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 0 (no change)

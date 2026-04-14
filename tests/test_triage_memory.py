@@ -64,6 +64,7 @@ class TriagePool:
                 "feature_key": args[16],
                 "policy_version": args[19],
                 "created_utc": datetime(2026, 4, 13, tzinfo=timezone.utc),
+                "lifecycle_updated_utc": datetime(2026, 4, 13, tzinfo=timezone.utc),
             }
         if "SELECT triage_case_id FROM ops.triage_cases" in query:
             return {"triage_case_id": uuid.UUID(args[0])} if args[0] == "11111111-1111-1111-1111-111111111111" else None
@@ -73,9 +74,23 @@ class TriagePool:
                 return {"id": 201}
             if type_code == "TRIAGE_OUTCOME_STATUS" and value_code == "TRIAGE_OUTCOME_CONFIRMED_CORRECT":
                 return {"id": 202}
+            if type_code == "TRIAGE_DECISION_LIFECYCLE_STATE" and value_code == "TRIAGE_LIFECYCLE_PROPOSED":
+                return {"id": 401}
+            if type_code == "TRIAGE_DECISION_LIFECYCLE_STATE" and value_code == "TRIAGE_LIFECYCLE_VALIDATED":
+                return {"id": 402}
+            if type_code == "TRIAGE_DECISION_LIFECYCLE_STATE" and value_code == "TRIAGE_LIFECYCLE_NEEDS_RETRIAGE":
+                return {"id": 403}
+            if type_code == "TRIAGE_DECISION_LIFECYCLE_STATE" and value_code == "TRIAGE_LIFECYCLE_HUMAN_REJECTED":
+                return {"id": 404}
+            if type_code == "TRIAGE_DECISION_LIFECYCLE_STATE" and value_code == "TRIAGE_LIFECYCLE_FEEDBACK_RECORDED":
+                return {"id": 405}
+            if type_code == "TRIAGE_DECISION_LIFECYCLE_STATE" and value_code == "TRIAGE_LIFECYCLE_SUPERSEDED":
+                return {"id": 406}
             return None
         if "INSERT INTO ops.triage_case_feedback" in query:
             return {"id": 1}
+        if "UPDATE ops.triage_cases" in query and "SET lifecycle_state_id = $2" in query:
+            return {"triage_case_id": uuid.UUID(args[0])}
         return None
 
     async def fetch(self, query, *args):
@@ -140,6 +155,9 @@ class TriagePool:
                     "repository_key": "repo-a",
                     "policy_version": None,
                     "created_utc": None,
+                    "lifecycle_state": "validated",
+                    "lifecycle_updated_utc": datetime(2026, 4, 13, tzinfo=timezone.utc),
+                    "superseded_by_case_id": None,
                     "outcome_status": "confirmed_correct",
                     "corrected_request_kind": None,
                 }
@@ -203,6 +221,7 @@ async def test_save_triage_case_tool_success(triage_env):
     assert insert_args[8] == json.dumps(["planning-workflow"])
     assert insert_args[11] == json.dumps([])
     assert insert_args[22] == json.dumps([])
+    assert insert_args[23] == 401
 
 
 @pytest.mark.asyncio
@@ -248,6 +267,7 @@ async def test_search_triage_cases_tool_returns_advisory_shape(triage_env):
     assert payload["status"] == "success"
     assert payload["data"]["advisory_only"] is True
     assert payload["data"]["rows"][0]["triage_case_id"] == "11111111-1111-1111-1111-111111111111"
+    assert payload["data"]["rows"][0]["lifecycle_state"] == "validated"
     assert qdrant.search_calls
 
 
@@ -417,6 +437,172 @@ async def test_search_triage_cases_hybrid_score_penalizes_clarification_and_rewa
 
     assert result["rows"][0]["triage_case_id"] == "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
     assert result["rows"][0]["similarity_score"] > result["rows"][1]["similarity_score"]
+    assert "ranking_features" in result["rows"][0]
+
+
+@pytest.mark.asyncio
+async def test_search_triage_cases_prefers_validated_lifecycle_when_semantics_are_close(monkeypatch):
+    class LifecycleRankingPool(TriagePool):
+        async def fetch(self, query, *args):
+            if "FROM ops.triage_cases tc" in query and "tc.execution_mode" in query:
+                return [
+                    {
+                        "triage_case_id": uuid.UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+                        "prompt_text": "Validated prompt",
+                        "request_kind": "task",
+                        "execution_mode": "autonomous_safe",
+                        "knowledge_mode": "memory_knowledge",
+                        "selected_workflow_name": "planning-workflow",
+                        "selected_run_action": None,
+                        "requires_clarification": False,
+                        "confidence": 0.8,
+                        "project_key": "PAY",
+                        "feature_key": None,
+                        "repository_key": "repo-a",
+                        "policy_version": None,
+                        "created_utc": datetime(2026, 4, 13, tzinfo=timezone.utc),
+                        "lifecycle_state": "validated",
+                        "lifecycle_updated_utc": datetime(2026, 4, 13, tzinfo=timezone.utc),
+                        "superseded_by_case_id": None,
+                        "outcome_status": "confirmed_correct",
+                        "corrected_request_kind": None,
+                    },
+                    {
+                        "triage_case_id": uuid.UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+                        "prompt_text": "Retriage prompt",
+                        "request_kind": "task",
+                        "execution_mode": "autonomous_safe",
+                        "knowledge_mode": "memory_knowledge",
+                        "selected_workflow_name": "planning-workflow",
+                        "selected_run_action": None,
+                        "requires_clarification": False,
+                        "confidence": 0.8,
+                        "project_key": "PAY",
+                        "feature_key": None,
+                        "repository_key": "repo-a",
+                        "policy_version": None,
+                        "created_utc": datetime(2026, 4, 13, tzinfo=timezone.utc),
+                        "lifecycle_state": "needs_retriage",
+                        "lifecycle_updated_utc": datetime(2026, 4, 13, tzinfo=timezone.utc),
+                        "superseded_by_case_id": None,
+                        "outcome_status": "corrected",
+                        "corrected_request_kind": "feature",
+                    },
+                ]
+            return await super().fetch(query, *args)
+
+    pool = LifecycleRankingPool()
+    result = await triage_memory.search_triage_cases(
+        pool,
+        SimpleNamespace(embedding_dimensions=8),
+        prompt_text="Need planning help",
+        repository_key="repo-a",
+        project_key="PAY",
+        qdrant_client=None,
+    )
+
+    assert result["rows"][0]["triage_case_id"] == "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
+    assert result["rows"][0]["ranking_features"]["lifecycle_quality"] > result["rows"][1]["ranking_features"]["lifecycle_quality"]
+
+
+@pytest.mark.asyncio
+async def test_search_triage_cases_uses_local_policy_alignment_prior(monkeypatch):
+    class PolicyPriorPool(TriagePool):
+        async def fetch(self, query, *args):
+            if "FROM ops.triage_cases tc" in query and "tc.execution_mode" in query:
+                return [
+                    {
+                        "triage_case_id": uuid.UUID("aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"),
+                        "prompt_text": "Strong planning example 1",
+                        "request_kind": "task",
+                        "execution_mode": "autonomous_safe",
+                        "knowledge_mode": "memory_knowledge",
+                        "selected_workflow_name": "planning-workflow",
+                        "selected_run_action": None,
+                        "requires_clarification": False,
+                        "confidence": 0.8,
+                        "project_key": None,
+                        "feature_key": None,
+                        "repository_key": "repo-a",
+                        "policy_version": None,
+                        "created_utc": datetime(2026, 4, 14, tzinfo=timezone.utc),
+                        "lifecycle_state": "validated",
+                        "lifecycle_updated_utc": datetime(2026, 4, 14, tzinfo=timezone.utc),
+                        "superseded_by_case_id": None,
+                        "outcome_status": "confirmed_correct",
+                        "corrected_request_kind": None,
+                    },
+                    {
+                        "triage_case_id": uuid.UUID("bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb"),
+                        "prompt_text": "Strong planning example 2",
+                        "request_kind": "task",
+                        "execution_mode": "autonomous_safe",
+                        "knowledge_mode": "memory_knowledge",
+                        "selected_workflow_name": "planning-workflow",
+                        "selected_run_action": None,
+                        "requires_clarification": False,
+                        "confidence": 0.8,
+                        "project_key": None,
+                        "feature_key": None,
+                        "repository_key": "repo-a",
+                        "policy_version": None,
+                        "created_utc": datetime(2026, 4, 13, tzinfo=timezone.utc),
+                        "lifecycle_state": "validated",
+                        "lifecycle_updated_utc": datetime(2026, 4, 13, tzinfo=timezone.utc),
+                        "superseded_by_case_id": None,
+                        "outcome_status": "confirmed_correct",
+                        "corrected_request_kind": None,
+                    },
+                    {
+                        "triage_case_id": uuid.UUID("cccccccc-cccc-cccc-cccc-cccccccccccc"),
+                        "prompt_text": "Deploy example",
+                        "request_kind": "task",
+                        "execution_mode": "autonomous_safe",
+                        "knowledge_mode": "memory_knowledge",
+                        "selected_workflow_name": "deploy-workflow",
+                        "selected_run_action": None,
+                        "requires_clarification": False,
+                        "confidence": 0.8,
+                        "project_key": None,
+                        "feature_key": None,
+                        "repository_key": "repo-a",
+                        "policy_version": None,
+                        "created_utc": datetime(2026, 4, 14, tzinfo=timezone.utc),
+                        "lifecycle_state": "validated",
+                        "lifecycle_updated_utc": datetime(2026, 4, 14, tzinfo=timezone.utc),
+                        "superseded_by_case_id": None,
+                        "outcome_status": "confirmed_correct",
+                        "corrected_request_kind": None,
+                    },
+                ]
+            return await super().fetch(query, *args)
+
+    candidate_scores = {
+        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa": 0.82,
+        "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb": 0.81,
+        "cccccccc-cccc-cccc-cccc-cccccccccccc": 0.83,
+    }
+    result = await triage_memory._fetch_search_rows(
+        PolicyPriorPool(),
+        candidate_ids=list(candidate_scores.keys()),
+        candidate_scores=candidate_scores,
+        prompt_text="Need planning help",
+        repository_key="repo-a",
+        project_key=None,
+        feature_key=None,
+        request_kind="task",
+        execution_mode=None,
+        selected_workflow_name=None,
+        selected_run_action=None,
+        policy_version=None,
+        include_corrected=True,
+        max_age_days=180,
+        limit=3,
+        lexical_fallback=False,
+    )
+
+    assert result[0]["selected_workflow_name"] == "planning-workflow"
+    assert result[0]["ranking_features"]["policy_alignment"] >= result[-1]["ranking_features"]["policy_alignment"]
 
 
 @pytest.mark.asyncio
@@ -756,6 +942,11 @@ async def test_record_triage_case_feedback_tool_resolves_canonical_status_id(tri
     )
     assert "status_id" in insert_query
     assert insert_args[2] == 201
+    update_query, update_args = next(
+        (query, args) for query, args in pool.fetchrow_calls if "UPDATE ops.triage_cases" in query
+    )
+    assert "lifecycle_state_id" in update_query
+    assert update_args[1] == 403
 
 
 @pytest.mark.asyncio
@@ -774,6 +965,12 @@ async def test_record_triage_case_feedback_tool_preserves_unknown_status_without
     )
     assert insert_args[1] == "custom_status_from_integrator"
     assert insert_args[2] is None
+    _update_query, update_args = next(
+        (query, args)
+        for query, args in reversed(pool.fetchrow_calls)
+        if "UPDATE ops.triage_cases" in query
+    )
+    assert update_args[1] == 405
 
 
 @pytest.mark.asyncio

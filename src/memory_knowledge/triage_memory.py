@@ -4,6 +4,7 @@ import datetime as dt
 import hashlib
 import json
 import uuid
+from dataclasses import dataclass
 from typing import Any
 
 import asyncpg
@@ -20,12 +21,19 @@ TRIAGE_CASES_COLLECTION = "triage_cases"
 DEFAULT_LOOKBACK_DAYS = 30
 TRIAGE_REPROJECTION_BATCH_SIZE = 50
 TRIAGE_OUTCOME_STATUS_TYPE = "TRIAGE_OUTCOME_STATUS"
+TRIAGE_DECISION_LIFECYCLE_STATE_TYPE = "TRIAGE_DECISION_LIFECYCLE_STATE"
 TRIAGE_OUTCOME_PENDING = "TRIAGE_OUTCOME_PENDING"
 TRIAGE_OUTCOME_CONFIRMED_CORRECT = "TRIAGE_OUTCOME_CONFIRMED_CORRECT"
 TRIAGE_OUTCOME_EXECUTION_FAILED_AFTER_ROUTE = "TRIAGE_OUTCOME_EXECUTION_FAILED_AFTER_ROUTE"
 TRIAGE_OUTCOME_INSUFFICIENT_CONTEXT = "TRIAGE_OUTCOME_INSUFFICIENT_CONTEXT"
 TRIAGE_OUTCOME_CORRECTED = "TRIAGE_OUTCOME_CORRECTED"
 TRIAGE_OUTCOME_OVERRIDDEN_BY_HUMAN = "TRIAGE_OUTCOME_OVERRIDDEN_BY_HUMAN"
+TRIAGE_LIFECYCLE_PROPOSED = "TRIAGE_LIFECYCLE_PROPOSED"
+TRIAGE_LIFECYCLE_FEEDBACK_RECORDED = "TRIAGE_LIFECYCLE_FEEDBACK_RECORDED"
+TRIAGE_LIFECYCLE_VALIDATED = "TRIAGE_LIFECYCLE_VALIDATED"
+TRIAGE_LIFECYCLE_NEEDS_RETRIAGE = "TRIAGE_LIFECYCLE_NEEDS_RETRIAGE"
+TRIAGE_LIFECYCLE_HUMAN_REJECTED = "TRIAGE_LIFECYCLE_HUMAN_REJECTED"
+TRIAGE_LIFECYCLE_SUPERSEDED = "TRIAGE_LIFECYCLE_SUPERSEDED"
 
 _OUTCOME_CONFIDENCE = {
     "pending": None,
@@ -45,11 +53,33 @@ _LEGACY_OUTCOME_TO_REFERENCE_CODE = {
     "overridden_by_human": TRIAGE_OUTCOME_OVERRIDDEN_BY_HUMAN,
 }
 
+_TRIAGE_LIFECYCLE_TO_PUBLIC_STATE = {
+    TRIAGE_LIFECYCLE_PROPOSED: "proposed",
+    TRIAGE_LIFECYCLE_FEEDBACK_RECORDED: "feedback_recorded",
+    TRIAGE_LIFECYCLE_VALIDATED: "validated",
+    TRIAGE_LIFECYCLE_NEEDS_RETRIAGE: "needs_retriage",
+    TRIAGE_LIFECYCLE_HUMAN_REJECTED: "human_rejected",
+    TRIAGE_LIFECYCLE_SUPERSEDED: "superseded",
+}
+
 LEXICAL_FALLBACK_BASELINE = 0.65
-PROJECT_PREFERENCE_BOOST = 0.03
-OUTCOME_CONFIDENCE_WEIGHT = 0.08
-CLARIFICATION_PENALTY = 0.04
-RECENCY_WEIGHT = 0.04
+
+
+@dataclass(frozen=True)
+class RankingProfile:
+    repository_match_weight: float = 0.02
+    project_match_weight: float = 0.04
+    workflow_success_prior_weight: float = 0.07
+    request_kind_prior_weight: float = 0.04
+    policy_alignment_weight: float = 0.05
+    lifecycle_quality_weight: float = 0.06
+    outcome_quality_weight: float = 0.06
+    clarification_penalty_weight: float = 0.04
+    recency_weight: float = 0.04
+
+
+DEFAULT_RANKING_PROFILE = RankingProfile()
+REPOSITORY_RANKING_PROFILE_OVERRIDES: dict[str, dict[str, float]] = {}
 
 
 def _prompt_hash(prompt_text: str) -> str:
@@ -67,6 +97,27 @@ def _canonicalize_outcome_status(status: str | None) -> str | None:
     return normalized
 
 
+def _public_lifecycle_state(internal_code: str | None) -> str | None:
+    if internal_code is None:
+        return None
+    return _TRIAGE_LIFECYCLE_TO_PUBLIC_STATE.get(str(internal_code))
+
+
+def _triage_lifecycle_internal_code_from_feedback(
+    *,
+    outcome_status: str | None,
+    human_override: bool | None,
+) -> str:
+    canonical_status = _canonicalize_outcome_status(outcome_status)
+    if human_override or canonical_status == "overridden_by_human":
+        return TRIAGE_LIFECYCLE_HUMAN_REJECTED
+    if canonical_status == "confirmed_correct":
+        return TRIAGE_LIFECYCLE_VALIDATED
+    if canonical_status == "corrected":
+        return TRIAGE_LIFECYCLE_NEEDS_RETRIAGE
+    return TRIAGE_LIFECYCLE_FEEDBACK_RECORDED
+
+
 def _recency_score(created_utc: dt.datetime | None, max_age_days: int) -> float:
     if created_utc is None or max_age_days <= 0:
         return 0.0
@@ -79,26 +130,140 @@ def _recency_score(created_utc: dt.datetime | None, max_age_days: int) -> float:
     return round(freshness, 4)
 
 
-def _hybrid_similarity_score(
+def _ranking_profile_for_scope(repository_key: str | None) -> RankingProfile:
+    if not repository_key:
+        return DEFAULT_RANKING_PROFILE
+    override = REPOSITORY_RANKING_PROFILE_OVERRIDES.get(repository_key)
+    if not override:
+        return DEFAULT_RANKING_PROFILE
+    return RankingProfile(**{**DEFAULT_RANKING_PROFILE.__dict__, **override})
+
+
+def _lifecycle_quality(state: str | None) -> float:
+    lifecycle_state = str(state or "proposed")
+    if lifecycle_state == "validated":
+        return 1.0
+    if lifecycle_state == "feedback_recorded":
+        return 0.7
+    if lifecycle_state == "proposed":
+        return 0.5
+    if lifecycle_state == "needs_retriage":
+        return 0.1
+    if lifecycle_state == "human_rejected":
+        return 0.0
+    if lifecycle_state == "superseded":
+        return 0.0
+    return 0.25
+
+
+def _historical_success_signal(row: dict[str, Any]) -> float:
+    outcome_quality = _outcome_confidence(str(row.get("outcome_status") or "pending"))
+    if outcome_quality is None:
+        outcome_quality = 0.5
+    return round((float(outcome_quality) + _lifecycle_quality(row.get("lifecycle_state"))) / 2.0, 4)
+
+
+def _build_ranking_priors(rows: list[dict[str, Any]]) -> dict[str, Any]:
+    workflow_totals: dict[tuple[str, str, str], list[float]] = {}
+    request_kind_totals: dict[str, list[float]] = {}
+    best_workflow_for_request_kind: dict[str, tuple[str, str | None, float]] = {}
+    for row in rows:
+        request_kind = str(row.get("request_kind") or "")
+        workflow_name = str(row.get("selected_workflow_name") or "")
+        run_action = str(row.get("selected_run_action") or "") if request_kind == "run_operation" else ""
+        signal = _historical_success_signal(row)
+        request_kind_totals.setdefault(request_kind, []).append(signal)
+        if workflow_name:
+            workflow_key = (request_kind, workflow_name, run_action)
+            workflow_totals.setdefault(workflow_key, []).append(signal)
+    workflow_priors = {
+        key: round(sum(values) / len(values), 4)
+        for key, values in workflow_totals.items()
+        if values
+    }
+    request_kind_priors = {
+        key: round(sum(values) / len(values), 4)
+        for key, values in request_kind_totals.items()
+        if values
+    }
+    for (request_kind, workflow_name, run_action), signal in workflow_priors.items():
+        current = best_workflow_for_request_kind.get(request_kind)
+        candidate = (workflow_name, run_action or None, signal)
+        if current is None or candidate[2] > current[2] or (
+            candidate[2] == current[2] and (candidate[0], candidate[1] or "") > (current[0], current[1] or "")
+        ):
+            best_workflow_for_request_kind[request_kind] = candidate
+    return {
+        "workflow_priors": workflow_priors,
+        "request_kind_priors": request_kind_priors,
+        "best_workflow_for_request_kind": best_workflow_for_request_kind,
+    }
+
+
+def _score_search_row(
     row: dict[str, Any],
     *,
-    candidate_scores: dict[str, float],
+    baseline_score: float,
+    repository_key: str | None,
     project_key: str | None,
     max_age_days: int,
-    lexical_fallback: bool,
-) -> float:
-    triage_case_id = str(row["triage_case_id"])
-    baseline = candidate_scores.get(triage_case_id, LEXICAL_FALLBACK_BASELINE if lexical_fallback else 0.0)
-    score = float(baseline)
-    if project_key and row["project_key"] == project_key:
-        score += PROJECT_PREFERENCE_BOOST
+    profile: RankingProfile,
+    ranking_priors: dict[str, Any],
+) -> tuple[float, dict[str, float]]:
+    score = float(baseline_score)
+    features: dict[str, float] = {"baseline": round(float(baseline_score), 4)}
+    if repository_key and row.get("repository_key") == repository_key:
+        boost = profile.repository_match_weight
+        score += boost
+        features["repository_match"] = round(boost, 4)
+    else:
+        features["repository_match"] = 0.0
+    if project_key and row.get("project_key") == project_key:
+        boost = profile.project_match_weight
+        score += boost
+        features["project_match"] = round(boost, 4)
+    else:
+        features["project_match"] = 0.0
+    workflow_key = (
+        str(row.get("request_kind") or ""),
+        str(row.get("selected_workflow_name") or ""),
+        str(row.get("selected_run_action") or "") if row.get("request_kind") == "run_operation" else "",
+    )
+    workflow_prior = float(ranking_priors["workflow_priors"].get(workflow_key, 0.5))
+    request_kind_prior = float(ranking_priors["request_kind_priors"].get(str(row.get("request_kind") or ""), 0.5))
+    workflow_boost = (workflow_prior - 0.5) * profile.workflow_success_prior_weight
+    request_kind_boost = (request_kind_prior - 0.5) * profile.request_kind_prior_weight
+    score += workflow_boost + request_kind_boost
+    features["workflow_success_prior"] = round(workflow_boost, 4)
+    features["request_kind_prior"] = round(request_kind_boost, 4)
+    best_workflow = ranking_priors["best_workflow_for_request_kind"].get(str(row.get("request_kind") or ""))
+    if best_workflow is not None and (
+        str(row.get("selected_workflow_name") or "") == best_workflow[0]
+        and ((row.get("selected_run_action") if row.get("request_kind") == "run_operation" else None) == best_workflow[1])
+    ):
+        score += profile.policy_alignment_weight
+        features["policy_alignment"] = round(profile.policy_alignment_weight, 4)
+    else:
+        features["policy_alignment"] = 0.0
+    lifecycle_boost = (_lifecycle_quality(row.get("lifecycle_state")) - 0.5) * profile.lifecycle_quality_weight
+    score += lifecycle_boost
+    features["lifecycle_quality"] = round(lifecycle_boost, 4)
     outcome_confidence = _outcome_confidence(str(row.get("outcome_status") or "pending"))
     if outcome_confidence is not None:
-        score += (float(outcome_confidence) - 0.5) * OUTCOME_CONFIDENCE_WEIGHT
+        outcome_boost = (float(outcome_confidence) - 0.5) * profile.outcome_quality_weight
+        score += outcome_boost
+        features["outcome_quality"] = round(outcome_boost, 4)
+    else:
+        features["outcome_quality"] = 0.0
     if row.get("requires_clarification"):
-        score -= CLARIFICATION_PENALTY
-    score += _recency_score(row.get("created_utc"), max_age_days) * RECENCY_WEIGHT
-    return round(max(score, 0.0), 4)
+        score -= profile.clarification_penalty_weight
+        features["clarification_penalty"] = round(-profile.clarification_penalty_weight, 4)
+    else:
+        features["clarification_penalty"] = 0.0
+    recency_boost = _recency_score(row.get("created_utc"), max_age_days) * profile.recency_weight
+    score += recency_boost
+    features["recency"] = round(recency_boost, 4)
+    return round(max(score, 0.0), 4), features
 
 
 def _search_sort_key(
@@ -144,6 +309,65 @@ async def _resolve_triage_outcome_status_id(
         )
         return None
     return int(row["id"])
+
+
+async def _resolve_reference_value_id(
+    pool: asyncpg.Pool,
+    reference_type_code: str,
+    reference_value_code: str,
+) -> int | None:
+    row = await pool.fetchrow(
+        """
+        SELECT rv.id
+        FROM core.reference_values rv
+        JOIN core.reference_types rt ON rt.id = rv.reference_type_id
+        WHERE rt.internal_code = $1 AND rv.internal_code = $2
+        """,
+        reference_type_code,
+        reference_value_code,
+    )
+    if row is None:
+        return None
+    return int(row["id"])
+
+
+async def _resolve_triage_lifecycle_state_id(
+    pool: asyncpg.Pool,
+    lifecycle_internal_code: str,
+) -> int | None:
+    row_id = await _resolve_reference_value_id(
+        pool,
+        TRIAGE_DECISION_LIFECYCLE_STATE_TYPE,
+        lifecycle_internal_code,
+    )
+    if row_id is None:
+        logger.warning(
+            "triage_lifecycle_reference_value_missing",
+            lifecycle_internal_code=lifecycle_internal_code,
+        )
+    return row_id
+
+
+def _triage_lifecycle_projection_select(case_alias: str = "tc", value_alias: str = "lifecycle_rv") -> str:
+    return f"""
+        {_triage_lifecycle_state_select(value_alias)} AS lifecycle_state,
+        {case_alias}.lifecycle_updated_utc,
+        {case_alias}.superseded_by_case_id
+    """
+
+
+def _triage_lifecycle_state_select(value_alias: str = "lifecycle_rv") -> str:
+    return f"""
+        CASE
+            WHEN {value_alias}.internal_code = '{TRIAGE_LIFECYCLE_PROPOSED}' THEN 'proposed'
+            WHEN {value_alias}.internal_code = '{TRIAGE_LIFECYCLE_FEEDBACK_RECORDED}' THEN 'feedback_recorded'
+            WHEN {value_alias}.internal_code = '{TRIAGE_LIFECYCLE_VALIDATED}' THEN 'validated'
+            WHEN {value_alias}.internal_code = '{TRIAGE_LIFECYCLE_NEEDS_RETRIAGE}' THEN 'needs_retriage'
+            WHEN {value_alias}.internal_code = '{TRIAGE_LIFECYCLE_HUMAN_REJECTED}' THEN 'human_rejected'
+            WHEN {value_alias}.internal_code = '{TRIAGE_LIFECYCLE_SUPERSEDED}' THEN 'superseded'
+            ELSE NULL
+        END
+    """
 
 
 async def _resolve_repository_id(pool: asyncpg.Pool, repository_key: str) -> int | None:
@@ -297,6 +521,7 @@ async def save_triage_case(
     repository_id = await _resolve_repository_id(pool, repository_key)
     if repository_id is None:
         raise ValueError(f"Repository '{repository_key}' not found")
+    lifecycle_state_id = await _resolve_triage_lifecycle_state_id(pool, TRIAGE_LIFECYCLE_PROPOSED)
 
     triage_case_id = str(uuid.uuid4())
     inserted = await pool.fetchrow(
@@ -307,12 +532,14 @@ async def save_triage_case(
             suggested_workflows, selected_run_action, requires_clarification,
             clarifying_questions, fallback_route, confidence, reasoning_summary,
             project_key, feature_key, task_key, actor_email, policy_version,
-            workflow_catalog_version, decision_source, matched_case_ids
+            workflow_catalog_version, decision_source, matched_case_ids,
+            lifecycle_state_id, lifecycle_updated_utc
         )
         VALUES (
             $1::uuid, $2, $3, $4, $5, $6, $7, $8,
             $9::jsonb, $10, $11, $12::jsonb, $13, $14, $15,
-            $16, $17, $18, $19, $20, $21, $22, $23::jsonb
+            $16, $17, $18, $19, $20, $21, $22, $23::jsonb,
+            $24, NOW()
         )
         RETURNING
             triage_case_id,
@@ -321,7 +548,8 @@ async def save_triage_case(
             project_key,
             feature_key,
             policy_version,
-            created_utc
+            created_utc,
+            lifecycle_updated_utc
         """,
         triage_case_id,
         repository_id,
@@ -346,6 +574,7 @@ async def save_triage_case(
         workflow_catalog_version,
         decision_source,
         json.dumps(matched_case_ids or []),
+        lifecycle_state_id,
     )
 
     if qdrant_client is not None and inserted is not None:
@@ -404,6 +633,23 @@ async def record_triage_case_feedback(
         corrected_execution_mode,
         corrected_selected_workflow_name,
         feedback_notes,
+    )
+    lifecycle_internal_code = _triage_lifecycle_internal_code_from_feedback(
+        outcome_status=outcome_status,
+        human_override=human_override,
+    )
+    lifecycle_state_id = await _resolve_triage_lifecycle_state_id(pool, lifecycle_internal_code)
+    await pool.fetchrow(
+        """
+        UPDATE ops.triage_cases
+        SET lifecycle_state_id = $2,
+            lifecycle_updated_utc = NOW(),
+            updated_utc = NOW()
+        WHERE triage_case_id = $1::uuid
+        RETURNING triage_case_id
+        """,
+        triage_case_id,
+        lifecycle_state_id,
     )
     return True
 
@@ -544,8 +790,9 @@ async def _fetch_search_rows(
     limit: int,
     lexical_fallback: bool,
 ) -> list[dict[str, Any]]:
+    lifecycle_select = _triage_lifecycle_projection_select("tc", "lifecycle_rv")
     rows = await pool.fetch(
-        """
+        f"""
         SELECT
             tc.triage_case_id,
             tc.prompt_text,
@@ -561,10 +808,12 @@ async def _fetch_search_rows(
             r.repository_key,
             tc.policy_version,
             tc.created_utc,
+            {lifecycle_select},
             COALESCE(fb.effective_outcome_status, 'pending') AS outcome_status,
             fb.corrected_request_kind
         FROM ops.triage_cases tc
         JOIN catalog.repositories r ON r.id = tc.repository_id
+        LEFT JOIN core.reference_values lifecycle_rv ON lifecycle_rv.id = tc.lifecycle_state_id
         LEFT JOIN LATERAL (
             SELECT
                 CASE
@@ -613,16 +862,21 @@ async def _fetch_search_rows(
         f"%{prompt_text[:64]}%",
     )
 
+    profile = _ranking_profile_for_scope(repository_key)
+    ranking_priors = _build_ranking_priors([dict(row) for row in rows])
     enriched: list[dict[str, Any]] = []
     for row in rows:
         triage_case_id = str(row["triage_case_id"])
         outcome_status = str(row["outcome_status"] or "pending")
-        score = _hybrid_similarity_score(
+        baseline_score = candidate_scores.get(triage_case_id, LEXICAL_FALLBACK_BASELINE if lexical_fallback else 0.0)
+        score, ranking_features = _score_search_row(
             row,
-            candidate_scores=candidate_scores,
+            baseline_score=baseline_score,
+            repository_key=repository_key,
             project_key=project_key,
             max_age_days=max_age_days,
-            lexical_fallback=lexical_fallback,
+            profile=profile,
+            ranking_priors=ranking_priors,
         )
         enriched.append(
             {
@@ -641,8 +895,12 @@ async def _fetch_search_rows(
                 "repository_key": row["repository_key"],
                 "policy_version": row["policy_version"],
                 "created_utc": row["created_utc"].isoformat() if row["created_utc"] else None,
+                "lifecycle_state": row.get("lifecycle_state") or "proposed",
+                "lifecycle_updated_utc": row["lifecycle_updated_utc"].isoformat() if row.get("lifecycle_updated_utc") else None,
+                "superseded_by_case_id": str(row["superseded_by_case_id"]) if row.get("superseded_by_case_id") else None,
                 "outcome_status": outcome_status,
                 "outcome_confidence": _outcome_confidence(outcome_status),
+                "ranking_features": ranking_features,
             }
         )
 
@@ -678,8 +936,9 @@ async def _fetch_triage_analysis_rows(
     selected_run_action: str | None,
     lookback_days: int,
 ) -> list[dict[str, Any]]:
+    lifecycle_select = _triage_lifecycle_projection_select("tc", "lifecycle_rv")
     rows = await pool.fetch(
-        """
+        f"""
         /* triage_analysis_rows */
         SELECT
             tc.prompt_text,
@@ -688,10 +947,12 @@ async def _fetch_triage_analysis_rows(
             tc.selected_run_action,
             tc.requires_clarification,
             tc.created_utc,
+            {lifecycle_select},
             COALESCE(fb.effective_outcome_status, 'pending') AS outcome_status,
             fb.corrected_request_kind
         FROM ops.triage_cases tc
         JOIN catalog.repositories r ON r.id = tc.repository_id
+        LEFT JOIN core.reference_values lifecycle_rv ON lifecycle_rv.id = tc.lifecycle_state_id
         LEFT JOIN LATERAL (
             SELECT
                 CASE
@@ -986,17 +1247,20 @@ async def get_triage_feedback_summary(
     request_kind: str | None = None,
     lookback_days: int = DEFAULT_LOOKBACK_DAYS,
 ) -> dict[str, Any]:
+    lifecycle_select = _triage_lifecycle_projection_select("tc", "lifecycle_rv")
     rows = await pool.fetch(
-        """
+        f"""
         SELECT
             tc.prompt_text,
             tc.request_kind,
             tc.requires_clarification,
             tc.created_utc,
+            {lifecycle_select},
             COALESCE(fb.effective_outcome_status, 'pending') AS outcome_status,
             fb.corrected_request_kind
         FROM ops.triage_cases tc
         JOIN catalog.repositories r ON r.id = tc.repository_id
+        LEFT JOIN core.reference_values lifecycle_rv ON lifecycle_rv.id = tc.lifecycle_state_id
         LEFT JOIN LATERAL (
             SELECT
                 CASE

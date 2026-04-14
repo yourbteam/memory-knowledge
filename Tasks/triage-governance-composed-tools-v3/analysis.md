@@ -5,19 +5,28 @@ Prepare V3 work that adds trust controls and higher-level composed tools so inte
 # Current-State Findings
 
 - The current server exposes granular write and read tools for triage, planning, workflow telemetry, and analytics.
+- The server now also exposes policy-synthesis and policy-refresh surfaces:
+  - `get_routing_policy_recommendations`
+  - `get_clarification_policy`
+  - `list_triage_behavior_profiles`
+  - `refresh_triage_policy_artifacts`
 - Integrators currently need to orchestrate multiple calls manually:
   - search before deciding
   - save after deciding
   - feedback after outcome
   - analytics during correction loops
-- There is no server-side concept of policy rollout stages, trust thresholds, or recommendation governance.
+- Policy artifacts now exist through `ops.triage_policy_artifacts` and explicit refresh logic, but there is still no server-side concept of policy rollout stages, trust thresholds, drift state, review state, or recommendation governance.
 - There is no high-level composed helper that returns a memory-aware triage recommendation with evidence and safety metadata in one call.
-- There is no drift or rollback model for future adaptive policy artifacts.
+- `search_triage_cases` now exposes `ranking_features`, so governance/composed tools already have a transparent score-component baseline they can reuse instead of inventing separate opaque trust heuristics.
+- There is still no drift or rollback model for adaptive policy artifacts.
 
 # Source Artifacts Inspected
 
 - [src/memory_knowledge/server.py](/Users/kamenkamenov/memory-knowledge/src/memory_knowledge/server.py)
 - [src/memory_knowledge/triage_memory.py](/Users/kamenkamenov/memory-knowledge/src/memory_knowledge/triage_memory.py)
+- [src/memory_knowledge/triage_policy.py](/Users/kamenkamenov/memory-knowledge/src/memory_knowledge/triage_policy.py)
+- [migrations/versions/013_triage_policy_artifacts.py](/Users/kamenkamenov/memory-knowledge/migrations/versions/013_triage_policy_artifacts.py)
+- [tests/test_triage_policy.py](/Users/kamenkamenov/memory-knowledge/tests/test_triage_policy.py)
 - [docs/AGENT_INTEGRATION_SPEC.md](/Users/kamenkamenov/memory-knowledge/docs/AGENT_INTEGRATION_SPEC.md)
 - [docs/roadmap.md](/Users/kamenkamenov/memory-knowledge/docs/roadmap.md)
 
@@ -39,9 +48,9 @@ Prepare V3 work that adds trust controls and higher-level composed tools so inte
 # Gaps To Close
 
 1. Integrators still need to manually stitch together multiple tools for one decision loop.
-2. There is no clear trust model for when synthesized recommendations are safe to use.
-3. There is no policy rollout stage such as draft, advisory, or trusted.
-4. There is no policy rollback or suppression concept.
+2. There is no clear trust model for when existing synthesized recommendations are safe to use.
+3. There is no policy rollout stage such as draft, advisory, or trusted on top of the current artifact model.
+4. There is no policy rollback or suppression concept on persisted policy artifacts.
 5. There is no drift-monitoring mechanism for adaptive guidance.
 
 # Constraints
@@ -59,8 +68,9 @@ Prepare V3 work that adds trust controls and higher-level composed tools so inte
 
 # Recommended Approach
 
-- Add governance metadata to future synthesized policy artifacts.
+- Add governance metadata to the existing synthesized policy artifact model rather than creating a second parallel artifact surface.
 - Expose high-level tools that compose existing lower-level calls but preserve transparency.
+- Reuse current ranking diagnostics and persisted policy artifacts as evidence inputs for composed-tool responses.
 - Keep the first governance model simple:
   - draft
   - advisory
@@ -80,5 +90,12 @@ Prepare V3 work that adds trust controls and higher-level composed tools so inte
 
 # Sequencing Notes
 
-- This task should follow policy synthesis enough to have real policy artifacts to govern.
-- It can define its governance schema early so policy synthesis work stores the right metadata from the start, but composed tool implementation should come after the first policy artifacts exist.
+- This task now extends a live policy-artifact baseline rather than waiting for the first policy implementation to exist.
+- Composed tool implementation can build directly on the current policy, ranking, and feedback surfaces.
+
+--- Analysis Verification Iteration 1 ---
+Findings from verifier: 5
+FIX NOW: 5 (analysis updated)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, analysis updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 0 (no change)

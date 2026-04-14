@@ -11,14 +11,21 @@ Prepare V3 work that upgrades triage retrieval from the current lightweight hybr
   - clarification penalty
   - recency boost
 - The ranking logic is local to [src/memory_knowledge/triage_memory.py](/Users/kamenkamenov/memory-knowledge/src/memory_knowledge/triage_memory.py).
+- Canonical lifecycle state is now part of the ranking-adjacent read surface. `triage_memory.py` stores and projects `lifecycle_state`, `lifecycle_updated_utc`, and `superseded_by_case_id`, and migration `012_triage_decision_lifecycle_state` backfills that state for historic cases.
+- A policy-synthesis surface now also exists elsewhere in the repo through [src/memory_knowledge/triage_policy.py](/Users/kamenkamenov/memory-knowledge/src/memory_knowledge/triage_policy.py) and the corresponding MCP tools in [src/memory_knowledge/server.py](/Users/kamenkamenov/memory-knowledge/src/memory_knowledge/server.py), but `search_triage_cases` does not yet consume those policy priors or behavior profiles.
 - Existing tests cover determinism and current weighting behavior, but there is no richer adaptive ranking framework.
 - There is no per-repository or per-project ranking profile.
-- There is no explicit use of workflow success/failure patterns, policy priors, or validator/finding data in triage ranking.
+- There is still no explicit use of workflow success/failure patterns, policy priors, or validator/finding data inside triage ranking itself, even though some of those signals now exist elsewhere in the repo.
 
 # Source Artifacts Inspected
 
 - [src/memory_knowledge/triage_memory.py](/Users/kamenkamenov/memory-knowledge/src/memory_knowledge/triage_memory.py)
+- [src/memory_knowledge/triage_policy.py](/Users/kamenkamenov/memory-knowledge/src/memory_knowledge/triage_policy.py)
+- [src/memory_knowledge/server.py](/Users/kamenkamenov/memory-knowledge/src/memory_knowledge/server.py)
+- [migrations/versions/012_triage_decision_lifecycle_state.py](/Users/kamenkamenov/memory-knowledge/migrations/versions/012_triage_decision_lifecycle_state.py)
+- [migrations/versions/013_triage_policy_artifacts.py](/Users/kamenkamenov/memory-knowledge/migrations/versions/013_triage_policy_artifacts.py)
 - [tests/test_triage_memory.py](/Users/kamenkamenov/memory-knowledge/tests/test_triage_memory.py)
+- [tests/test_triage_policy.py](/Users/kamenkamenov/memory-knowledge/tests/test_triage_policy.py)
 - [docs/roadmap.md](/Users/kamenkamenov/memory-knowledge/docs/roadmap.md)
 
 # Scope
@@ -80,5 +87,12 @@ Prepare V3 work that upgrades triage retrieval from the current lightweight hybr
 
 # Sequencing Notes
 
-- Can begin in parallel with lifecycle work, but final tuning should consume the canonical lifecycle semantics once they exist.
-- Should land before policy synthesis is treated as high-confidence decision guidance.
+- Should consume the canonical lifecycle semantics that now already exist in the repo.
+- Can proceed alongside policy synthesis evolution, but should be explicit about whether it consumes current policy priors in this increment or leaves that for a later pass.
+
+--- Analysis Verification Iteration 1 ---
+Findings from verifier: 4
+FIX NOW: 4 (analysis updated)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, analysis updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 0 (no change)

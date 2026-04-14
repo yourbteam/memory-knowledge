@@ -6,14 +6,20 @@ Prepare V3 work that upgrades triage memory from case retrieval plus analytics i
 
 - The server already persists triage cases and feedback in PostgreSQL via `ops.triage_cases` and `ops.triage_case_feedback`.
 - Triage outcomes are normalized through `core.reference_values` with migration `011_triage_outcome_status_reference_values`.
+- Canonical decision lifecycle semantics are now also present through migration `012_triage_decision_lifecycle_state`, which adds `ops.triage_cases.lifecycle_state_id`, `lifecycle_updated_utc`, and `superseded_by_case_id`, seeds `TRIAGE_DECISION_LIFECYCLE_STATE`, and backfills historic cases.
 - Similar-case retrieval is available through `search_triage_cases` in [src/memory_knowledge/triage_memory.py](/Users/kamenkamenov/memory-knowledge/src/memory_knowledge/triage_memory.py).
 - Operational triage analytics already exist:
   - `get_triage_feedback_summary`
   - `get_triage_confusion_clusters`
   - `get_triage_clarification_recommendations`
+- The current triage read/write surface already uses lifecycle projection semantics:
+  - `save_triage_case` initializes lifecycle state
+  - `record_triage_case_feedback` updates lifecycle state from feedback
+  - `search_triage_cases` projects `lifecycle_state`
 - Planning and workflow telemetry now exist in the same server surface, so synthesized routing guidance can eventually be grounded to repo, project, task, phase, validator, and finding context.
 - There is no current server-side concept of a synthesized routing policy artifact, recommended clarification policy, or repo-specific decision profile.
 - Current triage analytics are descriptive only. They return counts, clusters, and recommendations, but they do not produce durable policy objects that an integrator can consume directly.
+- Existing triage tests now cover not only persistence, normalization, retrieval, and descriptive analytics, but also lifecycle-backed read/write behavior for save, feedback, and read-side projection.
 
 # Source Artifacts Inspected
 
@@ -22,6 +28,7 @@ Prepare V3 work that upgrades triage memory from case retrieval plus analytics i
 - [src/memory_knowledge/server.py](/Users/kamenkamenov/memory-knowledge/src/memory_knowledge/server.py)
 - [migrations/versions/010_triage_memory.py](/Users/kamenkamenov/memory-knowledge/migrations/versions/010_triage_memory.py)
 - [migrations/versions/011_triage_outcome_status_reference_values.py](/Users/kamenkamenov/memory-knowledge/migrations/versions/011_triage_outcome_status_reference_values.py)
+- [migrations/versions/012_triage_decision_lifecycle_state.py](/Users/kamenkamenov/memory-knowledge/migrations/versions/012_triage_decision_lifecycle_state.py)
 - [tests/test_triage_memory.py](/Users/kamenkamenov/memory-knowledge/tests/test_triage_memory.py)
 
 # Scope
@@ -84,6 +91,13 @@ Prepare V3 work that upgrades triage memory from case retrieval plus analytics i
 
 # Sequencing Notes
 
-- This task should follow the lifecycle-normalization stream enough to rely on canonical decision-state semantics.
-- It depends on the existing triage analytics surface and should consume the stronger lifecycle model when available.
+- This task now depends on the lifecycle-normalization stream that has already established canonical decision-state semantics in the repo.
+- It depends on the existing triage analytics surface and should consume the current lifecycle projection rather than re-deriving policy evidence from latest-feedback logic.
 - Governance work should refine the trust and rollout rules after the first synthesis model is defined.
+
+--- Analysis Verification Iteration 1 ---
+Findings from verifier: 4
+FIX NOW: 4 (analysis updated)
+IMPLEMENT LATER: 0 (promoted to FIX NOW, analysis updated)
+ACKNOWLEDGE: 0 (no change)
+DISMISS: 0 (no change)
