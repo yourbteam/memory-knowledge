@@ -42,12 +42,20 @@ It now has four integration surfaces that matter to an external LLM:
    - loop pattern summaries
    - quality grades
    - entropy/triage targets
+5. **Adaptive triage and workflow guidance**
+   - outcome-weighted routing summaries
+   - required clarification policies
+   - convergence intervention summaries
+   - failure-mode playbooks
+   - actor adaptation summaries
+   - policy governance rollout summaries
 
 If you are integrating another LLM, you should treat this server as:
 
 - the canonical store for workflow run facts and planning state
 - the retrieval/evidence layer for code intelligence
 - the analytics/reporting layer for workflow quality
+- the advisory policy layer for adaptive routing, clarification, convergence, and governance
 
 Do **not** reimplement these data models in the external agent system if you can call the MCP tools directly.
 
@@ -292,6 +300,18 @@ Read tools:
 - `get_loop_pattern_summary`
 - `get_quality_grade_summary`
 - `list_entropy_sweep_targets`
+
+### 5.4 Adaptive policy and guidance tools
+
+- `get_outcome_weighted_routing_summary`
+- `get_clarification_policy`
+- `get_required_clarification_policy`
+- `get_behavior_policy_status`
+- `get_policy_governance_rollout_summary`
+- `get_convergence_recommendation_summary`
+- `get_failure_mode_playbooks`
+- `get_actor_adaptation_summary`
+- `triage_request_with_memory`
 
 ---
 
@@ -703,6 +723,64 @@ Use when you want:
 
 - the worst recent buckets
 - the best candidates for quality review
+
+### 12.7 Adaptive policy and guidance reads
+
+Use these once your producer is already persisting triage outcomes, phase states, validator results, and findings consistently.
+
+`get_outcome_weighted_routing_summary`
+
+- inspect route quality, failure rate, clarification rate, and route bias
+- use it to understand whether a route should be preferred, treated neutrally, or avoided
+
+`get_required_clarification_policy`
+
+- inspect whether clarification should be treated as effectively required before routing
+- this is stronger and more directly consumable than the broader `get_clarification_policy`
+
+`get_convergence_recommendation_summary`
+
+- inspect advisory interventions for retry-heavy workflows
+- examples:
+  - add grounding before retry
+  - move validators earlier
+  - insert a convergence checkpoint
+  - escalate after a retry threshold
+
+`get_failure_mode_playbooks`
+
+- consume normalized next-step playbooks instead of reinterpreting findings, confusion clusters, and convergence summaries manually
+- examples:
+  - `REQUEST_CLARIFICATION`
+  - `ESCALATE_TO_PLANNING_FIRST`
+  - `RERUN_RETRIEVAL_CONTEXT`
+  - `SUPPRESS_LOW_VALUE_NOISE`
+  - `ESCALATE_TO_OPERATOR_REVIEW`
+
+`get_actor_adaptation_summary`
+
+- inspect whether a specific actor should get a more cautious or more streamlined posture
+- use it only when the actor has enough history to avoid overfitting
+
+`get_policy_governance_rollout_summary`
+
+- inspect whether adaptive policy artifacts are still advisory, look stable enough for promotion, or need review due to drift or suppression
+- this is the main operator-facing rollout/governance read for the adaptive layer
+
+`triage_request_with_memory`
+
+- now returns richer advisory fields:
+  - `outcome_weighted_routes`
+  - `required_clarification_policy`
+  - `requires_clarification_recommendation`
+  - `actor_adaptation` when `actor_email` is supplied
+
+Recommended adoption pattern:
+
+1. read these surfaces as advisory only
+2. log them alongside actual route and retry decisions
+3. compare them with outcomes
+4. only then let them influence automatic routing or retry behavior
 
 ---
 

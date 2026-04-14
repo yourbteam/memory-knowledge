@@ -196,6 +196,21 @@ async def test_loop_pattern_summary_normalizes_thresholds_and_phase_retry_counts
 
 
 @pytest.mark.asyncio
+async def test_convergence_recommendation_summary_maps_failures_to_actions():
+    data = await analytics.get_convergence_recommendation_summary(
+        AnalyticsPool(),
+        include_planning_context=True,
+    )
+    row = data["summary"][0]
+    assert row["run_count"] == 2
+    assert row["dominant_retry_phase"] == "validate"
+    assert row["dominant_failed_validator"] == "OUTPUT_CONTRACT"
+    assert row["primary_recommendation"] == "ADD_PRE_RETRY_GROUNDING"
+    assert row["recommended_actions"][0]["action_code"] == "ADD_PRE_RETRY_GROUNDING"
+    assert row["planning_context"]["projects"][0]["project_key"] == "project-1"
+
+
+@pytest.mark.asyncio
 async def test_analytics_tools_return_successful_empty_collections_for_zero_match_cases():
     pool = EmptyAnalyticsPool()
 
@@ -228,3 +243,8 @@ async def test_analytics_tools_return_successful_empty_collections_for_zero_matc
     assert entropy_data["targets"] == []
     assert entropy_data["eligible_run_count"] == 0
     assert entropy_data["excluded_run_count"] == 0
+
+    convergence_data = await analytics.get_convergence_recommendation_summary(pool)
+    assert convergence_data["summary"] == []
+    assert convergence_data["eligible_run_count"] == 0
+    assert convergence_data["excluded_run_count"] == 0

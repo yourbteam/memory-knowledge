@@ -361,6 +361,29 @@ def _empty_planning_context() -> dict[str, list[dict[str, str]]]:
     return {"projects": [], "features": [], "tasks": []}
 
 
+def _reason_sort_key(item: dict[str, Any]) -> tuple[int, str]:
+    return (int(item["count"]), str(item["reason_code"]))
+
+
+_ACTION_PRIORITY = {
+    "ADD_PRE_RETRY_GROUNDING": 0,
+    "MOVE_VALIDATOR_EARLIER": 1,
+    "ADD_REPAIR_OR_CLARIFICATION_PHASE": 2,
+    "INSERT_CONVERGENCE_CHECKPOINT": 3,
+    "STRENGTHEN_PHASE_ENTRY_CRITERIA": 4,
+    "ADD_PHASE_SPEC_OR_GUARDRAIL": 5,
+    "ESCALATE_AFTER_THRESHOLD": 6,
+    "RUN_ENTROPY_SWEEP": 7,
+    "HARDEN_VALIDATOR_EXECUTION": 8,
+    "MONITOR": 99,
+}
+
+
+def _action_sort_key(item: tuple[str, int]) -> tuple[int, int, str]:
+    action_code, count = item
+    return (-count, _ACTION_PRIORITY.get(action_code, 50), action_code)
+
+
 async def get_agent_performance_summary(
     pool: asyncpg.Pool,
     *,
@@ -1088,4 +1111,194 @@ async def list_entropy_sweep_targets(
         },
         "eligible_run_count": len(eligible_rows),
         "excluded_run_count": max(len(run_fact) - len(eligible_rows), 0),
+    }
+
+
+async def get_convergence_recommendation_summary(
+    pool: asyncpg.Pool,
+    *,
+    repository_key: str | None = None,
+    workflow_name: str | None = None,
+    actor_email: str | None = None,
+    since_utc: str | None = None,
+    until_utc: str | None = None,
+    include_planning_context: bool = False,
+) -> dict[str, Any]:
+    run_fact = await fetch_run_fact(
+        pool,
+        repository_key=repository_key,
+        workflow_name=workflow_name,
+        actor_email=actor_email,
+        since_utc=since_utc,
+        until_utc=until_utc,
+    )
+    phase_fact = await fetch_phase_fact(
+        pool,
+        repository_key=repository_key,
+        workflow_name=workflow_name,
+        since_utc=since_utc,
+        until_utc=until_utc,
+    )
+    validator_fact = await fetch_validator_fact(
+        pool,
+        repository_key=repository_key,
+        workflow_name=workflow_name,
+        since_utc=since_utc,
+        until_utc=until_utc,
+    )
+    run_grade_fact = build_run_grade_fact(run_fact, phase_fact, validator_fact)
+    phase_by_run = defaultdict(list)
+    validator_by_run = defaultdict(list)
+    for row in phase_fact:
+        phase_by_run[row["workflow_run_id"]].append(row)
+    for row in validator_fact:
+        validator_by_run[row["workflow_run_id"]].append(row)
+    run_planning_context = (
+        await fetch_planning_context_for_runs(pool, [r["workflow_run_id"] for r in run_grade_fact])
+        if include_planning_context
+        else {}
+    )
+
+    buckets: dict[tuple[str, str, str], dict[str, Any]] = {}
+    for row in run_grade_fact:
+        key = (row["repository_key"], row["workflow_name"], row["actor_email"])
+        bucket = buckets.setdefault(
+            key,
+            {
+                "repository_key": key[0],
+                "workflow_name": key[1],
+                "actor_email": key[2],
+                "run_count": 0,
+                "_rows": [],
+                "_run_ids": [],
+                "_latest_started_utc": None,
+                "_reason_counts": defaultdict(int),
+                "_action_counts": defaultdict(int),
+                "_phase_retry_counts": defaultdict(int),
+                "_validator_failure_counts": defaultdict(int),
+                "_max_iteration_count": 0,
+            },
+        )
+        bucket["run_count"] += 1
+        bucket["_rows"].append(row)
+        bucket["_run_ids"].append(row["workflow_run_id"])
+        bucket["_max_iteration_count"] = max(bucket["_max_iteration_count"], row["iteration_count"] or 0)
+        if bucket["_latest_started_utc"] is None or (
+            row["started_utc"] and row["started_utc"] > bucket["_latest_started_utc"]
+        ):
+            bucket["_latest_started_utc"] = row["started_utc"]
+
+        reasons: set[str] = set()
+        actions: set[str] = set()
+        if row["grade"] in {"D", "F"}:
+            reasons.add("LOW_GRADE")
+            actions.add("RUN_ENTROPY_SWEEP")
+        if row["status_code"] == "RUN_ERROR":
+            reasons.add("RUN_ERROR")
+            actions.add("ADD_PRE_RETRY_GROUNDING")
+        if (row["iteration_count"] or 0) >= 3:
+            reasons.add("HIGH_ITERATION_COUNT")
+            actions.add("INSERT_CONVERGENCE_CHECKPOINT")
+
+        for phase in phase_by_run[row["workflow_run_id"]]:
+            if phase["attempts"] >= 2:
+                bucket["_phase_retry_counts"][phase["phase_id"]] += 1
+            if phase["attempts"] >= 3:
+                reasons.add("PHASE_RETRY_PRESSURE")
+                actions.add("STRENGTHEN_PHASE_ENTRY_CRITERIA")
+            if phase["error_text"] is not None:
+                reasons.add("PHASE_ERROR")
+                actions.add("ADD_PHASE_SPEC_OR_GUARDRAIL")
+
+        for validator in validator_by_run[row["workflow_run_id"]]:
+            if validator["status_code"] == "VAL_FAILED":
+                reasons.add("VALIDATOR_FAILED")
+                bucket["_validator_failure_counts"][validator["validator_code"]] += 1
+                actions.add("MOVE_VALIDATOR_EARLIER")
+            if validator["status_code"] == "VAL_ERROR":
+                reasons.add("VALIDATOR_ERROR")
+                actions.add("HARDEN_VALIDATOR_EXECUTION")
+
+        if "VALIDATOR_FAILED" in reasons and "PHASE_RETRY_PRESSURE" in reasons:
+            actions.add("ADD_REPAIR_OR_CLARIFICATION_PHASE")
+        if "RUN_ERROR" in reasons and "HIGH_ITERATION_COUNT" in reasons:
+            actions.add("ESCALATE_AFTER_THRESHOLD")
+
+        for reason in reasons:
+            bucket["_reason_counts"][reason] += 1
+        for action in actions:
+            bucket["_action_counts"][action] += 1
+
+    summary = []
+    for key in sorted(buckets):
+        bucket = buckets[key]
+        dominant_retry_phase = None
+        if bucket["_phase_retry_counts"]:
+            dominant_retry_phase = sorted(
+                bucket["_phase_retry_counts"].items(),
+                key=lambda item: (-item[1], item[0]),
+            )[0][0]
+        dominant_failed_validator = None
+        if bucket["_validator_failure_counts"]:
+            dominant_failed_validator = sorted(
+                bucket["_validator_failure_counts"].items(),
+                key=lambda item: (-item[1], item[0]),
+            )[0][0]
+        latest_row = sorted(
+            bucket["_rows"],
+            key=lambda row: (_isoformat(row["started_utc"]) or "", row["run_id"]),
+            reverse=True,
+        )[0]
+        primary_recommendation = sorted(
+            bucket["_action_counts"].items(),
+            key=_action_sort_key,
+        )[0][0] if bucket["_action_counts"] else "MONITOR"
+        summary.append(
+            {
+                "repository_key": bucket["repository_key"],
+                "workflow_name": bucket["workflow_name"],
+                "actor_email": bucket["actor_email"],
+                "run_count": bucket["run_count"],
+                "latest_started_utc": _isoformat(bucket["_latest_started_utc"]),
+                "max_iteration_count": bucket["_max_iteration_count"],
+                "avg_score": sum(row["score"] for row in bucket["_rows"]) / bucket["run_count"]
+                if bucket["run_count"]
+                else 0.0,
+                "latest_run_grade": latest_row["grade"],
+                "dominant_retry_phase": dominant_retry_phase,
+                "dominant_failed_validator": dominant_failed_validator,
+                "reason_counts": [
+                    {"reason_code": reason_code, "count": count}
+                    for reason_code, count in sorted(
+                        bucket["_reason_counts"].items(),
+                        key=lambda item: (-item[1], item[0]),
+                    )
+                ],
+                "recommended_actions": [
+                    {"action_code": action_code, "count": count}
+                    for action_code, count in sorted(
+                        bucket["_action_counts"].items(),
+                        key=_action_sort_key,
+                    )
+                ],
+                "primary_recommendation": primary_recommendation,
+                "planning_context": _bucket_planning_context(bucket["_run_ids"], run_planning_context)
+                if include_planning_context
+                else _empty_planning_context(),
+            }
+        )
+    return {
+        "summary": summary,
+        "ordering": ["repository_key", "workflow_name", "actor_email"],
+        "coverage": {"historical_complete": False, "basis": "post_adoption_only"},
+        "filters": {
+            "repository_key": repository_key,
+            "workflow_name": workflow_name,
+            "actor_email": actor_email,
+            "since_utc": since_utc,
+            "until_utc": until_utc,
+            "include_planning_context": include_planning_context,
+        },
+        "eligible_run_count": len(run_grade_fact),
+        "excluded_run_count": max(len(run_fact) - len(run_grade_fact), 0),
     }

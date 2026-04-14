@@ -7,6 +7,7 @@ from typing import Any
 import asyncpg
 
 from memory_knowledge import triage_memory
+from memory_knowledge.admin import actor_adaptation
 
 DEFAULT_LOOKBACK_DAYS = 90
 DEFAULT_POLICY_VERSION = "triage-policy-v1"
@@ -58,6 +59,16 @@ def _safe_iso(value: Any) -> str | None:
     return None
 
 
+def _freshness_score(value: Any, lookback_days: int) -> float:
+    if not isinstance(value, dt.datetime) or lookback_days <= 0:
+        return 0.0
+    now = dt.datetime.now(dt.timezone.utc)
+    created = value if value.tzinfo is not None else value.replace(tzinfo=dt.timezone.utc)
+    age_seconds = max((now - created).total_seconds(), 0.0)
+    horizon_seconds = max(float(lookback_days) * 86400.0, 1.0)
+    return round(max(0.0, 1.0 - min(age_seconds / horizon_seconds, 1.0)), 4)
+
+
 def _outcome_quality(status: str | None) -> float:
     return _OUTCOME_QUALITY.get(str(status or "pending"), 0.25)
 
@@ -84,6 +95,46 @@ def _count_mix(rows: list[dict[str, Any]], field: str) -> list[dict[str, Any]]:
         {"value": value, "count": count}
         for value, count in sorted(counts.items(), key=lambda item: (-item[1], item[0]))
     ]
+
+
+def _mean(values: list[float]) -> float:
+    if not values:
+        return 0.0
+    return round(sum(values) / len(values), 4)
+
+
+def _rate(count: int, total: int) -> float:
+    if total <= 0:
+        return 0.0
+    return round(count / total, 4)
+
+
+def _infer_missing_fields(questions: list[str]) -> list[str]:
+    inferred: list[str] = []
+    normalized = [question.lower() for question in questions]
+    field_patterns = [
+        ("repository_scope", ("repo", "repository", "path", "scope")),
+        ("project_key", ("project",)),
+        ("environment", ("environment", "prod", "production", "staging", "dev", "deploy")),
+        ("workflow_target", ("workflow", "route", "run action", "action")),
+        ("branch_or_version", ("branch", "commit", "revision", "version", "tag")),
+        ("expected_change", ("change", "fix", "implement", "update", "goal")),
+    ]
+    for field_name, patterns in field_patterns:
+        if any(any(pattern in question for pattern in patterns) for question in normalized):
+            inferred.append(field_name)
+    return inferred
+
+
+def _dedupe_texts(values: list[str], *, limit: int) -> list[str]:
+    result: list[str] = []
+    for value in values:
+        text = str(value or "").strip()
+        if text and text not in result:
+            result.append(text)
+        if len(result) >= limit:
+            break
+    return result
 
 
 async def _fetch_policy_source_rows(
@@ -175,6 +226,33 @@ def _routing_sort_key(item: dict[str, Any]) -> tuple[float, int, str, str, str]:
         str(item.get("request_kind") or ""),
         str(item.get("recommended_workflow_name") or ""),
     )
+
+
+def _routing_summary_sort_key(item: dict[str, Any]) -> tuple[float, int, str, str, str]:
+    return (
+        float(item["route_quality_score"]),
+        int(item["case_count"]),
+        str(item.get("latest_seen_utc") or ""),
+        str(item.get("request_kind") or ""),
+        str(item.get("selected_workflow_name") or ""),
+    )
+
+
+def _route_bias_label(
+    *,
+    route_quality_score: float,
+    failure_rate: float,
+    human_override_rate: float,
+    clarification_rate: float,
+    insufficient_context_rate: float,
+) -> str:
+    if failure_rate >= 0.35 or human_override_rate >= 0.25:
+        return "avoid"
+    if clarification_rate >= 0.5 or insufficient_context_rate >= 0.3:
+        return "clarify_first"
+    if route_quality_score >= 0.7 and failure_rate <= 0.15:
+        return "prefer"
+    return "neutral"
 
 
 async def get_routing_policy_recommendations(
@@ -280,6 +358,120 @@ async def get_routing_policy_recommendations(
     }
 
 
+async def get_outcome_weighted_routing_summary(
+    pool: asyncpg.Pool,
+    *,
+    repository_key: str,
+    project_key: str | None = None,
+    request_kind: str | None = None,
+    lookback_days: int = DEFAULT_LOOKBACK_DAYS,
+    limit: int = 10,
+    min_case_count: int = 2,
+) -> dict[str, Any]:
+    rows = await _fetch_policy_source_rows(
+        pool,
+        repository_key=repository_key,
+        project_key=project_key,
+        request_kind=request_kind,
+        lookback_days=lookback_days,
+        selected_workflow_name=None,
+        selected_run_action=None,
+    )
+    base = {
+        "advisory_only": True,
+        "policy_version": DEFAULT_POLICY_VERSION,
+        "filters": {
+            "repository_key": repository_key,
+            "project_key": project_key,
+            "request_kind": request_kind,
+            "lookback_days": lookback_days,
+            "limit": limit,
+            "min_case_count": min_case_count,
+        },
+        "analyzed_case_count": len(rows),
+        "route_count": 0,
+        "routes": [],
+    }
+    if not rows:
+        return base
+
+    grouped: dict[tuple[str | None, str | None, str | None], list[dict[str, Any]]] = {}
+    for row in rows:
+        workflow_name = row.get("selected_workflow_name")
+        if not workflow_name:
+            continue
+        run_action = row.get("selected_run_action") if row.get("request_kind") == "run_operation" else None
+        grouped.setdefault((row.get("request_kind"), workflow_name, run_action), []).append(row)
+
+    routes: list[dict[str, Any]] = []
+    for (request_kind_value, workflow_name, run_action), bucket in grouped.items():
+        case_count = len(bucket)
+        if case_count < min_case_count:
+            continue
+        clarification_count = sum(1 for row in bucket if row.get("requires_clarification"))
+        corrected_count = sum(1 for row in bucket if row.get("outcome_status") == "corrected")
+        failure_count = sum(1 for row in bucket if row.get("outcome_status") == "execution_failed_after_route")
+        human_override_count = sum(1 for row in bucket if row.get("outcome_status") == "overridden_by_human")
+        insufficient_context_count = sum(1 for row in bucket if row.get("outcome_status") == "insufficient_context")
+        successful_count = sum(1 for row in bucket if row.get("successful_execution") is True)
+        outcome_scores = [_outcome_quality(row.get("outcome_status")) for row in bucket]
+        lifecycle_scores = [_lifecycle_quality(row.get("lifecycle_state")) for row in bucket]
+        route_quality_score = _mean(
+            [
+                (_outcome_quality(row.get("outcome_status")) + _lifecycle_quality(row.get("lifecycle_state"))) / 2.0
+                for row in bucket
+            ]
+        )
+        clarification_rate = _rate(clarification_count, case_count)
+        failure_rate = _rate(failure_count + corrected_count, case_count)
+        human_override_rate = _rate(human_override_count, case_count)
+        insufficient_context_rate = _rate(insufficient_context_count, case_count)
+        successful_execution_rate = _rate(successful_count, case_count)
+        route_bias = _route_bias_label(
+            route_quality_score=route_quality_score,
+            failure_rate=failure_rate,
+            human_override_rate=human_override_rate,
+            clarification_rate=clarification_rate,
+            insufficient_context_rate=insufficient_context_rate,
+        )
+        latest_seen_utc = max((_safe_iso(row.get("created_utc")) or "" for row in bucket), default=None)
+        routes.append(
+            {
+                "route_key": "|".join([str(request_kind_value or ""), str(workflow_name or ""), str(run_action or "")]),
+                "repository_key": repository_key,
+                "project_key": project_key,
+                "request_kind": request_kind_value,
+                "selected_workflow_name": workflow_name,
+                "selected_run_action": run_action,
+                "case_count": case_count,
+                "route_quality_score": route_quality_score,
+                "avg_outcome_quality": _mean(outcome_scores),
+                "avg_lifecycle_quality": _mean(lifecycle_scores),
+                "successful_execution_rate": successful_execution_rate,
+                "clarification_rate": clarification_rate,
+                "failure_rate": failure_rate,
+                "human_override_rate": human_override_rate,
+                "insufficient_context_rate": insufficient_context_rate,
+                "correction_rate": _rate(corrected_count, case_count),
+                "latest_seen_utc": latest_seen_utc,
+                "route_bias": route_bias,
+                "outcome_mix": _count_mix(bucket, "outcome_status"),
+                "lifecycle_mix": _count_mix(bucket, "lifecycle_state"),
+                "evidence_summary": (
+                    f"{case_count} cases for {request_kind_value or 'unknown'} via {workflow_name}; "
+                    f"quality={route_quality_score}, failure_rate={failure_rate}, clarification_rate={clarification_rate}"
+                ),
+            }
+        )
+
+    routes.sort(key=_routing_summary_sort_key, reverse=True)
+    return {
+        **base,
+        "route_count": len(routes),
+        "routes": routes[:limit],
+    }
+
+
 def _clarification_sort_key(item: dict[str, Any]) -> tuple[float, int, str, str, str]:
     return (
         float(item["confidence"]),
@@ -348,6 +540,7 @@ async def get_clarification_policy(
         sample_questions: list[str] = []
         sample_prompts: list[str] = []
         problem_case_count = 0
+        latest_seen_dt: dt.datetime | None = None
         for row in bucket:
             if row.get("outcome_status") in {"corrected", "overridden_by_human", "insufficient_context"}:
                 problem_case_count += 1
@@ -357,9 +550,20 @@ async def get_clarification_policy(
             for question in _normalize_json_text_list(row.get("clarifying_questions")):
                 if question not in sample_questions and len(sample_questions) < 5:
                     sample_questions.append(question)
+            created = row.get("created_utc")
+            if isinstance(created, dt.datetime) and (latest_seen_dt is None or created > latest_seen_dt):
+                latest_seen_dt = created
         clarification_rate = clarification_count / case_count
         problem_rate = problem_case_count / case_count
-        confidence = round(min(1.0, clarification_rate * 0.7 + problem_rate * 0.3), 4)
+        freshness = _freshness_score(latest_seen_dt, lookback_days)
+        confidence = round(min(1.0, clarification_rate * 0.55 + problem_rate * 0.25 + freshness * 0.2), 4)
+        required_missing_fields = _infer_missing_fields(sample_questions)
+        recommended_prompt = (
+            "Ask for clarification before selecting the workflow."
+            if not required_missing_fields
+            else "Ask for clarification on: " + ", ".join(required_missing_fields)
+        )
+        mode = "required" if confidence >= 0.6 or problem_rate >= 0.35 else "advisory"
         policies.append(
             {
                 "policy_key": "|".join([str(request_kind_value or ""), str(workflow_name or ""), str(run_action or "")]),
@@ -372,11 +576,15 @@ async def get_clarification_policy(
                 "case_count": case_count,
                 "clarification_rate": round(clarification_rate, 4),
                 "problem_rate": round(problem_rate, 4),
-                "latest_seen_utc": max((_safe_iso(row.get("created_utc")) or "" for row in bucket), default=None),
-                "suggested_questions": sample_questions,
+                "freshness": freshness,
+                "latest_seen_utc": _safe_iso(latest_seen_dt),
+                "required_missing_fields": required_missing_fields,
+                "suggested_questions": _dedupe_texts(sample_questions, limit=5),
                 "sample_prompts": sample_prompts,
                 "outcome_mix": _count_mix(bucket, "outcome_status"),
                 "lifecycle_mix": _count_mix(bucket, "lifecycle_state"),
+                "mode": mode,
+                "recommended_prompt": recommended_prompt,
                 "recommendation": (
                     f"Prompt for clarification before routing {request_kind_value or 'unknown'} "
                     f"requests to {workflow_name or 'the default workflow'}"
@@ -389,6 +597,50 @@ async def get_clarification_policy(
         **base,
         "policy_count": len(policies),
         "policies": policies[:limit],
+    }
+
+
+async def get_required_clarification_policy(
+    pool: asyncpg.Pool,
+    *,
+    repository_key: str,
+    project_key: str | None = None,
+    request_kind: str | None = None,
+    selected_workflow_name: str | None = None,
+    selected_run_action: str | None = None,
+    lookback_days: int = DEFAULT_LOOKBACK_DAYS,
+    min_case_count: int = 2,
+) -> dict[str, Any]:
+    policies = await get_clarification_policy(
+        pool,
+        repository_key=repository_key,
+        project_key=project_key,
+        request_kind=request_kind,
+        selected_workflow_name=selected_workflow_name,
+        selected_run_action=selected_run_action,
+        lookback_days=lookback_days,
+        limit=10,
+        min_case_count=min_case_count,
+    )
+    candidates = policies["policies"]
+    selected = next((item for item in candidates if item.get("mode") == "required"), None)
+    if selected is None and candidates:
+        selected = candidates[0]
+    return {
+        "advisory_only": True,
+        "policy_version": DEFAULT_POLICY_VERSION,
+        "filters": {
+            "repository_key": repository_key,
+            "project_key": project_key,
+            "request_kind": request_kind,
+            "selected_workflow_name": selected_workflow_name,
+            "selected_run_action": selected_run_action,
+            "lookback_days": lookback_days,
+            "min_case_count": min_case_count,
+        },
+        "match_found": selected is not None,
+        "requires_clarification": bool(selected and selected.get("mode") == "required"),
+        "policy": selected,
     }
 
 
@@ -642,6 +894,86 @@ async def get_behavior_policy_status(
     }
 
 
+async def get_policy_governance_rollout_summary(
+    pool: asyncpg.Pool,
+    *,
+    repository_key: str,
+    project_key: str | None = None,
+) -> dict[str, Any]:
+    status = await get_behavior_policy_status(
+        pool,
+        repository_key=repository_key,
+        project_key=project_key,
+    )
+    artifacts = status["artifacts"]
+    kind_counts: dict[str, int] = {}
+    rollout_counts: dict[str, int] = {}
+    drift_counts: dict[str, int] = {}
+    suppressed_count = 0
+    trust_ready_count = 0
+    proposed_actions: list[str] = []
+
+    for artifact in artifacts:
+        kind = str(artifact.get("policy_kind") or "unknown")
+        rollout_stage = str(artifact.get("rollout_stage") or "unknown")
+        drift_state = str(artifact.get("drift_state") or "unknown")
+        kind_counts[kind] = kind_counts.get(kind, 0) + 1
+        rollout_counts[rollout_stage] = rollout_counts.get(rollout_stage, 0) + 1
+        drift_counts[drift_state] = drift_counts.get(drift_state, 0) + 1
+        if artifact.get("is_suppressed"):
+            suppressed_count += 1
+        confidence = float(artifact.get("confidence") or 0.0)
+        case_count = int(artifact.get("case_count") or 0)
+        threshold = float(artifact.get("confidence_threshold") or 0.0)
+        minimum_evidence = int(artifact.get("minimum_evidence_threshold") or 0)
+        if (
+            rollout_stage == "advisory"
+            and drift_state == "stable"
+            and not artifact.get("is_suppressed")
+            and confidence >= max(threshold, 0.75)
+            and case_count >= max(minimum_evidence, 1)
+        ):
+            trust_ready_count += 1
+
+    if suppressed_count > 0:
+        proposed_actions.append("review_suppressed_artifacts")
+    if drift_counts.get("stable", 0) < len(artifacts):
+        proposed_actions.append("inspect_policy_drift")
+    if trust_ready_count > 0:
+        proposed_actions.append("promote_stable_advisory_candidates")
+    if not proposed_actions:
+        proposed_actions.append("monitor")
+
+    overall_stage = "monitor"
+    if trust_ready_count > 0:
+        overall_stage = "promotion_candidate"
+    if suppressed_count > 0 or drift_counts.get("unstable", 0) > 0:
+        overall_stage = "needs_review"
+
+    return {
+        "repository_key": repository_key,
+        "project_key": project_key,
+        "artifact_count": len(artifacts),
+        "overall_stage": overall_stage,
+        "trust_ready_count": trust_ready_count,
+        "suppressed_count": suppressed_count,
+        "kind_counts": [
+            {"policy_kind": key, "count": kind_counts[key]}
+            for key in sorted(kind_counts)
+        ],
+        "rollout_stage_counts": [
+            {"rollout_stage": key, "count": rollout_counts[key]}
+            for key in sorted(rollout_counts)
+        ],
+        "drift_state_counts": [
+            {"drift_state": key, "count": drift_counts[key]}
+            for key in sorted(drift_counts)
+        ],
+        "proposed_actions": proposed_actions,
+        "artifacts": artifacts,
+    }
+
+
 async def triage_request_with_memory(
     pool: asyncpg.Pool,
     settings: Any,
@@ -650,6 +982,7 @@ async def triage_request_with_memory(
     repository_key: str,
     project_key: str | None = None,
     feature_key: str | None = None,
+    actor_email: str | None = None,
     request_kind: str | None = None,
     execution_mode: str | None = None,
     selected_workflow_name: str | None = None,
@@ -695,12 +1028,19 @@ async def triage_request_with_memory(
         project_key=project_key,
         limit=3,
     )
+    routing_summary = await get_outcome_weighted_routing_summary(
+        pool,
+        repository_key=repository_key,
+        project_key=project_key,
+        request_kind=request_kind,
+        limit=3,
+        min_case_count=1,
+    )
     governance = await get_behavior_policy_status(
         pool,
         repository_key=repository_key,
         project_key=project_key,
     )
-
     top_search = search["rows"][0] if search["rows"] else None
     top_policy = routing["recommendations"][0] if routing["recommendations"] else None
     top_stage = next(
@@ -716,36 +1056,71 @@ async def triage_request_with_memory(
         no_recommendation_reasons.append("no similar cases found")
     if top_policy is None:
         no_recommendation_reasons.append("no routing policy recommendation met thresholds")
+    effective_request_kind = (
+        top_policy.get("request_kind")
+        if top_policy is not None
+        else top_search.get("request_kind") if top_search is not None else request_kind
+    )
+    effective_workflow_name = (
+        top_policy.get("recommended_workflow_name")
+        if top_policy is not None
+        else top_search.get("selected_workflow_name") if top_search is not None else selected_workflow_name
+    )
+    effective_run_action = (
+        top_policy.get("recommended_run_action")
+        if top_policy is not None
+        else top_search.get("selected_run_action") if top_search is not None else selected_run_action
+    )
+    actor_profile = None
+    if actor_email:
+        actor_profile = await actor_adaptation.get_actor_adaptation_summary(
+            pool,
+            repository_key=repository_key,
+            actor_email=actor_email,
+            workflow_name=effective_workflow_name,
+        )
+    required_clarification = await get_required_clarification_policy(
+        pool,
+        repository_key=repository_key,
+        project_key=project_key,
+        request_kind=effective_request_kind,
+        selected_workflow_name=effective_workflow_name,
+        selected_run_action=effective_run_action,
+        min_case_count=1,
+    )
+
+    recommendation_confidence = (
+        top_policy.get("confidence")
+        if top_policy is not None
+        else top_search.get("similarity_score") if top_search is not None else None
+    )
+    if recommendation_confidence is not None and actor_profile and actor_profile.get("match_found"):
+        recommendation_confidence = round(
+            max(0.0, min(1.0, float(recommendation_confidence) + float(actor_profile.get("confidence_delta") or 0.0))),
+            4,
+        )
 
     return {
         "advisory_only": top_stage != "trusted",
         "repository_key": repository_key,
         "project_key": project_key,
         "prompt_text": prompt_text,
-        "recommended_request_kind": (
-            top_policy.get("request_kind")
-            if top_policy is not None
-            else top_search.get("request_kind") if top_search is not None else request_kind
-        ),
-        "recommended_workflow_name": (
-            top_policy.get("recommended_workflow_name")
-            if top_policy is not None
-            else top_search.get("selected_workflow_name") if top_search is not None else None
-        ),
-        "recommended_run_action": (
-            top_policy.get("recommended_run_action")
-            if top_policy is not None
-            else top_search.get("selected_run_action") if top_search is not None else None
-        ),
-        "recommendation_confidence": (
-            top_policy.get("confidence")
-            if top_policy is not None
-            else top_search.get("similarity_score") if top_search is not None else None
-        ),
+        "actor_email": actor_email,
+        "recommended_request_kind": effective_request_kind,
+        "recommended_workflow_name": effective_workflow_name,
+        "recommended_run_action": effective_run_action,
+        "recommendation_confidence": recommendation_confidence,
         "rollout_stage": top_stage,
         "supporting_cases": search["rows"][:3],
         "routing_recommendations": routing["recommendations"][:3],
+        "outcome_weighted_routes": routing_summary["routes"][:3],
         "clarification_policies": clarification["policies"][:3],
+        "required_clarification_policy": required_clarification["policy"],
+        "requires_clarification_recommendation": (
+            required_clarification["requires_clarification"]
+            or bool(actor_profile and actor_profile.get("requires_stronger_clarification"))
+        ),
+        "actor_adaptation": actor_profile,
         "behavior_profiles": behavior["profiles"][:3],
         "policy_status": governance["artifacts"],
         "ranking_features": top_search.get("ranking_features") if top_search is not None else None,

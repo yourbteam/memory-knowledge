@@ -74,19 +74,28 @@
 - `/health` and `/ready` verified
 - live MCP smoke checks completed against the deployed server
 
+### Agent Integration Spec Reconciliation
+**Status:** Completed.
+**Plan:** `Tasks/agent-integration-spec-reconciliation/plan.md`
+**Delivered:**
+- replaced stale count- and persona-heavy document structure
+- reconciled the spec around the current live MCP surface
+- documented planning, workflow telemetry, findings, analytics, triage memory, and triage policy tooling as one current integrator reference
+
+### `docker/init-pg.sql` Bootstrap Deprecation
+**Status:** Completed.
+**Plan:** `Tasks/init-pg-bootstrap-reconciliation/plan.md`
+**Delivered:**
+- removed the legacy snapshot from the active local Docker bootstrap path
+- documented `alembic upgrade head` as the supported PostgreSQL bootstrap path
+- validated fresh local bootstrap against the current migration line
+- kept `docker/init-pg.sql` only as a deprecated historical snapshot
+
 ## Next Up
 
-### `docker/init-pg.sql` Deprecation or Full Reconciliation
-**Problem:** `docker/init-pg.sql` remains a legacy bootstrap snapshot and does not reflect the current planning, reference-value, workflow, findings, analytics, and triage schema line.
-**Goal:** Decide and implement one supported direction:
-- either fully reconcile `docker/init-pg.sql` with the modern schema line
-- or formally deprecate/remove it in favor of `alembic upgrade head`
-**Why next:** This is the most important remaining repo-owned bootstrap/operations ambiguity.
-
-### `docs/AGENT_INTEGRATION_SPEC.md` Full Reconciliation
-**Problem:** `docs/AGENT_INTEGRATION_SPEC.md` is materially improved, but it is still not a full one-to-one reference for the current live server surface, including newer findings and triage V3 capabilities.
-**Goal:** Bring the integration spec up to a complete, stable reference-quality document for external LLM integrators.
-**Depends on:** Finalizing the bootstrap/support stance around the current server surface so the document does not need another structural rewrite immediately after.
+### Repo-Owned Roadmap Slice Complete
+**Status:** No remaining high-priority repo-owned roadmap item is currently open.
+**Meaning:** The next meaningful work now sits either in external adoption or in future enhancement tracks rather than in unresolved current-state reconciliation work.
 
 ## External / Depends On Other Repos
 
@@ -97,9 +106,47 @@
 
 ## Future
 
-### Deeper Workflow/Triage Feedback Automation
-**Problem:** The platform now supports triage policy synthesis and workflow analytics, but evaluator-assisted automatic feedback loops are still limited compared with the long-term closed-loop direction.
-**Goal:** Add stronger evaluator-driven scoring and convergence feedback so future routing and clarification guidance can be refined with less manual intervention.
+### Triage + Workflow Feedback Automation V4
+**Status:** Implemented.
+**Umbrella Plan:** `Tasks/triage-feedback-automation-v4/plan.md`
+**Goal:** Move from passive reporting and reusable memory toward active routing, clarification, and convergence adaptation driven by persisted outcomes.
+**Recommended delivery order:**
+- `Tasks/outcome-weighted-routing-v4/plan.md`
+- `Tasks/clarification-policy-learning-v4/plan.md`
+- `Tasks/convergence-intelligence-v4/plan.md`
+- `Tasks/failure-mode-playbooks-v4/plan.md`
+- `Tasks/actor-team-adaptation-v4/plan.md`
+- `Tasks/policy-governance-rollout-v4/plan.md`
+
+### Outcome-Weighted Routing V4
+**Plan:** `Tasks/outcome-weighted-routing-v4/plan.md`
+**Status:** Implemented.
+**Practical effect:** Route selection starts using downstream outcomes such as success rates, loop counts, and validator failures instead of relying mostly on prior case similarity and static policy artifacts.
+
+### Clarification Policy Learning V4
+**Plan:** `Tasks/clarification-policy-learning-v4/plan.md`
+**Status:** Implemented.
+**Practical effect:** Repeated ambiguity patterns become reusable clarification policy so the system asks the right questions before committing to a workflow.
+
+### Convergence Intelligence V4
+**Plan:** `Tasks/convergence-intelligence-v4/plan.md`
+**Status:** Implemented.
+**Practical effect:** Loop summaries become actionable convergence recommendations, helping orchestrators choose better interventions instead of repeating the same retry pattern.
+
+### Failure-Mode Playbooks V4
+**Plan:** `Tasks/failure-mode-playbooks-v4/plan.md`
+**Status:** Implemented.
+**Practical effect:** Recurring validator, finding, and routing failures get mapped to recommended next-step playbooks rather than remaining analytics-only observations.
+
+### Actor/Team Adaptation V4
+**Plan:** `Tasks/actor-team-adaptation-v4/plan.md`
+**Status:** Implemented.
+**Practical effect:** The platform can adapt route confidence, clarification needs, and workflow defaults based on stable actor or automation-source behavior patterns.
+
+### Policy Governance And Rollout V4
+**Plan:** `Tasks/policy-governance-rollout-v4/plan.md`
+**Status:** Implemented.
+**Practical effect:** Adaptive policies now have a consolidated governance summary showing rollout posture, drift, suppression pressure, and promotion-ready advisory candidates.
 
 ### Workflow Process Tooling
 **Problem:** The internal task-process ergonomics have been improved through the new task intake and size-aware workflow skills, but the repository does not yet include templates or examples for `light`, `standard`, and `heavy` task artifacts.

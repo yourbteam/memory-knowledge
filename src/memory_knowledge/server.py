@@ -25,7 +25,9 @@ from memory_knowledge.observability.metrics import track_tool_metrics
 from memory_knowledge.guards import check_remote_write_guard
 from memory_knowledge.workflows.base import WorkflowResult
 from memory_knowledge.admin import analytics as _analytics
+from memory_knowledge.admin import actor_adaptation as _actor_adaptation
 from memory_knowledge.admin import findings as _findings
+from memory_knowledge.admin import playbooks as _playbooks
 from memory_knowledge.admin import planning as _planning
 from memory_knowledge import triage_memory as _triage_memory
 from memory_knowledge import triage_policy as _triage_policy
@@ -1574,6 +1576,42 @@ async def get_clarification_policy(
 
 
 @mcp.tool()
+@track_tool_metrics("get_required_clarification_policy")
+async def get_required_clarification_policy(
+    repository_key: str,
+    project_key: str | None = None,
+    request_kind: str | None = None,
+    selected_workflow_name: str | None = None,
+    selected_run_action: str | None = None,
+    lookback_days: int = 90,
+    min_case_count: int = 2,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_required_clarification_policy")
+    try:
+        if not str(repository_key or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="get_required_clarification_policy", status="error", error="repository_key is required").model_dump_json()
+        if lookback_days < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_required_clarification_policy", status="error", error="lookback_days must be >= 1").model_dump_json()
+        if min_case_count < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_required_clarification_policy", status="error", error="min_case_count must be >= 1").model_dump_json()
+        data = await _triage_policy.get_required_clarification_policy(
+            get_pg_pool(),
+            repository_key=repository_key,
+            project_key=project_key,
+            request_kind=request_kind,
+            selected_workflow_name=selected_workflow_name,
+            selected_run_action=selected_run_action,
+            lookback_days=lookback_days,
+            min_case_count=min_case_count,
+        )
+        return WorkflowResult(run_id=str(rid), tool_name="get_required_clarification_policy", status="success", data=data).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("list_triage_behavior_profiles")
 async def list_triage_behavior_profiles(
     repository_key: str,
@@ -1678,12 +1716,81 @@ async def get_behavior_policy_status(
 
 
 @mcp.tool()
+@track_tool_metrics("get_policy_governance_rollout_summary")
+async def get_policy_governance_rollout_summary(
+    repository_key: str,
+    project_key: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_policy_governance_rollout_summary")
+    try:
+        if not str(repository_key or "").strip():
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_policy_governance_rollout_summary",
+                status="error",
+                error="repository_key is required",
+            ).model_dump_json()
+        data = await _triage_policy.get_policy_governance_rollout_summary(
+            get_pg_pool(),
+            repository_key=repository_key,
+            project_key=project_key,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_policy_governance_rollout_summary",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_outcome_weighted_routing_summary")
+async def get_outcome_weighted_routing_summary(
+    repository_key: str,
+    project_key: str | None = None,
+    request_kind: str | None = None,
+    lookback_days: int = 90,
+    limit: int = 10,
+    min_case_count: int = 2,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_outcome_weighted_routing_summary")
+    try:
+        if not str(repository_key or "").strip():
+            return WorkflowResult(run_id=str(rid), tool_name="get_outcome_weighted_routing_summary", status="error", error="repository_key is required").model_dump_json()
+        if lookback_days < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_outcome_weighted_routing_summary", status="error", error="lookback_days must be >= 1").model_dump_json()
+        if limit < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_outcome_weighted_routing_summary", status="error", error="limit must be >= 1").model_dump_json()
+        if min_case_count < 1:
+            return WorkflowResult(run_id=str(rid), tool_name="get_outcome_weighted_routing_summary", status="error", error="min_case_count must be >= 1").model_dump_json()
+        data = await _triage_policy.get_outcome_weighted_routing_summary(
+            get_pg_pool(),
+            repository_key=repository_key,
+            project_key=project_key,
+            request_kind=request_kind,
+            lookback_days=lookback_days,
+            limit=limit,
+            min_case_count=min_case_count,
+        )
+        return WorkflowResult(run_id=str(rid), tool_name="get_outcome_weighted_routing_summary", status="success", data=data).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("triage_request_with_memory")
 async def triage_request_with_memory(
     repository_key: str,
     prompt_text: str,
     project_key: str | None = None,
     feature_key: str | None = None,
+    actor_email: str | None = None,
     request_kind: str | None = None,
     execution_mode: str | None = None,
     selected_workflow_name: str | None = None,
@@ -1707,6 +1814,7 @@ async def triage_request_with_memory(
             repository_key=repository_key,
             project_key=project_key,
             feature_key=feature_key,
+            actor_email=actor_email,
             request_kind=request_kind,
             execution_mode=execution_mode,
             selected_workflow_name=selected_workflow_name,
@@ -2906,6 +3014,153 @@ async def list_entropy_sweep_targets(
             tool_name="list_entropy_sweep_targets",
             status="error",
             error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_convergence_recommendation_summary")
+async def get_convergence_recommendation_summary(
+    repository_key: str | None = None,
+    workflow_name: str | None = None,
+    actor_email: str | None = None,
+    since_utc: str | None = None,
+    until_utc: str | None = None,
+    include_planning_context: bool = False,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_convergence_recommendation_summary")
+    try:
+        data = await _analytics.get_convergence_recommendation_summary(
+            get_pg_pool(),
+            repository_key=repository_key,
+            workflow_name=workflow_name,
+            actor_email=actor_email,
+            since_utc=since_utc,
+            until_utc=until_utc,
+            include_planning_context=include_planning_context,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_convergence_recommendation_summary",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_failure_mode_playbooks")
+async def get_failure_mode_playbooks(
+    repository_key: str,
+    workflow_name: str | None = None,
+    phase_id: str | None = None,
+    agent_name: str | None = None,
+    request_kind: str | None = None,
+    selected_workflow_name: str | None = None,
+    selected_run_action: str | None = None,
+    since_utc: str | None = None,
+    until_utc: str | None = None,
+    limit: int = 20,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_failure_mode_playbooks")
+    try:
+        if not str(repository_key or "").strip():
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_failure_mode_playbooks",
+                status="error",
+                error="repository_key is required",
+            ).model_dump_json()
+        if limit < 1:
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_failure_mode_playbooks",
+                status="error",
+                error="limit must be >= 1",
+            ).model_dump_json()
+        if not _is_valid_timestamp(since_utc) or not _is_valid_timestamp(until_utc):
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_failure_mode_playbooks",
+                status="error",
+                error="since_utc and until_utc must be valid ISO-8601 timestamps",
+            ).model_dump_json()
+        data = await _playbooks.get_failure_mode_playbooks(
+            get_pg_pool(),
+            repository_key=repository_key,
+            workflow_name=workflow_name,
+            phase_id=phase_id,
+            agent_name=agent_name,
+            request_kind=request_kind,
+            selected_workflow_name=selected_workflow_name,
+            selected_run_action=selected_run_action,
+            since_utc=since_utc,
+            until_utc=until_utc,
+            limit=limit,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_failure_mode_playbooks",
+            status="success",
+            data=data,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_actor_adaptation_summary")
+async def get_actor_adaptation_summary(
+    repository_key: str,
+    actor_email: str,
+    workflow_name: str | None = None,
+    since_utc: str | None = None,
+    until_utc: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "get_actor_adaptation_summary")
+    try:
+        if not str(repository_key or "").strip():
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_actor_adaptation_summary",
+                status="error",
+                error="repository_key is required",
+            ).model_dump_json()
+        if not str(actor_email or "").strip():
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_actor_adaptation_summary",
+                status="error",
+                error="actor_email is required",
+            ).model_dump_json()
+        if not _is_valid_timestamp(since_utc) or not _is_valid_timestamp(until_utc):
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_actor_adaptation_summary",
+                status="error",
+                error="since_utc and until_utc must be valid ISO-8601 timestamps",
+            ).model_dump_json()
+        data = await _actor_adaptation.get_actor_adaptation_summary(
+            get_pg_pool(),
+            repository_key=repository_key,
+            actor_email=actor_email,
+            workflow_name=workflow_name,
+            since_utc=since_utc,
+            until_utc=until_utc,
+        )
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="get_actor_adaptation_summary",
+            status="success",
+            data=data,
         ).model_dump_json()
     finally:
         clear_run_context()

@@ -74,6 +74,7 @@ class RankingProfile:
     policy_alignment_weight: float = 0.05
     lifecycle_quality_weight: float = 0.06
     outcome_quality_weight: float = 0.06
+    route_failure_penalty_weight: float = 0.08
     clarification_penalty_weight: float = 0.04
     recency_weight: float = 0.04
 
@@ -165,6 +166,7 @@ def _historical_success_signal(row: dict[str, Any]) -> float:
 
 def _build_ranking_priors(rows: list[dict[str, Any]]) -> dict[str, Any]:
     workflow_totals: dict[tuple[str, str, str], list[float]] = {}
+    workflow_risk_totals: dict[tuple[str, str, str], list[float]] = {}
     request_kind_totals: dict[str, list[float]] = {}
     best_workflow_for_request_kind: dict[str, tuple[str, str | None, float]] = {}
     for row in rows:
@@ -172,13 +174,30 @@ def _build_ranking_priors(rows: list[dict[str, Any]]) -> dict[str, Any]:
         workflow_name = str(row.get("selected_workflow_name") or "")
         run_action = str(row.get("selected_run_action") or "") if request_kind == "run_operation" else ""
         signal = _historical_success_signal(row)
+        risk_signal = 0.0
+        outcome_status = str(row.get("outcome_status") or "pending")
+        if outcome_status in {"execution_failed_after_route", "corrected", "overridden_by_human"}:
+            risk_signal += 1.0
+        elif outcome_status == "insufficient_context":
+            risk_signal += 0.6
+        elif outcome_status == "pending":
+            risk_signal += 0.15
+        if row.get("requires_clarification"):
+            risk_signal += 0.35
+        risk_signal = round(min(risk_signal, 1.0), 4)
         request_kind_totals.setdefault(request_kind, []).append(signal)
         if workflow_name:
             workflow_key = (request_kind, workflow_name, run_action)
             workflow_totals.setdefault(workflow_key, []).append(signal)
+            workflow_risk_totals.setdefault(workflow_key, []).append(risk_signal)
     workflow_priors = {
         key: round(sum(values) / len(values), 4)
         for key, values in workflow_totals.items()
+        if values
+    }
+    workflow_risks = {
+        key: round(sum(values) / len(values), 4)
+        for key, values in workflow_risk_totals.items()
         if values
     }
     request_kind_priors = {
@@ -195,6 +214,7 @@ def _build_ranking_priors(rows: list[dict[str, Any]]) -> dict[str, Any]:
             best_workflow_for_request_kind[request_kind] = candidate
     return {
         "workflow_priors": workflow_priors,
+        "workflow_risks": workflow_risks,
         "request_kind_priors": request_kind_priors,
         "best_workflow_for_request_kind": best_workflow_for_request_kind,
     }
@@ -236,6 +256,10 @@ def _score_search_row(
     score += workflow_boost + request_kind_boost
     features["workflow_success_prior"] = round(workflow_boost, 4)
     features["request_kind_prior"] = round(request_kind_boost, 4)
+    route_risk = float(ranking_priors["workflow_risks"].get(workflow_key, 0.0))
+    route_failure_penalty = route_risk * profile.route_failure_penalty_weight
+    score -= route_failure_penalty
+    features["route_failure_penalty"] = round(-route_failure_penalty, 4)
     best_workflow = ranking_priors["best_workflow_for_request_kind"].get(str(row.get("request_kind") or ""))
     if best_workflow is not None and (
         str(row.get("selected_workflow_name") or "") == best_workflow[0]
