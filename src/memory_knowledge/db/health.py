@@ -12,6 +12,14 @@ from memory_knowledge.db.neo4j import get_neo4j_driver
 logger = structlog.get_logger()
 
 
+def _format_dependency_error(exc: Exception) -> str:
+    error_type = exc.__class__.__name__
+    message = str(exc).strip()
+    if message:
+        return f"error: {error_type}: {message}"
+    return f"error: {error_type}: {repr(exc)}"
+
+
 async def health_check() -> dict[str, str]:
     return {"status": "ok"}
 
@@ -27,7 +35,8 @@ async def readiness_check() -> dict[str, Any]:
         val = await asyncio.wait_for(pool.fetchval("SELECT 1"), timeout=_TIMEOUT)
         results["postgres"] = "ok" if val == 1 else "error"
     except Exception as exc:
-        results["postgres"] = f"error: {exc}"
+        logger.warning("readiness_postgres_failed", error=_format_dependency_error(exc))
+        results["postgres"] = _format_dependency_error(exc)
         results["status"] = "not_ready"
 
     # Qdrant
@@ -36,7 +45,8 @@ async def readiness_check() -> dict[str, Any]:
         await asyncio.wait_for(client.get_collections(), timeout=_TIMEOUT)
         results["qdrant"] = "ok"
     except Exception as exc:
-        results["qdrant"] = f"error: {exc}"
+        logger.warning("readiness_qdrant_failed", error=_format_dependency_error(exc))
+        results["qdrant"] = _format_dependency_error(exc)
         results["status"] = "not_ready"
 
     # Neo4j
@@ -45,7 +55,8 @@ async def readiness_check() -> dict[str, Any]:
         await asyncio.wait_for(driver.verify_connectivity(), timeout=_TIMEOUT)
         results["neo4j"] = "ok"
     except Exception as exc:
-        results["neo4j"] = f"error: {exc}"
+        logger.warning("readiness_neo4j_failed", error=_format_dependency_error(exc))
+        results["neo4j"] = _format_dependency_error(exc)
         results["status"] = "not_ready"
 
     return results
