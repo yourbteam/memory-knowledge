@@ -15,6 +15,7 @@ from tenacity import (
 
 from memory_knowledge.config import Settings
 from memory_knowledge.jobs.manifest_writer import update_job_state
+from memory_knowledge.observability.error_detail import format_exception_detail
 from memory_knowledge.observability.failure_classifier import classify_error
 from memory_knowledge.workflows.base import WorkflowResult
 
@@ -53,12 +54,15 @@ async def execute_job(
 
         result_json = result.model_dump_json()
         if result.status == "error":
+            error_text = (result.error or "").strip()
+            if not error_text:
+                error_text = "Workflow returned error result without details."
             await update_job_state(
                 manifest_pool,
                 job_id,
                 "failed",
                 checkpoint_data=result_json,
-                error_text=(result.error or "Workflow returned error result")[:2000],
+                error_text=error_text[:2000],
             )
             return result
 
@@ -71,22 +75,23 @@ async def execute_job(
 
     except Exception as exc:
         error_code = classify_error(exc)
+        error_detail = format_exception_detail(exc)
         await update_job_state(
             manifest_pool,
             job_id,
             "failed",
             error_code=error_code,
-            error_text=str(exc)[:2000],
+            error_text=error_detail[:2000],
         )
         logger.error(
             "job_failed",
             job_id=str(job_id),
             error_code=error_code,
-            error=str(exc),
+            error=error_detail,
         )
         return WorkflowResult(
             run_id=str(job_id),
             tool_name="job_worker",
             status="error",
-            error=str(exc),
+            error=error_detail,
         )

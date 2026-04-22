@@ -159,6 +159,65 @@ async def test_bulk_upsert_chunks_uses_set_based_queries():
 
 
 @pytest.mark.asyncio
+async def test_bulk_upsert_symbols_dedupes_duplicate_entity_keys():
+    class Pool:
+        def __init__(self):
+            self.fetch_calls: list[tuple[str, tuple]] = []
+
+        async def fetch(self, query, *args):
+            self.fetch_calls.append((query, args))
+            if "INSERT INTO catalog.entities" in query:
+                return [{"id": 55, "entity_key": args[0][0]}]
+            return [{"id": 66, "entity_id": args[0][0]}]
+
+    pool = Pool()
+    rows = [
+        {
+            "entity_key": "91e7812e-eb28-4dae-80e3-e9172553fa0b",
+            "repository_id": 1,
+            "repo_revision_id": 2,
+            "file_id": 3,
+            "file_path": "scripts/libraries/pdf.js",
+            "symbol_name": "_classCallCheck",
+            "symbol_kind": "function",
+            "line_start": 10,
+            "line_end": 10,
+            "signature": "function _classCallCheck()",
+            "external_hash": "hash-a",
+        },
+        {
+            "entity_key": "91e7812e-eb28-4dae-80e3-e9172553fa0b",
+            "repository_id": 1,
+            "repo_revision_id": 2,
+            "file_id": 3,
+            "file_path": "scripts/libraries/pdf.js",
+            "symbol_name": "_classCallCheck",
+            "symbol_kind": "function",
+            "line_start": 25,
+            "line_end": 25,
+            "signature": "function _classCallCheck()",
+            "external_hash": "hash-b",
+        },
+    ]
+
+    saved = await entity_registrar.bulk_upsert_symbols(pool, rows)
+
+    assert saved == [{
+        "entity_id": 55,
+        "symbol_id": 66,
+        "entity_key": "91e7812e-eb28-4dae-80e3-e9172553fa0b",
+        "file_path": "scripts/libraries/pdf.js",
+        "symbol_name": "_classCallCheck",
+    }]
+    entity_query, entity_args = pool.fetch_calls[0]
+    symbol_query, symbol_args = pool.fetch_calls[1]
+    assert "UNNEST" in entity_query
+    assert "UNNEST" in symbol_query
+    assert entity_args[0] == ["91e7812e-eb28-4dae-80e3-e9172553fa0b"]
+    assert symbol_args[0] == [55]
+
+
+@pytest.mark.asyncio
 async def test_bulk_upsert_summaries_uses_set_based_queries():
     class Pool:
         def __init__(self):

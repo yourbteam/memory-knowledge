@@ -74,3 +74,69 @@ async def get_job_checkpoint(
     if isinstance(cp, str):
         return json.loads(cp)
     return dict(cp) if cp else None
+
+
+async def get_latest_resume_checkpoint(
+    pool: asyncpg.Pool,
+    repository_key: str,
+    commit_sha: str,
+    branch_name: str,
+    tool_name: str,
+) -> dict[str, Any] | None:
+    """Return the latest saved workflow checkpoint for an identical job shape."""
+    row = await pool.fetchrow(
+        """
+        SELECT checkpoint_data
+        FROM ops.job_manifests
+        WHERE repository_key = $1
+          AND commit_sha = $2
+          AND branch_name = $3
+          AND tool_name = $4
+          AND checkpoint_data IS NOT NULL
+        ORDER BY created_utc DESC
+        LIMIT 1
+        """,
+        repository_key,
+        commit_sha,
+        branch_name,
+        tool_name,
+    )
+    if row is None or row["checkpoint_data"] is None:
+        return None
+    checkpoint_data = row["checkpoint_data"]
+    if isinstance(checkpoint_data, str):
+        checkpoint_data = json.loads(checkpoint_data)
+    if not checkpoint_data:
+        return None
+    checkpoint = checkpoint_data.get("checkpoint")
+    if checkpoint is None:
+        return None
+    return dict(checkpoint) if isinstance(checkpoint, dict) else checkpoint
+
+
+async def get_active_job_for_shape(
+    pool: asyncpg.Pool,
+    repository_key: str,
+    commit_sha: str,
+    branch_name: str,
+    tool_name: str,
+) -> dict[str, Any] | None:
+    """Return the newest pending/running job for an identical workflow shape."""
+    row = await pool.fetchrow(
+        """
+        SELECT *
+        FROM ops.job_manifests
+        WHERE repository_key = $1
+          AND commit_sha = $2
+          AND branch_name = $3
+          AND tool_name = $4
+          AND state_code IN ('pending', 'running')
+        ORDER BY created_utc DESC
+        LIMIT 1
+        """,
+        repository_key,
+        commit_sha,
+        branch_name,
+        tool_name,
+    )
+    return dict(row) if row else None

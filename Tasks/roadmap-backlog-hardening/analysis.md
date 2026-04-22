@@ -101,3 +101,49 @@ The right balance is:
 - keep a concise resolved archive summary in `docs/backlog.md`
 - move active planning focus to a short list of real unresolved items
 - make roadmap and backlog agree on what is complete and what is next
+
+## 2026-04-21 Follow-Up Analysis
+
+### Objective
+
+Reconcile `docs/roadmap.md` and `docs/backlog.md` after the latest repository-refresh and ingestion-control work.
+
+### Task Type and Size
+
+- task type: documentation / planning hygiene
+- task size: light
+
+This is light because it updates planning documents only. It does not change runtime behavior, schema, or remote data.
+
+### Current-State Findings
+
+The current roadmap and backlog contradict each other:
+
+- `docs/roadmap.md` says no high-priority repo-owned roadmap item is open.
+- `docs/backlog.md` still lists `docker/init-pg.sql` deprecation as open.
+- `docs/backlog.md` still lists `docs/AGENT_INTEGRATION_SPEC.md` full reconciliation as open.
+
+The task artifacts show `docker/init-pg.sql` deprecation is already implemented and locally verified in `Tasks/init-pg-bootstrap-reconciliation/plan.md`.
+
+`docs/AGENT_INTEGRATION_SPEC.md` is already marked as the current integration reference and the roadmap lists agent integration spec reconciliation as completed. There is no clear evidence in the current docs that another full reconciliation is actively required; if a future one-to-one generated tool catalog is wanted, that should be a new optional docs-audit task rather than an open current-state blocker.
+
+The latest operational work also completed:
+
+- remote repository refreshes for the active ingested repos
+- forced full `millennium-wp` refresh with a completed authoritative full run
+- ingestion control-plane hardening for blank failure diagnostics and duplicate active ingestion requests
+
+Remaining real current items are:
+
+- external workflow producer adoption, outside this repo
+- Neo4j readiness degradation, because `/ready` still reports Neo4j DNS failure even though `/health` is OK and ingestion degrades around Neo4j
+- unresolved `fcsapi-remote-test` catalog placeholder, blocked until a real source URL is provided
+
+### Recommended Approach
+
+Update the docs so:
+
+- completed repo-owned items are removed from the open backlog
+- the latest ingestion-control hardening appears in completed roadmap/backlog history
+- operationally real current follow-ups are represented accurately
+- external or blocked items are not misclassified as normal repo-owned implementation work

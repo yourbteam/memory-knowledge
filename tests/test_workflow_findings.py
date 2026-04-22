@@ -366,6 +366,35 @@ async def test_run_ingestion_background_uses_manifest_job_id_only(monkeypatch):
 
 
 @pytest.mark.asyncio
+async def test_run_ingestion_background_allows_missing_neo4j_driver(monkeypatch):
+    captured = {}
+
+    async def fake_execute_job(**kwargs):
+        captured.update(kwargs)
+
+    monkeypatch.setattr(job_worker, "execute_job", fake_execute_job)
+    monkeypatch.setattr(server, "get_pg_pool", lambda: object())
+    monkeypatch.setattr(server, "get_settings", lambda: SimpleNamespace())
+    monkeypatch.setattr(server, "get_qdrant_client", lambda: object())
+
+    def raise_missing_driver():
+        raise RuntimeError("Neo4j driver not initialized")
+
+    monkeypatch.setattr(server, "get_neo4j_driver", raise_missing_driver)
+
+    await server._run_ingestion_background(
+        uuid.uuid4(),
+        uuid.uuid4(),
+        "repo-a",
+        "abc",
+        "main",
+    )
+
+    assert "job_id" in captured
+    assert captured["neo4j_driver"] is None
+
+
+@pytest.mark.asyncio
 async def test_list_workflow_finding_suppressions_picks_latest_decision_before_filtering():
     class Pool:
         def __init__(self):

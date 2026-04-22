@@ -2,33 +2,11 @@
 
 ## Open Repo-Owned Items
 
-### 1. `docker/init-pg.sql` deprecation or full reconciliation
-**Priority:** High
-**Status:** Open
+None currently tracked.
 
-**Problem:** `docker/init-pg.sql` is still a legacy bootstrap snapshot and does not reflect the current planning, reference-value, workflow, findings, analytics, and triage schema line.
+## Blocked / Needs Input
 
-**Why it matters:** The repository currently has two competing bootstrap narratives:
-- the supported path: `alembic upgrade head`
-- the legacy snapshot path: `docker/init-pg.sql`
-
-That ambiguity is operationally risky and keeps reappearing in task planning, rollout, and local bootstrap assumptions.
-
-**Expected outcome:** Choose and implement one supported direction:
-- reconcile `docker/init-pg.sql` to the modern schema line
-- or formally deprecate/remove it and make Alembic the only supported bootstrap path
-
-**Relevant context:** `Tasks/analytics-tools/plan.md` documents that the current file is materially incomplete, not just slightly out of date.
-
-### 2. `docs/AGENT_INTEGRATION_SPEC.md` full reconciliation
-**Priority:** Medium
-**Status:** Open
-
-**Problem:** The integration spec is substantially improved, but it is still not a full one-to-one reference for the current live server surface, especially across newer findings, triage-memory, and triage V3 capabilities.
-
-**Why it matters:** External LLM integrators now have a richer server surface than the original workflow-focused subset. The spec should become a stable reference-quality integration manual rather than a partial bridge document.
-
-**Expected outcome:** Expand and reconcile `docs/AGENT_INTEGRATION_SPEC.md` so it accurately documents the full intended integrator-facing tool surface and current usage expectations.
+None currently tracked.
 
 ## External / Non-Repo-Owned Follow-Ups
 
@@ -44,6 +22,12 @@ That ambiguity is operationally risky and keeps reappearing in task planning, ro
 
 The historical backlog items previously tracked here have been resolved and are retained in git history. The major resolved areas are:
 
+- `docker/init-pg.sql` deprecation from the active bootstrap path
+- `docs/AGENT_INTEGRATION_SPEC.md` reconciliation into a current integration reference
+- remote repository refresh/status reconciliation for `css-fe`, `fcs-admin`, `fcsapi`, `taggable-server`, and `millennium-wp`
+- ingestion control-plane hardening for blank failure diagnostics and duplicate active ingestion requests
+- Neo4j readiness semantics now report graph projection as degraded while PostgreSQL/Qdrant remain readiness gates
+- remote `fcsapi-remote-test` placeholder and its disposable smoke-test planning/workflow/triage rows were removed
 - ingestion correctness and resume behavior
 - remote private-repo GitHub auth for ingestion
 - remote PostgreSQL ingestion performance improvements

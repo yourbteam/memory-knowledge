@@ -25,7 +25,7 @@ async def health_check() -> dict[str, str]:
 
 
 async def readiness_check() -> dict[str, Any]:
-    results: dict[str, Any] = {"status": "ready"}
+    results: dict[str, Any] = {"status": "ready", "degraded": []}
 
     _TIMEOUT = 5.0  # seconds per store check
 
@@ -56,7 +56,7 @@ async def readiness_check() -> dict[str, Any]:
         results["neo4j"] = "ok"
     except Exception as exc:
         logger.warning("readiness_neo4j_failed", error=_format_dependency_error(exc))
-        results["neo4j"] = _format_dependency_error(exc)
-        results["status"] = "not_ready"
+        results["neo4j"] = f"degraded: {_format_dependency_error(exc)}"
+        results["degraded"].append("neo4j")
 
     return results

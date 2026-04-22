@@ -73,6 +73,7 @@ from memory_knowledge.structure.entity_registrar import (
     upsert_symbol_call,
 )
 from memory_knowledge.jobs.job_checkpoint_manager import save_checkpoint
+from memory_knowledge.observability.error_detail import format_exception_detail
 from memory_knowledge.workflows.base import WorkflowResult
 
 logger = structlog.get_logger()
@@ -466,7 +467,7 @@ async def run(
     ingestion_run_id: int | None = None
 
     try:
-        if pool is None or qdrant_client is None or neo4j_driver is None or settings is None:
+        if pool is None or qdrant_client is None or settings is None:
             return WorkflowResult(
                 run_id=str(run_id),
                 tool_name=TOOL_NAME,
@@ -1115,135 +1116,144 @@ async def run(
             )
 
         # Step 9: Neo4j projection (structure + dependency edges)
-        if neo4j_file_symbols and not _checkpoint_phase_at_or_beyond(checkpoint_state, "neo4j_complete"):
-            await project_repository_graph(
-                neo4j_driver, repository_key, commit_sha,
-                branch_name, neo4j_file_symbols,
-            )
-        if (neo4j_import_edges or neo4j_call_edges) and not _checkpoint_phase_at_or_beyond(checkpoint_state, "neo4j_complete"):
-            await project_dependency_edges(
-                neo4j_driver, neo4j_import_edges, neo4j_call_edges,
-            )
-
-        # Step 9b: Additive labels (DbTable, StoredProcedure) + Modules + Endpoints
-        if neo4j_file_symbols and not _checkpoint_phase_at_or_beyond(checkpoint_state, "neo4j_complete"):
-            await project_additive_labels(neo4j_driver, neo4j_file_symbols)
-
-            # Module detection: directories with 2+ source files or __init__.py
-            from collections import defaultdict
-            dir_files: dict[str, list[str]] = defaultdict(list)
-            has_init: set[str] = set()
-            for fs in neo4j_file_symbols:
-                fp = fs["file_path"]
-                dir_path = os.path.dirname(fp)
-                if dir_path:
-                    dir_files[dir_path].append(fs["file_entity_key"])
-                    if os.path.basename(fp) == "__init__.py":
-                        has_init.add(dir_path)
-
-            modules_data = []
-            for dir_path, file_keys in dir_files.items():
-                if len(file_keys) >= 2 or dir_path in has_init:
-                    mod_ek = str(uuid.uuid5(
-                        uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
-                        f"{repository_key}:module:{dir_path}",
-                    ))
-                    modules_data.append({
-                        "entity_key": mod_ek,
-                        "path": dir_path,
-                        "name": os.path.basename(dir_path) or dir_path,
-                        "file_keys": file_keys,
-                    })
-            await project_modules(neo4j_driver, repository_key, modules_data)
-
-            # ApiEndpoint projection from route data
-            endpoints_data = []
-            for fs in neo4j_file_symbols:
-                for route in fs.get("routes", []):
-                    ep_ek = str(uuid.uuid5(
-                        uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
-                        f"{repository_key}:endpoint:{route['method']}:{route['path']}",
-                    ))
-                    endpoints_data.append({
-                        "entity_key": ep_ek,
-                        "method": route["method"],
-                        "path": route["path"],
-                        "file_entity_key": fs["file_entity_key"],
-                    })
-            await project_api_endpoints(neo4j_driver, endpoints_data)
-
-            # SQL READS_TABLE/WRITES_TABLE edges
-            sql_edge_data: list[dict[str, str]] = []
-            for fs in neo4j_file_symbols:
-                for sr in fs.get("sql_refs", []):
-                    # Find DbTable entity_key by matching symbol name
-                    table_ek = None
-                    for fs2 in neo4j_file_symbols:
-                        for s in fs2.get("symbols", []):
-                            if s["name"].lower() == sr["object_name"].lower() and s["kind"] in ("table", "view"):
-                                table_ek = s["entity_key"]
-                                break
-                        if table_ek:
-                            break
-                    if table_ek:
-                        rel = "READS_TABLE" if sr["operation"] == "select" else "WRITES_TABLE"
-                        sql_edge_data.append({
-                            "source_ek": fs["file_entity_key"],
-                            "target_ek": table_ek,
-                            "rel_type": rel,
-                        })
-            await project_sql_edges(neo4j_driver, sql_edge_data)
-
-            # Inheritance edges (EXTENDS/IMPLEMENTS)
-            inheritance_edges: list[dict[str, str]] = []
-
-            def _find_symbol_ek(name: str) -> str | None:
-                for fs2 in neo4j_file_symbols:
-                    for s in fs2["symbols"]:
-                        if s["name"] == name:
-                            return s["entity_key"]
-                return None
-
-            for fs in neo4j_file_symbols:
-                cached = file_path_to_parse_output.get(fs["file_path"])
-                if not cached:
-                    continue
-                for sym in cached.symbols:
-                    if sym.kind != "class":
-                        continue
-                    child_ek = symbol_ek_lookup.get((fs["file_path"], sym.name))
-                    if not child_ek:
-                        continue
-
-                    # EXTENDS edges from base_classes
-                    for base_name in sym.base_classes:
-                        # For C#, base_classes may include interfaces (: Base, IFoo)
-                        if cached.language == "csharp":
-                            is_iface = base_name.startswith("I") and len(base_name) > 1 and base_name[1].isupper()
-                            rel = "IMPLEMENTS" if is_iface else "EXTENDS"
-                        else:
-                            rel = "EXTENDS"
-                        target_ek = _find_symbol_ek(base_name)
-                        if target_ek:
-                            inheritance_edges.append({
-                                "child_ek": child_ek, "target_ek": target_ek, "rel_type": rel,
-                            })
-
-                    # IMPLEMENTS edges from implements field (TS, PHP)
-                    for iface_name in sym.implements:
-                        target_ek = _find_symbol_ek(iface_name)
-                        if target_ek:
-                            inheritance_edges.append({
-                                "child_ek": child_ek, "target_ek": target_ek, "rel_type": "IMPLEMENTS",
-                            })
-
-            await project_inheritance_edges(neo4j_driver, inheritance_edges)
+        if neo4j_driver is None:
+            logger.warning("neo4j_projection_skipped", repository_key=repository_key, commit_sha=commit_sha)
             checkpoint_state = await _save_ingestion_checkpoint(
                 pool,
                 manifest_job_id,
                 checkpoint_state,
                 phase="neo4j_complete",
             )
+        else:
+            if neo4j_file_symbols and not _checkpoint_phase_at_or_beyond(checkpoint_state, "neo4j_complete"):
+                await project_repository_graph(
+                    neo4j_driver, repository_key, commit_sha,
+                    branch_name, neo4j_file_symbols,
+                )
+            if (neo4j_import_edges or neo4j_call_edges) and not _checkpoint_phase_at_or_beyond(checkpoint_state, "neo4j_complete"):
+                await project_dependency_edges(
+                    neo4j_driver, neo4j_import_edges, neo4j_call_edges,
+                )
+
+            # Step 9b: Additive labels (DbTable, StoredProcedure) + Modules + Endpoints
+            if neo4j_file_symbols and not _checkpoint_phase_at_or_beyond(checkpoint_state, "neo4j_complete"):
+                await project_additive_labels(neo4j_driver, neo4j_file_symbols)
+
+                # Module detection: directories with 2+ source files or __init__.py
+                from collections import defaultdict
+                dir_files: dict[str, list[str]] = defaultdict(list)
+                has_init: set[str] = set()
+                for fs in neo4j_file_symbols:
+                    fp = fs["file_path"]
+                    dir_path = os.path.dirname(fp)
+                    if dir_path:
+                        dir_files[dir_path].append(fs["file_entity_key"])
+                        if os.path.basename(fp) == "__init__.py":
+                            has_init.add(dir_path)
+
+                modules_data = []
+                for dir_path, file_keys in dir_files.items():
+                    if len(file_keys) >= 2 or dir_path in has_init:
+                        mod_ek = str(uuid.uuid5(
+                            uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
+                            f"{repository_key}:module:{dir_path}",
+                        ))
+                        modules_data.append({
+                            "entity_key": mod_ek,
+                            "path": dir_path,
+                            "name": os.path.basename(dir_path) or dir_path,
+                            "file_keys": file_keys,
+                        })
+                await project_modules(neo4j_driver, repository_key, modules_data)
+
+                # ApiEndpoint projection from route data
+                endpoints_data = []
+                for fs in neo4j_file_symbols:
+                    for route in fs.get("routes", []):
+                        ep_ek = str(uuid.uuid5(
+                            uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
+                            f"{repository_key}:endpoint:{route['method']}:{route['path']}",
+                        ))
+                        endpoints_data.append({
+                            "entity_key": ep_ek,
+                            "method": route["method"],
+                            "path": route["path"],
+                            "file_entity_key": fs["file_entity_key"],
+                        })
+                await project_api_endpoints(neo4j_driver, endpoints_data)
+
+                # SQL READS_TABLE/WRITES_TABLE edges
+                sql_edge_data: list[dict[str, str]] = []
+                for fs in neo4j_file_symbols:
+                    for sr in fs.get("sql_refs", []):
+                        # Find DbTable entity_key by matching symbol name
+                        table_ek = None
+                        for fs2 in neo4j_file_symbols:
+                            for s in fs2.get("symbols", []):
+                                if s["name"].lower() == sr["object_name"].lower() and s["kind"] in ("table", "view"):
+                                    table_ek = s["entity_key"]
+                                    break
+                            if table_ek:
+                                break
+                        if table_ek:
+                            rel = "READS_TABLE" if sr["operation"] == "select" else "WRITES_TABLE"
+                            sql_edge_data.append({
+                                "source_ek": fs["file_entity_key"],
+                                "target_ek": table_ek,
+                                "rel_type": rel,
+                            })
+                await project_sql_edges(neo4j_driver, sql_edge_data)
+
+                # Inheritance edges (EXTENDS/IMPLEMENTS)
+                inheritance_edges: list[dict[str, str]] = []
+
+                def _find_symbol_ek(name: str) -> str | None:
+                    for fs2 in neo4j_file_symbols:
+                        for s in fs2["symbols"]:
+                            if s["name"] == name:
+                                return s["entity_key"]
+                    return None
+
+                for fs in neo4j_file_symbols:
+                    cached = file_path_to_parse_output.get(fs["file_path"])
+                    if not cached:
+                        continue
+                    for sym in cached.symbols:
+                        if sym.kind != "class":
+                            continue
+                        child_ek = symbol_ek_lookup.get((fs["file_path"], sym.name))
+                        if not child_ek:
+                            continue
+
+                        # EXTENDS edges from base_classes
+                        for base_name in sym.base_classes:
+                            # For C#, base_classes may include interfaces (: Base, IFoo)
+                            if cached.language == "csharp":
+                                is_iface = base_name.startswith("I") and len(base_name) > 1 and base_name[1].isupper()
+                                rel = "IMPLEMENTS" if is_iface else "EXTENDS"
+                            else:
+                                rel = "EXTENDS"
+                            target_ek = _find_symbol_ek(base_name)
+                            if target_ek:
+                                inheritance_edges.append({
+                                    "child_ek": child_ek, "target_ek": target_ek, "rel_type": rel,
+                                })
+
+                        # IMPLEMENTS edges from implements field (TS, PHP)
+                        for iface_name in sym.implements:
+                            target_ek = _find_symbol_ek(iface_name)
+                            if target_ek:
+                                inheritance_edges.append({
+                                    "child_ek": child_ek, "target_ek": target_ek, "rel_type": "IMPLEMENTS",
+                                })
+
+                await project_inheritance_edges(neo4j_driver, inheritance_edges)
+                checkpoint_state = await _save_ingestion_checkpoint(
+                    pool,
+                    manifest_job_id,
+                    checkpoint_state,
+                    phase="neo4j_complete",
+                )
 
         # Step 10: Update branch head + retrieval surface
         await upsert_branch_head(pool, repository_id, branch_name, repo_revision_id)
@@ -1278,11 +1288,12 @@ async def run(
 
     except Exception as exc:
         duration_ms = int((time.monotonic() - start) * 1000)
-        logger.error("ingestion_failed", error=str(exc), duration_ms=duration_ms)
+        error_detail = format_exception_detail(exc)
+        logger.error("ingestion_failed", error=error_detail, duration_ms=duration_ms)
         if pool is not None and ingestion_run_id is not None:
             try:
                 await complete_ingestion_run(
-                    pool, ingestion_run_id, "failed", str(exc)
+                    pool, ingestion_run_id, "failed", error_detail
                 )
             except Exception:
                 pass
@@ -1290,6 +1301,6 @@ async def run(
             run_id=str(run_id),
             tool_name=TOOL_NAME,
             status="error",
-            error=str(exc),
+            error=error_detail,
             duration_ms=duration_ms,
         )

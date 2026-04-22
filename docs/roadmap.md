@@ -71,12 +71,12 @@
 **Delivered:**
 - remote migrations applied successfully
 - live app deployed and restarted successfully
-- `/health` and `/ready` verified
+- `/health` verified
+- readiness diagnostics exercised; current Neo4j readiness degradation is tracked under `Next Up`
 - live MCP smoke checks completed against the deployed server
 
 ### Agent Integration Spec Reconciliation
 **Status:** Completed.
-**Plan:** `Tasks/agent-integration-spec-reconciliation/plan.md`
 **Delivered:**
 - replaced stale count- and persona-heavy document structure
 - reconciled the spec around the current live MCP surface
@@ -91,11 +91,41 @@
 - validated fresh local bootstrap against the current migration line
 - kept `docker/init-pg.sql` only as a deprecated historical snapshot
 
+### Remote Repository Knowledge Refresh
+**Status:** Completed.
+**Delivered:**
+- refreshed and verified the active deployed repository catalog entries:
+  - `css-fe`
+  - `fcs-admin`
+  - `fcsapi`
+  - `taggable-server`
+  - `millennium-wp`
+- forced a full `millennium-wp` refresh onto commit `81d4458f83ab35e6d8fc8376e1bfbe5b5d665dbb`
+- confirmed the authoritative `millennium-wp` full run completed and populated the current revision
+
+### Ingestion Control-Plane Hardening
+**Status:** Implemented, tested, and deployed.
+**Delivered:**
+- preserved exception type and traceback context for blank-message ingestion/job failures
+- replaced vague blank terminal failures with actionable diagnostics
+- prevented duplicate active ingestion submissions for the same repository, commit, branch, and tool shape
+- validated the fix with focused tests and a disposable remote-DB integration test
+- deployed image `workfloworchreg.azurecr.io/memory-knowledge:latest` digest `sha256:0d2bd9c2eeb024dd015821a79f9c463f153e753284b4fa268a47381ee0a7dc9b`
+
+### Current Pending Work Closure
+**Status:** Implemented, deployed, and verified.
+**Plan:** `Tasks/current-pending-work-closure/plan.md`
+**Delivered:**
+- changed readiness semantics so PostgreSQL and Qdrant remain readiness gates while Neo4j graph projection reports explicit degraded status
+- preserved actionable Neo4j readiness diagnostics, including blank-message exception types
+- removed remote `fcsapi-remote-test` placeholder after guarded cleanup of disposable smoke-test planning, workflow, and triage rows
+- verified the deployed repository catalog now contains only `css-fe`, `fcs-admin`, `fcsapi`, `millennium-wp`, and `taggable-server`
+- deployed image `workfloworchreg.azurecr.io/memory-knowledge:latest` digest `sha256:8f948d0468b62bc278d6ccd3c9d2edf3a91c2daf2279da2b7b1993d49e32c7e5`
+- verified `/health` returns OK and `/ready` returns HTTP 200 with `degraded: ["neo4j"]`
+
 ## Next Up
 
-### Repo-Owned Roadmap Slice Complete
-**Status:** No remaining high-priority repo-owned roadmap item is currently open.
-**Meaning:** The next meaningful work now sits either in external adoption or in future enhancement tracks rather than in unresolved current-state reconciliation work.
+No repo-owned roadmap items are currently queued.
 
 ## External / Depends On Other Repos
 

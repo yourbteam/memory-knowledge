@@ -274,6 +274,15 @@ async def run_blueprint_refinement_workflow(
 _background_tasks: set[asyncio.Task] = set()
 
 
+def _get_optional_neo4j_driver():
+    """Return the Neo4j driver when available, otherwise degrade gracefully."""
+    try:
+        return get_neo4j_driver()
+    except RuntimeError as exc:
+        logger.warning("neo4j_driver_unavailable", error=str(exc))
+        return None
+
+
 async def _run_ingestion_background(
     job_id: uuid.UUID, run_id: uuid.UUID,
     repository_key: str, commit_sha: str, branch_name: str,
@@ -300,7 +309,7 @@ async def _run_ingestion_background(
         checkpoint=checkpoint,
         pool=pool,
         qdrant_client=get_qdrant_client(),
-        neo4j_driver=get_neo4j_driver(),
+        neo4j_driver=_get_optional_neo4j_driver(),
         settings=settings,
     )
 
@@ -324,7 +333,7 @@ async def _run_repair_background(
         repair_scope=repair_scope,
         pool=pool,
         qdrant_client=get_qdrant_client(),
-        neo4j_driver=get_neo4j_driver(),
+        neo4j_driver=_get_optional_neo4j_driver(),
         settings=settings,
     )
 
@@ -347,16 +356,18 @@ async def _run_integrity_background(
         run_id=run_id,
         pool=pool,
         qdrant_client=get_qdrant_client(),
-        neo4j_driver=get_neo4j_driver(),
+        neo4j_driver=_get_optional_neo4j_driver(),
         settings=settings,
     )
 
 
 def _on_task_done(task: asyncio.Task) -> None:
     """Remove task from tracking set and log any unhandled exceptions."""
+    from memory_knowledge.observability.error_detail import format_exception_detail
+
     _background_tasks.discard(task)
     if not task.cancelled() and task.exception():
-        logger.error("background_task_failed", error=str(task.exception()))
+        logger.error("background_task_failed", error=format_exception_detail(task.exception()))
 
 
 def _track_task(task: asyncio.Task) -> None:
@@ -382,9 +393,39 @@ async def run_repo_ingestion_workflow(
         return guard.model_dump_json()
     try:
         from memory_knowledge.jobs.manifest_writer import create_job
-        from memory_knowledge.jobs.manifest_reader import get_latest_resume_checkpoint
+        from memory_knowledge.jobs.manifest_reader import (
+            get_active_job_for_shape,
+            get_latest_resume_checkpoint,
+        )
 
         pool = get_pg_pool()
+        active_job = await get_active_job_for_shape(
+            pool,
+            repository_key=repository_key,
+            commit_sha=commit_sha,
+            branch_name=branch_name,
+            tool_name="run_repo_ingestion_workflow",
+        )
+        if active_job is not None:
+            active_job_id = str(active_job["job_id"])
+            logger.info(
+                "ingestion_job_already_active",
+                repository_key=repository_key,
+                commit_sha=commit_sha,
+                branch_name=branch_name,
+                job_id=active_job_id,
+            )
+            return WorkflowResult(
+                run_id=str(run_id),
+                tool_name="run_repo_ingestion_workflow",
+                status="submitted",
+                data={
+                    "job_id": active_job_id,
+                    "existing": True,
+                    "state_code": active_job.get("state_code"),
+                },
+            ).model_dump_json()
+
         resume_checkpoint = await get_latest_resume_checkpoint(
             pool,
             repository_key=repository_key,
@@ -4526,9 +4567,13 @@ async def app_lifespan(app: Starlette):
     await init_postgres(settings)
     logger.info("postgres_connected")
 
-    neo4j_driver = await init_neo4j(settings)
-    await apply_constraints(neo4j_driver)
-    logger.info("neo4j_connected")
+    neo4j_driver = None
+    try:
+        neo4j_driver = await init_neo4j(settings)
+        await apply_constraints(neo4j_driver)
+        logger.info("neo4j_connected")
+    except Exception as exc:
+        logger.warning("neo4j_startup_degraded", error=str(exc))
 
     qdrant_client = await init_qdrant(settings)
     await ensure_collections(qdrant_client, settings)
@@ -4557,11 +4602,14 @@ async def app_lifespan(app: Starlette):
     except Exception:
         pass
     try:
-        neo4j_result = await neo4j_driver.execute_query(
-            "CALL dbms.components() YIELD versions RETURN versions[0] AS v"
-        )
-        logger.info("db_fingerprint_neo4j",
-                     version=neo4j_result.records[0]["v"] if neo4j_result.records else "?")
+        if neo4j_driver is not None:
+            neo4j_result = await neo4j_driver.execute_query(
+                "CALL dbms.components() YIELD versions RETURN versions[0] AS v"
+            )
+            logger.info(
+                "db_fingerprint_neo4j",
+                version=neo4j_result.records[0]["v"] if neo4j_result.records else "?",
+            )
     except Exception:
         pass
 

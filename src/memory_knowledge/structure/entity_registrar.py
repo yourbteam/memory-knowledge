@@ -16,6 +16,14 @@ def _column_arrays(rows: list[tuple[Any, ...]]) -> list[list[Any]]:
     return [list(col) for col in zip(*rows)]
 
 
+def _dedupe_rows_by_entity_key(rows: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    """Collapse duplicate entity rows so batch upserts don't conflict with themselves."""
+    deduped: dict[str, dict[str, Any]] = {}
+    for row in rows:
+        deduped[str(row["entity_key"])] = row
+    return list(deduped.values())
+
+
 async def upsert_repo_revision(
     pool: asyncpg.Pool,
     repository_id: int,
@@ -238,6 +246,7 @@ async def bulk_upsert_symbols(
     """Batch upsert symbol entities and symbols."""
     if not rows:
         return []
+    rows = _dedupe_rows_by_entity_key(rows)
 
     entity_rows = [
         (
