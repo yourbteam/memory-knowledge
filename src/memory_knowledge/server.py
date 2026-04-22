@@ -27,6 +27,7 @@ from memory_knowledge.workflows.base import WorkflowResult
 from memory_knowledge.admin import analytics as _analytics
 from memory_knowledge.admin import actor_adaptation as _actor_adaptation
 from memory_knowledge.admin import findings as _findings
+from memory_knowledge.admin import intake as _intake
 from memory_knowledge.admin import playbooks as _playbooks
 from memory_knowledge.admin import planning as _planning
 from memory_knowledge import triage_memory as _triage_memory
@@ -106,6 +107,23 @@ mcp = FastMCP(
     streamable_http_path="/",
     transport_security=TransportSecuritySettings(enable_dns_rebinding_protection=False),
 )
+
+
+def _intake_result_json(run_id: uuid.UUID, tool_name: str, data: dict) -> str:
+    if data.get("ok") is False:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name=tool_name,
+            status="error",
+            error=data.get("error"),
+            data=data,
+        ).model_dump_json()
+    return WorkflowResult(
+        run_id=str(run_id),
+        tool_name=tool_name,
+        status="success",
+        data=data,
+    ).model_dump_json()
 
 
 # ---------------------------------------------------------------------------
@@ -4171,6 +4189,412 @@ async def run_route_intelligence_workflow(
             pool=get_pg_pool(),
         )
         return result.model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("create_intake_session")
+async def create_intake_session(
+    mode: str = "full",
+    title: str | None = None,
+    actor_email: str | None = None,
+    actor_id: str | None = None,
+    repository_key: str | None = None,
+    project_key: str | None = None,
+    feature_key: str | None = None,
+    task_key: str | None = None,
+    metadata: dict | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Create a durable brainstorm intake session."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "create_intake_session")
+    guard = check_remote_write_guard(get_settings(), "create_intake_session")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        data = await _intake.create_session(
+            get_pg_pool(),
+            mode=mode,
+            title=title,
+            actor_email=actor_email,
+            actor_id=actor_id,
+            repository_key=repository_key,
+            project_key=project_key,
+            feature_key=feature_key,
+            task_key=task_key,
+            metadata=metadata,
+        )
+        return _intake_result_json(run_id, "create_intake_session", data)
+    except Exception as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="create_intake_session",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("append_intake_event")
+async def append_intake_event(
+    session_key: str,
+    role: str,
+    event_type: str,
+    content_text: str | None = None,
+    content_json: dict | None = None,
+    attachment_refs: list | None = None,
+    source: str | None = "mcp",
+    model_provider: str | None = None,
+    model_name: str | None = None,
+    idempotency_key: str | None = None,
+    metadata: dict | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Append one immutable intake transcript or system event."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "append_intake_event")
+    guard = check_remote_write_guard(get_settings(), "append_intake_event")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        data = await _intake.append_event(
+            get_pg_pool(),
+            session_key=session_key,
+            role=role,
+            event_type=event_type,
+            content_text=content_text,
+            content_json=content_json,
+            attachment_refs=attachment_refs,
+            source=source,
+            model_provider=model_provider,
+            model_name=model_name,
+            idempotency_key=idempotency_key,
+            metadata=metadata,
+        )
+        return _intake_result_json(run_id, "append_intake_event", data)
+    except Exception as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="append_intake_event",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("get_intake_session_state")
+async def get_intake_session_state(
+    session_key: str,
+    include_recent_events: bool = True,
+    recent_event_limit: int = 10,
+    include_latest_draft: bool = True,
+    include_asset_refs: bool = True,
+    correlation_id: str | None = None,
+) -> str:
+    """Return compact intake state for stateless prompt reconstruction."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "get_intake_session_state")
+    try:
+        data = await _intake.get_session_state(
+            get_pg_pool(),
+            session_key=session_key,
+            include_recent_events=include_recent_events,
+            recent_event_limit=recent_event_limit,
+            include_latest_draft=include_latest_draft,
+            include_asset_refs=include_asset_refs,
+        )
+        return _intake_result_json(run_id, "get_intake_session_state", data)
+    except Exception as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="get_intake_session_state",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("update_intake_distilled_context")
+async def update_intake_distilled_context(
+    session_key: str,
+    expected_revision: int,
+    updated_from_sequence: int,
+    distilled_context: dict,
+    metadata: dict | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Overwrite current distilled intake context with revision protection."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "update_intake_distilled_context")
+    guard = check_remote_write_guard(get_settings(), "update_intake_distilled_context")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        data = await _intake.update_distilled_context(
+            get_pg_pool(),
+            session_key=session_key,
+            expected_revision=expected_revision,
+            updated_from_sequence=updated_from_sequence,
+            distilled_context=distilled_context,
+            metadata=metadata,
+        )
+        return _intake_result_json(run_id, "update_intake_distilled_context", data)
+    except Exception as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="update_intake_distilled_context",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("save_intake_draft_revision")
+async def save_intake_draft_revision(
+    session_key: str,
+    status: str = "draft",
+    draft_json: dict | None = None,
+    draft_markdown: str | None = None,
+    source_distilled_revision: int | None = None,
+    source_event_range: dict | None = None,
+    metadata: dict | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Persist a versioned intake draft snapshot."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "save_intake_draft_revision")
+    guard = check_remote_write_guard(get_settings(), "save_intake_draft_revision")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        data = await _intake.save_draft_revision(
+            get_pg_pool(),
+            session_key=session_key,
+            status=status,
+            draft_json=draft_json or {},
+            draft_markdown=draft_markdown,
+            source_distilled_revision=source_distilled_revision,
+            source_event_range=source_event_range,
+            metadata=metadata,
+        )
+        return _intake_result_json(run_id, "save_intake_draft_revision", data)
+    except Exception as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="save_intake_draft_revision",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_intake_events")
+async def list_intake_events(
+    session_key: str,
+    from_sequence: int = 1,
+    to_sequence: int | None = None,
+    limit: int = 100,
+    correlation_id: str | None = None,
+) -> str:
+    """Return exact intake events for replay, review, or re-distillation."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "list_intake_events")
+    try:
+        data = await _intake.list_events(
+            get_pg_pool(),
+            session_key=session_key,
+            from_sequence=from_sequence,
+            to_sequence=to_sequence,
+            limit=limit,
+        )
+        return _intake_result_json(run_id, "list_intake_events", data)
+    except Exception as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="list_intake_events",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("add_intake_asset_ref")
+async def add_intake_asset_ref(
+    session_key: str,
+    event_key: str,
+    asset_type: str,
+    display_name: str,
+    uri: str,
+    mime_type: str | None = None,
+    description: str | None = None,
+    metadata: dict | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Attach metadata for an external intake asset."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "add_intake_asset_ref")
+    guard = check_remote_write_guard(get_settings(), "add_intake_asset_ref")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        data = await _intake.add_asset_ref(
+            get_pg_pool(),
+            session_key=session_key,
+            event_key=event_key,
+            asset_type=asset_type,
+            display_name=display_name,
+            uri=uri,
+            mime_type=mime_type,
+            description=description,
+            metadata=metadata,
+        )
+        return _intake_result_json(run_id, "add_intake_asset_ref", data)
+    except Exception as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="add_intake_asset_ref",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("finalize_intake_session")
+async def finalize_intake_session(
+    session_key: str,
+    final_draft_revision: int,
+    repository_key: str | None = None,
+    project_key: str | None = None,
+    feature_key: str | None = None,
+    task_key: str | None = None,
+    metadata: dict | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Finalize an intake session and pin its final draft revision."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "finalize_intake_session")
+    guard = check_remote_write_guard(get_settings(), "finalize_intake_session")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        data = await _intake.finalize_session(
+            get_pg_pool(),
+            session_key=session_key,
+            final_draft_revision=final_draft_revision,
+            repository_key=repository_key,
+            project_key=project_key,
+            feature_key=feature_key,
+            task_key=task_key,
+            metadata=metadata,
+        )
+        return _intake_result_json(run_id, "finalize_intake_session", data)
+    except Exception as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="finalize_intake_session",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("link_intake_workflow_run")
+async def link_intake_workflow_run(
+    session_key: str,
+    run_id: str,
+    workflow_name: str,
+    link_type: str,
+    repository_key: str | None = None,
+    project_key: str | None = None,
+    feature_key: str | None = None,
+    task_key: str | None = None,
+    metadata: dict | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Link an intake session to a downstream workflow run."""
+    tool_run_id = new_run_id()
+    bind_run_context(tool_run_id, correlation_id, "link_intake_workflow_run")
+    guard = check_remote_write_guard(get_settings(), "link_intake_workflow_run")
+    if guard is not None:
+        guard.run_id = str(tool_run_id)
+        return guard.model_dump_json()
+    try:
+        data = await _intake.link_workflow_run(
+            get_pg_pool(),
+            session_key=session_key,
+            run_id=run_id,
+            workflow_name=workflow_name,
+            link_type=link_type,
+            repository_key=repository_key,
+            project_key=project_key,
+            feature_key=feature_key,
+            task_key=task_key,
+            metadata=metadata,
+        )
+        return _intake_result_json(tool_run_id, "link_intake_workflow_run", data)
+    except Exception as exc:
+        return WorkflowResult(
+            run_id=str(tool_run_id),
+            tool_name="link_intake_workflow_run",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_intake_sessions_by_actor")
+async def list_intake_sessions_by_actor(
+    actor_email: str,
+    include_terminal: bool = False,
+    status: str | None = None,
+    limit: int = 50,
+    correlation_id: str | None = None,
+) -> str:
+    """Recover active or historical intake sessions by actor email."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "list_intake_sessions_by_actor")
+    try:
+        data = await _intake.list_sessions_by_actor(
+            get_pg_pool(),
+            actor_email=actor_email,
+            include_terminal=include_terminal,
+            status=status,
+            limit=limit,
+        )
+        return _intake_result_json(run_id, "list_intake_sessions_by_actor", data)
+    except Exception as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="list_intake_sessions_by_actor",
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
     finally:
         clear_run_context()
 
