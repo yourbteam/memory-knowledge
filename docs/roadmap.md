@@ -125,7 +125,50 @@
 
 ## Next Up
 
-No repo-owned roadmap items are currently queued.
+### Graceful Neo4j Degradation Across Tooling
+**Priority:** High
+**Status:** Proposed
+**Problem:** Startup and readiness now allow Neo4j to be degraded while PostgreSQL and Qdrant remain healthy, but several MCP handlers still call `get_neo4j_driver()` directly before entering workflows. In a degraded Neo4j state, retrieval/context tools that could otherwise return PostgreSQL/Qdrant evidence may fail before they can degrade gracefully.
+**Goal:** Make Neo4j optional for non-graph-critical paths, passing `None` or returning graph-specific warnings where appropriate instead of failing the full tool call.
+**Expected outcome:**
+- `run_retrieval_workflow` and `run_context_assembly_workflow` still return usable evidence when Neo4j is unavailable.
+- graph-dependent tools clearly report unavailable graph capability instead of producing ambiguous runtime failures.
+- readiness semantics and tool behavior match the same degradation contract.
+**Likely files:** `src/memory_knowledge/server.py`, `src/memory_knowledge/workflows/retrieval.py`, `src/memory_knowledge/workflows/context_assembly.py`, `src/memory_knowledge/workflows/impact_analysis.py`, focused tests.
+
+### Retrieval Policy Field Wiring
+**Priority:** High
+**Status:** Proposed
+**Problem:** `routing.route_policies` models `third_store`, `semantic_assist_enabled`, `fusion_strategy`, and `rerank_strategy`, but retrieval currently uses only the first/second store and hardcodes persisted rerank strategy as `score_sort`.
+**Goal:** Align retrieval behavior with the policy schema so route-policy rows are the real control plane for store order, fan-out, semantic assist, fusion, and reranking.
+**Expected outcome:**
+- `third_store` is honored when configured and useful.
+- `semantic_assist_enabled` controls semantic auxiliary behavior instead of being passive metadata.
+- `fusion_strategy` and `rerank_strategy` drive score combination and persisted route-execution metadata.
+- route analytics reflect the policy actually executed.
+**Likely files:** `src/memory_knowledge/workflows/retrieval.py`, route-policy tests, possibly seed-policy migration adjustments if defaults need normalization.
+
+### Semantic Triage Memory In Main Advisory Path
+**Priority:** High
+**Status:** Proposed
+**Problem:** `search_triage_cases` can use Qdrant semantic search, but `triage_request_with_memory` currently calls it with `qdrant_client=None`, forcing the high-level advisory path onto lexical/database matching.
+**Goal:** Pass the Qdrant client into the high-level triage advisory flow so current routing advice benefits from semantic prior-case retrieval.
+**Expected outcome:**
+- `triage_request_with_memory` uses the same hybrid/semantic retrieval capability as direct `search_triage_cases`.
+- advisory outputs improve for paraphrased or conceptually similar requests.
+- fallback to lexical search remains available when Qdrant is unavailable.
+**Likely files:** `src/memory_knowledge/server.py`, `src/memory_knowledge/triage_policy.py`, `src/memory_knowledge/triage_memory.py`, triage policy tests.
+
+### Per-Database Remote Secret Seeding
+**Priority:** Medium
+**Status:** Proposed
+**Problem:** DB secret seeding from Azure Key Vault is currently gated on `DATA_MODE=remote`. If the deployment uses `DATA_MODE=local` with a per-database override such as `QDRANT_MODE=remote`, the relevant remote secret may not be seeded.
+**Goal:** Base DB secret seeding on each effective database mode, not only the global data mode.
+**Expected outcome:**
+- `DATABASE_URL`, `QDRANT_API_KEY`, and `NEO4J_PASSWORD` can be seeded independently when their respective effective modes are remote.
+- mixed local/remote deployments behave predictably.
+- startup logging makes the effective mode and seeded-secret status clear without exposing secret values.
+**Likely files:** `src/memory_knowledge/server.py`, `src/memory_knowledge/config.py`, config/startup tests.
 
 ## External / Depends On Other Repos
 
