@@ -1221,7 +1221,14 @@ async def run(
                     for sym in cached.symbols:
                         if sym.kind != "class":
                             continue
-                        child_ek = symbol_ek_lookup.get((fs["file_path"], sym.name))
+                        child_ek = next(
+                            (
+                                s["entity_key"]
+                                for s in fs["symbols"]
+                                if s["name"] == sym.name
+                            ),
+                            None,
+                        )
                         if not child_ek:
                             continue
 
