@@ -28,6 +28,7 @@ from memory_knowledge.admin import analytics as _analytics
 from memory_knowledge.admin import actor_adaptation as _actor_adaptation
 from memory_knowledge.admin import findings as _findings
 from memory_knowledge.admin import intake as _intake
+from memory_knowledge.admin import mawf as _mawf
 from memory_knowledge.admin import playbooks as _playbooks
 from memory_knowledge.admin import planning as _planning
 from memory_knowledge import triage_memory as _triage_memory
@@ -124,6 +125,39 @@ def _intake_result_json(run_id: uuid.UUID, tool_name: str, data: dict) -> str:
         status="success",
         data=data,
     ).model_dump_json()
+
+
+def _mawf_result_json(run_id: uuid.UUID, tool_name: str, data) -> str:
+    if isinstance(data, list):
+        data = {"items": data, "count": len(data)}
+    return WorkflowResult(
+        run_id=str(run_id),
+        tool_name=tool_name,
+        status="success",
+        data=data,
+    ).model_dump_json()
+
+
+async def _run_mawf_tool(tool_name: str, func, *args, write: bool = False, **kwargs) -> str:
+    run_id = new_run_id()
+    bind_run_context(run_id, kwargs.pop("correlation_id", None), tool_name)
+    try:
+        if write:
+            guard = check_remote_write_guard(get_settings(), tool_name)
+            if guard is not None:
+                guard.run_id = str(run_id)
+                return guard.model_dump_json()
+        data = await func(get_pg_pool(), *args, **kwargs)
+        return _mawf_result_json(run_id, tool_name, data)
+    except Exception as exc:
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name=tool_name,
+            status="error",
+            error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
 
 
 # ---------------------------------------------------------------------------
@@ -4597,6 +4631,574 @@ async def list_intake_sessions_by_actor(
         ).model_dump_json()
     finally:
         clear_run_context()
+
+
+# ---------------------------------------------------------------------------
+# MCP Agents Workflow Contract tools
+# ---------------------------------------------------------------------------
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_list_catalog_types")
+async def mawf_list_catalog_types(correlation_id: str | None = None) -> str:
+    """List MAWF catalog/reference types."""
+    return await _run_mawf_tool(
+        "mawf_list_catalog_types", _mawf.list_catalog_types, correlation_id=correlation_id
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_list_catalog_values")
+async def mawf_list_catalog_values(
+    catalog_type_code: str | None = None,
+    include_inactive: bool = False,
+    correlation_id: str | None = None,
+) -> str:
+    """List MAWF catalog/reference values."""
+    return await _run_mawf_tool(
+        "mawf_list_catalog_values",
+        _mawf.list_catalog_values,
+        catalog_type_code=catalog_type_code,
+        include_inactive=include_inactive,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_upsert_catalog_value")
+async def mawf_upsert_catalog_value(
+    catalog_type_code: str,
+    code: str,
+    description: str | None = None,
+    sort_order: int = 0,
+    is_active: bool = True,
+    correlation_id: str | None = None,
+) -> str:
+    """Create or update one MAWF catalog value."""
+    return await _run_mawf_tool(
+        "mawf_upsert_catalog_value",
+        _mawf.upsert_catalog_value,
+        write=True,
+        catalog_type_code=catalog_type_code,
+        code=code,
+        description=description,
+        sort_order=sort_order,
+        is_active=is_active,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_deactivate_catalog_value")
+async def mawf_deactivate_catalog_value(
+    catalog_type_code: str,
+    code: str,
+    correlation_id: str | None = None,
+) -> str:
+    """Soft-deactivate one MAWF catalog value."""
+    return await _run_mawf_tool(
+        "mawf_deactivate_catalog_value",
+        _mawf.deactivate_catalog_value,
+        write=True,
+        catalog_type_code=catalog_type_code,
+        code=code,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_upsert_user")
+async def mawf_upsert_user(
+    email: str,
+    user_id: str | None = None,
+    display_name: str | None = None,
+    role_code: str = "employee",
+    status_code: str = "active",
+    correlation_id: str | None = None,
+) -> str:
+    """Create or update a MAWF user."""
+    return await _run_mawf_tool(
+        "mawf_upsert_user",
+        _mawf.upsert_user,
+        write=True,
+        email=email,
+        user_id=user_id,
+        display_name=display_name,
+        role_code=role_code,
+        status_code=status_code,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_get_user")
+async def mawf_get_user(
+    user_id: str | None = None,
+    email: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Get one MAWF user by id or email."""
+    return await _run_mawf_tool(
+        "mawf_get_user",
+        _mawf.get_user,
+        user_id=user_id,
+        email=email,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_list_users")
+async def mawf_list_users(
+    status_code: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """List MAWF users."""
+    return await _run_mawf_tool(
+        "mawf_list_users",
+        _mawf.list_users,
+        status_code=status_code,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_deactivate_user")
+async def mawf_deactivate_user(user_id: str, correlation_id: str | None = None) -> str:
+    """Soft-deactivate a MAWF user."""
+    return await _run_mawf_tool(
+        "mawf_deactivate_user",
+        _mawf.deactivate_user,
+        write=True,
+        user_id=user_id,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_upsert_project")
+async def mawf_upsert_project(
+    project_key: str,
+    display_name: str,
+    project_id: str | None = None,
+    status_code: str = "active",
+    correlation_id: str | None = None,
+) -> str:
+    """Create or update a MAWF project over planning.projects."""
+    return await _run_mawf_tool(
+        "mawf_upsert_project",
+        _mawf.upsert_project,
+        write=True,
+        project_key=project_key,
+        display_name=display_name,
+        project_id=project_id,
+        status_code=status_code,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_get_project")
+async def mawf_get_project(
+    project_id: str | None = None,
+    project_key: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Get one MAWF project by UUID id or project_key."""
+    return await _run_mawf_tool(
+        "mawf_get_project",
+        _mawf.get_project,
+        project_id=project_id,
+        project_key=project_key,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_list_projects")
+async def mawf_list_projects(
+    status_code: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """List MAWF projects."""
+    return await _run_mawf_tool(
+        "mawf_list_projects",
+        _mawf.list_projects,
+        status_code=status_code,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_archive_project")
+async def mawf_archive_project(project_id: str, correlation_id: str | None = None) -> str:
+    """Soft-archive a MAWF project."""
+    return await _run_mawf_tool(
+        "mawf_archive_project",
+        _mawf.archive_project,
+        write=True,
+        project_id=project_id,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_upsert_repository")
+async def mawf_upsert_repository(
+    repository_key: str,
+    repository_id: str | None = None,
+    project_id: str | None = None,
+    provider: str | None = None,
+    owner: str | None = None,
+    repo_name: str | None = None,
+    remote_url: str | None = None,
+    status_code: str = "active",
+    correlation_id: str | None = None,
+) -> str:
+    """Create or update a MAWF repository over catalog.repositories."""
+    return await _run_mawf_tool(
+        "mawf_upsert_repository",
+        _mawf.upsert_repository,
+        write=True,
+        repository_key=repository_key,
+        repository_id=repository_id,
+        project_id=project_id,
+        provider=provider,
+        owner=owner,
+        repo_name=repo_name,
+        remote_url=remote_url,
+        status_code=status_code,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_get_repository")
+async def mawf_get_repository(
+    repository_id: str | None = None,
+    repository_key: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Get one MAWF repository by UUID id or repository_key."""
+    return await _run_mawf_tool(
+        "mawf_get_repository",
+        _mawf.get_repository,
+        repository_id=repository_id,
+        repository_key=repository_key,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_list_repositories")
+async def mawf_list_repositories(
+    status_code: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """List MAWF repositories."""
+    return await _run_mawf_tool(
+        "mawf_list_repositories",
+        _mawf.list_repositories,
+        status_code=status_code,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_deactivate_repository")
+async def mawf_deactivate_repository(
+    repository_id: str, correlation_id: str | None = None
+) -> str:
+    """Soft-deactivate a MAWF repository."""
+    return await _run_mawf_tool(
+        "mawf_deactivate_repository",
+        _mawf.deactivate_repository,
+        write=True,
+        repository_id=repository_id,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_create_prompt")
+async def mawf_create_prompt(
+    normalized_hash: str,
+    original_prompt_ref: str,
+    normalized_prompt_ref: str,
+    created_by_user_id: str,
+    prompt_id: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Create an immutable MAWF prompt record."""
+    return await _run_mawf_tool(
+        "mawf_create_prompt",
+        _mawf.create_prompt,
+        write=True,
+        normalized_hash=normalized_hash,
+        original_prompt_ref=original_prompt_ref,
+        normalized_prompt_ref=normalized_prompt_ref,
+        created_by_user_id=created_by_user_id,
+        prompt_id=prompt_id,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_get_prompt")
+async def mawf_get_prompt(prompt_id: str, correlation_id: str | None = None) -> str:
+    """Get one MAWF prompt by id."""
+    return await _run_mawf_tool(
+        "mawf_get_prompt",
+        _mawf.get_prompt,
+        prompt_id=prompt_id,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_get_prompt_by_hash")
+async def mawf_get_prompt_by_hash(
+    normalized_hash: str, correlation_id: str | None = None
+) -> str:
+    """Get one MAWF prompt by normalized hash."""
+    return await _run_mawf_tool(
+        "mawf_get_prompt_by_hash",
+        _mawf.get_prompt_by_hash,
+        normalized_hash=normalized_hash,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_list_prompts_by_user")
+async def mawf_list_prompts_by_user(
+    user_id: str, correlation_id: str | None = None
+) -> str:
+    """List MAWF prompts created by a user."""
+    return await _run_mawf_tool(
+        "mawf_list_prompts_by_user",
+        _mawf.list_prompts_by_user,
+        user_id=user_id,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_supersede_prompt_ref")
+async def mawf_supersede_prompt_ref(
+    prompt_id: str,
+    normalized_hash: str,
+    original_prompt_ref: str,
+    normalized_prompt_ref: str,
+    correction_note: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Create a new prompt record that supersedes an existing prompt."""
+    return await _run_mawf_tool(
+        "mawf_supersede_prompt_ref",
+        _mawf.supersede_prompt_ref,
+        write=True,
+        prompt_id=prompt_id,
+        normalized_hash=normalized_hash,
+        original_prompt_ref=original_prompt_ref,
+        normalized_prompt_ref=normalized_prompt_ref,
+        correction_note=correction_note,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_upsert_task")
+async def mawf_upsert_task(
+    task_id: str,
+    owner_user_id: str,
+    project_id: str,
+    repository_id: str,
+    prompt_id: str,
+    title: str,
+    task_ledger_ref: str,
+    status_code: str = "active",
+    correlation_id: str | None = None,
+) -> str:
+    """Create or update a MAWF task over planning.tasks."""
+    return await _run_mawf_tool(
+        "mawf_upsert_task",
+        _mawf.upsert_task,
+        write=True,
+        task_id=task_id,
+        owner_user_id=owner_user_id,
+        project_id=project_id,
+        repository_id=repository_id,
+        prompt_id=prompt_id,
+        title=title,
+        task_ledger_ref=task_ledger_ref,
+        status_code=status_code,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_get_task")
+async def mawf_get_task(task_id: str, correlation_id: str | None = None) -> str:
+    """Get one MAWF task."""
+    return await _run_mawf_tool(
+        "mawf_get_task",
+        _mawf.get_task,
+        task_id=task_id,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_list_tasks")
+async def mawf_list_tasks(
+    owner_user_id: str | None = None,
+    project_id: str | None = None,
+    repository_id: str | None = None,
+    status_code: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """List MAWF tasks."""
+    return await _run_mawf_tool(
+        "mawf_list_tasks",
+        _mawf.list_tasks,
+        owner_user_id=owner_user_id,
+        project_id=project_id,
+        repository_id=repository_id,
+        status_code=status_code,
+        correlation_id=correlation_id,
+    )
+
+
+async def _mawf_set_task_status_tool(
+    tool_name: str, task_id: str, status_code: str, correlation_id: str | None
+) -> str:
+    return await _run_mawf_tool(
+        tool_name,
+        _mawf.set_task_status,
+        write=True,
+        task_id=task_id,
+        status_code=status_code,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_cancel_task")
+async def mawf_cancel_task(task_id: str, correlation_id: str | None = None) -> str:
+    """Set a MAWF task to cancelled."""
+    return await _mawf_set_task_status_tool(
+        "mawf_cancel_task", task_id, "cancelled", correlation_id
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_complete_task")
+async def mawf_complete_task(task_id: str, correlation_id: str | None = None) -> str:
+    """Set a MAWF task to completed."""
+    return await _mawf_set_task_status_tool(
+        "mawf_complete_task", task_id, "completed", correlation_id
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_fail_task")
+async def mawf_fail_task(task_id: str, correlation_id: str | None = None) -> str:
+    """Set a MAWF task to failed."""
+    return await _mawf_set_task_status_tool(
+        "mawf_fail_task", task_id, "failed", correlation_id
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_upsert_artifact_ref")
+async def mawf_upsert_artifact_ref(
+    task_id: str,
+    role_code: str,
+    artifact_path: str,
+    content_hash: str | None = None,
+    persist_status_code: str = "local_only",
+    artifact_ref_id: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Create or update a MAWF task artifact ref."""
+    return await _run_mawf_tool(
+        "mawf_upsert_artifact_ref",
+        _mawf.upsert_artifact_ref,
+        write=True,
+        task_id=task_id,
+        role_code=role_code,
+        artifact_path=artifact_path,
+        content_hash=content_hash,
+        persist_status_code=persist_status_code,
+        artifact_ref_id=artifact_ref_id,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_get_artifact_ref")
+async def mawf_get_artifact_ref(
+    artifact_ref_id: str | None = None,
+    task_id: str | None = None,
+    role_code: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Get one MAWF artifact ref."""
+    return await _run_mawf_tool(
+        "mawf_get_artifact_ref",
+        _mawf.get_artifact_ref,
+        artifact_ref_id=artifact_ref_id,
+        task_id=task_id,
+        role_code=role_code,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_list_artifact_refs")
+async def mawf_list_artifact_refs(
+    task_id: str, correlation_id: str | None = None
+) -> str:
+    """List MAWF artifact refs for a task."""
+    return await _run_mawf_tool(
+        "mawf_list_artifact_refs",
+        _mawf.list_artifact_refs,
+        task_id=task_id,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_set_artifact_persist_status")
+async def mawf_set_artifact_persist_status(
+    artifact_ref_id: str,
+    persist_status_code: str,
+    correlation_id: str | None = None,
+) -> str:
+    """Update the persistence status for one MAWF artifact ref."""
+    return await _run_mawf_tool(
+        "mawf_set_artifact_persist_status",
+        _mawf.set_artifact_persist_status,
+        write=True,
+        artifact_ref_id=artifact_ref_id,
+        persist_status_code=persist_status_code,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_get_task_memory_bundle")
+async def mawf_get_task_memory_bundle(
+    task_id: str, correlation_id: str | None = None
+) -> str:
+    """Return the MAWF task memory bundle with related canonical memory surfaces."""
+    return await _run_mawf_tool(
+        "mawf_get_task_memory_bundle",
+        _mawf.get_task_memory_bundle,
+        task_id=task_id,
+        correlation_id=correlation_id,
+    )
 
 
 @mcp.tool()
