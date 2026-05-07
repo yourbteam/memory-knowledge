@@ -5175,6 +5175,30 @@ async def mawf_list_workflow_runs(
 
 
 @mcp.tool()
+@track_tool_metrics("mawf_set_workflow_run_status")
+async def mawf_set_workflow_run_status(
+    workflow_run_id: str,
+    status_code: str,
+    current_phase: str | None = None,
+    iteration_count: int | None = None,
+    error_text: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Update the status for one MAWF-linked workflow run."""
+    return await _run_mawf_tool(
+        "mawf_set_workflow_run_status",
+        _mawf.set_workflow_run_status,
+        write=True,
+        workflow_run_id=workflow_run_id,
+        status_code=status_code,
+        current_phase=current_phase,
+        iteration_count=iteration_count,
+        error_text=error_text,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
 @track_tool_metrics("mawf_upsert_artifact_ref")
 async def mawf_upsert_artifact_ref(
     task_id: str,

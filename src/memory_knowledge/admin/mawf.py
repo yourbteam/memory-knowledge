@@ -1014,6 +1014,45 @@ async def list_workflow_runs(pool: asyncpg.Pool, task_id: str) -> list[dict[str,
     return [_workflow_run(row) for row in rows]
 
 
+async def set_workflow_run_status(
+    pool: asyncpg.Pool,
+    workflow_run_id: str,
+    status_code: str,
+    current_phase: str | None = None,
+    iteration_count: int | None = None,
+    error_text: str | None = None,
+) -> dict[str, Any]:
+    status = await resolve_reference_value(
+        pool, "WORKFLOW_RUN_STATUS", _workflow_status_code(status_code)
+    )
+    row = await pool.fetchrow(
+        """
+        UPDATE ops.workflow_runs
+        SET status = $2,
+            status_id = $3,
+            current_phase = COALESCE($4, current_phase),
+            iteration_count = COALESCE($5, iteration_count),
+            error_text = COALESCE($6, error_text),
+            completed_utc = CASE
+                WHEN $7 THEN COALESCE(completed_utc, NOW())
+                ELSE completed_utc
+            END
+        WHERE run_id = $1
+        RETURNING id
+        """,
+        _workflow_run_uuid(workflow_run_id),
+        _mawf_workflow_status(status["internal_code"]),
+        status["id"],
+        current_phase,
+        iteration_count,
+        error_text,
+        status["is_terminal"],
+    )
+    if row is None:
+        raise ValueError(f"Workflow run not found: {workflow_run_id}")
+    return await get_workflow_run(pool, workflow_run_id)
+
+
 def _artifact_ref(row: Any) -> dict[str, Any]:
     return {
         "id": str(row["id"]),
