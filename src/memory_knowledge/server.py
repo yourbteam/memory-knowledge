@@ -5111,6 +5111,70 @@ async def mawf_fail_task(task_id: str, correlation_id: str | None = None) -> str
 
 
 @mcp.tool()
+@track_tool_metrics("mawf_upsert_workflow_run")
+async def mawf_upsert_workflow_run(
+    workflow_run_id: str,
+    task_id: str,
+    workflow_name: str,
+    attempt: int = 1,
+    status_code: str = "queued",
+    workflow_ledger_ref: str | None = None,
+    workflow_state_ref: str | None = None,
+    current_phase: str | None = None,
+    iteration_count: int | None = None,
+    error_text: str | None = None,
+    relation_type: str = "implements",
+    correlation_id: str | None = None,
+) -> str:
+    """Create/update a MAWF-linked workflow run and attach it to a MAWF task."""
+    return await _run_mawf_tool(
+        "mawf_upsert_workflow_run",
+        _mawf.upsert_workflow_run,
+        write=True,
+        workflow_run_id=workflow_run_id,
+        task_id=task_id,
+        workflow_name=workflow_name,
+        attempt=attempt,
+        status_code=status_code,
+        workflow_ledger_ref=workflow_ledger_ref,
+        workflow_state_ref=workflow_state_ref,
+        current_phase=current_phase,
+        iteration_count=iteration_count,
+        error_text=error_text,
+        relation_type=relation_type,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_get_workflow_run")
+async def mawf_get_workflow_run(
+    workflow_run_id: str, correlation_id: str | None = None
+) -> str:
+    """Get one MAWF-linked workflow run by external workflow_run_id."""
+    return await _run_mawf_tool(
+        "mawf_get_workflow_run",
+        _mawf.get_workflow_run,
+        workflow_run_id=workflow_run_id,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_list_workflow_runs")
+async def mawf_list_workflow_runs(
+    task_id: str, correlation_id: str | None = None
+) -> str:
+    """List workflow runs linked to a MAWF task."""
+    return await _run_mawf_tool(
+        "mawf_list_workflow_runs",
+        _mawf.list_workflow_runs,
+        task_id=task_id,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
 @track_tool_metrics("mawf_upsert_artifact_ref")
 async def mawf_upsert_artifact_ref(
     task_id: str,

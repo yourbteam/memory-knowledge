@@ -164,6 +164,37 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
     async def fake_set_task_status(pool, task_id, status_code):
         return {"id": task_id, "status_code": status_code}
 
+    async def fake_upsert_workflow_run(
+        pool,
+        workflow_run_id,
+        task_id,
+        workflow_name,
+        attempt=1,
+        status_code="queued",
+        workflow_ledger_ref=None,
+        workflow_state_ref=None,
+        current_phase=None,
+        iteration_count=None,
+        error_text=None,
+        relation_type="implements",
+    ):
+        return {
+            "workflow_run_id": workflow_run_id,
+            "task_id": task_id,
+            "workflow_name": workflow_name,
+            "attempt": attempt,
+            "status_code": status_code,
+            "workflow_ledger_ref": workflow_ledger_ref,
+            "workflow_state_ref": workflow_state_ref,
+            "relation_type": relation_type,
+        }
+
+    async def fake_get_workflow_run(pool, workflow_run_id):
+        return {"workflow_run_id": workflow_run_id, "task_id": "task-a"}
+
+    async def fake_list_workflow_runs(pool, task_id):
+        return [{"workflow_run_id": "run-a", "task_id": task_id}]
+
     async def fake_upsert_artifact(pool, task_id, role_code, artifact_path, content_hash=None, persist_status_code="local_only", artifact_ref_id=None):
         return {"id": artifact_ref_id or artifact_ref_id, "task_id": task_id, "role_code": role_code, "artifact_path": artifact_path, "persist_status_code": persist_status_code}
 
@@ -188,6 +219,9 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
     monkeypatch.setattr(server._mawf, "get_task", fake_get_task)
     monkeypatch.setattr(server._mawf, "list_tasks", fake_list_tasks)
     monkeypatch.setattr(server._mawf, "set_task_status", fake_set_task_status)
+    monkeypatch.setattr(server._mawf, "upsert_workflow_run", fake_upsert_workflow_run)
+    monkeypatch.setattr(server._mawf, "get_workflow_run", fake_get_workflow_run)
+    monkeypatch.setattr(server._mawf, "list_workflow_runs", fake_list_workflow_runs)
     monkeypatch.setattr(server._mawf, "upsert_artifact_ref", fake_upsert_artifact)
     monkeypatch.setattr(server._mawf, "get_artifact_ref", fake_get_artifact)
     monkeypatch.setattr(server._mawf, "list_artifact_refs", fake_list_artifacts)
@@ -206,6 +240,20 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
     assert _payload(await server.mawf_complete_task("task-a"))["data"]["status_code"] == "completed"
     assert _payload(await server.mawf_cancel_task("task-a"))["data"]["status_code"] == "cancelled"
     assert _payload(await server.mawf_fail_task("task-a"))["data"]["status_code"] == "failed"
+    run = _payload(
+        await server.mawf_upsert_workflow_run(
+            "raw-run-a",
+            "task-a",
+            "full-task-workflow",
+            workflow_ledger_ref="repo://ledger.json",
+            workflow_state_ref="repo://state.json",
+        )
+    )["data"]
+    assert run["workflow_run_id"] == "raw-run-a"
+    assert run["status_code"] == "queued"
+    assert run["workflow_ledger_ref"] == "repo://ledger.json"
+    assert _payload(await server.mawf_get_workflow_run("raw-run-a"))["data"]["task_id"] == "task-a"
+    assert _payload(await server.mawf_list_workflow_runs("task-a"))["data"]["items"][0]["workflow_run_id"] == "run-a"
     artifact = _payload(await server.mawf_upsert_artifact_ref("task-a", "task_ledger", "Tasks/task-a/plan.md", artifact_ref_id=artifact_ref_id))["data"]
     assert artifact["role_code"] == "task_ledger"
     assert _payload(await server.mawf_get_artifact_ref(artifact_ref_id=artifact_ref_id))["data"]["id"] == artifact_ref_id

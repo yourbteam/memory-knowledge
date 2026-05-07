@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import uuid
+import json
 from typing import Any
 
 import asyncpg
@@ -14,6 +15,30 @@ DEFAULT_USER_ROLE = "employee"
 DEFAULT_USER_STATUS = "active"
 DEFAULT_ARTIFACT_PERSIST_STATUS = "local_only"
 
+MAWF_WORKFLOW_RUN_NAMESPACE = uuid.UUID("c9134234-7022-4f5d-96fd-65f5eaa4ddf6")
+MAWF_TO_WORKFLOW_RUN_STATUS = {
+    "queued": "RUN_PENDING",
+    "pending": "RUN_PENDING",
+    "submitted": "RUN_SUBMITTED",
+    "running": "RUN_RUNNING",
+    "completed": "RUN_SUCCESS",
+    "success": "RUN_SUCCESS",
+    "partial": "RUN_PARTIAL",
+    "failed": "RUN_ERROR",
+    "error": "RUN_ERROR",
+    "cancelled": "RUN_CANCELLED",
+    "canceled": "RUN_CANCELLED",
+}
+WORKFLOW_RUN_TO_MAWF_STATUS = {
+    "RUN_PENDING": "queued",
+    "RUN_SUBMITTED": "submitted",
+    "RUN_RUNNING": "running",
+    "RUN_SUCCESS": "completed",
+    "RUN_PARTIAL": "partial",
+    "RUN_ERROR": "failed",
+    "RUN_CANCELLED": "cancelled",
+}
+
 
 def _iso(value: Any) -> str | None:
     return value.isoformat() if value else None
@@ -21,6 +46,23 @@ def _iso(value: Any) -> str | None:
 
 def _dict(row: Any | None) -> dict[str, Any] | None:
     return dict(row) if row is not None else None
+
+
+def _workflow_run_uuid(workflow_run_id: str) -> uuid.UUID:
+    try:
+        return uuid.UUID(workflow_run_id)
+    except ValueError:
+        return uuid.uuid5(MAWF_WORKFLOW_RUN_NAMESPACE, workflow_run_id)
+
+
+def _workflow_status_code(status_code: str | None) -> str:
+    if not status_code:
+        return "RUN_PENDING"
+    return MAWF_TO_WORKFLOW_RUN_STATUS.get(status_code.lower(), status_code)
+
+
+def _mawf_workflow_status(internal_code: str) -> str:
+    return WORKFLOW_RUN_TO_MAWF_STATUS.get(internal_code, internal_code.lower())
 
 
 async def resolve_reference_value(
@@ -812,6 +854,166 @@ async def set_task_status(pool: asyncpg.Pool, task_id: str, status_code: str) ->
     return await get_task(pool, task_id)
 
 
+def _workflow_run(row: Any) -> dict[str, Any]:
+    context = row["context_json"] or {}
+    if isinstance(context, str):
+        context = json.loads(context)
+    workflow_run_id = context.get("mawf_workflow_run_id") or str(row["run_id"])
+    relation_type = row.get("relation_type", "implements") if hasattr(row, "get") else row["relation_type"]
+    relation_type = relation_type or "implements"
+    return {
+        "workflow_run_id": workflow_run_id,
+        "canonical_run_id": str(row["run_id"]),
+        "task_id": row["mawf_task_id"],
+        "workflow_name": row["workflow_name"],
+        "attempt": context.get("mawf_attempt"),
+        "status_code": _mawf_workflow_status(row["status_code"]),
+        "internal_status_code": row["status_code"],
+        "status_display_name": row["status_display_name"],
+        "is_terminal": row["is_terminal"],
+        "workflow_ledger_ref": context.get("workflow_ledger_ref"),
+        "workflow_state_ref": context.get("workflow_state_ref"),
+        "actor_email": row["actor_email"],
+        "current_phase": row["current_phase"],
+        "iteration_count": row["iteration_count"],
+        "started_at": _iso(row["started_utc"]),
+        "completed_at": _iso(row["completed_utc"]),
+        "error_text": row["error_text"],
+        "relation_type": relation_type,
+    }
+
+
+async def upsert_workflow_run(
+    pool: asyncpg.Pool,
+    workflow_run_id: str,
+    task_id: str,
+    workflow_name: str,
+    attempt: int = 1,
+    status_code: str = "queued",
+    workflow_ledger_ref: str | None = None,
+    workflow_state_ref: str | None = None,
+    current_phase: str | None = None,
+    iteration_count: int | None = None,
+    error_text: str | None = None,
+    relation_type: str = "implements",
+) -> dict[str, Any]:
+    task_row = await pool.fetchrow(
+        """
+        SELECT t.id, t.mawf_task_id, t.repository_id, t.title, u.email AS actor_email
+        FROM planning.tasks t
+        LEFT JOIN core.users u ON u.id = t.owner_user_id
+        WHERE t.mawf_task_id = $1
+        """,
+        task_id,
+    )
+    if task_row is None:
+        raise ValueError(f"Task not found: {task_id}")
+
+    status = await resolve_reference_value(
+        pool, "WORKFLOW_RUN_STATUS", _workflow_status_code(status_code)
+    )
+    context_json = {
+        "mawf_workflow_run_id": workflow_run_id,
+        "mawf_attempt": attempt,
+        "workflow_ledger_ref": workflow_ledger_ref,
+        "workflow_state_ref": workflow_state_ref,
+    }
+    run_uuid = _workflow_run_uuid(workflow_run_id)
+    row = await pool.fetchrow(
+        """
+        INSERT INTO ops.workflow_runs (
+            run_id, repository_id, workflow_name, task_description, status,
+            status_id, actor_email, current_phase, iteration_count, context_json,
+            error_text, completed_utc
+        )
+        VALUES (
+            $1, $2, $3, $4, $5, $6, $7, $8, COALESCE($9, 0), $10::jsonb,
+            $11, CASE WHEN $12 THEN NOW() ELSE NULL END
+        )
+        ON CONFLICT (run_id) DO UPDATE SET
+            repository_id = EXCLUDED.repository_id,
+            workflow_name = EXCLUDED.workflow_name,
+            task_description = COALESCE(EXCLUDED.task_description, ops.workflow_runs.task_description),
+            status = EXCLUDED.status,
+            status_id = EXCLUDED.status_id,
+            actor_email = COALESCE(EXCLUDED.actor_email, ops.workflow_runs.actor_email),
+            current_phase = COALESCE(EXCLUDED.current_phase, ops.workflow_runs.current_phase),
+            iteration_count = COALESCE(EXCLUDED.iteration_count, ops.workflow_runs.iteration_count),
+            context_json = COALESCE(ops.workflow_runs.context_json, '{}'::jsonb) || EXCLUDED.context_json,
+            error_text = COALESCE(EXCLUDED.error_text, ops.workflow_runs.error_text),
+            completed_utc = CASE
+                WHEN $12 THEN COALESCE(ops.workflow_runs.completed_utc, NOW())
+                ELSE ops.workflow_runs.completed_utc
+            END
+        RETURNING id
+        """,
+        run_uuid,
+        task_row["repository_id"],
+        workflow_name,
+        task_row["title"],
+        _mawf_workflow_status(status["internal_code"]),
+        status["id"],
+        task_row["actor_email"],
+        current_phase,
+        iteration_count,
+        json.dumps(context_json),
+        error_text,
+        status["is_terminal"],
+    )
+    await pool.execute(
+        """
+        INSERT INTO planning.task_workflow_runs (task_id, workflow_run_id, relation_type)
+        VALUES ($1, $2, $3)
+        ON CONFLICT (task_id, workflow_run_id, relation_type) DO NOTHING
+        """,
+        task_row["id"],
+        row["id"],
+        relation_type,
+    )
+    return await get_workflow_run(pool, workflow_run_id)
+
+
+async def get_workflow_run(pool: asyncpg.Pool, workflow_run_id: str) -> dict[str, Any]:
+    row = await pool.fetchrow(
+        """
+        SELECT wr.run_id, t.mawf_task_id, wr.workflow_name, wr.context_json,
+               rv.internal_code AS status_code, rv.display_name AS status_display_name,
+               rv.is_terminal, wr.actor_email, wr.current_phase, wr.iteration_count,
+               wr.started_utc, wr.completed_utc, wr.error_text, twr.relation_type
+        FROM ops.workflow_runs wr
+        JOIN core.reference_values rv ON rv.id = wr.status_id
+        LEFT JOIN planning.task_workflow_runs twr ON twr.workflow_run_id = wr.id
+        LEFT JOIN planning.tasks t ON t.id = twr.task_id
+        WHERE wr.run_id = $1
+        ORDER BY twr.created_utc DESC NULLS LAST
+        LIMIT 1
+        """,
+        _workflow_run_uuid(workflow_run_id),
+    )
+    if row is None:
+        raise ValueError(f"Workflow run not found: {workflow_run_id}")
+    return _workflow_run(row)
+
+
+async def list_workflow_runs(pool: asyncpg.Pool, task_id: str) -> list[dict[str, Any]]:
+    rows = await pool.fetch(
+        """
+        SELECT wr.run_id, t.mawf_task_id, wr.workflow_name, wr.context_json,
+               rv.internal_code AS status_code, rv.display_name AS status_display_name,
+               rv.is_terminal, wr.actor_email, wr.current_phase, wr.iteration_count,
+               wr.started_utc, wr.completed_utc, wr.error_text, twr.relation_type
+        FROM planning.tasks t
+        JOIN planning.task_workflow_runs twr ON twr.task_id = t.id
+        JOIN ops.workflow_runs wr ON wr.id = twr.workflow_run_id
+        JOIN core.reference_values rv ON rv.id = wr.status_id
+        WHERE t.mawf_task_id = $1
+        ORDER BY wr.started_utc DESC
+        """,
+        task_id,
+    )
+    return [_workflow_run(row) for row in rows]
+
+
 def _artifact_ref(row: Any) -> dict[str, Any]:
     return {
         "id": str(row["id"]),
@@ -934,21 +1136,7 @@ async def get_task_memory_bundle(pool: asyncpg.Pool, task_id: str) -> dict[str, 
     repository = await get_repository(pool, repository_id=task["repository_id"]) if task["repository_id"] else None
     prompt = await get_prompt(pool, task["prompt_id"]) if task["prompt_id"] else None
     artifact_refs = await list_artifact_refs(pool, task_id)
-    workflow_runs = await pool.fetch(
-        """
-        SELECT wr.run_id, wr.workflow_name, wr.task_description,
-               COALESCE(status.mawf_code, status.internal_code) AS status_code,
-               wr.actor_email, wr.current_phase, wr.iteration_count,
-               wr.started_utc, wr.completed_utc, twr.relation_type
-        FROM planning.tasks t
-        JOIN planning.task_workflow_runs twr ON twr.task_id = t.id
-        JOIN ops.workflow_runs wr ON wr.id = twr.workflow_run_id
-        JOIN core.reference_values status ON status.id = wr.status_id
-        WHERE t.mawf_task_id = $1
-        ORDER BY wr.started_utc DESC
-        """,
-        task_id,
-    )
+    workflow_runs = await list_workflow_runs(pool, task_id)
     return {
         "task": task,
         "owner": owner,
@@ -956,21 +1144,7 @@ async def get_task_memory_bundle(pool: asyncpg.Pool, task_id: str) -> dict[str, 
         "repository": repository,
         "prompt": prompt,
         "artifact_refs": artifact_refs,
-        "workflow_runs": [
-            {
-                "run_id": str(row["run_id"]),
-                "workflow_name": row["workflow_name"],
-                "task_description": row["task_description"],
-                "status_code": row["status_code"],
-                "actor_email": row["actor_email"],
-                "current_phase": row["current_phase"],
-                "iteration_count": row["iteration_count"],
-                "started_utc": _iso(row["started_utc"]),
-                "completed_utc": _iso(row["completed_utc"]),
-                "relation_type": row["relation_type"],
-            }
-            for row in workflow_runs
-        ],
+        "workflow_runs": workflow_runs,
         "available_memory_surfaces": [
             "workflow_runs",
             "workflow_artifacts",
