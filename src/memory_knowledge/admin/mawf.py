@@ -14,6 +14,14 @@ DEFAULT_PRIORITY = "PRIO_MEDIUM"
 DEFAULT_USER_ROLE = "employee"
 DEFAULT_USER_STATUS = "active"
 DEFAULT_ARTIFACT_PERSIST_STATUS = "local_only"
+DEFAULT_LEASE_TTL_SECONDS = 60
+MIN_LEASE_TTL_SECONDS = 5
+MAX_LEASE_TTL_SECONDS = 3600
+LEASE_STATUS_ACTIVE = "active"
+LEASE_STATUS_RELEASED = "released"
+LEASE_STATUS_EXPIRED = "expired"
+LEASE_STATUS_FAILED = "failed"
+LEASE_RELEASE_REASON_STALE_RECLAIMED = "stale_reclaimed"
 
 MAWF_WORKFLOW_RUN_NAMESPACE = uuid.UUID("c9134234-7022-4f5d-96fd-65f5eaa4ddf6")
 MAWF_TO_WORKFLOW_RUN_STATUS = {
@@ -65,6 +73,15 @@ def _mawf_workflow_status(internal_code: str) -> str:
     return WORKFLOW_RUN_TO_MAWF_STATUS.get(internal_code, internal_code.lower())
 
 
+def _validate_lease_ttl(lease_ttl_seconds: int | None) -> int:
+    ttl = lease_ttl_seconds or DEFAULT_LEASE_TTL_SECONDS
+    if ttl < MIN_LEASE_TTL_SECONDS or ttl > MAX_LEASE_TTL_SECONDS:
+        raise ValueError(
+            f"lease_ttl_seconds must be between {MIN_LEASE_TTL_SECONDS} and {MAX_LEASE_TTL_SECONDS}"
+        )
+    return ttl
+
+
 async def resolve_reference_value(
     pool: asyncpg.Pool, type_code: str, value_code: str
 ) -> dict[str, Any]:
@@ -111,7 +128,8 @@ async def list_catalog_types(pool: asyncpg.Pool) -> list[dict[str, Any]]:
         FROM core.reference_types
         WHERE internal_code IN (
             'USER_ROLE', 'USER_STATUS', 'PROJECT_STATUS', 'REPOSITORY_STATUS',
-            'TASK_STATUS', 'ARTIFACT_ROLE', 'ARTIFACT_PERSIST_STATUS'
+            'TASK_STATUS', 'ARTIFACT_ROLE', 'ARTIFACT_PERSIST_STATUS',
+            'TASK_EXECUTION_LEASE_STATUS', 'TASK_EXECUTION_LEASE_RELEASE_REASON'
         )
         ORDER BY id
         """
@@ -126,7 +144,8 @@ async def list_catalog_values(
         """
         rt.internal_code IN (
             'USER_ROLE', 'USER_STATUS', 'PROJECT_STATUS', 'REPOSITORY_STATUS',
-            'TASK_STATUS', 'ARTIFACT_ROLE', 'ARTIFACT_PERSIST_STATUS'
+            'TASK_STATUS', 'ARTIFACT_ROLE', 'ARTIFACT_PERSIST_STATUS',
+            'TASK_EXECUTION_LEASE_STATUS', 'TASK_EXECUTION_LEASE_RELEASE_REASON'
         )
         """
     ]
@@ -1051,6 +1070,435 @@ async def set_workflow_run_status(
     if row is None:
         raise ValueError(f"Workflow run not found: {workflow_run_id}")
     return await get_workflow_run(pool, workflow_run_id)
+
+
+def _json_object(value: Any) -> dict[str, Any]:
+    if value is None:
+        return {}
+    if isinstance(value, str):
+        return json.loads(value)
+    return dict(value)
+
+
+def _lease(row: Any) -> dict[str, Any]:
+    context = _json_object(row["workflow_context_json"])
+    metadata = row["metadata_json"]
+    if isinstance(metadata, str):
+        metadata = json.loads(metadata)
+    workflow_run_uuid = row["workflow_run_uuid"]
+    workflow_run_id = (
+        context.get("mawf_workflow_run_id")
+        or (str(workflow_run_uuid) if workflow_run_uuid else None)
+    )
+    release_reason_id = row["release_reason_value_id"]
+    return {
+        "id": str(row["id"]),
+        "canonical_task_id": row["canonical_task_id"],
+        "task_id": row["mawf_task_id"],
+        "workflow_run_id": workflow_run_id,
+        "canonical_workflow_run_id": row["workflow_run_id"],
+        "lease_token": str(row["lease_token"]),
+        "owner_user_id": str(row["owner_user_id"]) if row["owner_user_id"] else None,
+        "owner_instance_id": row["owner_instance_id"],
+        "owner_host": row["owner_host"],
+        "owner_process_id": row["owner_process_id"],
+        "status_catalog_value_id": row["status_value_id"],
+        "status_value_id": row["status_value_id"],
+        "status_code": row["status_code"],
+        "release_reason_catalog_value_id": release_reason_id,
+        "release_reason_value_id": release_reason_id,
+        "release_reason": row["release_reason"],
+        "acquired_utc": _iso(row["acquired_utc"]),
+        "last_heartbeat_utc": _iso(row["last_heartbeat_utc"]),
+        "expires_utc": _iso(row["expires_utc"]),
+        "released_utc": _iso(row["released_utc"]),
+        "metadata_json": metadata,
+    }
+
+
+async def _resolve_lease_task(conn: asyncpg.Connection, task_id: str, *, lock: bool = False) -> Any:
+    row = await conn.fetchrow(
+        f"""
+        SELECT t.id, t.mawf_task_id
+        FROM planning.tasks t
+        WHERE t.mawf_task_id = $1
+        {'FOR UPDATE' if lock else ''}
+        """,
+        task_id,
+    )
+    if row is None:
+        raise ValueError(f"Task not found: {task_id}")
+    return row
+
+
+async def _resolve_lease_workflow_run(
+    conn: asyncpg.Connection, workflow_run_id: str | None, task_id: int
+) -> Any | None:
+    if workflow_run_id is None:
+        return None
+    row = await conn.fetchrow(
+        """
+        SELECT wr.id, wr.run_id, wr.context_json
+        FROM ops.workflow_runs wr
+        JOIN planning.task_workflow_runs twr ON twr.workflow_run_id = wr.id
+        WHERE wr.run_id = $1
+          AND twr.task_id = $2
+        ORDER BY twr.created_utc DESC
+        LIMIT 1
+        """,
+        _workflow_run_uuid(workflow_run_id),
+        task_id,
+    )
+    if row is None:
+        raise ValueError(f"Workflow run not linked to task: {workflow_run_id}")
+    return row
+
+
+async def _fetch_lease_by_id(conn: asyncpg.Connection, lease_id: str | uuid.UUID) -> dict[str, Any]:
+    row = await conn.fetchrow(
+        """
+        SELECT l.id, l.task_id AS canonical_task_id, t.mawf_task_id,
+               l.workflow_run_id, wr.run_id AS workflow_run_uuid,
+               wr.context_json AS workflow_context_json,
+               l.lease_token, l.owner_user_id, l.owner_instance_id,
+               l.owner_host, l.owner_process_id, l.status_value_id,
+               COALESCE(status.mawf_code, status.internal_code) AS status_code,
+               l.acquired_utc, l.last_heartbeat_utc, l.expires_utc, l.released_utc,
+               l.release_reason_value_id,
+               COALESCE(reason.mawf_code, reason.internal_code) AS release_reason,
+               l.metadata_json
+        FROM ops.mawf_task_execution_leases l
+        JOIN planning.tasks t ON t.id = l.task_id
+        JOIN core.reference_values status ON status.id = l.status_value_id
+        LEFT JOIN core.reference_values reason ON reason.id = l.release_reason_value_id
+        LEFT JOIN ops.workflow_runs wr ON wr.id = l.workflow_run_id
+        WHERE l.id = $1::uuid
+        """,
+        lease_id,
+    )
+    if row is None:
+        raise ValueError(f"Lease not found: {lease_id}")
+    return _lease(row)
+
+
+async def _fetch_open_lease_for_update(conn: asyncpg.Connection, canonical_task_id: int) -> Any | None:
+    return await conn.fetchrow(
+        """
+        SELECT l.id, l.task_id AS canonical_task_id, t.mawf_task_id,
+               l.workflow_run_id, wr.run_id AS workflow_run_uuid,
+               wr.context_json AS workflow_context_json,
+               l.lease_token, l.owner_user_id, l.owner_instance_id,
+               l.owner_host, l.owner_process_id, l.status_value_id,
+               COALESCE(status.mawf_code, status.internal_code) AS status_code,
+               l.acquired_utc, l.last_heartbeat_utc, l.expires_utc, l.released_utc,
+               l.release_reason_value_id,
+               COALESCE(reason.mawf_code, reason.internal_code) AS release_reason,
+               l.metadata_json,
+               l.expires_utc <= NOW() AS is_expired
+        FROM ops.mawf_task_execution_leases l
+        JOIN planning.tasks t ON t.id = l.task_id
+        JOIN core.reference_values status ON status.id = l.status_value_id
+        LEFT JOIN core.reference_values reason ON reason.id = l.release_reason_value_id
+        LEFT JOIN ops.workflow_runs wr ON wr.id = l.workflow_run_id
+        WHERE l.task_id = $1
+          AND l.released_utc IS NULL
+        ORDER BY l.acquired_utc DESC
+        LIMIT 1
+        FOR UPDATE
+        """,
+        canonical_task_id,
+    )
+
+
+async def acquire_task_execution_lease(
+    pool: asyncpg.Pool,
+    task_id: str,
+    owner_instance_id: str,
+    workflow_run_id: str | None = None,
+    owner_user_id: str | None = None,
+    owner_host: str | None = None,
+    owner_process_id: str | None = None,
+    lease_ttl_seconds: int | None = DEFAULT_LEASE_TTL_SECONDS,
+    metadata_json: dict[str, Any] | None = None,
+) -> dict[str, Any]:
+    ttl = _validate_lease_ttl(lease_ttl_seconds)
+    if not owner_instance_id:
+        raise ValueError("owner_instance_id is required")
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            task_row = await _resolve_lease_task(conn, task_id, lock=True)
+            workflow_row = await _resolve_lease_workflow_run(
+                conn, workflow_run_id, task_row["id"]
+            )
+            active_status_id = await _reference_id(
+                conn, "TASK_EXECUTION_LEASE_STATUS", LEASE_STATUS_ACTIVE
+            )
+            expired_status_id = await _reference_id(
+                conn, "TASK_EXECUTION_LEASE_STATUS", LEASE_STATUS_EXPIRED
+            )
+            stale_reason_id = await _reference_id(
+                conn,
+                "TASK_EXECUTION_LEASE_RELEASE_REASON",
+                LEASE_RELEASE_REASON_STALE_RECLAIMED,
+            )
+            current = await _fetch_open_lease_for_update(conn, task_row["id"])
+            stale_reclaimed = False
+            if current is not None and current["status_code"] == LEASE_STATUS_ACTIVE:
+                if not current["is_expired"]:
+                    return {
+                        "ok": True,
+                        "acquired": False,
+                        "task_id": task_id,
+                        "current_lease": _lease(current),
+                    }
+                await conn.execute(
+                    """
+                    UPDATE ops.mawf_task_execution_leases
+                    SET status_value_id = $2,
+                        release_reason_value_id = $3,
+                        released_utc = NOW()
+                    WHERE id = $1
+                    """,
+                    current["id"],
+                    expired_status_id,
+                    stale_reason_id,
+                )
+                stale_reclaimed = True
+            elif current is not None:
+                await conn.execute(
+                    """
+                    UPDATE ops.mawf_task_execution_leases
+                    SET released_utc = NOW()
+                    WHERE id = $1
+                      AND released_utc IS NULL
+                    """,
+                    current["id"],
+                )
+
+            row = await conn.fetchrow(
+                """
+                INSERT INTO ops.mawf_task_execution_leases (
+                    task_id, workflow_run_id, owner_user_id, owner_instance_id,
+                    owner_host, owner_process_id, status_value_id, expires_utc,
+                    metadata_json
+                )
+                VALUES (
+                    $1, $2, $3::uuid, $4, $5, $6, $7,
+                    NOW() + ($8::int * INTERVAL '1 second'), $9::jsonb
+                )
+                RETURNING id
+                """,
+                task_row["id"],
+                workflow_row["id"] if workflow_row else None,
+                uuid.UUID(owner_user_id) if owner_user_id else None,
+                owner_instance_id,
+                owner_host,
+                owner_process_id,
+                active_status_id,
+                ttl,
+                json.dumps(metadata_json) if metadata_json is not None else None,
+            )
+            lease = await _fetch_lease_by_id(conn, row["id"])
+            return {
+                "ok": True,
+                "acquired": True,
+                "task_id": task_id,
+                "workflow_run_id": workflow_run_id,
+                "canonical_task_id": task_row["id"],
+                "lease_token": lease["lease_token"],
+                "expires_utc": lease["expires_utc"],
+                "stale_reclaimed": stale_reclaimed,
+                "lease": lease,
+            }
+
+
+async def heartbeat_task_execution_lease(
+    pool: asyncpg.Pool,
+    task_id: str,
+    lease_token: str,
+    lease_ttl_seconds: int | None = DEFAULT_LEASE_TTL_SECONDS,
+) -> dict[str, Any]:
+    ttl = _validate_lease_ttl(lease_ttl_seconds)
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            task_row = await _resolve_lease_task(conn, task_id, lock=True)
+            current = await _fetch_open_lease_for_update(conn, task_row["id"])
+            if current is None:
+                raise ValueError(f"No active lease for task: {task_id}")
+            if str(current["lease_token"]) != str(lease_token):
+                raise ValueError("Lease token mismatch")
+            if current["status_code"] != LEASE_STATUS_ACTIVE:
+                raise ValueError(f"Lease is {current['status_code']}")
+            if current["is_expired"]:
+                raise ValueError("Lease expired")
+            row = await conn.fetchrow(
+                """
+                UPDATE ops.mawf_task_execution_leases
+                SET last_heartbeat_utc = NOW(),
+                    expires_utc = NOW() + ($2::int * INTERVAL '1 second')
+                WHERE id = $1
+                RETURNING id
+                """,
+                current["id"],
+                ttl,
+            )
+            lease = await _fetch_lease_by_id(conn, row["id"])
+            return {"ok": True, "task_id": task_id, "lease": lease}
+
+
+async def release_task_execution_lease(
+    pool: asyncpg.Pool,
+    task_id: str,
+    lease_token: str,
+    release_reason: str,
+) -> dict[str, Any]:
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            task_row = await _resolve_lease_task(conn, task_id, lock=True)
+            released_status_id = await _reference_id(
+                conn, "TASK_EXECUTION_LEASE_STATUS", LEASE_STATUS_RELEASED
+            )
+            reason_id = await _reference_id(
+                conn, "TASK_EXECUTION_LEASE_RELEASE_REASON", release_reason
+            )
+            current = await _fetch_open_lease_for_update(conn, task_row["id"])
+            if current is not None:
+                if str(current["lease_token"]) != str(lease_token):
+                    raise ValueError("Lease token mismatch")
+                if current["status_code"] != LEASE_STATUS_ACTIVE:
+                    raise ValueError(f"Lease is {current['status_code']}")
+                if current["is_expired"]:
+                    raise ValueError("Lease expired")
+                row = await conn.fetchrow(
+                    """
+                    UPDATE ops.mawf_task_execution_leases
+                    SET status_value_id = $2,
+                        release_reason_value_id = $3,
+                        released_utc = NOW()
+                    WHERE id = $1
+                    RETURNING id
+                    """,
+                    current["id"],
+                    released_status_id,
+                    reason_id,
+                )
+                lease = await _fetch_lease_by_id(conn, row["id"])
+                return {"ok": True, "task_id": task_id, "lease": lease}
+
+            latest = await conn.fetchrow(
+                """
+                SELECT l.id, l.task_id AS canonical_task_id, t.mawf_task_id,
+                       l.workflow_run_id, wr.run_id AS workflow_run_uuid,
+                       wr.context_json AS workflow_context_json,
+                       l.lease_token, l.owner_user_id, l.owner_instance_id,
+                       l.owner_host, l.owner_process_id, l.status_value_id,
+                       COALESCE(status.mawf_code, status.internal_code) AS status_code,
+                       l.acquired_utc, l.last_heartbeat_utc, l.expires_utc, l.released_utc,
+                       l.release_reason_value_id,
+                       COALESCE(reason.mawf_code, reason.internal_code) AS release_reason,
+                       l.metadata_json
+                FROM ops.mawf_task_execution_leases l
+                JOIN planning.tasks t ON t.id = l.task_id
+                JOIN core.reference_values status ON status.id = l.status_value_id
+                LEFT JOIN core.reference_values reason ON reason.id = l.release_reason_value_id
+                LEFT JOIN ops.workflow_runs wr ON wr.id = l.workflow_run_id
+                WHERE l.task_id = $1
+                  AND l.lease_token = $2::uuid
+                ORDER BY l.acquired_utc DESC
+                LIMIT 1
+                """,
+                task_row["id"],
+                uuid.UUID(lease_token),
+            )
+            if (
+                latest is not None
+                and latest["status_code"] == LEASE_STATUS_RELEASED
+                and latest["release_reason"] == release_reason
+            ):
+                return {"ok": True, "task_id": task_id, "lease": _lease(latest)}
+            raise ValueError(f"No active lease for task: {task_id}")
+
+
+async def get_task_execution_lease(pool: asyncpg.Pool, task_id: str) -> dict[str, Any]:
+    task_row = await _resolve_lease_task(pool, task_id)
+    row = await pool.fetchrow(
+        """
+        SELECT l.id, l.task_id AS canonical_task_id, t.mawf_task_id,
+               l.workflow_run_id, wr.run_id AS workflow_run_uuid,
+               wr.context_json AS workflow_context_json,
+               l.lease_token, l.owner_user_id, l.owner_instance_id,
+               l.owner_host, l.owner_process_id, l.status_value_id,
+               COALESCE(status.mawf_code, status.internal_code) AS status_code,
+               l.acquired_utc, l.last_heartbeat_utc, l.expires_utc, l.released_utc,
+               l.release_reason_value_id,
+               COALESCE(reason.mawf_code, reason.internal_code) AS release_reason,
+               l.metadata_json,
+               (
+                   l.released_utc IS NULL
+                   AND COALESCE(status.mawf_code, status.internal_code) = 'active'
+                   AND l.expires_utc > NOW()
+               ) AS has_active_lease
+        FROM ops.mawf_task_execution_leases l
+        JOIN planning.tasks t ON t.id = l.task_id
+        JOIN core.reference_values status ON status.id = l.status_value_id
+        LEFT JOIN core.reference_values reason ON reason.id = l.release_reason_value_id
+        LEFT JOIN ops.workflow_runs wr ON wr.id = l.workflow_run_id
+        WHERE l.task_id = $1
+        ORDER BY CASE
+            WHEN l.released_utc IS NULL
+             AND COALESCE(status.mawf_code, status.internal_code) = 'active'
+             AND l.expires_utc > NOW() THEN 0
+            ELSE 1
+        END, l.acquired_utc DESC
+        LIMIT 1
+        """,
+        task_row["id"],
+    )
+    lease = _lease(row) if row is not None else None
+    return {
+        "ok": True,
+        "task_id": task_id,
+        "canonical_task_id": task_row["id"],
+        "has_active_lease": bool(row and row["has_active_lease"]),
+        "lease": lease,
+    }
+
+
+async def list_stale_task_execution_leases(
+    pool: asyncpg.Pool,
+    older_than_seconds: int = DEFAULT_LEASE_TTL_SECONDS,
+    limit: int = 100,
+) -> list[dict[str, Any]]:
+    if older_than_seconds < 0:
+        raise ValueError("older_than_seconds must be non-negative")
+    capped_limit = min(max(limit, 1), 500)
+    rows = await pool.fetch(
+        """
+        SELECT l.id, l.task_id AS canonical_task_id, t.mawf_task_id,
+               l.workflow_run_id, wr.run_id AS workflow_run_uuid,
+               wr.context_json AS workflow_context_json,
+               l.lease_token, l.owner_user_id, l.owner_instance_id,
+               l.owner_host, l.owner_process_id, l.status_value_id,
+               COALESCE(status.mawf_code, status.internal_code) AS status_code,
+               l.acquired_utc, l.last_heartbeat_utc, l.expires_utc, l.released_utc,
+               l.release_reason_value_id,
+               COALESCE(reason.mawf_code, reason.internal_code) AS release_reason,
+               l.metadata_json
+        FROM ops.mawf_task_execution_leases l
+        JOIN planning.tasks t ON t.id = l.task_id
+        JOIN core.reference_values status ON status.id = l.status_value_id
+        LEFT JOIN core.reference_values reason ON reason.id = l.release_reason_value_id
+        LEFT JOIN ops.workflow_runs wr ON wr.id = l.workflow_run_id
+        WHERE l.released_utc IS NULL
+          AND COALESCE(status.mawf_code, status.internal_code) = 'active'
+          AND l.expires_utc < NOW() - ($1::int * INTERVAL '1 second')
+        ORDER BY l.expires_utc ASC
+        LIMIT $2
+        """,
+        older_than_seconds,
+        capped_limit,
+    )
+    return [_lease(row) for row in rows]
 
 
 def _artifact_ref(row: Any) -> dict[str, Any]:

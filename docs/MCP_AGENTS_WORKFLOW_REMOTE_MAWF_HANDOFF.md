@@ -126,6 +126,8 @@ Seeded MAWF value codes:
 | `TASK_STATUS` | `active`, `completed`, `cancelled`, `failed` |
 | `ARTIFACT_ROLE` | `initial_prompt`, `normalized_prompt`, `task_ledger` |
 | `ARTIFACT_PERSIST_STATUS` | `local_only`, `persist_pending`, `persisted`, `persist_failed` |
+| `TASK_EXECUTION_LEASE_STATUS` | `active`, `released`, `expired`, `failed` |
+| `TASK_EXECUTION_LEASE_RELEASE_REASON` | `completed`, `failed`, `cancelled`, `operator_cancelled`, `server_shutdown`, `stale_reclaimed` |
 
 The database enforces reference-type correctness. For example, `completed` is valid as a task status, but invalid as a user role. Invalid type usage returns a tool failure such as `Invalid USER_ROLE value: completed`.
 
@@ -230,6 +232,7 @@ Use these tools when `mcp-agents-workflow` needs to persist a workflow execution
 | `mawf_upsert_workflow_run` | Create/update a workflow run and link it to a MAWF task. |
 | `mawf_get_workflow_run` | Read one workflow run by MAWF external workflow run ID. |
 | `mawf_list_workflow_runs` | List workflow runs linked to a MAWF task. |
+| `mawf_set_workflow_run_status` | Update status, current phase, iteration count, or error text for a workflow run. |
 
 `workflow_run_id` may be a UUID or a text orchestrator ID such as `raw-mawf-run-1778171339`. The server stores a deterministic canonical UUID internally and returns both:
 
@@ -258,6 +261,68 @@ The workflow ledger and state refs are stored in workflow-run context:
 - `workflow_state_ref`
 
 These refs are returned by `mawf_get_workflow_run`, `mawf_list_workflow_runs`, and inside `mawf_get_task_memory_bundle.workflow_runs`.
+
+### Task Execution Lease Tools
+
+Use task execution leases to coordinate ownership before a worker starts executing a MAWF task. A lease answers one narrow question: which worker currently owns execution for this task. It does not store phase telemetry, workflow ledgers, artifact contents, polling state, or execution history. Task folders and Git-persisted ledgers remain the source of truth for what happened.
+
+| Tool | Purpose |
+|---|---|
+| `mawf_acquire_task_execution_lease` | Atomically acquire task execution ownership. |
+| `mawf_heartbeat_task_execution_lease` | Extend a matching active lease. |
+| `mawf_release_task_execution_lease` | Release a matching active lease on terminal outcome or shutdown. |
+| `mawf_get_task_execution_lease` | Read the active lease, or the latest lease if none is active. |
+| `mawf_list_stale_task_execution_leases` | List open active leases whose expiry is stale. |
+
+Acquire input:
+
+```json
+{
+  "task_id": "mawf-task-id",
+  "workflow_run_id": "mawf-workflow-run-id-or-null",
+  "owner_user_id": "uuid-or-null",
+  "owner_instance_id": "worker-instance-id",
+  "owner_host": "host-or-null",
+  "owner_process_id": "pid-or-null",
+  "lease_ttl_seconds": 60,
+  "metadata_json": {}
+}
+```
+
+The server resolves `task_id` through `planning.tasks.mawf_task_id` and resolves `workflow_run_id` through the same deterministic bridge used by `mawf_upsert_workflow_run`. If `workflow_run_id` is supplied, it must already be linked to the same task. TTL must be between 5 and 3600 seconds.
+
+Acquire success returns `ok: true`, `acquired: true`, `lease_token`, `expires_utc`, `canonical_task_id`, `stale_reclaimed`, and a `lease` summary. If another non-expired active lease exists, acquire returns `ok: true`, `acquired: false`, and `current_lease`.
+
+Heartbeat input:
+
+```json
+{
+  "task_id": "mawf-task-id",
+  "lease_token": "uuid",
+  "lease_ttl_seconds": 60
+}
+```
+
+Heartbeat succeeds only for the matching active, non-expired lease token. Missing, expired, released, or token-mismatched leases return a clear MCP error.
+
+Release input:
+
+```json
+{
+  "task_id": "mawf-task-id",
+  "lease_token": "uuid",
+  "release_reason": "completed"
+}
+```
+
+Valid release reasons are `completed`, `failed`, `cancelled`, `operator_cancelled`, `server_shutdown`, and `stale_reclaimed`. Release is idempotent when the same token was already released with the same reason.
+
+Stale recovery:
+
+1. Call `mawf_list_stale_task_execution_leases` to find open active leases that have been expired longer than the chosen grace period.
+2. Try `mawf_acquire_task_execution_lease` for the task.
+3. If the old lease is expired, the server closes it as `expired` with reason `stale_reclaimed`, then creates a new active lease atomically.
+4. If acquire returns `acquired: false`, another worker still owns a valid lease.
 
 ### Artifact Reference Tools
 
@@ -316,10 +381,14 @@ For a new task:
 8. Call `mawf_upsert_artifact_ref` for `normalized_prompt`.
 9. Call `mawf_upsert_artifact_ref` for `task_ledger`.
 10. Call `mawf_upsert_workflow_run` when a workflow execution is queued or starts.
-11. During execution, update artifact persistence with `mawf_set_artifact_persist_status`.
-12. Update workflow-run status with `mawf_upsert_workflow_run` as the workflow progresses.
-13. On terminal outcome, call `mawf_complete_task`, `mawf_fail_task`, or `mawf_cancel_task`.
-14. On resume or handoff, call `mawf_get_task_memory_bundle`.
+11. Call `mawf_acquire_task_execution_lease` before executing task work.
+12. If acquire returns `acquired: false`, do not execute the task from this worker.
+13. Heartbeat with `mawf_heartbeat_task_execution_lease` while execution is active.
+14. During execution, update artifact persistence with `mawf_set_artifact_persist_status`.
+15. Update workflow-run status with `mawf_set_workflow_run_status` or `mawf_upsert_workflow_run` as the workflow progresses.
+16. On terminal outcome, release the lease with `mawf_release_task_execution_lease`.
+17. Then call `mawf_complete_task`, `mawf_fail_task`, or `mawf_cancel_task`.
+18. On resume or handoff, call `mawf_get_task_memory_bundle`.
 
 For an existing task:
 

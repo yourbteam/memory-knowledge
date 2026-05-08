@@ -1,4 +1,5 @@
 import uuid
+from datetime import datetime, timedelta, timezone
 
 import pytest
 
@@ -78,3 +79,214 @@ async def test_upsert_task_links_project_repository_before_task_write():
     ]
     assert link_calls
     assert link_calls[0][1] == (100, 200)
+
+
+def _lease_row(*, status_code="active", expired=False, released=False, reason=None):
+    now = datetime(2026, 5, 8, 12, 0, tzinfo=timezone.utc)
+    return {
+        "id": uuid.uuid4(),
+        "canonical_task_id": 300,
+        "mawf_task_id": "task-a",
+        "workflow_run_id": 400,
+        "workflow_run_uuid": mawf._workflow_run_uuid("run-a"),
+        "workflow_context_json": {"mawf_workflow_run_id": "run-a"},
+        "lease_token": uuid.UUID("00000000-0000-0000-0000-000000000001"),
+        "owner_user_id": None,
+        "owner_instance_id": "worker-old",
+        "owner_host": None,
+        "owner_process_id": None,
+        "status_value_id": 701,
+        "status_code": status_code,
+        "acquired_utc": now - timedelta(minutes=5),
+        "last_heartbeat_utc": now - timedelta(minutes=5),
+        "expires_utc": now - timedelta(seconds=1) if expired else now + timedelta(seconds=60),
+        "released_utc": now if released else None,
+        "release_reason_value_id": 801 if reason else None,
+        "release_reason": reason,
+        "metadata_json": {"attempt": 1},
+        "is_expired": expired,
+    }
+
+
+class LeaseTransaction:
+    def __init__(self, pool):
+        self.pool = pool
+
+    async def __aenter__(self):
+        self.pool.transaction_entered = True
+
+    async def __aexit__(self, exc_type, exc, tb):
+        self.pool.transaction_exited = True
+
+
+class LeaseAcquire:
+    def __init__(self, conn):
+        self.conn = conn
+
+    async def __aenter__(self):
+        return self.conn
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return None
+
+
+class LeaseAdminConn:
+    def __init__(self, *, current_open=None, workflow_mismatch=False, fetch_rows=None):
+        self.fetchrow_calls: list[tuple[str, tuple]] = []
+        self.fetch_calls: list[tuple[str, tuple]] = []
+        self.execute_calls: list[tuple[str, tuple]] = []
+        self.transaction_entered = False
+        self.transaction_exited = False
+        self.current_open = current_open
+        self.workflow_mismatch = workflow_mismatch
+        self.fetch_rows = fetch_rows or []
+        self.inserted_lease_id = uuid.uuid4()
+        self.workflow_run_arg = None
+
+    def acquire(self):
+        return LeaseAcquire(self)
+
+    def transaction(self):
+        return LeaseTransaction(self)
+
+    async def fetchrow(self, query, *args):
+        self.fetchrow_calls.append((query, args))
+        if "FROM core.reference_values rv" in query and "rt.internal_code = $1" in query:
+            values = {
+                ("TASK_EXECUTION_LEASE_STATUS", "active"): {"id": 701, "internal_code": "LEASE_ACTIVE", "mawf_code": "active", "display_name": "Active", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
+                ("TASK_EXECUTION_LEASE_STATUS", "released"): {"id": 702, "internal_code": "LEASE_RELEASED", "mawf_code": "released", "display_name": "Released", "description": None, "sort_order": 20, "is_active": True, "is_terminal": True},
+                ("TASK_EXECUTION_LEASE_STATUS", "expired"): {"id": 703, "internal_code": "LEASE_EXPIRED", "mawf_code": "expired", "display_name": "Expired", "description": None, "sort_order": 30, "is_active": True, "is_terminal": True},
+                ("TASK_EXECUTION_LEASE_RELEASE_REASON", "completed"): {"id": 801, "internal_code": "LEASE_REASON_COMPLETED", "mawf_code": "completed", "display_name": "Completed", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
+                ("TASK_EXECUTION_LEASE_RELEASE_REASON", "stale_reclaimed"): {"id": 806, "internal_code": "LEASE_REASON_STALE_RECLAIMED", "mawf_code": "stale_reclaimed", "display_name": "Stale Reclaimed", "description": None, "sort_order": 60, "is_active": True, "is_terminal": False},
+            }
+            return values.get((args[0], args[1]))
+        if "FROM planning.tasks t" in query and "WHERE t.mawf_task_id = $1" in query:
+            return {"id": 300, "mawf_task_id": args[0]}
+        if "FROM ops.workflow_runs wr" in query and "JOIN planning.task_workflow_runs" in query:
+            self.workflow_run_arg = args[0]
+            if self.workflow_mismatch:
+                return None
+            return {"id": 400, "run_id": args[0], "context_json": {"mawf_workflow_run_id": "run-a"}}
+        if "FROM ops.mawf_task_execution_leases l" in query and "AND l.released_utc IS NULL" in query:
+            return self.current_open
+        if "INSERT INTO ops.mawf_task_execution_leases" in query:
+            return {"id": self.inserted_lease_id}
+        if "WHERE l.id = $1::uuid" in query:
+            return _lease_row()
+        return None
+
+    async def fetch(self, query, *args):
+        self.fetch_calls.append((query, args))
+        return self.fetch_rows
+
+    async def execute(self, query, *args):
+        self.execute_calls.append((query, args))
+
+
+@pytest.mark.asyncio
+async def test_acquire_task_execution_lease_uses_transaction_task_lock_and_workflow_bridge():
+    pool = LeaseAdminConn()
+    result = await mawf.acquire_task_execution_lease(
+        pool,
+        task_id="task-a",
+        workflow_run_id="run-a",
+        owner_instance_id="worker-1",
+        lease_ttl_seconds=60,
+    )
+
+    task_queries = [
+        query for query, _ in pool.fetchrow_calls
+        if "FROM planning.tasks t" in query and "WHERE t.mawf_task_id = $1" in query
+    ]
+    assert pool.transaction_entered is True
+    assert "FOR UPDATE" in task_queries[0]
+    assert pool.workflow_run_arg == mawf._workflow_run_uuid("run-a")
+    assert result["acquired"] is True
+    assert result["canonical_task_id"] == 300
+
+
+@pytest.mark.asyncio
+async def test_acquire_task_execution_lease_rejects_workflow_task_mismatch():
+    pool = LeaseAdminConn(workflow_mismatch=True)
+
+    with pytest.raises(ValueError, match="Workflow run not linked to task"):
+        await mawf.acquire_task_execution_lease(
+            pool,
+            task_id="task-a",
+            workflow_run_id="run-a",
+            owner_instance_id="worker-1",
+        )
+
+
+@pytest.mark.asyncio
+async def test_acquire_task_execution_lease_denies_active_non_expired_owner():
+    pool = LeaseAdminConn(current_open=_lease_row(expired=False))
+
+    result = await mawf.acquire_task_execution_lease(
+        pool,
+        task_id="task-a",
+        owner_instance_id="worker-2",
+    )
+
+    assert result["acquired"] is False
+    assert result["current_lease"]["owner_instance_id"] == "worker-old"
+    assert not [
+        query for query, _ in pool.fetchrow_calls
+        if "INSERT INTO ops.mawf_task_execution_leases" in query
+    ]
+
+
+@pytest.mark.asyncio
+async def test_acquire_task_execution_lease_enforces_ttl_bounds():
+    with pytest.raises(ValueError, match="lease_ttl_seconds"):
+        await mawf.acquire_task_execution_lease(
+            object(),
+            task_id="task-a",
+            owner_instance_id="worker-1",
+            lease_ttl_seconds=4,
+        )
+    with pytest.raises(ValueError, match="lease_ttl_seconds"):
+        await mawf.acquire_task_execution_lease(
+            object(),
+            task_id="task-a",
+            owner_instance_id="worker-1",
+            lease_ttl_seconds=3601,
+        )
+
+
+@pytest.mark.asyncio
+async def test_stale_reclaim_closes_old_lease_before_new_insert():
+    pool = LeaseAdminConn(current_open=_lease_row(expired=True))
+
+    result = await mawf.acquire_task_execution_lease(
+        pool,
+        task_id="task-a",
+        owner_instance_id="worker-2",
+    )
+
+    assert result["acquired"] is True
+    assert result["stale_reclaimed"] is True
+    reclaim_updates = [
+        args for query, args in pool.execute_calls
+        if "UPDATE ops.mawf_task_execution_leases" in query
+        and "release_reason_value_id" in query
+    ]
+    assert reclaim_updates
+    assert reclaim_updates[0][1:] == (703, 806)
+
+
+@pytest.mark.asyncio
+async def test_list_stale_task_execution_leases_filters_open_active_expired_and_caps_limit():
+    pool = LeaseAdminConn(fetch_rows=[_lease_row(expired=True)])
+
+    result = await mawf.list_stale_task_execution_leases(
+        pool,
+        older_than_seconds=30,
+        limit=999,
+    )
+
+    assert result[0]["task_id"] == "task-a"
+    query, args = pool.fetch_calls[0]
+    assert "l.released_utc IS NULL" in query
+    assert "COALESCE(status.mawf_code, status.internal_code) = 'active'" in query
+    assert args == (30, 500)

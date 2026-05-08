@@ -6,6 +6,7 @@ import json
 import os
 import uuid
 from contextlib import asynccontextmanager
+from typing import Any
 
 import structlog
 from starlette.applications import Starlette
@@ -5194,6 +5195,108 @@ async def mawf_set_workflow_run_status(
         current_phase=current_phase,
         iteration_count=iteration_count,
         error_text=error_text,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_acquire_task_execution_lease")
+async def mawf_acquire_task_execution_lease(
+    task_id: str,
+    owner_instance_id: str,
+    workflow_run_id: str | None = None,
+    owner_user_id: str | None = None,
+    owner_host: str | None = None,
+    owner_process_id: str | None = None,
+    lease_ttl_seconds: int = 60,
+    metadata_json: dict[str, Any] | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Acquire a task-scoped MAWF execution lease."""
+    return await _run_mawf_tool(
+        "mawf_acquire_task_execution_lease",
+        _mawf.acquire_task_execution_lease,
+        write=True,
+        task_id=task_id,
+        owner_instance_id=owner_instance_id,
+        workflow_run_id=workflow_run_id,
+        owner_user_id=owner_user_id,
+        owner_host=owner_host,
+        owner_process_id=owner_process_id,
+        lease_ttl_seconds=lease_ttl_seconds,
+        metadata_json=metadata_json,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_heartbeat_task_execution_lease")
+async def mawf_heartbeat_task_execution_lease(
+    task_id: str,
+    lease_token: str,
+    lease_ttl_seconds: int = 60,
+    correlation_id: str | None = None,
+) -> str:
+    """Extend a matching active MAWF task execution lease."""
+    return await _run_mawf_tool(
+        "mawf_heartbeat_task_execution_lease",
+        _mawf.heartbeat_task_execution_lease,
+        write=True,
+        task_id=task_id,
+        lease_token=lease_token,
+        lease_ttl_seconds=lease_ttl_seconds,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_release_task_execution_lease")
+async def mawf_release_task_execution_lease(
+    task_id: str,
+    lease_token: str,
+    release_reason: str,
+    correlation_id: str | None = None,
+) -> str:
+    """Release a matching active MAWF task execution lease."""
+    return await _run_mawf_tool(
+        "mawf_release_task_execution_lease",
+        _mawf.release_task_execution_lease,
+        write=True,
+        task_id=task_id,
+        lease_token=lease_token,
+        release_reason=release_reason,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_get_task_execution_lease")
+async def mawf_get_task_execution_lease(
+    task_id: str,
+    correlation_id: str | None = None,
+) -> str:
+    """Get the active or latest MAWF task execution lease."""
+    return await _run_mawf_tool(
+        "mawf_get_task_execution_lease",
+        _mawf.get_task_execution_lease,
+        task_id=task_id,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_list_stale_task_execution_leases")
+async def mawf_list_stale_task_execution_leases(
+    older_than_seconds: int = 60,
+    limit: int = 100,
+    correlation_id: str | None = None,
+) -> str:
+    """List open active MAWF task execution leases that are stale."""
+    return await _run_mawf_tool(
+        "mawf_list_stale_task_execution_leases",
+        _mawf.list_stale_task_execution_leases,
+        older_than_seconds=older_than_seconds,
+        limit=limit,
         correlation_id=correlation_id,
     )
 

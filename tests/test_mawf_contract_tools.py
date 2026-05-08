@@ -211,6 +211,73 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
             "error_text": error_text,
         }
 
+    async def fake_acquire_lease(
+        pool,
+        task_id,
+        owner_instance_id,
+        workflow_run_id=None,
+        owner_user_id=None,
+        owner_host=None,
+        owner_process_id=None,
+        lease_ttl_seconds=60,
+        metadata_json=None,
+    ):
+        return {
+            "ok": True,
+            "acquired": True,
+            "task_id": task_id,
+            "workflow_run_id": workflow_run_id,
+            "canonical_task_id": 300,
+            "lease_token": "00000000-0000-0000-0000-000000000001",
+            "expires_utc": "2026-05-08T12:01:00+00:00",
+            "stale_reclaimed": False,
+            "lease": {
+                "task_id": task_id,
+                "owner_instance_id": owner_instance_id,
+                "status_code": "active",
+                "metadata_json": metadata_json,
+            },
+        }
+
+    async def fake_heartbeat_lease(pool, task_id, lease_token, lease_ttl_seconds=60):
+        return {
+            "ok": True,
+            "task_id": task_id,
+            "lease": {
+                "lease_token": lease_token,
+                "status_code": "active",
+                "expires_utc": "2026-05-08T12:02:00+00:00",
+            },
+        }
+
+    async def fake_release_lease(pool, task_id, lease_token, release_reason):
+        return {
+            "ok": True,
+            "task_id": task_id,
+            "lease": {
+                "lease_token": lease_token,
+                "status_code": "released",
+                "release_reason": release_reason,
+            },
+        }
+
+    async def fake_get_lease(pool, task_id):
+        return {
+            "ok": True,
+            "task_id": task_id,
+            "has_active_lease": True,
+            "lease": {"task_id": task_id, "status_code": "active"},
+        }
+
+    async def fake_list_stale_leases(pool, older_than_seconds=60, limit=100):
+        return [
+            {
+                "task_id": "task-a",
+                "status_code": "active",
+                "expires_utc": "2026-05-08T12:00:00+00:00",
+            }
+        ]
+
     async def fake_upsert_artifact(pool, task_id, role_code, artifact_path, content_hash=None, persist_status_code="local_only", artifact_ref_id=None):
         return {"id": artifact_ref_id or artifact_ref_id, "task_id": task_id, "role_code": role_code, "artifact_path": artifact_path, "persist_status_code": persist_status_code}
 
@@ -239,6 +306,11 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
     monkeypatch.setattr(server._mawf, "get_workflow_run", fake_get_workflow_run)
     monkeypatch.setattr(server._mawf, "list_workflow_runs", fake_list_workflow_runs)
     monkeypatch.setattr(server._mawf, "set_workflow_run_status", fake_set_workflow_run_status)
+    monkeypatch.setattr(server._mawf, "acquire_task_execution_lease", fake_acquire_lease)
+    monkeypatch.setattr(server._mawf, "heartbeat_task_execution_lease", fake_heartbeat_lease)
+    monkeypatch.setattr(server._mawf, "release_task_execution_lease", fake_release_lease)
+    monkeypatch.setattr(server._mawf, "get_task_execution_lease", fake_get_lease)
+    monkeypatch.setattr(server._mawf, "list_stale_task_execution_leases", fake_list_stale_leases)
     monkeypatch.setattr(server._mawf, "upsert_artifact_ref", fake_upsert_artifact)
     monkeypatch.setattr(server._mawf, "get_artifact_ref", fake_get_artifact)
     monkeypatch.setattr(server._mawf, "list_artifact_refs", fake_list_artifacts)
@@ -282,6 +354,32 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
     assert updated_run["status_code"] == "running"
     assert updated_run["current_phase"] == "implement"
     assert updated_run["iteration_count"] == 2
+    lease = _payload(
+        await server.mawf_acquire_task_execution_lease(
+            "task-a",
+            "worker-1",
+            workflow_run_id="raw-run-a",
+            lease_ttl_seconds=60,
+            metadata_json={"slot": "primary"},
+        )
+    )["data"]
+    assert lease["acquired"] is True
+    assert lease["canonical_task_id"] == 300
+    assert lease["lease"]["metadata_json"]["slot"] == "primary"
+    heartbeat = _payload(
+        await server.mawf_heartbeat_task_execution_lease(
+            "task-a", "00000000-0000-0000-0000-000000000001"
+        )
+    )["data"]
+    assert heartbeat["lease"]["status_code"] == "active"
+    release = _payload(
+        await server.mawf_release_task_execution_lease(
+            "task-a", "00000000-0000-0000-0000-000000000001", "completed"
+        )
+    )["data"]
+    assert release["lease"]["release_reason"] == "completed"
+    assert _payload(await server.mawf_get_task_execution_lease("task-a"))["data"]["has_active_lease"] is True
+    assert _payload(await server.mawf_list_stale_task_execution_leases())["data"]["items"][0]["task_id"] == "task-a"
     artifact = _payload(await server.mawf_upsert_artifact_ref("task-a", "task_ledger", "Tasks/task-a/plan.md", artifact_ref_id=artifact_ref_id))["data"]
     assert artifact["role_code"] == "task_ledger"
     assert _payload(await server.mawf_get_artifact_ref(artifact_ref_id=artifact_ref_id))["data"]["id"] == artifact_ref_id
@@ -315,3 +413,65 @@ async def test_mawf_reference_type_errors_surface_through_mcp(monkeypatch, mawf_
     assert "TASK_STATUS" in task_payload["error"]
     assert artifact_payload["status"] == "error"
     assert "ARTIFACT_ROLE" in artifact_payload["error"]
+
+
+@pytest.mark.asyncio
+async def test_mawf_lease_write_tools_use_remote_write_guard(monkeypatch, mawf_env):
+    blocked_tools = []
+
+    def fake_guard(settings, tool_name):
+        blocked_tools.append(tool_name)
+        return server.WorkflowResult(
+            run_id="guarded",
+            tool_name=tool_name,
+            status="error",
+            error=f"blocked {tool_name}",
+        )
+
+    monkeypatch.setattr(server, "check_remote_write_guard", fake_guard)
+
+    acquire = _payload(await server.mawf_acquire_task_execution_lease("task-a", "worker-1"))
+    heartbeat = _payload(
+        await server.mawf_heartbeat_task_execution_lease(
+            "task-a", "00000000-0000-0000-0000-000000000001"
+        )
+    )
+    release = _payload(
+        await server.mawf_release_task_execution_lease(
+            "task-a", "00000000-0000-0000-0000-000000000001", "completed"
+        )
+    )
+
+    assert acquire["status"] == "error"
+    assert heartbeat["status"] == "error"
+    assert release["status"] == "error"
+    assert blocked_tools == [
+        "mawf_acquire_task_execution_lease",
+        "mawf_heartbeat_task_execution_lease",
+        "mawf_release_task_execution_lease",
+    ]
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    "message",
+    [
+        "No active lease for task: task-a",
+        "Lease expired",
+        "Lease is released",
+        "Lease token mismatch",
+    ],
+)
+async def test_mawf_heartbeat_lease_errors_surface_through_mcp(monkeypatch, mawf_env, message):
+    async def fake_heartbeat(pool, task_id, lease_token, lease_ttl_seconds=60):
+        raise ValueError(message)
+
+    monkeypatch.setattr(server._mawf, "heartbeat_task_execution_lease", fake_heartbeat)
+
+    payload = _payload(
+        await server.mawf_heartbeat_task_execution_lease(
+            "task-a", "00000000-0000-0000-0000-000000000001"
+        )
+    )
+    assert payload["status"] == "error"
+    assert payload["error"] == message
