@@ -328,18 +328,40 @@ Stale recovery:
 
 | Tool | Purpose |
 |---|---|
-| `mawf_upsert_artifact_ref` | Create/update one artifact ref for a task and role. |
-| `mawf_get_artifact_ref` | Read by artifact UUID, or by `task_id` plus `role_code`. |
+| `mawf_upsert_artifact_ref` | Create/update one artifact ref for a task and stable `artifact_key`. |
+| `mawf_get_artifact_ref` | Read by artifact UUID, by `task_id` plus `artifact_key`, or by singleton `task_id` plus `role_code`. |
 | `mawf_list_artifact_refs` | List artifact refs for a task. |
 | `mawf_set_artifact_persist_status` | Update persistence status. |
 
-The server enforces one artifact ref per `(task_id, role_code)`. Upserting `task_ledger` for the same task updates that role's artifact ref rather than creating duplicates.
+The server enforces one artifact ref per `(task_id, artifact_key)`. If `artifact_key` is omitted, it defaults to `role_code` for backward-compatible singleton refs. Use explicit keys for workflow, phase, generated artifact, and feedback refs.
 
-Use these roles for the initial integration:
+Singleton role keys:
 
 - `initial_prompt`
 - `normalized_prompt`
 - `task_ledger`
+
+Additional durable-reference roles:
+
+- `workflow_ledger`
+- `workflow_state`
+- `phase_ledger`
+- `telemetry_jsonl`
+- `telemetry_summary`
+- `generated_artifact`
+- `feedback_payload`
+
+Recommended multi-ref keys:
+
+- `workflow:<workflow_run_id>:ledger`
+- `workflow:<workflow_run_id>:state`
+- `phase:<workflow_run_id>:<phase_id>:ledger`
+- `phase:<workflow_run_id>:<phase_id>:telemetry_jsonl`
+- `phase:<workflow_run_id>:<phase_id>:telemetry_summary`
+- `artifact:<workflow_run_id>:<artifact_name>`
+- `artifact:<workflow_run_id>:<phase_id>:<artifact_name>`
+- `feedback:<workflow_run_id>:<feedback_name>`
+- `feedback:<workflow_run_id>:<phase_id>:<feedback_name>`
 
 Use persistence status as follows:
 

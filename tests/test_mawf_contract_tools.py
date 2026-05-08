@@ -278,14 +278,14 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
             }
         ]
 
-    async def fake_upsert_artifact(pool, task_id, role_code, artifact_path, content_hash=None, persist_status_code="local_only", artifact_ref_id=None):
-        return {"id": artifact_ref_id or artifact_ref_id, "task_id": task_id, "role_code": role_code, "artifact_path": artifact_path, "persist_status_code": persist_status_code}
+    async def fake_upsert_artifact(pool, task_id, role_code, artifact_path, content_hash=None, persist_status_code="local_only", artifact_ref_id=None, artifact_key=None):
+        return {"id": artifact_ref_id or artifact_ref_id, "task_id": task_id, "artifact_key": artifact_key or role_code, "role_code": role_code, "artifact_path": artifact_path, "persist_status_code": persist_status_code}
 
-    async def fake_get_artifact(pool, artifact_ref_id=None, task_id=None, role_code=None):
-        return {"id": artifact_ref_id, "task_id": task_id, "role_code": role_code}
+    async def fake_get_artifact(pool, artifact_ref_id=None, task_id=None, role_code=None, artifact_key=None):
+        return {"id": artifact_ref_id, "task_id": task_id, "artifact_key": artifact_key, "role_code": role_code}
 
     async def fake_list_artifacts(pool, task_id):
-        return [{"id": artifact_ref_id, "task_id": task_id}]
+        return [{"id": artifact_ref_id, "task_id": task_id, "artifact_key": "task_ledger"}]
 
     async def fake_set_artifact_status(pool, artifact_ref_id, persist_status_code):
         return {"id": artifact_ref_id, "persist_status_code": persist_status_code}
@@ -382,7 +382,11 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
     assert _payload(await server.mawf_list_stale_task_execution_leases())["data"]["items"][0]["task_id"] == "task-a"
     artifact = _payload(await server.mawf_upsert_artifact_ref("task-a", "task_ledger", "Tasks/task-a/plan.md", artifact_ref_id=artifact_ref_id))["data"]
     assert artifact["role_code"] == "task_ledger"
+    assert artifact["artifact_key"] == "task_ledger"
+    keyed_artifact = _payload(await server.mawf_upsert_artifact_ref("task-a", "workflow_ledger", "Tasks/task-a/workflow-ledger.json", artifact_key="workflow:run-a:ledger"))["data"]
+    assert keyed_artifact["artifact_key"] == "workflow:run-a:ledger"
     assert _payload(await server.mawf_get_artifact_ref(artifact_ref_id=artifact_ref_id))["data"]["id"] == artifact_ref_id
+    assert _payload(await server.mawf_get_artifact_ref(task_id="task-a", artifact_key="workflow:run-a:ledger"))["data"]["artifact_key"] == "workflow:run-a:ledger"
     assert _payload(await server.mawf_list_artifact_refs("task-a"))["data"]["items"][0]["id"] == artifact_ref_id
     assert _payload(await server.mawf_set_artifact_persist_status(artifact_ref_id, "persisted"))["data"]["persist_status_code"] == "persisted"
     assert _payload(await server.mawf_get_task_memory_bundle("task-a"))["data"]["task"]["id"] == "task-a"

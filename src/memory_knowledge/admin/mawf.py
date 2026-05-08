@@ -1505,6 +1505,7 @@ def _artifact_ref(row: Any) -> dict[str, Any]:
     return {
         "id": str(row["id"]),
         "task_id": row["mawf_task_id"],
+        "artifact_key": row["artifact_key"],
         "role_catalog_value_id": row["role_id"],
         "role_code": row["role_code"],
         "artifact_path": row["artifact_path"],
@@ -1524,17 +1525,22 @@ async def upsert_artifact_ref(
     content_hash: str | None = None,
     persist_status_code: str = DEFAULT_ARTIFACT_PERSIST_STATUS,
     artifact_ref_id: str | None = None,
+    artifact_key: str | None = None,
 ) -> dict[str, Any]:
     role_id = await _reference_id(pool, "ARTIFACT_ROLE", role_code)
     persist_status_id = await _reference_id(pool, "ARTIFACT_PERSIST_STATUS", persist_status_code)
+    effective_artifact_key = artifact_key or role_code
+    if not effective_artifact_key.strip():
+        raise ValueError("artifact_key must not be blank")
     row = await pool.fetchrow(
         """
         INSERT INTO planning.mawf_artifact_refs (
-            id, mawf_task_id, role_id, artifact_path, content_hash, persist_status_id
+            id, mawf_task_id, artifact_key, role_id, artifact_path, content_hash, persist_status_id
         )
-        VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6)
-        ON CONFLICT (mawf_task_id, role_id) DO UPDATE SET
+        VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6, $7)
+        ON CONFLICT (mawf_task_id, artifact_key) DO UPDATE SET
             artifact_path = EXCLUDED.artifact_path,
+            role_id = EXCLUDED.role_id,
             content_hash = EXCLUDED.content_hash,
             persist_status_id = EXCLUDED.persist_status_id,
             updated_utc = NOW()
@@ -1542,6 +1548,7 @@ async def upsert_artifact_ref(
         """,
         uuid.UUID(artifact_ref_id) if artifact_ref_id else None,
         task_id,
+        effective_artifact_key,
         role_id,
         artifact_path,
         content_hash,
@@ -1555,34 +1562,53 @@ async def get_artifact_ref(
     artifact_ref_id: str | None = None,
     task_id: str | None = None,
     role_code: str | None = None,
+    artifact_key: str | None = None,
 ) -> dict[str, Any]:
+    if artifact_ref_id:
+        row = await pool.fetchrow(
+            """
+            SELECT ar.id, ar.mawf_task_id, ar.artifact_key, ar.role_id, ar.artifact_path,
+                   ar.content_hash, ar.persist_status_id, ar.created_utc, ar.updated_utc,
+                   COALESCE(role.mawf_code, role.internal_code) AS role_code,
+                   COALESCE(ps.mawf_code, ps.internal_code) AS persist_status_code
+            FROM planning.mawf_artifact_refs ar
+            JOIN core.reference_values role ON role.id = ar.role_id
+            JOIN core.reference_values ps ON ps.id = ar.persist_status_id
+            WHERE ar.id = $1::uuid
+            """,
+            uuid.UUID(artifact_ref_id),
+        )
+        if row is None:
+            raise ValueError("Artifact ref not found")
+        return _artifact_ref(row)
+
+    if task_id and artifact_key:
+        row = await pool.fetchrow(
+            """
+            SELECT ar.id, ar.mawf_task_id, ar.artifact_key, ar.role_id, ar.artifact_path,
+                   ar.content_hash, ar.persist_status_id, ar.created_utc, ar.updated_utc,
+                   COALESCE(role.mawf_code, role.internal_code) AS role_code,
+                   COALESCE(ps.mawf_code, ps.internal_code) AS persist_status_code
+            FROM planning.mawf_artifact_refs ar
+            JOIN core.reference_values role ON role.id = ar.role_id
+            JOIN core.reference_values ps ON ps.id = ar.persist_status_id
+            WHERE ar.mawf_task_id = $1
+              AND ar.artifact_key = $2
+            """,
+            task_id,
+            artifact_key,
+        )
+        if row is None:
+            raise ValueError("Artifact ref not found")
+        return _artifact_ref(row)
+
+    if not (task_id and role_code):
+        raise ValueError("artifact_ref_id or task_id with artifact_key or role_code is required")
+
     role_id = await _reference_id(pool, "ARTIFACT_ROLE", role_code) if role_code else None
-    row = await pool.fetchrow(
-        """
-        SELECT ar.id, ar.mawf_task_id, ar.role_id, ar.artifact_path,
-               ar.content_hash, ar.persist_status_id, ar.created_utc, ar.updated_utc,
-               COALESCE(role.mawf_code, role.internal_code) AS role_code,
-               COALESCE(ps.mawf_code, ps.internal_code) AS persist_status_code
-        FROM planning.mawf_artifact_refs ar
-        JOIN core.reference_values role ON role.id = ar.role_id
-        JOIN core.reference_values ps ON ps.id = ar.persist_status_id
-        WHERE ($1::uuid IS NULL OR ar.id = $1::uuid)
-          AND ($2::text IS NULL OR ar.mawf_task_id = $2)
-          AND ($3::bigint IS NULL OR ar.role_id = $3)
-        """,
-        uuid.UUID(artifact_ref_id) if artifact_ref_id else None,
-        task_id,
-        role_id,
-    )
-    if row is None:
-        raise ValueError("Artifact ref not found")
-    return _artifact_ref(row)
-
-
-async def list_artifact_refs(pool: asyncpg.Pool, task_id: str) -> list[dict[str, Any]]:
     rows = await pool.fetch(
         """
-        SELECT ar.id, ar.mawf_task_id, ar.role_id, ar.artifact_path,
+        SELECT ar.id, ar.mawf_task_id, ar.artifact_key, ar.role_id, ar.artifact_path,
                ar.content_hash, ar.persist_status_id, ar.created_utc, ar.updated_utc,
                COALESCE(role.mawf_code, role.internal_code) AS role_code,
                COALESCE(ps.mawf_code, ps.internal_code) AS persist_status_code
@@ -1590,7 +1616,32 @@ async def list_artifact_refs(pool: asyncpg.Pool, task_id: str) -> list[dict[str,
         JOIN core.reference_values role ON role.id = ar.role_id
         JOIN core.reference_values ps ON ps.id = ar.persist_status_id
         WHERE ar.mawf_task_id = $1
-        ORDER BY role.sort_order, ar.created_utc
+          AND ar.role_id = $2
+        ORDER BY ar.created_utc
+        LIMIT 2
+        """,
+        task_id,
+        role_id,
+    )
+    if not rows:
+        raise ValueError("Artifact ref not found")
+    if len(rows) > 1:
+        raise ValueError("Multiple artifact refs match task_id and role_code; provide artifact_ref_id or artifact_key")
+    return _artifact_ref(rows[0])
+
+
+async def list_artifact_refs(pool: asyncpg.Pool, task_id: str) -> list[dict[str, Any]]:
+    rows = await pool.fetch(
+        """
+        SELECT ar.id, ar.mawf_task_id, ar.artifact_key, ar.role_id, ar.artifact_path,
+               ar.content_hash, ar.persist_status_id, ar.created_utc, ar.updated_utc,
+               COALESCE(role.mawf_code, role.internal_code) AS role_code,
+               COALESCE(ps.mawf_code, ps.internal_code) AS persist_status_code
+        FROM planning.mawf_artifact_refs ar
+        JOIN core.reference_values role ON role.id = ar.role_id
+        JOIN core.reference_values ps ON ps.id = ar.persist_status_id
+        WHERE ar.mawf_task_id = $1
+        ORDER BY role.sort_order, ar.artifact_key, ar.created_utc
         """,
         task_id,
     )

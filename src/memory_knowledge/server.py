@@ -5311,6 +5311,7 @@ async def mawf_upsert_artifact_ref(
     persist_status_code: str = "local_only",
     artifact_ref_id: str | None = None,
     correlation_id: str | None = None,
+    artifact_key: str | None = None,
 ) -> str:
     """Create or update a MAWF task artifact ref."""
     return await _run_mawf_tool(
@@ -5323,6 +5324,7 @@ async def mawf_upsert_artifact_ref(
         content_hash=content_hash,
         persist_status_code=persist_status_code,
         artifact_ref_id=artifact_ref_id,
+        artifact_key=artifact_key,
         correlation_id=correlation_id,
     )
 
@@ -5334,6 +5336,7 @@ async def mawf_get_artifact_ref(
     task_id: str | None = None,
     role_code: str | None = None,
     correlation_id: str | None = None,
+    artifact_key: str | None = None,
 ) -> str:
     """Get one MAWF artifact ref."""
     return await _run_mawf_tool(
@@ -5342,6 +5345,7 @@ async def mawf_get_artifact_ref(
         artifact_ref_id=artifact_ref_id,
         task_id=task_id,
         role_code=role_code,
+        artifact_key=artifact_key,
         correlation_id=correlation_id,
     )
 

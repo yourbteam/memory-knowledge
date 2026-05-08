@@ -3,6 +3,7 @@ from pathlib import Path
 
 MIGRATION = Path("migrations/versions/016_mawf_contract.py")
 LEASE_MIGRATION = Path("migrations/versions/017_mawf_task_execution_leases.py")
+ARTIFACT_KEY_MIGRATION = Path("migrations/versions/018_mawf_artifact_ref_keys.py")
 
 
 def test_mawf_migration_contains_required_schema_objects():
@@ -122,6 +123,44 @@ def test_mawf_lease_migration_stays_coordination_only():
         "phase_ledger",
         "artifact_content",
         "polling_state",
+    ]
+    for snippet in forbidden:
+        assert snippet not in text
+
+
+def test_mawf_artifact_key_migration_contains_minimal_expansion():
+    text = ARTIFACT_KEY_MIGRATION.read_text()
+    required = [
+        "ALTER TABLE planning.mawf_artifact_refs ADD COLUMN IF NOT EXISTS artifact_key TEXT",
+        "SET artifact_key = COALESCE(role.mawf_code, role.internal_code)",
+        "ALTER COLUMN artifact_key SET NOT NULL",
+        "DROP CONSTRAINT IF EXISTS uq_mawf_artifact_refs_task_role",
+        "ux_mawf_artifact_refs_task_artifact_key",
+        "ON planning.mawf_artifact_refs(mawf_task_id, artifact_key)",
+        "ix_mawf_artifact_refs_task_role",
+        "workflow_ledger",
+        "workflow_state",
+        "phase_ledger",
+        "telemetry_jsonl",
+        "telemetry_summary",
+        "generated_artifact",
+        "feedback_payload",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_mawf_artifact_key_migration_stays_reference_only():
+    text = ARTIFACT_KEY_MIGRATION.read_text().lower()
+    forbidden = [
+        "workflow_run_id",
+        "phase_id",
+        "metadata_json",
+        "content_text",
+        "artifact_content",
+        "create table if not exists ops.mawf_phase",
+        "create table if not exists ops.phase",
+        "execution_history",
     ]
     for snippet in forbidden:
         assert snippet not in text

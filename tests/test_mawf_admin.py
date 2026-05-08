@@ -51,6 +51,59 @@ class MawfAdminPool:
         self.execute_calls.append((query, args))
 
 
+class ArtifactAdminPool:
+    def __init__(self, *, role_rows=None):
+        self.fetchrow_calls: list[tuple[str, tuple]] = []
+        self.fetch_calls: list[tuple[str, tuple]] = []
+        self.role_rows = role_rows or []
+        self.artifact_id = uuid.uuid4()
+
+    async def fetchrow(self, query, *args):
+        self.fetchrow_calls.append((query, args))
+        if "FROM core.reference_values rv" in query and "rt.internal_code = $1" in query:
+            values = {
+                ("ARTIFACT_ROLE", "task_ledger"): {"id": 12, "internal_code": "ARTIFACT_TASK_LEDGER", "mawf_code": "task_ledger", "display_name": "Task Ledger", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
+                ("ARTIFACT_ROLE", "workflow_ledger"): {"id": 13, "internal_code": "ARTIFACT_WORKFLOW_LEDGER", "mawf_code": "workflow_ledger", "display_name": "Workflow Ledger", "description": None, "sort_order": 20, "is_active": True, "is_terminal": False},
+                ("ARTIFACT_PERSIST_STATUS", "local_only"): {"id": 60, "internal_code": "ARTIFACT_LOCAL_ONLY", "mawf_code": "local_only", "display_name": "Local Only", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
+            }
+            return values.get((args[0], args[1]))
+        if "INSERT INTO planning.mawf_artifact_refs" in query:
+            return {"id": self.artifact_id}
+        if "WHERE ar.id = $1::uuid" in query:
+            return {
+                "id": args[0],
+                "mawf_task_id": "task-a",
+                "artifact_key": "workflow:run-a:ledger",
+                "role_id": 13,
+                "role_code": "workflow_ledger",
+                "artifact_path": "repo://workflow-ledger.json",
+                "content_hash": None,
+                "persist_status_id": 60,
+                "persist_status_code": "local_only",
+                "created_utc": None,
+                "updated_utc": None,
+            }
+        if "WHERE ar.mawf_task_id = $1" in query and "AND ar.artifact_key = $2" in query:
+            return {
+                "id": self.artifact_id,
+                "mawf_task_id": args[0],
+                "artifact_key": args[1],
+                "role_id": 13,
+                "role_code": "workflow_ledger",
+                "artifact_path": "repo://workflow-ledger.json",
+                "content_hash": None,
+                "persist_status_id": 60,
+                "persist_status_code": "local_only",
+                "created_utc": None,
+                "updated_utc": None,
+            }
+        return None
+
+    async def fetch(self, query, *args):
+        self.fetch_calls.append((query, args))
+        return self.role_rows
+
+
 @pytest.mark.asyncio
 async def test_deactivate_catalog_value_preserves_catalog_type_id():
     pool = MawfAdminPool()
@@ -79,6 +132,63 @@ async def test_upsert_task_links_project_repository_before_task_write():
     ]
     assert link_calls
     assert link_calls[0][1] == (100, 200)
+
+
+@pytest.mark.asyncio
+async def test_upsert_artifact_ref_uses_artifact_key_for_conflict_identity():
+    pool = ArtifactAdminPool()
+    result = await mawf.upsert_artifact_ref(
+        pool,
+        task_id="task-a",
+        role_code="workflow_ledger",
+        artifact_path="repo://workflow-ledger.json",
+        artifact_key="workflow:run-a:ledger",
+    )
+
+    insert_query, insert_args = [
+        call for call in pool.fetchrow_calls if "INSERT INTO planning.mawf_artifact_refs" in call[0]
+    ][0]
+    assert "artifact_key" in insert_query
+    assert "ON CONFLICT (mawf_task_id, artifact_key)" in insert_query
+    assert insert_args[2] == "workflow:run-a:ledger"
+    assert result["artifact_key"] == "workflow:run-a:ledger"
+
+
+@pytest.mark.asyncio
+async def test_upsert_artifact_ref_defaults_artifact_key_to_role_code():
+    pool = ArtifactAdminPool()
+    await mawf.upsert_artifact_ref(
+        pool,
+        task_id="task-a",
+        role_code="task_ledger",
+        artifact_path="repo://task-ledger.json",
+    )
+
+    _, insert_args = [
+        call for call in pool.fetchrow_calls if "INSERT INTO planning.mawf_artifact_refs" in call[0]
+    ][0]
+    assert insert_args[2] == "task_ledger"
+
+
+@pytest.mark.asyncio
+async def test_get_artifact_ref_rejects_ambiguous_role_lookup():
+    row = {
+        "id": uuid.uuid4(),
+        "mawf_task_id": "task-a",
+        "artifact_key": "workflow:run-a:ledger",
+        "role_id": 13,
+        "role_code": "workflow_ledger",
+        "artifact_path": "repo://workflow-ledger.json",
+        "content_hash": None,
+        "persist_status_id": 60,
+        "persist_status_code": "local_only",
+        "created_utc": None,
+        "updated_utc": None,
+    }
+    pool = ArtifactAdminPool(role_rows=[row, {**row, "id": uuid.uuid4(), "artifact_key": "workflow:run-b:ledger"}])
+
+    with pytest.raises(ValueError, match="provide artifact_ref_id or artifact_key"):
+        await mawf.get_artifact_ref(pool, task_id="task-a", role_code="workflow_ledger")
 
 
 def _lease_row(*, status_code="active", expired=False, released=False, reason=None):
