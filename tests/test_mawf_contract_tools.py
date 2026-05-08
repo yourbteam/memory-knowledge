@@ -195,6 +195,30 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
     async def fake_list_workflow_runs(pool, task_id):
         return [{"workflow_run_id": "run-a", "task_id": task_id}]
 
+    async def fake_list_workflow_runs_by_user(
+        pool,
+        owner_user_id,
+        workflow_name=None,
+        status_code=None,
+        terminal=None,
+        active_only=False,
+        limit=50,
+        offset=0,
+    ):
+        return [
+            {
+                "workflow_run_id": "run-a",
+                "task_id": "task-a",
+                "owner_user_id": owner_user_id,
+                "workflow_name": workflow_name,
+                "status_code": status_code or "running",
+                "is_terminal": terminal if terminal is not None else False,
+                "active_only": active_only,
+                "limit": limit,
+                "offset": offset,
+            }
+        ]
+
     async def fake_set_workflow_run_status(
         pool,
         workflow_run_id,
@@ -305,6 +329,7 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
     monkeypatch.setattr(server._mawf, "upsert_workflow_run", fake_upsert_workflow_run)
     monkeypatch.setattr(server._mawf, "get_workflow_run", fake_get_workflow_run)
     monkeypatch.setattr(server._mawf, "list_workflow_runs", fake_list_workflow_runs)
+    monkeypatch.setattr(server._mawf, "list_workflow_runs_by_user", fake_list_workflow_runs_by_user)
     monkeypatch.setattr(server._mawf, "set_workflow_run_status", fake_set_workflow_run_status)
     monkeypatch.setattr(server._mawf, "acquire_task_execution_lease", fake_acquire_lease)
     monkeypatch.setattr(server._mawf, "heartbeat_task_execution_lease", fake_heartbeat_lease)
@@ -343,6 +368,24 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
     assert run["workflow_ledger_ref"] == "repo://ledger.json"
     assert _payload(await server.mawf_get_workflow_run("raw-run-a"))["data"]["task_id"] == "task-a"
     assert _payload(await server.mawf_list_workflow_runs("task-a"))["data"]["items"][0]["workflow_run_id"] == "run-a"
+    runs_by_user = _payload(
+        await server.mawf_list_workflow_runs_by_user(
+            user_id,
+            workflow_name="full-task-workflow",
+            status_code="running",
+            terminal=False,
+            active_only=True,
+            limit=999,
+            offset=10,
+        )
+    )["data"]["items"][0]
+    assert runs_by_user["owner_user_id"] == user_id
+    assert runs_by_user["workflow_name"] == "full-task-workflow"
+    assert runs_by_user["status_code"] == "running"
+    assert runs_by_user["is_terminal"] is False
+    assert runs_by_user["active_only"] is True
+    assert runs_by_user["limit"] == 999
+    assert runs_by_user["offset"] == 10
     updated_run = _payload(
         await server.mawf_set_workflow_run_status(
             "raw-run-a",
@@ -454,6 +497,28 @@ async def test_mawf_lease_write_tools_use_remote_write_guard(monkeypatch, mawf_e
         "mawf_heartbeat_task_execution_lease",
         "mawf_release_task_execution_lease",
     ]
+
+
+@pytest.mark.asyncio
+async def test_mawf_list_workflow_runs_by_user_is_read_only(monkeypatch, mawf_env):
+    async def fake_list_by_user(pool, owner_user_id, **kwargs):
+        return [{"workflow_run_id": "run-a", "owner_user_id": owner_user_id, **kwargs}]
+
+    def fail_guard(settings, tool_name):
+        raise AssertionError(f"write guard should not run for {tool_name}")
+
+    monkeypatch.setattr(server._mawf, "list_workflow_runs_by_user", fake_list_by_user)
+    monkeypatch.setattr(server, "check_remote_write_guard", fail_guard)
+
+    payload = _payload(
+        await server.mawf_list_workflow_runs_by_user(
+            "00000000-0000-0000-0000-000000000123",
+            active_only=True,
+        )
+    )
+
+    assert payload["status"] == "success"
+    assert payload["data"]["items"][0]["active_only"] is True
 
 
 @pytest.mark.asyncio

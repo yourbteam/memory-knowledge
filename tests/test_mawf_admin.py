@@ -104,6 +104,54 @@ class ArtifactAdminPool:
         return self.role_rows
 
 
+class WorkflowRunsByUserPool:
+    def __init__(self, *, user_exists=True, run_rows=None):
+        self.fetchrow_calls: list[tuple[str, tuple]] = []
+        self.fetch_calls: list[tuple[str, tuple]] = []
+        self.user_exists = user_exists
+        self.run_rows = run_rows or []
+
+    async def fetchrow(self, query, *args):
+        self.fetchrow_calls.append((query, args))
+        if "SELECT id FROM core.users WHERE id = $1::uuid" in query:
+            return {"id": args[0]} if self.user_exists else None
+        if "FROM core.reference_values rv" in query and "rt.internal_code = $1" in query:
+            values = {
+                ("WORKFLOW_RUN_STATUS", "RUN_RUNNING"): {"id": 901, "internal_code": "RUN_RUNNING", "mawf_code": "running", "display_name": "Running", "description": None, "sort_order": 30, "is_active": True, "is_terminal": False},
+                ("WORKFLOW_RUN_STATUS", "running"): {"id": 901, "internal_code": "RUN_RUNNING", "mawf_code": "running", "display_name": "Running", "description": None, "sort_order": 30, "is_active": True, "is_terminal": False},
+            }
+            return values.get((args[0], args[1]))
+        return None
+
+    async def fetch(self, query, *args):
+        self.fetch_calls.append((query, args))
+        return self.run_rows
+
+
+def _workflow_run_user_row(*, status_code="RUN_RUNNING", is_terminal=False):
+    now = datetime(2026, 5, 8, 12, 0, tzinfo=timezone.utc)
+    return {
+        "run_id": mawf._workflow_run_uuid("run-a"),
+        "mawf_task_id": "task-a",
+        "task_title": "Task A",
+        "owner_user_id": uuid.UUID("00000000-0000-0000-0000-000000000123"),
+        "workflow_name": "full-task-workflow",
+        "context_json": {
+            "mawf_workflow_run_id": "run-a",
+            "mawf_attempt": 2,
+            "workflow_ledger_ref": "repo://ledger.json",
+            "workflow_state_ref": "repo://state.json",
+        },
+        "status_code": status_code,
+        "status_display_name": "Running",
+        "is_terminal": is_terminal,
+        "actor_email": "user@example.com",
+        "started_utc": now - timedelta(minutes=10),
+        "completed_utc": None,
+        "updated_utc": now,
+    }
+
+
 @pytest.mark.asyncio
 async def test_deactivate_catalog_value_preserves_catalog_type_id():
     pool = MawfAdminPool()
@@ -189,6 +237,106 @@ async def test_get_artifact_ref_rejects_ambiguous_role_lookup():
 
     with pytest.raises(ValueError, match="provide artifact_ref_id or artifact_key"):
         await mawf.get_artifact_ref(pool, task_id="task-a", role_code="workflow_ledger")
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_runs_by_user_validates_owner_and_returns_index_rows():
+    owner_user_id = "00000000-0000-0000-0000-000000000123"
+    pool = WorkflowRunsByUserPool(run_rows=[_workflow_run_user_row()])
+
+    result = await mawf.list_workflow_runs_by_user(
+        pool,
+        owner_user_id=owner_user_id,
+        workflow_name="full-task-workflow",
+        status_code="running",
+        terminal=False,
+        limit=999,
+        offset=5,
+    )
+
+    query, args = pool.fetch_calls[0]
+    assert "planning.tasks t" in query
+    assert "planning.task_workflow_runs" in query
+    assert "ops.workflow_runs wr" in query
+    assert "workflow_phase" not in query
+    assert "workflow_artifacts" not in query
+    assert args[0] == uuid.UUID(owner_user_id)
+    assert args[1] == "full-task-workflow"
+    assert args[2] == 901
+    assert args[3] is False
+    assert args[6] == 500
+    assert args[7] == 5
+    assert result[0]["workflow_run_id"] == "run-a"
+    assert result[0]["canonical_run_id"] == str(mawf._workflow_run_uuid("run-a"))
+    assert result[0]["task_id"] == "task-a"
+    assert result[0]["task_title"] == "Task A"
+    assert result[0]["owner_user_id"] == owner_user_id
+    assert result[0]["attempt"] == 2
+    assert result[0]["status_code"] == "running"
+    assert result[0]["workflow_ledger_ref"] == "repo://ledger.json"
+    assert "current_phase" not in result[0]
+    assert "error_text" not in result[0]
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_runs_by_user_active_only_conflict_and_offset_validation():
+    pool = WorkflowRunsByUserPool()
+
+    with pytest.raises(ValueError, match="conflicts"):
+        await mawf.list_workflow_runs_by_user(
+            pool,
+            owner_user_id="00000000-0000-0000-0000-000000000123",
+            active_only=True,
+            terminal=True,
+        )
+    with pytest.raises(ValueError, match="offset"):
+        await mawf.list_workflow_runs_by_user(
+            pool,
+            owner_user_id="00000000-0000-0000-0000-000000000123",
+            offset=-1,
+        )
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_runs_by_user_missing_user_and_invalid_status_fail_clearly():
+    with pytest.raises(ValueError, match="Invalid owner_user_id"):
+        await mawf.list_workflow_runs_by_user(
+            WorkflowRunsByUserPool(),
+            owner_user_id="not-a-uuid",
+        )
+    with pytest.raises(ValueError, match="MAWF user not found"):
+        await mawf.list_workflow_runs_by_user(
+            WorkflowRunsByUserPool(user_exists=False),
+            owner_user_id="00000000-0000-0000-0000-000000000123",
+        )
+    with pytest.raises(ValueError, match="Invalid WORKFLOW_RUN_STATUS value"):
+        await mawf.list_workflow_runs_by_user(
+            WorkflowRunsByUserPool(),
+            owner_user_id="00000000-0000-0000-0000-000000000123",
+            status_code="bogus",
+        )
+
+
+@pytest.mark.asyncio
+async def test_list_workflow_runs_by_user_active_only_uses_required_statuses_and_ordering():
+    pool = WorkflowRunsByUserPool()
+    await mawf.list_workflow_runs_by_user(
+        pool,
+        owner_user_id="00000000-0000-0000-0000-000000000123",
+        active_only=True,
+    )
+
+    query, args = pool.fetch_calls[0]
+    assert set(args[5]) == {
+        "RUN_PENDING",
+        "RUN_RUNNING",
+        "RUN_WAITING_FOR_FEEDBACK",
+        "RUN_RESUME_PENDING",
+    }
+    assert "rv.is_terminal = FALSE THEN 0 ELSE 1 END" in query
+    assert "wr.updated_utc DESC" in query
+    assert "wr.started_utc DESC" in query
+    assert "mawf_attempt" in query
 
 
 def _lease_row(*, status_code="active", expired=False, released=False, reason=None):

@@ -4,6 +4,7 @@ from pathlib import Path
 MIGRATION = Path("migrations/versions/016_mawf_contract.py")
 LEASE_MIGRATION = Path("migrations/versions/017_mawf_task_execution_leases.py")
 ARTIFACT_KEY_MIGRATION = Path("migrations/versions/018_mawf_artifact_ref_keys.py")
+USER_WORKFLOW_RUN_MIGRATION = Path("migrations/versions/019_mawf_workflow_runs_by_user.py")
 
 
 def test_mawf_migration_contains_required_schema_objects():
@@ -161,6 +162,42 @@ def test_mawf_artifact_key_migration_stays_reference_only():
         "create table if not exists ops.mawf_phase",
         "create table if not exists ops.phase",
         "execution_history",
+    ]
+    for snippet in forbidden:
+        assert snippet not in text
+
+
+def test_mawf_user_workflow_run_migration_contains_required_index_support():
+    text = USER_WORKFLOW_RUN_MIGRATION.read_text()
+    required = [
+        "ALTER TABLE ops.workflow_runs",
+        "ADD COLUMN IF NOT EXISTS updated_utc TIMESTAMPTZ",
+        "SET updated_utc = COALESCE(completed_utc, started_utc, NOW())",
+        "ALTER COLUMN updated_utc SET DEFAULT NOW()",
+        "ALTER COLUMN updated_utc SET NOT NULL",
+        "RUN_WAITING_FOR_FEEDBACK",
+        "waiting_for_feedback",
+        "RUN_RESUME_PENDING",
+        "resume_pending",
+        "ix_workflow_runs_status_updated_started",
+        "ON ops.workflow_runs(status_id, updated_utc DESC, started_utc DESC)",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_mawf_user_workflow_run_migration_stays_index_only():
+    text = USER_WORKFLOW_RUN_MIGRATION.read_text().lower()
+    forbidden = [
+        "create table if not exists ops.mawf_phase",
+        "create table if not exists ops.phase",
+        "content_text",
+        "artifact_content",
+        "producer",
+        "verifier",
+        "critic",
+        "execution_history",
+        "telemetry",
     ]
     for snippet in forbidden:
         assert snippet not in text

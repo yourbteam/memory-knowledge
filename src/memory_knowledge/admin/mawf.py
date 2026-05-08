@@ -29,6 +29,8 @@ MAWF_TO_WORKFLOW_RUN_STATUS = {
     "pending": "RUN_PENDING",
     "submitted": "RUN_SUBMITTED",
     "running": "RUN_RUNNING",
+    "waiting_for_feedback": "RUN_WAITING_FOR_FEEDBACK",
+    "resume_pending": "RUN_RESUME_PENDING",
     "completed": "RUN_SUCCESS",
     "success": "RUN_SUCCESS",
     "partial": "RUN_PARTIAL",
@@ -41,6 +43,8 @@ WORKFLOW_RUN_TO_MAWF_STATUS = {
     "RUN_PENDING": "queued",
     "RUN_SUBMITTED": "submitted",
     "RUN_RUNNING": "running",
+    "RUN_WAITING_FOR_FEEDBACK": "waiting_for_feedback",
+    "RUN_RESUME_PENDING": "resume_pending",
     "RUN_SUCCESS": "completed",
     "RUN_PARTIAL": "partial",
     "RUN_ERROR": "failed",
@@ -963,7 +967,8 @@ async def upsert_workflow_run(
             completed_utc = CASE
                 WHEN $12 THEN COALESCE(ops.workflow_runs.completed_utc, NOW())
                 ELSE ops.workflow_runs.completed_utc
-            END
+            END,
+            updated_utc = NOW()
         RETURNING id
         """,
         run_uuid,
@@ -1033,6 +1038,108 @@ async def list_workflow_runs(pool: asyncpg.Pool, task_id: str) -> list[dict[str,
     return [_workflow_run(row) for row in rows]
 
 
+ACTIVE_WORKFLOW_RUN_CODES = (
+    "RUN_PENDING",
+    "RUN_RUNNING",
+    "RUN_WAITING_FOR_FEEDBACK",
+    "RUN_RESUME_PENDING",
+)
+
+
+def _workflow_run_user_index(row: Any) -> dict[str, Any]:
+    context = _json_object(row["context_json"])
+    workflow_run_id = context.get("mawf_workflow_run_id") or str(row["run_id"])
+    return {
+        "workflow_run_id": workflow_run_id,
+        "canonical_run_id": str(row["run_id"]),
+        "task_id": row["mawf_task_id"],
+        "task_title": row["task_title"],
+        "owner_user_id": str(row["owner_user_id"]),
+        "workflow_name": row["workflow_name"],
+        "attempt": context.get("mawf_attempt"),
+        "status_code": _mawf_workflow_status(row["status_code"]),
+        "internal_status_code": row["status_code"],
+        "status_display_name": row["status_display_name"],
+        "is_terminal": row["is_terminal"],
+        "workflow_ledger_ref": context.get("workflow_ledger_ref"),
+        "workflow_state_ref": context.get("workflow_state_ref"),
+        "started_at": _iso(row["started_utc"]),
+        "completed_at": _iso(row["completed_utc"]),
+        "updated_at": _iso(row["updated_utc"]),
+        "actor_email": row["actor_email"],
+    }
+
+
+async def list_workflow_runs_by_user(
+    pool: asyncpg.Pool,
+    owner_user_id: str,
+    workflow_name: str | None = None,
+    status_code: str | None = None,
+    terminal: bool | None = None,
+    active_only: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+) -> list[dict[str, Any]]:
+    if active_only and terminal is True:
+        raise ValueError("active_only=true conflicts with terminal=true")
+    if offset < 0:
+        raise ValueError("offset must be greater than or equal to 0")
+    capped_limit = min(limit, 500)
+    if capped_limit < 1:
+        raise ValueError("limit must be greater than 0")
+
+    try:
+        owner_uuid = uuid.UUID(owner_user_id)
+    except ValueError as exc:
+        raise ValueError(f"Invalid owner_user_id UUID: {owner_user_id}") from exc
+
+    owner = await pool.fetchrow("SELECT id FROM core.users WHERE id = $1::uuid", owner_uuid)
+    if owner is None:
+        raise ValueError(f"MAWF user not found: {owner_user_id}")
+
+    status_id = None
+    if status_code:
+        status = await resolve_reference_value(
+            pool, "WORKFLOW_RUN_STATUS", _workflow_status_code(status_code)
+        )
+        status_id = status["id"]
+
+    rows = await pool.fetch(
+        """
+        SELECT wr.run_id, t.mawf_task_id, t.title AS task_title, t.owner_user_id,
+               wr.workflow_name, wr.context_json,
+               rv.internal_code AS status_code, rv.display_name AS status_display_name,
+               rv.is_terminal, wr.actor_email, wr.started_utc, wr.completed_utc,
+               wr.updated_utc
+        FROM planning.tasks t
+        JOIN planning.task_workflow_runs twr ON twr.task_id = t.id
+        JOIN ops.workflow_runs wr ON wr.id = twr.workflow_run_id
+        JOIN core.reference_values rv ON rv.id = wr.status_id
+        WHERE t.owner_user_id = $1::uuid
+          AND ($2::text IS NULL OR wr.workflow_name = $2)
+          AND ($3::bigint IS NULL OR wr.status_id = $3)
+          AND ($4::boolean IS NULL OR rv.is_terminal = $4)
+          AND ($5::boolean = FALSE OR rv.internal_code = ANY($6::text[]))
+        ORDER BY
+          CASE WHEN $4::boolean IS NULL AND $5::boolean = FALSE AND rv.is_terminal = FALSE THEN 0 ELSE 1 END,
+          wr.updated_utc DESC,
+          wr.started_utc DESC,
+          COALESCE((wr.context_json ->> 'mawf_attempt')::int, 0) DESC,
+          wr.run_id ASC
+        LIMIT $7 OFFSET $8
+        """,
+        owner_uuid,
+        workflow_name,
+        status_id,
+        terminal,
+        active_only,
+        list(ACTIVE_WORKFLOW_RUN_CODES),
+        capped_limit,
+        offset,
+    )
+    return [_workflow_run_user_index(row) for row in rows]
+
+
 async def set_workflow_run_status(
     pool: asyncpg.Pool,
     workflow_run_id: str,
@@ -1055,7 +1162,8 @@ async def set_workflow_run_status(
             completed_utc = CASE
                 WHEN $7 THEN COALESCE(completed_utc, NOW())
                 ELSE completed_utc
-            END
+            END,
+            updated_utc = NOW()
         WHERE run_id = $1
         RETURNING id
         """,

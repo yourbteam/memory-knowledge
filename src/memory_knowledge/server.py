@@ -5176,6 +5176,33 @@ async def mawf_list_workflow_runs(
 
 
 @mcp.tool()
+@track_tool_metrics("mawf_list_workflow_runs_by_user")
+async def mawf_list_workflow_runs_by_user(
+    owner_user_id: str,
+    workflow_name: str | None = None,
+    status_code: str | None = None,
+    terminal: bool | None = None,
+    active_only: bool = False,
+    limit: int = 50,
+    offset: int = 0,
+    correlation_id: str | None = None,
+) -> str:
+    """List MAWF workflow-run index records for tasks owned by one user."""
+    return await _run_mawf_tool(
+        "mawf_list_workflow_runs_by_user",
+        _mawf.list_workflow_runs_by_user,
+        owner_user_id=owner_user_id,
+        workflow_name=workflow_name,
+        status_code=status_code,
+        terminal=terminal,
+        active_only=active_only,
+        limit=limit,
+        offset=offset,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
 @track_tool_metrics("mawf_set_workflow_run_status")
 async def mawf_set_workflow_run_status(
     workflow_run_id: str,
