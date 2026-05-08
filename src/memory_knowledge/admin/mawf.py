@@ -1204,7 +1204,7 @@ async def _fetch_open_lease_for_update(conn: asyncpg.Connection, canonical_task_
           AND l.released_utc IS NULL
         ORDER BY l.acquired_utc DESC
         LIMIT 1
-        FOR UPDATE
+        FOR UPDATE OF l
         """,
         canonical_task_id,
     )
