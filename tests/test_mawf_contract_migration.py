@@ -6,6 +6,7 @@ LEASE_MIGRATION = Path("migrations/versions/017_mawf_task_execution_leases.py")
 ARTIFACT_KEY_MIGRATION = Path("migrations/versions/018_mawf_artifact_ref_keys.py")
 USER_WORKFLOW_RUN_MIGRATION = Path("migrations/versions/019_mawf_workflow_runs_by_user.py")
 RECOVERABLE_WORKFLOW_RUN_MIGRATION = Path("migrations/versions/020_mawf_recoverable_workflow_runs.py")
+EXTERNAL_TASK_ID_MIGRATION = Path("migrations/versions/021_mawf_external_task_id.py")
 
 
 def test_mawf_migration_contains_required_schema_objects():
@@ -229,6 +230,36 @@ def test_mawf_recoverable_workflow_run_migration_stays_index_only():
         "critic",
         "execution_history",
         "telemetry",
+    ]
+    for snippet in forbidden:
+        assert snippet not in text
+
+
+def test_mawf_external_task_id_migration_contains_required_schema():
+    text = EXTERNAL_TASK_ID_MIGRATION.read_text()
+    required = [
+        "021_mawf_external_task_id",
+        "020_mawf_recoverable_workflow_runs",
+        "ALTER TABLE planning.tasks",
+        "ADD COLUMN IF NOT EXISTS external_task_id TEXT",
+        "ux_tasks_external_task_id",
+        "ON planning.tasks(external_task_id)",
+        "WHERE external_task_id IS NOT NULL",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_mawf_external_task_id_migration_stays_minimal():
+    text = EXTERNAL_TASK_ID_MIGRATION.read_text().lower()
+    forbidden = [
+        "create table",
+        "artifact_content",
+        "telemetry",
+        "workflow_phase",
+        "producer",
+        "verifier",
+        "critic",
     ]
     for snippet in forbidden:
         assert snippet not in text

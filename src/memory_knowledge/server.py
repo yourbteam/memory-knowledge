@@ -5019,6 +5019,7 @@ async def mawf_upsert_task(
     title: str,
     task_ledger_ref: str,
     status_code: str = "active",
+    external_task_id: str | None = None,
     correlation_id: str | None = None,
 ) -> str:
     """Create or update a MAWF task over planning.tasks."""
@@ -5034,18 +5035,24 @@ async def mawf_upsert_task(
         title=title,
         task_ledger_ref=task_ledger_ref,
         status_code=status_code,
+        external_task_id=external_task_id,
         correlation_id=correlation_id,
     )
 
 
 @mcp.tool()
 @track_tool_metrics("mawf_get_task")
-async def mawf_get_task(task_id: str, correlation_id: str | None = None) -> str:
+async def mawf_get_task(
+    task_id: str | None = None,
+    external_task_id: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
     """Get one MAWF task."""
     return await _run_mawf_tool(
         "mawf_get_task",
         _mawf.get_task,
         task_id=task_id,
+        external_task_id=external_task_id,
         correlation_id=correlation_id,
     )
 

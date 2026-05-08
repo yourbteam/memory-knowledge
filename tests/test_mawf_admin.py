@@ -27,13 +27,16 @@ class MawfAdminPool:
             return {"id": 200}
         if "FROM planning.projects p" in query and "p.project_key = $1::uuid" in query:
             return {"id": 100, "project_key": args[0], "mawf_project_key": "proj-a", "name": "Project A", "project_status_id": 1, "created_utc": None, "updated_utc": None, "status_code": "active"}
+        if "WHERE external_task_id = $1" in query:
+            return None
         if "UPDATE planning.tasks" in query and "WHERE mawf_task_id = $1" in query:
             return None
         if "INSERT INTO planning.tasks" in query:
             return {"id": 300}
-        if "FROM planning.tasks t" in query and "WHERE t.mawf_task_id = $1" in query:
+        if "FROM planning.tasks t" in query and "t.mawf_task_id = $1" in query:
             return {
-                "mawf_task_id": args[0],
+                "mawf_task_id": args[0] or "task-a",
+                "external_task_id": "ABC-123",
                 "owner_user_id": uuid.uuid4(),
                 "project_key": uuid.uuid4(),
                 "mawf_repository_id": uuid.uuid4(),
@@ -190,6 +193,89 @@ async def test_upsert_task_links_project_repository_before_task_write():
     ]
     assert link_calls
     assert link_calls[0][1] == (100, 200)
+
+
+@pytest.mark.asyncio
+async def test_upsert_task_accepts_external_task_id_and_normalizes_blank():
+    pool = MawfAdminPool()
+    result = await mawf.upsert_task(
+        pool,
+        task_id="task-a",
+        owner_user_id=str(uuid.uuid4()),
+        project_id=str(uuid.uuid4()),
+        repository_id=str(uuid.uuid4()),
+        prompt_id=str(uuid.uuid4()),
+        title="Task A",
+        task_ledger_ref="ledger://task-a",
+        external_task_id=" ABC-123 ",
+    )
+
+    duplicate_query, duplicate_args = next(
+        (query, args) for query, args in pool.fetchrow_calls if "WHERE external_task_id = $1" in query
+    )
+    assert "mawf_task_id IS DISTINCT FROM $2" in duplicate_query
+    assert duplicate_args == ("ABC-123", "task-a")
+    update_query, update_args = next(
+        (query, args) for query, args in pool.fetchrow_calls if "UPDATE planning.tasks" in query
+    )
+    assert "external_task_id = $10" in update_query
+    assert update_args[9] == "ABC-123"
+    assert result["external_task_id"] == "ABC-123"
+
+    blank_pool = MawfAdminPool()
+    await mawf.upsert_task(
+        blank_pool,
+        task_id="task-a",
+        owner_user_id=str(uuid.uuid4()),
+        project_id=str(uuid.uuid4()),
+        repository_id=str(uuid.uuid4()),
+        prompt_id=str(uuid.uuid4()),
+        title="Task A",
+        task_ledger_ref="ledger://task-a",
+        external_task_id=" ",
+    )
+    assert not any("WHERE external_task_id = $1" in query for query, _ in blank_pool.fetchrow_calls)
+    blank_update_args = next(
+        args for query, args in blank_pool.fetchrow_calls if "UPDATE planning.tasks" in query
+    )
+    assert blank_update_args[9] is None
+
+
+@pytest.mark.asyncio
+async def test_upsert_task_rejects_duplicate_external_task_id():
+    class DuplicateExternalTaskPool(MawfAdminPool):
+        async def fetchrow(self, query, *args):
+            if "WHERE external_task_id = $1" in query:
+                return {"mawf_task_id": "other-task"}
+            return await super().fetchrow(query, *args)
+
+    with pytest.raises(ValueError, match="external_task_id already belongs"):
+        await mawf.upsert_task(
+            DuplicateExternalTaskPool(),
+            task_id="task-a",
+            owner_user_id=str(uuid.uuid4()),
+            project_id=str(uuid.uuid4()),
+            repository_id=str(uuid.uuid4()),
+            prompt_id=str(uuid.uuid4()),
+            title="Task A",
+            task_ledger_ref="ledger://task-a",
+            external_task_id="ABC-123",
+        )
+
+
+@pytest.mark.asyncio
+async def test_get_task_can_lookup_by_external_task_id():
+    pool = MawfAdminPool()
+
+    result = await mawf.get_task(pool, external_task_id=" ABC-123 ")
+
+    query, args = pool.fetchrow_calls[-1]
+    assert "t.external_task_id = $2" in query
+    assert args == (None, "ABC-123")
+    assert result["external_task_id"] == "ABC-123"
+
+    with pytest.raises(ValueError, match="task_id or external_task_id"):
+        await mawf.get_task(pool)
 
 
 @pytest.mark.asyncio

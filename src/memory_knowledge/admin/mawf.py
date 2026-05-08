@@ -87,6 +87,13 @@ def _parse_iso_timestamp(value: str | None, field_name: str) -> datetime | None:
         raise ValueError(f"{field_name} must be a valid ISO timestamp") from exc
 
 
+def _optional_nonblank(value: str | None) -> str | None:
+    if value is None:
+        return None
+    stripped = value.strip()
+    return stripped or None
+
+
 def _validate_lease_ttl(lease_ttl_seconds: int | None) -> int:
     ttl = lease_ttl_seconds or DEFAULT_LEASE_TTL_SECONDS
     if ttl < MIN_LEASE_TTL_SECONDS or ttl > MAX_LEASE_TTL_SECONDS:
@@ -701,6 +708,7 @@ async def supersede_prompt_ref(
 def _task(row: Any) -> dict[str, Any]:
     return {
         "id": row["mawf_task_id"],
+        "external_task_id": row["external_task_id"],
         "owner_user_id": str(row["owner_user_id"]) if row["owner_user_id"] else None,
         "project_id": str(row["project_key"]) if row["project_key"] else None,
         "repository_id": str(row["mawf_repository_id"]) if row["mawf_repository_id"] else None,
@@ -759,11 +767,29 @@ async def upsert_task(
     title: str,
     task_ledger_ref: str,
     status_code: str = DEFAULT_TASK_STATUS,
+    external_task_id: str | None = None,
 ) -> dict[str, Any]:
     status_id = await _reference_id(pool, "TASK_STATUS", status_code)
     priority_id = await _priority_id(pool)
     internal_project_id = await _internal_project_id(pool, project_id)
     internal_repository_id = await _internal_repository_id(pool, repository_id)
+    normalized_external_task_id = _optional_nonblank(external_task_id)
+    if normalized_external_task_id is not None:
+        existing = await pool.fetchrow(
+            """
+            SELECT mawf_task_id
+            FROM planning.tasks
+            WHERE external_task_id = $1
+              AND mawf_task_id IS DISTINCT FROM $2
+            LIMIT 1
+            """,
+            normalized_external_task_id,
+            task_id,
+        )
+        if existing is not None:
+            raise ValueError(
+                f"external_task_id already belongs to another task: {normalized_external_task_id}"
+            )
     await _ensure_project_repository_link(pool, internal_project_id, internal_repository_id)
     row = await pool.fetchrow(
         """
@@ -776,6 +802,7 @@ async def upsert_task(
             task_status_id = $7,
             priority_id = $8,
             task_ledger_ref = $9,
+            external_task_id = $10,
             updated_utc = NOW()
         WHERE mawf_task_id = $1
         RETURNING id
@@ -789,6 +816,7 @@ async def upsert_task(
         status_id,
         priority_id,
         task_ledger_ref,
+        normalized_external_task_id,
     )
     if row is None:
         await pool.fetchrow(
@@ -796,11 +824,11 @@ async def upsert_task(
             INSERT INTO planning.tasks (
                 task_key, project_id, repository_id, feature_id, title,
                 description, task_status_id, priority_id, mawf_task_id,
-                owner_user_id, prompt_id, task_ledger_ref
+                owner_user_id, prompt_id, task_ledger_ref, external_task_id
             )
             VALUES (
                 gen_random_uuid(), $1, $2, NULL, $3, NULL, $4, $5,
-                $6, $7::uuid, $8::uuid, $9
+                $6, $7::uuid, $8::uuid, $9, $10
             )
             RETURNING id
             """,
@@ -813,14 +841,20 @@ async def upsert_task(
             uuid.UUID(owner_user_id),
             uuid.UUID(prompt_id),
             task_ledger_ref,
+            normalized_external_task_id,
         )
     return await get_task(pool, task_id)
 
 
-async def get_task(pool: asyncpg.Pool, task_id: str) -> dict[str, Any]:
+async def get_task(
+    pool: asyncpg.Pool, task_id: str | None = None, external_task_id: str | None = None
+) -> dict[str, Any]:
+    normalized_external_task_id = _optional_nonblank(external_task_id)
+    if task_id is None and normalized_external_task_id is None:
+        raise ValueError("task_id or external_task_id is required")
     row = await pool.fetchrow(
         """
-        SELECT t.mawf_task_id, t.owner_user_id, p.project_key,
+        SELECT t.mawf_task_id, t.external_task_id, t.owner_user_id, p.project_key,
                r.mawf_repository_id, t.prompt_id, t.title, t.task_status_id,
                t.task_ledger_ref, t.created_utc, t.updated_utc,
                COALESCE(rv.mawf_code, rv.internal_code) AS status_code
@@ -828,9 +862,11 @@ async def get_task(pool: asyncpg.Pool, task_id: str) -> dict[str, Any]:
         JOIN planning.projects p ON p.id = t.project_id
         JOIN catalog.repositories r ON r.id = t.repository_id
         JOIN core.reference_values rv ON rv.id = t.task_status_id
-        WHERE t.mawf_task_id = $1
+        WHERE ($1::text IS NOT NULL AND t.mawf_task_id = $1)
+           OR ($1::text IS NULL AND $2::text IS NOT NULL AND t.external_task_id = $2)
         """,
         task_id,
+        normalized_external_task_id,
     )
     if row is None:
         raise ValueError("Task not found")
@@ -847,7 +883,7 @@ async def list_tasks(
     status_id = await _reference_id(pool, "TASK_STATUS", status_code) if status_code else None
     rows = await pool.fetch(
         """
-        SELECT t.mawf_task_id, t.owner_user_id, p.project_key,
+        SELECT t.mawf_task_id, t.external_task_id, t.owner_user_id, p.project_key,
                r.mawf_repository_id, t.prompt_id, t.title, t.task_status_id,
                t.task_ledger_ref, t.created_utc, t.updated_utc,
                COALESCE(rv.mawf_code, rv.internal_code) AS status_code
