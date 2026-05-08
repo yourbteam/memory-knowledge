@@ -5,6 +5,7 @@ MIGRATION = Path("migrations/versions/016_mawf_contract.py")
 LEASE_MIGRATION = Path("migrations/versions/017_mawf_task_execution_leases.py")
 ARTIFACT_KEY_MIGRATION = Path("migrations/versions/018_mawf_artifact_ref_keys.py")
 USER_WORKFLOW_RUN_MIGRATION = Path("migrations/versions/019_mawf_workflow_runs_by_user.py")
+RECOVERABLE_WORKFLOW_RUN_MIGRATION = Path("migrations/versions/020_mawf_recoverable_workflow_runs.py")
 
 
 def test_mawf_migration_contains_required_schema_objects():
@@ -191,6 +192,36 @@ def test_mawf_user_workflow_run_migration_stays_index_only():
     forbidden = [
         "create table if not exists ops.mawf_phase",
         "create table if not exists ops.phase",
+        "content_text",
+        "artifact_content",
+        "producer",
+        "verifier",
+        "critic",
+        "execution_history",
+        "telemetry",
+    ]
+    for snippet in forbidden:
+        assert snippet not in text
+
+
+def test_mawf_recoverable_workflow_run_migration_contains_required_index_support():
+    text = RECOVERABLE_WORKFLOW_RUN_MIGRATION.read_text()
+    required = [
+        "020_mawf_recoverable_workflow_runs",
+        "019_mawf_workflow_runs_by_user",
+        "ix_workflow_runs_recovery_priority",
+        "ON ops.workflow_runs(status_id, updated_utc ASC, started_utc ASC)",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_mawf_recoverable_workflow_run_migration_stays_index_only():
+    text = RECOVERABLE_WORKFLOW_RUN_MIGRATION.read_text().lower()
+    forbidden = [
+        "create table",
+        "workflow_phase",
+        "phase_status",
         "content_text",
         "artifact_content",
         "producer",

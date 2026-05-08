@@ -219,6 +219,31 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
             }
         ]
 
+    async def fake_list_recoverable_workflow_runs(
+        pool,
+        status_codes=None,
+        active_only=True,
+        updated_before=None,
+        started_before=None,
+        limit=100,
+        offset=0,
+    ):
+        return [
+            {
+                "workflow_run_id": "run-a",
+                "task_id": "task-a",
+                "status_codes": status_codes,
+                "active_only": active_only,
+                "updated_before": updated_before,
+                "started_before": started_before,
+                "limit": limit,
+                "offset": offset,
+                "task_ledger_ref": "repo://task-ledger.json",
+                "workflow_ledger_ref": "repo://workflow-ledger.json",
+                "workflow_state_ref": "repo://workflow-state.json",
+            }
+        ]
+
     async def fake_set_workflow_run_status(
         pool,
         workflow_run_id,
@@ -330,6 +355,7 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
     monkeypatch.setattr(server._mawf, "get_workflow_run", fake_get_workflow_run)
     monkeypatch.setattr(server._mawf, "list_workflow_runs", fake_list_workflow_runs)
     monkeypatch.setattr(server._mawf, "list_workflow_runs_by_user", fake_list_workflow_runs_by_user)
+    monkeypatch.setattr(server._mawf, "list_recoverable_workflow_runs", fake_list_recoverable_workflow_runs)
     monkeypatch.setattr(server._mawf, "set_workflow_run_status", fake_set_workflow_run_status)
     monkeypatch.setattr(server._mawf, "acquire_task_execution_lease", fake_acquire_lease)
     monkeypatch.setattr(server._mawf, "heartbeat_task_execution_lease", fake_heartbeat_lease)
@@ -386,6 +412,23 @@ async def test_mawf_prompt_task_artifact_and_bundle_through_mcp(monkeypatch, maw
     assert runs_by_user["active_only"] is True
     assert runs_by_user["limit"] == 999
     assert runs_by_user["offset"] == 10
+    recoverable_runs = _payload(
+        await server.mawf_list_recoverable_workflow_runs(
+            status_codes=["running"],
+            active_only=True,
+            updated_before="2026-05-08T12:00:00Z",
+            started_before="2026-05-08T11:00:00Z",
+            limit=999,
+            offset=20,
+        )
+    )["data"]["items"][0]
+    assert recoverable_runs["status_codes"] == ["running"]
+    assert recoverable_runs["active_only"] is True
+    assert recoverable_runs["updated_before"] == "2026-05-08T12:00:00Z"
+    assert recoverable_runs["started_before"] == "2026-05-08T11:00:00Z"
+    assert recoverable_runs["limit"] == 999
+    assert recoverable_runs["offset"] == 20
+    assert recoverable_runs["task_ledger_ref"] == "repo://task-ledger.json"
     updated_run = _payload(
         await server.mawf_set_workflow_run_status(
             "raw-run-a",
@@ -518,6 +561,29 @@ async def test_mawf_list_workflow_runs_by_user_is_read_only(monkeypatch, mawf_en
     )
 
     assert payload["status"] == "success"
+    assert payload["data"]["items"][0]["active_only"] is True
+
+
+@pytest.mark.asyncio
+async def test_mawf_list_recoverable_workflow_runs_is_read_only(monkeypatch, mawf_env):
+    async def fake_list_recoverable(pool, **kwargs):
+        return [{"workflow_run_id": "run-a", **kwargs}]
+
+    def fail_guard(settings, tool_name):
+        raise AssertionError(f"write guard should not run for {tool_name}")
+
+    monkeypatch.setattr(server._mawf, "list_recoverable_workflow_runs", fake_list_recoverable)
+    monkeypatch.setattr(server, "check_remote_write_guard", fail_guard)
+
+    payload = _payload(
+        await server.mawf_list_recoverable_workflow_runs(
+            status_codes=["running"],
+            active_only=True,
+        )
+    )
+
+    assert payload["status"] == "success"
+    assert payload["data"]["items"][0]["status_codes"] == ["running"]
     assert payload["data"]["items"][0]["active_only"] is True
 
 

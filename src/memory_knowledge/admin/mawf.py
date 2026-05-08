@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import uuid
 import json
+from datetime import datetime
 from typing import Any
 
 import asyncpg
@@ -75,6 +76,15 @@ def _workflow_status_code(status_code: str | None) -> str:
 
 def _mawf_workflow_status(internal_code: str) -> str:
     return WORKFLOW_RUN_TO_MAWF_STATUS.get(internal_code, internal_code.lower())
+
+
+def _parse_iso_timestamp(value: str | None, field_name: str) -> datetime | None:
+    if value is None:
+        return None
+    try:
+        return datetime.fromisoformat(value.replace("Z", "+00:00"))
+    except ValueError as exc:
+        raise ValueError(f"{field_name} must be a valid ISO timestamp") from exc
 
 
 def _validate_lease_ttl(lease_ttl_seconds: int | None) -> int:
@@ -1070,6 +1080,13 @@ def _workflow_run_user_index(row: Any) -> dict[str, Any]:
     }
 
 
+def _recoverable_workflow_run_index(row: Any) -> dict[str, Any]:
+    item = _workflow_run_user_index(row)
+    item["task_ledger_ref"] = row["task_ledger_ref"]
+    item["last_heartbeat_at"] = _iso(row["last_heartbeat_utc"])
+    return item
+
+
 async def list_workflow_runs_by_user(
     pool: asyncpg.Pool,
     owner_user_id: str,
@@ -1138,6 +1155,78 @@ async def list_workflow_runs_by_user(
         offset,
     )
     return [_workflow_run_user_index(row) for row in rows]
+
+
+async def list_recoverable_workflow_runs(
+    pool: asyncpg.Pool,
+    status_codes: list[str] | None = None,
+    active_only: bool = True,
+    updated_before: str | None = None,
+    started_before: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+) -> list[dict[str, Any]]:
+    if offset < 0:
+        raise ValueError("offset must be greater than or equal to 0")
+    capped_limit = min(limit, 500)
+    if capped_limit < 1:
+        raise ValueError("limit must be greater than 0")
+
+    effective_status_codes = status_codes or [
+        _mawf_workflow_status(code) for code in ACTIVE_WORKFLOW_RUN_CODES
+    ]
+    status_ids: list[int] = []
+    for code in effective_status_codes:
+        status = await resolve_reference_value(
+            pool, "WORKFLOW_RUN_STATUS", _workflow_status_code(code)
+        )
+        status_ids.append(status["id"])
+
+    updated_before_dt = _parse_iso_timestamp(updated_before, "updated_before")
+    started_before_dt = _parse_iso_timestamp(started_before, "started_before")
+
+    rows = await pool.fetch(
+        """
+        SELECT wr.run_id, t.mawf_task_id, t.title AS task_title, t.owner_user_id,
+               t.task_ledger_ref, wr.workflow_name, wr.context_json,
+               rv.internal_code AS status_code, rv.display_name AS status_display_name,
+               rv.is_terminal, wr.actor_email, wr.started_utc, wr.completed_utc,
+               wr.updated_utc, lease.last_heartbeat_utc
+        FROM ops.workflow_runs wr
+        JOIN planning.task_workflow_runs twr ON twr.workflow_run_id = wr.id
+        JOIN planning.tasks t ON t.id = twr.task_id
+        JOIN core.reference_values rv ON rv.id = wr.status_id
+        LEFT JOIN LATERAL (
+            SELECT l.last_heartbeat_utc
+            FROM ops.mawf_task_execution_leases l
+            WHERE l.task_id = t.id
+              AND l.released_utc IS NULL
+              AND (l.workflow_run_id = wr.id OR l.workflow_run_id IS NULL)
+            ORDER BY
+              CASE WHEN l.workflow_run_id = wr.id THEN 0 ELSE 1 END,
+              l.last_heartbeat_utc DESC
+            LIMIT 1
+        ) lease ON TRUE
+        WHERE wr.status_id = ANY($1::bigint[])
+          AND ($2::boolean = FALSE OR rv.is_terminal = FALSE)
+          AND ($3::timestamptz IS NULL OR wr.updated_utc < $3)
+          AND ($4::timestamptz IS NULL OR wr.started_utc < $4)
+        ORDER BY
+          CASE WHEN rv.is_terminal = FALSE THEN 0 ELSE 1 END,
+          wr.updated_utc ASC,
+          wr.started_utc ASC,
+          COALESCE((wr.context_json ->> 'mawf_attempt')::int, 0) DESC,
+          wr.run_id ASC
+        LIMIT $5 OFFSET $6
+        """,
+        status_ids,
+        active_only,
+        updated_before_dt,
+        started_before_dt,
+        capped_limit,
+        offset,
+    )
+    return [_recoverable_workflow_run_index(row) for row in rows]
 
 
 async def set_workflow_run_status(

@@ -5203,6 +5203,31 @@ async def mawf_list_workflow_runs_by_user(
 
 
 @mcp.tool()
+@track_tool_metrics("mawf_list_recoverable_workflow_runs")
+async def mawf_list_recoverable_workflow_runs(
+    status_codes: list[str] | None = None,
+    active_only: bool = True,
+    updated_before: str | None = None,
+    started_before: str | None = None,
+    limit: int = 100,
+    offset: int = 0,
+    correlation_id: str | None = None,
+) -> str:
+    """List MAWF workflow-run index records that may need recovery attention."""
+    return await _run_mawf_tool(
+        "mawf_list_recoverable_workflow_runs",
+        _mawf.list_recoverable_workflow_runs,
+        status_codes=status_codes,
+        active_only=active_only,
+        updated_before=updated_before,
+        started_before=started_before,
+        limit=limit,
+        offset=offset,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
 @track_tool_metrics("mawf_set_workflow_run_status")
 async def mawf_set_workflow_run_status(
     workflow_run_id: str,

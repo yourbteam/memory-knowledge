@@ -117,8 +117,16 @@ class WorkflowRunsByUserPool:
             return {"id": args[0]} if self.user_exists else None
         if "FROM core.reference_values rv" in query and "rt.internal_code = $1" in query:
             values = {
+                ("WORKFLOW_RUN_STATUS", "RUN_PENDING"): {"id": 900, "internal_code": "RUN_PENDING", "mawf_code": "queued", "display_name": "Queued", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
+                ("WORKFLOW_RUN_STATUS", "queued"): {"id": 900, "internal_code": "RUN_PENDING", "mawf_code": "queued", "display_name": "Queued", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
                 ("WORKFLOW_RUN_STATUS", "RUN_RUNNING"): {"id": 901, "internal_code": "RUN_RUNNING", "mawf_code": "running", "display_name": "Running", "description": None, "sort_order": 30, "is_active": True, "is_terminal": False},
                 ("WORKFLOW_RUN_STATUS", "running"): {"id": 901, "internal_code": "RUN_RUNNING", "mawf_code": "running", "display_name": "Running", "description": None, "sort_order": 30, "is_active": True, "is_terminal": False},
+                ("WORKFLOW_RUN_STATUS", "RUN_WAITING_FOR_FEEDBACK"): {"id": 902, "internal_code": "RUN_WAITING_FOR_FEEDBACK", "mawf_code": "waiting_for_feedback", "display_name": "Waiting For Feedback", "description": None, "sort_order": 35, "is_active": True, "is_terminal": False},
+                ("WORKFLOW_RUN_STATUS", "waiting_for_feedback"): {"id": 902, "internal_code": "RUN_WAITING_FOR_FEEDBACK", "mawf_code": "waiting_for_feedback", "display_name": "Waiting For Feedback", "description": None, "sort_order": 35, "is_active": True, "is_terminal": False},
+                ("WORKFLOW_RUN_STATUS", "RUN_RESUME_PENDING"): {"id": 903, "internal_code": "RUN_RESUME_PENDING", "mawf_code": "resume_pending", "display_name": "Resume Pending", "description": None, "sort_order": 36, "is_active": True, "is_terminal": False},
+                ("WORKFLOW_RUN_STATUS", "resume_pending"): {"id": 903, "internal_code": "RUN_RESUME_PENDING", "mawf_code": "resume_pending", "display_name": "Resume Pending", "description": None, "sort_order": 36, "is_active": True, "is_terminal": False},
+                ("WORKFLOW_RUN_STATUS", "RUN_SUCCESS"): {"id": 904, "internal_code": "RUN_SUCCESS", "mawf_code": "completed", "display_name": "Success", "description": None, "sort_order": 80, "is_active": True, "is_terminal": True},
+                ("WORKFLOW_RUN_STATUS", "completed"): {"id": 904, "internal_code": "RUN_SUCCESS", "mawf_code": "completed", "display_name": "Success", "description": None, "sort_order": 80, "is_active": True, "is_terminal": True},
             }
             return values.get((args[0], args[1]))
         return None
@@ -135,6 +143,7 @@ def _workflow_run_user_row(*, status_code="RUN_RUNNING", is_terminal=False):
         "mawf_task_id": "task-a",
         "task_title": "Task A",
         "owner_user_id": uuid.UUID("00000000-0000-0000-0000-000000000123"),
+        "task_ledger_ref": "repo://task-ledger.json",
         "workflow_name": "full-task-workflow",
         "context_json": {
             "mawf_workflow_run_id": "run-a",
@@ -149,6 +158,7 @@ def _workflow_run_user_row(*, status_code="RUN_RUNNING", is_terminal=False):
         "started_utc": now - timedelta(minutes=10),
         "completed_utc": None,
         "updated_utc": now,
+        "last_heartbeat_utc": now - timedelta(minutes=1),
     }
 
 
@@ -337,6 +347,73 @@ async def test_list_workflow_runs_by_user_active_only_uses_required_statuses_and
     assert "wr.updated_utc DESC" in query
     assert "wr.started_utc DESC" in query
     assert "mawf_attempt" in query
+
+
+@pytest.mark.asyncio
+async def test_list_recoverable_workflow_runs_defaults_to_active_index_rows():
+    pool = WorkflowRunsByUserPool(run_rows=[_workflow_run_user_row()])
+
+    result = await mawf.list_recoverable_workflow_runs(pool)
+
+    query, args = pool.fetch_calls[0]
+    assert "ops.workflow_runs wr" in query
+    assert "planning.task_workflow_runs" in query
+    assert "planning.tasks t" in query
+    assert "ops.mawf_task_execution_leases" in query
+    assert "workflow_phase" not in query
+    assert "workflow_artifacts" not in query
+    assert "artifact_content" not in query
+    assert args[0] == [900, 901, 902, 903]
+    assert args[1] is True
+    assert args[4] == 100
+    assert args[5] == 0
+    assert result[0]["workflow_run_id"] == "run-a"
+    assert result[0]["task_ledger_ref"] == "repo://task-ledger.json"
+    assert result[0]["workflow_ledger_ref"] == "repo://ledger.json"
+    assert result[0]["workflow_state_ref"] == "repo://state.json"
+    assert result[0]["last_heartbeat_at"] == "2026-05-08T11:59:00+00:00"
+    assert "current_phase" not in result[0]
+    assert "error_text" not in result[0]
+
+
+@pytest.mark.asyncio
+async def test_list_recoverable_workflow_runs_filters_timestamps_statuses_and_ordering():
+    pool = WorkflowRunsByUserPool()
+
+    await mawf.list_recoverable_workflow_runs(
+        pool,
+        status_codes=["running"],
+        active_only=False,
+        updated_before="2026-05-08T12:00:00Z",
+        started_before="2026-05-08T11:00:00+00:00",
+        limit=999,
+        offset=7,
+    )
+
+    query, args = pool.fetch_calls[0]
+    assert args[0] == [901]
+    assert args[1] is False
+    assert args[2].isoformat() == "2026-05-08T12:00:00+00:00"
+    assert args[3].isoformat() == "2026-05-08T11:00:00+00:00"
+    assert args[4] == 500
+    assert args[5] == 7
+    assert "wr.updated_utc ASC" in query
+    assert "wr.started_utc ASC" in query
+    assert "mawf_attempt" in query
+
+
+@pytest.mark.asyncio
+async def test_list_recoverable_workflow_runs_validates_inputs():
+    pool = WorkflowRunsByUserPool()
+
+    with pytest.raises(ValueError, match="offset"):
+        await mawf.list_recoverable_workflow_runs(pool, offset=-1)
+    with pytest.raises(ValueError, match="limit"):
+        await mawf.list_recoverable_workflow_runs(pool, limit=0)
+    with pytest.raises(ValueError, match="updated_before"):
+        await mawf.list_recoverable_workflow_runs(pool, updated_before="not-a-date")
+    with pytest.raises(ValueError, match="Invalid WORKFLOW_RUN_STATUS value"):
+        await mawf.list_recoverable_workflow_runs(pool, status_codes=["bogus"])
 
 
 def _lease_row(*, status_code="active", expired=False, released=False, reason=None):
