@@ -5872,9 +5872,13 @@ async def app_lifespan(app: Starlette):
     except Exception as exc:
         logger.warning("neo4j_startup_degraded", error=str(exc))
 
-    qdrant_client = await init_qdrant(settings)
-    await ensure_collections(qdrant_client, settings)
-    logger.info("qdrant_connected")
+    qdrant_client = None
+    try:
+        qdrant_client = await init_qdrant(settings)
+        await ensure_collections(qdrant_client, settings)
+        logger.info("qdrant_connected")
+    except Exception as exc:
+        logger.warning("qdrant_startup_degraded", error=str(exc))
 
     # Startup mode summary
     logger.info(
@@ -5914,8 +5918,11 @@ async def app_lifespan(app: Starlette):
     try:
         from memory_knowledge.routing.archetype_loader import load_archetypes
 
-        count = await load_archetypes(get_pg_pool(), qdrant_client, settings)
-        logger.info("routing_archetypes_loaded", count=count)
+        if qdrant_client is not None:
+            count = await load_archetypes(get_pg_pool(), qdrant_client, settings)
+            logger.info("routing_archetypes_loaded", count=count)
+        else:
+            logger.warning("archetype_loading_skipped", error="qdrant unavailable")
     except Exception as e:
         logger.warning("archetype_loading_skipped", error=str(e))
 
