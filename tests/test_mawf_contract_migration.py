@@ -7,6 +7,8 @@ ARTIFACT_KEY_MIGRATION = Path("migrations/versions/018_mawf_artifact_ref_keys.py
 USER_WORKFLOW_RUN_MIGRATION = Path("migrations/versions/019_mawf_workflow_runs_by_user.py")
 RECOVERABLE_WORKFLOW_RUN_MIGRATION = Path("migrations/versions/020_mawf_recoverable_workflow_runs.py")
 EXTERNAL_TASK_ID_MIGRATION = Path("migrations/versions/021_mawf_external_task_id.py")
+TASK_ARTIFACT_BRANCH_MIGRATION = Path("migrations/versions/022_mawf_task_artifact_branch_metadata.py")
+ARTIFACT_KEY_HANDOFF = Path("docs/MCP_AGENTS_WORKFLOW_ARTIFACT_REF_KEYS_HANDOFF.md")
 
 
 def test_mawf_migration_contains_required_schema_objects():
@@ -167,6 +169,67 @@ def test_mawf_artifact_key_migration_stays_reference_only():
     ]
     for snippet in forbidden:
         assert snippet not in text
+
+
+def test_mawf_task_artifact_branch_migration_follows_external_task_id_and_adds_nullable_columns():
+    text = TASK_ARTIFACT_BRANCH_MIGRATION.read_text()
+    required = [
+        'down_revision = "021_mawf_external_task_id"',
+        "ALTER TABLE planning.tasks",
+        "ADD COLUMN IF NOT EXISTS task_artifact_branch TEXT",
+        "ALTER TABLE planning.mawf_artifact_refs",
+        "ADD COLUMN IF NOT EXISTS artifact_branch TEXT",
+        "ADD COLUMN IF NOT EXISTS artifact_key TEXT",
+        "ALTER COLUMN artifact_key DROP NOT NULL",
+        "SET artifact_key = NULL",
+        "ar.artifact_key = COALESCE(role.mawf_code, role.internal_code)",
+        "OR ar.artifact_key = role.internal_code",
+    ]
+    for snippet in required:
+        assert snippet in text
+    assert "ALTER COLUMN artifact_key SET NOT NULL" not in text
+
+
+def test_mawf_task_artifact_branch_migration_replaces_artifact_ref_uniqueness():
+    text = TASK_ARTIFACT_BRANCH_MIGRATION.read_text()
+    required = [
+        "DROP INDEX IF EXISTS planning.ux_mawf_artifact_refs_task_artifact_key",
+        "DROP CONSTRAINT IF EXISTS uq_mawf_artifact_refs_task_role",
+        "ux_mawf_artifact_refs_task_artifact_key_keyed",
+        "ON planning.mawf_artifact_refs(mawf_task_id, artifact_key)",
+        "WHERE artifact_key IS NOT NULL",
+        "ux_mawf_artifact_refs_task_role_legacy",
+        "ON planning.mawf_artifact_refs(mawf_task_id, role_id)",
+        "WHERE artifact_key IS NULL",
+    ]
+    for snippet in required:
+        assert snippet in text
+
+
+def test_mawf_task_artifact_branch_downgrade_is_best_effort_without_key_fabrication():
+    text = TASK_ARTIFACT_BRANCH_MIGRATION.read_text()
+    required = [
+        "DROP INDEX IF EXISTS planning.ux_mawf_artifact_refs_task_artifact_key_keyed",
+        "DROP INDEX IF EXISTS planning.ux_mawf_artifact_refs_task_role_legacy",
+        "DROP COLUMN IF EXISTS artifact_branch",
+        "DROP COLUMN IF EXISTS task_artifact_branch",
+        "do not fabricate role-derived artifact_key values",
+        "pre-022 non-null key semantic contract",
+    ]
+    for snippet in required:
+        assert snippet in text
+    downgrade_text = text.split("def downgrade", 1)[1]
+    assert "COALESCE(role.mawf_code, role.internal_code)" not in downgrade_text
+    assert "ALTER COLUMN artifact_key SET NOT NULL" not in downgrade_text
+
+
+def test_artifact_key_handoff_marks_old_key_defaults_historical():
+    text = ARTIFACT_KEY_HANDOFF.read_text()
+    assert "pre-`022` historical deployment evidence" in text
+    assert "omitted or blank `artifact_key` must remain `NULL`" in text
+    assert "stores and returns `artifact_key: null`" in text
+    assert "defaults it to `role_code`" not in text
+    assert "defaults to `role_code`" not in text
 
 
 def test_mawf_user_workflow_run_migration_contains_required_index_support():

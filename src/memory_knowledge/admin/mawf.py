@@ -52,6 +52,40 @@ WORKFLOW_RUN_TO_MAWF_STATUS = {
     "RUN_CANCELLED": "cancelled",
 }
 
+SCHEMA_CAPABILITIES: dict[str, Any] = {
+    "schema_version": "mawf-task-artifact-branch-metadata-v1",
+    "capabilities": {
+        "task_artifact_branch": True,
+        "workflow_run_task_artifact_branch_context": True,
+        "artifact_ref_branch": True,
+        "artifact_ref_key_nullable": True,
+        "artifact_ref_legacy_role_lookup": True,
+    },
+    "payload_fields": {
+        "task": ["task_artifact_branch", "taskArtifactBranch"],
+        "workflow_run": ["task_artifact_branch", "taskArtifactBranch"],
+        "artifact_ref": ["artifact_branch", "artifactBranch", "artifact_key", "artifactKey"],
+    },
+    "artifact_ref_lookup_precedence": [
+        "artifact_ref_id",
+        "task_id+artifact_key",
+        "task_id+role_code",
+    ],
+    "artifact_ref_uniqueness": {
+        "keyed": ["mawf_task_id", "artifact_key"],
+        "keyed_predicate": "artifact_key IS NOT NULL",
+        "legacy": ["mawf_task_id", "role_id"],
+        "legacy_predicate": "artifact_key IS NULL",
+    },
+    "compatibility": {
+        "null_branch_preserved": True,
+        "null_artifact_key_preserved": True,
+        "missing_branch_default": None,
+        "camel_case_outputs": True,
+        "snake_case_inputs_only": True,
+    },
+}
+
 
 def _iso(value: Any) -> str | None:
     return value.isoformat() if value else None
@@ -59,6 +93,15 @@ def _iso(value: Any) -> str | None:
 
 def _dict(row: Any | None) -> dict[str, Any] | None:
     return dict(row) if row is not None else None
+
+
+def _row_get(row: Any, key: str, default: Any = None) -> Any:
+    if hasattr(row, "get"):
+        return row.get(key, default)
+    try:
+        return row[key]
+    except (KeyError, IndexError):
+        return default
 
 
 def _workflow_run_uuid(workflow_run_id: str) -> uuid.UUID:
@@ -92,6 +135,10 @@ def _optional_nonblank(value: str | None) -> str | None:
         return None
     stripped = value.strip()
     return stripped or None
+
+
+async def get_schema_capabilities(pool: asyncpg.Pool) -> dict[str, Any]:
+    return json.loads(json.dumps(SCHEMA_CAPABILITIES))
 
 
 def _validate_lease_ttl(lease_ttl_seconds: int | None) -> int:
@@ -706,9 +753,12 @@ async def supersede_prompt_ref(
 
 
 def _task(row: Any) -> dict[str, Any]:
+    task_artifact_branch = _row_get(row, "task_artifact_branch")
     return {
         "id": row["mawf_task_id"],
         "external_task_id": row["external_task_id"],
+        "task_artifact_branch": task_artifact_branch,
+        "taskArtifactBranch": task_artifact_branch,
         "owner_user_id": str(row["owner_user_id"]) if row["owner_user_id"] else None,
         "project_id": str(row["project_key"]) if row["project_key"] else None,
         "repository_id": str(row["mawf_repository_id"]) if row["mawf_repository_id"] else None,
@@ -768,12 +818,14 @@ async def upsert_task(
     task_ledger_ref: str,
     status_code: str = DEFAULT_TASK_STATUS,
     external_task_id: str | None = None,
+    task_artifact_branch: str | None = None,
 ) -> dict[str, Any]:
     status_id = await _reference_id(pool, "TASK_STATUS", status_code)
     priority_id = await _priority_id(pool)
     internal_project_id = await _internal_project_id(pool, project_id)
     internal_repository_id = await _internal_repository_id(pool, repository_id)
     normalized_external_task_id = _optional_nonblank(external_task_id)
+    normalized_task_artifact_branch = _optional_nonblank(task_artifact_branch)
     if normalized_external_task_id is not None:
         existing = await pool.fetchrow(
             """
@@ -803,6 +855,7 @@ async def upsert_task(
             priority_id = $8,
             task_ledger_ref = $9,
             external_task_id = $10,
+            task_artifact_branch = $11,
             updated_utc = NOW()
         WHERE mawf_task_id = $1
         RETURNING id
@@ -817,6 +870,7 @@ async def upsert_task(
         priority_id,
         task_ledger_ref,
         normalized_external_task_id,
+        normalized_task_artifact_branch,
     )
     if row is None:
         await pool.fetchrow(
@@ -824,11 +878,12 @@ async def upsert_task(
             INSERT INTO planning.tasks (
                 task_key, project_id, repository_id, feature_id, title,
                 description, task_status_id, priority_id, mawf_task_id,
-                owner_user_id, prompt_id, task_ledger_ref, external_task_id
+                owner_user_id, prompt_id, task_ledger_ref, external_task_id,
+                task_artifact_branch
             )
             VALUES (
                 gen_random_uuid(), $1, $2, NULL, $3, NULL, $4, $5,
-                $6, $7::uuid, $8::uuid, $9, $10
+                $6, $7::uuid, $8::uuid, $9, $10, $11
             )
             RETURNING id
             """,
@@ -842,6 +897,7 @@ async def upsert_task(
             uuid.UUID(prompt_id),
             task_ledger_ref,
             normalized_external_task_id,
+            normalized_task_artifact_branch,
         )
     return await get_task(pool, task_id)
 
@@ -856,7 +912,7 @@ async def get_task(
         """
         SELECT t.mawf_task_id, t.external_task_id, t.owner_user_id, p.project_key,
                r.mawf_repository_id, t.prompt_id, t.title, t.task_status_id,
-               t.task_ledger_ref, t.created_utc, t.updated_utc,
+               t.task_ledger_ref, t.task_artifact_branch, t.created_utc, t.updated_utc,
                COALESCE(rv.mawf_code, rv.internal_code) AS status_code
         FROM planning.tasks t
         JOIN planning.projects p ON p.id = t.project_id
@@ -885,7 +941,7 @@ async def list_tasks(
         """
         SELECT t.mawf_task_id, t.external_task_id, t.owner_user_id, p.project_key,
                r.mawf_repository_id, t.prompt_id, t.title, t.task_status_id,
-               t.task_ledger_ref, t.created_utc, t.updated_utc,
+               t.task_ledger_ref, t.task_artifact_branch, t.created_utc, t.updated_utc,
                COALESCE(rv.mawf_code, rv.internal_code) AS status_code
         FROM planning.tasks t
         JOIN planning.projects p ON p.id = t.project_id
@@ -930,6 +986,7 @@ def _workflow_run(row: Any) -> dict[str, Any]:
     workflow_run_id = context.get("mawf_workflow_run_id") or str(row["run_id"])
     relation_type = row.get("relation_type", "implements") if hasattr(row, "get") else row["relation_type"]
     relation_type = relation_type or "implements"
+    task_artifact_branch = context.get("task_artifact_branch")
     return {
         "workflow_run_id": workflow_run_id,
         "canonical_run_id": str(row["run_id"]),
@@ -942,6 +999,8 @@ def _workflow_run(row: Any) -> dict[str, Any]:
         "is_terminal": row["is_terminal"],
         "workflow_ledger_ref": context.get("workflow_ledger_ref"),
         "workflow_state_ref": context.get("workflow_state_ref"),
+        "task_artifact_branch": task_artifact_branch,
+        "taskArtifactBranch": task_artifact_branch,
         "actor_email": row["actor_email"],
         "current_phase": row["current_phase"],
         "iteration_count": row["iteration_count"],
@@ -961,6 +1020,7 @@ async def upsert_workflow_run(
     status_code: str = "queued",
     workflow_ledger_ref: str | None = None,
     workflow_state_ref: str | None = None,
+    task_artifact_branch: str | None = None,
     current_phase: str | None = None,
     iteration_count: int | None = None,
     error_text: str | None = None,
@@ -987,6 +1047,9 @@ async def upsert_workflow_run(
         "workflow_ledger_ref": workflow_ledger_ref,
         "workflow_state_ref": workflow_state_ref,
     }
+    normalized_task_artifact_branch = _optional_nonblank(task_artifact_branch)
+    if normalized_task_artifact_branch is not None:
+        context_json["task_artifact_branch"] = normalized_task_artifact_branch
     run_uuid = _workflow_run_uuid(workflow_run_id)
     row = await pool.fetchrow(
         """
@@ -1095,6 +1158,7 @@ ACTIVE_WORKFLOW_RUN_CODES = (
 def _workflow_run_user_index(row: Any) -> dict[str, Any]:
     context = _json_object(row["context_json"])
     workflow_run_id = context.get("mawf_workflow_run_id") or str(row["run_id"])
+    task_artifact_branch = context.get("task_artifact_branch")
     return {
         "workflow_run_id": workflow_run_id,
         "canonical_run_id": str(row["run_id"]),
@@ -1109,6 +1173,8 @@ def _workflow_run_user_index(row: Any) -> dict[str, Any]:
         "is_terminal": row["is_terminal"],
         "workflow_ledger_ref": context.get("workflow_ledger_ref"),
         "workflow_state_ref": context.get("workflow_state_ref"),
+        "task_artifact_branch": task_artifact_branch,
+        "taskArtifactBranch": task_artifact_branch,
         "started_at": _iso(row["started_utc"]),
         "completed_at": _iso(row["completed_utc"]),
         "updated_at": _iso(row["updated_utc"]),
@@ -1735,10 +1801,15 @@ async def list_stale_task_execution_leases(
 
 
 def _artifact_ref(row: Any) -> dict[str, Any]:
+    artifact_branch = _row_get(row, "artifact_branch")
+    artifact_key = row["artifact_key"]
     return {
         "id": str(row["id"]),
         "task_id": row["mawf_task_id"],
-        "artifact_key": row["artifact_key"],
+        "artifact_branch": artifact_branch,
+        "artifactBranch": artifact_branch,
+        "artifact_key": artifact_key,
+        "artifactKey": artifact_key,
         "role_catalog_value_id": row["role_id"],
         "role_code": row["role_code"],
         "artifact_path": row["artifact_path"],
@@ -1759,35 +1830,126 @@ async def upsert_artifact_ref(
     persist_status_code: str = DEFAULT_ARTIFACT_PERSIST_STATUS,
     artifact_ref_id: str | None = None,
     artifact_key: str | None = None,
+    artifact_branch: str | None = None,
 ) -> dict[str, Any]:
     role_id = await _reference_id(pool, "ARTIFACT_ROLE", role_code)
     persist_status_id = await _reference_id(pool, "ARTIFACT_PERSIST_STATUS", persist_status_code)
-    effective_artifact_key = artifact_key or role_code
-    if not effective_artifact_key.strip():
-        raise ValueError("artifact_key must not be blank")
-    row = await pool.fetchrow(
-        """
-        INSERT INTO planning.mawf_artifact_refs (
-            id, mawf_task_id, artifact_key, role_id, artifact_path, content_hash, persist_status_id
+    effective_artifact_key = _optional_nonblank(artifact_key)
+    effective_artifact_branch = _optional_nonblank(artifact_branch)
+
+    async def write_once(conn: Any, *, allow_insert: bool) -> uuid.UUID:
+        if artifact_ref_id:
+            ref_uuid = uuid.UUID(artifact_ref_id)
+            existing = await conn.fetchrow(
+                """
+                SELECT id, mawf_task_id
+                FROM planning.mawf_artifact_refs
+                WHERE id = $1::uuid
+                """,
+                ref_uuid,
+            )
+            if existing is None:
+                raise ValueError("Artifact ref not found")
+            if existing["mawf_task_id"] != task_id:
+                raise ValueError("Artifact ref task_id does not match")
+            row = await conn.fetchrow(
+                """
+                UPDATE planning.mawf_artifact_refs
+                SET artifact_key = $2,
+                    artifact_branch = $3,
+                    role_id = $4,
+                    artifact_path = $5,
+                    content_hash = $6,
+                    persist_status_id = $7,
+                    updated_utc = NOW()
+                WHERE id = $1::uuid
+                RETURNING id
+                """,
+                ref_uuid,
+                effective_artifact_key,
+                effective_artifact_branch,
+                role_id,
+                artifact_path,
+                content_hash,
+                persist_status_id,
+            )
+            return row["id"]
+
+        if effective_artifact_key is not None:
+            row = await conn.fetchrow(
+                """
+                UPDATE planning.mawf_artifact_refs
+                SET artifact_branch = $3,
+                    role_id = $4,
+                    artifact_path = $5,
+                    content_hash = $6,
+                    persist_status_id = $7,
+                    updated_utc = NOW()
+                WHERE mawf_task_id = $1
+                  AND artifact_key = $2
+                RETURNING id
+                """,
+                task_id,
+                effective_artifact_key,
+                effective_artifact_branch,
+                role_id,
+                artifact_path,
+                content_hash,
+                persist_status_id,
+            )
+        else:
+            row = await conn.fetchrow(
+                """
+                UPDATE planning.mawf_artifact_refs
+                SET artifact_branch = $3,
+                    artifact_path = $4,
+                    content_hash = $5,
+                    persist_status_id = $6,
+                    updated_utc = NOW()
+                WHERE mawf_task_id = $1
+                  AND role_id = $2
+                  AND artifact_key IS NULL
+                RETURNING id
+                """,
+                task_id,
+                role_id,
+                effective_artifact_branch,
+                artifact_path,
+                content_hash,
+                persist_status_id,
+            )
+        if row is not None:
+            return row["id"]
+        if not allow_insert:
+            raise ValueError("Artifact ref not found after unique-violation retry")
+        row = await conn.fetchrow(
+            """
+            INSERT INTO planning.mawf_artifact_refs (
+                id, mawf_task_id, artifact_key, artifact_branch, role_id,
+                artifact_path, content_hash, persist_status_id
+            )
+            VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6, $7)
+            RETURNING id
+            """,
+            task_id,
+            effective_artifact_key,
+            effective_artifact_branch,
+            role_id,
+            artifact_path,
+            content_hash,
+            persist_status_id,
         )
-        VALUES (COALESCE($1::uuid, gen_random_uuid()), $2, $3, $4, $5, $6, $7)
-        ON CONFLICT (mawf_task_id, artifact_key) DO UPDATE SET
-            artifact_path = EXCLUDED.artifact_path,
-            role_id = EXCLUDED.role_id,
-            content_hash = EXCLUDED.content_hash,
-            persist_status_id = EXCLUDED.persist_status_id,
-            updated_utc = NOW()
-        RETURNING id
-        """,
-        uuid.UUID(artifact_ref_id) if artifact_ref_id else None,
-        task_id,
-        effective_artifact_key,
-        role_id,
-        artifact_path,
-        content_hash,
-        persist_status_id,
-    )
-    return await get_artifact_ref(pool, artifact_ref_id=str(row["id"]))
+        return row["id"]
+
+    try:
+        async with pool.acquire() as conn:
+            async with conn.transaction():
+                artifact_id = await write_once(conn, allow_insert=True)
+    except asyncpg.UniqueViolationError:
+        async with pool.acquire() as conn:
+            async with conn.transaction():
+                artifact_id = await write_once(conn, allow_insert=False)
+    return await get_artifact_ref(pool, artifact_ref_id=str(artifact_id))
 
 
 async def get_artifact_ref(
@@ -1800,7 +1962,7 @@ async def get_artifact_ref(
     if artifact_ref_id:
         row = await pool.fetchrow(
             """
-            SELECT ar.id, ar.mawf_task_id, ar.artifact_key, ar.role_id, ar.artifact_path,
+            SELECT ar.id, ar.mawf_task_id, ar.artifact_key, ar.artifact_branch, ar.role_id, ar.artifact_path,
                    ar.content_hash, ar.persist_status_id, ar.created_utc, ar.updated_utc,
                    COALESCE(role.mawf_code, role.internal_code) AS role_code,
                    COALESCE(ps.mawf_code, ps.internal_code) AS persist_status_code
@@ -1815,11 +1977,12 @@ async def get_artifact_ref(
             raise ValueError("Artifact ref not found")
         return _artifact_ref(row)
 
-    if task_id and artifact_key:
+    effective_artifact_key = _optional_nonblank(artifact_key)
+    if task_id and effective_artifact_key:
         row = await pool.fetchrow(
             """
             SELECT ar.id, ar.mawf_task_id, ar.artifact_key, ar.role_id, ar.artifact_path,
-                   ar.content_hash, ar.persist_status_id, ar.created_utc, ar.updated_utc,
+                   ar.artifact_branch, ar.content_hash, ar.persist_status_id, ar.created_utc, ar.updated_utc,
                    COALESCE(role.mawf_code, role.internal_code) AS role_code,
                    COALESCE(ps.mawf_code, ps.internal_code) AS persist_status_code
             FROM planning.mawf_artifact_refs ar
@@ -1829,7 +1992,7 @@ async def get_artifact_ref(
               AND ar.artifact_key = $2
             """,
             task_id,
-            artifact_key,
+            effective_artifact_key,
         )
         if row is None:
             raise ValueError("Artifact ref not found")
@@ -1842,7 +2005,7 @@ async def get_artifact_ref(
     rows = await pool.fetch(
         """
         SELECT ar.id, ar.mawf_task_id, ar.artifact_key, ar.role_id, ar.artifact_path,
-               ar.content_hash, ar.persist_status_id, ar.created_utc, ar.updated_utc,
+               ar.artifact_branch, ar.content_hash, ar.persist_status_id, ar.created_utc, ar.updated_utc,
                COALESCE(role.mawf_code, role.internal_code) AS role_code,
                COALESCE(ps.mawf_code, ps.internal_code) AS persist_status_code
         FROM planning.mawf_artifact_refs ar
@@ -1850,6 +2013,7 @@ async def get_artifact_ref(
         JOIN core.reference_values ps ON ps.id = ar.persist_status_id
         WHERE ar.mawf_task_id = $1
           AND ar.role_id = $2
+          AND ar.artifact_key IS NULL
         ORDER BY ar.created_utc
         LIMIT 2
         """,
@@ -1866,7 +2030,7 @@ async def get_artifact_ref(
 async def list_artifact_refs(pool: asyncpg.Pool, task_id: str) -> list[dict[str, Any]]:
     rows = await pool.fetch(
         """
-        SELECT ar.id, ar.mawf_task_id, ar.artifact_key, ar.role_id, ar.artifact_path,
+        SELECT ar.id, ar.mawf_task_id, ar.artifact_key, ar.artifact_branch, ar.role_id, ar.artifact_path,
                ar.content_hash, ar.persist_status_id, ar.created_utc, ar.updated_utc,
                COALESCE(role.mawf_code, role.internal_code) AS role_code,
                COALESCE(ps.mawf_code, ps.internal_code) AS persist_status_code

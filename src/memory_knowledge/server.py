@@ -5020,6 +5020,7 @@ async def mawf_upsert_task(
     task_ledger_ref: str,
     status_code: str = "active",
     external_task_id: str | None = None,
+    task_artifact_branch: str | None = None,
     correlation_id: str | None = None,
 ) -> str:
     """Create or update a MAWF task over planning.tasks."""
@@ -5036,6 +5037,7 @@ async def mawf_upsert_task(
         task_ledger_ref=task_ledger_ref,
         status_code=status_code,
         external_task_id=external_task_id,
+        task_artifact_branch=task_artifact_branch,
         correlation_id=correlation_id,
     )
 
@@ -5074,6 +5076,17 @@ async def mawf_list_tasks(
         project_id=project_id,
         repository_id=repository_id,
         status_code=status_code,
+        correlation_id=correlation_id,
+    )
+
+
+@mcp.tool()
+@track_tool_metrics("mawf_get_schema_capabilities")
+async def mawf_get_schema_capabilities(correlation_id: str | None = None) -> str:
+    """Return static MAWF schema capability metadata without writing rows."""
+    return await _run_mawf_tool(
+        "mawf_get_schema_capabilities",
+        _mawf.get_schema_capabilities,
         correlation_id=correlation_id,
     )
 
@@ -5128,6 +5141,7 @@ async def mawf_upsert_workflow_run(
     status_code: str = "queued",
     workflow_ledger_ref: str | None = None,
     workflow_state_ref: str | None = None,
+    task_artifact_branch: str | None = None,
     current_phase: str | None = None,
     iteration_count: int | None = None,
     error_text: str | None = None,
@@ -5146,6 +5160,7 @@ async def mawf_upsert_workflow_run(
         status_code=status_code,
         workflow_ledger_ref=workflow_ledger_ref,
         workflow_state_ref=workflow_state_ref,
+        task_artifact_branch=task_artifact_branch,
         current_phase=current_phase,
         iteration_count=iteration_count,
         error_text=error_text,
@@ -5371,6 +5386,7 @@ async def mawf_upsert_artifact_ref(
     artifact_ref_id: str | None = None,
     correlation_id: str | None = None,
     artifact_key: str | None = None,
+    artifact_branch: str | None = None,
 ) -> str:
     """Create or update a MAWF task artifact ref."""
     return await _run_mawf_tool(
@@ -5384,6 +5400,7 @@ async def mawf_upsert_artifact_ref(
         persist_status_code=persist_status_code,
         artifact_ref_id=artifact_ref_id,
         artifact_key=artifact_key,
+        artifact_branch=artifact_branch,
         correlation_id=correlation_id,
     )
 

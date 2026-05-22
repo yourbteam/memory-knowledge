@@ -1,3 +1,4 @@
+import json
 import uuid
 from datetime import datetime, timedelta, timezone
 
@@ -44,6 +45,7 @@ class MawfAdminPool:
                 "title": "Task A",
                 "task_status_id": 10,
                 "task_ledger_ref": "ledger://task-a",
+                "task_artifact_branch": "artifact/task-a",
                 "created_utc": None,
                 "updated_utc": None,
                 "status_code": "active",
@@ -60,6 +62,21 @@ class ArtifactAdminPool:
         self.fetch_calls: list[tuple[str, tuple]] = []
         self.role_rows = role_rows or []
         self.artifact_id = uuid.uuid4()
+        self.existing_ref_task_id = "task-a"
+        self.raise_unique_on_insert = False
+        self.update_after_conflict = False
+
+    def acquire(self):
+        return self
+
+    def transaction(self):
+        return self
+
+    async def __aenter__(self):
+        return self
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return False
 
     async def fetchrow(self, query, *args):
         self.fetchrow_calls.append((query, args))
@@ -70,13 +87,30 @@ class ArtifactAdminPool:
                 ("ARTIFACT_PERSIST_STATUS", "local_only"): {"id": 60, "internal_code": "ARTIFACT_LOCAL_ONLY", "mawf_code": "local_only", "display_name": "Local Only", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
             }
             return values.get((args[0], args[1]))
+        if "SELECT id, mawf_task_id" in query and "FROM planning.mawf_artifact_refs" in query:
+            return {"id": args[0], "mawf_task_id": self.existing_ref_task_id}
+        if "UPDATE planning.mawf_artifact_refs" in query and "WHERE id = $1::uuid" in query:
+            return {"id": args[0]}
+        if "UPDATE planning.mawf_artifact_refs" in query and "AND artifact_key = $2" in query:
+            if self.update_after_conflict:
+                return {"id": self.artifact_id}
+            return None
+        if "UPDATE planning.mawf_artifact_refs" in query and "AND artifact_key IS NULL" in query:
+            if self.update_after_conflict:
+                return {"id": self.artifact_id}
+            return None
         if "INSERT INTO planning.mawf_artifact_refs" in query:
+            if self.raise_unique_on_insert:
+                self.raise_unique_on_insert = False
+                self.update_after_conflict = True
+                raise mawf.asyncpg.UniqueViolationError("duplicate")
             return {"id": self.artifact_id}
         if "WHERE ar.id = $1::uuid" in query:
             return {
                 "id": args[0],
                 "mawf_task_id": "task-a",
                 "artifact_key": "workflow:run-a:ledger",
+                "artifact_branch": "artifact/task-a",
                 "role_id": 13,
                 "role_code": "workflow_ledger",
                 "artifact_path": "repo://workflow-ledger.json",
@@ -91,6 +125,7 @@ class ArtifactAdminPool:
                 "id": self.artifact_id,
                 "mawf_task_id": args[0],
                 "artifact_key": args[1],
+                "artifact_branch": "artifact/task-a",
                 "role_id": 13,
                 "role_code": "workflow_ledger",
                 "artifact_path": "repo://workflow-ledger.json",
@@ -139,6 +174,61 @@ class WorkflowRunsByUserPool:
         return self.run_rows
 
 
+class WorkflowRunUpsertPool:
+    def __init__(self):
+        self.fetchrow_calls: list[tuple[str, tuple]] = []
+        self.execute_calls: list[tuple[str, tuple]] = []
+        self.context_json = {}
+        self.run_uuid = None
+
+    async def fetchrow(self, query, *args):
+        self.fetchrow_calls.append((query, args))
+        if "FROM planning.tasks t" in query and "WHERE t.mawf_task_id = $1" in query:
+            return {
+                "id": 300,
+                "mawf_task_id": args[0],
+                "repository_id": 200,
+                "title": "Task A",
+                "actor_email": "user@example.com",
+            }
+        if "FROM core.reference_values rv" in query and "rt.internal_code = $1" in query:
+            return {
+                "id": 900,
+                "internal_code": "RUN_PENDING",
+                "mawf_code": "queued",
+                "display_name": "Queued",
+                "description": None,
+                "sort_order": 10,
+                "is_active": True,
+                "is_terminal": False,
+            }
+        if "INSERT INTO ops.workflow_runs" in query:
+            self.run_uuid = args[0]
+            self.context_json = json.loads(args[9])
+            return {"id": 400}
+        if "FROM ops.workflow_runs wr" in query and "WHERE wr.run_id = $1" in query:
+            return {
+                "run_id": args[0],
+                "mawf_task_id": "task-a",
+                "workflow_name": "full-task-workflow",
+                "context_json": self.context_json,
+                "status_code": "RUN_PENDING",
+                "status_display_name": "Queued",
+                "is_terminal": False,
+                "actor_email": "user@example.com",
+                "current_phase": None,
+                "iteration_count": 0,
+                "started_utc": None,
+                "completed_utc": None,
+                "error_text": None,
+                "relation_type": "implements",
+            }
+        return None
+
+    async def execute(self, query, *args):
+        self.execute_calls.append((query, args))
+
+
 def _workflow_run_user_row(*, status_code="RUN_RUNNING", is_terminal=False):
     now = datetime(2026, 5, 8, 12, 0, tzinfo=timezone.utc)
     return {
@@ -153,6 +243,7 @@ def _workflow_run_user_row(*, status_code="RUN_RUNNING", is_terminal=False):
             "mawf_attempt": 2,
             "workflow_ledger_ref": "repo://ledger.json",
             "workflow_state_ref": "repo://state.json",
+            "task_artifact_branch": "artifact/task-a",
         },
         "status_code": status_code,
         "status_display_name": "Running",
@@ -208,6 +299,7 @@ async def test_upsert_task_accepts_external_task_id_and_normalizes_blank():
         title="Task A",
         task_ledger_ref="ledger://task-a",
         external_task_id=" ABC-123 ",
+        task_artifact_branch=" artifact/task-a ",
     )
 
     duplicate_query, duplicate_args = next(
@@ -219,8 +311,12 @@ async def test_upsert_task_accepts_external_task_id_and_normalizes_blank():
         (query, args) for query, args in pool.fetchrow_calls if "UPDATE planning.tasks" in query
     )
     assert "external_task_id = $10" in update_query
+    assert "task_artifact_branch = $11" in update_query
     assert update_args[9] == "ABC-123"
+    assert update_args[10] == "artifact/task-a"
     assert result["external_task_id"] == "ABC-123"
+    assert result["task_artifact_branch"] == "artifact/task-a"
+    assert result["taskArtifactBranch"] == "artifact/task-a"
 
     blank_pool = MawfAdminPool()
     await mawf.upsert_task(
@@ -233,12 +329,14 @@ async def test_upsert_task_accepts_external_task_id_and_normalizes_blank():
         title="Task A",
         task_ledger_ref="ledger://task-a",
         external_task_id=" ",
+        task_artifact_branch=" ",
     )
     assert not any("WHERE external_task_id = $1" in query for query, _ in blank_pool.fetchrow_calls)
     blank_update_args = next(
         args for query, args in blank_pool.fetchrow_calls if "UPDATE planning.tasks" in query
     )
     assert blank_update_args[9] is None
+    assert blank_update_args[10] is None
 
 
 @pytest.mark.asyncio
@@ -273,6 +371,8 @@ async def test_get_task_can_lookup_by_external_task_id():
     assert "t.external_task_id = $2" in query
     assert args == (None, "ABC-123")
     assert result["external_task_id"] == "ABC-123"
+    assert result["task_artifact_branch"] == "artifact/task-a"
+    assert result["taskArtifactBranch"] == "artifact/task-a"
 
     with pytest.raises(ValueError, match="task_id or external_task_id"):
         await mawf.get_task(pool)
@@ -287,39 +387,59 @@ async def test_upsert_artifact_ref_uses_artifact_key_for_conflict_identity():
         role_code="workflow_ledger",
         artifact_path="repo://workflow-ledger.json",
         artifact_key="workflow:run-a:ledger",
+        artifact_branch="artifact/task-a",
     )
 
+    update_query, update_args = [
+        call for call in pool.fetchrow_calls
+        if "UPDATE planning.mawf_artifact_refs" in call[0] and "AND artifact_key = $2" in call[0]
+    ][0]
+    assert "WHERE mawf_task_id = $1" in update_query
+    assert update_args[0] == "task-a"
+    assert update_args[1] == "workflow:run-a:ledger"
     insert_query, insert_args = [
         call for call in pool.fetchrow_calls if "INSERT INTO planning.mawf_artifact_refs" in call[0]
     ][0]
     assert "artifact_key" in insert_query
-    assert "ON CONFLICT (mawf_task_id, artifact_key)" in insert_query
-    assert insert_args[2] == "workflow:run-a:ledger"
+    assert "ON CONFLICT" not in insert_query
+    assert insert_args[1] == "workflow:run-a:ledger"
+    assert insert_args[2] == "artifact/task-a"
     assert result["artifact_key"] == "workflow:run-a:ledger"
+    assert result["artifactKey"] == "workflow:run-a:ledger"
+    assert result["artifact_branch"] == "artifact/task-a"
+    assert result["artifactBranch"] == "artifact/task-a"
 
 
 @pytest.mark.asyncio
-async def test_upsert_artifact_ref_defaults_artifact_key_to_role_code():
+async def test_upsert_artifact_ref_keeps_omitted_artifact_key_null():
     pool = ArtifactAdminPool()
     await mawf.upsert_artifact_ref(
         pool,
         task_id="task-a",
         role_code="task_ledger",
         artifact_path="repo://task-ledger.json",
+        artifact_key=" ",
     )
 
+    update_query, update_args = [
+        call for call in pool.fetchrow_calls
+        if "UPDATE planning.mawf_artifact_refs" in call[0] and "AND artifact_key IS NULL" in call[0]
+    ][0]
+    assert update_args[0] == "task-a"
+    assert update_args[1] == 12
     _, insert_args = [
         call for call in pool.fetchrow_calls if "INSERT INTO planning.mawf_artifact_refs" in call[0]
     ][0]
-    assert insert_args[2] == "task_ledger"
+    assert insert_args[1] is None
 
 
 @pytest.mark.asyncio
-async def test_get_artifact_ref_rejects_ambiguous_role_lookup():
+async def test_get_artifact_ref_role_lookup_filters_to_legacy_null_keys():
     row = {
         "id": uuid.uuid4(),
         "mawf_task_id": "task-a",
-        "artifact_key": "workflow:run-a:ledger",
+        "artifact_key": None,
+        "artifact_branch": None,
         "role_id": 13,
         "role_code": "workflow_ledger",
         "artifact_path": "repo://workflow-ledger.json",
@@ -329,10 +449,88 @@ async def test_get_artifact_ref_rejects_ambiguous_role_lookup():
         "created_utc": None,
         "updated_utc": None,
     }
-    pool = ArtifactAdminPool(role_rows=[row, {**row, "id": uuid.uuid4(), "artifact_key": "workflow:run-b:ledger"}])
+    pool = ArtifactAdminPool(role_rows=[row])
 
-    with pytest.raises(ValueError, match="provide artifact_ref_id or artifact_key"):
-        await mawf.get_artifact_ref(pool, task_id="task-a", role_code="workflow_ledger")
+    result = await mawf.get_artifact_ref(pool, task_id="task-a", role_code="workflow_ledger")
+
+    query, _ = pool.fetch_calls[0]
+    assert "AND ar.artifact_key IS NULL" in query
+    assert result["artifact_key"] is None
+
+
+@pytest.mark.asyncio
+async def test_upsert_artifact_ref_validates_id_task_before_update():
+    pool = ArtifactAdminPool()
+    pool.existing_ref_task_id = "other-task"
+
+    with pytest.raises(ValueError, match="task_id does not match"):
+        await mawf.upsert_artifact_ref(
+            pool,
+            task_id="task-a",
+            role_code="workflow_ledger",
+            artifact_path="repo://workflow-ledger.json",
+            artifact_ref_id=str(uuid.uuid4()),
+        )
+
+    assert any("SELECT id, mawf_task_id" in query for query, _ in pool.fetchrow_calls)
+    assert not any("UPDATE planning.mawf_artifact_refs" in query for query, _ in pool.fetchrow_calls)
+
+
+@pytest.mark.asyncio
+async def test_upsert_artifact_ref_retries_unique_race_by_updating_identity():
+    pool = ArtifactAdminPool()
+    pool.raise_unique_on_insert = True
+
+    result = await mawf.upsert_artifact_ref(
+        pool,
+        task_id="task-a",
+        role_code="workflow_ledger",
+        artifact_path="repo://workflow-ledger.json",
+        artifact_key="workflow:run-a:ledger",
+    )
+
+    keyed_updates = [
+        call for call in pool.fetchrow_calls
+        if "UPDATE planning.mawf_artifact_refs" in call[0] and "AND artifact_key = $2" in call[0]
+    ]
+    assert len(keyed_updates) == 2
+    assert result["artifact_key"] == "workflow:run-a:ledger"
+
+
+@pytest.mark.asyncio
+async def test_upsert_workflow_run_stores_task_artifact_branch_in_context_json():
+    pool = WorkflowRunUpsertPool()
+
+    result = await mawf.upsert_workflow_run(
+        pool,
+        workflow_run_id="raw-run-a",
+        task_id="task-a",
+        workflow_name="full-task-workflow",
+        workflow_ledger_ref="repo://ledger.json",
+        workflow_state_ref="repo://state.json",
+        task_artifact_branch=" artifact/task-a ",
+    )
+
+    assert pool.context_json["task_artifact_branch"] == "artifact/task-a"
+    assert result["task_artifact_branch"] == "artifact/task-a"
+    assert result["taskArtifactBranch"] == "artifact/task-a"
+
+
+@pytest.mark.asyncio
+async def test_upsert_workflow_run_omitted_task_artifact_branch_does_not_write_context_key():
+    pool = WorkflowRunUpsertPool()
+
+    result = await mawf.upsert_workflow_run(
+        pool,
+        workflow_run_id="raw-run-a",
+        task_id="task-a",
+        workflow_name="full-task-workflow",
+        task_artifact_branch=" ",
+    )
+
+    assert "task_artifact_branch" not in pool.context_json
+    assert result["task_artifact_branch"] is None
+    assert result["taskArtifactBranch"] is None
 
 
 @pytest.mark.asyncio
@@ -370,6 +568,9 @@ async def test_list_workflow_runs_by_user_validates_owner_and_returns_index_rows
     assert result[0]["attempt"] == 2
     assert result[0]["status_code"] == "running"
     assert result[0]["workflow_ledger_ref"] == "repo://ledger.json"
+    assert result[0]["workflow_state_ref"] == "repo://state.json"
+    assert result[0]["task_artifact_branch"] == "artifact/task-a"
+    assert result[0]["taskArtifactBranch"] == "artifact/task-a"
     assert "current_phase" not in result[0]
     assert "error_text" not in result[0]
 
@@ -457,6 +658,8 @@ async def test_list_recoverable_workflow_runs_defaults_to_active_index_rows():
     assert result[0]["task_ledger_ref"] == "repo://task-ledger.json"
     assert result[0]["workflow_ledger_ref"] == "repo://ledger.json"
     assert result[0]["workflow_state_ref"] == "repo://state.json"
+    assert result[0]["task_artifact_branch"] == "artifact/task-a"
+    assert result[0]["taskArtifactBranch"] == "artifact/task-a"
     assert result[0]["last_heartbeat_at"] == "2026-05-08T11:59:00+00:00"
     assert "current_phase" not in result[0]
     assert "error_text" not in result[0]
