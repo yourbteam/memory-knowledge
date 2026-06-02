@@ -52,9 +52,14 @@ async def _refresh_and_get_api_key(settings: Settings) -> str:
 async def embed(
     texts: list[str], settings: Settings
 ) -> list[list[float]]:
-    """Embed texts using OpenAI with retry on transient errors. Batches at 100."""
+    """Embed texts. Uses the in-process local model in codex/local mode; OpenAI otherwise."""
     if not texts:
         return []
+
+    if settings.embedding_provider == "local":
+        from memory_knowledge.llm import local_embed
+
+        return await local_embed.embed_texts(texts, settings)
 
     api_key = await _get_api_key(settings)
     client = AsyncOpenAI(api_key=api_key)

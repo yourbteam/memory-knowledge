@@ -40,8 +40,9 @@ class Settings(BaseSettings):
 
     # OpenAI
     openai_api_key: str | None = None
-    embedding_model: str = "text-embedding-3-small"
-    embedding_dimensions: int = 1536
+    embedding_provider: Literal["local", "openai"] = "local"
+    embedding_model: str = "BAAI/bge-base-en-v1.5"
+    embedding_dimensions: int = 768
     completion_model: str = "gpt-4o"
     max_completion_tokens: int = 4096
 

@@ -27,6 +27,10 @@ COPY src/ src/
 COPY docker/entrypoint.sh alembic.ini ./
 COPY migrations/ migrations/
 
+# Bake the embedding model into the image so there is no cold-start download.
+ENV FASTEMBED_CACHE_PATH=/app/.fastembed_cache
+RUN python -c "from fastembed import TextEmbedding; TextEmbedding('BAAI/bge-base-en-v1.5')"
+
 RUN chmod +x entrypoint.sh && chown -R appuser:appuser /app
 
 USER appuser

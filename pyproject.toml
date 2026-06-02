@@ -23,6 +23,7 @@ dependencies = [
     "prometheus-client>=0.20",
     "alembic>=1.13",
     "psycopg2-binary>=2.9",
+    "fastembed>=0.8,<0.9",
 ]
 
 [project.optional-dependencies]
