@@ -268,3 +268,23 @@ async def project_inheritance_edges(
         )
     if extends or implements:
         logger.info("neo4j_inheritance_projected", extends=len(extends), implements=len(implements))
+
+
+async def delete_file_subgraph(
+    driver: neo4j.AsyncDriver,
+    file_entity_key: str,
+) -> None:
+    """Remove a File node and its contained Symbols (deleted-file cleanup).
+
+    Used on incremental ingestion when a file no longer exists. DETACH DELETE
+    drops the nodes and all their relationships (CONTAINS, CALLS, IMPORTS, etc.).
+    """
+    await driver.execute_query(
+        """
+        MATCH (f:File {entity_key: $ek})
+        OPTIONAL MATCH (f)-[:CONTAINS]->(s:Symbol)
+        DETACH DELETE s, f
+        """,
+        ek=file_entity_key,
+    )
+    logger.info("neo4j_file_subgraph_deleted", file_entity_key=file_entity_key)

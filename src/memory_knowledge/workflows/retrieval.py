@@ -129,6 +129,7 @@ async def pg_fulltext_search(
             WHERE e.repository_id = $2
               AND (c.content_tsv @@ plainto_tsquery('english', $1)
                    OR f.file_path = ANY($4::text[]))
+              AND c.is_active = TRUE
             ORDER BY rank DESC
             LIMIT $3
             """,
@@ -149,6 +150,7 @@ async def pg_fulltext_search(
             JOIN catalog.entities e ON c.entity_id = e.id
             WHERE e.repository_id = $2
               AND c.content_tsv @@ plainto_tsquery('english', $1)
+              AND c.is_active = TRUE
             ORDER BY rank DESC
             LIMIT $3
             """,
@@ -218,6 +220,7 @@ async def pg_summary_search(
         JOIN catalog.entities e ON s.entity_id = e.id
         WHERE e.repository_id = $2
           AND s.summary_tsv @@ plainto_tsquery('english', $1)
+          AND s.is_active = TRUE
         ORDER BY rank DESC
         LIMIT $3
         """,

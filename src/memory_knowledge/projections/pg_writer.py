@@ -302,3 +302,84 @@ async def record_route_feedback(
         is_auto,
     )
     return row["id"]
+
+
+async def deactivate_file_chunks(
+    pool: asyncpg.Pool,
+    repository_id: int,
+    file_path: str,
+) -> None:
+    """Mark all active chunks for a repo+file_path inactive.
+
+    PG analogue of the per-file Qdrant set_payload(is_active=False) used on
+    incremental ingestion when a file is changed or deleted. Runs BEFORE the new
+    chunks are bulk-inserted, so it never touches the rows just written.
+    """
+    await pool.execute(
+        """
+        UPDATE catalog.chunks c
+        SET is_active = FALSE
+        FROM catalog.files f, catalog.entities e
+        WHERE c.file_id = f.id
+          AND c.entity_id = e.id
+          AND e.repository_id = $1
+          AND f.file_path = $2
+          AND c.is_active = TRUE
+        """,
+        repository_id,
+        file_path,
+    )
+
+
+async def deactivate_old_chunks(
+    pool: asyncpg.Pool,
+    repository_id: int,
+    branch_name: str,
+    new_commit_sha: str,
+) -> None:
+    """Mark chunks from prior commits on this branch inactive (full-run).
+
+    PG analogue of qdrant_projector.deactivate_old_points.
+    """
+    await pool.execute(
+        """
+        UPDATE catalog.chunks c
+        SET is_active = FALSE
+        FROM catalog.entities e, catalog.repo_revisions rr
+        WHERE c.entity_id = e.id
+          AND e.repo_revision_id = rr.id
+          AND rr.repository_id = $1
+          AND rr.branch_name = $2
+          AND rr.commit_sha <> $3
+          AND c.is_active = TRUE
+        """,
+        repository_id,
+        branch_name,
+        new_commit_sha,
+    )
+
+
+async def deactivate_old_summaries(
+    pool: asyncpg.Pool,
+    repository_id: int,
+    new_commit_sha: str,
+) -> None:
+    """Mark summaries from prior commits inactive (full-run).
+
+    PG analogue of summary_qdrant.deactivate_old_summary_points (repo + commit
+    scoped, no branch — matching that function's filter).
+    """
+    await pool.execute(
+        """
+        UPDATE catalog.summaries s
+        SET is_active = FALSE
+        FROM catalog.entities e, catalog.repo_revisions rr
+        WHERE s.entity_id = e.id
+          AND e.repo_revision_id = rr.id
+          AND rr.repository_id = $1
+          AND rr.commit_sha <> $2
+          AND s.is_active = TRUE
+        """,
+        repository_id,
+        new_commit_sha,
+    )

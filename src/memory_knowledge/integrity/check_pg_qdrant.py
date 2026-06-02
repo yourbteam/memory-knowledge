@@ -35,7 +35,10 @@ async def check_pg_qdrant(
             SELECT e.entity_key
             FROM catalog.entities e
             JOIN catalog.repositories r ON e.repository_id = r.id
-            WHERE r.repository_key = $1 AND e.entity_type = 'chunk'
+            JOIN catalog.chunks c ON c.entity_id = e.id
+            WHERE r.repository_key = $1
+              AND e.entity_type = 'chunk'
+              AND c.is_active = TRUE
             ORDER BY e.id
             LIMIT $2 OFFSET $3
             """,

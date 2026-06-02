@@ -50,6 +50,7 @@ from memory_knowledge.workflows import blueprint_refinement as _blueprint_refine
 from memory_knowledge.workflows import ingestion as _ingestion
 from memory_knowledge.workflows import integrity_audit as _integrity_audit
 from memory_knowledge.workflows import repair_rebuild as _repair_rebuild
+from memory_knowledge.integrity import backfill_is_active as _backfill_is_active
 from memory_knowledge.workflows import route_intelligence as _route_intelligence
 
 logger = structlog.get_logger()
@@ -414,6 +415,27 @@ async def _run_integrity_background(
     )
 
 
+async def _run_backfill_is_active_background(
+    job_id: uuid.UUID, run_id: uuid.UUID, repository_key: str,
+) -> None:
+    """Background task for is_active backfill job execution."""
+    from memory_knowledge.jobs.job_worker import execute_job
+
+    pool = get_pg_pool()
+    settings = get_settings()
+    await execute_job(
+        manifest_pool=pool,
+        job_id=job_id,
+        job_fn=_backfill_is_active.run,
+        worker_settings=settings,
+        repository_key=repository_key,
+        run_id=run_id,
+        pool=pool,
+        qdrant_client=get_qdrant_client(),
+        settings=settings,
+    )
+
+
 def _on_task_done(task: asyncio.Task) -> None:
     """Remove task from tracking set and log any unhandled exceptions."""
     from memory_knowledge.observability.error_detail import format_exception_detail
@@ -578,6 +600,41 @@ async def run_repair_rebuild_workflow(
         return WorkflowResult(
             run_id=str(run_id),
             tool_name="run_repair_rebuild_workflow",
+            status="submitted",
+            data={"job_id": str(job_id)},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("run_backfill_is_active_workflow")
+async def run_backfill_is_active_workflow(
+    repository_key: str,
+    correlation_id: str | None = None,
+) -> str:
+    """One-time reconcile: mirror Qdrant is_active=False into catalog.chunks/summaries. Returns job_id for polling."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "run_backfill_is_active_workflow")
+    guard = check_remote_write_guard(get_settings(), "run_backfill_is_active_workflow", is_destructive=True)
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        from memory_knowledge.jobs.manifest_writer import create_job
+
+        pool = get_pg_pool()
+        job_id = await create_job(
+            pool, run_id, "backfill", "run_backfill_is_active_workflow",
+            repository_key, correlation_id=str(correlation_id) if correlation_id else None,
+        )
+        task = asyncio.create_task(
+            _run_backfill_is_active_background(job_id, run_id, repository_key)
+        )
+        _track_task(task)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="run_backfill_is_active_workflow",
             status="submitted",
             data={"job_id": str(job_id)},
         ).model_dump_json()

@@ -2,7 +2,8 @@ from types import SimpleNamespace
 
 import pytest
 
-from memory_knowledge.projections import pg_writer, summary_writer
+from memory_knowledge.integrity import backfill_is_active
+from memory_knowledge.projections import neo4j_projector, pg_writer, summary_writer
 from memory_knowledge.structure import entity_registrar
 from memory_knowledge.workflows import ingestion
 
@@ -248,3 +249,94 @@ async def test_bulk_upsert_summaries_uses_set_based_queries():
     assert "UNNEST" in pool.fetch_queries[0]
     assert len(pool.execute_queries) == 1
     assert "UNNEST" in pool.execute_queries[0]
+
+
+class _ExecPool:
+    def __init__(self, status="UPDATE 0"):
+        self.calls: list[tuple[str, tuple]] = []
+        self._status = status
+
+    async def execute(self, query, *args):
+        self.calls.append((query, args))
+        return self._status
+
+
+@pytest.mark.asyncio
+async def test_deactivate_file_chunks_targets_repo_and_path():
+    pool = _ExecPool("UPDATE 3")
+    await pg_writer.deactivate_file_chunks(pool, 7, "src/x.py")
+    query, args = pool.calls[0]
+    assert "UPDATE catalog.chunks" in query
+    assert "is_active = FALSE" in query
+    assert "f.file_path = $2" in query
+    assert args == (7, "src/x.py")
+
+
+@pytest.mark.asyncio
+async def test_deactivate_old_chunks_filters_branch_and_other_commits():
+    pool = _ExecPool()
+    await pg_writer.deactivate_old_chunks(pool, 1, "main", "sha-new")
+    query, args = pool.calls[0]
+    assert "UPDATE catalog.chunks" in query
+    assert "rr.branch_name = $2" in query
+    assert "rr.commit_sha <> $3" in query
+    assert args == (1, "main", "sha-new")
+
+
+@pytest.mark.asyncio
+async def test_deactivate_old_summaries_filters_repo_and_other_commits():
+    pool = _ExecPool()
+    await pg_writer.deactivate_old_summaries(pool, 1, "sha-new")
+    query, args = pool.calls[0]
+    assert "UPDATE catalog.summaries" in query
+    assert "rr.commit_sha <> $2" in query
+    assert "branch_name" not in query
+    assert args == (1, "sha-new")
+
+
+@pytest.mark.asyncio
+async def test_backfill_deactivate_filters_invalid_uuids_and_counts():
+    pool = _ExecPool("UPDATE 2")
+    n = await backfill_is_active._deactivate_pg_rows(
+        pool,
+        backfill_is_active._UPDATE_CHUNKS_SQL,
+        [
+            "b4324b95-7175-47fa-9e3a-830c66f6e488",
+            "not-a-uuid",
+            "df7ec4ec-ae0a-437f-97d7-53e47402dd0c",
+        ],
+    )
+    assert n == 2
+    _, args = pool.calls[0]
+    assert args[0] == [
+        "b4324b95-7175-47fa-9e3a-830c66f6e488",
+        "df7ec4ec-ae0a-437f-97d7-53e47402dd0c",
+    ]
+
+
+@pytest.mark.asyncio
+async def test_backfill_deactivate_no_valid_ids_skips_execute():
+    pool = _ExecPool()
+    n = await backfill_is_active._deactivate_pg_rows(
+        pool, backfill_is_active._UPDATE_SUMMARIES_SQL, ["nope"]
+    )
+    assert n == 0
+    assert pool.calls == []
+
+
+@pytest.mark.asyncio
+async def test_delete_file_subgraph_detach_deletes_file_and_symbols():
+    class Driver:
+        def __init__(self):
+            self.calls: list[tuple[str, dict]] = []
+
+        async def execute_query(self, query, **params):
+            self.calls.append((query, params))
+            return ([], None, None)
+
+    driver = Driver()
+    await neo4j_projector.delete_file_subgraph(driver, "ek-file-1")
+    query, params = driver.calls[0]
+    assert "DETACH DELETE" in query
+    assert "File {entity_key: $ek}" in query
+    assert params == {"ek": "ek-file-1"}

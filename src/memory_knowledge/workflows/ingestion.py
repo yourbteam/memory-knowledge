@@ -32,6 +32,7 @@ from memory_knowledge.llm.complete import llm_complete
 from memory_knowledge.llm.openai_client import complete_batch_summaries
 # Parser dispatch via factory — no direct adapter import
 from memory_knowledge.projections.neo4j_projector import (
+    delete_file_subgraph,
     project_additive_labels,
     project_api_endpoints,
     project_dependency_edges,
@@ -45,6 +46,9 @@ from memory_knowledge.projections.pg_writer import (
     bulk_upsert_chunks,
     complete_ingestion_run,
     create_ingestion_run,
+    deactivate_file_chunks,
+    deactivate_old_chunks,
+    deactivate_old_summaries,
     record_ingestion_item,
     upsert_branch_head,
     upsert_chunk,
@@ -639,6 +643,26 @@ async def run(
                                 ]
                             ),
                         )
+                        await deactivate_file_chunks(pool, repository_id, file_path)
+                        if neo4j_driver is not None:
+                            del_rows = await pool.fetch(
+                                """
+                                SELECT e.entity_key
+                                FROM catalog.files f
+                                JOIN catalog.entities e ON f.entity_id = e.id
+                                WHERE e.repository_id = $1 AND f.file_path = $2
+                                """,
+                                repository_id,
+                                file_path,
+                            )
+                            for dr in del_rows:
+                                try:
+                                    await delete_file_subgraph(neo4j_driver, str(dr["entity_key"]))
+                                except Exception as exc:
+                                    logger.warning(
+                                        "neo4j_delete_file_failed",
+                                        file_path=file_path, error=str(exc),
+                                    )
                         ingestion_item_rows.append((ingestion_run_id, None, "file", "deleted", None))
                         continue
 
@@ -664,6 +688,7 @@ async def run(
                                 ]
                             ),
                         )
+                        await deactivate_file_chunks(pool, repository_id, file_path)
 
                     source = full_path.read_text(
                         encoding="utf-8", errors="replace"
@@ -1114,6 +1139,8 @@ async def run(
             await deactivate_old_summary_points(
                 qdrant_client, repository_key, commit_sha
             )
+            await deactivate_old_chunks(pool, repository_id, branch_name, commit_sha)
+            await deactivate_old_summaries(pool, repository_id, commit_sha)
 
         # Step 9: Neo4j projection (structure + dependency edges)
         if neo4j_driver is None:
