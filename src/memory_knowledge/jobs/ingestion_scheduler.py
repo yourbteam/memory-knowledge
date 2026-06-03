@@ -22,9 +22,10 @@ logger = structlog.get_logger()
 _TOOL = "run_repo_ingestion_workflow"
 
 _ENUMERATE_SQL = """
-    SELECT r.repository_key, r.origin_url, bh.branch_name, bh.commit_sha, bh.updated_utc
+    SELECT r.repository_key, r.origin_url, bh.branch_name, rr.commit_sha, bh.updated_utc
     FROM catalog.repositories r
     LEFT JOIN catalog.branch_heads bh ON bh.repository_id = r.id
+    LEFT JOIN catalog.repo_revisions rr ON rr.id = bh.repo_revision_id
     WHERE r.origin_url IS NOT NULL
       AND r.repository_key NOT LIKE 'mawf%'
       AND r.repository_key NOT LIKE 'repo-%'
