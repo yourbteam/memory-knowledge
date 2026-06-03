@@ -1,6 +1,10 @@
 # Embeddings Migration Plan — Self-hosted fastembed (bge-base, 768-dim)
 
-**Status:** Awaiting approval. No code changes until each step is approved.
+**Status:** ✅ COMPLETE + DEPLOYED + VERIFIED in production (2026-06-03).
+- Code committed `7a5fde1`→`31254dc` (main). Image `memory-knowledge:31254dc` deployed (model baked in).
+- App settings: `EMBEDDING_PROVIDER=local`, `EMBEDDING_MODEL=BAAI/bge-base-en-v1.5`, `EMBEDDING_DIMENSIONS=768`.
+- Migration: snapshotted all 5 collections, recreated at 768, re-embedded from PG truth (resilient runner after a Supabase-pooler reset on the first attempt). Final: code_chunks 66,650 / summary_units 25,671 / learned_memory 0 / routing_archetypes 23 / triage_cases 47 — all 768-dim.
+- Verified: a conceptual retrieval query (previously `429`) returns 40 results from qdrant semantic search, no OpenAI call. Completions unchanged (Codex CLI).
 **Research:** [`docs/OPENAI_CODEX_AUTH_RESEARCH.md`](OPENAI_CODEX_AUTH_RESEARCH.md).
 **Scope:** Replace OpenAI embeddings (the only OpenAI dependency in `auth_mode=codex`, cause of prod `429`) with an in-process self-hosted model. **Completions are out of scope — already Codex-routed** (`CodexMcpClient`).
 
