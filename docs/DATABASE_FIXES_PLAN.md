@@ -16,11 +16,14 @@ Each phase ends with explicit verification. Phases are independently approvable 
 
 ## PHASE 1 — Stale-data correctness (F1, F3, F6)
 
-> **STATUS: code complete + verified; DB migration & backfill applied to prod (2026-06-02).**
+> **STATUS: COMPLETE + DEPLOYED + VERIFIED in production (2026-06-02).**
 > - Steps 1.1–1.7 implemented; `tests/test_ingestion.py` 14/14 pass; ruff clean (no new findings).
+> - Committed to `main` (`823110a` → `7a5fde1`) and pushed.
 > - Migration `023` applied to prod Supabase (`022` → `023` head); `is_active` columns + partial GIN indexes present; old full GIN indexes dropped.
 > - Backfill run across all repos: 18,169 chunks + 12,021 summaries deactivated (fcsapi, millennium-wp); `catalog.chunks` = 66,658 active / 18,169 inactive.
-> - **PENDING (not mine to do): deploy new code to the remote.** Until deployed, old retrieval ignores `is_active` (still serves stale) and old ingestion won't maintain it (drift). **Re-run the backfill once after deploy** to catch drift (idempotent: `run_backfill_is_active_workflow` per repo, or the local runner).
+> - Deployed image `memory-knowledge:7a5fde1` via `az acr build` → webapp container set → restart; `/ready` green (pg/qdrant/neo4j all ok).
+> - Verified live: full-text for 'fleet' on fcsapi returns 4 active vs 8 unfiltered — 4 stale hits now excluded (F1 fix confirmed). Post-deploy backfill re-run: 0 drift.
+> - **Note (pre-existing, unrelated):** prod OpenAI account returns `429 insufficient_quota`, breaking the embedding/semantic-retrieval path (and embedding-dependent ingestion). Not caused by this change; flagged separately.
 
 **Goal:** PG full-text/summary retrieval must serve only current content, matching Qdrant's `is_active` model; deleted files must not linger in PG or Neo4j.
 
@@ -152,6 +155,11 @@ Each phase ends with explicit verification. Phases are independently approvable 
 
 ## PHASE 3 — Ranking & route-policy integrity (F7, F8)
 
+> **STATUS: ✅ COMPLETE + DEPLOYED + VERIFIED (2026-06-03, image `15d7a25`).**
+> - F7: `rerank_results` → scaled RRF (rank-based, magnitude-preserving so `compute_auto_feedback` thresholds stay valid).
+> - F8: wired `semantic_assist_enabled` (decision_history now gets a vector pass) + `confidence_threshold` (Qdrant score floor); migration `024` recalibrated thresholds to the bge-base band (sampled empirically) and dropped the 3 dead columns.
+> - Verified live: conceptual 40 results; decision_history now returns qdrant+summary (was lexical-only); nonsense cut 40→1 by the threshold. Full test suite green (398 passed); fixed a CI-red embedding-default test.
+
 **Goal:** make fusion scores comparable (F7) and stop the route table implying behavior that doesn't run (F8). **Behavior-changing — needs your decisions (below).**
 
 ### Step 3.1 — Comparable fusion (F7)
@@ -178,6 +186,8 @@ Today only `first_store`, `second_store`, `allow_fanout`, `allow_graph_expansion
 ---
 
 ## PHASE 4 — Ops/security (F4, F5)
+
+> **STATUS: F5 ✅ done + deployed (in `15d7a25`).** F4 ⏸️ DEFERRED: enabling real TLS verification needs Supabase's CA cert (the pooler chains to a self-signed root; verified failing under system CAs). Not in env/KV; lowest severity, highest prod-breakage risk. When resumed: download Supabase's official CA, validate locally against the live pooler, then `CERT_REQUIRED` + `pg_ssl_ca_path` + deploy.
 
 ### Step 4.1 — TLS verification (F4)
 **Files:** [`src/memory_knowledge/db/postgres.py`](../src/memory_knowledge/db/postgres.py) [`:13`](../src/memory_knowledge/db/postgres.py:13), [`config.py`](../src/memory_knowledge/config.py).
