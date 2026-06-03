@@ -26,6 +26,11 @@ class Settings(BaseSettings):
     neo4j_user: str
     neo4j_password: str
     neo4j_max_pool_size: int = 50
+    # Connection liveness — Aura drops idle connections; recycle/health-check
+    # them so a stale pooled connection doesn't abort ingestion (SessionExpired).
+    neo4j_liveness_check_timeout_seconds: float = 30.0
+    neo4j_max_connection_lifetime_seconds: float = 300.0
+    neo4j_connection_acquisition_timeout_seconds: float = 60.0
 
     # Auth
     auth_mode: Literal["api_key", "codex"] = "codex"

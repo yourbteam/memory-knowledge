@@ -18,6 +18,13 @@ async def init_neo4j(settings: Settings) -> neo4j.AsyncDriver:
         settings.neo4j_uri,
         auth=(settings.neo4j_user, settings.neo4j_password),
         max_connection_pool_size=settings.neo4j_max_pool_size,
+        # Aura silently drops idle connections; without liveness checks the
+        # first use of a stale pooled connection fails with SessionExpired and
+        # aborts the ingestion. Health-check idle connections before handing
+        # them out, and recycle long-lived ones proactively.
+        liveness_check_timeout=settings.neo4j_liveness_check_timeout_seconds,
+        max_connection_lifetime=settings.neo4j_max_connection_lifetime_seconds,
+        connection_acquisition_timeout=settings.neo4j_connection_acquisition_timeout_seconds,
     )
     await _driver.verify_connectivity()
     return _driver
