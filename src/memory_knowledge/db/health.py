@@ -46,8 +46,8 @@ async def readiness_check() -> dict[str, Any]:
         results["qdrant"] = "ok"
     except Exception as exc:
         logger.warning("readiness_qdrant_failed", error=_format_dependency_error(exc))
-        results["qdrant"] = _format_dependency_error(exc)
-        results["status"] = "not_ready"
+        results["qdrant"] = f"degraded: {_format_dependency_error(exc)}"
+        results["degraded"].append("qdrant")
 
     # Neo4j
     try:

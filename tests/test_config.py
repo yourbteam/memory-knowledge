@@ -40,8 +40,9 @@ def test_settings_defaults(monkeypatch):
     assert s.pg_pool_min_size == 5
     assert s.pg_pool_max_size == 20
     assert s.neo4j_max_pool_size == 50
-    assert s.embedding_model == "text-embedding-3-small"
-    assert s.embedding_dimensions == 1536
+    assert s.embedding_provider == "local"
+    assert s.embedding_model == "BAAI/bge-base-en-v1.5"
+    assert s.embedding_dimensions == 768
     assert s.server_port == 8000
     assert s.qdrant_api_key is None
     assert s.auth_mode == "codex"

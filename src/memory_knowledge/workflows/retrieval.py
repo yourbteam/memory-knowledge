@@ -171,6 +171,7 @@ async def qdrant_semantic_search(
     query_embedding: list[float],
     repository_key: str,
     limit: int = 40,
+    score_threshold: float | None = None,
 ) -> list[dict[str, Any]]:
     results = await client.query_points(
         collection_name="code_chunks",
@@ -188,6 +189,7 @@ async def qdrant_semantic_search(
             ]
         ),
         limit=limit,
+        score_threshold=score_threshold,
         with_payload=True,
     )
     return [
@@ -236,6 +238,7 @@ async def qdrant_summary_search(
     query_embedding: list[float],
     repository_key: str,
     limit: int = 20,
+    score_threshold: float | None = None,
 ) -> list[dict[str, Any]]:
     """Semantic search on summary_units Qdrant collection."""
     results = await client.query_points(
@@ -254,6 +257,7 @@ async def qdrant_summary_search(
             ]
         ),
         limit=limit,
+        score_threshold=score_threshold,
         with_payload=True,
     )
     return [
@@ -300,97 +304,68 @@ def rerank_results(
     summary_pg_results: list[dict[str, Any]] | None = None,
     summary_qdrant_results: list[dict[str, Any]] | None = None,
 ) -> list[dict[str, Any]]:
-    scores: dict[str, dict[str, Any]] = {}
+    """Fuse sources via scaled Reciprocal Rank Fusion (RRF).
 
-    # Normalize PG ts_rank to 0-1
-    max_rank = max((r["rank"] for r in pg_results), default=0) or 1e-9
-    for r in pg_results:
-        key = str(r["entity_key"])
-        norm_score = float(r["rank"]) / max_rank
-        scores[key] = {
-            "entity_key": key,
-            "pg_score": norm_score,
-            "qdrant_score": 0.0,
-            "graph_boost": 0.0,
-            "source": "postgres",
-            "data": r,
-        }
-
-    # Qdrant scores are already 0-1 cosine similarity
-    for r in qdrant_results:
-        key = str(r["entity_key"])
-        if key in scores:
-            scores[key]["qdrant_score"] = float(r["score"])
-            scores[key]["source"] = "both"
-        else:
-            scores[key] = {
-                "entity_key": key,
-                "pg_score": 0.0,
-                "qdrant_score": float(r["score"]),
-                "graph_boost": 0.0,
-                "source": "qdrant",
-                "data": r.get("payload", {}),
-            }
-
-    # Boost graph-connected results AND add new graph-discovered entities
-    if graph_entity_keys:
-        for key in graph_entity_keys:
-            if key in scores:
-                scores[key]["graph_boost"] = 0.1
-            else:
-                # New entity discovered via graph traversal — add with graph-only score
-                scores[key] = {
-                    "entity_key": key,
-                    "pg_score": 0.0,
-                    "qdrant_score": 0.0,
-                    "graph_boost": 0.3,
-                    "source": "graph",
-                    "data": {},
-                }
-
-    # Add summary results with 0.8x weight
+    PG ``ts_rank`` and Qdrant cosine live on incomparable scales, so we fuse by
+    RANK, not raw score: each source contributes ``weight * K/(K + rank)`` per
+    item (rank 0-based, so the top item contributes ~1.0). A result strong in
+    multiple sources sums to ~2.0 — the same ~0..N magnitude the previous additive
+    scheme produced, which keeps ``compute_auto_feedback``'s thresholds valid.
+    """
+    K = 60
     SUMMARY_WEIGHT = 0.8
-    if summary_pg_results:
-        max_srank = max((r["rank"] for r in summary_pg_results), default=0) or 1e-9
-        for r in summary_pg_results:
-            key = str(r["entity_key"])
-            norm = float(r["rank"]) / max_srank * SUMMARY_WEIGHT
-            if key not in scores:
-                scores[key] = {
-                    "entity_key": key,
-                    "pg_score": norm,
-                    "qdrant_score": 0.0,
-                    "graph_boost": 0.0,
-                    "source": "summary",
-                    "data": r,
-                }
-            else:
-                scores[key]["pg_score"] = max(scores[key]["pg_score"], norm)
+    entries: dict[str, dict[str, Any]] = {}
 
-    if summary_qdrant_results:
-        for r in summary_qdrant_results:
-            key = str(r["entity_key"])
-            score = float(r["score"]) * SUMMARY_WEIGHT
-            if key not in scores:
-                scores[key] = {
-                    "entity_key": key,
-                    "pg_score": 0.0,
-                    "qdrant_score": score,
-                    "graph_boost": 0.0,
-                    "source": "summary",
-                    "data": r.get("payload", {}),
-                }
-            else:
-                scores[key]["qdrant_score"] = max(scores[key]["qdrant_score"], score)
-
-    # Combined score and sort
-    for entry in scores.values():
-        entry["combined_score"] = (
-            entry["pg_score"] + entry["qdrant_score"] + entry["graph_boost"]
+    def _entry(key: Any) -> dict[str, Any]:
+        return entries.setdefault(
+            str(key),
+            {"entity_key": str(key), "combined_score": 0.0, "sources": set(), "data": {}},
         )
 
-    ranked = sorted(scores.values(), key=lambda x: x["combined_score"], reverse=True)
-    return ranked
+    def _fuse(items: list[dict[str, Any]], score_key: str, source: str, weight: float = 1.0) -> None:
+        ranked = sorted(items, key=lambda r: float(r.get(score_key) or 0.0), reverse=True)
+        for pos, r in enumerate(ranked):
+            e = _entry(r["entity_key"])
+            e["combined_score"] += weight * (K / (K + pos))
+            e["sources"].add(source)
+            if not e["data"]:
+                e["data"] = r.get("payload") or r
+
+    _fuse(pg_results, "rank", "postgres")
+    _fuse(qdrant_results, "score", "qdrant")
+    if summary_pg_results:
+        _fuse(summary_pg_results, "rank", "summary", SUMMARY_WEIGHT)
+    if summary_qdrant_results:
+        _fuse(summary_qdrant_results, "score", "summary", SUMMARY_WEIGHT)
+
+    # Graph connectivity is a soft signal: a small bonus if already retrieved,
+    # a larger one for entities discovered only via graph traversal.
+    if graph_entity_keys:
+        for key in graph_entity_keys:
+            e = _entry(key)
+            e["combined_score"] += 0.1 if e["sources"] else 0.3
+            e["sources"].add("graph")
+
+    ranked_out: list[dict[str, Any]] = []
+    for e in entries.values():
+        srcs = e["sources"]
+        if {"postgres", "qdrant"} <= srcs:
+            source = "both"
+        elif len(srcs) == 1:
+            source = next(iter(srcs))
+        else:
+            source = "+".join(sorted(srcs))
+        ranked_out.append(
+            {
+                "entity_key": e["entity_key"],
+                "combined_score": e["combined_score"],
+                "source": source,
+                "data": e["data"],
+            }
+        )
+
+    ranked_out.sort(key=lambda x: x["combined_score"], reverse=True)
+    return ranked_out
 
 
 async def assemble_context_bundle(
@@ -699,6 +674,12 @@ async def run(
         second_store = policy["second_store"] if policy else None
         allow_fanout = policy["allow_fanout"] if policy else False
         allow_graph = policy["allow_graph_expansion"] if policy else False
+        semantic_assist = policy["semantic_assist_enabled"] if policy else False
+        min_score = (
+            float(policy["confidence_threshold"])
+            if policy and policy.get("confidence_threshold") is not None
+            else None
+        )
         logger.info("policy_loaded", policy_name=policy["policy_name"] if policy else "none")
 
         # Extract active surface metadata for context bundle
@@ -733,7 +714,7 @@ async def run(
         elif first_store == "qdrant":
             query_embedding = await embed_query(query, settings)
             qdrant_results = await qdrant_semantic_search(
-                qdrant_client, query_embedding, repository_key
+                qdrant_client, query_embedding, repository_key, score_threshold=min_score
             )
             logger.info("qdrant_search_complete", result_count=len(qdrant_results))
 
@@ -751,9 +732,22 @@ async def run(
                 if query_embedding is None:
                     query_embedding = await embed_query(query, settings)
                 qdrant_results = await qdrant_semantic_search(
-                    qdrant_client, query_embedding, repository_key
+                    qdrant_client, query_embedding, repository_key, score_threshold=min_score
                 )
                 logger.info("fanout_qdrant_search", result_count=len(qdrant_results))
+
+        # Step 4.5: Semantic assist — for policies that request it, run vector search
+        # even when a non-Qdrant store led and fan-out didn't already cover Qdrant.
+        # (Fixes e.g. decision_history, which is Postgres-first with fan-out off.)
+        if semantic_assist and not qdrant_results:
+            if query_embedding is None:
+                query_embedding = await embed_query(query, settings)
+            if "qdrant" not in stores_queried:
+                stores_queried.append("qdrant")
+            qdrant_results = await qdrant_semantic_search(
+                qdrant_client, query_embedding, repository_key, score_threshold=min_score
+            )
+            logger.info("semantic_assist_search", result_count=len(qdrant_results))
 
         # Step 5: Optional Neo4j graph expansion
         graph_entity_keys: list[str] | None = None
@@ -778,7 +772,7 @@ async def run(
         summary_qdrant: list[dict[str, Any]] = []
         if query_embedding is not None:
             summary_qdrant = await qdrant_summary_search(
-                qdrant_client, query_embedding, repository_key
+                qdrant_client, query_embedding, repository_key, score_threshold=min_score
             )
 
         # Step 6: Rerank and fuse (including summaries at 0.8x weight)
@@ -842,7 +836,7 @@ async def run(
                 stores_queried=stores_queried,
                 fanout_used=fanout_used,
                 graph_expansion_used=graph_expansion_used,
-                rerank_strategy="score_sort",
+                rerank_strategy="rrf",
                 result_count=context_bundle["count"],
                 duration_ms=duration_ms,
             )
