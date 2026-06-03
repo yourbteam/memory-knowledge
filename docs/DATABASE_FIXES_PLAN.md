@@ -193,7 +193,9 @@ Today only `first_store`, `second_store`, `allow_fanout`, `allow_graph_expansion
 
 ## PHASE 4 — Ops/security (F4, F5)
 
-> **STATUS: F5 ✅ done + deployed (in `15d7a25`).** F4 ⏸️ DEFERRED: enabling real TLS verification needs Supabase's CA cert (the pooler chains to a self-signed root; verified failing under system CAs). Not in env/KV; lowest severity, highest prod-breakage risk. When resumed: download Supabase's official CA, validate locally against the live pooler, then `CERT_REQUIRED` + `pg_ssl_ca_path` + deploy.
+> **STATUS: ✅ BOTH COMPLETE + DEPLOYED.**
+> - **F5** (Qdrant readiness parity): deployed in `15d7a25`.
+> - **F4** (Postgres TLS verification): deployed in `0ce62aa`. `pg_ssl=True` now builds a verifying context (`CERT_REQUIRED` + hostname) against the baked **Supabase Root 2021 CA** (`docker/certs/supabase-root-2021.crt`, app setting `PG_SSL_CA_PATH=/app/certs/...`); `pg_ssl_insecure` is the explicit opt-out escape hatch. `VERIFY_X509_STRICT` kept off for the 2021 CA chain. Validated against the live pooler and confirmed `/ready` postgres=ok post-deploy.
 
 ### Step 4.1 — TLS verification (F4)
 **Files:** [`src/memory_knowledge/db/postgres.py`](../src/memory_knowledge/db/postgres.py) [`:13`](../src/memory_knowledge/db/postgres.py:13), [`config.py`](../src/memory_knowledge/config.py).
