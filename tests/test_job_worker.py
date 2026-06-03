@@ -7,6 +7,16 @@ from memory_knowledge.jobs import job_worker
 from memory_knowledge.workflows.base import WorkflowResult
 
 
+class _FakePool:
+    """Minimal pool stub: execute_job reads current state before transitioning."""
+
+    def __init__(self, state_code: str = "pending"):
+        self._state_code = state_code
+
+    async def fetchrow(self, _query, *_args):
+        return {"state_code": self._state_code}
+
+
 @pytest.mark.asyncio
 async def test_execute_job_marks_failed_when_workflow_returns_error(monkeypatch):
     transitions: list[tuple[str, dict[str, str | None]]] = []
@@ -34,7 +44,7 @@ async def test_execute_job_marks_failed_when_workflow_returns_error(monkeypatch)
     monkeypatch.setattr(job_worker, "update_job_state", fake_update_job_state)
 
     result = await job_worker.execute_job(
-        manifest_pool=object(),
+        manifest_pool=_FakePool(),
         job_id=uuid.uuid4(),
         job_fn=fake_job_fn,
         worker_settings=type("Settings", (), {"job_retry_delay_seconds": 0.01})(),
@@ -74,7 +84,7 @@ async def test_execute_job_marks_failed_with_placeholder_when_workflow_error_is_
     monkeypatch.setattr(job_worker, "update_job_state", fake_update_job_state)
 
     result = await job_worker.execute_job(
-        manifest_pool=object(),
+        manifest_pool=_FakePool(),
         job_id=uuid.uuid4(),
         job_fn=fake_job_fn,
         worker_settings=type("Settings", (), {"job_retry_delay_seconds": 0.01})(),
@@ -109,7 +119,7 @@ async def test_execute_job_exception_with_blank_message_preserves_type(monkeypat
     monkeypatch.setattr(job_worker, "update_job_state", fake_update_job_state)
 
     result = await job_worker.execute_job(
-        manifest_pool=object(),
+        manifest_pool=_FakePool(),
         job_id=uuid.uuid4(),
         job_fn=fake_job_fn,
         worker_settings=type("Settings", (), {"job_retry_delay_seconds": 0.01})(),
@@ -118,3 +128,33 @@ async def test_execute_job_exception_with_blank_message_preserves_type(monkeypat
     assert result.status == "error"
     assert "BlankError: <no message>" in result.error
     assert "BlankError: <no message>" in transitions[-1][1]["error_text"]
+
+
+@pytest.mark.asyncio
+async def test_execute_job_skips_running_transition_when_already_claimed(monkeypatch):
+    """Dispatcher claims pending→running atomically; execute_job must NOT
+    re-issue running→running (which the guard rejects, orphaning the job)."""
+    transitions: list[str] = []
+
+    async def fake_update_job_state(pool, job_id, state_code, checkpoint_data=None, error_code=None, error_text=None):
+        transitions.append(state_code)
+
+    async def fake_job_fn(**kwargs):
+        return WorkflowResult(
+            run_id=str(uuid.uuid4()),
+            tool_name="run_repo_ingestion_workflow",
+            status="success",
+        )
+
+    monkeypatch.setattr(job_worker, "update_job_state", fake_update_job_state)
+
+    result = await job_worker.execute_job(
+        manifest_pool=_FakePool(state_code="running"),
+        job_id=uuid.uuid4(),
+        job_fn=fake_job_fn,
+        worker_settings=type("Settings", (), {"job_retry_delay_seconds": 0.01})(),
+    )
+
+    assert result.status == "success"
+    # No redundant "running" transition; goes straight to "completed".
+    assert transitions == ["completed"]

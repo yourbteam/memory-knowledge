@@ -34,8 +34,15 @@ async def execute_job(
     manifest_pool/worker_settings are for the job system's own use.
     **kwargs are forwarded directly to job_fn (the workflow function).
     """
-    # Transition pending → running
-    await update_job_state(manifest_pool, job_id, "running")
+    # Transition pending/retrying → running, unless the dispatcher's atomic
+    # claim already set it to running (avoids an invalid running→running).
+    _row = await manifest_pool.fetchrow(
+        "SELECT state_code FROM ops.job_manifests WHERE job_id = $1", job_id
+    )
+    if _row is None:
+        raise ValueError(f"Job not found: {job_id}")
+    if _row["state_code"] != "running":
+        await update_job_state(manifest_pool, job_id, "running")
 
     try:
         # Inner retry for transient errors (connection timeouts, rate limits)
