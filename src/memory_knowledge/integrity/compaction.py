@@ -174,6 +174,11 @@ async def compact_repository(
                         """,
                         keys=orphans[i : i + BATCH_SIZE],
                     )
+        except (neo4j.exceptions.ServiceUnavailable, neo4j.exceptions.SessionExpired, TimeoutError) as exc:
+            # Neo4j unavailable/degraded (the dispatcher injects a live-but-dead driver during an
+            # outage) — treat as skipped, not a failure, so PG/Qdrant compaction still reports success.
+            report.skipped.append(f"neo4j (unavailable: {type(exc).__name__})")
+            logger.warning("compaction_neo4j_unavailable", repository_key=repository_key, error=str(exc))
         except Exception as exc:
             report.errors.append(f"neo4j: {exc}")
             report.skipped.append("neo4j (error)")

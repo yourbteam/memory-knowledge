@@ -106,3 +106,48 @@ def list_source_files(
 def list_python_files(repo: Repo) -> list[str]:
     """Deprecated: use list_source_files(repo, {".py"}) instead."""
     return list_source_files(repo, {".py"})
+
+
+async def resolve_remote_head(origin_url: str, branch: str, settings) -> str | None:
+    """Resolve a branch's remote HEAD sha via `git ls-remote` (no clone). Returns None on
+    failure or if the branch is absent. Used by the freshness scheduler for change detection."""
+    import asyncio
+
+    from git import Git
+
+    from memory_knowledge.auth.github_auth import get_authenticated_git_url
+
+    authed = await get_authenticated_git_url(origin_url, settings)
+    try:
+        out = await asyncio.to_thread(Git().ls_remote, authed, f"refs/heads/{branch}")
+    except Exception as exc:
+        logger.warning("ls_remote_failed", origin_url=origin_url, branch=branch, error=str(exc))
+        return None
+    out = (out or "").strip()
+    return out.split()[0] if out else None  # "<sha>\trefs/heads/<branch>"
+
+
+async def resolve_default_branch(origin_url: str, settings) -> tuple[str, str] | None:
+    """Resolve (branch, sha) of the remote default branch via `git ls-remote --symref HEAD`.
+    Bootstrap only (a repo registered but never ingested)."""
+    import asyncio
+
+    from git import Git
+
+    from memory_knowledge.auth.github_auth import get_authenticated_git_url
+
+    authed = await get_authenticated_git_url(origin_url, settings)
+    try:
+        out = await asyncio.to_thread(Git().ls_remote, "--symref", authed, "HEAD")
+    except Exception as exc:
+        logger.warning("ls_remote_symref_failed", origin_url=origin_url, error=str(exc))
+        return None
+    branch: str | None = None
+    sha: str | None = None
+    for line in (out or "").splitlines():
+        line = line.strip()
+        if line.startswith("ref:"):  # "ref: refs/heads/main\tHEAD"
+            branch = line.split()[1].rsplit("/", 1)[-1]
+        elif line.endswith("HEAD") and not line.startswith("ref:"):  # "<sha>\tHEAD"
+            sha = line.split()[0]
+    return (branch, sha) if branch and sha else None

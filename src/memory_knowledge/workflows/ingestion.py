@@ -110,7 +110,12 @@ async def _determine_diff_files(
     if old_sha is None or old_sha == commit_sha:
         return None
     extensions = get_supported_extensions(settings.supported_languages)
-    return await asyncio.to_thread(changed_files, repo, old_sha, commit_sha, extensions)
+    try:
+        return await asyncio.to_thread(changed_files, repo, old_sha, commit_sha, extensions)
+    except Exception as exc:
+        # old_sha may be unreachable (GC'd after a force-push/rebase) → fall back to a full re-ingest.
+        logger.warning("incremental_diff_failed", old_sha=old_sha, commit_sha=commit_sha, error=str(exc))
+        return None
 
 
 async def _fetch_existing_summary_keys(

@@ -5,7 +5,7 @@ import time
 from typing import Any, Callable
 
 import structlog
-from prometheus_client import Counter, Histogram
+from prometheus_client import Counter, Gauge, Histogram
 
 logger = structlog.get_logger()
 
@@ -24,6 +24,11 @@ ingestion_files_total = Counter(
 )
 job_transitions_total = Counter(
     "mk_job_transitions_total", "Job state transitions", ["from_state", "to_state"]
+)
+repo_surface_age_seconds = Gauge(
+    "mk_repo_surface_age_seconds",
+    "Age of a repository's active retrieval surface (seconds since last ingest)",
+    ["repository_key"],
 )
 
 

@@ -65,6 +65,16 @@ class Settings(BaseSettings):
     compaction_enabled: bool = False
     compaction_dry_run_default: bool = True
 
+    # Ingestion freshness scheduler
+    ingestion_scheduler_enabled: bool = False
+    ingestion_scheduler_interval_seconds: int = 3600
+    ingestion_scheduler_repo_allowlist: str = ""  # CSV; empty = all repos with origin_url (minus test prefixes)
+    ingestion_scheduler_max_per_tick: int = 5  # bounds enqueues per tick, not the cheap ls-remote checks
+
+    # Maintenance scheduler (audit + compaction)
+    maintenance_scheduler_enabled: bool = False
+    maintenance_interval_seconds: int = 604800  # weekly
+
     # Job orchestration
     max_job_retries: int = 3
     job_retry_delay_seconds: float = 5.0

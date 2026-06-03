@@ -51,6 +51,7 @@ from memory_knowledge.workflows import ingestion as _ingestion
 from memory_knowledge.workflows import integrity_audit as _integrity_audit
 from memory_knowledge.workflows import repair_rebuild as _repair_rebuild
 from memory_knowledge.integrity import backfill_is_active as _backfill_is_active
+from memory_knowledge.workflows import compaction as _compaction
 from memory_knowledge.workflows import route_intelligence as _route_intelligence
 
 logger = structlog.get_logger()
@@ -602,6 +603,40 @@ async def run_repair_rebuild_workflow(
             tool_name="run_repair_rebuild_workflow",
             status="submitted",
             data={"job_id": str(job_id)},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("run_compaction_workflow")
+async def run_compaction_workflow(
+    repository_key: str,
+    dry_run: bool = True,
+    correlation_id: str | None = None,
+) -> str:
+    """Prune superseded (is_active=False) data for a repo. dry_run=True reports counts only. Returns job_id for polling."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "run_compaction_workflow")
+    guard = check_remote_write_guard(get_settings(), "run_compaction_workflow", is_destructive=True)
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        from memory_knowledge.jobs.manifest_writer import create_job
+
+        pool = get_pg_pool()
+        job_id = await create_job(
+            pool, run_id, "compaction", "run_compaction_workflow", repository_key,
+            correlation_id=str(correlation_id) if correlation_id else None,
+            job_params={"dry_run": dry_run},
+        )
+        # The JobDispatcher (which has "compaction" registered) is the sole executor.
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="run_compaction_workflow",
+            status="submitted",
+            data={"job_id": str(job_id), "dry_run": dry_run},
         ).model_dump_json()
     finally:
         clear_run_context()
@@ -5989,9 +6024,26 @@ async def app_lifespan(app: Starlette):
     register_job_type("ingestion", _ingestion.run)
     register_job_type("repair", _repair_rebuild.run)
     register_job_type("integrity_audit", _integrity_audit.run)
+    register_job_type("compaction", _compaction.run)
 
     _dispatcher = JobDispatcher(poll_interval=15.0, max_concurrent=3)
     await _dispatcher.start(get_pg_pool(), settings)
+
+    # Ingestion freshness scheduler (enqueues incremental ingests for changed repos)
+    _ingestion_scheduler = None
+    if settings.ingestion_scheduler_enabled:
+        from memory_knowledge.jobs.ingestion_scheduler import IngestionScheduler
+
+        _ingestion_scheduler = IngestionScheduler()
+        await _ingestion_scheduler.start(get_pg_pool(), settings)
+
+    # Maintenance scheduler (periodic integrity-audit + compaction)
+    _maintenance_scheduler = None
+    if settings.maintenance_scheduler_enabled:
+        from memory_knowledge.jobs.maintenance_scheduler import MaintenanceScheduler
+
+        _maintenance_scheduler = MaintenanceScheduler()
+        await _maintenance_scheduler.start(get_pg_pool(), settings)
 
     # Start Codex token refresh manager
     _token_manager = None
@@ -6021,6 +6073,10 @@ async def app_lifespan(app: Starlette):
     await CodexMcpClient.get().shutdown()
     if _token_manager:
         await _token_manager.stop()
+    if _ingestion_scheduler:
+        await _ingestion_scheduler.stop()
+    if _maintenance_scheduler:
+        await _maintenance_scheduler.stop()
     await _dispatcher.stop()
     if _background_tasks:
         tasks = list(_background_tasks)
