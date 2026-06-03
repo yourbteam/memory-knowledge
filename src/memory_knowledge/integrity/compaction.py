@@ -125,9 +125,26 @@ async def compact_repository(
         report.skipped.append("neo4j (driver unavailable)")
     else:
         try:
+            # "Current" = files/symbols backed by active chunks, UNION files/symbols in the
+            # current branch-head revisions (covers chunkless-but-current files). Old-commit
+            # versions (whose chunks were superseded/pruned) fall out → graph orphans.
             rows = await pool.fetch(
                 """
-                SELECT e.entity_key FROM catalog.entities e
+                SELECT DISTINCT fe.entity_key
+                FROM catalog.files f
+                JOIN catalog.entities fe ON f.entity_id = fe.id
+                WHERE fe.repository_id = $1
+                  AND EXISTS (SELECT 1 FROM catalog.chunks c WHERE c.file_id = f.id AND c.is_active)
+                UNION
+                SELECT DISTINCT se.entity_key
+                FROM catalog.symbols s
+                JOIN catalog.entities se ON s.entity_id = se.id
+                WHERE se.repository_id = $1
+                  AND EXISTS (SELECT 1 FROM catalog.chunks c WHERE c.file_id = s.file_id AND c.is_active)
+                UNION
+                SELECT e.entity_key
+                FROM catalog.entities e
+                JOIN catalog.branch_heads bh ON bh.repo_revision_id = e.repo_revision_id
                 WHERE e.repository_id = $1 AND e.entity_type IN ('file', 'symbol')
                 """,
                 repo_id,
