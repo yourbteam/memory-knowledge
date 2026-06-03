@@ -121,7 +121,8 @@ Each phase ends with explicit verification. Phases are independently approvable 
 
 ## PHASE 2 — Compaction / garbage collection (F2)
 
-> **STATUS: ✅ PG compaction COMPLETE (2026-06-03). Neo4j orphan GC DEFERRED.**
+> **STATUS: ✅ FULLY COMPLETE (2026-06-03) — PG compaction + Neo4j orphan GC.**
+> - **Neo4j orphan GC done:** refined "current" = files/symbols backed by active chunks ∪ branch-head-revision files/symbols (`ab85706`). Validated (orphans have 0 active chunks, all on old revisions). Deleted 12,024 old-commit File/Symbol nodes; graph 30,293 → 18,269; re-check 0 orphans remain.
 > - `integrity/compaction.py` (`compact_repository`, dry-run-first) committed `9e37a4f`. Run offline via local runner (D2 pattern), not the MCP tool.
 > - Pruned prod: deleted 18,169 inactive chunks + 12,021 inactive summaries (`catalog.chunks` 84,827→66,658 / 0 inactive; `summaries` 37,692→25,671 / 0 inactive). FK-safe (learned_records empty). `ANALYZE` refreshed; `dead=0` (autovacuum reclaimed for reuse — on-disk size held for reuse, bounding growth; no `VACUUM FULL` to avoid the table lock).
 > - Qdrant: 0 inactive points (collections were rebuilt active-only during the embeddings migration).
