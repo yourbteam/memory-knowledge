@@ -54,6 +54,10 @@ async def ensure_collections(
             ("is_active", models.PayloadSchemaType.BOOL),
             ("branch_name", models.PayloadSchemaType.KEYWORD),
             ("commit_sha", models.PayloadSchemaType.KEYWORD),
+            # Incremental ingestion deactivates a changed/deleted file's old
+            # points via a filter on file_path — Qdrant rejects the filter
+            # without this index (file_ingestion_failed → 0 chunks written).
+            ("file_path", models.PayloadSchemaType.KEYWORD),
         ]:
             try:
                 await client.create_payload_index(

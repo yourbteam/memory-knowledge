@@ -79,6 +79,12 @@ class Settings(BaseSettings):
     max_job_retries: int = 3
     job_retry_delay_seconds: float = 5.0
     job_orphan_timeout_seconds: int = 3600
+    # Serialize dispatch: the shared B3 plan cannot run concurrent heavy
+    # ingestions (full re-ingest of a large repo OOMs / trips health checks).
+    job_dispatcher_max_concurrent: int = 1
+    job_dispatcher_poll_interval_seconds: float = 15.0
+    # Recover jobs left in 'running' by a crashed/restarted container.
+    reclaim_stale_running_jobs_on_start: bool = True
 
     # HTTP
     cors_allowed_origins: str = "*"

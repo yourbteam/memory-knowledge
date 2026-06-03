@@ -6026,7 +6026,10 @@ async def app_lifespan(app: Starlette):
     register_job_type("integrity_audit", _integrity_audit.run)
     register_job_type("compaction", _compaction.run)
 
-    _dispatcher = JobDispatcher(poll_interval=15.0, max_concurrent=3)
+    _dispatcher = JobDispatcher(
+        poll_interval=settings.job_dispatcher_poll_interval_seconds,
+        max_concurrent=settings.job_dispatcher_max_concurrent,
+    )
     await _dispatcher.start(get_pg_pool(), settings)
 
     # Ingestion freshness scheduler (enqueues incremental ingests for changed repos)

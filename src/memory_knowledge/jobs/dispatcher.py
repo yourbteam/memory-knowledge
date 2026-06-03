@@ -47,8 +47,36 @@ class JobDispatcher:
         self._running = True
         self._pool = pool
         self._settings = settings
+        if getattr(settings, "reclaim_stale_running_jobs_on_start", False):
+            await self._reclaim_stale_running()
         self._task = asyncio.create_task(self._poll_loop())
-        logger.info("job_dispatcher_started", poll_interval=self.poll_interval)
+        logger.info(
+            "job_dispatcher_started",
+            poll_interval=self.poll_interval,
+            max_concurrent=self.max_concurrent,
+        )
+
+    async def _reclaim_stale_running(self) -> None:
+        """Reset jobs left in 'running' by a crashed/restarted container.
+
+        Single-instance deployment: at startup nothing is legitimately
+        'running', so any 'running' row is an orphan from a killed container.
+        Mark it failed (not pending) to avoid a restart-loop on a job that
+        crashed the container; the scheduler/retry path re-enqueues in a
+        controlled way.
+        """
+        if self._pool is None:
+            return
+        result = await self._pool.execute(
+            """
+            UPDATE ops.job_manifests
+            SET state_code = 'failed', completed_utc = NOW(),
+                error_code = 'orphaned_restart',
+                error_text = 'Reclaimed: job was running when the container restarted.'
+            WHERE state_code = 'running'
+            """
+        )
+        logger.info("dispatcher_reclaimed_stale_running", result=result)
 
     async def stop(self) -> None:
         """Stop the polling loop and drain active dispatch tasks."""
