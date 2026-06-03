@@ -26,6 +26,7 @@ COPY --from=builder /install /usr/local
 COPY src/ src/
 COPY docker/entrypoint.sh alembic.ini ./
 COPY migrations/ migrations/
+COPY docker/certs/ /app/certs/
 
 # Bake the embedding model into the image so there is no cold-start download.
 ENV FASTEMBED_CACHE_PATH=/app/.fastembed_cache

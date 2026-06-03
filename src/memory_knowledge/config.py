@@ -13,6 +13,8 @@ class Settings(BaseSettings):
     pg_pool_min_size: int = 5
     pg_pool_max_size: int = 20
     pg_ssl: bool = False
+    pg_ssl_ca_path: str = ""  # CA bundle for full verification (e.g. Supabase root CA)
+    pg_ssl_insecure: bool = False  # opt-out: encrypt without cert verification (NOT recommended)
     pg_command_timeout: int = 30
 
     # Qdrant

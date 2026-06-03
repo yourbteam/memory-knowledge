@@ -12,9 +12,24 @@ async def init_postgres(settings: Settings) -> asyncpg.Pool:
     connect_kwargs: dict = {}
     if settings.pg_ssl:
         import ssl
-        ctx = ssl.create_default_context()
-        ctx.check_hostname = False
-        ctx.verify_mode = ssl.CERT_NONE
+        if settings.pg_ssl_insecure:
+            # Explicit opt-out: encrypt but do not verify the server cert (MITM-exposed).
+            ctx = ssl.create_default_context()
+            ctx.check_hostname = False
+            ctx.verify_mode = ssl.CERT_NONE
+        else:
+            # Verify the server certificate and hostname against a CA bundle.
+            ctx = ssl.SSLContext(ssl.PROTOCOL_TLS_CLIENT)
+            ctx.check_hostname = True
+            ctx.verify_mode = ssl.CERT_REQUIRED
+            # Supabase's 2021 CA chain predates the strict RFC-5280 profile; keep the
+            # (default-off) strict flag off so verification doesn't reject the intermediate.
+            try:
+                ctx.verify_flags &= ~ssl.VerifyFlags.VERIFY_X509_STRICT
+            except (AttributeError, ValueError):
+                pass
+            if settings.pg_ssl_ca_path:
+                ctx.load_verify_locations(settings.pg_ssl_ca_path)
         connect_kwargs["ssl"] = ctx
     if settings.pg_command_timeout:
         connect_kwargs["command_timeout"] = settings.pg_command_timeout
