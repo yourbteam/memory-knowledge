@@ -98,3 +98,56 @@ async def deactivate_old_points(
         repository_key=repository_key,
         branch_name=branch_name,
     )
+
+
+async def deactivate_unbacked_points(
+    client: AsyncQdrantClient,
+    collection_name: str,
+    repository_key: str,
+    active_entity_keys: set[str],
+) -> int:
+    """Set is_active=False on currently-active points not backed by active PG.
+
+    The point ID is the entity_key (which embeds commit_sha), so an additive
+    re-project can never overwrite or deactivate superseded/orphaned points from
+    other commits. This reconciles the collection to PG (the source of truth):
+    any point that is active in Qdrant but whose entity_key is not in the active
+    PG set is deactivated. Caller must pass a NON-EMPTY active set — an empty set
+    would deactivate everything, so the caller skips reconciliation in that case.
+    """
+    if not active_entity_keys:
+        return 0
+    active = {str(k).lower() for k in active_entity_keys}
+    orphan_ids: list[Any] = []
+    offset = None
+    flt = models.Filter(
+        must=[
+            models.FieldCondition(key="repository_key", match=models.MatchValue(value=repository_key)),
+            models.FieldCondition(key="is_active", match=models.MatchValue(value=True)),
+        ]
+    )
+    while True:
+        points, offset = await client.scroll(
+            collection_name=collection_name,
+            scroll_filter=flt,
+            limit=1000,
+            offset=offset,
+            with_payload=False,
+            with_vectors=False,
+        )
+        orphan_ids.extend(p.id for p in points if str(p.id).lower() not in active)
+        if offset is None:
+            break
+    for i in range(0, len(orphan_ids), 500):
+        await client.set_payload(
+            collection_name=collection_name,
+            payload={"is_active": False},
+            points=orphan_ids[i : i + 500],
+        )
+    logger.info(
+        "unbacked_points_deactivated",
+        collection=collection_name,
+        repository_key=repository_key,
+        deactivated=len(orphan_ids),
+    )
+    return len(orphan_ids)

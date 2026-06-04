@@ -13,7 +13,11 @@ from memory_knowledge.db.qdrant import ensure_collections
 from memory_knowledge import triage_memory as _triage_memory
 from memory_knowledge.projections.learned_memory_qdrant import embed_and_upsert_learned_record
 from memory_knowledge.projections.neo4j_projector import project_repository_graph
-from memory_knowledge.projections.qdrant_projector import embed_chunks, upsert_points
+from memory_knowledge.projections.qdrant_projector import (
+    deactivate_unbacked_points,
+    embed_chunks,
+    upsert_points,
+)
 from memory_knowledge.projections.summary_qdrant import embed_and_upsert_summaries
 
 logger = structlog.get_logger()
@@ -22,7 +26,9 @@ logger = structlog.get_logger()
 class RepairReport(BaseModel):
     scope: str
     qdrant_points_repaired: int = 0
+    qdrant_points_deactivated: int = 0
     summary_points_repaired: int = 0
+    summary_points_deactivated: int = 0
     learned_records_repaired: int = 0
     triage_cases_repaired: int = 0
     triage_cases_skipped: int = 0
@@ -67,6 +73,7 @@ async def repair(
     if repair_scope in ("full", "qdrant"):
         try:
             await ensure_collections(qdrant_client, settings)
+            # PG active set is the source of truth (not "latest revision").
             chunk_rows = await pool.fetch(
                 """
                 SELECT e.entity_key, c.content_text, c.chunk_type,
@@ -74,10 +81,9 @@ async def repair(
                 FROM catalog.chunks c
                 JOIN catalog.entities e ON c.entity_id = e.id
                 JOIN catalog.files f ON c.file_id = f.id
-                WHERE e.repository_id = $1 AND e.repo_revision_id = $2
+                WHERE e.repository_id = $1 AND c.is_active
                 """,
                 repo_id,
-                rev_id,
             )
 
             if chunk_rows:
@@ -105,7 +111,19 @@ async def repair(
                     repository_key, commit_sha, branch_name,
                 )
                 report.qdrant_points_repaired = len(chunks_with_embeddings)
-                logger.info("qdrant_repair_complete", points=report.qdrant_points_repaired)
+                # Reconcile: deactivate active points not backed by active PG
+                # (orphans/superseded the additive upsert can't reach because
+                # point IDs embed commit_sha). Only when the active set is
+                # non-empty (deactivate_unbacked_points guards against a wipe).
+                active_chunk_keys = {str(r["entity_key"]).lower() for r in chunk_rows}
+                report.qdrant_points_deactivated = await deactivate_unbacked_points(
+                    qdrant_client, "code_chunks", repository_key, active_chunk_keys
+                )
+                logger.info(
+                    "qdrant_repair_complete",
+                    points=report.qdrant_points_repaired,
+                    deactivated=report.qdrant_points_deactivated,
+                )
         except Exception as exc:
             report.errors.append(f"Qdrant repair failed: {exc}")
             logger.error("qdrant_repair_failed", error=str(exc))
@@ -118,7 +136,7 @@ async def repair(
                 SELECT e.entity_key, s.summary_text, s.summary_level
                 FROM catalog.summaries s
                 JOIN catalog.entities e ON s.entity_id = e.id
-                WHERE e.repository_id = $1
+                WHERE e.repository_id = $1 AND s.is_active
                 """,
                 repo_id,
             )
@@ -135,7 +153,15 @@ async def repair(
                     qdrant_client, summaries_list, repository_key, commit_sha, settings,
                 )
                 report.summary_points_repaired = len(summaries_list)
-                logger.info("summary_repair_complete", points=report.summary_points_repaired)
+                active_summary_keys = {str(r["entity_key"]).lower() for r in summary_rows}
+                report.summary_points_deactivated = await deactivate_unbacked_points(
+                    qdrant_client, "summary_units", repository_key, active_summary_keys
+                )
+                logger.info(
+                    "summary_repair_complete",
+                    points=report.summary_points_repaired,
+                    deactivated=report.summary_points_deactivated,
+                )
         except Exception as exc:
             report.errors.append(f"Summary repair failed: {exc}")
             logger.error("summary_repair_failed", error=str(exc))

@@ -123,9 +123,18 @@ async def test_repair_reprojects_all_canonical_chunks_and_summaries(monkeypatch)
     monkeypatch.setattr(repair_drift, "embed_and_upsert_summaries", fake_embed_and_upsert_summaries)
     monkeypatch.setattr(repair_drift, "project_repository_graph", fake_project_repository_graph)
 
+    class _FakeQ:
+        async def scroll(self, collection_name, scroll_filter, limit, offset, with_payload, with_vectors):
+            # active points already match PG → reconciliation deactivates nothing
+            ids = {"code_chunks": ["chunk-1", "chunk-2"], "summary_units": ["sum-1", "sum-2"]}.get(collection_name, [])
+            return [type("P", (), {"id": i})() for i in ids], None
+
+        async def set_payload(self, **kwargs):
+            pass
+
     report = await repair_drift.repair(
         pool=Pool(),
-        qdrant_client=object(),
+        qdrant_client=_FakeQ(),
         neo4j_driver=object(),
         settings=SimpleNamespace(),
         repository_key="repo-a",
@@ -135,6 +144,8 @@ async def test_repair_reprojects_all_canonical_chunks_and_summaries(monkeypatch)
     assert report.errors == []
     assert report.qdrant_points_repaired == 2
     assert report.summary_points_repaired == 2
+    assert report.qdrant_points_deactivated == 0
+    assert report.summary_points_deactivated == 0
     assert report.neo4j_nodes_repaired == 1
     assert captured["chunk_texts"] == ["a", "b"]
     assert len(captured["upserted_chunks"]) == 2
