@@ -158,3 +158,35 @@ async def test_execute_job_skips_running_transition_when_already_claimed(monkeyp
     assert result.status == "success"
     # No redundant "running" transition; goes straight to "completed".
     assert transitions == ["completed"]
+
+
+@pytest.mark.asyncio
+async def test_execute_job_partial_result_marked_completed_and_preserved(monkeypatch):
+    """A 'partial' workflow result is recorded (manifest completed + result stored
+    with files_failed) rather than treated as a clean success or a failure."""
+    captured: dict = {}
+
+    async def fake_update_job_state(pool, job_id, state_code, checkpoint_data=None, error_code=None, error_text=None):
+        captured["state"] = state_code
+        captured["checkpoint_data"] = checkpoint_data
+
+    async def fake_job_fn(**kwargs):
+        return WorkflowResult(
+            run_id=str(uuid.uuid4()),
+            tool_name="run_repo_ingestion_workflow",
+            status="partial",
+            data={"files_failed": 3, "files_processed": 10},
+        )
+
+    monkeypatch.setattr(job_worker, "update_job_state", fake_update_job_state)
+
+    result = await job_worker.execute_job(
+        manifest_pool=_FakePool(state_code="running"),
+        job_id=uuid.uuid4(),
+        job_fn=fake_job_fn,
+        worker_settings=type("Settings", (), {"job_retry_delay_seconds": 0.01})(),
+    )
+
+    assert result.status == "partial"
+    assert captured["state"] == "completed"
+    assert json.loads(captured["checkpoint_data"])["data"]["files_failed"] == 3

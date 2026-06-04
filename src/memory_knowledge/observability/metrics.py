@@ -30,6 +30,11 @@ repo_surface_age_seconds = Gauge(
     "Age of a repository's active retrieval surface (seconds since last ingest)",
     ["repository_key"],
 )
+ingestion_partial_runs_total = Counter(
+    "mk_ingestion_partial_runs_total",
+    "Ingestion runs that completed with one or more per-file failures (partial coverage)",
+    ["repository_key"],
+)
 
 
 def track_tool_metrics(tool_name: str) -> Callable:

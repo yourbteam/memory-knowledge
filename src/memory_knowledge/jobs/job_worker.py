@@ -73,7 +73,17 @@ async def execute_job(
             )
             return result
 
-        # Store result in checkpoint_data for check_job_status retrieval
+        if result.status == "partial":
+            logger.warning(
+                "job_partial",
+                job_id=str(job_id),
+                files_failed=(result.data or {}).get("files_failed"),
+            )
+
+        # Store result in checkpoint_data for check_job_status retrieval.
+        # 'partial' keeps the 'completed' manifest state (the succeeded work is
+        # real and the head advanced) but the stored result + warning make the
+        # partial coverage visible via check_job_status.
         await update_job_state(
             manifest_pool, job_id, "completed",
             checkpoint_data=result_json,

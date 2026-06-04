@@ -78,6 +78,7 @@ from memory_knowledge.structure.entity_registrar import (
 )
 from memory_knowledge.jobs.job_checkpoint_manager import save_checkpoint
 from memory_knowledge.observability.error_detail import format_exception_detail
+from memory_knowledge.observability.metrics import ingestion_partial_runs_total
 from memory_knowledge.workflows.base import WorkflowResult
 
 logger = structlog.get_logger()
@@ -145,6 +146,19 @@ def _checkpoint_phase_at_or_beyond(
     if not isinstance(current_phase, str):
         return False
     return CHECKPOINT_PHASE_ORDER.get(current_phase, -1) >= CHECKPOINT_PHASE_ORDER.get(phase, 10_000)
+
+
+def _ingestion_outcome(failed_file_count: int) -> tuple[str, str]:
+    """Map a run's per-file failure count to (ingestion_run status, WorkflowResult status).
+
+    A run that caught >=1 per-file error but still finished is reported as
+    'partial', not a clean success — so the silent "success on partial data"
+    failure mode becomes visible. (Head-advance/retry behaviour is unchanged;
+    gating those needs a transient-vs-permanent policy and is a separate step.)
+    """
+    if failed_file_count > 0:
+        return "partial", "partial"
+    return "completed", "success"
 
 
 async def _save_ingestion_checkpoint(
@@ -568,6 +582,7 @@ async def run(
         symbol_lookup: dict[tuple[str, str], int] = {}
         all_imports: list[tuple[str, str]] = []
         all_calls: list[tuple[str, str, str, str]] = []
+        failed_file_count = 0  # per-file ingest errors caught-and-continued (T3 fail-loud)
         canonical_complete = _checkpoint_phase_at_or_beyond(
             checkpoint_state, "canonical_complete"
         )
@@ -821,6 +836,7 @@ async def run(
                 except Exception as e:
                     logger.error("file_ingestion_failed", file_path=file_path, error=str(e))
                     ingestion_item_rows.append((ingestion_run_id, None, "file", "error", str(e)))
+                    failed_file_count += 1
 
             saved_files = await bulk_upsert_files(pool, pending_file_rows)
             for saved in saved_files:
@@ -1301,8 +1317,28 @@ async def run(
             branch_name, commit_sha, repo_revision_id,
         )
 
-        # Step 11: Complete ingestion run
-        await complete_ingestion_run(pool, ingestion_run_id, status="completed")
+        # Step 11: Complete ingestion run — honest status: a run that dropped
+        # files is 'partial', not a clean success (T3 fail-loud).
+        run_status, wf_status = _ingestion_outcome(failed_file_count)
+        await complete_ingestion_run(
+            pool,
+            ingestion_run_id,
+            status=run_status,
+            error_text=(
+                f"{failed_file_count} of {len(py_files)} files failed to ingest"
+                if failed_file_count
+                else None
+            ),
+        )
+        if failed_file_count:
+            ingestion_partial_runs_total.labels(repository_key=repository_key).inc()
+            logger.warning(
+                "ingestion_partial",
+                repository_key=repository_key,
+                files_failed=failed_file_count,
+                files_total=len(py_files),
+                run_type=run_type,
+            )
 
         duration_ms = int((time.monotonic() - start) * 1000)
         logger.info(
@@ -1310,14 +1346,16 @@ async def run(
             duration_ms=duration_ms,
             files=len(py_files),
             chunks=len(all_chunks_for_embedding),
+            files_failed=failed_file_count,
         )
 
         return WorkflowResult(
             run_id=str(run_id),
             tool_name=TOOL_NAME,
-            status="success",
+            status=wf_status,
             data={
                 "files_processed": len(py_files),
+                "files_failed": failed_file_count,
                 "chunks_created": len(all_chunks_for_embedding),
                 "summaries_created": summaries_created,
                 "run_type": run_type,
