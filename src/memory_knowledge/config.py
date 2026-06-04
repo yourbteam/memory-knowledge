@@ -16,10 +16,17 @@ class Settings(BaseSettings):
     pg_ssl_ca_path: str = ""  # CA bundle for full verification (e.g. Supabase root CA)
     pg_ssl_insecure: bool = False  # opt-out: encrypt without cert verification (NOT recommended)
     pg_command_timeout: int = 30
+    # Recycle idle pooled connections before Supabase/PgBouncer silently drops
+    # them, so the first query after an idle period (hourly/weekly schedulers)
+    # doesn't fail with ConnectionDoesNotExistError (mirrors the Neo4j fix).
+    pg_max_inactive_connection_lifetime_seconds: float = 300.0
 
     # Qdrant
     qdrant_url: str
     qdrant_api_key: str | None = None
+    # Bound every Qdrant HTTP call; an unbounded client hangs startup and
+    # queries indefinitely on a network blip (the ResponseHandlingException class).
+    qdrant_timeout_seconds: float = 60.0
 
     # Neo4j
     neo4j_uri: str

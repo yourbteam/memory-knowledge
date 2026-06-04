@@ -16,6 +16,18 @@ def _column_arrays(rows: list[tuple[Any, ...]]) -> list[list[Any]]:
     return [list(col) for col in zip(*rows)]
 
 
+def _dedup_last(rows: list[tuple[Any, ...]], key_fn: Any) -> list[tuple[Any, ...]]:
+    """Keep only the last row per conflict key, preserving order.
+
+    ``INSERT ... FROM UNNEST(...) ON CONFLICT DO UPDATE`` raises "cannot affect
+    row a second time" when one batch carries the same conflict key twice.
+    """
+    seen: dict[Any, tuple[Any, ...]] = {}
+    for row in rows:
+        seen[key_fn(row)] = row
+    return list(seen.values())
+
+
 async def upsert_chunk(
     pool: asyncpg.Pool,
     entity_key: uuid.UUID,
@@ -87,6 +99,7 @@ async def bulk_upsert_chunks(
         )
         for row in rows
     ]
+    entity_rows = _dedup_last(entity_rows, lambda r: r[0])  # by entity_key
     entity_ids_by_key: dict[str, int] = {}
     for i in range(0, len(entity_rows), BATCH_SIZE):
         batch = entity_rows[i : i + BATCH_SIZE]
@@ -116,6 +129,7 @@ async def bulk_upsert_chunks(
         )
         for row in rows
     ]
+    chunk_rows = _dedup_last(chunk_rows, lambda r: r[0])  # by entity_id
     for i in range(0, len(chunk_rows), BATCH_SIZE):
         batch = chunk_rows[i : i + BATCH_SIZE]
         arrays = _column_arrays(batch)

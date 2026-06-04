@@ -40,6 +40,7 @@ async def init_postgres(settings: Settings) -> asyncpg.Pool:
         dsn=settings.database_url,
         min_size=settings.pg_pool_min_size,
         max_size=settings.pg_pool_max_size,
+        max_inactive_connection_lifetime=settings.pg_max_inactive_connection_lifetime_seconds,
         **connect_kwargs,
     )
     return _pool

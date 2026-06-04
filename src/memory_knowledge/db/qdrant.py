@@ -22,6 +22,7 @@ async def init_qdrant(settings: Settings) -> AsyncQdrantClient:
     _client = AsyncQdrantClient(
         url=settings.qdrant_url,
         api_key=settings.qdrant_api_key,
+        timeout=settings.qdrant_timeout_seconds,
     )
     return _client
 

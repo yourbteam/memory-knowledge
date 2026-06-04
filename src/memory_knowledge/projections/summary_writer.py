@@ -16,6 +16,20 @@ def _column_arrays(rows: list[tuple[Any, ...]]) -> list[list[Any]]:
     return [list(col) for col in zip(*rows)]
 
 
+def _dedup_last(rows: list[tuple[Any, ...]], key_fn: Any) -> list[tuple[Any, ...]]:
+    """Keep only the last row per conflict key, preserving order.
+
+    ``INSERT ... FROM UNNEST(...) ON CONFLICT DO UPDATE`` raises
+    "ON CONFLICT DO UPDATE command cannot affect row a second time" when a single
+    batch carries the same conflict key twice (e.g. cross-revision duplicate
+    entity_keys). De-duplicating the input keeps the upsert valid.
+    """
+    seen: dict[Any, tuple[Any, ...]] = {}
+    for row in rows:
+        seen[key_fn(row)] = row
+    return list(seen.values())
+
+
 async def upsert_summary(
     pool: asyncpg.Pool,
     entity_key: uuid.UUID,
@@ -79,6 +93,9 @@ async def bulk_upsert_summaries(
         )
         for row in rows
     ]
+    # Same entity_key can appear twice in one call (cross-revision dupes) →
+    # ON CONFLICT (entity_key) would fail; keep the last (newest revision).
+    entity_rows = _dedup_last(entity_rows, lambda r: r[0])
     entity_ids_by_key: dict[str, int] = {}
     for i in range(0, len(entity_rows), BATCH_SIZE):
         batch = entity_rows[i : i + BATCH_SIZE]
@@ -103,6 +120,9 @@ async def bulk_upsert_summaries(
         )
         for row in rows
     ]
+    # Same (entity_id, summary_level) can collide within one call →
+    # ON CONFLICT (entity_id, summary_level) would fail; keep the last.
+    summary_rows = _dedup_last(summary_rows, lambda r: (r[0], r[1]))
     for i in range(0, len(summary_rows), BATCH_SIZE):
         batch = summary_rows[i : i + BATCH_SIZE]
         arrays = _column_arrays(batch)
