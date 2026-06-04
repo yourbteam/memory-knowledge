@@ -10,7 +10,12 @@ import asyncpg
 import structlog
 
 from memory_knowledge.config import Settings
+from memory_knowledge.jobs.job_retry_manager import sweep_failed_jobs
 from memory_knowledge.jobs.job_worker import execute_job
+from memory_knowledge.observability.metrics import (
+    job_dead_letters_total,
+    job_retries_total,
+)
 from memory_knowledge.workflows.base import WorkflowResult
 
 logger = structlog.get_logger()
@@ -98,6 +103,17 @@ class JobDispatcher:
             try:
                 if self._pool is None:
                     break
+                # Retry/dead-letter sweep: promote retryable failures to
+                # 'retrying' (re-claimed below) and dead-letter exhausted ones.
+                if getattr(self._settings, "job_retry_sweep_enabled", False):
+                    try:
+                        retried, dead = await sweep_failed_jobs(self._pool, self._settings)
+                        if retried:
+                            job_retries_total.inc(retried)
+                        if dead:
+                            job_dead_letters_total.inc(dead)
+                    except Exception as exc:
+                        logger.error("retry_sweep_error", error=str(exc))
                 # Atomically claim jobs: SELECT FOR UPDATE SKIP LOCKED + transition to running
                 rows = await self._pool.fetch(
                     """

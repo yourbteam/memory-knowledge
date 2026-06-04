@@ -91,6 +91,11 @@ class Settings(BaseSettings):
     max_job_retries: int = 3
     job_retry_delay_seconds: float = 5.0
     job_orphan_timeout_seconds: int = 3600
+    # Retry/dead-letter sweep: promote failed jobs back to 'retrying' (until the
+    # attempt cap, then 'dead_letter') so transient failures self-heal instead of
+    # stranding a repo stale forever. Backoff lets the transient condition clear.
+    job_retry_backoff_seconds: float = 60.0
+    job_retry_sweep_enabled: bool = True
     # Serialize dispatch: the shared B3 plan cannot run concurrent heavy
     # ingestions (full re-ingest of a large repo OOMs / trips health checks).
     job_dispatcher_max_concurrent: int = 1

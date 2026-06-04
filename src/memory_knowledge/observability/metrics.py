@@ -35,6 +35,12 @@ ingestion_partial_runs_total = Counter(
     "Ingestion runs that completed with one or more per-file failures (partial coverage)",
     ["repository_key"],
 )
+job_retries_total = Counter(
+    "mk_job_retries_total", "Failed jobs promoted back to 'retrying' by the sweep"
+)
+job_dead_letters_total = Counter(
+    "mk_job_dead_letters_total", "Jobs moved to 'dead_letter' after exhausting retries"
+)
 
 
 def track_tool_metrics(tool_name: str) -> Callable:
