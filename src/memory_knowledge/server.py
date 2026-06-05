@@ -34,6 +34,7 @@ from memory_knowledge.admin import playbooks as _playbooks
 from memory_knowledge.admin import planning as _planning
 from memory_knowledge import triage_memory as _triage_memory
 from memory_knowledge import triage_policy as _triage_policy
+from memory_knowledge import qa_memory as _qa_memory
 from memory_knowledge.observability.run_context import (
     bind_run_context,
     clear_run_context,
@@ -1514,6 +1515,71 @@ async def search_triage_cases(
             qdrant_client=get_qdrant_client(),
         )
         return WorkflowResult(run_id=str(rid), tool_name="search_triage_cases", status="success", data=data).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("ingest_qa_pairs")
+async def ingest_qa_pairs(
+    repository_key: str,
+    pairs: list[dict],
+    source: dict | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "ingest_qa_pairs")
+    guard = check_remote_write_guard(get_settings(), "ingest_qa_pairs")
+    if guard is not None:
+        guard.run_id = str(rid)
+        return guard.model_dump_json()
+    try:
+        if not str(repository_key or "").strip() or not pairs:
+            return WorkflowResult(
+                run_id=str(rid), tool_name="ingest_qa_pairs", status="error",
+                error="repository_key and non-empty pairs are required",
+            ).model_dump_json()
+        data = await _qa_memory.ingest_qa_pairs(
+            get_pg_pool(), get_settings(),
+            repository_key=repository_key, pairs=pairs, source=source or {},
+            qdrant_client=get_qdrant_client(),
+        )
+        return WorkflowResult(
+            run_id=str(rid), tool_name="ingest_qa_pairs", status="success", data=data,
+        ).model_dump_json()
+    except ValueError as exc:  # unknown repository_key
+        return WorkflowResult(
+            run_id=str(rid), tool_name="ingest_qa_pairs", status="error", error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("search_qa_knowledge")
+async def search_qa_knowledge(
+    repository_key: str,
+    question: str,
+    limit: int = 5,
+    min_similarity: float = 0.65,
+    correlation_id: str | None = None,
+) -> str:
+    rid = new_run_id()
+    bind_run_context(rid, correlation_id, "search_qa_knowledge")
+    try:
+        if not str(question or "").strip():
+            return WorkflowResult(
+                run_id=str(rid), tool_name="search_qa_knowledge", status="error",
+                error="question is required",
+            ).model_dump_json()
+        data = await _qa_memory.search_qa_knowledge(
+            get_pg_pool(), get_settings(),
+            repository_key=repository_key, question=question, limit=limit,
+            min_similarity=min_similarity, qdrant_client=get_qdrant_client(),
+        )
+        return WorkflowResult(
+            run_id=str(rid), tool_name="search_qa_knowledge", status="success", data=data,
+        ).model_dump_json()
     finally:
         clear_run_context()
 
