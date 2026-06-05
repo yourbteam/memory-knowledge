@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import asyncio
+import functools
 import hashlib
 import time
 import uuid
@@ -76,7 +77,12 @@ from memory_knowledge.structure.entity_registrar import (
     upsert_symbol,
     upsert_symbol_call,
 )
-from memory_knowledge.jobs.job_checkpoint_manager import save_checkpoint
+from memory_knowledge.jobs.job_checkpoint_manager import (
+    clear_shape_checkpoint,
+    load_shape_checkpoint,
+    save_checkpoint,
+    save_shape_checkpoint,
+)
 from memory_knowledge.observability.error_detail import format_exception_detail
 from memory_knowledge.observability.metrics import ingestion_partial_runs_total
 from memory_knowledge.workflows.base import WorkflowResult
@@ -167,12 +173,20 @@ async def _save_ingestion_checkpoint(
     checkpoint: dict[str, Any],
     *,
     phase: str,
+    shape: tuple[int, str, str] | None = None,
     **extra: Any,
 ) -> dict[str, Any]:
     checkpoint.update(extra)
     checkpoint["phase"] = phase
-    if pool is not None and job_id is not None:
+    if pool is None:
+        return checkpoint
+    if job_id is not None:
+        # Dispatcher path (unchanged): checkpoint lives on the job manifest.
         await save_checkpoint(pool, job_id, {"checkpoint": checkpoint})
+    elif shape is not None:
+        # Offline/manual path: no job_id, so persist by (repo, commit, branch).
+        repo_id, commit, branch = shape
+        await save_shape_checkpoint(pool, repo_id, commit, branch, checkpoint)
     return checkpoint
 
 
@@ -563,8 +577,22 @@ async def run(
         repo_revision_id = await upsert_repo_revision(
             pool, repository_id, commit_sha, branch_name
         )
-        checkpoint_state = dict(checkpoint or {})
-        checkpoint_state = await _save_ingestion_checkpoint(
+        # Offline/manual runs have no job_id; resume from the shape-keyed store
+        # (dispatcher jobs always pass an explicit checkpoint, so this is skipped).
+        _resume = checkpoint
+        if _resume is None and manifest_job_id is None:
+            _resume = await load_shape_checkpoint(pool, repository_id, commit_sha, branch_name)
+            if _resume:
+                logger.info(
+                    "ingestion_shape_resume_loaded",
+                    repository_key=repository_key,
+                    phase=_resume.get("phase"),
+                )
+        checkpoint_state = dict(_resume or {})
+        _save_ckpt = functools.partial(
+            _save_ingestion_checkpoint, shape=(repository_id, commit_sha, branch_name)
+        )
+        checkpoint_state = await _save_ckpt(
             pool,
             manifest_job_id,
             checkpoint_state,
@@ -908,7 +936,7 @@ async def run(
                 except Exception as exc:
                     logger.warning("staleness_check_failed", error=str(exc))
 
-            checkpoint_state = await _save_ingestion_checkpoint(
+            checkpoint_state = await _save_ckpt(
                 pool,
                 manifest_job_id,
                 checkpoint_state,
@@ -1076,7 +1104,7 @@ async def run(
                     if len(summary_rows) == len(results) and summary_rows:
                         next_cursor = summary_cursor_box[0] + len(summary_rows)
                         checkpoint_state.update({"summary_items_completed": next_cursor})
-                        await _save_ingestion_checkpoint(
+                        await _save_ckpt(
                             pool,
                             manifest_job_id,
                             checkpoint_state,
@@ -1092,7 +1120,7 @@ async def run(
                     summary_cursor = summary_cursor_box[0]
 
             logger.info("summaries_generated", count=summaries_created)
-            checkpoint_state = await _save_ingestion_checkpoint(
+            checkpoint_state = await _save_ckpt(
                 pool,
                 manifest_job_id,
                 checkpoint_state,
@@ -1125,7 +1153,7 @@ async def run(
                 qdrant_client, all_chunks_for_embedding,
                 repository_key, commit_sha, branch_name,
             )
-            checkpoint_state = await _save_ingestion_checkpoint(
+            checkpoint_state = await _save_ckpt(
                 pool,
                 manifest_job_id,
                 checkpoint_state,
@@ -1145,7 +1173,7 @@ async def run(
                 qdrant_client, all_summaries_for_embedding,
                 repository_key, commit_sha, settings,
             )
-            checkpoint_state = await _save_ingestion_checkpoint(
+            checkpoint_state = await _save_ckpt(
                 pool,
                 manifest_job_id,
                 checkpoint_state,
@@ -1166,7 +1194,7 @@ async def run(
         # Step 9: Neo4j projection (structure + dependency edges)
         if neo4j_driver is None:
             logger.warning("neo4j_projection_skipped", repository_key=repository_key, commit_sha=commit_sha)
-            checkpoint_state = await _save_ingestion_checkpoint(
+            checkpoint_state = await _save_ckpt(
                 pool,
                 manifest_job_id,
                 checkpoint_state,
@@ -1303,7 +1331,7 @@ async def run(
                                 })
 
                 await project_inheritance_edges(neo4j_driver, inheritance_edges)
-                checkpoint_state = await _save_ingestion_checkpoint(
+                checkpoint_state = await _save_ckpt(
                     pool,
                     manifest_job_id,
                     checkpoint_state,
@@ -1330,6 +1358,10 @@ async def run(
                 else None
             ),
         )
+        if manifest_job_id is None:
+            # Offline run finished — drop its shape checkpoint so a later
+            # re-ingest at the same commit doesn't wrongly resume from it.
+            await clear_shape_checkpoint(pool, repository_id, commit_sha, branch_name)
         if failed_file_count:
             ingestion_partial_runs_total.labels(repository_key=repository_key).inc()
             logger.warning(
