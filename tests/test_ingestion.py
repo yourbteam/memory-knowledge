@@ -78,7 +78,10 @@ async def test_fetch_existing_summary_keys_scopes_to_current_revision():
 
 def test_checkpoint_phase_at_or_beyond_orders_resume_stages():
     assert ingestion._checkpoint_phase_at_or_beyond({"phase": "canonical_complete"}, "canonical_complete") is True
-    assert ingestion._checkpoint_phase_at_or_beyond({"phase": "summary_embeddings_complete"}, "chunk_embeddings_complete") is True
+    assert (
+        ingestion._checkpoint_phase_at_or_beyond({"phase": "summary_embeddings_complete"}, "chunk_embeddings_complete")
+        is True
+    )
     assert ingestion._checkpoint_phase_at_or_beyond({"phase": "canonical_complete"}, "neo4j_complete") is False
     assert ingestion._checkpoint_phase_at_or_beyond(None, "canonical_complete") is False
 
@@ -111,12 +114,14 @@ async def test_bulk_upsert_files_uses_set_based_queries():
 
     saved = await entity_registrar.bulk_upsert_files(pool, rows)
 
-    assert saved == [{
-        "entity_id": 11,
-        "file_id": 22,
-        "file_path": "src/example.py",
-        "entity_key": "b4324b95-7175-47fa-9e3a-830c66f6e488",
-    }]
+    assert saved == [
+        {
+            "entity_id": 11,
+            "file_id": 22,
+            "file_path": "src/example.py",
+            "entity_key": "b4324b95-7175-47fa-9e3a-830c66f6e488",
+        }
+    ]
     assert len(pool.fetch_queries) == 2
     assert "UNNEST" in pool.fetch_queries[0]
     assert "UNNEST" in pool.fetch_queries[1]
@@ -139,18 +144,20 @@ async def test_bulk_upsert_chunks_uses_set_based_queries():
     pool = Pool()
     await pg_writer.bulk_upsert_chunks(
         pool,
-        [{
-            "entity_key": "df7ec4ec-ae0a-437f-97d7-53e47402dd0c",
-            "repository_id": 1,
-            "repo_revision_id": 2,
-            "file_id": 3,
-            "title": "chunk",
-            "content_text": "print('x')",
-            "chunk_type": "file",
-            "line_start": 1,
-            "line_end": 1,
-            "checksum": "sum",
-        }],
+        [
+            {
+                "entity_key": "df7ec4ec-ae0a-437f-97d7-53e47402dd0c",
+                "repository_id": 1,
+                "repo_revision_id": 2,
+                "file_id": 3,
+                "title": "chunk",
+                "content_text": "print('x')",
+                "chunk_type": "file",
+                "line_start": 1,
+                "line_end": 1,
+                "checksum": "sum",
+            }
+        ],
     )
 
     assert len(pool.fetch_queries) == 1
@@ -203,13 +210,15 @@ async def test_bulk_upsert_symbols_dedupes_duplicate_entity_keys():
 
     saved = await entity_registrar.bulk_upsert_symbols(pool, rows)
 
-    assert saved == [{
-        "entity_id": 55,
-        "symbol_id": 66,
-        "entity_key": "91e7812e-eb28-4dae-80e3-e9172553fa0b",
-        "file_path": "scripts/libraries/pdf.js",
-        "symbol_name": "_classCallCheck",
-    }]
+    assert saved == [
+        {
+            "entity_id": 55,
+            "symbol_id": 66,
+            "entity_key": "91e7812e-eb28-4dae-80e3-e9172553fa0b",
+            "file_path": "scripts/libraries/pdf.js",
+            "symbol_name": "_classCallCheck",
+        }
+    ]
     entity_query, entity_args = pool.fetch_calls[0]
     symbol_query, symbol_args = pool.fetch_calls[1]
     assert "UNNEST" in entity_query
@@ -235,14 +244,16 @@ async def test_bulk_upsert_summaries_uses_set_based_queries():
     pool = Pool()
     await summary_writer.bulk_upsert_summaries(
         pool,
-        [{
-            "entity_key": "3d17cf84-6321-4dc6-a6ca-fb1fdbd2d64f",
-            "repository_id": 1,
-            "repo_revision_id": 2,
-            "parent_entity_id": 9,
-            "summary_level": "file",
-            "summary_text": "summary",
-        }],
+        [
+            {
+                "entity_key": "3d17cf84-6321-4dc6-a6ca-fb1fdbd2d64f",
+                "repository_id": 1,
+                "repo_revision_id": 2,
+                "parent_entity_id": 9,
+                "summary_level": "file",
+                "summary_text": "summary",
+            }
+        ],
     )
 
     assert len(pool.fetch_queries) == 1
@@ -317,9 +328,7 @@ async def test_backfill_deactivate_filters_invalid_uuids_and_counts():
 @pytest.mark.asyncio
 async def test_backfill_deactivate_no_valid_ids_skips_execute():
     pool = _ExecPool()
-    n = await backfill_is_active._deactivate_pg_rows(
-        pool, backfill_is_active._UPDATE_SUMMARIES_SQL, ["nope"]
-    )
+    n = await backfill_is_active._deactivate_pg_rows(pool, backfill_is_active._UPDATE_SUMMARIES_SQL, ["nope"])
     assert n == 0
     assert pool.calls == []
 

@@ -119,7 +119,11 @@ async def get_actor_adaptation_summary(
             requires_stronger_clarification = True
             preferred_route_posture = "safer_default"
 
-    if primary_recommendation in {"ADD_PRE_RETRY_GROUNDING", "INSERT_CONVERGENCE_CHECKPOINT", "ESCALATE_AFTER_THRESHOLD"}:
+    if primary_recommendation in {
+        "ADD_PRE_RETRY_GROUNDING",
+        "INSERT_CONVERGENCE_CHECKPOINT",
+        "ESCALATE_AFTER_THRESHOLD",
+    }:
         adaptation_mode = "cautious"
         confidence_delta = min(confidence_delta, -0.1)
         requires_stronger_clarification = True

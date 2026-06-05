@@ -6,6 +6,7 @@ Run OFFLINE against the remote stores. Destructive: drops and recreates collecti
 Take a snapshot first (snapshot_collections). Per-revision payload values are preserved
 so retrieval filters (branch_name / commit_sha / retrieval_surface / is_active) stay correct.
 """
+
 from __future__ import annotations
 
 import structlog
@@ -65,10 +66,7 @@ async def _embed_and_upsert(
     for i in range(0, len(rows), BATCH_SIZE):
         batch = rows[i : i + BATCH_SIZE]
         vectors = await embed([r["text"] for r in batch], settings)
-        points = [
-            models.PointStruct(id=r["id"], vector=v, payload=r["payload"])
-            for r, v in zip(batch, vectors)
-        ]
+        points = [models.PointStruct(id=r["id"], vector=v, payload=r["payload"]) for r, v in zip(batch, vectors)]
         await client.upsert(collection_name=collection, points=points)
         total += len(points)
     return total
@@ -109,9 +107,7 @@ async def reembed_code_chunks(pool, client, settings, repository_id, repository_
             "content_kind": "code_chunk",
         }
         CodeChunkPayload.model_validate(payload)
-        payload_rows.append(
-            {"id": str(r["entity_key"]), "text": r["content_text"], "payload": payload}
-        )
+        payload_rows.append({"id": str(r["entity_key"]), "text": r["content_text"], "payload": payload})
     return await _embed_and_upsert(client, settings, "code_chunks", payload_rows)
 
 
@@ -139,9 +135,7 @@ async def reembed_summaries(pool, client, settings, repository_id, repository_ke
             "content_kind": "summary",
         }
         SummaryPayload.model_validate(payload)
-        payload_rows.append(
-            {"id": str(r["entity_key"]), "text": r["summary_text"], "payload": payload}
-        )
+        payload_rows.append({"id": str(r["entity_key"]), "text": r["summary_text"], "payload": payload})
     return await _embed_and_upsert(client, settings, "summary_units", payload_rows)
 
 
@@ -174,7 +168,5 @@ async def reembed_learned(pool, client, settings, repository_id, repository_key)
             "content_kind": "learned_rule",
         }
         LearnedMemoryPayload.model_validate(payload)
-        payload_rows.append(
-            {"id": str(r["entity_key"]), "text": r["body_text"], "payload": payload}
-        )
+        payload_rows.append({"id": str(r["entity_key"]), "text": r["body_text"], "payload": payload})
     return await _embed_and_upsert(client, settings, "learned_memory", payload_rows)

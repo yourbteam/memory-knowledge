@@ -12,6 +12,7 @@ async def init_postgres(settings: Settings) -> asyncpg.Pool:
     connect_kwargs: dict = {}
     if settings.pg_ssl:
         import ssl
+
         if settings.pg_ssl_insecure:
             # Explicit opt-out: encrypt but do not verify the server cert (MITM-exposed).
             ctx = ssl.create_default_context()

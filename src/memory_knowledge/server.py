@@ -102,7 +102,7 @@ WORKFLOW_RUN_STATUS_LEGACY_NAMES = {
 # MCP server instance — tools are registered on this via @mcp.tool()
 # streamable_http_path="/" so the endpoint is at /mcp/ (not /mcp/mcp)
 # transport_security disabled to allow non-localhost hosts (Azure, etc.)
-from mcp.server.transport_security import TransportSecuritySettings
+from mcp.server.transport_security import TransportSecuritySettings  # noqa: E402
 
 mcp = FastMCP(
     "memory-knowledge",
@@ -170,15 +170,15 @@ async def _run_mawf_tool(tool_name: str, func, *args, write: bool = False, **kwa
 
 @mcp.tool()
 @track_tool_metrics("run_retrieval_workflow")
-async def run_retrieval_workflow(
-    repository_key: str, query: str, correlation_id: str | None = None
-) -> str:
+async def run_retrieval_workflow(repository_key: str, query: str, correlation_id: str | None = None) -> str:
     """Retrieve evidence from the memory architecture for a given query."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_retrieval_workflow")
     try:
         result = await _retrieval.run(
-            repository_key, query, run_id,
+            repository_key,
+            query,
+            run_id,
             pool=get_pg_pool(),
             qdrant_client=get_qdrant_client(),
             neo4j_driver=get_neo4j_driver(),
@@ -191,15 +191,15 @@ async def run_retrieval_workflow(
 
 @mcp.tool()
 @track_tool_metrics("run_context_assembly_workflow")
-async def run_context_assembly_workflow(
-    repository_key: str, query: str, correlation_id: str | None = None
-) -> str:
+async def run_context_assembly_workflow(repository_key: str, query: str, correlation_id: str | None = None) -> str:
     """Build a normalized evidence package from retrieved results."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_context_assembly_workflow")
     try:
         result = await _context_assembly.run(
-            repository_key, query, run_id,
+            repository_key,
+            query,
+            run_id,
             pool=get_pg_pool(),
             qdrant_client=get_qdrant_client(),
             neo4j_driver=get_neo4j_driver(),
@@ -212,15 +212,15 @@ async def run_context_assembly_workflow(
 
 @mcp.tool()
 @track_tool_metrics("run_impact_analysis_workflow")
-async def run_impact_analysis_workflow(
-    repository_key: str, query: str, correlation_id: str | None = None
-) -> str:
+async def run_impact_analysis_workflow(repository_key: str, query: str, correlation_id: str | None = None) -> str:
     """Determine what a proposed change affects via graph traversal."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_impact_analysis_workflow")
     try:
         result = await _impact_analysis.run(
-            repository_key, query, run_id,
+            repository_key,
+            query,
+            run_id,
             pool=get_pg_pool(),
             qdrant_client=get_qdrant_client(),
             neo4j_driver=get_neo4j_driver(),
@@ -309,15 +309,15 @@ async def run_learned_memory_commit_workflow(
 
 @mcp.tool()
 @track_tool_metrics("run_blueprint_refinement_workflow")
-async def run_blueprint_refinement_workflow(
-    repository_key: str, query: str, correlation_id: str | None = None
-) -> str:
+async def run_blueprint_refinement_workflow(repository_key: str, query: str, correlation_id: str | None = None) -> str:
     """Support iterative refinement of blueprint artifacts."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_blueprint_refinement_workflow")
     try:
         result = await _blueprint_refinement.run(
-            repository_key, query, run_id,
+            repository_key,
+            query,
+            run_id,
             settings=get_settings(),
         )
         return result.model_dump_json()
@@ -339,8 +339,11 @@ def _get_optional_neo4j_driver():
 
 
 async def _run_ingestion_background(
-    job_id: uuid.UUID, run_id: uuid.UUID,
-    repository_key: str, commit_sha: str, branch_name: str,
+    job_id: uuid.UUID,
+    run_id: uuid.UUID,
+    repository_key: str,
+    commit_sha: str,
+    branch_name: str,
     checkpoint: dict | None = None,
 ) -> None:
     """Background task for ingestion job execution."""
@@ -370,8 +373,10 @@ async def _run_ingestion_background(
 
 
 async def _run_repair_background(
-    job_id: uuid.UUID, run_id: uuid.UUID,
-    repository_key: str, repair_scope: str,
+    job_id: uuid.UUID,
+    run_id: uuid.UUID,
+    repository_key: str,
+    repair_scope: str,
 ) -> None:
     """Background task for repair job execution."""
     from memory_knowledge.jobs.job_worker import execute_job
@@ -394,7 +399,8 @@ async def _run_repair_background(
 
 
 async def _run_integrity_background(
-    job_id: uuid.UUID, run_id: uuid.UUID,
+    job_id: uuid.UUID,
+    run_id: uuid.UUID,
     repository_key: str,
 ) -> None:
     """Background task for integrity audit job execution."""
@@ -417,7 +423,9 @@ async def _run_integrity_background(
 
 
 async def _run_backfill_is_active_background(
-    job_id: uuid.UUID, run_id: uuid.UUID, repository_key: str,
+    job_id: uuid.UUID,
+    run_id: uuid.UUID,
+    repository_key: str,
 ) -> None:
     """Background task for is_active backfill job execution."""
     from memory_knowledge.jobs.job_worker import execute_job
@@ -510,7 +518,10 @@ async def run_repo_ingestion_workflow(
             tool_name="run_repo_ingestion_workflow",
         )
         job_id = await create_job(
-            pool, run_id, "ingestion", "run_repo_ingestion_workflow",
+            pool,
+            run_id,
+            "ingestion",
+            "run_repo_ingestion_workflow",
             repository_key,
             commit_sha,
             branch_name,
@@ -540,9 +551,7 @@ async def run_repo_ingestion_workflow(
 
 @mcp.tool()
 @track_tool_metrics("run_integrity_audit_workflow")
-async def run_integrity_audit_workflow(
-    repository_key: str, correlation_id: str | None = None
-) -> str:
+async def run_integrity_audit_workflow(repository_key: str, correlation_id: str | None = None) -> str:
     """Check mechanical layer trustworthiness across stores. Returns job_id for polling."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_integrity_audit_workflow")
@@ -555,12 +564,14 @@ async def run_integrity_audit_workflow(
 
         pool = get_pg_pool()
         job_id = await create_job(
-            pool, run_id, "integrity_audit", "run_integrity_audit_workflow",
-            repository_key, correlation_id=str(correlation_id) if correlation_id else None,
+            pool,
+            run_id,
+            "integrity_audit",
+            "run_integrity_audit_workflow",
+            repository_key,
+            correlation_id=str(correlation_id) if correlation_id else None,
         )
-        task = asyncio.create_task(
-            _run_integrity_background(job_id, run_id, repository_key)
-        )
+        task = asyncio.create_task(_run_integrity_background(job_id, run_id, repository_key))
         _track_task(task)
         return WorkflowResult(
             run_id=str(run_id),
@@ -591,12 +602,14 @@ async def run_repair_rebuild_workflow(
 
         pool = get_pg_pool()
         job_id = await create_job(
-            pool, run_id, "repair", "run_repair_rebuild_workflow",
-            repository_key, correlation_id=str(correlation_id) if correlation_id else None,
+            pool,
+            run_id,
+            "repair",
+            "run_repair_rebuild_workflow",
+            repository_key,
+            correlation_id=str(correlation_id) if correlation_id else None,
         )
-        task = asyncio.create_task(
-            _run_repair_background(job_id, run_id, repository_key, repair_scope)
-        )
+        task = asyncio.create_task(_run_repair_background(job_id, run_id, repository_key, repair_scope))
         _track_task(task)
         return WorkflowResult(
             run_id=str(run_id),
@@ -627,7 +640,11 @@ async def run_compaction_workflow(
 
         pool = get_pg_pool()
         job_id = await create_job(
-            pool, run_id, "compaction", "run_compaction_workflow", repository_key,
+            pool,
+            run_id,
+            "compaction",
+            "run_compaction_workflow",
+            repository_key,
             correlation_id=str(correlation_id) if correlation_id else None,
             job_params={"dry_run": dry_run},
         )
@@ -660,12 +677,14 @@ async def run_backfill_is_active_workflow(
 
         pool = get_pg_pool()
         job_id = await create_job(
-            pool, run_id, "backfill", "run_backfill_is_active_workflow",
-            repository_key, correlation_id=str(correlation_id) if correlation_id else None,
+            pool,
+            run_id,
+            "backfill",
+            "run_backfill_is_active_workflow",
+            repository_key,
+            correlation_id=str(correlation_id) if correlation_id else None,
         )
-        task = asyncio.create_task(
-            _run_backfill_is_active_background(job_id, run_id, repository_key)
-        )
+        task = asyncio.create_task(_run_backfill_is_active_background(job_id, run_id, repository_key))
         _track_task(task)
         return WorkflowResult(
             run_id=str(run_id),
@@ -679,9 +698,7 @@ async def run_backfill_is_active_workflow(
 
 @mcp.tool()
 @track_tool_metrics("check_job_status")
-async def check_job_status(
-    job_id: str, correlation_id: str | None = None
-) -> str:
+async def check_job_status(job_id: str, correlation_id: str | None = None) -> str:
     """Check the current status of a background job. Returns manifest state + result data."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "check_job_status")
@@ -708,18 +725,14 @@ async def check_job_status(
 
 @mcp.tool()
 @track_tool_metrics("get_memory_stats")
-async def get_memory_stats(
-    repository_key: str, correlation_id: str | None = None
-) -> str:
+async def get_memory_stats(repository_key: str, correlation_id: str | None = None) -> str:
     """Get comprehensive statistics about the memory architecture for a repository."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "get_memory_stats")
     try:
         from memory_knowledge.admin.memory_stats import collect_memory_stats
 
-        stats = await collect_memory_stats(
-            get_pg_pool(), get_qdrant_client(), get_neo4j_driver(), repository_key
-        )
+        stats = await collect_memory_stats(get_pg_pool(), get_qdrant_client(), get_neo4j_driver(), repository_key)
         return WorkflowResult(
             run_id=str(run_id),
             tool_name="get_memory_stats",
@@ -781,19 +794,21 @@ async def list_repositories(correlation_id: str | None = None) -> str:
         )
         repos = []
         for row in rows:
-            repos.append({
-                "repository_key": row["repository_key"],
-                "name": row["name"],
-                "origin_url": row["origin_url"],
-                "latest_branch": row["latest_branch"],
-                "latest_commit": row["latest_commit"],
-                "latest_commit_utc": row["latest_commit_utc"].isoformat() if row["latest_commit_utc"] else None,
-                "file_count": row["file_count"],
-                "symbol_count": row["symbol_count"],
-                "chunk_count": row["chunk_count"],
-                "last_ingestion_status": row["last_ingestion_status"],
-                "last_ingestion_utc": row["last_ingestion_utc"].isoformat() if row["last_ingestion_utc"] else None,
-            })
+            repos.append(
+                {
+                    "repository_key": row["repository_key"],
+                    "name": row["name"],
+                    "origin_url": row["origin_url"],
+                    "latest_branch": row["latest_branch"],
+                    "latest_commit": row["latest_commit"],
+                    "latest_commit_utc": row["latest_commit_utc"].isoformat() if row["latest_commit_utc"] else None,
+                    "file_count": row["file_count"],
+                    "symbol_count": row["symbol_count"],
+                    "chunk_count": row["chunk_count"],
+                    "last_ingestion_status": row["last_ingestion_status"],
+                    "last_ingestion_utc": row["last_ingestion_utc"].isoformat() if row["last_ingestion_utc"] else None,
+                }
+            )
         return WorkflowResult(
             run_id=str(run_id),
             tool_name="list_repositories",
@@ -917,7 +932,9 @@ async def _resolve_feature_identifier(
     if feature_key is not None:
         ctx = await _planning.resolve_feature_context(pool, feature_key)
         if feature_external_system and feature_external_id:
-            ext_ctx = await _planning.resolve_feature_context_by_external(pool, feature_external_system, feature_external_id)
+            ext_ctx = await _planning.resolve_feature_context_by_external(
+                pool, feature_external_system, feature_external_id
+            )
             if ext_ctx != ctx:
                 raise ValueError("feature_key and external feature reference resolve to different features")
         return ctx
@@ -949,6 +966,7 @@ async def save_workflow_run(
         return guard.model_dump_json()
     try:
         import json as _json
+
         pool = get_pg_pool()
         # Resolve repository_key → repository_id
         repo_row = await pool.fetchrow(
@@ -957,8 +975,10 @@ async def save_workflow_run(
         )
         if not repo_row:
             return WorkflowResult(
-                run_id=str(rid), tool_name="save_workflow_run",
-                status="error", error=f"Repository '{repository_key}' not found",
+                run_id=str(rid),
+                tool_name="save_workflow_run",
+                status="error",
+                error=f"Repository '{repository_key}' not found",
             ).model_dump_json()
         repo_id = repo_row["id"]
         if isinstance(context_json, str):
@@ -969,9 +989,7 @@ async def save_workflow_run(
             "SELECT workflow_name FROM ops.workflow_runs WHERE run_id = $1",
             uuid.UUID(run_id),
         )
-        effective_workflow_name = workflow_name or (
-            existing_run_row["workflow_name"] if existing_run_row else None
-        )
+        effective_workflow_name = workflow_name or (existing_run_row["workflow_name"] if existing_run_row else None)
         if effective_workflow_name is None:
             return WorkflowResult(
                 run_id=str(rid),
@@ -1021,9 +1039,14 @@ async def save_workflow_run(
                 END
             RETURNING id, (xmax = 0) AS is_insert, status_id
             """,
-            uuid.UUID(run_id), repo_id, effective_workflow_name, task_description,
+            uuid.UUID(run_id),
+            repo_id,
+            effective_workflow_name,
+            task_description,
             status_row["id"] if status_row else None,
-            actor_email, current_phase, iteration_count,
+            actor_email,
+            current_phase,
+            iteration_count,
             _json.dumps(ctx) if ctx else None,
             error_text,
             correlation_id,
@@ -1032,7 +1055,9 @@ async def save_workflow_run(
         )
         persisted_status = status_row or default_status_row
         return WorkflowResult(
-            run_id=str(rid), tool_name="save_workflow_run", status="success",
+            run_id=str(rid),
+            tool_name="save_workflow_run",
+            status="success",
             data={
                 "run_id": run_id,
                 "status": _legacy_workflow_run_status_name(persisted_status["internal_code"]),
@@ -1074,8 +1099,10 @@ async def save_workflow_artifact(
         )
         if not wr:
             return WorkflowResult(
-                run_id=str(rid), tool_name="save_workflow_artifact",
-                status="error", error=f"Workflow run '{run_id}' not found",
+                run_id=str(rid),
+                tool_name="save_workflow_artifact",
+                status="error",
+                error=f"Workflow run '{run_id}' not found",
             ).model_dump_json()
         wf_id = wr["id"]
 
@@ -1094,11 +1121,18 @@ async def save_workflow_artifact(
                 updated_utc   = NOW()
             RETURNING id, (xmax = 0) AS is_insert, iteration, is_final
             """,
-            wf_id, artifact_name, artifact_type, content_text,
-            phase_id, iteration, is_final,
+            wf_id,
+            artifact_name,
+            artifact_type,
+            content_text,
+            phase_id,
+            iteration,
+            is_final,
         )
         return WorkflowResult(
-            run_id=str(rid), tool_name="save_workflow_artifact", status="success",
+            run_id=str(rid),
+            tool_name="save_workflow_artifact",
+            status="success",
             data={
                 "artifact_id": row["id"],
                 "artifact_name": artifact_name,
@@ -1426,11 +1460,23 @@ async def save_triage_case(
                     error=f"{name} is required",
                 ).model_dump_json()
         if not isinstance(suggested_workflows, list):
-            return WorkflowResult(run_id=str(rid), tool_name="save_triage_case", status="error", error="suggested_workflows must be a list").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_triage_case",
+                status="error",
+                error="suggested_workflows must be a list",
+            ).model_dump_json()
         if not isinstance(clarifying_questions, list):
-            return WorkflowResult(run_id=str(rid), tool_name="save_triage_case", status="error", error="clarifying_questions must be a list").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="save_triage_case",
+                status="error",
+                error="clarifying_questions must be a list",
+            ).model_dump_json()
         if matched_case_ids is not None and not isinstance(matched_case_ids, list):
-            return WorkflowResult(run_id=str(rid), tool_name="save_triage_case", status="error", error="matched_case_ids must be a list").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid), tool_name="save_triage_case", status="error", error="matched_case_ids must be a list"
+            ).model_dump_json()
 
         triage_case_id = await _triage_memory.save_triage_case(
             get_pg_pool(),
@@ -1465,7 +1511,9 @@ async def save_triage_case(
             data={"triage_case_id": triage_case_id, "saved": True},
         ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(rid), tool_name="save_triage_case", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="save_triage_case", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -1493,7 +1541,9 @@ async def search_triage_cases(
     bind_run_context(rid, correlation_id, "search_triage_cases")
     try:
         if not str(prompt_text or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="search_triage_cases", status="error", error="prompt_text is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid), tool_name="search_triage_cases", status="error", error="prompt_text is required"
+            ).model_dump_json()
         data = await _triage_memory.search_triage_cases(
             get_pg_pool(),
             get_settings(),
@@ -1513,7 +1563,9 @@ async def search_triage_cases(
             max_age_days=max_age_days,
             qdrant_client=get_qdrant_client(),
         )
-        return WorkflowResult(run_id=str(rid), tool_name="search_triage_cases", status="success", data=data).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="search_triage_cases", status="success", data=data
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -1540,13 +1592,28 @@ async def record_triage_case_feedback(
         return guard.model_dump_json()
     try:
         if not str(triage_case_id or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="record_triage_case_feedback", status="error", error="triage_case_id is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="record_triage_case_feedback",
+                status="error",
+                error="triage_case_id is required",
+            ).model_dump_json()
         if not str(outcome_status or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="record_triage_case_feedback", status="error", error="outcome_status is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="record_triage_case_feedback",
+                status="error",
+                error="outcome_status is required",
+            ).model_dump_json()
         try:
             uuid.UUID(str(triage_case_id))
         except ValueError:
-            return WorkflowResult(run_id=str(rid), tool_name="record_triage_case_feedback", status="error", error="triage_case_id must be a valid UUID").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="record_triage_case_feedback",
+                status="error",
+                error="triage_case_id must be a valid UUID",
+            ).model_dump_json()
         updated = await _triage_memory.record_triage_case_feedback(
             get_pg_pool(),
             triage_case_id=triage_case_id,
@@ -1560,8 +1627,18 @@ async def record_triage_case_feedback(
             feedback_notes=feedback_notes,
         )
         if not updated:
-            return WorkflowResult(run_id=str(rid), tool_name="record_triage_case_feedback", status="error", error=f"Triage case '{triage_case_id}' not found").model_dump_json()
-        return WorkflowResult(run_id=str(rid), tool_name="record_triage_case_feedback", status="success", data={"triage_case_id": triage_case_id, "updated": True}).model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="record_triage_case_feedback",
+                status="error",
+                error=f"Triage case '{triage_case_id}' not found",
+            ).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid),
+            tool_name="record_triage_case_feedback",
+            status="success",
+            data={"triage_case_id": triage_case_id, "updated": True},
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -1611,9 +1688,16 @@ async def get_triage_confusion_clusters(
     bind_run_context(rid, correlation_id, "get_triage_confusion_clusters")
     try:
         if lookback_days < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_triage_confusion_clusters", status="error", error="lookback_days must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_triage_confusion_clusters",
+                status="error",
+                error="lookback_days must be >= 1",
+            ).model_dump_json()
         if limit < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_triage_confusion_clusters", status="error", error="limit must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid), tool_name="get_triage_confusion_clusters", status="error", error="limit must be >= 1"
+            ).model_dump_json()
         data = await _triage_memory.get_triage_confusion_clusters(
             get_pg_pool(),
             repository_key=repository_key,
@@ -1651,11 +1735,26 @@ async def get_triage_clarification_recommendations(
     bind_run_context(rid, correlation_id, "get_triage_clarification_recommendations")
     try:
         if lookback_days < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_triage_clarification_recommendations", status="error", error="lookback_days must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_triage_clarification_recommendations",
+                status="error",
+                error="lookback_days must be >= 1",
+            ).model_dump_json()
         if limit < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_triage_clarification_recommendations", status="error", error="limit must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_triage_clarification_recommendations",
+                status="error",
+                error="limit must be >= 1",
+            ).model_dump_json()
         if min_case_count < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_triage_clarification_recommendations", status="error", error="min_case_count must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_triage_clarification_recommendations",
+                status="error",
+                error="min_case_count must be >= 1",
+            ).model_dump_json()
         data = await _triage_memory.get_triage_clarification_recommendations(
             get_pg_pool(),
             repository_key=repository_key,
@@ -1693,19 +1792,49 @@ async def get_routing_policy_recommendations(
     bind_run_context(rid, correlation_id, "get_routing_policy_recommendations")
     try:
         if not str(repository_key or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="error", error="repository_key is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_routing_policy_recommendations",
+                status="error",
+                error="repository_key is required",
+            ).model_dump_json()
         if lookback_days < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="error", error="lookback_days must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_routing_policy_recommendations",
+                status="error",
+                error="lookback_days must be >= 1",
+            ).model_dump_json()
         if limit < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="error", error="limit must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_routing_policy_recommendations",
+                status="error",
+                error="limit must be >= 1",
+            ).model_dump_json()
         if min_case_count < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="error", error="min_case_count must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_routing_policy_recommendations",
+                status="error",
+                error="min_case_count must be >= 1",
+            ).model_dump_json()
         try:
             min_confidence_value = float(min_confidence)
         except (TypeError, ValueError):
-            return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="error", error="min_confidence must be between 0 and 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_routing_policy_recommendations",
+                status="error",
+                error="min_confidence must be between 0 and 1",
+            ).model_dump_json()
         if not 0.0 <= min_confidence_value <= 1.0:
-            return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="error", error="min_confidence must be between 0 and 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_routing_policy_recommendations",
+                status="error",
+                error="min_confidence must be between 0 and 1",
+            ).model_dump_json()
         data = await _triage_policy.get_routing_policy_recommendations(
             get_pg_pool(),
             repository_key=repository_key,
@@ -1716,7 +1845,9 @@ async def get_routing_policy_recommendations(
             min_case_count=min_case_count,
             min_confidence=min_confidence_value,
         )
-        return WorkflowResult(run_id=str(rid), tool_name="get_routing_policy_recommendations", status="success", data=data).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="get_routing_policy_recommendations", status="success", data=data
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -1738,13 +1869,30 @@ async def get_clarification_policy(
     bind_run_context(rid, correlation_id, "get_clarification_policy")
     try:
         if not str(repository_key or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="get_clarification_policy", status="error", error="repository_key is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_clarification_policy",
+                status="error",
+                error="repository_key is required",
+            ).model_dump_json()
         if lookback_days < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_clarification_policy", status="error", error="lookback_days must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_clarification_policy",
+                status="error",
+                error="lookback_days must be >= 1",
+            ).model_dump_json()
         if limit < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_clarification_policy", status="error", error="limit must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid), tool_name="get_clarification_policy", status="error", error="limit must be >= 1"
+            ).model_dump_json()
         if min_case_count < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_clarification_policy", status="error", error="min_case_count must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_clarification_policy",
+                status="error",
+                error="min_case_count must be >= 1",
+            ).model_dump_json()
         data = await _triage_policy.get_clarification_policy(
             get_pg_pool(),
             repository_key=repository_key,
@@ -1756,7 +1904,9 @@ async def get_clarification_policy(
             limit=limit,
             min_case_count=min_case_count,
         )
-        return WorkflowResult(run_id=str(rid), tool_name="get_clarification_policy", status="success", data=data).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="get_clarification_policy", status="success", data=data
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -1777,11 +1927,26 @@ async def get_required_clarification_policy(
     bind_run_context(rid, correlation_id, "get_required_clarification_policy")
     try:
         if not str(repository_key or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="get_required_clarification_policy", status="error", error="repository_key is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_required_clarification_policy",
+                status="error",
+                error="repository_key is required",
+            ).model_dump_json()
         if lookback_days < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_required_clarification_policy", status="error", error="lookback_days must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_required_clarification_policy",
+                status="error",
+                error="lookback_days must be >= 1",
+            ).model_dump_json()
         if min_case_count < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_required_clarification_policy", status="error", error="min_case_count must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_required_clarification_policy",
+                status="error",
+                error="min_case_count must be >= 1",
+            ).model_dump_json()
         data = await _triage_policy.get_required_clarification_policy(
             get_pg_pool(),
             repository_key=repository_key,
@@ -1792,7 +1957,9 @@ async def get_required_clarification_policy(
             lookback_days=lookback_days,
             min_case_count=min_case_count,
         )
-        return WorkflowResult(run_id=str(rid), tool_name="get_required_clarification_policy", status="success", data=data).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="get_required_clarification_policy", status="success", data=data
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -1810,11 +1977,23 @@ async def list_triage_behavior_profiles(
     bind_run_context(rid, correlation_id, "list_triage_behavior_profiles")
     try:
         if not str(repository_key or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="list_triage_behavior_profiles", status="error", error="repository_key is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="list_triage_behavior_profiles",
+                status="error",
+                error="repository_key is required",
+            ).model_dump_json()
         if lookback_days < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="list_triage_behavior_profiles", status="error", error="lookback_days must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="list_triage_behavior_profiles",
+                status="error",
+                error="lookback_days must be >= 1",
+            ).model_dump_json()
         if limit < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="list_triage_behavior_profiles", status="error", error="limit must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid), tool_name="list_triage_behavior_profiles", status="error", error="limit must be >= 1"
+            ).model_dump_json()
         data = await _triage_policy.list_triage_behavior_profiles(
             get_pg_pool(),
             repository_key=repository_key,
@@ -1822,7 +2001,9 @@ async def list_triage_behavior_profiles(
             lookback_days=lookback_days,
             limit=limit,
         )
-        return WorkflowResult(run_id=str(rid), tool_name="list_triage_behavior_profiles", status="success", data=data).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="list_triage_behavior_profiles", status="success", data=data
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -1847,21 +2028,53 @@ async def refresh_triage_policy_artifacts(
         return guard.model_dump_json()
     try:
         if not str(repository_key or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="repository_key is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="refresh_triage_policy_artifacts",
+                status="error",
+                error="repository_key is required",
+            ).model_dump_json()
         if lookback_days < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="lookback_days must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="refresh_triage_policy_artifacts",
+                status="error",
+                error="lookback_days must be >= 1",
+            ).model_dump_json()
         if routing_min_case_count < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="routing_min_case_count must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="refresh_triage_policy_artifacts",
+                status="error",
+                error="routing_min_case_count must be >= 1",
+            ).model_dump_json()
         if clarification_min_case_count < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="clarification_min_case_count must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="refresh_triage_policy_artifacts",
+                status="error",
+                error="clarification_min_case_count must be >= 1",
+            ).model_dump_json()
         if limit < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="limit must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="limit must be >= 1"
+            ).model_dump_json()
         try:
             routing_min_confidence_value = float(routing_min_confidence)
         except (TypeError, ValueError):
-            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="routing_min_confidence must be between 0 and 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="refresh_triage_policy_artifacts",
+                status="error",
+                error="routing_min_confidence must be between 0 and 1",
+            ).model_dump_json()
         if not 0.0 <= routing_min_confidence_value <= 1.0:
-            return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error="routing_min_confidence must be between 0 and 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="refresh_triage_policy_artifacts",
+                status="error",
+                error="routing_min_confidence must be between 0 and 1",
+            ).model_dump_json()
         data = await _triage_policy.refresh_triage_policy_artifacts(
             get_pg_pool(),
             repository_key=repository_key,
@@ -1872,9 +2085,13 @@ async def refresh_triage_policy_artifacts(
             clarification_min_case_count=clarification_min_case_count,
             limit=limit,
         )
-        return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="success", data=data).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="success", data=data
+        ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="refresh_triage_policy_artifacts", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -1890,13 +2107,20 @@ async def get_behavior_policy_status(
     bind_run_context(rid, correlation_id, "get_behavior_policy_status")
     try:
         if not str(repository_key or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="get_behavior_policy_status", status="error", error="repository_key is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_behavior_policy_status",
+                status="error",
+                error="repository_key is required",
+            ).model_dump_json()
         data = await _triage_policy.get_behavior_policy_status(
             get_pg_pool(),
             repository_key=repository_key,
             project_key=project_key,
         )
-        return WorkflowResult(run_id=str(rid), tool_name="get_behavior_policy_status", status="success", data=data).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="get_behavior_policy_status", status="success", data=data
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -1948,13 +2172,33 @@ async def get_outcome_weighted_routing_summary(
     bind_run_context(rid, correlation_id, "get_outcome_weighted_routing_summary")
     try:
         if not str(repository_key or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="get_outcome_weighted_routing_summary", status="error", error="repository_key is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_outcome_weighted_routing_summary",
+                status="error",
+                error="repository_key is required",
+            ).model_dump_json()
         if lookback_days < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_outcome_weighted_routing_summary", status="error", error="lookback_days must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_outcome_weighted_routing_summary",
+                status="error",
+                error="lookback_days must be >= 1",
+            ).model_dump_json()
         if limit < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_outcome_weighted_routing_summary", status="error", error="limit must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_outcome_weighted_routing_summary",
+                status="error",
+                error="limit must be >= 1",
+            ).model_dump_json()
         if min_case_count < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="get_outcome_weighted_routing_summary", status="error", error="min_case_count must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="get_outcome_weighted_routing_summary",
+                status="error",
+                error="min_case_count must be >= 1",
+            ).model_dump_json()
         data = await _triage_policy.get_outcome_weighted_routing_summary(
             get_pg_pool(),
             repository_key=repository_key,
@@ -1964,7 +2208,9 @@ async def get_outcome_weighted_routing_summary(
             limit=limit,
             min_case_count=min_case_count,
         )
-        return WorkflowResult(run_id=str(rid), tool_name="get_outcome_weighted_routing_summary", status="success", data=data).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="get_outcome_weighted_routing_summary", status="success", data=data
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -1988,11 +2234,20 @@ async def triage_request_with_memory(
     bind_run_context(rid, correlation_id, "triage_request_with_memory")
     try:
         if not str(repository_key or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="triage_request_with_memory", status="error", error="repository_key is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="triage_request_with_memory",
+                status="error",
+                error="repository_key is required",
+            ).model_dump_json()
         if not str(prompt_text or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="triage_request_with_memory", status="error", error="prompt_text is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid), tool_name="triage_request_with_memory", status="error", error="prompt_text is required"
+            ).model_dump_json()
         if limit < 1:
-            return WorkflowResult(run_id=str(rid), tool_name="triage_request_with_memory", status="error", error="limit must be >= 1").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid), tool_name="triage_request_with_memory", status="error", error="limit must be >= 1"
+            ).model_dump_json()
         data = await _triage_policy.triage_request_with_memory(
             get_pg_pool(),
             get_settings(),
@@ -2007,7 +2262,9 @@ async def triage_request_with_memory(
             selected_run_action=selected_run_action,
             limit=limit,
         )
-        return WorkflowResult(run_id=str(rid), tool_name="triage_request_with_memory", status="success", data=data).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="triage_request_with_memory", status="success", data=data
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -2037,15 +2294,26 @@ async def finalize_triage_outcome(
         return guard.model_dump_json()
     try:
         if not str(triage_case_id or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error="triage_case_id is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error="triage_case_id is required"
+            ).model_dump_json()
         if not str(repository_key or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error="repository_key is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error="repository_key is required"
+            ).model_dump_json()
         if not str(outcome_status or "").strip():
-            return WorkflowResult(run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error="outcome_status is required").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error="outcome_status is required"
+            ).model_dump_json()
         try:
             uuid.UUID(str(triage_case_id))
         except ValueError:
-            return WorkflowResult(run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error="triage_case_id must be a valid UUID").model_dump_json()
+            return WorkflowResult(
+                run_id=str(rid),
+                tool_name="finalize_triage_outcome",
+                status="error",
+                error="triage_case_id must be a valid UUID",
+            ).model_dump_json()
         data = await _triage_policy.finalize_triage_outcome(
             get_pg_pool(),
             triage_case_id=triage_case_id,
@@ -2061,9 +2329,13 @@ async def finalize_triage_outcome(
             feedback_notes=feedback_notes,
             refresh_policy_artifacts=refresh_policy_artifacts_after_write,
         )
-        return WorkflowResult(run_id=str(rid), tool_name="finalize_triage_outcome", status="success", data=data).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="finalize_triage_outcome", status="success", data=data
+        ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(rid), tool_name="finalize_triage_outcome", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -2101,6 +2373,7 @@ async def save_workflow_finding(
         return guard.model_dump_json()
     try:
         import json as _json
+
         if attempt_number < 1:
             return WorkflowResult(
                 run_id=str(rid),
@@ -2277,6 +2550,7 @@ async def save_workflow_finding_decision(
         return guard.model_dump_json()
     try:
         import json as _json
+
         if attempt_number < 1:
             return WorkflowResult(
                 run_id=str(rid),
@@ -2541,9 +2815,7 @@ async def list_workflow_finding_suppressions(
 
 @mcp.tool()
 @track_tool_metrics("get_workflow_run")
-async def get_workflow_run(
-    run_id: str, correlation_id: str | None = None
-) -> str:
+async def get_workflow_run(run_id: str, correlation_id: str | None = None) -> str:
     """Retrieve a workflow run by run_id, including phase states and artifact metadata."""
     rid = new_run_id()
     bind_run_context(rid, correlation_id, "get_workflow_run")
@@ -2566,8 +2838,10 @@ async def get_workflow_run(
         )
         if not row:
             return WorkflowResult(
-                run_id=str(rid), tool_name="get_workflow_run",
-                status="error", error=f"Workflow run '{run_id}' not found",
+                run_id=str(rid),
+                tool_name="get_workflow_run",
+                status="error",
+                error=f"Workflow run '{run_id}' not found",
             ).model_dump_json()
 
         phases = await pool.fetch(
@@ -2611,7 +2885,9 @@ async def get_workflow_run(
         )
         ctx = json.loads(row["context_json"]) if row["context_json"] else None
         return WorkflowResult(
-            run_id=str(rid), tool_name="get_workflow_run", status="success",
+            run_id=str(rid),
+            tool_name="get_workflow_run",
+            status="success",
             data={
                 "run_id": str(row["run_id"]),
                 "repository_key": row["repository_key"],
@@ -2693,17 +2969,21 @@ async def get_workflow_artifact(
             JOIN ops.workflow_runs wr ON wr.id = a.workflow_run_id
             WHERE wr.run_id = $1 AND a.artifact_name = $2
             """,
-            uuid.UUID(run_id), artifact_name,
+            uuid.UUID(run_id),
+            artifact_name,
         )
         if not row:
             return WorkflowResult(
-                run_id=str(rid), tool_name="get_workflow_artifact",
+                run_id=str(rid),
+                tool_name="get_workflow_artifact",
                 status="error",
                 error=f"Artifact '{artifact_name}' not found for run '{run_id}'",
             ).model_dump_json()
 
         return WorkflowResult(
-            run_id=str(rid), tool_name="get_workflow_artifact", status="success",
+            run_id=str(rid),
+            tool_name="get_workflow_artifact",
+            status="success",
             data={
                 "artifact_name": row["artifact_name"],
                 "artifact_type": row["artifact_type"],
@@ -2757,7 +3037,9 @@ async def list_workflow_runs(
                 ORDER BY wr.started_utc DESC
                 LIMIT $3
                 """,
-                repository_key, status_row["id"], limit,
+                repository_key,
+                status_row["id"],
+                limit,
             )
         else:
             rows = await pool.fetch(
@@ -2775,7 +3057,8 @@ async def list_workflow_runs(
                 ORDER BY wr.started_utc DESC
                 LIMIT $2
                 """,
-                repository_key, limit,
+                repository_key,
+                limit,
             )
         runs = [
             {
@@ -2793,7 +3076,9 @@ async def list_workflow_runs(
             for r in rows
         ]
         return WorkflowResult(
-            run_id=str(rid), tool_name="list_workflow_runs", status="success",
+            run_id=str(rid),
+            tool_name="list_workflow_runs",
+            status="success",
             data={"runs": runs, "count": len(runs)},
         ).model_dump_json()
     finally:
@@ -2802,9 +3087,7 @@ async def list_workflow_runs(
 
 @mcp.tool()
 @track_tool_metrics("list_reference_values")
-async def list_reference_values(
-    reference_type_code: str, correlation_id: str | None = None
-) -> str:
+async def list_reference_values(reference_type_code: str, correlation_id: str | None = None) -> str:
     """List values for a reference type by internal_code."""
     rid = new_run_id()
     bind_run_context(rid, correlation_id, "list_reference_values")
@@ -3470,7 +3753,9 @@ async def create_project(
         return guard.model_dump_json()
     try:
         pool = get_pg_pool()
-        status_row = await _require_reference_value(pool, "PROJECT_STATUS", project_status_code, "create_project", run_id)
+        status_row = await _require_reference_value(
+            pool, "PROJECT_STATUS", project_status_code, "create_project", run_id
+        )
         if isinstance(status_row, str):
             return status_row
         result = await _planning.create_project(
@@ -3529,9 +3814,13 @@ async def link_project_external_ref(
             external_parent_id,
             external_url,
         )
-        return WorkflowResult(run_id=str(run_id), tool_name="link_project_external_ref", status="success", data=result).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="link_project_external_ref", status="success", data=result
+        ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(run_id), tool_name="link_project_external_ref", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="link_project_external_ref", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -3549,7 +3838,9 @@ async def list_projects(
         pool = get_pg_pool()
         status_id = None
         if project_status_code is not None:
-            status_row = await _require_reference_value(pool, "PROJECT_STATUS", project_status_code, "list_projects", run_id)
+            status_row = await _require_reference_value(
+                pool, "PROJECT_STATUS", project_status_code, "list_projects", run_id
+            )
             if isinstance(status_row, str):
                 return status_row
             status_id = status_row["id"]
@@ -3597,7 +3888,9 @@ async def add_repository_to_project(
             data={"repository_key": repository_key},
         ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(run_id), tool_name="add_repository_to_project", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="add_repository_to_project", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -3629,7 +3922,9 @@ async def list_project_repositories(
             data={"repositories": repos, "count": len(repos)},
         ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(run_id), tool_name="list_project_repositories", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="list_project_repositories", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -3667,7 +3962,9 @@ async def remove_repository_from_project(
             data={"repository_key": repository_key, **result},
         ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(run_id), tool_name="remove_repository_from_project", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="remove_repository_from_project", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -3701,7 +3998,9 @@ async def create_feature(
             project_external_system=project_external_system,
             project_external_id=project_external_id,
         )
-        status_row = await _require_reference_value(pool, "FEATURE_STATUS", feature_status_code, "create_feature", run_id)
+        status_row = await _require_reference_value(
+            pool, "FEATURE_STATUS", feature_status_code, "create_feature", run_id
+        )
         if isinstance(status_row, str):
             return status_row
         priority_row = await _require_reference_value(pool, "PRIORITY", priority_code, "create_feature", run_id)
@@ -3765,9 +4064,13 @@ async def link_feature_external_ref(
             external_parent_id,
             external_url,
         )
-        return WorkflowResult(run_id=str(run_id), tool_name="link_feature_external_ref", status="success", data=result).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="link_feature_external_ref", status="success", data=result
+        ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(run_id), tool_name="link_feature_external_ref", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="link_feature_external_ref", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -3797,7 +4100,9 @@ async def list_features(
             )
         status_id = None
         if feature_status_code is not None:
-            status_row = await _require_reference_value(pool, "FEATURE_STATUS", feature_status_code, "list_features", run_id)
+            status_row = await _require_reference_value(
+                pool, "FEATURE_STATUS", feature_status_code, "list_features", run_id
+            )
             if isinstance(status_row, str):
                 return status_row
             status_id = status_row["id"]
@@ -3855,7 +4160,9 @@ async def add_repository_to_feature(
             data={"repository_key": repository_key},
         ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(run_id), tool_name="add_repository_to_feature", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="add_repository_to_feature", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -3889,7 +4196,9 @@ async def list_feature_repositories(
             data={"repositories": repos, "count": len(repos)},
         ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(run_id), tool_name="list_feature_repositories", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="list_feature_repositories", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -3929,7 +4238,9 @@ async def remove_repository_from_feature(
             data={"repository_key": repository_key, **result},
         ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(run_id), tool_name="remove_repository_from_feature", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="remove_repository_from_feature", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -4048,9 +4359,13 @@ async def link_task_external_ref(
             external_parent_id,
             external_url,
         )
-        return WorkflowResult(run_id=str(run_id), tool_name="link_task_external_ref", status="success", data=result).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="link_task_external_ref", status="success", data=result
+        ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(run_id), tool_name="link_task_external_ref", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="link_task_external_ref", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -4144,9 +4459,13 @@ async def link_repository_external_ref(
             external_parent_id,
             external_url,
         )
-        return WorkflowResult(run_id=str(run_id), tool_name="link_repository_external_ref", status="success", data=result).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="link_repository_external_ref", status="success", data=result
+        ).model_dump_json()
     except ValueError as exc:
-        return WorkflowResult(run_id=str(run_id), tool_name="link_repository_external_ref", status="error", error=str(exc)).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="link_repository_external_ref", status="error", error=str(exc)
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -4221,9 +4540,7 @@ async def get_backlog(
 
 @mcp.tool()
 @track_tool_metrics("create_working_session")
-async def create_working_session(
-    repository_key: str, correlation_id: str | None = None
-) -> str:
+async def create_working_session(repository_key: str, correlation_id: str | None = None) -> str:
     """Create a new working session for tracking investigation state."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "create_working_session")
@@ -4265,8 +4582,11 @@ async def record_working_observation(
         from memory_knowledge.admin.working_memory import record_observation
 
         obs_id = await record_observation(
-            get_pg_pool(), uuid.UUID(session_key),
-            entity_key, observation_type, observation_text,
+            get_pg_pool(),
+            uuid.UUID(session_key),
+            entity_key,
+            observation_type,
+            observation_text,
         )
         return WorkflowResult(
             run_id=str(run_id),
@@ -4280,18 +4600,14 @@ async def record_working_observation(
 
 @mcp.tool()
 @track_tool_metrics("get_working_session_context")
-async def get_working_session_context(
-    session_key: str, correlation_id: str | None = None
-) -> str:
+async def get_working_session_context(session_key: str, correlation_id: str | None = None) -> str:
     """Get all observations from a working session."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "get_working_session_context")
     try:
         from memory_knowledge.admin.working_memory import get_session_observations
 
-        observations = await get_session_observations(
-            get_pg_pool(), uuid.UUID(session_key)
-        )
+        observations = await get_session_observations(get_pg_pool(), uuid.UUID(session_key))
         return WorkflowResult(
             run_id=str(run_id),
             tool_name="get_working_session_context",
@@ -4304,15 +4620,15 @@ async def get_working_session_context(
 
 @mcp.tool()
 @track_tool_metrics("run_route_intelligence_workflow")
-async def run_route_intelligence_workflow(
-    repository_key: str, query: str, correlation_id: str | None = None
-) -> str:
+async def run_route_intelligence_workflow(repository_key: str, query: str, correlation_id: str | None = None) -> str:
     """Provide routing history and support for route decisions."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_route_intelligence_workflow")
     try:
         result = await _route_intelligence.run(
-            repository_key, query, run_id,
+            repository_key,
+            query,
+            run_id,
             pool=get_pg_pool(),
         )
         return result.model_dump_json()
@@ -4735,9 +5051,7 @@ async def list_intake_sessions_by_actor(
 @track_tool_metrics("mawf_list_catalog_types")
 async def mawf_list_catalog_types(correlation_id: str | None = None) -> str:
     """List MAWF catalog/reference types."""
-    return await _run_mawf_tool(
-        "mawf_list_catalog_types", _mawf.list_catalog_types, correlation_id=correlation_id
-    )
+    return await _run_mawf_tool("mawf_list_catalog_types", _mawf.list_catalog_types, correlation_id=correlation_id)
 
 
 @mcp.tool()
@@ -4999,9 +5313,7 @@ async def mawf_list_repositories(
 
 @mcp.tool()
 @track_tool_metrics("mawf_deactivate_repository")
-async def mawf_deactivate_repository(
-    repository_id: str, correlation_id: str | None = None
-) -> str:
+async def mawf_deactivate_repository(repository_id: str, correlation_id: str | None = None) -> str:
     """Soft-deactivate a MAWF repository."""
     return await _run_mawf_tool(
         "mawf_deactivate_repository",
@@ -5050,9 +5362,7 @@ async def mawf_get_prompt(prompt_id: str, correlation_id: str | None = None) -> 
 
 @mcp.tool()
 @track_tool_metrics("mawf_get_prompt_by_hash")
-async def mawf_get_prompt_by_hash(
-    normalized_hash: str, correlation_id: str | None = None
-) -> str:
+async def mawf_get_prompt_by_hash(normalized_hash: str, correlation_id: str | None = None) -> str:
     """Get one MAWF prompt by normalized hash."""
     return await _run_mawf_tool(
         "mawf_get_prompt_by_hash",
@@ -5064,9 +5374,7 @@ async def mawf_get_prompt_by_hash(
 
 @mcp.tool()
 @track_tool_metrics("mawf_list_prompts_by_user")
-async def mawf_list_prompts_by_user(
-    user_id: str, correlation_id: str | None = None
-) -> str:
+async def mawf_list_prompts_by_user(user_id: str, correlation_id: str | None = None) -> str:
     """List MAWF prompts created by a user."""
     return await _run_mawf_tool(
         "mawf_list_prompts_by_user",
@@ -5183,9 +5491,7 @@ async def mawf_get_schema_capabilities(correlation_id: str | None = None) -> str
     )
 
 
-async def _mawf_set_task_status_tool(
-    tool_name: str, task_id: str, status_code: str, correlation_id: str | None
-) -> str:
+async def _mawf_set_task_status_tool(tool_name: str, task_id: str, status_code: str, correlation_id: str | None) -> str:
     return await _run_mawf_tool(
         tool_name,
         _mawf.set_task_status,
@@ -5200,27 +5506,21 @@ async def _mawf_set_task_status_tool(
 @track_tool_metrics("mawf_cancel_task")
 async def mawf_cancel_task(task_id: str, correlation_id: str | None = None) -> str:
     """Set a MAWF task to cancelled."""
-    return await _mawf_set_task_status_tool(
-        "mawf_cancel_task", task_id, "cancelled", correlation_id
-    )
+    return await _mawf_set_task_status_tool("mawf_cancel_task", task_id, "cancelled", correlation_id)
 
 
 @mcp.tool()
 @track_tool_metrics("mawf_complete_task")
 async def mawf_complete_task(task_id: str, correlation_id: str | None = None) -> str:
     """Set a MAWF task to completed."""
-    return await _mawf_set_task_status_tool(
-        "mawf_complete_task", task_id, "completed", correlation_id
-    )
+    return await _mawf_set_task_status_tool("mawf_complete_task", task_id, "completed", correlation_id)
 
 
 @mcp.tool()
 @track_tool_metrics("mawf_fail_task")
 async def mawf_fail_task(task_id: str, correlation_id: str | None = None) -> str:
     """Set a MAWF task to failed."""
-    return await _mawf_set_task_status_tool(
-        "mawf_fail_task", task_id, "failed", correlation_id
-    )
+    return await _mawf_set_task_status_tool("mawf_fail_task", task_id, "failed", correlation_id)
 
 
 @mcp.tool()
@@ -5263,9 +5563,7 @@ async def mawf_upsert_workflow_run(
 
 @mcp.tool()
 @track_tool_metrics("mawf_get_workflow_run")
-async def mawf_get_workflow_run(
-    workflow_run_id: str, correlation_id: str | None = None
-) -> str:
+async def mawf_get_workflow_run(workflow_run_id: str, correlation_id: str | None = None) -> str:
     """Get one MAWF-linked workflow run by external workflow_run_id."""
     return await _run_mawf_tool(
         "mawf_get_workflow_run",
@@ -5277,9 +5575,7 @@ async def mawf_get_workflow_run(
 
 @mcp.tool()
 @track_tool_metrics("mawf_list_workflow_runs")
-async def mawf_list_workflow_runs(
-    task_id: str, correlation_id: str | None = None
-) -> str:
+async def mawf_list_workflow_runs(task_id: str, correlation_id: str | None = None) -> str:
     """List workflow runs linked to a MAWF task."""
     return await _run_mawf_tool(
         "mawf_list_workflow_runs",
@@ -5520,9 +5816,7 @@ async def mawf_get_artifact_ref(
 
 @mcp.tool()
 @track_tool_metrics("mawf_list_artifact_refs")
-async def mawf_list_artifact_refs(
-    task_id: str, correlation_id: str | None = None
-) -> str:
+async def mawf_list_artifact_refs(task_id: str, correlation_id: str | None = None) -> str:
     """List MAWF artifact refs for a task."""
     return await _run_mawf_tool(
         "mawf_list_artifact_refs",
@@ -5552,9 +5846,7 @@ async def mawf_set_artifact_persist_status(
 
 @mcp.tool()
 @track_tool_metrics("mawf_get_task_memory_bundle")
-async def mawf_get_task_memory_bundle(
-    task_id: str, correlation_id: str | None = None
-) -> str:
+async def mawf_get_task_memory_bundle(task_id: str, correlation_id: str | None = None) -> str:
     """Return the MAWF task memory bundle with related canonical memory surfaces."""
     return await _run_mawf_tool(
         "mawf_get_task_memory_bundle",
@@ -5611,9 +5903,7 @@ async def register_repository(
 
 @mcp.tool()
 @track_tool_metrics("end_working_session")
-async def end_working_session(
-    session_key: str, correlation_id: str | None = None
-) -> str:
+async def end_working_session(session_key: str, correlation_id: str | None = None) -> str:
     """End a working session, marking it as completed."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "end_working_session")
@@ -5682,8 +5972,10 @@ async def submit_route_feedback(
             ).model_dump_json()
 
         from memory_knowledge.projections.pg_writer import record_route_feedback
+
         await record_route_feedback(
-            pool, route_execution_id,
+            pool,
+            route_execution_id,
             usefulness_score=usefulness_score,
             precision_score=precision_score,
             expansion_needed=expansion_needed,
@@ -5702,9 +5994,7 @@ async def submit_route_feedback(
 
 @mcp.tool()
 @track_tool_metrics("export_repo_memory_tool")
-async def export_repo_memory_tool(
-    repository_key: str, correlation_id: str | None = None
-) -> str:
+async def export_repo_memory_tool(repository_key: str, correlation_id: str | None = None) -> str:
     """Export repository memory as JSONL for backup or migration."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "export_repo_memory")
@@ -5724,9 +6014,7 @@ async def export_repo_memory_tool(
 
 @mcp.tool()
 @track_tool_metrics("import_repo_memory_tool")
-async def import_repo_memory_tool(
-    data: str, correlation_id: str | None = None
-) -> str:
+async def import_repo_memory_tool(data: str, correlation_id: str | None = None) -> str:
     """Import repository memory from JSONL data."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "import_repo_memory")
@@ -5760,9 +6048,7 @@ async def import_repo_memory_tool(
 
 @mcp.tool()
 @track_tool_metrics("purge_repository")
-async def purge_repository(
-    repository_key: str, correlation_id: str | None = None
-) -> str:
+async def purge_repository(repository_key: str, correlation_id: str | None = None) -> str:
     """Purge all repo-owned data across PostgreSQL, Qdrant, and Neo4j."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "purge_repository")
@@ -5836,9 +6122,7 @@ async def rebuild_revision_workflow(
 
 @mcp.tool()
 @track_tool_metrics("run_embedding_backfill")
-async def run_embedding_backfill(
-    repository_key: str, correlation_id: str | None = None
-) -> str:
+async def run_embedding_backfill(repository_key: str, correlation_id: str | None = None) -> str:
     """Backfill missing Qdrant embeddings from PG canonical data."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "run_embedding_backfill")
@@ -5873,11 +6157,10 @@ async def run_embedding_backfill(
 def _mask_url(url: str) -> str:
     """Show host:port but mask credentials in URLs."""
     from urllib.parse import urlparse
+
     parsed = urlparse(url)
     if parsed.password:
-        masked = parsed._replace(
-            netloc=f"***:***@{parsed.hostname}" + (f":{parsed.port}" if parsed.port else "")
-        )
+        masked = parsed._replace(netloc=f"***:***@{parsed.hostname}" + (f":{parsed.port}" if parsed.port else ""))
         return masked.geturl()
     return url
 
@@ -5893,9 +6176,7 @@ async def app_lifespan(app: Starlette):
     if settings.auth_mode == "codex" and settings.azure_keyvault_name:
         from memory_knowledge.auth.credential_refresh import seed_from_keyvault
 
-        seed_status = await seed_from_keyvault(
-            settings.azure_keyvault_name, settings.codex_auth_path
-        )
+        seed_status = await seed_from_keyvault(settings.azure_keyvault_name, settings.codex_auth_path)
         logger.info("codex_kv_seed_result", status=seed_status)
 
     if settings.azure_keyvault_name:
@@ -5921,9 +6202,7 @@ async def app_lifespan(app: Starlette):
             logger.error("codex_auth_failed", error=str(e))
             raise
     elif not settings.openai_api_key:
-        raise RuntimeError(
-            "OPENAI_API_KEY is required when AUTH_MODE=api_key"
-        )
+        raise RuntimeError("OPENAI_API_KEY is required when AUTH_MODE=api_key")
 
     logger.info("startup_begin")
 
@@ -5939,6 +6218,7 @@ async def app_lifespan(app: Starlette):
     # Seed DB secrets from Azure Key Vault if configured
     if settings.azure_keyvault_name and settings.data_mode == "remote":
         from memory_knowledge.auth.credential_refresh import fetch_kv_secret
+
         for env_var, secret_name in [
             ("DATABASE_URL", settings.kv_pg_secret_name),
             ("QDRANT_API_KEY", settings.kv_qdrant_secret_name),
@@ -6073,6 +6353,7 @@ async def app_lifespan(app: Starlette):
     # SHUTDOWN — stop Codex MCP client, token manager, dispatcher, drain tasks, close connections
     logger.info("shutdown_begin")
     from memory_knowledge.llm.codex_mcp import CodexMcpClient
+
     await CodexMcpClient.get().shutdown()
     if _token_manager:
         await _token_manager.stop()
@@ -6114,10 +6395,10 @@ async def metrics_endpoint(request: Request) -> Response:
     return Response(generate_latest(), media_type=CONTENT_TYPE_LATEST)
 
 
-from starlette.middleware import Middleware
-from starlette.middleware.cors import CORSMiddleware
+from starlette.middleware import Middleware  # noqa: E402
+from starlette.middleware.cors import CORSMiddleware  # noqa: E402
 
-from memory_knowledge.middleware.auth import ApiKeyAuthMiddleware
+from memory_knowledge.middleware.auth import ApiKeyAuthMiddleware  # noqa: E402
 
 _cors_origins = os.environ.get("CORS_ALLOWED_ORIGINS", "*").split(",")
 
@@ -6127,23 +6408,28 @@ app = Starlette(
         Route("/health", health_endpoint),
         Route("/ready", readiness_endpoint),
         Route("/metrics", metrics_endpoint),
-        Route("/.well-known/oauth-authorization-server",
-              lambda r: JSONResponse({"error": "oauth_not_supported"}, status_code=404)),
-        Route("/.well-known/openid-configuration",
-              lambda r: JSONResponse({"error": "not_supported"}, status_code=404)),
-        Route("/.well-known/oauth-protected-resource",
-              lambda r: JSONResponse({"error": "not_supported"}, status_code=404)),
-        Route("/.well-known/oauth-protected-resource/{path:path}",
-              lambda r: JSONResponse({"error": "not_supported"}, status_code=404)),
-        Route("/register",
-              lambda r: JSONResponse({"error": "registration_not_supported"}, status_code=404),
-              methods=["POST"]),
+        Route(
+            "/.well-known/oauth-authorization-server",
+            lambda r: JSONResponse({"error": "oauth_not_supported"}, status_code=404),
+        ),
+        Route("/.well-known/openid-configuration", lambda r: JSONResponse({"error": "not_supported"}, status_code=404)),
+        Route(
+            "/.well-known/oauth-protected-resource", lambda r: JSONResponse({"error": "not_supported"}, status_code=404)
+        ),
+        Route(
+            "/.well-known/oauth-protected-resource/{path:path}",
+            lambda r: JSONResponse({"error": "not_supported"}, status_code=404),
+        ),
+        Route(
+            "/register",
+            lambda r: JSONResponse({"error": "registration_not_supported"}, status_code=404),
+            methods=["POST"],
+        ),
         Mount("/mcp", app=mcp.streamable_http_app()),
     ],
     middleware=[
         Middleware(ApiKeyAuthMiddleware),
-        Middleware(CORSMiddleware, allow_origins=_cors_origins,
-                  allow_methods=["*"], allow_headers=["*"]),
+        Middleware(CORSMiddleware, allow_origins=_cors_origins, allow_methods=["*"], allow_headers=["*"]),
     ],
     lifespan=app_lifespan,
 )

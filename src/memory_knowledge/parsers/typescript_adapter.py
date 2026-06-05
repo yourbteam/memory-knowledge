@@ -71,9 +71,7 @@ def parse_typescript_file(file_path: str, source: str) -> FileParseOutput:
         )
     except Exception as e:
         logger.warning("ts_parse_error", file_path=file_path, error=str(e))
-        return FileParseOutput(
-            file_path=file_path, language=language, parse_error=str(e)
-        )
+        return FileParseOutput(file_path=file_path, language=language, parse_error=str(e))
 
 
 def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
@@ -178,11 +176,40 @@ def _extract_imports(source: str) -> list[ImportInfo]:
 
 
 _TS_CALL_EXCLUDE = {
-    "if", "for", "while", "switch", "catch", "return", "throw", "new",
-    "typeof", "await", "async", "import", "export", "from", "require",
-    "const", "let", "var", "function", "class", "interface", "extends",
-    "console", "Math", "JSON", "Array", "Object", "String", "Number",
-    "Promise", "setTimeout", "setInterval", "parseInt", "parseFloat",
+    "if",
+    "for",
+    "while",
+    "switch",
+    "catch",
+    "return",
+    "throw",
+    "new",
+    "typeof",
+    "await",
+    "async",
+    "import",
+    "export",
+    "from",
+    "require",
+    "const",
+    "let",
+    "var",
+    "function",
+    "class",
+    "interface",
+    "extends",
+    "console",
+    "Math",
+    "JSON",
+    "Array",
+    "Object",
+    "String",
+    "Number",
+    "Promise",
+    "setTimeout",
+    "setInterval",
+    "parseInt",
+    "parseFloat",
 }
 
 
@@ -218,20 +245,24 @@ def _extract_routes(source: str) -> list[RouteInfo]:
     routes: list[RouteInfo] = []
     for match in _TS_ROUTE_PATTERN.finditer(source):
         line_no = source[: match.start()].count("\n") + 1
-        routes.append(RouteInfo(
-            method=match.group(1).upper(),
-            path=match.group(2),
-            handler_name="",
-            line_start=line_no,
-        ))
+        routes.append(
+            RouteInfo(
+                method=match.group(1).upper(),
+                path=match.group(2),
+                handler_name="",
+                line_start=line_no,
+            )
+        )
     for match in _NESTJS_ROUTE_PATTERN.finditer(source):
         line_no = source[: match.start()].count("\n") + 1
-        routes.append(RouteInfo(
-            method=match.group(1).upper(),
-            path=match.group(2),
-            handler_name="",
-            line_start=line_no,
-        ))
+        routes.append(
+            RouteInfo(
+                method=match.group(1).upper(),
+                path=match.group(2),
+                handler_name="",
+                line_start=line_no,
+            )
+        )
     return routes
 
 

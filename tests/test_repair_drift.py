@@ -85,8 +85,20 @@ async def test_repair_reprojects_all_canonical_chunks_and_summaries(monkeypatch)
         async def fetch(self, query, *args):
             if "FROM catalog.chunks" in query:
                 return [
-                    {"entity_key": "chunk-1", "content_text": "a", "chunk_type": "file", "file_path": "a.py", "title": "file:a"},
-                    {"entity_key": "chunk-2", "content_text": "b", "chunk_type": "symbol", "file_path": "b.py", "title": "symbol:fn[b.py]"},
+                    {
+                        "entity_key": "chunk-1",
+                        "content_text": "a",
+                        "chunk_type": "file",
+                        "file_path": "a.py",
+                        "title": "file:a",
+                    },
+                    {
+                        "entity_key": "chunk-2",
+                        "content_text": "b",
+                        "chunk_type": "symbol",
+                        "file_path": "b.py",
+                        "title": "symbol:fn[b.py]",
+                    },
                 ]
             if "FROM catalog.summaries" in query:
                 return [
@@ -96,7 +108,14 @@ async def test_repair_reprojects_all_canonical_chunks_and_summaries(monkeypatch)
             if "SELECT e.entity_key AS file_entity_key, f.file_path" in query:
                 return [{"file_entity_key": "file-1", "file_path": "a.py"}]
             if "SELECT e_file.entity_key AS file_entity_key" in query:
-                return [{"file_entity_key": "file-1", "symbol_entity_key": "sym-1", "symbol_name": "fn", "symbol_kind": "function"}]
+                return [
+                    {
+                        "file_entity_key": "file-1",
+                        "symbol_entity_key": "sym-1",
+                        "symbol_name": "fn",
+                        "symbol_kind": "function",
+                    }
+                ]
             return []
 
     captured: dict[str, object] = {}
@@ -161,8 +180,20 @@ async def test_rebuild_revision_reprojects_all_revision_chunks(monkeypatch):
         async def fetch(self, query, *args):
             if "FROM catalog.chunks" in query:
                 return [
-                    {"entity_key": "chunk-1", "content_text": "a", "chunk_type": "file", "file_path": "a.py", "title": "file:a"},
-                    {"entity_key": "chunk-2", "content_text": "b", "chunk_type": "symbol", "file_path": "b.py", "title": "symbol:fn[b.py]"},
+                    {
+                        "entity_key": "chunk-1",
+                        "content_text": "a",
+                        "chunk_type": "file",
+                        "file_path": "a.py",
+                        "title": "file:a",
+                    },
+                    {
+                        "entity_key": "chunk-2",
+                        "content_text": "b",
+                        "chunk_type": "symbol",
+                        "file_path": "b.py",
+                        "title": "symbol:fn[b.py]",
+                    },
                 ]
             if "SELECT e.entity_key AS file_entity_key, f.file_path" in query:
                 return []

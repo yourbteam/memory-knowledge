@@ -79,9 +79,7 @@ async def test_github_app_auth_caches_token(monkeypatch, tmp_path):
             github_app_config_path=str(tmp_path / "config.json"),
         )
     )
-    future_expiry = (datetime.now(timezone.utc) + timedelta(hours=1)).strftime(
-        "%Y-%m-%dT%H:%M:%SZ"
-    )
+    future_expiry = (datetime.now(timezone.utc) + timedelta(hours=1)).strftime("%Y-%m-%dT%H:%M:%SZ")
     monkeypatch.setattr(auth, "_generate_jwt", lambda: "jwt")
 
     calls = {"count": 0}

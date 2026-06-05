@@ -6,6 +6,7 @@ completions — the standard OpenAI API rejects them.
 
 Adapted from mcp-agents-workflow's McpStdioClient pattern.
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -28,8 +29,8 @@ class CodexMcpClient:
         self._process: asyncio.subprocess.Process | None = None
         self._request_id = 0
         self._initialized = False
-        self._lock = asyncio.Lock()       # guards subprocess startup
-        self._req_lock = asyncio.Lock()   # serializes requests — one in-flight at a time
+        self._lock = asyncio.Lock()  # guards subprocess startup
+        self._req_lock = asyncio.Lock()  # serializes requests — one in-flight at a time
 
     @classmethod
     def get(cls) -> CodexMcpClient:
@@ -57,14 +58,13 @@ class CodexMcpClient:
 
             command = shutil.which("codex")
             if not command:
-                raise RuntimeError(
-                    "codex CLI not found in PATH — install it or add to PATH"
-                )
+                raise RuntimeError("codex CLI not found in PATH — install it or add to PATH")
 
             logger.info("codex_mcp_starting", command=command)
 
             self._process = await asyncio.create_subprocess_exec(
-                command, "mcp-server",
+                command,
+                "mcp-server",
                 stdin=asyncio.subprocess.PIPE,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
@@ -103,9 +103,7 @@ class CodexMcpClient:
         self._process.stdin.write((json.dumps(msg) + "\n").encode())
         await self._process.stdin.drain()
 
-    async def _send_request(
-        self, method: str, params: dict, timeout: float = _REQUEST_TIMEOUT
-    ) -> dict:
+    async def _send_request(self, method: str, params: dict, timeout: float = _REQUEST_TIMEOUT) -> dict:
         """Send a JSON-RPC request and wait for the matching response.
 
         Serialized via _req_lock — only one request in-flight at a time
@@ -114,9 +112,7 @@ class CodexMcpClient:
         async with self._req_lock:
             return await self._send_request_inner(method, params, timeout)
 
-    async def _send_request_inner(
-        self, method: str, params: dict, timeout: float
-    ) -> dict:
+    async def _send_request_inner(self, method: str, params: dict, timeout: float) -> dict:
         if not self._process or not self._process.stdin or not self._process.stdout:
             raise RuntimeError("Codex MCP subprocess not started")
 
@@ -130,13 +126,9 @@ class CodexMcpClient:
         # Read lines until we get our response
         while True:
             try:
-                line = await asyncio.wait_for(
-                    self._process.stdout.readline(), timeout=timeout
-                )
+                line = await asyncio.wait_for(self._process.stdout.readline(), timeout=timeout)
             except asyncio.TimeoutError:
-                raise RuntimeError(
-                    f"Codex MCP request timed out after {timeout}s: {method}"
-                )
+                raise RuntimeError(f"Codex MCP request timed out after {timeout}s: {method}")
 
             if not line:
                 self._initialized = False
@@ -155,9 +147,7 @@ class CodexMcpClient:
             if response.get("id") == rid:
                 if "error" in response:
                     err = response["error"]
-                    raise RuntimeError(
-                        f"Codex MCP error: {err.get('message', 'unknown')}"
-                    )
+                    raise RuntimeError(f"Codex MCP error: {err.get('message', 'unknown')}")
                 return response.get("result", {})
 
     async def complete(self, prompt: str, timeout: float = _REQUEST_TIMEOUT) -> str:

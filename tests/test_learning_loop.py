@@ -1,4 +1,5 @@
 """Tests for agent retrieval learning loop components."""
+
 import uuid
 from unittest.mock import AsyncMock
 

@@ -413,7 +413,9 @@ async def get_finding_pattern_summary(
                 "dismiss_count": sum(1 for i in items if i["decision_bucket"] == "DISMISS"),
                 "acknowledge_count": sum(1 for i in items if i["decision_bucket"] == "ACKNOWLEDGE_OK"),
                 "actionable_count": sum(1 for i in items if i["actionable"] is True),
-                "top_fingerprints": _top_counts([i["finding_fingerprint"] for i in items], label_key="finding_fingerprint"),
+                "top_fingerprints": _top_counts(
+                    [i["finding_fingerprint"] for i in items], label_key="finding_fingerprint"
+                ),
                 "top_locations": _top_counts([i["location"] for i in items], label_key="location"),
                 "top_reason_texts": _top_counts([i["reason_text"] for i in items], label_key="reason_text"),
             }
@@ -496,7 +498,11 @@ async def get_agent_failure_mode_summary(
                 "critic_actionable_rate": actionable_count / finding_count if finding_count else 0.0,
                 "repeat_rate": (finding_count - distinct_fingerprint_count) / finding_count if finding_count else 0.0,
                 "top_examples": [
-                    {"finding_fingerprint": item["finding_fingerprint"], "finding_title": item["finding_title"], "count": count}
+                    {
+                        "finding_fingerprint": item["finding_fingerprint"],
+                        "finding_title": item["finding_title"],
+                        "count": count,
+                    }
                     for item, count in []
                 ],
             }
@@ -511,7 +517,9 @@ async def get_agent_failure_mode_summary(
             for (fingerprint, title), count in sorted(examples.items(), key=lambda x: (-x[1], x[0][0], x[0][1]))[:5]
         ]
 
-    summary.sort(key=lambda x: (x["repository_key"], x["workflow_name"], x["agent_name"], x["finding_kind"], x["phase_id"]))
+    summary.sort(
+        key=lambda x: (x["repository_key"], x["workflow_name"], x["agent_name"], x["finding_kind"], x["phase_id"])
+    )
     summary = summary[:limit]
     eligible = len({row["workflow_run_id"] for row in rows})
     return {

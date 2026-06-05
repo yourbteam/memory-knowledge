@@ -25,10 +25,7 @@ def changed_files(
     paths: set[str] = set()
     for d in diff_index:
         for path in (d.a_path, d.b_path):
-            if path and (
-                extensions is None
-                or any(path.endswith(ext) for ext in extensions)
-            ):
+            if path and (extensions is None or any(path.endswith(ext) for ext in extensions)):
                 paths.add(path)
     logger.info(
         "diff_computed",

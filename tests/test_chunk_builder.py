@@ -1,7 +1,6 @@
 from memory_knowledge.parsers.base import FileParseOutput, SymbolInfo
 from memory_knowledge.structure.chunk_builder import (
     MAX_CHUNK_CHARS,
-    ChunkSpec,
     build_chunks,
 )
 

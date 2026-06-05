@@ -309,7 +309,10 @@ async def get_routing_policy_recommendations(
         if case_count < min_case_count:
             continue
         confidence = round(
-            sum((_outcome_quality(row.get("outcome_status")) + _lifecycle_quality(row.get("lifecycle_state"))) / 2.0 for row in bucket)
+            sum(
+                (_outcome_quality(row.get("outcome_status")) + _lifecycle_quality(row.get("lifecycle_state"))) / 2.0
+                for row in bucket
+            )
             / case_count,
             4,
         )
@@ -325,7 +328,9 @@ async def get_routing_policy_recommendations(
                 sample_prompts.append(prompt)
         recommendations.append(
             {
-                "policy_key": "|".join([str(request_kind_value or ""), str(workflow_name or ""), str(run_action or "")]),
+                "policy_key": "|".join(
+                    [str(request_kind_value or ""), str(workflow_name or ""), str(run_action or "")]
+                ),
                 "repository_key": repository_key,
                 "project_key": project_key,
                 "request_kind": request_kind_value,
@@ -344,8 +349,7 @@ async def get_routing_policy_recommendations(
                     f"confidence>={min_confidence}",
                 ],
                 "evidence_summary": (
-                    f"{case_count} cases for {request_kind_value or 'unknown'} "
-                    f"routed to {workflow_name}"
+                    f"{case_count} cases for {request_kind_value or 'unknown'} routed to {workflow_name}"
                 ),
             }
         )
@@ -545,7 +549,12 @@ async def get_clarification_policy(
             if row.get("outcome_status") in {"corrected", "overridden_by_human", "insufficient_context"}:
                 problem_case_count += 1
             prompt = str(row.get("prompt_text") or "")
-            if row.get("requires_clarification") and prompt and prompt not in sample_prompts and len(sample_prompts) < 3:
+            if (
+                row.get("requires_clarification")
+                and prompt
+                and prompt not in sample_prompts
+                and len(sample_prompts) < 3
+            ):
                 sample_prompts.append(prompt)
             for question in _normalize_json_text_list(row.get("clarifying_questions")):
                 if question not in sample_questions and len(sample_questions) < 5:
@@ -566,7 +575,9 @@ async def get_clarification_policy(
         mode = "required" if confidence >= 0.6 or problem_rate >= 0.35 else "advisory"
         policies.append(
             {
-                "policy_key": "|".join([str(request_kind_value or ""), str(workflow_name or ""), str(run_action or "")]),
+                "policy_key": "|".join(
+                    [str(request_kind_value or ""), str(workflow_name or ""), str(run_action or "")]
+                ),
                 "repository_key": repository_key,
                 "project_key": project_key,
                 "request_kind": request_kind_value,
@@ -797,11 +808,7 @@ async def refresh_triage_policy_artifacts(
         ("behavior_profile", profiles["profiles"]),
     ]:
         for item in items:
-            policy_key = str(
-                item.get("policy_key")
-                or item.get("profile_key")
-                or f"{policy_kind}:{inserted + 1}"
-            )
+            policy_key = str(item.get("policy_key") or item.get("profile_key") or f"{policy_kind}:{inserted + 1}")
             await pool.execute(
                 """
                 INSERT INTO ops.triage_policy_artifacts (
@@ -957,18 +964,11 @@ async def get_policy_governance_rollout_summary(
         "overall_stage": overall_stage,
         "trust_ready_count": trust_ready_count,
         "suppressed_count": suppressed_count,
-        "kind_counts": [
-            {"policy_kind": key, "count": kind_counts[key]}
-            for key in sorted(kind_counts)
-        ],
+        "kind_counts": [{"policy_kind": key, "count": kind_counts[key]} for key in sorted(kind_counts)],
         "rollout_stage_counts": [
-            {"rollout_stage": key, "count": rollout_counts[key]}
-            for key in sorted(rollout_counts)
+            {"rollout_stage": key, "count": rollout_counts[key]} for key in sorted(rollout_counts)
         ],
-        "drift_state_counts": [
-            {"drift_state": key, "count": drift_counts[key]}
-            for key in sorted(drift_counts)
-        ],
+        "drift_state_counts": [{"drift_state": key, "count": drift_counts[key]} for key in sorted(drift_counts)],
         "proposed_actions": proposed_actions,
         "artifacts": artifacts,
     }
@@ -1059,17 +1059,23 @@ async def triage_request_with_memory(
     effective_request_kind = (
         top_policy.get("request_kind")
         if top_policy is not None
-        else top_search.get("request_kind") if top_search is not None else request_kind
+        else top_search.get("request_kind")
+        if top_search is not None
+        else request_kind
     )
     effective_workflow_name = (
         top_policy.get("recommended_workflow_name")
         if top_policy is not None
-        else top_search.get("selected_workflow_name") if top_search is not None else selected_workflow_name
+        else top_search.get("selected_workflow_name")
+        if top_search is not None
+        else selected_workflow_name
     )
     effective_run_action = (
         top_policy.get("recommended_run_action")
         if top_policy is not None
-        else top_search.get("selected_run_action") if top_search is not None else selected_run_action
+        else top_search.get("selected_run_action")
+        if top_search is not None
+        else selected_run_action
     )
     actor_profile = None
     if actor_email:
@@ -1092,7 +1098,9 @@ async def triage_request_with_memory(
     recommendation_confidence = (
         top_policy.get("confidence")
         if top_policy is not None
-        else top_search.get("similarity_score") if top_search is not None else None
+        else top_search.get("similarity_score")
+        if top_search is not None
+        else None
     )
     if recommendation_confidence is not None and actor_profile and actor_profile.get("match_found"):
         recommendation_confidence = round(

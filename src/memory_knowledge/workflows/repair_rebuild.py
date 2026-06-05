@@ -38,13 +38,15 @@ async def run(
             )
 
         if repair_scope not in ("full", "qdrant", "neo4j"):
-            raise ValueError(
-                f"Invalid repair_scope: {repair_scope}. Must be full, qdrant, or neo4j."
-            )
+            raise ValueError(f"Invalid repair_scope: {repair_scope}. Must be full, qdrant, or neo4j.")
 
         report = await repair(
-            pool, qdrant_client, neo4j_driver, settings,
-            repository_key, repair_scope,
+            pool,
+            qdrant_client,
+            neo4j_driver,
+            settings,
+            repository_key,
+            repair_scope,
         )
 
         duration_ms = int((time.monotonic() - start) * 1000)

@@ -30,8 +30,6 @@ class ApiKeyAuthMiddleware(BaseHTTPMiddleware):
         if expected:
             auth_header = request.headers.get("authorization", "")
             if auth_header != f"Bearer {expected}":
-                return JSONResponse(
-                    {"error": "Unauthorized"}, status_code=401
-                )
+                return JSONResponse({"error": "Unauthorized"}, status_code=401)
 
         return await call_next(request)

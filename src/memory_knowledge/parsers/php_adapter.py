@@ -76,9 +76,7 @@ def parse_php_file(file_path: str, source: str) -> FileParseOutput:
         )
     except Exception as e:
         logger.warning("php_parse_error", file_path=file_path, error=str(e))
-        return FileParseOutput(
-            file_path=file_path, language="php", parse_error=str(e)
-        )
+        return FileParseOutput(file_path=file_path, language="php", parse_error=str(e))
 
 
 def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
@@ -222,11 +220,32 @@ def _extract_imports(source: str) -> list[ImportInfo]:
 
 
 _PHP_CALL_EXCLUDE = {
-    "if", "for", "while", "switch", "catch", "foreach",
-    "class", "function", "use", "require", "include",
-    "require_once", "include_once", "array", "list",
-    "return", "throw", "new", "echo", "print", "isset",
-    "empty", "unset", "count", "strlen", "substr",
+    "if",
+    "for",
+    "while",
+    "switch",
+    "catch",
+    "foreach",
+    "class",
+    "function",
+    "use",
+    "require",
+    "include",
+    "require_once",
+    "include_once",
+    "array",
+    "list",
+    "return",
+    "throw",
+    "new",
+    "echo",
+    "print",
+    "isset",
+    "empty",
+    "unset",
+    "count",
+    "strlen",
+    "substr",
 }
 
 
@@ -244,9 +263,7 @@ def _extract_calls(source: str, symbols: list[SymbolInfo]) -> list[CallInfo]:
             if sym.line_start <= line_no <= sym.line_end and sym.name != name:
                 enclosing = sym.name
         if enclosing:
-            calls.append(
-                CallInfo(caller_name=enclosing, callee_name=name, line_no=line_no)
-            )
+            calls.append(CallInfo(caller_name=enclosing, callee_name=name, line_no=line_no))
     return calls
 
 
@@ -261,12 +278,14 @@ def _extract_routes(source: str) -> list[RouteInfo]:
     routes: list[RouteInfo] = []
     for match in _PHP_ROUTE_PATTERN.finditer(source):
         line_no = source[: match.start()].count("\n") + 1
-        routes.append(RouteInfo(
-            method=match.group(1).upper(),
-            path=match.group(2),
-            handler_name="",
-            line_start=line_no,
-        ))
+        routes.append(
+            RouteInfo(
+                method=match.group(1).upper(),
+                path=match.group(2),
+                handler_name="",
+                line_start=line_no,
+            )
+        )
     return routes
 
 

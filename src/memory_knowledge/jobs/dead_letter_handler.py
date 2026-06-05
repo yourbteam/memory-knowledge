@@ -10,9 +10,7 @@ import structlog
 logger = structlog.get_logger()
 
 
-async def move_to_dead_letter(
-    pool: asyncpg.Pool, job_id: uuid.UUID
-) -> None:
+async def move_to_dead_letter(pool: asyncpg.Pool, job_id: uuid.UUID) -> None:
     """Move a failed job to dead-letter state."""
     await pool.execute(
         """
@@ -25,9 +23,7 @@ async def move_to_dead_letter(
     logger.info("job_dead_lettered", job_id=str(job_id))
 
 
-async def list_dead_letters(
-    pool: asyncpg.Pool, repository_key: str
-) -> list[dict[str, Any]]:
+async def list_dead_letters(pool: asyncpg.Pool, repository_key: str) -> list[dict[str, Any]]:
     """List all dead-lettered jobs for a repository."""
     rows = await pool.fetch(
         """
@@ -42,9 +38,7 @@ async def list_dead_letters(
     return [dict(r) for r in rows]
 
 
-async def requeue_dead_letter(
-    pool: asyncpg.Pool, job_id: uuid.UUID
-) -> None:
+async def requeue_dead_letter(pool: asyncpg.Pool, job_id: uuid.UUID) -> None:
     """Admin reset: move dead-lettered job back to pending for manual retry."""
     # Intentionally bypasses state_transition_guard — this is an admin override
     await pool.execute(

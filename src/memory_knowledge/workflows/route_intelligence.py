@@ -14,9 +14,7 @@ logger = structlog.get_logger()
 TOOL_NAME = "run_route_intelligence_workflow"
 
 
-async def _compute_policy_recommendations(
-    pool: asyncpg.Pool, repository_id: int
-) -> list[dict[str, Any]]:
+async def _compute_policy_recommendations(pool: asyncpg.Pool, repository_id: int) -> list[dict[str, Any]]:
     """Compute policy recommendations based on feedback trends."""
     rows = await pool.fetch(
         """
@@ -107,16 +105,10 @@ async def run(
         graph_expansion_count = 0
 
         if total_execs > 0:
-            avg_result_count = sum(
-                r["result_count"] or 0 for r in recent_rows
-            ) / total_execs
-            avg_duration_ms = sum(
-                r["duration_ms"] or 0 for r in recent_rows
-            ) / total_execs
+            avg_result_count = sum(r["result_count"] or 0 for r in recent_rows) / total_execs
+            avg_duration_ms = sum(r["duration_ms"] or 0 for r in recent_rows) / total_execs
             fanout_count = sum(1 for r in recent_rows if r["fanout_used"])
-            graph_expansion_count = sum(
-                1 for r in recent_rows if r["graph_expansion_used"]
-            )
+            graph_expansion_count = sum(1 for r in recent_rows if r["graph_expansion_used"])
 
         # Query feedback metrics
         feedback_row = await pool.fetchrow(
@@ -144,9 +136,7 @@ async def run(
             "avg_duration_ms": round(avg_duration_ms, 1),
             "route_patterns": {
                 "fanout_rate": round(fanout_count / total_execs, 2) if total_execs else 0,
-                "graph_expansion_rate": round(
-                    graph_expansion_count / total_execs, 2
-                ) if total_execs else 0,
+                "graph_expansion_rate": round(graph_expansion_count / total_execs, 2) if total_execs else 0,
             },
             "feedback": {
                 "avg_usefulness": (
@@ -159,9 +149,7 @@ async def run(
                     if feedback_row and feedback_row["avg_precision"]
                     else None
                 ),
-                "feedback_count": (
-                    feedback_row["feedback_count"] if feedback_row else 0
-                ),
+                "feedback_count": (feedback_row["feedback_count"] if feedback_row else 0),
             },
             "policy_recommendations": policy_recs,
         }

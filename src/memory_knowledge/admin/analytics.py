@@ -320,17 +320,11 @@ async def fetch_planning_context_for_runs(
         run_id = row["workflow_run_id"]
         ctx = context_by_run.setdefault(run_id, {"projects": [], "features": [], "tasks": []})
         if row["project_key"]:
-            ctx["projects"].append(
-                {"project_key": str(row["project_key"]), "project_name": row["project_name"]}
-            )
+            ctx["projects"].append({"project_key": str(row["project_key"]), "project_name": row["project_name"]})
         if row["feature_key"]:
-            ctx["features"].append(
-                {"feature_key": str(row["feature_key"]), "feature_title": row["feature_title"]}
-            )
+            ctx["features"].append({"feature_key": str(row["feature_key"]), "feature_title": row["feature_title"]})
         if row["task_key"]:
-            ctx["tasks"].append(
-                {"task_key": str(row["task_key"]), "task_title": row["task_title"]}
-            )
+            ctx["tasks"].append({"task_key": str(row["task_key"]), "task_title": row["task_title"]})
     for run_id, ctx in context_by_run.items():
         ctx["projects"] = _distinct_sorted(ctx["projects"], "project_key")
         ctx["features"] = _distinct_sorted(ctx["features"], "feature_key")
@@ -461,13 +455,9 @@ async def get_agent_performance_summary(
                 "error_count": bucket["error_count"],
                 "cancelled_count": bucket["cancelled_count"],
                 "avg_duration_ms": (
-                    bucket["_duration_total"] / bucket["_duration_count"]
-                    if bucket["_duration_count"]
-                    else 0.0
+                    bucket["_duration_total"] / bucket["_duration_count"] if bucket["_duration_count"] else 0.0
                 ),
-                "avg_iteration_count": bucket["_iteration_total"] / bucket["run_count"]
-                if bucket["run_count"]
-                else 0.0,
+                "avg_iteration_count": bucket["_iteration_total"] / bucket["run_count"] if bucket["run_count"] else 0.0,
                 "planning_context": _bucket_planning_context(bucket["_run_ids"], run_planning_context)
                 if include_planning_context
                 else _empty_planning_context(),
@@ -559,13 +549,9 @@ async def get_phase_quality_summary(
                 "cancelled_count": bucket["cancelled_count"],
                 "other_count": bucket["other_count"],
                 "decision_counts": decision_counts,
-                "avg_attempts": bucket["_attempt_total"] / len(bucket["_run_ids"])
-                if bucket["_run_ids"]
-                else 0.0,
+                "avg_attempts": bucket["_attempt_total"] / len(bucket["_run_ids"]) if bucket["_run_ids"] else 0.0,
                 "avg_duration_ms": (
-                    bucket["_duration_total"] / bucket["_duration_count"]
-                    if bucket["_duration_count"]
-                    else 0.0
+                    bucket["_duration_total"] / bucket["_duration_count"] if bucket["_duration_count"] else 0.0
                 ),
             }
         )
@@ -756,9 +742,7 @@ async def get_loop_pattern_summary(
                 "repository_key": bucket["repository_key"],
                 "workflow_name": bucket["workflow_name"],
                 "run_count": bucket["run_count"],
-                "avg_iteration_count": bucket["_iteration_total"] / bucket["run_count"]
-                if bucket["run_count"]
-                else 0.0,
+                "avg_iteration_count": bucket["_iteration_total"] / bucket["run_count"] if bucket["run_count"] else 0.0,
                 "threshold_counts": [
                     {"threshold": threshold, "run_count": bucket["_threshold_counts"][threshold]}
                     for threshold in thresholds
@@ -986,7 +970,6 @@ async def list_entropy_sweep_targets(
     phase_fact = await fetch_phase_fact(pool, repository_key=repository_key, workflow_name=workflow_name)
     validator_fact = await fetch_validator_fact(pool, repository_key=repository_key, workflow_name=workflow_name)
     run_grade_fact = build_run_grade_fact(run_fact, phase_fact, validator_fact)
-    grade_by_run = {row["workflow_run_id"]: row for row in run_grade_fact}
     validator_by_run = defaultdict(list)
     phase_by_run = defaultdict(list)
     for row in validator_fact:
@@ -1249,10 +1232,14 @@ async def get_convergence_recommendation_summary(
             key=lambda row: (_isoformat(row["started_utc"]) or "", row["run_id"]),
             reverse=True,
         )[0]
-        primary_recommendation = sorted(
-            bucket["_action_counts"].items(),
-            key=_action_sort_key,
-        )[0][0] if bucket["_action_counts"] else "MONITOR"
+        primary_recommendation = (
+            sorted(
+                bucket["_action_counts"].items(),
+                key=_action_sort_key,
+            )[0][0]
+            if bucket["_action_counts"]
+            else "MONITOR"
+        )
         summary.append(
             {
                 "repository_key": bucket["repository_key"],

@@ -1,4 +1,5 @@
 """Tests for Phase 12 features: inheritance, mixed classification, features, backfill schemas."""
+
 from memory_knowledge.parsers.python_adapter import parse_python_file
 from memory_knowledge.parsers.typescript_adapter import parse_typescript_file
 from memory_knowledge.parsers.csharp_adapter import parse_csharp_file
@@ -9,8 +10,9 @@ from memory_knowledge.routing.prompt_feature_extractor import extract_prompt_fea
 
 # --- Inheritance extraction ---
 
+
 def test_python_base_classes():
-    code = '''\
+    code = """\
 class Base:
     pass
 
@@ -19,7 +21,7 @@ class Child(Base):
 
 class Multi(Base, Mixin):
     pass
-'''
+"""
     output = parse_python_file("test.py", code)
     child = next(s for s in output.symbols if s.name == "Child")
     assert child.base_classes == ["Base"]
@@ -83,6 +85,7 @@ class UserService extends BaseService implements Cacheable, Loggable
 
 # --- Prompt feature extractor ---
 
+
 def test_stack_trace_detection():
     features = extract_prompt_features('Traceback (most recent call last):\n  File "foo.py", line 42')
     assert features["has_stack_trace"] is True
@@ -107,6 +110,7 @@ def test_no_false_positive_features():
 
 # --- Mixed classification ---
 
+
 def test_mixed_two_categories():
     result = classify_prompt("what is the impact of the design pattern change")
     assert result == ("mixed", 0.7)
@@ -123,6 +127,7 @@ def test_single_category_not_mixed():
 
 
 # --- Service label heuristic (unit test for naming) ---
+
 
 def test_service_name_detection():
     """Service label is applied to classes ending with Service or Provider."""

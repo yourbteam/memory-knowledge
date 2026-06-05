@@ -1,4 +1,3 @@
-import os
 from types import SimpleNamespace
 
 import pytest
@@ -54,7 +53,7 @@ def test_ensure_repo_fetch_existing(tmp_path, temp_git_repo):
     clone_base.mkdir()
 
     # Clone first
-    repo1 = ensure_repo("my-repo", str(source_repo.working_dir), str(clone_base))
+    ensure_repo("my-repo", str(source_repo.working_dir), str(clone_base))
     # Fetch again — should not fail
     repo2 = ensure_repo("my-repo", str(source_repo.working_dir), str(clone_base))
     assert isinstance(repo2, Repo)

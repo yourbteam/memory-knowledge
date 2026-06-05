@@ -4,6 +4,7 @@ deactivate_unbacked_points must set is_active=False only on currently-active
 points whose entity_key isn't in the active PG set, and must NEVER wipe when the
 active set is empty (safety valve).
 """
+
 import pytest
 
 from memory_knowledge.projections.qdrant_projector import deactivate_unbacked_points
@@ -31,9 +32,7 @@ class _FakeQdrant:
 async def test_deactivates_only_unbacked_active_points():
     # Qdrant has 4 active points; PG active backs only k1, k2 → k3 + orphan are unbacked.
     client = _FakeQdrant(["K1", "K2", "K3", "orphan-x"])
-    n = await deactivate_unbacked_points(
-        client, "code_chunks", "repo", active_entity_keys={"k1", "k2"}
-    )
+    n = await deactivate_unbacked_points(client, "code_chunks", "repo", active_entity_keys={"k1", "k2"})
     assert n == 2
     assert len(client.set_payload_calls) == 1
     call = client.set_payload_calls[0]

@@ -29,8 +29,8 @@ from memory_knowledge.identity.entity_key import (
 import os
 from itertools import groupby
 
-from memory_knowledge.llm.complete import llm_complete
 from memory_knowledge.llm.openai_client import complete_batch_summaries
+
 # Parser dispatch via factory — no direct adapter import
 from memory_knowledge.projections.neo4j_projector import (
     delete_file_subgraph,
@@ -50,9 +50,7 @@ from memory_knowledge.projections.pg_writer import (
     deactivate_file_chunks,
     deactivate_old_chunks,
     deactivate_old_summaries,
-    record_ingestion_item,
     upsert_branch_head,
-    upsert_chunk,
     upsert_retrieval_surface,
 )
 from memory_knowledge.projections.qdrant_projector import (
@@ -64,18 +62,14 @@ from memory_knowledge.projections.summary_qdrant import (
     deactivate_old_summary_points,
     embed_and_upsert_summaries,
 )
-from memory_knowledge.projections.summary_writer import bulk_upsert_summaries, upsert_summary
+from memory_knowledge.projections.summary_writer import bulk_upsert_summaries
 from memory_knowledge.structure.chunk_builder import build_chunks
 from memory_knowledge.structure.entity_registrar import (
     bulk_upsert_file_imports,
     bulk_upsert_files,
     bulk_upsert_symbol_calls,
     bulk_upsert_symbols,
-    upsert_file,
-    upsert_file_import,
     upsert_repo_revision,
-    upsert_symbol,
-    upsert_symbol_call,
 )
 from memory_knowledge.jobs.job_checkpoint_manager import (
     clear_shape_checkpoint,
@@ -98,6 +92,7 @@ CHECKPOINT_PHASE_ORDER = {
     "summary_embeddings_complete": 4,
     "neo4j_complete": 5,
 }
+
 
 def _summary_prompt(language: str) -> str:
     return (
@@ -295,12 +290,10 @@ async def _load_resume_parse_context(
                 "language": detect_language(file_path),
                 "symbols": file_symbols,
                 "routes": [
-                    {"method": r.method, "path": r.path, "handler_name": r.handler_name}
-                    for r in parse_output.routes
+                    {"method": r.method, "path": r.path, "handler_name": r.handler_name} for r in parse_output.routes
                 ],
                 "sql_refs": [
-                    {"object_name": sr.object_name, "operation": sr.operation}
-                    for sr in parse_output.sql_refs
+                    {"object_name": sr.object_name, "operation": sr.operation} for sr in parse_output.sql_refs
                 ],
             }
         )
@@ -429,9 +422,7 @@ async def _resolve_dependency_edges(
                     pg_import_rows.append((importer_file_id, imported_file_id))
                 importer_ek = file_path_to_entity_key.get(importer_path, "")
                 if importer_ek and imported_ek:
-                    neo4j_import_edges.append(
-                        {"importer_ek": importer_ek, "imported_ek": imported_ek}
-                    )
+                    neo4j_import_edges.append({"importer_ek": importer_ek, "imported_ek": imported_ek})
 
     name_to_symbols: dict[str, list[tuple[str, int]]] = {}
     for (fp, sname), sid in symbol_lookup.items():
@@ -569,14 +560,10 @@ async def run(
         logger.info("files_determined", count=len(py_files), run_type=run_type)
 
         # Step 3: Create ingestion run
-        ingestion_run_id = await create_ingestion_run(
-            pool, repository_id, commit_sha, branch_name, run_type=run_type
-        )
+        ingestion_run_id = await create_ingestion_run(pool, repository_id, commit_sha, branch_name, run_type=run_type)
 
         # Step 4: Register revision
-        repo_revision_id = await upsert_repo_revision(
-            pool, repository_id, commit_sha, branch_name
-        )
+        repo_revision_id = await upsert_repo_revision(pool, repository_id, commit_sha, branch_name)
         # Offline/manual runs have no job_id; resume from the shape-keyed store
         # (dispatcher jobs always pass an explicit checkpoint, so this is skipped).
         _resume = checkpoint
@@ -589,9 +576,7 @@ async def run(
                     phase=_resume.get("phase"),
                 )
         checkpoint_state = dict(_resume or {})
-        _save_ckpt = functools.partial(
-            _save_ingestion_checkpoint, shape=(repository_id, commit_sha, branch_name)
-        )
+        _save_ckpt = functools.partial(_save_ingestion_checkpoint, shape=(repository_id, commit_sha, branch_name))
         checkpoint_state = await _save_ckpt(
             pool,
             manifest_job_id,
@@ -611,9 +596,7 @@ async def run(
         all_imports: list[tuple[str, str]] = []
         all_calls: list[tuple[str, str, str, str]] = []
         failed_file_count = 0  # per-file ingest errors caught-and-continued (T3 fail-loud)
-        canonical_complete = _checkpoint_phase_at_or_beyond(
-            checkpoint_state, "canonical_complete"
-        )
+        canonical_complete = _checkpoint_phase_at_or_beyond(checkpoint_state, "canonical_complete")
 
         if canonical_complete:
             resume_context = await _load_resume_parse_context(
@@ -709,7 +692,8 @@ async def run(
                                 except Exception as exc:
                                     logger.warning(
                                         "neo4j_delete_file_failed",
-                                        file_path=file_path, error=str(exc),
+                                        file_path=file_path,
+                                        error=str(exc),
                                     )
                         ingestion_item_rows.append((ingestion_run_id, None, "file", "deleted", None))
                         continue
@@ -738,9 +722,7 @@ async def run(
                         )
                         await deactivate_file_chunks(pool, repository_id, file_path)
 
-                    source = full_path.read_text(
-                        encoding="utf-8", errors="replace"
-                    )
+                    source = full_path.read_text(encoding="utf-8", errors="replace")
                     source_lines = source.splitlines()
                     size_bytes = len(source.encode("utf-8"))
                     checksum = hashlib.sha256(source.encode("utf-8")).hexdigest()
@@ -769,16 +751,10 @@ async def run(
                     # Register symbols
                     file_symbol_records: list[dict[str, Any]] = []
                     for sym in parse_output.symbols:
-                        s_ek = symbol_entity_key(
-                            repository_key, commit_sha, file_path, sym.name, sym.kind
-                        )
-                        sym_source = "\n".join(
-                            source_lines[sym.line_start - 1 : sym.line_end]
-                        )
+                        s_ek = symbol_entity_key(repository_key, commit_sha, file_path, sym.name, sym.kind)
+                        sym_source = "\n".join(source_lines[sym.line_start - 1 : sym.line_end])
                         sym_hash = hashlib.sha256(sym_source.encode("utf-8")).hexdigest()
-                        file_symbol_records.append(
-                            {"entity_key": str(s_ek), "name": sym.name, "kind": sym.kind}
-                        )
+                        file_symbol_records.append({"entity_key": str(s_ek), "name": sym.name, "kind": sym.kind})
                         pending_symbol_rows.append(
                             {
                                 "entity_key": s_ek,
@@ -814,12 +790,8 @@ async def run(
                     # Build chunks
                     chunks = build_chunks(parse_output, source_lines)
                     for chunk in chunks:
-                        c_ek = chunk_entity_key(
-                            repository_key, commit_sha, file_path, chunk.chunk_index
-                        )
-                        chunk_checksum = hashlib.sha256(
-                            chunk.content_text.encode("utf-8")
-                        ).hexdigest()
+                        c_ek = chunk_entity_key(repository_key, commit_sha, file_path, chunk.chunk_index)
+                        chunk_checksum = hashlib.sha256(chunk.content_text.encode("utf-8")).hexdigest()
                         all_chunks_for_embedding.append(
                             {
                                 "entity_key": str(c_ek),
@@ -848,10 +820,15 @@ async def run(
                     for imp in parse_output.imports:
                         all_imports.append((file_path, imp.module_path))
                     for call in parse_output.calls:
-                        caller_ek = str(symbol_entity_key(
-                            repository_key, commit_sha, file_path, call.caller_name,
-                            next((s.kind for s in parse_output.symbols if s.name == call.caller_name), "function"),
-                        ))
+                        caller_ek = str(
+                            symbol_entity_key(
+                                repository_key,
+                                commit_sha,
+                                file_path,
+                                call.caller_name,
+                                next((s.kind for s in parse_output.symbols if s.name == call.caller_name), "function"),
+                            )
+                        )
                         all_calls.append((file_path, call.caller_name, call.callee_name, caller_ek))
 
                     processed_files = len(file_path_to_source)
@@ -986,16 +963,18 @@ async def run(
                 # File-level item
                 s_ek = str(summary_entity_key(repository_key, commit_sha, file_ek, "file"))
                 if s_ek not in existing_summary_keys:
-                    summary_items.append({
-                        "index": item_index,
-                        "name": os.path.basename(fp),
-                        "kind": "file",
-                        "file": fp,
-                        "source": source[:8000],
-                        "entity_key": file_ek,
-                        "summary_level": "file",
-                        "language": detect_language(fp),
-                    })
+                    summary_items.append(
+                        {
+                            "index": item_index,
+                            "name": os.path.basename(fp),
+                            "kind": "file",
+                            "file": fp,
+                            "source": source[:8000],
+                            "entity_key": file_ek,
+                            "summary_level": "file",
+                            "language": detect_language(fp),
+                        }
+                    )
                     item_index += 1
 
                 # Symbol-level items
@@ -1014,22 +993,22 @@ async def run(
                         sym_source = None
                         for psym in cached_parse.symbols:
                             if psym.name == sym_rec["name"]:
-                                sym_source = "\n".join(
-                                    source_lines[psym.line_start - 1 : psym.line_end]
-                                )
+                                sym_source = "\n".join(source_lines[psym.line_start - 1 : psym.line_end])
                                 break
                         if not sym_source:
                             continue
-                        summary_items.append({
-                            "index": item_index,
-                            "name": sym_rec["name"],
-                            "kind": sym_rec.get("kind", "symbol"),
-                            "file": fp,
-                            "source": sym_source[:4000],
-                            "entity_key": sym_ek,
-                            "summary_level": "symbol",
-                            "language": detect_language(fp),
-                        })
+                        summary_items.append(
+                            {
+                                "index": item_index,
+                                "name": sym_rec["name"],
+                                "kind": sym_rec.get("kind", "symbol"),
+                                "file": fp,
+                                "source": sym_source[:4000],
+                                "entity_key": sym_ek,
+                                "summary_level": "symbol",
+                                "language": detect_language(fp),
+                            }
+                        )
                         item_index += 1
 
             summary_items.sort(
@@ -1068,9 +1047,7 @@ async def run(
                         item = index_to_item.get(result["index"])
                         if not item or not result.get("summary"):
                             continue
-                        s_ek = summary_entity_key(
-                            repository_key, commit_sha, item["entity_key"], item["summary_level"]
-                        )
+                        s_ek = summary_entity_key(repository_key, commit_sha, item["entity_key"], item["summary_level"])
                         if item["summary_level"] == "file":
                             entity_id = file_path_to_entity_id.get(item["file"])
                         else:
@@ -1091,15 +1068,19 @@ async def run(
                     except Exception as exc:
                         for row in summary_rows:
                             logger.warning(
-                                "summary_upsert_failed", entity_key=str(row["entity_key"]), error=str(exc),
+                                "summary_upsert_failed",
+                                entity_key=str(row["entity_key"]),
+                                error=str(exc),
                             )
                         return
                     for row in summary_rows:
-                        all_summaries_for_embedding.append({
-                            "entity_key": str(row["entity_key"]),
-                            "summary_text": row["summary_text"],
-                            "summary_level": row["summary_level"],
-                        })
+                        all_summaries_for_embedding.append(
+                            {
+                                "entity_key": str(row["entity_key"]),
+                                "summary_text": row["summary_text"],
+                                "summary_level": row["summary_level"],
+                            }
+                        )
                     summaries_created += len(summary_rows)
                     if len(summary_rows) == len(results) and summary_rows:
                         next_cursor = summary_cursor_box[0] + len(summary_rows)
@@ -1114,7 +1095,10 @@ async def run(
 
                 for language, lang_items in by_language.items():
                     await complete_batch_summaries(
-                        lang_items, settings, language, batch_size=50,
+                        lang_items,
+                        settings,
+                        language,
+                        batch_size=50,
                         on_batch_complete=_persist_batch_results,
                     )
                     summary_cursor = summary_cursor_box[0]
@@ -1142,7 +1126,9 @@ async def run(
                     repository_id=repository_id,
                     repo_revision_id=repo_revision_id,
                 )
-        if all_chunks_for_embedding and not _checkpoint_phase_at_or_beyond(checkpoint_state, "chunk_embeddings_complete"):
+        if all_chunks_for_embedding and not _checkpoint_phase_at_or_beyond(
+            checkpoint_state, "chunk_embeddings_complete"
+        ):
             texts = [c["content_text"] for c in all_chunks_for_embedding]
             embeddings = await embed_chunks(texts, settings)
             for c, emb in zip(all_chunks_for_embedding, embeddings):
@@ -1150,8 +1136,11 @@ async def run(
 
             # Step 7: Upsert to Qdrant
             await upsert_points(
-                qdrant_client, all_chunks_for_embedding,
-                repository_key, commit_sha, branch_name,
+                qdrant_client,
+                all_chunks_for_embedding,
+                repository_key,
+                commit_sha,
+                branch_name,
             )
             checkpoint_state = await _save_ckpt(
                 pool,
@@ -1168,10 +1157,15 @@ async def run(
                     repository_id=repository_id,
                     repo_revision_id=repo_revision_id,
                 )
-        if all_summaries_for_embedding and not _checkpoint_phase_at_or_beyond(checkpoint_state, "summary_embeddings_complete"):
+        if all_summaries_for_embedding and not _checkpoint_phase_at_or_beyond(
+            checkpoint_state, "summary_embeddings_complete"
+        ):
             await embed_and_upsert_summaries(
-                qdrant_client, all_summaries_for_embedding,
-                repository_key, commit_sha, settings,
+                qdrant_client,
+                all_summaries_for_embedding,
+                repository_key,
+                commit_sha,
+                settings,
             )
             checkpoint_state = await _save_ckpt(
                 pool,
@@ -1182,12 +1176,8 @@ async def run(
 
         # Step 8: Deactivate old points (only for full runs)
         if run_type == "full":
-            await deactivate_old_points(
-                qdrant_client, repository_key, branch_name, commit_sha
-            )
-            await deactivate_old_summary_points(
-                qdrant_client, repository_key, commit_sha
-            )
+            await deactivate_old_points(qdrant_client, repository_key, branch_name, commit_sha)
+            await deactivate_old_summary_points(qdrant_client, repository_key, commit_sha)
             await deactivate_old_chunks(pool, repository_id, branch_name, commit_sha)
             await deactivate_old_summaries(pool, repository_id, commit_sha)
 
@@ -1203,12 +1193,19 @@ async def run(
         else:
             if neo4j_file_symbols and not _checkpoint_phase_at_or_beyond(checkpoint_state, "neo4j_complete"):
                 await project_repository_graph(
-                    neo4j_driver, repository_key, commit_sha,
-                    branch_name, neo4j_file_symbols,
+                    neo4j_driver,
+                    repository_key,
+                    commit_sha,
+                    branch_name,
+                    neo4j_file_symbols,
                 )
-            if (neo4j_import_edges or neo4j_call_edges) and not _checkpoint_phase_at_or_beyond(checkpoint_state, "neo4j_complete"):
+            if (neo4j_import_edges or neo4j_call_edges) and not _checkpoint_phase_at_or_beyond(
+                checkpoint_state, "neo4j_complete"
+            ):
                 await project_dependency_edges(
-                    neo4j_driver, neo4j_import_edges, neo4j_call_edges,
+                    neo4j_driver,
+                    neo4j_import_edges,
+                    neo4j_call_edges,
                 )
 
             # Step 9b: Additive labels (DbTable, StoredProcedure) + Modules + Endpoints
@@ -1217,6 +1214,7 @@ async def run(
 
                 # Module detection: directories with 2+ source files or __init__.py
                 from collections import defaultdict
+
                 dir_files: dict[str, list[str]] = defaultdict(list)
                 has_init: set[str] = set()
                 for fs in neo4j_file_symbols:
@@ -1230,32 +1228,40 @@ async def run(
                 modules_data = []
                 for dir_path, file_keys in dir_files.items():
                     if len(file_keys) >= 2 or dir_path in has_init:
-                        mod_ek = str(uuid.uuid5(
-                            uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
-                            f"{repository_key}:module:{dir_path}",
-                        ))
-                        modules_data.append({
-                            "entity_key": mod_ek,
-                            "path": dir_path,
-                            "name": os.path.basename(dir_path) or dir_path,
-                            "file_keys": file_keys,
-                        })
+                        mod_ek = str(
+                            uuid.uuid5(
+                                uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
+                                f"{repository_key}:module:{dir_path}",
+                            )
+                        )
+                        modules_data.append(
+                            {
+                                "entity_key": mod_ek,
+                                "path": dir_path,
+                                "name": os.path.basename(dir_path) or dir_path,
+                                "file_keys": file_keys,
+                            }
+                        )
                 await project_modules(neo4j_driver, repository_key, modules_data)
 
                 # ApiEndpoint projection from route data
                 endpoints_data = []
                 for fs in neo4j_file_symbols:
                     for route in fs.get("routes", []):
-                        ep_ek = str(uuid.uuid5(
-                            uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
-                            f"{repository_key}:endpoint:{route['method']}:{route['path']}",
-                        ))
-                        endpoints_data.append({
-                            "entity_key": ep_ek,
-                            "method": route["method"],
-                            "path": route["path"],
-                            "file_entity_key": fs["file_entity_key"],
-                        })
+                        ep_ek = str(
+                            uuid.uuid5(
+                                uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
+                                f"{repository_key}:endpoint:{route['method']}:{route['path']}",
+                            )
+                        )
+                        endpoints_data.append(
+                            {
+                                "entity_key": ep_ek,
+                                "method": route["method"],
+                                "path": route["path"],
+                                "file_entity_key": fs["file_entity_key"],
+                            }
+                        )
                 await project_api_endpoints(neo4j_driver, endpoints_data)
 
                 # SQL READS_TABLE/WRITES_TABLE edges
@@ -1273,11 +1279,13 @@ async def run(
                                 break
                         if table_ek:
                             rel = "READS_TABLE" if sr["operation"] == "select" else "WRITES_TABLE"
-                            sql_edge_data.append({
-                                "source_ek": fs["file_entity_key"],
-                                "target_ek": table_ek,
-                                "rel_type": rel,
-                            })
+                            sql_edge_data.append(
+                                {
+                                    "source_ek": fs["file_entity_key"],
+                                    "target_ek": table_ek,
+                                    "rel_type": rel,
+                                }
+                            )
                 await project_sql_edges(neo4j_driver, sql_edge_data)
 
                 # Inheritance edges (EXTENDS/IMPLEMENTS)
@@ -1298,11 +1306,7 @@ async def run(
                         if sym.kind != "class":
                             continue
                         child_ek = next(
-                            (
-                                s["entity_key"]
-                                for s in fs["symbols"]
-                                if s["name"] == sym.name
-                            ),
+                            (s["entity_key"] for s in fs["symbols"] if s["name"] == sym.name),
                             None,
                         )
                         if not child_ek:
@@ -1318,17 +1322,25 @@ async def run(
                                 rel = "EXTENDS"
                             target_ek = _find_symbol_ek(base_name)
                             if target_ek:
-                                inheritance_edges.append({
-                                    "child_ek": child_ek, "target_ek": target_ek, "rel_type": rel,
-                                })
+                                inheritance_edges.append(
+                                    {
+                                        "child_ek": child_ek,
+                                        "target_ek": target_ek,
+                                        "rel_type": rel,
+                                    }
+                                )
 
                         # IMPLEMENTS edges from implements field (TS, PHP)
                         for iface_name in sym.implements:
                             target_ek = _find_symbol_ek(iface_name)
                             if target_ek:
-                                inheritance_edges.append({
-                                    "child_ek": child_ek, "target_ek": target_ek, "rel_type": "IMPLEMENTS",
-                                })
+                                inheritance_edges.append(
+                                    {
+                                        "child_ek": child_ek,
+                                        "target_ek": target_ek,
+                                        "rel_type": "IMPLEMENTS",
+                                    }
+                                )
 
                 await project_inheritance_edges(neo4j_driver, inheritance_edges)
                 checkpoint_state = await _save_ckpt(
@@ -1341,8 +1353,12 @@ async def run(
         # Step 10: Update branch head + retrieval surface
         await upsert_branch_head(pool, repository_id, branch_name, repo_revision_id)
         await upsert_retrieval_surface(
-            pool, repository_id, "live_branch",
-            branch_name, commit_sha, repo_revision_id,
+            pool,
+            repository_id,
+            "live_branch",
+            branch_name,
+            commit_sha,
+            repo_revision_id,
         )
 
         # Step 11: Complete ingestion run — honest status: a run that dropped
@@ -1353,9 +1369,7 @@ async def run(
             ingestion_run_id,
             status=run_status,
             error_text=(
-                f"{failed_file_count} of {len(py_files)} files failed to ingest"
-                if failed_file_count
-                else None
+                f"{failed_file_count} of {len(py_files)} files failed to ingest" if failed_file_count else None
             ),
         )
         if manifest_job_id is None:
@@ -1401,9 +1415,7 @@ async def run(
         logger.error("ingestion_failed", error=error_detail, duration_ms=duration_ms)
         if pool is not None and ingestion_run_id is not None:
             try:
-                await complete_ingestion_run(
-                    pool, ingestion_run_id, "failed", error_detail
-                )
+                await complete_ingestion_run(pool, ingestion_run_id, "failed", error_detail)
             except Exception:
                 pass
         return WorkflowResult(

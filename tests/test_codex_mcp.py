@@ -1,5 +1,5 @@
 """Tests for Codex MCP client (codex_mcp.py)."""
-import asyncio
+
 import json
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -39,7 +39,9 @@ def _make_response(request_id, result):
 
 def _make_error(request_id, code, message):
     """Create a JSON-RPC error response line."""
-    return (json.dumps({"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message}}) + "\n").encode()
+    return (
+        json.dumps({"jsonrpc": "2.0", "id": request_id, "error": {"code": code, "message": message}}) + "\n"
+    ).encode()
 
 
 class TestCodexMcpClientSingleton:
@@ -64,8 +66,10 @@ class TestCodexMcpClientStartup:
         init_response = _make_response(1, {"protocolVersion": "2024-11-05"})
         mock_process.stdout.readline = AsyncMock(return_value=init_response)
 
-        with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process) as mock_exec, \
-             patch("shutil.which", return_value="/usr/local/bin/codex"):
+        with (
+            patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process) as mock_exec,
+            patch("shutil.which", return_value="/usr/local/bin/codex"),
+        ):
             await client._ensure_started()
 
             mock_exec.assert_called_once()
@@ -90,13 +94,13 @@ class TestCodexMcpClientComplete:
 
         # Sequence: init response, then tool call response
         init_resp = _make_response(1, {"protocolVersion": "2024-11-05"})
-        tool_resp = _make_response(2, {
-            "content": [{"type": "text", "text": "This is a summary of the code."}]
-        })
+        tool_resp = _make_response(2, {"content": [{"type": "text", "text": "This is a summary of the code."}]})
         mock_process.stdout.readline = AsyncMock(side_effect=[init_resp, tool_resp])
 
-        with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process), \
-             patch("shutil.which", return_value="/usr/local/bin/codex"):
+        with (
+            patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process),
+            patch("shutil.which", return_value="/usr/local/bin/codex"),
+        ):
             result = await client.complete("Summarize this function")
 
         assert result == "This is a summary of the code."
@@ -109,8 +113,10 @@ class TestCodexMcpClientComplete:
         tool_resp = _make_response(2, {"content": [{"type": "text", "text": "ok"}]})
         mock_process.stdout.readline = AsyncMock(side_effect=[init_resp, tool_resp])
 
-        with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process), \
-             patch("shutil.which", return_value="/usr/local/bin/codex"):
+        with (
+            patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process),
+            patch("shutil.which", return_value="/usr/local/bin/codex"),
+        ):
             await client.complete("test prompt")
 
         # Check the tool call written to stdin (second write, after init + notification)
@@ -138,8 +144,10 @@ class TestCodexMcpClientComplete:
         tool_resp = _make_response(2, {"content": [{"type": "text", "text": "result"}]})
         mock_process.stdout.readline = AsyncMock(side_effect=[init_resp, notification, tool_resp])
 
-        with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process), \
-             patch("shutil.which", return_value="/usr/local/bin/codex"):
+        with (
+            patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process),
+            patch("shutil.which", return_value="/usr/local/bin/codex"),
+        ):
             result = await client.complete("test")
 
         assert result == "result"
@@ -152,8 +160,10 @@ class TestCodexMcpClientComplete:
         tool_resp = _make_response(2, {"content": []})
         mock_process.stdout.readline = AsyncMock(side_effect=[init_resp, tool_resp])
 
-        with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process), \
-             patch("shutil.which", return_value="/usr/local/bin/codex"):
+        with (
+            patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process),
+            patch("shutil.which", return_value="/usr/local/bin/codex"),
+        ):
             result = await client.complete("test")
 
         assert result == "[]"
@@ -168,8 +178,10 @@ class TestCodexMcpClientErrors:
         error_resp = _make_error(2, -32600, "Something went wrong")
         mock_process.stdout.readline = AsyncMock(side_effect=[init_resp, error_resp])
 
-        with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process), \
-             patch("shutil.which", return_value="/usr/local/bin/codex"):
+        with (
+            patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process),
+            patch("shutil.which", return_value="/usr/local/bin/codex"),
+        ):
             with pytest.raises(RuntimeError, match="Something went wrong"):
                 await client.complete("test")
 
@@ -180,8 +192,10 @@ class TestCodexMcpClientErrors:
         init_resp = _make_response(1, {"protocolVersion": "2024-11-05"})
         mock_process.stdout.readline = AsyncMock(side_effect=[init_resp, b""])
 
-        with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process), \
-             patch("shutil.which", return_value="/usr/local/bin/codex"):
+        with (
+            patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process),
+            patch("shutil.which", return_value="/usr/local/bin/codex"),
+        ):
             with pytest.raises(RuntimeError, match="closed connection"):
                 await client.complete("test")
 
@@ -194,8 +208,10 @@ class TestCodexMcpClientShutdown:
         init_resp = _make_response(1, {"protocolVersion": "2024-11-05"})
         mock_process.stdout.readline = AsyncMock(return_value=init_resp)
 
-        with patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process), \
-             patch("shutil.which", return_value="/usr/local/bin/codex"):
+        with (
+            patch("asyncio.create_subprocess_exec", new_callable=AsyncMock, return_value=mock_process),
+            patch("shutil.which", return_value="/usr/local/bin/codex"),
+        ):
             await client._ensure_started()
 
         await client.shutdown()

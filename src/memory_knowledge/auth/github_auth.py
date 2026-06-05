@@ -40,11 +40,7 @@ class GitHubAppAuth:
         self._lock = asyncio.Lock()
 
     def is_configured(self) -> bool:
-        return bool(
-            self._app_id
-            and self._installation_id
-            and os.path.isfile(self._pem_path)
-        )
+        return bool(self._app_id and self._installation_id and os.path.isfile(self._pem_path))
 
     def _generate_jwt(self) -> str:
         import jwt
@@ -59,9 +55,7 @@ class GitHubAppAuth:
             with open(self._pem_path, "r", encoding="utf-8") as f:
                 private_key = f.read()
         except OSError as exc:
-            raise RuntimeError(
-                f"Cannot read GitHub App PEM key at {self._pem_path}: {exc}"
-            ) from exc
+            raise RuntimeError(f"Cannot read GitHub App PEM key at {self._pem_path}: {exc}") from exc
         return jwt.encode(payload, private_key, algorithm="RS256")
 
     async def _request_installation_token(self, app_jwt: str) -> dict:
@@ -93,9 +87,7 @@ class GitHubAppAuth:
                     f"(app_id={self._app_id}, installation_id={self._installation_id}): {body}"
                 ) from exc
             except urllib.error.URLError as exc:
-                raise RuntimeError(
-                    f"Network error requesting GitHub installation token: {exc.reason}"
-                ) from exc
+                raise RuntimeError(f"Network error requesting GitHub installation token: {exc.reason}") from exc
 
         loop = asyncio.get_running_loop()
         return await loop.run_in_executor(None, _do_request)
@@ -103,25 +95,18 @@ class GitHubAppAuth:
     async def get_installation_token(self) -> str:
         async with self._lock:
             now = datetime.now(timezone.utc)
-            if (
-                self._cached_token
-                and self._token_expires_at
-                and (self._token_expires_at - now).total_seconds() > 300
-            ):
+            if self._cached_token and self._token_expires_at and (self._token_expires_at - now).total_seconds() > 300:
                 return self._cached_token
 
             app_jwt = self._generate_jwt()
             result = await self._request_installation_token(app_jwt)
             if "token" not in result or "expires_at" not in result:
                 raise RuntimeError(
-                    f"Unexpected GitHub API response: missing 'token' or 'expires_at' "
-                    f"(keys: {list(result.keys())})"
+                    f"Unexpected GitHub API response: missing 'token' or 'expires_at' (keys: {list(result.keys())})"
                 )
 
             self._cached_token = result["token"]
-            self._token_expires_at = datetime.fromisoformat(
-                result["expires_at"].replace("Z", "+00:00")
-            )
+            self._token_expires_at = datetime.fromisoformat(result["expires_at"].replace("Z", "+00:00"))
             return self._cached_token
 
     @staticmethod

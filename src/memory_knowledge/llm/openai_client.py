@@ -49,9 +49,7 @@ async def _refresh_and_get_api_key(settings: Settings) -> str:
     stop=stop_after_attempt(4),
     reraise=True,
 )
-async def embed(
-    texts: list[str], settings: Settings
-) -> list[list[float]]:
+async def embed(texts: list[str], settings: Settings) -> list[list[float]]:
     """Embed texts. Uses the in-process local model in codex/local mode; OpenAI otherwise."""
     if not texts:
         return []
@@ -75,14 +73,11 @@ async def embed(
             )
             batch_embeddings = [d.embedding for d in response.data]
             if len(batch_embeddings) != len(batch):
-                raise ValueError(
-                    f"Embedding count mismatch: expected {len(batch)}, got {len(batch_embeddings)}"
-                )
+                raise ValueError(f"Embedding count mismatch: expected {len(batch)}, got {len(batch_embeddings)}")
             for emb in batch_embeddings:
                 if len(emb) != settings.embedding_dimensions:
                     raise ValueError(
-                        f"Embedding dimension mismatch: expected {settings.embedding_dimensions}, "
-                        f"got {len(emb)}"
+                        f"Embedding dimension mismatch: expected {settings.embedding_dimensions}, got {len(emb)}"
                     )
             all_embeddings.extend(batch_embeddings)
         except openai.AuthenticationError:
@@ -109,9 +104,7 @@ async def embed(
                     all_embeddings.extend(batch_embeddings)
                     continue
                 except openai.AuthenticationError:
-                    raise RuntimeError(
-                        "Codex OAuth token rejected after refresh — run 'codex auth' to re-authenticate"
-                    )
+                    raise RuntimeError("Codex OAuth token rejected after refresh — run 'codex auth' to re-authenticate")
             raise
 
     return all_embeddings
@@ -159,9 +152,7 @@ async def complete(
     return response.choices[0].message.content or ""
 
 
-async def _complete_via_codex(
-    prompt: str, system_prompt: str | None = None, timeout: float | None = None
-) -> str:
+async def _complete_via_codex(prompt: str, system_prompt: str | None = None, timeout: float | None = None) -> str:
     """Route completions through the Codex CLI MCP server subprocess."""
     from memory_knowledge.llm.codex_mcp import CodexMcpClient
 
@@ -277,9 +268,7 @@ def _extract_partial_json(text: str) -> list[dict[str, Any]]:
     return objects
 
 
-async def _retry_individual(
-    item: dict[str, Any], settings: Settings, language: str
-) -> dict[str, Any] | None:
+async def _retry_individual(item: dict[str, Any], settings: Settings, language: str) -> dict[str, Any] | None:
     """Fall back to a single-item summary call when batch parsing fails."""
     prompt = (
         f"Summarize the following {language} code in 2-3 sentences. "
@@ -333,16 +322,12 @@ async def complete_batch_summaries(
         parsed = _extract_json_array(response)
         if parsed:
             index_to_summary = {
-                r["index"]: r["summary"]
-                for r in parsed
-                if isinstance(r, dict) and "index" in r and "summary" in r
+                r["index"]: r["summary"] for r in parsed if isinstance(r, dict) and "index" in r and "summary" in r
             }
             missing_items = []
             for item in batch:
                 if item["index"] in index_to_summary:
-                    batch_results.append(
-                        {"index": item["index"], "summary": index_to_summary[item["index"]]}
-                    )
+                    batch_results.append({"index": item["index"], "summary": index_to_summary[item["index"]]})
                 else:
                     missing_items.append(item)
             if missing_items:
@@ -354,7 +339,9 @@ async def complete_batch_summaries(
                             batch_results.append(individual)
                 else:
                     sub_results = await complete_batch_summaries(
-                        missing_items, settings, language,
+                        missing_items,
+                        settings,
+                        language,
                         batch_size=max(10, len(missing_items) // 2),
                         on_batch_complete=on_batch_complete,
                     )
@@ -371,7 +358,9 @@ async def complete_batch_summaries(
                 unsalvaged = [item for item in batch if item["index"] not in salvaged_indices]
                 if unsalvaged:
                     sub_results = await complete_batch_summaries(
-                        unsalvaged, settings, language,
+                        unsalvaged,
+                        settings,
+                        language,
                         batch_size=max(10, len(unsalvaged) // 2),
                         on_batch_complete=on_batch_complete,
                     )
@@ -379,7 +368,9 @@ async def complete_batch_summaries(
             else:
                 logger.warning("batch_json_extraction_failed", batch_size=len(batch), raw_response=response[:500])
                 sub_results = await complete_batch_summaries(
-                    batch, settings, language,
+                    batch,
+                    settings,
+                    language,
                     batch_size=max(10, len(batch) // 2),
                     on_batch_complete=on_batch_complete,
                 )

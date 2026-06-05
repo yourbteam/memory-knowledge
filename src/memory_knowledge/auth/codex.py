@@ -15,22 +15,16 @@ async def codex_token_provider(auth_path: str) -> str:
     """Read access_token from Codex CLI's auth.json."""
     path = Path(auth_path).expanduser()
     if not path.exists():
-        raise RuntimeError(
-            f"Codex auth file not found at {path} — run 'codex auth' to authenticate"
-        )
+        raise RuntimeError(f"Codex auth file not found at {path} — run 'codex auth' to authenticate")
 
     try:
         data = json.loads(path.read_text())
     except json.JSONDecodeError:
-        raise RuntimeError(
-            f"Codex auth file at {path} is malformed — run 'codex auth' to re-authenticate"
-        )
+        raise RuntimeError(f"Codex auth file at {path} is malformed — run 'codex auth' to re-authenticate")
 
     tokens = data.get("tokens")
     if not tokens or not tokens.get("access_token"):
-        raise RuntimeError(
-            "Codex auth.json has no OAuth tokens — run 'codex auth' to authenticate"
-        )
+        raise RuntimeError("Codex auth.json has no OAuth tokens — run 'codex auth' to authenticate")
 
     # Warn if token is likely stale
     last_refresh = data.get("last_refresh")

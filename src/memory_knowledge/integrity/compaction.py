@@ -7,6 +7,7 @@ catalog.summaries. Orphaned chunk/summary *entity* rows are intentionally left
 (tiny; FK-entangled with ingestion_run_items/working_observations) — the storage
 lives in chunks.content_text/tsv, which these deletes reclaim.
 """
+
 from __future__ import annotations
 
 import asyncpg
@@ -51,9 +52,7 @@ async def compact_repository(
 ) -> CompactionReport:
     report = CompactionReport(repository_key=repository_key, dry_run=dry_run)
 
-    repo_id = await pool.fetchval(
-        "SELECT id FROM catalog.repositories WHERE repository_key = $1", repository_key
-    )
+    repo_id = await pool.fetchval("SELECT id FROM catalog.repositories WHERE repository_key = $1", repository_key)
     if repo_id is None:
         report.errors.append(f"repository not found: {repository_key}")
         return report
@@ -113,9 +112,7 @@ async def compact_repository(
             )
             cnt = (await qdrant_client.count(collection_name=coll, count_filter=flt)).count
             if cnt and not dry_run:
-                await qdrant_client.delete(
-                    collection_name=coll, points_selector=models.FilterSelector(filter=flt)
-                )
+                await qdrant_client.delete(collection_name=coll, points_selector=models.FilterSelector(filter=flt))
             report.qdrant_points_deleted += cnt
     except Exception as exc:
         report.errors.append(f"qdrant: {exc}")
@@ -185,8 +182,11 @@ async def compact_repository(
 
     logger.info(
         "compaction_complete",
-        repository_key=repository_key, dry_run=dry_run,
-        chunks=report.pg_chunks_deleted, summaries=report.pg_summaries_deleted,
-        qdrant=report.qdrant_points_deleted, neo4j=report.neo4j_nodes_deleted,
+        repository_key=repository_key,
+        dry_run=dry_run,
+        chunks=report.pg_chunks_deleted,
+        summaries=report.pg_summaries_deleted,
+        qdrant=report.qdrant_points_deleted,
+        neo4j=report.neo4j_nodes_deleted,
     )
     return report

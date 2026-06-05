@@ -1,4 +1,5 @@
 """Tests for route, SQL ref, and doc block extraction across parsers."""
+
 from memory_knowledge.parsers.python_adapter import parse_python_file
 from memory_knowledge.parsers.typescript_adapter import parse_typescript_file
 from memory_knowledge.parsers.csharp_adapter import parse_csharp_file
@@ -8,7 +9,7 @@ from memory_knowledge.parsers.sql_adapter import parse_sql_file
 
 # --- Python route extraction ---
 
-PYTHON_FLASK = '''\
+PYTHON_FLASK = """\
 from flask import Flask
 app = Flask(__name__)
 
@@ -19,7 +20,7 @@ def list_users():
 @app.get('/users/<int:id>')
 async def get_user(id: int):
     return {}
-'''
+"""
 
 
 def test_python_flask_routes():
@@ -31,7 +32,7 @@ def test_python_flask_routes():
     assert output.routes[1].method == "GET"
 
 
-PYTHON_FASTAPI = '''\
+PYTHON_FASTAPI = """\
 from fastapi import APIRouter
 router = APIRouter()
 
@@ -42,7 +43,7 @@ async def list_items():
 @router.post('/items')
 async def create_item():
     return {}
-'''
+"""
 
 
 def test_python_fastapi_routes():
@@ -80,7 +81,7 @@ def test_python_doc_blocks():
 
 # --- TypeScript route extraction ---
 
-TS_EXPRESS = '''\
+TS_EXPRESS = """\
 import express from 'express';
 const app = express();
 
@@ -91,7 +92,7 @@ app.get('/api/users', (req, res) => {
 app.post('/api/users', (req, res) => {
     res.json({});
 });
-'''
+"""
 
 
 def test_ts_express_routes():
@@ -103,7 +104,7 @@ def test_ts_express_routes():
 
 # --- TypeScript JSDoc extraction ---
 
-TS_JSDOC = '''\
+TS_JSDOC = """\
 /**
  * Creates a new user
  * @param name - the user name
@@ -111,7 +112,7 @@ TS_JSDOC = '''\
 function createUser(name) {
     return { name };
 }
-'''
+"""
 
 
 def test_ts_jsdoc():
@@ -122,7 +123,7 @@ def test_ts_jsdoc():
 
 # --- C# route extraction ---
 
-CS_ROUTES = '''\
+CS_ROUTES = """\
 [HttpGet("api/users")]
 public IActionResult GetUsers() { }
 
@@ -131,7 +132,7 @@ public IActionResult CreateUser() { }
 
 [Route("api/[controller]")]
 public class UsersController { }
-'''
+"""
 
 
 def test_csharp_routes():
@@ -144,12 +145,12 @@ def test_csharp_routes():
 
 # --- C# XML doc extraction ---
 
-CS_DOC = '''\
+CS_DOC = """\
 /// <summary>
 /// Represents a user entity
 /// </summary>
 public class User { }
-'''
+"""
 
 
 def test_csharp_xml_doc():
@@ -210,6 +211,7 @@ def test_sql_dml_operations():
 
 
 # --- Default fields ---
+
 
 def test_new_fields_have_defaults():
     output = parse_sql_file("empty.sql", "")

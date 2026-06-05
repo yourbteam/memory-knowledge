@@ -93,7 +93,9 @@ class PolicyPool:
                     "successful_execution": False,
                 },
             ]
-            repository_key, project_key, request_kind, selected_workflow_name, selected_run_action, _lookback_days = args
+            repository_key, project_key, request_kind, selected_workflow_name, selected_run_action, _lookback_days = (
+                args
+            )
             filtered = []
             for row in rows:
                 conditional_run_action = row["selected_run_action"] if row["request_kind"] == "run_operation" else None
@@ -146,6 +148,7 @@ def policy_env(monkeypatch):
     monkeypatch.setattr(server, "get_pg_pool", lambda: pool)
     monkeypatch.setattr(server, "get_settings", lambda: SimpleNamespace())
     monkeypatch.setattr(server, "check_remote_write_guard", lambda settings, tool_name: None)
+
     async def _default_actor_summary(*args, **kwargs):
         return {
             "match_found": False,
@@ -157,7 +160,10 @@ def policy_env(monkeypatch):
             "evidence": {"run_count": 0, "avg_score": 0.0, "entropy_target_count": 0, "primary_recommendation": None},
             "planning_context": {"projects": [], "features": [], "tasks": []},
         }
-    monkeypatch.setattr("memory_knowledge.triage_policy.actor_adaptation.get_actor_adaptation_summary", _default_actor_summary)
+
+    monkeypatch.setattr(
+        "memory_knowledge.triage_policy.actor_adaptation.get_actor_adaptation_summary", _default_actor_summary
+    )
     return pool
 
 
@@ -360,8 +366,17 @@ async def test_triage_request_with_memory_applies_actor_adaptation(policy_env, m
             "requires_stronger_clarification": True,
             "preferred_route_posture": "safer_default",
             "team_key": "project:pay",
-            "evidence": {"run_count": 3, "avg_score": 58.0, "entropy_target_count": 1, "primary_recommendation": "ADD_PRE_RETRY_GROUNDING"},
-            "planning_context": {"projects": [{"project_key": "pay", "project_name": "Pay"}], "features": [], "tasks": []},
+            "evidence": {
+                "run_count": 3,
+                "avg_score": 58.0,
+                "entropy_target_count": 1,
+                "primary_recommendation": "ADD_PRE_RETRY_GROUNDING",
+            },
+            "planning_context": {
+                "projects": [{"project_key": "pay", "project_name": "Pay"}],
+                "features": [],
+                "tasks": [],
+            },
         }
 
     monkeypatch.setattr("memory_knowledge.triage_policy.actor_adaptation.get_actor_adaptation_summary", _actor_summary)

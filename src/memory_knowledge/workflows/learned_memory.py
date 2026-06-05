@@ -36,9 +36,7 @@ VALID_MEMORY_TYPES = {
 }
 
 
-async def _resolve_entity_key_to_id(
-    pool: asyncpg.Pool, entity_key_str: str
-) -> int | None:
+async def _resolve_entity_key_to_id(pool: asyncpg.Pool, entity_key_str: str) -> int | None:
     """Resolve a UUID entity_key string to its PG integer id."""
     row = await pool.fetchrow(
         "SELECT id FROM catalog.entities WHERE entity_key = $1",
@@ -107,9 +105,7 @@ async def run_proposal(
             evidence_entity_id,
         )
         if chunk_row is None:
-            raise ValueError(
-                f"Evidence entity {evidence_entity_key} has no associated chunk"
-            )
+            raise ValueError(f"Evidence entity {evidence_entity_key} has no associated chunk")
         evidence_chunk_id = chunk_row["id"]
 
         # Step 5: Get current revision
@@ -197,9 +193,7 @@ async def run_commit(
             )
 
         if approval_status not in ("approve", "reject", "supersede"):
-            raise ValueError(
-                f"Invalid approval_status: {approval_status}. Must be approve, reject, or supersede."
-            )
+            raise ValueError(f"Invalid approval_status: {approval_status}. Must be approve, reject, or supersede.")
 
         # Load proposal from PG
         row = await pool.fetchrow(
@@ -236,9 +230,7 @@ async def run_commit(
 
         async def _approve_and_project() -> None:
             """Shared logic: verify status, embed to Qdrant, project to Neo4j."""
-            await update_verification_status(
-                pool, learned_record_id, "verified", verification_notes
-            )
+            await update_verification_status(pool, learned_record_id, "verified", verification_notes)
             if qdrant_client is not None and settings is not None:
                 await embed_and_upsert_learned_record(
                     client=qdrant_client,
@@ -277,9 +269,7 @@ async def run_commit(
             result_data: dict[str, Any] = {"status": "verified", "entity_key": entity_key_str}
 
         elif approval_status == "reject":
-            await update_verification_status(
-                pool, learned_record_id, "rejected", verification_notes, is_active=False
-            )
+            await update_verification_status(pool, learned_record_id, "rejected", verification_notes, is_active=False)
             logger.info("proposal_rejected", entity_key=entity_key_str)
             result_data = {"status": "rejected", "entity_key": entity_key_str}
 

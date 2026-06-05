@@ -27,9 +27,7 @@ _UPDATE_SUMMARIES_SQL = """
 """
 
 
-async def _deactivate_pg_rows(
-    pool: asyncpg.Pool, sql: str, point_ids: list[str]
-) -> int:
+async def _deactivate_pg_rows(pool: asyncpg.Pool, sql: str, point_ids: list[str]) -> int:
     valid = []
     for pid in point_ids:
         try:
@@ -58,7 +56,9 @@ async def run(
     try:
         if pool is None or qdrant_client is None:
             return WorkflowResult(
-                run_id=str(run_id), tool_name=TOOL_NAME, status="error",
+                run_id=str(run_id),
+                tool_name=TOOL_NAME,
+                status="error",
                 error="Missing required dependencies (pool, qdrant_client).",
             )
 
@@ -91,9 +91,7 @@ async def run(
                 )
                 if results:
                     scanned += len(results)
-                    deactivated += await _deactivate_pg_rows(
-                        pool, sql, [str(p.id) for p in results]
-                    )
+                    deactivated += await _deactivate_pg_rows(pool, sql, [str(p.id) for p in results])
                 if next_offset is None:
                     break
                 scroll_offset = next_offset
@@ -104,13 +102,16 @@ async def run(
             }
             logger.info(
                 "backfill_is_active_collection_done",
-                collection=collection, **counts[collection],
+                collection=collection,
+                **counts[collection],
             )
 
         duration_ms = int((time.monotonic() - start) * 1000)
         logger.info("backfill_is_active_complete", duration_ms=duration_ms)
         return WorkflowResult(
-            run_id=str(run_id), tool_name=TOOL_NAME, status="success",
+            run_id=str(run_id),
+            tool_name=TOOL_NAME,
+            status="success",
             data={
                 "repository_key": repository_key,
                 "counts": counts,
@@ -122,6 +123,9 @@ async def run(
         duration_ms = int((time.monotonic() - start) * 1000)
         logger.error("backfill_is_active_failed", error=str(exc), duration_ms=duration_ms)
         return WorkflowResult(
-            run_id=str(run_id), tool_name=TOOL_NAME, status="error",
-            error=str(exc), duration_ms=duration_ms,
+            run_id=str(run_id),
+            tool_name=TOOL_NAME,
+            status="error",
+            error=str(exc),
+            duration_ms=duration_ms,
         )

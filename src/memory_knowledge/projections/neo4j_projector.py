@@ -139,9 +139,7 @@ async def project_additive_labels(
     service_keys: list[str] = []
     for fs in file_symbols:
         for s in fs.get("symbols", []):
-            if s["kind"] == "class" and (
-                s["name"].endswith("Service") or s["name"].endswith("Provider")
-            ):
+            if s["kind"] == "class" and (s["name"].endswith("Service") or s["name"].endswith("Provider")):
                 service_keys.append(str(s["entity_key"]))
         if "services/" in fs.get("file_path", ""):
             for s in fs.get("symbols", []):

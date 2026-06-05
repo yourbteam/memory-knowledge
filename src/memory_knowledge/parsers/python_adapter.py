@@ -27,19 +27,13 @@ def parse_python_file(file_path: str, source: str) -> FileParseOutput:
         tree = ast.parse(source, filename=file_path)
     except SyntaxError as e:
         logger.warning("python_parse_error", file_path=file_path, error=str(e))
-        return FileParseOutput(
-            file_path=file_path, language="python", parse_error=str(e)
-        )
+        return FileParseOutput(file_path=file_path, language="python", parse_error=str(e))
 
     # Extract top-level symbols (module-level functions and classes)
     symbols: list[SymbolInfo] = []
     for node in ast.iter_child_nodes(tree):
         if isinstance(node, (ast.FunctionDef, ast.AsyncFunctionDef)):
-            kind = (
-                "async_function"
-                if isinstance(node, ast.AsyncFunctionDef)
-                else "function"
-            )
+            kind = "async_function" if isinstance(node, ast.AsyncFunctionDef) else "function"
             sig = _extract_signature(node)
             symbols.append(
                 SymbolInfo(
@@ -126,25 +120,61 @@ def _extract_imports(tree: ast.Module) -> list[ImportInfo]:
 
 
 _PY_CALL_EXCLUDE = {
-    "print", "len", "range", "str", "int", "float", "bool", "list", "dict",
-    "set", "tuple", "type", "isinstance", "issubclass", "hasattr", "getattr",
-    "setattr", "delattr", "super", "property", "staticmethod", "classmethod",
-    "enumerate", "zip", "map", "filter", "sorted", "reversed", "any", "all",
-    "min", "max", "sum", "abs", "round", "open", "input", "format", "repr",
-    "id", "hash", "callable", "iter", "next", "vars", "dir",
+    "print",
+    "len",
+    "range",
+    "str",
+    "int",
+    "float",
+    "bool",
+    "list",
+    "dict",
+    "set",
+    "tuple",
+    "type",
+    "isinstance",
+    "issubclass",
+    "hasattr",
+    "getattr",
+    "setattr",
+    "delattr",
+    "super",
+    "property",
+    "staticmethod",
+    "classmethod",
+    "enumerate",
+    "zip",
+    "map",
+    "filter",
+    "sorted",
+    "reversed",
+    "any",
+    "all",
+    "min",
+    "max",
+    "sum",
+    "abs",
+    "round",
+    "open",
+    "input",
+    "format",
+    "repr",
+    "id",
+    "hash",
+    "callable",
+    "iter",
+    "next",
+    "vars",
+    "dir",
 }
 
 
-def _extract_calls(
-    tree: ast.Module, symbols: list[SymbolInfo]
-) -> list[CallInfo]:
+def _extract_calls(tree: ast.Module, symbols: list[SymbolInfo]) -> list[CallInfo]:
     """Extract all function/method calls — cross-file resolution handled by ingestion pipeline."""
     calls: list[CallInfo] = []
 
     for top_node in ast.iter_child_nodes(tree):
-        if not isinstance(
-            top_node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)
-        ):
+        if not isinstance(top_node, (ast.FunctionDef, ast.AsyncFunctionDef, ast.ClassDef)):
             continue
         caller_name = top_node.name
         for child in ast.walk(top_node):
@@ -156,12 +186,7 @@ def _extract_calls(
                 callee = child.func.id
             elif isinstance(child.func, ast.Attribute):
                 callee = child.func.attr  # obj.method() → "method"
-            if (
-                callee
-                and callee != caller_name
-                and callee not in _PY_CALL_EXCLUDE
-                and len(callee) >= 2
-            ):
+            if callee and callee != caller_name and callee not in _PY_CALL_EXCLUDE and len(callee) >= 2:
                 calls.append(
                     CallInfo(
                         caller_name=caller_name,
@@ -226,9 +251,7 @@ def _extract_signature(
         if arg.annotation:
             annotation = f": {ast.unparse(arg.annotation)}"
         args.append(f"{arg.arg}{annotation}")
-    prefix = (
-        "async def" if isinstance(node, ast.AsyncFunctionDef) else "def"
-    )
+    prefix = "async def" if isinstance(node, ast.AsyncFunctionDef) else "def"
     ret = ""
     if node.returns:
         ret = f" -> {ast.unparse(node.returns)}"

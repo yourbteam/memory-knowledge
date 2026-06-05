@@ -227,7 +227,13 @@ async def get_failure_mode_playbooks(
                 playbooks,
                 playbook_code="SUPPRESS_LOW_VALUE_NOISE",
                 source_type="finding_pattern",
-                source_key="|".join([str(row.get("workflow_name") or ""), str(row.get("finding_kind") or ""), str(row.get("phase_id") or "")]),
+                source_key="|".join(
+                    [
+                        str(row.get("workflow_name") or ""),
+                        str(row.get("finding_kind") or ""),
+                        str(row.get("phase_id") or ""),
+                    ]
+                ),
                 confidence=_confidence(occurrence_count, dismiss_rate),
                 recommendation="Suppress or filter repeated low-value findings for this pattern.",
                 suggested_actions=["suppress low-value noise", "tighten critic filtering for this pattern"],
@@ -245,7 +251,13 @@ async def get_failure_mode_playbooks(
                 playbooks,
                 playbook_code="ESCALATE_TO_OPERATOR_REVIEW",
                 source_type="finding_pattern",
-                source_key="|".join([str(row.get("workflow_name") or ""), str(row.get("finding_kind") or ""), str(row.get("phase_id") or "")]),
+                source_key="|".join(
+                    [
+                        str(row.get("workflow_name") or ""),
+                        str(row.get("finding_kind") or ""),
+                        str(row.get("phase_id") or ""),
+                    ]
+                ),
                 confidence=_confidence(occurrence_count, actionable_rate),
                 recommendation="Escalate this repeated actionable finding pattern for direct operator or workflow-owner review.",
                 suggested_actions=["escalate to operator review", "promote to workflow hardening task"],

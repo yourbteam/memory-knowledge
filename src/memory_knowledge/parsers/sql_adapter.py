@@ -34,9 +34,7 @@ def parse_sql_file(file_path: str, source: str) -> FileParseOutput:
         )
     except Exception as e:
         logger.warning("sql_parse_error", file_path=file_path, error=str(e))
-        return FileParseOutput(
-            file_path=file_path, language="sql", parse_error=str(e)
-        )
+        return FileParseOutput(file_path=file_path, language="sql", parse_error=str(e))
 
 
 def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
@@ -90,10 +88,12 @@ def _extract_sql_refs(source: str) -> list[SqlObjectRef]:
             continue
         seen.add(key)
         line_no = source[: match.start()].count("\n") + 1
-        refs.append(SqlObjectRef(
-            object_name=obj_name,
-            object_type="table",
-            operation=operation,
-            line_start=line_no,
-        ))
+        refs.append(
+            SqlObjectRef(
+                object_name=obj_name,
+                object_type="table",
+                operation=operation,
+                line_start=line_no,
+            )
+        )
     return refs

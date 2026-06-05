@@ -3,6 +3,7 @@
 Invocation-time blocking: the server starts in remote mode but
 write operations are rejected unless explicitly allowed.
 """
+
 from __future__ import annotations
 
 from memory_knowledge.config import Settings
@@ -41,10 +42,7 @@ def check_remote_write_guard(
             run_id="",
             tool_name=tool_name,
             status="error",
-            error=(
-                f"Destructive operation '{tool_name}' blocked: "
-                "ALLOW_REMOTE_REBUILDS is not set to true"
-            ),
+            error=(f"Destructive operation '{tool_name}' blocked: ALLOW_REMOTE_REBUILDS is not set to true"),
         )
 
     return None

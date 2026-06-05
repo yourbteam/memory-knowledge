@@ -98,17 +98,22 @@ async def repair(
                     if ":" in title:
                         symbol_name = title.split(":", 1)[1].split("[")[0]
 
-                    chunks_with_embeddings.append({
-                        "entity_key": str(r["entity_key"]),
-                        "embedding": emb,
-                        "file_path": r["file_path"],
-                        "symbol_name": symbol_name,
-                        "chunk_type": r["chunk_type"],
-                    })
+                    chunks_with_embeddings.append(
+                        {
+                            "entity_key": str(r["entity_key"]),
+                            "embedding": emb,
+                            "file_path": r["file_path"],
+                            "symbol_name": symbol_name,
+                            "chunk_type": r["chunk_type"],
+                        }
+                    )
 
                 await upsert_points(
-                    qdrant_client, chunks_with_embeddings,
-                    repository_key, commit_sha, branch_name,
+                    qdrant_client,
+                    chunks_with_embeddings,
+                    repository_key,
+                    commit_sha,
+                    branch_name,
                 )
                 report.qdrant_points_repaired = len(chunks_with_embeddings)
                 # Reconcile: deactivate active points not backed by active PG
@@ -150,7 +155,11 @@ async def repair(
                     for r in summary_rows
                 ]
                 await embed_and_upsert_summaries(
-                    qdrant_client, summaries_list, repository_key, commit_sha, settings,
+                    qdrant_client,
+                    summaries_list,
+                    repository_key,
+                    commit_sha,
+                    settings,
                 )
                 report.summary_points_repaired = len(summaries_list)
                 active_summary_keys = {str(r["entity_key"]).lower() for r in summary_rows}
@@ -255,11 +264,13 @@ async def repair(
                 fek = str(sr["file_entity_key"])
                 if fek not in symbols_by_file:
                     symbols_by_file[fek] = []
-                symbols_by_file[fek].append({
-                    "entity_key": str(sr["symbol_entity_key"]),
-                    "name": sr["symbol_name"],
-                    "kind": sr["symbol_kind"],
-                })
+                symbols_by_file[fek].append(
+                    {
+                        "entity_key": str(sr["symbol_entity_key"]),
+                        "name": sr["symbol_name"],
+                        "kind": sr["symbol_kind"],
+                    }
+                )
 
             file_symbols: list[dict[str, Any]] = [
                 {
@@ -272,8 +283,11 @@ async def repair(
 
             if file_symbols:
                 await project_repository_graph(
-                    neo4j_driver, repository_key, commit_sha,
-                    branch_name, file_symbols,
+                    neo4j_driver,
+                    repository_key,
+                    commit_sha,
+                    branch_name,
+                    file_symbols,
                 )
                 report.neo4j_nodes_repaired = len(file_symbols)
                 logger.info("neo4j_repair_complete", files=report.neo4j_nodes_repaired)
@@ -338,16 +352,21 @@ async def rebuild_revision(
                     title = r["title"] or ""
                     if ":" in title:
                         symbol_name = title.split(":", 1)[1].split("[")[0]
-                    chunks_with_embeddings.append({
-                        "entity_key": str(r["entity_key"]),
-                        "embedding": emb,
-                        "file_path": r["file_path"],
-                        "symbol_name": symbol_name,
-                        "chunk_type": r["chunk_type"],
-                    })
+                    chunks_with_embeddings.append(
+                        {
+                            "entity_key": str(r["entity_key"]),
+                            "embedding": emb,
+                            "file_path": r["file_path"],
+                            "symbol_name": symbol_name,
+                            "chunk_type": r["chunk_type"],
+                        }
+                    )
                 await upsert_points(
-                    qdrant_client, chunks_with_embeddings,
-                    repository_key, commit_sha, branch_name,
+                    qdrant_client,
+                    chunks_with_embeddings,
+                    repository_key,
+                    commit_sha,
+                    branch_name,
                 )
                 report.qdrant_points_repaired = len(chunks_with_embeddings)
         except Exception as exc:
@@ -382,11 +401,13 @@ async def rebuild_revision(
             symbols_by_file: dict[str, list[dict[str, str]]] = {}
             for sr in all_symbols:
                 fek = str(sr["file_entity_key"])
-                symbols_by_file.setdefault(fek, []).append({
-                    "entity_key": str(sr["symbol_entity_key"]),
-                    "name": sr["symbol_name"],
-                    "kind": sr["symbol_kind"],
-                })
+                symbols_by_file.setdefault(fek, []).append(
+                    {
+                        "entity_key": str(sr["symbol_entity_key"]),
+                        "name": sr["symbol_name"],
+                        "kind": sr["symbol_kind"],
+                    }
+                )
             file_symbols: list[dict[str, Any]] = [
                 {
                     "file_path": fr["file_path"],
@@ -397,8 +418,11 @@ async def rebuild_revision(
             ]
             if file_symbols:
                 await project_repository_graph(
-                    neo4j_driver, repository_key, commit_sha,
-                    branch_name, file_symbols,
+                    neo4j_driver,
+                    repository_key,
+                    commit_sha,
+                    branch_name,
+                    file_symbols,
                 )
                 report.neo4j_nodes_repaired = len(file_symbols)
         except Exception as exc:

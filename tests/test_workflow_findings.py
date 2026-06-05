@@ -24,12 +24,20 @@ class FindingsPool:
                 "repository_id": 7,
                 "workflow_name": "wf-a",
             }
-        if "FROM core.reference_values rv" in query and "WHERE rt.internal_code = $1 AND rv.internal_code = $2" in query:
+        if (
+            "FROM core.reference_values rv" in query
+            and "WHERE rt.internal_code = $1 AND rv.internal_code = $2" in query
+        ):
             type_code, value_code = args
             if type_code == server.WORKFLOW_FINDING_KIND_TYPE:
                 return {"id": 21, "internal_code": value_code, "display_name": value_code.title(), "is_terminal": False}
             if type_code == server.WORKFLOW_FINDING_STATUS_TYPE:
-                return {"id": 22, "internal_code": value_code, "display_name": value_code.title(), "is_terminal": value_code != "OPEN"}
+                return {
+                    "id": 22,
+                    "internal_code": value_code,
+                    "display_name": value_code.title(),
+                    "is_terminal": value_code != "OPEN",
+                }
             if type_code == server.WORKFLOW_FINDING_DECISION_BUCKET_TYPE:
                 return {"id": 23, "internal_code": value_code, "display_name": value_code.title(), "is_terminal": False}
             if type_code == server.WORKFLOW_FINDING_SUPPRESSION_SCOPE_TYPE:
@@ -80,10 +88,7 @@ async def test_save_workflow_finding_defaults_kind_and_status(findings_pool):
     )
     payload = json.loads(result)
     assert payload["status"] == "success"
-    reference_calls = [
-        args for query, args in findings_pool.fetchrow_calls
-        if "FROM core.reference_values rv" in query
-    ]
+    reference_calls = [args for query, args in findings_pool.fetchrow_calls if "FROM core.reference_values rv" in query]
     assert (server.WORKFLOW_FINDING_KIND_TYPE, server.DEFAULT_WORKFLOW_FINDING_KIND) in reference_calls
     assert (server.WORKFLOW_FINDING_STATUS_TYPE, server.DEFAULT_WORKFLOW_FINDING_STATUS) in reference_calls
 
