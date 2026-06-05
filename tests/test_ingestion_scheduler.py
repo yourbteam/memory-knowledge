@@ -30,8 +30,11 @@ class FakePool:
 
 def _row(rk, origin="https://github.com/x/y.git", branch="main", commit="old", updated=None):
     return {
-        "repository_key": rk, "origin_url": origin, "branch_name": branch,
-        "commit_sha": commit, "updated_utc": updated,
+        "repository_key": rk,
+        "origin_url": origin,
+        "branch_name": branch,
+        "commit_sha": commit,
+        "updated_utc": updated,
     }
 
 
@@ -51,12 +54,16 @@ def _patch_common(monkeypatch, *, head=None, default=None, active=None, resume=N
     monkeypatch.setattr(mr_mod, "get_active_job_for_shape", fake_active)
     monkeypatch.setattr(mr_mod, "get_latest_resume_checkpoint", fake_resume)
     if head is not None:
+
         async def fake_head(origin, branch, settings):
             return head(origin, branch) if callable(head) else head
+
         monkeypatch.setattr(clone_mod, "resolve_remote_head", fake_head)
     if default is not None:
+
         async def fake_default(origin, settings):
             return default
+
         monkeypatch.setattr(clone_mod, "resolve_default_branch", fake_default)
 
 
@@ -188,6 +195,7 @@ async def test_maintenance_dedups_active(monkeypatch):
 async def test_resolve_remote_head_parses_sha(monkeypatch):
     async def fake_authed(url, settings):
         return url
+
     monkeypatch.setattr(gh_mod, "get_authenticated_git_url", fake_authed)
 
     class FakeGit:
@@ -195,6 +203,7 @@ async def test_resolve_remote_head_parses_sha(monkeypatch):
             return "abc123def\trefs/heads/main"
 
     import git
+
     monkeypatch.setattr(git, "Git", lambda: FakeGit())
     sha = await clone_mod.resolve_remote_head("https://github.com/x/y.git", "main", object())
     assert sha == "abc123def"
@@ -204,6 +213,7 @@ async def test_resolve_remote_head_parses_sha(monkeypatch):
 async def test_resolve_default_branch_parses_symref(monkeypatch):
     async def fake_authed(url, settings):
         return url
+
     monkeypatch.setattr(gh_mod, "get_authenticated_git_url", fake_authed)
 
     class FakeGit:
@@ -211,6 +221,7 @@ async def test_resolve_default_branch_parses_symref(monkeypatch):
             return "ref: refs/heads/trunk\tHEAD\nzzz999\tHEAD"
 
     import git
+
     monkeypatch.setattr(git, "Git", lambda: FakeGit())
     res = await clone_mod.resolve_default_branch("https://github.com/x/y.git", object())
     assert res == ("trunk", "zzz999")

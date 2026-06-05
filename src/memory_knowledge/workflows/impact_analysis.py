@@ -111,9 +111,7 @@ async def run(
             )
 
         # Step 1: Resolve query to entity_key
-        entity_key = await _resolve_query_to_entity_key(
-            pool, qdrant_client, settings, repository_key, query
-        )
+        entity_key = await _resolve_query_to_entity_key(pool, qdrant_client, settings, repository_key, query)
         if entity_key is None:
             return WorkflowResult(
                 run_id=str(run_id),
@@ -163,15 +161,17 @@ async def run(
                 key = str(rec["entity_key"])
                 dist = rec["distance"]
                 h = hydrated_map.get(key, {})
-                affected.append({
-                    "entity_key": key,
-                    "entity_type": h.get("entity_type", "unknown") if h else "unknown",
-                    "file_path": h.get("file_path") if h else None,
-                    "symbol_name": h.get("symbol_name") if h else None,
-                    "symbol_kind": h.get("symbol_kind") if h else None,
-                    "distance": dist,
-                    "labels": rec["labels"],
-                })
+                affected.append(
+                    {
+                        "entity_key": key,
+                        "entity_type": h.get("entity_type", "unknown") if h else "unknown",
+                        "file_path": h.get("file_path") if h else None,
+                        "symbol_name": h.get("symbol_name") if h else None,
+                        "symbol_kind": h.get("symbol_kind") if h else None,
+                        "distance": dist,
+                        "labels": rec["labels"],
+                    }
+                )
 
         duration_ms = int((time.monotonic() - start) * 1000)
         logger.info("impact_analysis_complete", duration_ms=duration_ms, affected_count=len(affected))

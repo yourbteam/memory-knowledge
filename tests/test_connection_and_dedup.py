@@ -6,6 +6,7 @@ Regression coverage for two grounded fragilities:
 - bulk upserts must de-dup conflict keys within a batch, else Postgres raises
   "ON CONFLICT DO UPDATE command cannot affect row a second time".
 """
+
 import pytest
 
 from memory_knowledge.db import postgres as pg_mod
@@ -23,11 +24,15 @@ async def test_init_qdrant_passes_timeout(monkeypatch):
             captured.update(kwargs)
 
     monkeypatch.setattr(qdrant_mod, "AsyncQdrantClient", FakeClient)
-    settings = type("S", (), {
-        "qdrant_url": "http://localhost:6333",
-        "qdrant_api_key": "k",
-        "qdrant_timeout_seconds": 60.0,
-    })()
+    settings = type(
+        "S",
+        (),
+        {
+            "qdrant_url": "http://localhost:6333",
+            "qdrant_api_key": "k",
+            "qdrant_timeout_seconds": 60.0,
+        },
+    )()
 
     await qdrant_mod.init_qdrant(settings)
     assert captured["timeout"] == 60.0
@@ -42,14 +47,18 @@ async def test_init_postgres_passes_idle_recycle(monkeypatch):
         return object()
 
     monkeypatch.setattr(pg_mod.asyncpg, "create_pool", fake_create_pool)
-    settings = type("S", (), {
-        "database_url": "postgresql://localhost/db",
-        "pg_ssl": False,
-        "pg_command_timeout": 30,
-        "pg_pool_min_size": 5,
-        "pg_pool_max_size": 20,
-        "pg_max_inactive_connection_lifetime_seconds": 300.0,
-    })()
+    settings = type(
+        "S",
+        (),
+        {
+            "database_url": "postgresql://localhost/db",
+            "pg_ssl": False,
+            "pg_command_timeout": 30,
+            "pg_pool_min_size": 5,
+            "pg_pool_max_size": 20,
+            "pg_max_inactive_connection_lifetime_seconds": 300.0,
+        },
+    )()
 
     await pg_mod.init_postgres(settings)
     assert captured["max_inactive_connection_lifetime"] == 300.0

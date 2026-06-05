@@ -6,9 +6,7 @@ from typing import Any
 import asyncpg
 
 
-async def resolve_repository_ids(
-    pool: asyncpg.Pool, repository_keys: list[str]
-) -> list[int]:
+async def resolve_repository_ids(pool: asyncpg.Pool, repository_keys: list[str]) -> list[int]:
     if not repository_keys:
         return []
     rows = await pool.fetch(
@@ -82,9 +80,7 @@ async def resolve_project_id(pool: asyncpg.Pool, project_key: str) -> int:
     return row["id"]
 
 
-async def resolve_project_id_by_external(
-    pool: asyncpg.Pool, external_system: str, external_id: str
-) -> int:
+async def resolve_project_id_by_external(pool: asyncpg.Pool, external_system: str, external_id: str) -> int:
     row = await pool.fetchrow(
         """
         SELECT p.id
@@ -364,9 +360,7 @@ async def remove_repository_from_feature(
         repository_id,
     )
     if task_count:
-        raise ValueError(
-            f"Repository cannot be removed from feature because {task_count} tasks still reference it"
-        )
+        raise ValueError(f"Repository cannot be removed from feature because {task_count} tasks still reference it")
     await pool.execute(
         """
         DELETE FROM planning.feature_repositories
@@ -486,9 +480,7 @@ async def link_task_to_workflow_run(
     return {"task_id": task_id, "workflow_run_id": run_row["id"], "relation_type": relation_type}
 
 
-async def list_projects(
-    pool: asyncpg.Pool, project_status_id: int | None = None
-) -> list[dict[str, Any]]:
+async def list_projects(pool: asyncpg.Pool, project_status_id: int | None = None) -> list[dict[str, Any]]:
     if project_status_id is not None:
         rows = await pool.fetch(
             """
@@ -681,7 +673,7 @@ async def get_backlog(
         JOIN core.reference_values p ON p.id = f.priority_id
         LEFT JOIN planning.feature_repositories fr ON fr.feature_id = f.id
         LEFT JOIN catalog.repositories r ON r.id = fr.repository_id
-        WHERE {' AND '.join(feature_conditions)}
+        WHERE {" AND ".join(feature_conditions)}
         ORDER BY p.sort_order DESC, f.created_utc DESC
         LIMIT {limit}
         """,
@@ -697,7 +689,7 @@ async def get_backlog(
         JOIN core.reference_values s ON s.id = t.task_status_id
         JOIN core.reference_values p ON p.id = t.priority_id
         LEFT JOIN catalog.repositories r ON r.id = t.repository_id
-        WHERE {' AND '.join(task_conditions)}
+        WHERE {" AND ".join(task_conditions)}
         ORDER BY p.sort_order DESC, t.created_utc DESC
         LIMIT {limit}
         """,

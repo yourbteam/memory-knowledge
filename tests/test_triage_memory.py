@@ -68,7 +68,10 @@ class TriagePool:
             }
         if "SELECT triage_case_id FROM ops.triage_cases" in query:
             return {"triage_case_id": uuid.UUID(args[0])} if args[0] == "11111111-1111-1111-1111-111111111111" else None
-        if "FROM core.reference_values rv" in query and "WHERE rt.internal_code = $1 AND rv.internal_code = $2" in query:
+        if (
+            "FROM core.reference_values rv" in query
+            and "WHERE rt.internal_code = $1 AND rv.internal_code = $2" in query
+        ):
             type_code, value_code = args
             if type_code == "TRIAGE_OUTCOME_STATUS" and value_code == "TRIAGE_OUTCOME_CORRECTED":
                 return {"id": 201}
@@ -193,7 +196,9 @@ def triage_env(monkeypatch):
     monkeypatch.setattr(server, "get_qdrant_client", lambda: qdrant)
     monkeypatch.setattr(server, "get_settings", lambda: settings)
     monkeypatch.setattr(server, "check_remote_write_guard", lambda settings, tool_name: None)
-    monkeypatch.setattr("memory_knowledge.triage_memory.embed_single", lambda text, settings: asyncio.sleep(0, result=[0.1] * 8))
+    monkeypatch.setattr(
+        "memory_knowledge.triage_memory.embed_single", lambda text, settings: asyncio.sleep(0, result=[0.1] * 8)
+    )
     return pool, qdrant
 
 
@@ -350,7 +355,9 @@ async def test_search_triage_cases_semantic_path_applies_hybrid_ranking(monkeypa
     monkeypatch.setattr(server, "get_pg_pool", lambda: pool)
     monkeypatch.setattr(server, "get_qdrant_client", lambda: qdrant)
     monkeypatch.setattr(server, "get_settings", lambda: SimpleNamespace(embedding_dimensions=8))
-    monkeypatch.setattr("memory_knowledge.triage_memory.embed_single", lambda text, settings: asyncio.sleep(0, result=[0.1] * 8))
+    monkeypatch.setattr(
+        "memory_knowledge.triage_memory.embed_single", lambda text, settings: asyncio.sleep(0, result=[0.1] * 8)
+    )
 
     result = await server.search_triage_cases(prompt_text="Need planning help")
     payload = json.loads(result)
@@ -369,7 +376,9 @@ async def test_search_triage_cases_tool_does_not_lexically_fallback_on_zero_sema
     monkeypatch.setattr(server, "get_qdrant_client", lambda: qdrant)
     monkeypatch.setattr(server, "get_settings", lambda: SimpleNamespace(embedding_dimensions=8))
     monkeypatch.setattr(server, "check_remote_write_guard", lambda settings, tool_name: None)
-    monkeypatch.setattr("memory_knowledge.triage_memory.embed_single", lambda text, settings: asyncio.sleep(0, result=[0.1] * 8))
+    monkeypatch.setattr(
+        "memory_knowledge.triage_memory.embed_single", lambda text, settings: asyncio.sleep(0, result=[0.1] * 8)
+    )
 
     result = await server.search_triage_cases(prompt_text="Need planning help", repository_key="repo-a")
     payload = json.loads(result)
@@ -502,7 +511,10 @@ async def test_search_triage_cases_prefers_validated_lifecycle_when_semantics_ar
     )
 
     assert result["rows"][0]["triage_case_id"] == "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa"
-    assert result["rows"][0]["ranking_features"]["lifecycle_quality"] > result["rows"][1]["ranking_features"]["lifecycle_quality"]
+    assert (
+        result["rows"][0]["ranking_features"]["lifecycle_quality"]
+        > result["rows"][1]["ranking_features"]["lifecycle_quality"]
+    )
 
 
 @pytest.mark.asyncio
@@ -727,10 +739,14 @@ async def test_search_triage_cases_lexical_fallback_order_is_deterministic(monke
 
     first_ids = [row["triage_case_id"] for row in first["rows"]]
     second_ids = [row["triage_case_id"] for row in second["rows"]]
-    assert first_ids == second_ids == [
-        "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
-        "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
-    ]
+    assert (
+        first_ids
+        == second_ids
+        == [
+            "bbbbbbbb-bbbb-bbbb-bbbb-bbbbbbbbbbbb",
+            "aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa",
+        ]
+    )
 
 
 @pytest.mark.asyncio
@@ -852,7 +868,9 @@ async def test_search_triage_cases_semantic_path_consensus_strength_uses_ranked_
     monkeypatch.setattr(server, "get_pg_pool", lambda: pool)
     monkeypatch.setattr(server, "get_qdrant_client", lambda: qdrant)
     monkeypatch.setattr(server, "get_settings", lambda: SimpleNamespace(embedding_dimensions=8))
-    monkeypatch.setattr("memory_knowledge.triage_memory.embed_single", lambda text, settings: asyncio.sleep(0, result=[0.1] * 8))
+    monkeypatch.setattr(
+        "memory_knowledge.triage_memory.embed_single", lambda text, settings: asyncio.sleep(0, result=[0.1] * 8)
+    )
 
     result = await server.search_triage_cases(prompt_text="Need planning help")
     payload = json.loads(result)
@@ -966,9 +984,7 @@ async def test_record_triage_case_feedback_tool_preserves_unknown_status_without
     assert insert_args[1] == "custom_status_from_integrator"
     assert insert_args[2] is None
     _update_query, update_args = next(
-        (query, args)
-        for query, args in reversed(pool.fetchrow_calls)
-        if "UPDATE ops.triage_cases" in query
+        (query, args) for query, args in reversed(pool.fetchrow_calls) if "UPDATE ops.triage_cases" in query
     )
     assert update_args[1] == 405
 
@@ -1065,9 +1081,7 @@ async def test_get_triage_confusion_clusters_forwards_filters_to_analysis_query(
 
     assert payload["status"] == "success"
     _query, args = next(
-        (query, args)
-        for query, args in reversed(pool.fetch_calls)
-        if "/* triage_analysis_rows */" in query
+        (query, args) for query, args in reversed(pool.fetch_calls) if "/* triage_analysis_rows */" in query
     )
     assert args[0] == "repo-a"
     assert args[2] == "run_operation"
@@ -1324,7 +1338,10 @@ async def test_reproject_triage_cases_uses_pg_created_utc_in_payload(monkeypatch
 
     pool = ProjectionPool()
     qdrant = ReprojectableQdrant()
-    monkeypatch.setattr("memory_knowledge.triage_memory.embed", lambda texts, settings: asyncio.sleep(0, result=[[0.3] * 8 for _ in texts]))
+    monkeypatch.setattr(
+        "memory_knowledge.triage_memory.embed",
+        lambda texts, settings: asyncio.sleep(0, result=[[0.3] * 8 for _ in texts]),
+    )
 
     result = await triage_memory.reproject_triage_cases(
         pool=pool,
@@ -1386,8 +1403,13 @@ async def test_search_triage_cases_restored_point_is_searchable_with_widened_max
     monkeypatch.setattr(server, "get_pg_pool", lambda: pool)
     monkeypatch.setattr(server, "get_qdrant_client", lambda: qdrant)
     monkeypatch.setattr(server, "get_settings", lambda: SimpleNamespace(embedding_dimensions=8))
-    monkeypatch.setattr("memory_knowledge.triage_memory.embed", lambda texts, settings: asyncio.sleep(0, result=[[0.3] * 8 for _ in texts]))
-    monkeypatch.setattr("memory_knowledge.triage_memory.embed_single", lambda text, settings: asyncio.sleep(0, result=[0.1] * 8))
+    monkeypatch.setattr(
+        "memory_knowledge.triage_memory.embed",
+        lambda texts, settings: asyncio.sleep(0, result=[[0.3] * 8 for _ in texts]),
+    )
+    monkeypatch.setattr(
+        "memory_knowledge.triage_memory.embed_single", lambda text, settings: asyncio.sleep(0, result=[0.1] * 8)
+    )
 
     reprojection = await triage_memory.reproject_triage_cases(
         pool=pool,
@@ -1447,7 +1469,9 @@ async def test_reproject_triage_cases_counts_missing_embeddings_as_skipped(monke
 
     pool = ProjectionPool()
     qdrant = ReprojectableQdrant()
-    monkeypatch.setattr("memory_knowledge.triage_memory.embed", lambda texts, settings: asyncio.sleep(0, result=[[0.3] * 8]))
+    monkeypatch.setattr(
+        "memory_knowledge.triage_memory.embed", lambda texts, settings: asyncio.sleep(0, result=[[0.3] * 8])
+    )
 
     result = await triage_memory.reproject_triage_cases(
         pool=pool,

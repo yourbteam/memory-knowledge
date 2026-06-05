@@ -241,10 +241,7 @@ async def get_session_state(
             session_key,
             limit,
         )
-        recent_events = [
-            _record_to_dict(row, {"content_json", "attachment_refs", "metadata"}) or {}
-            for row in rows
-        ]
+        recent_events = [_record_to_dict(row, {"content_json", "attachment_refs", "metadata"}) or {} for row in rows]
 
     asset_refs: list[dict[str, Any]] = []
     if include_asset_refs:
@@ -444,12 +441,7 @@ async def list_events(
         to_sequence,
         capped_limit,
     )
-    return {
-        "events": [
-            _record_to_dict(row, {"content_json", "attachment_refs", "metadata"}) or {}
-            for row in rows
-        ]
-    }
+    return {"events": [_record_to_dict(row, {"content_json", "attachment_refs", "metadata"}) or {} for row in rows]}
 
 
 async def add_asset_ref(
@@ -543,10 +535,7 @@ async def finalize_session(
                 return {
                     "ok": False,
                     "errorCode": "FINALIZATION_CONFLICT",
-                    "error": (
-                        f"Session already finalized with draft revision "
-                        f"{session['final_draft_revision']}"
-                    ),
+                    "error": (f"Session already finalized with draft revision {session['final_draft_revision']}"),
                     "final_draft_revision": session["final_draft_revision"],
                 }
             if session["status"] != "active":

@@ -5,6 +5,7 @@ shared B3), the job is left in 'running' forever — the poll loop only claims
 'pending'/'retrying'. On (single-instance) startup nothing is legitimately
 running, so the dispatcher resets stale 'running' rows to 'failed'.
 """
+
 import pytest
 
 from memory_knowledge.jobs.dispatcher import JobDispatcher
@@ -30,10 +31,9 @@ async def test_reclaim_marks_running_jobs_failed():
 
     await d._reclaim_stale_running()
 
-    assert any(
-        "state_code = 'failed'" in q and "WHERE state_code = 'running'" in q
-        for q in pool.executed
-    ), pool.executed
+    assert any("state_code = 'failed'" in q and "WHERE state_code = 'running'" in q for q in pool.executed), (
+        pool.executed
+    )
 
 
 @pytest.mark.asyncio

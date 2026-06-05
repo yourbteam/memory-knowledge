@@ -18,7 +18,10 @@ class FakePool:
             return {"id": 7}
         if "SELECT workflow_name FROM ops.workflow_runs WHERE run_id = $1" in query:
             return None
-        if "FROM core.reference_values rv" in query and "WHERE rt.internal_code = $1 AND rv.internal_code = $2" in query:
+        if (
+            "FROM core.reference_values rv" in query
+            and "WHERE rt.internal_code = $1 AND rv.internal_code = $2" in query
+        ):
             type_code, value_code = args
             if type_code == server.WORKFLOW_RUN_STATUS_TYPE and value_code == "RUN_RUNNING":
                 return {
@@ -38,7 +41,11 @@ class FakePool:
         if "INSERT INTO ops.workflow_runs" in query:
             return {"id": 1, "is_insert": True, "status_id": args[4] or args[12]}
         if "SELECT wr.id, wr.repository_id, wr.run_id" in query:
-            return {"id": 1, "repository_id": 7, "run_id": uuid.UUID(str(args[0])) if isinstance(args[0], str) else args[0]}
+            return {
+                "id": 1,
+                "repository_id": 7,
+                "run_id": uuid.UUID(str(args[0])) if isinstance(args[0], str) else args[0],
+            }
         if "FROM ops.workflow_phase_states" in query and "SELECT 1" in query:
             return {"exists": 1}
         if "INSERT INTO ops.workflow_phase_states" in query:

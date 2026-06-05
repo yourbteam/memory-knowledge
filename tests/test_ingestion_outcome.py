@@ -1,4 +1,5 @@
 """T3 fail-loud: a run that dropped files reports 'partial', not clean success."""
+
 from memory_knowledge.workflows.ingestion import _ingestion_outcome
 
 

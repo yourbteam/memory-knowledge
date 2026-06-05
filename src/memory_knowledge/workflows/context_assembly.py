@@ -40,12 +40,14 @@ async def _fetch_applicable_learned_rules(
                 entity_keys=entity_keys,
             )
             for r in records:
-                rules.append({
-                    "entity_key": r["entity_key"],
-                    "title": r["title"],
-                    "memory_type": r["memory_type"],
-                    "source": "neo4j",
-                })
+                rules.append(
+                    {
+                        "entity_key": r["entity_key"],
+                        "title": r["title"],
+                        "memory_type": r["memory_type"],
+                        "source": "neo4j",
+                    }
+                )
         except Exception:
             pass  # LearnedRule label may not exist yet — graceful degradation
 
@@ -68,15 +70,17 @@ async def _fetch_applicable_learned_rules(
         for row in rows:
             key = str(row["entity_key"])
             if key not in seen:
-                rules.append({
-                    "entity_key": key,
-                    "title": row["title"],
-                    "memory_type": row["memory_type"],
-                    "confidence": float(row["confidence"]) if row["confidence"] else None,
-                    "applicability_mode": row["applicability_mode"],
-                    "body_text": row["body_text"],
-                    "source": "postgres",
-                })
+                rules.append(
+                    {
+                        "entity_key": key,
+                        "title": row["title"],
+                        "memory_type": row["memory_type"],
+                        "confidence": float(row["confidence"]) if row["confidence"] else None,
+                        "applicability_mode": row["applicability_mode"],
+                        "body_text": row["body_text"],
+                        "source": "postgres",
+                    }
+                )
     except Exception:
         pass  # table may be empty — graceful degradation
 
@@ -105,9 +109,13 @@ async def run(
 
         # Step 1: Run retrieval to get raw results
         retrieval_result = await _retrieval.run(
-            repository_key, query, run_id,
-            pool=pool, qdrant_client=qdrant_client,
-            neo4j_driver=neo4j_driver, settings=settings,
+            repository_key,
+            query,
+            run_id,
+            pool=pool,
+            qdrant_client=qdrant_client,
+            neo4j_driver=neo4j_driver,
+            settings=settings,
         )
 
         if retrieval_result.status != "success":
@@ -154,17 +162,17 @@ async def run(
             scope_entity_keys = [str(r["entity_key"]) for r in scope_rows]
 
         learned_rules = await _fetch_applicable_learned_rules(
-            pool, neo4j_driver, scope_entity_keys, repository_id,
+            pool,
+            neo4j_driver,
+            scope_entity_keys,
+            repository_id,
         )
 
         # Step 3.5: Follow CALLS edges from evidence symbols to get callee code
         call_chain: list[dict[str, Any]] = []
         if neo4j_driver is not None:
             # Extract symbol names from evidence to find what they call
-            evidence_symbol_keys = [
-                e["entity_key"] for e in evidence
-                if e.get("entity_key") and e.get("symbol_name")
-            ]
+            evidence_symbol_keys = [e["entity_key"] for e in evidence if e.get("entity_key") and e.get("symbol_name")]
             if evidence_symbol_keys:
                 try:
                     # Find callees via Neo4j CALLS edges
@@ -186,6 +194,7 @@ async def run(
                     if new_callee_keys:
                         # Hydrate callee chunks from PG
                         import uuid as _uuid
+
                         valid_keys = []
                         for k in new_callee_keys[:20]:  # limit to avoid huge queries
                             try:
@@ -209,15 +218,17 @@ async def run(
                                 valid_keys,
                             )
                             for row in callee_rows:
-                                call_chain.append({
-                                    "entity_key": str(row["entity_key"]),
-                                    "file_path": row["file_path"],
-                                    "symbol_name": row["symbol_name"],
-                                    "symbol_kind": row["symbol_kind"],
-                                    "title": row["title"],
-                                    "content_text": row["content_text"],
-                                    "source_store": "call_chain",
-                                })
+                                call_chain.append(
+                                    {
+                                        "entity_key": str(row["entity_key"]),
+                                        "file_path": row["file_path"],
+                                        "symbol_name": row["symbol_name"],
+                                        "symbol_kind": row["symbol_kind"],
+                                        "title": row["title"],
+                                        "content_text": row["content_text"],
+                                        "source_store": "call_chain",
+                                    }
+                                )
                 except Exception:
                     logger.debug("call_chain_expansion_failed", exc_info=True)
 

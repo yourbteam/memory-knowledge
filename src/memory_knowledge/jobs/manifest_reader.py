@@ -7,9 +7,7 @@ from typing import Any
 import asyncpg
 
 
-async def get_job_by_id(
-    pool: asyncpg.Pool, job_id: uuid.UUID
-) -> dict[str, Any] | None:
+async def get_job_by_id(pool: asyncpg.Pool, job_id: uuid.UUID) -> dict[str, Any] | None:
     """Get a single job manifest by job_id."""
     row = await pool.fetchrow(
         "SELECT * FROM ops.job_manifests WHERE job_id = $1",
@@ -34,9 +32,7 @@ async def get_job_by_id(
     return result
 
 
-async def get_jobs_for_run(
-    pool: asyncpg.Pool, run_id: uuid.UUID
-) -> list[dict[str, Any]]:
+async def get_jobs_for_run(pool: asyncpg.Pool, run_id: uuid.UUID) -> list[dict[str, Any]]:
     """Get all job manifests for a run."""
     rows = await pool.fetch(
         "SELECT * FROM ops.job_manifests WHERE run_id = $1 ORDER BY created_utc",
@@ -45,9 +41,7 @@ async def get_jobs_for_run(
     return [dict(r) for r in rows]
 
 
-async def get_failed_jobs(
-    pool: asyncpg.Pool, repository_key: str
-) -> list[dict[str, Any]]:
+async def get_failed_jobs(pool: asyncpg.Pool, repository_key: str) -> list[dict[str, Any]]:
     """Get all failed jobs for a repository."""
     rows = await pool.fetch(
         """
@@ -60,9 +54,7 @@ async def get_failed_jobs(
     return [dict(r) for r in rows]
 
 
-async def get_job_checkpoint(
-    pool: asyncpg.Pool, job_id: uuid.UUID
-) -> dict[str, Any] | None:
+async def get_job_checkpoint(pool: asyncpg.Pool, job_id: uuid.UUID) -> dict[str, Any] | None:
     """Get checkpoint data for a job."""
     row = await pool.fetchrow(
         "SELECT checkpoint_data FROM ops.job_manifests WHERE job_id = $1",

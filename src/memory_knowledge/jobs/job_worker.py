@@ -36,9 +36,7 @@ async def execute_job(
     """
     # Transition pending/retrying → running, unless the dispatcher's atomic
     # claim already set it to running (avoids an invalid running→running).
-    _row = await manifest_pool.fetchrow(
-        "SELECT state_code FROM ops.job_manifests WHERE job_id = $1", job_id
-    )
+    _row = await manifest_pool.fetchrow("SELECT state_code FROM ops.job_manifests WHERE job_id = $1", job_id)
     if _row is None:
         raise ValueError(f"Job not found: {job_id}")
     if _row["state_code"] != "running":
@@ -48,9 +46,7 @@ async def execute_job(
         # Inner retry for transient errors (connection timeouts, rate limits)
         @retry(
             stop=stop_after_attempt(3),
-            wait=wait_exponential(
-                multiplier=worker_settings.job_retry_delay_seconds, min=1, max=60
-            ),
+            wait=wait_exponential(multiplier=worker_settings.job_retry_delay_seconds, min=1, max=60),
             retry=retry_if_exception_type((ConnectionError, TimeoutError, OSError)),
             reraise=True,
         )
@@ -85,7 +81,9 @@ async def execute_job(
         # real and the head advanced) but the stored result + warning make the
         # partial coverage visible via check_job_status.
         await update_job_state(
-            manifest_pool, job_id, "completed",
+            manifest_pool,
+            job_id,
+            "completed",
             checkpoint_data=result_json,
         )
         return result

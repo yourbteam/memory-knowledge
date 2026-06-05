@@ -63,12 +63,8 @@ def ensure_repo(
                 repo.remotes.origin.set_url(origin_url or original_remote_url)
         return repo
     if origin_url is None:
-        raise ValueError(
-            f"No origin_url for {repository_key} and no local clone exists"
-        )
-    logger.info(
-        "git_clone", repository_key=repository_key, origin_url=origin_url
-    )
+        raise ValueError(f"No origin_url for {repository_key} and no local clone exists")
+    logger.info("git_clone", repository_key=repository_key, origin_url=origin_url)
     os.makedirs(repo_dir.parent, exist_ok=True)
     clone_url = authenticated_origin_url or _inject_github_token(
         origin_url,
@@ -87,9 +83,7 @@ def checkout_commit(repo: Repo, commit_sha: str) -> None:
     logger.info("git_checkout", commit_sha=commit_sha)
 
 
-def list_source_files(
-    repo: Repo, extensions: set[str] | None = None
-) -> list[str]:
+def list_source_files(repo: Repo, extensions: set[str] | None = None) -> list[str]:
     """Return repo-relative paths of source files tracked at HEAD.
 
     If extensions is None, returns all blob files.
@@ -98,8 +92,7 @@ def list_source_files(
     return [
         item.path
         for item in repo.head.commit.tree.traverse()
-        if item.type == "blob"
-        and (extensions is None or any(item.path.endswith(ext) for ext in extensions))
+        if item.type == "blob" and (extensions is None or any(item.path.endswith(ext) for ext in extensions))
     ]
 
 

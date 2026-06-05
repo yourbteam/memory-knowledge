@@ -1,4 +1,5 @@
 """T1: failed jobs self-heal via the retry/dead-letter sweep instead of being terminal."""
+
 import asyncio
 
 import pytest
@@ -59,10 +60,14 @@ async def _run_dispatcher_once(monkeypatch, enabled: bool) -> int:
 
     monkeypatch.setattr(disp_mod, "sweep_failed_jobs", fake_sweep)
     d = JobDispatcher(poll_interval=0.01, max_concurrent=1)
-    settings = type("S", (), {
-        "job_retry_sweep_enabled": enabled,
-        "reclaim_stale_running_jobs_on_start": False,
-    })()
+    settings = type(
+        "S",
+        (),
+        {
+            "job_retry_sweep_enabled": enabled,
+            "reclaim_stale_running_jobs_on_start": False,
+        },
+    )()
     await d.start(_IdlePool(), settings)
     await asyncio.sleep(0.06)
     await d.stop()

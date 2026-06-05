@@ -52,9 +52,7 @@ def parse_csharp_file(file_path: str, source: str) -> FileParseOutput:
         )
     except Exception as e:
         logger.warning("csharp_parse_error", file_path=file_path, error=str(e))
-        return FileParseOutput(
-            file_path=file_path, language="csharp", parse_error=str(e)
-        )
+        return FileParseOutput(file_path=file_path, language="csharp", parse_error=str(e))
 
 
 def _extract_symbols(source: str, lines: list[str]) -> list[SymbolInfo]:
@@ -135,10 +133,38 @@ def _extract_imports(source: str) -> list[ImportInfo]:
 
 
 _CS_CALL_EXCLUDE = {
-    "if", "for", "while", "switch", "catch", "using", "class", "foreach",
-    "return", "throw", "new", "typeof", "nameof", "sizeof", "await", "async",
-    "get", "set", "var", "string", "int", "bool", "void", "object", "Task",
-    "List", "Dictionary", "Array", "Console", "Math", "Convert", "String",
+    "if",
+    "for",
+    "while",
+    "switch",
+    "catch",
+    "using",
+    "class",
+    "foreach",
+    "return",
+    "throw",
+    "new",
+    "typeof",
+    "nameof",
+    "sizeof",
+    "await",
+    "async",
+    "get",
+    "set",
+    "var",
+    "string",
+    "int",
+    "bool",
+    "void",
+    "object",
+    "Task",
+    "List",
+    "Dictionary",
+    "Array",
+    "Console",
+    "Math",
+    "Convert",
+    "String",
 }
 
 

@@ -40,9 +40,7 @@ async def embed_and_upsert_summaries(
             "content_kind": "summary",
         }
         SummaryPayload.model_validate(payload)
-        points.append(
-            models.PointStruct(id=s["entity_key"], vector=emb, payload=payload)
-        )
+        points.append(models.PointStruct(id=s["entity_key"], vector=emb, payload=payload))
 
     for i in range(0, len(points), BATCH_SIZE):
         await client.upsert(

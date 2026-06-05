@@ -3,6 +3,7 @@
 Wraps the CompactionReport in a WorkflowResult so it runs through the job dispatcher
 and the MCP tool surface like the other workflows. dry_run flows in via job_params.
 """
+
 from __future__ import annotations
 
 import uuid
@@ -32,12 +33,12 @@ async def run(
 ) -> WorkflowResult:
     if pool is None or qdrant_client is None or settings is None:
         return WorkflowResult(
-            run_id=str(run_id), tool_name=TOOL_NAME, status="error",
+            run_id=str(run_id),
+            tool_name=TOOL_NAME,
+            status="error",
             error="Missing required dependencies (pool, qdrant_client, settings).",
         )
-    report = await compact_repository(
-        pool, qdrant_client, neo4j_driver, settings, repository_key, dry_run=dry_run
-    )
+    report = await compact_repository(pool, qdrant_client, neo4j_driver, settings, repository_key, dry_run=dry_run)
     status = "error" if report.errors else "success"
     return WorkflowResult(
         run_id=str(run_id),

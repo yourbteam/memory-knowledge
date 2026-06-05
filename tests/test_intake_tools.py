@@ -196,9 +196,7 @@ async def test_list_intake_events_asset_refs_and_sessions(monkeypatch, intake_en
             uri="opaque-ref",
         )
     )
-    sessions = json.loads(
-        await server.list_intake_sessions_by_actor(actor_email="user@example.com")
-    )
+    sessions = json.loads(await server.list_intake_sessions_by_actor(actor_email="user@example.com"))
 
     assert events["data"]["events"][0]["event_key"] == "evt_001"
     assert asset["data"]["asset_ref_key"] == "asset_001"

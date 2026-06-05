@@ -27,9 +27,7 @@ async def init_qdrant(settings: Settings) -> AsyncQdrantClient:
     return _client
 
 
-async def ensure_collections(
-    client: AsyncQdrantClient, settings: Settings
-) -> None:
+async def ensure_collections(client: AsyncQdrantClient, settings: Settings) -> None:
     existing = await client.get_collections()
     existing_names = {c.name for c in existing.collections}
 

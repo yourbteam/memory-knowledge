@@ -19,9 +19,7 @@ class ChunkSpec:
     symbol_name: str | None
 
 
-def build_chunks(
-    parse_output: FileParseOutput, source_lines: list[str]
-) -> list[ChunkSpec]:
+def build_chunks(parse_output: FileParseOutput, source_lines: list[str]) -> list[ChunkSpec]:
     """Build chunks from parsed symbols. Falls back to file-level if no symbols."""
     if not source_lines or not any(line.strip() for line in source_lines):
         return []  # skip empty files
@@ -42,8 +40,11 @@ def build_chunks(
             gap_text = "\n".join(source_lines[covered_end : sym.line_start - 1])
             if gap_text.strip():
                 gap_chunks = _gap_chunks(
-                    parse_output.file_path, gap_text,
-                    covered_end + 1, sym.line_start - 1, len(chunks),
+                    parse_output.file_path,
+                    gap_text,
+                    covered_end + 1,
+                    sym.line_start - 1,
+                    len(chunks),
                 )
                 chunks.extend(gap_chunks)
 
@@ -71,17 +72,18 @@ def build_chunks(
         gap_text = "\n".join(source_lines[covered_end:])
         if gap_text.strip():
             gap_chunks = _gap_chunks(
-                parse_output.file_path, gap_text,
-                covered_end + 1, len(source_lines), len(chunks),
+                parse_output.file_path,
+                gap_text,
+                covered_end + 1,
+                len(source_lines),
+                len(chunks),
             )
             chunks.extend(gap_chunks)
 
     return chunks
 
 
-def _file_level_chunks(
-    file_path: str, source_lines: list[str]
-) -> list[ChunkSpec]:
+def _file_level_chunks(file_path: str, source_lines: list[str]) -> list[ChunkSpec]:
     full_text = "\n".join(source_lines)
     if len(full_text) <= MAX_CHUNK_CHARS:
         return [
@@ -111,7 +113,11 @@ def _file_level_chunks(
 
 
 def _gap_chunks(
-    file_path: str, text: str, line_start: int, line_end: int, start_idx: int,
+    file_path: str,
+    text: str,
+    line_start: int,
+    line_end: int,
+    start_idx: int,
 ) -> list[ChunkSpec]:
     """Create file-level chunks for content between/outside symbols."""
     if len(text) <= MAX_CHUNK_CHARS:
@@ -141,9 +147,7 @@ def _gap_chunks(
     ]
 
 
-def _split_oversized(
-    text: str, sym: SymbolInfo, start_idx: int
-) -> list[ChunkSpec]:
+def _split_oversized(text: str, sym: SymbolInfo, start_idx: int) -> list[ChunkSpec]:
     parts = _split_with_overlap(text)
     return [
         ChunkSpec(

@@ -1,4 +1,5 @@
 """Tests for batched summary generation."""
+
 from memory_knowledge.llm.openai_client import (
     _extract_json_array,
     _format_batch_prompt,
@@ -78,7 +79,7 @@ def test_batch_index_matching():
 def test_extract_json_array_with_source_code_brackets():
     """Source code in the prompt echo may contain [ ] that confuse naive parsing."""
     text = (
-        'The code uses array[0] and list[i] patterns.\n\n'
+        "The code uses array[0] and list[i] patterns.\n\n"
         '[{"index": 1, "summary": "Handles arrays."}, {"index": 2, "summary": "Processes lists."}]'
     )
     result = _extract_json_array(text)
@@ -104,10 +105,10 @@ def test_extract_json_array_with_agent_commentary():
     text = (
         "I'll analyze each symbol and provide summaries.\n\n"
         "Here are my findings:\n\n"
-        '```json\n'
+        "```json\n"
         '[{"index": 1, "summary": "Validates user input."}, '
         '{"index": 2, "summary": "Sends email notification."}]\n'
-        '```\n\n'
+        "```\n\n"
         "Let me know if you need more detail."
     )
     result = _extract_json_array(text)

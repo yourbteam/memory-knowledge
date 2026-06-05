@@ -46,9 +46,7 @@ async def project_learned_rule(
     logger.info("learned_rule_projected", entity_key=entity_key)
 
 
-async def deactivate_learned_rule(
-    driver: neo4j.AsyncDriver, entity_key: str
-) -> None:
+async def deactivate_learned_rule(driver: neo4j.AsyncDriver, entity_key: str) -> None:
     """Set is_active=false on a LearnedRule node in Neo4j."""
     await driver.execute_query(
         "MATCH (lr:LearnedRule {entity_key: $ek}) SET lr.is_active = false",

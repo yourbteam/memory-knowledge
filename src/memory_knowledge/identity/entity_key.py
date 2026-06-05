@@ -23,17 +23,11 @@ def symbol_entity_key(
     )
 
 
-def chunk_entity_key(
-    repo_key: str, commit_sha: str, file_path: str, chunk_index: int
-) -> uuid.UUID:
-    return uuid.uuid5(
-        NAMESPACE_MK, f"{repo_key}:{commit_sha}:{file_path}:{chunk_index}"
-    )
+def chunk_entity_key(repo_key: str, commit_sha: str, file_path: str, chunk_index: int) -> uuid.UUID:
+    return uuid.uuid5(NAMESPACE_MK, f"{repo_key}:{commit_sha}:{file_path}:{chunk_index}")
 
 
-def learned_record_entity_key(
-    repo_key: str, memory_type: str, title_hash: str
-) -> uuid.UUID:
+def learned_record_entity_key(repo_key: str, memory_type: str, title_hash: str) -> uuid.UUID:
     return uuid.uuid5(NAMESPACE_MK, f"{repo_key}:{memory_type}:{title_hash}")
 
 

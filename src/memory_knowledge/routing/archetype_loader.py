@@ -63,9 +63,7 @@ async def load_archetypes(
     """
     # Read route policies to get policy metadata
     policies = await pool.fetch("SELECT * FROM routing.route_policies")
-    policy_by_class: dict[str, dict] = {
-        p["prompt_class"]: dict(p) for p in policies
-    }
+    policy_by_class: dict[str, dict] = {p["prompt_class"]: dict(p) for p in policies}
 
     all_texts: list[str] = []
     all_metadata: list[dict] = []
@@ -74,15 +72,17 @@ async def load_archetypes(
         policy = policy_by_class.get(prompt_class)
         for template in templates:
             all_texts.append(template)
-            all_metadata.append({
-                "prompt_class": prompt_class,
-                "policy_id": policy["id"] if policy else None,
-                "first_store": policy["first_store"] if policy else "postgres",
-                "second_store": policy["second_store"] if policy else None,
-                "allow_fanout": policy["allow_fanout"] if policy else False,
-                "allow_graph_expansion": policy["allow_graph_expansion"] if policy else False,
-                "template_text": template,
-            })
+            all_metadata.append(
+                {
+                    "prompt_class": prompt_class,
+                    "policy_id": policy["id"] if policy else None,
+                    "first_store": policy["first_store"] if policy else "postgres",
+                    "second_store": policy["second_store"] if policy else None,
+                    "allow_fanout": policy["allow_fanout"] if policy else False,
+                    "allow_graph_expansion": policy["allow_graph_expansion"] if policy else False,
+                    "template_text": template,
+                }
+            )
 
     if not all_texts:
         return 0
@@ -94,10 +94,12 @@ async def load_archetypes(
     points = []
     for emb, meta in zip(embeddings, all_metadata):
         # Deterministic point ID from prompt_class + template text (stable across reordering)
-        point_id = str(uuid.uuid5(
-            uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
-            f"archetype:{meta['prompt_class']}:{meta['template_text']}",
-        ))
+        point_id = str(
+            uuid.uuid5(
+                uuid.UUID("b7e15163-2a0e-4e29-8f3a-d4b612c8a1f7"),
+                f"archetype:{meta['prompt_class']}:{meta['template_text']}",
+            )
+        )
         points.append(
             models.PointStruct(
                 id=point_id,

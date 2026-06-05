@@ -13,9 +13,7 @@ logger = structlog.get_logger()
 BATCH_SIZE = 100
 
 
-async def embed_chunks(
-    chunks_text: list[str], settings: Settings
-) -> list[list[float]]:
+async def embed_chunks(chunks_text: list[str], settings: Settings) -> list[list[float]]:
     """Batch embed chunk texts using OpenAI with retry."""
     all_embeddings = await embed(chunks_text, settings)
     logger.info("chunks_embedded", total=len(all_embeddings))

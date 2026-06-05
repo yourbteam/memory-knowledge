@@ -24,18 +24,15 @@ def classify_error(exc: Exception) -> str:
     exc_module = type(exc).__module__ or ""
 
     # Connection / unreachable errors
-    if any(
-        kw in exc_type.lower()
-        for kw in ("connection", "timeout", "refused", "unreachable")
-    ):
+    if any(kw in exc_type.lower() for kw in ("connection", "timeout", "refused", "unreachable")):
         return STORE_UNREACHABLE
     if "asyncpg" in exc_module and exc_type in (
-        "InterfaceError", "InternalClientError", "ConnectionDoesNotExistError",
+        "InterfaceError",
+        "InternalClientError",
+        "ConnectionDoesNotExistError",
     ):
         return STORE_UNREACHABLE
-    if "qdrant" in exc_module.lower() and any(
-        kw in exc_type for kw in ("Connection", "Timeout", "Unreachable")
-    ):
+    if "qdrant" in exc_module.lower() and any(kw in exc_type for kw in ("Connection", "Timeout", "Unreachable")):
         return STORE_UNREACHABLE
     if "neo4j" in exc_module.lower() and exc_type in ("ServiceUnavailable",):
         return STORE_UNREACHABLE

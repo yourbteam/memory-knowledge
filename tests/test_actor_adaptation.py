@@ -21,7 +21,11 @@ async def test_actor_adaptation_summary_returns_cautious_mode_for_low_quality_ac
                 {
                     "run_count": 3,
                     "avg_score": 58.0,
-                    "planning_context": {"projects": [{"project_key": "project-1", "project_name": "Project 1"}], "features": [], "tasks": []},
+                    "planning_context": {
+                        "projects": [{"project_key": "project-1", "project_name": "Project 1"}],
+                        "features": [],
+                        "tasks": [],
+                    },
                 }
             ]
         }
@@ -32,13 +36,28 @@ async def test_actor_adaptation_summary_returns_cautious_mode_for_low_quality_ac
                 {
                     "run_count": 3,
                     "primary_recommendation": "ADD_PRE_RETRY_GROUNDING",
-                    "planning_context": {"projects": [{"project_key": "project-1", "project_name": "Project 1"}], "features": [], "tasks": []},
+                    "planning_context": {
+                        "projects": [{"project_key": "project-1", "project_name": "Project 1"}],
+                        "features": [],
+                        "tasks": [],
+                    },
                 }
             ]
         }
 
     async def fake_entropy(*args, **kwargs):
-        return {"targets": [{"score": 90, "planning_context": {"projects": [{"project_key": "project-1", "project_name": "Project 1"}], "features": [], "tasks": []}}]}
+        return {
+            "targets": [
+                {
+                    "score": 90,
+                    "planning_context": {
+                        "projects": [{"project_key": "project-1", "project_name": "Project 1"}],
+                        "features": [],
+                        "tasks": [],
+                    },
+                }
+            ]
+        }
 
     monkeypatch.setattr(actor_adaptation.analytics, "get_quality_grade_summary", fake_quality)
     monkeypatch.setattr(actor_adaptation.analytics, "get_convergence_recommendation_summary", fake_convergence)

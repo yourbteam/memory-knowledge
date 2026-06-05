@@ -1,4 +1,5 @@
 """A4: offline/manual runs (no job_id) checkpoint by (repo, commit, branch)."""
+
 import json
 import uuid
 

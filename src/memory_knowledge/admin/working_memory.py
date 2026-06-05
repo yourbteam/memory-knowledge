@@ -20,9 +20,7 @@ VALID_OBSERVATION_TYPES = {
 }
 
 
-async def create_session(
-    pool: asyncpg.Pool, repository_key: str
-) -> uuid.UUID:
+async def create_session(pool: asyncpg.Pool, repository_key: str) -> uuid.UUID:
     """Create a new working session. Returns session_key."""
     row = await pool.fetchrow(
         "SELECT id FROM catalog.repositories WHERE repository_key = $1",
@@ -103,14 +101,11 @@ async def end_session(
 ) -> None:
     """End a working session and optionally project to Neo4j."""
     result = await pool.execute(
-        "UPDATE memory.working_sessions SET ended_utc = NOW() "
-        "WHERE session_key = $1 AND ended_utc IS NULL",
+        "UPDATE memory.working_sessions SET ended_utc = NOW() WHERE session_key = $1 AND ended_utc IS NULL",
         session_key,
     )
     if result == "UPDATE 0":
-        raise ValueError(
-            f"Session not found or already ended: {session_key}"
-        )
+        raise ValueError(f"Session not found or already ended: {session_key}")
     logger.info("working_session_ended", session_key=str(session_key))
 
     # Project to Neo4j if driver is available
@@ -139,9 +134,7 @@ async def end_session(
             )
 
 
-async def get_session_observations(
-    pool: asyncpg.Pool, session_key: uuid.UUID
-) -> list[dict[str, Any]]:
+async def get_session_observations(pool: asyncpg.Pool, session_key: uuid.UUID) -> list[dict[str, Any]]:
     """Get all observations for a session."""
     rows = await pool.fetch(
         """
@@ -172,9 +165,7 @@ async def get_session_observations(
     ]
 
 
-async def get_recent_sessions(
-    pool: asyncpg.Pool, repository_key: str, limit: int = 10
-) -> list[dict[str, Any]]:
+async def get_recent_sessions(pool: asyncpg.Pool, repository_key: str, limit: int = 10) -> list[dict[str, Any]]:
     """Get recent working sessions for a repository."""
     rows = await pool.fetch(
         """

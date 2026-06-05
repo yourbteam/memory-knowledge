@@ -190,26 +190,20 @@ def _build_ranking_priors(rows: list[dict[str, Any]]) -> dict[str, Any]:
             workflow_key = (request_kind, workflow_name, run_action)
             workflow_totals.setdefault(workflow_key, []).append(signal)
             workflow_risk_totals.setdefault(workflow_key, []).append(risk_signal)
-    workflow_priors = {
-        key: round(sum(values) / len(values), 4)
-        for key, values in workflow_totals.items()
-        if values
-    }
+    workflow_priors = {key: round(sum(values) / len(values), 4) for key, values in workflow_totals.items() if values}
     workflow_risks = {
-        key: round(sum(values) / len(values), 4)
-        for key, values in workflow_risk_totals.items()
-        if values
+        key: round(sum(values) / len(values), 4) for key, values in workflow_risk_totals.items() if values
     }
     request_kind_priors = {
-        key: round(sum(values) / len(values), 4)
-        for key, values in request_kind_totals.items()
-        if values
+        key: round(sum(values) / len(values), 4) for key, values in request_kind_totals.items() if values
     }
     for (request_kind, workflow_name, run_action), signal in workflow_priors.items():
         current = best_workflow_for_request_kind.get(request_kind)
         candidate = (workflow_name, run_action or None, signal)
-        if current is None or candidate[2] > current[2] or (
-            candidate[2] == current[2] and (candidate[0], candidate[1] or "") > (current[0], current[1] or "")
+        if (
+            current is None
+            or candidate[2] > current[2]
+            or (candidate[2] == current[2] and (candidate[0], candidate[1] or "") > (current[0], current[1] or ""))
         ):
             best_workflow_for_request_kind[request_kind] = candidate
     return {
@@ -263,7 +257,9 @@ def _score_search_row(
     best_workflow = ranking_priors["best_workflow_for_request_kind"].get(str(row.get("request_kind") or ""))
     if best_workflow is not None and (
         str(row.get("selected_workflow_name") or "") == best_workflow[0]
-        and ((row.get("selected_run_action") if row.get("request_kind") == "run_operation" else None) == best_workflow[1])
+        and (
+            (row.get("selected_run_action") if row.get("request_kind") == "run_operation" else None) == best_workflow[1]
+        )
     ):
         score += profile.policy_alignment_weight
         features["policy_alignment"] = round(profile.policy_alignment_weight, 4)
@@ -484,7 +480,7 @@ async def reproject_triage_cases(
             continue
 
         if len(embeddings) != len(batch):
-            for row in batch[len(embeddings):]:
+            for row in batch[len(embeddings) :]:
                 skipped += 1
                 message = f"Triage case {row.get('triage_case_id')} projection skipped: embedding missing"
                 logger.warning("triage_case_projection_embedding_missing", error=message)
@@ -697,9 +693,7 @@ def _qdrant_filter(
         ("policy_version", policy_version),
     ]:
         if value:
-            conditions.append(
-                models.FieldCondition(key=field, match=models.MatchValue(value=value))
-            )
+            conditions.append(models.FieldCondition(key=field, match=models.MatchValue(value=value)))
     if not conditions:
         return None
     return models.Filter(must=conditions)
@@ -730,7 +724,9 @@ async def search_triage_cases(
     fallback_to_lexical = qdrant_client is None
 
     if prefer_same_repository is False:
-        warnings.append("prefer_same_repository is retained for compatibility and does not change ranking under the current search contract.")
+        warnings.append(
+            "prefer_same_repository is retained for compatibility and does not change ranking under the current search contract."
+        )
 
     if qdrant_client is not None:
         try:
@@ -920,8 +916,12 @@ async def _fetch_search_rows(
                 "policy_version": row["policy_version"],
                 "created_utc": row["created_utc"].isoformat() if row["created_utc"] else None,
                 "lifecycle_state": row.get("lifecycle_state") or "proposed",
-                "lifecycle_updated_utc": row["lifecycle_updated_utc"].isoformat() if row.get("lifecycle_updated_utc") else None,
-                "superseded_by_case_id": str(row["superseded_by_case_id"]) if row.get("superseded_by_case_id") else None,
+                "lifecycle_updated_utc": row["lifecycle_updated_utc"].isoformat()
+                if row.get("lifecycle_updated_utc")
+                else None,
+                "superseded_by_case_id": str(row["superseded_by_case_id"])
+                if row.get("superseded_by_case_id")
+                else None,
                 "outcome_status": outcome_status,
                 "outcome_confidence": _outcome_confidence(outcome_status),
                 "ranking_features": ranking_features,
@@ -1051,7 +1051,8 @@ async def get_triage_confusion_clusters(
         row
         for row in rows
         if row.get("corrected_request_kind")
-        or row.get("outcome_status") in {"corrected", "overridden_by_human", "execution_failed_after_route", "insufficient_context"}
+        or row.get("outcome_status")
+        in {"corrected", "overridden_by_human", "execution_failed_after_route", "insufficient_context"}
         or row.get("requires_clarification")
     ]
     base_data = {
@@ -1343,7 +1344,9 @@ async def get_triage_feedback_summary(
 
     top_misroutes = [
         {"from": from_kind, "to": to_kind, "count": count}
-        for (from_kind, to_kind), count in sorted(misroutes.items(), key=lambda item: (-item[1], item[0][0], item[0][1]))[:10]
+        for (from_kind, to_kind), count in sorted(
+            misroutes.items(), key=lambda item: (-item[1], item[0][0], item[0][1])
+        )[:10]
     ]
     latest_prompt_ts: dict[str, float] = {}
     for row in rows:

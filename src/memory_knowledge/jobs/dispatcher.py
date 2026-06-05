@@ -23,9 +23,7 @@ logger = structlog.get_logger()
 JOB_TYPE_REGISTRY: dict[str, Callable[..., Awaitable[WorkflowResult]]] = {}
 
 
-def register_job_type(
-    job_type: str, workflow_fn: Callable[..., Awaitable[WorkflowResult]]
-) -> None:
+def register_job_type(job_type: str, workflow_fn: Callable[..., Awaitable[WorkflowResult]]) -> None:
     """Register a workflow function for a given job type."""
     JOB_TYPE_REGISTRY[job_type] = workflow_fn
 
@@ -145,9 +143,7 @@ class JobDispatcher:
 
             await asyncio.sleep(self.poll_interval)
 
-    async def _dispatch_job(
-        self, row: Any, workflow_fn: Callable[..., Awaitable[WorkflowResult]]
-    ) -> None:
+    async def _dispatch_job(self, row: Any, workflow_fn: Callable[..., Awaitable[WorkflowResult]]) -> None:
         """Dispatch a single job with concurrency limiting."""
         async with self._semaphore:
             job_id = row["job_id"]

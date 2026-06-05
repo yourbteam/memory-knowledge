@@ -17,9 +17,36 @@ class MawfAdminPool:
         if "FROM core.reference_values rv" in query and "rt.internal_code = $1" in query:
             type_code, value_code = args
             values = {
-                ("TASK_STATUS", "active"): {"id": 10, "internal_code": "TASK_TODO", "mawf_code": "active", "display_name": "Active", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
-                ("PRIORITY", "PRIO_MEDIUM"): {"id": 11, "internal_code": "PRIO_MEDIUM", "mawf_code": None, "display_name": "Medium", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
-                ("ARTIFACT_ROLE", "task_ledger"): {"id": 12, "internal_code": "ARTIFACT_TASK_LEDGER", "mawf_code": "task_ledger", "display_name": "Task Ledger", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
+                ("TASK_STATUS", "active"): {
+                    "id": 10,
+                    "internal_code": "TASK_TODO",
+                    "mawf_code": "active",
+                    "display_name": "Active",
+                    "description": None,
+                    "sort_order": 10,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("PRIORITY", "PRIO_MEDIUM"): {
+                    "id": 11,
+                    "internal_code": "PRIO_MEDIUM",
+                    "mawf_code": None,
+                    "display_name": "Medium",
+                    "description": None,
+                    "sort_order": 10,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("ARTIFACT_ROLE", "task_ledger"): {
+                    "id": 12,
+                    "internal_code": "ARTIFACT_TASK_LEDGER",
+                    "mawf_code": "task_ledger",
+                    "display_name": "Task Ledger",
+                    "description": None,
+                    "sort_order": 10,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
             }
             return values.get((type_code, value_code))
         if "SELECT id FROM core.reference_types WHERE internal_code = $1" in query:
@@ -27,7 +54,16 @@ class MawfAdminPool:
         if "SELECT id FROM catalog.repositories WHERE mawf_repository_id = $1::uuid" in query:
             return {"id": 200}
         if "FROM planning.projects p" in query and "p.project_key = $1::uuid" in query:
-            return {"id": 100, "project_key": args[0], "mawf_project_key": "proj-a", "name": "Project A", "project_status_id": 1, "created_utc": None, "updated_utc": None, "status_code": "active"}
+            return {
+                "id": 100,
+                "project_key": args[0],
+                "mawf_project_key": "proj-a",
+                "name": "Project A",
+                "project_status_id": 1,
+                "created_utc": None,
+                "updated_utc": None,
+                "status_code": "active",
+            }
         if "WHERE external_task_id = $1" in query:
             return None
         if "UPDATE planning.tasks" in query and "WHERE mawf_task_id = $1" in query:
@@ -82,9 +118,36 @@ class ArtifactAdminPool:
         self.fetchrow_calls.append((query, args))
         if "FROM core.reference_values rv" in query and "rt.internal_code = $1" in query:
             values = {
-                ("ARTIFACT_ROLE", "task_ledger"): {"id": 12, "internal_code": "ARTIFACT_TASK_LEDGER", "mawf_code": "task_ledger", "display_name": "Task Ledger", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
-                ("ARTIFACT_ROLE", "workflow_ledger"): {"id": 13, "internal_code": "ARTIFACT_WORKFLOW_LEDGER", "mawf_code": "workflow_ledger", "display_name": "Workflow Ledger", "description": None, "sort_order": 20, "is_active": True, "is_terminal": False},
-                ("ARTIFACT_PERSIST_STATUS", "local_only"): {"id": 60, "internal_code": "ARTIFACT_LOCAL_ONLY", "mawf_code": "local_only", "display_name": "Local Only", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
+                ("ARTIFACT_ROLE", "task_ledger"): {
+                    "id": 12,
+                    "internal_code": "ARTIFACT_TASK_LEDGER",
+                    "mawf_code": "task_ledger",
+                    "display_name": "Task Ledger",
+                    "description": None,
+                    "sort_order": 10,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("ARTIFACT_ROLE", "workflow_ledger"): {
+                    "id": 13,
+                    "internal_code": "ARTIFACT_WORKFLOW_LEDGER",
+                    "mawf_code": "workflow_ledger",
+                    "display_name": "Workflow Ledger",
+                    "description": None,
+                    "sort_order": 20,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("ARTIFACT_PERSIST_STATUS", "local_only"): {
+                    "id": 60,
+                    "internal_code": "ARTIFACT_LOCAL_ONLY",
+                    "mawf_code": "local_only",
+                    "display_name": "Local Only",
+                    "description": None,
+                    "sort_order": 10,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
             }
             return values.get((args[0], args[1]))
         if "SELECT id, mawf_task_id" in query and "FROM planning.mawf_artifact_refs" in query:
@@ -155,16 +218,106 @@ class WorkflowRunsByUserPool:
             return {"id": args[0]} if self.user_exists else None
         if "FROM core.reference_values rv" in query and "rt.internal_code = $1" in query:
             values = {
-                ("WORKFLOW_RUN_STATUS", "RUN_PENDING"): {"id": 900, "internal_code": "RUN_PENDING", "mawf_code": "queued", "display_name": "Queued", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
-                ("WORKFLOW_RUN_STATUS", "queued"): {"id": 900, "internal_code": "RUN_PENDING", "mawf_code": "queued", "display_name": "Queued", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
-                ("WORKFLOW_RUN_STATUS", "RUN_RUNNING"): {"id": 901, "internal_code": "RUN_RUNNING", "mawf_code": "running", "display_name": "Running", "description": None, "sort_order": 30, "is_active": True, "is_terminal": False},
-                ("WORKFLOW_RUN_STATUS", "running"): {"id": 901, "internal_code": "RUN_RUNNING", "mawf_code": "running", "display_name": "Running", "description": None, "sort_order": 30, "is_active": True, "is_terminal": False},
-                ("WORKFLOW_RUN_STATUS", "RUN_WAITING_FOR_FEEDBACK"): {"id": 902, "internal_code": "RUN_WAITING_FOR_FEEDBACK", "mawf_code": "waiting_for_feedback", "display_name": "Waiting For Feedback", "description": None, "sort_order": 35, "is_active": True, "is_terminal": False},
-                ("WORKFLOW_RUN_STATUS", "waiting_for_feedback"): {"id": 902, "internal_code": "RUN_WAITING_FOR_FEEDBACK", "mawf_code": "waiting_for_feedback", "display_name": "Waiting For Feedback", "description": None, "sort_order": 35, "is_active": True, "is_terminal": False},
-                ("WORKFLOW_RUN_STATUS", "RUN_RESUME_PENDING"): {"id": 903, "internal_code": "RUN_RESUME_PENDING", "mawf_code": "resume_pending", "display_name": "Resume Pending", "description": None, "sort_order": 36, "is_active": True, "is_terminal": False},
-                ("WORKFLOW_RUN_STATUS", "resume_pending"): {"id": 903, "internal_code": "RUN_RESUME_PENDING", "mawf_code": "resume_pending", "display_name": "Resume Pending", "description": None, "sort_order": 36, "is_active": True, "is_terminal": False},
-                ("WORKFLOW_RUN_STATUS", "RUN_SUCCESS"): {"id": 904, "internal_code": "RUN_SUCCESS", "mawf_code": "completed", "display_name": "Success", "description": None, "sort_order": 80, "is_active": True, "is_terminal": True},
-                ("WORKFLOW_RUN_STATUS", "completed"): {"id": 904, "internal_code": "RUN_SUCCESS", "mawf_code": "completed", "display_name": "Success", "description": None, "sort_order": 80, "is_active": True, "is_terminal": True},
+                ("WORKFLOW_RUN_STATUS", "RUN_PENDING"): {
+                    "id": 900,
+                    "internal_code": "RUN_PENDING",
+                    "mawf_code": "queued",
+                    "display_name": "Queued",
+                    "description": None,
+                    "sort_order": 10,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("WORKFLOW_RUN_STATUS", "queued"): {
+                    "id": 900,
+                    "internal_code": "RUN_PENDING",
+                    "mawf_code": "queued",
+                    "display_name": "Queued",
+                    "description": None,
+                    "sort_order": 10,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("WORKFLOW_RUN_STATUS", "RUN_RUNNING"): {
+                    "id": 901,
+                    "internal_code": "RUN_RUNNING",
+                    "mawf_code": "running",
+                    "display_name": "Running",
+                    "description": None,
+                    "sort_order": 30,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("WORKFLOW_RUN_STATUS", "running"): {
+                    "id": 901,
+                    "internal_code": "RUN_RUNNING",
+                    "mawf_code": "running",
+                    "display_name": "Running",
+                    "description": None,
+                    "sort_order": 30,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("WORKFLOW_RUN_STATUS", "RUN_WAITING_FOR_FEEDBACK"): {
+                    "id": 902,
+                    "internal_code": "RUN_WAITING_FOR_FEEDBACK",
+                    "mawf_code": "waiting_for_feedback",
+                    "display_name": "Waiting For Feedback",
+                    "description": None,
+                    "sort_order": 35,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("WORKFLOW_RUN_STATUS", "waiting_for_feedback"): {
+                    "id": 902,
+                    "internal_code": "RUN_WAITING_FOR_FEEDBACK",
+                    "mawf_code": "waiting_for_feedback",
+                    "display_name": "Waiting For Feedback",
+                    "description": None,
+                    "sort_order": 35,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("WORKFLOW_RUN_STATUS", "RUN_RESUME_PENDING"): {
+                    "id": 903,
+                    "internal_code": "RUN_RESUME_PENDING",
+                    "mawf_code": "resume_pending",
+                    "display_name": "Resume Pending",
+                    "description": None,
+                    "sort_order": 36,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("WORKFLOW_RUN_STATUS", "resume_pending"): {
+                    "id": 903,
+                    "internal_code": "RUN_RESUME_PENDING",
+                    "mawf_code": "resume_pending",
+                    "display_name": "Resume Pending",
+                    "description": None,
+                    "sort_order": 36,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("WORKFLOW_RUN_STATUS", "RUN_SUCCESS"): {
+                    "id": 904,
+                    "internal_code": "RUN_SUCCESS",
+                    "mawf_code": "completed",
+                    "display_name": "Success",
+                    "description": None,
+                    "sort_order": 80,
+                    "is_active": True,
+                    "is_terminal": True,
+                },
+                ("WORKFLOW_RUN_STATUS", "completed"): {
+                    "id": 904,
+                    "internal_code": "RUN_SUCCESS",
+                    "mawf_code": "completed",
+                    "display_name": "Success",
+                    "description": None,
+                    "sort_order": 80,
+                    "is_active": True,
+                    "is_terminal": True,
+                },
             }
             return values.get((args[0], args[1]))
         return None
@@ -278,10 +431,7 @@ async def test_upsert_task_links_project_repository_before_task_write():
         title="Task A",
         task_ledger_ref="ledger://task-a",
     )
-    link_calls = [
-        call for call in pool.execute_calls
-        if "INSERT INTO planning.project_repositories" in call[0]
-    ]
+    link_calls = [call for call in pool.execute_calls if "INSERT INTO planning.project_repositories" in call[0]]
     assert link_calls
     assert link_calls[0][1] == (100, 200)
 
@@ -332,9 +482,7 @@ async def test_upsert_task_accepts_external_task_id_and_normalizes_blank():
         task_artifact_branch=" ",
     )
     assert not any("WHERE external_task_id = $1" in query for query, _ in blank_pool.fetchrow_calls)
-    blank_update_args = next(
-        args for query, args in blank_pool.fetchrow_calls if "UPDATE planning.tasks" in query
-    )
+    blank_update_args = next(args for query, args in blank_pool.fetchrow_calls if "UPDATE planning.tasks" in query)
     assert blank_update_args[9] is None
     assert blank_update_args[10] is None
 
@@ -391,7 +539,8 @@ async def test_upsert_artifact_ref_uses_artifact_key_for_conflict_identity():
     )
 
     update_query, update_args = [
-        call for call in pool.fetchrow_calls
+        call
+        for call in pool.fetchrow_calls
         if "UPDATE planning.mawf_artifact_refs" in call[0] and "AND artifact_key = $2" in call[0]
     ][0]
     assert "WHERE mawf_task_id = $1" in update_query
@@ -422,14 +571,13 @@ async def test_upsert_artifact_ref_keeps_omitted_artifact_key_null():
     )
 
     update_query, update_args = [
-        call for call in pool.fetchrow_calls
+        call
+        for call in pool.fetchrow_calls
         if "UPDATE planning.mawf_artifact_refs" in call[0] and "AND artifact_key IS NULL" in call[0]
     ][0]
     assert update_args[0] == "task-a"
     assert update_args[1] == 12
-    _, insert_args = [
-        call for call in pool.fetchrow_calls if "INSERT INTO planning.mawf_artifact_refs" in call[0]
-    ][0]
+    _, insert_args = [call for call in pool.fetchrow_calls if "INSERT INTO planning.mawf_artifact_refs" in call[0]][0]
     assert insert_args[1] is None
 
 
@@ -490,7 +638,8 @@ async def test_upsert_artifact_ref_retries_unique_race_by_updating_identity():
     )
 
     keyed_updates = [
-        call for call in pool.fetchrow_calls
+        call
+        for call in pool.fetchrow_calls
         if "UPDATE planning.mawf_artifact_refs" in call[0] and "AND artifact_key = $2" in call[0]
     ]
     assert len(keyed_updates) == 2
@@ -777,11 +926,56 @@ class LeaseAdminConn:
         self.fetchrow_calls.append((query, args))
         if "FROM core.reference_values rv" in query and "rt.internal_code = $1" in query:
             values = {
-                ("TASK_EXECUTION_LEASE_STATUS", "active"): {"id": 701, "internal_code": "LEASE_ACTIVE", "mawf_code": "active", "display_name": "Active", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
-                ("TASK_EXECUTION_LEASE_STATUS", "released"): {"id": 702, "internal_code": "LEASE_RELEASED", "mawf_code": "released", "display_name": "Released", "description": None, "sort_order": 20, "is_active": True, "is_terminal": True},
-                ("TASK_EXECUTION_LEASE_STATUS", "expired"): {"id": 703, "internal_code": "LEASE_EXPIRED", "mawf_code": "expired", "display_name": "Expired", "description": None, "sort_order": 30, "is_active": True, "is_terminal": True},
-                ("TASK_EXECUTION_LEASE_RELEASE_REASON", "completed"): {"id": 801, "internal_code": "LEASE_REASON_COMPLETED", "mawf_code": "completed", "display_name": "Completed", "description": None, "sort_order": 10, "is_active": True, "is_terminal": False},
-                ("TASK_EXECUTION_LEASE_RELEASE_REASON", "stale_reclaimed"): {"id": 806, "internal_code": "LEASE_REASON_STALE_RECLAIMED", "mawf_code": "stale_reclaimed", "display_name": "Stale Reclaimed", "description": None, "sort_order": 60, "is_active": True, "is_terminal": False},
+                ("TASK_EXECUTION_LEASE_STATUS", "active"): {
+                    "id": 701,
+                    "internal_code": "LEASE_ACTIVE",
+                    "mawf_code": "active",
+                    "display_name": "Active",
+                    "description": None,
+                    "sort_order": 10,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("TASK_EXECUTION_LEASE_STATUS", "released"): {
+                    "id": 702,
+                    "internal_code": "LEASE_RELEASED",
+                    "mawf_code": "released",
+                    "display_name": "Released",
+                    "description": None,
+                    "sort_order": 20,
+                    "is_active": True,
+                    "is_terminal": True,
+                },
+                ("TASK_EXECUTION_LEASE_STATUS", "expired"): {
+                    "id": 703,
+                    "internal_code": "LEASE_EXPIRED",
+                    "mawf_code": "expired",
+                    "display_name": "Expired",
+                    "description": None,
+                    "sort_order": 30,
+                    "is_active": True,
+                    "is_terminal": True,
+                },
+                ("TASK_EXECUTION_LEASE_RELEASE_REASON", "completed"): {
+                    "id": 801,
+                    "internal_code": "LEASE_REASON_COMPLETED",
+                    "mawf_code": "completed",
+                    "display_name": "Completed",
+                    "description": None,
+                    "sort_order": 10,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
+                ("TASK_EXECUTION_LEASE_RELEASE_REASON", "stale_reclaimed"): {
+                    "id": 806,
+                    "internal_code": "LEASE_REASON_STALE_RECLAIMED",
+                    "mawf_code": "stale_reclaimed",
+                    "display_name": "Stale Reclaimed",
+                    "description": None,
+                    "sort_order": 60,
+                    "is_active": True,
+                    "is_terminal": False,
+                },
             }
             return values.get((args[0], args[1]))
         if "FROM planning.tasks t" in query and "WHERE t.mawf_task_id = $1" in query:
@@ -819,7 +1013,8 @@ async def test_acquire_task_execution_lease_uses_transaction_task_lock_and_workf
     )
 
     task_queries = [
-        query for query, _ in pool.fetchrow_calls
+        query
+        for query, _ in pool.fetchrow_calls
         if "FROM planning.tasks t" in query and "WHERE t.mawf_task_id = $1" in query
     ]
     assert pool.transaction_entered is True
@@ -854,10 +1049,7 @@ async def test_acquire_task_execution_lease_denies_active_non_expired_owner():
 
     assert result["acquired"] is False
     assert result["current_lease"]["owner_instance_id"] == "worker-old"
-    assert not [
-        query for query, _ in pool.fetchrow_calls
-        if "INSERT INTO ops.mawf_task_execution_leases" in query
-    ]
+    assert not [query for query, _ in pool.fetchrow_calls if "INSERT INTO ops.mawf_task_execution_leases" in query]
 
 
 @pytest.mark.asyncio
@@ -891,9 +1083,9 @@ async def test_stale_reclaim_closes_old_lease_before_new_insert():
     assert result["acquired"] is True
     assert result["stale_reclaimed"] is True
     reclaim_updates = [
-        args for query, args in pool.execute_calls
-        if "UPDATE ops.mawf_task_execution_leases" in query
-        and "release_reason_value_id" in query
+        args
+        for query, args in pool.execute_calls
+        if "UPDATE ops.mawf_task_execution_leases" in query and "release_reason_value_id" in query
     ]
     assert reclaim_updates
     assert reclaim_updates[0][1:] == (703, 806)

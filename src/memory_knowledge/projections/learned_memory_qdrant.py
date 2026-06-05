@@ -40,16 +40,12 @@ async def embed_and_upsert_learned_record(
 
     await client.upsert(
         collection_name="learned_memory",
-        points=[
-            models.PointStruct(id=entity_key, vector=embedding, payload=payload)
-        ],
+        points=[models.PointStruct(id=entity_key, vector=embedding, payload=payload)],
     )
     logger.info("learned_record_embedded", entity_key=entity_key)
 
 
-async def deactivate_learned_record_point(
-    client: AsyncQdrantClient, entity_key: str
-) -> None:
+async def deactivate_learned_record_point(client: AsyncQdrantClient, entity_key: str) -> None:
     """Set is_active=False on a learned memory Qdrant point."""
     await client.set_payload(
         collection_name="learned_memory",

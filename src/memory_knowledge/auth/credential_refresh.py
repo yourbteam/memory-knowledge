@@ -7,6 +7,7 @@ Adapted from mcp-agents-workflow's credential_refresh.py. Provides:
 - Background refresh loop (daily at configurable UTC hour)
 - File locking for safe concurrent access to auth.json
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -20,7 +21,6 @@ import urllib.parse
 import urllib.request
 import urllib.error
 from datetime import datetime, timezone
-from typing import Any
 
 import structlog
 
@@ -34,6 +34,7 @@ _KV_SECRET_NAME = "cli-auth-codex"
 
 
 # ── File I/O helpers ──────────────────────────────────────────────────
+
 
 def _read_json_file(path: str) -> dict | None:
     path = os.path.expanduser(path)
@@ -75,9 +76,7 @@ def _atomic_write_text(path: str, data: str) -> None:
         raise
 
 
-def _locked_update_json(
-    path: str, fallback_data: dict, updater, label: str
-) -> tuple[bool, str | None]:
+def _locked_update_json(path: str, fallback_data: dict, updater, label: str) -> tuple[bool, str | None]:
     """Acquire file lock, re-read, apply updater, write atomically."""
     path = os.path.expanduser(path)
     lock_path = path + ".lock"
@@ -102,6 +101,7 @@ def _locked_update_json(
 
 # ── HTTP helper ───────────────────────────────────────────────────────
 
+
 class CredentialRefreshError(Exception):
     pass
 
@@ -110,6 +110,7 @@ async def _http_post_form(url: str, data: dict, retries: int = 3) -> dict:
     loop = asyncio.get_running_loop()
     for attempt in range(retries):
         try:
+
             def _do_request():
                 req = urllib.request.Request(
                     url,
@@ -125,16 +126,17 @@ async def _http_post_form(url: str, data: dict, retries: int = 3) -> dict:
             if 400 <= e.code < 500:
                 raise CredentialRefreshError(f"HTTP {e.code}: {body}")
             if attempt < retries - 1:
-                await asyncio.sleep(2 ** attempt)
+                await asyncio.sleep(2**attempt)
         except (urllib.error.URLError, OSError) as e:
             if attempt < retries - 1:
-                await asyncio.sleep(2 ** attempt)
+                await asyncio.sleep(2**attempt)
             else:
                 raise CredentialRefreshError(f"Network error: {e}")
     raise CredentialRefreshError("Max retries exceeded")
 
 
 # ── Codex token refresh ──────────────────────────────────────────────
+
 
 def parse_codex_last_refresh(path: str) -> datetime | None:
     data = _read_json_file(path)
@@ -175,11 +177,14 @@ async def refresh_codex_token(path: str) -> tuple[bool, str | None]:
         return False, "No refresh_token in Codex credentials"
 
     try:
-        resp = await _http_post_form(_CODEX_OAUTH_URL, {
-            "grant_type": "refresh_token",
-            "refresh_token": refresh_token,
-            "client_id": _CODEX_CLIENT_ID,
-        })
+        resp = await _http_post_form(
+            _CODEX_OAUTH_URL,
+            {
+                "grant_type": "refresh_token",
+                "refresh_token": refresh_token,
+                "client_id": _CODEX_CLIENT_ID,
+            },
+        )
     except CredentialRefreshError as e:
         return False, str(e)
 
@@ -208,6 +213,7 @@ async def refresh_codex_token(path: str) -> tuple[bool, str | None]:
 
 # ── Key Vault integration ────────────────────────────────────────────
 
+
 async def fetch_kv_secret(vault_name: str, secret_name: str) -> str | None:
     """Fetch a single secret value from Azure Key Vault. Returns None on failure."""
     if not _keyvault_available():
@@ -227,6 +233,7 @@ async def fetch_kv_secret(vault_name: str, secret_name: str) -> str | None:
             class _StaticTokenCredential:
                 def get_token(self, *scopes, **kwargs):
                     return AccessToken(kv_token, int(time.time()) + 3600)
+
                 def close(self):
                     pass
 
@@ -253,14 +260,13 @@ def _keyvault_available() -> bool:
     try:
         import azure.identity  # noqa: F401
         import azure.keyvault.secrets  # noqa: F401
+
         return True
     except ImportError:
         return False
 
 
-async def seed_from_keyvault(
-    vault_name: str, codex_auth_path: str, force: bool = False
-) -> str:
+async def seed_from_keyvault(vault_name: str, codex_auth_path: str, force: bool = False) -> str:
     """Pull Codex credentials from Azure Key Vault and write to local file.
 
     Returns status: "seeded", "skipped", or "error: ...".
@@ -282,6 +288,7 @@ async def seed_from_keyvault(
             class _StaticTokenCredential:
                 def get_token(self, *scopes, **kwargs):
                     return AccessToken(kv_token, int(time.time()) + 3600)
+
                 def close(self):
                     pass
 
@@ -427,6 +434,7 @@ async def writeback_to_keyvault(vault_name: str, codex_auth_path: str) -> str:
             class _StaticTokenCredential:
                 def get_token(self, *scopes, **kwargs):
                     return AccessToken(kv_token, int(time.time()) + 3600)
+
                 def close(self):
                     pass
 
@@ -450,6 +458,7 @@ async def writeback_to_keyvault(vault_name: str, codex_auth_path: str) -> str:
 
 
 # ── Background refresh manager ───────────────────────────────────────
+
 
 class CodexTokenManager:
     """Background manager that refreshes Codex tokens on a schedule.
@@ -485,9 +494,7 @@ class CodexTokenManager:
     async def start(self) -> None:
         """Start background refresh loops. Optionally seed from Key Vault."""
         if self.keyvault_name:
-            status = await seed_from_keyvault(
-                self.keyvault_name, self.codex_auth_path
-            )
+            status = await seed_from_keyvault(self.keyvault_name, self.codex_auth_path)
             logger.info("keyvault_seed_result", status=status)
 
         self._check_task = asyncio.create_task(self._check_loop())
@@ -515,9 +522,7 @@ class CodexTokenManager:
         while not self._stop_event.is_set():
             try:
                 # Check actual JWT expiry, not just file age
-                expires_soon = self._token_expires_within(
-                    self.codex_auth_path, buffer_seconds=600
-                )
+                expires_soon = self._token_expires_within(self.codex_auth_path, buffer_seconds=600)
                 if expires_soon:
                     logger.info("codex_token_expiring_soon", buffer_seconds=600)
                     await self._do_refresh()
@@ -532,9 +537,7 @@ class CodexTokenManager:
                 logger.error("codex_check_failed", error=str(e))
 
             try:
-                await asyncio.wait_for(
-                    self._stop_event.wait(), timeout=self.check_interval
-                )
+                await asyncio.wait_for(self._stop_event.wait(), timeout=self.check_interval)
                 break  # stop_event was set
             except asyncio.TimeoutError:
                 pass  # normal timeout, continue loop
@@ -545,16 +548,16 @@ class CodexTokenManager:
             now = datetime.now(timezone.utc)
             target = now.replace(
                 hour=self.daily_refresh_utc_hour,
-                minute=0, second=0, microsecond=0,
+                minute=0,
+                second=0,
+                microsecond=0,
             )
             if target <= now:
                 target = target + timedelta(days=1)
             wait_seconds = (target - now).total_seconds()
 
             try:
-                await asyncio.wait_for(
-                    self._stop_event.wait(), timeout=wait_seconds
-                )
+                await asyncio.wait_for(self._stop_event.wait(), timeout=wait_seconds)
                 break  # stop_event was set
             except asyncio.TimeoutError:
                 pass  # time to refresh
@@ -566,6 +569,7 @@ class CodexTokenManager:
     def _token_expires_within(auth_path: str, buffer_seconds: int = 600) -> bool:
         """Check if the access_token JWT expires within buffer_seconds."""
         import base64
+
         data = _read_json_file(auth_path)
         if not data:
             return True
@@ -599,9 +603,7 @@ class CodexTokenManager:
         if success:
             self._consecutive_failures = 0
             if self.writeback_enabled and self.keyvault_name:
-                wb_status = await writeback_to_keyvault(
-                    self.keyvault_name, self.codex_auth_path
-                )
+                wb_status = await writeback_to_keyvault(self.keyvault_name, self.codex_auth_path)
                 logger.info("keyvault_writeback_result", status=wb_status)
         else:
             self._consecutive_failures += 1
@@ -612,7 +614,5 @@ class CodexTokenManager:
             )
             # Try reseeding from KV on failure
             if self._consecutive_failures >= 2 and self.keyvault_name:
-                reseed_status = await seed_from_keyvault(
-                    self.keyvault_name, self.codex_auth_path, force=True
-                )
+                reseed_status = await seed_from_keyvault(self.keyvault_name, self.codex_auth_path, force=True)
                 logger.info("keyvault_reseed_on_failure", status=reseed_status)

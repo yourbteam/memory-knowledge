@@ -5,6 +5,7 @@ points via a filter on file_path. Without a file_path payload index, Qdrant
 rejects the filter (400) and every changed file is dropped (0 chunks written)
 while the run still "completes" — silently stalling incremental freshness.
 """
+
 import pytest
 
 from memory_knowledge.db import qdrant

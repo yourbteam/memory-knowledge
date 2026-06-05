@@ -11,13 +11,36 @@ class PlanningPool:
     async def fetchrow(self, query, *args):
         if "SELECT id FROM catalog.repositories WHERE repository_key = $1" in query:
             return {"id": 99}
-        if "FROM core.reference_values rv" in query and "WHERE rt.internal_code = $1 AND rv.internal_code = $2" in query:
+        if (
+            "FROM core.reference_values rv" in query
+            and "WHERE rt.internal_code = $1 AND rv.internal_code = $2" in query
+        ):
             type_code, value_code = args
             lookup = {
-                ("PROJECT_STATUS", "PROJ_ACTIVE"): {"id": 1, "internal_code": "PROJ_ACTIVE", "display_name": "Active", "is_terminal": False},
-                ("FEATURE_STATUS", "FEAT_IDEA"): {"id": 2, "internal_code": "FEAT_IDEA", "display_name": "Idea", "is_terminal": False},
-                ("TASK_STATUS", "TASK_TODO"): {"id": 3, "internal_code": "TASK_TODO", "display_name": "To Do", "is_terminal": False},
-                ("PRIORITY", "PRIO_MEDIUM"): {"id": 4, "internal_code": "PRIO_MEDIUM", "display_name": "Medium", "is_terminal": False},
+                ("PROJECT_STATUS", "PROJ_ACTIVE"): {
+                    "id": 1,
+                    "internal_code": "PROJ_ACTIVE",
+                    "display_name": "Active",
+                    "is_terminal": False,
+                },
+                ("FEATURE_STATUS", "FEAT_IDEA"): {
+                    "id": 2,
+                    "internal_code": "FEAT_IDEA",
+                    "display_name": "Idea",
+                    "is_terminal": False,
+                },
+                ("TASK_STATUS", "TASK_TODO"): {
+                    "id": 3,
+                    "internal_code": "TASK_TODO",
+                    "display_name": "To Do",
+                    "is_terminal": False,
+                },
+                ("PRIORITY", "PRIO_MEDIUM"): {
+                    "id": 4,
+                    "internal_code": "PRIO_MEDIUM",
+                    "display_name": "Medium",
+                    "is_terminal": False,
+                },
             }
             return lookup.get((type_code, value_code))
         return None
@@ -53,7 +76,9 @@ async def test_create_feature_tool_accepts_project_external_ref(monkeypatch, pla
         assert external_id == "proj-ext-1"
         return 20
 
-    async def fake_create_feature(pool, project_id, feature_status_id, priority_id, title, description=None, repository_keys=None):
+    async def fake_create_feature(
+        pool, project_id, feature_status_id, priority_id, title, description=None, repository_keys=None
+    ):
         assert project_id == 20
         return {"feature_id": 11, "feature_key": str(uuid.uuid4()), "repository_count": 1}
 
@@ -75,7 +100,9 @@ async def test_create_feature_tool_resolves_project(monkeypatch, planning_env):
         assert project_key == "proj-key"
         return 20
 
-    async def fake_create_feature(pool, project_id, feature_status_id, priority_id, title, description=None, repository_keys=None):
+    async def fake_create_feature(
+        pool, project_id, feature_status_id, priority_id, title, description=None, repository_keys=None
+    ):
         assert project_id == 20
         assert feature_status_id == 2
         assert priority_id == 4
@@ -101,7 +128,9 @@ async def test_create_task_tool_resolves_feature(monkeypatch, planning_env):
         assert feature_key == "feat-key"
         return {"feature_id": 30, "project_id": 20}
 
-    async def fake_create_task(pool, project_id, repository_id, feature_id, task_status_id, priority_id, title, description=None):
+    async def fake_create_task(
+        pool, project_id, repository_id, feature_id, task_status_id, priority_id, title, description=None
+    ):
         assert project_id == 20
         assert repository_id == 99
         assert feature_id == 30
@@ -112,7 +141,9 @@ async def test_create_task_tool_resolves_feature(monkeypatch, planning_env):
     monkeypatch.setattr(server._planning, "resolve_project_id", fake_resolve_project_id)
     monkeypatch.setattr(server._planning, "resolve_feature_context", fake_resolve_feature_context)
     monkeypatch.setattr(server._planning, "create_task", fake_create_task)
-    result = await server.create_task(project_key="proj-key", repository_key="repo-a", feature_key="feat-key", title="Task A")
+    result = await server.create_task(
+        project_key="proj-key", repository_key="repo-a", feature_key="feat-key", title="Task A"
+    )
     payload = json.loads(result)
     assert payload["status"] == "success"
     assert payload["data"]["task_id"] == 12
@@ -145,7 +176,9 @@ async def test_create_task_tool_allows_project_only_task(monkeypatch, planning_e
         assert project_key == "proj-key"
         return 20
 
-    async def fake_create_task(pool, project_id, repository_id, feature_id, task_status_id, priority_id, title, description=None):
+    async def fake_create_task(
+        pool, project_id, repository_id, feature_id, task_status_id, priority_id, title, description=None
+    ):
         assert project_id == 20
         assert repository_id == 99
         assert feature_id is None
@@ -171,14 +204,18 @@ async def test_create_task_tool_accepts_external_refs(monkeypatch, planning_env)
         assert external_id == "feat-ext-1"
         return {"feature_id": 30, "project_id": 20}
 
-    async def fake_create_task(pool, project_id, repository_id, feature_id, task_status_id, priority_id, title, description=None):
+    async def fake_create_task(
+        pool, project_id, repository_id, feature_id, task_status_id, priority_id, title, description=None
+    ):
         assert project_id == 20
         assert repository_id == 99
         assert feature_id == 30
         return {"task_id": 14, "task_key": str(uuid.uuid4()), "repository_id": 99}
 
     monkeypatch.setattr(server._planning, "resolve_project_id_by_external", fake_resolve_project_id_by_external)
-    monkeypatch.setattr(server._planning, "resolve_feature_context_by_external", fake_resolve_feature_context_by_external)
+    monkeypatch.setattr(
+        server._planning, "resolve_feature_context_by_external", fake_resolve_feature_context_by_external
+    )
     monkeypatch.setattr(server._planning, "create_task", fake_create_task)
     result = await server.create_task(
         project_external_system="clickup",
@@ -235,11 +272,26 @@ async def test_link_project_external_ref_tool(monkeypatch, planning_env):
         assert project_key == "proj-key"
         return 20
 
-    async def fake_create_external_link(pool, table_name, owner_column, owner_id, external_system, external_object_type, external_id, external_parent_id=None, external_url=None):
+    async def fake_create_external_link(
+        pool,
+        table_name,
+        owner_column,
+        owner_id,
+        external_system,
+        external_object_type,
+        external_id,
+        external_parent_id=None,
+        external_url=None,
+    ):
         assert table_name == "planning.project_external_links"
         assert owner_column == "project_id"
         assert owner_id == 20
-        return {"link_id": 1, "external_system": external_system, "external_object_type": external_object_type, "external_id": external_id}
+        return {
+            "link_id": 1,
+            "external_system": external_system,
+            "external_object_type": external_object_type,
+            "external_id": external_id,
+        }
 
     monkeypatch.setattr(server._planning, "resolve_project_id", fake_resolve_project_id)
     monkeypatch.setattr(server._planning, "create_external_link", fake_create_external_link)
@@ -294,7 +346,9 @@ async def test_remove_repository_from_project_tool(monkeypatch, planning_env):
 
 @pytest.mark.asyncio
 async def test_add_repository_to_feature_tool(monkeypatch, planning_env):
-    async def fake_resolve_feature_context(pool, feature_key=None, feature_external_system=None, feature_external_id=None):
+    async def fake_resolve_feature_context(
+        pool, feature_key=None, feature_external_system=None, feature_external_id=None
+    ):
         return {"feature_id": 30, "project_id": 20}
 
     calls = {"project_check": False, "feature_add": False}
@@ -320,7 +374,9 @@ async def test_add_repository_to_feature_tool(monkeypatch, planning_env):
 
 @pytest.mark.asyncio
 async def test_remove_repository_from_feature_tool(monkeypatch, planning_env):
-    async def fake_resolve_feature_context(pool, feature_key=None, feature_external_system=None, feature_external_id=None):
+    async def fake_resolve_feature_context(
+        pool, feature_key=None, feature_external_system=None, feature_external_id=None
+    ):
         return {"feature_id": 30, "project_id": 20}
 
     async def fake_remove_repository_from_feature(pool, feature_id, repository_id):
@@ -347,7 +403,9 @@ async def test_list_tasks_tool_accepts_feature_external_filter(monkeypatch, plan
         assert feature_id == 30
         return [{"task_key": "t1", "project_key": "proj-key"}]
 
-    monkeypatch.setattr(server._planning, "resolve_feature_context_by_external", fake_resolve_feature_context_by_external)
+    monkeypatch.setattr(
+        server._planning, "resolve_feature_context_by_external", fake_resolve_feature_context_by_external
+    )
     monkeypatch.setattr(server._planning, "list_tasks", fake_list_tasks)
     result = await server.list_tasks(
         feature_external_system="clickup",

@@ -5,6 +5,7 @@ enqueues an incremental ingestion job. The JobDispatcher (which has "ingestion"
 registered) is the sole executor, so enqueue is exactly-once. See
 docs/FRESHNESS_AND_MAINTENANCE_PLAN.md (Workstream A).
 """
+
 from __future__ import annotations
 
 import asyncio
@@ -96,7 +97,8 @@ class IngestionScheduler:
             except Exception as exc:
                 logger.warning(
                     "ingestion_scheduler_repo_error",
-                    repository_key=row["repository_key"], error=str(exc),
+                    repository_key=row["repository_key"],
+                    error=str(exc),
                 )
         logger.info("ingestion_scheduler_tick_complete", checked=len(rows), enqueued=enqueued)
 
@@ -137,7 +139,9 @@ class IngestionScheduler:
         if active is not None:
             logger.info(
                 "scheduler_skip_in_progress",
-                repository_key=rk, commit_sha=commit, job_id=str(active["job_id"]),
+                repository_key=rk,
+                commit_sha=commit,
+                job_id=str(active["job_id"]),
             )
             return False
 
@@ -145,7 +149,13 @@ class IngestionScheduler:
             pool, repository_key=rk, commit_sha=commit, branch_name=branch, tool_name=_TOOL
         )
         await create_job(
-            pool, uuid.uuid4(), "ingestion", _TOOL, rk, commit, branch,
+            pool,
+            uuid.uuid4(),
+            "ingestion",
+            _TOOL,
+            rk,
+            commit,
+            branch,
             job_params={"checkpoint": resume} if resume else None,
         )
         logger.info("ingestion_scheduled", repository_key=rk, branch=branch, commit_sha=commit)

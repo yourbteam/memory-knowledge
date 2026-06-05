@@ -133,10 +133,7 @@ class Settings(BaseSettings):
 
     def is_any_remote(self) -> bool:
         """True if any database is in remote mode."""
-        return any(
-            self.effective_mode(db) == "remote"
-            for db in ("pg", "qdrant", "neo4j")
-        )
+        return any(self.effective_mode(db) == "remote" for db in ("pg", "qdrant", "neo4j"))
 
 
 _settings: Settings | None = None

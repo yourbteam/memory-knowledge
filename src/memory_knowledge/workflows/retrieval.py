@@ -19,7 +19,7 @@ logger = structlog.get_logger()
 
 TOOL_NAME = "run_retrieval_workflow"
 
-from memory_knowledge.routing.prompt_feature_extractor import (
+from memory_knowledge.routing.prompt_feature_extractor import (  # noqa: E402
     extract_prompt_features,
     match_archetype,
 )
@@ -51,11 +51,13 @@ def classify_prompt(query: str) -> tuple[str, float]:
     if features.get("has_traversal_phrases"):
         return "impact_analysis", 1.0
     # Mixed when multiple keyword categories match
-    keyword_hits = sum([
-        features["has_impact_keywords"],
-        features["has_decision_keywords"],
-        features["has_pattern_keywords"],
-    ])
+    keyword_hits = sum(
+        [
+            features["has_impact_keywords"],
+            features["has_decision_keywords"],
+            features["has_pattern_keywords"],
+        ]
+    )
     if keyword_hits >= 2:
         return "mixed", 0.7
     if features["identifier_count"] > 0:
@@ -69,9 +71,7 @@ def classify_prompt(query: str) -> tuple[str, float]:
     return "conceptual_lookup", 0.5
 
 
-async def load_route_policy(
-    pool: asyncpg.Pool, prompt_class: str
-) -> dict[str, Any] | None:
+async def load_route_policy(pool: asyncpg.Pool, prompt_class: str) -> dict[str, Any] | None:
     row = await pool.fetchrow(
         "SELECT * FROM routing.route_policies WHERE prompt_class = $1 LIMIT 1",
         prompt_class,
@@ -79,9 +79,7 @@ async def load_route_policy(
     return dict(row) if row else None
 
 
-async def load_retrieval_surfaces(
-    pool: asyncpg.Pool, repository_id: int
-) -> list[dict[str, Any]]:
+async def load_retrieval_surfaces(pool: asyncpg.Pool, repository_id: int) -> list[dict[str, Any]]:
     rows = await pool.fetch(
         "SELECT * FROM catalog.retrieval_surfaces WHERE repository_id = $1",
         repository_id,
@@ -96,6 +94,7 @@ def _clean_query_for_fulltext(query: str) -> str:
     'image_created_at column' → 'image_created_at column' (snake_case kept — valid search term)
     """
     import re
+
     # Remove file paths (word/word.ext patterns) that break plainto_tsquery
     cleaned = re.sub(r"(?<!/)(?<!//)[\w]+(?:/[\w.]+)+", " ", query)
     return " ".join(cleaned.split())  # normalize whitespace
@@ -109,6 +108,7 @@ async def pg_fulltext_search(
 ) -> list[dict[str, Any]]:
     # Extract file paths from query for path-based matching
     import re
+
     file_paths = re.findall(r"(?<!/)(?<!//)[\w]+(?:/[\w.]+)+", query)
     search_text = _clean_query_for_fulltext(query)
 
@@ -476,12 +476,12 @@ async def assemble_context_bundle(
 # ── Auto-feedback heuristics ────────────────────────────────────────
 
 _CLASS_PROFILES: dict[str, dict[str, tuple[int, int]]] = {
-    "exact_lookup":      {"ideal_range": (1, 5)},
+    "exact_lookup": {"ideal_range": (1, 5)},
     "conceptual_lookup": {"ideal_range": (5, 20)},
-    "impact_analysis":   {"ideal_range": (3, 15)},
-    "pattern_search":    {"ideal_range": (5, 20)},
-    "decision_history":  {"ideal_range": (1, 10)},
-    "mixed":             {"ideal_range": (5, 20)},
+    "impact_analysis": {"ideal_range": (3, 15)},
+    "pattern_search": {"ideal_range": (5, 20)},
+    "decision_history": {"ideal_range": (1, 10)},
+    "mixed": {"ideal_range": (5, 20)},
 }
 
 
@@ -532,11 +532,7 @@ def compute_auto_feedback(
                 precision = min(precision + 0.10, 0.85)
 
     # ── expansion_needed ──
-    expansion_needed = (
-        result_count < low
-        and not fanout_used
-        and not graph_expansion_used
-    )
+    expansion_needed = result_count < low and not fanout_used and not graph_expansion_used
 
     # ── notes ──
     top_score = ranked_results[0]["combined_score"] if ranked_results else 0.0
@@ -564,7 +560,8 @@ async def _persist_auto_feedback(
     """Fire-and-forget wrapper — logs warnings on failure, never raises."""
     try:
         await record_route_feedback(
-            pool, route_execution_id,
+            pool,
+            route_execution_id,
             usefulness_score=feedback["usefulness_score"],
             precision_score=feedback["precision_score"],
             expansion_needed=feedback["expansion_needed"],
@@ -676,9 +673,7 @@ async def run(
         allow_graph = policy["allow_graph_expansion"] if policy else False
         semantic_assist = policy["semantic_assist_enabled"] if policy else False
         min_score = (
-            float(policy["confidence_threshold"])
-            if policy and policy.get("confidence_threshold") is not None
-            else None
+            float(policy["confidence_threshold"]) if policy and policy.get("confidence_threshold") is not None else None
         )
         logger.info("policy_loaded", policy_name=policy["policy_name"] if policy else "none")
 
@@ -696,8 +691,7 @@ async def run(
             if age > timedelta(hours=settings.max_surface_age_hours):
                 hours_old = int(age.total_seconds() / 3600)
                 freshness_warning = (
-                    f"Data is {hours_old} hours old. "
-                    f"Last ingestion: {active_surface['updated_utc'].isoformat()}"
+                    f"Data is {hours_old} hours old. Last ingestion: {active_surface['updated_utc'].isoformat()}"
                 )
                 logger.warning("stale_retrieval_surface", hours_old=hours_old)
 
@@ -753,16 +747,12 @@ async def run(
         graph_entity_keys: list[str] | None = None
         graph_expansion_used = False
         if allow_graph and neo4j_driver is not None:
-            all_entity_keys = [
-                str(r["entity_key"]) for r in pg_results
-            ] + [
+            all_entity_keys = [str(r["entity_key"]) for r in pg_results] + [
                 str(r["entity_key"]) for r in qdrant_results if r.get("entity_key")
             ]
             if all_entity_keys:
                 stores_queried.append("neo4j")
-                graph_results = await neo4j_graph_expansion(
-                    neo4j_driver, all_entity_keys[:20]
-                )
+                graph_results = await neo4j_graph_expansion(neo4j_driver, all_entity_keys[:20])
                 graph_entity_keys = [r["entity_key"] for r in graph_results]
                 graph_expansion_used = True
                 logger.info("graph_expansion_complete", expanded_count=len(graph_entity_keys))
@@ -777,7 +767,9 @@ async def run(
 
         # Step 6: Rerank and fuse (including summaries at 0.8x weight)
         ranked = rerank_results(
-            pg_results, qdrant_results, graph_entity_keys,
+            pg_results,
+            qdrant_results,
+            graph_entity_keys,
             summary_pg_results=summary_pg if summary_pg else None,
             summary_qdrant_results=summary_qdrant if summary_qdrant else None,
         )
@@ -785,7 +777,9 @@ async def run(
 
         # Step 7: Assemble context bundle with surface metadata
         context_bundle = await assemble_context_bundle(
-            pool, ranked, repository_key,
+            pool,
+            ranked,
+            repository_key,
             commit_sha=surface_commit_sha,
             branch_name=surface_branch_name,
         )
@@ -796,10 +790,8 @@ async def run(
             from memory_knowledge.workflows.context_assembly import (
                 _fetch_applicable_learned_rules,
             )
-            file_paths = list({
-                e["file_path"] for e in context_bundle.get("evidence", [])
-                if e.get("file_path")
-            })
+
+            file_paths = list({e["file_path"] for e in context_bundle.get("evidence", []) if e.get("file_path")})
             if file_paths:
                 scope_rows = await pool.fetch(
                     """
@@ -815,7 +807,10 @@ async def run(
                 scope_entity_keys = [str(r["entity_key"]) for r in scope_rows]
                 if scope_entity_keys:
                     learned_rules = await _fetch_applicable_learned_rules(
-                        pool, neo4j_driver, scope_entity_keys, repository_id,
+                        pool,
+                        neo4j_driver,
+                        scope_entity_keys,
+                        repository_id,
                     )
         except Exception:
             logger.warning("learned_rules_fetch_failed", exc_info=True)

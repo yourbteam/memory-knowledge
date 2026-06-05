@@ -44,9 +44,7 @@ async def run(
 
         # Run each check independently — failures don't abort the audit
         try:
-            entity_report = await check_entities(
-                pool, qdrant_client, neo4j_driver, repository_key
-            )
+            entity_report = await check_entities(pool, qdrant_client, neo4j_driver, repository_key)
             data["entity_check"] = entity_report.model_dump()
         except Exception as exc:
             data["entity_check"] = {"error": str(exc)}

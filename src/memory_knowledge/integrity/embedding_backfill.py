@@ -22,13 +22,19 @@ async def backfill_embeddings(
 ) -> dict[str, Any]:
     """Compare PG entities against Qdrant points and embed/upsert missing ones."""
     stats: dict[str, int] = {
-        "chunks_checked": 0, "chunks_backfilled": 0,
-        "summaries_checked": 0, "summaries_backfilled": 0,
-        "learned_checked": 0, "learned_backfilled": 0,
+        "chunks_checked": 0,
+        "chunks_backfilled": 0,
+        "summaries_checked": 0,
+        "summaries_backfilled": 0,
+        "learned_checked": 0,
+        "learned_backfilled": 0,
     }
 
     await _backfill_collection(
-        pool, qdrant_client, settings, repository_key,
+        pool,
+        qdrant_client,
+        settings,
+        repository_key,
         collection="code_chunks",
         text_query="""
             SELECT e.entity_key, c.content_text
@@ -37,11 +43,15 @@ async def backfill_embeddings(
             JOIN catalog.repositories r ON e.repository_id = r.id
             WHERE r.repository_key = $1
         """,
-        stats_prefix="chunks", stats=stats,
+        stats_prefix="chunks",
+        stats=stats,
     )
 
     await _backfill_collection(
-        pool, qdrant_client, settings, repository_key,
+        pool,
+        qdrant_client,
+        settings,
+        repository_key,
         collection="summary_units",
         text_query="""
             SELECT e.entity_key, s.summary_text AS content_text
@@ -50,11 +60,15 @@ async def backfill_embeddings(
             JOIN catalog.repositories r ON e.repository_id = r.id
             WHERE r.repository_key = $1
         """,
-        stats_prefix="summaries", stats=stats,
+        stats_prefix="summaries",
+        stats=stats,
     )
 
     await _backfill_collection(
-        pool, qdrant_client, settings, repository_key,
+        pool,
+        qdrant_client,
+        settings,
+        repository_key,
         collection="learned_memory",
         text_query="""
             SELECT e.entity_key, lr.body_text AS content_text
@@ -64,7 +78,8 @@ async def backfill_embeddings(
             WHERE r.repository_key = $1 AND lr.is_active = TRUE
               AND lr.verification_status = 'verified'
         """,
-        stats_prefix="learned", stats=stats,
+        stats_prefix="learned",
+        stats=stats,
     )
 
     logger.info("backfill_complete", stats=stats)
@@ -94,7 +109,8 @@ async def _backfill_collection(
         for i in range(0, len(entity_keys), BATCH_SIZE):
             batch_ids = entity_keys[i : i + BATCH_SIZE]
             found = await qdrant_client.retrieve(
-                collection_name=collection, ids=batch_ids,
+                collection_name=collection,
+                ids=batch_ids,
             )
             found_ids.update(str(p.id) for p in found)
     except Exception:

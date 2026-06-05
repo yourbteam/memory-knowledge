@@ -1,4 +1,5 @@
 """Tests for remote write and rebuild safety guards."""
+
 from memory_knowledge.config import Settings
 from memory_knowledge.guards import check_remote_write_guard
 

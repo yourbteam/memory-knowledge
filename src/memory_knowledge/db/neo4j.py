@@ -7,8 +7,18 @@ from memory_knowledge.config import Settings
 _driver: neo4j.AsyncDriver | None = None
 
 NODE_LABELS = [
-    "Repository", "Revision", "File", "Symbol", "LearnedRule", "WorkingSession",
-    "Module", "DbTable", "StoredProcedure", "ApiEndpoint", "Service", "Task",
+    "Repository",
+    "Revision",
+    "File",
+    "Symbol",
+    "LearnedRule",
+    "WorkingSession",
+    "Module",
+    "DbTable",
+    "StoredProcedure",
+    "ApiEndpoint",
+    "Service",
+    "Task",
 ]
 
 
@@ -32,10 +42,7 @@ async def init_neo4j(settings: Settings) -> neo4j.AsyncDriver:
 
 async def apply_constraints(driver: neo4j.AsyncDriver) -> None:
     for label in NODE_LABELS:
-        query = (
-            f"CREATE CONSTRAINT IF NOT EXISTS "
-            f"FOR (n:{label}) REQUIRE n.entity_key IS UNIQUE"
-        )
+        query = f"CREATE CONSTRAINT IF NOT EXISTS FOR (n:{label}) REQUIRE n.entity_key IS UNIQUE"
         await driver.execute_query(query)
 
 

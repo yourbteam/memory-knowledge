@@ -144,15 +144,11 @@ async def get_schema_capabilities(pool: asyncpg.Pool) -> dict[str, Any]:
 def _validate_lease_ttl(lease_ttl_seconds: int | None) -> int:
     ttl = lease_ttl_seconds or DEFAULT_LEASE_TTL_SECONDS
     if ttl < MIN_LEASE_TTL_SECONDS or ttl > MAX_LEASE_TTL_SECONDS:
-        raise ValueError(
-            f"lease_ttl_seconds must be between {MIN_LEASE_TTL_SECONDS} and {MAX_LEASE_TTL_SECONDS}"
-        )
+        raise ValueError(f"lease_ttl_seconds must be between {MIN_LEASE_TTL_SECONDS} and {MAX_LEASE_TTL_SECONDS}")
     return ttl
 
 
-async def resolve_reference_value(
-    pool: asyncpg.Pool, type_code: str, value_code: str
-) -> dict[str, Any]:
+async def resolve_reference_value(pool: asyncpg.Pool, type_code: str, value_code: str) -> dict[str, Any]:
     row = await pool.fetchrow(
         """
         SELECT rv.id, rv.internal_code, rv.mawf_code, rv.display_name,
@@ -230,7 +226,7 @@ async def list_catalog_values(
                rv.sort_order, rv.is_active
         FROM core.reference_values rv
         JOIN core.reference_types rt ON rt.id = rv.reference_type_id
-        WHERE {' AND '.join(clauses)}
+        WHERE {" AND ".join(clauses)}
         ORDER BY rt.id, rv.sort_order, rv.id
         """,
         *args,
@@ -282,9 +278,7 @@ async def upsert_catalog_value(
     return _catalog_value(data)
 
 
-async def deactivate_catalog_value(
-    pool: asyncpg.Pool, catalog_type_code: str, code: str
-) -> dict[str, Any]:
+async def deactivate_catalog_value(pool: asyncpg.Pool, catalog_type_code: str, code: str) -> dict[str, Any]:
     value = await resolve_reference_value(pool, catalog_type_code, code)
     type_row = await pool.fetchrow(
         "SELECT id FROM core.reference_types WHERE internal_code = $1",
@@ -460,7 +454,9 @@ async def _project_row(pool: asyncpg.Pool, project_id: str | None = None, projec
     )
 
 
-async def get_project(pool: asyncpg.Pool, project_id: str | None = None, project_key: str | None = None) -> dict[str, Any]:
+async def get_project(
+    pool: asyncpg.Pool, project_id: str | None = None, project_key: str | None = None
+) -> dict[str, Any]:
     row = await _project_row(pool, project_id, project_key)
     if row is None:
         raise ValueError("Project not found")
@@ -793,9 +789,7 @@ async def _internal_repository_id(pool: asyncpg.Pool, repository_id: str) -> int
     return row["id"]
 
 
-async def _ensure_project_repository_link(
-    pool: asyncpg.Pool, project_id: int, repository_id: int
-) -> None:
+async def _ensure_project_repository_link(pool: asyncpg.Pool, project_id: int, repository_id: int) -> None:
     await pool.execute(
         """
         INSERT INTO planning.project_repositories (project_id, repository_id)
@@ -839,9 +833,7 @@ async def upsert_task(
             task_id,
         )
         if existing is not None:
-            raise ValueError(
-                f"external_task_id already belongs to another task: {normalized_external_task_id}"
-            )
+            raise ValueError(f"external_task_id already belongs to another task: {normalized_external_task_id}")
     await _ensure_project_repository_link(pool, internal_project_id, internal_repository_id)
     row = await pool.fetchrow(
         """
@@ -1038,9 +1030,7 @@ async def upsert_workflow_run(
     if task_row is None:
         raise ValueError(f"Task not found: {task_id}")
 
-    status = await resolve_reference_value(
-        pool, "WORKFLOW_RUN_STATUS", _workflow_status_code(status_code)
-    )
+    status = await resolve_reference_value(pool, "WORKFLOW_RUN_STATUS", _workflow_status_code(status_code))
     context_json = {
         "mawf_workflow_run_id": workflow_run_id,
         "mawf_attempt": attempt,
@@ -1218,9 +1208,7 @@ async def list_workflow_runs_by_user(
 
     status_id = None
     if status_code:
-        status = await resolve_reference_value(
-            pool, "WORKFLOW_RUN_STATUS", _workflow_status_code(status_code)
-        )
+        status = await resolve_reference_value(pool, "WORKFLOW_RUN_STATUS", _workflow_status_code(status_code))
         status_id = status["id"]
 
     rows = await pool.fetch(
@@ -1274,14 +1262,10 @@ async def list_recoverable_workflow_runs(
     if capped_limit < 1:
         raise ValueError("limit must be greater than 0")
 
-    effective_status_codes = status_codes or [
-        _mawf_workflow_status(code) for code in ACTIVE_WORKFLOW_RUN_CODES
-    ]
+    effective_status_codes = status_codes or [_mawf_workflow_status(code) for code in ACTIVE_WORKFLOW_RUN_CODES]
     status_ids: list[int] = []
     for code in effective_status_codes:
-        status = await resolve_reference_value(
-            pool, "WORKFLOW_RUN_STATUS", _workflow_status_code(code)
-        )
+        status = await resolve_reference_value(pool, "WORKFLOW_RUN_STATUS", _workflow_status_code(code))
         status_ids.append(status["id"])
 
     updated_before_dt = _parse_iso_timestamp(updated_before, "updated_before")
@@ -1339,9 +1323,7 @@ async def set_workflow_run_status(
     iteration_count: int | None = None,
     error_text: str | None = None,
 ) -> dict[str, Any]:
-    status = await resolve_reference_value(
-        pool, "WORKFLOW_RUN_STATUS", _workflow_status_code(status_code)
-    )
+    status = await resolve_reference_value(pool, "WORKFLOW_RUN_STATUS", _workflow_status_code(status_code))
     row = await pool.fetchrow(
         """
         UPDATE ops.workflow_runs
@@ -1385,10 +1367,7 @@ def _lease(row: Any) -> dict[str, Any]:
     if isinstance(metadata, str):
         metadata = json.loads(metadata)
     workflow_run_uuid = row["workflow_run_uuid"]
-    workflow_run_id = (
-        context.get("mawf_workflow_run_id")
-        or (str(workflow_run_uuid) if workflow_run_uuid else None)
-    )
+    workflow_run_id = context.get("mawf_workflow_run_id") or (str(workflow_run_uuid) if workflow_run_uuid else None)
     release_reason_id = row["release_reason_value_id"]
     return {
         "id": str(row["id"]),
@@ -1421,7 +1400,7 @@ async def _resolve_lease_task(conn: asyncpg.Connection, task_id: str, *, lock: b
         SELECT t.id, t.mawf_task_id
         FROM planning.tasks t
         WHERE t.mawf_task_id = $1
-        {'FOR UPDATE' if lock else ''}
+        {"FOR UPDATE" if lock else ""}
         """,
         task_id,
     )
@@ -1526,15 +1505,9 @@ async def acquire_task_execution_lease(
     async with pool.acquire() as conn:
         async with conn.transaction():
             task_row = await _resolve_lease_task(conn, task_id, lock=True)
-            workflow_row = await _resolve_lease_workflow_run(
-                conn, workflow_run_id, task_row["id"]
-            )
-            active_status_id = await _reference_id(
-                conn, "TASK_EXECUTION_LEASE_STATUS", LEASE_STATUS_ACTIVE
-            )
-            expired_status_id = await _reference_id(
-                conn, "TASK_EXECUTION_LEASE_STATUS", LEASE_STATUS_EXPIRED
-            )
+            workflow_row = await _resolve_lease_workflow_run(conn, workflow_run_id, task_row["id"])
+            active_status_id = await _reference_id(conn, "TASK_EXECUTION_LEASE_STATUS", LEASE_STATUS_ACTIVE)
+            expired_status_id = await _reference_id(conn, "TASK_EXECUTION_LEASE_STATUS", LEASE_STATUS_EXPIRED)
             stale_reason_id = await _reference_id(
                 conn,
                 "TASK_EXECUTION_LEASE_RELEASE_REASON",
@@ -1654,12 +1627,8 @@ async def release_task_execution_lease(
     async with pool.acquire() as conn:
         async with conn.transaction():
             task_row = await _resolve_lease_task(conn, task_id, lock=True)
-            released_status_id = await _reference_id(
-                conn, "TASK_EXECUTION_LEASE_STATUS", LEASE_STATUS_RELEASED
-            )
-            reason_id = await _reference_id(
-                conn, "TASK_EXECUTION_LEASE_RELEASE_REASON", release_reason
-            )
+            released_status_id = await _reference_id(conn, "TASK_EXECUTION_LEASE_STATUS", LEASE_STATUS_RELEASED)
+            reason_id = await _reference_id(conn, "TASK_EXECUTION_LEASE_RELEASE_REASON", release_reason)
             current = await _fetch_open_lease_for_update(conn, task_row["id"])
             if current is not None:
                 if str(current["lease_token"]) != str(lease_token):

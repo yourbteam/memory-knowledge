@@ -10,9 +10,7 @@ from memory_knowledge.config import Settings
 logger = structlog.get_logger()
 
 
-async def retry_failed_jobs(
-    pool: asyncpg.Pool, repository_key: str, settings: Settings
-) -> list[uuid.UUID]:
+async def retry_failed_jobs(pool: asyncpg.Pool, repository_key: str, settings: Settings) -> list[uuid.UUID]:
     """Find failed jobs and mark them for retry. Returns list of re-queued job_ids."""
     rows = await pool.fetch(
         """
@@ -49,9 +47,7 @@ async def retry_failed_jobs(
     return requeued
 
 
-async def sweep_failed_jobs(
-    pool: asyncpg.Pool, settings: Settings
-) -> tuple[int, int]:
+async def sweep_failed_jobs(pool: asyncpg.Pool, settings: Settings) -> tuple[int, int]:
     """Dead-letter exhausted failures and promote retryable ones to 'retrying'.
 
     Set-based, backoff-gated, repo-agnostic. Returns (retried, dead_lettered).
