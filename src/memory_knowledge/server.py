@@ -1588,20 +1588,31 @@ async def ingest_qa_pairs(
     try:
         if not str(repository_key or "").strip() or not pairs:
             return WorkflowResult(
-                run_id=str(rid), tool_name="ingest_qa_pairs", status="error",
+                run_id=str(rid),
+                tool_name="ingest_qa_pairs",
+                status="error",
                 error="repository_key and non-empty pairs are required",
             ).model_dump_json()
         data = await _qa_memory.ingest_qa_pairs(
-            get_pg_pool(), get_settings(),
-            repository_key=repository_key, pairs=pairs, source=source or {},
+            get_pg_pool(),
+            get_settings(),
+            repository_key=repository_key,
+            pairs=pairs,
+            source=source or {},
             qdrant_client=get_qdrant_client(),
         )
         return WorkflowResult(
-            run_id=str(rid), tool_name="ingest_qa_pairs", status="success", data=data,
+            run_id=str(rid),
+            tool_name="ingest_qa_pairs",
+            status="success",
+            data=data,
         ).model_dump_json()
     except ValueError as exc:  # unknown repository_key
         return WorkflowResult(
-            run_id=str(rid), tool_name="ingest_qa_pairs", status="error", error=str(exc),
+            run_id=str(rid),
+            tool_name="ingest_qa_pairs",
+            status="error",
+            error=str(exc),
         ).model_dump_json()
     finally:
         clear_run_context()
@@ -1621,16 +1632,25 @@ async def search_qa_knowledge(
     try:
         if not str(question or "").strip():
             return WorkflowResult(
-                run_id=str(rid), tool_name="search_qa_knowledge", status="error",
+                run_id=str(rid),
+                tool_name="search_qa_knowledge",
+                status="error",
                 error="question is required",
             ).model_dump_json()
         data = await _qa_memory.search_qa_knowledge(
-            get_pg_pool(), get_settings(),
-            repository_key=repository_key, question=question, limit=limit,
-            min_similarity=min_similarity, qdrant_client=get_qdrant_client(),
+            get_pg_pool(),
+            get_settings(),
+            repository_key=repository_key,
+            question=question,
+            limit=limit,
+            min_similarity=min_similarity,
+            qdrant_client=get_qdrant_client(),
         )
         return WorkflowResult(
-            run_id=str(rid), tool_name="search_qa_knowledge", status="success", data=data,
+            run_id=str(rid),
+            tool_name="search_qa_knowledge",
+            status="success",
+            data=data,
         ).model_dump_json()
     finally:
         clear_run_context()

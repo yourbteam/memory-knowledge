@@ -60,17 +60,11 @@ def _qa_point_from_row(row: dict[str, Any], embedding: list[float]) -> models.Po
 
 def _qdrant_filter(*, repository_key: str, feature_key: str | None = None) -> models.Filter:
     conditions: list[models.FieldCondition] = [
-        models.FieldCondition(
-            key="repository_key", match=models.MatchValue(value=repository_key)
-        ),
+        models.FieldCondition(key="repository_key", match=models.MatchValue(value=repository_key)),
         models.FieldCondition(key="is_active", match=models.MatchValue(value=True)),
     ]
     if feature_key:
-        conditions.append(
-            models.FieldCondition(
-                key="feature_key", match=models.MatchValue(value=feature_key)
-            )
-        )
+        conditions.append(models.FieldCondition(key="feature_key", match=models.MatchValue(value=feature_key)))
     return models.Filter(must=conditions)
 
 
@@ -94,9 +88,7 @@ async def ingest_qa_pairs(
         q = (pair.get("question") or "").strip()
         a = (pair.get("answer") or "").strip()
         if not q or not a:
-            skipped.append(
-                {"question": pair.get("question"), "reason": "empty question/answer"}
-            )
+            skipped.append({"question": pair.get("question"), "reason": "empty question/answer"})
             continue
 
         eff_source = {**(source or {}), **(pair.get("source") or {})}
@@ -149,9 +141,7 @@ async def ingest_qa_pairs(
                     ],
                 )
             except Exception:
-                logger.warning(
-                    "qa_pair_embedding_upsert_failed", qa_pair_id=str(qid), exc_info=True
-                )
+                logger.warning("qa_pair_embedding_upsert_failed", qa_pair_id=str(qid), exc_info=True)
 
         qa_pair_ids.append(qid)
 

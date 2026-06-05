@@ -27,11 +27,7 @@ class FakeQdrant:
 
     async def query_points(self, **kwargs):
         self.query_calls.append(kwargs)
-        pts = [
-            SimpleNamespace(id=str(p.id), score=0.83, payload={})
-            for (_, points) in self.upserts
-            for p in points
-        ]
+        pts = [SimpleNamespace(id=str(p.id), score=0.83, payload={}) for (_, points) in self.upserts for p in points]
         return SimpleNamespace(points=pts)
 
 
@@ -112,11 +108,16 @@ SETTINGS = SimpleNamespace(embedding_dimensions=8)
 async def test_ingest_writes_row_and_upserts_point(patch_embed):
     pool, qdrant = QAPool(), FakeQdrant()
     res = await qa_memory.ingest_qa_pairs(
-        pool, SETTINGS,
+        pool,
+        SETTINGS,
         repository_key="taggable-server",
-        pairs=[{"question": "When a tag is deleted, what happens?",
+        pairs=[
+            {
+                "question": "When a tag is deleted, what happens?",
                 "answer": "Untagged, not deleted.",
-                "source": {"node_key": "analysis", "question_id": "q3"}}],
+                "source": {"node_key": "analysis", "question_id": "q3"},
+            }
+        ],
         source={"session_key": "S-99", "feature_key": "F-12", "task_key": "T-4821"},
         qdrant_client=qdrant,
     )
@@ -133,19 +134,23 @@ async def test_ingest_writes_row_and_upserts_point(patch_embed):
     assert points[0].payload["content_kind"] == "qa_pair"
     assert "task_key" not in points[0].payload  # PG-only
     stored_source = json.loads(pool.rows[qid]["source"])
-    assert stored_source == {"session_key": "S-99", "feature_key": "F-12",
-                             "task_key": "T-4821", "node_key": "analysis", "question_id": "q3"}
+    assert stored_source == {
+        "session_key": "S-99",
+        "feature_key": "F-12",
+        "task_key": "T-4821",
+        "node_key": "analysis",
+        "question_id": "q3",
+    }
 
 
 @pytest.mark.asyncio
 async def test_reingest_same_question_overwrites(patch_embed):
     pool, qdrant = QAPool(), FakeQdrant()
-    args = dict(repository_key="taggable-server",
-                source={"feature_key": "F-12"}, qdrant_client=qdrant)
-    r1 = await qa_memory.ingest_qa_pairs(
-        pool, SETTINGS, pairs=[{"question": "Q one?", "answer": "first"}], **args)
+    args = dict(repository_key="taggable-server", source={"feature_key": "F-12"}, qdrant_client=qdrant)
+    r1 = await qa_memory.ingest_qa_pairs(pool, SETTINGS, pairs=[{"question": "Q one?", "answer": "first"}], **args)
     r2 = await qa_memory.ingest_qa_pairs(
-        pool, SETTINGS, pairs=[{"question": "  q   ONE? ", "answer": "second"}], **args)
+        pool, SETTINGS, pairs=[{"question": "  q   ONE? ", "answer": "second"}], **args
+    )
     assert r1["qa_pair_ids"] == r2["qa_pair_ids"]  # same deterministic id
     assert len(pool.rows) == 1  # overwrite, not accumulate
     assert pool.rows[r2["qa_pair_ids"][0]]["answer"] == "second"
@@ -155,19 +160,28 @@ async def test_reingest_same_question_overwrites(patch_embed):
 async def test_unknown_repo_raises(patch_embed):
     with pytest.raises(ValueError, match="not found"):
         await qa_memory.ingest_qa_pairs(
-            QAPool(), SETTINGS, repository_key="nope",
-            pairs=[{"question": "q", "answer": "a"}], qdrant_client=FakeQdrant())
+            QAPool(),
+            SETTINGS,
+            repository_key="nope",
+            pairs=[{"question": "q", "answer": "a"}],
+            qdrant_client=FakeQdrant(),
+        )
 
 
 @pytest.mark.asyncio
 async def test_blank_qa_skipped(patch_embed):
     pool = QAPool()
     res = await qa_memory.ingest_qa_pairs(
-        pool, SETTINGS, repository_key="taggable-server",
-        pairs=[{"question": "", "answer": "x"},
-               {"question": "y", "answer": ""},
-               {"question": "real?", "answer": "yes"}],
-        qdrant_client=FakeQdrant())
+        pool,
+        SETTINGS,
+        repository_key="taggable-server",
+        pairs=[
+            {"question": "", "answer": "x"},
+            {"question": "y", "answer": ""},
+            {"question": "real?", "answer": "yes"},
+        ],
+        qdrant_client=FakeQdrant(),
+    )
     assert res["ingested"] == 1 and len(res["skipped"]) == 2
 
 
@@ -178,12 +192,20 @@ async def test_blank_qa_skipped(patch_embed):
 async def test_search_round_trip(patch_embed):
     pool, qdrant = QAPool(), FakeQdrant()
     await qa_memory.ingest_qa_pairs(
-        pool, SETTINGS, repository_key="taggable-server",
+        pool,
+        SETTINGS,
+        repository_key="taggable-server",
         pairs=[{"question": "When a tag is deleted, what happens?", "answer": "Untagged."}],
-        source={"session_key": "S-1"}, qdrant_client=qdrant)
+        source={"session_key": "S-1"},
+        qdrant_client=qdrant,
+    )
     res = await qa_memory.search_qa_knowledge(
-        pool, SETTINGS, repository_key="taggable-server",
-        question="If we remove a tag, are assets deleted?", qdrant_client=qdrant)
+        pool,
+        SETTINGS,
+        repository_key="taggable-server",
+        question="If we remove a tag, are assets deleted?",
+        qdrant_client=qdrant,
+    )
     assert res["advisory_only"] is True
     assert len(res["rows"]) == 1
     row = res["rows"][0]
@@ -194,8 +216,8 @@ async def test_search_round_trip(patch_embed):
 @pytest.mark.asyncio
 async def test_search_unknown_repo_returns_advisory_empty(patch_embed):
     res = await qa_memory.search_qa_knowledge(
-        QAPool(), SETTINGS, repository_key="nope", question="anything",
-        qdrant_client=FakeQdrant())
+        QAPool(), SETTINGS, repository_key="nope", question="anything", qdrant_client=FakeQdrant()
+    )
     assert res == {"advisory_only": True, "rows": [], "warnings": ["unknown repository"]}
 
 
@@ -203,12 +225,16 @@ async def test_search_unknown_repo_returns_advisory_empty(patch_embed):
 async def test_search_semantic_empty_does_not_lexically_fallback(patch_embed):
     pool, qdrant = QAPool(), EmptyQdrant()
     await qa_memory.ingest_qa_pairs(
-        pool, SETTINGS, repository_key="taggable-server",
-        pairs=[{"question": "stored q?", "answer": "stored a"}], qdrant_client=FakeQdrant())
+        pool,
+        SETTINGS,
+        repository_key="taggable-server",
+        pairs=[{"question": "stored q?", "answer": "stored a"}],
+        qdrant_client=FakeQdrant(),
+    )
     # semantic runs (qdrant not None) and returns nothing → empty, no lexical scan
     res = await qa_memory.search_qa_knowledge(
-        pool, SETTINGS, repository_key="taggable-server", question="unrelated",
-        qdrant_client=qdrant)
+        pool, SETTINGS, repository_key="taggable-server", question="unrelated", qdrant_client=qdrant
+    )
     assert res["rows"] == []
 
 
@@ -216,11 +242,15 @@ async def test_search_semantic_empty_does_not_lexically_fallback(patch_embed):
 async def test_search_lexical_fallback_when_qdrant_none(patch_embed):
     pool = QAPool()
     await qa_memory.ingest_qa_pairs(
-        pool, SETTINGS, repository_key="taggable-server",
-        pairs=[{"question": "stored q?", "answer": "stored a"}], qdrant_client=FakeQdrant())
+        pool,
+        SETTINGS,
+        repository_key="taggable-server",
+        pairs=[{"question": "stored q?", "answer": "stored a"}],
+        qdrant_client=FakeQdrant(),
+    )
     res = await qa_memory.search_qa_knowledge(
-        pool, SETTINGS, repository_key="taggable-server", question="stored",
-        qdrant_client=None)  # forces lexical path
+        pool, SETTINGS, repository_key="taggable-server", question="stored", qdrant_client=None
+    )  # forces lexical path
     assert len(res["rows"]) == 1 and res["rows"][0]["answer"] == "stored a"
     assert "lexical fallback" in " ".join(res["warnings"])
 
@@ -256,17 +286,15 @@ def qa_env(monkeypatch):
 @pytest.mark.asyncio
 async def test_tool_ingest_success(qa_env):
     result = await server.ingest_qa_pairs(
-        repository_key="taggable-server",
-        pairs=[{"question": "q?", "answer": "a"}],
-        source={"session_key": "S-1"})
+        repository_key="taggable-server", pairs=[{"question": "q?", "answer": "a"}], source={"session_key": "S-1"}
+    )
     payload = json.loads(result)
     assert payload["status"] == "success" and payload["data"]["ingested"] == 1
 
 
 @pytest.mark.asyncio
 async def test_tool_ingest_unknown_repo_is_error(qa_env):
-    result = await server.ingest_qa_pairs(
-        repository_key="missing", pairs=[{"question": "q?", "answer": "a"}])
+    result = await server.ingest_qa_pairs(repository_key="missing", pairs=[{"question": "q?", "answer": "a"}])
     payload = json.loads(result)
     assert payload["status"] == "error" and "not found" in payload["error"]
 
@@ -274,8 +302,7 @@ async def test_tool_ingest_unknown_repo_is_error(qa_env):
 @pytest.mark.asyncio
 async def test_tool_ingest_honors_write_guard(qa_env, monkeypatch):
     monkeypatch.setattr(server, "check_remote_write_guard", lambda settings, tool_name: FakeGuard())
-    result = await server.ingest_qa_pairs(
-        repository_key="taggable-server", pairs=[{"question": "q?", "answer": "a"}])
+    result = await server.ingest_qa_pairs(repository_key="taggable-server", pairs=[{"question": "q?", "answer": "a"}])
     assert json.loads(result)["status"] == "blocked"
 
 
