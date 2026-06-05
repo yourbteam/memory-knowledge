@@ -14,6 +14,7 @@ COLLECTIONS = [
     "learned_memory",
     "routing_archetypes",
     "triage_cases",
+    "qa_pairs",
 ]
 
 

@@ -34,3 +34,11 @@ class LearnedMemoryPayload(BaseModel):
     scope_entity_key: str
     is_active: bool
     content_kind: str = "learned_rule"
+
+
+class QAPairPayload(BaseModel):
+    qa_pair_id: str
+    repository_key: str
+    feature_key: str | None = None
+    is_active: bool
+    content_kind: str = "qa_pair"
