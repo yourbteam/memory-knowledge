@@ -95,8 +95,9 @@ az webapp config appsettings set --name memory-knowledge --resource-group workfl
   NEO4J_PASSWORD="@Microsoft.KeyVault(VaultName=hrness;SecretName=mk-neo4j-password)" \
   GENERATE_SUMMARIES=false \
   MCP_API_KEY="@Microsoft.KeyVault(VaultName=hrness;SecretName=memory-knowledge-mcp-api-key)" \
-  EMBEDDING_MODEL=text-embedding-3-small \
-  EMBEDDING_DIMENSIONS=1536 \
+  EMBEDDING_PROVIDER=local \
+  EMBEDDING_MODEL=BAAI/bge-base-en-v1.5 \
+  EMBEDDING_DIMENSIONS=768 \
   SUPPORTED_LANGUAGES='["python","csharp","sql","typescript","php"]' \
   MAX_IMPORT_SIZE_MB=200 \
   ENVIRONMENT=production \
@@ -107,6 +108,13 @@ az webapp config appsettings set --name memory-knowledge --resource-group workfl
   WEBSITE_HEALTHCHECK_MAXPINGFAILURES=5 \
   WEBSITE_HTTPLOGGING_RETENTION_DAYS=3
 ```
+
+**Embeddings are self-hosted (`EMBEDDING_PROVIDER=local`, `BAAI/bge-base-en-v1.5`, 768 dims).**
+`EMBEDDING_DIMENSIONS` MUST equal the existing Qdrant collections' vector size (768). On startup
+`db/qdrant.ensure_collections` fails loud (`RuntimeError`) if they differ, so a wrong value here
+takes the app down on boot. Changing dimensions requires a full re-embed
+(`integrity/reembed_collections.py`). (Earlier revisions of this doc listed
+`text-embedding-3-small`/1536 — stale; the live app and collections are bge-base/768.)
 
 ## Step 7: Configure Web App Settings
 
