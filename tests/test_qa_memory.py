@@ -6,6 +6,7 @@ import uuid
 from types import SimpleNamespace
 
 import pytest
+from structlog.testing import capture_logs
 
 from memory_knowledge import qa_memory
 from memory_knowledge import server
@@ -98,7 +99,7 @@ def patch_embed(monkeypatch):
     monkeypatch.setattr("memory_knowledge.qa_memory.embed_single", _embed)
 
 
-SETTINGS = SimpleNamespace(embedding_dimensions=8)
+SETTINGS = SimpleNamespace(embedding_dimensions=8, qa_search_min_similarity=0.45)
 
 
 # --- Module-level: ingest -------------------------------------------------------
@@ -222,7 +223,7 @@ async def test_search_unknown_repo_returns_advisory_empty(patch_embed):
 
 
 @pytest.mark.asyncio
-async def test_search_semantic_empty_does_not_lexically_fallback(patch_embed):
+async def test_search_semantic_empty_falls_back_to_lexical(patch_embed):
     pool, qdrant = QAPool(), EmptyQdrant()
     await qa_memory.ingest_qa_pairs(
         pool,
@@ -231,11 +232,59 @@ async def test_search_semantic_empty_does_not_lexically_fallback(patch_embed):
         pairs=[{"question": "stored q?", "answer": "stored a"}],
         qdrant_client=FakeQdrant(),
     )
-    # semantic runs (qdrant not None) and returns nothing → empty, no lexical scan
+    # semantic runs (qdrant not None) and returns nothing → lexical fallback kicks in (Step 2)
     res = await qa_memory.search_qa_knowledge(
-        pool, SETTINGS, repository_key="taggable-server", question="unrelated", qdrant_client=qdrant
+        pool, SETTINGS, repository_key="taggable-server", question="stored", qdrant_client=qdrant
     )
+    assert len(res["rows"]) == 1 and res["rows"][0]["answer"] == "stored a"
+    assert "lexical fallback" in " ".join(res["warnings"])
+
+
+@pytest.mark.asyncio
+async def test_search_threshold_default_and_override(patch_embed):
+    pool, qdrant = QAPool(), FakeQdrant()
+    await qa_memory.ingest_qa_pairs(
+        pool,
+        SETTINGS,
+        repository_key="taggable-server",
+        pairs=[{"question": "q?", "answer": "a"}],
+        qdrant_client=qdrant,
+    )
+    # default param (0.45) reaches query_points
+    await qa_memory.search_qa_knowledge(
+        pool, SETTINGS, repository_key="taggable-server", question="q", qdrant_client=qdrant
+    )
+    assert qdrant.query_calls[-1]["score_threshold"] == 0.45
+    # explicit override is forwarded
+    await qa_memory.search_qa_knowledge(
+        pool,
+        SETTINGS,
+        repository_key="taggable-server",
+        question="q",
+        min_similarity=0.9,
+        qdrant_client=qdrant,
+    )
+    assert qdrant.query_calls[-1]["score_threshold"] == 0.9
+
+
+@pytest.mark.asyncio
+async def test_search_logs_empty_result(patch_embed):
+    # No rows ingested → semantic empty → lexical empty → empty result, but the
+    # qa_search_done event must still fire with repository_key/returned/lexical_used (R4).
+    pool = QAPool()
+    with capture_logs() as logs:
+        res = await qa_memory.search_qa_knowledge(
+            pool,
+            SETTINGS,
+            repository_key="taggable-server",
+            question="nothing here",
+            qdrant_client=EmptyQdrant(),
+        )
     assert res["rows"] == []
+    done = [e for e in logs if e.get("event") == "qa_search_done"]
+    assert done, "expected a qa_search_done log event"
+    assert done[-1]["repository_key"] == "taggable-server"
+    assert done[-1]["returned"] == 0 and "lexical_used" in done[-1]
 
 
 @pytest.mark.asyncio
@@ -317,3 +366,15 @@ async def test_tool_search_rejects_empty_question(qa_env):
     result = await server.search_qa_knowledge(repository_key="taggable-server", question="   ")
     payload = json.loads(result)
     assert payload["status"] == "error" and "question is required" in payload["error"]
+
+
+@pytest.mark.asyncio
+async def test_tool_search_resolves_threshold_from_settings(qa_env):
+    # Step 3c / R7: the server tool resolves min_similarity None → settings value (the
+    # deployed path), and an explicit arg overrides it.
+    pool, qdrant = qa_env
+    await server.ingest_qa_pairs(repository_key="taggable-server", pairs=[{"question": "q?", "answer": "a"}])
+    await server.search_qa_knowledge(repository_key="taggable-server", question="q")
+    assert qdrant.query_calls[-1]["score_threshold"] == SETTINGS.qa_search_min_similarity
+    await server.search_qa_knowledge(repository_key="taggable-server", question="q", min_similarity=0.9)
+    assert qdrant.query_calls[-1]["score_threshold"] == 0.9

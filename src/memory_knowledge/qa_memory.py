@@ -77,6 +77,7 @@ async def ingest_qa_pairs(
     source: dict[str, Any] | None = None,
     qdrant_client: AsyncQdrantClient | None = None,
 ) -> dict[str, Any]:
+    logger.info("qa_ingest_start", repository_key=repository_key, pairs=len(pairs))
     repository_id = await _resolve_repository_id(pool, repository_key)
     if repository_id is None:
         raise ValueError(f"Repository '{repository_key}' not found")
@@ -145,6 +146,12 @@ async def ingest_qa_pairs(
 
         qa_pair_ids.append(qid)
 
+    logger.info(
+        "qa_ingest_done",
+        repository_key=repository_key,
+        ingested=len(qa_pair_ids),
+        skipped=len(skipped),
+    )
     return {
         "ingested": len(qa_pair_ids),
         "qa_pair_ids": [str(x) for x in qa_pair_ids],
@@ -159,12 +166,13 @@ async def search_qa_knowledge(
     repository_key: str,
     question: str,
     limit: int = 5,
-    min_similarity: float = 0.65,
+    min_similarity: float = 0.45,
     qdrant_client: AsyncQdrantClient | None = None,
 ) -> dict[str, Any]:
     warnings: list[str] = []
     repository_id = await _resolve_repository_id(pool, repository_key)
     if repository_id is None:
+        logger.info("qa_search_done", repository_key=repository_key, returned=0, reason="unknown_repository")
         return {"advisory_only": True, "rows": [], "warnings": ["unknown repository"]}
 
     candidates: list[tuple[str, float]] = []
@@ -189,9 +197,13 @@ async def search_qa_knowledge(
     else:
         warnings.append("Semantic retrieval unavailable; using lexical fallback.")
 
-    # Semantic ran and found nothing → return empty (matches search_triage_cases:762-768).
+    # Semantic ran but nothing cleared the threshold → try lexical before giving up.
+    # An exact/overlapping question still matches via full-text even when the embedding
+    # similarity is below min_similarity.
+    semantic_hits = len(candidates)
     if qdrant_client is not None and not fallback_to_lexical and not candidates:
-        return {"advisory_only": True, "rows": [], "warnings": warnings}
+        fallback_to_lexical = True
+        warnings.append("No semantic matches above threshold; using lexical fallback.")
 
     if fallback_to_lexical:
         lex = await pool.fetch(
@@ -211,6 +223,14 @@ async def search_qa_knowledge(
         candidates = [(str(r["qa_pair_id"]), float(r["score"])) for r in lex]
 
     if not candidates:
+        logger.info(
+            "qa_search_done",
+            repository_key=repository_key,
+            question_len=len(question),
+            semantic_hits=semantic_hits,
+            lexical_used=fallback_to_lexical,
+            returned=0,
+        )
         return {"advisory_only": True, "rows": [], "warnings": warnings}
 
     score_by_id = {cid: score for cid, score in candidates}
@@ -238,4 +258,13 @@ async def search_qa_knowledge(
             }
         )
     rows.sort(key=lambda x: x["score"], reverse=True)  # PG = ANY() does not preserve order
-    return {"advisory_only": True, "rows": rows[:limit], "warnings": warnings}
+    result_rows = rows[:limit]
+    logger.info(
+        "qa_search_done",
+        repository_key=repository_key,
+        question_len=len(question),
+        semantic_hits=semantic_hits,
+        lexical_used=fallback_to_lexical,
+        returned=len(result_rows),
+    )
+    return {"advisory_only": True, "rows": result_rows, "warnings": warnings}

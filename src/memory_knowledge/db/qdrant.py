@@ -2,9 +2,12 @@ from __future__ import annotations
 
 from typing import Any
 
+import structlog
 from qdrant_client import AsyncQdrantClient, models
 
 from memory_knowledge.config import Settings
+
+logger = structlog.get_logger()
 
 _client: AsyncQdrantClient | None = None
 
@@ -28,6 +31,24 @@ async def init_qdrant(settings: Settings) -> AsyncQdrantClient:
     return _client
 
 
+def _assert_collection_dims(info: Any, name: str, configured: int) -> None:
+    """Fail loud if an existing collection's vector size != configured dimensions.
+
+    A mismatch (e.g. EMBEDDING_DIMENSIONS changed without a re-embed) silently breaks
+    search; surface it at startup instead. Unknown/named-vector shapes are skipped.
+    """
+    vectors = info.config.params.vectors
+    size = getattr(vectors, "size", None)
+    if size is None or size == configured:
+        return
+    logger.error("qdrant_collection_dim_mismatch", collection=name, stored=size, configured=configured)
+    raise RuntimeError(
+        f"Qdrant collection '{name}' has vector size {size} but EMBEDDING_DIMENSIONS={configured}. "
+        "Search will mismatch. Re-embed with integrity/reembed_collections.py, or restore "
+        "EMBEDDING_DIMENSIONS to the collection's size."
+    )
+
+
 async def ensure_collections(client: AsyncQdrantClient, settings: Settings) -> None:
     existing = await client.get_collections()
     existing_names = {c.name for c in existing.collections}
@@ -41,6 +62,9 @@ async def ensure_collections(client: AsyncQdrantClient, settings: Settings) -> N
                     distance=models.Distance.COSINE,
                 ),
             )
+        else:
+            # Existing collection: guard against a silent dimension mismatch.
+            _assert_collection_dims(await client.get_collection(name), name, settings.embedding_dimensions)
 
     # Ensure payload indexes for filtered queries
     for name in COLLECTIONS:

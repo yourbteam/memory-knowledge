@@ -60,6 +60,10 @@ class Settings(BaseSettings):
     completion_model: str = "gpt-4o"
     max_completion_tokens: int = 4096
 
+    # Advisory Q&A retrieval: minimum cosine similarity to surface a suggestion.
+    # Measured intra-repo near-duplicate scores are ~0.49–0.60; 0.65 over-filtered.
+    qa_search_min_similarity: float = 0.45
+
     # Ingestion
     repo_clone_base_path: str = "/tmp/memory-knowledge/repos"
     generate_summaries: bool = True

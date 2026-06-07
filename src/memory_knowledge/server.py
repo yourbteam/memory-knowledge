@@ -1624,7 +1624,7 @@ async def search_qa_knowledge(
     repository_key: str,
     question: str,
     limit: int = 5,
-    min_similarity: float = 0.65,
+    min_similarity: float | None = None,
     correlation_id: str | None = None,
 ) -> str:
     rid = new_run_id()
@@ -1637,13 +1637,14 @@ async def search_qa_knowledge(
                 status="error",
                 error="question is required",
             ).model_dump_json()
+        settings = get_settings()
         data = await _qa_memory.search_qa_knowledge(
             get_pg_pool(),
-            get_settings(),
+            settings,
             repository_key=repository_key,
             question=question,
             limit=limit,
-            min_similarity=min_similarity,
+            min_similarity=(min_similarity if min_similarity is not None else settings.qa_search_min_similarity),
             qdrant_client=get_qdrant_client(),
         )
         return WorkflowResult(
