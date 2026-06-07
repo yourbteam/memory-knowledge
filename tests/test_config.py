@@ -1,4 +1,28 @@
+import pytest
+
 from memory_knowledge.config import Settings, get_settings, init_settings
+
+
+@pytest.fixture(autouse=True)
+def _isolate_dotenv(monkeypatch):
+    """Isolate these tests from the developer's on-disk .env.
+
+    Settings has ``env_file=".env"``, so a populated local .env (DATA_MODE=remote,
+    QDRANT_API_KEY=<jwt>, ...) would leak into Settings() and break the default/explicit
+    assertions below. Disable file loading; explicit ``monkeypatch.setenv`` values (real
+    os.environ) still apply, so each test controls exactly what it sets.
+    """
+    monkeypatch.setitem(Settings.model_config, "env_file", None)
+    for leaking in (
+        "DATA_MODE",
+        "PG_MODE",
+        "QDRANT_MODE",
+        "NEO4J_MODE",
+        "QDRANT_API_KEY",
+        "AUTH_MODE",
+        "OPENAI_API_KEY",
+    ):
+        monkeypatch.delenv(leaking, raising=False)
 
 
 def _set_base_env(monkeypatch):
