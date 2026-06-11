@@ -14,8 +14,20 @@ Legend: ✅ success · ⛔ blocked (needs you) · ⏳ in progress
 
 <!-- newest entries on top -->
 
-### ⏳ 2026-06-11 — neocurrency-dashboard onboarding (local → remote import)
+### ⛔ 2026-06-11 — neocurrency-dashboard onboarding: BLOCKED, needs your decision
 
-Autonomous run in progress: local ingestion → export → register remote → import to
-remote Postgres → rebuild Qdrant/Neo4j → verify. This entry will be updated to ✅ with
-the final counts the moment the **remote import** completes successfully.
+Local side is **done**: clean ingestion completed (10,184 chunks / 5,396 summaries /
+4,384 symbols / 1,012 files), exported to JSONL (85.9 MB / 49,741 rows), and the repo is
+registered on remote.
+
+**Blocker:** the remote `import_repo_memory_tool` can't onboard a *new* repo — its
+repositories insert is a stale 3-column `INSERT … ON CONFLICT`, but post-`016` the
+catalog requires `mawf_repository_id`/`status_id` (NOT NULL, no default), which Postgres
+checks *before* the conflict resolves → the import errors. I wrote the fix
+(`export_import.py` resolves the pre-registered repo) and built a remote image
+(`neo-import-20260611-223102`), but **deploying new code to prod was correctly gated** —
+it's beyond the "remote import" autonomy and your per-change-approval rule.
+
+**Needs you:** approve the prod deploy of the bundled bug fixes (NUL-strip, dispatcher
+retry, import-repo-resolve), or pick the no-deploy client-side-import alternative. Details
+in the session.
