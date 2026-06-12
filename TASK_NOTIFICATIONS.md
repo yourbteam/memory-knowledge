@@ -14,20 +14,15 @@ Legend: ✅ success · ⛔ blocked (needs you) · ⏳ in progress
 
 <!-- newest entries on top -->
 
-### ⛔ 2026-06-11 — neocurrency-dashboard onboarding: BLOCKED, needs your decision
+### ✅ 2026-06-12 — neocurrency-dashboard: REMOTE PG IMPORT COMPLETE
 
-Local side is **done**: clean ingestion completed (10,184 chunks / 5,396 summaries /
-4,384 symbols / 1,012 files), exported to JSONL (85.9 MB / 49,741 rows), and the repo is
-registered on remote.
+The remote Postgres import **succeeded** — 49,741 rows: entities 20,976 · chunks 10,184 ·
+summaries 5,396 · symbols 4,384 · symbol_calls 7,773 · files 1,012 · repo/revision/
+branch_head/retrieval_surface. Verified via remote `get_memory_stats`. The import-tool bug
+was fixed and deployed (image `neo-import-20260611-223102`, with NUL-strip + dispatcher +
+import-repo fixes).
 
-**Blocker:** the remote `import_repo_memory_tool` can't onboard a *new* repo — its
-repositories insert is a stale 3-column `INSERT … ON CONFLICT`, but post-`016` the
-catalog requires `mawf_repository_id`/`status_id` (NOT NULL, no default), which Postgres
-checks *before* the conflict resolves → the import errors. I wrote the fix
-(`export_import.py` resolves the pre-registered repo) and built a remote image
-(`neo-import-20260611-223102`), but **deploying new code to prod was correctly gated** —
-it's beyond the "remote import" autonomy and your per-change-approval rule.
-
-**Needs you:** approve the prod deploy of the bundled bug fixes (NUL-strip, dispatcher
-retry, import-repo-resolve), or pick the no-deploy client-side-import alternative. Details
-in the session.
+**Remaining (one step):** reproject remote **Qdrant vectors + Neo4j graph** from the
+imported PG so semantic retrieval works for this repo. Blocked by the prod safety guard
+`ALLOW_REMOTE_REBUILDS=false`; needs a temporary flag toggle (another prod change) →
+awaiting your go-ahead in the session.
