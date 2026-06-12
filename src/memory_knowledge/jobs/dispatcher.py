@@ -154,6 +154,12 @@ class JobDispatcher:
                     params = json.loads(cp) if isinstance(cp, str) else dict(cp)
                 except (json.JSONDecodeError, TypeError):
                     pass
+            # checkpoint_data may hold a stored WorkflowResult (written by the job
+            # worker on failure), not resume params. Never forward its envelope keys
+            # into the workflow run() — doing so crashes the retry with e.g.
+            # "run() got an unexpected keyword argument 'data'".
+            for _envelope_key in ("run_id", "tool_name", "status", "data", "error", "duration_ms"):
+                params.pop(_envelope_key, None)
 
             from memory_knowledge.db.neo4j import get_neo4j_driver
             from memory_knowledge.db.qdrant import get_qdrant_client

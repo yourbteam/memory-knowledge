@@ -268,7 +268,7 @@ async def _load_resume_parse_context(
         full_path = repo_dir / file_path
         if not full_path.exists():
             continue
-        source = full_path.read_text(encoding="utf-8", errors="replace")
+        source = full_path.read_text(encoding="utf-8", errors="replace").replace("\x00", "")
         parse_output = get_parser(file_path)(file_path, source)
         file_path_to_entity_key[file_path] = str(row["file_entity_key"])
         file_path_to_entity_id[file_path] = row["entity_id"]
@@ -722,7 +722,7 @@ async def run(
                         )
                         await deactivate_file_chunks(pool, repository_id, file_path)
 
-                    source = full_path.read_text(encoding="utf-8", errors="replace")
+                    source = full_path.read_text(encoding="utf-8", errors="replace").replace("\x00", "")
                     source_lines = source.splitlines()
                     size_bytes = len(source.encode("utf-8"))
                     checksum = hashlib.sha256(source.encode("utf-8")).hexdigest()

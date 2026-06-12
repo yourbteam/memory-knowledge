@@ -244,18 +244,42 @@ async def import_repo_memory(pool: asyncpg.Pool, lines: list[str]) -> dict[str, 
             await pool.executemany(sql, batch)
             _log(table, min(i + BATCH, len(args_list)), len(args_list))
 
-    # 1. Repositories (tiny, keep individual)
+    # 1. Repositories (tiny, keep individual). Post-016 the catalog requires
+    # mawf_repository_id + status_id (NOT NULL, no default) — these are checked
+    # before ON CONFLICT can fire, so a bare 3-column upsert always errors. A new
+    # repo must therefore be pre-registered via the MAWF contract
+    # (mawf_upsert_repository); resolve its existing id here, and only fall back to
+    # a full insert (carrying the export's mawf fields) when it is genuinely absent.
     for row in rows_by_table.get("catalog.repositories", []):
-        r = await pool.fetchrow(
-            """INSERT INTO catalog.repositories (repository_key, name, origin_url)
-            VALUES ($1, $2, $3)
-            ON CONFLICT (repository_key) DO UPDATE SET name = EXCLUDED.name, origin_url = EXCLUDED.origin_url
-            RETURNING id""",
+        existing = await pool.fetchrow(
+            "SELECT id FROM catalog.repositories WHERE repository_key = $1",
             row["repository_key"],
-            row["name"],
-            row.get("origin_url"),
         )
-        repo_key_to_id[row["repository_key"]] = r["id"]
+        if existing is not None:
+            await pool.execute(
+                "UPDATE catalog.repositories SET name = $2, origin_url = $3, updated_utc = NOW() WHERE id = $1",
+                existing["id"],
+                row["name"],
+                row.get("origin_url"),
+            )
+            repo_key_to_id[row["repository_key"]] = existing["id"]
+        else:
+            r = await pool.fetchrow(
+                """INSERT INTO catalog.repositories
+                       (repository_key, name, origin_url, mawf_repository_id, status_id,
+                        provider, owner, repo_name)
+                   VALUES ($1, $2, $3, $4, $5, $6, $7, $8)
+                   RETURNING id""",
+                row["repository_key"],
+                row["name"],
+                row.get("origin_url"),
+                row.get("mawf_repository_id"),
+                row.get("status_id"),
+                row.get("provider"),
+                row.get("owner"),
+                row.get("repo_name"),
+            )
+            repo_key_to_id[row["repository_key"]] = r["id"]
     _log("catalog.repositories", len(repo_key_to_id), len(rows_by_table.get("catalog.repositories", [])))
 
     # 2. Repo revisions (tiny, keep individual)
