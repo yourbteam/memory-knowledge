@@ -14,15 +14,22 @@ Legend: ✅ success · ⛔ blocked (needs you) · ⏳ in progress
 
 <!-- newest entries on top -->
 
-### ✅ 2026-06-12 — neocurrency-dashboard: REMOTE PG IMPORT COMPLETE
+### ✅ 2026-06-12 — neocurrency-dashboard: FULLY ONBOARDED TO REMOTE (all 3 stores)
 
-The remote Postgres import **succeeded** — 49,741 rows: entities 20,976 · chunks 10,184 ·
-summaries 5,396 · symbols 4,384 · symbol_calls 7,773 · files 1,012 · repo/revision/
-branch_head/retrieval_surface. Verified via remote `get_memory_stats`. The import-tool bug
-was fixed and deployed (image `neo-import-20260611-223102`, with NUL-strip + dispatcher +
-import-repo fixes).
+`neocurrency-dashboard` (branch `main`, commit `b1ea8cf`) is now live in all three remote
+databases:
+- **Postgres:** 10,184 chunks · 5,396 summaries · 4,384 symbols · 1,012 files (49,741 rows imported)
+- **Qdrant:** 10,184 code_chunks + 5,396 summary_units (bge-base/768)
+- **Neo4j:** graph built (Revision/File/Symbol nodes)
 
-**Remaining (one step):** reproject remote **Qdrant vectors + Neo4j graph** from the
-imported PG so semantic retrieval works for this repo. Blocked by the prod safety guard
-`ALLOW_REMOTE_REBUILDS=false`; needs a temporary flag toggle (another prod change) →
-awaiting your go-ahead in the session.
+`list_repositories` shows it with the correct latest branch/commit + counts. Guard
+`ALLOW_REMOTE_REBUILDS` restored to `false`.
+
+**How (the fast path):** local ingest → export (85.9 MB) → register remote → import to PG
+(after fixing+deploying the import tool's post-016 repo bug) → **copied the already-embedded
+vectors local→remote Qdrant in ~40s** (instead of a multi-hour webapp re-embed) → Neo4j-only
+rebuild (~23s). Bug fixes shipped to prod: NUL-strip, dispatcher retry, import-repo-resolve.
+
+Note: the retrieval *workflow* returns 0 evidence here — but it does the same for known-good
+repos (e.g. taggable-server), so it's a pre-existing all-repo behavior, not an onboarding
+gap (direct Qdrant search returns correct hits at score 1.0).
