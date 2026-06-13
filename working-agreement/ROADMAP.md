@@ -27,7 +27,7 @@ from "proposed" to live.
 ## Done (live plumbing)
 - `DIRECTIVES.md` with directives **G0** (open every turn with a checkable compliance pass),
   **G1** (keep Kamen in grasp), **G2** (concrete consequence before a decision),
-  **G3** (stay inside the scope of the ask).
+  **G3** (stay inside the scope of the ask), **G4** (no unapproved workarounds).
 - `inject-directives.sh` (executable) + global `UserPromptSubmit` hook in
   `~/.claude/settings.json` → `DIRECTIVES.md` is auto-injected every session, every project.
 - `SETUP-claude.md` (office-machine runbook). Codex setup deferred to a future `SETUP-codex.md`.
@@ -83,7 +83,23 @@ from "proposed" to live.
       **Review pass done** (review-playbook): RV2 confirms all R1–R16 + acceptance covered; RV1 found
       no blocker — 3 findings (F1 title-in-identity, F2 supersede/embed ordering, F3 shared index loop)
       all resolved as by-design → documented in code (no behavior change). 12 corpus tests still green.
-      Chain complete: Research → Plan (gated) → Write code → Review. Uncommitted (commit on request).
+      Chain complete: Research → Plan (gated) → Write code → Review. Merged + deployed live (Azure).
+      **MCP verified end-to-end** through the deployed server (`corpus_query`/`run_corpus_upsert_workflow`):
+      real ingest → semantic hydrate (score 0.62) → link_slug filter excludes — all `status:success`.
+      MCP entry: user-global `~/.claude.json` + vendored `scripts/mcp-remote-wrapper.sh`.
+- [~] **Corpus triggers** (make ingest/hydrate actually fire — storage alone is inert).
+      **Backfill DONE** — `scripts/backfill_corpus.py` ingested G0–G4 as `directive_rationale` entries via
+      the deployed MCP; hydration spot-check passed (G2/G4/G3 retrieved correctly, semantic + filtered).
+      **Skill DONE** — `~/.claude/skills/corpus-add/` (curate one entry on demand via the MCP tool;
+      stops if MCP not connected, no workaround per G4). Global skill (not in this repo).
+      **Hydration trigger DONE (Option A)** — `working-agreement/hydrate_corpus.py` + `inject-corpus.sh`,
+      registered as a 2nd `UserPromptSubmit` hook in `~/.claude/settings.json`. Per prompt it queries the
+      deployed `corpus_query`, injects top hits ≥0.5 score (≤3), labeled context-only; fail-open + 6s timeout.
+      Verified: relevant prompt → G2 injected (0.73); unrelated → nothing; bad URL → fail-open exit 0.
+      (Takes effect on next session start — hooks load at startup.)
+- [x] **Corpus triggers COMPLETE** — ingest (backfill + `corpus-add` skill) and hydrate (per-prompt hook)
+      both live. The Tier-2 corpus is now self-serving: content goes in deliberately, relevant entries
+      come back automatically each prompt.
       Note: pre-existing `.env` leakage (`ALLOW_REMOTE_WRITES=true`) fails 4 `test_guards.py` tests when
       run from the repo dir — unrelated to this work (same class as the prior `test_config.py` isolation fix).
 - [ ] Capture additional overarching directives as they come up.
