@@ -110,6 +110,7 @@ from "proposed" to live.
 - `working-agreement/inject-directives.sh` — Tier-1 directives hook
 - `working-agreement/hydrate_corpus.py` + `inject-corpus.sh` — Tier-2 per-prompt corpus hydration hook
 - `working-agreement/INSTALL.md` — full Tier-1 + Tier-2 install runbook (new machine)
+- `working-agreement/PLACEMENT.md` — what goes where (directive vs playbook vs corpus) litmus test
 - `working-agreement/SETUP-claude.md` — original Tier-1 setup runbook
 - `working-agreement/ROADMAP.md` — this file
 - `scripts/backfill_corpus.py` · `scripts/mcp-remote-wrapper.sh` — corpus seed + MCP bridge wrapper
