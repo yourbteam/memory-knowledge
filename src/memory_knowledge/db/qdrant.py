@@ -18,6 +18,7 @@ COLLECTIONS = [
     "routing_archetypes",
     "triage_cases",
     "qa_pairs",
+    "corpus_entries",
 ]
 
 
@@ -76,6 +77,12 @@ async def ensure_collections(client: AsyncQdrantClient, settings: Settings) -> N
             ("selected_workflow_name", models.PayloadSchemaType.KEYWORD),
             ("policy_version", models.PayloadSchemaType.KEYWORD),
             ("is_active", models.PayloadSchemaType.BOOL),
+            # corpus_entries filtered retrieval — Qdrant rejects a filter on an
+            # unindexed field, so corpus_query's kind/link_slug filters need these.
+            # Applied across all collections like the fields above (e.g. file_path);
+            # harmless where a collection has no such payload field.
+            ("kind", models.PayloadSchemaType.KEYWORD),
+            ("link_slug", models.PayloadSchemaType.KEYWORD),
             ("branch_name", models.PayloadSchemaType.KEYWORD),
             ("commit_sha", models.PayloadSchemaType.KEYWORD),
             # Incremental ingestion deactivates a changed/deleted file's old

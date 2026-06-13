@@ -54,6 +54,7 @@ from memory_knowledge.workflows import repair_rebuild as _repair_rebuild
 from memory_knowledge.integrity import backfill_is_active as _backfill_is_active
 from memory_knowledge.workflows import compaction as _compaction
 from memory_knowledge.workflows import route_intelligence as _route_intelligence
+from memory_knowledge.workflows import corpus as _corpus
 
 logger = structlog.get_logger()
 
@@ -301,6 +302,74 @@ async def run_learned_memory_commit_workflow(
             pool=get_pg_pool(),
             qdrant_client=get_qdrant_client(),
             neo4j_driver=get_neo4j_driver(),
+            settings=get_settings(),
+        )
+        return result.model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("run_corpus_upsert_workflow")
+async def run_corpus_upsert_workflow(
+    kind: str,
+    title: str,
+    body_text: str,
+    tags: list[str] | None = None,
+    link_slug: str | None = None,
+    confidence: float | None = None,
+    supersedes_id: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Upsert a Tier-2 working-agreement corpus entry (directive rationale, playbook detail,
+    example, reference). Written directly to PG + Qdrant; global, not repository-scoped."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "run_corpus_upsert_workflow")
+    guard = check_remote_write_guard(get_settings(), "run_corpus_upsert_workflow")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        result = await _corpus.run_upsert(
+            kind=kind,
+            title=title,
+            body_text=body_text,
+            tags=tags,
+            link_slug=link_slug,
+            confidence=confidence,
+            supersedes_id=supersedes_id,
+            run_id=run_id,
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+            settings=get_settings(),
+        )
+        return result.model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("corpus_query")
+async def corpus_query(
+    query_text: str,
+    kind: str | None = None,
+    link_slug: str | None = None,
+    limit: int = 5,
+    correlation_id: str | None = None,
+) -> str:
+    """Semantic search over the Tier-2 corpus. Filters out inactive/superseded entries;
+    optional kind / link_slug filters."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "corpus_query")
+    try:
+        result = await _corpus.run_query(
+            query_text=query_text,
+            kind=kind,
+            link_slug=link_slug,
+            limit=limit,
+            run_id=run_id,
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
             settings=get_settings(),
         )
         return result.model_dump_json()

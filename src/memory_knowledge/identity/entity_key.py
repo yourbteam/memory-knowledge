@@ -31,6 +31,14 @@ def learned_record_entity_key(repo_key: str, memory_type: str, title_hash: str) 
     return uuid.uuid5(NAMESPACE_MK, f"{repo_key}:{memory_type}:{title_hash}")
 
 
+def corpus_entry_key(kind: str, link_slug: str | None, title: str) -> uuid.UUID:
+    """Deterministic key for a Tier-2 corpus entry (global, not repo-scoped).
+
+    Re-writing the same (kind, link_slug, title) upserts in place rather than duplicating.
+    """
+    return uuid.uuid5(NAMESPACE_MK, f"corpus:{kind}:{link_slug or '_'}:{title}")
+
+
 def summary_entity_key(
     repo_key: str,
     commit_sha: str,

@@ -42,3 +42,12 @@ class QAPairPayload(BaseModel):
     feature_key: str | None = None
     is_active: bool
     content_kind: str = "qa_pair"
+
+
+class CorpusEntryPayload(BaseModel):
+    entry_key: str
+    kind: str
+    link_slug: str | None = None
+    confidence: float | None = None
+    is_active: bool
+    content_kind: str = "corpus_entry"
