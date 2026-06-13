@@ -107,6 +107,9 @@ from "proposed" to live.
 
 ## Files
 - `working-agreement/DIRECTIVES.md` — Tier-1 rules (auto-injected)
-- `working-agreement/inject-directives.sh` — hook script
-- `working-agreement/SETUP-claude.md` — setup runbook
+- `working-agreement/inject-directives.sh` — Tier-1 directives hook
+- `working-agreement/hydrate_corpus.py` + `inject-corpus.sh` — Tier-2 per-prompt corpus hydration hook
+- `working-agreement/INSTALL.md` — full Tier-1 + Tier-2 install runbook (new machine)
+- `working-agreement/SETUP-claude.md` — original Tier-1 setup runbook
 - `working-agreement/ROADMAP.md` — this file
+- `scripts/backfill_corpus.py` · `scripts/mcp-remote-wrapper.sh` — corpus seed + MCP bridge wrapper

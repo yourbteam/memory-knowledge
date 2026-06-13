@@ -1,0 +1,93 @@
+# Working Agreement — Install (Tier-1 directives + Tier-2 corpus)
+
+How to set up the full working-agreement system on a new machine. Two layers:
+
+- **Tier-1 — directives:** `DIRECTIVES.md` auto-injected into every Claude Code prompt by a hook.
+- **Tier-2 — corpus:** durable knowledge in the deployed `memory-knowledge` service (PG + Qdrant),
+  written via an MCP tool and auto-retrieved per prompt by a second hook.
+
+> **Paths below assume the repo lives at `/Users/kamenkamenov/memory-knowledge`.** On a different
+> machine, either clone to that path or override via the env vars noted at each step.
+
+## 0. Prerequisites
+
+- This repo cloned locally.
+- **Python venv with the `mcp` client** (used by the hydration hook and the backfill script):
+  ```bash
+  cd <repo>
+  uv venv && uv pip install --python .venv/bin/python mcp
+  ```
+  The hook/backfill only need the `mcp` package — do **not** require a full `pip install -e .`
+  (the service's `fastembed`/`onnxruntime` deps have no wheel on some platforms, e.g. x86-mac/py3.14,
+  and embedding runs server-side anyway).
+- **Node/`npx`** on PATH (for `mcp-remote`, which bridges the deployed MCP into Claude).
+
+## 1. Tier-1 — directives hook
+
+Register `inject-directives.sh` as a global `UserPromptSubmit` hook in `~/.claude/settings.json`:
+```json
+{ "hooks": { "UserPromptSubmit": [
+  { "hooks": [ { "type": "command", "command": "<repo>/working-agreement/inject-directives.sh" } ] }
+] } }
+```
+Override the directives path with `CLAUDE_DIRECTIVES_PATH` if the repo isn't at the default location.
+
+## 2. MCP entry — connect Claude to the deployed corpus
+
+Add to `~/.claude.json` under `mcpServers` (user-global):
+```json
+"memory-knowledge": {
+  "type": "stdio",
+  "command": "<repo>/scripts/mcp-remote-wrapper.sh",
+  "args": ["-y", "mcp-remote", "https://memory-knowledge.azurewebsites.net/mcp/"],
+  "env": { "PATH": "<node-bin-dir>:/usr/local/bin:/usr/bin:/bin" }
+}
+```
+`<node-bin-dir>` = the directory containing `npx` (e.g. `~/.nvm/versions/node/<ver>/bin`). The wrapper
+(`scripts/mcp-remote-wrapper.sh`, vendored in this repo) handles clean shutdown. The endpoint is open
+(no auth). Connect/approve the server via `/mcp` (or restart Claude); MCP servers load at session start.
+
+## 3. Tier-2 — corpus hydration hook
+
+Add `inject-corpus.sh` as a **second** `UserPromptSubmit` hook (append to the array from step 1):
+```json
+{ "hooks": [ { "type": "command", "command": "<repo>/working-agreement/inject-corpus.sh" } ] }
+```
+It runs `hydrate_corpus.py` via `.venv/bin/python`, queries the deployed `corpus_query`, and injects the
+top hits (≥0.5 score, ≤3) labeled context-only. **Fail-open** with a 6s timeout — if the venv/MCP is
+unavailable it injects nothing and never blocks the prompt. Overrides:
+`CLAUDE_CORPUS_PYTHON`, `CLAUDE_CORPUS_HELPER`, `CLAUDE_CORPUS_MCP_URL`, `CLAUDE_CORPUS_TIMEOUT`,
+`CLAUDE_CORPUS_MIN_SCORE`, `CLAUDE_CORPUS_LIMIT`.
+
+Smoke-test the hook directly (no Claude restart needed):
+```bash
+echo '{"prompt":"why must I show concrete consequences before deciding"}' | ./working-agreement/inject-corpus.sh
+# expect a JSON additionalContext payload containing G2
+```
+
+## 4. Seed the corpus (backfill the directives)
+
+With the MCP reachable, ingest the directives as corpus entries:
+```bash
+.venv/bin/python scripts/backfill_corpus.py           # --dry-run to preview
+```
+Idempotent (deterministic `entry_key`); re-running updates in place.
+
+## 5. Global skills (not in this repo)
+
+These live under `~/.claude/skills/` (user-global), not in the repo — copy them onto the new machine:
+- Playbooks: `research-playbook`, `plan-playbook`, `write-code-playbook`, `review-playbook`
+- Corpus curation: `corpus-add` (add one entry on demand via the MCP tool)
+
+## 6. Verify end-to-end
+
+1. New Claude session → confirm the `memory-knowledge` MCP server is connected (`/mcp`).
+2. Ingest a throwaway entry via `run_corpus_upsert_workflow`, then `corpus_query` it back; delete after.
+3. Start a fresh session and confirm a relevant prompt auto-injects a "Tier-2 corpus — retrieved for
+   this prompt" block (the hydration hook firing).
+
+## Service deploy (separate concern)
+
+The `memory-knowledge` service itself (the MCP backend) is deployed via `infra/azure-push.sh`
+(ACR build → webapp container swap → restart → health check). The corpus DB table ships in migration
+`027_corpus_schema`. See that script and `docs/TIER2_CORPUS_IMPLEMENTATION_PLAN.md`.
