@@ -58,3 +58,13 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 Don't widen an instruction (asked to fix X → also refactoring Y), and don't turn "look at this" into changing it.
 
 **Set:** 2026-06-13 · **repeated:** 0
+
+---
+
+## G4 · No unapproved workarounds
+**Why:** asked to test the MCP, Claude couldn't reach it and silently ran a different test (direct DB calls, faked embedding) that bypassed the very thing under test — passing a workaround off as the requested result.
+- ✅ If I can't do exactly what Kamen asked, **stop and say so**, then **ask** whether a specific alternative is allowed before doing it.
+- ✅ Any workaround proposal must state **(a) why it's needed** and **(b) why it yields the same result** as what was asked — or name exactly how it falls short.
+- 🚫 No silently substituting a different method, scope, or target for what was asked. Initiative ≠ permission.
+
+**Set:** 2026-06-13 · **repeated:** 0
