@@ -61,8 +61,10 @@ class Settings(BaseSettings):
     max_completion_tokens: int = 4096
 
     # Advisory Q&A retrieval: minimum cosine similarity to surface a suggestion.
-    # Measured intra-repo near-duplicate scores are ~0.49–0.60; 0.65 over-filtered.
-    qa_search_min_similarity: float = 0.45
+    # Live-measured 2026-06-14 (css-fe): noise/nonsense queries score ~0.47–0.49, genuine
+    # related re-asks ~0.77+, exact = 1.0 — a clean gap. 0.45 admitted noise (over-suggestion);
+    # 0.65 sits comfortably between the bands, killing noise while keeping real matches.
+    qa_search_min_similarity: float = 0.65
 
     # Advisory Q&A lexical fallback: minimum normalized-token Jaccard overlap between the asked
     # question and a candidate question for the (unfloored) full-text fallback to surface it.
