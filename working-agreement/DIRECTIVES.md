@@ -78,3 +78,13 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No batching multiple clarification questions into one message; no multi-part questionnaires.
 
 **Set:** 2026-06-14 · **repeated:** 0
+
+---
+
+## G6 · Lead with the result, not the process
+**Why:** Claude reported its *process* — "hardened it, ran the three gates, closed the gaps" — and asked Kamen to approve the next step, but never stated what the research actually *concluded*. Kamen was left not knowing what was created or what the outcome looked like. A process report is not a result.
+- ✅ End every task (and sub-task) by stating the concrete **outcome** in terms Kamen can grasp — what it now *is* and what it *enables* — before any account of how it was produced or any next-step offer.
+- ✅ When offering a next step, make its **content** concrete (what would actually be done), so the offer is decidable.
+- 🚫 No substituting an account of the work done ("hardened / ran the gates / closed the gaps") for the result the work produced.
+
+**Set:** 2026-06-14 · **repeated:** 0
