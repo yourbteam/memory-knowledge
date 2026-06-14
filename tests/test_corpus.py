@@ -203,6 +203,64 @@ async def test_supersede_deactivates_old(patch_embed):
     assert pool.rows[uuid.UUID(new_key)]["supersedes_key"] == uuid.UUID(old_key)
 
 
+# --- run_deactivate -------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_deactivate_sets_inactive_pg_and_qdrant(patch_embed):
+    pool, q = CorpusPool(), FakeQdrant()
+    await corpus.run_upsert(
+        kind="directive_rationale",
+        title="G5 · Ask one at a time",
+        body_text="b",
+        link_slug="g5",
+        run_id=uuid.uuid4(),
+        pool=pool,
+        qdrant_client=q,
+        settings=SETTINGS,
+    )
+    ek = corpus_entry_key("directive_rationale", "g5", "G5 · Ask one at a time")
+    assert pool.rows[ek]["is_active"] is True
+    res = await corpus.run_deactivate(
+        kind="directive_rationale",
+        title="G5 · Ask one at a time",
+        link_slug="g5",
+        run_id=uuid.uuid4(),
+        pool=pool,
+        qdrant_client=q,
+    )
+    assert res.status == "success"
+    assert res.data["entry_key"] == str(ek)
+    assert pool.rows[ek]["is_active"] is False  # PG deactivated
+    assert q.points[str(ek)]["is_active"] is False  # Qdrant deactivated
+
+
+@pytest.mark.asyncio
+async def test_deactivate_idempotent_when_missing(patch_embed):
+    # Deactivating an entry that was never written is a no-op success (sync re-run safety).
+    pool, q = CorpusPool(), FakeQdrant()
+    res = await corpus.run_deactivate(
+        kind="directive_rationale",
+        title="never existed",
+        link_slug="g9",
+        run_id=uuid.uuid4(),
+        pool=pool,
+        qdrant_client=q,
+    )
+    assert res.status == "success"
+    assert pool.rows == {}
+
+
+@pytest.mark.asyncio
+async def test_deactivate_rejects_invalid_kind(patch_embed):
+    pool, q = CorpusPool(), FakeQdrant()
+    res = await corpus.run_deactivate(
+        kind="bogus", title="t", link_slug="g0", run_id=uuid.uuid4(), pool=pool, qdrant_client=q
+    )
+    assert res.status == "error"
+    assert "Invalid kind" in res.error
+
+
 # --- run_query ------------------------------------------------------------------
 
 
@@ -283,6 +341,37 @@ async def test_tool_upsert_blocked_by_guard(monkeypatch, corpus_env):
     out = await server.run_corpus_upsert_workflow(kind="reference", title="t", body_text="b")
     assert json.loads(out)["status"] == "error"
     assert pool.rows == {}  # guard blocked before any write
+
+
+@pytest.mark.asyncio
+async def test_tool_deactivate_success(corpus_env):
+    import json
+
+    pool, q = corpus_env
+    await server.run_corpus_upsert_workflow(
+        kind="directive_rationale", title="G5 · t", body_text="b", link_slug="g5"
+    )
+    out = await server.corpus_deactivate(kind="directive_rationale", title="G5 · t", link_slug="g5")
+    assert json.loads(out)["status"] == "success"
+    ek = corpus_entry_key("directive_rationale", "g5", "G5 · t")
+    assert pool.rows[ek]["is_active"] is False
+
+
+@pytest.mark.asyncio
+async def test_tool_deactivate_blocked_by_guard(monkeypatch, corpus_env):
+    import json
+    from memory_knowledge.workflows.base import WorkflowResult
+
+    pool, q = corpus_env
+    await server.run_corpus_upsert_workflow(
+        kind="directive_rationale", title="G5 · t", body_text="b", link_slug="g5"
+    )
+    blocked = WorkflowResult(run_id="x", tool_name="corpus_deactivate", status="error", error="ALLOW_REMOTE_WRITES not set")
+    monkeypatch.setattr(server, "check_remote_write_guard", lambda settings, tool_name: blocked)
+    out = await server.corpus_deactivate(kind="directive_rationale", title="G5 · t", link_slug="g5")
+    assert json.loads(out)["status"] == "error"
+    ek = corpus_entry_key("directive_rationale", "g5", "G5 · t")
+    assert pool.rows[ek]["is_active"] is True  # guard blocked before any write
 
 
 @pytest.mark.asyncio

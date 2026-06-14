@@ -73,6 +73,25 @@ With the MCP reachable, ingest the directives as corpus entries:
 ```
 Idempotent (deterministic `entry_key`); re-running updates in place.
 
+## 4b. Auto-sync hook (keep the corpus mirrored to DIRECTIVES.md)
+
+Step 4 is a one-shot seed. To keep Tier-2 mirrored automatically, install a git **post-commit**
+hook so any commit that touches `DIRECTIVES.md` re-syncs the corpus — upserting current rules and
+**deactivating orphans** (rules that were renamed or deleted):
+```bash
+ln -sf ../../working-agreement/sync-corpus.sh <repo>/.git/hooks/post-commit
+```
+`sync-corpus.sh` is **fail-open**: it does nothing unless the commit changed `DIRECTIVES.md`, and
+never blocks the commit. It runs `sync_corpus.py`, which diffs the new commit against `HEAD~1`
+(upsert current via `run_corpus_upsert_workflow`; deactivate orphans via `corpus_deactivate`).
+Override the interpreter with `CLAUDE_CORPUS_PYTHON`. Preview without writing:
+```bash
+.venv/bin/python working-agreement/sync_corpus.py --dry-run
+```
+> **Deploy dependency:** orphan pruning calls the `corpus_deactivate` MCP tool, which must be live
+> on the deployed service (see *Service deploy* below). Until the service is redeployed, upserts
+> work but deactivation of orphans will error (logged, fail-open) — pruning activates post-deploy.
+
 ## 5. Global skills (not in this repo)
 
 These live under `~/.claude/skills/` (user-global), not in the repo — copy them onto the new machine:

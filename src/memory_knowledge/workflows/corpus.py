@@ -17,6 +17,7 @@ from memory_knowledge.projections.corpus_qdrant import (
     embed_and_upsert_corpus_entry,
 )
 from memory_knowledge.projections.corpus_writer import (
+    deactivate_corpus_entry,
     supersede_corpus_entry,
     upsert_corpus_entry,
 )
@@ -118,6 +119,64 @@ async def run_upsert(
     except Exception as exc:
         duration_ms = int((time.monotonic() - start) * 1000)
         logger.error("corpus_upsert_failed", error=str(exc))
+        return WorkflowResult(
+            run_id=str(run_id), tool_name=tool, status="error", error=str(exc), duration_ms=duration_ms
+        )
+
+
+async def run_deactivate(
+    *,
+    kind: str,
+    title: str,
+    run_id: uuid.UUID,
+    link_slug: str | None = None,
+    pool: asyncpg.Pool | None = None,
+    qdrant_client: AsyncQdrantClient | None = None,
+) -> WorkflowResult:
+    """Soft-delete a Tier-2 corpus entry by identity (kind, link_slug, title).
+
+    Used by the directives sync to prune orphans — entries whose rule was renamed or deleted
+    from DIRECTIVES.md. Identity (F1): entry_key is derived the same way as the write path, so
+    the caller passes the same fields it would pass to run_upsert.
+
+    PG is authoritative: deactivate the PG row first, then the Qdrant point. Idempotent — a key
+    that is missing or already inactive is a no-op that still returns success, so re-running the
+    sync (or deactivating an entry that was never embedded) never errors.
+    """
+    start = time.monotonic()
+    tool = "corpus_deactivate"
+    try:
+        if pool is None:
+            return WorkflowResult(
+                run_id=str(run_id), tool_name=tool, status="error", error="Missing required dependency: pool."
+            )
+        if kind not in VALID_CORPUS_KINDS:
+            return WorkflowResult(
+                run_id=str(run_id),
+                tool_name=tool,
+                status="error",
+                error=f"Invalid kind: {kind}. Must be one of: {', '.join(sorted(VALID_CORPUS_KINDS))}",
+            )
+        if not title:
+            return WorkflowResult(run_id=str(run_id), tool_name=tool, status="error", error="title is required.")
+
+        entry_key = corpus_entry_key(kind, link_slug, title)
+        await deactivate_corpus_entry(pool, entry_key)
+        if qdrant_client is not None:
+            await deactivate_corpus_point(qdrant_client, str(entry_key))
+
+        duration_ms = int((time.monotonic() - start) * 1000)
+        logger.info("corpus_deactivate_done", entry_key=str(entry_key), kind=kind)
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name=tool,
+            status="success",
+            data={"entry_key": str(entry_key)},
+            duration_ms=duration_ms,
+        )
+    except Exception as exc:
+        duration_ms = int((time.monotonic() - start) * 1000)
+        logger.error("corpus_deactivate_failed", error=str(exc))
         return WorkflowResult(
             run_id=str(run_id), tool_name=tool, status="error", error=str(exc), duration_ms=duration_ms
         )

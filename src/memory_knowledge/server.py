@@ -349,6 +349,36 @@ async def run_corpus_upsert_workflow(
 
 
 @mcp.tool()
+@track_tool_metrics("corpus_deactivate")
+async def corpus_deactivate(
+    kind: str,
+    title: str,
+    link_slug: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Soft-delete a Tier-2 corpus entry by identity (kind, link_slug, title). Used by the
+    directives sync to prune orphans (renamed/deleted rules). Idempotent; PG + Qdrant."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "corpus_deactivate")
+    guard = check_remote_write_guard(get_settings(), "corpus_deactivate")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        result = await _corpus.run_deactivate(
+            kind=kind,
+            title=title,
+            link_slug=link_slug,
+            run_id=run_id,
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+        )
+        return result.model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("corpus_query")
 async def corpus_query(
     query_text: str,

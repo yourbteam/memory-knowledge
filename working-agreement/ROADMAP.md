@@ -102,6 +102,16 @@ from "proposed" to live.
       come back automatically each prompt.
       Note: pre-existing `.env` leakage (`ALLOW_REMOTE_WRITES=true`) fails 4 `test_guards.py` tests when
       run from the repo dir — unrelated to this work (same class as the prior `test_config.py` isolation fix).
+- [~] **Corpus auto-sync (full mirror)** — keep Tier-2 mirrored to DIRECTIVES.md on every commit, not
+      just on remembered manual ingests. **Server DONE** — new `corpus_deactivate` MCP tool
+      (`server.py` + `workflows/corpus.py:run_deactivate`, soft-delete PG + Qdrant, remote-write guarded),
+      reusing the existing `deactivate_corpus_entry`/`deactivate_corpus_point`. 17 corpus tests green
+      (12 + 5 new). **Hook DONE** — `working-agreement/sync_corpus.py` + `sync-corpus.sh`, installed as the
+      repo's git `post-commit` hook (symlink). On a commit touching DIRECTIVES.md it diffs HEAD vs HEAD~1:
+      upserts current rules + deactivates orphans (rename = old title gone; deletion = rule removed).
+      Verified offline: dry-run (6 rules, 0 orphans) + synthetic rename+deletion both detected as orphans.
+      **PENDING DEPLOY** — `corpus_deactivate` is live only after the service is redeployed; until then
+      upserts work and orphan-deactivation errors fail-open. (Pre-deploy, the upsert path also ingests G5.)
 - [ ] Capture additional overarching directives as they come up.
 - [ ] (later) Project overlays via the project-scoped memory store.
 
@@ -109,6 +119,7 @@ from "proposed" to live.
 - `working-agreement/DIRECTIVES.md` — Tier-1 rules (auto-injected)
 - `working-agreement/inject-directives.sh` — Tier-1 directives hook
 - `working-agreement/hydrate_corpus.py` + `inject-corpus.sh` — Tier-2 per-prompt corpus hydration hook
+- `working-agreement/sync_corpus.py` + `sync-corpus.sh` — Tier-2 corpus auto-sync (git post-commit; mirror DIRECTIVES.md)
 - `working-agreement/INSTALL.md` — full Tier-1 + Tier-2 install runbook (new machine)
 - `working-agreement/PLACEMENT.md` — what goes where (directive vs playbook vs corpus) litmus test
 - `working-agreement/SETUP-claude.md` — original Tier-1 setup runbook

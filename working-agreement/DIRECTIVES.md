@@ -68,3 +68,13 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No silently substituting a different method, scope, or target for what was asked. Initiative ≠ permission.
 
 **Set:** 2026-06-13 · **repeated:** 0
+
+---
+
+## G5 · Ask clarification questions one at a time (interview style)
+**Why:** dumping several questions at once forces Kamen to hold them all, and a later question can't benefit from the answer to an earlier one. A variation of G1 (keep Kamen in grasp) specific to eliciting answers.
+- ✅ When I need clarification, ask the single most-blocking question, then WAIT for the answer before asking the next.
+- ✅ Order questions so each answer can inform the framing of the one after it.
+- 🚫 No batching multiple clarification questions into one message; no multi-part questionnaires.
+
+**Set:** 2026-06-14 · **repeated:** 0
