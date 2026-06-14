@@ -99,7 +99,7 @@ def patch_embed(monkeypatch):
     monkeypatch.setattr("memory_knowledge.qa_memory.embed_single", _embed)
 
 
-SETTINGS = SimpleNamespace(embedding_dimensions=8, qa_search_min_similarity=0.45)
+SETTINGS = SimpleNamespace(embedding_dimensions=8, qa_search_min_similarity=0.45, qa_lexical_min_overlap=0.6)
 
 
 # --- Module-level: ingest -------------------------------------------------------
@@ -232,9 +232,10 @@ async def test_search_semantic_empty_falls_back_to_lexical(patch_embed):
         pairs=[{"question": "stored q?", "answer": "stored a"}],
         qdrant_client=FakeQdrant(),
     )
-    # semantic runs (qdrant not None) and returns nothing → lexical fallback kicks in (Step 2)
+    # semantic runs (qdrant not None) and returns nothing → lexical fallback kicks in (Step 2).
+    # Near-exact re-ask clears the lexical overlap floor.
     res = await qa_memory.search_qa_knowledge(
-        pool, SETTINGS, repository_key="taggable-server", question="stored", qdrant_client=qdrant
+        pool, SETTINGS, repository_key="taggable-server", question="stored q", qdrant_client=qdrant
     )
     assert len(res["rows"]) == 1 and res["rows"][0]["answer"] == "stored a"
     assert "lexical fallback" in " ".join(res["warnings"])
@@ -298,10 +299,52 @@ async def test_search_lexical_fallback_when_qdrant_none(patch_embed):
         qdrant_client=FakeQdrant(),
     )
     res = await qa_memory.search_qa_knowledge(
-        pool, SETTINGS, repository_key="taggable-server", question="stored", qdrant_client=None
-    )  # forces lexical path
+        pool, SETTINGS, repository_key="taggable-server", question="stored q", qdrant_client=None
+    )  # forces lexical path; near-exact re-ask clears the overlap floor
     assert len(res["rows"]) == 1 and res["rows"][0]["answer"] == "stored a"
     assert "lexical fallback" in " ".join(res["warnings"])
+
+
+@pytest.mark.asyncio
+async def test_search_lexical_fallback_filters_low_overlap(patch_embed):
+    # Fix A: the lexical fallback must drop loose token-overlap matches (the "plain stupid
+    # suggestions" at low volume), surfacing nothing rather than guessing.
+    pool, qdrant = QAPool(), EmptyQdrant()
+    await qa_memory.ingest_qa_pairs(
+        pool,
+        SETTINGS,
+        repository_key="taggable-server",
+        pairs=[{"question": "How do I rotate the API signing key?", "answer": "Use rotate-key."}],
+        qdrant_client=FakeQdrant(),
+    )
+    res = await qa_memory.search_qa_knowledge(
+        pool, SETTINGS, repository_key="taggable-server", question="delete a user account", qdrant_client=qdrant
+    )
+    assert res["rows"] == []  # no near-exact overlap → suppressed
+
+
+@pytest.mark.asyncio
+async def test_search_lexical_overlap_threshold_configurable(patch_embed):
+    # A loose re-ask (overlap ~0.5) is surfaced under a permissive threshold and suppressed
+    # under a strict one — proving qa_lexical_min_overlap governs the floor.
+    pool = QAPool()
+    await qa_memory.ingest_qa_pairs(
+        pool,
+        SETTINGS,
+        repository_key="taggable-server",
+        pairs=[{"question": "stored q?", "answer": "stored a"}],
+        qdrant_client=FakeQdrant(),
+    )
+    permissive = SimpleNamespace(embedding_dimensions=8, qa_search_min_similarity=0.45, qa_lexical_min_overlap=0.1)
+    strict = SimpleNamespace(embedding_dimensions=8, qa_search_min_similarity=0.45, qa_lexical_min_overlap=0.9)
+    loose = await qa_memory.search_qa_knowledge(
+        pool, permissive, repository_key="taggable-server", question="stored", qdrant_client=EmptyQdrant()
+    )
+    assert len(loose["rows"]) == 1  # 0.5 overlap >= 0.1
+    tight = await qa_memory.search_qa_knowledge(
+        pool, strict, repository_key="taggable-server", question="stored", qdrant_client=EmptyQdrant()
+    )
+    assert tight["rows"] == []  # 0.5 overlap < 0.9
 
 
 def test_question_hash_normalization():

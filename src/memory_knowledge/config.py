@@ -64,6 +64,11 @@ class Settings(BaseSettings):
     # Measured intra-repo near-duplicate scores are ~0.49–0.60; 0.65 over-filtered.
     qa_search_min_similarity: float = 0.45
 
+    # Advisory Q&A lexical fallback: minimum normalized-token Jaccard overlap between the asked
+    # question and a candidate question for the (unfloored) full-text fallback to surface it.
+    # Keeps near-exact re-asks, drops loose token-overlap junk when little Q&A is ingested.
+    qa_lexical_min_overlap: float = 0.6
+
     # Ingestion
     repo_clone_base_path: str = "/tmp/memory-knowledge/repos"
     generate_summaries: bool = True

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import re
 import uuid
 from typing import Any
 
@@ -17,6 +18,22 @@ from memory_knowledge.llm.openai_client import embed_single
 logger = structlog.get_logger()
 
 QA_PAIRS_COLLECTION = "qa_pairs"
+
+_TOKEN_RE = re.compile(r"[a-z0-9]+")
+
+
+def _normalized_tokens(text: str) -> set[str]:
+    """Lowercased alphanumeric token set for lexical-overlap comparison."""
+    return set(_TOKEN_RE.findall((text or "").lower()))
+
+
+def _question_overlap(asked: set[str], candidate: str) -> float:
+    """Jaccard overlap between the asked question's tokens and a candidate question's tokens."""
+    other = _normalized_tokens(candidate)
+    if not asked or not other:
+        return 0.0
+    union = len(asked | other)
+    return (len(asked & other) / union) if union else 0.0
 
 
 async def _resolve_repository_id(pool: asyncpg.Pool, repository_key: str) -> int | None:
@@ -243,8 +260,19 @@ async def search_qa_knowledge(
         [cid for cid, _ in candidates],
     )
 
+    # Lexical fallback has no relevance floor (ts_rank matches any shared token), so it surfaces
+    # junk when little Q&A is ingested. Keep only near-exact re-asks: candidates whose question
+    # clears a token-overlap (Jaccard) threshold. The semantic path is already floored at
+    # min_similarity, so this filter applies to the lexical fallback only.
+    lexical_min_overlap = float(getattr(settings, "qa_lexical_min_overlap", 0.6))
+    asked_tokens = _normalized_tokens(question) if fallback_to_lexical else set()
+
     rows: list[dict[str, Any]] = []
+    dropped_low_overlap = 0
     for r in hydrated:
+        if fallback_to_lexical and _question_overlap(asked_tokens, r["question"]) < lexical_min_overlap:
+            dropped_low_overlap += 1
+            continue
         raw_source = r["source"]
         src = raw_source if isinstance(raw_source, dict) else json.loads(raw_source or "{}")
         rows.append(
@@ -265,6 +293,7 @@ async def search_qa_knowledge(
         question_len=len(question),
         semantic_hits=semantic_hits,
         lexical_used=fallback_to_lexical,
+        lexical_dropped_low_overlap=dropped_low_overlap,
         returned=len(result_rows),
     )
     return {"advisory_only": True, "rows": result_rows, "warnings": warnings}
