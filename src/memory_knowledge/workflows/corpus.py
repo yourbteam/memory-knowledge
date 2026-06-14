@@ -139,9 +139,10 @@ async def run_deactivate(
     from DIRECTIVES.md. Identity (F1): entry_key is derived the same way as the write path, so
     the caller passes the same fields it would pass to run_upsert.
 
-    PG is authoritative: deactivate the PG row first, then the Qdrant point. Idempotent — a key
-    that is missing or already inactive is a no-op that still returns success, so re-running the
-    sync (or deactivating an entry that was never embedded) never errors.
+    PG is authoritative: deactivate the PG row first, then the Qdrant point — but only if the PG
+    row existed (they are written together, so a missing PG row means no Qdrant point either, and
+    real Qdrant set_payload 404s on a missing point). Idempotent — a missing or already-inactive
+    key is a no-op that still returns success, so re-running the sync never errors.
     """
     start = time.monotonic()
     tool = "corpus_deactivate"
@@ -161,8 +162,8 @@ async def run_deactivate(
             return WorkflowResult(run_id=str(run_id), tool_name=tool, status="error", error="title is required.")
 
         entry_key = corpus_entry_key(kind, link_slug, title)
-        await deactivate_corpus_entry(pool, entry_key)
-        if qdrant_client is not None:
+        existed = await deactivate_corpus_entry(pool, entry_key)
+        if existed and qdrant_client is not None:
             await deactivate_corpus_point(qdrant_client, str(entry_key))
 
         duration_ms = int((time.monotonic() - start) * 1000)

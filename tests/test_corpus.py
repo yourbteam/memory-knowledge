@@ -53,6 +53,9 @@ class CorpusPool:
             row = self.rows.get(args[0])
             if row:
                 row["is_active"] = False
+                return "UPDATE 1"
+            return "UPDATE 0"
+        return "UPDATE 0"
 
     async def fetch(self, query, *args):
         if "WHERE entry_key = ANY" in query:
@@ -78,8 +81,9 @@ class FakeQdrant:
 
     async def set_payload(self, collection_name, payload, points):
         for pid in points:
-            if str(pid) in self.points:
-                self.points[str(pid)].update(payload)
+            if str(pid) not in self.points:
+                raise KeyError(f"point {pid} not found")  # mirror real Qdrant 404 on missing point
+            self.points[str(pid)].update(payload)
 
     async def query_points(self, **kwargs):
         self.query_calls.append(kwargs)

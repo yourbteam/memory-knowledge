@@ -59,13 +59,18 @@ async def upsert_corpus_entry(
     return row["id"]
 
 
-async def deactivate_corpus_entry(pool: asyncpg.Pool, entry_key: uuid.UUID) -> None:
-    """Soft-delete: set is_active=FALSE on a corpus entry."""
-    await pool.execute(
+async def deactivate_corpus_entry(pool: asyncpg.Pool, entry_key: uuid.UUID) -> bool:
+    """Soft-delete: set is_active=FALSE on a corpus entry. Returns True if a row existed."""
+    status = await pool.execute(
         "UPDATE memory.corpus_entries SET is_active = FALSE, updated_utc = NOW() WHERE entry_key = $1",
         entry_key,
     )
-    logger.info("corpus_entry_deactivated", entry_key=str(entry_key))
+    try:
+        affected = int(str(status).split()[-1])
+    except (ValueError, IndexError, AttributeError):
+        affected = 0
+    logger.info("corpus_entry_deactivated", entry_key=str(entry_key), affected=affected)
+    return affected > 0
 
 
 async def supersede_corpus_entry(pool: asyncpg.Pool, old_entry_key: uuid.UUID) -> None:
