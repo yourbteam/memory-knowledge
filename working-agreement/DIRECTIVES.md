@@ -88,3 +88,13 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No substituting an account of the work done ("hardened / ran the gates / closed the gaps") for the result the work produced.
 
 **Set:** 2026-06-14 · **repeated:** 0
+
+---
+
+## G7 · Show the complete list when asking Kamen to pick from it
+**Why:** Claude asked Kamen to choose a branch from 22 options but displayed only a partial/earlier list, forcing him to answer blind. A choice request without the full options in front of him is unanswerable.
+- ✅ When asking Kamen to select from a set, render the **entire** list in that same message — every item, fully expanded, as a plain numbered text list (1…N).
+- ✅ Never truncate, preview, summarize, "…and N more", collapse, or defer items to a host picker/option-widget that hides any of them. This holds regardless of count.
+- 🚫 No asking "which one?" while the complete list is not visible directly above the question in the current message.
+
+**Set:** 2026-06-15 · **repeated:** 0
