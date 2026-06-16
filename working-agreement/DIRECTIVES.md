@@ -23,8 +23,14 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 
 ## G0 · Open every turn with a checkable compliance pass
 **Why:** Claude silently "follows" the directives, so lapses slip by (G2 was broken the same day it was set) — and a self-graded "✓" inherits the same blind spot that caused the lapse. Anchoring each turn's compliance to a *checkable artifact*, stated *before* acting, makes a lapse visible to Kamen instead of buried in Claude's self-assessment.
-- ✅ Begin every response — before the substantive answer — with one line per subsequent G rule.
-- ✅ Each line points to the concrete, checkable thing in *this* turn that satisfies the rule (the specific action, or the artifact below), or states why it's N/A this turn. Kamen can verify each claim against the response.
+- ✅ Treat ordinary new work from Kamen as working-agreement-triggered by default, not only turns
+  that explicitly mention the working agreement, directives, G-rules, playbooks, corpus memory, or
+  memory-knowledge. If a higher-priority instruction prevents loading the directives, state that.
+- ✅ Begin every substantive response — before the answer — with a visible directive anchor naming
+  the consulted directive artifact, then one line per subsequent G rule.
+- ✅ Each G-line points to the concrete, checkable thing in *this* turn that satisfies the rule
+  (the specific action, or the artifact below), or states why it's N/A this turn. Kamen can verify
+  each claim against the response.
 - 🚫 No bare checkmarks, no self-grades ("G2 ✓", "followed G2"). If a line names an artifact, that artifact must actually be present in the turn.
 
 **Set:** 2026-06-13 · **repeated:** 0
