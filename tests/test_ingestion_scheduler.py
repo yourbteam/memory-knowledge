@@ -1,4 +1,5 @@
 import types
+from datetime import datetime, timezone
 
 import pytest
 
@@ -8,6 +9,7 @@ import memory_knowledge.jobs.ingestion_scheduler as sched_mod
 import memory_knowledge.jobs.manifest_reader as mr_mod
 import memory_knowledge.jobs.manifest_writer as mw_mod
 from memory_knowledge.jobs.ingestion_scheduler import IngestionScheduler
+from memory_knowledge.jobs.ingestion_scheduler import next_daily_run_utc
 
 
 def _settings(**kw):
@@ -15,6 +17,8 @@ def _settings(**kw):
         ingestion_scheduler_repo_allowlist="",
         ingestion_scheduler_max_per_tick=5,
         ingestion_scheduler_interval_seconds=3600,
+        ingestion_scheduler_daily_at="",
+        ingestion_scheduler_timezone="Europe/Sofia",
     )
     d.update(kw)
     return types.SimpleNamespace(**d)
@@ -129,6 +133,24 @@ async def test_tick_caps_enqueues_and_isolates_errors(monkeypatch):
     sch._settings = _settings(ingestion_scheduler_max_per_tick=3)
     await sch._tick()
     assert len(created) == 3  # capped at 3 enqueues despite 10 repos + 1 error
+
+
+def test_next_daily_run_utc_uses_europe_sofia_midnight_winter():
+    now = datetime(2026, 1, 1, 21, 30, tzinfo=timezone.utc)  # 23:30 Europe/Sofia
+    next_run = next_daily_run_utc("00:00", "Europe/Sofia", now)
+    assert next_run == datetime(2026, 1, 1, 22, 0, tzinfo=timezone.utc)
+
+
+def test_next_daily_run_utc_uses_europe_sofia_midnight_summer():
+    now = datetime(2026, 6, 17, 20, 30, tzinfo=timezone.utc)  # 23:30 Europe/Sofia
+    next_run = next_daily_run_utc("00:00", "Europe/Sofia", now)
+    assert next_run == datetime(2026, 6, 17, 21, 0, tzinfo=timezone.utc)
+
+
+def test_next_daily_run_utc_rolls_to_tomorrow_after_target_time():
+    now = datetime(2026, 6, 17, 21, 1, tzinfo=timezone.utc)  # 00:01 Europe/Sofia
+    next_run = next_daily_run_utc("00:00", "Europe/Sofia", now)
+    assert next_run == datetime(2026, 6, 18, 21, 0, tzinfo=timezone.utc)
 
 
 def test_scheduler_does_not_import_run_ingestion_background():

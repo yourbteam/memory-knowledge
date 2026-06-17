@@ -91,6 +91,8 @@ class Settings(BaseSettings):
     # Ingestion freshness scheduler
     ingestion_scheduler_enabled: bool = False
     ingestion_scheduler_interval_seconds: int = 3600
+    ingestion_scheduler_daily_at: str = ""  # Optional HH:MM local wall-clock time; overrides interval loop.
+    ingestion_scheduler_timezone: str = "Europe/Sofia"
     ingestion_scheduler_repo_allowlist: str = ""  # CSV; empty = all repos with origin_url (minus test prefixes)
     ingestion_scheduler_max_per_tick: int = 5  # bounds enqueues per tick, not the cheap ls-remote checks
 

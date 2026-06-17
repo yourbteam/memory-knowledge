@@ -10,7 +10,8 @@ from __future__ import annotations
 
 import asyncio
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, time, timedelta, timezone
+from zoneinfo import ZoneInfo
 
 import asyncpg
 import structlog
@@ -36,6 +37,32 @@ _ENUMERATE_SQL = """
 """
 
 
+def _parse_daily_at(value: str) -> time:
+    raw = (value or "").strip()
+    try:
+        hour_s, minute_s = raw.split(":", 1)
+        hour, minute = int(hour_s), int(minute_s)
+    except ValueError as exc:
+        raise ValueError("ingestion_scheduler_daily_at must use HH:MM format") from exc
+    if not (0 <= hour <= 23 and 0 <= minute <= 59):
+        raise ValueError("ingestion_scheduler_daily_at must be a valid 24-hour HH:MM time")
+    return time(hour=hour, minute=minute)
+
+
+def next_daily_run_utc(daily_at: str, timezone_name: str, now_utc: datetime | None = None) -> datetime:
+    """Return the next UTC instant for a local wall-clock daily scheduler."""
+    target_time = _parse_daily_at(daily_at)
+    tz = ZoneInfo(timezone_name or "UTC")
+    now = now_utc or datetime.now(timezone.utc)
+    if now.tzinfo is None:
+        now = now.replace(tzinfo=timezone.utc)
+    local_now = now.astimezone(tz)
+    local_target = datetime.combine(local_now.date(), target_time, tzinfo=tz)
+    if local_target <= local_now:
+        local_target += timedelta(days=1)
+    return local_target.astimezone(timezone.utc)
+
+
 class IngestionScheduler:
     """In-app periodic scheduler (managed start/stop, mirrors JobDispatcher/CodexTokenManager)."""
 
@@ -48,11 +75,18 @@ class IngestionScheduler:
     async def start(self, pool: asyncpg.Pool, settings: Settings) -> None:
         self._pool = pool
         self._settings = settings
+        daily_at = getattr(settings, "ingestion_scheduler_daily_at", "") or ""
+        timezone_name = getattr(settings, "ingestion_scheduler_timezone", "UTC") or "UTC"
+        if daily_at:
+            next_daily_run_utc(daily_at, timezone_name)
         self._stop_event.clear()
         self._task = asyncio.create_task(self._loop())
         logger.info(
             "ingestion_scheduler_started",
+            mode="daily" if daily_at else "interval",
             interval=settings.ingestion_scheduler_interval_seconds,
+            daily_at=daily_at or None,
+            timezone=timezone_name,
             max_per_tick=settings.ingestion_scheduler_max_per_tick,
         )
 
@@ -67,6 +101,10 @@ class IngestionScheduler:
         logger.info("ingestion_scheduler_stopped")
 
     async def _loop(self) -> None:
+        daily_at = getattr(self._settings, "ingestion_scheduler_daily_at", "") or ""
+        if daily_at:
+            await self._daily_loop(daily_at)
+            return
         interval = self._settings.ingestion_scheduler_interval_seconds
         while not self._stop_event.is_set():
             try:
@@ -77,6 +115,28 @@ class IngestionScheduler:
                 await asyncio.wait_for(self._stop_event.wait(), timeout=interval)
             except asyncio.TimeoutError:
                 pass  # interval elapsed → next tick
+
+    async def _daily_loop(self, daily_at: str) -> None:
+        timezone_name = getattr(self._settings, "ingestion_scheduler_timezone", "UTC") or "UTC"
+        while not self._stop_event.is_set():
+            next_run = next_daily_run_utc(daily_at, timezone_name)
+            delay = max((next_run - datetime.now(timezone.utc)).total_seconds(), 0.0)
+            logger.info(
+                "ingestion_scheduler_next_daily_tick",
+                daily_at=daily_at,
+                timezone=timezone_name,
+                next_run_utc=next_run.isoformat(),
+                delay_seconds=round(delay, 3),
+            )
+            try:
+                await asyncio.wait_for(self._stop_event.wait(), timeout=delay)
+                continue
+            except asyncio.TimeoutError:
+                pass
+            try:
+                await self._tick()
+            except Exception as exc:
+                logger.error("ingestion_scheduler_tick_error", error=str(exc))
 
     async def _tick(self) -> None:
         s = self._settings
