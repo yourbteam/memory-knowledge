@@ -124,3 +124,17 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No silent conversion of non-canonical model output into canonical ledger/runtime records without telemetry and a test proving the canonical path does not require the conversion.
 
 **Set:** 2026-06-19 · **repeated:** 0
+
+---
+
+## G9 · Translate findings into practical meaning before asking Kamen to decide
+**Why:** Claude can cite files, helpers, tests, contracts, and abstract policy questions while leaving Kamen without the practical context needed to understand what could break, what remains unproven, or what decision is actually being asked of him. Technical accuracy is not enough if the explanation is not human-graspable.
+- ✅ For every finding, lead with the practical consequence in normal language: what could fail next time, what remains unproven, what user-visible behavior changes, or what decision it affects.
+- ✅ Then give the technical evidence: file, line, test, command, contract, or runtime artifact that proves the issue.
+- ✅ Before asking Kamen a question, translate it into concrete choices with consequences. State what each answer would mean operationally.
+- ✅ If a technical term is necessary, define it by its effect in this task before relying on it.
+- 🚫 No findings that only name code structures, tests, contracts, helper functions, ids, or policy categories without explaining why Kamen should care.
+- 🚫 No abstract implementation-policy questions when the real choice is practical. Ask the practical question instead.
+- 🚫 No asking Kamen to decide from missing context, implied tradeoffs, or unexplained jargon.
+
+**Set:** 2026-06-19 · **repeated:** 0
