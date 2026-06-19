@@ -1,7 +1,7 @@
 # Working Agreement — Directives
 <!-- Authority: Kamen authors. Claude proposes; nothing is binding until Kamen confirms. -->
 <!-- Confirm word: "lock it" promotes a proposed rule to live. Nothing else counts as confirmation. -->
-<!-- Last reviewed: 2026-06-13 -->
+<!-- Last reviewed: 2026-06-19 -->
 
 **Prime directive:** Before acting, consult these directives and follow them. They override default behavior.
 
@@ -104,3 +104,23 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No asking "which one?" while the complete list is not visible directly above the question in the current message.
 
 **Set:** 2026-06-15 · **repeated:** 0
+
+## G8 · Fix the contract, not an exception garden
+**Why:** when a live failure is caused by an upstream contract, prompt, schema, or phase-output boundary drifting, patching runtime to accept every observed variant can hide the real defect and start an unmanageable exception list. Runtime tolerance is sometimes needed to unblock production, but it must not become the default substitute for fixing the authoritative boundary.
+
+- ✅ When a bug is caused by malformed, non-canonical, or drifted output, first identify the authoritative contract/boundary that should have prevented it: phase contract, persona prompt, schema, parser contract, API contract, or persisted-data migration.
+- ✅ Before proposing or implementing runtime normalization, state the concrete old-vs-new behavior on the live example:
+  - old bad behavior: what malformed shape was accepted/produced and where it came from;
+  - stable fix: which boundary will prevent that shape next time;
+  - temporary compatibility, if any: exactly what legacy/live data it protects and when it can be removed.
+- ✅ Runtime exception handling is allowed only when it is one of:
+  - a generic boundary adapter that applies broadly and has a small fixed shape, such as unwrapping a known envelope;
+  - a temporary compatibility shim for already-persisted/live data, with telemetry, tests, and an explicit containment/removal condition;
+  - a fail-closed diagnostic path that reports the contract violation without silently translating it.
+- ✅ If a helper starts accumulating phase-specific aliases, synonyms, fallback keys, or special cases for model output, stop and treat that as evidence of a contract/prompt/schema defect. Create or update the research/plan to fix the source boundary instead of adding another alias.
+- ✅ Reviews of commits that add normalization, fallback parsing, or exception handling must explicitly answer: “Is this fixing the core boundary, or compensating for it?” If compensating, name the follow-up boundary fix or mark the change as not a stable end state.
+- 🚫 No accepting “it passes the live case” as sufficient when the fix works by recognizing another malformed variant.
+- 🚫 No open-ended lists of accepted alternate keys/shapes unless Kamen explicitly approves them as a bounded legacy compatibility layer.
+- 🚫 No silent conversion of non-canonical model output into canonical ledger/runtime records without telemetry and a test proving the canonical path does not require the conversion.
+
+**Set:** 2026-06-19 · **repeated:** 0
