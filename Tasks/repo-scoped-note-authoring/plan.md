@@ -1,5 +1,10 @@
 # Plan: Repo-scoped note authoring (`author_repo_note`)
 
+> **STATUS — BUILT & DEPLOYED (2026-06-20).** S1–S6 complete on `main`, deployed to Azure
+> (`sha-3dee9be`+). Migration `028` relaxed `learned_records` evidence cols to nullable (live-verify
+> caught the NOT-NULL constraint). `author_repo_note` + retrieval `repo_scoped_memory` verified
+> end-to-end; 9 project notes migrated. Both gates (coverage + satisfaction) converged pre-build.
+
 **Why this exists.** Folding the 6 projects' file-memory into the brain (gap #1 §1.4, Bucket B) is blocked: durable repo-scoped memory (`memory.learned_records`) is **entity-anchored and evidence-by-default**, so there is no way to author a free-text repo-*level* note. This plan adds that capability the right way.
 
 **Mode:** Plan (feeds Write-code). Created 2026-06-20. Owner: memory-knowledge.
