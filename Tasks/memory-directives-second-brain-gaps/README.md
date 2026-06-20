@@ -34,6 +34,6 @@ Research ✅ → Plan ✅ (hardened) → **Implementation ✅ complete.** On `ma
 ### Remaining tails (none block the above)
 - #2 cosmetic fix `7fff0ad` (verification_status echo) applies on next deploy; storage already correct.
 - #4 per-project `AGENTS.md` generation (cross-repo, needs go).
-- Operator enablement: `launchctl load` #7 plist; `MK_AUTOCAPTURE=1` + wire #2 Stop hook; install #2 skill.
+- ~~Operator enablement~~ **ACTIVATED 2026-06-20:** #7 plist loaded (`launchctl list` → `com.kamen.memory-weekly-review`); #2 Stop hook wired in `~/.claude/settings.json` + `env.MK_AUTOCAPTURE=1` (verified inherited by hook subprocess); #2 skill installed at `~/.claude/skills/auto-capture/SKILL.md`. **One manual step left:** restart Claude Code so it picks up the new `Stop` hook + `env`.
 - 36 Bucket-B notes in non-ingested repos (mcp-agents-workflow/memory-knowledge/taggable-backoffice) — need ingestion first.
 - Cleanups: 2 test-marker notes in taggable-server brain; 3 redundant taggable-server file-memory files; pre-existing `test_guards.py` env-leak.
