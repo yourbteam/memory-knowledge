@@ -297,6 +297,38 @@ async def neo4j_graph_expansion(
     return [{"entity_key": r["entity_key"], "labels": r["labels"]} for r in records]
 
 
+async def qdrant_learned_memory_search(
+    client: AsyncQdrantClient,
+    query_embedding: list[float],
+    repository_key: str,
+    limit: int = 10,
+    score_threshold: float | None = None,
+) -> list[dict[str, Any]]:
+    """Semantic search on the `learned_memory` Qdrant collection, repo-scoped.
+
+    Surfaces learned-records (including human-asserted repo notes) directly by
+    `repository_key`. Without this, learned-records are only reachable via APPLIES_TO graph
+    traversal from code-chunk hits — which repo-level notes (no code anchor) never receive.
+    """
+    results = await client.query_points(
+        collection_name="learned_memory",
+        query=query_embedding,
+        query_filter=models.Filter(
+            must=[
+                models.FieldCondition(key="repository_key", match=models.MatchValue(value=repository_key)),
+                models.FieldCondition(key="is_active", match=models.MatchValue(value=True)),
+            ]
+        ),
+        limit=limit,
+        score_threshold=score_threshold,
+        with_payload=True,
+    )
+    return [
+        {"entity_key": p.payload.get("entity_key") if p.payload else None, "score": p.score}
+        for p in results.points
+    ]
+
+
 def rerank_results(
     pg_results: list[dict[str, Any]],
     qdrant_results: list[dict[str, Any]],
@@ -815,6 +847,32 @@ async def run(
         except Exception:
             logger.warning("learned_rules_fetch_failed", exc_info=True)
         context_bundle["applicable_learned_rules"] = learned_rules
+
+        # Step 7.6: Surface repo-scoped learned memory (incl. human-asserted notes) directly by
+        # repository_key — repo-level notes have no code anchor for the APPLIES_TO path above.
+        # Best-effort: never crashes retrieval.
+        repo_scoped_memory: list[dict[str, Any]] = []
+        try:
+            qe = query_embedding if query_embedding is not None else await embed_query(query, settings)
+            lm_hits = await qdrant_learned_memory_search(
+                qdrant_client, qe, repository_key, score_threshold=min_score
+            )
+            lm_keys = [uuid.UUID(h["entity_key"]) for h in lm_hits if h.get("entity_key")]
+            if lm_keys:
+                lm_rows = await pool.fetch(
+                    """
+                    SELECT e.entity_key, lr.title, lr.body_text, lr.memory_type,
+                           lr.confidence, lr.verification_status, lr.source_kind
+                    FROM memory.learned_records lr
+                    JOIN catalog.entities e ON lr.entity_id = e.id
+                    WHERE e.entity_key = ANY($1::uuid[]) AND lr.is_active = TRUE
+                    """,
+                    lm_keys,
+                )
+                repo_scoped_memory = [dict(r) for r in lm_rows]
+        except Exception:
+            logger.warning("repo_scoped_memory_fetch_failed", exc_info=True)
+        context_bundle["repo_scoped_memory"] = repo_scoped_memory
 
         # Step 8: Persist route execution (skipped in remote read-only mode)
         duration_ms = int((time.monotonic() - start) * 1000)

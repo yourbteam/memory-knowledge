@@ -10,6 +10,7 @@ import pytest
 from memory_knowledge import server
 from memory_knowledge.identity.entity_key import learned_record_entity_key, repository_root_entity_key
 from memory_knowledge.workflows import repo_note
+from memory_knowledge.workflows import retrieval as _retrieval
 from memory_knowledge.workflows.base import WorkflowResult
 
 
@@ -209,3 +210,25 @@ async def test_tool_author_repo_note_blocked_by_guard(monkeypatch, _server_env):
     out = await server.author_repo_note(repository_key="r", title="t", body_text="b")
     assert _json.loads(out)["status"] == "error"
     assert called["n"] == 0  # guard short-circuits before the workflow runs
+
+
+# --- S4: learned_memory retrieval search (repo isolation) ----------------------
+class _FakeQdrantLM:
+    def __init__(self):
+        self.captured = {}
+
+    async def query_points(self, **kw):
+        self.captured = kw
+        return SimpleNamespace(points=[SimpleNamespace(payload={"entity_key": "ek1"}, score=0.9)])
+
+
+@pytest.mark.asyncio
+async def test_learned_memory_search_is_repo_scoped():
+    q = _FakeQdrantLM()
+    hits = await _retrieval.qdrant_learned_memory_search(q, [0.1, 0.2], "taggable-server")
+    assert q.captured["collection_name"] == "learned_memory"
+    must = q.captured["query_filter"].must
+    by_key = {c.key: c for c in must}
+    assert "repository_key" in by_key and "is_active" in by_key  # isolation contract
+    assert by_key["repository_key"].match.value == "taggable-server"  # repo X only
+    assert hits[0]["entity_key"] == "ek1"
