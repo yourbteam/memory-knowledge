@@ -32,8 +32,8 @@ Research ✅ → Plan ✅ (hardened) → **Implementation ✅ complete.** On `ma
 **Repo-note feature** (enabling #1 Bucket B): see sibling task `Tasks/repo-scoped-note-authoring/` (S1–S6 built, deployed `sha-3dee9be`+, migration `028` relaxed evidence cols to nullable).
 
 ### Remaining tails (none block the above)
-- #2 cosmetic fix `7fff0ad` (verification_status echo) applies on next deploy; storage already correct.
-- #4 per-project `AGENTS.md` generation (cross-repo, needs go).
+- ~~#2 cosmetic fix `7fff0ad`~~ **DEPLOYED 2026-06-20** (`sha-98b50a4`); `include_inactive` now live (verified: active=9, include_inactive=56).
+- #4 per-project `AGENTS.md` generation (cross-repo) — **not authorized** in the 2026-06-20 sweep; left untouched.
 - ~~Operator enablement~~ **ACTIVATED 2026-06-20:** #7 plist loaded (`launchctl list` → `com.kamen.memory-weekly-review`); #2 Stop hook wired in `~/.claude/settings.json` + `env.MK_AUTOCAPTURE=1` (verified inherited by hook subprocess); #2 skill installed at `~/.claude/skills/auto-capture/SKILL.md`. **One manual step left:** restart Claude Code so it picks up the new `Stop` hook + `env`.
-- 36 Bucket-B notes in non-ingested repos (mcp-agents-workflow/memory-knowledge/taggable-backoffice) — need ingestion first.
-- Cleanups: 2 test-marker notes in taggable-server brain; 3 redundant taggable-server file-memory files; pre-existing `test_guards.py` env-leak.
+- 36 Bucket-B notes in non-ingested repos — **not authorized** in the 2026-06-20 sweep. `taggable-backoffice` also hard-blocked (no local clone); `mcp-agents-workflow` + `memory-knowledge` are on disk if you later want them.
+- Cleanups: ~~`test_guards.py` env-leak~~ **FIXED 2026-06-20** (boundary fix in test baseline; suite 57/57 green). Still open: 2 test-marker notes in taggable-server brain; 3 redundant taggable-server file-memory files. `tpp-petkey` null ingestion-status diagnosed as benign legacy artifact (no action).
