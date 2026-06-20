@@ -138,3 +138,30 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No asking Kamen to decide from missing context, implied tradeoffs, or unexplained jargon.
 
 **Set:** 2026-06-19 · **repeated:** 0
+
+---
+
+## G10 · Never invent API or database schema names
+**Why:** fabricated attribute, column, or endpoint names produce code that fails against the real API or database; correctness depends on referencing what actually exists. (Distilled from `~/.claude/CLAUDE.md` into the governed directive set, 2026-06-20.)
+- ✅ Reference API and database schemas from the actual schema/source, and verify a field, column, or endpoint exists before using it.
+- 🚫 No guessing attribute names, table columns, or endpoints that are not confirmed to exist in the real API or database.
+
+**Set:** 2026-06-20 · **repeated:** 0
+
+---
+
+## G11 · Make code changes granular and approval-gated
+**Why:** large, unreviewed changes get approved blind and ship drift; Kamen needs to see each change and its rationale before it lands. (Distilled from `~/.claude/CLAUDE.md`, 2026-06-20; the `write-code-playbook` is the mechanism this standing rule relies on.)
+- ✅ Present code changes as a granular, change-by-change plan — each change with the reason for it — and wait for Kamen's approval before applying.
+- 🚫 No bundling many changes into a single unreviewed edit, and no applying a code change Kamen has not approved.
+
+**Set:** 2026-06-20 · **repeated:** 0
+
+---
+
+## G12 · No AI attribution in commits
+**Why:** commit history must not carry AI co-author or attribution lines. (Distilled from `~/CLAUDE.md`, 2026-06-20; overrides the harness default that appends `Co-Authored-By: Claude`.)
+- ✅ Author commit messages with no `Co-Authored-By: Claude` and no other AI-attribution line.
+- 🚫 No AI co-author credits or AI-attribution trailers in commits.
+
+**Set:** 2026-06-20 · **repeated:** 0
