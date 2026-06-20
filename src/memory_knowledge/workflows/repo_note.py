@@ -220,7 +220,7 @@ async def run_author_note(
         return WorkflowResult(
             run_id=str(run_id), tool_name=tool, status="success",
             data={"entity_key": str(entity_key), "learned_record_id": learned_record_id,
-                  "repository_key": repository_key, "verification_status": NOTE_VERIFICATION_STATUS},
+                  "repository_key": repository_key, "verification_status": verification_status},
             duration_ms=duration_ms,
         )
     except Exception as exc:

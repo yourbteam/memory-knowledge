@@ -263,6 +263,7 @@ async def test_run_author_note_candidate_tier(monkeypatch):
                                          run_id=_uuid.uuid4(), verification_status="unverified",
                                          pool=_RevPool(), settings=SimpleNamespace())
     assert r2.status == "success" and cap["vs"] == "unverified"
+    assert r2.data["verification_status"] == "unverified"  # response echoes the stored tier
 
 
 @pytest.mark.asyncio
