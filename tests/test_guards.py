@@ -10,6 +10,12 @@ def _set_base_env(monkeypatch):
     monkeypatch.setenv("NEO4J_URI", "bolt://localhost:7687")
     monkeypatch.setenv("NEO4J_USER", "neo4j")
     monkeypatch.setenv("NEO4J_PASSWORD", "pass")
+    # The dev `.env` sets DATA_MODE / ALLOW_REMOTE_WRITES / ALLOW_REMOTE_REBUILDS; pin the
+    # guard-relevant env to a known baseline so each test owns it (os.environ overrides .env).
+    # Tests that exercise remote/allow paths override these explicitly below.
+    monkeypatch.setenv("DATA_MODE", "local")
+    monkeypatch.setenv("ALLOW_REMOTE_WRITES", "false")
+    monkeypatch.setenv("ALLOW_REMOTE_REBUILDS", "false")
 
 
 def test_local_mode_allows_writes(monkeypatch):
