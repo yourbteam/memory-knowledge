@@ -34,6 +34,16 @@ MCP server already configured in `~/.codex/config.toml`.
 
 > **Per-project note:** to govern Codex in another repo, generate an `AGENTS.md` in that repo
 > too. Only generate into repos you own; never overwrite a third-party repo's own `AGENTS.md`.
+>
+> **Repo already has its own `AGENTS.md`?** Don't overwrite it — merge instead:
+>
+> ```bash
+> python working-agreement/generate_projections.py --kind agents --append-to /path/to/repo/AGENTS.md
+> ```
+>
+> This folds the directives into a fenced `BEGIN/END GENERATED WORKING-AGREEMENT DIRECTIVES`
+> block at the end of the file: the repo's own guidance is preserved, the directives land in
+> Codex context, and re-running replaces only the block (idempotent — never duplicates or drifts).
 
 ## Verify it works
 - `python working-agreement/generate_projections.py --kind agents` (dry-run) prints the
