@@ -845,8 +845,15 @@ async def get_memory_stats(repository_key: str, correlation_id: str | None = Non
 
 @mcp.tool()
 @track_tool_metrics("list_repositories")
-async def list_repositories(correlation_id: str | None = None) -> str:
-    """List all registered repositories with their latest ingestion state."""
+async def list_repositories(
+    include_inactive: bool = False, correlation_id: str | None = None
+) -> str:
+    """List registered repositories with their latest ingestion state.
+
+    By default, repositories whose status is ``inactive`` are excluded so the
+    listing surfaces only live repositories. Pass ``include_inactive=True`` to
+    return every repository regardless of status (the legacy behaviour).
+    """
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "list_repositories")
     try:
@@ -868,6 +875,7 @@ async def list_repositories(correlation_id: str | None = None) -> str:
                 ir.status         AS last_ingestion_status,
                 ir.completed_utc  AS last_ingestion_utc
             FROM catalog.repositories r
+            LEFT JOIN core.reference_values rstat ON rstat.id = r.status_id
             LEFT JOIN LATERAL (
                 SELECT bh2.branch_name, bh2.repo_revision_id
                 FROM catalog.branch_heads bh2
@@ -889,8 +897,10 @@ async def list_repositories(correlation_id: str | None = None) -> str:
                 WHERE ir2.repository_id = r.id
                 ORDER BY ir2.id DESC LIMIT 1
             ) ir ON TRUE
+            WHERE ($1::bool OR rstat.internal_code IS DISTINCT FROM 'inactive')
             ORDER BY r.name
-            """
+            """,
+            include_inactive,
         )
         repos = []
         for row in rows:
