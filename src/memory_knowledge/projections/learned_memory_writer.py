@@ -20,8 +20,8 @@ async def upsert_learned_record(
     confidence: float,
     applicability_mode: str,
     valid_from_revision_id: int,
-    evidence_entity_id: int,
-    evidence_chunk_id: int,
+    evidence_entity_id: int | None,
+    evidence_chunk_id: int | None,
     verification_status: str = "unverified",
     is_active: bool = True,
 ) -> int:

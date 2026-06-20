@@ -1,8 +1,12 @@
-"""Tests for repo-scoped note authoring — S1: ensure_repo_root_entity."""
+"""Tests for repo-scoped note authoring — S1: ensure_repo_root_entity; S2: run_author_note."""
+
+import hashlib
+import uuid as _uuid
+from types import SimpleNamespace
 
 import pytest
 
-from memory_knowledge.identity.entity_key import repository_root_entity_key
+from memory_knowledge.identity.entity_key import learned_record_entity_key, repository_root_entity_key
 from memory_knowledge.workflows import repo_note
 
 
@@ -77,3 +81,79 @@ async def test_neo4j_failure_is_best_effort():
     pool = FakePool()
     ek, eid = await repo_note.ensure_repo_root_entity(pool, "taggable-server", neo4j_driver=BoomNeo4j())
     assert eid == 99  # PG write still succeeds; Neo4j failure swallowed
+
+
+# --- S2: run_author_note orchestration -----------------------------------------
+
+
+class _RevPool:
+    async def fetchrow(self, query, *args):
+        assert "repo_revisions" in query
+        return {"id": 10}
+
+
+@pytest.mark.asyncio
+async def test_run_author_note_human_asserted_evidence_free(monkeypatch):
+    calls = {}
+
+    async def fake_ensure(pool, repository_key, neo4j_driver=None):
+        return ("rootkey-uuid", 7)
+
+    async def fake_upsert(**kw):
+        calls["upsert"] = kw
+        return 55
+
+    async def fake_embed(**kw):
+        calls["embed"] = kw
+
+    async def fake_project(**kw):
+        calls["project"] = kw
+
+    monkeypatch.setattr(repo_note, "ensure_repo_root_entity", fake_ensure)
+    monkeypatch.setattr(repo_note, "upsert_learned_record", fake_upsert)
+    monkeypatch.setattr(repo_note, "embed_and_upsert_learned_record", fake_embed)
+    monkeypatch.setattr(repo_note, "project_learned_rule", fake_project)
+
+    res = await repo_note.run_author_note(
+        repository_key="taggable-server",
+        title="React migration underway",
+        body_text="Frontend migration to React is in progress.",
+        run_id=_uuid.uuid4(),
+        pool=_RevPool(),
+        qdrant_client=object(),
+        neo4j_driver=object(),
+        settings=SimpleNamespace(),
+    )
+    assert res.status == "success"
+    # human-asserted, evidence-free, scoped to the repo root
+    up = calls["upsert"]
+    assert up["source_kind"] == "operator_note"
+    assert up["verification_status"] == "human_asserted"
+    assert up["evidence_entity_id"] is None and up["evidence_chunk_id"] is None
+    assert up["scope_entity_id"] == 7
+    assert up["entity_key"] == learned_record_entity_key(
+        "taggable-server", "note", hashlib.sha256(b"React migration underway").hexdigest()[:16]
+    )
+    # embedded into learned_memory with repo-scoped payload key
+    assert calls["embed"]["repository_key"] == "taggable-server"
+    assert calls["embed"]["scope_entity_key"] == "rootkey-uuid"
+    # best-effort graph edge issued
+    assert "project" in calls
+
+
+@pytest.mark.asyncio
+async def test_run_author_note_rejects_invalid_memory_type():
+    res = await repo_note.run_author_note(
+        repository_key="r", title="t", body_text="b", run_id=_uuid.uuid4(),
+        memory_type="bogus", pool=_RevPool(), settings=SimpleNamespace(),
+    )
+    assert res.status == "error" and "Invalid memory_type" in res.error
+
+
+@pytest.mark.asyncio
+async def test_run_author_note_requires_title_body():
+    res = await repo_note.run_author_note(
+        repository_key="r", title="", body_text="b", run_id=_uuid.uuid4(),
+        pool=_RevPool(), settings=SimpleNamespace(),
+    )
+    assert res.status == "error"
