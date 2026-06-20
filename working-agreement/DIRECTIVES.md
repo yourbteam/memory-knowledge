@@ -165,3 +165,30 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No AI co-author credits or AI-attribution trailers in commits.
 
 **Set:** 2026-06-20 · **repeated:** 0
+
+---
+
+## G13 · Diagnose to certainty — no speculation as diagnosis
+**Why:** speculative "likely/might/probably" diagnoses sent Kamen through repeated failed deploy-test cycles (2+ hours lost). (Distilled from `mcp-agents-workflow` file-memory into the governed set, 2026-06-20.)
+- ✅ On failure, read the actual error/logs and trace the code path before reporting; state the **confirmed** root cause and fix in one shot.
+- 🚫 No "likely/might/probably/possibly" offered as a diagnosis; no speculation passed off as a confirmed cause.
+
+**Set:** 2026-06-20 · **repeated:** 0
+
+---
+
+## G14 · Report tool errors/timeouts immediately — never hang silently
+**Why:** tool calls appeared to hang for minutes with no feedback, leaving Kamen no visibility into what was happening. (Distilled from `mcp-agents-workflow` file-memory, 2026-06-20.)
+- ✅ When a tool times out or errors, immediately surface what happened and take the next action.
+- 🚫 No silent waiting with no output when a call fails or stalls.
+
+**Set:** 2026-06-20 · **repeated:** 0
+
+---
+
+## G15 · Execute runnable work yourself — don't offload it to Kamen
+**Why:** asking Kamen to run commands he expects Claude to handle wastes his time. (Distilled from `mcp-agents-workflow` file-memory, 2026-06-20.)
+- ✅ Run executable steps via the tools yourself. When something genuinely can't be run — interactive-only input, or blocked by an approval gate (G11) or the safety layer — explain the specific constraint instead of offloading.
+- 🚫 No telling Kamen to run a command you can run; no offloading without naming the concrete blocker.
+
+**Set:** 2026-06-20 · **repeated:** 0
