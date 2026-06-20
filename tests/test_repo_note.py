@@ -1,13 +1,16 @@
 """Tests for repo-scoped note authoring — S1: ensure_repo_root_entity; S2: run_author_note."""
 
 import hashlib
+import json as _json
 import uuid as _uuid
 from types import SimpleNamespace
 
 import pytest
 
+from memory_knowledge import server
 from memory_knowledge.identity.entity_key import learned_record_entity_key, repository_root_entity_key
 from memory_knowledge.workflows import repo_note
+from memory_knowledge.workflows.base import WorkflowResult
 
 
 class FakePool:
@@ -157,3 +160,52 @@ async def test_run_author_note_requires_title_body():
         pool=_RevPool(), settings=SimpleNamespace(),
     )
     assert res.status == "error"
+
+
+# --- S3: author_repo_note MCP tool wiring --------------------------------------
+
+
+@pytest.fixture
+def _server_env(monkeypatch):
+    monkeypatch.setattr(server, "get_pg_pool", lambda: object())
+    monkeypatch.setattr(server, "get_qdrant_client", lambda: object())
+    monkeypatch.setattr(server, "get_neo4j_driver", lambda: object())
+    monkeypatch.setattr(server, "get_settings", lambda: SimpleNamespace())
+
+
+@pytest.mark.asyncio
+async def test_tool_author_repo_note_success(monkeypatch, _server_env):
+    captured = {}
+
+    async def fake(**kw):
+        captured.update(kw)
+        return WorkflowResult(run_id="r", tool_name="author_repo_note", status="success",
+                              data={"entity_key": "ek", "repository_key": kw["repository_key"]})
+
+    monkeypatch.setattr(server, "check_remote_write_guard", lambda settings, tool_name: None)
+    monkeypatch.setattr(server._repo_note, "run_author_note", fake)
+
+    out = await server.author_repo_note(repository_key="taggable-server", title="t", body_text="b")
+    data = _json.loads(out)
+    assert data["status"] == "success"
+    assert captured["repository_key"] == "taggable-server"
+    assert captured["memory_type"] == "note"  # default
+    # deps wired through
+    assert "pool" in captured and "qdrant_client" in captured and "neo4j_driver" in captured
+
+
+@pytest.mark.asyncio
+async def test_tool_author_repo_note_blocked_by_guard(monkeypatch, _server_env):
+    blocked = WorkflowResult(run_id="x", tool_name="author_repo_note", status="error",
+                             error="ALLOW_REMOTE_WRITES not set")
+    monkeypatch.setattr(server, "check_remote_write_guard", lambda settings, tool_name: blocked)
+    called = {"n": 0}
+
+    async def fake(**kw):
+        called["n"] += 1
+        return WorkflowResult(run_id="r", tool_name="author_repo_note", status="success")
+
+    monkeypatch.setattr(server._repo_note, "run_author_note", fake)
+    out = await server.author_repo_note(repository_key="r", title="t", body_text="b")
+    assert _json.loads(out)["status"] == "error"
+    assert called["n"] == 0  # guard short-circuits before the workflow runs

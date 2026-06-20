@@ -47,6 +47,7 @@ from memory_knowledge.workflows import retrieval as _retrieval
 from memory_knowledge.workflows import context_assembly as _context_assembly
 from memory_knowledge.workflows import impact_analysis as _impact_analysis
 from memory_knowledge.workflows import learned_memory as _learned_memory
+from memory_knowledge.workflows import repo_note as _repo_note
 from memory_knowledge.workflows import blueprint_refinement as _blueprint_refinement
 from memory_knowledge.workflows import ingestion as _ingestion
 from memory_knowledge.workflows import integrity_audit as _integrity_audit
@@ -261,6 +262,48 @@ async def run_learned_memory_proposal_workflow(
             body_text=body_text,
             evidence_entity_key=evidence_entity_key,
             scope_entity_key=scope_entity_key,
+            confidence=confidence,
+            applicability_mode=applicability_mode,
+            run_id=run_id,
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+            neo4j_driver=get_neo4j_driver(),
+            settings=get_settings(),
+        )
+        return result.model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("author_repo_note")
+async def author_repo_note(
+    repository_key: str,
+    title: str,
+    body_text: str,
+    memory_type: str = "note",
+    confidence: float = 0.8,
+    applicability_mode: str = "repository",
+    correlation_id: str | None = None,
+) -> str:
+    """Author a human-asserted, evidence-free repo-scoped note into the brain.
+
+    Stores a free-text note (a project fact or working note) as repo-scoped memory, anchored
+    to the repository's root entity and retrievable via run_retrieval_workflow for that repo.
+    Use for durable repo-level knowledge that is not tied to a specific code entity.
+    """
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "author_repo_note")
+    guard = check_remote_write_guard(get_settings(), "author_repo_note")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        result = await _repo_note.run_author_note(
+            repository_key=repository_key,
+            title=title,
+            body_text=body_text,
+            memory_type=memory_type,
             confidence=confidence,
             applicability_mode=applicability_mode,
             run_id=run_id,
