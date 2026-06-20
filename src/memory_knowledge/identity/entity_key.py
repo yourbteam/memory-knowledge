@@ -31,6 +31,15 @@ def learned_record_entity_key(repo_key: str, memory_type: str, title_hash: str) 
     return uuid.uuid5(NAMESPACE_MK, f"{repo_key}:{memory_type}:{title_hash}")
 
 
+def repository_root_entity_key(repo_key: str) -> uuid.UUID:
+    """Deterministic key for a repository's root entity (entity_type='repository').
+
+    One stable anchor per repo, used as the scope for repo-level notes that are not
+    about any specific file. Deterministic so creation is idempotent.
+    """
+    return uuid.uuid5(NAMESPACE_MK, f"repository_root:{repo_key}")
+
+
 def corpus_entry_key(kind: str, link_slug: str | None, title: str) -> uuid.UUID:
     """Deterministic key for a Tier-2 corpus entry (global, not repo-scoped).
 

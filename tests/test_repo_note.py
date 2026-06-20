@@ -1,0 +1,79 @@
+"""Tests for repo-scoped note authoring — S1: ensure_repo_root_entity."""
+
+import pytest
+
+from memory_knowledge.identity.entity_key import repository_root_entity_key
+from memory_knowledge.workflows import repo_note
+
+
+class FakePool:
+    """Pattern-matches the queries ensure_repo_root_entity issues."""
+
+    def __init__(self, *, repo_id=1, revision_id=10, insert_returns_id=99, existing_id=99):
+        self.repo_id = repo_id
+        self.revision_id = revision_id
+        self.insert_returns_id = insert_returns_id  # None simulates ON CONFLICT no-op
+        self.existing_id = existing_id
+        self.calls: list[str] = []
+
+    async def fetchrow(self, query, *args):
+        self.calls.append(query)
+        if "FROM catalog.repositories WHERE repository_key" in query:
+            return {"id": self.repo_id} if self.repo_id is not None else None
+        if "FROM catalog.repo_revisions" in query:
+            return {"id": self.revision_id} if self.revision_id is not None else None
+        if "INSERT INTO catalog.entities" in query:
+            return {"id": self.insert_returns_id} if self.insert_returns_id is not None else None
+        if "SELECT id FROM catalog.entities WHERE entity_key" in query:
+            return {"id": self.existing_id}
+        raise AssertionError(f"unexpected query: {query}")
+
+
+class FakeNeo4j:
+    def __init__(self):
+        self.queries: list[str] = []
+
+    async def execute_query(self, query, **kw):
+        self.queries.append(query)
+
+
+@pytest.mark.asyncio
+async def test_creates_root_entity_with_repository_type():
+    pool, neo = FakePool(insert_returns_id=99), FakeNeo4j()
+    ek, eid = await repo_note.ensure_repo_root_entity(pool, "taggable-server", neo4j_driver=neo)
+    assert ek == str(repository_root_entity_key("taggable-server"))  # deterministic key
+    assert eid == 99
+    insert = next(q for q in pool.calls if "INSERT INTO catalog.entities" in q)
+    assert "entity_type" in insert and "ON CONFLICT (entity_key) DO NOTHING" in insert
+    assert any("MERGE (root:RepositoryRoot" in q for q in neo.queries)  # best-effort node
+
+
+@pytest.mark.asyncio
+async def test_idempotent_returns_existing_id_on_conflict():
+    pool = FakePool(insert_returns_id=None, existing_id=42)  # conflict path
+    ek, eid = await repo_note.ensure_repo_root_entity(pool, "fcsapi")
+    assert eid == 42
+    assert ek == str(repository_root_entity_key("fcsapi"))
+
+
+@pytest.mark.asyncio
+async def test_raises_when_repo_missing():
+    with pytest.raises(ValueError, match="Repository not found"):
+        await repo_note.ensure_repo_root_entity(FakePool(repo_id=None), "nope")
+
+
+@pytest.mark.asyncio
+async def test_raises_when_no_revision():
+    with pytest.raises(ValueError, match="no ingested revision"):
+        await repo_note.ensure_repo_root_entity(FakePool(revision_id=None), "taggable-api")
+
+
+@pytest.mark.asyncio
+async def test_neo4j_failure_is_best_effort():
+    class BoomNeo4j:
+        async def execute_query(self, *a, **k):
+            raise RuntimeError("neo4j down")
+
+    pool = FakePool()
+    ek, eid = await repo_note.ensure_repo_root_entity(pool, "taggable-server", neo4j_driver=BoomNeo4j())
+    assert eid == 99  # PG write still succeeds; Neo4j failure swallowed

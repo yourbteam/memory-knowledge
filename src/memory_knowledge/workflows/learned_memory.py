@@ -33,6 +33,7 @@ VALID_MEMORY_TYPES = {
     "entity_relationship",
     "naming_convention",
     "architectural_pattern",
+    "note",  # human-asserted, evidence-free repo-level note (author_repo_note)
 }
 
 
