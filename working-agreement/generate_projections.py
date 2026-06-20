@@ -96,16 +96,79 @@ def merge_into(existing: str, directives_text: str) -> str:
     return f"{base}\n{block}"
 
 
+def refresh_agents_file(existing: str, directives_text: str) -> str | None:
+    """Refresh an already-generated AGENTS.md in place; return new content, or None to skip.
+
+    Safety: only files this generator itself produced are refreshed — never a repo's own
+    hand-authored AGENTS.md or a hand-curated pointer.
+      - fenced merge block present  -> refresh just the block (repo content preserved);
+      - full generated projection   -> regenerate the whole file;
+      - anything else               -> None (skip; do not touch).
+    """
+    if MERGE_BEGIN in existing:
+        return merge_into(existing, directives_text)
+    if existing.lstrip().startswith(GENERATED_HEADER.splitlines()[0]) and "## G0" in existing:
+        return agents_projection(directives_text)
+    return None
+
+
+def codex_trusted_projects(config_path: Path) -> list[Path]:
+    """Parse `[projects."<path>"]` headers from a Codex config.toml into repo paths."""
+    if not config_path.exists():
+        return []
+    out: list[Path] = []
+    for line in config_path.read_text().splitlines():
+        m = re.match(r'\[projects\."(.+)"\]\s*$', line.strip())
+        if m:
+            out.append(Path(m.group(1)))
+    return out
+
+
+def refresh_trusted(directives_path: Path, config_path: Path) -> list[str]:
+    """Refresh every generated AGENTS.md across Codex trusted projects. Returns one status line each."""
+    directives_text = read_directives(directives_path)
+    results: list[str] = []
+    for proj in codex_trusted_projects(config_path):
+        f = proj / "AGENTS.md"
+        if not f.exists():
+            results.append(f"skip(no-AGENTS.md): {proj.name}")
+            continue
+        new = refresh_agents_file(f.read_text(), directives_text)
+        if new is None:
+            results.append(f"skip(not-generated): {proj.name}")
+        else:
+            f.write_text(new)
+            results.append(f"refreshed: {proj.name}")
+    return results
+
+
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__)
-    ap.add_argument("--kind", required=True, choices=["agents", "claude-pointer"])
+    ap.add_argument("--kind", default=None, choices=["agents", "claude-pointer"])
     ap.add_argument("--directives", type=Path, default=DEFAULT_DIRECTIVES)
     ap.add_argument("--write", type=Path, default=None, help="Target path to overwrite; omit for dry-run.")
     ap.add_argument(
         "--append-to", type=Path, default=None,
         help="Existing AGENTS.md to merge the directives into a fenced block (preserves its content).",
     )
+    ap.add_argument(
+        "--refresh-trusted", action="store_true",
+        help="Refresh every already-generated AGENTS.md across Codex trusted projects.",
+    )
+    ap.add_argument(
+        "--codex-config", type=Path, default=Path.home() / ".codex" / "config.toml",
+        help="Codex config.toml to read trusted projects from (with --refresh-trusted).",
+    )
     args = ap.parse_args()
+
+    # Freshness sweep: regenerate generated AGENTS.md across trusted projects (never clobbers own files).
+    if args.refresh_trusted:
+        for line in refresh_trusted(args.directives, args.codex_config):
+            sys.stderr.write(f"{line}\n")
+        return 0
+
+    if args.kind is None:
+        ap.error("--kind is required unless --refresh-trusted is given")
 
     # Merge mode: fold the directives into an existing repo AGENTS.md without clobbering it.
     if args.append_to is not None:

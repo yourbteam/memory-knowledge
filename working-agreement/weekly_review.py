@@ -77,7 +77,21 @@ async def _run(date: str) -> int:
     except Exception as exc:  # noqa: BLE001
         print(f"[weekly-review] consolidation failed (continuing): {exc}", file=sys.stderr)
 
-    # 3. Bump the review stamp (wrapper commits it)
+    # 3. Refresh generated AGENTS.md across Codex trusted projects (#4 freshness; never clobbers
+    #    a repo's own AGENTS.md — only files this generator produced). Best-effort.
+    try:
+        import importlib.util
+        gp_path = Path(__file__).resolve().parent / "generate_projections.py"
+        spec = importlib.util.spec_from_file_location("generate_projections", gp_path)
+        gp = importlib.util.module_from_spec(spec)
+        spec.loader.exec_module(gp)
+        codex_config = Path(os.environ.get("MK_CODEX_CONFIG", str(Path.home() / ".codex" / "config.toml")))
+        for line in gp.refresh_trusted(DIRECTIVES, codex_config):
+            print(f"[weekly-review] agents-refresh {line}", file=sys.stderr)
+    except Exception as exc:  # noqa: BLE001 — best-effort
+        print(f"[weekly-review] agents-refresh failed (continuing): {exc}", file=sys.stderr)
+
+    # 4. Bump the review stamp (wrapper commits it)
     if DIRECTIVES.exists():
         DIRECTIVES.write_text(bump_review_stamp(DIRECTIVES.read_text(), date))
         print(f"[weekly-review] stamped Last reviewed: {date}", file=sys.stderr)

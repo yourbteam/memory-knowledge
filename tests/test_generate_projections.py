@@ -82,3 +82,51 @@ def test_merge_refreshes_block_on_directive_change(tmp_path):
     assert "## G99 · New rule" in second
     assert "## G1 · Keep Kamen in grasp" not in second  # old block fully replaced
     assert second.count(gp.MERGE_BEGIN) == 1
+
+
+def _full_directives(tmp_path):
+    d = tmp_path / "DIRECTIVES.md"
+    d.write_text("# Working Agreement\n\n## G0 · Compliance\n**Why:** ...\n## G1 · Grasp\n**Why:** ...\n")
+    return d
+
+
+def test_refresh_skips_repo_own_agents(tmp_path):
+    d = _full_directives(tmp_path)
+    own = "# Repository Guidelines\n\n## Build\nrun make\n"
+    assert gp.refresh_agents_file(own, gp.read_directives(d)) is None  # never clobber a repo's own file
+
+
+def test_refresh_skips_hand_pointer(tmp_path):
+    d = _full_directives(tmp_path)
+    pointer = "# Codex Working Agreement\n\nRead working-agreement/DIRECTIVES.md\n"  # no GENERATED header, no G0
+    assert gp.refresh_agents_file(pointer, gp.read_directives(d)) is None
+
+
+def test_refresh_regenerates_full_projection(tmp_path):
+    d = _full_directives(tmp_path)
+    stale = gp.agents_projection("# Working Agreement\n\n## G0 · Compliance\n**Why:** OLD\n")
+    out = gp.refresh_agents_file(stale, gp.read_directives(d))
+    assert out is not None and "## G1 · Grasp" in out and "OLD" not in out
+
+
+def test_refresh_refreshes_merge_block_only(tmp_path):
+    d = _full_directives(tmp_path)
+    merged = gp.merge_into("# Repo own\nkeep\n", "# Working Agreement\n\n## G0 · old\n**Why:** OLD\n")
+    out = gp.refresh_agents_file(merged, gp.read_directives(d))
+    assert out is not None
+    assert "keep" in out and "## G1 · Grasp" in out and "OLD" not in out
+    assert out.count(gp.MERGE_BEGIN) == 1
+
+
+def test_codex_trusted_projects_parses_headers(tmp_path):
+    cfg = tmp_path / "config.toml"
+    cfg.write_text(
+        'model = "x"\n[projects."/Users/k/repo-a"]\ntrust_level = "trusted"\n'
+        '[projects."/Users/k/repo-b"]\ntrust_level = "trusted"\n[mcp_servers.x]\n'
+    )
+    projs = gp.codex_trusted_projects(cfg)
+    assert [p.name for p in projs] == ["repo-a", "repo-b"]
+
+
+def test_codex_trusted_projects_missing_config(tmp_path):
+    assert gp.codex_trusted_projects(tmp_path / "nope.toml") == []
