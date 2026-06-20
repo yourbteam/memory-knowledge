@@ -284,13 +284,16 @@ async def author_repo_note(
     memory_type: str = "note",
     confidence: float = 0.8,
     applicability_mode: str = "repository",
+    verification_status: str = "human_asserted",
     correlation_id: str | None = None,
 ) -> str:
-    """Author a human-asserted, evidence-free repo-scoped note into the brain.
+    """Author a repo-scoped note into the brain.
 
     Stores a free-text note (a project fact or working note) as repo-scoped memory, anchored
     to the repository's root entity and retrievable via run_retrieval_workflow for that repo.
     Use for durable repo-level knowledge that is not tied to a specific code entity.
+    verification_status: 'human_asserted' (default, a confirmed note) or 'unverified' (an
+    auto-captured candidate for later promotion).
     """
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "author_repo_note")
@@ -306,6 +309,7 @@ async def author_repo_note(
             memory_type=memory_type,
             confidence=confidence,
             applicability_mode=applicability_mode,
+            verification_status=verification_status,
             run_id=run_id,
             pool=get_pg_pool(),
             qdrant_client=get_qdrant_client(),

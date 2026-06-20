@@ -32,6 +32,9 @@ logger = structlog.get_logger()
 REPOSITORY_ROOT_ENTITY_TYPE = "repository"
 NOTE_SOURCE_KIND = "operator_note"
 NOTE_VERIFICATION_STATUS = "human_asserted"
+# Trust tiers for a note: a human-confirmed assertion vs an auto-captured candidate (#2).
+# Auto-capture writes 'unverified' candidates (evidence-grade) for later promotion.
+VALID_NOTE_VERIFICATION = {"human_asserted", "unverified"}
 
 
 async def ensure_repo_root_entity(
@@ -113,6 +116,7 @@ async def run_author_note(
     memory_type: str = "note",
     confidence: float = 0.8,
     applicability_mode: str = "repository",
+    verification_status: str = NOTE_VERIFICATION_STATUS,
     pool: asyncpg.Pool | None = None,
     qdrant_client: AsyncQdrantClient | None = None,
     neo4j_driver: neo4j.AsyncDriver | None = None,
@@ -144,6 +148,11 @@ async def run_author_note(
                 run_id=str(run_id), tool_name=tool, status="error",
                 error=f"Invalid memory_type: {memory_type}. Must be one of: {', '.join(sorted(VALID_MEMORY_TYPES))}",
             )
+        if verification_status not in VALID_NOTE_VERIFICATION:
+            return WorkflowResult(
+                run_id=str(run_id), tool_name=tool, status="error",
+                error=f"Invalid verification_status: {verification_status}. Must be one of: {', '.join(sorted(VALID_NOTE_VERIFICATION))}",
+            )
 
         # S1 anchor (also validates repo + ingested revision; raises with a clear message otherwise)
         root_entity_key, root_entity_id = await ensure_repo_root_entity(
@@ -173,9 +182,9 @@ async def run_author_note(
             confidence=confidence,
             applicability_mode=applicability_mode,
             valid_from_revision_id=valid_from_revision_id,
-            evidence_entity_id=None,   # evidence-free, human-asserted
+            evidence_entity_id=None,   # evidence-free
             evidence_chunk_id=None,
-            verification_status=NOTE_VERIFICATION_STATUS,
+            verification_status=verification_status,
             is_active=True,
         )
 

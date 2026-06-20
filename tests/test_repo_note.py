@@ -232,3 +232,42 @@ async def test_learned_memory_search_is_repo_scoped():
     assert "repository_key" in by_key and "is_active" in by_key  # isolation contract
     assert by_key["repository_key"].match.value == "taggable-server"  # repo X only
     assert hits[0]["entity_key"] == "ek1"
+
+
+# --- 2a: candidate tier (verification_status) ----------------------------------
+@pytest.mark.asyncio
+async def test_run_author_note_candidate_tier(monkeypatch):
+    cap = {}
+
+    async def fake_ensure(pool, repository_key, neo4j_driver=None):
+        return ("rk", 7)
+
+    async def fake_upsert(**kw):
+        cap["vs"] = kw["verification_status"]
+        return 1
+
+    async def noop(**kw):
+        pass
+
+    monkeypatch.setattr(repo_note, "ensure_repo_root_entity", fake_ensure)
+    monkeypatch.setattr(repo_note, "upsert_learned_record", fake_upsert)
+    monkeypatch.setattr(repo_note, "embed_and_upsert_learned_record", noop)
+    monkeypatch.setattr(repo_note, "project_learned_rule", noop)
+
+    # default = human_asserted
+    r = await repo_note.run_author_note(repository_key="r", title="t", body_text="b",
+                                        run_id=_uuid.uuid4(), pool=_RevPool(), settings=SimpleNamespace())
+    assert r.status == "success" and cap["vs"] == "human_asserted"
+    # auto-capture candidate = unverified
+    r2 = await repo_note.run_author_note(repository_key="r", title="t", body_text="b",
+                                         run_id=_uuid.uuid4(), verification_status="unverified",
+                                         pool=_RevPool(), settings=SimpleNamespace())
+    assert r2.status == "success" and cap["vs"] == "unverified"
+
+
+@pytest.mark.asyncio
+async def test_run_author_note_rejects_bad_verification_status():
+    r = await repo_note.run_author_note(repository_key="r", title="t", body_text="b",
+                                        run_id=_uuid.uuid4(), verification_status="bogus",
+                                        pool=_RevPool(), settings=SimpleNamespace())
+    assert r.status == "error" and "verification_status" in r.error
