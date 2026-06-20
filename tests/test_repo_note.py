@@ -285,7 +285,7 @@ class FakeDeactivatePool:
         self.executed: list[tuple] = []
 
     async def fetchrow(self, query, *args):
-        if "FROM memory.learned_records WHERE entity_key" in query:
+        if "FROM memory.learned_records lr" in query and "JOIN catalog.entities e" in query:
             return {"id": 5, "is_active": self.is_active} if self.found else None
         raise AssertionError(f"unexpected query: {query}")
 

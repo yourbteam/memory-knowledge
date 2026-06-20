@@ -274,8 +274,16 @@ async def run_deactivate_note(
         title_hash = hashlib.sha256(title.encode()).hexdigest()[:16]
         entity_key = learned_record_entity_key(repository_key, memory_type, title_hash)
 
+        # learned_records has no entity_key column; the note's entity_key lives on catalog.entities,
+        # referenced by learned_records.entity_id (see upsert_learned_record). Resolve via the join.
         row = await pool.fetchrow(
-            "SELECT id, is_active FROM memory.learned_records WHERE entity_key = $1", entity_key
+            """
+            SELECT lr.id, lr.is_active
+            FROM memory.learned_records lr
+            JOIN catalog.entities e ON lr.entity_id = e.id
+            WHERE e.entity_key = $1
+            """,
+            entity_key,
         )
         if row is None:
             return WorkflowResult(
