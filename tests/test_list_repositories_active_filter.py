@@ -42,7 +42,7 @@ async def test_list_repositories_excludes_inactive_by_default(monkeypatch):
     query, args = pool.fetch_calls[0]
     # Status join + filter clause must be present, and bound to the default (hide inactive).
     assert "LEFT JOIN core.reference_values rstat ON rstat.id = r.status_id" in query
-    assert "rstat.internal_code IS DISTINCT FROM 'inactive'" in query
+    assert "rstat.internal_code IS DISTINCT FROM 'REPO_INACTIVE'" in query
     assert args == (False,)
 
 

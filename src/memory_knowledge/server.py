@@ -897,7 +897,7 @@ async def list_repositories(
                 WHERE ir2.repository_id = r.id
                 ORDER BY ir2.id DESC LIMIT 1
             ) ir ON TRUE
-            WHERE ($1::bool OR rstat.internal_code IS DISTINCT FROM 'inactive')
+            WHERE ($1::bool OR rstat.internal_code IS DISTINCT FROM 'REPO_INACTIVE')
             ORDER BY r.name
             """,
             include_inactive,
