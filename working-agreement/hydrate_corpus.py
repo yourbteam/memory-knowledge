@@ -67,11 +67,17 @@ def main() -> int:
         "# Tier-2 corpus — retrieved for this prompt",
         "(Relevance-ranked background, retrieved on demand. Context only — the Tier-1 "
         "directives above remain authoritative.)",
+        "When a corpus entry materially informs your response, cite its source so the "
+        "decision is traceable — reference its link_slug (or entry_key) shown below.",
     ]
     for h in hits:
         label = h.get("title") or h.get("link_slug") or "entry"
         score = round(float(h.get("score") or 0), 2)
-        lines.append(f"\n## {label}  (score {score})\n{h['body_text'].strip()}")
+        slug = h.get("link_slug") or "—"
+        ekey = h.get("entry_key") or "—"
+        lines.append(
+            f"\n## {label}  (score {score} · slug {slug} · id {ekey})\n{h['body_text'].strip()}"
+        )
     ctx = "\n".join(lines)
 
     print(json.dumps({

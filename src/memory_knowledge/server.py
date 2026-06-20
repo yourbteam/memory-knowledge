@@ -385,10 +385,12 @@ async def corpus_query(
     kind: str | None = None,
     link_slug: str | None = None,
     limit: int = 5,
+    min_score: float | None = None,
     correlation_id: str | None = None,
 ) -> str:
     """Semantic search over the Tier-2 corpus. Filters out inactive/superseded entries;
-    optional kind / link_slug filters."""
+    optional kind / link_slug filters. Results are ranked by similarity with recency
+    (updated_utc) as a tiebreaker; pass min_score to drop hits below a similarity floor."""
     run_id = new_run_id()
     bind_run_context(run_id, correlation_id, "corpus_query")
     try:
@@ -397,6 +399,7 @@ async def corpus_query(
             kind=kind,
             link_slug=link_slug,
             limit=limit,
+            min_score=min_score,
             run_id=run_id,
             pool=get_pg_pool(),
             qdrant_client=get_qdrant_client(),

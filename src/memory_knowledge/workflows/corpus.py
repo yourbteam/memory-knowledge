@@ -190,12 +190,19 @@ async def run_query(
     kind: str | None = None,
     link_slug: str | None = None,
     limit: int = 5,
+    min_score: float | None = None,
     pool: asyncpg.Pool | None = None,
     qdrant_client: AsyncQdrantClient | None = None,
     settings: Settings | None = None,
 ) -> WorkflowResult:
     """Semantic search over the corpus. Embeds the query with the same model as the write
     path, filters is_active=true (+ optional kind/link_slug), and returns ranked entries.
+
+    Ranking: vector similarity is primary; ``updated_utc`` recency is a tiebreaker so that,
+    among entries of equal similarity, the freshest ranks first (conservative — recency never
+    overrides a stronger similarity match). ``min_score`` (optional) drops hits below that
+    cosine-similarity floor so weakly-related entries are not returned. Both are additive and
+    default to the prior behaviour (no floor; Qdrant score order) when unset.
     """
     start = time.monotonic()
     tool = "corpus_query"
@@ -237,11 +244,15 @@ async def run_query(
             for p in points
         ]
 
-        # Enrich with title/body from PG (authoritative), still excluding inactive rows.
+        # Relevance floor: drop hits below the requested cosine-similarity threshold.
+        if min_score is not None:
+            results = [r for r in results if (r.get("score") or 0.0) >= min_score]
+
+        # Enrich with title/body/recency from PG (authoritative), still excluding inactive rows.
         if pool is not None and results:
             keys = [uuid.UUID(r["entry_key"]) for r in results if r["entry_key"]]
             rows = await pool.fetch(
-                "SELECT entry_key, title, body_text FROM memory.corpus_entries "
+                "SELECT entry_key, title, body_text, updated_utc FROM memory.corpus_entries "
                 "WHERE entry_key = ANY($1::uuid[]) AND is_active = TRUE",
                 keys,
             )
@@ -251,6 +262,13 @@ async def run_query(
                 if row is not None:
                     r["title"] = row["title"]
                     r["body_text"] = row["body_text"]
+                    r["updated_utc"] = row["updated_utc"].isoformat() if row["updated_utc"] else None
+                    r["_recency"] = row["updated_utc"].timestamp() if row["updated_utc"] else 0.0
+
+        # Rank: similarity primary, recency (updated_utc) as a tiebreaker. Two stable sorts —
+        # recency first, then score — so equal-similarity entries keep newest-first order.
+        results.sort(key=lambda r: r.pop("_recency", 0.0), reverse=True)
+        results.sort(key=lambda r: r.get("score") or 0.0, reverse=True)
 
         duration_ms = int((time.monotonic() - start) * 1000)
         return WorkflowResult(

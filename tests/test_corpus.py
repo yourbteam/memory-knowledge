@@ -5,6 +5,7 @@ All deps are faked, so these run without fastembed, a live DB, or a live Qdrant.
 
 import asyncio
 import uuid
+from datetime import datetime, timezone
 from types import SimpleNamespace
 
 import pytest
@@ -40,6 +41,7 @@ class CorpusPool:
                 "confidence": confidence,
                 "is_active": is_active,
                 "supersedes_key": supersedes_key,
+                "updated_utc": datetime.now(timezone.utc),
             }
             return {"id": rid}
         return None
@@ -61,7 +63,12 @@ class CorpusPool:
         if "WHERE entry_key = ANY" in query:
             ids = set(args[0])
             return [
-                {"entry_key": v["entry_key"], "title": v["title"], "body_text": v["body_text"]}
+                {
+                    "entry_key": v["entry_key"],
+                    "title": v["title"],
+                    "body_text": v["body_text"],
+                    "updated_utc": v["updated_utc"],
+                }
                 for v in self.rows.values()
                 if v["entry_key"] in ids and v["is_active"]
             ]
@@ -307,6 +314,91 @@ async def test_query_requires_text(patch_embed):
         query_text="", run_id=uuid.uuid4(), pool=CorpusPool(), qdrant_client=FakeQdrant(), settings=SETTINGS
     )
     assert res.status == "error"
+
+
+def _point(entry_key, score, kind="reference", slug="g0"):
+    return SimpleNamespace(
+        payload={"entry_key": entry_key, "kind": kind, "link_slug": slug}, score=score
+    )
+
+
+class _RankPool:
+    """Returns corpus_entries rows (with updated_utc) for the enrich query."""
+
+    def __init__(self, rows):
+        self._rows = rows
+
+    async def fetch(self, query, *args):
+        ids = {str(k) for k in args[0]}
+        return [r for r in self._rows if r["entry_key"] in ids]
+
+
+@pytest.mark.asyncio
+async def test_query_min_score_floor_and_recency_tiebreak(monkeypatch):
+    k_old, k_new, k_weak = (str(uuid.uuid4()) for _ in range(3))
+    pts = [_point(k_old, 0.80), _point(k_new, 0.80), _point(k_weak, 0.30)]
+
+    async def _e(*a, **k):
+        return []
+
+    async def _sqp(*a, **k):
+        return pts
+
+    monkeypatch.setattr("memory_knowledge.workflows.corpus.embed_single", _e)
+    monkeypatch.setattr("memory_knowledge.workflows.corpus.semantic_query_points", _sqp)
+
+    now = datetime.now(timezone.utc)
+    old = now.replace(year=now.year - 1)
+    rows = [
+        {"entry_key": k_old, "title": "old", "body_text": "o", "updated_utc": old},
+        {"entry_key": k_new, "title": "new", "body_text": "n", "updated_utc": now},
+        {"entry_key": k_weak, "title": "weak", "body_text": "w", "updated_utc": now},
+    ]
+    res = await corpus.run_query(
+        query_text="x",
+        run_id=uuid.uuid4(),
+        min_score=0.5,
+        pool=_RankPool(rows),
+        qdrant_client=object(),
+        settings=SimpleNamespace(),
+    )
+    assert res.status == "success"
+    out = res.data["results"]
+    # threshold dropped the 0.30 hit; equal-score 0.80 entries ordered newest-first
+    assert [r["entry_key"] for r in out] == [k_new, k_old]
+    assert all(r["entry_key"] != k_weak for r in out)
+    assert "_recency" not in out[0]  # internal sort key not leaked
+
+
+@pytest.mark.asyncio
+async def test_query_without_min_score_keeps_all_in_score_order(monkeypatch):
+    a, b = str(uuid.uuid4()), str(uuid.uuid4())
+    pts = [_point(a, 0.9), _point(b, 0.4)]
+
+    async def _e(*x, **k):
+        return []
+
+    async def _sqp(*x, **k):
+        return pts
+
+    monkeypatch.setattr("memory_knowledge.workflows.corpus.embed_single", _e)
+    monkeypatch.setattr("memory_knowledge.workflows.corpus.semantic_query_points", _sqp)
+
+    now = datetime.now(timezone.utc)
+    rows = [
+        {"entry_key": a, "title": "a", "body_text": "a", "updated_utc": now},
+        {"entry_key": b, "title": "b", "body_text": "b", "updated_utc": now},
+    ]
+    res = await corpus.run_query(
+        query_text="x",
+        run_id=uuid.uuid4(),
+        pool=_RankPool(rows),
+        qdrant_client=object(),
+        settings=SimpleNamespace(),
+    )
+    out = res.data["results"]
+    assert len(out) == 2  # no floor → both kept (backward compatible)
+    assert out[0]["entry_key"] == a  # higher similarity first
 
 
 # --- MCP tools (server wiring) --------------------------------------------------
