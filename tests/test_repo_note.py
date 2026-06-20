@@ -272,3 +272,59 @@ async def test_run_author_note_rejects_bad_verification_status():
                                         run_id=_uuid.uuid4(), verification_status="bogus",
                                         pool=_RevPool(), settings=SimpleNamespace())
     assert r.status == "error" and "verification_status" in r.error
+
+
+# --- run_deactivate_note (counterpart to run_author_note) ---
+
+class FakeDeactivatePool:
+    """Matches run_deactivate_note's lookup + the deactivate UPDATE."""
+
+    def __init__(self, found=True, is_active=True):
+        self.found = found
+        self.is_active = is_active
+        self.executed: list[tuple] = []
+
+    async def fetchrow(self, query, *args):
+        if "FROM memory.learned_records WHERE entity_key" in query:
+            return {"id": 5, "is_active": self.is_active} if self.found else None
+        raise AssertionError(f"unexpected query: {query}")
+
+    async def execute(self, query, *args):
+        self.executed.append((query, args))
+
+
+class FakeQdrant:
+    def __init__(self):
+        self.set_payload_calls: list[dict] = []
+
+    async def set_payload(self, **kw):
+        self.set_payload_calls.append(kw)
+
+
+@pytest.mark.asyncio
+async def test_deactivate_note_deactivates_pg_and_qdrant():
+    pool, q = FakeDeactivatePool(found=True), FakeQdrant()
+    res = await repo_note.run_deactivate_note(
+        repository_key="taggable-server", title="S5 verification note",
+        run_id=_uuid.uuid4(), pool=pool, qdrant_client=q,
+    )
+    assert res.status == "success"
+    assert any("SET is_active = FALSE" in qy for qy, _ in pool.executed)  # PG deactivated
+    assert q.set_payload_calls and q.set_payload_calls[0]["payload"] == {"is_active": False}  # Qdrant deactivated
+    expected = str(learned_record_entity_key(
+        "taggable-server", "note", hashlib.sha256(b"S5 verification note").hexdigest()[:16]))
+    assert res.data["entity_key"] == expected  # resolves the same key author used
+
+
+@pytest.mark.asyncio
+async def test_deactivate_note_errors_when_missing():
+    res = await repo_note.run_deactivate_note(
+        repository_key="x", title="does not exist", run_id=_uuid.uuid4(), pool=FakeDeactivatePool(found=False))
+    assert res.status == "error" and "No repo note found" in res.error
+
+
+@pytest.mark.asyncio
+async def test_deactivate_note_requires_title():
+    res = await repo_note.run_deactivate_note(
+        repository_key="x", title="", run_id=_uuid.uuid4(), pool=FakeDeactivatePool())
+    assert res.status == "error" and "title is required" in res.error

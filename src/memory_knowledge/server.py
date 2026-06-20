@@ -322,6 +322,40 @@ async def author_repo_note(
 
 
 @mcp.tool()
+@track_tool_metrics("deactivate_repo_note")
+async def deactivate_repo_note(
+    repository_key: str,
+    title: str,
+    memory_type: str = "note",
+    correlation_id: str | None = None,
+) -> str:
+    """Deactivate a repo-scoped note authored via author_repo_note (its counterpart).
+
+    Resolves the note by (repository_key, memory_type, title) and sets it inactive in both
+    Postgres and the Qdrant learned_memory point, so it stops surfacing in repo retrieval.
+    Idempotent. Errors if no matching note exists.
+    """
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "deactivate_repo_note")
+    guard = check_remote_write_guard(get_settings(), "deactivate_repo_note")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        result = await _repo_note.run_deactivate_note(
+            repository_key=repository_key,
+            title=title,
+            memory_type=memory_type,
+            run_id=run_id,
+            pool=get_pg_pool(),
+            qdrant_client=get_qdrant_client(),
+        )
+        return result.model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("run_learned_memory_commit_workflow")
 async def run_learned_memory_commit_workflow(
     repository_key: str,

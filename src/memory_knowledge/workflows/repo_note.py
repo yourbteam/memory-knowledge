@@ -22,8 +22,14 @@ from qdrant_client import AsyncQdrantClient
 from memory_knowledge.config import Settings
 from memory_knowledge.identity.entity_key import learned_record_entity_key, repository_root_entity_key
 from memory_knowledge.projections.learned_memory_neo4j import project_learned_rule
-from memory_knowledge.projections.learned_memory_qdrant import embed_and_upsert_learned_record
-from memory_knowledge.projections.learned_memory_writer import upsert_learned_record
+from memory_knowledge.projections.learned_memory_qdrant import (
+    deactivate_learned_record_point,
+    embed_and_upsert_learned_record,
+)
+from memory_knowledge.projections.learned_memory_writer import (
+    deactivate_learned_record,
+    upsert_learned_record,
+)
 from memory_knowledge.workflows.base import WorkflowResult
 from memory_knowledge.workflows.learned_memory import VALID_MEMORY_TYPES
 
@@ -226,6 +232,78 @@ async def run_author_note(
     except Exception as exc:
         duration_ms = int((time.monotonic() - start) * 1000)
         logger.error("repo_note_author_failed", error=str(exc))
+        return WorkflowResult(
+            run_id=str(run_id), tool_name=tool, status="error", error=str(exc), duration_ms=duration_ms
+        )
+
+
+async def run_deactivate_note(
+    *,
+    repository_key: str,
+    title: str,
+    run_id: uuid.UUID,
+    memory_type: str = "note",
+    pool: asyncpg.Pool | None = None,
+    qdrant_client: AsyncQdrantClient | None = None,
+) -> WorkflowResult:
+    """Deactivate a repo-scoped note — the counterpart to ``run_author_note``.
+
+    Resolves the note by its deterministic ``entity_key`` (repository_key, memory_type,
+    title-hash — the same derivation ``run_author_note`` used), then deactivates it
+    **symmetrically**: ``is_active=FALSE`` in PG (authoritative) and on the Qdrant
+    ``learned_memory`` point (what repo-scoped retrieval filters on, retrieval.py:319/868),
+    so the note stops surfacing. Idempotent: re-running on an already-inactive note succeeds.
+    """
+    start = time.monotonic()
+    tool = "deactivate_repo_note"
+    try:
+        if pool is None:
+            return WorkflowResult(
+                run_id=str(run_id), tool_name=tool, status="error", error="Missing required dependency: pool.",
+            )
+        if not title:
+            return WorkflowResult(
+                run_id=str(run_id), tool_name=tool, status="error", error="title is required.",
+            )
+        if memory_type not in VALID_MEMORY_TYPES:
+            return WorkflowResult(
+                run_id=str(run_id), tool_name=tool, status="error",
+                error=f"Invalid memory_type: {memory_type}. Must be one of: {', '.join(sorted(VALID_MEMORY_TYPES))}",
+            )
+
+        title_hash = hashlib.sha256(title.encode()).hexdigest()[:16]
+        entity_key = learned_record_entity_key(repository_key, memory_type, title_hash)
+
+        row = await pool.fetchrow(
+            "SELECT id, is_active FROM memory.learned_records WHERE entity_key = $1", entity_key
+        )
+        if row is None:
+            return WorkflowResult(
+                run_id=str(run_id), tool_name=tool, status="error",
+                error=(f"No repo note found for repository_key={repository_key!r}, title={title!r} "
+                       f"(memory_type={memory_type}, entity_key={entity_key})."),
+            )
+
+        await deactivate_learned_record(pool, row["id"])  # PG authoritative
+
+        # Qdrant payload flag (what retrieval filters on). Best-effort: PG is the source of truth.
+        if qdrant_client is not None:
+            try:
+                await deactivate_learned_record_point(qdrant_client, str(entity_key))
+            except Exception as exc:  # noqa: BLE001
+                logger.warning("repo_note_qdrant_deactivate_failed", repository_key=repository_key, error=str(exc))
+
+        duration_ms = int((time.monotonic() - start) * 1000)
+        logger.info("repo_note_deactivated", repository_key=repository_key, entity_key=str(entity_key))
+        return WorkflowResult(
+            run_id=str(run_id), tool_name=tool, status="success",
+            data={"entity_key": str(entity_key), "learned_record_id": row["id"],
+                  "repository_key": repository_key, "was_active": row["is_active"]},
+            duration_ms=duration_ms,
+        )
+    except Exception as exc:
+        duration_ms = int((time.monotonic() - start) * 1000)
+        logger.error("repo_note_deactivate_failed", error=str(exc))
         return WorkflowResult(
             run_id=str(run_id), tool_name=tool, status="error", error=str(exc), duration_ms=duration_ms
         )
