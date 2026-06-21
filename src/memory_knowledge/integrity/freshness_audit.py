@@ -30,6 +30,7 @@ async def check_freshness(
         FROM catalog.repo_revisions rr
         JOIN catalog.repositories r ON rr.repository_id = r.id
         WHERE r.repository_key = $1
+          AND rr.commit_sha <> '__note_anchor__'  -- A2: ignore the notes-only sentinel revision
         ORDER BY rr.created_utc DESC
         LIMIT 1
         """,

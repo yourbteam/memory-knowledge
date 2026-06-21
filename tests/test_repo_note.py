@@ -1,4 +1,4 @@
-"""Tests for repo-scoped note authoring — S1: ensure_repo_root_entity; S2: run_author_note."""
+"""Tests for repo-scoped note authoring — anchor (A2), authoring, deactivation, A1 canonicalization."""
 
 import hashlib
 import json as _json
@@ -15,20 +15,37 @@ from memory_knowledge.workflows.base import WorkflowResult
 
 
 class FakePool:
-    """Pattern-matches the queries ensure_repo_root_entity issues."""
+    """Pattern-matches the queries ensure_repo_root_entity / run_author_note issue.
 
-    def __init__(self, *, repo_id=1, revision_id=10, insert_returns_id=99, existing_id=99):
+    `repo_id=None` → repo not found (resolve returns []). `revision_id=None` → no existing
+    revision (exercises the A2 auto-create path). `canonical_key` is what the resolve returns
+    as the stored key (A1).
+    """
+
+    def __init__(self, *, repo_id=1, canonical_key="taggable-server", revision_id=10,
+                 insert_returns_id=99, existing_id=99):
         self.repo_id = repo_id
+        self.canonical_key = canonical_key
         self.revision_id = revision_id
-        self.insert_returns_id = insert_returns_id  # None simulates ON CONFLICT no-op
+        self.insert_returns_id = insert_returns_id
         self.existing_id = existing_id
         self.calls: list[str] = []
+        self.created_revision: dict | None = None  # captures A2 synthetic revision args
+
+    async def fetch(self, query, *args):
+        self.calls.append(query)
+        if "lower(repository_key) = lower($1)" in query:  # A1 _resolve_repository
+            if self.repo_id is None:
+                return []
+            return [{"id": self.repo_id, "repository_key": self.canonical_key}]
+        raise AssertionError(f"unexpected fetch: {query}")
 
     async def fetchrow(self, query, *args):
         self.calls.append(query)
-        if "FROM catalog.repositories WHERE repository_key" in query:
-            return {"id": self.repo_id} if self.repo_id is not None else None
-        if "FROM catalog.repo_revisions" in query:
+        if "INSERT INTO catalog.repo_revisions" in query:  # A2 upsert_repo_revision
+            self.created_revision = {"commit_sha": args[1], "branch_name": args[2]}
+            return {"id": 777}
+        if "SELECT id FROM catalog.repo_revisions" in query:
             return {"id": self.revision_id} if self.revision_id is not None else None
         if "INSERT INTO catalog.entities" in query:
             return {"id": self.insert_returns_id} if self.insert_returns_id is not None else None
@@ -45,12 +62,15 @@ class FakeNeo4j:
         self.queries.append(query)
 
 
+# --- A1 + anchor: ensure_repo_root_entity --------------------------------------
+
+
 @pytest.mark.asyncio
 async def test_creates_root_entity_with_repository_type():
     pool, neo = FakePool(insert_returns_id=99), FakeNeo4j()
-    ek, eid = await repo_note.ensure_repo_root_entity(pool, "taggable-server", neo4j_driver=neo)
+    ek, eid, canon = await repo_note.ensure_repo_root_entity(pool, "taggable-server", neo4j_driver=neo)
     assert ek == str(repository_root_entity_key("taggable-server"))  # deterministic key
-    assert eid == 99
+    assert eid == 99 and canon == "taggable-server"
     insert = next(q for q in pool.calls if "INSERT INTO catalog.entities" in q)
     assert "entity_type" in insert and "ON CONFLICT (entity_key) DO NOTHING" in insert
     assert any("MERGE (root:RepositoryRoot" in q for q in neo.queries)  # best-effort node
@@ -58,10 +78,19 @@ async def test_creates_root_entity_with_repository_type():
 
 @pytest.mark.asyncio
 async def test_idempotent_returns_existing_id_on_conflict():
-    pool = FakePool(insert_returns_id=None, existing_id=42)  # conflict path
-    ek, eid = await repo_note.ensure_repo_root_entity(pool, "fcsapi")
-    assert eid == 42
+    pool = FakePool(canonical_key="fcsapi", insert_returns_id=None, existing_id=42)  # conflict path
+    ek, eid, canon = await repo_note.ensure_repo_root_entity(pool, "fcsapi")
+    assert eid == 42 and canon == "fcsapi"
     assert ek == str(repository_root_entity_key("fcsapi"))
+
+
+@pytest.mark.asyncio
+async def test_resolves_repo_key_case_insensitively():
+    # A1: given "FCSAPI" resolves to the stored canonical "fcsapi" and keys off the canonical.
+    pool = FakePool(canonical_key="fcsapi")
+    ek, eid, canon = await repo_note.ensure_repo_root_entity(pool, "FCSAPI")
+    assert canon == "fcsapi"
+    assert ek == str(repository_root_entity_key("fcsapi"))  # canonical, not "FCSAPI"
 
 
 @pytest.mark.asyncio
@@ -71,9 +100,30 @@ async def test_raises_when_repo_missing():
 
 
 @pytest.mark.asyncio
-async def test_raises_when_no_revision():
+async def test_auto_creates_note_anchor_revision_when_none(monkeypatch):
+    # A2 keystone: a registered-but-never-ingested repo gets a synthetic note-anchor revision.
+    pool = FakePool(revision_id=None)
+    ek, eid, canon = await repo_note.ensure_repo_root_entity(pool, "taggable-server")
+    assert eid == 99
+    assert pool.created_revision == {"commit_sha": "__note_anchor__", "branch_name": "__notes__"}
+
+
+@pytest.mark.asyncio
+async def test_strict_mode_still_raises_without_revision():
+    # auto_create_revision=False preserves the old strict behavior.
     with pytest.raises(ValueError, match="no ingested revision"):
-        await repo_note.ensure_repo_root_entity(FakePool(revision_id=None), "taggable-api")
+        await repo_note.ensure_repo_root_entity(
+            FakePool(revision_id=None, canonical_key="taggable-api"), "taggable-api",
+            auto_create_revision=False,
+        )
+
+
+@pytest.mark.asyncio
+async def test_no_source_embedded_by_anchor(monkeypatch):
+    # A2: the anchor path creates ONLY a repo_revisions row + the root entity — no files/chunks.
+    pool = FakePool(revision_id=None)
+    await repo_note.ensure_repo_root_entity(pool, "taggable-server")
+    assert not any("catalog.files" in q or "catalog.chunks" in q for q in pool.calls)
 
 
 @pytest.mark.asyncio
@@ -83,11 +133,11 @@ async def test_neo4j_failure_is_best_effort():
             raise RuntimeError("neo4j down")
 
     pool = FakePool()
-    ek, eid = await repo_note.ensure_repo_root_entity(pool, "taggable-server", neo4j_driver=BoomNeo4j())
+    ek, eid, canon = await repo_note.ensure_repo_root_entity(pool, "taggable-server", neo4j_driver=BoomNeo4j())
     assert eid == 99  # PG write still succeeds; Neo4j failure swallowed
 
 
-# --- S2: run_author_note orchestration -----------------------------------------
+# --- run_author_note orchestration ---------------------------------------------
 
 
 class _RevPool:
@@ -101,7 +151,7 @@ async def test_run_author_note_human_asserted_evidence_free(monkeypatch):
     calls = {}
 
     async def fake_ensure(pool, repository_key, neo4j_driver=None):
-        return ("rootkey-uuid", 7)
+        return ("rootkey-uuid", 7, "taggable-server")
 
     async def fake_upsert(**kw):
         calls["upsert"] = kw
@@ -129,7 +179,6 @@ async def test_run_author_note_human_asserted_evidence_free(monkeypatch):
         settings=SimpleNamespace(),
     )
     assert res.status == "success"
-    # human-asserted, evidence-free, scoped to the repo root
     up = calls["upsert"]
     assert up["source_kind"] == "operator_note"
     assert up["verification_status"] == "human_asserted"
@@ -138,11 +187,62 @@ async def test_run_author_note_human_asserted_evidence_free(monkeypatch):
     assert up["entity_key"] == learned_record_entity_key(
         "taggable-server", "note", hashlib.sha256(b"React migration underway").hexdigest()[:16]
     )
-    # embedded into learned_memory with repo-scoped payload key
     assert calls["embed"]["repository_key"] == "taggable-server"
     assert calls["embed"]["scope_entity_key"] == "rootkey-uuid"
-    # best-effort graph edge issued
     assert "project" in calls
+
+
+@pytest.mark.asyncio
+async def test_author_note_canonicalizes_key_end_to_end(monkeypatch):
+    # A1 end-to-end: author with "FCSAPI"; the note must be keyed + embedded under canonical "fcsapi"
+    # so run_retrieval_workflow("fcsapi", ...) can read it back.
+    calls = {}
+
+    async def fake_upsert(**kw):
+        calls["upsert"] = kw
+        return 1
+
+    async def fake_embed(**kw):
+        calls["embed"] = kw
+
+    async def noop(**kw):
+        pass
+
+    monkeypatch.setattr(repo_note, "upsert_learned_record", fake_upsert)
+    monkeypatch.setattr(repo_note, "embed_and_upsert_learned_record", fake_embed)
+    monkeypatch.setattr(repo_note, "project_learned_rule", noop)
+
+    res = await repo_note.run_author_note(
+        repository_key="FCSAPI", title="t", body_text="b", run_id=_uuid.uuid4(),
+        pool=FakePool(canonical_key="fcsapi"), qdrant_client=object(), settings=SimpleNamespace(),
+    )
+    assert res.status == "success"
+    expected_key = learned_record_entity_key("fcsapi", "note", hashlib.sha256(b"t").hexdigest()[:16])
+    assert calls["upsert"]["entity_key"] == expected_key   # canonical, not FCSAPI
+    assert calls["embed"]["repository_key"] == "fcsapi"     # read-back-critical payload key
+    assert res.data["repository_key"] == "fcsapi"
+
+
+@pytest.mark.asyncio
+async def test_author_note_auto_anchor_for_unrevisioned_repo(monkeypatch):
+    # A2 end-to-end: a repo with no revision still authors (synthetic anchor created, no source).
+    async def noop(**kw):
+        pass
+
+    async def fake_upsert(**kw):
+        return 1
+
+    monkeypatch.setattr(repo_note, "upsert_learned_record", fake_upsert)
+    monkeypatch.setattr(repo_note, "embed_and_upsert_learned_record", noop)
+    monkeypatch.setattr(repo_note, "project_learned_rule", noop)
+
+    pool = FakePool(revision_id=None)
+    res = await repo_note.run_author_note(
+        repository_key="taggable-server", title="t", body_text="b", run_id=_uuid.uuid4(),
+        pool=pool, qdrant_client=object(), settings=SimpleNamespace(),
+    )
+    assert res.status == "success"
+    assert pool.created_revision == {"commit_sha": "__note_anchor__", "branch_name": "__notes__"}
 
 
 @pytest.mark.asyncio
@@ -163,7 +263,7 @@ async def test_run_author_note_requires_title_body():
     assert res.status == "error"
 
 
-# --- S3: author_repo_note MCP tool wiring --------------------------------------
+# --- author_repo_note MCP tool wiring ------------------------------------------
 
 
 @pytest.fixture
@@ -191,7 +291,6 @@ async def test_tool_author_repo_note_success(monkeypatch, _server_env):
     assert data["status"] == "success"
     assert captured["repository_key"] == "taggable-server"
     assert captured["memory_type"] == "note"  # default
-    # deps wired through
     assert "pool" in captured and "qdrant_client" in captured and "neo4j_driver" in captured
 
 
@@ -212,7 +311,7 @@ async def test_tool_author_repo_note_blocked_by_guard(monkeypatch, _server_env):
     assert called["n"] == 0  # guard short-circuits before the workflow runs
 
 
-# --- S4: learned_memory retrieval search (repo isolation) ----------------------
+# --- learned_memory retrieval search (repo isolation) --------------------------
 class _FakeQdrantLM:
     def __init__(self):
         self.captured = {}
@@ -234,13 +333,13 @@ async def test_learned_memory_search_is_repo_scoped():
     assert hits[0]["entity_key"] == "ek1"
 
 
-# --- 2a: candidate tier (verification_status) ----------------------------------
+# --- candidate tier (verification_status) --------------------------------------
 @pytest.mark.asyncio
 async def test_run_author_note_candidate_tier(monkeypatch):
     cap = {}
 
     async def fake_ensure(pool, repository_key, neo4j_driver=None):
-        return ("rk", 7)
+        return ("rk", 7, "r")
 
     async def fake_upsert(**kw):
         cap["vs"] = kw["verification_status"]
@@ -254,16 +353,14 @@ async def test_run_author_note_candidate_tier(monkeypatch):
     monkeypatch.setattr(repo_note, "embed_and_upsert_learned_record", noop)
     monkeypatch.setattr(repo_note, "project_learned_rule", noop)
 
-    # default = human_asserted
     r = await repo_note.run_author_note(repository_key="r", title="t", body_text="b",
                                         run_id=_uuid.uuid4(), pool=_RevPool(), settings=SimpleNamespace())
     assert r.status == "success" and cap["vs"] == "human_asserted"
-    # auto-capture candidate = unverified
     r2 = await repo_note.run_author_note(repository_key="r", title="t", body_text="b",
                                          run_id=_uuid.uuid4(), verification_status="unverified",
                                          pool=_RevPool(), settings=SimpleNamespace())
     assert r2.status == "success" and cap["vs"] == "unverified"
-    assert r2.data["verification_status"] == "unverified"  # response echoes the stored tier
+    assert r2.data["verification_status"] == "unverified"
 
 
 @pytest.mark.asyncio
@@ -274,15 +371,22 @@ async def test_run_author_note_rejects_bad_verification_status():
     assert r.status == "error" and "verification_status" in r.error
 
 
-# --- run_deactivate_note (counterpart to run_author_note) ---
+# --- run_deactivate_note (counterpart to run_author_note) ----------------------
 
 class FakeDeactivatePool:
-    """Matches run_deactivate_note's lookup + the deactivate UPDATE."""
+    """Matches run_deactivate_note: A1 resolve (fetch) + entity_key lookup + the UPDATE."""
 
-    def __init__(self, found=True, is_active=True):
+    def __init__(self, found=True, is_active=True, repo_found=True, canonical_key="taggable-server"):
         self.found = found
         self.is_active = is_active
+        self.repo_found = repo_found
+        self.canonical_key = canonical_key
         self.executed: list[tuple] = []
+
+    async def fetch(self, query, *args):
+        if "lower(repository_key) = lower($1)" in query:  # A1 resolve
+            return [{"id": 1, "repository_key": self.canonical_key}] if self.repo_found else []
+        raise AssertionError(f"unexpected fetch: {query}")
 
     async def fetchrow(self, query, *args):
         if "FROM memory.learned_records lr" in query and "JOIN catalog.entities e" in query:
@@ -310,16 +414,38 @@ async def test_deactivate_note_deactivates_pg_and_qdrant():
     )
     assert res.status == "success"
     assert any("SET is_active = FALSE" in qy for qy, _ in pool.executed)  # PG deactivated
-    assert q.set_payload_calls and q.set_payload_calls[0]["payload"] == {"is_active": False}  # Qdrant deactivated
+    assert q.set_payload_calls and q.set_payload_calls[0]["payload"] == {"is_active": False}  # Qdrant
     expected = str(learned_record_entity_key(
         "taggable-server", "note", hashlib.sha256(b"S5 verification note").hexdigest()[:16]))
-    assert res.data["entity_key"] == expected  # resolves the same key author used
+    assert res.data["entity_key"] == expected
+
+
+@pytest.mark.asyncio
+async def test_deactivate_note_canonicalizes_key():
+    # A1: deactivate under "FCSAPI" resolves canonical "fcsapi" and computes the same entity_key
+    # authoring (under any casing) wrote.
+    pool = FakeDeactivatePool(found=True, canonical_key="fcsapi")
+    res = await repo_note.run_deactivate_note(
+        repository_key="FCSAPI", title="lesson", run_id=_uuid.uuid4(), pool=pool)
+    assert res.status == "success"
+    expected = str(learned_record_entity_key(
+        "fcsapi", "note", hashlib.sha256(b"lesson").hexdigest()[:16]))
+    assert res.data["entity_key"] == expected
+
+
+@pytest.mark.asyncio
+async def test_deactivate_note_errors_when_repo_missing():
+    res = await repo_note.run_deactivate_note(
+        repository_key="x", title="t", run_id=_uuid.uuid4(),
+        pool=FakeDeactivatePool(repo_found=False))
+    assert res.status == "error" and "No repo note found" in res.error
 
 
 @pytest.mark.asyncio
 async def test_deactivate_note_errors_when_missing():
     res = await repo_note.run_deactivate_note(
-        repository_key="x", title="does not exist", run_id=_uuid.uuid4(), pool=FakeDeactivatePool(found=False))
+        repository_key="x", title="does not exist", run_id=_uuid.uuid4(),
+        pool=FakeDeactivatePool(found=False))
     assert res.status == "error" and "No repo note found" in res.error
 
 

@@ -30,6 +30,7 @@ from memory_knowledge.projections.learned_memory_writer import (
     deactivate_learned_record,
     upsert_learned_record,
 )
+from memory_knowledge.structure.entity_registrar import upsert_repo_revision
 from memory_knowledge.workflows.base import WorkflowResult
 from memory_knowledge.workflows.learned_memory import VALID_MEMORY_TYPES
 
@@ -41,39 +42,91 @@ NOTE_VERIFICATION_STATUS = "human_asserted"
 # Trust tiers for a note: a human-confirmed assertion vs an auto-captured candidate (#2).
 # Auto-capture writes 'unverified' candidates (evidence-grade) for later promotion.
 VALID_NOTE_VERIFICATION = {"human_asserted", "unverified"}
+# A2: sentinel revision created on demand so notes can anchor WITHOUT full source ingestion.
+# Source-retrieval / branch_heads readers never see it (no files/chunks, branch_heads untouched);
+# direct latest-`repo_revisions` readers (integrity freshness/repair) must filter it out.
+NOTE_ANCHOR_COMMIT_SHA = "__note_anchor__"
+NOTE_ANCHOR_BRANCH = "__notes__"
+
+
+async def _resolve_repository(
+    pool: asyncpg.Pool, repository_key: str
+) -> asyncpg.Record | None:
+    """Resolve a repo by **case-insensitive exact** match; return its row (canonical key + id) or None.
+
+    A1 (Locked Decision 2): `lower(repository_key) = lower($1)`, no wildcards. Prefer an exact-case
+    hit, else lowest id (deterministic). On a pathological case-collision (>1 row differing only by
+    case) log `repo_key_case_collision` and take the deterministic pick.
+    """
+    rows = await pool.fetch(
+        """
+        SELECT id, repository_key
+        FROM catalog.repositories
+        WHERE lower(repository_key) = lower($1)
+        ORDER BY (repository_key = $1) DESC, id ASC
+        """,
+        repository_key,
+    )
+    if not rows:
+        return None
+    if len(rows) > 1:
+        logger.warning(
+            "repo_key_case_collision",
+            given=repository_key,
+            matches=[r["repository_key"] for r in rows],
+            picked=rows[0]["repository_key"],
+        )
+    return rows[0]
 
 
 async def ensure_repo_root_entity(
     pool: asyncpg.Pool,
     repository_key: str,
     neo4j_driver: neo4j.AsyncDriver | None = None,
-) -> tuple[str, int]:
-    """Idempotently ensure a repo has a root entity; return (entity_key, entity_id).
+    auto_create_revision: bool = True,
+) -> tuple[str, int, str]:
+    """Idempotently ensure a repo has a root entity; return (entity_key, entity_id, canonical_key).
 
-    PG is authoritative. `catalog.entities.repo_revision_id` is NOT NULL, so the repo must
-    have at least one ingested revision — raises a clear error otherwise (a non-ingested repo
-    cannot hold repo-scoped memory). The Neo4j node is best-effort: repo-note retrieval rides
-    the direct `learned_memory` Qdrant search, not the `APPLIES_TO` edge (see plan §3).
+    A1: the repo is resolved **case-insensitively** and the **canonical** stored key is returned
+    so every downstream key/payload uses one casing (read-back consistency).
+
+    A2: `catalog.entities.repo_revision_id` is NOT NULL. Rather than require full source ingestion,
+    when the repo has no revision and ``auto_create_revision`` is True we create a synthetic
+    note-anchor revision (`__note_anchor__`) — no source files/chunks/embeddings — so a note can
+    anchor. With ``auto_create_revision=False`` the old strict behavior (raise) is preserved.
+
+    The Neo4j node is best-effort: repo-note retrieval rides the direct `learned_memory` Qdrant
+    search, not the `APPLIES_TO` edge.
     """
-    repo_row = await pool.fetchrow(
-        "SELECT id FROM catalog.repositories WHERE repository_key = $1",
-        repository_key,
-    )
+    repo_row = await _resolve_repository(pool, repository_key)
     if repo_row is None:
         raise ValueError(f"Repository not found: {repository_key}")
     repository_id = repo_row["id"]
+    canonical_key = repo_row["repository_key"]
 
     rev_row = await pool.fetchrow(
         "SELECT id FROM catalog.repo_revisions WHERE repository_id = $1 ORDER BY id DESC LIMIT 1",
         repository_id,
     )
-    if rev_row is None:
-        raise ValueError(
-            f"Repository {repository_key} has no ingested revision; cannot anchor repo-scoped memory."
+    if rev_row is not None:
+        repo_revision_id = rev_row["id"]
+    elif auto_create_revision:
+        # A2 keystone: anchor notes without embedding source. Idempotent via
+        # ON CONFLICT (repository_id, commit_sha) inside upsert_repo_revision.
+        repo_revision_id = await upsert_repo_revision(
+            pool, repository_id, NOTE_ANCHOR_COMMIT_SHA, NOTE_ANCHOR_BRANCH
         )
-    repo_revision_id = rev_row["id"]
+        logger.info(
+            "note_anchor_revision_created",
+            repository_key=canonical_key,
+            repo_revision_id=repo_revision_id,
+        )
+    else:
+        raise ValueError(
+            f"Repository {canonical_key} has no ingested revision; cannot anchor repo-scoped memory."
+        )
 
-    entity_key = repository_root_entity_key(repository_key)
+    entity_key = repository_root_entity_key(canonical_key)
 
     # Idempotent: same repo -> same deterministic entity_key -> insert-or-noop, then read the id.
     row = await pool.fetchrow(
@@ -105,12 +158,12 @@ async def ensure_repo_root_entity(
                 SET root.repository_key = $repository_key
                 """,
                 entity_key=str(entity_key),
-                repository_key=repository_key,
+                repository_key=canonical_key,
             )
         except Exception as exc:  # noqa: BLE001 — best-effort; retrieval does not depend on it
-            logger.warning("repo_root_neo4j_merge_failed", repository_key=repository_key, error=str(exc))
+            logger.warning("repo_root_neo4j_merge_failed", repository_key=canonical_key, error=str(exc))
 
-    return str(entity_key), entity_id
+    return str(entity_key), entity_id, canonical_key
 
 
 async def run_author_note(
@@ -160,21 +213,24 @@ async def run_author_note(
                 error=f"Invalid verification_status: {verification_status}. Must be one of: {', '.join(sorted(VALID_NOTE_VERIFICATION))}",
             )
 
-        # S1 anchor (also validates repo + ingested revision; raises with a clear message otherwise)
-        root_entity_key, root_entity_id = await ensure_repo_root_entity(
+        # S1 anchor: resolves the canonical key (A1) and creates a note-anchor revision if the
+        # repo has none (A2). Use `canonical_key` for EVERY key-derived value below so authoring
+        # and retrieval/deactivation agree on one casing.
+        root_entity_key, root_entity_id, canonical_key = await ensure_repo_root_entity(
             pool, repository_key, neo4j_driver=neo4j_driver
         )
 
-        # learned_records.valid_from_revision_id: the repo's latest revision
+        # learned_records.valid_from_revision_id: the repo's latest revision (now incl. the
+        # synthetic note-anchor revision for a notes-only repo). Query by the canonical key.
         rev_row = await pool.fetchrow(
             "SELECT id FROM catalog.repo_revisions WHERE repository_id = "
             "(SELECT id FROM catalog.repositories WHERE repository_key = $1) ORDER BY id DESC LIMIT 1",
-            repository_key,
+            canonical_key,
         )
         valid_from_revision_id = rev_row["id"] if rev_row else 0
 
         title_hash = hashlib.sha256(title.encode()).hexdigest()[:16]
-        entity_key = learned_record_entity_key(repository_key, memory_type, title_hash)
+        entity_key = learned_record_entity_key(canonical_key, memory_type, title_hash)
 
         learned_record_id = await upsert_learned_record(
             pool=pool,
@@ -200,7 +256,7 @@ async def run_author_note(
                 client=qdrant_client,
                 entity_key=str(entity_key),
                 body_text=body_text,
-                repository_key=repository_key,
+                repository_key=canonical_key,
                 memory_type=memory_type,
                 confidence=confidence,
                 applicability_mode=applicability_mode,
@@ -222,11 +278,11 @@ async def run_author_note(
                 logger.warning("repo_note_neo4j_project_failed", repository_key=repository_key, error=str(exc))
 
         duration_ms = int((time.monotonic() - start) * 1000)
-        logger.info("repo_note_authored", repository_key=repository_key, entity_key=str(entity_key))
+        logger.info("repo_note_authored", repository_key=canonical_key, entity_key=str(entity_key))
         return WorkflowResult(
             run_id=str(run_id), tool_name=tool, status="success",
             data={"entity_key": str(entity_key), "learned_record_id": learned_record_id,
-                  "repository_key": repository_key, "verification_status": verification_status},
+                  "repository_key": canonical_key, "verification_status": verification_status},
             duration_ms=duration_ms,
         )
     except Exception as exc:
@@ -271,8 +327,20 @@ async def run_deactivate_note(
                 error=f"Invalid memory_type: {memory_type}. Must be one of: {', '.join(sorted(VALID_MEMORY_TYPES))}",
             )
 
+        # A1: canonicalize the repo key BEFORE deriving the entity_key, so a deactivate call under
+        # any casing computes the same entity_key authoring wrote under. Read-only (never creates a
+        # revision). Repo absent -> "no note found" (symmetric with the not-found case below).
+        repo_row = await _resolve_repository(pool, repository_key)
+        if repo_row is None:
+            return WorkflowResult(
+                run_id=str(run_id), tool_name=tool, status="error",
+                error=(f"No repo note found for repository_key={repository_key!r}, title={title!r} "
+                       f"(repository not found)."),
+            )
+        canonical_key = repo_row["repository_key"]
+
         title_hash = hashlib.sha256(title.encode()).hexdigest()[:16]
-        entity_key = learned_record_entity_key(repository_key, memory_type, title_hash)
+        entity_key = learned_record_entity_key(canonical_key, memory_type, title_hash)
 
         # learned_records has no entity_key column; the note's entity_key lives on catalog.entities,
         # referenced by learned_records.entity_id (see upsert_learned_record). Resolve via the join.

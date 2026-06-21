@@ -33,6 +33,14 @@ _ENUMERATE_SQL = """
       AND r.repository_key NOT LIKE 'repo-%'
       AND r.repository_key NOT LIKE 'idx-%'
       AND (cardinality($1::text[]) = 0 OR r.repository_key = ANY($1::text[]))
+      -- A2 (SGAP-002): never auto-ingest a *notes-only* repo (its only revision is the sentinel).
+      -- Excludes sentinel-only repos but still bootstraps genuinely-new repos (no revisions at all).
+      AND NOT (
+          EXISTS (SELECT 1 FROM catalog.repo_revisions rs
+                  WHERE rs.repository_id = r.id AND rs.commit_sha = '__note_anchor__')
+          AND NOT EXISTS (SELECT 1 FROM catalog.repo_revisions rr2
+                          WHERE rr2.repository_id = r.id AND rr2.commit_sha <> '__note_anchor__')
+      )
     ORDER BY bh.updated_utc ASC NULLS FIRST
 """
 
