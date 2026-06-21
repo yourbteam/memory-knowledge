@@ -277,16 +277,32 @@ async def purge_repository(
         raise ValueError(f"Repository not found: {repository_key}")
 
     repository_id = int(row["id"])
-    pg_counts = await _purge_postgres(pool, repository_key, repository_id)
-    qdrant_counts = await _purge_qdrant(qdrant_client, repository_key)
-    neo4j_counts = await _purge_neo4j(neo4j_driver, repository_key)
 
-    result = {
-        "repository_key": repository_key,
-        "repository_id": repository_id,
-        "postgres": pg_counts,
-        "qdrant": qdrant_counts,
-        "neo4j": neo4j_counts,
-    }
-    logger.info("repository_purged", **result)
+    # Isolate each store: one store failing must not abort the others or swallow the cause.
+    # Capture repr(exc) so even empty-message exceptions reveal their type (root-causes the
+    # previously-opaque "Error executing tool purge_repository:" blank failures).
+    result: dict[str, Any] = {"repository_key": repository_key, "repository_id": repository_id}
+    errors: dict[str, str] = {}
+
+    try:
+        result["postgres"] = await _purge_postgres(pool, repository_key, repository_id)
+    except Exception as exc:  # noqa: BLE001 — per-store isolation + diagnostic capture
+        errors["postgres"] = repr(exc)
+        logger.error("purge_postgres_failed", repository_key=repository_key, error=repr(exc))
+    try:
+        result["qdrant"] = await _purge_qdrant(qdrant_client, repository_key)
+    except Exception as exc:  # noqa: BLE001
+        errors["qdrant"] = repr(exc)
+        logger.error("purge_qdrant_failed", repository_key=repository_key, error=repr(exc))
+    try:
+        result["neo4j"] = await _purge_neo4j(neo4j_driver, repository_key)
+    except Exception as exc:  # noqa: BLE001
+        errors["neo4j"] = repr(exc)
+        logger.error("purge_neo4j_failed", repository_key=repository_key, error=repr(exc))
+
+    if errors:
+        result["errors"] = errors
+        logger.warning("repository_purge_partial", repository_key=repository_key, errors=errors)
+    else:
+        logger.info("repository_purged", **result)
     return result
