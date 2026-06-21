@@ -1,11 +1,14 @@
 # Plan — Capture & Jobs Fixes (Tier A + Tier B)
 
-> **STATUS — A1 + A2 SHIPPED & LIVE-VERIFIED (2026-06-21, `sha-5a7261e`).** A1 (canonical repo-key
-> resolution) + A2 (notes-only synthetic `__note_anchor__` revision; sentinel filters in
-> freshness/repair/scheduler) implemented in `repo_note.py`/`integrity/*`/`jobs/ingestion_scheduler.py`,
-> 530 tests green, deployed, verified live: capture on the un-ingested `mcp-agents-workflow` succeeded
-> with **0 source** (entity_counts `{learned_record:1, repository:1}`, qdrant chunks 0); `FCSAPI`→`fcsapi`
-> read-back confirmed. **Remaining: A3, A4, A5 (local-only), B1, B2, B3 (deploy).**
+> **STATUS — ALL ITEMS SHIPPED (2026-06-21).** Tier A + Tier B complete; 543 tests green.
+> - **A1+A2** (`sha-5a7261e`): canonical repo-key + notes-only `__note_anchor__` revision; verified live
+>   (capture on un-ingested repo with 0 source; `FCSAPI`→`fcsapi` read-back).
+> - **A3/A4/A5** (`7ea0790`, local-only): repo-memory hydration hook (verified live), Codex capture skill
+>   installed, `MK_SPARK_REPOS` 8-repo set + spark-candidate surfacing (Spark scanned 8 repos).
+> - **B1/B2/B3** (`368801a`, `sha-368801a`): `cancel_job` + terminal `cancelled` + ingestion cooperative
+>   abort; age-gated reclaim; `register_repository` NOT-NULL fix. Verified live: `cancel_job` in schema +
+>   not-found handling; `register_repository("united-partners")` **succeeded** (was the NOT-NULL failure).
+>   B1 running-abort + B2 reclaim age-gate are unit-verified (no safe live throwaway repo / restart-race).
 
 **Mode:** Implementation plan (decision-complete; no code shipped here). Created 2026-06-21.
 **Source of findings:** `Tasks/brain-alignment-audit/alignment-audit.md` (§2 Tier A = P1-1..P1-7; §3/§4 Tier B = X-1, X-5).
