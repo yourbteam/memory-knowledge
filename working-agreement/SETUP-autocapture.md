@@ -4,7 +4,7 @@ Two complementary mechanisms capture durable session lessons as **candidate** no
 (`verification_status='unverified'`) for later promotion. Both write via `author_repo_note`.
 
 ## Option 2 — skill (works in Claude *and* Codex, no extra cost)
-Install `working-agreement/auto-capture.skill.md` into your AI client's skills. At session
+Install `working-agreement/auto-capture.skill.md` into your AI client's skills (Codex: copy to `~/.codex/skills/auto-capture/SKILL.md`). At session
 close the agent self-captures durable lessons. No setup beyond installing the skill.
 
 ## Option 1 — automatic Stop-hook + LLM extractor (Claude Code only)

@@ -64,6 +64,18 @@ async def _run(date: str) -> int:
         spark = importlib.util.module_from_spec(spec)
         spec.loader.exec_module(spark)
         await spark._run()
+        # A5: surface the candidate file so the weekly run tells Kamen to look (reuse spark.OUT —
+        # the already-loaded module's path constant; do not import a second copy).
+        out_path = getattr(spark, "OUT", None)
+        cand_lines = []
+        if out_path and Path(out_path).exists():
+            cand_lines = [ln for ln in Path(out_path).read_text().splitlines() if ln.startswith("- ")]
+        if cand_lines:
+            print(f"[weekly-review] spark-candidates: {len(cand_lines)} candidate(s) -> {out_path}", file=sys.stderr)
+            for ln in cand_lines[:5]:
+                print(f"[weekly-review]   {ln[:120]}", file=sys.stderr)
+        else:
+            print("[weekly-review] spark-candidates: none this run", file=sys.stderr)
     except Exception as exc:  # noqa: BLE001
         print(f"[weekly-review] spark failed (continuing): {exc}", file=sys.stderr)
 

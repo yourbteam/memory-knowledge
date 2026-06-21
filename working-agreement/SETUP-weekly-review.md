@@ -18,3 +18,9 @@ working-agreement/weekly-review.sh
 ```
 Fail-soft: any step failing is logged and skipped; the routine never blocks. Review
 `working-agreement/spark-candidates.md` after a run and promote any worthy candidate via "lock it".
+
+## A5: repo set + spark candidates
+`weekly-review.sh` exports `MK_SPARK_REPOS` (the 8-repo set: taggable-api, fcsapi, taggable-server,
+taggable-database, united-partners, agentic-trading, mcp-agents-workflow, memory-knowledge) so Spark +
+consolidation scan all of them; override by exporting `MK_SPARK_REPOS` before the run. The weekly run now
+prints a `spark-candidates: <N> -> <path>` line (or `none this run`) so you know to review candidates.

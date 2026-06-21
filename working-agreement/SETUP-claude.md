@@ -39,3 +39,11 @@ context, so the rules are consulted before Claude acts.
 ## Notes
 - The file is injected on every prompt, so keep it small — this is also directive **G1**.
 - Codex plumbing will live in a separate `SETUP-codex.md` (added later).
+
+## A3: repo-scoped memory hydration (optional)
+A third `UserPromptSubmit` hook injects this repo's captured notes per prompt (closes the
+capture→recall loop). Opt-in: set `MK_REPO_HYDRATE=1` and register the wrapper (absolute path):
+```json
+{ "hooks": [ { "type": "command", "command": "/Users/kamenkamenov/memory-knowledge/working-agreement/inject-repo-memory.sh" } ] }
+```
+Fail-open (any error/timeout/unknown-repo → injects nothing). Already wired in `~/.claude/settings.json`.

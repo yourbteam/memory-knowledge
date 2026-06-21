@@ -57,3 +57,10 @@ MCP server already configured in `~/.codex/config.toml`.
 - The `CLAUDE.md` files become thin generated pointers via
   `generate_projections.py --kind claude-pointer`; Claude Code still gets the real directives
   through its `inject-directives.sh` hook.
+
+## Capture (auto-capture skill)
+Codex has no session-end hook, so capture runs via the **skill** (installed at
+`~/.codex/skills/auto-capture/SKILL.md`, copied from `working-agreement/auto-capture.skill.md`).
+At session close, invoke the `auto-capture` skill — it writes `unverified` candidate notes via
+`author_repo_note` (functional on any registered repo now that A1+A2 removed the casing + ingested-revision
+preconditions). Promotion stays human-gated ("lock it").
