@@ -1,0 +1,69 @@
+name: weekly-upkeep
+# WS2: machine-independent weekly upkeep (replaces the single-laptop launchd job).
+# Directive Spark + DIRECTIVES "Last reviewed" stamp + explicit corpus sync. Fails loud.
+on:
+  schedule:
+    - cron: "0 3 * * 1"   # Mondays 03:00 UTC (~05:00/06:00 Europe/Sofia, off-peak); ±1h DST accepted
+  workflow_dispatch:
+concurrency:
+  group: weekly-upkeep
+  cancel-in-progress: false
+permissions:
+  contents: write
+jobs:
+  upkeep:
+    runs-on: ubuntu-latest
+    env:
+      CLAUDE_CORPUS_MCP_URL: ${{ secrets.CLAUDE_CORPUS_MCP_URL }}
+      MK_SPARK_REPOS: taggable-api,fcsapi,taggable-server,taggable-database,united-partners,agentic-trading,mcp-agents-workflow,memory-knowledge
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ".[dev]"
+      - name: Reachability probe (fail loud)
+        run: |
+          set -euo pipefail
+          if [ -z "${CLAUDE_CORPUS_MCP_URL:-}" ]; then echo "CLAUDE_CORPUS_MCP_URL secret not set"; exit 1; fi
+          HEALTH_URL="${CLAUDE_CORPUS_MCP_URL%/mcp/}/health"
+          echo "Probing $HEALTH_URL"
+          curl --fail --silent --show-error --max-time 20 "$HEALTH_URL"
+      - name: Spark + stamp
+        run: python working-agreement/weekly_review.py --date "$(date -u +%F)"
+      - name: Commit stamp + spark candidates
+        id: commit
+        run: |
+          set -euo pipefail
+          git config user.name "memory-knowledge-bot"
+          git config user.email "memory-knowledge-bot@users.noreply.github.com"
+          git add working-agreement/DIRECTIVES.md working-agreement/spark-candidates.md
+          if git diff --cached --quiet; then
+            echo "no changes to commit"
+            echo "committed=0" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+          git commit -m "chore(weekly-review): refresh spark candidates + bump Last reviewed ($(date -u +%F))"
+          for attempt in 1 2 3; do
+            if git pull --rebase --autostash origin main && git push origin HEAD:main; then
+              echo "committed=1" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+            echo "push attempt $attempt failed (concurrent edit?), retrying"; sleep 5
+          done
+          echo "push failed after retries"; exit 1
+      - name: Corpus sync (only if committed)
+        if: steps.commit.outputs.committed == '1'
+        run: python working-agreement/sync_corpus.py --url "$CLAUDE_CORPUS_MCP_URL"
+      - name: Surface spark candidates
+        if: always()
+        run: |
+          F=working-agreement/spark-candidates.md
+          if [ -f "$F" ]; then
+            N=$(grep -c '^- ' "$F" 2>/dev/null || true)
+            echo "### Spark candidates: ${N:-0}" >> "$GITHUB_STEP_SUMMARY"
+            grep '^- ' "$F" 2>/dev/null | head -5 >> "$GITHUB_STEP_SUMMARY" || true
+          else
+            echo "### Spark candidates: none this run" >> "$GITHUB_STEP_SUMMARY"
+          fi

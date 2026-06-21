@@ -1,0 +1,24 @@
+name: upkeep-heartbeat
+# WS5: dead-man's-switch. Independent of weekly-upkeep — if the upkeep cadence stalls (CI cron
+# stopped, or the server maintenance scheduler stopped ticking), this run goes RED and emails.
+on:
+  schedule:
+    - cron: "0 12 * * 1"   # Mondays 12:00 UTC, 9h after the upkeep run (fresh stamp visible)
+  workflow_dispatch:
+permissions:
+  contents: read
+jobs:
+  heartbeat:
+    runs-on: ubuntu-latest
+    env:
+      CLAUDE_CORPUS_MCP_URL: ${{ secrets.CLAUDE_CORPUS_MCP_URL }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: pip install ".[dev]"
+      - name: Dead-man's-switch (stamp + server scheduler)
+        run: python working-agreement/upkeep_heartbeat.py
