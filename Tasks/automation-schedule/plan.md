@@ -1,5 +1,13 @@
 # Plan — Automation schedule for second-brain upkeep (no manual triggers)
 
+> **STATUS — BUILT 2026-06-21 (heartbeat tool included).** Live & verified:
+> - **WS1** maintenance scheduler **ENABLED** (`MAINTENANCE_SCHEDULER_ENABLED=true`, `COMPACTION_ENABLED=false` dry-run) — verified ticking (`get_scheduler_heartbeat` non-null, age ~2s). Cadence anchored to the enabling restart **~11:07 UTC** (NOT off-peak — re-anchor via a deliberate off-peak restart when convenient).
+> - **WS5 tool** `get_scheduler_heartbeat` deployed (`sha-99a86e0`) + dead-man's-switch script shipped.
+> - **WS3** on-DIRECTIVES AGENTS-refresh hook shipped (live via the post-commit symlink).
+> - **WS4** launchd retired on THIS machine.
+> - Code committed `99a86e0`; GitHub secret `CLAUDE_CORPUS_MCP_URL` set; `ALLOW_REMOTE_WRITES=true` confirmed.
+> **Pending (operator — credential/machine limits):** (1) **push the 2 workflow files** (`weekly-upkeep.yml`, `upkeep-heartbeat.yml`) — git/`gh` token lacks `workflow` scope (`gh auth refresh -s workflow`, then push); (2) retire launchd on the **other** machine; (3) §7 follow-up: flip `COMPACTION_ENABLED=true` after one clean dry-run cycle; (4) optional: re-anchor WS1 cadence off-peak.
+
 **Mode:** Implementation plan (decision-complete; no code shipped). Created 2026-06-21. Owner: memory-knowledge.
 **Source:** `research.md` + `research.gap-audit.md` + `research.coverage-audit.md` + `research.satisfaction-audit.md` (same folder). Honors every GAP/CGAP/SGAP finding.
 **Repo:** `/Users/kamenkamenov/memory-knowledge` (GitHub `yourbteam/memory-knowledge`, default branch `main`). Python MCP server deployed on Azure App Service (RG `workflow-orch-rg`, app `memory-knowledge`, URL `https://memory-knowledge.azurewebsites.net/mcp/`). The brain's job dispatcher is shared with the `workflow-orch-app` harness (co-tenant).
