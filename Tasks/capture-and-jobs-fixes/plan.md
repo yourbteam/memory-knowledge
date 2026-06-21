@@ -1,5 +1,12 @@
 # Plan — Capture & Jobs Fixes (Tier A + Tier B)
 
+> **STATUS — A1 + A2 SHIPPED & LIVE-VERIFIED (2026-06-21, `sha-5a7261e`).** A1 (canonical repo-key
+> resolution) + A2 (notes-only synthetic `__note_anchor__` revision; sentinel filters in
+> freshness/repair/scheduler) implemented in `repo_note.py`/`integrity/*`/`jobs/ingestion_scheduler.py`,
+> 530 tests green, deployed, verified live: capture on the un-ingested `mcp-agents-workflow` succeeded
+> with **0 source** (entity_counts `{learned_record:1, repository:1}`, qdrant chunks 0); `FCSAPI`→`fcsapi`
+> read-back confirmed. **Remaining: A3, A4, A5 (local-only), B1, B2, B3 (deploy).**
+
 **Mode:** Implementation plan (decision-complete; no code shipped here). Created 2026-06-21.
 **Source of findings:** `Tasks/brain-alignment-audit/alignment-audit.md` (§2 Tier A = P1-1..P1-7; §3/§4 Tier B = X-1, X-5).
 **Repo:** `memory-knowledge` (Python MCP server; Supabase PG + Qdrant + Neo4j; deployed to Azure via `infra/azure-push.sh`).
