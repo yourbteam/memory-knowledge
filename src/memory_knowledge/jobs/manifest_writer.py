@@ -63,9 +63,15 @@ async def update_job_state(
         raise ValueError(f"Job not found: {job_id}")
 
     current_state = row["state_code"]
+    # B1: `cancelled` is terminal. Make any further state write a no-op so a worker finishing its
+    # in-flight phase (or a reclaim/retry path) can never flip a cancelled job back to
+    # running/failed/completed. Protects every caller (worker, dispatcher) race-free.
+    if current_state == "cancelled":
+        logger.info("job_update_skipped_cancelled", job_id=str(job_id), requested=state_code)
+        return
     validate_transition(current_state, state_code)
 
-    if state_code in ("completed", "failed", "dead_letter"):
+    if state_code in ("completed", "failed", "dead_letter", "cancelled"):
         await pool.execute(
             """
             UPDATE ops.job_manifests

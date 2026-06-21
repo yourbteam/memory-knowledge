@@ -70,6 +70,9 @@ class JobDispatcher:
         """
         if self._pool is None:
             return
+        # B2: only reclaim jobs that have been 'running' longer than the grace window, so a fresh
+        # restart racing a just-started (or just-cancelled) job won't clobber/resurrect it.
+        min_age = getattr(self._settings, "reclaim_running_min_age_seconds", 300)
         result = await self._pool.execute(
             """
             UPDATE ops.job_manifests
@@ -77,9 +80,11 @@ class JobDispatcher:
                 error_code = 'orphaned_restart',
                 error_text = 'Reclaimed: job was running when the container restarted.'
             WHERE state_code = 'running'
-            """
+              AND started_utc < NOW() - ($1 * INTERVAL '1 second')
+            """,
+            min_age,
         )
-        logger.info("dispatcher_reclaimed_stale_running", result=result)
+        logger.info("dispatcher_reclaimed_stale_running", result=result, min_age_seconds=min_age)
 
     async def stop(self) -> None:
         """Stop the polling loop and drain active dispatch tasks."""

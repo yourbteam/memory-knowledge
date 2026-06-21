@@ -68,8 +68,18 @@ def _spies(monkeypatch):
 @pytest.mark.asyncio
 async def test_routes_to_manifest_when_job_id_present(monkeypatch):
     calls = _spies(monkeypatch)
-    await ing._save_ingestion_checkpoint(object(), uuid.uuid4(), {}, phase="p", shape=(1, "c", "b"))
+    # _FakePool with load_row=None → _is_cancelled (B1 chokepoint) reads a non-cancelled state.
+    await ing._save_ingestion_checkpoint(_FakePool(), uuid.uuid4(), {}, phase="p", shape=(1, "c", "b"))
     assert calls == {"manifest": 1, "shape": 0}  # dispatcher path unchanged
+
+
+@pytest.mark.asyncio
+async def test_chokepoint_raises_when_cancelled(monkeypatch):
+    # B1 cooperative abort: a cancelled manifest makes the checkpoint raise JobCancelled.
+    _spies(monkeypatch)
+    pool = _FakePool(load_row={"state_code": "cancelled"})
+    with pytest.raises(ing.JobCancelled):
+        await ing._save_ingestion_checkpoint(pool, uuid.uuid4(), {}, phase="p", shape=(1, "c", "b"))
 
 
 @pytest.mark.asyncio

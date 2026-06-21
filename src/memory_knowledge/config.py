@@ -115,6 +115,9 @@ class Settings(BaseSettings):
     job_dispatcher_poll_interval_seconds: float = 15.0
     # Recover jobs left in 'running' by a crashed/restarted container.
     reclaim_stale_running_jobs_on_start: bool = True
+    # B2: only reclaim 'running' jobs older than this on startup, so a restart that races a
+    # just-started (or just-cancelled) job can't clobber/resurrect it.
+    reclaim_running_min_age_seconds: int = 300
 
     # HTTP
     cors_allowed_origins: str = "*"

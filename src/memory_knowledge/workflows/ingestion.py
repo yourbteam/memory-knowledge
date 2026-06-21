@@ -84,6 +84,20 @@ from memory_knowledge.workflows.base import WorkflowResult
 logger = structlog.get_logger()
 
 TOOL_NAME = "run_repo_ingestion_workflow"
+
+
+class JobCancelled(Exception):
+    """Raised mid-ingestion when the job manifest was set to 'cancelled' — B1 cooperative abort."""
+
+    def __init__(self, job_id: uuid.UUID):
+        super().__init__(f"Ingestion job cancelled: {job_id}")
+        self.job_id = job_id
+
+
+async def _is_cancelled(pool: asyncpg.Pool, job_id: uuid.UUID) -> bool:
+    """True iff the job manifest has been cancelled (operator cancel via cancel_job)."""
+    row = await pool.fetchrow("SELECT state_code FROM ops.job_manifests WHERE job_id = $1", job_id)
+    return bool(row) and row["state_code"] == "cancelled"
 CHECKPOINT_PHASE_ORDER = {
     "initialized": 0,
     "canonical_complete": 1,
@@ -178,6 +192,10 @@ async def _save_ingestion_checkpoint(
     if job_id is not None:
         # Dispatcher path (unchanged): checkpoint lives on the job manifest.
         await save_checkpoint(pool, job_id, {"checkpoint": checkpoint})
+        # B1 cooperative abort: single chokepoint covering all ingestion checkpoint boundaries —
+        # if the operator cancelled this job, stop cleanly here.
+        if await _is_cancelled(pool, job_id):
+            raise JobCancelled(job_id)
     elif shape is not None:
         # Offline/manual path: no job_id, so persist by (repo, commit, branch).
         repo_id, commit, branch = shape
@@ -1406,6 +1424,24 @@ async def run(
                 "summaries_created": summaries_created,
                 "run_type": run_type,
             },
+            duration_ms=duration_ms,
+        )
+
+    except JobCancelled as exc:
+        # B1: operator-cancelled mid-run. The manifest is already terminal 'cancelled'; mark the
+        # ingestion_run done (reuse 'failed' status with a clear note) and return a clean result.
+        duration_ms = int((time.monotonic() - start) * 1000)
+        logger.info("ingestion_cancelled", job_id=str(exc.job_id), duration_ms=duration_ms)
+        if pool is not None and ingestion_run_id is not None:
+            try:
+                await complete_ingestion_run(pool, ingestion_run_id, "failed", "cancelled by operator")
+            except Exception:
+                pass
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name=TOOL_NAME,
+            status="error",
+            error="cancelled",
             duration_ms=duration_ms,
         )
 

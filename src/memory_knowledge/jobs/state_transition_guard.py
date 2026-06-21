@@ -2,9 +2,10 @@ from __future__ import annotations
 
 VALID_TRANSITIONS: dict[str, set[str]] = {
     "pending": {"running", "cancelled"},
-    "running": {"completed", "failed"},
+    "running": {"completed", "failed", "cancelled"},
     "failed": {"retrying", "dead_letter"},
-    "retrying": {"running"},
+    "retrying": {"running", "cancelled"},
+    # no "cancelled" key ⇒ terminal (no outgoing edges): never retried or reclaimed (B1).
 }
 
 

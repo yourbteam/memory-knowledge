@@ -68,6 +68,35 @@ async def test_start_skips_reclaim_when_disabled():
     assert calls["n"] == 0
 
 
+class _ArgRecordingPool:
+    def __init__(self):
+        self.last = None
+
+    async def execute(self, query, *args):
+        self.last = (query, args)
+        return "UPDATE 0"
+
+    async def fetch(self, *a, **k):
+        return []
+
+
+@pytest.mark.asyncio
+async def test_reclaim_is_age_gated():
+    # B2: only reclaim 'running' jobs older than the configured grace window.
+    d = JobDispatcher(poll_interval=15.0, max_concurrent=1)
+    d._pool = _ArgRecordingPool()
+    d._settings = type("S", (), {"reclaim_running_min_age_seconds": 600})()
+    await d._reclaim_stale_running()
+    q, args = d._pool.last
+    assert "started_utc <" in q and "INTERVAL '1 second'" in q  # age predicate present
+    assert args == (600,)  # binds the configured threshold
+
+
+def test_reclaim_min_age_default_is_300():
+    from memory_knowledge.config import Settings
+    assert Settings.model_fields["reclaim_running_min_age_seconds"].default == 300
+
+
 def test_dispatcher_honors_max_concurrent():
     # server.py wires this from settings.job_dispatcher_max_concurrent (default 1).
     d = JobDispatcher(poll_interval=15.0, max_concurrent=1)

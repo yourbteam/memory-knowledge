@@ -908,6 +908,58 @@ async def check_job_status(job_id: str, correlation_id: str | None = None) -> st
 
 
 @mcp.tool()
+@track_tool_metrics("cancel_job")
+async def cancel_job(job_id: str, correlation_id: str | None = None) -> str:
+    """Cancel a job (pending/running/retrying → cancelled). Idempotent on already-terminal jobs.
+
+    `cancelled` is terminal: the job is never retried or reclaimed. For ingestion, the worker also
+    aborts at its next checkpoint boundary (cooperative abort); other job types finish their current
+    bounded run but stay `cancelled` (B1).
+    """
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "cancel_job")
+    guard = check_remote_write_guard(get_settings(), "cancel_job")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        from memory_knowledge.jobs.manifest_reader import get_job_by_id
+        from memory_knowledge.jobs.manifest_writer import update_job_state
+        from memory_knowledge.jobs.state_transition_guard import InvalidStateTransition
+
+        jid = uuid.UUID(job_id)
+        job = await get_job_by_id(get_pg_pool(), jid)
+        if job is None:
+            return WorkflowResult(
+                run_id=str(run_id), tool_name="cancel_job", status="error",
+                error=f"Job not found: {job_id}",
+            ).model_dump_json()
+        current = job.get("state_code")
+        if current in ("completed", "failed", "dead_letter", "cancelled"):
+            return WorkflowResult(
+                run_id=str(run_id), tool_name="cancel_job", status="success",
+                data={"job_id": job_id, "state_code": current, "already_terminal": True},
+            ).model_dump_json()
+        try:
+            await update_job_state(
+                get_pg_pool(), jid, "cancelled",
+                error_code="cancelled", error_text="Cancelled by operator.",
+            )
+        except InvalidStateTransition as exc:
+            # Raced to a terminal state between read and write — idempotent success.
+            return WorkflowResult(
+                run_id=str(run_id), tool_name="cancel_job", status="success",
+                data={"job_id": job_id, "state_code": exc.current, "already_terminal": True},
+            ).model_dump_json()
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="cancel_job", status="success",
+            data={"job_id": job_id, "state_code": "cancelled"},
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("get_memory_stats")
 async def get_memory_stats(repository_key: str, correlation_id: str | None = None) -> str:
     """Get comprehensive statistics about the memory architecture for a repository."""
@@ -6153,10 +6205,17 @@ async def register_repository(
         return guard.model_dump_json()
     try:
         pool = get_pg_pool()
+        # B3: migration 016 made mawf_repository_id + status_id NOT NULL (no default). Supply both
+        # inline (mirror admin/mawf.py:upsert_repository) so the brain's own registration works
+        # without the constraint violation. Insert-only sets them; the update path preserves any
+        # MAWF-owned values (non-destructive to MAWF-registered rows).
+        from memory_knowledge.admin.mawf import _reference_id
+
+        status_id = await _reference_id(pool, "REPOSITORY_STATUS", "active")
         row = await pool.fetchrow(
             """
-            INSERT INTO catalog.repositories (repository_key, name, origin_url)
-            VALUES ($1, $2, $3)
+            INSERT INTO catalog.repositories (mawf_repository_id, repository_key, name, origin_url, status_id)
+            VALUES (gen_random_uuid(), $1, $2, $3, $4)
             ON CONFLICT (repository_key) DO UPDATE
                 SET name = EXCLUDED.name,
                     origin_url = EXCLUDED.origin_url,
@@ -6166,6 +6225,7 @@ async def register_repository(
             repository_key,
             name,
             origin_url,
+            status_id,
         )
         return WorkflowResult(
             run_id=str(run_id),
