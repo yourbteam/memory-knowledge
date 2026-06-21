@@ -960,6 +960,43 @@ async def cancel_job(job_id: str, correlation_id: str | None = None) -> str:
 
 
 @mcp.tool()
+@track_tool_metrics("get_scheduler_heartbeat")
+async def get_scheduler_heartbeat(correlation_id: str | None = None) -> str:
+    """Health signal for the in-server maintenance scheduler (WS5 dead-man's-switch).
+
+    Returns the creation time + age of the most recent maintenance job (`integrity_audit` /
+    `compaction`) in `ops.job_manifests` — the scheduler's only durable, externally-readable
+    output. A null/stale age means the scheduler has not ticked; the dead-man's-switch cron ages
+    this against `maintenance_interval_seconds`. Read-only + open `/mcp` (no token needed).
+    """
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "get_scheduler_heartbeat")
+    try:
+        pool = get_pg_pool()
+        row = await pool.fetchrow(
+            """
+            SELECT MAX(created_utc) AS last_tick
+            FROM ops.job_manifests
+            WHERE job_type IN ('integrity_audit', 'compaction')
+            """
+        )
+        last = row["last_tick"] if row else None
+        age_seconds = (dt.datetime.now(dt.timezone.utc) - last).total_seconds() if last is not None else None
+        return WorkflowResult(
+            run_id=str(run_id),
+            tool_name="get_scheduler_heartbeat",
+            status="success",
+            data={
+                "last_maintenance_tick_utc": last.isoformat() if last is not None else None,
+                "age_seconds": age_seconds,
+                "maintenance_interval_seconds": get_settings().maintenance_interval_seconds,
+            },
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
 @track_tool_metrics("get_memory_stats")
 async def get_memory_stats(repository_key: str, correlation_id: str | None = None) -> str:
     """Get comprehensive statistics about the memory architecture for a repository."""

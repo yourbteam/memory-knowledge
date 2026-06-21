@@ -21,4 +21,9 @@ HELPER="$REPO_ROOT/working-agreement/sync_corpus.py"
 [ -f "$HELPER" ] || exit 0
 
 "$PY" "$HELPER" 2>/dev/null
+
+# WS3: a DIRECTIVES change also refreshes this machine's generated Codex AGENTS.md projections
+# (event-driven, replaces the weekly launchd refresh). --refresh-trusted only rewrites files this
+# generator produced; never clobbers a repo's own AGENTS.md. Fail-open: never block the commit.
+"$PY" "$REPO_ROOT/working-agreement/generate_projections.py" --refresh-trusted 2>/dev/null || true
 exit 0
