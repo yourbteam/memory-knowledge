@@ -23,8 +23,9 @@ https://memory-knowledge.azurewebsites.net/ready
 
 Deployment verified:
 
-- Image: `workfloworchreg.azurecr.io/memory-knowledge:e16f857`
-- Migration applied at startup: `015_intake_sessions -> 016_mawf_contract`
+- Image: `workfloworchreg.azurecr.io/memory-knowledge:2dc09a5`
+- Image digest: `sha256:489e8781b8e528432b8fdafe35f867ab040e55821017d8981a98718bd867e2e6`
+- Migrations applied at startup through: `018_mawf_artifact_ref_keys`
 - Remote readiness after Neo4j resume: Postgres `ok`, Qdrant `ok`, Neo4j `ok`
 - MAWF MCP CRUD smoke tests passed remotely through `/mcp/`
 
@@ -335,6 +336,8 @@ Stale recovery:
 
 The server enforces one artifact ref per `(task_id, artifact_key)`. If `artifact_key` is omitted, it defaults to `role_code` for backward-compatible singleton refs. Use explicit keys for workflow, phase, generated artifact, and feedback refs.
 
+Do not put artifact contents, phase status, phase telemetry, execution history, or producer/verifier/critic output into memory-knowledge. Store those files durably elsewhere, then pass only durable refs in `artifact_path`.
+
 Singleton role keys:
 
 - `initial_prompt`
@@ -362,6 +365,49 @@ Recommended multi-ref keys:
 - `artifact:<workflow_run_id>:<phase_id>:<artifact_name>`
 - `feedback:<workflow_run_id>:<feedback_name>`
 - `feedback:<workflow_run_id>:<phase_id>:<feedback_name>`
+
+Create or update a singleton task ledger ref:
+
+```json
+{
+  "name": "mawf_upsert_artifact_ref",
+  "arguments": {
+    "task_id": "mawf-task-123",
+    "role_code": "task_ledger",
+    "artifact_path": "repo://Tasks/mawf-task-123/ledger.md",
+    "persist_status_code": "persisted"
+  }
+}
+```
+
+Create or update multiple workflow ledger refs under the same task:
+
+```json
+{
+  "name": "mawf_upsert_artifact_ref",
+  "arguments": {
+    "task_id": "mawf-task-123",
+    "role_code": "workflow_ledger",
+    "artifact_key": "workflow:mawf-run-001:ledger",
+    "artifact_path": "repo://Tasks/mawf-task-123/workflows/full-task-workflow/runs/mawf-run-001/workflow-ledger.json",
+    "persist_status_code": "persisted"
+  }
+}
+```
+
+Read a specific multi-ref by key:
+
+```json
+{
+  "name": "mawf_get_artifact_ref",
+  "arguments": {
+    "task_id": "mawf-task-123",
+    "artifact_key": "workflow:mawf-run-001:ledger"
+  }
+}
+```
+
+When multiple refs share a `role_code` under the same task, do not call `mawf_get_artifact_ref` with only `task_id` and `role_code`; the server returns an ambiguity error. Use `artifact_ref_id` or `task_id + artifact_key`.
 
 Use persistence status as follows:
 
@@ -563,6 +609,7 @@ The following remote paths were tested successfully through the deployed `/mcp/`
 - `mawf_upsert_workflow_run`
 - `mawf_get_workflow_run`
 - `mawf_list_workflow_runs`
+- `mawf_set_workflow_run_status`
 - `mawf_upsert_artifact_ref`
 - `mawf_get_artifact_ref`
 - `mawf_list_artifact_refs`
@@ -588,6 +635,23 @@ Negative validation tested remotely:
 - User role rejected task status code `completed`.
 - Artifact role rejected persistence status code `persisted`.
 
+Artifact-key expansion smoke tested remotely:
+
+```json
+{
+  "image": "workfloworchreg.azurecr.io/memory-knowledge:2dc09a5",
+  "image_digest": "sha256:489e8781b8e528432b8fdafe35f867ab040e55821017d8981a98718bd867e2e6",
+  "task_id": "mawf-artifact-key-artifact-key-1778234195-e507efce",
+  "checks": [
+    "new ARTIFACT_ROLE codes are present",
+    "two workflow_ledger refs under one task can be created with different artifact_key values",
+    "mawf_list_artifact_refs returns both artifact_key values",
+    "mawf_get_artifact_ref works by task_id + artifact_key",
+    "role-only lookup returns the expected ambiguity error when multiple refs share a role"
+  ]
+}
+```
+
 ## Implementation Checklist For `mcp-agents-workflow`
 
 - Configure `MEMORY_KNOWLEDGE_MCP_URL` as `https://memory-knowledge.azurewebsites.net/mcp/`.
@@ -598,6 +662,8 @@ Negative validation tested remotely:
 - Ensure project and repository are upserted and linked before task writes.
 - Store prompt and ledger content externally, then pass refs into MAWF tools.
 - Persist workflow executions with `mawf_upsert_workflow_run` using stable external workflow run IDs.
+- Index workflow, phase, generated artifact, and feedback files with explicit `artifact_key` values.
+- Use `artifact_ref_id` or `task_id + artifact_key` for exact multi-ref reads; use role-only reads only for singleton refs.
 - Use `mawf_get_task_memory_bundle` for resume/handoff.
 - Treat deletes as lifecycle transitions, not hard deletes.
 - Add integration tests against a disposable task ID prefix.
