@@ -234,9 +234,12 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - ✅ If `sequence-runner` is unavailable in the current session, manually read `operations/sequences/SEQUENCES.md` before running commands.
 - ✅ If a matching sequence exists, follow its `sequence.md` and scripts instead of reconstructing equivalent commands from memory.
 - ✅ If no matching sequence exists, create a discovery log with `scripts/sequence_discovery_log.py start` before or during execution, then append validated steps with `scripts/sequence_discovery_log.py append-step`.
+- ✅ Maintain an explicit active sequence state with `scripts/sequence_guard.py activate` when that guard is available in the repo.
+- ✅ Before running repeatable operational commands, validate the command source with `scripts/sequence_guard.py guard`; allowed sources are only `sequence_doc`, `discovery_log`, `script`, or `tool_help`.
 - ✅ When a discovered sequence repeats or becomes stable, promote it into `operations/sequences/<sequence-id>/sequence.md`.
 - 🚫 No silent improvising of repeatable command sequences.
 - 🚫 No relying on conversation memory as the source of truth for operational steps.
+- 🚫 No running a guarded operational command when the only source is memory or an unrecorded conversation.
 - 🚫 No claiming a sequence is reusable unless its commands, inputs, failure handling, and verification evidence are recorded.
 
 **Set:** 2026-06-22 · **repeated:** 0
