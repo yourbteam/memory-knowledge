@@ -192,3 +192,51 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No telling Kamen to run a command you can run; no offloading without naming the concrete blocker.
 
 **Set:** 2026-06-20 · **repeated:** 0
+
+---
+
+## G16 · Chase the Cause Chain, Not the First Plausible Cause
+**Why:** When a problem manifests, Claude/Codex often finds the first plausible explanation and stops. That can still be shallow: the first cause may itself be a symptom of an upstream design flaw, stale contract, bad data model, broken identity boundary, or wrong workflow assumption.
+- ✅ When a problem appears, trace the cause chain through at least one upstream producer and one downstream consumer before calling it root cause.
+- ✅ After finding a plausible cause, ask: “what allowed this cause to exist?” and continue until the answer reaches a stable boundary: contract, schema, architecture, persistence model, ownership boundary, or explicit product decision.
+- ✅ Distinguish symptom, immediate cause, deeper cause, and stable fix boundary.
+- ✅ Report the confidence level with evidence: confirmed root cause, likely cause needing verification, or unresolved.
+- ✅ If the task needs an urgent unblock, separate the unblock from the permanent fix and name what remains unproven.
+- 🚫 No stopping at the first plausible explanation.
+- 🚫 No calling something root cause unless the upstream/downstream trace supports it.
+- 🚫 No permanent fix proposal that only addresses an intermediate cause.
+
+**Set:** 2026-06-21 · **repeated:** 0
+
+
+---
+
+## G17 · Turn Repeated Execution Sequences Into Reusable Tools
+**Why:** When Codex runs multi-step operational sequences by memory or improvisation, it forgets prerequisites, misses flags, rebuilds things incorrectly, repeats known mistakes, and wastes Kamen's time. If a sequence will be used again, the correct result is not just "I got through it once"; the correct result is a reusable script and skill-backed runbook that preserves the working steps.
+- ✅ When executing any sequence that is likely to recur, has 3+ meaningful steps, touches external systems, builds images/packages, deploys, seeds auth, or requires special environment flags, record the exact steps as they are discovered.
+- ✅ During the run, capture practical corrections: missing flags, wrong command shape, required env vars, auth prerequisites, build context, expected outputs, failure fingerprints, and the command that fixed each issue.
+- ✅ Before claiming the sequence is complete, convert the proven sequence into a checked-in shell or Python script unless Kamen explicitly says not to.
+- ✅ If the sequence needs operator guidance, create or update a skill whose instructions call the script instead of re-describing the commands in prose.
+- ✅ The script must include preflight checks, clear failure messages, no secret printing, parameterized inputs, idempotent behavior where practical, and a final verification check.
+- ✅ On the next use of the same sequence, use the existing script/skill first. If it fails because reality changed, update the script/skill with the new confirmed fix before continuing manually.
+- ✅ If the sequence is destructive or deploys remotely, the script must include a dry-run or manifest/review gate when practical, plus rollback/evidence capture steps when relevant.
+- 🚫 No repeatedly hand-running the same fragile command chain from memory.
+- 🚫 No leaving corrected steps only in conversation, terminal history, or ad hoc notes.
+- 🚫 No claiming a sequence is "figured out" while the reusable script/skill still encodes the old broken path.
+
+**Set:** 2026-06-22 · **repeated:** 0
+
+---
+
+## G18 · Use Registered Sequences Before Reconstructing Steps
+**Why:** long goal-oriented work caused Codex to repeatedly rebuild fragile operational sequences from memory, forget required steps, and then patch mistakes mid-run. Repeatable sequences need a stable entry point so the correct steps are reused, and new sequences are captured while they are being discovered.
+- ✅ Before starting any repeatable multi-step operational sequence, invoke `sequence-runner`.
+- ✅ If `sequence-runner` is unavailable in the current session, manually read `operations/sequences/SEQUENCES.md` before running commands.
+- ✅ If a matching sequence exists, follow its `sequence.md` and scripts instead of reconstructing equivalent commands from memory.
+- ✅ If no matching sequence exists, create a discovery log with `scripts/sequence_discovery_log.py start` before or during execution, then append validated steps with `scripts/sequence_discovery_log.py append-step`.
+- ✅ When a discovered sequence repeats or becomes stable, promote it into `operations/sequences/<sequence-id>/sequence.md`.
+- 🚫 No silent improvising of repeatable command sequences.
+- 🚫 No relying on conversation memory as the source of truth for operational steps.
+- 🚫 No claiming a sequence is reusable unless its commands, inputs, failure handling, and verification evidence are recorded.
+
+**Set:** 2026-06-22 · **repeated:** 0
