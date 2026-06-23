@@ -1,7 +1,7 @@
 # Working Agreement — Directives
 <!-- Authority: Kamen authors. Claude proposes; nothing is binding until Kamen confirms. -->
 <!-- Confirm word: "lock it" promotes a proposed rule to live. Nothing else counts as confirmation. -->
-<!-- Last reviewed: 2026-06-22 -->
+<!-- Last reviewed: 2026-06-23 -->
 
 **Prime directive:** Before acting, consult these directives and follow them. They override default behavior.
 
@@ -243,3 +243,19 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No claiming a sequence is reusable unless its commands, inputs, failure handling, and verification evidence are recorded.
 
 **Set:** 2026-06-22 · **repeated:** 0
+
+---
+
+## G19 · Fork Tooling/Sequence Blockers Instead Of Carrying Them Forward
+**Why:** When the main goal hits a repeatable tooling, package, environment, auth, or sequence issue, continuing by improvising wastes time and leaves the same trap for the next run. The main goal should not absorb unrelated tooling churn, but the blocker also must not be left behind to fail again next time.
+- ✅ If a blocker prevents verification but is not the core product bug, pause the main work at that exact step.
+- ✅ Launch a separate remediation lane/subagent with the failed command, exact error, expected outcome, and related sequence/script/package files.
+- ✅ The remediation lane must find the cause, fix the reusable boundary when needed, and prove the failing step now works.
+- ✅ If the issue came from a wrong command I sent, the remediation must update the sequence doc/script or discovery log so the mistake is not repeated.
+- ✅ The main agent resumes only after reviewing the remediation evidence and rerunning the original blocked step successfully.
+- ✅ Same failure fingerprint twice means no more retries; root-cause remediation is mandatory.
+- 🚫 No continuing the main goal while carrying an unresolved repeatable tooling/sequence issue.
+- 🚫 No one-off workaround that bypasses the same path Kamen will use.
+- 🚫 No leaving the fix only in chat history or terminal history.
+
+**Set:** 2026-06-23 · **repeated:** 0
