@@ -64,3 +64,15 @@ Codex has no session-end hook, so capture runs via the **skill** (installed at
 At session close, invoke the `auto-capture` skill — it writes `unverified` candidate notes via
 `author_repo_note` (functional on any registered repo now that A1+A2 removed the casing + ingested-revision
 preconditions). Promotion stays human-gated ("lock it").
+
+
+## Skills + sequence registry (install-skills.sh)
+The `sequence-runner` skill and the operational-sequence registry are canonical in this repo
+(`skills/`, `operations/sequences/`). Distribute them to BOTH Claude and Codex on this machine:
+
+```bash
+working-agreement/install-skills.sh
+```
+This copies `skills/*` into `~/.claude/skills/` and `~/.codex/skills/` (idempotent; never deletes other
+skills) and sets `core.hooksPath=.githooks` so a future `git pull` auto-re-syncs via the `post-merge` hook.
+Run once per machine after cloning.

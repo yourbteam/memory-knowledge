@@ -1,0 +1,172 @@
+#!/usr/bin/env python3
+"""Record and verify that the canonical working-agreement directives were read."""
+
+from __future__ import annotations
+
+import argparse
+import hashlib
+import json
+from datetime import UTC, datetime, timedelta
+from pathlib import Path
+from typing import Any, Sequence
+
+
+DEFAULT_DIRECTIVES_PATH = Path("/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md")
+DEFAULT_STATE_PATH = Path("/private/tmp/workflow-orch-directive-guard.json")
+DEFAULT_MAX_AGE_MINUTES = 1440
+SCHEMA_VERSION = 1
+
+
+def _utc_now() -> datetime:
+    return datetime.now(UTC).replace(microsecond=0)
+
+
+def _utc_now_text() -> str:
+    return _utc_now().isoformat().replace("+00:00", "Z")
+
+
+def _write_json(value: dict[str, Any]) -> None:
+    print(json.dumps(value, indent=2, sort_keys=True))
+
+
+def _path(value: str | None, default: Path) -> Path:
+    return Path(value).expanduser().resolve() if value else default
+
+
+def _sha256(path: Path) -> str:
+    if not path.is_file():
+        raise SystemExit(f"directives file not found: {path}")
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def _parse_utc(value: str, *, label: str) -> datetime:
+    text = value.strip()
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    try:
+        parsed = datetime.fromisoformat(text)
+    except ValueError as exc:
+        raise SystemExit(f"{label} is not a valid UTC timestamp: {value!r}") from exc
+    if parsed.tzinfo is None:
+        raise SystemExit(f"{label} must include UTC timezone: {value!r}")
+    return parsed.astimezone(UTC)
+
+
+def _load_state(path: Path) -> dict[str, Any]:
+    if not path.is_file():
+        raise SystemExit(f"directive read state not found: {path}")
+    try:
+        state = json.loads(path.read_text(encoding="utf-8"))
+    except json.JSONDecodeError as exc:
+        raise SystemExit(f"directive read state is invalid JSON: {path}: {exc}") from exc
+    if not isinstance(state, dict):
+        raise SystemExit(f"directive read state must be a JSON object: {path}")
+    return state
+
+
+def write_directive_read_state(
+    *,
+    directives_path: Path,
+    state_path: Path,
+    mode: str,
+) -> dict[str, Any]:
+    mode_text = mode.strip()
+    if not mode_text:
+        raise SystemExit("mode is required")
+    state = {
+        "schemaVersion": SCHEMA_VERSION,
+        "directivesPath": str(directives_path),
+        "directivesSha256": _sha256(directives_path),
+        "readAtUtc": _utc_now_text(),
+        "mode": mode_text,
+    }
+    state_path.parent.mkdir(parents=True, exist_ok=True)
+    state_path.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return state
+
+
+def check_directive_read_state(
+    *,
+    directives_path: Path,
+    state_path: Path,
+    max_age_minutes: int = DEFAULT_MAX_AGE_MINUTES,
+) -> dict[str, Any]:
+    if max_age_minutes <= 0:
+        raise SystemExit("directive max age minutes must be greater than zero")
+    state = _load_state(state_path)
+    if state.get("schemaVersion") != SCHEMA_VERSION:
+        raise SystemExit("directive read state schemaVersion is unsupported")
+    stored_path = str(state.get("directivesPath") or "").strip()
+    if Path(stored_path).resolve() != directives_path.resolve():
+        raise SystemExit(
+            f"directive read state was recorded for {stored_path or '<missing>'}, expected {directives_path}"
+        )
+    stored_sha = str(state.get("directivesSha256") or "").strip()
+    current_sha = _sha256(directives_path)
+    if stored_sha != current_sha:
+        raise SystemExit("directive read state is stale because directives SHA changed")
+    read_at = _parse_utc(str(state.get("readAtUtc") or ""), label="readAtUtc")
+    if read_at + timedelta(minutes=max_age_minutes) < _utc_now():
+        raise SystemExit("directive read state is stale because it exceeded max age")
+    return {
+        "schemaVersion": SCHEMA_VERSION,
+        "directivesPath": str(directives_path),
+        "directivesSha256": current_sha,
+        "readAtUtc": state.get("readAtUtc"),
+        "mode": state.get("mode"),
+        "statePath": str(state_path),
+        "maxAgeMinutes": max_age_minutes,
+    }
+
+
+def cmd_read(args: argparse.Namespace) -> int:
+    directives_path = _path(args.directives_path, DEFAULT_DIRECTIVES_PATH)
+    state_path = _path(args.state, DEFAULT_STATE_PATH)
+    state = write_directive_read_state(
+        directives_path=directives_path,
+        state_path=state_path,
+        mode=args.mode,
+    )
+    _write_json({"ok": True, "statePath": str(state_path), "state": state})
+    return 0
+
+
+def cmd_check(args: argparse.Namespace) -> int:
+    directives_path = _path(args.directives_path, DEFAULT_DIRECTIVES_PATH)
+    state_path = _path(args.state, DEFAULT_STATE_PATH)
+    state = check_directive_read_state(
+        directives_path=directives_path,
+        state_path=state_path,
+        max_age_minutes=int(args.max_age_minutes),
+    )
+    _write_json({"ok": True, "state": state})
+    return 0
+
+
+def build_parser() -> argparse.ArgumentParser:
+    parser = argparse.ArgumentParser(description=__doc__)
+    sub = parser.add_subparsers(dest="command_name", required=True)
+
+    read = sub.add_parser("read", help="Record that the canonical directives were read.")
+    read.add_argument("--mode", required=True)
+    read.add_argument("--directives-path")
+    read.add_argument("--state")
+    read.set_defaults(func=cmd_read)
+
+    check = sub.add_parser("check", help="Verify a fresh directive-read state exists.")
+    check.add_argument("--directives-path")
+    check.add_argument("--state")
+    check.add_argument("--max-age-minutes", type=int, default=DEFAULT_MAX_AGE_MINUTES)
+    check.set_defaults(func=cmd_check)
+
+    return parser
+
+
+def main(argv: Sequence[str] | None = None) -> int:
+    parser = build_parser()
+    args = parser.parse_args(argv)
+    return int(args.func(args))
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

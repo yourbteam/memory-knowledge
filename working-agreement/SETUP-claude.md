@@ -47,3 +47,15 @@ capture→recall loop). Opt-in: set `MK_REPO_HYDRATE=1` and register the wrapper
 { "hooks": [ { "type": "command", "command": "/Users/kamenkamenov/memory-knowledge/working-agreement/inject-repo-memory.sh" } ] }
 ```
 Fail-open (any error/timeout/unknown-repo → injects nothing). Already wired in `~/.claude/settings.json`.
+
+
+## Skills + sequence registry (install-skills.sh)
+The `sequence-runner` skill and the operational-sequence registry are canonical in this repo
+(`skills/`, `operations/sequences/`). Distribute them to BOTH Claude and Codex on this machine:
+
+```bash
+working-agreement/install-skills.sh
+```
+This copies `skills/*` into `~/.claude/skills/` and `~/.codex/skills/` (idempotent; never deletes other
+skills) and sets `core.hooksPath=.githooks` so a future `git pull` auto-re-syncs via the `post-merge` hook.
+Run once per machine after cloning.

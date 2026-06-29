@@ -1,0 +1,4 @@
+#!/usr/bin/env bash
+# memory-knowledge post-merge hook: after every `git pull`/merge, re-sync skills into Claude + Codex.
+# Activated per machine by `install-skills.sh` (sets core.hooksPath=.githooks).
+exec "$(git rev-parse --show-toplevel)/working-agreement/install-skills.sh"
