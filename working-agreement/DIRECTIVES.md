@@ -259,3 +259,18 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No leaving the fix only in chat history or terminal history.
 
 **Set:** 2026-06-23 · **repeated:** 0
+
+---
+
+## G20 · Catalog Every Blocker Before Fixing Or Resuming
+**Why:** During long goal pursuit, blockers were fixed with uneven records: some were table entries, some were buried in run notes, and some existed only in conversation. Without one durable catalog entry per blocker, Kamen cannot evaluate whether the work is converging, drifting, or repeatedly fixing symptoms.
+- ✅ When any blocker appears, create or update a durable blocker-catalog entry before attempting the fix or resuming the main goal. The entry must include the practical symptom, confirmed evidence, practical impact, blocker type, task/run ids when available, and the suspected or confirmed stable boundary.
+- ✅ When a blocker fix is implemented, update the same catalog entry with the solution summary, changed files or artifacts, verification evidence, remaining work, and whether it was verified through the same path Kamen uses.
+- ✅ When `playbook-convergence-loop` or a remediation lane is launched for a blocker, record the blocker id in the catalog first and carry that id through research, plan, implementation, review, and final reporting.
+- ✅ Before resuming goal pursuit after a blocker, check the catalog entry and state whether the blocker is `open`, `fixed-awaiting-verification`, `verified`, `closed`, `superseded`, or `non-gap`.
+- ✅ If no catalog helper exists for the repo, create a minimal catalog document or helper before continuing; do not rely on chat, terminal history, or scattered run notes as the control surface.
+- 🚫 No fixing a blocker without a catalog entry.
+- 🚫 No claiming a blocker is fixed without updating its catalog entry with practical solution and verification evidence.
+- 🚫 No resuming the main goal while the active blocker entry still lacks status, solution, or verification state.
+
+**Set:** 2026-06-24 · **repeated:** 0
