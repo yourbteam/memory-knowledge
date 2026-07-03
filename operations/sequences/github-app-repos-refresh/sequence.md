@@ -54,17 +54,30 @@ These are MCP tools on the workflow-orch server (call them through the connected
    - queries every configured GitHub App installation for accessible repos
      (`auth_registry.list_all_repos()`),
    - diffs against the current mapping at `git_settings.repo_mapping_path`,
-   - writes the new mapping to disk (`repo_mapping_path`), to Key Vault (`keyvault_name`), and to the
+   - writes the new mapping to BOTH the on-disk file (`repo_mapping_path`) AND the canonical Key
+     Vault (`credential_settings.keyvault_name`, via `writeback_repo_mapping_to_keyvault`), plus the
      in-memory mapping,
-   - returns `{ ok, added:[...], removed:[...], warnings:[...], kv_status, ... }`.
-     `warnings` flags any `removed` alias that still has an active local clone.
+   - returns `{ ok, added:[...], removed:[...], warnings:[...], kvWriteback, ... }` where
+     `kvWriteback` is **`"ok"`** only when the Key Vault was actually written, **`"skipped"`** when
+     the target server has NO `keyvault_name` configured (e.g. the isolated local sequence-check
+     container), or **`"error: <msg>"`** on a KV write failure. `warnings` flags any `removed`
+     alias that still has an active local clone.
+
+   > A refresh that returns `kvWriteback: "skipped"` (or `error:`) updated ONLY the local mapping,
+   > NOT the canonical Key Vault — the change is EPHEMERAL (lost on container rebuild) and is NOT a
+   > durable, cross-instance repo-availability update. Run against the KV-backed server (the deployed
+   > `workflow-orch`), not the isolated local sequence-check container.
 
 3. **Capture AFTER state + verify**: `workflow.repos.list` again → confirm the mapping now contains
    the expected repos, and that `list`'s delta matches the refresh response's `added`/`removed`.
 
 ## Verification (acceptance)
 
-- `refresh` returned `ok: true`.
+- `refresh` returned `ok: true` **AND `kvWriteback: "ok"`** — i.e. the mapping was persisted to BOTH
+  the Key Vault (canonical/durable) AND the local mapping file. A `kvWriteback` of `"skipped"`/`error`
+  means the refresh did NOT update the Key Vault and MUST NOT be accepted as durable (the wrapper
+  script exits non-zero in that case unless `--allow-local-only` is passed for an explicitly
+  ephemeral, local-only refresh).
 - The `added`/`removed` in the refresh response match the intended change (the repo you added on
   GitHub appears in `added`; a removed one appears in `removed`).
 - Step-3 `workflow.repos.list` shows the new repo alias (and it now works with
@@ -80,16 +93,35 @@ These are MCP tools on the workflow-orch server (call them through the connected
 | `NOT_AVAILABLE: … requires Git remote management` | server not running GitRemoteManager | check deployment/config; git remote management must be enabled |
 | `NOT_CONFIGURED: GitHub App auth is not configured` | App id/installation/PEM missing | run the presence check above; seed the GitHub App credentials (id, installation, PEM, `app-config.json`) |
 | `GITHUB_API_ERROR: <msg>` | GitHub API call failed (auth expired, rate limit, network) | verify the App installation is still valid on GitHub; retry; check App token minting |
-| write/KV failure in response | mapping fetched but couldn't persist to disk/Key Vault | check `repo_mapping_path` writability + `keyvault_name` access (managed identity) |
+| `kvWriteback: "skipped"` (script exits 2) | target server has NO `keyvault_name` — the refresh updated only the local mapping (ephemeral, not durable). This is the isolated local sequence-check container. | Run against the KV-backed **deployed** `workflow-orch` server so the canonical Key Vault is updated. Only pass `--allow-local-only` when you deliberately want an ephemeral local-only refresh. |
+| `kvWriteback: "error: <msg>"` | mapping written to disk but the Key Vault write FAILED (auth/managed-identity/network) | check the target's Key Vault access (managed identity / `keyvault_name`); the mapping is NOT durably persisted until this succeeds — re-run after fixing KV access. |
 | repo added on GitHub but not in `added` | the App installation doesn't actually have access to it | grant the App access to that repo in GitHub App settings, then re-run |
+
+## Target (which server to run against)
+
+The refresh updates the stores of **the server it runs on**. To make repos DURABLY available across
+harness instances you must update the canonical Key Vault, so run against a **KV-backed** server:
+
+- **Deployed `workflow-orch` (durable — required for a real change).** `keyvault_name` is set →
+  `workflow.repos.refresh` writes BOTH the Key Vault (canonical) and that server's local mapping →
+  `kvWriteback: "ok"`. This is the acceptable path; every instance that reads the KV then sees the
+  new repos.
+- **Local sequence-check container (ephemeral only).** `keyvault_name` is EMPTY → the refresh writes
+  only the container's local `repo-mapping.json` + in-memory cache and returns `kvWriteback:
+  "skipped"`. Useful to make the LOCAL harness see a repo for a one-off local drive, but it is NOT
+  durable and does NOT update the Key Vault. Requires the explicit `--allow-local-only` flag.
 
 ## Invocation options
 
 - **Via the connected `workflow-orch-remote` MCP** (interactive/agent): call
-  `workflow.repos.list`, then `workflow.repos.refresh`, then `workflow.repos.list`.
+  `workflow.repos.list`, then `workflow.repos.refresh`, then `workflow.repos.list`; require
+  `kvWriteback == "ok"`.
 - **Via the wrapper script** (non-interactive): `scripts/github_app_repos_refresh.py`
-  (see that script's `--help`) — runs list→refresh→list, prints the diff, and exits non-zero on any
-  non-`ok` result or a `NOT_CONFIGURED`/`FORBIDDEN` precondition failure.
+  (see `--help`) — runs list→refresh→list, prints the diff + `kvWriteback`, verifies the KV was
+  written, and **exits non-zero** on any non-`ok` result, a `NOT_CONFIGURED`/`FORBIDDEN` precondition
+  failure, OR a KV-skipped/errored writeback (unless `--allow-local-only` is passed for the ephemeral
+  local-container case). Point it at the deployed server with `--server-url wss://<host>/ws` (+ admin
+  auth in the env) for the durable path.
 
 ## Notes
 
@@ -97,5 +129,8 @@ These are MCP tools on the workflow-orch server (call them through the connected
   `added`/`removed`.
 - Does NOT touch task/workflow state; safe to run while workflows are idle. (It only rewrites the
   alias mapping + KV + cache.)
-- Canonical registry: promote/keep this in the memory-knowledge sequence registry (per G18) in
-  addition to this repo copy.
+- **Durability rule:** a refresh is only "done" when it updated BOTH the Key Vault and the local
+  mapping (`kvWriteback: "ok"`). A `skipped`/`error` writeback means the change is not durable — see
+  Failure handling. This is why the wrapper script fails a KV-skipped run by default.
+- Canonical registry: kept in the memory-knowledge sequence registry (per G18); automation lives at
+  `mcp-agents-workflow:scripts/github_app_repos_refresh.py`.
