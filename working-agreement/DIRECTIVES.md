@@ -274,3 +274,15 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No resuming the main goal while the active blocker entry still lacks status, solution, or verification state.
 
 **Set:** 2026-06-24 · **repeated:** 0
+
+## G21 · Always the grounded full implementation — never a deferred workaround
+**Why:** Claude repeatedly offered Kamen a "fast" patched option beside the correct one ("option 1: harden the flaky agent gate; option 2: make it deterministic — 1 is faster"), and framed shortcuts as legitimate choices. A patched version that half-implements a feature to check a box leaves the real defect in place, ships fragility (e.g. a deterministic decision driven by a non-deterministic agent that flakes), and creates "I'll come back to it someday" debt that never gets paid. Kamen's standing choice is the complete, root-grounded implementation that closes the feature out — every time.
+- ✅ When a defect or design gap has a grounded root fix and a faster surface patch, pursue the **grounded root fix** and do not present the shortcut as an option. If the grounded route is large, run it through the proper convergence loop (research → harden → plan → harden → approve → implement → live-verify), not a patch.
+- ✅ Fix the feature at its correct boundary so it is *complete*: no known-fragile mechanism left in place, no "temporary" behavior, no capability half-wired with the rest deferred. A feature is done when it works end-to-end by design, not when a single happy-path run passes.
+- ✅ If the grounded fix is genuinely out of scope for the current change, STOP and say so explicitly, name the full-implementation work it requires, and get Kamen's decision — do not silently ship the patch and move on.
+- ✅ Surface the tradeoff honestly (grounded cost vs shortcut), but state the recommendation as the grounded route; never ask Kamen to pick the shortcut to save time.
+- 🚫 No presenting a "faster workaround vs correct fix" menu and inviting Kamen to choose the workaround.
+- 🚫 No half-implemented feature left with a "come back later" note, TODO, or deferred-scope hand-wave as the finished state.
+- 🚫 No shipping a known-fragile/flaky mechanism (nondeterminism where determinism is required, accepted-limitation where a real fix exists) to check a box.
+
+**Set:** 2026-07-05 · **repeated:** 0
