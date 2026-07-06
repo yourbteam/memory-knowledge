@@ -22,8 +22,14 @@ prefer it over reconstructed commands.
   `src/services/api_path.tsx`, used as a base with paths appended (e.g. `${API_PATH}/auth/admin/login`).
   The committed `.env` is `http://localhost:5078/api`, so the value **keeps the `/api` suffix**. The
   dev value is **`https://taggable-api-dev.azurewebsites.net/api`** (the script default).
-- The script writes the value to **`.env.production.local`** (gitignored via `*.local`), which overrides
-  the committed `.env` for the production build. It is not committed.
+- **`.env.production` is committed** with the dev API URL and is auto-loaded by Vite for **every**
+  production build — so no build (fresh clone, manual `npm run build`, CI, or this script) can bake the
+  localhost value in `.env` (which only applies to `npm run dev`). The committed `.env` = localhost is
+  dev-only. The script additionally writes gitignored **`.env.production.local`** only to honor a custom
+  `--api-base` override. **History:** a build without the local override once shipped a localhost bundle →
+  login "Network Error"; committing `.env.production` closes that hole permanently.
+- The deploy has a **post-deploy LOGIN GATE** (see below) that fails the deploy if the live bundle targets
+  localhost/the wrong API or if the API's CORS does not allow the admin origin.
 - `vite.config.ts` sets **`base: ""`** → relative asset paths (`./assets/...`), correct for `serve -s`.
 - The zip deploy **replaces** `wwwroot` with the zip contents. There is **no WebJob** to preserve here
   (unlike taggable-api-deploy).
@@ -65,6 +71,11 @@ prefer it over reconstructed commands.
   do a real render check: load the site in a browser (or serve the built `dist/` with `serve -s` and
   read the console) and confirm `#root` is non-empty with no console `TypeError`. The script only
   proves the bytes are served, not that React mounted.
+- **LOGIN GATE (in the script):** after deploy it fetches the live `index-*.js` bundle and asserts it
+  contains `$API_BASE` and NO `localhost:*/api`, then asserts the API returns
+  `Access-Control-Allow-Origin: <admin origin>` for the login preflight. If either fails the deploy
+  ABORTS — a login-breaking bundle cannot silently ship. (Grep the downloaded file with `grep -a`; the
+  minified JS does not survive a shell variable.)
 
 ## Failure handling
 - **`az webapp deploy` fails / HTTP 401** → 401 means SCM basic auth is disabled *and* the deploy tried
