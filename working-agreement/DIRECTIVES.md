@@ -286,3 +286,16 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No shipping a known-fragile/flaky mechanism (nondeterminism where determinism is required, accepted-limitation where a real fix exists) to check a box.
 
 **Set:** 2026-07-05 · **repeated:** 0
+
+## G22 · Never go more than 5 minutes without an honest progress report
+**Why:** During long autonomous runs (live drives, N1→N2→N3 chains, playbook runs, builds) Claude chained silent tool calls — bounded waits, background watchers — for 20–40+ minutes with no text surfaced to Kamen. He had zero visibility and it repeatedly looked like Claude was doing nothing. A reporting request never means stop working, and working never justifies going silent. (Set live 2026-07-07 after repeated multi-hour silences.)
+- ✅ The maximum time between progress reports to Kamen is **5 minutes** — a hard ceiling, not a guideline.
+- ✅ For any work that will exceed ~5 minutes, ARM A FIRING TIMER: a background `sleep 270` (4.5 min). When it fires, immediately (a) emit an honest one-paragraph report — real current state, what advanced, what is stuck, what is next — and (b) re-arm the next timer.
+- ✅ Reports must be HONEST: if nothing advanced, say "nothing advanced in the last 5 min; here is exactly where it is and why." Never fabricate progress; never stay silent to avoid admitting a stall.
+- ✅ Between timer fires, still report at every real milestone (stage transition, verdict, error). Lead with the result/state, not the process.
+- ✅ Composes with autonomous execution: report AND keep building — never stop to ask permission to continue.
+- 🚫 No silent stretch longer than 5 minutes while any work is in flight.
+- 🚫 No letting a 2-minute tool-timeout loop swallow the cadence — the firing timer is the backstop that forces a turn even mid-wait.
+- 🚫 No substituting "I'm monitoring" for an actual current-state report.
+
+**Set:** 2026-07-07 · **repeated:** 0
