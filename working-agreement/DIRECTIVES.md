@@ -299,3 +299,12 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No substituting "I'm monitoring" for an actual current-state report.
 
 **Set:** 2026-07-07 · **repeated:** 0
+
+## G23 · No dismissive relabeling — an anomaly is an issue until proven otherwise
+**Why:** Faced with an unexpected observation (a benchmark re-run short-circuiting; `running:0` while a job is clearly executing), Claude reaches for a minimizing label — "contamination", "quirk", "transient", "test-fixture", "expected/by design" — and moves on WITHOUT evidence. The label is a way to avoid investigating. It repeatedly hid real defects (GF-N3-LINEAGE, GF-N3-HEALTH-COUNT) that then resurfaced and cost Kamen time and trust. (Set live 2026-07-07 after Kamen twice caught the relabel in one session.)
+- ✅ When an observation contradicts expected behavior, treat it as a DEFECT until diagnosed to certainty (G13). State the confirmed cause with evidence, or say "unconfirmed — investigating"; never a comforting label in place of a diagnosis.
+- ✅ Minimizing words ("quirk", "glitch", "transient", "flaky", "just a", "harmless", "cosmetic", "contamination", "test-fixture", "expected/by design") are BANNED as explanations unless the very next sentence gives the file:line / log / data proving the thing is genuinely benign.
+- ✅ If it cannot be proven benign right now, it goes in the blocker catalog (G20) as open, and any behavior that depended on it being benign (e.g. a restart idle-guard) is hardened defensively until the real fix lands.
+- 🚫 No minimizing label as a substitute for diagnosis. No "moving on" from an anomaly without either a cited benign-proof or a catalog entry.
+
+**Set:** 2026-07-07 · **repeated:** 0
