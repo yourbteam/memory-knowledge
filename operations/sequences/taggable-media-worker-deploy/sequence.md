@@ -10,13 +10,12 @@ worker itself. This is a **separate** deploy from `taggable-api-deploy`; it does
 Automation: **`taggable-api:scripts/deploy-media-worker.sh`** — the script owns the exact steps;
 prefer it over reconstructed commands.
 
-> **Status: PENDING FIRST RUN (unproven).** As of 2026-07-07 the script has NOT yet been run
-> end-to-end — it is blocked on three runtime inputs (see Preconditions: ffmpeg binaries **K1**,
-> storage App Settings **K5**, Always On **K3**) and on applying the `product_video` migration
-> (**K10**). The script mirrors the **proven** `db-import` WebJob-PUT pattern in
-> `reload-source.sh` (Kudu creds + `curl -X PUT .../<kind>webjobs/<name>`), differing only in
-> `continuouswebjobs` vs `triggeredwebjobs`. Record the first real run's evidence here and drop
-> this banner once verified.
+> **Status: PROVEN (first successful run 2026-07-07).** Deployed the continuous `media-worker` WebJob to
+> `taggable-api-dev` (`WebJob deploy HTTP 200`), it reached **`Running`**, and it processed a real uploaded
+> video **end-to-end**: `product_video` row went `pending → processing → ready` in ~20s with all 3 derived
+> blobs (720p H.264 transcode + centered watermark overlay + poster frame) produced by the vendored win-x64
+> ffmpeg, and the poll endpoint returned the URLs. Mirrors the proven `db-import` WebJob-PUT pattern in
+> `reload-source.sh`, differing only in `continuouswebjobs` vs `triggeredwebjobs`.
 
 ## Preconditions
 - `az login` done (`az account show` succeeds).
@@ -24,13 +23,17 @@ prefer it over reconstructed commands.
 - **K1** — win-x64 `ffmpeg.exe` + `ffprobe.exe` present in
   `tools/Taggable.MediaWorker/ffmpeg/` (gitignored; the script fails loudly if missing).
 - **K5** — the Azure App Settings for storage are set on `taggable-api-dev` (env vars override the
-  empty committed `appsettings.json`): `ConnectionStrings__TaggableDatabase`,
-  `MediaUpload__Storage__Images__{AccountName,AccountKey,Container,PublicBaseUrl}`,
-  `MediaUpload__Storage__Videos__{...}`.
-- **K3** — App Service **Always On** enabled (a continuous WebJob is killed on idle without it).
-- **K10** — the `product_video` table exists (apply `taggable-api:migrations/2026-07-07-add-product-video.sql`
-  with a GO-honoring tool — `sqlcmd -i` / SSMS / Azure Query Editor — NOT MigrationRunner `apply-schema`,
-  whose `;\n` splitter shreds GO/BEGIN-END batches).
+  empty committed `appsettings.json`): `ConnectionStrings__TaggableDatabase`, plus **5 per-version targets**
+  `MediaUpload__Storage__{Original,Resized,Midsize,Watermark,Videos}__{AccountName,AccountKey,Container,PublicBaseUrl}`
+  — containers on `taggableblobstorage`: Original→`images`, Resized→`resized`, Midsize→`midsizeimages`,
+  Watermark→`watermark`, Videos→`videos`. (All set on `taggable-api-dev` 2026-07-07; persist across deploys.)
+- **K3** — App Service **Always On** enabled (a continuous WebJob is killed on idle without it). Set via
+  `az webapp config set -g Umbraco -n taggable-api-dev --always-on true`.
+- **K10** — the `product_video` table exists (from `taggable-api:migrations/2026-07-07-add-product-video.sql`).
+  Apply with a **GO-honoring** path — NOT MigrationRunner `apply-schema` (its `;\n` splitter shreds
+  GO/BEGIN-END batches). **Confirmed method (2026-07-07):** split the file on `^GO$` and run each of the 4
+  guarded batches as a separate `Taggable.MigrationRunner.dll query appsettings "<batch>"` call (each
+  `IF…BEGIN…END` batch is one valid command); or `sqlcmd -i` / SSMS / Azure Query Editor.
 
 ## Environment facts (why the script is shaped this way)
 - Host is the **same Windows .NET 8 Web App** as the API; the worker targets `net8.0` →
