@@ -231,6 +231,8 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 ## G18 · Use Registered Sequences Before Reconstructing Steps
 **Why:** long goal-oriented work caused Codex to repeatedly rebuild fragile operational sequences from memory, forget required steps, and then patch mistakes mid-run. Repeatable sequences need a stable entry point so the correct steps are reused, and new sequences are captured while they are being discovered.
 - ✅ Before starting any repeatable multi-step operational sequence, invoke `sequence-runner`.
+- ✅ Treat ANY turn that builds/runs an image, recreates a container, seeds auth, deploys, or drives a workflow as sequence-triggered by DEFAULT — grep `SEQUENCES.md` for a match FIRST, even when it feels like a one-off. (Amended 2026-07-10: the miss that motivated this was hand-running the greenfield build→container→auth→drive chain from memory instead of checking the catalog — where `local-workflow-orch-image` existed and the `greenfield-full-drive` sequence now does.)
+- ✅ On any operational/tooling turn, the G0 compliance anchor must STATE the sequence checked (its `sequence-id`, or "no match → discovery log") BEFORE the first operational command, so a skip is visible to Kamen instead of buried mid-flow.
 - ✅ If `sequence-runner` is unavailable in the current session, manually read `operations/sequences/SEQUENCES.md` before running commands.
 - ✅ If a matching sequence exists, follow its `sequence.md` and scripts instead of reconstructing equivalent commands from memory.
 - ✅ If no matching sequence exists, create a discovery log with `scripts/sequence_discovery_log.py start` before or during execution, then append validated steps with `scripts/sequence_discovery_log.py append-step`.
@@ -242,7 +244,7 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No running a guarded operational command when the only source is memory or an unrecorded conversation.
 - 🚫 No claiming a sequence is reusable unless its commands, inputs, failure handling, and verification evidence are recorded.
 
-**Set:** 2026-06-22 · **repeated:** 0
+**Set:** 2026-06-22 · **repeated:** 0 · **amended:** 2026-07-10 (Kamen "lock it" — broaden the trigger to any build/container/auth/deploy/drive turn + require the sequence-check in the G0 anchor)
 
 ---
 

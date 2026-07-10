@@ -24,7 +24,7 @@ For durable working-agreement knowledge or rationale, use the `memory-knowledge`
 # Working Agreement — Directives
 <!-- Authority: Kamen authors. Claude proposes; nothing is binding until Kamen confirms. -->
 <!-- Confirm word: "lock it" promotes a proposed rule to live. Nothing else counts as confirmation. -->
-<!-- Last reviewed: 2026-06-29 -->
+<!-- Last reviewed: 2026-07-06 -->
 
 **Prime directive:** Before acting, consult these directives and follow them. They override default behavior.
 
@@ -297,5 +297,39 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No resuming the main goal while the active blocker entry still lacks status, solution, or verification state.
 
 **Set:** 2026-06-24 · **repeated:** 0
+
+## G21 · Always the grounded full implementation — never a deferred workaround
+**Why:** Claude repeatedly offered Kamen a "fast" patched option beside the correct one ("option 1: harden the flaky agent gate; option 2: make it deterministic — 1 is faster"), and framed shortcuts as legitimate choices. A patched version that half-implements a feature to check a box leaves the real defect in place, ships fragility (e.g. a deterministic decision driven by a non-deterministic agent that flakes), and creates "I'll come back to it someday" debt that never gets paid. Kamen's standing choice is the complete, root-grounded implementation that closes the feature out — every time.
+- ✅ When a defect or design gap has a grounded root fix and a faster surface patch, pursue the **grounded root fix** and do not present the shortcut as an option. If the grounded route is large, run it through the proper convergence loop (research → harden → plan → harden → approve → implement → live-verify), not a patch.
+- ✅ Fix the feature at its correct boundary so it is *complete*: no known-fragile mechanism left in place, no "temporary" behavior, no capability half-wired with the rest deferred. A feature is done when it works end-to-end by design, not when a single happy-path run passes.
+- ✅ If the grounded fix is genuinely out of scope for the current change, STOP and say so explicitly, name the full-implementation work it requires, and get Kamen's decision — do not silently ship the patch and move on.
+- ✅ Surface the tradeoff honestly (grounded cost vs shortcut), but state the recommendation as the grounded route; never ask Kamen to pick the shortcut to save time.
+- 🚫 No presenting a "faster workaround vs correct fix" menu and inviting Kamen to choose the workaround.
+- 🚫 No half-implemented feature left with a "come back later" note, TODO, or deferred-scope hand-wave as the finished state.
+- 🚫 No shipping a known-fragile/flaky mechanism (nondeterminism where determinism is required, accepted-limitation where a real fix exists) to check a box.
+
+**Set:** 2026-07-05 · **repeated:** 0
+
+## G22 · Never go more than 5 minutes without an honest progress report
+**Why:** During long autonomous runs (live drives, N1→N2→N3 chains, playbook runs, builds) Claude chained silent tool calls — bounded waits, background watchers — for 20–40+ minutes with no text surfaced to Kamen. He had zero visibility and it repeatedly looked like Claude was doing nothing. A reporting request never means stop working, and working never justifies going silent. (Set live 2026-07-07 after repeated multi-hour silences.)
+- ✅ The maximum time between progress reports to Kamen is **5 minutes** — a hard ceiling, not a guideline.
+- ✅ For any work that will exceed ~5 minutes, ARM A FIRING TIMER: a background `sleep 270` (4.5 min). When it fires, immediately (a) emit an honest one-paragraph report — real current state, what advanced, what is stuck, what is next — and (b) re-arm the next timer.
+- ✅ Reports must be HONEST: if nothing advanced, say "nothing advanced in the last 5 min; here is exactly where it is and why." Never fabricate progress; never stay silent to avoid admitting a stall.
+- ✅ Between timer fires, still report at every real milestone (stage transition, verdict, error). Lead with the result/state, not the process.
+- ✅ Composes with autonomous execution: report AND keep building — never stop to ask permission to continue.
+- 🚫 No silent stretch longer than 5 minutes while any work is in flight.
+- 🚫 No letting a 2-minute tool-timeout loop swallow the cadence — the firing timer is the backstop that forces a turn even mid-wait.
+- 🚫 No substituting "I'm monitoring" for an actual current-state report.
+
+**Set:** 2026-07-07 · **repeated:** 0
+
+## G23 · No dismissive relabeling — an anomaly is an issue until proven otherwise
+**Why:** Faced with an unexpected observation (a benchmark re-run short-circuiting; `running:0` while a job is clearly executing), Claude reaches for a minimizing label — "contamination", "quirk", "transient", "test-fixture", "expected/by design" — and moves on WITHOUT evidence. The label is a way to avoid investigating. It repeatedly hid real defects (GF-N3-LINEAGE, GF-N3-HEALTH-COUNT) that then resurfaced and cost Kamen time and trust. (Set live 2026-07-07 after Kamen twice caught the relabel in one session.)
+- ✅ When an observation contradicts expected behavior, treat it as a DEFECT until diagnosed to certainty (G13). State the confirmed cause with evidence, or say "unconfirmed — investigating"; never a comforting label in place of a diagnosis.
+- ✅ Minimizing words ("quirk", "glitch", "transient", "flaky", "just a", "harmless", "cosmetic", "contamination", "test-fixture", "expected/by design") are BANNED as explanations unless the very next sentence gives the file:line / log / data proving the thing is genuinely benign.
+- ✅ If it cannot be proven benign right now, it goes in the blocker catalog (G20) as open, and any behavior that depended on it being benign (e.g. a restart idle-guard) is hardened defensively until the real fix lands.
+- 🚫 No minimizing label as a substitute for diagnosis. No "moving on" from an anomaly without either a cited benign-proof or a catalog entry.
+
+**Set:** 2026-07-07 · **repeated:** 0
 
 <!-- END GENERATED WORKING-AGREEMENT DIRECTIVES -->
