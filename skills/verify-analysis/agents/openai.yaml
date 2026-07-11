@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify Analysis"
+  short_description: "Iterative analysis verification loop"
+  default_prompt: "Use $verify-analysis to verify and harden the analysis in this conversation."

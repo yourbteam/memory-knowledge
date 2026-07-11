@@ -1,0 +1,4 @@
+interface:
+  display_name: "Playbook Convergence Loop"
+  short_description: "Run research, plan, code, and review playbooks to convergence."
+  default_prompt: "Run the current task through the bounded autonomous convergence loop. Preserve the objective, use independent assessment-only gates, make no commits unless explicitly authorized, review all recorded working-tree surfaces, and loop validated gaps back to research until every requirement is satisfied."

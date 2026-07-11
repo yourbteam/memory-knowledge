@@ -1,0 +1,4 @@
+interface:
+  display_name: "Task Workflow"
+  short_description: "Task folder analysis-plan-execute loop"
+  default_prompt: "Use $task-workflow for this repo task: create a task folder, write analysis.md, harden it, write plan.md, harden it, execute, then verify the work."

@@ -1,0 +1,4 @@
+interface:
+  display_name: "Coverage Gap Loop"
+  short_description: "Audit whether every requirement is addressed"
+  default_prompt: "Use $requirements-coverage-gap-loop to audit this plan for coverage gaps."

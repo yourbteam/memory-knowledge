@@ -92,11 +92,11 @@ Override the interpreter with `CLAUDE_CORPUS_PYTHON`. Preview without writing:
 > on the deployed service (see *Service deploy* below). Until the service is redeployed, upserts
 > work but deactivation of orphans will error (logged, fail-open) — pruning activates post-deploy.
 
-## 5. Global skills (not in this repo)
+## 5. Canonical personal skills
 
-These live under `~/.claude/skills/` (user-global), not in the repo — copy them onto the new machine:
-- Playbooks: `research-playbook`, `plan-playbook`, `write-code-playbook`, `review-playbook`
-- Corpus curation: `corpus-add` (add one entry on demand via the MCP tool)
+Personal skills are versioned in this repository under `skills/` and declared by
+`skills/managed-skills.txt`. Use the validator and transactional installer described below; do not
+hand-copy installed client directories.
 
 ## 6. Verify end-to-end
 
@@ -104,6 +104,29 @@ These live under `~/.claude/skills/` (user-global), not in the repo — copy the
 2. Ingest a throwaway entry via `run_corpus_upsert_workflow`, then `corpus_query` it back; delete after.
 3. Start a fresh session and confirm a relevant prompt auto-injects a "Tier-2 corpus — retrieved for
    this prompt" block (the hydration hook firing).
+
+## Codex managed skills and no-commit directive sync
+
+Canonical Codex skills live under `skills/` and are declared in `skills/managed-skills.txt`:
+
+```bash
+working-agreement/validate-skills.sh
+working-agreement/install-skills.sh
+```
+
+The installer defaults to Codex, uses a global lock and recovery journal, replaces only managed
+directories, verifies tree hashes, and preserves unrelated skills. Claude installation requires
+explicit reconciliation plus `--target both --accept-cross-client`.
+
+When locked directive edits must reach Tier-2 before a commit, run:
+
+```bash
+working-agreement/sync-corpus.sh --force-current
+```
+
+Force mode compares committed `HEAD:working-agreement/DIRECTIVES.md` with the working-tree file,
+upserts current identities, deactivates removed identities, and verifies both states through the
+active-only `corpus_query` MCP read path before succeeding.
 
 ## Service deploy (separate concern)
 

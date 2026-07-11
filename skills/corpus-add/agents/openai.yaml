@@ -1,0 +1,4 @@
+interface:
+  display_name: "Corpus Add"
+  short_description: "Curate one durable corpus entry"
+  default_prompt: "Use $corpus-add to add this working-agreement note to the corpus."

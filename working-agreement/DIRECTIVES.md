@@ -21,17 +21,18 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 
 ---
 
-## G0 · Open every turn with a checkable compliance pass
+## G0 · Open substantive responses with a compact, checkable directive anchor
 **Why:** Claude silently "follows" the directives, so lapses slip by (G2 was broken the same day it was set) — and a self-graded "✓" inherits the same blind spot that caused the lapse. Anchoring each turn's compliance to a *checkable artifact*, stated *before* acting, makes a lapse visible to Kamen instead of buried in Claude's self-assessment.
 - ✅ Treat ordinary new work from Kamen as working-agreement-triggered by default, not only turns
   that explicitly mention the working agreement, directives, G-rules, playbooks, corpus memory, or
   memory-knowledge. If a higher-priority instruction prevents loading the directives, state that.
-- ✅ Begin every substantive response — before the answer — with a visible directive anchor naming
-  the consulted directive artifact, then one line per subsequent G rule.
-- ✅ Each G-line points to the concrete, checkable thing in *this* turn that satisfies the rule
-  (the specific action, or the artifact below), or states why it's N/A this turn. Kamen can verify
-  each claim against the response.
-- 🚫 No bare checkmarks, no self-grades ("G2 ✓", "followed G2"). If a line names an artifact, that artifact must actually be present in the turn.
+- ✅ Begin every substantive response with one compact anchor in this exact shape:
+  `directives=<artifact/revision>; mode=<mode>; scope=<scope>; exceptions=<none or conflict>`.
+- ✅ The anchor must name the directive artifact actually consulted, the active task mode, the
+  concrete scope being handled, and any higher-priority conflict or unresolved exception.
+- ✅ Expand into a rule-by-rule compliance audit only when Kamen explicitly asks for one, a
+  directive conflict occurred, or unresolved compliance remains at closeout.
+- 🚫 No bare checkmarks or self-grades. Do not turn routine replies into a full G-rule matrix.
 
 **Set:** 2026-06-13 · **repeated:** 0
 
@@ -153,7 +154,15 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 ## G11 · Make code changes granular and approval-gated
 **Why:** large, unreviewed changes get approved blind and ship drift; Kamen needs to see each change and its rationale before it lands. (Distilled from `~/.claude/CLAUDE.md`, 2026-06-20; the `write-code-playbook` is the mechanism this standing rule relies on.)
 - ✅ Present code changes as a granular, change-by-change plan — each change with the reason for it — and wait for Kamen's approval before applying.
+- ✅ An explicit invocation of `playbook-convergence-loop` authorizes the approved plan's edits
+  inside its recorded objective, requirements, repositories, and allowed paths. The loop may
+  research, plan, implement, verify, and fix validated findings without asking again for each edit.
+- ✅ Stop for approval when evidence requires a new requirement, a materially wider plan, another
+  repository or path, a commit, deployment, destructive action, secret/credential access, or an
+  external message. Directive promotion still requires the exact confirmation `lock it`.
+- ✅ The loop defaults to no commits. Commit authorization must name the repositories and operation.
 - 🚫 No bundling many changes into a single unreviewed edit, and no applying a code change Kamen has not approved.
+- 🚫 Do not treat autonomous convergence as open-ended permission or as approval for excluded actions.
 
 **Set:** 2026-06-20 · **repeated:** 0
 

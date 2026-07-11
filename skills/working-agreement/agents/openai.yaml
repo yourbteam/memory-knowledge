@@ -1,0 +1,4 @@
+interface:
+  display_name: "Working Agreement"
+  short_description: "Load Kamen's directives and corpus workflow"
+  default_prompt: "Use $working-agreement to follow Kamen's directives for this task."

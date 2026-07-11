@@ -6,6 +6,7 @@ on-disk file is ever treated as authoritative.
 
 import importlib.util
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -130,3 +131,65 @@ def test_codex_trusted_projects_parses_headers(tmp_path):
 
 def test_codex_trusted_projects_missing_config(tmp_path):
     assert gp.codex_trusted_projects(tmp_path / "nope.toml") == []
+
+
+def _allowlisted_fixture(tmp_path):
+    gp.LOCK_ROOT = tmp_path / "projection-locks"
+    project = tmp_path / "owned"
+    project.mkdir()
+    directives = tmp_path / "DIRECTIVES.md"
+    directives.write_text("## G0 · Rule\nbody\n")
+    allowlist = tmp_path / "allowlist"
+    allowlist.write_text(str(project) + "\n")
+    return project, directives, allowlist
+
+
+def test_allowlisted_create_is_dry_run_then_apply(tmp_path):
+    project, directives, allowlist = _allowlisted_fixture(tmp_path)
+    result = gp.refresh_projects(directives, [project], allowlist, apply=False, create_missing=True)
+    assert "would-create" in result[0]
+    assert not (project / "AGENTS.md").exists()
+    result = gp.refresh_projects(directives, [project], allowlist, apply=True, create_missing=True)
+    assert "created" in result[0]
+    assert (project / "AGENTS.md").exists()
+    assert not (project / ".AGENTS.md.working-agreement.lock").exists()
+
+
+def test_non_allowlisted_project_is_skipped(tmp_path):
+    project = tmp_path / "other"
+    project.mkdir()
+    directives = tmp_path / "DIRECTIVES.md"
+    directives.write_text("## G0 · Rule\nbody\n")
+    allowlist = tmp_path / "allowlist"
+    allowlist.write_text("")
+    result = gp.refresh_projects(directives, [project], allowlist, apply=True, create_missing=True)
+    assert "skip(not-allowlisted)" in result[0]
+
+
+def test_refresh_only_missing_preserves_legacy_skip(tmp_path):
+    project, directives, allowlist = _allowlisted_fixture(tmp_path)
+    result = gp.refresh_projects(directives, [project], allowlist, apply=True, create_missing=False)
+    assert "skip(no-AGENTS.md)" in result[0]
+
+
+def test_hand_authored_file_is_preserved(tmp_path):
+    project, directives, allowlist = _allowlisted_fixture(tmp_path)
+    target = project / "AGENTS.md"
+    target.write_text("hand-authored\n")
+    result = gp.refresh_projects(directives, [project], allowlist, apply=True, create_missing=True)
+    assert "skip(not-generated)" in result[0]
+    assert target.read_text() == "hand-authored\n"
+
+
+def test_raced_create_preserves_winner(tmp_path):
+    project, directives, allowlist = _allowlisted_fixture(tmp_path)
+    target = project / "AGENTS.md"
+
+    def race(_temp, destination):
+        Path(destination).write_text("winner\n")
+        raise FileExistsError
+
+    with mock.patch.object(gp.os, "link", side_effect=race):
+        result = gp.refresh_projects(directives, [project], allowlist, apply=True, create_missing=True)
+    assert "skip(raced-existing)" in result[0]
+    assert target.read_text() == "winner\n"

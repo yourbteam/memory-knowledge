@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verifier Foundry"
+  short_description: "Bounded verifier persona slices"
+  default_prompt: "Create a bounded verifier persona slice from the approved workflow phase contract."

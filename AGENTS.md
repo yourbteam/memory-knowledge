@@ -24,7 +24,7 @@ For durable working-agreement knowledge or rationale, use the `memory-knowledge`
 # Working Agreement — Directives
 <!-- Authority: Kamen authors. Claude proposes; nothing is binding until Kamen confirms. -->
 <!-- Confirm word: "lock it" promotes a proposed rule to live. Nothing else counts as confirmation. -->
-<!-- Last reviewed: 2026-07-06 -->
+<!-- Last reviewed: 2026-07-11 -->
 
 **Prime directive:** Before acting, consult these directives and follow them. They override default behavior.
 
@@ -44,17 +44,18 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 
 ---
 
-## G0 · Open every turn with a checkable compliance pass
+## G0 · Open substantive responses with a compact, checkable directive anchor
 **Why:** Claude silently "follows" the directives, so lapses slip by (G2 was broken the same day it was set) — and a self-graded "✓" inherits the same blind spot that caused the lapse. Anchoring each turn's compliance to a *checkable artifact*, stated *before* acting, makes a lapse visible to Kamen instead of buried in Claude's self-assessment.
 - ✅ Treat ordinary new work from Kamen as working-agreement-triggered by default, not only turns
   that explicitly mention the working agreement, directives, G-rules, playbooks, corpus memory, or
   memory-knowledge. If a higher-priority instruction prevents loading the directives, state that.
-- ✅ Begin every substantive response — before the answer — with a visible directive anchor naming
-  the consulted directive artifact, then one line per subsequent G rule.
-- ✅ Each G-line points to the concrete, checkable thing in *this* turn that satisfies the rule
-  (the specific action, or the artifact below), or states why it's N/A this turn. Kamen can verify
-  each claim against the response.
-- 🚫 No bare checkmarks, no self-grades ("G2 ✓", "followed G2"). If a line names an artifact, that artifact must actually be present in the turn.
+- ✅ Begin every substantive response with one compact anchor in this exact shape:
+  `directives=<artifact/revision>; mode=<mode>; scope=<scope>; exceptions=<none or conflict>`.
+- ✅ The anchor must name the directive artifact actually consulted, the active task mode, the
+  concrete scope being handled, and any higher-priority conflict or unresolved exception.
+- ✅ Expand into a rule-by-rule compliance audit only when Kamen explicitly asks for one, a
+  directive conflict occurred, or unresolved compliance remains at closeout.
+- 🚫 No bare checkmarks or self-grades. Do not turn routine replies into a full G-rule matrix.
 
 **Set:** 2026-06-13 · **repeated:** 0
 
@@ -176,7 +177,15 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 ## G11 · Make code changes granular and approval-gated
 **Why:** large, unreviewed changes get approved blind and ship drift; Kamen needs to see each change and its rationale before it lands. (Distilled from `~/.claude/CLAUDE.md`, 2026-06-20; the `write-code-playbook` is the mechanism this standing rule relies on.)
 - ✅ Present code changes as a granular, change-by-change plan — each change with the reason for it — and wait for Kamen's approval before applying.
+- ✅ An explicit invocation of `playbook-convergence-loop` authorizes the approved plan's edits
+  inside its recorded objective, requirements, repositories, and allowed paths. The loop may
+  research, plan, implement, verify, and fix validated findings without asking again for each edit.
+- ✅ Stop for approval when evidence requires a new requirement, a materially wider plan, another
+  repository or path, a commit, deployment, destructive action, secret/credential access, or an
+  external message. Directive promotion still requires the exact confirmation `lock it`.
+- ✅ The loop defaults to no commits. Commit authorization must name the repositories and operation.
 - 🚫 No bundling many changes into a single unreviewed edit, and no applying a code change Kamen has not approved.
+- 🚫 Do not treat autonomous convergence as open-ended permission or as approval for excluded actions.
 
 **Set:** 2026-06-20 · **repeated:** 0
 
@@ -254,6 +263,8 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 ## G18 · Use Registered Sequences Before Reconstructing Steps
 **Why:** long goal-oriented work caused Codex to repeatedly rebuild fragile operational sequences from memory, forget required steps, and then patch mistakes mid-run. Repeatable sequences need a stable entry point so the correct steps are reused, and new sequences are captured while they are being discovered.
 - ✅ Before starting any repeatable multi-step operational sequence, invoke `sequence-runner`.
+- ✅ Treat ANY turn that builds/runs an image, recreates a container, seeds auth, deploys, or drives a workflow as sequence-triggered by DEFAULT — grep `SEQUENCES.md` for a match FIRST, even when it feels like a one-off. (Amended 2026-07-10: the miss that motivated this was hand-running the greenfield build→container→auth→drive chain from memory instead of checking the catalog — where `local-workflow-orch-image` existed and the `greenfield-full-drive` sequence now does.)
+- ✅ On any operational/tooling turn, the G0 compliance anchor must STATE the sequence checked (its `sequence-id`, or "no match → discovery log") BEFORE the first operational command, so a skip is visible to Kamen instead of buried mid-flow.
 - ✅ If `sequence-runner` is unavailable in the current session, manually read `operations/sequences/SEQUENCES.md` before running commands.
 - ✅ If a matching sequence exists, follow its `sequence.md` and scripts instead of reconstructing equivalent commands from memory.
 - ✅ If no matching sequence exists, create a discovery log with `scripts/sequence_discovery_log.py start` before or during execution, then append validated steps with `scripts/sequence_discovery_log.py append-step`.
@@ -265,7 +276,7 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No running a guarded operational command when the only source is memory or an unrecorded conversation.
 - 🚫 No claiming a sequence is reusable unless its commands, inputs, failure handling, and verification evidence are recorded.
 
-**Set:** 2026-06-22 · **repeated:** 0
+**Set:** 2026-06-22 · **repeated:** 0 · **amended:** 2026-07-10 (Kamen "lock it" — broaden the trigger to any build/container/auth/deploy/drive turn + require the sequence-check in the G0 anchor)
 
 ---
 
@@ -331,5 +342,14 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No minimizing label as a substitute for diagnosis. No "moving on" from an anomaly without either a cited benign-proof or a catalog entry.
 
 **Set:** 2026-07-07 · **repeated:** 0
+
+## G24 · Reproduce-first before paying for the slow live loop
+**Why:** on large projects a fix's live-verification point can be an hour+ into a run, so gating every fix attempt on the full run costs ~an hour per iteration (we lived this: the lease + observability fixes needed a rebuild + ~1hr re-drive just to reach feature-0). A fast reproduction that runs the real code on real-captured inputs predicts live in seconds — proven when the GF-N3-LEASE-ORPHAN in-process test produced byte-identical `released: True` to the later ~75-min drive. (Set live 2026-07-11.)
+- ✅ When a fix's live verification point is far into a long/expensive run AND the defect is a recurring class, build a fast reproduction at the tightest boundary that runs the REAL code with REAL-captured failing inputs (per the `reproduce-first-verify` skill), verify red-before/green-after there, then insert + ONE live confirmation via the project's fast re-entry primitives.
+- ✅ Trustworthiness gate (hard): the reproduction MUST (i) run the same code path (no reimplementation; mocks only at true external edges), (ii) use real captured inputs (never guessed), (iii) be red-before/green-after. If it cannot satisfy all three, it is not a valid proxy — say so; do not claim the fix verified from it.
+- 🚫 No claiming a fix verified from a reproduction that reimplements the logic or feeds invented state (the false-confidence trap, G4).
+- 🚫 No skipping the single live confirmation — a passing reproduction proves the fix, not that the whole run now succeeds (each fix can unmask the next layer).
+
+**Set:** 2026-07-11 · **repeated:** 0
 
 <!-- END GENERATED WORKING-AGREEMENT DIRECTIVES -->

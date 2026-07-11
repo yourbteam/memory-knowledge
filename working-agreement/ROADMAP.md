@@ -91,7 +91,8 @@ from "proposed" to live.
       **Backfill DONE** — `scripts/backfill_corpus.py` ingested G0–G4 as `directive_rationale` entries via
       the deployed MCP; hydration spot-check passed (G2/G4/G3 retrieved correctly, semantic + filtered).
       **Skill DONE** — `~/.claude/skills/corpus-add/` (curate one entry on demand via the MCP tool;
-      stops if MCP not connected, no workaround per G4). Global skill (not in this repo).
+      stops if MCP not connected, no workaround per G4). The skill is now versioned in this repo's
+      managed skill manifest and installed to clients through the transactional installer.
       **Hydration trigger DONE (Option A)** — `working-agreement/hydrate_corpus.py` + `inject-corpus.sh`,
       registered as a 2nd `UserPromptSubmit` hook in `~/.claude/settings.json`. Per prompt it queries the
       deployed `corpus_query`, injects top hits ≥0.5 score (≤3), labeled context-only; fail-open + 6s timeout.

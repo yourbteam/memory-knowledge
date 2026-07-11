@@ -49,13 +49,14 @@ capture→recall loop). Opt-in: set `MK_REPO_HYDRATE=1` and register the wrapper
 Fail-open (any error/timeout/unknown-repo → injects nothing). Already wired in `~/.claude/settings.json`.
 
 
-## Skills + sequence registry (install-skills.sh)
-The `sequence-runner` skill and the operational-sequence registry are canonical in this repo
-(`skills/`, `operations/sequences/`). Distribute them to BOTH Claude and Codex on this machine:
+## Managed skills
+
+Canonical personal skills are declared in `skills/managed-skills.txt`. Validate them first. The
+installer defaults to Codex and deliberately preserves current Claude variants:
 
 ```bash
+working-agreement/validate-skills.sh
 working-agreement/install-skills.sh
 ```
-This copies `skills/*` into `~/.claude/skills/` and `~/.codex/skills/` (idempotent; never deletes other
-skills) and sets `core.hooksPath=.githooks` so a future `git pull` auto-re-syncs via the `post-merge` hook.
-Run once per machine after cloning.
+Install to both clients only after explicit reconciliation, using
+`--target both --accept-cross-client --reconciliation <file>`. Unrelated skills remain untouched.

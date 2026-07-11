@@ -1,0 +1,4 @@
+interface:
+  display_name: "Verify Plan"
+  short_description: "Iterative plan verification loop"
+  default_prompt: "Use $verify-plan to verify and harden the plan in this conversation."

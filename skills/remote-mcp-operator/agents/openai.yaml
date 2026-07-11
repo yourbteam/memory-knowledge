@@ -1,0 +1,4 @@
+interface:
+  display_name: "Remote MCP Operator"
+  short_description: "Drive remote MCP task operations"
+  default_prompt: "Use $remote-mcp-operator to start or monitor a real remote MCP task through the packaged operator."

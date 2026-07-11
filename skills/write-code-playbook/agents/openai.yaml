@@ -1,0 +1,4 @@
+interface:
+  display_name: "Write Code Playbook"
+  short_description: "Implement changes with verification"
+  default_prompt: "Use $write-code-playbook to implement this change."

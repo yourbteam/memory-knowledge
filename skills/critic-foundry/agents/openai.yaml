@@ -1,0 +1,4 @@
+interface:
+  display_name: "Critic Foundry"
+  short_description: "Bounded critic persona slices"
+  default_prompt: "Create a bounded critic persona slice from the approved verifier and manager contracts."

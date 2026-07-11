@@ -1,0 +1,4 @@
+interface:
+  display_name: "Producer Foundry"
+  short_description: "Bounded producer persona slices"
+  default_prompt: "Create a bounded producer persona slice from the approved workflow phase contract."

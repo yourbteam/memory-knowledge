@@ -1,0 +1,4 @@
+interface:
+  display_name: "Research Playbook"
+  short_description: "Run research with source-grounded findings"
+  default_prompt: "Use $research-playbook to investigate this question."

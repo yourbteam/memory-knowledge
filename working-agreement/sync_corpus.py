@@ -15,7 +15,7 @@ the (kind, link_slug, title) triple is equivalent to comparing entry_keys.
 Fail-soft: prune is skipped when there is no previous revision (first commit / shallow clone).
 
 Usage:
-    python working-agreement/sync_corpus.py [--url URL] [--dry-run]
+    python working-agreement/sync_corpus.py [--url URL] [--dry-run] [--force-current]
 """
 from __future__ import annotations
 
@@ -43,11 +43,11 @@ def _identity(entry: dict) -> tuple[str, str | None, str]:
     return (entry["kind"], entry.get("link_slug"), entry["title"])
 
 
-def _previous_directives() -> str | None:
-    """Return DIRECTIVES.md content at HEAD~1, or None if unavailable (first commit, etc.)."""
+def _previous_directives(force_current: bool = False) -> str | None:
+    """Return the selected committed predecessor for normal or working-tree sync."""
     try:
         out = subprocess.run(
-            ["git", "show", f"HEAD~1:{DIRECTIVES_REL}"],
+            ["git", "show", f"{'HEAD' if force_current else 'HEAD~1'}:{DIRECTIVES_REL}"],
             cwd=REPO_ROOT,
             capture_output=True,
             text=True,
@@ -89,6 +89,10 @@ async def run(url: str, upserts: list[dict], orphans: list[dict], dry_run: bool)
                 ok = _report("upsert", e, _tool_text(res))
                 failures += 0 if ok else 1
 
+            if failures:
+                print("ERR upsert phase incomplete; refusing all deactivations and read-back success claims")
+                return failures
+
             for e in orphans:
                 res = await session.call_tool("corpus_deactivate", {
                     "kind": e["kind"],
@@ -97,6 +101,20 @@ async def run(url: str, upserts: list[dict], orphans: list[dict], dry_run: bool)
                 })
                 ok = _report("deactivate", e, _tool_text(res))
                 failures += 0 if ok else 1
+
+            # corpus_query returns active entries only. Exact identity checks make a zero exit
+            # mean the working projection is observable, not merely that writes returned success.
+            for expected_active, entries in ((True, upserts), (False, orphans)):
+                for e in entries:
+                    res = await session.call_tool("corpus_query", {
+                        "query_text": e["title"], "kind": e["kind"],
+                        "link_slug": e["link_slug"], "limit": 5, "min_score": 0.0,
+                    })
+                    raw = _tool_text(res)
+                    found = e["title"] in raw and e["link_slug"] in raw
+                    ok = found if expected_active else not found
+                    print(f"{'OK ' if ok else 'ERR'} verify     {e['link_slug']:4} expected_active={expected_active}")
+                    failures += 0 if ok else 1
     return failures
 
 
@@ -118,6 +136,8 @@ def main() -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--url", default=DEFAULT_URL)
     ap.add_argument("--dry-run", action="store_true")
+    ap.add_argument("--force-current", action="store_true",
+                    help="Compare committed HEAD to the working-tree directives; usable before commit.")
     args = ap.parse_args()
 
     current = parse_directives(DIRECTIVES.read_text())
@@ -125,8 +145,11 @@ def main() -> int:
         print("No directive sections found in DIRECTIVES.md", file=sys.stderr)
         return 1
 
-    prev_text = _previous_directives()
+    prev_text = _previous_directives(args.force_current)
     if prev_text is None:
+        if args.force_current:
+            print("Force-current requires committed HEAD:working-agreement/DIRECTIVES.md; prune cannot be proven.", file=sys.stderr)
+            return 1
         orphans: list[dict] = []
         print("No previous DIRECTIVES.md revision found; skipping prune (upsert only).")
     else:
