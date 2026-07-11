@@ -58,7 +58,8 @@ Read each named skill when its stage begins:
 7. coverage then satisfaction assessment-only gates on the plan until PASS
 8. `write-code-playbook`
 9. independent execution verification using the plan's commands and success criteria
-10. `verify-work` using parent-managed reviewer -> critic -> orchestrator-fix cycles
+10. `review-playbook`
+11. `verify-work` using parent-managed reviewer -> critic -> orchestrator-fix cycles
 
 Every stage returns `PASS`, `GAPS`, `BLOCKED`, or `CAP_REACHED`.
 

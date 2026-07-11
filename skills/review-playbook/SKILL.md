@@ -14,6 +14,12 @@ actually covers the plan it's based on.
 that plan is the baseline; if there is no clear intent/spec, get it before reviewing — otherwise
 intended behavior gets flagged as a bug, and missing work goes unnoticed.
 
+When called by `playbook-convergence-loop`, the hardened objective, requirements, research, plan,
+recorded review surface, and runtime evidence define the review baseline. Run `guard-baseline`
+immediately before each delegated review pass or finding fix. The parent orchestrator is the only
+fixer/state writer; nested reviewer and critic agents remain assessment-only and return the shared
+stage-result envelope. Default commit policy is `none`.
+
 ## Reach for
 
 - Codex's review stance: findings first, ordered by severity, grounded in file/line evidence.
