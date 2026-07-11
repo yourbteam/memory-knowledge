@@ -25,8 +25,12 @@ Automation: `mcp-agents-workflow:scripts/greenfield_full_drive.sh`.
 
 ## Steps (the script runs these in order; each fails loud)
 
-0. **Preflight** — docker up; env-file + spec present; `docker container/image prune` (RP-068 disk
-   guard); free-space report.
+0. **Preflight** — docker up; env-file + spec present; **RP-068 disk guard**: prune stopped
+   containers + dangling images + orphaned volumes, then CHECK the Docker **VM disk** (not host
+   `/var/tmp`, which reads TBs-free while the VM overlay is full — the failure that sank
+   `playwright install` with "no space in /var/cache/apt/archives"). If VM free < floor
+   (`GF_DISK_FLOOR_G`, default 8G) it frees space HARD (`image prune -af` + `builder prune -af` +
+   `system prune -f`); warns if still < 3G after. Reports both VM-disk and host free space.
 1. **Build** — `local_workflow_orch_image_harness.py build --tag <tag>` with a REAL exit-code check
    (never `| tail`, which masked a failed build as success). The Dockerfile retries the flaky
    `playwright install --with-deps chromium` step 3× so a transient CDN hiccup does not sink the build.
