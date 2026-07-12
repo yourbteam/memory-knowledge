@@ -1,9 +1,32 @@
 from __future__ import annotations
 
+import json
 import uuid
+from contextlib import asynccontextmanager
 from typing import Any
 
 import asyncpg
+
+
+class PlanningValidationError(ValueError):
+    """Canonical, typed validation failure crossing the planning boundary."""
+
+    def __init__(self, error_code: str, message: str, *, field: str | None = None,
+                 references: list[str] | None = None) -> None:
+        super().__init__(message)
+        self.error_code = error_code
+        self.field = field
+        self.references = sorted(references or [])
+
+
+@asynccontextmanager
+async def _transaction_connection(pool: Any, connection: Any | None = None):
+    if connection is not None:
+        yield connection
+        return
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            yield conn
 
 
 async def resolve_repository_ids(pool: asyncpg.Pool, repository_keys: list[str]) -> list[int]:
@@ -20,7 +43,7 @@ async def resolve_repository_ids(pool: asyncpg.Pool, repository_keys: list[str])
     found = {row["repository_key"]: row["id"] for row in rows}
     missing = [key for key in repository_keys if key not in found]
     if missing:
-        raise ValueError(f"Repositories not found: {', '.join(missing)}")
+        raise PlanningValidationError("REPOSITORY_NOT_FOUND", f"Repositories not found: {', '.join(missing)}", field="related_repository_keys", references=missing)
     return [found[key] for key in repository_keys]
 
 
@@ -140,7 +163,7 @@ async def resolve_task_id(pool: asyncpg.Pool, task_key: str) -> int:
         uuid.UUID(task_key),
     )
     if row is None:
-        raise ValueError(f"Task not found: {task_key}")
+        raise PlanningValidationError("TASK_NOT_FOUND", f"Task not found: {task_key}", field="task_key")
     return row["id"]
 
 
@@ -423,11 +446,49 @@ async def create_task(
     priority_id: int,
     title: str,
     description: str | None = None,
+    task_type: str | None = None,
+    parent_task_id: int | None = None,
+    feature_task_id: int | None = None,
+    graph_node_id: str | None = None,
+    depends_on_task_ids: list[int] | None = None,
+    blocked_by_task_ids: list[int] | None = None,
+    coordination_task_ids: list[int] | None = None,
+    related_repository_ids: list[int] | None = None,
+    is_runnable: bool = True,
+    task_metadata: dict[str, Any] | None = None,
+    legacy_task_id: int | None = None,
+    connection: Any | None = None,
 ) -> dict[str, Any]:
     await ensure_project_has_repository(pool, project_id, repository_id)
     if feature_id is not None:
         await ensure_feature_has_repository(pool, feature_id, repository_id)
     task_key = uuid.uuid4()
+    if graph_node_id is not None:
+        if connection is not None:
+            return await _create_graph_task_on_connection(
+                connection, task_key=task_key, project_id=project_id, repository_id=repository_id,
+                feature_id=feature_id, task_status_id=task_status_id, priority_id=priority_id,
+                title=title, description=description, task_type=task_type,
+                parent_task_id=parent_task_id, feature_task_id=feature_task_id,
+                graph_node_id=graph_node_id, depends_on_task_ids=depends_on_task_ids or [],
+                blocked_by_task_ids=blocked_by_task_ids or [],
+                coordination_task_ids=coordination_task_ids or [],
+                related_repository_ids=related_repository_ids or [], is_runnable=is_runnable,
+                task_metadata=task_metadata or {}, legacy_task_id=legacy_task_id,
+            )
+        async with pool.acquire() as conn:
+            async with conn.transaction():
+                return await _create_graph_task_on_connection(
+                    conn, task_key=task_key, project_id=project_id, repository_id=repository_id,
+                    feature_id=feature_id, task_status_id=task_status_id, priority_id=priority_id,
+                    title=title, description=description, task_type=task_type,
+                    parent_task_id=parent_task_id, feature_task_id=feature_task_id,
+                    graph_node_id=graph_node_id, depends_on_task_ids=depends_on_task_ids or [],
+                    blocked_by_task_ids=blocked_by_task_ids or [],
+                    coordination_task_ids=coordination_task_ids or [],
+                    related_repository_ids=related_repository_ids or [], is_runnable=is_runnable,
+                    task_metadata=task_metadata or {}, legacy_task_id=legacy_task_id,
+                )
     row = await pool.fetchrow(
         """
         INSERT INTO planning.tasks
@@ -445,6 +506,115 @@ async def create_task(
         priority_id,
     )
     return {"task_id": row["id"], "task_key": str(row["task_key"]), "repository_id": repository_id}
+
+
+async def _create_graph_task_on_connection(conn: Any, **values: Any) -> dict[str, Any]:
+    # Validate every graph edge against the owning project before any write.
+    task_ids = [
+        *values["depends_on_task_ids"], *values["blocked_by_task_ids"],
+        *values["coordination_task_ids"],
+        *([values["parent_task_id"]] if values["parent_task_id"] is not None else []),
+        *([values["feature_task_id"]] if values["feature_task_id"] is not None else []),
+    ]
+    if task_ids:
+        rows = await conn.fetch(
+            "SELECT id, project_id FROM planning.tasks WHERE id=ANY($1::bigint[])", task_ids
+        )
+        found = {row["id"]: row for row in rows}
+        if len(found) != len(set(task_ids)):
+            raise ValueError("task reference not found")
+        if any(row["project_id"] != values["project_id"] for row in rows):
+            raise ValueError("task reference belongs to a different project")
+    if values["related_repository_ids"]:
+        rows = await conn.fetch(
+            "SELECT id FROM catalog.repositories WHERE id=ANY($1::bigint[])",
+            values["related_repository_ids"],
+        )
+        if len(rows) != len(set(values["related_repository_ids"])):
+            raise ValueError("related repository not found")
+        ownership = await conn.fetch(
+            "SELECT repository_id FROM planning.project_repositories WHERE project_id=$1 AND repository_id=ANY($2::bigint[])",
+            values["project_id"], values["related_repository_ids"],
+        )
+        if len(ownership) != len(set(values["related_repository_ids"])):
+            raise ValueError("related repository is not linked to the project")
+        if values["feature_id"] is not None:
+            feature_ownership = await conn.fetch(
+                "SELECT repository_id FROM planning.feature_repositories WHERE feature_id=$1 AND repository_id=ANY($2::bigint[])",
+                values["feature_id"], values["related_repository_ids"],
+            )
+            if len(feature_ownership) != len(set(values["related_repository_ids"])):
+                raise ValueError("related repository is not linked to the feature")
+    existing = await conn.fetchrow(
+        "SELECT id, task_key FROM planning.tasks WHERE project_id=$1 AND feature_id=$2 "
+        "AND graph_node_id=$3 FOR UPDATE",
+        values["project_id"], values["feature_id"], values["graph_node_id"],
+    )
+    if existing is None and values["legacy_task_id"] is not None:
+        existing = await conn.fetchrow(
+            "SELECT id, task_key FROM planning.tasks WHERE id=$1 AND project_id=$2 AND feature_id=$3 "
+            "AND repository_id=$4 AND graph_node_id IS NULL FOR UPDATE",
+            values["legacy_task_id"], values["project_id"], values["feature_id"], values["repository_id"],
+        )
+        if existing is None:
+            raise ValueError("legacy task identity mismatch")
+    if existing is None:
+        existing = await conn.fetchrow(
+            """INSERT INTO planning.tasks
+               (task_key,project_id,repository_id,feature_id,title,description,task_status_id,priority_id,
+                task_type,parent_task_id,feature_task_id,graph_node_id,is_runnable,task_metadata)
+               VALUES($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12,$13,$14::jsonb)
+               ON CONFLICT (project_id,feature_id,graph_node_id) WHERE graph_node_id IS NOT NULL
+               DO NOTHING RETURNING id,task_key""",
+            values["task_key"], values["project_id"], values["repository_id"], values["feature_id"],
+            values["title"], values["description"], values["task_status_id"], values["priority_id"],
+            values["task_type"], values["parent_task_id"], values["feature_task_id"],
+            values["graph_node_id"], values["is_runnable"],
+            json.dumps(values["task_metadata"], sort_keys=True, separators=(",", ":")),
+        )
+        if existing is None:
+            existing = await conn.fetchrow(
+                "SELECT id,task_key FROM planning.tasks WHERE project_id=$1 AND feature_id=$2 "
+                "AND graph_node_id=$3 FOR UPDATE",
+                values["project_id"], values["feature_id"], values["graph_node_id"],
+            )
+    await conn.execute(
+        """UPDATE planning.tasks SET repository_id=$2,title=$3,description=$4,task_type=$5,
+           parent_task_id=$6,feature_task_id=$7,graph_node_id=$8,is_runnable=$9,
+           task_metadata=$10::jsonb,updated_utc=NOW() WHERE id=$1""",
+        existing["id"], values["repository_id"], values["title"], values["description"], values["task_type"],
+        values["parent_task_id"], values["feature_task_id"], values["graph_node_id"], values["is_runnable"],
+        json.dumps(values["task_metadata"], sort_keys=True, separators=(",", ":")),
+    )
+    await _replace_task_relations(
+        conn, existing["id"], values["depends_on_task_ids"], values["blocked_by_task_ids"],
+        values["coordination_task_ids"], values["related_repository_ids"],
+    )
+    return {"task_id": existing["id"], "task_key": str(existing["task_key"]),
+            "repository_id": values["repository_id"]}
+
+
+async def _replace_task_relations(
+    conn: Any,
+    task_id: int,
+    depends_on: list[int],
+    blocked_by: list[int],
+    coordination: list[int],
+    repositories: list[int],
+) -> None:
+    specs = (
+        ("planning.task_dependencies", "depends_on_task_id", depends_on),
+        ("planning.task_blockers", "blocked_by_task_id", blocked_by),
+        ("planning.task_coordination", "coordination_task_id", coordination),
+        ("planning.task_related_repositories", "repository_id", repositories),
+    )
+    for table, column, values in specs:
+        await conn.execute(f"DELETE FROM {table} WHERE task_id=$1", task_id)
+        if values:
+            await conn.executemany(
+                f"INSERT INTO {table} (task_id, {column}) VALUES ($1,$2) ON CONFLICT DO NOTHING",
+                [(task_id, value) for value in values],
+            )
 
 
 async def link_task_to_workflow_run(
@@ -587,6 +757,7 @@ async def list_tasks(
     feature_id: int | None = None,
     repository_key: str | None = None,
     task_status_id: int | None = None,
+    graph_node_id: str | None = None,
 ) -> list[dict[str, Any]]:
     conditions: list[str] = []
     args: list[Any] = []
@@ -602,6 +773,9 @@ async def list_tasks(
     if task_status_id is not None:
         args.append(task_status_id)
         conditions.append(f"t.task_status_id = ${len(args)}")
+    if graph_node_id is not None:
+        args.append(graph_node_id)
+        conditions.append(f"t.graph_node_id = ${len(args)}")
     where_sql = f"WHERE {' AND '.join(conditions)}" if conditions else ""
     rows = await pool.fetch(
         f"""
@@ -611,6 +785,21 @@ async def list_tasks(
                f.feature_key,
                s.internal_code AS status_code, s.display_name AS status_display_name,
                p.internal_code AS priority_code, p.display_name AS priority_display_name,
+               t.task_type, pt.task_key AS parent_task_key, ft.task_key AS feature_task_key,
+               t.graph_node_id, t.is_runnable, t.task_metadata,
+               COALESCE((SELECT array_agg(dt.task_key::text ORDER BY dt.task_key::text)
+                         FROM planning.task_dependencies d JOIN planning.tasks dt ON dt.id=d.depends_on_task_id
+                         WHERE d.task_id=t.id), ARRAY[]::text[]) AS depends_on_task_keys,
+               COALESCE((SELECT array_agg(bt.task_key::text ORDER BY bt.task_key::text)
+                         FROM planning.task_blockers b JOIN planning.tasks bt ON bt.id=b.blocked_by_task_id
+                         WHERE b.task_id=t.id), ARRAY[]::text[]) AS blocked_by_task_keys,
+               COALESCE((SELECT array_agg(ct.task_key::text ORDER BY ct.task_key::text)
+                         FROM planning.task_coordination c JOIN planning.tasks ct ON ct.id=c.coordination_task_id
+                         WHERE c.task_id=t.id), ARRAY[]::text[]) AS coordination_task_keys,
+               COALESCE((SELECT array_agg(rr.repository_key ORDER BY rr.repository_key)
+                         FROM planning.task_related_repositories tr
+                         JOIN catalog.repositories rr ON rr.id=tr.repository_id
+                         WHERE tr.task_id=t.id), ARRAY[]::text[]) AS related_repository_keys,
                t.created_utc, t.updated_utc
         FROM planning.tasks t
         JOIN planning.projects proj ON proj.id = t.project_id
@@ -618,14 +807,22 @@ async def list_tasks(
         LEFT JOIN planning.features f ON f.id = t.feature_id
         JOIN core.reference_values s ON s.id = t.task_status_id
         JOIN core.reference_values p ON p.id = t.priority_id
+        LEFT JOIN planning.tasks pt ON pt.id = t.parent_task_id
+        LEFT JOIN planning.tasks ft ON ft.id = t.feature_task_id
         LEFT JOIN catalog.repositories r ON r.id = t.repository_id
         {where_sql}
-        ORDER BY t.created_utc DESC
+        ORDER BY t.task_key ASC
         """,
         *args,
     )
-    return [
-        {
+    result = []
+    for r in rows:
+        metadata = r["task_metadata"]
+        if isinstance(metadata, str):
+            metadata = json.loads(metadata)
+        if not isinstance(metadata, dict):
+            raise ValueError("task_metadata must be a JSON object")
+        result.append({
             "task_key": str(r["task_key"]),
             "project_key": str(r["project_key"]),
             "repository_key": r["repository_key"],
@@ -636,11 +833,134 @@ async def list_tasks(
             "status_display_name": r["status_display_name"],
             "priority_code": r["priority_code"],
             "priority_display_name": r["priority_display_name"],
+            "task_type": r["task_type"],
+            "parent_task_key": str(r["parent_task_key"]) if r["parent_task_key"] else None,
+            "feature_task_key": str(r["feature_task_key"]) if r["feature_task_key"] else None,
+            "graph_node_id": r["graph_node_id"],
+            "depends_on_task_keys": list(r["depends_on_task_keys"] or []),
+            "blocked_by_task_keys": list(r["blocked_by_task_keys"] or []),
+            "coordination_task_keys": list(r["coordination_task_keys"] or []),
+            "related_repository_keys": list(r["related_repository_keys"] or []),
+            "is_runnable": bool(r["is_runnable"]),
+            "task_metadata": metadata,
             "created_utc": r["created_utc"].isoformat() if r["created_utc"] else None,
             "updated_utc": r["updated_utc"].isoformat() if r["updated_utc"] else None,
-        }
-        for r in rows
-    ]
+        })
+    return result
+
+
+async def update_task(pool: asyncpg.Pool, task_key: str, patch: dict[str, Any], connection: Any | None = None) -> int:
+    """Apply a graph-owned patch atomically and return the internal task id."""
+    async with _transaction_connection(pool, connection) as conn:
+            row = await conn.fetchrow(
+                "SELECT id, project_id, feature_id FROM planning.tasks WHERE task_key=$1 FOR UPDATE",
+                uuid.UUID(task_key),
+            )
+            if row is None:
+                raise ValueError(f"Task not found: {task_key}")
+            task_id, project_id, feature_id = row["id"], row["project_id"], row["feature_id"]
+
+            async def task_ids(keys: list[str], field: str) -> list[int]:
+                if not keys:
+                    return []
+                rows = await conn.fetch(
+                    "SELECT id, task_key, project_id FROM planning.tasks WHERE task_key=ANY($1::uuid[])",
+                    [uuid.UUID(key) for key in keys],
+                )
+                found = {str(item["task_key"]): item for item in rows}
+                missing = sorted(set(keys) - set(found))
+                if missing:
+                    raise ValueError(f"{field} not found: {', '.join(missing)}")
+                if any(item["project_id"] != project_id for item in rows):
+                    raise ValueError(f"{field} contains cross-project task")
+                if task_key in keys:
+                    raise ValueError(f"{field} cannot reference the task itself")
+                return [found[key]["id"] for key in keys]
+
+            scalar_columns = {
+                "title": "title", "description": "description", "task_type": "task_type",
+                "is_runnable": "is_runnable", "task_metadata": "task_metadata",
+            }
+            assignments: list[str] = []
+            values: list[Any] = []
+            for field, column in scalar_columns.items():
+                if field in patch:
+                    value = patch[field]
+                    if field == "task_metadata":
+                        value = json.dumps(value, sort_keys=True, separators=(",", ":"))
+                        assignments.append(f"{column}=${len(values)+1}::jsonb")
+                    else:
+                        assignments.append(f"{column}=${len(values)+1}")
+                    values.append(value)
+
+            for field, column in (("parent_task_key", "parent_task_id"),
+                                  ("feature_task_key", "feature_task_id")):
+                if field in patch:
+                    key = patch[field]
+                    resolved = None if key is None else (await task_ids([key], field))[0]
+                    assignments.append(f"{column}=${len(values)+1}")
+                    values.append(resolved)
+            if assignments:
+                values.append(task_id)
+                await conn.execute(
+                    f"UPDATE planning.tasks SET {', '.join(assignments)}, updated_utc=NOW() "
+                    f"WHERE id=${len(values)}",
+                    *values,
+                )
+
+            current = {}
+            for field in ("depends_on_task_keys", "blocked_by_task_keys", "coordination_task_keys"):
+                if field in patch:
+                    current[field] = await task_ids(list(patch[field]), field)
+            repo_ids: list[int] | None = None
+            if "related_repository_keys" in patch:
+                keys = list(patch["related_repository_keys"])
+                rows = await conn.fetch(
+                    "SELECT id, repository_key FROM catalog.repositories WHERE repository_key=ANY($1::text[])",
+                    keys,
+                )
+                found = {r["repository_key"]: r["id"] for r in rows}
+                missing = sorted(set(keys) - set(found))
+                if missing:
+                    raise ValueError(f"related_repository_keys not found: {', '.join(missing)}")
+                repo_ids = [found[key] for key in keys]
+                ownership = await conn.fetch(
+                    "SELECT repository_id FROM planning.project_repositories "
+                    "WHERE project_id=$1 AND repository_id=ANY($2::bigint[])",
+                    project_id, repo_ids,
+                )
+                if len(ownership) != len(set(repo_ids)):
+                    raise ValueError("related repository is not linked to the project")
+                if feature_id is not None:
+                    feature_ownership = await conn.fetch(
+                        "SELECT repository_id FROM planning.feature_repositories "
+                        "WHERE feature_id=$1 AND repository_id=ANY($2::bigint[])",
+                        feature_id, repo_ids,
+                    )
+                    if len(feature_ownership) != len(set(repo_ids)):
+                        raise ValueError("related repository is not linked to the project")
+
+            relation_specs = (
+                ("depends_on_task_keys", "planning.task_dependencies", "depends_on_task_id"),
+                ("blocked_by_task_keys", "planning.task_blockers", "blocked_by_task_id"),
+                ("coordination_task_keys", "planning.task_coordination", "coordination_task_id"),
+            )
+            for field, table, column in relation_specs:
+                if field in current:
+                    await conn.execute(f"DELETE FROM {table} WHERE task_id=$1", task_id)
+                    if current[field]:
+                        await conn.executemany(
+                            f"INSERT INTO {table}(task_id,{column}) VALUES($1,$2)",
+                            [(task_id, value) for value in current[field]],
+                        )
+            if repo_ids is not None:
+                await conn.execute("DELETE FROM planning.task_related_repositories WHERE task_id=$1", task_id)
+                if repo_ids:
+                    await conn.executemany(
+                        "INSERT INTO planning.task_related_repositories(task_id,repository_id) VALUES($1,$2)",
+                        [(task_id, value) for value in repo_ids],
+                    )
+            return task_id
 
 
 async def get_backlog(

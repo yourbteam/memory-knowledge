@@ -14,9 +14,8 @@ from starlette.requests import Request
 from starlette.responses import JSONResponse, Response
 from starlette.routing import Mount, Route
 
-from mcp.server.fastmcp import FastMCP
-
 from memory_knowledge.config import Settings, init_settings, get_settings
+from memory_knowledge.planning_mcp_boundary import PlanningFastMCP
 from memory_knowledge.db.health import health_check, readiness_check
 from memory_knowledge.db.neo4j import apply_constraints, close_neo4j, init_neo4j
 from memory_knowledge.db.postgres import close_postgres, init_postgres
@@ -107,7 +106,7 @@ WORKFLOW_RUN_STATUS_LEGACY_NAMES = {
 # transport_security disabled to allow non-localhost hosts (Azure, etc.)
 from mcp.server.transport_security import TransportSecuritySettings  # noqa: E402
 
-mcp = FastMCP(
+mcp = PlanningFastMCP(
     "memory-knowledge",
     stateless_http=True,
     json_response=True,
@@ -1256,6 +1255,111 @@ async def _resolve_feature_identifier(
                 raise ValueError("feature_key and external feature reference resolve to different features")
         return ctx
     return await _planning.resolve_feature_context_by_external(pool, feature_external_system, feature_external_id)
+
+
+def _planning_error_code(message: str) -> str:
+    text = message.lower()
+    if "resolve to different projects" in text or "resolve to different features" in text:
+        return "INVALID_ARGS"
+    if "project not found" in text: return "PROJECT_NOT_FOUND"
+    if "repository not found" in text: return "REPOSITORY_NOT_FOUND"
+    if "feature not found" in text: return "FEATURE_NOT_FOUND"
+    if "task not found" in text: return "TASK_NOT_FOUND"
+    if "repository is not linked to the feature" in text: return "REPOSITORY_OUTSIDE_PROJECT"
+    if "repository is not linked to the project" in text: return "REPOSITORY_OUTSIDE_PROJECT"
+    if "does not belong to the given project" in text: return "FEATURE_PROJECT_MISMATCH"
+    if "different feature" in text or "cross-project" in text or "belongs to a different project" in text:
+        return "CROSS_PROJECT_RELATION"
+    if "itself" in text: return "SELF_RELATION"
+    if "not found" in text or "invalid" in text: return "REFERENCE_NOT_FOUND"
+    if "required" in text or "identity" in text:
+        return "INVALID_ARGS"
+    return "MUTATION_FAILED"
+
+
+def _planning_error_data(exc: ValueError) -> dict[str, str]:
+    if isinstance(exc, _planning.PlanningValidationError):
+        data = {"error_code": exc.error_code}
+        if exc.field:
+            data["field"] = exc.field
+        if exc.references:
+            data["references"] = exc.references
+        return data
+    return {"error_code": _planning_error_code(str(exc))}
+
+
+async def _create_graph_task_atomic(pool, *, run_id: uuid.UUID, title: str, project_key: str | None,
+    repository_key: str, description: str | None, feature_key: str | None,
+    task_status_code: str, priority_code: str, project_external_system: str | None,
+    project_external_id: str | None, feature_external_system: str | None,
+    feature_external_id: str | None, task_type: str | None, parent_task_key: str | None,
+    feature_task_key: str | None, graph_node_id: str | None, depends_on_task_keys: list[str],
+    blocked_by_task_keys: list[str], coordination_task_keys: list[str],
+    related_repository_keys: list[str], is_runnable: bool, task_metadata: dict[str, Any],
+    legacy_task_key: str | None) -> dict[str, Any]:
+    """Resolve identities, mutate, and read back on one acquired transaction connection."""
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            project_id = await _resolve_project_identifier(
+                conn, project_key=project_key, project_external_system=project_external_system,
+                project_external_id=project_external_id,
+            )
+            repository_id = await _planning.resolve_repository_id(conn, repository_key)
+            feature_ctx = await _resolve_feature_identifier(
+                conn, feature_key=feature_key, feature_external_system=feature_external_system,
+                feature_external_id=feature_external_id,
+            )
+            feature_id = None
+            if feature_ctx is not None:
+                if feature_ctx["project_id"] != project_id:
+                    raise ValueError("feature_key does not belong to the given project_key")
+                feature_id = feature_ctx["feature_id"]
+            status_row = await _require_reference_value(conn, "TASK_STATUS", task_status_code, "create_task", run_id)
+            if isinstance(status_row, str):
+                raise ValueError(f"Invalid TASK_STATUS value: {task_status_code}")
+            priority_row = await _require_reference_value(conn, "PRIORITY", priority_code, "create_task", run_id)
+            if isinstance(priority_row, str):
+                raise ValueError(f"Invalid PRIORITY value: {priority_code}")
+            async def resolve_task_keys(keys: list[str], field: str) -> list[int]:
+                resolved: list[int] = []
+                missing: list[str] = []
+                for key in keys:
+                    try:
+                        resolved.append(await _planning.resolve_task_id(conn, key))
+                    except _planning.PlanningValidationError as exc:
+                        missing.append(key)
+                if missing:
+                    raise _planning.PlanningValidationError(
+                        "REFERENCE_NOT_FOUND", f"Missing task references: {', '.join(sorted(set(missing)))}",
+                        field=field, references=sorted(set(missing))
+                    )
+                return resolved
+            async def resolve_relation_key(key: str | None, field: str) -> int | None:
+                if not key:
+                    return None
+                try:
+                    return await _planning.resolve_task_id(conn, key)
+                except _planning.PlanningValidationError as exc:
+                    raise _planning.PlanningValidationError(
+                        "REFERENCE_NOT_FOUND", str(exc), field=field, references=[key]
+                    ) from exc
+            result = await _planning.create_task(
+                conn, project_id=project_id, repository_id=repository_id, feature_id=feature_id,
+                task_status_id=status_row["id"], priority_id=priority_row["id"], title=title,
+                description=description, task_type=task_type,
+                parent_task_id=await resolve_relation_key(parent_task_key, "parent_task_key"),
+                feature_task_id=await resolve_relation_key(feature_task_key, "feature_task_key"),
+                graph_node_id=graph_node_id,
+                depends_on_task_ids=await resolve_task_keys(depends_on_task_keys, "depends_on_task_keys"),
+                blocked_by_task_ids=await resolve_task_keys(blocked_by_task_keys, "blocked_by_task_keys"),
+                coordination_task_ids=await resolve_task_keys(coordination_task_keys, "coordination_task_keys"),
+                related_repository_ids=await _planning.resolve_repository_ids(conn, related_repository_keys),
+                is_runnable=is_runnable, task_metadata=task_metadata,
+                legacy_task_id=await resolve_relation_key(legacy_task_key, "legacy_task_key"),
+                connection=conn,
+            )
+            rows = await _planning.list_tasks(conn, project_id, feature_id, repository_key, None, graph_node_id)
+            return {**(rows[0] if rows else result), "task_id": result["task_id"]}
 
 
 @mcp.tool()
@@ -4663,6 +4767,17 @@ async def create_task(
     project_external_id: str | None = None,
     feature_external_system: str | None = None,
     feature_external_id: str | None = None,
+    task_type: str | None = None,
+    parent_task_key: str | None = None,
+    feature_task_key: str | None = None,
+    graph_node_id: str | None = None,
+    depends_on_task_keys: list[str] = [],
+    blocked_by_task_keys: list[str] = [],
+    coordination_task_keys: list[str] = [],
+    related_repository_keys: list[str] = [],
+    is_runnable: bool = True,
+    task_metadata: dict[str, Any] = {},
+    legacy_task_key: str | None = None,
     correlation_id: str | None = None,
 ) -> str:
     """Create a task within a feature."""
@@ -4674,6 +4789,22 @@ async def create_task(
         return guard.model_dump_json()
     try:
         pool = get_pg_pool()
+        graph_request = any((task_type, parent_task_key, feature_task_key, graph_node_id,
+                             depends_on_task_keys, blocked_by_task_keys, coordination_task_keys,
+                             related_repository_keys, task_metadata, legacy_task_key)) or not is_runnable
+        if graph_request:
+            result = await _create_graph_task_atomic(
+                pool, run_id=run_id, title=title, project_key=project_key, repository_key=repository_key,
+                description=description, feature_key=feature_key, task_status_code=task_status_code,
+                priority_code=priority_code, project_external_system=project_external_system,
+                project_external_id=project_external_id, feature_external_system=feature_external_system,
+                feature_external_id=feature_external_id, task_type=task_type, parent_task_key=parent_task_key,
+                feature_task_key=feature_task_key, graph_node_id=graph_node_id,
+                depends_on_task_keys=depends_on_task_keys, blocked_by_task_keys=blocked_by_task_keys,
+                coordination_task_keys=coordination_task_keys, related_repository_keys=related_repository_keys,
+                is_runnable=is_runnable, task_metadata=task_metadata, legacy_task_key=legacy_task_key,
+            )
+            return WorkflowResult(run_id=str(run_id), tool_name="create_task", status="success", data=result).model_dump_json()
         project_id = await _resolve_project_identifier(
             pool,
             project_key=project_key,
@@ -4703,16 +4834,34 @@ async def create_task(
         priority_row = await _require_reference_value(pool, "PRIORITY", priority_code, "create_task", run_id)
         if isinstance(priority_row, str):
             return priority_row
-        result = await _planning.create_task(
-            pool,
-            project_id=project_id,
-            repository_id=repository_id,
-            feature_id=feature_id,
-            task_status_id=status_row["id"],
-            priority_id=priority_row["id"],
-            title=title,
-            description=description,
+        async def resolve_task_keys(keys: list[str]) -> list[int]:
+            return [await _planning.resolve_task_id(pool, key) for key in keys]
+
+        parent_task_id = await _planning.resolve_task_id(pool, parent_task_key) if parent_task_key else None
+        feature_task_id = await _planning.resolve_task_id(pool, feature_task_key) if feature_task_key else None
+        legacy_task_id = await _planning.resolve_task_id(pool, legacy_task_key) if legacy_task_key else None
+        related_repository_ids = await _planning.resolve_repository_ids(pool, related_repository_keys)
+        base_kwargs = dict(
+            project_id=project_id, repository_id=repository_id, feature_id=feature_id,
+            task_status_id=status_row["id"], priority_id=priority_row["id"],
+            title=title, description=description,
         )
+        if graph_request:
+            result = await _planning.create_task(
+                pool, **base_kwargs, task_type=task_type, parent_task_id=parent_task_id,
+                feature_task_id=feature_task_id, graph_node_id=graph_node_id,
+                depends_on_task_ids=await resolve_task_keys(depends_on_task_keys),
+                blocked_by_task_ids=await resolve_task_keys(blocked_by_task_keys),
+                coordination_task_ids=await resolve_task_keys(coordination_task_keys),
+                related_repository_ids=related_repository_ids, is_runnable=is_runnable,
+                task_metadata=task_metadata, legacy_task_id=legacy_task_id,
+            )
+        else:
+            result = await _planning.create_task(pool, **base_kwargs)
+        if graph_node_id:
+            rows = await _planning.list_tasks(pool, project_id, feature_id, repository_key, None, graph_node_id)
+            if rows:
+                result = {**rows[0], "task_id": result["task_id"]}
         return WorkflowResult(
             run_id=str(run_id),
             tool_name="create_task",
@@ -4725,6 +4874,7 @@ async def create_task(
             tool_name="create_task",
             status="error",
             error=str(exc),
+            data=_planning_error_data(exc),
         ).model_dump_json()
     finally:
         clear_run_context()
@@ -4784,6 +4934,7 @@ async def list_tasks(
     project_external_id: str | None = None,
     feature_external_system: str | None = None,
     feature_external_id: str | None = None,
+    graph_node_id: str | None = None,
     correlation_id: str | None = None,
 ) -> str:
     """List tasks with optional feature, repository, and status filters."""
@@ -4812,7 +4963,10 @@ async def list_tasks(
             if isinstance(status_row, str):
                 return status_row
             status_id = status_row["id"]
-        tasks = await _planning.list_tasks(pool, project_id, feature_id, repository_key, status_id)
+        if graph_node_id is None:
+            tasks = await _planning.list_tasks(pool, project_id, feature_id, repository_key, status_id)
+        else:
+            tasks = await _planning.list_tasks(pool, project_id, feature_id, repository_key, status_id, graph_node_id)
         return WorkflowResult(
             run_id=str(run_id),
             tool_name="list_tasks",
@@ -4825,6 +4979,39 @@ async def list_tasks(
             tool_name="list_tasks",
             status="error",
             error=str(exc),
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("update_task")
+async def update_task(
+    task_key: str,
+    patch: dict[str, Any],
+    correlation_id: str | None = None,
+) -> str:
+    """Atomically reconcile graph-owned task fields while preserving identity and execution state."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "update_task")
+    guard = check_remote_write_guard(get_settings(), "update_task")
+    if guard is not None:
+        guard.run_id = str(run_id)
+        return guard.model_dump_json()
+    try:
+        pool = get_pg_pool()
+        async with pool.acquire() as conn:
+            async with conn.transaction():
+                await _planning.update_task(pool, task_key, patch, connection=conn)
+                tasks = await _planning.list_tasks(conn)
+        task = next((item for item in tasks if item["task_key"] == task_key), None)
+        if task is None:
+            raise ValueError(f"Task not found after update: {task_key}")
+        return WorkflowResult(run_id=str(run_id), tool_name="update_task", status="success", data=task).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="update_task", status="error", error=str(exc),
+            data=_planning_error_data(exc),
         ).model_dump_json()
     finally:
         clear_run_context()
