@@ -22,6 +22,26 @@ from pathlib import Path
 URL = os.environ.get("CLAUDE_CORPUS_MCP_URL", "https://memory-knowledge.azurewebsites.net/mcp/")
 TIMEOUT = float(os.environ.get("CLAUDE_REPO_HYDRATE_TIMEOUT", "6"))
 LIMIT = int(os.environ.get("CLAUDE_REPO_HYDRATE_LIMIT", "3"))
+ALLOWED_CONTENT_KINDS = {
+    "root-cause", "corrected-approach", "repository-decision", "repository-fact",
+}
+
+
+def _eligible(note: dict) -> bool:
+    operator_note = note.get("source_kind") == "operator_note" or note.get("memory_type") in {
+        "note", "operator_note",
+    }
+    if not note.get("is_active", True):
+        return False
+    if not operator_note:
+        return note.get("verification_status") == "verified"
+    return (
+        note.get("verification_status") in {"human_asserted", "verified"}
+        and note.get("content_kind") in ALLOWED_CONTENT_KINDS
+        and isinstance(note.get("evidence_refs"), list)
+        and bool(note["evidence_refs"])
+        and not note.get("evidence_resolution_errors")
+    )
 
 
 def _read_payload() -> tuple[str, str]:
@@ -70,7 +90,7 @@ def main() -> int:
         return 0
     notes = [
         n for n in ((data.get("data") or {}).get("repo_scoped_memory") or [])
-        if n.get("body_text")
+        if n.get("body_text") and _eligible(n)
     ][:LIMIT]
     if not notes:
         return 0

@@ -5,83 +5,39 @@ description: Use whenever a blocker appears during goal pursuit, verification, p
 
 # Blocker Catalog
 
-Use this skill to make blockers durable and auditable instead of leaving them in chat,
-terminal history, or scattered run notes.
+Use the canonical event ledger immediately when an operational run fails. Do not leave
+the failure only in chat, terminal history, or a project-specific Markdown diary.
 
-## When To Use
-
-Use this skill immediately when:
-
-- a workflow, package, deployment, local image, auth, status, hydration, prompt, parser,
-  phase-ledger, or verification issue blocks the current goal;
-- the same failure fingerprint appears a second time;
-- goal pursuit pauses for a `playbook-convergence-loop` remediation;
-- a blocker fix is implemented, verified, or found incomplete.
-
-## Required Behavior
-
-Before fixing a blocker, create or update a catalog entry with:
-
-- blocker id;
-- workflow or surface;
-- type;
-- task id and run id when available;
-- practical symptom;
-- confirmed evidence;
-- practical impact;
-- confirmed or suspected boundary;
-- current remaining work.
-
-After implementing a fix, update the same entry with:
-
-- fix status;
-- solution summary;
-- files or artifacts changed;
-- verification evidence;
-- remaining work, or `none` when fully verified.
-
-Do not resume the main goal after a blocker fix until the catalog entry says whether the
-fix was verified through the same path Kamen uses.
-
-## Script
-
-Use the repo helper instead of hand-formatting entries:
+## Open Before Fix
 
 ```bash
-python3 scripts/blocker_catalog.py --catalog "<catalog.md>" add \
-  --id "<ID>" \
-  --title "<short title>" \
-  --type "<workflow-runtime|operator-package|local-environment|deployment|quality-readiness|status-recovery>" \
-  --workflow "<workflow or surface>" \
-  --task-id "<task id if known>" \
-  --run-id "<run id if known>" \
-  --symptom "<what happened in practical terms>" \
-  --evidence "<specific command/log/status/artifact evidence>" \
-  --impact "<what this prevents or risks>" \
-  --boundary "<stable boundary to inspect or fix>" \
-  --remaining "<next action>" \
-  --blocking-goal
+python3 scripts/blocker_catalog.py open \
+  --run-id "<run-id>" --subject-id "<subject-id>" --step-id "<stable-step>" \
+  --surface "<surface>" --error-signature "<stable error signature>" \
+  --symptom "<practical symptom>" --evidence "<non-secret evidence>" \
+  --impact "<blocked outcome>" --boundary "<suspected stable boundary>"
 ```
 
-When the fix is implemented:
+Retain every generated id. An exact retry supplies the same event/occurrence identities.
+The blocker fingerprint is lineage-stable and automatically detects a closed recurrence.
+
+## Correct And Verify
+
+After editing the reusable artifact, call `work_memory.py correct` with the run,
+blocker, occurrence, step, and every changed artifact. This records bundle A to B; it
+does not allow stale A receipts to verify B. Transition `open` to
+`fixed-awaiting-verification`, close the original run failed, create a fresh successor
+selection for B, and run the same path.
+
+Only a passed `same-path` verification naming the exact blocker/correction ids can move
+the blocker to `verified`, then `closed` with `remaining_work=none`:
 
 ```bash
-python3 scripts/blocker_catalog.py --catalog "<catalog.md>" update \
-  --id "<ID>" \
-  --status "<fixed-awaiting-verification|verified|closed|superseded>" \
-  --solution "<what changed and why it addresses the boundary>" \
-  --changed "<files, artifacts, or operational sequence changed>" \
-  --verification "<tests, package run, local image run, deploy proof, or other evidence>" \
-  --remaining "<remaining work or none>"
+python3 scripts/blocker_catalog.py transition --run-id "<run-id>" --blocker-id "<blocker-id>" --to-status fixed-awaiting-verification
+python3 scripts/blocker_catalog.py transition --run-id "<successor-run-id>" --blocker-id "<blocker-id>" --to-status verified --verification-event-id "<event-id>"
+python3 scripts/blocker_catalog.py transition --run-id "<successor-run-id>" --blocker-id "<blocker-id>" --to-status closed --verification-event-id "<event-id>" --remaining-work none
 ```
 
-## Default MAWF4 Catalog
-
-For the current MAWF4 local-package validation goal, use:
-
-```text
-software company workflows/implementation plans/phase-ledger-harness/mawf4-playbook-real-run-blocker-catalog.md
-```
-
-The older issue-notes document may remain as narrative run history, but the blocker
-catalog is the control surface for goal pauses, fixes, verification, and convergence.
+`operations/blockers/BLOCKERS.md` is generated. Never edit it as authority. On the next
+matching task, use selection-reported eligible corrections before running commands;
+stale, proxy-only, superseded, or different-bundle corrections are warnings only.

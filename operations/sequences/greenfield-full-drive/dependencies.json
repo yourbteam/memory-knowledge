@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "lineage_id": "greenfield-full-drive",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "mcp-agents-workflow",
+      "path_or_sequence_id": "scripts/greenfield_full_drive.sh"
+    },
+    {
+      "kind": "sequence",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "local-workflow-orch-image"
+    }
+  ]
+}

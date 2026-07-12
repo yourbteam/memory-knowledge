@@ -37,7 +37,9 @@ Do not use this sequence for local container-only tests unless the local sequenc
 1. Invoke `sequence-runner`, read this sequence, then activate it:
 
    ```bash
-   uv run python scripts/sequence_guard.py activate --sequence-id "remote-mcp-user-onboarding" --sequence-doc "operations/sequences/remote-mcp-user-onboarding/sequence.md"
+   python3 scripts/work_memory.py classify --task-id "<task-id>" --operation-kind remote-operator --repeatable yes --meaningful-steps 3
+   python3 scripts/work_memory.py select --task-id "<task-id>" --sequence-id remote-mcp-user-onboarding
+   python3 scripts/sequence_guard.py activate --task-id "<task-id>" --sequence-doc "operations/sequences/remote-mcp-user-onboarding/sequence.md"
    ```
 
 2. Confirm the deployed registry source without printing secrets:

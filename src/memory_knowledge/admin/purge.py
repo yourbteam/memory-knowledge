@@ -107,6 +107,20 @@ async def _purge_postgres(pool: asyncpg.Pool, repository_key: str, repository_id
                 repository_id,
             )
             await delete(
+                "memory.learned_import_unresolved",
+                """
+                DELETE FROM memory.learned_import_unresolved u
+                USING memory.learned_import_reports r
+                WHERE u.import_id = r.import_id AND r.repository_id = $1
+                """,
+                repository_id,
+            )
+            await delete(
+                "memory.learned_import_reports",
+                "DELETE FROM memory.learned_import_reports WHERE repository_id = $1",
+                repository_id,
+            )
+            await delete(
                 "memory.learned_records",
                 """
                 UPDATE memory.learned_records lr

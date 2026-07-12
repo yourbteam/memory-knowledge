@@ -285,13 +285,13 @@ async def author_repo_note(
     confidence: float = 0.8,
     applicability_mode: str = "repository",
     verification_status: str = "human_asserted",
+    content_kind: str | None = None,
+    evidence_refs: list[dict[str, Any]] | None = None,
     correlation_id: str | None = None,
 ) -> str:
     """Author a repo-scoped note into the brain.
 
-    Stores a free-text note (a project fact or working note) as repo-scoped memory, anchored
-    to the repository's root entity and retrievable via run_retrieval_workflow for that repo.
-    Use for durable repo-level knowledge that is not tied to a specific code entity.
+    Stores an evidence-anchored operational note as repo-scoped memory.
     verification_status: 'human_asserted' (default, a confirmed note) or 'unverified' (an
     auto-captured candidate for later promotion).
     """
@@ -310,6 +310,8 @@ async def author_repo_note(
             confidence=confidence,
             applicability_mode=applicability_mode,
             verification_status=verification_status,
+            content_kind=content_kind,
+            evidence_refs=evidence_refs,
             run_id=run_id,
             pool=get_pg_pool(),
             qdrant_client=get_qdrant_client(),
@@ -317,6 +319,34 @@ async def author_repo_note(
             settings=get_settings(),
         )
         return result.model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_repo_note_candidates")
+async def list_repo_note_candidates(
+    repository_key: str,
+    limit: int = 50,
+    cursor: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """List unverified or legacy repo-note candidates for explicit review."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "list_repo_note_candidates")
+    try:
+        data = await _learned_memory.list_repo_note_candidates(
+            get_pg_pool(), repository_key, limit=limit, cursor=cursor
+        )
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="list_repo_note_candidates",
+            status="success", data=data,
+        ).model_dump_json()
+    except Exception as exc:
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="list_repo_note_candidates",
+            status="error", error=str(exc),
+        ).model_dump_json()
     finally:
         clear_run_context()
 
@@ -363,6 +393,8 @@ async def run_learned_memory_commit_workflow(
     approval_status: str,
     verification_notes: str | None = None,
     supersedes_id: str | None = None,
+    content_kind: str | None = None,
+    evidence_refs: list[dict[str, Any]] | None = None,
     correlation_id: str | None = None,
 ) -> str:
     """Approve, reject, or supersede a learned-memory proposal."""
@@ -379,6 +411,8 @@ async def run_learned_memory_commit_workflow(
             approval_status=approval_status,
             verification_notes=verification_notes,
             supersedes_id=supersedes_id,
+            content_kind=content_kind,
+            evidence_refs=evidence_refs,
             run_id=run_id,
             pool=get_pg_pool(),
             qdrant_client=get_qdrant_client(),
@@ -6418,6 +6452,37 @@ async def import_repo_memory_tool(data: str, correlation_id: str | None = None) 
             tool_name="import_repo_memory",
             status="success",
             data=result,
+        ).model_dump_json()
+    finally:
+        clear_run_context()
+
+
+@mcp.tool()
+@track_tool_metrics("list_import_unresolved")
+async def list_import_unresolved(
+    repository_key: str,
+    import_id: str,
+    limit: int = 100,
+    cursor: str | None = None,
+    correlation_id: str | None = None,
+) -> str:
+    """Page immutable destination-derived unresolved evidence from one import."""
+    run_id = new_run_id()
+    bind_run_context(run_id, correlation_id, "list_import_unresolved")
+    try:
+        from memory_knowledge.admin.export_import import list_import_unresolved as _list
+
+        data = await _list(
+            get_pg_pool(), repository_key, import_id, limit=limit, cursor=cursor
+        )
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="list_import_unresolved",
+            status="success", data=data,
+        ).model_dump_json()
+    except ValueError as exc:
+        return WorkflowResult(
+            run_id=str(run_id), tool_name="list_import_unresolved",
+            status="error", error=str(exc),
         ).model_dump_json()
     finally:
         clear_run_context()

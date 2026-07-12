@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "lineage_id": "taggable-source-reload",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "taggable-api",
+      "path_or_sequence_id": "tools/Taggable.MigrationRunner/scripts/reload-source.sh"
+    }
+  ]
+}

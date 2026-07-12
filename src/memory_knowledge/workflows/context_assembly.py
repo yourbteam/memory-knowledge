@@ -12,6 +12,7 @@ from qdrant_client import AsyncQdrantClient
 from memory_knowledge.config import Settings
 from memory_knowledge.workflows import retrieval as _retrieval
 from memory_knowledge.workflows.base import WorkflowResult
+from memory_knowledge.workflows.learned_memory import learned_record_is_eligible
 
 logger = structlog.get_logger()
 
@@ -26,6 +27,7 @@ async def _fetch_applicable_learned_rules(
 ) -> list[dict[str, Any]]:
     """Fetch learned rules that apply to entities in the result set."""
     rules: list[dict[str, Any]] = []
+    graph_keys: list[uuid.UUID] = []
 
     # Try Neo4j APPLIES_TO edges first
     if neo4j_driver is not None and entity_keys:
@@ -40,14 +42,10 @@ async def _fetch_applicable_learned_rules(
                 entity_keys=entity_keys,
             )
             for r in records:
-                rules.append(
-                    {
-                        "entity_key": r["entity_key"],
-                        "title": r["title"],
-                        "memory_type": r["memory_type"],
-                        "source": "neo4j",
-                    }
-                )
+                try:
+                    graph_keys.append(uuid.UUID(str(r["entity_key"])))
+                except (ValueError, TypeError):
+                    continue
         except Exception:
             pass  # LearnedRule label may not exist yet — graceful degradation
 
@@ -55,32 +53,34 @@ async def _fetch_applicable_learned_rules(
     try:
         rows = await pool.fetch(
             """
-            SELECT e.entity_key, lr.title, lr.memory_type, lr.confidence,
-                   lr.applicability_mode, lr.body_text
+            SELECT e.entity_key, lr.title, lr.memory_type, lr.source_kind,
+                   lr.confidence, lr.applicability_mode, lr.body_text,
+                   lr.verification_status, lr.is_active, lr.content_kind,
+                   lr.evidence_refs, lr.evidence_resolution_errors
             FROM memory.learned_records lr
             JOIN catalog.entities e ON lr.entity_id = e.id
-            WHERE e.repository_id = $1 AND lr.is_active = TRUE
-              AND lr.verification_status = 'verified'
+            WHERE e.repository_id = $1
+              AND ($2::uuid[] = '{}'::uuid[] OR e.entity_key = ANY($2::uuid[])
+                   OR lr.verification_status IN ('verified','human_asserted'))
             ORDER BY lr.confidence DESC
             LIMIT 40
             """,
             repository_id,
+            graph_keys,
         )
-        seen = {r["entity_key"] for r in rules}
-        for row in rows:
+        for row in _retrieval.filter_eligible_learned_rows(rows):
             key = str(row["entity_key"])
-            if key not in seen:
-                rules.append(
-                    {
-                        "entity_key": key,
-                        "title": row["title"],
-                        "memory_type": row["memory_type"],
-                        "confidence": float(row["confidence"]) if row["confidence"] else None,
-                        "applicability_mode": row["applicability_mode"],
-                        "body_text": row["body_text"],
-                        "source": "postgres",
-                    }
-                )
+            rules.append(
+                {
+                    "entity_key": key,
+                    "title": row["title"],
+                    "memory_type": row["memory_type"],
+                    "confidence": float(row["confidence"]) if row["confidence"] else None,
+                    "applicability_mode": row["applicability_mode"],
+                    "body_text": row["body_text"],
+                    "source": "postgres",
+                }
+            )
     except Exception:
         pass  # table may be empty — graceful degradation
 

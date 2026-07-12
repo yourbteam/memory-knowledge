@@ -20,6 +20,7 @@ from memory_knowledge.projections.qdrant_payload_schemas import (
     LearnedMemoryPayload,
     SummaryPayload,
 )
+from memory_knowledge.workflows.learned_memory import learned_record_is_eligible
 
 logger = structlog.get_logger()
 
@@ -142,19 +143,36 @@ async def reembed_summaries(pool, client, settings, repository_id, repository_ke
 async def reembed_learned(pool, client, settings, repository_id, repository_key) -> int:
     rows = await pool.fetch(
         """
-        SELECT e.entity_key, lr.body_text, lr.memory_type, lr.confidence,
-               lr.applicability_mode, se.entity_key AS scope_entity_key
+        SELECT e.entity_key, lr.body_text, lr.memory_type, lr.source_kind,
+               lr.confidence, lr.applicability_mode, se.entity_key AS scope_entity_key,
+               lr.verification_status, lr.is_active, lr.content_kind,
+               lr.evidence_refs, lr.evidence_resolution_errors
         FROM memory.learned_records lr
         JOIN catalog.entities e ON lr.entity_id = e.id
         LEFT JOIN catalog.entities se ON lr.scope_entity_id = se.id
         WHERE e.repository_id = $1 AND lr.is_active = TRUE
-          AND lr.verification_status = 'verified'
+          AND (
+                    (
+                      lr.verification_status = 'verified'
+                      AND COALESCE(lr.source_kind, '') <> 'operator_note'
+                      AND COALESCE(lr.memory_type, '') NOT IN ('note','operator_note')
+                    )
+                    OR (
+                      (lr.source_kind = 'operator_note' OR lr.memory_type IN ('note','operator_note'))
+                      AND lr.verification_status IN ('human_asserted','verified')
+                      AND lr.content_kind IN ('root-cause','corrected-approach',
+                                              'repository-decision','repository-fact')
+                      AND jsonb_typeof(lr.evidence_refs) = 'array'
+                      AND jsonb_array_length(lr.evidence_refs) > 0
+                      AND COALESCE(jsonb_array_length(lr.evidence_resolution_errors), 0) = 0
+                    )
+                  )
         """,
         repository_id,
     )
     payload_rows = []
     for r in rows:
-        if not r["body_text"]:
+        if not r["body_text"] or not learned_record_is_eligible(r):
             continue
         scope_key = str(r["scope_entity_key"]) if r["scope_entity_key"] else str(r["entity_key"])
         payload = {

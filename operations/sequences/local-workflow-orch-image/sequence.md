@@ -29,13 +29,15 @@ Activate this sequence before running its operational commands:
 
 ```bash
 uv run python scripts/directive_guard.py read --mode "local-workflow-orch-image"
-uv run python scripts/sequence_guard.py activate --sequence-id local-workflow-orch-image --sequence-doc operations/sequences/local-workflow-orch-image/sequence.md
+python3 scripts/work_memory.py classify --task-id "<task-id>" --operation-kind container --repeatable yes --meaningful-steps 3
+python3 scripts/work_memory.py select --task-id "<task-id>" --sequence-id local-workflow-orch-image
+python3 scripts/sequence_guard.py activate --task-id "<task-id>" --sequence-doc operations/sequences/local-workflow-orch-image/sequence.md
 ```
 
 Guard commands from this document before running them. Example:
 
 ```bash
-uv run python scripts/sequence_guard.py guard --step "Build image" --command "uv run python scripts/local_workflow_orch_image_harness.py build --tag workflow-orch:local-sequence-check" --source sequence_doc --source-ref operations/sequences/local-workflow-orch-image/sequence.md
+python3 scripts/sequence_guard.py guard --task-id "<task-id>" --step "Build image" --command "uv run python scripts/local_workflow_orch_image_harness.py build --tag workflow-orch:local-sequence-check" --source sequence_doc --source-ref operations/sequences/local-workflow-orch-image/sequence.md
 ```
 
 Supported commands are implemented in `scripts/local_workflow_orch_image_harness.py`:

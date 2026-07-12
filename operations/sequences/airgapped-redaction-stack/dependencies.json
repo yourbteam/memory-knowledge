@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "lineage_id": "airgapped-redaction-stack",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "callcenter-harness",
+      "path_or_sequence_id": "scripts/setup_airgapped_redaction.sh"
+    },
+    {
+      "kind": "file",
+      "repository_key": "callcenter-harness",
+      "path_or_sequence_id": "scripts/test_ner_chunk.py"
+    }
+  ]
+}

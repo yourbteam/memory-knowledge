@@ -1,288 +1,256 @@
 #!/usr/bin/env python3
-"""Guard repeatable operational commands against memory-only execution."""
+"""Guard operational commands with classification, selection, and bundle receipts."""
 
 from __future__ import annotations
 
 import argparse
 import json
+import os
 import shlex
-from datetime import UTC, datetime
+import sys
+import tempfile
 from pathlib import Path
 from typing import Any, Sequence
 
 try:
     from scripts.directive_guard import (
-        DEFAULT_DIRECTIVES_PATH,
-        DEFAULT_MAX_AGE_MINUTES,
-        DEFAULT_STATE_PATH as DEFAULT_DIRECTIVE_STATE_PATH,
-        check_directive_read_state,
+        DEFAULT_DIRECTIVES_PATH, DEFAULT_MAX_AGE_MINUTES,
+        DEFAULT_STATE_PATH as DEFAULT_DIRECTIVE_STATE_PATH, check_directive_read_state,
     )
-except ModuleNotFoundError:  # pragma: no cover - direct script execution path
-    from directive_guard import (
-        DEFAULT_DIRECTIVES_PATH,
-        DEFAULT_MAX_AGE_MINUTES,
-        DEFAULT_STATE_PATH as DEFAULT_DIRECTIVE_STATE_PATH,
-        check_directive_read_state,
+    from scripts import work_memory
+except ModuleNotFoundError:
+    from directive_guard import (  # type: ignore
+        DEFAULT_DIRECTIVES_PATH, DEFAULT_MAX_AGE_MINUTES,
+        DEFAULT_STATE_PATH as DEFAULT_DIRECTIVE_STATE_PATH, check_directive_read_state,
     )
+    import work_memory  # type: ignore
 
 
-DEFAULT_STATE_PATH = Path("/private/tmp/workflow-orch-active-sequence.json")
 ALLOWED_SOURCES = {"sequence_doc", "discovery_log", "script", "tool_help"}
 
 
-def _utc_now() -> str:
-    return datetime.now(UTC).replace(microsecond=0).isoformat().replace("+00:00", "Z")
-
-
-def _repo_root(path: str | None) -> Path:
-    return Path(path or ".").resolve()
+def _root(value: str | None) -> Path:
+    return Path(value or ".").resolve()
 
 
 def _resolve(root: Path, value: str) -> Path:
     path = Path(value)
-    if not path.is_absolute():
-        path = root / path
-    return path.resolve()
+    return (root / path).resolve() if not path.is_absolute() else path.resolve()
 
 
-def _state_path(value: str | None) -> Path:
-    return Path(value).resolve() if value else DEFAULT_STATE_PATH
-
-
-def _directive_path(value: str | None) -> Path:
-    return Path(value).resolve() if value else DEFAULT_DIRECTIVES_PATH
-
-
-def _directive_state_path(value: str | None) -> Path:
-    return Path(value).resolve() if value else DEFAULT_DIRECTIVE_STATE_PATH
+def _state_path(task_id: str, value: str | None) -> Path:
+    return Path(value).resolve() if value else work_memory.receipt_path(task_id, "active")
 
 
 def _require_directives(args: argparse.Namespace) -> None:
     check_directive_read_state(
-        directives_path=_directive_path(args.directives_path),
-        state_path=_directive_state_path(args.directive_state),
+        directives_path=Path(args.directives_path).resolve() if args.directives_path else DEFAULT_DIRECTIVES_PATH,
+        state_path=Path(args.directive_state).resolve() if args.directive_state else DEFAULT_DIRECTIVE_STATE_PATH,
         max_age_minutes=int(args.directive_max_age_minutes),
     )
 
 
-def _write_json(value: dict[str, Any]) -> None:
-    print(json.dumps(value, indent=2, sort_keys=True))
+def _atomic_json(path: Path, value: dict[str, Any]) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    data = work_memory.canonical_bytes(value)
+    fd, raw = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    tmp = Path(raw)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(data); handle.flush(); os.fsync(handle.fileno())
+        os.replace(tmp, path)
+    finally:
+        tmp.unlink(missing_ok=True)
 
 
 def _load_state(path: Path) -> dict[str, Any]:
     if not path.is_file():
-        raise SystemExit(f"active sequence state not found: {path}")
+        raise work_memory.WorkMemoryError("active-state-not-found", 4)
     try:
-        state = json.loads(path.read_text(encoding="utf-8"))
+        state = json.loads(path.read_text())
     except json.JSONDecodeError as exc:
-        raise SystemExit(f"active sequence state is invalid JSON: {path}: {exc}") from exc
+        raise work_memory.WorkMemoryError("invalid-active-state", 4) from exc
     if not isinstance(state, dict):
-        raise SystemExit(f"active sequence state must be a JSON object: {path}")
+        raise work_memory.WorkMemoryError("invalid-active-state", 4)
     return state
 
 
-def _require_text(value: str, label: str) -> str:
-    stripped = value.strip()
-    if not stripped:
-        raise SystemExit(f"{label} is required")
-    return stripped
+def verify_receipts(task_id: str, state_path: Path | None = None) -> dict[str, Any]:
+    classification, class_hash, _ = work_memory.load_receipt(task_id, "classification")
+    selection, selection_hash, _ = work_memory.load_receipt(task_id, "selection")
+    if classification["verdict"] != "operational":
+        raise work_memory.WorkMemoryError("classification-is-not-operational", 4)
+    if selection["classification_receipt_hash"] != class_hash:
+        raise work_memory.WorkMemoryError("receipt-chain-mismatch", 4)
+    rows, registry_hash = work_memory.registry_rows()
+    if selection["registry_hash"] != registry_hash:
+        raise work_memory.WorkMemoryError("stale-registry-receipt", 4)
+    bundle, bundle_hash, lineage = work_memory.resolve_bundle(
+        mode=selection["mode"], subject_id=selection["subject_id"],
+        document=Path(selection["document"]), manifest=Path(selection["manifest"]),
+        repo_roots_file=selection.get("repository_roots_file"),
+    )
+    if bundle_hash != selection["source_bundle_hash"] or bundle != selection["source_bundle"]:
+        raise work_memory.WorkMemoryError("stale-source-bundle", 4)
+    if lineage != selection["lineage_id"]:
+        raise work_memory.WorkMemoryError("stale-lineage", 4)
+    if selection["mode"] == "registered":
+        row = next((item for item in rows if item["sequence_id"] == selection["subject_id"]), None)
+        if row is None or row["lineage_id"] != lineage:
+            raise work_memory.WorkMemoryError("registry-lineage-mismatch", 4)
+    if state_path is not None:
+        state = _load_state(state_path)
+        expected = {
+            "task_id": task_id, "classification_receipt_hash": class_hash,
+            "selection_receipt_hash": selection_hash, "source_bundle_hash": bundle_hash,
+        }
+        if any(state.get(key) != value for key, value in expected.items()):
+            raise work_memory.WorkMemoryError("active-state-receipt-mismatch", 4)
+    return {
+        "ok": True, "task_id": task_id, "classification_receipt_hash": class_hash,
+        "selection_receipt_hash": selection_hash, "source_bundle_hash": bundle_hash,
+        "mode": selection["mode"], "subject_id": selection["subject_id"],
+        "lineage_id": lineage, "selection": selection,
+    }
 
 
-def _path_under(path: Path, parent: Path) -> bool:
-    try:
-        path.relative_to(parent)
-    except ValueError:
-        return False
-    return True
+def cmd_activate(args: argparse.Namespace) -> dict[str, Any]:
+    _require_directives(args)
+    if args.sequence_id:
+        raise work_memory.WorkMemoryError(
+            "activation-sequence-id-retired:run-work_memory-select-then-pass-selected-document", 2
+        )
+    root = _root(args.root)
+    chosen = args.sequence_doc or args.discovery_log
+    if bool(args.sequence_doc) == bool(args.discovery_log):
+        raise work_memory.WorkMemoryError("exactly-one-selected-document-required", 2)
+    selected_path = _resolve(root, chosen)
+    verified = verify_receipts(args.task_id)
+    selection = verified.pop("selection")
+    expected_mode = "registered" if args.sequence_doc else "discovery"
+    if selection["mode"] != expected_mode or Path(selection["document"]).resolve() != selected_path:
+        raise work_memory.WorkMemoryError("selected-document-receipt-mismatch", 4)
+    state = {
+        "schema_version": 1, "task_id": args.task_id, "activated_at_utc": work_memory.utc_now(),
+        "mode": selection["mode"], "subject_id": selection["subject_id"],
+        "lineage_id": selection["lineage_id"], "document": str(selected_path),
+        "classification_receipt_hash": verified["classification_receipt_hash"],
+        "selection_receipt_hash": verified["selection_receipt_hash"],
+        "source_bundle_hash": verified["source_bundle_hash"],
+    }
+    path = _state_path(args.task_id, args.state)
+    _atomic_json(path, state)
+    return {"ok": True, "state_path": str(path), "state": state}
 
 
-def _source_ref_text(source_ref: Path) -> str:
-    if not source_ref.is_file():
-        raise SystemExit(f"source ref file not found: {source_ref}")
-    return source_ref.read_text(encoding="utf-8")
-
-
-def _is_placeholder_token(token: str) -> bool:
-    return token.startswith("<") and token.endswith(">") and len(token) > 2 and token != "<command>"
-
-
-def _tokens_match_shape(command_tokens: list[str], shape_tokens: list[str]) -> bool:
-    if len(command_tokens) != len(shape_tokens):
-        return False
-    for command_token, shape_token in zip(command_tokens, shape_tokens):
-        if _is_placeholder_token(shape_token):
-            continue
-        if command_token != shape_token:
-            return False
-    return True
-
-
-def _command_matches_documented_shape(command: str, text: str) -> bool:
+def _shape_match(command: str, text: str) -> bool:
+    if command in text:
+        return True
     try:
         command_tokens = shlex.split(command)
     except ValueError:
         return False
     for line in text.splitlines():
-        shape = line.strip()
-        if not shape or "<" not in shape or ">" not in shape or "<command>" in shape:
-            continue
         try:
-            shape_tokens = shlex.split(shape)
+            shape = shlex.split(line.strip())
         except ValueError:
             continue
-        if any(_is_placeholder_token(token) for token in shape_tokens) and _tokens_match_shape(
-            command_tokens, shape_tokens
-        ):
+        if len(shape) != len(command_tokens):
+            continue
+        if all(a == b or (b.startswith("<") and b.endswith(">")) for a, b in zip(command_tokens, shape)):
             return True
     return False
 
 
-def _command_in_text(command: str, text: str, source_ref: Path) -> None:
-    if command not in text and not _command_matches_documented_shape(command, text):
-        raise SystemExit(f"command is not recorded in source ref: {source_ref}")
-
-
-def _script_command_mentions(command: str, script_ref: Path) -> None:
-    candidates = {str(script_ref), script_ref.name}
-    try:
-        candidates.add(str(script_ref.relative_to(Path.cwd())))
-    except ValueError:
-        pass
-    if not any(candidate in command for candidate in candidates):
-        raise SystemExit(f"command does not invoke source script: {script_ref}")
-
-
-def cmd_activate(args: argparse.Namespace) -> int:
+def cmd_verify(args: argparse.Namespace) -> dict[str, Any]:
     _require_directives(args)
-    root = _repo_root(args.root)
-    sequence_doc = _resolve(root, args.sequence_doc) if args.sequence_doc else None
-    discovery_log = _resolve(root, args.discovery_log) if args.discovery_log else None
-    if bool(sequence_doc) == bool(discovery_log):
-        raise SystemExit("activate requires exactly one of --sequence-doc or --discovery-log")
-    if sequence_doc and not sequence_doc.is_file():
-        raise SystemExit(f"sequence doc not found: {sequence_doc}")
-    if discovery_log and not discovery_log.is_file():
-        raise SystemExit(f"discovery log not found: {discovery_log}")
+    result = verify_receipts(args.task_id)
+    result.pop("selection")
+    return result
 
-    state = {
-        "activeSequence": _require_text(args.sequence_id, "sequence id"),
-        "activatedAtUtc": _utc_now(),
-        "mode": "registered" if sequence_doc else "discovery",
-        "sequenceDoc": str(sequence_doc) if sequence_doc else None,
-        "discoveryLog": str(discovery_log) if discovery_log else None,
+
+def cmd_status(args: argparse.Namespace) -> dict[str, Any]:
+    _require_directives(args)
+    path = _state_path(args.task_id, args.state)
+    state = _load_state(path)
+    result = verify_receipts(args.task_id, path)
+    result.pop("selection")
+    return {**result, "state_path": str(path), "active_state": state}
+
+
+def cmd_guard(args: argparse.Namespace) -> dict[str, Any]:
+    _require_directives(args)
+    if args.source not in ALLOWED_SOURCES:
+        raise work_memory.WorkMemoryError("invalid-command-source", 2)
+    root = _root(args.root)
+    path = _state_path(args.task_id, args.state)
+    verified = verify_receipts(args.task_id, path)
+    selection = verified.pop("selection")
+    roots = work_memory._repo_roots(selection.get("repository_roots_file"))
+    bundle_paths = {
+        (roots[item["repository_key"]] / item["path"]).resolve()
+        for item in selection["source_bundle"] if item["repository_key"] in roots
     }
-    path = _state_path(args.state)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps(state, indent=2, sort_keys=True) + "\n", encoding="utf-8")
-    _write_json({"ok": True, "statePath": str(path), "state": state})
-    return 0
+    raw_source = Path(args.source_ref)
+    if raw_source.is_absolute():
+        source_ref = raw_source.resolve()
+    else:
+        matches = [
+            (roots[item["repository_key"]] / item["path"]).resolve()
+            for item in selection["source_bundle"]
+            if item["repository_key"] in roots and item["path"] == args.source_ref
+        ]
+        source_ref = matches[0] if len(matches) == 1 else _resolve(root, args.source_ref)
+    if source_ref not in bundle_paths:
+        raise work_memory.WorkMemoryError("source-ref-outside-selected-bundle", 4)
+    if not source_ref.is_file():
+        raise work_memory.WorkMemoryError("source-ref-not-found", 4)
+    command = args.command.strip()
+    if not command or not args.step.strip():
+        raise work_memory.WorkMemoryError("step-and-command-required", 2)
+    document_text = Path(selection["document"]).read_text()
+    if not _shape_match(command, document_text):
+        raise work_memory.WorkMemoryError("command-not-grounded-in-selected-document", 4)
+    if args.source == "script" and source_ref.name not in command and str(source_ref) not in command:
+        raise work_memory.WorkMemoryError("command-does-not-invoke-source-script", 4)
+    return {**verified, "ok": True, "step": args.step, "command_source": args.source,
+            "source_ref": str(source_ref)}
 
 
-def _validate_source_against_state(
-    *,
-    root: Path,
-    state: dict[str, Any],
-    source: str,
-    source_ref: Path,
-    command: str,
-    evidence_text: str | None,
-) -> None:
-    if source not in ALLOWED_SOURCES:
-        raise SystemExit(
-            f"command source must be one of {sorted(ALLOWED_SOURCES)}; got {source!r}"
-        )
-    if source == "sequence_doc":
-        active_doc = state.get("sequenceDoc")
-        if not active_doc:
-            raise SystemExit("active sequence is not backed by a sequence document")
-        if source_ref != Path(str(active_doc)).resolve():
-            raise SystemExit("sequence_doc source ref does not match active sequence document")
-        _command_in_text(command, _source_ref_text(source_ref), source_ref)
-        return
-    if source == "discovery_log":
-        active_log = state.get("discoveryLog")
-        if not active_log:
-            raise SystemExit("active sequence is not backed by a discovery log")
-        if source_ref != Path(str(active_log)).resolve():
-            raise SystemExit("discovery_log source ref does not match active discovery log")
-        _command_in_text(command, _source_ref_text(source_ref), source_ref)
-        return
-    if source == "script":
-        if not _path_under(source_ref, root / "scripts"):
-            raise SystemExit(f"script source ref must be under scripts/: {source_ref}")
-        if not source_ref.is_file():
-            raise SystemExit(f"script source ref not found: {source_ref}")
-        _script_command_mentions(command, source_ref)
-        return
-    if source == "tool_help":
-        _require_text(evidence_text or "", "tool_help evidence text")
-        return
-
-
-def cmd_guard(args: argparse.Namespace) -> int:
-    _require_directives(args)
-    root = _repo_root(args.root)
-    state_path = _state_path(args.state)
-    state = _load_state(state_path)
-    step = _require_text(args.step, "step")
-    command = _require_text(args.command, "command")
-    source = _require_text(args.source, "source")
-    source_ref = _resolve(root, _require_text(args.source_ref, "source ref"))
-    _validate_source_against_state(
-        root=root,
-        state=state,
-        source=source,
-        source_ref=source_ref,
-        command=command,
-        evidence_text=args.evidence_text,
-    )
-    _write_json(
-        {
-            "ok": True,
-            "activeSequence": state.get("activeSequence"),
-            "step": step,
-            "commandSource": source,
-            "sourceRef": str(source_ref),
-        }
-    )
-    return 0
+def _shared(parser: argparse.ArgumentParser, *, state: bool = True) -> None:
+    parser.add_argument("--task-id", required=True); parser.add_argument("--root")
+    if state:
+        parser.add_argument("--state")
+    parser.add_argument("--directives-path"); parser.add_argument("--directive-state")
+    parser.add_argument("--directive-max-age-minutes", type=int, default=DEFAULT_MAX_AGE_MINUTES)
 
 
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command_name", required=True)
-
-    activate = sub.add_parser("activate", help="Record the active operational sequence.")
-    activate.add_argument("--sequence-id", required=True)
-    activate.add_argument("--sequence-doc")
-    activate.add_argument("--discovery-log")
-    activate.add_argument("--root")
-    activate.add_argument("--state")
-    activate.add_argument("--directives-path")
-    activate.add_argument("--directive-state")
-    activate.add_argument("--directive-max-age-minutes", type=int, default=DEFAULT_MAX_AGE_MINUTES)
-    activate.set_defaults(func=cmd_activate)
-
-    guard = sub.add_parser("guard", help="Verify a command has an allowed sequence source.")
-    guard.add_argument("--step", required=True)
-    guard.add_argument("--command", required=True)
-    guard.add_argument("--source", required=True)
-    guard.add_argument("--source-ref", required=True)
-    guard.add_argument("--evidence-text")
-    guard.add_argument("--root")
-    guard.add_argument("--state")
-    guard.add_argument("--directives-path")
-    guard.add_argument("--directive-state")
-    guard.add_argument("--directive-max-age-minutes", type=int, default=DEFAULT_MAX_AGE_MINUTES)
-    guard.set_defaults(func=cmd_guard)
-
+    activate = sub.add_parser("activate")
+    activate.add_argument("--sequence-doc"); activate.add_argument("--discovery-log"); activate.add_argument("--sequence-id")
+    _shared(activate); activate.set_defaults(func=cmd_activate)
+    verify = sub.add_parser("verify-receipts"); _shared(verify, state=False); verify.set_defaults(func=cmd_verify)
+    status = sub.add_parser("status"); _shared(status); status.set_defaults(func=cmd_status)
+    guard = sub.add_parser("guard")
+    guard.add_argument("--step", required=True); guard.add_argument("--command", required=True)
+    guard.add_argument("--source", required=True); guard.add_argument("--source-ref", required=True)
+    guard.add_argument("--evidence-text"); _shared(guard); guard.set_defaults(func=cmd_guard)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
-    parser = build_parser()
-    args = parser.parse_args(argv)
-    return int(args.func(args))
+    try:
+        args = build_parser().parse_args(argv)
+        print(json.dumps(args.func(args), sort_keys=True))
+        return 0
+    except work_memory.WorkMemoryError as exc:
+        print(json.dumps({"ok": False, "error": exc.code}, sort_keys=True), file=sys.stderr)
+        return exc.exit_code
+    except (OSError, json.JSONDecodeError) as exc:
+        print(json.dumps({"ok": False, "error": type(exc).__name__}, sort_keys=True), file=sys.stderr)
+        return 5
 
 
 if __name__ == "__main__":

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "lineage_id": "taggable-admin-spa-deploy",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "taggable-admin-spa",
+      "path_or_sequence_id": "scripts/deploy-admin-spa.sh"
+    }
+  ]
+}

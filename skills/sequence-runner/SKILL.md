@@ -10,15 +10,20 @@ Use this skill as the entry point for repeatable operational sequences.
 ## Workflow
 
 1. Locate the sequences root: `${MK_SEQUENCES_ROOT:-$HOME/memory-knowledge}` (the `memory-knowledge` repo). Run the guard/discovery scripts from there.
-2. Read `operations/sequences/SEQUENCES.md` under that root. A row's `automation` is `<repo-key>:<path>` — resolve the script in that repo (e.g. `mcp-agents-workflow:…`, `taggable-api:…`).
-3. Pick exactly one matching sequence row by use case.
-4. Read that sequence folder's `sequence.md`.
-5. Activate the selected sequence with `scripts/sequence_guard.py activate`.
-6. Before every operational command in the sequence, run `scripts/sequence_guard.py guard`.
+2. Require the fresh operational classification receipt created by `task-intake`.
+3. Run `work_memory.py select --task-id <task-id>`. Supply exact `--sequence-id` only to resolve an ambiguity, or `--discovery-log` when no registry row matches.
+4. Read the selected document and its dependency manifest from the selection receipt.
+5. Activate with `sequence_guard.py activate --task-id <task-id>` and exactly the selected `--sequence-doc` or `--discovery-log`. Activation by `--sequence-id` is retired.
+6. Start the durable run with `work_memory.py run-start --task-id <task-id>` and retain returned ids for exact retry.
+7. Before every operational command, run `sequence_guard.py guard --task-id <task-id>`.
 7. Only run commands whose guard source is `sequence_doc`, `discovery_log`, `script`, or `tool_help`.
 8. Run the documented script commands instead of inventing equivalent commands.
-9. If a command fails, report the failed step and exact error, then follow the sequence document's failure handling.
-10. If the run exposes a missing reusable step, update the sequence document or script before calling the sequence complete.
+9. If a command fails, invoke `blocker-catalog` before changing anything, then follow documented failure handling.
+10. Record corrections with `work_memory.py correct`; when the bundle changes, close the original run failed and select a fresh B-bound successor with paired `--verification-successor-of/--verifies-correction-id`.
+11. Record verification with explicit quality `same-path` when it exercised the real
+    corrected route, then close the run. Only discovery-mode runs call discovery `check`
+    and `closeout`; registered runs never do.
+12. Before completion, read `work_memory.py summary`. Report prior eligible corrections used, warnings ignored, and measurable current/change-effect evidence.
 
 ## Selection Rules
 
@@ -33,13 +38,13 @@ Use this skill as the entry point for repeatable operational sequences.
 When no registered sequence matches, run:
 
 ```bash
-uv run python scripts/sequence_discovery_log.py start --sequence-name "<short name>" --outcome "<intended outcome>" --why-repeatable "<why this will likely recur>"
+python3 scripts/sequence_discovery_log.py start --sequence-name "<short name>" --outcome "<intended outcome>" --why-repeatable "<why this will likely recur>"
 ```
 
 Then append each real step that was executed or validated:
 
 ```bash
-uv run python scripts/sequence_discovery_log.py append-step --file <log-path> --step "<step>" --command "<command or action>" --result "<result>" --note "<correction or note>"
+python3 scripts/sequence_discovery_log.py append-step --file <log-path> --step "<step>" --command "<command or action>" --result "<result>" --note "<correction or note>"
 ```
 
 Use the discovery log as raw evidence. Promote it to `operations/sequences/<sequence-id>/sequence.md` only after the commands, required inputs, failure handling, and verification evidence are stable.
@@ -49,22 +54,26 @@ Use the discovery log as raw evidence. Promote it to `operations/sequences/<sequ
 Registered sequence:
 
 ```bash
-uv run python scripts/sequence_guard.py activate --sequence-id "<sequence-id>" --sequence-doc "operations/sequences/<sequence-id>/sequence.md"
-uv run python scripts/sequence_guard.py guard --step "<step>" --command "<command>" --source sequence_doc --source-ref "operations/sequences/<sequence-id>/sequence.md"
+python3 scripts/work_memory.py select --task-id "<task-id>" --sequence-id "<sequence-id>"
+python3 scripts/sequence_guard.py activate --task-id "<task-id>" --sequence-doc "operations/sequences/<sequence-id>/sequence.md"
+python3 scripts/work_memory.py run-start --task-id "<task-id>"
+python3 scripts/sequence_guard.py guard --task-id "<task-id>" --step "<step>" --command "<command>" --source sequence_doc --source-ref "operations/sequences/<sequence-id>/sequence.md"
 ```
 
 Discovery sequence:
 
 ```bash
-uv run python scripts/sequence_guard.py activate --sequence-id "<sequence-name>" --discovery-log "<log-path>"
-uv run python scripts/sequence_guard.py guard --step "<step>" --command "<command>" --source discovery_log --source-ref "<log-path>"
+python3 scripts/work_memory.py select --task-id "<task-id>" --discovery-log "<log-path>"
+python3 scripts/sequence_guard.py activate --task-id "<task-id>" --discovery-log "<log-path>"
+python3 scripts/work_memory.py run-start --task-id "<task-id>"
+python3 scripts/sequence_guard.py guard --task-id "<task-id>" --step "<step>" --command "<command>" --source discovery_log --source-ref "<log-path>"
 ```
 
 If the needed command comes from a script or tool help instead of already-recorded prose, guard it explicitly:
 
 ```bash
-uv run python scripts/sequence_guard.py guard --step "<step>" --command "<command>" --source script --source-ref "scripts/<script>.py"
-uv run python scripts/sequence_guard.py guard --step "<step>" --command "<command>" --source tool_help --source-ref "<sequence-doc-or-log>" --evidence-text "<short non-secret help evidence>"
+python3 scripts/sequence_guard.py guard --task-id "<task-id>" --step "<step>" --command "<command>" --source script --source-ref "<manifest-covered-script>"
+python3 scripts/sequence_guard.py guard --task-id "<task-id>" --step "<step>" --command "<command>" --source tool_help --source-ref "<sequence-doc-or-log>" --evidence-text "<short non-secret help evidence>"
 ```
 
 The guard must reject `source=memory`. Treat that rejection as a stop sign, not as a prompt to retry by hand.

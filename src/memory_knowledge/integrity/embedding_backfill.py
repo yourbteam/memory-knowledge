@@ -76,7 +76,22 @@ async def backfill_embeddings(
             JOIN catalog.entities e ON lr.entity_id = e.id
             JOIN catalog.repositories r ON e.repository_id = r.id
             WHERE r.repository_key = $1 AND lr.is_active = TRUE
-              AND lr.verification_status = 'verified'
+              AND (
+                    (
+                      lr.verification_status = 'verified'
+                      AND COALESCE(lr.source_kind, '') <> 'operator_note'
+                      AND COALESCE(lr.memory_type, '') NOT IN ('note','operator_note')
+                    )
+                    OR (
+                      (lr.source_kind = 'operator_note' OR lr.memory_type IN ('note','operator_note'))
+                      AND lr.verification_status IN ('human_asserted','verified')
+                      AND lr.content_kind IN ('root-cause','corrected-approach',
+                                              'repository-decision','repository-fact')
+                      AND jsonb_typeof(lr.evidence_refs) = 'array'
+                      AND jsonb_array_length(lr.evidence_refs) > 0
+                      AND COALESCE(jsonb_array_length(lr.evidence_resolution_errors), 0) = 0
+                    )
+                  )
         """,
         stats_prefix="learned",
         stats=stats,

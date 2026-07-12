@@ -13,6 +13,7 @@ from __future__ import annotations
 import hashlib
 import time
 import uuid
+from typing import Any
 
 import neo4j
 import asyncpg
@@ -28,11 +29,16 @@ from memory_knowledge.projections.learned_memory_qdrant import (
 )
 from memory_knowledge.projections.learned_memory_writer import (
     deactivate_learned_record,
-    upsert_learned_record,
+    insert_operator_note_create_only,
 )
 from memory_knowledge.structure.entity_registrar import upsert_repo_revision
 from memory_knowledge.workflows.base import WorkflowResult
-from memory_knowledge.workflows.learned_memory import VALID_MEMORY_TYPES
+from memory_knowledge.workflows.learned_memory import (
+    VALID_MEMORY_TYPES,
+    learned_record_is_eligible,
+    resolve_evidence_refs,
+    validate_operational_content,
+)
 
 logger = structlog.get_logger()
 
@@ -176,19 +182,14 @@ async def run_author_note(
     confidence: float = 0.8,
     applicability_mode: str = "repository",
     verification_status: str = NOTE_VERIFICATION_STATUS,
+    content_kind: str | None = None,
+    evidence_refs: list[dict[str, Any]] | None = None,
     pool: asyncpg.Pool | None = None,
     qdrant_client: AsyncQdrantClient | None = None,
     neo4j_driver: neo4j.AsyncDriver | None = None,
     settings: Settings | None = None,
 ) -> WorkflowResult:
-    """Author a human-asserted, evidence-free repo-scoped note.
-
-    Single write: ensure the repo-root anchor (S1), insert the `learned_records` row
-    (human-asserted, NULL evidence), embed it into the `learned_memory` Qdrant collection
-    (repo-scoped payload — what the retrieval extension filters on), and best-effort-project
-    the Neo4j edge. Idempotent: the learned-record entity_key is derived from
-    (repository_key, memory_type, title-hash), so re-authoring the same note upserts in place.
-    """
+    """Author an evidence-anchored repo-scoped note without identity overwrite."""
     start = time.monotonic()
     tool = "author_repo_note"
     try:
@@ -212,77 +213,76 @@ async def run_author_note(
                 run_id=str(run_id), tool_name=tool, status="error",
                 error=f"Invalid verification_status: {verification_status}. Must be one of: {', '.join(sorted(VALID_NOTE_VERIFICATION))}",
             )
-
-        # S1 anchor: resolves the canonical key (A1) and creates a note-anchor revision if the
-        # repo has none (A2). Use `canonical_key` for EVERY key-derived value below so authoring
-        # and retrieval/deactivation agree on one casing.
-        root_entity_key, root_entity_id, canonical_key = await ensure_repo_root_entity(
-            pool, repository_key, neo4j_driver=neo4j_driver
-        )
-
-        # learned_records.valid_from_revision_id: the repo's latest revision (now incl. the
-        # synthetic note-anchor revision for a notes-only repo). Query by the canonical key.
-        rev_row = await pool.fetchrow(
-            "SELECT id FROM catalog.repo_revisions WHERE repository_id = "
-            "(SELECT id FROM catalog.repositories WHERE repository_key = $1) ORDER BY id DESC LIMIT 1",
-            canonical_key,
-        )
-        valid_from_revision_id = rev_row["id"] if rev_row else 0
-
-        title_hash = hashlib.sha256(title.encode()).hexdigest()[:16]
-        entity_key = learned_record_entity_key(canonical_key, memory_type, title_hash)
-
-        learned_record_id = await upsert_learned_record(
-            pool=pool,
-            entity_key=entity_key,
-            entity_id=root_entity_id,        # inherit repo/revision from the root
-            scope_entity_id=root_entity_id,  # the note applies to the repo (root)
-            memory_type=memory_type,
-            title=title,
-            body_text=body_text,
-            source_kind=NOTE_SOURCE_KIND,
-            confidence=confidence,
-            applicability_mode=applicability_mode,
-            valid_from_revision_id=valid_from_revision_id,
-            evidence_entity_id=None,   # evidence-free
-            evidence_chunk_id=None,
-            verification_status=verification_status,
-            is_active=True,
-        )
-
-        # Retrieval path: embed into the learned_memory collection (repository_key payload).
-        if qdrant_client is not None:
-            await embed_and_upsert_learned_record(
-                client=qdrant_client,
-                entity_key=str(entity_key),
-                body_text=body_text,
-                repository_key=canonical_key,
-                memory_type=memory_type,
-                confidence=confidence,
-                applicability_mode=applicability_mode,
-                scope_entity_key=root_entity_key,
-                settings=settings,
+        if content_kind is None or evidence_refs is None:
+            return WorkflowResult(
+                run_id=str(run_id), tool_name=tool, status="error",
+                error="content_kind and evidence_refs are required.",
             )
 
-        # Best-effort Neo4j edge (retrieval does not depend on it — see plan §3).
-        if neo4j_driver is not None:
-            try:
-                await project_learned_rule(
-                    driver=neo4j_driver,
-                    entity_key=str(entity_key),
-                    memory_type=memory_type,
-                    title=title,
-                    scope_entity_key=root_entity_key,
+        validate_operational_content(
+            title=title, body_text=body_text, content_kind=content_kind,
+            evidence_refs=evidence_refs,
+        )
+        async with pool.acquire() as conn:
+            async with conn.transaction():
+                canonical_evidence_repo, canonical_refs = await resolve_evidence_refs(
+                    conn, repository_key, evidence_refs
                 )
-            except Exception as exc:  # noqa: BLE001
-                logger.warning("repo_note_neo4j_project_failed", repository_key=repository_key, error=str(exc))
+                root_entity_key, root_entity_id, canonical_key = await ensure_repo_root_entity(
+                    conn, repository_key, neo4j_driver=None
+                )
+                if canonical_evidence_repo != canonical_key:
+                    raise ValueError("cross-repository-evidence")
+                rev_row = await conn.fetchrow(
+                    "SELECT id FROM catalog.repo_revisions WHERE repository_id = "
+                    "(SELECT id FROM catalog.repositories WHERE repository_key = $1) "
+                    "ORDER BY id DESC LIMIT 1", canonical_key,
+                )
+                valid_from_revision_id = rev_row["id"] if rev_row else 0
+                title_hash = hashlib.sha256(title.encode()).hexdigest()[:16]
+                entity_key = learned_record_entity_key(canonical_key, memory_type, title_hash)
+                learned_record_id, idempotent_retry = await insert_operator_note_create_only(
+                    pool=conn, entity_key=entity_key, entity_id=root_entity_id,
+                    scope_entity_id=root_entity_id, title=title, body_text=body_text,
+                    confidence=confidence, applicability_mode=applicability_mode,
+                    valid_from_revision_id=valid_from_revision_id,
+                    verification_status=verification_status, content_kind=content_kind,
+                    evidence_refs=canonical_refs,
+                )
+                eligible = learned_record_is_eligible({
+                    "memory_type": "operator_note", "source_kind": NOTE_SOURCE_KIND,
+                    "verification_status": verification_status, "is_active": True,
+                    "content_kind": content_kind, "evidence_refs": canonical_refs,
+                    "evidence_resolution_errors": [],
+                })
+                if eligible and qdrant_client is not None:
+                    await embed_and_upsert_learned_record(
+                        client=qdrant_client, entity_key=str(entity_key), body_text=body_text,
+                        repository_key=canonical_key, memory_type=memory_type,
+                        confidence=confidence, applicability_mode=applicability_mode,
+                        scope_entity_key=root_entity_key, settings=settings,
+                    )
+                if eligible and neo4j_driver is not None:
+                    try:
+                        await project_learned_rule(
+                            driver=neo4j_driver, entity_key=str(entity_key),
+                            memory_type=memory_type, title=title,
+                            scope_entity_key=root_entity_key,
+                        )
+                    except Exception as exc:  # noqa: BLE001
+                        logger.warning(
+                            "repo_note_neo4j_project_failed",
+                            repository_key=repository_key, error=str(exc),
+                        )
 
         duration_ms = int((time.monotonic() - start) * 1000)
         logger.info("repo_note_authored", repository_key=canonical_key, entity_key=str(entity_key))
         return WorkflowResult(
             run_id=str(run_id), tool_name=tool, status="success",
             data={"entity_key": str(entity_key), "learned_record_id": learned_record_id,
-                  "repository_key": canonical_key, "verification_status": verification_status},
+                  "repository_key": canonical_key, "verification_status": verification_status,
+                  "content_kind": content_kind, "evidence_refs": canonical_refs,
+                  "idempotent_retry": idempotent_retry, "eligible": eligible},
             duration_ms=duration_ms,
         )
     except Exception as exc:

@@ -28,6 +28,21 @@ The intake step should determine:
 
 The output should be short, concrete, and operational.
 
+## Mandatory Operation Classification
+
+Before any shell, package, database, container, authentication, deployment, remote
+operator, cleanup, image, or multi-step workflow command, allocate a stable task id and
+run from the canonical `memory-knowledge` root:
+
+```bash
+python3 scripts/work_memory.py classify --task-id "<task-id>" --operation-kind "<kind>" --repeatable "<yes|no>" --meaningful-steps <N>
+```
+
+Kinds are `image|container|auth|deploy|workflow-drive|package|database|remote-operator|cleanup|other|read-only|single-test|single-build`.
+Use the actual command flow, not the requested deliverable label. If the receipt says
+`operational`, hand off to `sequence-runner` before commands. Do not self-declare an
+exception or recreate the classifier logic in prose.
+
 ## Classification Outputs
 
 Produce the following:
@@ -146,6 +161,8 @@ Recommended shape:
 ```text
 Task intake result:
 - slug: <task-slug>
+- task id: <stable-task-id>
+- operation receipt: <classification path/hash and verdict>
 - type: <task-type>
 - size: <light|standard|heavy>
 - grounding: <repo/project/environment requirements>

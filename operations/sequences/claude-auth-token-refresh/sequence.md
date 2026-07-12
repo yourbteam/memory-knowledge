@@ -54,7 +54,9 @@ Primary script (this repo): `mcp-agents-workflow:scripts/claude_auth_refresh.sh`
 Activate + guard before operational commands:
 
 ```bash
-uv run python scripts/sequence_guard.py activate --sequence-id claude-auth-token-refresh \
+python3 scripts/work_memory.py classify --task-id "<task-id>" --operation-kind auth --repeatable yes --meaningful-steps 3
+python3 scripts/work_memory.py select --task-id "<task-id>" --sequence-id claude-auth-token-refresh
+python3 scripts/sequence_guard.py activate --task-id "<task-id>" \
   --sequence-doc operations/sequences/claude-auth-token-refresh/sequence.md
 ```
 

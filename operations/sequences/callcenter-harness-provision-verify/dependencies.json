@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "lineage_id": "callcenter-harness-provision-verify",
+  "dependencies": [
+    {
+      "kind": "sequence",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "airgapped-local-bulgarian-stt"
+    },
+    {
+      "kind": "sequence",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "airgapped-redaction-stack"
+    },
+    {
+      "kind": "glob",
+      "repository_key": "callcenter-harness",
+      "path_or_sequence_id": "scripts/cc_*smoke*.py"
+    }
+  ]
+}

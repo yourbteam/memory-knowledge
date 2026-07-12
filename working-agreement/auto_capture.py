@@ -28,10 +28,18 @@ MAX_LESSONS = int(os.environ.get("MK_AUTOCAPTURE_MAX", "3"))
 MAX_TRANSCRIPT_CHARS = 24000
 
 _PROMPT = (
-    "You review an AI coding session and extract ONLY durable, reusable lessons worth remembering: "
-    "a confirmed gotcha/root-cause, a corrected approach, or a decision with lasting rationale. "
-    "Skip task chatter, transient state, secrets, and large code. Return STRICT JSON: "
-    '{"lessons":[{"title":"<=80 chars","body":"the lesson + why"}]} with 0 to %d items.' % MAX_LESSONS
+    "Extract only durable WORK lessons grounded in repository evidence: a confirmed root cause, "
+    "corrected approach, repository decision, or repository fact. Never extract people, preferences, "
+    "relationships, diary/activity, transcript, conversation history, secrets, or transient status. "
+    "Each lesson needs one content_kind from root-cause|corrected-approach|repository-decision|"
+    "repository-fact and at least one concrete evidence ref. A ref is either "
+    '{"kind":"entity","entity_key":"uuid"}, '
+    '{"kind":"revision","revision_commit":"40-hex"}, or '
+    '{"kind":"file","file_path":"repo/relative/path","revision_commit":"40-hex"}. '
+    "Return strict JSON with no transcript excerpts: "
+    '{"lessons":[{"title":"<=80 chars","body":"concise operational lesson and why",'
+    '"content_kind":"...","evidence_refs":[...]}]} with 0 to %d items. '
+    "Skip any lesson whose evidence is uncertain." % MAX_LESSONS
 )
 
 
@@ -98,11 +106,29 @@ async def write_candidates(repo_key: str, lessons: list[dict]) -> int:
             await s.initialize()
             for ls in lessons:
                 title, body = (ls.get("title") or "").strip(), (ls.get("body") or "").strip()
-                if not title or not body:
+                content_kind = ls.get("content_kind")
+                refs = ls.get("evidence_refs")
+                if (
+                    not title or not body or len(title) > 80
+                    or content_kind not in {
+                        "root-cause", "corrected-approach",
+                        "repository-decision", "repository-fact",
+                    }
+                    or not isinstance(refs, list) or not refs
+                ):
+                    continue
+                normalized_refs = []
+                for ref in refs:
+                    if not isinstance(ref, dict) or ref.get("kind") not in {"entity", "file", "revision"}:
+                        normalized_refs = []
+                        break
+                    normalized_refs.append({**ref, "repository_key": repo_key})
+                if not normalized_refs:
                     continue
                 res = await s.call_tool("author_repo_note", {
                     "repository_key": repo_key, "title": title, "body_text": body,
-                    "verification_status": "unverified", "confidence": 0.4})
+                    "verification_status": "unverified", "confidence": 0.4,
+                    "content_kind": content_kind, "evidence_refs": normalized_refs})
                 txt = next((b.text for b in res.content if getattr(b, "type", None) == "text"), "")
                 try:
                     if json.loads(txt).get("status") == "success":

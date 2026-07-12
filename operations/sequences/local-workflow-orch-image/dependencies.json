@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "lineage_id": "local-workflow-orch-image",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "mcp-agents-workflow",
+      "path_or_sequence_id": "scripts/local_workflow_orch_image_harness.py"
+    }
+  ]
+}

@@ -14,10 +14,16 @@ from memory_knowledge.config import Settings
 from memory_knowledge.llm.openai_client import embed_single
 from memory_knowledge.projections.pg_writer import record_route_feedback
 from memory_knowledge.workflows.base import WorkflowResult
+from memory_knowledge.workflows.learned_memory import learned_record_is_eligible
 
 logger = structlog.get_logger()
 
 TOOL_NAME = "run_retrieval_workflow"
+
+
+def filter_eligible_learned_rows(rows: list[Any]) -> list[dict[str, Any]]:
+    """Rehydrate projection keys through PG and apply the shared trust predicate."""
+    return [dict(row) for row in rows if learned_record_is_eligible(row)]
 
 from memory_knowledge.routing.prompt_feature_extractor import (  # noqa: E402
     extract_prompt_features,
@@ -862,14 +868,16 @@ async def run(
                 lm_rows = await pool.fetch(
                     """
                     SELECT e.entity_key, lr.title, lr.body_text, lr.memory_type,
-                           lr.confidence, lr.verification_status, lr.source_kind
+                           lr.confidence, lr.verification_status, lr.source_kind,
+                           lr.is_active, lr.content_kind, lr.evidence_refs,
+                           lr.evidence_resolution_errors
                     FROM memory.learned_records lr
                     JOIN catalog.entities e ON lr.entity_id = e.id
-                    WHERE e.entity_key = ANY($1::uuid[]) AND lr.is_active = TRUE
+                    WHERE e.entity_key = ANY($1::uuid[])
                     """,
                     lm_keys,
                 )
-                repo_scoped_memory = [dict(r) for r in lm_rows]
+                repo_scoped_memory = filter_eligible_learned_rows(lm_rows)
         except Exception:
             logger.warning("repo_scoped_memory_fetch_failed", exc_info=True)
         context_bundle["repo_scoped_memory"] = repo_scoped_memory

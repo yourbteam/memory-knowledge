@@ -1,13 +1,45 @@
 from __future__ import annotations
 
 import json
+import base64
+import binascii
+import hashlib
+import hmac
+import os
 import uuid
+from datetime import UTC, datetime, timedelta
 from typing import Any
 
 import asyncpg
 import structlog
 
+from memory_knowledge.workflows.learned_memory import (
+    normalize_import_owned_record,
+    resolve_evidence_refs,
+)
+
 logger = structlog.get_logger()
+
+
+def order_learned_insert_items(
+    items: list[dict[str, Any]], available_entity_keys: set[str]
+) -> list[dict[str, Any]]:
+    """Topologically order absent learned records by stable supersession identity."""
+    remaining = {item["row"]["_entity_key"]: item for item in items}
+    available = set(available_entity_keys)
+    ordered: list[dict[str, Any]] = []
+    while remaining:
+        ready = [
+            key for key, item in remaining.items()
+            if not item["row"].get("_supersedes_entity_key")
+            or item["row"]["_supersedes_entity_key"] in available
+        ]
+        if not ready:
+            raise ValueError("import-learned-record-missing-or-cyclic-supersedes")
+        for key in sorted(ready):
+            ordered.append(remaining.pop(key))
+            available.add(key)
+    return ordered
 
 # Tables to export in FK-safe order (parents before children)
 _EXPORT_TABLES = [
@@ -536,69 +568,264 @@ async def import_repo_memory(pool: asyncpg.Pool, lines: list[str]) -> dict[str, 
             "catalog.symbol_calls_symbol",
         )
 
-    # 12. Learned records (non-superseding first, then superseding)
+    # 12. Learned records: collision-safe, destination-resolved, one transaction.
     lr_rows = rows_by_table.get("memory.learned_records", [])
     non_superseding = [r for r in lr_rows if not r.get("_supersedes_entity_key")]
     superseding = [r for r in lr_rows if r.get("_supersedes_entity_key")]
+    destination_key = next(iter(repo_key_to_id), None)
+    destination_repo_id = repo_key_to_id.get(destination_key) if destination_key else None
+    prepared: list[dict[str, Any]] = []
+    unresolved: list[dict[str, Any]] = []
+    for row in sorted(lr_rows, key=lambda item: str(item.get("_entity_key", ""))):
+        ek = row.get("_entity_key")
+        entity_id = ek_to_entity_id.get(ek)
+        scope_id = ek_to_entity_id.get(row.get("_scope_entity_key"))
+        if not destination_key or not destination_repo_id or not entity_id or not scope_id:
+            continue
+        source_errors = row.get("evidence_resolution_errors")
+        if source_errors is not None and (
+            not isinstance(source_errors, list)
+            or any(not isinstance(item, dict) or set(item) - {
+                "reason_code", "ref_index", "kind", "repository_key", "entity_key",
+                "file_path", "revision_commit",
+            } for item in source_errors)
+        ):
+            raise ValueError("invalid-source-evidence-diagnostics")
+        source_refs = row.get("evidence_refs")
+        canonical_refs: list[dict[str, Any]] | None = None
+        destination_errors: list[dict[str, Any]] = []
+        if source_refs is not None:
+            if not isinstance(source_refs, list):
+                raise ValueError("invalid-evidence-refs")
+            canonical_refs = []
+            for ref_index, source_ref in enumerate(source_refs):
+                safe_ref = dict(source_ref) if isinstance(source_ref, dict) else {}
+                safe_ref["repository_key"] = destination_key
+                try:
+                    _, resolved = await resolve_evidence_refs(pool, destination_key, [safe_ref])
+                    canonical_refs.extend(resolved)
+                except ValueError as exc:
+                    reason = str(exc).split(":", 1)[0]
+                    detail = {"reason_code": reason, "ref_index": ref_index}
+                    for field in ("kind", "repository_key", "entity_key", "file_path", "revision_commit"):
+                        if field in safe_ref:
+                            detail[field] = safe_ref[field]
+                    destination_errors.append(detail)
+                    canonical_refs.append(safe_ref)
+            canonical_refs.sort(key=lambda item: (
+                item.get("kind", ""), item.get("repository_key", ""),
+                item.get("entity_key") or item.get("file_path") or "",
+                item.get("revision_commit") or "",
+            ))
+        imported = dict(row)
+        imported["evidence_refs"] = canonical_refs
+        imported["evidence_resolution_errors"] = destination_errors
+        if destination_errors:
+            imported["verification_status"] = "legacy-unclassified"
+            imported["is_active"] = False
+            unresolved.append({"entity_key": ek, "reason_codes": destination_errors})
+        vf_sha, vt_sha = row.get("_valid_from_commit_sha"), row.get("_valid_to_commit_sha")
+        prepared.append({
+            "stable": normalize_import_owned_record(imported), "row": imported,
+            "entity_id": entity_id, "scope_id": scope_id,
+            "ev_id": ek_to_entity_id.get(row.get("_evidence_entity_key")) if row.get("_evidence_entity_key") else None,
+            "ev_chunk_id": ek_to_chunk_id.get(row.get("_evidence_chunk_entity_key")) if row.get("_evidence_chunk_entity_key") else None,
+            "vf_rev_id": rev_key_to_id.get((destination_key, vf_sha)) if vf_sha else None,
+            "vt_rev_id": rev_key_to_id.get((destination_key, vt_sha)) if vt_sha else None,
+        })
 
-    for batch_rows in [non_superseding, superseding]:
-        for row in batch_rows:
-            ek = row.get("_entity_key")
-            entity_id = ek_to_entity_id.get(ek)
-            scope_id = ek_to_entity_id.get(row.get("_scope_entity_key"))
-            ev_id = ek_to_entity_id.get(row.get("_evidence_entity_key")) if row.get("_evidence_entity_key") else None
-            ev_chunk_id = (
-                ek_to_chunk_id.get(row.get("_evidence_chunk_entity_key"))
-                if row.get("_evidence_chunk_entity_key")
-                else None
-            )
-            vf_sha = row.get("_valid_from_commit_sha")
-            vt_sha = row.get("_valid_to_commit_sha")
-            vf_rev_id = vt_rev_id = None
-            for rk in repo_key_to_id:
-                if vf_sha:
-                    vf_rev_id = vf_rev_id or rev_key_to_id.get((rk, vf_sha))
-                if vt_sha:
-                    vt_rev_id = vt_rev_id or rev_key_to_id.get((rk, vt_sha))
-            sup_lr_id = (
-                ek_to_lr_id.get(row.get("_supersedes_entity_key")) if row.get("_supersedes_entity_key") else None
-            )
-            if not entity_id or not scope_id:
-                continue
-            r = await pool.fetchrow(
-                """INSERT INTO memory.learned_records
-                    (entity_id, scope_entity_id, memory_type, title, body_text,
-                     body_tsv, source_kind, confidence, applicability_mode,
-                     valid_from_revision_id, valid_to_revision_id,
-                     evidence_entity_id, evidence_chunk_id,
-                     verification_status, verification_notes, is_active,
-                     supersedes_learned_record_id)
-                VALUES ($1,$2,$3,$4,$5,to_tsvector('english',COALESCE($5,'')),$6,$7,$8,$9,$10,$11,$12,$13,$14,$15,$16)
-                ON CONFLICT (entity_id) DO UPDATE
-                    SET body_text=EXCLUDED.body_text, body_tsv=to_tsvector('english',COALESCE(EXCLUDED.body_text,'')),
-                        verification_status=EXCLUDED.verification_status, is_active=EXCLUDED.is_active
-                RETURNING id""",
-                entity_id,
-                scope_id,
-                row.get("memory_type"),
-                row.get("title"),
-                row.get("body_text"),
-                row.get("source_kind"),
-                float(row["confidence"]) if row.get("confidence") else 0.5,
-                row.get("applicability_mode", "repository"),
-                vf_rev_id,
-                vt_rev_id,
-                ev_id,
-                ev_chunk_id,
-                row.get("verification_status", "unverified"),
-                row.get("verification_notes"),
-                row.get("is_active", True),
-                sup_lr_id,
-            )
-            if r:
-                ek_to_lr_id[ek] = r["id"]
+    import_id = uuid.uuid4()
+    cursor_secret = os.urandom(32)
+    created = datetime.now(UTC).replace(microsecond=0)
+    expires = created + timedelta(days=7)
+    async with pool.acquire() as conn:
+        async with conn.transaction():
+            if destination_repo_id:
+                expired = await conn.fetch(
+                    "SELECT import_id FROM memory.learned_import_reports WHERE repository_id=$1 "
+                    "AND expired_utc IS NULL AND expires_utc<=$2 FOR UPDATE",
+                    destination_repo_id, created,
+                )
+                for report in expired:
+                    await conn.execute(
+                        "DELETE FROM memory.learned_import_unresolved WHERE import_id=$1",
+                        report["import_id"],
+                    )
+                    await conn.execute(
+                        "UPDATE memory.learned_import_reports SET cursor_secret=NULL,expired_utc=$2 "
+                        "WHERE import_id=$1", report["import_id"], created,
+                    )
+            absent: list[dict[str, Any]] = []
+            for item in prepared:
+                row = item["row"]
+                existing = await conn.fetchrow(
+                    """
+                    SELECT lr.*,e.entity_key AS _entity_key,se.entity_key AS _scope_entity_key,
+                           ee.entity_key AS _evidence_entity_key,ce.entity_key AS _evidence_chunk_entity_key,
+                           sue.entity_key AS _supersedes_entity_key,vf.commit_sha AS _valid_from_commit_sha,
+                           vt.commit_sha AS _valid_to_commit_sha
+                    FROM memory.learned_records lr
+                    JOIN catalog.entities e ON e.id=lr.entity_id
+                    JOIN catalog.entities se ON se.id=lr.scope_entity_id
+                    LEFT JOIN catalog.entities ee ON ee.id=lr.evidence_entity_id
+                    LEFT JOIN catalog.chunks ec ON ec.id=lr.evidence_chunk_id
+                    LEFT JOIN catalog.entities ce ON ce.id=ec.entity_id
+                    LEFT JOIN memory.learned_records sulr ON sulr.id=lr.supersedes_learned_record_id
+                    LEFT JOIN catalog.entities sue ON sue.id=sulr.entity_id
+                    LEFT JOIN catalog.repo_revisions vf ON vf.id=lr.valid_from_revision_id
+                    LEFT JOIN catalog.repo_revisions vt ON vt.id=lr.valid_to_revision_id
+                    WHERE e.entity_key=$1 FOR UPDATE OF lr
+                    """,
+                    uuid.UUID(row["_entity_key"]),
+                )
+                if existing is not None:
+                    if normalize_import_owned_record(existing) != item["stable"]:
+                        raise ValueError("import-learned-record-conflict")
+                    ek_to_lr_id[row["_entity_key"]] = existing["id"]
+                    continue
+                absent.append(item)
+
+            ordered_absent = order_learned_insert_items(absent, set(ek_to_lr_id))
+            for item in ordered_absent:
+                row = item["row"]
+                supersedes_lr_id = ek_to_lr_id.get(row.get("_supersedes_entity_key"))
+                if row.get("_supersedes_entity_key") and supersedes_lr_id is None:
+                    raise ValueError("import-learned-record-missing-supersedes")
+                inserted = await conn.fetchrow(
+                    """INSERT INTO memory.learned_records
+                       (entity_id,scope_entity_id,memory_type,title,body_text,body_tsv,source_kind,
+                        confidence,applicability_mode,valid_from_revision_id,valid_to_revision_id,
+                        evidence_entity_id,evidence_chunk_id,verification_status,verification_notes,
+                        is_active,supersedes_learned_record_id,created_utc,content_kind,evidence_refs,
+                        evidence_resolution_errors)
+                       VALUES ($1,$2,$3,$4,$5,to_tsvector('english',COALESCE($5,'')),$6,$7,$8,$9,
+                               $10,$11,$12,$13,$14,$15,$16,$17,$18,$19::jsonb,$20::jsonb)
+                       RETURNING id""",
+                    item["entity_id"], item["scope_id"], row.get("memory_type"), row.get("title"),
+                    row.get("body_text"), row.get("source_kind"), float(row.get("confidence") or 0.5),
+                    row.get("applicability_mode") or "repository", item["vf_rev_id"], item["vt_rev_id"],
+                    item["ev_id"], item["ev_chunk_id"], row.get("verification_status") or "unverified",
+                    row.get("verification_notes"), bool(row.get("is_active")), supersedes_lr_id,
+                    row.get("created_utc") or created, row.get("content_kind"),
+                    json.dumps(row.get("evidence_refs")) if row.get("evidence_refs") is not None else None,
+                    json.dumps(row.get("evidence_resolution_errors")) if row.get("evidence_resolution_errors") is not None else None,
+                )
+                ek_to_lr_id[row["_entity_key"]] = inserted["id"]
+            if destination_repo_id:
+                await conn.execute(
+                    "INSERT INTO memory.learned_import_reports "
+                    "(import_id,repository_id,cursor_secret,unresolved_total,created_utc,expires_utc) "
+                    "VALUES ($1,$2,$3,$4,$5,$6)",
+                    import_id, destination_repo_id, cursor_secret, len(unresolved), created, expires,
+                )
+                for ordinal, item in enumerate(sorted(
+                    unresolved,
+                    key=lambda value: (value["entity_key"], json.dumps(value["reason_codes"], sort_keys=True)),
+                )):
+                    await conn.execute(
+                        "INSERT INTO memory.learned_import_unresolved "
+                        "(import_id,ordinal,entity_key,reason_codes) VALUES ($1,$2,$3,$4::jsonb)",
+                        import_id, ordinal, uuid.UUID(item["entity_key"]),
+                        json.dumps(item["reason_codes"], sort_keys=True, separators=(",", ":")),
+                    )
     _log("memory.learned_records", len(ek_to_lr_id), len(lr_rows))
 
     total = sum(imported.values())
     logger.info("import_complete", tables=list(imported.keys()), total_rows=total)
-    return {"tables_imported": list(imported.keys()), "rows_imported": total, "detail": imported}
+    page = sorted(unresolved, key=lambda value: value["entity_key"])[:100]
+    next_cursor = None
+    if len(unresolved) > 100 and destination_key:
+        next_cursor = _encode_import_cursor(
+            cursor_secret, import_id, destination_key, 99, expires
+        )
+    return {
+        "tables_imported": list(imported.keys()), "rows_imported": total, "detail": imported,
+        "unresolved_report": {
+            "import_id": str(import_id), "unresolved_total": len(unresolved),
+            "returned_count": len(page), "truncated": len(unresolved) > 100,
+            "next_cursor": next_cursor, "expires_utc": expires.isoformat(), "items": page,
+        },
+    }
+
+
+def _b64(value: bytes) -> str:
+    return base64.urlsafe_b64encode(value).decode().rstrip("=")
+
+
+def _unb64(value: str) -> bytes:
+    return base64.urlsafe_b64decode(value + "=" * (-len(value) % 4))
+
+
+def _encode_import_cursor(
+    secret: bytes, import_id: uuid.UUID, repository_key: str,
+    after_ordinal: int, expires_utc: datetime,
+) -> str:
+    payload = {
+        "v": 1, "import_id": str(import_id), "repository_key": repository_key,
+        "after_ordinal": after_ordinal, "expires_utc": expires_utc.isoformat(),
+    }
+    body = json.dumps(payload, sort_keys=True, separators=(",", ":")).encode()
+    return _b64(body) + "." + _b64(hmac.new(secret, body, hashlib.sha256).digest())
+
+
+async def list_import_unresolved(
+    pool: asyncpg.Pool, repository_key: str, import_id: str,
+    *, limit: int = 100, cursor: str | None = None,
+) -> dict[str, Any]:
+    if limit < 1 or limit > 100:
+        raise ValueError("invalid-limit")
+    report = await pool.fetchrow(
+        """
+        SELECT ir.*,r.repository_key FROM memory.learned_import_reports ir
+        JOIN catalog.repositories r ON r.id=ir.repository_id
+        WHERE ir.import_id=$1 AND lower(r.repository_key)=lower($2)
+        """,
+        uuid.UUID(import_id), repository_key,
+    )
+    if report is None:
+        raise ValueError("import-result-not-found")
+    if report["expired_utc"] is not None or report["expires_utc"] <= datetime.now(UTC):
+        raise ValueError("import-result-expired")
+    secret = bytes(report["cursor_secret"])
+    after = -1
+    if cursor:
+        try:
+            body_text, signature_text = cursor.split(".", 1)
+            body = _unb64(body_text)
+            signature = _unb64(signature_text)
+            if not hmac.compare_digest(signature, hmac.new(secret, body, hashlib.sha256).digest()):
+                raise ValueError
+            payload = json.loads(body)
+            if payload != {
+                "v": 1, "import_id": str(report["import_id"]),
+                "repository_key": report["repository_key"],
+                "after_ordinal": payload.get("after_ordinal"),
+                "expires_utc": report["expires_utc"].isoformat(),
+            } or not isinstance(payload["after_ordinal"], int):
+                raise ValueError
+            after = payload["after_ordinal"]
+            exists = await pool.fetchrow(
+                "SELECT 1 FROM memory.learned_import_unresolved WHERE import_id=$1 AND ordinal=$2",
+                report["import_id"], after,
+            )
+            if exists is None:
+                raise ValueError
+        except (ValueError, KeyError, json.JSONDecodeError, binascii.Error):
+            raise ValueError("invalid-import-cursor") from None
+    rows = await pool.fetch(
+        "SELECT ordinal,entity_key,reason_codes FROM memory.learned_import_unresolved "
+        "WHERE import_id=$1 AND ordinal>$2 ORDER BY ordinal ASC LIMIT $3",
+        report["import_id"], after, limit + 1,
+    )
+    page = rows[:limit]
+    items = [{"entity_key": str(row["entity_key"]), "reason_codes": row["reason_codes"]} for row in page]
+    truncated = len(rows) > limit
+    next_cursor = _encode_import_cursor(
+        secret, report["import_id"], report["repository_key"],
+        page[-1]["ordinal"], report["expires_utc"],
+    ) if truncated and page else None
+    return {
+        "import_id": str(report["import_id"]), "unresolved_total": report["unresolved_total"],
+        "returned_count": len(items), "truncated": truncated, "next_cursor": next_cursor,
+        "expires_utc": report["expires_utc"].isoformat(), "items": items,
+    }

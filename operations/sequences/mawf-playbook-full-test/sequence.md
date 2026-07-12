@@ -73,15 +73,16 @@ contains a `.env`. Do not run the operator from the repo root.
 
 ```bash
 uv run python scripts/directive_guard.py read --mode "mawf-playbook-full-test"
-uv run python scripts/sequence_guard.py activate \
-  --sequence-id mawf-playbook-full-test \
+python3 scripts/work_memory.py classify --task-id "<task-id>" --operation-kind workflow-drive --repeatable yes --meaningful-steps 3
+python3 scripts/work_memory.py select --task-id "<task-id>" --sequence-id mawf-playbook-full-test
+python3 scripts/sequence_guard.py activate --task-id "<task-id>" \
   --sequence-doc operations/sequences/mawf-playbook-full-test/sequence.md
 ```
 
 Guard each command from this document before running it, e.g.:
 
 ```bash
-uv run python scripts/sequence_guard.py guard \
+python3 scripts/sequence_guard.py guard --task-id "<task-id>" \
   --step "Answer research gate (approve)" \
   --command "uv run python scripts/mawf_playbook_test_sequence.py answer-gate --gate-policy full --task-guid <task> --workflow-name research-workflow --run-id <run>" \
   --source sequence_doc \

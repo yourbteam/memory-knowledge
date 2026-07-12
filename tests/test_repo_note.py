@@ -10,8 +10,46 @@ import pytest
 from memory_knowledge import server
 from memory_knowledge.identity.entity_key import learned_record_entity_key, repository_root_entity_key
 from memory_knowledge.workflows import repo_note
+from memory_knowledge.workflows.learned_memory import validate_operational_content
 from memory_knowledge.workflows import retrieval as _retrieval
 from memory_knowledge.workflows.base import WorkflowResult
+
+
+class _AsyncContext:
+    def __init__(self, value=None):
+        self.value = value
+
+    async def __aenter__(self):
+        return self.value
+
+    async def __aexit__(self, exc_type, exc, tb):
+        return False
+
+
+class _AsyncContextWithHooks:
+    def __init__(self, enter, exit):
+        self.enter, self.exit = enter, exit
+
+    async def __aenter__(self):
+        self.enter()
+
+    async def __aexit__(self, exc_type, exc, tb):
+        self.exit()
+        return False
+
+
+@pytest.mark.parametrize("body", [
+    "Kamen prefers tea",
+    "Bearer%20abcdefghijklmnopqrstuvwxyz",
+])
+def test_operator_note_validator_rejects_personal_and_encoded_secret(body):
+    with pytest.raises(ValueError, match="prohibited"):
+        validate_operational_content(
+            title="Repository observation", body_text=body,
+            content_kind="repository-fact",
+            evidence_refs=[{"kind": "revision", "repository_key": "repo",
+                            "revision_commit": "a" * 40}],
+        )
 
 
 class FakePool:
@@ -31,6 +69,12 @@ class FakePool:
         self.existing_id = existing_id
         self.calls: list[str] = []
         self.created_revision: dict | None = None  # captures A2 synthetic revision args
+
+    def acquire(self):
+        return _AsyncContext(self)
+
+    def transaction(self):
+        return _AsyncContext()
 
     async def fetch(self, query, *args):
         self.calls.append(query)
@@ -141,21 +185,30 @@ async def test_neo4j_failure_is_best_effort():
 
 
 class _RevPool:
+    def acquire(self):
+        return _AsyncContext(self)
+
+    def transaction(self):
+        return _AsyncContext()
+
     async def fetchrow(self, query, *args):
         assert "repo_revisions" in query
         return {"id": 10}
 
 
 @pytest.mark.asyncio
-async def test_run_author_note_human_asserted_evidence_free(monkeypatch):
+async def test_run_author_note_human_asserted_evidence_backed(monkeypatch):
     calls = {}
 
     async def fake_ensure(pool, repository_key, neo4j_driver=None):
         return ("rootkey-uuid", 7, "taggable-server")
 
-    async def fake_upsert(**kw):
-        calls["upsert"] = kw
-        return 55
+    async def fake_insert(**kw):
+        calls["insert"] = kw
+        return 55, False
+
+    async def fake_resolve(pool, repository_key, refs):
+        return "taggable-server", refs
 
     async def fake_embed(**kw):
         calls["embed"] = kw
@@ -164,7 +217,8 @@ async def test_run_author_note_human_asserted_evidence_free(monkeypatch):
         calls["project"] = kw
 
     monkeypatch.setattr(repo_note, "ensure_repo_root_entity", fake_ensure)
-    monkeypatch.setattr(repo_note, "upsert_learned_record", fake_upsert)
+    monkeypatch.setattr(repo_note, "insert_operator_note_create_only", fake_insert)
+    monkeypatch.setattr(repo_note, "resolve_evidence_refs", fake_resolve)
     monkeypatch.setattr(repo_note, "embed_and_upsert_learned_record", fake_embed)
     monkeypatch.setattr(repo_note, "project_learned_rule", fake_project)
 
@@ -177,12 +231,13 @@ async def test_run_author_note_human_asserted_evidence_free(monkeypatch):
         qdrant_client=object(),
         neo4j_driver=object(),
         settings=SimpleNamespace(),
+        content_kind="repository-decision",
+        evidence_refs=[{"kind": "revision", "repository_key": "taggable-server",
+                        "revision_commit": "a" * 40}],
     )
     assert res.status == "success"
-    up = calls["upsert"]
-    assert up["source_kind"] == "operator_note"
+    up = calls["insert"]
     assert up["verification_status"] == "human_asserted"
-    assert up["evidence_entity_id"] is None and up["evidence_chunk_id"] is None
     assert up["scope_entity_id"] == 7
     assert up["entity_key"] == learned_record_entity_key(
         "taggable-server", "note", hashlib.sha256(b"React migration underway").hexdigest()[:16]
@@ -198,9 +253,12 @@ async def test_author_note_canonicalizes_key_end_to_end(monkeypatch):
     # so run_retrieval_workflow("fcsapi", ...) can read it back.
     calls = {}
 
-    async def fake_upsert(**kw):
-        calls["upsert"] = kw
-        return 1
+    async def fake_insert(**kw):
+        calls["insert"] = kw
+        return 1, False
+
+    async def fake_resolve(pool, repository_key, refs):
+        return "fcsapi", [{**refs[0], "repository_key": "fcsapi"}]
 
     async def fake_embed(**kw):
         calls["embed"] = kw
@@ -208,17 +266,21 @@ async def test_author_note_canonicalizes_key_end_to_end(monkeypatch):
     async def noop(**kw):
         pass
 
-    monkeypatch.setattr(repo_note, "upsert_learned_record", fake_upsert)
+    monkeypatch.setattr(repo_note, "insert_operator_note_create_only", fake_insert)
+    monkeypatch.setattr(repo_note, "resolve_evidence_refs", fake_resolve)
     monkeypatch.setattr(repo_note, "embed_and_upsert_learned_record", fake_embed)
     monkeypatch.setattr(repo_note, "project_learned_rule", noop)
 
     res = await repo_note.run_author_note(
         repository_key="FCSAPI", title="t", body_text="b", run_id=_uuid.uuid4(),
         pool=FakePool(canonical_key="fcsapi"), qdrant_client=object(), settings=SimpleNamespace(),
+        content_kind="repository-fact",
+        evidence_refs=[{"kind": "revision", "repository_key": "FCSAPI",
+                        "revision_commit": "b" * 40}],
     )
     assert res.status == "success"
     expected_key = learned_record_entity_key("fcsapi", "note", hashlib.sha256(b"t").hexdigest()[:16])
-    assert calls["upsert"]["entity_key"] == expected_key   # canonical, not FCSAPI
+    assert calls["insert"]["entity_key"] == expected_key   # canonical, not FCSAPI
     assert calls["embed"]["repository_key"] == "fcsapi"     # read-back-critical payload key
     assert res.data["repository_key"] == "fcsapi"
 
@@ -229,10 +291,14 @@ async def test_author_note_auto_anchor_for_unrevisioned_repo(monkeypatch):
     async def noop(**kw):
         pass
 
-    async def fake_upsert(**kw):
-        return 1
+    async def fake_insert(**kw):
+        return 1, False
 
-    monkeypatch.setattr(repo_note, "upsert_learned_record", fake_upsert)
+    async def fake_resolve(pool, repository_key, refs):
+        return "taggable-server", refs
+
+    monkeypatch.setattr(repo_note, "insert_operator_note_create_only", fake_insert)
+    monkeypatch.setattr(repo_note, "resolve_evidence_refs", fake_resolve)
     monkeypatch.setattr(repo_note, "embed_and_upsert_learned_record", noop)
     monkeypatch.setattr(repo_note, "project_learned_rule", noop)
 
@@ -240,6 +306,9 @@ async def test_author_note_auto_anchor_for_unrevisioned_repo(monkeypatch):
     res = await repo_note.run_author_note(
         repository_key="taggable-server", title="t", body_text="b", run_id=_uuid.uuid4(),
         pool=pool, qdrant_client=object(), settings=SimpleNamespace(),
+        content_kind="repository-fact",
+        evidence_refs=[{"kind": "revision", "repository_key": "taggable-server",
+                        "revision_commit": "c" * 40}],
     )
     assert res.status == "success"
     assert pool.created_revision == {"commit_sha": "__note_anchor__", "branch_name": "__notes__"}
@@ -341,26 +410,68 @@ async def test_run_author_note_candidate_tier(monkeypatch):
     async def fake_ensure(pool, repository_key, neo4j_driver=None):
         return ("rk", 7, "r")
 
-    async def fake_upsert(**kw):
+    async def fake_insert(**kw):
         cap["vs"] = kw["verification_status"]
-        return 1
+        return 1, False
+
+    async def fake_resolve(pool, repository_key, refs):
+        return "r", refs
 
     async def noop(**kw):
         pass
 
     monkeypatch.setattr(repo_note, "ensure_repo_root_entity", fake_ensure)
-    monkeypatch.setattr(repo_note, "upsert_learned_record", fake_upsert)
+    monkeypatch.setattr(repo_note, "insert_operator_note_create_only", fake_insert)
+    monkeypatch.setattr(repo_note, "resolve_evidence_refs", fake_resolve)
     monkeypatch.setattr(repo_note, "embed_and_upsert_learned_record", noop)
     monkeypatch.setattr(repo_note, "project_learned_rule", noop)
 
+    evidence = [{"kind": "revision", "repository_key": "r", "revision_commit": "d" * 40}]
     r = await repo_note.run_author_note(repository_key="r", title="t", body_text="b",
-                                        run_id=_uuid.uuid4(), pool=_RevPool(), settings=SimpleNamespace())
+                                        run_id=_uuid.uuid4(), pool=_RevPool(), settings=SimpleNamespace(),
+                                        content_kind="repository-fact", evidence_refs=evidence)
     assert r.status == "success" and cap["vs"] == "human_asserted"
     r2 = await repo_note.run_author_note(repository_key="r", title="t", body_text="b",
                                          run_id=_uuid.uuid4(), verification_status="unverified",
-                                         pool=_RevPool(), settings=SimpleNamespace())
+                                         pool=_RevPool(), settings=SimpleNamespace(),
+                                         content_kind="root-cause", evidence_refs=evidence)
     assert r2.status == "success" and cap["vs"] == "unverified"
     assert r2.data["verification_status"] == "unverified"
+
+
+@pytest.mark.asyncio
+async def test_candidate_authoring_uses_one_explicit_transaction(monkeypatch):
+    class AtomicPool(_RevPool):
+        def __init__(self):
+            self.active = False
+
+        def transaction(self):
+            return _AsyncContextWithHooks(
+                enter=lambda: setattr(self, "active", True),
+                exit=lambda: setattr(self, "active", False),
+            )
+
+    pool = AtomicPool(); observed = []
+
+    async def fake_resolve(conn, repository_key, refs):
+        observed.append(conn is pool and pool.active); return "r", refs
+
+    async def fake_ensure(conn, repository_key, neo4j_driver=None):
+        observed.append(conn is pool and pool.active); return "root", 7, "r"
+
+    async def fake_insert(**kwargs):
+        observed.append(kwargs["pool"] is pool and pool.active); return 1, False
+
+    monkeypatch.setattr(repo_note, "resolve_evidence_refs", fake_resolve)
+    monkeypatch.setattr(repo_note, "ensure_repo_root_entity", fake_ensure)
+    monkeypatch.setattr(repo_note, "insert_operator_note_create_only", fake_insert)
+    evidence = [{"kind": "revision", "repository_key": "r", "revision_commit": "e" * 40}]
+    result = await repo_note.run_author_note(
+        repository_key="r", title="Cause", body_text="Stable cause", run_id=_uuid.uuid4(),
+        pool=pool, settings=SimpleNamespace(), verification_status="unverified",
+        content_kind="root-cause", evidence_refs=evidence,
+    )
+    assert result.status == "success" and all(observed) and not pool.active
 
 
 @pytest.mark.asyncio

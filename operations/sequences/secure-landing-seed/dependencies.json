@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "lineage_id": "secure-landing-seed",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "callcenter-harness",
+      "path_or_sequence_id": "scripts/seed_landing.sh"
+    },
+    {
+      "kind": "file",
+      "repository_key": "callcenter-harness",
+      "path_or_sequence_id": "scripts/scrub_and_retire.py"
+    }
+  ]
+}

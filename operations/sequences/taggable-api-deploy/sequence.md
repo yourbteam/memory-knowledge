@@ -23,7 +23,9 @@ reconstructed commands.
 1. Activate + guard (registry discipline):
    ```bash
    cd "${MK_SEQUENCES_ROOT:-$HOME/memory-knowledge}"
-   uv run python scripts/sequence_guard.py activate --sequence-id taggable-api-deploy \
+   python3 scripts/work_memory.py classify --task-id "<task-id>" --operation-kind deploy --repeatable yes --meaningful-steps 3
+   python3 scripts/work_memory.py select --task-id "<task-id>" --sequence-id taggable-api-deploy
+   python3 scripts/sequence_guard.py activate --task-id "<task-id>" \
      --sequence-doc operations/sequences/taggable-api-deploy/sequence.md
    ```
 2. Run the deploy (publish → zip → zipdeploy → verify), from a taggable-api checkout:

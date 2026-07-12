@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "lineage_id": "mawf-playbook-blocker-reentry",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "mcp-agents-workflow",
+      "path_or_sequence_id": "scripts/mawf_playbook_test_sequence.py"
+    }
+  ]
+}

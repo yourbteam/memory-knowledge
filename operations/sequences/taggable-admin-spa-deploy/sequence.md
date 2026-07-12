@@ -44,7 +44,9 @@ prefer it over reconstructed commands.
 1. Activate + guard (registry discipline):
    ```bash
    cd "${MK_SEQUENCES_ROOT:-$HOME/memory-knowledge}"
-   uv run python scripts/sequence_guard.py activate --sequence-id taggable-admin-spa-deploy \
+   python3 scripts/work_memory.py classify --task-id "<task-id>" --operation-kind deploy --repeatable yes --meaningful-steps 3
+   python3 scripts/work_memory.py select --task-id "<task-id>" --sequence-id taggable-admin-spa-deploy
+   python3 scripts/sequence_guard.py activate --task-id "<task-id>" \
      --sequence-doc operations/sequences/taggable-admin-spa-deploy/sequence.md
    ```
 2. Run the deploy (env → build → assert baked URL → zip → zipdeploy → verify), from a

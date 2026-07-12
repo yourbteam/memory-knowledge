@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "lineage_id": "remote-mcp-user-onboarding",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "mcp-agents-workflow",
+      "path_or_sequence_id": "dist/remote-mcp-user-admin/remote_mcp_user_admin_tui.py"
+    }
+  ]
+}

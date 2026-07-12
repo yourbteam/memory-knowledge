@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "lineage_id": "claude-auth-token-refresh",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "mcp-agents-workflow",
+      "path_or_sequence_id": "scripts/claude_auth_refresh.sh"
+    },
+    {
+      "kind": "file",
+      "repository_key": "mcp-agents-workflow",
+      "path_or_sequence_id": "scripts/rotate-credentials.sh"
+    }
+  ]
+}

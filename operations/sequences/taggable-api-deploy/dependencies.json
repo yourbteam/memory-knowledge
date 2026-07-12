@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "lineage_id": "taggable-api-deploy",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "taggable-api",
+      "path_or_sequence_id": "scripts/deploy-api.sh"
+    },
+    {
+      "kind": "file",
+      "repository_key": "taggable-api",
+      "path_or_sequence_id": "tools/Taggable.MigrationRunner/scripts/reload-source.sh"
+    }
+  ]
+}

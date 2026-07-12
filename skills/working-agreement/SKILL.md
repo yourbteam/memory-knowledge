@@ -28,6 +28,21 @@ Classify the task and use the matching playbook when relevant:
 
 If the task crosses modes, progress in order: research before planning when understanding is missing, planning before substantial implementation, and review after implementation.
 
+## Work-Memory Gate
+
+For every task, invoke `task-intake` before any operational command. It must run the
+canonical classifier in `memory-knowledge/scripts/work_memory.py`; prose classification
+is not a substitute. A non-operational receipt permits ordinary bounded work. An
+operational receipt requires `sequence-runner`, a receipt-backed selection, and
+`sequence_guard.py activate` before commands.
+
+When a command fails, invoke `blocker-catalog` before fixing it. Record the correction,
+update the reusable sequence/script when behavior changed, and require a fresh
+same-path successor verification before the correction becomes reusable. At substantive
+closeout invoke `auto-capture`; only evidence-backed work lessons may enter candidate
+review. Never persist people, preferences, diary/activity, transcript, or conversation
+history as memory.
+
 ## Tier-2 Corpus
 
 When the task asks about durable working-agreement knowledge, rationale, prior examples, or corpus entries, use the `memory-knowledge` MCP tools if they are available in the session.

@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "lineage_id": "github-app-repos-refresh",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "mcp-agents-workflow",
+      "path_or_sequence_id": "scripts/github_app_repos_refresh.py"
+    }
+  ]
+}

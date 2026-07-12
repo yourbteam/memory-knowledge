@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "lineage_id": "airgapped-llm-judge",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "callcenter-harness",
+      "path_or_sequence_id": "scripts/setup_airgapped_judge.sh"
+    },
+    {
+      "kind": "file",
+      "repository_key": "callcenter-harness",
+      "path_or_sequence_id": "scripts/judge_ollama.py"
+    },
+    {
+      "kind": "file",
+      "repository_key": "callcenter-harness",
+      "path_or_sequence_id": "scripts/cc_command_eval_smoke.py"
+    }
+  ]
+}

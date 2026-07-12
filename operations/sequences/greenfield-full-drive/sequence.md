@@ -48,7 +48,9 @@ Automation: `mcp-agents-workflow:scripts/greenfield_full_drive.sh`.
 
 ```bash
 uv run python scripts/directive_guard.py read --mode "greenfield-full-drive"
-uv run python scripts/sequence_guard.py activate --sequence-id greenfield-full-drive \
+python3 scripts/work_memory.py classify --task-id "<task-id>" --operation-kind workflow-drive --repeatable yes --meaningful-steps 3
+python3 scripts/work_memory.py select --task-id "<task-id>" --sequence-id greenfield-full-drive
+python3 scripts/sequence_guard.py activate --task-id "<task-id>" \
   --sequence-doc operations/sequences/greenfield-full-drive/sequence.md
 
 # Full drive onto a test branch (benchmark main stays untouched):
