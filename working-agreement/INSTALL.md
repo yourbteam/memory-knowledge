@@ -111,7 +111,12 @@ Canonical Codex skills live under `skills/` and are declared in `skills/managed-
 
 ```bash
 working-agreement/validate-skills.sh
-working-agreement/install-skills.sh
+python3 working-agreement/install_skills.py \
+  --source skills \
+  --manifest skills/managed-skills.txt \
+  --target both \
+  --accept-cross-client \
+  --reconciliation tests/fixtures/work-memory/reconciliation.json
 ```
 
 The installer defaults to Codex, uses a global lock and recovery journal, replaces only managed

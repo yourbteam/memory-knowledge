@@ -25,7 +25,7 @@ Future memory-knowledge schema and agent-contract upgrades require the same cont
 | push-release-evidence | git push origin main | planned | Push final release evidence to origin/main. |
 | commit-release-evidence | git commit -m 'chore: record work-memory release evidence' | planned | Commit the reusable release evidence without AI attribution. |
 | check-release-evidence | git diff --cached --check | planned | Validate the evidence-only staged diff. |
-| stage-release-evidence | git add operations/blockers/BLOCKERS.md operations/work-memory/events.jsonl operations/sequences/discovery/2026-07-12-work-memory-flywheel-release.dependencies.json operations/sequences/discovery/2026-07-12-work-memory-flywheel-release.md | planned | Stage only post-deploy ledger and discovery evidence. |
+| stage-release-evidence | git add operations/blockers/BLOCKERS.md operations/work-memory/events.jsonl operations/sequences/discovery/2026-07-12-work-memory-flywheel-release.dependencies.json operations/sequences/discovery/2026-07-12-work-memory-flywheel-release.md working-agreement/INSTALL.md | planned | Stage post-deploy ledger, discovery evidence, and the corrected canonical installer contract. |
 | release-summary | python3 scripts/work_memory.py summary --subject-id discovery-87df1262-3559-590e-9102-27b64fd3c6ad | planned | Read corrections and run metrics before closeout. |
 | discovery-closeout | python3 scripts/sequence_discovery_log.py closeout --file operations/sequences/discovery/2026-07-12-work-memory-flywheel-release.md | planned | Verify discovery closeout is not overdue or blocked. |
 | discovery-check | python3 scripts/sequence_discovery_log.py check --file operations/sequences/discovery/2026-07-12-work-memory-flywheel-release.md | planned | Refresh derived discovery lifecycle state. |
@@ -36,7 +36,7 @@ Future memory-knowledge schema and agent-contract upgrades require the same cont
 | probe-source-discovery | python3 scripts/work_memory_contract_probe.py --skills-root skills --mode discovery | planned | Probe source discovery receipt behavior. |
 | probe-source-registered | python3 scripts/work_memory_contract_probe.py --skills-root skills --mode registered | planned | Probe source registered receipt behavior. |
 | deploy-service | ./infra/azure-push.sh --tag work-memory-flywheel-20260712 | planned | Build, deploy, restart, migrate on startup, and health-check Azure. |
-| install-both-clients | working-agreement/install-skills.sh --target both --accept-cross-client | planned | Transactionally reconcile Codex and Claude managed skills. |
+| install-both-clients | python3 working-agreement/install_skills.py --source skills --manifest skills/managed-skills.txt --target both --accept-cross-client --reconciliation tests/fixtures/work-memory/reconciliation.json | planned | Transactionally reconcile Codex and Claude managed skills with the reviewed shared-identical reconciliation. |
 | deploy-dry-run | ./infra/azure-push.sh --tag work-memory-flywheel-20260712 --dry-run | planned | Review Azure targets and commands without mutation. |
 | push-feature | git push origin main | planned | Push the feature commit to origin/main. |
 | commit-feature | git commit -m 'feat: add verified work-memory flywheel' | planned | Commit the complete work-memory upgrade without AI attribution. |
