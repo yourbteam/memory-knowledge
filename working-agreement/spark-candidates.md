@@ -130,5 +130,5 @@ Repos scanned: taggable-api, fcsapi, taggable-server, taggable-database, united-
 - **[taggable-server]** {"repository_key": "taggable-server", "workflow_name": "triage-workflow", "agent_name": "triage-verifier", "finding_kind": "UNKNOWN", "phase_id": "verify", "finding_count": 2, "distinct_fingerprint_count": 2, "latest_seen_utc": "2026-04-13T11:40:49.850786+00:00", "dismiss_count": 0, "acknowledge_cou
 
 ## get_clarification_policy (1)
-- **[fcsapi]** {"policy_key": "unknown||", "repository_key": "fcsapi", "project_key": null, "request_kind": "unknown", "selected_workflow_name": null, "selected_run_action": null, "confidence": 0.5666, "case_count": 3, "clarification_rate": 1.0, "problem_rate": 0.0, "freshness": 0.083, "latest_seen_utc": "2026-04-
+- **[fcsapi]** {"policy_key": "unknown||", "repository_key": "fcsapi", "project_key": null, "request_kind": "unknown", "selected_workflow_name": null, "selected_run_action": null, "confidence": 0.5511, "case_count": 3, "clarification_rate": 1.0, "problem_rate": 0.0, "freshness": 0.0056, "latest_seen_utc": "2026-04
 
