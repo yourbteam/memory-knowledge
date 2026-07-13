@@ -388,8 +388,8 @@ def validate_lifecycle(events: list[dict[str, Any]]) -> None:
                 predecessor_ids = {item["run_id"] for item in active}
                 if (
                     not active_ids
-                    or set(verification["correction_ids"]) != active_ids
-                    or set(successor.get("verifies_correction_ids", [])) != active_ids
+                    or not active_ids <= set(verification["correction_ids"])
+                    or not active_ids <= set(successor.get("verifies_correction_ids", []))
                     or successor.get("predecessor_run_id") not in predecessor_ids
                     or verification["lineage_id"] != blocker_meta[event["blocker_id"]]["lineage_id"]
                 ):
@@ -1098,7 +1098,12 @@ def summarize(events: list[dict[str, Any]], subject_id: str, bundle_hash: str | 
     closed = [record for record in records if record["terminal"] and record["terminal"]["event_type"] == "run_closed"]
     closed.sort(key=lambda record: (record["start"]["started_at_utc"], record["start"]["run_id"]))
     result = {"subject_id": subject_id, "source_bundle_hash": bundle_hash,
-              "metrics": _metrics(closed), "abandoned_runs": sum(record["terminal"] and record["terminal"]["event_type"] == "run_abandoned" for record in records),
+              "metrics": _metrics(closed), "abandoned_runs": sum(
+                  1
+                  for record in records
+                  if record["terminal"]
+                  and record["terminal"]["event_type"] == "run_abandoned"
+              ),
               "history_status": "insufficient-history", "trend": None, "change_effects": []}
     if len(closed) >= 6:
         result["history_status"] = "sufficient"

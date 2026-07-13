@@ -78,6 +78,13 @@ python3 scripts/sequence_guard.py guard --task-id "<task-id>" --step "<step>" --
 
 The guard must reject `source=memory`. Treat that rejection as a stop sign, not as a prompt to retry by hand.
 
+For values that are unknowable until runtime, pre-record a command shape in the selected sequence or
+discovery document with a standalone angle-bracket placeholder, such as `--agent-id <agent-id>`.
+`sequence_guard.py` permits that one token position to vary when guarding the concrete command. It
+does not permit missing/extra tokens or changes to the executable, subcommand, paths, flags, labels,
+or any non-placeholder token. Record the shape before the operation that produces the value; do not
+edit and reselect the bundle while a spawned agent or other live resource is waiting to be bound.
+
 ## Reporting
 
 When finished, report the selected sequence id or discovery log path, the sequence document used when one existed, the scripts run, pass/fail evidence, and any sequence updates made.

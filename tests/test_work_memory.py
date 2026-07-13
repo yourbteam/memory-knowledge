@@ -173,6 +173,57 @@ def test_only_exact_same_path_successor_can_close_blocker():
         )
 
 
+def test_one_successor_verification_can_close_two_corrected_blockers():
+    base = corrected_successor_events()
+    start_a, opened_a, correction_a, transition_a, awaiting_a, close_a = base[:6]
+    start_b, verification, verified_a, closed_a, close_b = base[6:]
+    blocker_b = "blk-" + "2" * 24
+    occurrence_b, correction_b_id = str(uuid.uuid4()), str(uuid.uuid4())
+    opened_b = {
+        **opened_a, "event_id": str(uuid.uuid4()), "blocker_id": blocker_b,
+        "occurrence_id": occurrence_b, "fingerprint": "2" * 64,
+    }
+    correction_b = {
+        **correction_a, "event_id": str(uuid.uuid4()), "blocker_id": blocker_b,
+        "occurrence_id": occurrence_b, "correction_id": correction_b_id,
+    }
+    transition_b = {
+        **transition_a, "event_id": str(uuid.uuid4()), "correction_ids": [correction_b_id],
+    }
+    awaiting_b = {
+        **awaiting_a, "event_id": str(uuid.uuid4()), "blocker_id": blocker_b,
+    }
+    verification = {
+        **verification,
+        "blocker_ids": [opened_a["blocker_id"], blocker_b],
+        "correction_ids": [correction_a["correction_id"], correction_b_id],
+        "changed_artifact_hashes": ["e" * 64, "e" * 64],
+    }
+    start_b = {
+        **start_b,
+        "verifies_correction_ids": [correction_a["correction_id"], correction_b_id],
+    }
+    verified_b = {
+        **verified_a, "event_id": str(uuid.uuid4()), "blocker_id": blocker_b,
+        "verification_event_id": verification["event_id"],
+    }
+    closed_b = {
+        **closed_a, "event_id": str(uuid.uuid4()), "blocker_id": blocker_b,
+        "verification_event_id": verification["event_id"],
+    }
+    close_a = {**close_a, "correction_count": 2, "blocker_ids": [opened_a["blocker_id"], blocker_b]}
+    close_b = {**close_b, "blocker_ids": [opened_a["blocker_id"], blocker_b]}
+
+    events = [
+        start_a, opened_a, correction_a, transition_a, awaiting_a,
+        opened_b, correction_b, transition_b, awaiting_b, close_a,
+        start_b, verification, verified_a, closed_a, verified_b, closed_b, close_b,
+    ]
+    work_memory.stage_event_batch(
+        b"", {"schema_version": 1, "expected_ledger_hash": None, "events": events}
+    )
+
+
 @pytest.mark.parametrize("value", [
     "Bearer abcdefghijklmnopqrstuvwxyz",
     "Bearer%20abcdefghijklmnopqrstuvwxyz",
@@ -208,6 +259,21 @@ def test_summary_uses_six_run_equal_windows():
     assert summary["history_status"] == "sufficient"
     assert summary["trend"]["speed_status"] == "improved"
     assert summary["metrics"]["pass_rate"] == [6, 6]
+
+
+def test_summary_counts_abandoned_runs_with_active_records_present():
+    active = run_events(0)[0]
+    abandoned = run_events(1)[0]
+    abandoned_close = event(
+        "run_abandoned",
+        run_id=abandoned["run_id"],
+        subject_id="sequence",
+        lineage_id="lineage",
+    )
+
+    summary = work_memory.summarize([active, abandoned, abandoned_close], "sequence")
+
+    assert summary["abandoned_runs"] == 1
 
 
 def test_recurrence_counts_as_repeated_blocker():

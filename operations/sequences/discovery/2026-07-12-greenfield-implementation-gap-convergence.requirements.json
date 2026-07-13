@@ -1,0 +1,12 @@
+{
+  "requirements": [
+    {"id": "R1", "text": "Audit commits 3684cb53 through 209e8392 for correctness, completeness, and end-to-end wiring gaps.", "source": "user objective plus hardened latest-100 findings"},
+    {"id": "R2", "text": "Preserve intended behavior, including serial width-1 defaults and fail-closed boundaries.", "source": "hardened latest-100 findings"},
+    {"id": "R3", "text": "Close every independently confirmed implementation gap at its stable source boundary and add regression evidence.", "source": "user pre-approved convergence request"},
+    {"id": "R4", "text": "Do not change any general phase-ledger or phase-category contract without new specific approval.", "source": "repository AGENTS.md approval boundary"},
+    {"id": "R5", "text": "Protect pre-existing dirty paths, especially backlog.md and scripts/greenfield_full_drive.sh.", "source": "convergence baseline rule and observed working tree"},
+    {"id": "R6", "text": "Make no commits, deployments, secret accesses, destructive changes, or external messages.", "source": "authorization envelope"},
+    {"id": "R7", "text": "Require repository-native verification and independent accumulated-surface review before convergence.", "source": "playbook-convergence-loop completion contract"},
+    {"id": "R8", "text": "Treat style, optional cleanup, and speculative future improvements as non-gaps.", "source": "playbook-convergence-loop review rules"}
+  ]
+}

@@ -37,13 +37,22 @@ Use `skills/_shared/STAGE_RESULT_CONTRACT.md` for every delegated result. The pa
 
 Use `skills/_shared/agent_slot_ledger.py` serially, normally with `--max 1`:
 
-1. `guard`, then `acquire --label <stage>`.
-2. Spawn; immediately `bind-agent --label <stage> --agent-id <returned-id>`.
-3. Wait and collect full output; `mark-completed --agent-id <id>`.
-4. Call runtime `close_agent` with that exact returned id.
-5. `mark-closed --agent-id <id> --close-evidence <previous-status>`, then `release --agent-id <id>`.
+1. Before acquisition, record every runtime-ID-bearing slot command in the selected sequence or
+   discovery document using fixed-position placeholders, for example
+   `bind-agent --slot-id <slot-id> --agent-id <agent-id>`. Guard later concrete commands
+   against these shapes; the executable, subcommand, ledger, flags, label, and token count remain
+   exact while only the placeholder token may vary.
+2. `guard`, then `acquire --label <stage>` and capture the returned slot id. Labels are reusable
+   stage descriptions; they are not unique selectors once released tombstones exist.
+3. Spawn; immediately guard and run `bind-agent --slot-id <returned-slot-id> --agent-id <returned-id>`
+   against the pre-recorded shape.
+4. Wait and collect full output; guard and run `mark-completed --slot-id <returned-slot-id>` against
+   its pre-recorded shape.
+5. Call runtime `close_agent` with that exact returned id.
+6. Guard and run `mark-closed --slot-id <returned-slot-id> --close-evidence <previous-status>`, then
+   `release --slot-id <returned-slot-id>`, each against its pre-recorded shape.
 
-If spawn fails before an id, abandon the reservation. If bind fails after spawn, close the runtime agent, abandon with runtime id and close evidence, then release. Never use `reap` for a live/unknown agent. At iteration boundaries require zero active slots; compact released tombstones only after status proves zero.
+If spawn fails before an id, abandon the reservation by slot id. If bind fails after spawn, close the runtime agent, abandon by slot id with runtime id and close evidence, then release by slot id. Never use a reusable label for mutation after acquisition. Never use `reap` for a live/unknown agent. At iteration boundaries require zero active slots; compact released tombstones only after status proves zero.
 
 ## Stage Order
 

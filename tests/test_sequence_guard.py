@@ -100,6 +100,36 @@ def test_guard_rejects_ungrounded_command(receipt_flow, tmp_path: Path):
     ]) == 4
 
 
+def test_guard_accepts_only_declared_runtime_placeholder_position(receipt_flow, tmp_path: Path):
+    task_id, document, _, _ = receipt_flow
+    shape = (
+        "python3 skills/_shared/agent_slot_ledger.py bind-agent /tmp/slots.json "
+        "--label research-internal-1 --agent-id <agent-id>"
+    )
+    document.write_text(
+        document.read_text()
+        + "\n| step | command or action | result | note |\n"
+        + "| --- | --- | --- | --- |\n"
+        + f"| bind | {shape} | planned | runtime id is produced after spawn |\n"
+    )
+    state = tmp_path / "active.json"
+    sequence_guard.main([
+        "activate", "--task-id", task_id, "--sequence-doc", str(document), "--state", str(state),
+    ])
+    concrete = shape.replace("<agent-id>", "agent-7f3d")
+    common = [
+        "guard", "--task-id", task_id, "--step", "bind-agent", "--source", "sequence_doc",
+        "--source-ref", str(document), "--state", str(state),
+    ]
+    assert sequence_guard.main([*common, "--command", concrete]) == 0
+    assert sequence_guard.main([
+        *common, "--command", concrete.replace("research-internal-1", "research-coverage-1"),
+    ]) == 4
+    assert sequence_guard.main([
+        *common, "--command", concrete.replace("agent_slot_ledger.py", "other.py"),
+    ]) == 4
+
+
 def test_guard_rejects_source_outside_bundle(receipt_flow, tmp_path: Path):
     task_id, document, _, command = receipt_flow; state = tmp_path / "active.json"
     other = tmp_path / "other.py"; other.write_text("pass\n")

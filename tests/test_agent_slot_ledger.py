@@ -31,6 +31,22 @@ class SlotTests(unittest.TestCase):
             self.assertEqual(json.loads(Path(ledger).read_text())["slots"][0]["state"],"reserved")
             self.assertNotEqual(self.command("compact",ledger,ok=False).returncode,0)
 
+    def test_slot_id_remains_unambiguous_when_label_is_reused(self):
+        with tempfile.TemporaryDirectory() as raw:
+            ledger = str(Path(raw) / "ledger.json")
+            self.command("init", ledger)
+            self.command("acquire", ledger, "--label", "research")
+            self.command("bind-agent", ledger, "--slot-id", "s1", "--agent-id", "a1")
+            self.command("mark-completed", ledger, "--slot-id", "s1")
+            self.command("mark-closed", ledger, "--slot-id", "s1", "--close-evidence", "completed")
+            self.command("release", ledger, "--slot-id", "s1")
+            self.command("acquire", ledger, "--label", "research")
+            self.command("bind-agent", ledger, "--slot-id", "s2", "--agent-id", "a2")
+            slots = json.loads(Path(ledger).read_text())["slots"]
+            self.assertEqual([(slot["id"], slot["state"]) for slot in slots], [
+                ("s1", "released"), ("s2", "running"),
+            ])
+
     def test_nonempty_legacy_is_blocked(self):
         with tempfile.TemporaryDirectory() as raw:
             ledger=Path(raw)/"ledger.json"; ledger.write_text(json.dumps({"max":1,"slots":[{"label":"unknown"}]}))

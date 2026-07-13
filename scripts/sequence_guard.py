@@ -155,10 +155,16 @@ def _shape_match(command: str, text: str) -> bool:
             shape = shlex.split(line.strip())
         except ValueError:
             continue
-        if len(shape) != len(command_tokens):
+        if len(shape) < len(command_tokens):
             continue
-        if all(a == b or (b.startswith("<") and b.endswith(">")) for a, b in zip(command_tokens, shape)):
-            return True
+        for start in range(len(shape) - len(command_tokens) + 1):
+            window = shape[start:start + len(command_tokens)]
+            if all(
+                actual == declared
+                or (declared.startswith("<") and declared.endswith(">"))
+                for actual, declared in zip(command_tokens, window)
+            ):
+                return True
     return False
 
 
