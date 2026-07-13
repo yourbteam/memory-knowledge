@@ -30,8 +30,7 @@ reconstructed commands.
    ```
 2. Run the deploy (publish → zip → zipdeploy → verify), from a taggable-api checkout:
    ```bash
-   export PATH=$HOME/.dotnet:$PATH
-   bash scripts/deploy-api.sh
+   PATH="$HOME/.dotnet:$PATH" bash scripts/deploy-api.sh
    ```
    The script: preflights `az`/dotnet, `dotnet publish -c Release` (net8.0), zips (no pdb), gets Kudu
    publishing creds, POSTs the zip to `/api/zipdeploy`, then verifies.

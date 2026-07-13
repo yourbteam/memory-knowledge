@@ -215,8 +215,10 @@ def cmd_guard(args: argparse.Namespace) -> dict[str, Any]:
     if not command or not args.step.strip():
         raise work_memory.WorkMemoryError("step-and-command-required", 2)
     document_text = Path(selection["document"]).read_text()
-    if not _shape_match(command, document_text):
-        raise work_memory.WorkMemoryError("command-not-grounded-in-selected-document", 4)
+    grounded = _shape_match(command, document_text)
+    if not grounded:
+        if args.source != "tool_help" or not (args.evidence_text or "").strip():
+            raise work_memory.WorkMemoryError("command-not-grounded-in-selected-document", 4)
     if args.source == "script" and source_ref.name not in command and str(source_ref) not in command:
         raise work_memory.WorkMemoryError("command-does-not-invoke-source-script", 4)
     return {**verified, "ok": True, "step": args.step, "command_source": args.source,

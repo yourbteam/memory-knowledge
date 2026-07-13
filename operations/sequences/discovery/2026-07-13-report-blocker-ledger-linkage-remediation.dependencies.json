@@ -1,0 +1,12 @@
+{
+  "dependencies": [
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/blocker_catalog.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/sequence_guard.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/work_memory.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "tests/test_blocker_catalog.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "tests/test_sequence_guard.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "tests/test_work_memory.py"}
+  ],
+  "lineage_id": "discovery-54330313-0f49-590b-a9be-7751ab2b8664",
+  "schema_version": 1
+}

@@ -173,6 +173,37 @@ def test_only_exact_same_path_successor_can_close_blocker():
         )
 
 
+def test_fixed_awaiting_blocker_can_reopen_for_missing_correction():
+    events = corrected_successor_events()
+    start, opened, correction, _bundle_transition, awaiting = events[:5]
+    reopened = event(
+        "blocker_transitioned", run_id=start["run_id"], blocker_id=opened["blocker_id"],
+        from_status="fixed-awaiting-verification", to_status="open",
+        reopen_evidence="The status advanced before its correction event was recorded.",
+    )
+    replacement = {
+        **correction,
+        "event_id": str(uuid.uuid4()),
+        "correction_id": str(uuid.uuid4()),
+    }
+    work_memory.stage_event_batch(
+        b"", {"schema_version": 1, "expected_ledger_hash": None,
+             "events": [start, opened, awaiting, reopened, replacement]}
+    )
+
+
+def test_reopen_transition_requires_evidence():
+    events = corrected_successor_events()[:5]
+    events.append(event(
+        "blocker_transitioned", run_id=events[0]["run_id"], blocker_id=events[1]["blocker_id"],
+        from_status="fixed-awaiting-verification", to_status="open",
+    ))
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-blocker-transition-fields"):
+        work_memory.stage_event_batch(
+            b"", {"schema_version": 1, "expected_ledger_hash": None, "events": events}
+        )
+
+
 def test_one_successor_verification_can_close_two_corrected_blockers():
     base = corrected_successor_events()
     start_a, opened_a, correction_a, transition_a, awaiting_a, close_a = base[:6]
@@ -314,6 +345,127 @@ def test_classification_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     ))
     assert nonop["verdict"] == "non-operational"
     assert operational["verdict"] == "operational"
+
+
+def test_run_start_preserves_external_roots_for_later_correction(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    root = tmp_path / "memory-knowledge"
+    external = tmp_path / "codex-skills"
+    discovery = root / "operations/sequences/discovery/repair.md"
+    manifest = discovery.with_suffix(".dependencies.json")
+    helper = external / "_shared/helper.py"
+    for path in (discovery, manifest, helper):
+        path.parent.mkdir(parents=True, exist_ok=True)
+    discovery.write_text("""# Sequence Discovery Log: repair
+
+DiscoveryId: discovery-repair
+Status: discovery
+CreatedAtUtc: 2026-07-13T00:00:00Z
+RegisteredSequenceMatch: none
+
+## Intended Outcome
+
+Repair the captured bundle.
+
+## Why This Looks Repeatable
+
+Corrections can occur after selection.
+
+## Required Inputs, Auth, Or Environment
+
+- External repository root map.
+
+## Commands And Observations
+
+| step | command or action | result | correction or note |
+| --- | --- | --- | --- |
+
+## Failure Handling
+
+Stop on bundle errors.
+
+## Verified Path
+
+- Not verified yet.
+
+## Promotion Readiness
+
+- [ ] Not ready.
+""")
+    helper.write_text("HELPER = True\n")
+    manifest.write_text(json.dumps({
+        "schema_version": 1,
+        "lineage_id": "discovery-repair",
+        "dependencies": [{
+            "kind": "file",
+            "repository_key": "codex-skills",
+            "path_or_sequence_id": "_shared/helper.py",
+        }],
+    }))
+    roots_file = tmp_path / "roots.json"
+    roots_file.write_text(json.dumps({"codex-skills": str(external)}))
+
+    monkeypatch.setattr(work_memory, "ROOT", root)
+    bundle, bundle_hash, _ = work_memory.resolve_bundle(
+        mode="discovery", subject_id="discovery-repair", document=discovery,
+        manifest=manifest, repo_roots_file=str(roots_file),
+    )
+    classification_hash = "a" * 64
+    selection_hash = "b" * 64
+    classification = {"operation_kind": "other"}
+    selection = {
+        "classification_receipt_hash": classification_hash,
+        "mode": "discovery",
+        "subject_id": "discovery-repair",
+        "lineage_id": "discovery-repair",
+        "document": str(discovery),
+        "manifest": str(manifest),
+        "source_bundle_hash": bundle_hash,
+        "repository_roots_file": str(roots_file),
+        "predecessor_run_id": None,
+        "verifies_correction_ids": [],
+    }
+
+    def load_receipt(_task_id: str, kind: str):
+        return (
+            (classification, classification_hash, tmp_path / "classification.json")
+            if kind == "classification"
+            else (selection, selection_hash, tmp_path / "selection.json")
+        )
+
+    staged: list[dict] = []
+    monkeypatch.setattr(work_memory, "load_receipt", load_receipt)
+    monkeypatch.setattr(work_memory, "transact", lambda request: staged.append(request) or {"ok": True})
+    work_memory.cmd_run_start(Namespace(task_id="repair", run_id=str(uuid.uuid4()), event_id=None))
+    start = staged.pop()["events"][0]
+    assert start["source_bundle"] == bundle
+    assert start["repository_roots"]["codex-skills"] == str(external.resolve())
+
+    roots_file.unlink()
+    discovery.write_text(discovery.read_text() + "\nValidated correction step.\n")
+    blocker_id = "blk-" + "9" * 24
+    occurrence_id = str(uuid.uuid4())
+    opened = event(
+        "blocker_opened", run_id=start["run_id"], blocker_id=blocker_id,
+        occurrence_id=occurrence_id, fingerprint="9" * 64,
+        subject_id="discovery-repair", lineage_id="discovery-repair",
+        step_id="repair", surface="work-memory", symptom="failed",
+        evidence="missing-repository-root", impact="blocked", boundary="repository roots",
+        status="open",
+    )
+    monkeypatch.setattr(work_memory, "load_ledger", lambda path=work_memory.LEDGER: ([start, opened], "c" * 64))
+    result = work_memory.cmd_correct(Namespace(
+        run_id=start["run_id"], blocker_id=blocker_id, occurrence_id=occurrence_id,
+        step_id="repair", changed_artifact=[str(discovery)], solution="preserve roots",
+        reusable_behavior_changed="yes", supersedes_correction_id=None,
+        correction_id=None, event_id=None, transition_event_id=None,
+        repo_roots_file=None,
+    ))
+    assert result["ok"] is True
+    assert staged[-1]["events"][1]["new_bundle_hash"] != bundle_hash
 
 
 def test_selection_uses_verified_fingerprint_correction(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):

@@ -67,12 +67,29 @@ class StateTests(unittest.TestCase):
             result2=root/"pass.json"; payload=json.loads(result.read_text()); payload.update(attempt=2,verdict="PASS"); result2.write_text(json.dumps(payload))
             self.assertNotEqual(subprocess.run(cli+["record-stage",str(state),"--result-file",str(result2)],capture_output=True).returncode,0)
 
-    def test_artifact_hash_drift_fails_check(self):
+    def test_artifact_snapshot_survives_source_update_and_detects_snapshot_tamper(self):
         with tempfile.TemporaryDirectory() as raw:
             root=Path(raw); state,cli=self.make_state(root); self.stage_ready(state,root); artifact=root/"evidence"; artifact.write_text("one")
             subprocess.run(cli+["register-artifact",str(state),"--id","a","--path",str(artifact),"--kind","ledger","--stage","review"],check=True,capture_output=True)
             subprocess.run(cli+["record-stage",str(state),"--stage","review","--attempt","1","--verdict","PASS","--artifact-id","a"],check=True,capture_output=True)
-            artifact.write_text("two"); self.assertNotEqual(subprocess.run(cli+["check",str(state)],capture_output=True).returncode,0)
+            artifact.write_text("two"); self.assertEqual(subprocess.run(cli+["check",str(state)],capture_output=True).returncode,0)
+            snapshot=Path(json.loads(state.read_text())["artifacts"]["a"]["snapshot_path"]); snapshot.write_text("tampered")
+            self.assertNotEqual(subprocess.run(cli+["check",str(state)],capture_output=True).returncode,0)
+
+    def test_legacy_artifact_migration_records_source_advance_without_rewriting_hash(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root=Path(raw); state,cli=self.make_state(root); self.stage_ready(state,root); artifact=root/"evidence"; artifact.write_text("one")
+            registered_hash=s.digest_tree(artifact); data=json.loads(state.read_text())
+            data["artifacts"]["a"]={"id":"a","path":str(artifact),"hash":registered_hash,"type":"ledger","stage":"review"}
+            data["stages"]["review:1:1"]={"stage":"review","outer_iteration":1,"attempt":1,"verdict":"PASS","artifact_ids":["a"]}
+            state.write_text(json.dumps(data)); artifact.write_text("two")
+            self.assertNotEqual(subprocess.run(cli+["check",str(state)],capture_output=True).returncode,0)
+            subprocess.run(cli+["migrate-artifact-provenance",str(state)],check=True,capture_output=True)
+            checked=subprocess.run(cli+["check",str(state)],capture_output=True,text=True)
+            self.assertEqual(checked.returncode,0); self.assertIn("legacy artifact source advanced",checked.stdout)
+            migrated=json.loads(state.read_text()); self.assertEqual(migrated["artifacts"]["a"]["hash"],registered_hash)
+            event=migrated["artifact_provenance_events"]["a"]
+            self.assertEqual(event["registered_hash"],registered_hash); self.assertEqual(event["observed_hash"],s.digest_tree(artifact))
 
     def test_unrelated_repo_change_does_not_block_allowed_path_guard(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -350,12 +367,14 @@ class StateTests(unittest.TestCase):
             root=Path(raw); state,cli=self.make_state(root); data=json.loads(state.read_text()); data["blockers"]["B1"]={"status":"resolved"}; state.write_text(json.dumps(data))
             self.assertNotEqual(subprocess.run(cli+["check",str(state)],capture_output=True).returncode,0)
 
-    def test_stage_artifact_identity_is_immutable(self):
+    def test_stage_artifacts_are_content_versioned(self):
         with tempfile.TemporaryDirectory() as raw:
             root=Path(raw); state,cli=self.make_state(root); self.stage_ready(state,root); data=json.loads(state.read_text()); data["requirements"]["R1"]["status"]="satisfied"; state.write_text(json.dumps(data)); artifact=root/"evidence"; artifact.write_text("one"); result=root/"result.json"
             payload={"stage":"review","iteration":1,"attempt":1,"assigned_requirement_ids":["R1"],"assigned_gap_ids":[],"owned_blocker_ids":[],"verdict":"PASS","open_gap_ids":[],"closed_gap_ids":[],"new_gaps":[],"new_blockers":[],"record_transitions":[],"evidence":[],"artifact_paths":[str(artifact)]}
             result.write_text(json.dumps(payload)); subprocess.run(cli+["record-stage",str(state),"--result-file",str(result)],check=True,capture_output=True)
-            artifact.write_text("two"); payload["attempt"]=2; result.write_text(json.dumps(payload)); self.assertNotEqual(subprocess.run(cli+["record-stage",str(state),"--result-file",str(result)],capture_output=True).returncode,0)
+            artifact.write_text("two"); payload["attempt"]=2; result.write_text(json.dumps(payload)); subprocess.run(cli+["record-stage",str(state),"--result-file",str(result)],check=True,capture_output=True)
+            data=json.loads(state.read_text()); first=data["stages"]["review:1:1"]["artifact_ids"]; second=data["stages"]["review:1:2"]["artifact_ids"]
+            self.assertNotEqual(first,second); self.assertEqual(subprocess.run(cli+["check",str(state)],capture_output=True).returncode,0)
 
     def test_candidate_ids_are_reserved_and_provenance_required(self):
         with tempfile.TemporaryDirectory() as raw:

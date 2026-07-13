@@ -98,6 +98,10 @@ def cmd_transition(args: argparse.Namespace) -> dict[str, Any]:
         extra["verification_event_id"] = args.verification_event_id
     if args.to_status == "closed":
         extra["remaining_work"] = args.remaining_work
+    elif args.to_status == "open":
+        if not args.reopen_evidence:
+            raise work_memory.WorkMemoryError("reopen-evidence-required", 2)
+        extra["reopen_evidence"] = args.reopen_evidence
     elif args.to_status == "superseded":
         extra["supersession_evidence"] = args.supersession_evidence
     elif args.to_status == "non-gap":
@@ -122,9 +126,10 @@ def build_parser() -> argparse.ArgumentParser:
     opened.set_defaults(func=cmd_open)
     transition = sub.add_parser("transition")
     transition.add_argument("--run-id", required=True); transition.add_argument("--blocker-id", required=True)
-    transition.add_argument("--to-status", required=True, choices=["fixed-awaiting-verification", "verified", "closed", "superseded", "non-gap"])
+    transition.add_argument("--to-status", required=True, choices=["open", "fixed-awaiting-verification", "verified", "closed", "superseded", "non-gap"])
     transition.add_argument("--verification-event-id"); transition.add_argument("--remaining-work", default="none")
     transition.add_argument("--supersession-evidence"); transition.add_argument("--non-gap-evidence"); transition.add_argument("--event-id")
+    transition.add_argument("--reopen-evidence")
     transition.set_defaults(func=cmd_transition)
     return parser
 

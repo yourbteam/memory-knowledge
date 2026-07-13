@@ -100,6 +100,23 @@ def test_guard_rejects_ungrounded_command(receipt_flow, tmp_path: Path):
     ]) == 4
 
 
+def test_tool_help_can_ground_command_with_explicit_evidence(receipt_flow, tmp_path: Path):
+    task_id, document, _, _ = receipt_flow
+    state = tmp_path / "active.json"
+    sequence_guard.main([
+        "activate", "--task-id", task_id, "--sequence-doc", str(document), "--state", str(state),
+    ])
+    common = [
+        "guard", "--task-id", task_id, "--step", "help-derived",
+        "--command", "python3 scripts/example.py status", "--source", "tool_help",
+        "--source-ref", str(document), "--state", str(state),
+    ]
+    assert sequence_guard.main(common) == 4
+    assert sequence_guard.main([
+        *common, "--evidence-text", "example.py --help documents the status subcommand",
+    ]) == 0
+
+
 def test_guard_accepts_only_declared_runtime_placeholder_position(receipt_flow, tmp_path: Path):
     task_id, document, _, _ = receipt_flow
     shape = (

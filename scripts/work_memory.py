@@ -41,7 +41,7 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
         {"run_id", "subject_id", "lineage_id", "mode", "operation_kind", "source_bundle",
          "source_bundle_hash", "classification_receipt_hash", "selection_receipt_hash",
          "started_at_utc"},
-        {"predecessor_run_id", "verifies_correction_ids"},
+        {"predecessor_run_id", "verifies_correction_ids", "repository_roots"},
     ),
     "blocker_opened": (
         {"run_id", "blocker_id", "occurrence_id", "fingerprint", "subject_id", "lineage_id",
@@ -66,7 +66,8 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
     ),
     "blocker_transitioned": (
         {"run_id", "blocker_id", "from_status", "to_status"},
-        {"verification_event_id", "remaining_work", "supersession_evidence", "non_gap_evidence"},
+        {"verification_event_id", "remaining_work", "supersession_evidence", "non_gap_evidence",
+         "reopen_evidence"},
     ),
     "run_closed": (
         {"run_id", "subject_id", "lineage_id", "result", "completed_at_utc", "correction_count",
@@ -208,6 +209,17 @@ def _validate_event_values(event: dict[str, Any]) -> None:
     if kind == "run_started":
         if event["mode"] not in {"registered", "discovery"} or event["operation_kind"] not in OPERATION_KINDS:
             raise WorkMemoryError("invalid-run-start-enum", 2)
+        if "repository_roots" in event:
+            roots = event["repository_roots"]
+            if (
+                not isinstance(roots, dict) or not roots
+                or any(
+                    not isinstance(key, str) or not key
+                    or not isinstance(value, str) or not Path(value).is_absolute()
+                    for key, value in roots.items()
+                )
+            ):
+                raise WorkMemoryError("invalid-repository-roots", 2)
         if ("predecessor_run_id" in event) != ("verifies_correction_ids" in event):
             raise WorkMemoryError("incomplete-successor-binding", 2)
         if "verifies_correction_ids" in event:
@@ -252,6 +264,7 @@ def _validate_event_values(event: dict[str, Any]) -> None:
     elif kind == "blocker_transitioned":
         target = event["to_status"]
         expected_optional = {
+            "open": {"reopen_evidence"},
             "fixed-awaiting-verification": set(),
             "verified": {"verification_event_id"},
             "closed": {"verification_event_id", "remaining_work"},
@@ -366,7 +379,7 @@ def validate_lifecycle(events: list[dict[str, Any]]) -> None:
                 raise WorkMemoryError("blocker-from-status-mismatch", 3)
             valid = {
                 "open": {"fixed-awaiting-verification", "superseded", "non-gap"},
-                "fixed-awaiting-verification": {"verified"}, "verified": {"closed"},
+                "fixed-awaiting-verification": {"open", "verified"}, "verified": {"closed"},
             }
             if event["to_status"] not in valid.get(current, set()):
                 raise WorkMemoryError("invalid-blocker-status-transition", 3)
@@ -525,14 +538,23 @@ def semantic_discovery_bytes(path: Path) -> bytes:
     return ("\n".join(lines).rstrip() + "\n").encode()
 
 
-def _repo_roots(path: str | None = None) -> dict[str, Path]:
-    roots = {"memory-knowledge": ROOT}
-    source = Path(path or os.environ.get("MK_REPO_ROOTS_FILE", "~/.config/memory-knowledge/repositories.json")).expanduser()
-    if source.is_file():
-        raw = json.loads(source.read_text())
-        if not isinstance(raw, dict):
-            raise WorkMemoryError("invalid-repo-roots", 2)
-        roots.update({str(key): Path(value).expanduser().resolve() for key, value in raw.items()})
+def _repo_roots(
+    path: str | None = None, *, snapshot: dict[str, str] | None = None,
+) -> dict[str, Path]:
+    if path and snapshot is not None:
+        raise WorkMemoryError("conflicting-repo-roots", 2)
+    if snapshot is not None:
+        raw: Any = snapshot
+    else:
+        source = Path(path or os.environ.get("MK_REPO_ROOTS_FILE", "~/.config/memory-knowledge/repositories.json")).expanduser()
+        raw = json.loads(source.read_text()) if source.is_file() else {}
+    if not isinstance(raw, dict) or any(
+        not isinstance(key, str) or not key or not isinstance(value, str) or not value
+        for key, value in raw.items()
+    ):
+        raise WorkMemoryError("invalid-repo-roots", 2)
+    roots = {str(key): Path(value).expanduser().resolve() for key, value in raw.items()}
+    roots.setdefault("memory-knowledge", ROOT.resolve())
     return roots
 
 
@@ -552,8 +574,9 @@ def _safe_file(root: Path, relative: str) -> Path:
 def resolve_bundle(
     *, mode: str, subject_id: str, document: Path, manifest: Path,
     repo_roots_file: str | None = None,
+    repository_roots: dict[str, str] | None = None,
 ) -> tuple[list[dict[str, str]], str, str]:
-    roots = _repo_roots(repo_roots_file)
+    roots = _repo_roots(repo_roots_file, snapshot=repository_roots)
     seen: set[tuple[str, str]] = set()
     stack: list[str] = []
     entries: list[dict[str, str]] = []
@@ -895,10 +918,14 @@ def cmd_run_start(args: argparse.Namespace) -> dict[str, Any]:
     selection, selection_hash, _ = load_receipt(args.task_id, "selection")
     if selection["classification_receipt_hash"] != class_hash:
         raise WorkMemoryError("receipt-chain-mismatch", 4)
+    repository_roots = {
+        key: str(path) for key, path in
+        _repo_roots(selection.get("repository_roots_file")).items()
+    }
     bundle, digest, lineage = resolve_bundle(
         mode=selection["mode"], subject_id=selection["subject_id"], document=Path(selection["document"]),
         manifest=Path(selection["manifest"]),
-        repo_roots_file=selection.get("repository_roots_file"),
+        repository_roots=repository_roots,
     )
     if digest != selection["source_bundle_hash"] or lineage != selection["lineage_id"]:
         raise WorkMemoryError("stale-selection-bundle", 4)
@@ -908,7 +935,7 @@ def cmd_run_start(args: argparse.Namespace) -> dict[str, Any]:
         "mode": selection["mode"], "operation_kind": classification["operation_kind"],
         "source_bundle": bundle, "source_bundle_hash": digest,
         "classification_receipt_hash": class_hash, "selection_receipt_hash": selection_hash,
-        "started_at_utc": utc_now(),
+        "started_at_utc": utc_now(), "repository_roots": repository_roots,
     }
     if selection.get("predecessor_run_id"):
         fields["predecessor_run_id"] = selection["predecessor_run_id"]
@@ -942,7 +969,19 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
     document = next(Path(item["path"]) for item in start["source_bundle"] if item["repository_key"] == "memory-knowledge" and item["path"].endswith(("sequence.md", ".md")))
     document = ROOT / document
     manifest = document.with_name("dependencies.json") if start["mode"] == "registered" else document.with_suffix(".dependencies.json")
-    _, new_hash, _ = resolve_bundle(mode=start["mode"], subject_id=start["subject_id"], document=document, manifest=manifest)
+    repository_roots = start.get("repository_roots")
+    explicit_roots_file = getattr(args, "repo_roots_file", None)
+    if repository_roots is not None and explicit_roots_file:
+        explicit_roots = {
+            key: str(path) for key, path in _repo_roots(explicit_roots_file).items()
+        }
+        if explicit_roots != repository_roots:
+            raise WorkMemoryError("repository-roots-mismatch", 3)
+    _, new_hash, _ = resolve_bundle(
+        mode=start["mode"], subject_id=start["subject_id"], document=document, manifest=manifest,
+        repo_roots_file=explicit_roots_file if repository_roots is None else None,
+        repository_roots=repository_roots,
+    )
     correction_id = args.correction_id or str(uuid.uuid4())
     correction = _event(
         "correction_recorded", args.event_id, run_id=args.run_id, blocker_id=args.blocker_id,
@@ -1176,6 +1215,7 @@ def build_parser() -> argparse.ArgumentParser:
     correct.add_argument("--run-id", required=True); correct.add_argument("--blocker-id", required=True); correct.add_argument("--occurrence-id", required=True)
     correct.add_argument("--step-id", required=True); correct.add_argument("--changed-artifact", action="append", required=True)
     correct.add_argument("--solution", required=True); correct.add_argument("--reusable-behavior-changed", choices=["yes", "no"], required=True)
+    correct.add_argument("--repo-roots-file")
     correct.add_argument("--supersedes-correction-id"); correct.add_argument("--correction-id"); correct.add_argument("--event-id"); correct.add_argument("--transition-event-id")
     correct.set_defaults(func=cmd_correct)
     verify = sub.add_parser("verify")
