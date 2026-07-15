@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `c0fa8e419ca9e76128328936c66d1ce68818b17784959674ddc2e97acc17ab78`
+Ledger-SHA256: `76548c8a39f6b33b27e626fe589d08fc8495ae64c01ceb003a410312e8e6a358`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -753,7 +753,7 @@ This file is generated from `operations/work-memory/events.jsonl`.
 
 ## blk-5bb7b1e56beedd0a96154972
 
-- Status: `fixed-awaiting-verification`
+- Status: `closed`
 - Subject: `discovery-a55832eb-534e-5813-b755-dfc6cb73bf75`
 - Step: `canonical-ledger-union`
 - Surface: `scripts/work_memory.py`
