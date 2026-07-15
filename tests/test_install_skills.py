@@ -32,6 +32,36 @@ class InstallerTests(unittest.TestCase):
             self.assertEqual((dest/"unrelated/keep").read_text(), "yes")
             self.assertFalse((state/"transaction.json").exists())
 
+    def test_only_replaces_selected_managed_skill(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw); source = root/"source"; dest = root/"dest"; state = root/"state"
+            for name in ("one", "two"):
+                (source/name).mkdir(parents=True)
+                (source/name/"SKILL.md").write_text(f"---\nname: {name}\ndescription: test\n---\nnew-{name}\n")
+                (dest/name).mkdir(parents=True)
+                (dest/name/"SKILL.md").write_text(f"old-{name}\n")
+            (dest/"two/nested").mkdir()
+            (dest/"two/nested/keep").write_text("untouched\n")
+            manifest = source/"managed-skills.txt"; manifest.write_text("one\ntwo\n")
+            untouched_before = installer.tree_hash(dest/"two")
+
+            installer.install(source, manifest, [dest], state, only=["one"])
+
+            self.assertIn("new-one", (dest/"one/SKILL.md").read_text())
+            self.assertEqual(installer.tree_hash(dest/"two"), untouched_before)
+
+    def test_only_rejects_unknown_or_duplicate_names_before_mutation(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw); source = root/"source"; dest = root/"dest"; state = root/"state"
+            (source/"one").mkdir(parents=True)
+            (source/"one/SKILL.md").write_text("---\nname: one\ndescription: test\n---\n")
+            manifest = source/"managed-skills.txt"; manifest.write_text("one\n")
+            with self.assertRaisesRegex(SystemExit, "not managed"):
+                installer.install(source, manifest, [dest], state, only=["two"])
+            with self.assertRaisesRegex(SystemExit, "unique"):
+                installer.install(source, manifest, [dest], state, only=["one", "one"])
+            self.assertFalse(dest.exists())
+
     def test_recover_applying_restores_backup(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw); dest = root/"skill"; backup = root/"backup"; staged = root/"staged"

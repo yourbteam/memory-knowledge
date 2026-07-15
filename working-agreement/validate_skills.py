@@ -49,12 +49,33 @@ def frontmatter(path: Path) -> dict[str, str]:
 def validate_openai(path: Path) -> list[str]:
     errors = []
     if not path.exists(): return errors
-    values = {}; lines = path.read_text().splitlines()
-    if not lines or lines[0].strip() != "interface:": return [f"{path}: root must be exactly interface"]
-    for number, line in enumerate(lines[1:], 2):
+    values = {}; policy = {}; sections = set(); current = None; lines = path.read_text().splitlines()
+    for number, line in enumerate(lines, 1):
         if not line.strip() or line.lstrip().startswith("#"): continue
+        if not line.startswith((" ", "\t")):
+            match = re.fullmatch(r"([A-Za-z_][\w-]*):", line)
+            if not match:
+                errors.append(f"{path}:{number}: top-level sections must be empty mappings"); current = None; continue
+            current = match.group(1)
+            if current not in {"interface", "policy"}:
+                errors.append(f"{path}:{number}: unknown top-level section {current}")
+            if current in sections:
+                errors.append(f"{path}:{number}: duplicate top-level section {current}")
+            sections.add(current)
+            continue
         match = re.fullmatch(r"  ([A-Za-z_][\w-]*):\s*(.+)", line)
-        if not match:
+        if current == "policy":
+            if not match:
+                errors.append(f"{path}:{number}: policy values must be non-empty scalars"); continue
+            key, value = match.group(1), match.group(2).strip()
+            if key != "allow_implicit_invocation":
+                errors.append(f"{path}:{number}: unknown policy key {key}"); continue
+            if key in policy: errors.append(f"{path}:{number}: duplicate policy key {key}")
+            if value not in {"true", "false"}:
+                errors.append(f"{path}:{number}: policy.{key} must be an unquoted YAML boolean")
+            policy[key] = value
+            continue
+        if current != "interface" or not match:
             errors.append(f"{path}:{number}: interface values must be non-empty scalars"); continue
         key, value = match.group(1), match.group(2).strip()
         if key in values: errors.append(f"{path}:{number}: duplicate interface key {key}")
@@ -62,8 +83,11 @@ def validate_openai(path: Path) -> list[str]:
         quoted = len(value) >= 2 and value[0] == value[-1] and value[0] in "\"'"
         if not quoted and NON_STRING.fullmatch(value): errors.append(f"{path}:{number}: interface value must be a string")
         values[key] = value[1:-1] if quoted else value
+    if "interface" not in sections: errors.append(f"{path}: missing interface section")
     for key in ("display_name", "short_description", "default_prompt"):
         if not values.get(key): errors.append(f"{path}: missing interface.{key}")
+    if "policy" in sections and "allow_implicit_invocation" not in policy:
+        errors.append(f"{path}: missing policy.allow_implicit_invocation")
     return errors
 
 

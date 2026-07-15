@@ -36,6 +36,11 @@ OPERATION_KINDS = {
 ALWAYS_OPERATIONAL = {"image", "container", "auth", "deploy", "workflow-drive"}
 CONDITIONAL_OPERATIONAL = {"package", "database", "remote-operator", "cleanup", "other"}
 NON_OPERATIONAL = {"read-only", "single-test", "single-build"}
+BOOTSTRAP_TRUST_ANCHORS = (
+    "scripts/work_memory.py",
+    "scripts/work_memory_bootstrap.py",
+    "scripts/work_memory_bootstrap_launcher.py",
+)
 EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
     "run_started": (
         {"run_id", "subject_id", "lineage_id", "mode", "operation_kind", "source_bundle",
@@ -53,7 +58,7 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
     "correction_recorded": (
         {"run_id", "blocker_id", "occurrence_id", "correction_id", "subject_id", "lineage_id",
          "step_id", "changed_artifacts", "changed_artifact_hashes", "reusable_behavior_changed",
-         "solution"}, {"supersedes_correction_id"},
+         "solution"}, {"supersedes_correction_id", "supersedes_correction_ids"},
     ),
     "bundle_transition_recorded": (
         {"lineage_id", "old_bundle_hash", "new_bundle_hash", "transition_reason"},
@@ -67,7 +72,7 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
     "blocker_transitioned": (
         {"run_id", "blocker_id", "from_status", "to_status"},
         {"verification_event_id", "remaining_work", "supersession_evidence", "non_gap_evidence",
-         "reopen_evidence"},
+         "reopen_evidence", "recovery_evidence"},
     ),
     "run_closed": (
         {"run_id", "subject_id", "lineage_id", "result", "completed_at_utc", "correction_count",
@@ -201,6 +206,24 @@ def _require_list(event: dict[str, Any], field: str, *, nonempty: bool = False) 
     return value
 
 
+def _superseded_correction_ids(event: dict[str, Any]) -> set[str]:
+    single = event.get("supersedes_correction_id")
+    multiple = event.get("supersedes_correction_ids")
+    if single is not None and multiple is not None:
+        raise WorkMemoryError("ambiguous-superseded-corrections", 2)
+    if single is not None:
+        require_uuid(single, "supersedes-correction-id")
+        return {single}
+    if multiple is None:
+        return set()
+    values = _require_list(event, "supersedes_correction_ids", nonempty=True)
+    if len(values) != len(set(values)):
+        raise WorkMemoryError("duplicate-superseded-correction-id", 2)
+    for value in values:
+        require_uuid(value, "supersedes-correction-id")
+    return set(values)
+
+
 def _validate_event_values(event: dict[str, Any]) -> None:
     kind = event["event_type"]
     for field in ("run_id", "occurrence_id", "correction_id", "predecessor_run_id"):
@@ -234,6 +257,9 @@ def _validate_event_values(event: dict[str, Any]) -> None:
         hashes = _require_list(event, "changed_artifact_hashes", nonempty=True)
         if len(artifacts) != len(hashes) or not isinstance(event["reusable_behavior_changed"], bool):
             raise WorkMemoryError("invalid-correction-artifacts", 2)
+        for artifact in artifacts:
+            _artifact_identity(artifact)
+        _superseded_correction_ids(event)
     elif kind == "bundle_transition_recorded":
         reason = event["transition_reason"]
         if reason == "correction":
@@ -246,6 +272,8 @@ def _validate_event_values(event: dict[str, Any]) -> None:
             hashes = _require_list(event, "changed_artifact_hashes", nonempty=True)
             if not ids or len(arts) != len(hashes):
                 raise WorkMemoryError("invalid-correction-transition", 2)
+            for artifact in arts:
+                _artifact_identity(artifact)
         elif reason == "promotion":
             required = {"discovery_id", "promoted_sequence_id", "correction_ids"}
             prohibited = {"run_id", "changed_artifacts", "changed_artifact_hashes"}
@@ -264,7 +292,7 @@ def _validate_event_values(event: dict[str, Any]) -> None:
     elif kind == "blocker_transitioned":
         target = event["to_status"]
         expected_optional = {
-            "open": {"reopen_evidence"},
+            "open": set(),
             "fixed-awaiting-verification": set(),
             "verified": {"verification_event_id"},
             "closed": {"verification_event_id", "remaining_work"},
@@ -274,8 +302,17 @@ def _validate_event_values(event: dict[str, Any]) -> None:
         if target not in expected_optional or not expected_optional[target] <= set(event):
             raise WorkMemoryError("invalid-blocker-transition-fields", 2)
         optional_present = set(event) & EVENT_FIELDS[kind][1]
+        if target == "open":
+            reopen_fields = optional_present & {"reopen_evidence", "recovery_evidence"}
+            if len(reopen_fields) != 1:
+                raise WorkMemoryError("invalid-blocker-transition-fields", 2)
+            expected_optional[target] = reopen_fields
         if optional_present != expected_optional[target] or (target == "closed" and event["remaining_work"] != "none"):
             raise WorkMemoryError("invalid-blocker-transition-fields", 2)
+        if target == "open":
+            evidence = event[next(iter(expected_optional[target]))]
+            if not isinstance(evidence, str) or not evidence.strip():
+                raise WorkMemoryError("reopen-evidence-required", 2)
     elif kind == "run_closed":
         if event["result"] not in {"passed", "failed"} or event["verification_quality"] not in {"none", "proxy", "same-path"}:
             raise WorkMemoryError("invalid-run-close-enum", 2)
@@ -297,7 +334,10 @@ def parse_ledger_bytes(data: bytes) -> list[dict[str, Any]]:
         except WorkMemoryError as exc:
             raise WorkMemoryError(f"invalid-ledger-line:{line_no}:{exc.code}", 3) from exc
         events.append(event)
-    validate_lifecycle(events)
+    validate_lifecycle(
+        events,
+        legacy_premature_fixed_event_ids={event["event_id"] for event in events},
+    )
     return events
 
 
@@ -311,11 +351,18 @@ def _event_index(events: list[dict[str, Any]]) -> dict[str, dict[str, Any]]:
     return index
 
 
-def validate_lifecycle(events: list[dict[str, Any]]) -> None:
+def validate_lifecycle(
+    events: list[dict[str, Any]],
+    *,
+    legacy_premature_fixed_event_ids: set[str] | None = None,
+) -> None:
     _event_index(events)
+    legacy_premature_fixed_event_ids = legacy_premature_fixed_event_ids or set()
     runs: dict[str, dict[str, Any]] = {}
     blockers: dict[str, str] = {}
     blocker_meta: dict[str, dict[str, Any]] = {}
+    blocker_occurrences: dict[str, str] = {}
+    legacy_stranded_fixed_sources: dict[str, str] = {}
     corrections: dict[str, dict[str, Any]] = {}
     verifications: dict[str, dict[str, Any]] = {}
     for event in events:
@@ -336,16 +383,20 @@ def validate_lifecycle(events: list[dict[str, Any]]) -> None:
                 raise WorkMemoryError("duplicate-blocker-open", 3)
             blockers[event["blocker_id"]] = "open"
             blocker_meta[event["blocker_id"]] = event
+            blocker_occurrences[event["blocker_id"]] = event["occurrence_id"]
+            legacy_stranded_fixed_sources.pop(event["blocker_id"], None)
             runs[run_id]["blockers"].add(event["blocker_id"])
         elif kind == "blocker_recurred":
             if blockers.get(event["blocker_id"]) != "closed":
                 raise WorkMemoryError("invalid-blocker-recurrence", 3)
             blockers[event["blocker_id"]] = "open"
+            blocker_occurrences[event["blocker_id"]] = event["occurrence_id"]
+            legacy_stranded_fixed_sources.pop(event["blocker_id"], None)
             runs[run_id]["blockers"].add(event["blocker_id"])
         elif kind == "correction_recorded":
             if blockers.get(event["blocker_id"]) != "open":
                 raise WorkMemoryError("correction-for-nonopen-blocker", 3)
-            if event.get("supersedes_correction_id") and event["supersedes_correction_id"] not in corrections:
+            if not _superseded_correction_ids(event) <= set(corrections):
                 raise WorkMemoryError("unknown-superseded-correction", 3)
             corrections[event["correction_id"]] = event
             runs[run_id]["corrections"].append(event)
@@ -379,10 +430,41 @@ def validate_lifecycle(events: list[dict[str, Any]]) -> None:
                 raise WorkMemoryError("blocker-from-status-mismatch", 3)
             valid = {
                 "open": {"fixed-awaiting-verification", "superseded", "non-gap"},
-                "fixed-awaiting-verification": {"open", "verified"}, "verified": {"closed"},
+                "fixed-awaiting-verification": {"open", "verified", "superseded"},
+                "verified": {"closed"},
             }
             if event["to_status"] not in valid.get(current, set()):
                 raise WorkMemoryError("invalid-blocker-status-transition", 3)
+            if current == "open" and event["to_status"] == "fixed-awaiting-verification":
+                occurrence_id = blocker_occurrences[event["blocker_id"]]
+                has_current_correction = any(
+                    item["blocker_id"] == event["blocker_id"]
+                    and item["occurrence_id"] == occurrence_id
+                    for item in corrections.values()
+                )
+                if not has_current_correction and event["event_id"] not in legacy_premature_fixed_event_ids:
+                    raise WorkMemoryError("blocker-correction-required", 3)
+                if has_current_correction:
+                    legacy_stranded_fixed_sources.pop(event["blocker_id"], None)
+                else:
+                    legacy_stranded_fixed_sources[event["blocker_id"]] = event["event_id"]
+            if current == "fixed-awaiting-verification" and event["to_status"] == "open":
+                if event["blocker_id"] not in legacy_stranded_fixed_sources:
+                    raise WorkMemoryError("recovery-source-not-legacy-stranded", 3)
+                del legacy_stranded_fixed_sources[event["blocker_id"]]
+            if current == "fixed-awaiting-verification" and event["to_status"] == "superseded":
+                candidates = {
+                    item["correction_id"]
+                    for item in corrections.values()
+                    if item["blocker_id"] == event["blocker_id"]
+                }
+                superseded = {
+                    correction_id
+                    for item in corrections.values()
+                    for correction_id in _superseded_correction_ids(item)
+                }
+                if not candidates or not candidates <= superseded:
+                    raise WorkMemoryError("blocker-correction-not-superseded", 3)
             verification_id = event.get("verification_event_id")
             if verification_id:
                 verification = verifications.get(verification_id)
@@ -394,16 +476,18 @@ def validate_lifecycle(events: list[dict[str, Any]]) -> None:
                 ):
                     raise WorkMemoryError("invalid-transition-verification", 3)
                 candidates = [item for item in corrections.values() if item["blocker_id"] == event["blocker_id"]]
-                superseded = {item.get("supersedes_correction_id") for item in candidates}
+                superseded = {
+                    correction_id
+                    for item in candidates
+                    for correction_id in _superseded_correction_ids(item)
+                }
                 active = [item for item in candidates if item["correction_id"] not in superseded]
                 active_ids = {item["correction_id"] for item in active}
                 successor = runs[event["run_id"]]["start"]
-                predecessor_ids = {item["run_id"] for item in active}
                 if (
                     not active_ids
                     or not active_ids <= set(verification["correction_ids"])
                     or not active_ids <= set(successor.get("verifies_correction_ids", []))
-                    or successor.get("predecessor_run_id") not in predecessor_ids
                     or verification["lineage_id"] != blocker_meta[event["blocker_id"]]["lineage_id"]
                 ):
                     raise WorkMemoryError("verification-successor-binding-mismatch", 3)
@@ -445,7 +529,10 @@ def stage_event_batch(existing: bytes, request: dict[str, Any]) -> tuple[bytes, 
         by_id[event["event_id"]] = event
         added.append(event)
     result_events = current + added
-    validate_lifecycle(result_events)
+    validate_lifecycle(
+        result_events,
+        legacy_premature_fixed_event_ids=set(_event_index(current)),
+    )
     ledger_bytes = b"".join(canonical_bytes(event) for event in result_events)
     ledger_hash = sha256_bytes(ledger_bytes)
     view_bytes = render_blocker_view(result_events, ledger_hash).encode()
@@ -571,10 +658,26 @@ def _safe_file(root: Path, relative: str) -> Path:
     return resolved
 
 
+def _artifact_identity(value: Any) -> tuple[str, str]:
+    """Return the repository-qualified identity stored in correction events."""
+    if isinstance(value, str):
+        return "memory-knowledge", value
+    if (
+        isinstance(value, dict)
+        and set(value) == {"repository_key", "path"}
+        and isinstance(value["repository_key"], str)
+        and isinstance(value["path"], str)
+        and value["repository_key"]
+        and value["path"]
+    ):
+        return value["repository_key"], value["path"]
+    raise WorkMemoryError("invalid-changed-artifact-identity", 2)
+
+
 def resolve_bundle(
     *, mode: str, subject_id: str, document: Path, manifest: Path,
-    repo_roots_file: str | None = None,
-    repository_roots: dict[str, str] | None = None,
+    repo_roots_file: str | None = None, repository_roots: dict[str, str] | None = None,
+    include_bootstrap_trust_anchors: bool = False,
 ) -> tuple[list[dict[str, str]], str, str]:
     roots = _repo_roots(repo_roots_file, snapshot=repository_roots)
     seen: set[tuple[str, str]] = set()
@@ -632,6 +735,10 @@ def resolve_bundle(
         return lineage
 
     lineage_id = visit(subject_id, document.resolve(), manifest.resolve(), mode == "discovery")
+    if include_bootstrap_trust_anchors:
+        for relative in BOOTSTRAP_TRUST_ANCHORS:
+            if ("memory-knowledge", relative) not in seen:
+                add("memory-knowledge", relative, _safe_file(roots["memory-knowledge"], relative))
     entries.sort(key=lambda item: (item["repository_key"], item["path"], item["sha256"]))
     document_text = document.read_text(encoding="utf-8")
     control_scripts = {
@@ -722,6 +829,99 @@ def cmd_classify(args: argparse.Namespace) -> dict[str, Any]:
     return {**payload, "classification_path": str(path), "classification_receipt_hash": digest}
 
 
+def _validate_successor_corrections(
+    events: list[dict[str, Any]], *, lineage_id: str, source_bundle: list[dict[str, str]],
+    predecessor_run_id: str, correction_ids: Sequence[str], repo_roots_file: str | None = None,
+    repository_roots: dict[str, str] | None = None,
+    source_bundle_hash: str | None = None,
+) -> None:
+    if len(set(correction_ids)) != len(correction_ids):
+        raise WorkMemoryError("duplicate-successor-correction", 2)
+
+    predecessor = next((
+        event for event in events
+        if event["event_type"] == "run_started" and event["run_id"] == predecessor_run_id
+    ), None)
+    if predecessor is None:
+        raise WorkMemoryError("successor-predecessor-not-found", 3)
+    if predecessor["lineage_id"] != lineage_id:
+        raise WorkMemoryError("successor-predecessor-lineage-mismatch", 3)
+    if not any(
+        event["event_type"] in {"run_closed", "run_abandoned"}
+        and event.get("run_id") == predecessor_run_id
+        for event in events
+    ):
+        raise WorkMemoryError("successor-predecessor-not-terminal", 3)
+
+    blocker_states: dict[str, str] = {}
+    current_occurrences: dict[str, str] = {}
+    for event in events:
+        blocker_id = event.get("blocker_id")
+        if event["event_type"] == "blocker_opened" and event["lineage_id"] == lineage_id:
+            blocker_states[blocker_id] = "open"
+            current_occurrences[blocker_id] = event["occurrence_id"]
+        elif event["event_type"] == "blocker_recurred" and blocker_id in blocker_states:
+            blocker_states[blocker_id] = "open"
+            current_occurrences[blocker_id] = event["occurrence_id"]
+        elif event["event_type"] == "blocker_transitioned" and blocker_id in blocker_states:
+            blocker_states[blocker_id] = event["to_status"]
+
+    correction_rows = [
+        event for event in events
+        if event["event_type"] == "correction_recorded" and event["lineage_id"] == lineage_id
+    ]
+    superseded = {
+        correction_id
+        for event in correction_rows
+        for correction_id in _superseded_correction_ids(event)
+    }
+    active = {
+        event["correction_id"]: event
+        for event in correction_rows if event["correction_id"] not in superseded
+    }
+    bundle_paths = {
+        (item["repository_key"], item["path"])
+        for item in source_bundle
+    }
+    predecessor_bundle_paths = {
+        (item["repository_key"], item["path"])
+        for item in predecessor["source_bundle"]
+    }
+    roots = _repo_roots(repo_roots_file, snapshot=repository_roots)
+    effective_bundle_hash = source_bundle_hash or sha256_bytes(canonical_bytes(source_bundle))
+    transition_hashes = {
+        correction_id: event["new_bundle_hash"]
+        for event in events
+        if event["event_type"] == "bundle_transition_recorded"
+        and event.get("transition_reason") == "correction"
+        for correction_id in event.get("correction_ids", [])
+    }
+
+    for correction_id in correction_ids:
+        correction = active.get(correction_id)
+        if correction is None:
+            raise WorkMemoryError("successor-correction-not-active", 3)
+        if transition_hashes.get(correction_id) != effective_bundle_hash:
+            raise WorkMemoryError("successor-correction-bundle-mismatch", 3)
+        blocker_id = correction["blocker_id"]
+        if blocker_states.get(blocker_id) != "fixed-awaiting-verification":
+            raise WorkMemoryError("successor-correction-not-awaiting-verification", 3)
+        if correction["occurrence_id"] != current_occurrences.get(blocker_id):
+            raise WorkMemoryError("successor-correction-occurrence-mismatch", 3)
+        for artifact, expected_hash in zip(
+            correction["changed_artifacts"], correction["changed_artifact_hashes"], strict=True,
+        ):
+            repository_key, relative = _artifact_identity(artifact)
+            if (repository_key, relative) not in bundle_paths:
+                if (repository_key, relative) not in predecessor_bundle_paths:
+                    raise WorkMemoryError("successor-correction-artifact-outside-bundle", 3)
+            if repository_key not in roots:
+                raise WorkMemoryError("missing-repository-root", 3)
+            raw_hash = sha256_bytes(_safe_file(roots[repository_key], relative).read_bytes())
+            if raw_hash != expected_hash:
+                raise WorkMemoryError("successor-correction-artifact-hash-mismatch", 3)
+
+
 def cmd_select(args: argparse.Namespace) -> dict[str, Any]:
     classification, class_hash, _ = load_receipt(args.task_id, "classification")
     if classification["verdict"] != "operational":
@@ -798,7 +998,7 @@ def cmd_select(args: argparse.Namespace) -> dict[str, Any]:
         manifest = document.with_name("dependencies.json")
     bundle, bundle_hash, lineage = resolve_bundle(
         mode=mode, subject_id=subject_id, document=document, manifest=manifest,
-        repo_roots_file=args.repo_roots_file,
+        repo_roots_file=args.repo_roots_file, include_bootstrap_trust_anchors=True,
     )
     if mode == "registered" and row["lineage_id"] != lineage:
         raise WorkMemoryError("registry-manifest-lineage-mismatch", 3)
@@ -841,7 +1041,11 @@ def cmd_select(args: argparse.Namespace) -> dict[str, Any]:
         event for event in events if event["event_type"] == "correction_recorded"
         and event["lineage_id"] == lineage and event["blocker_id"] in opened
     ]
-    superseded = {event.get("supersedes_correction_id") for event in correction_rows}
+    superseded = {
+        correction_id
+        for event in correction_rows
+        for correction_id in _superseded_correction_ids(event)
+    }
     latest = {
         event["correction_id"]: event for event in correction_rows
         if event["correction_id"] not in superseded
@@ -878,6 +1082,14 @@ def cmd_select(args: argparse.Namespace) -> dict[str, Any]:
     successor_ids = args.verifies_correction_id or []
     if bool(args.verification_successor_of) != bool(successor_ids):
         raise WorkMemoryError("incomplete-successor-selection", 2)
+    if args.verification_successor_of:
+        _validate_successor_corrections(
+            events, lineage_id=lineage, source_bundle=bundle,
+            predecessor_run_id=args.verification_successor_of,
+            correction_ids=successor_ids,
+            repo_roots_file=args.repo_roots_file,
+            source_bundle_hash=bundle_hash,
+        )
     reason = "successor-verification" if args.verification_successor_of else (
         "fingerprint-link" if fingerprint_row is not None else
         ("explicit-override" if explicit else "operation-kind-match")
@@ -919,23 +1131,33 @@ def cmd_run_start(args: argparse.Namespace) -> dict[str, Any]:
     if selection["classification_receipt_hash"] != class_hash:
         raise WorkMemoryError("receipt-chain-mismatch", 4)
     repository_roots = {
-        key: str(path) for key, path in
-        _repo_roots(selection.get("repository_roots_file")).items()
+        key: str(path)
+        for key, path in _repo_roots(selection.get("repository_roots_file")).items()
     }
     bundle, digest, lineage = resolve_bundle(
         mode=selection["mode"], subject_id=selection["subject_id"], document=Path(selection["document"]),
         manifest=Path(selection["manifest"]),
-        repository_roots=repository_roots,
+        repository_roots=repository_roots, include_bootstrap_trust_anchors=True,
     )
     if digest != selection["source_bundle_hash"] or lineage != selection["lineage_id"]:
         raise WorkMemoryError("stale-selection-bundle", 4)
+    if selection.get("predecessor_run_id"):
+        events, _ = load_ledger()
+        _validate_successor_corrections(
+            events, lineage_id=lineage, source_bundle=bundle,
+            predecessor_run_id=selection["predecessor_run_id"],
+            correction_ids=selection["verifies_correction_ids"],
+            repository_roots=repository_roots,
+            source_bundle_hash=digest,
+        )
     run_id = args.run_id or str(uuid.uuid4())
     fields: dict[str, Any] = {
         "run_id": run_id, "subject_id": selection["subject_id"], "lineage_id": lineage,
         "mode": selection["mode"], "operation_kind": classification["operation_kind"],
         "source_bundle": bundle, "source_bundle_hash": digest,
+        "repository_roots": repository_roots,
         "classification_receipt_hash": class_hash, "selection_receipt_hash": selection_hash,
-        "started_at_utc": utc_now(), "repository_roots": repository_roots,
+        "started_at_utc": utc_now(),
     }
     if selection.get("predecessor_run_id"):
         fields["predecessor_run_id"] = selection["predecessor_run_id"]
@@ -945,17 +1167,31 @@ def cmd_run_start(args: argparse.Namespace) -> dict[str, Any]:
     return {**result, "run_id": run_id, "event_id": event["event_id"]}
 
 
-def _artifact_hashes(paths: Iterable[str]) -> tuple[list[str], list[str]]:
-    artifacts, hashes = [], []
+def _artifact_hashes(
+    paths: Iterable[str], repo_roots_file: str | None = None,
+    repository_roots: dict[str, str] | None = None,
+) -> tuple[list[Any], list[str]]:
+    roots = _repo_roots(repo_roots_file, snapshot=repository_roots)
+    artifacts: list[Any] = []
+    hashes: list[str] = []
     for raw in paths:
         path = Path(raw).resolve()
         if not path.is_file():
             raise WorkMemoryError("changed-artifact-not-found", 2)
-        try:
-            relative = str(path.relative_to(ROOT))
-        except ValueError as exc:
-            raise WorkMemoryError("changed-artifact-outside-repository", 2) from exc
-        artifacts.append(relative)
+        matches: list[tuple[int, str, str]] = []
+        for repository_key, root in roots.items():
+            try:
+                relative = str(path.relative_to(root))
+            except ValueError:
+                continue
+            matches.append((len(root.parts), repository_key, relative))
+        if not matches:
+            raise WorkMemoryError("changed-artifact-outside-repository", 2)
+        _, repository_key, relative = max(matches)
+        artifacts.append(
+            relative if repository_key == "memory-knowledge"
+            else {"repository_key": repository_key, "path": relative}
+        )
         hashes.append(sha256_bytes(path.read_bytes()))
     return artifacts, hashes
 
@@ -963,32 +1199,105 @@ def _artifact_hashes(paths: Iterable[str]) -> tuple[list[str], list[str]]:
 def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
     events, _ = load_ledger()
     start, related = _run_state(events, args.run_id)
-    if any(event["event_type"] in {"run_closed", "run_abandoned"} for event in related):
-        raise WorkMemoryError("run-is-terminal", 3)
-    artifacts, hashes = _artifact_hashes(args.changed_artifact)
-    document = next(Path(item["path"]) for item in start["source_bundle"] if item["repository_key"] == "memory-knowledge" and item["path"].endswith(("sequence.md", ".md")))
-    document = ROOT / document
-    manifest = document.with_name("dependencies.json") if start["mode"] == "registered" else document.with_suffix(".dependencies.json")
     repository_roots = start.get("repository_roots")
-    explicit_roots_file = getattr(args, "repo_roots_file", None)
-    if repository_roots is not None and explicit_roots_file:
-        explicit_roots = {
-            key: str(path) for key, path in _repo_roots(explicit_roots_file).items()
+    if repository_roots is not None and args.repo_roots_file:
+        supplied_roots = {
+            key: str(path) for key, path in _repo_roots(args.repo_roots_file).items()
         }
-        if explicit_roots != repository_roots:
-            raise WorkMemoryError("repository-roots-mismatch", 3)
-    _, new_hash, _ = resolve_bundle(
-        mode=start["mode"], subject_id=start["subject_id"], document=document, manifest=manifest,
-        repo_roots_file=explicit_roots_file if repository_roots is None else None,
+        if supplied_roots != repository_roots:
+            raise WorkMemoryError("repository-roots-mismatch", 4)
+    artifacts, hashes = _artifact_hashes(
+        args.changed_artifact,
+        args.repo_roots_file if repository_roots is None else None,
         repository_roots=repository_roots,
     )
     correction_id = args.correction_id or str(uuid.uuid4())
+    supersedes = args.supersedes_correction_id or []
+    existing = next((
+        event for event in events
+        if event["event_type"] == "correction_recorded"
+        and event["correction_id"] == correction_id
+    ), None)
+    if existing is not None:
+        expected = {
+            "run_id": args.run_id,
+            "blocker_id": args.blocker_id,
+            "occurrence_id": args.occurrence_id,
+            "step_id": args.step_id,
+            "changed_artifacts": artifacts,
+            "changed_artifact_hashes": hashes,
+            "solution": args.solution,
+            "reusable_behavior_changed": args.reusable_behavior_changed == "yes",
+        }
+        if any(existing.get(key) != value for key, value in expected.items()):
+            raise WorkMemoryError("correction-id-conflict", 3)
+        if _superseded_correction_ids(existing) != set(supersedes):
+            raise WorkMemoryError("correction-id-conflict", 3)
+        if args.finalize_failed_run:
+            terminal = next((
+                event for event in related
+                if event["event_type"] == "run_closed" and event["result"] == "failed"
+            ), None)
+            awaiting = any(
+                event["event_type"] == "blocker_transitioned"
+                and event["blocker_id"] == args.blocker_id
+                and event["to_status"] == "fixed-awaiting-verification"
+                for event in events
+            )
+            if terminal is None or not awaiting:
+                raise WorkMemoryError("existing-correction-not-finalized", 3)
+        existing_transition = next((
+            event for event in events
+            if event["event_type"] == "bundle_transition_recorded"
+            and correction_id in event.get("correction_ids", [])
+        ), None)
+        if existing_transition is None:
+            raise WorkMemoryError("existing-correction-transition-not-found", 3)
+        return {
+            "ok": True, "correction_id": correction_id,
+            "event_id": existing["event_id"], "already_recorded": True,
+            "changed_artifact_hashes": hashes,
+            "new_bundle_hash": existing_transition["new_bundle_hash"],
+            "transition_event_id": existing_transition["event_id"],
+        }
+    if any(event["event_type"] in {"run_closed", "run_abandoned"} for event in related):
+        raise WorkMemoryError("run-is-terminal", 3)
+    document = next(Path(item["path"]) for item in start["source_bundle"] if item["repository_key"] == "memory-knowledge" and item["path"].endswith(("sequence.md", ".md")))
+    document = ROOT / document
+    manifest = document.with_name("dependencies.json") if start["mode"] == "registered" else document.with_suffix(".dependencies.json")
+    new_bundle, new_hash, _ = resolve_bundle(
+        mode=start["mode"], subject_id=start["subject_id"], document=document,
+        manifest=manifest,
+        repo_roots_file=args.repo_roots_file if repository_roots is None else None,
+        repository_roots=repository_roots,
+        include_bootstrap_trust_anchors=True,
+    )
+    old_map = {
+        (item["repository_key"], item["path"]): item["sha256"]
+        for item in start["source_bundle"]
+    }
+    new_map = {
+        (item["repository_key"], item["path"]): item["sha256"]
+        for item in new_bundle
+    }
+    drifted = {
+        key for key in old_map.keys() | new_map.keys()
+        if old_map.get(key) != new_map.get(key)
+    }
+    artifact_keys = {_artifact_identity(artifact) for artifact in artifacts}
+    if artifact_keys != drifted:
+        raise WorkMemoryError("correction-artifact-drift-mismatch", 3)
+    supersession_fields: dict[str, Any] = {}
+    if len(supersedes) == 1:
+        supersession_fields["supersedes_correction_id"] = supersedes[0]
+    elif supersedes:
+        supersession_fields["supersedes_correction_ids"] = supersedes
     correction = _event(
         "correction_recorded", args.event_id, run_id=args.run_id, blocker_id=args.blocker_id,
         occurrence_id=args.occurrence_id, correction_id=correction_id, subject_id=start["subject_id"],
         lineage_id=start["lineage_id"], step_id=args.step_id, changed_artifacts=artifacts,
         changed_artifact_hashes=hashes, reusable_behavior_changed=args.reusable_behavior_changed == "yes",
-        solution=args.solution, **({"supersedes_correction_id": args.supersedes_correction_id} if args.supersedes_correction_id else {}),
+        solution=args.solution, **supersession_fields,
     )
     transition = _event(
         "bundle_transition_recorded", args.transition_event_id, lineage_id=start["lineage_id"],
@@ -996,7 +1305,60 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         run_id=args.run_id, correction_ids=[correction_id], changed_artifacts=artifacts,
         changed_artifact_hashes=hashes,
     )
-    result = transact({"schema_version": 1, "expected_ledger_hash": None, "events": [correction, transition]})
+    batch = [correction, transition]
+    if args.finalize_failed_run:
+        blocker_states: dict[str, str] = {}
+        correction_blockers: dict[str, str] = {}
+        for event in events:
+            blocker_id = event.get("blocker_id")
+            if event["event_type"] in {"blocker_opened", "blocker_recurred"}:
+                blocker_states[blocker_id] = "open"
+            elif event["event_type"] == "blocker_transitioned" and blocker_id in blocker_states:
+                blocker_states[blocker_id] = event["to_status"]
+            elif event["event_type"] == "correction_recorded":
+                correction_blockers[event["correction_id"]] = event["blocker_id"]
+        for old_correction_id in supersedes:
+            old_blocker_id = correction_blockers.get(old_correction_id)
+            if old_blocker_id is None:
+                raise WorkMemoryError("superseded-correction-not-found", 3)
+            old_status = blocker_states.get(old_blocker_id)
+            if old_status == "closed":
+                continue
+            if old_status not in {"open", "fixed-awaiting-verification"}:
+                raise WorkMemoryError("superseded-blocker-not-active", 3)
+            batch.append(_event(
+                "blocker_transitioned", run_id=args.run_id,
+                blocker_id=old_blocker_id, from_status=old_status, to_status="superseded",
+                supersession_evidence=(
+                    f"Correction {old_correction_id} is explicitly superseded by {correction_id}."
+                ),
+            ))
+        if blocker_states.get(args.blocker_id) != "open":
+            raise WorkMemoryError("correction-for-nonopen-blocker", 3)
+        batch.append(_event(
+            "blocker_transitioned", run_id=args.run_id,
+            blocker_id=args.blocker_id, from_status="open",
+            to_status="fixed-awaiting-verification",
+        ))
+        blockers = sorted({event["blocker_id"] for event in related if "blocker_id" in event})
+        verification_quality = next(
+            (
+                event["quality"]
+                for event in reversed(related)
+                if event["event_type"] == "verification_recorded"
+            ),
+            "none",
+        )
+        batch.append(_event(
+            "run_closed", run_id=args.run_id, subject_id=start["subject_id"],
+            lineage_id=start["lineage_id"], result="failed", completed_at_utc=utc_now(),
+            correction_count=sum(
+                event["event_type"] == "correction_recorded" for event in related
+            ) + 1,
+            blocker_ids=blockers, sequence_updated=True,
+            verification_quality=verification_quality,
+        ))
+    result = transact({"schema_version": 1, "expected_ledger_hash": None, "events": batch})
     return {**result, "correction_id": correction_id, "event_id": correction["event_id"],
             "transition_event_id": transition["event_id"], "old_bundle_hash": start["source_bundle_hash"],
             "new_bundle_hash": new_hash, "changed_artifact_hashes": hashes}
@@ -1175,6 +1537,50 @@ def cmd_transact(args: argparse.Namespace) -> dict[str, Any]:
                     Path(args.view).resolve() if args.view else BLOCKER_VIEW)
 
 
+def cmd_merge_ledger(args: argparse.Namespace) -> dict[str, Any]:
+    """Union two independently valid persisted ledgers at the canonical writer boundary."""
+    target = Path(args.ledger).resolve() if args.ledger else LEDGER
+    view = Path(args.view).resolve() if args.view else BLOCKER_VIEW
+    source = Path(args.source_ledger).resolve()
+    lock = target.with_suffix(target.suffix + ".lock")
+    lock.parent.mkdir(parents=True, exist_ok=True)
+    with lock.open("a+b") as handle:
+        fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
+        existing = target.read_bytes() if target.exists() else b""
+        source_bytes = source.read_bytes() if source.is_file() else b""
+        target_events = parse_ledger_bytes(existing)
+        source_events = parse_ledger_bytes(source_bytes)
+        target_by_id = _event_index(target_events)
+        unseen: list[dict[str, Any]] = []
+        for event in source_events:
+            prior = target_by_id.get(event["event_id"])
+            if prior is not None:
+                if prior != event:
+                    raise WorkMemoryError("ledger-event-identity-conflict", 4)
+                continue
+            target_by_id[event["event_id"]] = event
+            unseen.append(event)
+        merged = target_events + unseen
+        validate_lifecycle(
+            merged,
+            legacy_premature_fixed_event_ids={
+                event["event_id"] for event in target_events + source_events
+            },
+        )
+        ledger_bytes = b"".join(canonical_bytes(event) for event in merged)
+        ledger_hash = sha256_bytes(ledger_bytes)
+        view_bytes = render_blocker_view(merged, ledger_hash).encode()
+        _atomic_write(target, ledger_bytes)
+        _atomic_write(view, view_bytes)
+    return {
+        "ok": True,
+        "previous_ledger_hash": sha256_bytes(existing),
+        "ledger_hash": ledger_hash,
+        "blocker_view_hash": sha256_bytes(view_bytes),
+        "appended_event_count": len(unseen),
+    }
+
+
 def cmd_summary(args: argparse.Namespace) -> dict[str, Any]:
     events, digest = load_ledger(Path(args.ledger).resolve() if args.ledger else LEDGER)
     return {**summarize(events, args.subject_id, args.source_bundle_hash),
@@ -1208,6 +1614,10 @@ def build_parser() -> argparse.ArgumentParser:
     transact_p = sub.add_parser("transact")
     transact_p.add_argument("--request-json", required=True); transact_p.add_argument("--ledger"); transact_p.add_argument("--view")
     transact_p.set_defaults(func=cmd_transact)
+    merge_ledger = sub.add_parser("merge-ledger")
+    merge_ledger.add_argument("--source-ledger", required=True)
+    merge_ledger.add_argument("--ledger"); merge_ledger.add_argument("--view")
+    merge_ledger.set_defaults(func=cmd_merge_ledger)
     run_start = sub.add_parser("run-start")
     run_start.add_argument("--task-id", required=True); run_start.add_argument("--run-id"); run_start.add_argument("--event-id")
     run_start.set_defaults(func=cmd_run_start)
@@ -1215,8 +1625,8 @@ def build_parser() -> argparse.ArgumentParser:
     correct.add_argument("--run-id", required=True); correct.add_argument("--blocker-id", required=True); correct.add_argument("--occurrence-id", required=True)
     correct.add_argument("--step-id", required=True); correct.add_argument("--changed-artifact", action="append", required=True)
     correct.add_argument("--solution", required=True); correct.add_argument("--reusable-behavior-changed", choices=["yes", "no"], required=True)
-    correct.add_argument("--repo-roots-file")
-    correct.add_argument("--supersedes-correction-id"); correct.add_argument("--correction-id"); correct.add_argument("--event-id"); correct.add_argument("--transition-event-id")
+    correct.add_argument("--supersedes-correction-id", action="append"); correct.add_argument("--correction-id"); correct.add_argument("--event-id"); correct.add_argument("--transition-event-id")
+    correct.add_argument("--repo-roots-file"); correct.add_argument("--finalize-failed-run", action="store_true")
     correct.set_defaults(func=cmd_correct)
     verify = sub.add_parser("verify")
     verify.add_argument("--run-id", required=True); verify.add_argument("--outcome", choices=["passed", "failed"], required=True)

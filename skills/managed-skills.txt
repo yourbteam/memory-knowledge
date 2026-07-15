@@ -15,6 +15,7 @@ remote-mcp-user-admin
 requirements-coverage-gap-loop
 requirements-satisfaction-gap-loop
 research-playbook
+research-playbook-v2
 reproduce-first-verify
 review-playbook
 sequence-runner

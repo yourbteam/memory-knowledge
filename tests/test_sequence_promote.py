@@ -122,7 +122,7 @@ def test_exact_committed_promotion_retry_is_idempotent(tmp_path: Path, monkeypat
     )
     sequence_path.write_bytes(sequence_promote._sequence_text(discovery, sequence_id, args.use_when, args.pass_signal))
     sequence_path.with_name("dependencies.json").write_bytes(work_memory.canonical_bytes(source_manifest))
-    monkeypatch.setattr(sequence_promote.sequence_discovery_log, "discovery_state", lambda path: {
+    monkeypatch.setattr(sequence_promote.sequence_discovery_log, "discovery_state", lambda path, **_: {
         "status": "promoted", "discovery_id": discovery_id, "source_bundle_hash": "a" * 64,
     })
     monkeypatch.setattr(work_memory, "resolve_bundle", lambda **kwargs: ([], "b" * 64, discovery_id))
@@ -140,3 +140,39 @@ def test_exact_committed_promotion_retry_is_idempotent(tmp_path: Path, monkeypat
     monkeypatch.setattr(work_memory, "load_ledger", lambda: ([promoted, transition], "d" * 64))
     result = sequence_promote.cmd_promote(args)
     assert result["idempotent_retry"] and result["event_id"] == promoted["event_id"]
+
+
+def test_registered_bundle_from_staged_accepts_cross_repository_dependency(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    memory_root = tmp_path / "memory"
+    external_root = tmp_path / "external"
+    memory_root.mkdir()
+    dependency = external_root / "scripts" / "external.py"
+    dependency.parent.mkdir(parents=True)
+    dependency.write_text("print('external')\n")
+    roots = tmp_path / "repositories.json"
+    roots.write_text(json.dumps({"external": str(external_root)}))
+    monkeypatch.setattr(work_memory, "ROOT", memory_root)
+    manifest = {
+        "schema_version": 1,
+        "lineage_id": "discovery-cross-repo",
+        "dependencies": [{
+            "kind": "file",
+            "repository_key": "external",
+            "path_or_sequence_id": "scripts/external.py",
+        }],
+    }
+    sequence = b"# cross-repo\n\n## Commands\n\npython3 scripts/external.py\n"
+    entries, digest = sequence_promote._registered_bundle_from_staged(
+        "cross-repo",
+        sequence,
+        work_memory.canonical_bytes(manifest),
+        manifest,
+        repo_roots_file=str(roots),
+    )
+    assert digest
+    assert any(
+        item["repository_key"] == "external" and item["path"] == "scripts/external.py"
+        for item in entries
+    )

@@ -8,6 +8,11 @@ ROOT=Path(__file__).parents[1]; spec=importlib.util.spec_from_file_location("val
 
 
 class ValidatorTests(unittest.TestCase):
+    def validate_openai(self, content):
+        with tempfile.TemporaryDirectory() as raw:
+            path=Path(raw)/"openai.yaml"; path.write_text(content)
+            return v.validate_openai(path)
+
     def test_block_description_and_metadata(self):
         with tempfile.TemporaryDirectory() as raw:
             root=Path(raw); skill=root/"sample"; skill.mkdir(); (root/"managed-skills.txt").write_text("sample\n")
@@ -45,6 +50,80 @@ class ValidatorTests(unittest.TestCase):
             (skill/"SKILL.md").write_text("---\nname: sample\ndescription: null\n---\n")
             (skill/"agents/openai.yaml").write_text("interface:\n  display_name: null\n  short_description: true\n  default_prompt: 123\n")
             self.assertTrue(v.validate(root,root/"managed-skills.txt"))
+
+    def test_candidate_explicit_only_metadata_is_valid(self):
+        errors=self.validate_openai(
+            "interface:\n"
+            "  display_name: Research Playbook V2\n"
+            "  short_description: Research policy\n"
+            "  default_prompt: Run the research playbook\n"
+            "policy:\n"
+            "  allow_implicit_invocation: false\n"
+        )
+        self.assertEqual(errors,[])
+
+    def test_research_playbook_v2_is_managed_and_explicit_only(self):
+        managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
+        self.assertIn("research-playbook-v2",managed)
+        metadata=(ROOT/"skills/research-playbook-v2/agents/openai.yaml").read_text()
+        self.assertIn("policy:\n  allow_implicit_invocation: false\n",metadata)
+        self.assertEqual(v.validate_openai(ROOT/"skills/research-playbook-v2/agents/openai.yaml"),[])
+
+    def test_policy_accepts_exact_unquoted_yaml_booleans(self):
+        for value in ("true","false"):
+            with self.subTest(value=value):
+                errors=self.validate_openai(
+                    "interface:\n"
+                    "  display_name: Sample\n"
+                    "  short_description: Sample policy\n"
+                    "  default_prompt: Run sample\n"
+                    "policy:\n"
+                    f"  allow_implicit_invocation: {value}\n"
+                )
+                self.assertEqual(errors,[])
+
+    def test_policy_rejects_quoted_booleans(self):
+        for value in ('"false"',"'true'"):
+            with self.subTest(value=value):
+                errors=self.validate_openai(
+                    "interface:\n"
+                    "  display_name: Sample\n"
+                    "  short_description: Sample policy\n"
+                    "  default_prompt: Run sample\n"
+                    "policy:\n"
+                    f"  allow_implicit_invocation: {value}\n"
+                )
+                self.assertTrue(any("must be an unquoted YAML boolean" in error for error in errors))
+
+    def test_unknown_duplicate_and_malformed_policy_shapes_are_rejected(self):
+        base=(
+            "interface:\n"
+            "  display_name: Sample\n"
+            "  short_description: Sample policy\n"
+            "  default_prompt: Run sample\n"
+        )
+        cases={
+            "unknown section": base+"permissions:\n  allow_implicit_invocation: false\n",
+            "duplicate policy section": base+"policy:\n  allow_implicit_invocation: false\npolicy:\n  allow_implicit_invocation: true\n",
+            "scalar policy section": base+"policy: false\n",
+            "missing policy key": base+"policy:\n",
+            "unknown policy key": base+"policy:\n  implicit: false\n",
+            "duplicate policy key": base+"policy:\n  allow_implicit_invocation: false\n  allow_implicit_invocation: true\n",
+            "malformed policy key": base+"policy:\n    allow_implicit_invocation: false\n",
+        }
+        for name,content in cases.items():
+            with self.subTest(name=name):
+                self.assertTrue(self.validate_openai(content))
+
+    def test_policy_does_not_bypass_interface_validation(self):
+        errors=self.validate_openai(
+            "interface:\n"
+            "  display_name: Sample\n"
+            "policy:\n"
+            "  allow_implicit_invocation: false\n"
+        )
+        self.assertTrue(any("missing interface.short_description" in error for error in errors))
+        self.assertTrue(any("missing interface.default_prompt" in error for error in errors))
 
     def test_documented_wrappers_are_executable(self):
         for name in ("validate-skills.sh","install-skills.sh","sync-corpus.sh"):

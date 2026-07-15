@@ -58,6 +58,19 @@ def names(manifest: Path) -> list[str]:
     return [x.strip() for x in manifest.read_text().splitlines() if x.strip() and not x.lstrip().startswith("#")]
 
 
+def selected_names(manifest: Path, only: list[str] | None = None) -> list[str]:
+    managed = names(manifest)
+    if only is None:
+        return managed
+    if not only or len(only) != len(set(only)):
+        raise SystemExit("--only values must be non-empty and unique")
+    unknown = sorted(set(only) - set(managed))
+    if unknown:
+        raise SystemExit("--only names are not managed: " + ", ".join(unknown))
+    selected = set(only)
+    return [name for name in managed if name in selected]
+
+
 def recover(journal_path: Path) -> None:
     if not journal_path.exists(): return
     journal = json.loads(journal_path.read_text())
@@ -78,7 +91,9 @@ def recover(journal_path: Path) -> None:
     journal_path.unlink(missing_ok=True); fsync_dir(journal_path.parent)
 
 
-def install(source: Path, manifest: Path, destinations: list[Path], state_dir: Path, hold: float = 0) -> None:
+def install(source: Path, manifest: Path, destinations: list[Path], state_dir: Path,
+            hold: float = 0, only: list[str] | None = None) -> None:
+    install_names = selected_names(manifest, only)
     validator = Path(__file__).with_name("validate_skills.py")
     checked = subprocess.run(
         [sys.executable, str(validator), "--skills-root", str(source), "--manifest", str(manifest)],
@@ -97,7 +112,7 @@ def install(source: Path, manifest: Path, destinations: list[Path], state_dir: P
         entries = []
         for destination_index, destination_root in enumerate(destinations):
             destination_root.mkdir(parents=True, exist_ok=True)
-            for name in names(manifest):
+            for name in install_names:
                 src, dest = source / name, destination_root / name
                 staged = txn / "staged" / str(destination_index) / name
                 backup = txn / "backup" / str(destination_index) / name
@@ -137,6 +152,7 @@ def main() -> int:
     ap.add_argument("--codex-root", type=Path, default=Path.home()/".codex/skills"); ap.add_argument("--claude-root", type=Path, default=Path.home()/".claude/skills")
     ap.add_argument("--state-dir", type=Path, default=Path(os.environ.get("XDG_STATE_HOME", Path.home()/".local/state"))/"kamen-managed-skills")
     ap.add_argument("--reconciliation", type=Path)
+    ap.add_argument("--only", action="append", help="Install only this manifest-managed skill; repeatable")
     ap.add_argument("--hold-lock", type=float, default=0, help=argparse.SUPPRESS); args = ap.parse_args()
     if args.target == "both":
         if not args.accept_cross_client: raise SystemExit("--target both requires --accept-cross-client")
@@ -145,7 +161,7 @@ def main() -> int:
         unresolved = [row["name"] for row in rows if row.get("status") == "claude-divergent-preserved"]
         if unresolved: raise SystemExit("cross-client variants are not reconciled: " + ", ".join(unresolved))
     destinations = [args.codex_root] if args.target == "codex" else [args.claude_root] if args.target == "claude" else [args.codex_root, args.claude_root]
-    install(args.source.resolve(), args.manifest.resolve(), destinations, args.state_dir.resolve(), args.hold_lock); return 0
+    install(args.source.resolve(), args.manifest.resolve(), destinations, args.state_dir.resolve(), args.hold_lock, args.only); return 0
 
 
 if __name__ == "__main__": raise SystemExit(main())

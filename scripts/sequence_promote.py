@@ -177,7 +177,12 @@ def _registry_bytes(
 
 
 def _registered_bundle_from_staged(
-    sequence_id: str, sequence_bytes: bytes, manifest_bytes: bytes, manifest: dict[str, Any]
+    sequence_id: str,
+    sequence_bytes: bytes,
+    manifest_bytes: bytes,
+    manifest: dict[str, Any],
+    *,
+    repo_roots_file: str | None = None,
 ) -> tuple[list[dict[str, str]], str]:
     temp_dir = work_memory.ROOT / "operations/sequences" / f".promotion-{sequence_id}-{uuid.uuid4().hex}"
     temp_dir.mkdir(parents=True)
@@ -187,6 +192,7 @@ def _registered_bundle_from_staged(
         entries, _, _ = work_memory.resolve_bundle(
             mode="registered", subject_id=sequence_id, document=temp_dir / "sequence.md",
             manifest=temp_dir / "dependencies.json",
+            repo_roots_file=repo_roots_file,
         )
         prefix = str(temp_dir.relative_to(work_memory.ROOT))
         final = f"operations/sequences/{sequence_id}"
@@ -218,7 +224,10 @@ def cmd_promote(args: argparse.Namespace) -> dict[str, Any]:
         fcntl.flock(promotion_handle.fileno(), fcntl.LOCK_EX)
         recovered = recover()
         discovery = Path(args.file).resolve()
-        state = sequence_discovery_log.discovery_state(discovery)
+        repo_roots_file = getattr(args, "repo_roots_file", None)
+        state = sequence_discovery_log.discovery_state(
+            discovery, repo_roots_file=repo_roots_file,
+        )
         if state["status"] == "promoted":
             promoted_id = sequence_discovery_log._metadata(
                 discovery.read_text(), "PromotedSequenceId"
@@ -244,6 +253,7 @@ def cmd_promote(args: argparse.Namespace) -> dict[str, Any]:
             _, new_bundle_hash, lineage = work_memory.resolve_bundle(
                 mode="registered", subject_id=args.sequence_id, document=sequence_path,
                 manifest=registered_manifest_path,
+                repo_roots_file=repo_roots_file,
             )
             row = next(
                 (item for item in work_memory.registry_rows()[0]
@@ -295,7 +305,11 @@ def cmd_promote(args: argparse.Namespace) -> dict[str, Any]:
         manifest_bytes = work_memory.canonical_bytes(registered_manifest)
         sequence_bytes = _sequence_text(discovery, args.sequence_id, args.use_when, args.pass_signal)
         bundle, new_bundle_hash = _registered_bundle_from_staged(
-            args.sequence_id, sequence_bytes, manifest_bytes, registered_manifest
+            args.sequence_id,
+            sequence_bytes,
+            manifest_bytes,
+            registered_manifest,
+            repo_roots_file=repo_roots_file,
         )
         registry_bytes = _registry_bytes(
             args.sequence_id, args.use_when, args.automation_display, args.pass_signal,
@@ -374,6 +388,7 @@ def build_parser() -> argparse.ArgumentParser:
     promote = sub.add_parser("promote"); promote.add_argument("--file", required=True); promote.add_argument("--sequence-id", required=True)
     promote.add_argument("--use-when", required=True); promote.add_argument("--operation-kind", action="append", required=True)
     promote.add_argument("--automation-display", required=True); promote.add_argument("--pass-signal", required=True)
+    promote.add_argument("--repo-roots-file")
     promote.set_defaults(func=cmd_promote); return parser
 
 

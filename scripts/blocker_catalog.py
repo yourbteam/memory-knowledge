@@ -115,6 +115,39 @@ def cmd_transition(args: argparse.Namespace) -> dict[str, Any]:
             "to_status": args.to_status, "event_id": event["event_id"]}
 
 
+def cmd_recover(args: argparse.Namespace) -> dict[str, Any]:
+    events, _ = work_memory.load_ledger()
+    _run(events, args.run_id)
+    status = None
+    for item in events:
+        if item["event_type"] == "blocker_opened" and item["blocker_id"] == args.blocker_id:
+            status = "open"
+        elif item["event_type"] == "blocker_recurred" and item["blocker_id"] == args.blocker_id:
+            status = "open"
+        elif item["event_type"] == "blocker_transitioned" and item["blocker_id"] == args.blocker_id:
+            status = item["to_status"]
+    if status is None:
+        raise work_memory.WorkMemoryError("blocker-not-found", 3)
+    event = work_memory._event(
+        "blocker_transitioned", args.event_id, run_id=args.run_id,
+        blocker_id=args.blocker_id, from_status=status, to_status="open",
+        reopen_evidence=args.reopen_evidence,
+    )
+    result = work_memory.transact(
+        {"schema_version": 1, "expected_ledger_hash": None, "events": [event]}
+    )
+    return {
+        **result,
+        "event_type": event["event_type"],
+        "event_id": event["event_id"],
+        "run_id": args.run_id,
+        "blocker_id": args.blocker_id,
+        "from_status": status,
+        "to_status": "open",
+        "reopen_evidence": args.reopen_evidence,
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -128,9 +161,14 @@ def build_parser() -> argparse.ArgumentParser:
     transition.add_argument("--run-id", required=True); transition.add_argument("--blocker-id", required=True)
     transition.add_argument("--to-status", required=True, choices=["open", "fixed-awaiting-verification", "verified", "closed", "superseded", "non-gap"])
     transition.add_argument("--verification-event-id"); transition.add_argument("--remaining-work", default="none")
-    transition.add_argument("--supersession-evidence"); transition.add_argument("--non-gap-evidence"); transition.add_argument("--event-id")
-    transition.add_argument("--reopen-evidence")
+    transition.add_argument("--supersession-evidence"); transition.add_argument("--non-gap-evidence"); transition.add_argument("--reopen-evidence"); transition.add_argument("--event-id")
     transition.set_defaults(func=cmd_transition)
+    recover = sub.add_parser("recover")
+    recover.add_argument("--run-id", required=True)
+    recover.add_argument("--blocker-id", required=True)
+    recover.add_argument("--reopen-evidence", required=True)
+    recover.add_argument("--event-id")
+    recover.set_defaults(func=cmd_recover)
     return parser
 
 

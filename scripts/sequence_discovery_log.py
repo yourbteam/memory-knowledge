@@ -73,7 +73,7 @@ def _replace_metadata(text: str, name: str, value: str | None) -> str:
     if pattern.search(text):
         return pattern.sub(line, text, count=1)
     title_end = text.find("\n") + 1
-    return text[:title_end] + "\n" + line + text[title_end:]
+    return text[:title_end] + line + text[title_end:]
 
 
 def _replace_section(text: str, heading: str, body: str) -> str:
@@ -90,7 +90,9 @@ def _section(text: str, heading: str) -> str:
     return match.group(1).strip()
 
 
-def _bundle(path: Path) -> tuple[list[dict[str, str]], str, str]:
+def _bundle(
+    path: Path, *, repo_roots_file: str | None = None,
+) -> tuple[list[dict[str, str]], str, str]:
     text = path.read_text()
     discovery_id = _metadata(text, "DiscoveryId")
     if not discovery_id:
@@ -98,6 +100,7 @@ def _bundle(path: Path) -> tuple[list[dict[str, str]], str, str]:
     return work_memory.resolve_bundle(
         mode="discovery", subject_id=discovery_id, document=path,
         manifest=path.with_suffix(".dependencies.json"),
+        repo_roots_file=repo_roots_file,
     )
 
 
@@ -211,15 +214,21 @@ def cmd_set_dependencies(args: argparse.Namespace) -> dict[str, Any]:
         raise work_memory.WorkMemoryError("invalid-dependency-manifest", 2)
     target = path.with_suffix(".dependencies.json")
     _write_json(target, source)
-    _, digest, _ = _bundle(path)
+    _, digest, _ = _bundle(path, repo_roots_file=args.repo_roots_file)
     return {"ok": True, "path": str(path), "manifest_path": str(target), "source_bundle_hash": digest}
 
 
-def discovery_state(path: Path, now: datetime | None = None, *, require_bound: bool = True) -> dict[str, Any]:
+def discovery_state(
+    path: Path,
+    now: datetime | None = None,
+    *,
+    require_bound: bool = True,
+    repo_roots_file: str | None = None,
+) -> dict[str, Any]:
     text = path.read_text(); discovery_id = _metadata(text, "DiscoveryId")
     if not discovery_id:
         raise work_memory.WorkMemoryError("discovery-id-missing", 3)
-    _, bundle_hash, lineage = _bundle(path)
+    _, bundle_hash, lineage = _bundle(path, repo_roots_file=repo_roots_file)
     events, ledger_hash = work_memory.load_ledger()
     starts = {event["run_id"]: event for event in events if event["event_type"] == "run_started" and event["mode"] == "discovery" and event["subject_id"] == discovery_id}
     if require_bound and not starts:
@@ -263,7 +272,8 @@ def discovery_state(path: Path, now: datetime | None = None, *, require_bound: b
 
 
 def cmd_check(args: argparse.Namespace) -> dict[str, Any]:
-    path = Path(args.file).resolve(); state = discovery_state(path)
+    path = Path(args.file).resolve()
+    state = discovery_state(path, repo_roots_file=args.repo_roots_file)
     text = path.read_text()
     for legacy in ("SuccessfulRuns", "LastValidatedAtUtc"):
         text = _replace_metadata(text, legacy, None)
@@ -281,7 +291,11 @@ def cmd_backlog(args: argparse.Namespace) -> dict[str, Any]:
     root = _root(args.root); records = []
     for path in sorted((root / DISCOVERY_DIR).glob("*.md")):
         try:
-            records.append(discovery_state(path, require_bound=False))
+            records.append(discovery_state(
+                path,
+                require_bound=False,
+                repo_roots_file=args.repo_roots_file,
+            ))
         except work_memory.WorkMemoryError as exc:
             records.append({"path": str(path), "status": "invalid", "error": exc.code,
                             "successful_runs": 0, "ready_at_utc": None, "discovery_id": path.stem})
@@ -293,7 +307,9 @@ def cmd_backlog(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def cmd_closeout(args: argparse.Namespace) -> dict[str, Any]:
-    state = discovery_state(Path(args.file).resolve())
+    state = discovery_state(
+        Path(args.file).resolve(), repo_roots_file=args.repo_roots_file,
+    )
     if state["status"] == "overdue":
         raise work_memory.WorkMemoryError("discovery-promotion-overdue", 3)
     return state
@@ -309,10 +325,10 @@ def build_parser() -> argparse.ArgumentParser:
     failure = sub.add_parser("set-failure-handling"); failure.add_argument("--file", required=True); failure.add_argument("--text", required=True); failure.set_defaults(func=cmd_set_section)
     verified = sub.add_parser("set-verified-path"); verified.add_argument("--file", required=True); verified.add_argument("--evidence", required=True); verified.set_defaults(func=cmd_set_section)
     readiness = sub.add_parser("set-readiness"); readiness.add_argument("--file", required=True); readiness.add_argument("--item", choices=sorted(READINESS), required=True); readiness.add_argument("--checked", choices=["yes", "no"], required=True); readiness.set_defaults(func=cmd_set_readiness)
-    dependencies = sub.add_parser("set-dependencies"); dependencies.add_argument("--file", required=True); dependencies.add_argument("--dependencies-json", required=True); dependencies.set_defaults(func=cmd_set_dependencies)
-    check = sub.add_parser("check"); check.add_argument("--file", required=True); check.set_defaults(func=cmd_check)
-    backlog = sub.add_parser("backlog"); backlog.add_argument("--root"); backlog.set_defaults(func=cmd_backlog)
-    closeout = sub.add_parser("closeout"); closeout.add_argument("--file", required=True); closeout.set_defaults(func=cmd_closeout)
+    dependencies = sub.add_parser("set-dependencies"); dependencies.add_argument("--file", required=True); dependencies.add_argument("--dependencies-json", required=True); dependencies.add_argument("--repo-roots-file"); dependencies.set_defaults(func=cmd_set_dependencies)
+    check = sub.add_parser("check"); check.add_argument("--file", required=True); check.add_argument("--repo-roots-file"); check.set_defaults(func=cmd_check)
+    backlog = sub.add_parser("backlog"); backlog.add_argument("--root"); backlog.add_argument("--repo-roots-file"); backlog.set_defaults(func=cmd_backlog)
+    closeout = sub.add_parser("closeout"); closeout.add_argument("--file", required=True); closeout.add_argument("--repo-roots-file"); closeout.set_defaults(func=cmd_closeout)
     return parser
 
 

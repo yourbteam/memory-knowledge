@@ -1,3 +1,4 @@
+import uuid
 from argparse import Namespace
 
 import pytest
@@ -18,6 +19,40 @@ def test_fingerprint_normalizes_volatile_values_but_keeps_error_code():
     different = fingerprint("deploy", "lineage", "upload", "ERR43 attempt 9")
     assert first == second and first != different
     assert "err42" in normalize_error_signature("ERR42 line 99")
+
+
+def test_recover_command_emits_canonical_transition(monkeypatch):
+    run_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "1" * 24
+    events = [
+        {"event_type": "run_started", "run_id": run_id},
+        {"event_type": "blocker_opened", "blocker_id": blocker_id},
+        {"event_type": "blocker_transitioned", "blocker_id": blocker_id,
+         "to_status": "fixed-awaiting-verification"},
+    ]
+    captured = {}
+    monkeypatch.setattr(blocker_catalog.work_memory, "load_ledger", lambda: (events, "0" * 64))
+
+    def capture(request):
+        captured["request"] = request
+        return {"ok": True}
+
+    monkeypatch.setattr(blocker_catalog.work_memory, "transact", capture)
+    args = blocker_catalog.build_parser().parse_args([
+        "recover", "--run-id", run_id, "--blocker-id", blocker_id,
+        "--reopen-evidence", "captured event predates correction enforcement",
+    ])
+
+    result = args.func(args)
+
+    transition = captured["request"]["events"][0]
+    assert transition["event_type"] == "blocker_transitioned"
+    assert transition["run_id"] == run_id
+    assert transition["blocker_id"] == blocker_id
+    assert transition["from_status"] == "fixed-awaiting-verification"
+    assert transition["to_status"] == "open"
+    assert transition["reopen_evidence"] == "captured event predates correction enforcement"
+    assert result["event_id"] == transition["event_id"]
 
 
 def test_reopen_transition_requires_evidence(monkeypatch: pytest.MonkeyPatch):
