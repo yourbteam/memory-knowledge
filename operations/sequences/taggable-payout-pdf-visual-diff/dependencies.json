@@ -1,0 +1,16 @@
+{
+  "schema_version": 1,
+  "lineage_id": "taggable-payout-pdf-visual-diff",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "taggable-api",
+      "path_or_sequence_id": "scripts/pdf_visual_diff.py"
+    },
+    {
+      "kind": "file",
+      "repository_key": "taggable-api",
+      "path_or_sequence_id": "scripts/verify-payout-report.sh"
+    }
+  ]
+}

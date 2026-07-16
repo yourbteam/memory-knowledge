@@ -1,0 +1,1 @@
+{"dependencies":[{"kind":"file","path_or_sequence_id":"scripts/pdf_visual_diff.py","repository_key":"taggable-api"},{"kind":"file","path_or_sequence_id":"scripts/verify-payout-report.sh","repository_key":"taggable-api"}],"lineage_id":"discovery-89094bbd-9afc-5495-bd36-e4f44ecdbe79","schema_version":1}
