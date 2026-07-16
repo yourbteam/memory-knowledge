@@ -253,6 +253,83 @@ def test_finalize_correction_is_one_atomic_idempotent_transaction(
     assert second["already_recorded"] is True
 
 
+def test_terminal_failed_run_accepts_only_active_superseding_correction(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sequence = tmp_path / "operations/sequences/example/sequence.md"
+    sequence.parent.mkdir(parents=True)
+    sequence.write_text("# example\n")
+    artifact = tmp_path / "scripts/fix.py"
+    artifact.parent.mkdir()
+    artifact.write_text("fixed = True\n")
+    run_id, occurrence_id = str(uuid.uuid4()), str(uuid.uuid4())
+    old_correction_id, new_correction_id = str(uuid.uuid4()), str(uuid.uuid4())
+    blocker_id = "blk-" + "8" * 24
+    start = event(
+        "run_started", run_id=run_id, subject_id="example", lineage_id="lineage",
+        mode="registered", operation_kind="workflow-drive",
+        source_bundle=[{
+            "repository_key": "memory-knowledge",
+            "path": "operations/sequences/example/sequence.md", "sha256": "a" * 64,
+        }], source_bundle_hash="a" * 64,
+        classification_receipt_hash="b" * 64, selection_receipt_hash="c" * 64,
+        started_at_utc="2026-01-01T00:00:00Z",
+    )
+    opened = event(
+        "blocker_opened", run_id=run_id, blocker_id=blocker_id,
+        occurrence_id=occurrence_id, fingerprint="8" * 64, subject_id="example",
+        lineage_id="lineage", step_id="review", surface="lifecycle", symptom="gap",
+        evidence="review", impact="blocked", boundary="controller", status="open",
+    )
+    current = [start, opened]
+    new_bundle = [
+        start["source_bundle"][0],
+        {
+            "repository_key": "memory-knowledge", "path": "scripts/fix.py",
+            "sha256": work_memory.sha256_bytes(artifact.read_bytes()),
+        },
+    ]
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: (current, "a" * 64))
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle", lambda **kwargs: (new_bundle, "d" * 64, "lineage"),
+    )
+
+    def transact(request):
+        raw = b"".join(work_memory.canonical_bytes(item) for item in current)
+        ledger, _, result = work_memory.stage_event_batch(raw, request)
+        current[:] = work_memory.parse_ledger_bytes(ledger)
+        return result
+
+    monkeypatch.setattr(work_memory, "transact", transact)
+    base = dict(
+        run_id=run_id, blocker_id=blocker_id, occurrence_id=occurrence_id,
+        step_id="review", changed_artifact=[str(artifact)], solution="stable fix",
+        reusable_behavior_changed="yes", event_id=None, transition_event_id=None,
+        repo_roots_file=None,
+    )
+    work_memory.cmd_correct(SimpleNamespace(
+        **base, supersedes_correction_id=None, correction_id=old_correction_id,
+        finalize_failed_run=True,
+    ))
+
+    artifact.write_text("fixed = 'new evidence'\n")
+    new_bundle[1]["sha256"] = work_memory.sha256_bytes(artifact.read_bytes())
+    result = work_memory.cmd_correct(SimpleNamespace(
+        **base, supersedes_correction_id=[old_correction_id],
+        correction_id=new_correction_id, finalize_failed_run=False,
+    ))
+
+    assert result["correction_id"] == new_correction_id
+    replacement = next(
+        item for item in current
+        if item.get("event_type") == "correction_recorded"
+        and item.get("correction_id") == new_correction_id
+    )
+    assert replacement["supersedes_correction_id"] == old_correction_id
+    assert work_memory._active_correction_ids(current, blocker_id) == {new_correction_id}
+
+
 def test_discovery_correction_selects_subject_document_after_registered_dependency(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:

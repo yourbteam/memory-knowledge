@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import re
 import shlex
@@ -41,6 +42,33 @@ PROTECTED_CORRECTION_PATHS = {
     "scripts/work_memory_bootstrap.py",
 }
 IMMUTABLE_LAUNCHER_PATH = "scripts/work_memory_bootstrap_launcher.py"
+
+
+def _correction_id(
+    *, root: Path, blocker: dict[str, Any], artifacts: list[str],
+    supersedes: list[str], solution: str, reusable_behavior_changed: str,
+) -> str:
+    artifact_fingerprints = []
+    for artifact in sorted(artifacts):
+        raw_path = Path(artifact)
+        resolved = (raw_path if raw_path.is_absolute() else root / raw_path).resolve()
+        if not resolved.is_file():
+            raise LifecycleError("changed-artifact-not-found", details={"artifact": artifact})
+        artifact_fingerprints.append({
+            "path": str(resolved),
+            "sha256": hashlib.sha256(resolved.read_bytes()).hexdigest(),
+        })
+    identity = json.dumps({
+        "run_id": blocker["run_id"],
+        "blocker_id": blocker["blocker_id"],
+        "occurrence_id": blocker["occurrence_id"],
+        "step_id": blocker["step_id"],
+        "artifacts": artifact_fingerprints,
+        "supersedes": sorted(supersedes),
+        "solution": solution,
+        "reusable_behavior_changed": reusable_behavior_changed,
+    }, sort_keys=True, separators=(",", ":"))
+    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"memory-knowledge:{identity}"))
 
 
 def _metadata(path: Path, name: str) -> str:
@@ -134,6 +162,14 @@ def _open_blocker_ids(subject_id: str) -> list[str]:
         elif event.get("event_type") == "blocker_transitioned" and blocker_id in states:
             states[blocker_id] = event["to_status"]
     return sorted(blocker_id for blocker_id, status in states.items() if status == "open")
+
+
+def _run_is_terminal(events: list[dict[str, Any]], run_id: str) -> bool:
+    return any(
+        event.get("run_id") == run_id
+        and event.get("event_type") in {"run_closed", "run_abandoned"}
+        for event in events
+    )
 
 
 def _registered_verified(sequence_id: str, *, repo_roots_file: str | None) -> bool:
@@ -458,32 +494,44 @@ def _correct_subject(args: argparse.Namespace, subject_id: str) -> dict[str, Any
         if relative == IMMUTABLE_LAUNCHER_PATH:
             raise LifecycleError("immutable-bootstrap-launcher-change")
         protected = protected or relative in PROTECTED_CORRECTION_PATHS
-    if protected and not args.task_id:
+    supersedes = list(args.supersedes_correction_id or [])
+    authenticated_current_recovery = (
+        protected
+        and bool(supersedes)
+        and _run_is_terminal(events, blocker["run_id"])
+        and _registered_verified(
+            "discovery-promotion-lifecycle",
+            repo_roots_file=args.repo_roots_file,
+        )
+    )
+    use_sealed_bootstrap = protected and not authenticated_current_recovery
+    if use_sealed_bootstrap and not args.task_id:
         raise LifecycleError("task-id-required-for-protected-correction")
     command = [
         "python3",
-        "scripts/work_memory_bootstrap_launcher.py" if protected else "scripts/work_memory.py",
+        "scripts/work_memory_bootstrap_launcher.py" if use_sealed_bootstrap else "scripts/work_memory.py",
         "correct",
     ]
-    if protected:
+    if use_sealed_bootstrap:
         command.extend(["--task-id", args.task_id])
+    correction_id = _correction_id(
+        root=root, blocker=blocker, artifacts=artifacts, supersedes=supersedes,
+        solution=args.solution, reusable_behavior_changed=args.reusable_behavior_changed,
+    )
     command.extend([
         "--run-id", blocker["run_id"],
         "--blocker-id", blocker["blocker_id"], "--occurrence-id", blocker["occurrence_id"],
         "--step-id", blocker["step_id"], "--solution", args.solution,
         "--reusable-behavior-changed", args.reusable_behavior_changed,
-        "--correction-id", str(uuid.uuid5(
-            uuid.NAMESPACE_URL,
-            f"memory-knowledge:{blocker['run_id']}:{blocker['blocker_id']}:{blocker['occurrence_id']}",
-        )),
+        "--correction-id", correction_id,
     ])
-    if not protected:
+    if not protected and not _run_is_terminal(events, blocker["run_id"]):
         command.append("--finalize-failed-run")
     for artifact in artifacts:
         command.extend(["--changed-artifact", artifact])
-    for correction_id in args.supersedes_correction_id or []:
-        command.extend(["--supersedes-correction-id", correction_id])
-    if args.repo_roots_file and not protected:
+    for superseded_correction_id in supersedes:
+        command.extend(["--supersedes-correction-id", superseded_correction_id])
+    if args.repo_roots_file and not use_sealed_bootstrap:
         command.extend(["--repo-roots-file", args.repo_roots_file])
     correction = _json_command(command, root=root)
     return {"ok": True, "correction_id": correction["correction_id"],

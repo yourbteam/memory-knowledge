@@ -58,6 +58,8 @@ Use it when a task involves a multi-step command sequence that has been run befo
 
 | `discovery-candidate-reconciliation` | Audit all logged discovery sequences, decide which should promote, absorb, remain, supersede, or quarantine, and clean the active queue without deleting provenance. | `operations/sequences/discovery-candidate-reconciliation/` | python3 scripts/discovery_candidate_reconciliation.py | The controller returns ok true, every frozen candidate has an approved disposition, canonical promote rows reach registered verification, and the active index excludes only terminal rows while original logs remain. | `other` | `discovery-782832ed-7fa4-5efe-9765-463303ecd2a2` |
 
+| `screenshot-page-source-locator` | Locate the route, owning page/template, behavior script, styles, and data boundary behind a UI page from a screenshot, including duplicate or ambiguous variants. | `operations/sequences/screenshot-page-source-locator/` | memory-knowledge:scripts/screenshot_source_locator.py | The helper and agent trace identify the evidence-backed route, page/template, behavior script, styles, data boundary, and any unresolved discriminator; verification tests pass. | `read-only` | `discovery-66c9c758-8b03-5e3b-9622-faa1044070c9` |
+
 
 ## Missing Sequence Discovery
 

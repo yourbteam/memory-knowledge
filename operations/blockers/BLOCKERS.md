@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `bcd708d050ce91202cf771550e3f21a009e7cbf17fd464177d9bf0dba729a694`
+Ledger-SHA256: `4deef968ce87b2f103257c1ed019bb028e64431b3d7605472cab5bde89c6e5ba`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -13,24 +13,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The manifest correction was proven by exact selection but the correction ledger rejected recording it
 - Evidence: cmd_correct calls resolve_bundle without the selection repo-roots file and returned missing-repository-root after codex-skills dependencies were declared
 
-## blk-00bb2ceebc4dd6192ab64da2
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/touchpoints.py`
-- Symptom: The real source run produced a valid strategy and owner-question manifest, but compose-platform-lock-session-guide blocked because the command-backed guide payload violated the exact grounding contract.
-- Evidence: up-run-66394f2cc69e records platform_lock_session_guide_status={status:invalid,issues:[platform_lock_guide_grounding_invalid]}; the phase ledger reason is the same and publication was never reached.
-
-## blk-010279601780b9c2fe9cb4c1
-
-- Status: `superseded`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `verify-correction-bootstrap-guard`
-- Surface: `sequence-guard-tests`
-- Symptom: Two existing direct-correction guard tests rejected valid relative memory-repository artifact paths.
-- Evidence: tests/test_sequence_guard.py: 53 passed, 2 failed with invalid-correction-bootstrap-artifact in the direct work_memory.py correction path.
-
 ## blk-016a972d134f32eaffd58e98
 
 - Status: `non-gap`
@@ -40,15 +22,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The registered deploy run-start guard omitted the mandatory source reference.
 - Evidence: argparse rejected the guard before validation and printed that --source-ref is required.
 
-## blk-018e75ffc4689db389ef6b33
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `accept-test-diagnostic-baseline`
-- Surface: `/Users/kamenkamenov/.local/state/kamen-convergence/up-harness-cd-s-002-upgrades-20260714/state.json`
-- Symptom: The approved tests baseline update could not atomically write its convergence state file under the sandbox.
-- Evidence: tempfile.mkstemp raised PermissionError for the convergence state directory.
-
 ## blk-01fb8f61bf3ddba46341a3ec
 
 - Status: `superseded`
@@ -57,42 +30,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `operations/sequences/discovery/2026-07-15-unified-research-playbook-v2-trust-reset.dependencies.json`
 - Symptom: A concurrent change to tests/test_scoped_git_publish.py invalidated the v2 successor even though scoped publishing is outside the v2 research-playbook evaluation.
 - Evidence: The exact current-vs-selected bundle diff contained the two intended v2 replay files plus tests/test_scoped_git_publish.py; no v2 source or evaluator path depends on that test.
-
-## blk-02843a2f775ca97659278bd2
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `sealed-bootstrap-launcher-correction`
-- Surface: `scripts/work_memory_bootstrap_launcher.py`
-- Symptom: The immutable sealed bootstrap launcher rejected the trust-reset correction before writing because the task active state no longer matches its current classification/selection receipts.
-- Evidence: work_memory_bootstrap_launcher.py correct returned exit 4 and active-state-receipt-mismatch; no correction event was appended.
-
-## blk-036a1d3f8e9384ec8df94616
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/platform_decisions.py`
-- Symptom: The live canary completed its source re-draft and first owner-decision/evidence continuation, but the canonical platform decision gate remained non-locked.
-- Evidence: The command-backed canary exited with platform did not lock; the continuation state contains the exact gate issues and claim usability evidence.
-
-## blk-056a285935402e93ed9804f7
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `/Users/kamenkamenov/united-partners/scripts/run_cd_s_002_upgrade_canary.py`
-- Symptom: The first continuation stayed provisional and blocked final composition because the synthetic owner record selected a core-line claim whose generated proof row required a clearance the fixture did not supply.
-- Evidence: up-run-bd764c0695f4 platform_decisions_gate issues are required_clearance_missing and public_claim_not_usable for claim-demo-governance-grade; compose-final-strategy-brief then blocked.
-
-## blk-0599ff16677a344d8bb87f7e
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `score-evaluation`
-- Surface: `final-v17-comparative-score`
-- Symptom: complete-18-record-score-failed-critical-recall-13-of-17-and-planner-pass-every-case-false
-- Evidence: current-timeout-after-acceptance-test-missing-and-conflict-archive-retention-versus-pii-deletion-absent-from-v2-material-gaps
 
 ## blk-05a905f3cd51821710c0480d
 
@@ -112,15 +49,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Convergence slot lifecycle cannot be followed under sequence guarding because the skills omit predeclared runtime-ID command shapes
 - Evidence: sequence_guard _shape_match supports <placeholder>; convergence and sequence skills did not describe using it before spawn
 
-## blk-0650626e15d66f50f203ca11
-
-- Status: `closed`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `schema-remediation-replay`
-- Surface: `research-package-raw-finding-ingress`
-- Symptom: captured-malformed-lens-envelopes-enter-trusted-state
-- Evidence: final-v4-captured-raw_findings-and-finding_type-shapes-plus-permissive-normalize_raw_findings
-
 ## blk-06f9a648d262b8afa1e1cf11
 
 - Status: `superseded`
@@ -130,24 +58,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The browser requests an eight-character device code but the user has no terminal view of the CLI-generated code
 - Evidence: The active gh flow emitted its code only inside the agent-owned PTY
 
-## blk-079e153aaafc9926aa6c10c2
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `strategy-contract-fix-baseline`
-- Surface: `convergence-baseline-guard`
-- Symptom: The convergence guard blocks the confirmed strategy contract edit because its expected hashes predate already-made approved fixes.
-- Evidence: guard-baseline reported drift only in scripts, src/up_harness, and tests; docs and workflows matched their expected hashes and Git HEAD/index did not drift.
-
-## blk-080f363bbda43a35924db97d
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/final_strategy.py`
-- Symptom: The command-backed canary passed structured draft generation but blocked at compose-final-strategy-brief with an empty phase error.
-- Evidence: Live run up-run-e78d789027f9 is blocked at compose-final-strategy-brief; the canonical final_strategy_validation record in its state is the required diagnostic source.
-
 ## blk-0824f088e8dcfdb4a7227835
 
 - Status: `non-gap`
@@ -156,15 +66,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `blocker-catalog-cli`
 - Symptom: Catalog transition rejected flags described by the blocker-catalog skill
 - Evidence: argparse reported unrecognized --solution-summary and --changed-artifact
-
-## blk-089558d0d5b04a4cd63a1dba
-
-- Status: `non-gap`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `create-legacy-workdirs`
-- Surface: `scripts/sequence_guard.py`
-- Symptom: sequence-guard-rejected-workdir-command
-- Evidence: argparse-required-step-and-source-ref
 
 ## blk-0a65afd883030d71c00f618d
 
@@ -202,15 +103,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The guard rejected the documented gh browser-login command
 - Evidence: sequence_guard.py returned command-not-grounded-in-selected-document
 
-## blk-0bc83d86cbd25e92c88b43d5
-
-- Status: `open`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `final-v4-requirement-conflict-satisfaction`
-- Surface: `requirements-satisfaction-terminal-envelope`
-- Symptom: conflict-satisfaction-finding-used-originating-stage-REQUIREMENTS_SATISFACTION
-- Evidence: locked-prompt-and-finding-contract-require-originating-stage-RESEARCH
-
 ## blk-0bcbc5962dd62d05f376cd66
 
 - Status: `closed`
@@ -219,15 +111,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `tests/test_scoped_git_publish.py`
 - Symptom: The isolated recovery test expected a leading porcelain status space that the shared git helper strips.
 - Evidence: Runtime recovery succeeded; pytest reported only expected M excluded.txt versus actual stripped M excluded.txt.
-
-## blk-0c551f9a30f8cf4d583644cb
-
-- Status: `non-gap`
-- Subject: `discovery-e239c5e0-5bff-58b1-a62f-99f64e686baf`
-- Step: `catalog-invalid-spec`
-- Surface: `discovery-bootstrap-spec`
-- Symptom: Bootstrap rejected failure_handling before creating a run.
-- Evidence: First bootstrap exited 2 with invalid-bootstrap-failure-handling; the field was a JSON list but the contract requires one non-empty string.
 
 ## blk-0cc194931fe4493f937d47c2
 
@@ -238,24 +121,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Correction recording rejected at least one changed artifact path
 - Evidence: work_memory.py correct returned changed-artifact-outside-repository
 
-## blk-0ce64ff33985d5f1913a87c5
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-6c9c32b3-939c-54f1-8cff-5bd9758f8821`
-- Step: `verify-reset-worker-at-most-once-under-launchd`
-- Surface: `launchctl-job-contract`
-- Symptom: submitted-one-shot-job-remains-spawn-scheduled-after-successful-exit
-- Evidence: launchctl-print-showed-properties-keepalive-runs-4-state-spawn-scheduled-last-exit-code-0
-
-## blk-0d4dec0b648f70201ce730ae
-
-- Status: `superseded`
-- Subject: `discovery-782832ed-7fa4-5efe-9765-463303ecd2a2`
-- Step: `expand-discovery-dependencies`
-- Surface: `scripts/sequence_discovery_log.py`
-- Symptom: The canonical set-dependencies helper rejected the supplied dependency array before changing the manifest.
-- Evidence: sequence_discovery_log.py returned exactly invalid-dependencies-json for a JSON array of dependency entries.
-
 ## blk-0d9e2b0044af3e4b745c92fe
 
 - Status: `closed`
@@ -265,24 +130,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Two planned discovery rows could not be recorded; pipe tokens escaped the command argument
 - Evidence: invalid-command-row plus zsh command-not-found for greenfield/preflight/parallel tokens
 
-## blk-0dc4feadc070f3efb02dbcda
-
-- Status: `superseded`
-- Subject: `discovery-6c9c32b3-939c-54f1-8cff-5bd9758f8821`
-- Step: `schedule-cloned-remote-control-enrollment-reset`
-- Surface: `launchd-reset-worker`
-- Symptom: chatgpt-repeatedly-quits-and-reopens
-- Evidence: user-reported-loop-and-launchd-service-removal-stopped-worker
-
-## blk-104cd4ddbbbfd8469317242d
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `compose-platform-lock-session-guide`
-- Symptom: The real gpt-5.5 guide now preserves all owner questions but its option grounding payload does not exactly match the manifest pairs required by the validator.
-- Evidence: Harness run up-run-da0f753dddb0 stored platform_lock_guide_grounding_invalid after the question-mismatch correction passed.
-
 ## blk-10adf26e004bba44f735495a
 
 - Status: `closed`
@@ -291,33 +138,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-discovery`
 - Symptom: The discovery path does not authorize the mandatory init_skill.py scaffold command.
 - Evidence: The skill-creator contract requires init_skill.py for a new skill; no matching command exists in the selected discovery document.
-
-## blk-110e4e87393edd3855a45cbc
-
-- Status: `open`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `final-v4-current-runtime-satisfaction`
-- Surface: `requirements-satisfaction-terminal-envelope`
-- Symptom: current-satisfaction-returned-raw_findings-envelope-instead-of-findings
-- Evidence: locked-prompt-requires-exact-verdict-findings-object-and-complete-finding-record
-
-## blk-12c1ccdc00f12a3ba0627521
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/platform_decisions.py`
-- Symptom: The live canary produced a valid structured brief whose core-line question offered no option equal to a proof-manifest claim, so no discipline-safe owner core-line decision could be constructed.
-- Evidence: The command-backed canary exited with core-line options do not bind exactly one proof claim after completing source generation.
-
-## blk-139ea98a01bb530b1824487e
-
-- Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `final-strategy-unit-verification`
-- Surface: `tests/unit/test_final_strategy.py`
-- Symptom: The locked final-strategy unit vector returned invalid instead of valid because its draft question section failed the canonical parser.
-- Evidence: test_locked_roadmap_uses_supplied_values_and_verified_proof failed with final validation issue beginning owner_questions_invalid.
 
 ## blk-147e5a540edd6d8e3114a736
 
@@ -337,33 +157,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The future-system INTERNAL_READINESS agent remained running for over five minutes and wrote no output file.
 - Evidence: Agent 019f6535-112e-7080-985d-90cbd93437f0 returned repeated wait timeouts across more than five minutes; expected internal-readiness-output.json is absent.
 
-## blk-1648042967067975b9dc380d
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `blocker-catalog-command-guard`
-- Surface: `scripts/sequence_guard.py`
-- Symptom: The sequence guard rejected the blocker-catalog validation because the invocation omitted --step and --source-ref.
-- Evidence: Argparse reported: the following arguments are required: --step, --source-ref.
-
-## blk-170d08987d47896e428af8ed
-
-- Status: `non-gap`
-- Subject: `discovery-3fd6cc31-5152-5c78-91fb-b6e946b2cdab`
-- Step: `correction-recording`
-- Surface: `work-memory-correction-lifecycle`
-- Symptom: The canonical correction recorder rejected the approved typed-answer artifact set before it could bind the fix to the original evaluator blocker.
-- Evidence: work_memory.py correct exited 3 with correction-artifact-drift-mismatch for blocker blk-c94e16da740af387f954abdd; no tests or rerun followed.
-
-## blk-17237a0f4e911444c1c9e845
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `accept-source-tests-baseline`
-- Surface: `scripts/sequence_guard.py`
-- Symptom: The sequence guard rejected atomic source/tests baseline advancement because the selected source bundle no longer matches current shared operational files.
-- Evidence: sequence_guard returned {error: stale-source-bundle, ok: false} before dispatching convergence_state.py.
-
 ## blk-17488b4b91687fc9020ef8ce
 
 - Status: `superseded`
@@ -373,24 +166,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The baseline guard sees the parent-authored research document hash as drift.
 - Evidence: Only docs/gf-n3-resume-durability-research.md changed from expected 800b4f... to actual f2605e...; every other allowed path hash matches.
 
-## blk-1748ae1078707861f452c473
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `final-v4-lens-schema-boundary`
-- Surface: `research-package-raw-finding-ingress`
-- Symptom: repeated-lens-agents-emitted-wrong-finding-field-shapes
-- Evidence: research_package-normalize_raw_findings-only-calls-canonical_json-and-conflict-retry-used-finding_type-instead-of-type
-
-## blk-17ca287f5b7e1cf521fbd758
-
-- Status: `open`
-- Subject: `discovery-e78611ed-2903-5b35-9fa2-142b91bcebc3`
-- Step: `memory-publish`
-- Surface: `memory-knowledge-origin-main`
-- Symptom: The approved memory-knowledge commit was created locally but origin rejected main because remote main contains five commits absent from the local branch.
-- Evidence: scoped_git_publish.py preserved local commit 6daa425c962dd970670551792db2273380fd0c0b and git push returned fetch-first/non-fast-forward.
-
 ## blk-181ce7d8121a02f705556331
 
 - Status: `open`
@@ -399,42 +174,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `src/up_harness/engine/runner.py`
 - Symptom: the source workflow completed policy preparation and join but exposed zero controlled topics after strategy composition
 - Evidence: same-path integration test progressed beyond strategy composition then observed len(controlled_topics) equal to zero
-
-## blk-18da244547076d574b8e92c1
-
-- Status: `superseded`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `record-owner-question-contract-correction`
-- Surface: `work-memory-control`
-- Symptom: The sequence guard rejected a direct work_memory.py correction command in correction-bootstrap mode.
-- Evidence: sequence_guard.py returned invalid-correction-bootstrap-command before the correction command ran.
-
-## blk-192048d5b4826bf16f7a61f1
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `transition-corrected-blocker`
-- Surface: `correction-bootstrap-dependency-bundle`
-- Symptom: The prescribed post-correction transition cannot be guarded because blocker_catalog.py is absent from the predecessor selected bundle.
-- Evidence: sequence_guard.py returned invalid-correction-bootstrap-source after the exact transition command was added and correction recording succeeded.
-
-## blk-1964e23016a13f5237b9944c
-
-- Status: `superseded`
-- Subject: `discovery-candidate-reconciliation`
-- Step: `review-rerun`
-- Surface: `scripts/discovery_candidate_reconciliation.py`
-- Symptom: A second execute-rolling invocation using the same output directory overwrites attempt-1.json but then encounters the prior checkpoint with a different manifest hash.
-- Evidence: cmd_execute_rolling writes output_dir/attempt-1.json on every invocation; audit generated_at_utc changes the manifest hash; _load_checkpoint rejects the retained attempt-1 checkpoint as checkpoint-manifest-mismatch.
-
-## blk-1975f40a029b3a7885de0493
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-3fd6cc31-5152-5c78-91fb-b6e946b2cdab`
-- Step: `test-focused`
-- Surface: `discovery-sequence-pytest-command`
-- Symptom: The correction-bound verification sequence prescribes direct uv pytest, but the repository contract requires every memory-knowledge pytest run to use scripts/run_pytest.sh.
-- Evidence: Discovery test-focused row calls uv run --extra dev pytest; skills/write-code-playbook/SKILL.md requires scripts/run_pytest.sh and forbids direct uv/pytest invocation.
 
 ## blk-19f5420d72778a0233bd0442
 
@@ -454,33 +193,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: state initialization rejected the recorded --state flag
 - Evidence: convergence_state.py init --help shows positional state argument
 
-## blk-1a151c7dd05870d0e8f57c60
-
-- Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `convergence-state-inspection`
-- Surface: `/Users/kamenkamenov/.codex/skills/_shared/convergence_state.py`
-- Symptom: State inspection command rejected the nonexistent show subcommand.
-- Evidence: argparse lists status, not show, as the supported read command.
-
-## blk-1af5226c2775a0c65e1264e6
-
-- Status: `open`
-- Subject: `discovery-6c9c32b3-939c-54f1-8cff-5bd9758f8821`
-- Step: `verify-reset-worker-unit-test`
-- Surface: `python-unittest`
-- Symptom: reset-worker-test-did-not-start
-- Evidence: python3-m-unittest-rejected-filesystem-path-as-module-name
-
-## blk-1b13fedc817055228a9de307
-
-- Status: `open`
-- Subject: `discovery-e78611ed-2903-5b35-9fa2-142b91bcebc3`
-- Step: `memory-integrate-and-push`
-- Surface: `scripts/sequence_guard.py`
-- Symptom: Isolated reconciliation stopped while three-way merging scripts/sequence_guard.py; git merge-file returned 10 conflict hunks.
-- Evidence: scoped_git_publish.py returned three-way merge failed for scripts/sequence_guard.py: exit 10 before commit or push. Its _merge_commit_path currently treats only return code 1 as a content conflict.
-
 ## blk-1b24a5707c20a0937f146399
 
 - Status: `superseded`
@@ -489,6 +201,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `playbook-convergence-loop-slot-lifecycle`
 - Symptom: The exact bind-agent command cannot be guarded before spawn because the agent ID is runtime-generated, while binding must happen immediately after spawn
 - Evidence: playbook-convergence-loop requires immediate bind-agent; sequence_guard requires exact command grounded in the selected immutable bundle
+
+## blk-1c2627343d77a52f371f5121
+
+- Status: `superseded`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `protected-correct`
+- Surface: `scripts/work_memory_bootstrap_launcher.py`
+- Symptom: The sealed bootstrap refused the generated protected correction command before recording the controller fix.
+- Evidence: discovery_promotion_lifecycle.py emitted a content-bound correction id and exact two-file artifact list; work_memory_bootstrap_launcher.py returned bootstrap-command-not-grounded.
 
 ## blk-1da9d4977b4f37968d8b751b
 
@@ -508,15 +229,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: the new decision-rerun test inherited two trailing assertions from the preceding history test and fails with NameError
 - Evidence: bundled unittest points to test_mcp_stdio.py line 361; filtered is local to the preceding test
 
-## blk-1e60d1e3a7cb0715cb2b9f53
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/strategy_brief.py`
-- Symptom: The final command-backed canary failed in compose-llm-strategy-brief with owner_question_manifest_invalid:4 after earlier runs failed different owner-manifest fields.
-- Evidence: /tmp/up-cd-s-002-upgrade-canary/canary-failure.json and run up-run-3adc5b8cd0bf record deterministic rejection of structured owner-question manifest row 4.
-
 ## blk-1eb4cec7ca00caded9403f3e
 
 - Status: `closed`
@@ -534,15 +246,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `blocker_catalog status transition`
 - Symptom: The required explicit transition to verified was rejected after a successful same-path verification event
 - Evidence: blocker_catalog.py transition returned {error: invalid-blocker-status-transition, ok: false} for blk-5f0381d736e14801b802be9c using verification event 98df96d3-92b6-4dbb-b5bd-477a1ba9d553
-
-## blk-1f2780e54e553406ea2d158f
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `register-full-verification-commands`
-- Surface: `operations/sequences/discovery/2026-07-14-up-harness-cd-s-002-live-verification.dependencies.json`
-- Symptom: The sequence correction rejected the newly registered verify_harness command because its executable script is absent from the dependency manifest.
-- Evidence: work_memory.py correct returned executable-outside-manifest::scripts/verify_harness.py.
 
 ## blk-1f4cb7b82439f59a6c162ca1
 
@@ -571,15 +274,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The guard rejected the required atomic source-plus-tests expected-state command.
 - Evidence: sequence_guard returned command-not-grounded-in-selected-document before accept-baseline executed.
 
-## blk-2165c0c033c5b4cae015ee1e
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `record-combined-command-registry-correction`
-- Surface: `scripts/work_memory.py`
-- Symptom: A combined correction record could not represent simultaneous discovery-log and dependency-manifest drift.
-- Evidence: work_memory.py correct returned correction-artifact-drift-mismatch after both changed artifacts were supplied.
-
 ## blk-21b2da2a8e50279db192754d
 
 - Status: `closed`
@@ -588,24 +282,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `commit-push-main`
 - Symptom: The registered verification command executes three test files while the sealed dependency bundle includes only one.
 - Evidence: REV-COMMIT-PUSH-001 independently confirmed tests/test_scoped_git_publish.py and tests/test_sequence_promote.py are omitted; scripts/sequence_promote.py is their directly executed helper.
-
-## blk-226c908efabad4d1392d67d9
-
-- Status: `closed`
-- Subject: `discovery-12a4d13f-4852-5fc4-8106-aebb5efbec71`
-- Step: `edit-command-shape`
-- Surface: `v14-correction-bootstrap-contract`
-- Symptom: The v14 stale-bundle bootstrap rejects the exact three-artifact correction because its selected discovery document declares only one, two, four, five, and eleven-artifact shapes.
-- Evidence: The guarded wrapper command for the current discovery document, sequence guard, and sequence guard test returned command-not-grounded-in-selected-document before any correction ran.
-
-## blk-234f25d500b05ba32c9dcd9a
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `compose-platform-lock-session-guide`
-- Symptom: The real gpt-5.5 run passed structured strategy composition and stopped with the new platform-lock session-guide phase blocked.
-- Evidence: Harness run up-run-ab4991abdff9 returned overall blocked with compose-platform-lock-session-guide status blocked and no phase error.
 
 ## blk-23c06fb0d9e360287293d158
 
@@ -616,14 +292,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The active discovery run cannot guard its own work-memory summary or blocker-catalog command.
 - Evidence: sequence_guard returned source-ref-outside-selected-bundle and command-not-grounded-in-selected-document.
 
-## blk-24eb24daf377058df643288d
+## blk-2494393a7c1adcc3a8d485c7
 
 - Status: `non-gap`
-- Subject: `discovery-3fd6cc31-5152-5c78-91fb-b6e946b2cdab`
-- Step: `record-evaluation`
-- Surface: `sequence-guard`
-- Symptom: The guard rejected the repository-root evaluator command before recording a completed legacy output.
-- Evidence: The discovery row uses python3 evaluate_research_playbook_v2.py from scripts/; the concrete run uses python3 scripts/evaluate_research_playbook_v2.py from repository root.
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `final-research-verification`
+- Surface: `work_memory_verification`
+- Symptom: aggregate verification omitted the successor correction binding
+- Evidence: work_memory verify returned clean-verification-after-correction
 
 ## blk-25226aa23e317a9df6357c04
 
@@ -697,15 +373,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Post-edit verification cannot start because the baseline still contains the pre-edit hashes for the authorized research and audit artifacts.
 - Evidence: guard-baseline returned BLOCKED and showed only allowed-path drift for hypothesis-validation-protocol-research.md and its gap-audit.md.
 
-## blk-2ade3deacde01a5751eb052a
-
-- Status: `closed`
-- Subject: `discovery-6a9f4f62-798e-5c7c-8bbe-8738a523d1d1`
-- Step: `open-blocker`
-- Surface: `sequence-contract`
-- Symptom: wrong-subject-binding-accepted-by-guard
-- Evidence: product-run-returned-subject-run-mismatch
-
 ## blk-2b96f570c4b12dd76a7b32eb
 
 - Status: `non-gap`
@@ -724,24 +391,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The dual-client installer refused before changing either managed root.
 - Evidence: working-agreement/install-skills.sh returned: --target both requires --reconciliation.
 
-## blk-2c3cc9cbd1504d955fdd2adb
-
-- Status: `non-gap`
-- Subject: `discovery-6c9c32b3-939c-54f1-8cff-5bd9758f8821`
-- Step: `start-successor-diagnostic-run`
-- Surface: `work-memory`
-- Symptom: fresh-diagnostic-run-could-not-start
-- Evidence: work_memory.py-run-start-returned-PermissionError
-
-## blk-2cdef6071b36075203d13c85
-
-- Status: `non-gap`
-- Subject: `discovery-3fd6cc31-5152-5c78-91fb-b6e946b2cdab`
-- Step: `select-verification-sequence`
-- Surface: `work-memory-routing`
-- Symptom: The requested registered verification sequence could not be selected.
-- Evidence: work_memory.py select returned sequence-not-valid-for-operation; registry contains no v2-regression-tests row.
-
 ## blk-2d4fe08c2f2b0c43df307887
 
 - Status: `superseded`
@@ -750,15 +399,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-discovery-contract`
 - Symptom: overlapping-document-correction-cannot-be-terminally-superseded-through-discovery-command
 - Evidence: older-correction-eee2-hash-is-replaced-by-latest-preserving-document-revision
-
-## blk-2e65432f8ed08537a4557b65
-
-- Status: `closed`
-- Subject: `discovery-3fd6cc31-5152-5c78-91fb-b6e946b2cdab`
-- Step: `v2-emit-package`
-- Surface: `sequence-command-contract`
-- Symptom: The reusable discovery command cannot emit a controller-valid package because it omits the required planner-readiness input.
-- Evidence: research_package.py emit-package --help requires --planner-readiness; the selected discovery row has no such argument.
 
 ## blk-2ec0005e9c80d950709e1f75
 
@@ -778,15 +418,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The guard rejected release of closed coverage slot s83 because the selected source bundle is stale
 - Evidence: sequence_guard.py guard returned stale-source-bundle after mark-closed succeeded; slot s83 is closed and not released
 
-## blk-30424585bd80d1b3a201f07d
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-init-state`
-- Surface: `selected-source-bundle`
-- Symptom: The active v7 guard rejected the first case initialization before state creation.
-- Evidence: sequence_guard.py guard returned stale-source-bundle for the selected v7 bundle 996165f2284060c5ea9259a896dbb3653278365e068299cacd1511b97d8e8a8a31 before running research_package.py init.
-
 ## blk-30b441c2d5efd2b0efcd4adb
 
 - Status: `closed`
@@ -804,15 +435,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `focused-work-memory-reproduction`
 - Symptom: The focused reproduction stopped before exercising the missing repository-root path
 - Evidence: resolve_bundle rejected the test discovery fixture because mandatory discovery sections were absent
-
-## blk-30f1bf296a75b6afdf6473de
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `final-live-canary`
-- Surface: `/Users/kamenkamenov/united-partners/scripts/run_cd_s_002_upgrade_canary.py`
-- Symptom: The live canary expected a locked platform but its synthetic owner decision made claim-resilience-high-level public while the supplied evidence made only qaf-913f42e3bf30bd90 public-usable.
-- Evidence: up-run-cb8c681814bf completed 35 phases; platform_decisions_gate returned provisional with public_claim_not_usable, claim-resilience-high-level public_usable=false, and qaf-913f42e3bf30bd90 public_usable=true.
 
 ## blk-30fc6d2e072f46cf732eefc2
 
@@ -841,15 +463,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Independent review proved registered failures can bypass correction, interrupted correction is not resumable, cross-repository corrections are rejected, and commit-push proof omits two executed tests.
 - Evidence: Reviewer and critic independently classified REV-LIFECYCLE-001, REV-LIFECYCLE-002, REV-LIFECYCLE-003, and REV-COMMIT-PUSH-001 as FIX NOW.
 
-## blk-348b191e37b8d5c1a1f4964c
-
-- Status: `closed`
-- Subject: `discovery-candidate-reconciliation`
-- Step: `validate-dispositions`
-- Surface: `scripts/discovery_candidate_reconciliation.py`
-- Symptom: Manifest validation accepts the same HEAD and candidate path list even when an uncommitted candidate log changes or the sequence registry changes after audit.
-- Evidence: The schema stores candidate_set_hash and registry_hash, but validate_manifest checks only HEAD, path list, and path-list hash; it never recomputes per-candidate bytes or registry_hash.
-
 ## blk-34d433bae9511f2ea2686a1a
 
 - Status: `non-gap`
@@ -877,32 +490,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Existing adjudication replay returns ADJUDICATION_ALREADY_RECORDED without recomputing a persisted verdict created by the prior controller.
 - Evidence: Current, mixed, and scope states retain pre-fix IN_PROGRESS/BLOCKED verdicts even though their immutable adjudications are valid under the corrected disposition-driven evaluation.
 
-## blk-369d6d3ac0069a2dd91f0b90
+## blk-370bea2272786caf34525347
 
 - Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `accept-canary-script-baseline`
-- Surface: `/Users/kamenkamenov/.local/state/kamen-convergence/up-harness-cd-s-002-upgrades-20260714/state.json`
-- Symptom: convergence accept-baseline rejected a scripts-only advance because another authorized path also differs from expected state
-- Evidence: accept-baseline returned: an authorized path outside the declared change set drifted
-
-## blk-370041ea4cabe0295e3669a3
-
-- Status: `non-gap`
-- Subject: `discovery-e239c5e0-5bff-58b1-a62f-99f64e686baf`
-- Step: `catalog-prerun-deadlock`
-- Surface: `blocker-catalog-bootstrap`
-- Symptom: The blocker catalog helper rejected a blocker that occurred before bootstrap had created its required run_started event.
-- Evidence: blocker_catalog.py open exited 3 with run-not-found after the first bootstrap validation failure; successful bootstrap supplied the run identity used here. Two later script-source guard attempts also proved blocker_catalog.py is not automatically selected as a trust anchor.
-
-## blk-3709a6c0c65f62629fea1282
-
-- Status: `non-gap`
-- Subject: `discovery-e78611ed-2903-5b35-9fa2-142b91bcebc3`
-- Step: `validate-agentic-trading`
-- Surface: `agentic-trading-test-suite`
-- Symptom: The full agentic-trading suite produced EXIT for CLSK:verdict while TestGraphBuilder.test_c6_verdict_value requires MONITOR.
-- Evidence: uv run pytest: 1 failed, 807 passed; tests/test_graph.py:375 asserted v[0] == MONITOR but actual was EXIT.
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `inspect-blocker-ledger-files`
+- Surface: `shell-expansion`
+- Symptom: A read-only ledger inspection command stopped before rg because zsh expanded a nonexistent operations/events/*.jsonl glob.
+- Evidence: zsh:1: no matches found: operations/events/*.jsonl
 
 ## blk-37575ef28f83a55bd0433d9a
 
@@ -949,23 +544,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: fresh-final-executions-did-not-return-runtime-agent-ids
 - Evidence: eight-request-Promise-all-returned-agent-thread-limit-reached
 
-## blk-3dd4136f89ebaa69ef53c38e
+## blk-3d3a6824bbea9c6033c28fe9
 
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `validate-captured-guide-payload`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/touchpoints.py`
-- Symptom: Three guide correction attempts received only platform_lock_guide_grounding_invalid even though the payload has dozens of independently validated quote and structural fields.
-- Evidence: The live up-run-87ba98207ae2 exhausted all three attempts with the same generic reason; an offline exact-substring audit of the later captured payload found no invalid evidence quote, confirming that failures can move between fields while retaining an indistinguishable diagnostic.
-
-## blk-3e14bd2b2f6f6910231fba26
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `compose-llm-strategy-brief`
-- Symptom: The real gpt-5.5 CD-S-002 canary stopped in compose-llm-strategy-brief because the structured proof manifest did not satisfy the runtime contract.
-- Evidence: Harness run up-run-7d46e4627fc6 returned phase compose-llm-strategy-brief status failed and error proof_manifest_invalid.
+- Status: `closed`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `protected-terminal-replacement`
+- Surface: `lifecycle-controller-bootstrap-routing`
+- Symptom: The complete correction drift includes protected trust anchors, but the predecessor activation snapshot predates the verified terminal-replacement contract.
+- Evidence: Exact drift is discovery doc, discovery manifest, helper, helper test, work_memory.py, and work_memory_bootstrap.py; the old task activation sealed pre-contract controller hashes while current registered lifecycle run 957da562-b757-4390-b209-cda40d68cf05 passed 159 tests.
 
 ## blk-3e7a70df538ca01016710375
 
@@ -976,33 +562,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Direct fixed-awaiting-verification to non-gap transition was rejected
 - Evidence: blocker_catalog.py returned invalid-blocker-status-transition
 
-## blk-3f797e3f5fa8eece40757d76
-
-- Status: `non-gap`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `focused-suite-node-selection`
-- Surface: `tests/test_work_memory.py`
-- Symptom: A focused pytest command selected the correction-bootstrap test from the wrong module and collected zero tests.
-- Evidence: pytest reported not found under tests/test_work_memory.py and exited 4 before collection.
-
-## blk-3f94234308fcfebb048becc4
-
-- Status: `superseded`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `repair-live-owner-question-contract`
-- Surface: `compose-llm-strategy-brief`
-- Symptom: The clean before-state structured strategy prompt does not state the strict owner-question list grammar that the downstream validator enforces.
-- Evidence: Live run up-run-87d9d0de034b failed owner_questions_invalid_line:106; source inspection proves the producer prompt omits the canonical list syntax.
-
-## blk-3fb8a9cf220a4d11f9f79238
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `verify-final-strategy`
-- Surface: `scripts/sequence_guard.py`
-- Symptom: The guard rejected one unittest command containing three target tokens.
-- Evidence: The discovery row records unittest <targets> as one placeholder token; the same single-target shape previously passed.
-
 ## blk-40488ff90594764f3846303d
 
 - Status: `closed`
@@ -1011,15 +570,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `research-playbook-v2-hash-contract`
 - Symptom: Independent lenses block because candidate/envelope canonical object hashes differ from the SHA256 of their JSON files and the role contract does not define the hash domain.
 - Evidence: INTERNAL_READINESS and REQUIREMENTS_SATISFACTION independently reported candidate file b8da0a44 versus declared ab47703f and envelope file dad48ccc versus declared af7072eb; both stopped rather than assess unverified inputs.
-
-## blk-40ab28e6c972d0e250143be4
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `restore-correction-bundle`
-- Surface: `work-memory-selection`
-- Symptom: The active correction receipt omits one changed UP test and includes unrelated selected-controller/discovery drift.
-- Evidence: Independent remediation assessment found tests/unit/test_strategy_brief_prompt.py absent from the dependency manifest and unrelated drift in scripts/work_memory.py plus the discovery document.
 
 ## blk-40b4a227f019ec7882f591e4
 
@@ -1030,23 +580,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Cycle 4 coverage audit reconciliation fails with artifact has a different live supersession
 - Evidence: existing Cycle 1 artifact points to Cycle 3; one-pass loop validates that pointer before repointing Cycle 3 to Cycle 4
 
-## blk-40eda9272e80b63fc13005cc
+## blk-4269e3b7cb8ed9c13ee456d7
 
-- Status: `closed`
-- Subject: `discovery-223a62bb-62d5-5004-a1b6-cedb69d65585`
-- Step: `adjudication`
-- Surface: `blind-fixture`
-- Symptom: planner-must-invent-future-boundary
-- Evidence: /private/tmp/research-playbook-v2-eval-20260715-final-v7/v15-unrecorded-adjudication/mixed-maturity/adjudication-output.json
-
-## blk-415d303e1ee7a936686d098c
-
-- Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `record-final-strategy-correction`
-- Surface: `work-memory-correction-bundle`
-- Symptom: The work-memory ledger rejected the final-strategy producer correction because final_strategy.py is not in the selected UP dependency bundle, although its focused test is.
-- Evidence: work_memory.py correct returned correction-artifact-drift-mismatch for final_strategy.py plus test_final_strategy.py; the selected dependency manifest contains only the test path.
+- Status: `non-gap`
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `research-inventory-rerun`
+- Surface: `sequence_guard`
+- Symptom: sequence_guard rejected the repository inspection command before execution
+- Evidence: guard usage error: required --step, --source-ref, and --task-id were omitted
 
 ## blk-4286396929b5fae000d04032
 
@@ -1075,42 +616,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The convergence state rejected expected-state advancement for approved executor edits.
 - Evidence: accept-baseline rejected src as lacking a matching path approval, then scripts as drift outside the declared change set.
 
-## blk-44599b6976b59b1f17db1443
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `blind-planner-evaluation`
-- Surface: `research-playbook-v2-planner-handoff-readiness`
-- Symptom: packages-reported-terminal-pass-but-current-missing-evidence-and-conflict-planners-could-not-close-without-invention
-- Evidence: blind-planners-identified-missing-code-test-anchors-evidence-acquisition-route-and-named-approval-owner
-
-## blk-449400a4c2d00ece71d97b45
-
-- Status: `superseded`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `ground-cross-repository-correction-command`
-- Surface: `discovery-command-registry`
-- Symptom: The repaired guard rejected the exact two-file correction because the selected discovery document has no matching direct-correction shape.
-- Evidence: sequence_guard.py returned command-not-grounded-in-selected-document before correction recording.
-
-## blk-4520c56ce6e059950345a694
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-core-attempt-input-extraction`
-- Surface: `temporary-evaluation-state-query`
-- Symptom: core-attempt-input-query-failed-before-recording
-- Evidence: jq-reported-Cannot-index-object-with-number-for-all-six-state-files
-
-## blk-452a57aab253846fde06993a
-
-- Status: `non-gap`
-- Subject: `discovery-3fd6cc31-5152-5c78-91fb-b6e946b2cdab`
-- Step: `v2-record-candidate`
-- Surface: `bounded-v2-workdir`
-- Symptom: The controller could not record the first candidate because the new run directory lacked evidence-availability.json.
-- Evidence: record-candidate returned INVALID_OPERATION with Errno 2 for the exact new-run evidence-availability path; no candidate was recorded.
-
 ## blk-4578e027d32ae1aa65cd84da
 
 - Status: `closed`
@@ -1119,15 +624,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence_guard`
 - Symptom: The guard rejected the full slot lifecycle command because the discovery log stored only a shortened placeholder form.
 - Evidence: sequence_guard returned command-not-grounded-in-selected-document for mark-closed and release; both commands then executed because the orchestration loop failed to stop after the guard rejection.
-
-## blk-45c7753ddfaa89af3f1eda61
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-adjudication`
-- Surface: `research-playbook-v2-maturity-adjudication`
-- Symptom: future-system-runtime-proof-absence-survived-as-material-planning-gap
-- Evidence: mixed-maturity-finding-only-restates-frozen-future-acceptance-obligation-and-current-absence
 
 ## blk-45feac2859a7b950a41fcc61
 
@@ -1138,6 +634,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The successful live deployment evidence was submitted to the corrected discovery lineage as a clean verification.
 - Evidence: work_memory.py verify rejected the event with clean-verification-after-correction; the registered deploy sequence has its own selected lineage.
 
+## blk-462b26b8c690df49a4fbf881
+
+- Status: `non-gap`
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `resume-main-research`
+- Surface: `work_memory_cli`
+- Symptom: work_memory rejected the help request because start is not a valid subcommand
+- Evidence: CLI advertised run-start as the supported subcommand
+
 ## blk-471c325bdc1a6e949cf96158
 
 - Status: `non-gap`
@@ -1146,15 +651,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory-selection`
 - Symptom: The registered taggable-api-deploy sequence could not be selected because its taggable-api automation repository root was not supplied.
 - Evidence: classify succeeded and the immediately following explicit sequence selection returned missing-repository-root before activation or deployment.
-
-## blk-47b3276f929caa22b98b8e45
-
-- Status: `closed`
-- Subject: `discovery-3fd6cc31-5152-5c78-91fb-b6e946b2cdab`
-- Step: `v2-record-lens`
-- Surface: `sequence-guard`
-- Symptom: The guard rejected the current controller record-lens command after the first lens attempt was recorded.
-- Evidence: The discovery document specifies --raw-findings; current research_package.py CLI and contract require --terminal-envelope.
 
 ## blk-486dd03ab73cee3ebc1a1501
 
@@ -1183,6 +679,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Baseline guard blocked after the approved research document was created
 - Evidence: Only docs working hash changed; git status shows the new up-cd-s-002-remaining-harness-upgrades research folder
 
+## blk-49cebe5ff91bf431e475d00c
+
+- Status: `superseded`
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `refresh-selection-after-discovery-append`
+- Surface: `sequence_guard`
+- Symptom: sequence_guard activate also rejected the updated discovery log as stale
+- Evidence: second same fingerprint: activate returned stale-source-bundle
+
 ## blk-4b7f97392b9d4648553c2dac
 
 - Status: `fixed-awaiting-verification`
@@ -1192,33 +697,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: After the selected bundle changes, sequence_guard rejects the work_memory correct command that must record that exact bundle transition.
 - Evidence: Both discovery_log and script sourced guards returned stale-source-bundle before command-shape evaluation; verify_receipts fails closed before cmd_guard can authorize work_memory.py correct.
 
-## blk-4c8b8fb67b86ea3078916913
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `compose-llm-strategy-brief`
-- Symptom: The real gpt-5.5 successor passed the proof-manifest boundary but rejected owner_questions manifest entry 1 against the deterministic grounding contract.
-- Evidence: Harness run up-run-55743050815d failed at compose-llm-strategy-brief with owner_question_manifest_invalid:1.
-
-## blk-4d38212b0771a4dc9b96e8b1
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `final-v3-candidate-requirement-status-contract`
-- Surface: `skills/research-playbook-v2/references/planner-handoff.md`
-- Symptom: All six fresh core agents produced richer requirement_statuses objects without the required research_value field, so terminal PASS states cannot emit packages.
-- Evidence: emit-package returned every requirement status must contain requirement_id, research_value, and evidence_ids. Every final-v3 candidate status uses status/conclusion fields instead; SKILL.md and planner-handoff.md do not define the exact candidate requirement_statuses schema, and record_candidate accepts it until emission.
-
-## blk-4db4846763b87bb0d4afe19f
-
-- Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `record-platform-lock-guide-correction`
-- Surface: `work-memory-correction-bundle`
-- Symptom: The work-memory ledger rejected the guide producer correction because its selected cross-repository bundle does not contain the changed touchpoints implementation and test paths.
-- Evidence: work_memory.py correct returned correction-artifact-drift-mismatch for src/up_harness/touchpoints.py and tests/unit/test_touchpoints.py.
-
 ## blk-4edbb8641b9676e9b6278e56
 
 - Status: `closed`
@@ -1227,15 +705,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `discovery-promotion-lifecycle`
 - Symptom: Registered failures can bypass correction, interrupted correction is not resumable, and cross-repository correction artifacts are rejected.
 - Evidence: REV-LIFECYCLE-001, REV-LIFECYCLE-002, and REV-LIFECYCLE-003 were independently confirmed FIX NOW.
-
-## blk-4eec50da6e9e5e04aeda7d96
-
-- Status: `superseded`
-- Subject: `discovery-782832ed-7fa4-5efe-9765-463303ecd2a2`
-- Step: `select-bulk-reconciliation`
-- Surface: `operations/sequences/SEQUENCES.md`
-- Symptom: Canonical selection returned discovery-required for the repeatable bulk discovery-log audit and promotion operation.
-- Evidence: work_memory.py select for task audit-discovery-promotion-candidates-20260715 returned exactly discovery-required before the discovery bootstrap.
 
 ## blk-4f6b72278a35b093ce1df7fd
 
@@ -1255,23 +724,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: staged-inputs-omit-required-predicate-scope-and-planner-check-vocabulary
 - Evidence: evaluator_matches_output_predicate_id_scope_id_and_planner_check_names_against_hidden_gold_but_raw_snapshots_expose_only_request_and_evidence_ids
 
-## blk-538209598c5346c2fa63b43b
+## blk-51b1de3620f40a21ed38e2dd
 
 - Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `expand-correction-dependency-bundle`
-- Surface: `dependency-manifest`
-- Symptom: The approved dependency-manifest patch could not find the just-inspected context.
-- Evidence: apply_patch verification failed before mutation because scripts/work_memory_bootstrap.py was no longer present in the expected formatted location.
-
-## blk-53898f13b6d53b4f8edf20d1
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `record-strategy-section-correction`
-- Surface: `sequence-guard-receipt-chain`
-- Symptom: The sequence guard rejects correction recording because the selected discovery document changed after this run started.
-- Evidence: The selected discovery document hash is 7ef3e0d6; current hash is b31906fd; all selected controller and manifest hashes still match.
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `inventory-keap-tests-config`
+- Surface: `repository_inventory`
+- Symptom: targeted Keap scan returned path errors for absent tests and .github directories
+- Evidence: rg reported tests: No such file or directory and .github: No such file or directory; it still found only the two known source references
 
 ## blk-539e7f2311661d7da1eefb74
 
@@ -1282,6 +742,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Two focused evaluator tests fail before exercising their intended assertions.
 - Evidence: The tests supplied output_hash=None and lifecycle agent_id, while the evaluator requires a lowercase SHA-256 output_hash and runtime_agent_id.
 
+## blk-55ae370049697ba81174488f
+
+- Status: `non-gap`
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `activate-keap-research-sequence`
+- Surface: `sequence-guard`
+- Symptom: The selected Keap integration research discovery sequence could not activate because the cached directive-read receipt exceeded its maximum age.
+- Evidence: sequence_guard.py activate returned directive read state is stale because it exceeded max age before any repository inspection command ran.
+
 ## blk-5631781b9a52545ff026d704
 
 - Status: `non-gap`
@@ -1290,15 +759,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard-source-bundle`
 - Symptom: sequence_guard rejected the implementation baseline command because the selected memory-knowledge source bundle changed during coding
 - Evidence: guard returned stale-source-bundle before dispatching the accept-baseline command
-
-## blk-5656ea8e0e215d6cb947f743
-
-- Status: `non-gap`
-- Subject: `discovery-6c9c32b3-939c-54f1-8cff-5bd9758f8821`
-- Step: `record-receipt-polling-correction`
-- Surface: `work-memory-correction-recorder`
-- Symptom: approved-test-correction-cannot-be-recorded-against-sealed-run
-- Evidence: work_memory-correct-returned-correction-artifact-drift-mismatch
 
 ## blk-56aedb8236dd9e68fdbf806f
 
@@ -1317,15 +777,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `tests/test_scoped_git_publish.py`
 - Symptom: Full pytest suite reports one failure because the test expects a leading porcelain-status space after its helper strips leading whitespace.
 - Evidence: uv run pytest -q: 1 failed, 869 passed, 1 skipped; tests/test_scoped_git_publish.py git() returns stdout.strip() at line 12 while line 212 expects a string beginning with a space.
-
-## blk-57fb6beb5742ee7e24b4c353
-
-- Status: `superseded`
-- Subject: `discovery-782832ed-7fa4-5efe-9765-463303ecd2a2`
-- Step: `implement-controller`
-- Surface: `scripts/discovery_candidate_reconciliation.py`
-- Symptom: The approved bulk discovery reconciliation sequence existed only as a scaffold and could not audit, validate, checkpoint, or execute candidate dispositions.
-- Evidence: The current run source bundle captured the scaffold baseline before the controller and tests were implemented.
 
 ## blk-585b09207361d374d81e6ee3
 
@@ -1363,33 +814,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Live reconciliation stopped on scripts/sequence_guard.py and tests/test_sequence_guard.py even though the prior Git rebase did not report content conflicts for them.
 - Evidence: isolated-reconcile-remote returned remote conflict has no approved reconciliation rule for exactly scripts/sequence_guard.py and tests/test_sequence_guard.py before commit or push.
 
-## blk-59180b19228e8b7c7cafa1fb
-
-- Status: `closed`
-- Subject: `discovery-e239c5e0-5bff-58b1-a62f-99f64e686baf`
-- Step: `promotion-tests`
-- Surface: `promotion-controller-evaluation-rewrite`
-- Symptom: Two promotion controller tests failed before mutation because the historical approval sentence did not match one physical line.
-- Evidence: Focused pytest reported 2 failed and 2 passed at stage_canonical; evaluation.md wraps Legacy replacement remains across two source lines.
-
-## blk-5933375df65e9126834306c6
-
-- Status: `closed`
-- Subject: `discovery-promotion-lifecycle`
-- Step: `verify-automation`
-- Surface: `operations/sequences/discovery-promotion-lifecycle/sequence.md:verify-automation`
-- Symptom: The registered lifecycle sequence prescribes uv run pytest directly instead of the repository-mandated scripts/run_pytest.sh entry point.
-- Evidence: Registered verify-automation row contains uv run pytest across seven test modules; repository verification discipline uses scripts/run_pytest.sh and the lifecycle dependency manifest does not currently include that runner.
-
-## blk-5a2c8846b801b89eb6f5c84c
-
-- Status: `superseded`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `final-live-canary`
-- Surface: `/Users/kamenkamenov/united-partners/scripts/client_packet.py`
-- Symptom: All three workflow runs completed and both continuations published valid locked strategies, but packet verification failed because Positioning Options and Measurement Framework headings were absent.
-- Evidence: The canary exited with PACKET FAILED: strategy is missing structured sections: [## Positioning Options, ## Measurement Framework] after up-run-537f885b9977 reached publication=published and final_strategy_validation=valid.
-
 ## blk-5a8136a16ee7fbce36628938
 
 - Status: `non-gap`
@@ -1398,24 +822,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `local-test-runner`
 - Symptom: The final helper suite could not initialize uv's cache under the sandbox.
 - Evidence: uv exited before pytest after failing to open /Users/kamenkamenov/.cache/uv/sdists-v9/.git with os error 1.
-
-## blk-5a9068b12f7b1d9dd93a1c09
-
-- Status: `non-gap`
-- Subject: `discovery-e78611ed-2903-5b35-9fa2-142b91bcebc3`
-- Step: `sequence-selection`
-- Surface: `work-memory-sequence-selector`
-- Symptom: The selector matched three unrelated application deployment sequences for a Git commit-and-push task.
-- Evidence: work_memory.py select returned ambiguous-sequence:taggable-admin-spa-deploy,taggable-api-deploy,taggable-media-worker-deploy
-
-## blk-5a978b19f46e13679a211247
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `close-verification-run`
-- Surface: `scripts/work_memory.py`
-- Symptom: The verified work-memory run remained open because run-close was called with an event ID already used by the verification event.
-- Evidence: work_memory.py run-close returned event-id-conflict for 39fed7e5-7091-45c8-aca4-14fe5bb4ff1f.
 
 ## blk-5b6e654711de2b37c90768ca
 
@@ -1426,6 +832,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The first corrected-bundle successor selection had no current classification receipt after predecessor closure.
 - Evidence: The first select returned missing-classification-receipt; a fresh canonical classify receipt then allowed successor selection.
 
+## blk-5b791a9a76559b620325e00e
+
+- Status: `non-gap`
+- Subject: `discovery-66c9c758-8b03-5e3b-9622-faa1044070c9`
+- Step: `sequence-selection`
+- Surface: `operations/work-memory/events.jsonl`
+- Symptom: Sequence selection and blocker recording both rejected the canonical ledger.
+- Evidence: Working tree contained conflict marker at events.jsonl line 360; Git stages 2 and 3 were independently valid; canonical merge-ledger produced a 1670-event union.
+
 ## blk-5bb7b1e56beedd0a96154972
 
 - Status: `closed`
@@ -1434,15 +849,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/work_memory.py`
 - Symptom: The isolated reconciliation canonical writer rejected remote-order plus local-unseen event union with blocker-correction-required.
 - Evidence: isolated-reconcile-remote stopped before commit or push with merged ledger failed canonical validation: blocker-correction-required.
-
-## blk-5bdd8951968543c4ca2f0dec
-
-- Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-canary-dependency-manifest`
-- Surface: `operations/sequences/discovery/2026-07-14-up-harness-cd-s-002-live-verification.dependencies.json`
-- Symptom: work-memory selection rejects the recorded live canary because its canonical adapter executable is absent from the dependency manifest
-- Evidence: select returned executable-outside-manifest::scripts/codex_role_command.py before creating a selection receipt
 
 ## blk-5c06394170ef484b6fe41c2a
 
@@ -1488,24 +894,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `python-test-runtime`
 - Symptom: The documented focused pytest command cannot start.
 - Evidence: Homebrew Python 3.14 reported No module named pytest.
-
-## blk-5d8b04fef972363c4d5fa2d9
-
-- Status: `closed`
-- Subject: `discovery-candidate-reconciliation`
-- Step: `correction-successor-recovery`
-- Surface: `operations/sequences/discovery-candidate-reconciliation/sequence.md`
-- Symptom: A correction successor that failed and produced a second correction left both corrections active, so direct dual successor binding failed on the earlier sealed document hash and blocker supersession was rejected.
-- Evidence: Selection returned successor-correction-bundle-mismatch for both correction IDs; blocker transition returned blocker-correction-not-superseded; work_memory.cmd_correct atomically supports supersedes_correction_ids and prior-blocker supersession when the final correction is recorded.
-
-## blk-5da33ca4f4baa4dc7ab4910e
-
-- Status: `superseded`
-- Subject: `discovery-04cf3898-8384-5912-9dbb-77f555ee1b22`
-- Step: `read-authoritative-material`
-- Surface: `sequence-guard`
-- Symptom: The guard rejected the exact authorized read command because it was not yet present in the discovery document
-- Evidence: sequence_guard.py returned command-not-grounded-in-selected-document for the explicit rg command despite source=tool_help
 
 ## blk-5e5921daa66d3f06148dbcf5
 
@@ -1561,14 +949,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The guarded docs baseline advance crashes because --changed-path docs resolves to memory-knowledge/docs instead of the target repository docs directory
 - Evidence: ValueError: /Users/kamenkamenov/memory-knowledge/docs is not in subpath /Users/kamenkamenov/mcp-agents-workflow
 
-## blk-62982aa3a803a33ff37e83ca
+## blk-62a8d37e7c13b521c858c3c3
 
 - Status: `closed`
-- Subject: `discovery-candidate-reconciliation`
-- Step: `validate-dispositions`
-- Surface: `scripts/discovery_candidate_reconciliation.py:manifest-snapshot`
-- Symptom: The approved manifest names two already-promoted targets proven on bundle b389a844, but the execution selection resolved bundle c03b8165 and both registered verification predicates are now false.
-- Evidence: Selection ccedc156 source bundle c03b81656287a9d4c6e23c5b6c00d056fa2426ee2f2815fd4c53cd06866938b6 includes changed sequence_guard.py and test hashes; direct checks returned false for discovery-candidate-reconciliation and discovery-promotion-lifecycle.
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `hardening-gate-1-api-exposure`
+- Surface: `research_document`
+- Symptom: draft says the Infusionsoft field is not exposed by an API contract without explicitly excluding direct User entity responses
+- Evidence: the field is public on User.cs:45, so reflection-based JSON exposure must be ruled out separately from named DTO searches
 
 ## blk-62a9a0ec25a8c852f5129dcd
 
@@ -1615,33 +1003,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: controller-cannot-record-its-own-grounded-correction
 - Evidence: sealed-predecessor-hash-0e55a0af-matches-but-current-path-must-remain-byte-identical
 
-## blk-64abd808af57fd130e06b55e
-
-- Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `repair-cross-repository-correction-guard-v2`
-- Surface: `scripts/sequence_guard.py`
-- Symptom: correction-guard-cannot-authorize-exact-multi-repository-artifact-bundles
-- Evidence: selected-guard-rejects-external-artifacts-and-partial-bundle-validation
-
-## blk-658f6163af8ba811b9a99fe0
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `accept-implementation-baseline`
-- Surface: `/Users/kamenkamenov/.local/state/kamen-convergence/up-harness-cd-s-002-upgrades-20260714/state.json`
-- Symptom: The convergence baseline update could not create its atomic temporary file under the task state directory.
-- Evidence: convergence_state.py accept-baseline raised PermissionError operation not permitted for .convergence-*.tmp before saving state.
-
-## blk-65d8b02621a7cc33355289f8
-
-- Status: `open`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/touchpoints.py`
-- Symptom: All three bounded platform-lock guide attempts failed the same grounding contract and the source run blocked at compose-platform-lock-session-guide.
-- Evidence: up-run-87ba98207ae2 records platform_lock_guide_grounding_invalid after the three-attempt correction implementation passed focused tests.
-
 ## blk-663f98228359c7ee35ffb4e2
 
 - Status: `closed`
@@ -1669,15 +1030,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The documented tool_help guard source cannot authorize the first discovery-log command
 - Evidence: cmd_guard always requires _shape_match against the selected document and does not consume evidence_text
 
-## blk-66d7fbf92b0e72abb2f52393
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `compose-final-strategy-brief`
-- Symptom: The real gpt-5.5 run passed structured strategy, decisions, evidence, controlled-topic policy, and the new platform-lock guide, then blocked in final strategy composition.
-- Evidence: Harness run up-run-770096c57fad returned compose-final-strategy-brief status blocked with no phase exception.
-
 ## blk-6739e10cf9ef5089784c0f6a
 
 - Status: `open`
@@ -1686,15 +1038,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work_memory.verify`
 - Symptom: The ledger rejected same-path verification for both corrections after the corrected bundle executed
 - Evidence: work_memory.py verify returned verification-correction-mismatch for corrections e67e00e4 and 7dfa35d8
-
-## blk-67d78d84e549faa4a8cfff33
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-init-state`
-- Surface: `research-package-v2-cli`
-- Symptom: init-rejected-literal-AVAILABLE-as-missing-file
-- Evidence: controller-returned-cannot-read-JSON-from-AVAILABLE
 
 ## blk-67ea3ddac63fa16ac6d02859
 
@@ -1713,33 +1056,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: hash-json-guard-rejected-out-of-bundle-tool-help
 - Evidence: twelve-read-only-hash-commands-rejected
-
-## blk-68b05e47b0d2832a2b8818bf
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `correction-lifecycle-order`
-- Surface: `correction-run-sequencing`
-- Symptom: final-v4-correction-bootstrap-rejected-terminal-run
-- Evidence: sequence-guard-stale-bootstrap-context-rejects-run_closed-before-correct
-
-## blk-6961bf647157f2f07e2470b0
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/strategy_brief.py`
-- Symptom: The command-backed CD-S-002 canary failed in compose-llm-strategy-brief because the candidate owner-question manifest did not match the rendered owner-question block.
-- Evidence: /tmp/up-cd-s-002-upgrade-canary/run-20260715T212807Z-66484/state/up-run-acc2fec2fdcb.json records compose-llm-strategy-brief failed with owner_questions_manifest_mismatch.
-
-## blk-69b5f1f3a25b8eb69a74357c
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-record-adjudication`
-- Surface: `missing-runtime-evidence-adjudicator-output`
-- Symptom: evidence-limit-adjudication-rejected-before-state-mutation
-- Evidence: controller-returned-invalid-operation-missing-raw-finding
 
 ## blk-6a6f3afe2a9fe77fbc9ee7b1
 
@@ -1777,41 +1093,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The evaluator refuses to record v2 research packages because the v2 skill tree changed after the evaluation lock was frozen.
 - Evidence: evaluate_research_playbook_v2.py record returned locked-skill-tree-drift:v2 immediately after correction 49d184c8-8ef5-4164-b7b7-1fe7954a008f changed research_package.py and its test.
 
-## blk-6dcd7e0b50b4ec0e63f558f4
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `repair-owner-question-output-contract-v2`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/strategy_brief.py`
-- Symptom: live-gpt-5.5-strategy-output-breaks-owner-question-parser
-- Evidence: run-up-run-87d9d0de034b-failed-at-compose-llm-strategy-brief-line-106
-
-## blk-6e4eda023d95363875059cbf
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/engine/runner.py`
-- Symptom: The live canary locked the platform and published the final strategy, but the published compatibility brief still contained a reserved QAF claim marker.
-- Evidence: The signed-document canary exited with publication leaked claim markers after the continuation lock assertions passed.
-
-## blk-6e51c6e83cd6ea138ff85d3a
+## blk-6ce5332bdc4ba0296f1c109a
 
 - Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `work-memory-inspection`
-- Surface: `scripts/work_memory.py`
-- Symptom: Work-memory inspection command rejected the nonexistent status subcommand.
-- Evidence: argparse lists summary, not status, as the supported summary command.
-
-## blk-6ee002fe32ae5818f516abc5
-
-- Status: `superseded`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `command-workflow-policy-candidate`
-- Surface: `tests/integration/test_command_workflow.py`
-- Symptom: The changed-policy integration case raised KeyError because controlled_topic_policy_candidate was absent from the continuation context.
-- Evidence: test_changed_policy_cannot_replace_platform_source_policy failed at line 371 with KeyError controlled_topic_policy_candidate.
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `inspect-origin-commit`
+- Surface: `sequence_guard`
+- Symptom: sequence_guard rejected newly appended research steps because the active bundle predates the updated discovery log
+- Evidence: guard returned stale-source-bundle immediately after append-step changed the discovery document
 
 ## blk-70e9a4477dcd42d3ba7f87c4
 
@@ -1858,15 +1147,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The reproduction remediation lane was rejected before initialization.
 - Evidence: multi_agent_v1 spawn returned: Full-history forked agents inherit the parent agent type; omit agent_type or spawn without a full-history fork.
 
-## blk-72dd39296d121e65c2a87419
-
-- Status: `open`
-- Subject: `discovery-promotion-lifecycle`
-- Step: `drive`
-- Surface: `discovery-promotion-lifecycle`
-- Symptom: The one-shot drive completed three additional same-bundle same-path passes but remained in qualification because every promotion-readiness declaration was unchecked.
-- Evidence: Lifecycle status reports successful_runs=4, source_bundle_hash=11eb9e7557b161714b0786fa85046ecd7e918ee0bcf224ef98ab13e1c858faaa, and unmet_predicates=[readiness].
-
 ## blk-7316f2d6e07bed6cba6ac970
 
 - Status: `closed`
@@ -1876,15 +1156,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Same-path verification events are rejected although the successor selection lists both correction IDs
 - Evidence: work_memory verify returned verification-correction-mismatch for corrections 23cacea6 and d5798140
 
-## blk-73394a07e10b92ed3124f9e5
-
-- Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `bind-product-canary-successor`
-- Surface: `scripts/work_memory.py`
-- Symptom: A still-open product correction cannot receive same-path verification after later independent corrections advance the sequence bundle, despite its changed artifact remaining byte-identical.
-- Evidence: The controller rejected correction d3d98166-97db-4c61-a421-50db1fec3d97 because transition hash 54403fe4... differs from current bundle 06ca93d4...; scripts/run_cd_s_002_upgrade_canary.py still hashes to the correction value 48dd4bd2....
-
 ## blk-7441db416f180077aa835e06
 
 - Status: `fixed-awaiting-verification`
@@ -1893,15 +1164,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `skills/research-playbook-v2/scripts/research_package.py`
 - Symptom: Rejected provisional lens findings still force IN_PROGRESS or BLOCKED after fresh adjudication.
 - Evidence: Round 1: current and scope returned zero actionable fingerprints but remained IN_PROGRESS with LENS_GAPS; mixed rejected RS-EVIDENCE-001 yet became BLOCKED with LENS_BLOCKED.
-
-## blk-74feda3dc50e38b180f8875f
-
-- Status: `superseded`
-- Subject: `discovery-782832ed-7fa4-5efe-9765-463303ecd2a2`
-- Step: `bootstrap-discovery-bundle`
-- Surface: `work_memory.py-select`
-- Symptom: Selection rejected first scripts/run_pytest.sh and then the not-yet-created discovery_candidate_reconciliation.py before a run could start.
-- Evidence: work_memory.py select returned executable-outside-manifest for each recorded executable; a minimal controller scaffold and explicit launcher/controller/test dependencies were required before selection succeeded.
 
 ## blk-756d91ccabe45fa88fa5caf4
 
@@ -1929,42 +1191,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory-correction`
 - Symptom: Canonical correction recording rejects the approved shared convergence helper because it is outside the active repository bundle.
 - Evidence: work_memory.py correct returned changed-artifact-outside-repository for /Users/kamenkamenov/.codex/skills/_shared/convergence_state.py.
-
-## blk-7769e472ae1f0944f2844cdb
-
-- Status: `closed`
-- Subject: `discovery-candidate-reconciliation`
-- Step: `audit-terminal-verification`
-- Surface: `scripts/discovery_candidate_reconciliation.py:_candidate_row`
-- Symptom: Guarded audit suggested four already-promoted rows although the executor predicate rejects two as unverified; legacy exact absorption targets also fail registered verification with missing-repository-root.
-- Evidence: Red manifest /private/tmp/discovery-candidate-reconciliation-red.json reports already-promoted=4; registered checks: commit-push-main=false, discovery-bootstrap=false, remote-mcp-user-onboarding=missing-repository-root, taggable-admin-spa-deploy=missing-repository-root.
-
-## blk-77740d820bbf7e79e99d7e00
-
-- Status: `closed`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `select-successor`
-- Surface: `overlapping-active-corrections`
-- Symptom: A verification successor cannot carry all four active corrections after a later correction changed their shared discovery document.
-- Evidence: Corrections 46ad161e-c641-440d-98b9-8acfaa0d52f0, bae51208-7e25-416d-bf67-9fc10120b789, and cd0eed01-6357-49c2-8820-303423f985e3 seal the discovery document at a122be426653d85fcd1d19fd0739a2bb6d0880610bc7d56f6f39ecb89682b980; correction 8960346d-3b5b-48b4-b460-7146688a6b5c moved the same document to 7746e9702155cc33b70cbe3b0cc07c78f62e205b26da607b61657b0094356d8f without superseding those overlapping corrections.
-
-## blk-780d4ae6289bb109347ca087
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `full-deterministic-verification-command-guard`
-- Surface: `operations/sequences/discovery/2026-07-14-up-harness-cd-s-002-live-verification.md`
-- Symptom: The sequence guard rejected the unit-discovery, integration-discovery, and verify_harness commands because only a single-target unittest shape was registered.
-- Evidence: All three guards returned command-not-grounded-in-selected-document; none of the verification commands executed.
-
-## blk-78118958dbd62e3e4ead8731
-
-- Status: `open`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `final-live-canary`
-- Surface: `tool-session-supervision`
-- Symptom: The final canary process disappeared after two workflows completed and the third reached compose-platform-lock-session-guide.
-- Evidence: up-run-cfcc73588d76 and up-run-5ea9263892ab completed 35 phases; up-run-e00aa81e16f2 remained running at 27 phases; ps found no canary or role process and no current-run summary exists.
 
 ## blk-7864e7ef841aead64e2b6cf9
 
@@ -2065,33 +1291,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Discovery helper rejects stored rg commands whose quoted regex contains pipe alternation
 - Evidence: append-step returned invalid-command-row for both memory search and report-label trace after shell quoting was corrected
 
-## blk-7f61aafc54c93e5d1373abcb
-
-- Status: `non-gap`
-- Subject: `discovery-3fd6cc31-5152-5c78-91fb-b6e946b2cdab`
-- Step: `correction-lifecycle-order`
-- Surface: `work-memory-orchestration`
-- Symptom: The correction-bound successor could not be selected because the predecessor blocker remained open after its run was closed.
-- Evidence: successor selection returned successor-correction-not-awaiting-verification; transition on the closed predecessor returned event-after-terminal.
-
-## blk-7fa6482208e9bbacae565824
-
-- Status: `superseded`
-- Subject: `discovery-candidate-reconciliation`
-- Step: `execute-rolling`
-- Surface: `operations/sequences/discovery-candidate-reconciliation/sequence.md`
-- Symptom: execute-rolling changed the reconciliation discovery candidate from already-promoted to quarantine while the corrected registered bundle's successor was still open.
-- Evidence: The guarded live command returned rolling-existing-disposition-changed for discovery-candidate-reconciliation: already-promoted->quarantine; the current bundle had passing tests but no recorded passed same-path verification and passed close yet.
-
-## blk-7fc1c7428ce176309641ffa1
-
-- Status: `non-gap`
-- Subject: `discovery-782832ed-7fa4-5efe-9765-463303ecd2a2`
-- Step: `inspect-lifecycle-help`
-- Surface: `sequence_guard.py`
-- Symptom: The active discovery guard rejected the lifecycle help inspection before it ran.
-- Evidence: sequence_guard.py guard returned exactly stale-source-bundle after activation.
-
 ## blk-801829be7d2077acfbe0411c
 
 - Status: `open`
@@ -2100,15 +1299,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence_guard`
 - Symptom: The runtime search command was rejected before execution
 - Evidence: sequence_guard returned command-not-grounded-in-selected-document
-
-## blk-802727e9596a22606e2fdd70
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `roots-correction-supersession`
-- Surface: `scripts/blocker_catalog.py`
-- Symptom: The catalog rejected direct supersession of the roots blocker because its attached correction remains active in the correction ledger.
-- Evidence: blocker_catalog.py returned blocker-correction-not-superseded for blk-923e1cf6d66a4b9f87287f12.
 
 ## blk-8073bfceb3ce55625e3a4bc2
 
@@ -2137,15 +1327,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Cycle 25 stage-result cannot be recorded because convergence state knows gaps only through GAP-021 while the audit has reached GAP-067.
 - Evidence: record-stage returned stage assigns unknown gaps; state stages contain research-doc-gap attempt 1 and doc-gap-closure attempts 1-12 only, while the audit documents Cycles 13-25.
 
-## blk-822f5912321b9e00df07c17c
-
-- Status: `closed`
-- Subject: `discovery-782832ed-7fa4-5efe-9765-463303ecd2a2`
-- Step: `audit-candidates`
-- Surface: `scripts/discovery_candidate_reconciliation.py`
-- Symptom: The audit manifest included operations/sequences/discovery/README.md as candidate 46 and classified it as discovery-id-missing.
-- Evidence: Audit /private/tmp/discovery-candidate-reconciliation-20260715.json returned 46 rows; row 46 is README.md, which is directory documentation rather than a discovery run log.
-
 ## blk-83f0a654438fd4f644768834
 
 - Status: `non-gap`
@@ -2173,24 +1354,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: independent plan critic remained running after repeated 20-second waits and a direct conclusion request
 - Evidence: agent /root/research_coverage_sgap20 produced no mailbox result across more than 80 seconds
 
-## blk-84c6df6252dd91043099abc0
-
-- Status: `superseded`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `repository-roots-successor-selection`
-- Surface: `scripts/work_memory.py`
-- Symptom: The roots correction successor could not bind after a later product correction advanced the discovery source bundle.
-- Evidence: Correction 7ae65fce-7ca0-41ce-8351-c07cd30f3799 expects bundle b884, while the current selected bundle is 42033fd42c1e5231356a883331ec15ab83337e32465d12f211b12e520595ced3.
-
-## blk-85f4b845329a1390c55d08cb
-
-- Status: `non-gap`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-init-state`
-- Surface: `skills/research-playbook-v2/scripts/research_package.py`
-- Symptom: all-five-v2-state-initializations-rejected-before-write
-- Evidence: argparse-requires-current-runtime-future-system-or-mixed-enum
-
 ## blk-86fa98060551f4ec68265ccc
 
 - Status: `closed`
@@ -2200,32 +1363,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: the grounded verification command omits the promotion-helper test that is part of the correction
 - Evidence: discovery row lists scoped publish and discovery-log tests only; correction 0ec30bae also changes scripts/sequence_promote.py and tests/test_sequence_promote.py
 
-## blk-8748ce255b175eb2f2aa9eef
+## blk-8993d8c4248483be1f967a45
 
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-record-attempt-help`
-- Surface: `operational-command-grounding`
-- Symptom: record-attempt-help-path-failed-and-first-catalog-open-used-wrong-subject
-- Evidence: run-receipt-binds-subject-discovery-683fb3d9-702b-55ff-945f-35c9f667e439-and-rg-locates-controller-at-skills/research-playbook-v2/scripts/research_package.py
-
-## blk-87d14c39def5a888a2c1e392
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `evaluator-command-discovery`
-- Surface: `scripts/evaluate_research_playbook_v2.py`
-- Symptom: help-probe-used-lock-instead-of-prepare
-- Evidence: argparse-rejected-lock-before-any-evaluation-state-write
-
-## blk-881ff356a4b4cd18adf7d149
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `record-evaluation`
-- Surface: `evaluate-research-playbook-v2-record-order`
-- Symptom: research-record-rejected-because-unrecorded-planner-files-existed
-- Evidence: evaluator-returned-orphaned-output-current-runtime-v2-planner-json
+- Status: `non-gap`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `stable-bundle-selection`
+- Surface: `git-index-ledger-conflict`
+- Symptom: A concurrent stash application reintroduced conflict markers after a clean 143-test verification, making selection stale before run-start.
+- Evidence: git status showed UU in ledger, blocker view, sequence document, and bootstrap; canonical ledger union appended 104 events and regenerated the blocker view.
 
 ## blk-8a0d8a7aae77d49d366def9d
 
@@ -2263,15 +1408,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Repository-local blocker helper rejected the skill-documented transition command
 - Evidence: mcp-agents-workflow helper exposes add/update while memory-knowledge helper exposes open/transition
 
-## blk-8b6be409b3d95d0cfe47a51a
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `successor-selection`
-- Surface: `work-memory-correction-carry-forward`
-- Symptom: A fresh successor cannot bind older still-valid corrections after an unrelated bundle change when those corrections include the semantic discovery document.
-- Evidence: All eleven raw correction artifacts still match their recorded SHA-256 values, but _validate_successor_corrections compares the discovery document's raw correction hash to its semantic source-bundle hash and rejects selection.
-
 ## blk-8bcbe4478330315aa3d2f25a
 
 - Status: `closed`
@@ -2280,24 +1416,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence_guard`
 - Symptom: The convergence state cannot register the research artifact because sequence_guard rejects tool-help evidence outside the selected discovery bundle.
 - Evidence: sequence_guard returned {error: source-ref-outside-selected-bundle, ok: false} before register-artifact executed.
-
-## blk-8c1dcf77bcbfff4a57a49000
-
-- Status: `superseded`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `record-cross-repository-correction`
-- Surface: `sequence-guard-contract`
-- Symptom: The clean before-state guard cannot authorize the typed bootstrap wrapper or repository-qualified UP artifacts while preserving relative memory-repository paths.
-- Evidence: Independent assessment plus red/green guard tests identified the stale prefix, task binding, repository identity, and exact-drift contract.
-
-## blk-8c4036400e25c270eb7a1bb8
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-6c9c32b3-939c-54f1-8cff-5bd9758f8821`
-- Step: `verify-reset-worker-tests`
-- Surface: `reset-worker-sqlite`
-- Symptom: regression-tests-emit-repeated-unclosed-database-warnings
-- Evidence: python-unittest-emitted-multiple-ResourceWarning-unclosed-database-messages
 
 ## blk-8ce0cf7fb5202a60bb906416
 
@@ -2308,24 +1426,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Baseline guard rejected unsupported --path argument before checking state
 - Evidence: argparse rejected --path; initial catalog attempt also rejected a guessed subject and the run receipt confirms subject discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a
 
-## blk-8d00495043a7badd2b1a94c4
-
-- Status: `open`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `command-workflow-locked-qna`
-- Surface: `tests/integration/test_command_workflow.py`
-- Symptom: The locked controlled-policy continuation blocked at compose-final-strategy-brief instead of completing.
-- Evidence: test_controlled_policy_is_preserved_into_locked_qna_continuation expected completed but received blocked for compose-final-strategy-brief.
-
-## blk-8daf0f33edaa3c2e03743951
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `record-lineage-controller-correction`
-- Surface: `scripts/sequence_guard.py`
-- Symptom: The sequence guard rejected the controller correction command before it could be recorded.
-- Evidence: sequence_guard.py guard --correction-bootstrap returned invalid-correction-bootstrap-source with scripts/work_memory.py as both invoked controller and source-ref.
-
 ## blk-8dcf1c94b73742e9410b5303
 
 - Status: `fixed-awaiting-verification`
@@ -2334,15 +1434,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `managed-projection-recovery`
 - Symptom: sealed-missing-file-cannot-be-recreated
 - Evidence: restore-managed-refused-missing-pyc-before-mutation
-
-## blk-8e3d23e3fab2ac13377e86ef
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `sequence-guard-status-before-stage5-baseline`
-- Surface: `sequence_guard`
-- Symptom: The active sequence receipt no longer matches the current selected controller bundle.
-- Evidence: sequence_guard status returned {error: stale-source-bundle, ok: false} on 2026-07-15.
 
 ## blk-8e6823c77df76e296b919e1d
 
@@ -2362,15 +1453,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The verifier cannot read the current plan or its verification ledger through the active sequence guard.
 - Evidence: sequence_guard rejected exact sed reads for docs/gf-n3-resume-durability-plan.md and /private/tmp/gf-n3-resume-durability-plan-verification.json; the recorded research read was accepted.
 
-## blk-909a39c3c98f1f638ca79574
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `guard-final-live-canary`
-- Surface: `sequence-guard-working-directory`
-- Symptom: The live-canary guard failed before dispatch because it was invoked from the UP repository instead of the discovery repository.
-- Evidence: sequence_guard.py returned missing-repository-root; run-start succeeded from memory-knowledge with the identical selected bundle and roots manifest.
-
 ## blk-9147abcbb1d0b5d7d7a826bb
 
 - Status: `superseded`
@@ -2379,24 +1461,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory-lifecycle`
 - Symptom: same-path verification cannot be recorded for the generated-artifact blocker
 - Evidence: work_memory.py verify returned paired-correction-blocker-required
-
-## blk-91b24d910bcd5a622a9665c7
-
-- Status: `closed`
-- Subject: `discovery-candidate-reconciliation`
-- Step: `one-shot-drive`
-- Surface: `scripts/discovery_candidate_reconciliation.py`
-- Symptom: The registered reconciliation sequence still requires separate manual classification, selection, verification, live execution, evidence recording, and run closure commands.
-- Evidence: The reconciliation parser exposes only audit, validate, execute, and execute-rolling; the sequence document lists the governed lifecycle as separate operator steps.
-
-## blk-923e1cf6d66a4b9f87287f12
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `product-correction-recording`
-- Surface: `scripts/work_memory.py`
-- Symptom: The work-memory ledger refused to bind the UP source correction because the selection has no UP repository root.
-- Evidence: work_memory.py correct returned changed-artifact-outside-repository for /Users/kamenkamenov/united-partners/src/up_harness/strategy_brief.py.
 
 ## blk-929eb38f1d020f4de6b4d125
 
@@ -2424,15 +1488,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `memory-knowledge selected source bundle`
 - Symptom: The sequence guard is stale before the integrated test because shared controller and discovery files changed after selection.
 - Evidence: Selected discovery/controller hashes 47f08e.../a1091c...; current hashes 62b6c8.../a42f16....
-
-## blk-937364a65584e386463f135a
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `record-parser-boundary-correction`
-- Surface: `scripts/work_memory.py`
-- Symptom: The work-memory ledger rejected the proven parser correction because platform_decisions.py was absent from the selected dependency snapshot.
-- Evidence: work_memory.py correct returned correction-artifact-drift-mismatch for /Users/kamenkamenov/united-partners/src/up_harness/platform_decisions.py.
 
 ## blk-93dcecee88f315fc1e2fa743
 
@@ -2479,15 +1534,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Blocker open rejected the task id as the run subject
 - Evidence: Active selection binds the run to discovery-3aaffc84-ada2-5b1f-803c-19b08cdb803c
 
-## blk-961b309e641228540cd016a7
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `reconstruct-clean-correction-baseline`
-- Surface: `safety-approval`
-- Symptom: The safety layer rejected temporary removal of the approved guard and owner-question hunks before any file changed.
-- Evidence: apply_patch returned unacceptable risk: destructive rollback not clearly authorized; it required explicit authorization naming the temporary reversal and immediate reapplication.
-
 ## blk-9633479be37098d61b4320ca
 
 - Status: `non-gap`
@@ -2524,15 +1570,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: test-contract-can-change-without-invalidating-active-run-bundle
 - Evidence: selected-source-bundle-contains-controller-but-omits-tests-test-research-playbook-v2-py
 
-## blk-9840dc7237480079e55472ed
-
-- Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `accept-stage5-packet-baseline`
-- Surface: `sequence_guard`
-- Symptom: The packet stage changed src/up_harness, scripts, and tests together, but the discovery log lacks the exact atomic three-root accept-baseline command.
-- Evidence: sequence_guard rejected the three-root command with command-not-grounded-in-selected-document.
-
 ## blk-99e06d8f4cd4edf3e5c55d09
 
 - Status: `closed`
@@ -2541,6 +1578,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard-discovery-grounding`
 - Symptom: The active discovery sequence rejects the first repository/skill inspection command because no command shape is recorded.
 - Evidence: sequence_guard.py returned command-not-grounded-in-selected-document for rg --files over the convergence skill directories.
+
+## blk-9ad363bfbc7631ae4c7777de
+
+- Status: `closed`
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `close-stale-directive-receipt-blocker`
+- Surface: `sequence-guard-source-bundle`
+- Symptom: The active Keap research discovery bundle cannot guard the canonical blocker terminal transition because blocker_catalog.py is absent from its dependency manifest.
+- Evidence: sequence_guard.py guard returned source-ref-outside-selected-bundle for /Users/kamenkamenov/memory-knowledge/scripts/blocker_catalog.py; the discovery manifest dependencies array is empty.
 
 ## blk-9afd55aa254755b5d8267659
 
@@ -2560,15 +1606,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: gh auth status reports the active yourbteam token is invalid
 - Evidence: gh auth status exited 1 and identified an invalid token without exposing it
 
-## blk-9bd1010a362febf24870f984
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `live-cd-s-002-upgrade-canary`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/touchpoints.py`
-- Symptom: The command-backed acceptance canary completed its discovery run with a platform-lock session guide even though that artifact is permitted only for corporate re-drafts.
-- Evidence: /tmp/up-cd-s-002-upgrade-canary/canary-failure.json records error discovery run emitted a session guide.
-
 ## blk-9c4932e5c2c593eac5be7e3d
 
 - Status: `closed`
@@ -2577,15 +1614,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory-run-close`
 - Symptom: run-close persists the terminal event but exits with TypeError while computing metrics
 - Evidence: scripts/work_memory.py:1101 sums record[terminal] and boolean; non-terminal records yield None
-
-## blk-9cbf32aa7597b0b9cdd18cac
-
-- Status: `non-gap`
-- Subject: `discovery-6c9c32b3-939c-54f1-8cff-5bd9758f8821`
-- Step: `compare-current-and-cloned-enrollment`
-- Surface: `sequence-guard-orchestration`
-- Symptom: read-only-comparison-executed-after-guard-rejected-stale-bundle
-- Evidence: guard-returned-stale-source-bundle-but-combined-tool-script-continued-to-sqlite-query
 
 ## blk-9d066ad64f69a4b253a939fb
 
@@ -2613,15 +1641,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: The corrected discovery bundle cannot activate
 - Evidence: sequence_guard.py activate returned bootstrap-sources-not-selected
-
-## blk-9e3a0f0d74e5e2ae86da1567
-
-- Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `canary-static-command-grounding`
-- Surface: `operations/sequences/discovery/2026-07-14-up-harness-cd-s-002-live-verification.md`
-- Symptom: sequence_guard rejected the bundled-Python canary --help command because the exact command is absent from the selected discovery document
-- Evidence: sequence_guard returned exit 4 with command-not-grounded-in-selected-document for the exact bundled interpreter and script path
 
 ## blk-9e9ee1daf2ff86ae6f1a77d3
 
@@ -2668,24 +1687,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The critic wait call did not attach because the runtime expects a non-empty agent id collection rather than the singular agent_id field.
 - Evidence: multi_agent_v1__wait_agent returned: agent ids must be non-empty; the bound agent remains active.
 
-## blk-a0fecad285c0e403c22fba64
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-init-state`
-- Surface: `selected-source-bundle-v10`
-- Symptom: The active v10 guard rejected the first case initialization after the controller and its tests changed again.
-- Evidence: After v10 selection, scripts/work_memory.py and tests/test_work_memory.py acquired new hashes before any v2 state was created.
-
-## blk-a123a8b1fcf2622e153c8b6d
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `reusable-live-model-canary`
-- Surface: `scripts/run_cd_s_002_upgrade_canary.py`
-- Symptom: The pre-approved Stage 6.2 live canary entrypoint does not exist in scripts/.
-- Evidence: rg --files scripts lists client_packet.py, codex_role_command.py, mcp_smoke.py, run_evaluation.py, and verify_harness.py, but no run_cd_s_002_upgrade_canary.py.
-
 ## blk-a1c07342b4019033f278ee33
 
 - Status: `closed`
@@ -2713,6 +1714,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Verification ledger check rejected all six coverage items
 - Evidence: Each item has subsystem why risk evidence miss_risk status but lacks required summary
 
+## blk-a507a01ef80c9f9bf706e43e
+
+- Status: `closed`
+- Subject: `discovery-66c9c758-8b03-5e3b-9622-faa1044070c9`
+- Step: `verify-automation`
+- Surface: `tests/test_screenshot_source_locator.py`
+- Symptom: The exact discovery verification command could not start the test suite.
+- Evidence: /opt/homebrew/opt/python@3.14/bin/python3.14: No module named pytest
+
 ## blk-a5d91c78094c2c6abd11ca71
 
 - Status: `closed`
@@ -2722,32 +1732,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The discovery log records managed validation and install commands without their required source and manifest arguments.
 - Evidence: validate_skills.py requires --skills-root; install_skills.py requires --source and --manifest.
 
-## blk-a61d3ce9e34f92de1b3f894f
+## blk-a97a1b0a939925fbdbcd19a0
 
-- Status: `open`
-- Subject: `discovery-3fd6cc31-5152-5c78-91fb-b6e946b2cdab`
-- Step: `successor-select`
-- Surface: `work-memory-correction-chain`
-- Symptom: The final successor could not bind both corrections because the test-launcher correction changed the dependency manifest already sealed by the typed-answer correction.
-- Evidence: Selection with corrections a573dd49-7498-4317-885d-213f8ce06f20 and 726c3f3f-003b-40b7-a114-a4c9d4f9e3a1 exited 3 with successor-correction-bundle-mismatch; work_memory.py lines 925-960 require each active correction artifact hash to match the effective successor bundle.
-
-## blk-a6e730de2cac3cac1e397d45
-
-- Status: `closed`
-- Subject: `discovery-04cf3898-8384-5912-9dbb-77f555ee1b22`
-- Step: `record-read-command`
-- Surface: `work-memory-correction`
-- Symptom: Correction recording rejected the discovery bundle because an explicitly read Python contract path is not declared in the dependency manifest
-- Evidence: work_memory.py correct returned executable-outside-manifest::scripts/research_package.py after the read command named the locked script
-
-## blk-a9904c536f46f6645b9eb6f9
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `legacy-research-batch`
-- Surface: `subagent-runtime`
-- Symptom: six-agent-legacy-spawn-returned-no-ids-after-thread-limit
-- Evidence: runtime-reported-agent-thread-limit-reached-and-sequence-doc-warns-partial-allocation
+- Status: `non-gap`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `full-repository-suite`
+- Surface: `skills/managed-skills.txt`
+- Symptom: The complete repository suite has one validator failure because research-playbook-v2 remains in managed-skills.txt.
+- Evidence: Full suite: 1 failed, 972 passed, 1 skipped, 13 subtests passed; failing assertion is test_validate_skills.py:68.
 
 ## blk-aa358c52c5dceacb935be8a4
 
@@ -2776,24 +1768,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Cycle 5 stage envelope is rejected before its gap transition can be recorded
 - Evidence: record-stage returned: record transition is missing required fields or evidence
 
-## blk-ac4508f797ea8ec31f6b15df
-
-- Status: `closed`
-- Subject: `discovery-6c9c32b3-939c-54f1-8cff-5bd9758f8821`
-- Step: `verify-reset-worker-tests`
-- Surface: `reset-worker-regression-test`
-- Symptom: focused-scheduler-test-observes-valid-started-receipt-and-fails-before-worker-finishes
-- Evidence: pytest-assertion-started-not-in-complete-failed-after-waiting-only-for-receipt-existence
-
-## blk-ac8e0fb8bf444adb3083e0b5
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `sealed-controller-correct`
-- Surface: `discovery-bootstrap-task-namespace`
-- Symptom: The recorded sealed-controller correction command hardcodes the original task ID and cannot load a successor run active state.
-- Evidence: scripts/work_memory_bootstrap.py:_load_context reads classification, selection, and active receipts from /private/tmp/work-memory/<task-id> and compares state.task_id to that argument. v11 receipts and active state use unified-research-playbook-v2-final-v11-20260715; the failed command passed unified-research-playbook-v2-trust-reset-20260715.
-
 ## blk-ac99e130f7255ca34c0545ba
 
 - Status: `non-gap`
@@ -2803,32 +1777,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Corrected final verifier payload was rejected because the prior failed attempt reserved the same stage iteration attempt key
 - Evidence: Attempt 1 payload changed only to satisfy the diagnosed owned-gap reconciliation contract
 
-## blk-ad923f3eea2c6e9dbe1a38d5
+## blk-ae9411e160019d27b47474d8
 
 - Status: `non-gap`
-- Subject: `discovery-3fd6cc31-5152-5c78-91fb-b6e946b2cdab`
-- Step: `start-durable-run`
-- Surface: `work-memory-ledger-write`
-- Symptom: run-start could not append its durable event inside the workspace sandbox.
-- Evidence: Two sandboxed invocations returned PermissionError; the same command succeeded unchanged with approved elevated repository-write access.
-
-## blk-af961444acabec745c386dab
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `final-strategy-runner-edit`
-- Surface: `src/up_harness/engine/runner.py`
-- Symptom: The combined runner patch was rejected before mutation because the touchpoint-status context did not match the current file.
-- Evidence: apply_patch reported Failed to find expected lines; git worktree runner file remained unchanged by this patch.
-
-## blk-afcfd0f40c6a94aee24a4339
-
-- Status: `open`
-- Subject: `discovery-681aa86a-0cde-5ed2-b8cf-615eef3bdb7d`
-- Step: `run-start`
-- Surface: `memory-knowledge-run-ledger`
-- Symptom: The sandbox denied writing the governed run record
-- Evidence: work_memory.py run-start returned PermissionError; the same command succeeded with scoped escalation
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `final-verification-remediation-read-state`
+- Surface: `operator-tooling`
+- Symptom: Attempted blocker_catalog show command is unsupported.
+- Evidence: argparse returned invalid choice show and listed only open and transition.
 
 ## blk-b0115258deb6307476c6ba9b
 
@@ -2848,15 +1804,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Automatic sequence selection returned five unrelated workflow sequences and no usable match
 - Evidence: work_memory select returned callcenter-harness-provision-verify, greenfield-full-drive, mawf-playbook-blocker-reentry, mawf-playbook-full-test, and mawf-playbook-speed-test
 
-## blk-b079618ade4b284b057b4d59
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `select-successor`
-- Surface: `correction-lifecycle-transition`
-- Symptom: The cumulative correction exists but its owning blocker remained open, so successor selection rejects it.
-- Evidence: Correction f9d4b2bc-ba36-43ec-9219-463173d889e3 was recorded in v12 without --finalize-failed-run; work_memory.py only adds the open-to-fixed-awaiting-verification transition inside the finalizing branch. v12 was then closed before an explicit blocker transition.
-
 ## blk-b1f2f0ad31b74d513fee573a
 
 - Status: `superseded`
@@ -2865,15 +1812,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `staged-markdown`
 - Symptom: git diff --cached --check reports trailing whitespace in new durability research and plan documents
 - Evidence: 20 header metadata lines reported across six staged Markdown files
-
-## blk-b20bcf38ad8cb8de94e38208
-
-- Status: `superseded`
-- Subject: `discovery-223a62bb-62d5-5004-a1b6-cedb69d65585`
-- Step: `open-blocker`
-- Surface: `sequence-control`
-- Symptom: blocker-entry-rejected
-- Evidence: command-returned-subject-run-mismatch
 
 ## blk-b23549ebeec52ae32836f61d
 
@@ -2884,32 +1822,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The provenance unit test failed before exercising run_role_with_provenance because it assigned run_role on a frozen CommandRoleExecutor instance.
 - Evidence: Bundled unittest: tests.unit.test_role_executor_usage.AggregateUsageTests.test_role_execution_keeps_provenance_outside_payload raised dataclasses.FrozenInstanceError at line 54.
 
-## blk-b235c96f00f12bb4bf80c173
+## blk-b414456f2223b1be55e52624
 
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `score-evaluation`
-- Surface: `evaluation-planner-output-schema`
-- Symptom: planner-outputs-pass-envelope-validation-but-scorer-rejects-first-planner-before-quality-scoring
-- Evidence: scorer-calls-_evaluate_claims-for-every-record-and-requires-claims-and-material_gaps-before-role-branch
-
-## blk-b2db18a08a6b0dde2751ebe8
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `verify-owner-question-contract-fix`
-- Surface: `convergence-control`
-- Symptom: The convergence baseline guard detected the approved source and test edits, but the focused test command still ran in the same orchestration cell.
-- Evidence: guard-baseline returned BLOCKED with drift in src/up_harness and tests; the subsequent unittest command then ran and reported one fixture-mode failure.
-
-## blk-b3501b51c123e69c94ad936a
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `reusable-live-model-canary-static-contract`
-- Surface: `/Users/kamenkamenov/united-partners/scripts/run_cd_s_002_upgrade_canary.py`
-- Symptom: the initial canary demanded controlled Q&A during discovery and could generate evidence below the owner-selected global proof threshold
-- Evidence: build_strategy_profile emits guide/Q&A only for redraft; gate_platform_decisions applies the stronger of claim tier and owner threshold, while the initial _write_evidence used only claim.required_tier
+- Status: `superseded`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `sealed-protected-correct`
+- Surface: `activated work_memory bootstrap snapshot`
+- Symptom: The old sealed bootstrap passed command grounding but failed internally before recording the combined correction.
+- Evidence: work_memory_bootstrap_launcher.py returned TypeError with exit code 5 for the exact grounded five-artifact correction command.
 
 ## blk-b436d06ac2e1f91e5df5fa40
 
@@ -2919,24 +1839,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `subagent-fanout`
 - Symptom: duplicate-mixed-maturity-writer-created-after-batch-spawn-reported-thread-limit
 - Evidence: hidden-agent-019f6263-9294-7110-9e62-72d32c9f10c3-completed-while-replacement-019f6266-44ab-7b60-a604-f33dbf3ed3ab-was-running
-
-## blk-b4b8a6d8d7e16121e2f0d5b3
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `final-live-canary`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/final_strategy.py`
-- Symptom: The corrected source strategy and guide passed, but final strategy composition blocked because the controlled-Q&A output could not be reconstructed against the strategy draft.
-- Evidence: Run up-run-c85238fe23f3 reports controlled_qna.status=invalid and final_strategy_validation issues exactly final_strategy_reconstruction_mismatch and controlled_qna_section_invalid; all prior phases are valid.
-
-## blk-b4f5ebc96928c0f7b3e6a4a6
-
-- Status: `superseded`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `reproduce-final-strategy`
-- Surface: `/Users/kamenkamenov/united-partners/src/up_harness/final_strategy.py`
-- Symptom: The model followed the corrected empty-markdown compatibility contract, but the final-strategy envelope validator rejected the empty string.
-- Evidence: Captured-input GPT-5.5 reproduction returned final_strategy_envelope_invalid; prompt requires markdown empty while validator still applies bool(payload[markdown]).
 
 ## blk-b5175d1c747569d56dc72408
 
@@ -2955,6 +1857,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: the updated discovery bundle cannot activate
 - Evidence: sequence_guard.py activate returned bootstrap-sources-not-selected after control dependencies were removed from the manifest
+
+## blk-b7844825bd3857c3ce4176e3
+
+- Status: `non-gap`
+- Subject: `discovery-66c9c758-8b03-5e3b-9622-faa1044070c9`
+- Step: `record-route-trace`
+- Surface: `sequence_discovery_log.py append-step`
+- Symptom: The route-trace evidence row was rejected because its command contained a literal Markdown table separator.
+- Evidence: append-step returned invalid-command-row while all surrounding metadata commands succeeded.
 
 ## blk-b78810aeb63ca80f94f8cfe0
 
@@ -3009,15 +1920,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence_guard`
 - Symptom: The same-path blocker verification cannot run because the recorded run-verify step omits required blocker-id and correction-id arguments.
 - Evidence: sequence_guard returned command-not-grounded-in-selected-document for work_memory.py verify with blocker and correction ids.
-
-## blk-baa353d0d0094f7876f4806e
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `run-live-cd-s-002-upgrade-canary`
-- Surface: `external-model-data-boundary`
-- Symptom: The registered real gpt-5.5 canary was rejected before process start because it may send private United Partners workflow or client content to an external model service.
-- Evidence: The execution reviewer rejected CreateProcess and explicitly confirmed that no safer-equivalent workaround may be used without informed user approval.
 
 ## blk-bab8ab59a58c3c3820a46f75
 
@@ -3109,14 +2011,23 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: honest-parent-cannot-freeze-unknown-claim-values-or-add-them-after-core-without-scope-drift
 - Evidence: create_state-hashes-entire-requirements-before-core-while-evaluator-load_v2_package-requires-research_value-and-evidence_ids-in-emitted-requirements
 
-## blk-bdc091e901a4c2e6916360cb
+## blk-bd53f0c42db72f7f79b3e139
 
-- Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `guard-live-canary-baseline`
-- Surface: `convergence-baseline`
-- Symptom: The convergence guard blocked the live canary because verify_harness changed working hashes under scripts, src/up_harness, and tests after all deterministic checks passed.
-- Evidence: guard-baseline reported scripts d169f51c..., src/up_harness 7ffd53db..., tests 2a81fe54... instead of the recorded hashes; docs and workflows remained unchanged.
+- Status: `non-gap`
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `final-verification-remediation-guard-help`
+- Surface: `operator-tooling`
+- Symptom: Verification remediation help commands could not be guard-authorized with scripts/work_memory.py as source-ref.
+- Evidence: sequence_guard returned source-ref-outside-selected-bundle for five command receipts; selected manifest covers only scripts/blocker_catalog.py.
+
+## blk-bdb73fecb9f30ad4c3457a89
+
+- Status: `non-gap`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `verify-automation`
+- Surface: `scripts/run_pytest.sh`
+- Symptom: The documented repository test runner exits immediately with zsh permission denied.
+- Evidence: Exact command scripts/run_pytest.sh tests/test_discovery_promotion_lifecycle.py tests/test_work_memory_bootstrap.py tests/test_sequence_guard.py returned exit code 126.
 
 ## blk-bec03ce3f78be19efc3d30a1
 
@@ -3127,6 +2038,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The guard rejects the two-pair aggregate verification command because the discovery row describes repetition with bracket notation rather than an explicit executable shape.
 - Evidence: sequence_guard returned command-not-grounded-in-selected-document for run-verify-all-corrections after the grouped selection and baseline passed.
 
+## blk-bed4e799176d097207c61ecb
+
+- Status: `non-gap`
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `research-inventory-rerun`
+- Surface: `sequence_guard`
+- Symptom: sequence_guard rejected the absolute-path form of a logged repository inspection command
+- Evidence: guard returned command-not-grounded-in-selected-document
+
 ## blk-beec5dbbd5bba52c387659f2
 
 - Status: `closed`
@@ -3135,6 +2055,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence_guard`
 - Symptom: Concrete runtime agent ID fails guard although the discovery table declares --agent-id <agent-id>
 - Evidence: _shape_match compares whole line token length; discovery command is embedded between Markdown table cells
+
+## blk-bf148505c9528d2ef1e4a87e
+
+- Status: `non-gap`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `controller-regression-suite`
+- Surface: `tests/test_discovery_promotion_lifecycle.py`
+- Symptom: Two controller tests failed before command assertions because their declared changed artifacts did not exist.
+- Evidence: 30 tests passed; test_correct_accepts_one_stable_artifact_manifest_argument and test_registered_correction_forwards_repository_roots raised changed-artifact-not-found from the new content-bound identity helper.
 
 ## blk-bfaccd0546fc71be51e67252
 
@@ -3145,24 +2074,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Subagent cannot start the guarded read-only coverage audit run
 - Evidence: work_memory.py run-start returned PermissionError after successful activation
 
-## blk-c04206b1671a956e970f5d2d
-
-- Status: `open`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `final-live-canary`
-- Surface: `/Users/kamenkamenov/united-partners/scripts/run_cd_s_002_upgrade_canary.py`
-- Symptom: The final synthetic-fixture canary was rejected before process creation because its generated UP workflow draft would be sent to external GPT-5.5.
-- Evidence: The safety layer returned unacceptable risk and required fresh explicit user approval after disclosure; no canary process or model call started.
-
-## blk-c2ac363470fe4bb0c1f97c4e
-
-- Status: `non-gap`
-- Subject: `discovery-e239c5e0-5bff-58b1-a62f-99f64e686baf`
-- Step: `catalog-sandbox-boundary`
-- Surface: `discovery-bootstrap-filesystem`
-- Symptom: Bootstrap could not write its discovery bundle under the default workspace sandbox.
-- Evidence: Corrected bootstrap exited 5 with PermissionError; the same command crossed the boundary and progressed under bounded write escalation.
-
 ## blk-c659e7c0c6c7ef43bc4130b0
 
 - Status: `non-gap`
@@ -3171,15 +2082,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `delegated-assessment`
 - Symptom: Fresh assessor stopped before document review because it treated read-only evidence inspection as a separate operational sequence.
 - Evidence: Stage envelope RDG-EXEC-001; active parent discovery lineage and run already govern this convergence task.
-
-## blk-c6d54f9736b7c08a0c36d6be
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `parser-correction-verification-successor`
-- Surface: `scripts/work_memory.py`
-- Symptom: A correction-bound successor selection was rejected because correction 469fe5da was no longer in awaiting-verification state; stale activation and run start then failed closed.
-- Evidence: Selection returned successor-correction-not-awaiting-verification; activation returned stale-source-bundle; run-start returned stale-selection-bundle. A subsequent normal selection feac5e55 activated and started run 1c11fa88.
 
 ## blk-c7c2be69cc786d528b8e7cf0
 
@@ -3190,15 +2092,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Building the verifier changed bin and obj beneath the allowed verifier directory fingerprint
 - Evidence: Only tools/Taggable.ReportExportVerifier directory hash differs after a successful build
 
-## blk-c803fdecb7a9c864cf0210da
-
-- Status: `closed`
-- Subject: `discovery-04cf3898-8384-5912-9dbb-77f555ee1b22`
-- Step: `inventory-authoritative-inputs`
-- Surface: `sequence-guard`
-- Symptom: The guard rejected the recorded read-only inventory command after the discovery log changed
-- Evidence: sequence_guard.py returned stale-source-bundle immediately after append-step changed the selected discovery document
-
 ## blk-c820736fb9a7767bc974c37f
 
 - Status: `superseded`
@@ -3208,15 +2101,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: focused-suite-90-passed-2-failed
 - Evidence: wrong-private-validator-name-and-old-generic-error-expectation
 
-## blk-c94e16da740af387f954abdd
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-3fd6cc31-5152-5c78-91fb-b6e946b2cdab`
-- Step: `score-evaluation`
-- Surface: `research-package-structured-claims`
-- Symptom: The bounded evaluator rejected semantically correct yes/no conclusions because the package serialized them as explanatory strings instead of boolean values.
-- Evidence: score verdict FAIL: complete critical recall was 6/8; the current-runtime v2 research and planner each preserved the material gap but missed both typed predicate values, while evidence, scope, maturity, budget, lifecycle, and planner rubric checks passed.
-
 ## blk-c95e0e5f249e5a8d337fe4d4
 
 - Status: `closed`
@@ -3225,6 +2109,24 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `multi-agent-verifier`
 - Symptom: Fresh Cycle 25 critic stopped before artifact inspection and asked to create orchestration files.
 - Evidence: Agent 019f60f1-5406-7552-aa46-109e47d3b0a4 returned no PASS/GAPS result because it treated a new discovery log as mandatory, although discovery-d43595b9-6d8a-5290-8d6a-9b8b476582fa already exists.
+
+## blk-c9dbe9aacced22115f59cb04
+
+- Status: `non-gap`
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `hardening-gate-1-closeout`
+- Surface: `blocker_catalog`
+- Symptom: catalog rejected direct transition of the corrected proof gap to closed
+- Evidence: same-path verification event fe4b7c94-b91c-4f7c-80c0-30f5355bc2be exists; transition returned invalid-blocker-status-transition
+
+## blk-ca14471bcd458665a94fcd79
+
+- Status: `non-gap`
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `blocker-remediation-proof`
+- Surface: `sequence_discovery_log_cli`
+- Symptom: sequence_discovery_log rejected verify because the supported validation subcommand is check
+- Evidence: CLI returned valid choices start, append-step, set-inputs, set-failure-handling, set-verified-path, set-readiness, set-dependencies, check, backlog, closeout; no state changed
 
 ## blk-cabce4fb88dfed2ef99ff43a
 
@@ -3244,14 +2146,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Baseline guard blocks reviewer spawn because docs working hash changed after creating the research artifact
 - Evidence: Only docs working_hash changed; src/workflow_orch and tests hashes match baseline
 
-## blk-cc19a00d79446695934e63ab
+## blk-cc419900291a40c4cdb6c30f
 
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `spawn-legacy-batch`
-- Surface: `multi-agent-runtime`
-- Symptom: six-agent-batch-partially-allocated-without-returned-ids
-- Evidence: tool-returned-agent-thread-limit-reached
+- Status: `closed`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `full-registered-verification`
+- Surface: `tests/test_sequence_guard.py`
+- Symptom: Three sequence-guard tests monkeypatch _repo_roots with a lambda that does not accept the new snapshot keyword.
+- Evidence: Full registered suite failures raise TypeError: lambda() got an unexpected keyword argument snapshot.
 
 ## blk-cd779554e707f3293f2fa8f6
 
@@ -3289,15 +2191,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The real verifier project could not compile because dotnet is not on PATH
 - Evidence: The guarded dotnet build command exited before compilation
 
-## blk-ce17e7bcff5eb0aae0d2184e
-
-- Status: `open`
-- Subject: `discovery-e78611ed-2903-5b35-9fa2-142b91bcebc3`
-- Step: `memory-integrate-and-push`
-- Surface: `lifecycle-work-memory-contract`
-- Symptom: Reconciliation found 13 content-conflicting lifecycle, work-memory, registry, and test files between the completed local package and the earlier remote promotion.
-- Evidence: scoped_git_publish.py fail-closed with the exact list: SEQUENCES.md; discovery-promotion lifecycle docs/manifest/controller; sequence discovery log; work_memory and bootstrap; and seven associated tests.
-
 ## blk-ce2d5ffa0a4827ffa948b731
 
 - Status: `fixed-awaiting-verification`
@@ -3325,6 +2218,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: combined-retarget-test-stops-at-lens-mismatch-and-cannot-detect-later-binding-regressions
 - Evidence: independent-auditor-cited-test-line-822-and-controller-lines-1001-and-1053
 
+## blk-cedbcb5b263c5edd787331f0
+
+- Status: `non-gap`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `targeted-controller-regression`
+- Surface: `uv cache initialization`
+- Symptom: The sandboxed test process could not initialize uv's home-directory cache.
+- Evidence: Failed to initialize cache at /Users/kamenkamenov/.cache/uv: Operation not permitted.
+
 ## blk-cf7c1d98acc835c31bc60947
 
 - Status: `closed`
@@ -3343,14 +2245,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: guarded-read-commands-rejected-before-execution
 - Evidence: four exact sed read commands were rejected by sequence_guard; no artifact reads executed
 
-## blk-d12156f7ae4fec13960a0323
+## blk-d1340c73e0b1366c8892439f
 
-- Status: `superseded`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `close-corrected-predecessor`
-- Surface: `sequence-discovery-command-contract`
-- Symptom: The correction predecessor cannot be closed because the exact run-close failed command is absent from the selected discovery table.
-- Evidence: sequence_guard.py post-correction-bootstrap returned command-not-grounded-in-selected-document; correction 07aae488 is already recorded and no successor has started.
+- Status: `closed`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `correct-superseding`
+- Surface: `scripts/work_memory.py::cmd_correct`
+- Symptom: Even without redundant finalization, the canonical correction transaction rejects a replacement correction because its predecessor run is terminal.
+- Evidence: Live screenshot correction command included --supersedes-correction-id and omitted --finalize-failed-run, but work_memory.py returned run-is-terminal.
 
 ## blk-d158c5eae27cc2ccab0ee8e2
 
@@ -3360,15 +2262,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory discovery selection`
 - Symptom: The selector rejected a discovery log stored outside the canonical repository
 - Evidence: ValueError: temporary discovery log is not below /Users/kamenkamenov/memory-knowledge
-
-## blk-d1b062d2207b8108d126a859
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `schema-remediation-record-candidate`
-- Surface: `research-package-cli-grounding`
-- Symptom: record-candidate-could-not-read-AVAILABLE-as-file
-- Evidence: controller-returned-cannot-read-JSON-from-AVAILABLE
 
 ## blk-d204b870a2c4b98d1f9b144c
 
@@ -3397,23 +2290,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The guard rejects the generic autonomy-approval row when the actual command contains JSON scope lists and evidence text.
 - Evidence: sequence_guard returned command-not-grounded-in-selected-document before grant-approval executed.
 
-## blk-d35e3271969ce26b019e946f
+## blk-d2a5dd8faec5309d0df3edd2
 
 - Status: `superseded`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `run-live-cd-s-002-upgrade-canary`
-- Surface: `compose-llm-strategy-brief`
-- Symptom: The real gpt-5.5 CD-S-002 canary failed while composing the strategy brief because owner-question line 106 violated the canonical format.
-- Evidence: Canary exit 1 for run up-run-87d9d0de034b: compose-llm-strategy-brief failed with owner_questions_invalid_line:106.
-
-## blk-d40f117232b9bc5dbc69a283
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-combined-tests`
-- Surface: `work-memory-successor-validation`
-- Symptom: The carried-correction raw-byte check leaks missing-dependency when the corrected artifact is absent.
-- Evidence: tests/test_work_memory.py::test_successor_rejects_bundle_drift_after_recorded_correction failed; 218 sibling tests passed.
+- Subject: `discovery-promotion-lifecycle`
+- Step: `correct-superseding`
+- Surface: `scripts/discovery_promotion_lifecycle.py`
+- Symptom: A valid superseding correction request fails before recording because the controller passes the old correction id as the new correction id.
+- Evidence: Controller emitted work_memory.py correct with both --correction-id e7174b34-c65c-50f6-9d83-27ce1aa7c056 and --supersedes-correction-id e7174b34-c65c-50f6-9d83-27ce1aa7c056; work_memory returned correction-id-conflict.
 
 ## blk-d5089d868945bf418fa33010
 
@@ -3433,24 +2317,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The mixed-maturity INTERNAL_READINESS lens returned BLOCKED with zero findings because it treated raw file hashes as the supplied identity hashes and could not resolve relative skill references.
 - Evidence: Agent final reported input hashes mismatched and references absent. Controller hash-json proves candidate canonical 8a32ea... versus file 1d2d01..., and envelope canonical 0dd758... versus file 3396a0...; the supplied hashes are correct under sha256-canonical-json-utf8-no-trailing-newline-v1.
 
-## blk-d587d0712325d53c39d072c3
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-681aa86a-0cde-5ed2-b8cf-615eef3bdb7d`
-- Step: `sequence-selection`
-- Surface: `local-codex-remote-control-identity`
-- Symptom: Sequence selection offered two unrelated auth workflows for a cloned Codex installation ID reset
-- Evidence: work_memory select returned ambiguous-sequence with claude-auth-token-refresh and remote-mcp-user-onboarding
-
-## blk-d6114f9536fb3a57af3c0cb4
-
-- Status: `closed`
-- Subject: `discovery-e239c5e0-5bff-58b1-a62f-99f64e686baf`
-- Step: `final-review`
-- Surface: `promotion-controller-fail-closed-boundary`
-- Symptom: Final review found that pre-apply failures can leave staging or partial backup state, and a recomputed plan can redirect tracked path values.
-- Evidence: apply_plan stages before its cleanup try; create_backup failure leaves backup_root when manifest assignment never completes; validate_preconditions compares only tracked key sets rather than each planned path to tracked_paths(repo_root, installed_root).
-
 ## blk-d6588c5770330e723c81c152
 
 - Status: `fixed-awaiting-verification`
@@ -3469,15 +2335,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: honest-lenses-cannot-terminate-planner-ready-packages-with-known-planning-gaps
 - Evidence: missing-runtime-and-requirement-conflict-cases-returned-GAPS-for-HANDOFF_TO_PLANNER-findings
 
-## blk-d82b3f505167055e2e838202
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `accept-canary-script-baseline`
-- Surface: `/Users/kamenkamenov/united-partners/scripts/run_cd_s_002_upgrade_canary.py`
-- Symptom: sequence guard rejected the approved scripts baseline transition because the selected bundle contains the placeholder canary while the worktree contains the implemented driver
-- Evidence: sequence_guard returned exit 4 with {error: stale-source-bundle, ok: false}
-
 ## blk-d830b3f69e35fb5ef45d512e
 
 - Status: `closed`
@@ -3487,23 +2344,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: successor-selection-rejected-correction-artifact-outside-bundle
 - Evidence: test-scoped-git-publish-and-test-sequence-promote-omitted-from-dependencies
 
-## blk-d86cae24cc9d226e25254c49
+## blk-d86d592cdcf8ddaea9a63b8e
 
 - Status: `non-gap`
-- Subject: `discovery-candidate-reconciliation`
-- Step: `audit-candidates`
-- Surface: `operations/sequences/discovery/2026-07-15-discovery-candidate-reconciliation.dependencies.json`
-- Symptom: The promoted reconciliation discovery log is quarantined because its historical manifest declares scripts/run_pytest.sh directly and also receives it transitively from discovery-promotion-lifecycle.
-- Evidence: Schema-3 audit row reports duplicate-bundle-file; the discovery sidecar contains both discovery-promotion-lifecycle and direct scripts/run_pytest.sh, while the registered target resolves and is current.
-
-## blk-d950859cd05e764e4f7a7ace
-
-- Status: `open`
-- Subject: `discovery-6c9c32b3-939c-54f1-8cff-5bd9758f8821`
-- Step: `inspect-remote-control-processes`
-- Surface: `sequence-guard-command-shape`
-- Symptom: duplicate-process-inspection-command-rejected-before-execution
-- Evidence: sequence_guard-returned-invalid-guarded-command-for-ps-pipe-rg
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `resume-main-research`
+- Surface: `work_memory_cli`
+- Symptom: blocker catalog rejected an attempted write to a closed verification run
+- Evidence: catalog returned event-after-terminal for run a26a9b4f-052c-4623-9d8e-78c83b6378d9
 
 ## blk-d9c6f4df2bd8c81ca0333228
 
@@ -3541,15 +2389,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The repaired manifest blocker cannot advance to verified through the successor protocol
 - Evidence: blk-8e transitioned open to fixed-awaiting-verification before work_memory correct succeeded; lifecycle forbids correction_recorded unless blocker status is open
 
-## blk-dca5fd26c3e53a6ce193f940
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `close-correction-run`
-- Surface: `operations/work-memory/events.jsonl`
-- Symptom: The correction run could not be closed because the active workspace sandbox denied writes to the memory-knowledge ledger.
-- Evidence: work_memory.py run-close returned PermissionError before emitting a run_closed event.
-
 ## blk-dec6a4256092a99c8ed3fa04
 
 - Status: `open`
@@ -3567,33 +2406,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory-selection`
 - Symptom: Automatic selection offered only unrelated workflow sequences for the spreadsheet repair
 - Evidence: work_memory.py select returned five unrelated workflow-drive sequence ids before any product command ran
-
-## blk-e09ed3e7b6e42e86da08b5cd
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `correction-successor-selection`
-- Surface: `scripts/work_memory.py`
-- Symptom: A correction-bound successor could not start because the blocker catalog still showed the corrected blockers as open.
-- Evidence: BLOCKERS.md showed blk-1a151c7dd05870d0e8f57c60 and blk-6e51c6e83cd6ea138ff85d3a status open after work_memory.py correct; the discovery sequence already requires an explicit fixed-awaiting-verification transition.
-
-## blk-e10fb7734e48f031e02bd999
-
-- Status: `non-gap`
-- Subject: `discovery-e78611ed-2903-5b35-9fa2-142b91bcebc3`
-- Step: `memory-integrate-and-push`
-- Surface: `memory-knowledge-publish-manifest`
-- Symptom: Isolated reconciliation rejected the full manifest because skills/managed-skills.txt has no net change across the local commit stack.
-- Evidence: scoped_git_publish.py returned publish scope is not fully sourced by commit or overlay; missing=[skills/managed-skills.txt] before creating or pushing a commit.
-
-## blk-e23a8093a7a470d019ea146c
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-init-state`
-- Surface: `selected-source-bundle-v15`
-- Symptom: The first clean-state replay guard rejected v15 as stale after another process restored sequence_guard.py and tests/test_sequence_guard.py to earlier bytes.
-- Evidence: v15 selected sequence_guard.py=1d1bd5db84f434fd0e0cefa154f1f29c7636d38c3f0491ecb4beae414f20a600 and tests/test_sequence_guard.py=66e853403832f31ee7acdcc27d6b808b59c59788b7f6f2d31541e8351c8efbd6; current stable hashes are 42518faba590693dbfdb06e360e32c50d084d06e4729c715fe48c84be8365cef and bd4476016db727cd3d17a741df70af19d7cec2e1d7bc71f23d9dbcadaa1a748c. The fail-closed replay wrote zero state files.
 
 ## blk-e2959c49b9463620770cc809
 
@@ -3640,15 +2452,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The isolated rebase identified four exact conflicts: ledger, generated blocker view, work-memory controller, and blocker-catalog tests.
 - Evidence: conflict_paths were operations/blockers/BLOCKERS.md, operations/work-memory/events.jsonl, scripts/work_memory.py, tests/test_blocker_catalog.py; temporary rebase aborted and restored HEAD.
 
-## blk-e70ef0c4bd678413b7dfe416
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `schema-remediation-replay-grounding`
-- Surface: `sequence-guard-command-source`
-- Symptom: temporary-reproduction-script-rejected-before-execution
-- Evidence: sequence-guard-returned-source-ref-outside-selected-bundle
-
 ## blk-e730851043677c62164ab745
 
 - Status: `open`
@@ -3657,15 +2460,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory sequence activation`
 - Symptom: The read-only plan-verification sequence could not activate until directive-read state was refreshed.
 - Evidence: Initial sequence_guard.py activate exited nonzero with the exact stale directive-read message; documented directive_guard read then made activation pass.
-
-## blk-e7e5fae5456b377e6fe909f2
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `score-evaluation`
-- Surface: `evaluation-legacy-output-schema`
-- Symptom: locked-score-rejected-first-legacy-output-before-quality-scoring
-- Evidence: scorer-returned-unsupported-output-schema-current-runtime-legacy-research
 
 ## blk-e9b0b0f06d71257e62fc7636
 
@@ -3685,15 +2479,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Sequence selection rejected the required verify-plan ledger helper
 - Evidence: Discovery log references /Users/kamenkamenov/.codex/skills/verify-plan/scripts/verification_ledger.py while dependencies manifest is empty
 
-## blk-eb0e284eb68069e05306fdcb
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `advance-convergence-baseline`
-- Surface: `convergence-control`
-- Symptom: The approved baseline advancement could not atomically write the convergence state file.
-- Evidence: PermissionError opening /Users/kamenkamenov/.local/state/kamen-convergence/up-harness-cd-s-002-upgrades-20260714/.convergence-*.tmp.
-
 ## blk-edc8fa1326f247b90486b412
 
 - Status: `non-gap`
@@ -3712,23 +2497,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The focused helper reproduction could not start because the default uv environment omits pytest
 - Evidence: pyproject declares pytest only in project.optional-dependencies.dev and uv run pytest exited 2 with Failed to spawn pytest
 
-## blk-f1a0eb4cedf8520c60a7cec7
+## blk-f239f184dbe0cf9c9a8f4f36
 
 - Status: `non-gap`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `final-v3-adjudication-record-contract`
-- Surface: `/private/tmp/research-playbook-v2-eval-20260715-final-v3/v2-work/current-runtime/adjudications.json`
-- Symptom: Three adjudicators emitted summary records with finding_id/fingerprint/rationale instead of controller-valid records embedding each exact raw_finding plus finding_type, materiality, and disposition.
-- Evidence: current record-adjudication returned every adjudication must include raw_finding; current, missing-runtime, and requirement-conflict output keys omit raw_finding, finding_type, and materiality. Scope-inflation output is valid empty list.
-
-## blk-f1daa02c7ecff0e8c81f39e8
-
-- Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `product-repository-roots-bundle`
-- Surface: `operations/sequences/discovery/2026-07-14-up-harness-cd-s-002-live-verification.dependencies.json`
-- Symptom: The roots-manifest correction could not be recorded because the new file was outside the discovery dependency bundle.
-- Evidence: work_memory.py correct returned correction-artifact-drift-mismatch after both the log and repositories JSON were named as changed artifacts.
+- Subject: `discovery-8f6f0b9b-0174-5840-b07e-f61d9ed1acf4`
+- Step: `blocker-remediation-proof-check`
+- Surface: `sequence_discovery_log_cli`
+- Symptom: supported discovery-log check could not refresh canonical state under the default sandbox
+- Evidence: python3 scripts/sequence_discovery_log.py check returned PermissionError and no state change
 
 ## blk-f2a7a53d16490f32d20f4946
 
@@ -3748,15 +2524,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: same-path verification for the repaired directive blocker was rejected because no correction id was paired
 - Evidence: work_memory.py verify returned paired-correction-blocker-required
 
-## blk-f33ebd6cfa377a6c074f6a25
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-emit-package`
-- Surface: `current-runtime-evidence-index-input`
-- Symptom: first-final-package-emission-rejected-before-output
-- Evidence: controller-returned-invalid-operation-evidence-index-item-zero-invalid-fields
-
 ## blk-f33fe9c4a8bdb4568e7c0be8
 
 - Status: `non-gap`
@@ -3775,15 +2542,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The isolated rebase abort reports the failed commit but omits the exact unresolved file paths.
 - Evidence: Live failure named commit 4056fc6 and restored temporary HEAD but did not return conflict_paths.
 
-## blk-f4c40d29a989efeb555a7c19
-
-- Status: `closed`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-record-attempt`
-- Surface: `selected-source-bundle-v14`
-- Symptom: The v14 source receipt became stale before coverage attempt recording, and the batch orchestration executed six state writes despite six failed guards.
-- Evidence: v14 selected scripts/sequence_guard.py=42518faba590693dbfdb06e360e32c50d084d06e4729c715fe48c84be8365cef and tests/test_sequence_guard.py=bd4476016db727cd3d17a741df70af19d7cec2e1d7bc71f23d9dbcadaa1a748c; current hashes are d004942ecab3f87354856057039896c792090ef064b61aced721bbc5dae36fa0 and 66e853403832f31ee7acdcc27d6b808b59c59788b7f6f2d31541e8351c8efbd6. All six guard calls returned stale-source-bundle, but the JS batch did not gate execution on their exit codes.
-
 ## blk-f5083c31ebd4f7e372ef2c7b
 
 - Status: `superseded`
@@ -3793,14 +2551,14 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: fresh-blind-lock-cannot-be-created-through-recorded-command
 - Evidence: discovery-table-has-record-and-score-but-no-prepare
 
-## blk-f65fdb80e74569a77dd38c68
+## blk-f5b0232da20b663738c6e583
 
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `abandon-stranded-predecessor`
-- Surface: `scripts/sequence_guard.py`
-- Symptom: run-abandon-rejected-before-execution
-- Evidence: first-guard-missing-exact-help-shape-and-followup-shell-tokenization-errors
+- Status: `closed`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `correct-superseding`
+- Surface: `scripts/discovery_promotion_lifecycle.py`
+- Symptom: A replacement correction is generated correctly but the wrapper always passes --finalize-failed-run, even when the stale correction already finalized that run.
+- Evidence: Screenshot discovery correction attempt returned run-is-terminal before recording correction 9f1895dc-db28-57fa-a940-15259fa4961e.
 
 ## blk-f688fe246d4cbc81e600ece8
 
@@ -3810,42 +2568,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `codex-managed-skill-installation`
 - Symptom: selected-discovery-cannot-restore-sealed-baseline
 - Evidence: sealed-snapshot-diff-and-recovery-artifacts-confirmed
-
-## blk-f6b81fcc2c8624973af9c381
-
-- Status: `non-gap`
-- Subject: `discovery-e239c5e0-5bff-58b1-a62f-99f64e686baf`
-- Step: `catalog-undeclared-executable`
-- Surface: `discovery-bootstrap-manifest`
-- Symptom: Bootstrap rejected an executable named by the discovery document but absent from its dependency manifest.
-- Evidence: Escalated bootstrap exited 3 with executable-outside-manifest::scripts/run_pytest.sh; declaring the existing script made the same path pass.
-
-## blk-f70c149b27319d28eb799c3b
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-6c9c32b3-939c-54f1-8cff-5bd9758f8821`
-- Step: `activate-remote-control-after-regeneration`
-- Surface: `codex-remote-control`
-- Symptom: remote-control-activation-still-fails-after-codex-restart
-- Evidence: active-installation-id-exists-and-differs-byte-for-byte-from-pre-clone-backup
-
-## blk-f7316d2a4c12acf443b3f54c
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `activate-live-verification`
-- Surface: `control-plane`
-- Symptom: Activation rejected the retired explicit discovery sequence-id argument.
-- Evidence: sequence_guard.py returned activation-sequence-id-retired:run-work_memory-select-then-pass-selected-document.
-
-## blk-f74c1079c548e9e2f714a4ba
-
-- Status: `closed`
-- Subject: `discovery-candidate-reconciliation`
-- Step: `execute-rolling`
-- Surface: `scripts/discovery_candidate_reconciliation.py:command-surface`
-- Symptom: The successful rolling cleanup required ad hoc orchestration around audit, semantic comparison, manifest construction, retry, execution, and post-audit stability.
-- Evidence: Run 3b43fa64 executed 49 rows successfully, but the controller exposes only audit, validate, and execute; the approved rolling retain-only gate and retry semantics are absent from the registered command table.
 
 ## blk-f774b622fcd9e5d112a02346
 
@@ -3865,24 +2587,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Selection rejected a discovery log rooted in /private/tmp with pathlib.relative_to(ROOT) ValueError
 - Evidence: scripts/work_memory.py resolve_bundle lines 579-585 require discovery documents and manifests below canonical ROOT; canonical-root selection then succeeded
 
-## blk-f92429b3b2b961c059641f99
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `non-reusable-correction-successor-selection`
-- Surface: `scripts/work_memory.py`
-- Symptom: A second successor selection was attempted for a correction recorded with reusable_behavior_changed=no and was rejected; dependent activation/start failed closed.
-- Evidence: Correction b1c73f41 had no eligible_corrections entry; successor selection returned successor-correction-not-awaiting-verification. Normal selection 6ea364f7 started run 859be192.
-
-## blk-f9342af8345d9a7267cea922
-
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-e78611ed-2903-5b35-9fa2-142b91bcebc3`
-- Step: `inspect-repository-ancestry`
-- Surface: `sequence-guard`
-- Symptom: Every newly appended Git ancestry inspection command is rejected by sequence_guard.py with stale-source-bundle.
-- Evidence: Four independent guard calls returned error=stale-source-bundle and exit code 4 after the discovery log gained the new command rows.
-
 ## blk-f9bf87fafc029f0cc74176cd
 
 - Status: `non-gap`
@@ -3891,15 +2595,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-discovery-log`
 - Symptom: Embedded pipe and alternation characters executed while recording commands instead of remaining command text
 - Evidence: zsh reported command not found for agent_slot_ledger.py, numeric, mssql, Excel, Net, OperatorPayout, and sequence_discovery_log.py reported missing --result
-
-## blk-fa58d7cb2c1bb3bbcb0ddb04
-
-- Status: `non-gap`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `verify-pre-snapshot-parser-fix`
-- Surface: `scripts/work_memory.py`
-- Symptom: The ledger refused a verification-only event because the blocker has no correction paired to this roots-aware run.
-- Evidence: work_memory.py verify returned paired-correction-blocker-required for blk-8d00495043a7badd2b1a94c4.
 
 ## blk-fa87299b96d3612464af01ca
 
@@ -3928,33 +2623,6 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The mixed-maturity revision-2 candidate cannot be recorded because the case state reached its one-hour TIME_BUDGET while controller and package-contract blockers were remediated.
 - Evidence: record-candidate returned verdict CAP_REACHED, reason TIME_BUDGET, candidate_hash null; state started 2026-07-15T08:23:24Z with deadline 2026-07-15T09:23:24Z.
 
-## blk-fc2aae96b1dcd9b87fa043ec
-
-- Status: `open`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `full-unit-suite-publication-compatibility`
-- Surface: `tests/unit/test_workflows.py`
-- Symptom: A legacy unit test raised KeyError because a blocked required-live run no longer writes the published llm_strategy_brief key before publication.
-- Evidence: test_required_live_strategy_brief_blocks_without_command_executor failed at test_workflows.py:156; 185 other unit tests passed and all 22 integration tests passed.
-
-## blk-fc97747daa4d144b7d7759b7
-
-- Status: `closed`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `activate-verification-successor`
-- Surface: `sequence-guard-activation`
-- Symptom: Verification successor could not activate because the command supplied the retired discovery lineage id as sequence-id.
-- Evidence: sequence_guard.py returned activation-sequence-id-retired:run-work_memory-select-then-pass-selected-document
-
-## blk-fc99c032ad54102e89b3e73b
-
-- Status: `verified`
-- Subject: `discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a`
-- Step: `revalidate-live-canary-command`
-- Surface: `selected-source-bundle`
-- Symptom: The informed-approved live canary remained unable to start because sequence_guard found the active selected source bundle stale.
-- Evidence: sequence_guard returned stale-source-bundle before dispatch; convergence guard still passed for the UP repository.
-
 ## blk-fd3cc7b777171aaaabc2481d
 
 - Status: `closed`
@@ -3964,20 +2632,11 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: A shared work-memory controller change appeared after successor selection, so correction recording sees unrelated artifact drift.
 - Evidence: Selected hash ebbfdc...; current hash a1091c...; git diff adds preservation of prior verification_quality when cmd_correct closes a run.
 
-## blk-fdd74263e18a0e14686911bc
+## blk-ffc10318728bf2a91bccb2b2
 
-- Status: `fixed-awaiting-verification`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `v2-record-attempt`
-- Surface: `selected-source-bundle-v11`
-- Symptom: The v11 source receipt no longer matches the controller bytes before completed lens results can be recorded.
-- Evidence: Selected scripts/work_memory.py=f3da696e4a92648f40b5dc2d5325cf437cecc9c6432b10c81da97de8fac18b64 and tests/test_work_memory.py=dc73786b1d734b167a920eb09c3f01849eee1c8fe99a6f00a37b052de78ac677; current scripts/work_memory.py=d287d1101e05a66e7c51c27fde3b2524f5c4943a147242422714089d06f65f49 and tests/test_work_memory.py=c1594e411c4144280bf6f2aafe023faee435f9125eb70891a332a2e6903fcfad. The current revision adds subject-document resolution through the matching dependencies manifest and lineage plus regression coverage.
-
-## blk-fe72934a138ce48d2c6e84b0
-
-- Status: `superseded`
-- Subject: `discovery-683fb3d9-702b-55ff-945f-35c9f667e439`
-- Step: `focused-suite-concurrent-work-memory-drift`
-- Surface: `scripts/work_memory.py`
-- Symptom: The broader controller/bootstrap suite has six failures before v2 code runs because legacy one-argument _repo_roots monkeypatches reject the new snapshot keyword.
-- Evidence: Current scripts/work_memory.py and tests/test_work_memory.py hashes exactly match correction aed4a49c-4369-40bb-97de-ba95efd886a2; six failures report unexpected keyword argument snapshot in tests/test_work_memory.py, tests/test_sequence_guard.py, and tests/test_work_memory_bootstrap.py.
+- Status: `non-gap`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `full-registered-verification`
+- Surface: `tests/test_work_memory.py::test_registry_and_manifest_coverage`
+- Symptom: Registered sequence taggable-api-authed-endpoint-verify has no dependencies.json.
+- Evidence: Full registered suite: 139 passed, 4 failed; registry coverage reports the missing manifest path.

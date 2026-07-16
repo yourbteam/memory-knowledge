@@ -1,0 +1,11 @@
+{
+  "schema_version": 1,
+  "lineage_id": "taggable-api-authed-endpoint-verify",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "taggable-api",
+      "path_or_sequence_id": "scripts/verify-v3-report-scope.sh"
+    }
+  ]
+}

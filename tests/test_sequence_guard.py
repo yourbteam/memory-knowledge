@@ -81,7 +81,7 @@ def receipt_flow(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     }], registry_hash))
     monkeypatch.setattr(work_memory, "resolve_bundle", lambda **kwargs: (bundle, bundle_hash, "example"))
     monkeypatch.setattr(work_memory, "ROOT", tmp_path)
-    monkeypatch.setattr(work_memory, "_repo_roots", lambda path=None: {
+    monkeypatch.setattr(work_memory, "_repo_roots", lambda path=None, snapshot=None: {
         "memory-knowledge": tmp_path, "external": external_root,
     })
 

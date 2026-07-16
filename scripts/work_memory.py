@@ -233,6 +233,25 @@ def _superseded_correction_ids(event: dict[str, Any]) -> set[str]:
     return set(values)
 
 
+def _active_correction_ids(
+    events: Iterable[dict[str, Any]], blocker_id: str,
+) -> set[str]:
+    corrections = [
+        event for event in events
+        if event.get("event_type") == "correction_recorded"
+        and event.get("blocker_id") == blocker_id
+    ]
+    superseded = {
+        correction_id
+        for event in corrections
+        for correction_id in _superseded_correction_ids(event)
+    }
+    return {
+        event["correction_id"] for event in corrections
+        if event["correction_id"] not in superseded
+    }
+
+
 def _validate_event_values(event: dict[str, Any]) -> None:
     kind = event["event_type"]
     for field in ("run_id", "occurrence_id", "correction_id", "predecessor_run_id"):
@@ -374,6 +393,7 @@ def validate_lifecycle(
     legacy_stranded_fixed_sources: dict[str, str] = {}
     corrections: dict[str, dict[str, Any]] = {}
     verifications: dict[str, dict[str, Any]] = {}
+    post_terminal_correction_ids: set[str] = set()
     for event in events:
         kind = event["event_type"]
         run_id = event.get("run_id")
@@ -382,10 +402,24 @@ def validate_lifecycle(
                 raise WorkMemoryError("duplicate-run-start", 3)
             runs[run_id] = {"start": event, "terminal": None, "blockers": set(), "corrections": [], "verifications": []}
             continue
+        terminal = runs.get(run_id, {}).get("terminal") if run_id is not None else None
         if run_id is not None:
             if run_id not in runs:
                 raise WorkMemoryError("event-before-run-start", 3)
-            if runs[run_id]["terminal"] is not None:
+            terminal_correction = (
+                kind == "correction_recorded"
+                and terminal is not None
+                and terminal.get("event_type") == "run_closed"
+                and terminal.get("result") == "failed"
+                and bool(_superseded_correction_ids(event))
+            )
+            terminal_transition = (
+                kind == "bundle_transition_recorded"
+                and terminal is not None
+                and bool(event.get("correction_ids"))
+                and set(event["correction_ids"]) <= post_terminal_correction_ids
+            )
+            if terminal is not None and not (terminal_correction or terminal_transition):
                 raise WorkMemoryError("event-after-terminal", 3)
         if kind == "blocker_opened":
             if event["blocker_id"] in blockers:
@@ -403,12 +437,28 @@ def validate_lifecycle(
             legacy_stranded_fixed_sources.pop(event["blocker_id"], None)
             runs[run_id]["blockers"].add(event["blocker_id"])
         elif kind == "correction_recorded":
-            if blockers.get(event["blocker_id"]) != "open":
+            superseded_ids = _superseded_correction_ids(event)
+            current = blockers.get(event["blocker_id"])
+            active_ids = _active_correction_ids(corrections.values(), event["blocker_id"])
+            terminal_replacement = (
+                terminal is not None
+                and current == "fixed-awaiting-verification"
+                and bool(active_ids)
+                and superseded_ids == active_ids
+                and all(
+                    corrections[correction_id].get("run_id") == run_id
+                    for correction_id in superseded_ids
+                )
+            )
+            if current != "open" and not terminal_replacement:
                 raise WorkMemoryError("correction-for-nonopen-blocker", 3)
-            if not _superseded_correction_ids(event) <= set(corrections):
+            if not superseded_ids <= set(corrections):
                 raise WorkMemoryError("unknown-superseded-correction", 3)
             corrections[event["correction_id"]] = event
-            runs[run_id]["corrections"].append(event)
+            if terminal is None:
+                runs[run_id]["corrections"].append(event)
+            else:
+                post_terminal_correction_ids.add(event["correction_id"])
         elif kind == "verification_recorded":
             start = runs[run_id]["start"]
             if event["subject_id"] != start["subject_id"] or event["lineage_id"] != start["lineage_id"]:
@@ -1302,8 +1352,26 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
             "new_bundle_hash": existing_transition["new_bundle_hash"],
             "transition_event_id": existing_transition["event_id"],
         }
-    if any(event["event_type"] in {"run_closed", "run_abandoned"} for event in related):
-        raise WorkMemoryError("run-is-terminal", 3)
+    terminal = next((
+        event for event in related
+        if event["event_type"] in {"run_closed", "run_abandoned"}
+    ), None)
+    if terminal is not None:
+        active_ids = _active_correction_ids(events, args.blocker_id)
+        terminal_replacement = (
+            terminal["event_type"] == "run_closed"
+            and terminal.get("result") == "failed"
+            and bool(active_ids)
+            and set(supersedes) == active_ids
+            and all(
+                event.get("run_id") == args.run_id
+                for event in events
+                if event.get("event_type") == "correction_recorded"
+                and event.get("correction_id") in active_ids
+            )
+        )
+        if not terminal_replacement:
+            raise WorkMemoryError("run-is-terminal", 3)
     bundle_paths = {
         item["path"]
         for item in start["source_bundle"]

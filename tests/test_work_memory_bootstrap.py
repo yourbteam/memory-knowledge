@@ -49,9 +49,8 @@ def bootstrap_flow(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         "## Why This Looks Repeatable\nController upgrades recur.\n\n"
         "## Required Inputs, Auth, Or Environment\nLocal repository.\n\n"
         "## Commands And Observations\nNo commands yet.\n\n"
-        "python3 scripts/work_memory_bootstrap.py correct\n"
         "python3 scripts/work_memory_bootstrap_launcher.py correct\n"
-        "python3 scripts/work_memory_bootstrap.py run-close\n\n"
+        "python3 scripts/work_memory_bootstrap_launcher.py run-close\n\n"
         "## Failure Handling\nFail closed.\n\n"
         "## Verified Path\nPending.\n\n"
         "## Promotion Readiness\nNot ready.\n"
@@ -225,6 +224,23 @@ def test_sealed_hash_adapter_rejects_repository_roots_drift():
             ["/tmp/external/src/target.py"],
             repository_roots={"external": "/tmp/other"},
         )
+
+
+def test_sealed_hash_adapter_accepts_snapshotted_repository_roots_keyword():
+    class ControllerError(Exception):
+        pass
+
+    module = types.SimpleNamespace(WorkMemoryError=ControllerError)
+    roots = {"memory-knowledge": "/tmp/memory-knowledge"}
+    sealed = bootstrap._sealed_artifact_hashes(
+        module, ["scripts/target.py"], ["a" * 64], None, roots,
+    )
+
+    assert sealed(
+        ["scripts/target.py"], repository_roots=roots,
+    ) == (["scripts/target.py"], ["a" * 64])
+    with pytest.raises(ControllerError, match="bootstrap-repository-roots-mismatch"):
+        sealed(["scripts/target.py"], repository_roots=None)
 
 
 def test_bootstrap_artifact_identity_preserves_repository_qualification():

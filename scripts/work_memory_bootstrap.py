@@ -232,7 +232,7 @@ def _current_blocker(events: list[dict[str, Any]], blocker_id: str) -> tuple[dic
 
 def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
     context = _load_context(args)
-    if "python3 scripts/work_memory_bootstrap.py correct" not in Path(context["selection"]["document"]).read_text():
+    if "python3 scripts/work_memory_bootstrap_launcher.py correct" not in Path(context["selection"]["document"]).read_text():
         raise BootstrapError("bootstrap-command-not-grounded")
     module = context["module"]
     events, _ = module.load_ledger()
@@ -261,18 +261,10 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         raise BootstrapError("bootstrap-blocker-mismatch")
 
     repo_roots_file = context["selection"].get("repository_roots_file")
-    repository_roots = start.get("repository_roots")
     args.repo_roots_file = repo_roots_file
     args.finalize_failed_run = True
     try:
-        if repository_roots is None:
-            artifacts, hashes = module._artifact_hashes(
-                args.changed_artifact, repo_roots_file,
-            )
-        else:
-            artifacts, hashes = module._artifact_hashes(
-                args.changed_artifact, repository_roots=repository_roots,
-            )
+        artifacts, hashes = module._artifact_hashes(args.changed_artifact, repo_roots_file)
     except module.WorkMemoryError as exc:
         raise BootstrapError("bootstrap-artifact-invalid", 2) from exc
     old_map = _bundle_map(context["selection"]["source_bundle"])
@@ -291,7 +283,7 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
     original_hashes = module._artifact_hashes
     original_resolve = module.resolve_bundle
     module._artifact_hashes = _sealed_artifact_hashes(
-        module, artifacts, hashes, repo_roots_file, repository_roots,
+        module, artifacts, hashes, repo_roots_file, start.get("repository_roots"),
     )
     module.resolve_bundle = lambda **kwargs: (
         context["current_bundle"], context["current_bundle_hash"], context["selection"]["lineage_id"]
@@ -308,7 +300,7 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
 
 def cmd_run_close(args: argparse.Namespace) -> dict[str, Any]:
     context = _load_context(args)
-    if "python3 scripts/work_memory_bootstrap.py run-close" not in Path(context["selection"]["document"]).read_text():
+    if "python3 scripts/work_memory_bootstrap_launcher.py run-close" not in Path(context["selection"]["document"]).read_text():
         raise BootstrapError("bootstrap-command-not-grounded")
     module = context["module"]
     events, _ = module.load_ledger()
