@@ -101,54 +101,112 @@ def _bundle(
         mode="discovery", subject_id=discovery_id, document=path,
         manifest=path.with_suffix(".dependencies.json"),
         repo_roots_file=repo_roots_file,
+        include_bootstrap_trust_anchors=True,
     )
 
 
-def cmd_start(args: argparse.Namespace) -> dict[str, Any]:
-    root = _root(args.root)
-    date_text = args.date or datetime.now(UTC).strftime("%Y-%m-%d")
-    path = root / DISCOVERY_DIR / f"{date_text}-{_slug(args.sequence_name)}.md"
-    if path.exists() and not args.force:
-        raise work_memory.WorkMemoryError("discovery-log-exists", 3)
+def render_discovery_bundle(
+    *,
+    root: Path,
+    date_text: str,
+    sequence_name: str,
+    outcome: str,
+    why_repeatable: str,
+    created_at_utc: str,
+    steps: Sequence[dict[str, str]] = (),
+    inputs: Sequence[str] | None = None,
+    failure_handling: str | None = None,
+    verified_path: str | None = None,
+    dependencies: Sequence[dict[str, str]] = (),
+    bootstrap_request_sha256: str | None = None,
+) -> tuple[Path, str, dict[str, Any]]:
+    """Render a complete discovery document and manifest without writing either."""
+    path = root / DISCOVERY_DIR / f"{date_text}-{_slug(sequence_name)}.md"
     discovery_id = _discovery_id(root, path)
-    text = f"""# Sequence Discovery Log: {args.sequence_name}
+    digest_line = (
+        f"BootstrapRequestSha256: {bootstrap_request_sha256}\n"
+        if bootstrap_request_sha256 else ""
+    )
+    rows = "".join(
+        "| " + " | ".join(
+            (row["step"], row["command"], row["result"], row["note"])
+        ) + " |\n"
+        for row in steps
+    )
+    rendered_inputs = (
+        "\n".join(f"- {item}" for item in inputs)
+        if inputs is not None else "- TBD while discovering."
+    )
+    rendered_failure = failure_handling or "TBD while discovering."
+    rendered_verified = f"- {verified_path}" if verified_path else "- Not verified yet."
+    text = f"""# Sequence Discovery Log: {sequence_name}
 
 DiscoveryId: {discovery_id}
 Status: discovery
-CreatedAtUtc: {work_memory.utc_now()}
-RegisteredSequenceMatch: none
+CreatedAtUtc: {created_at_utc}
+{digest_line}RegisteredSequenceMatch: none
 
 ## Intended Outcome
 
-{args.outcome.strip()}
+{outcome}
 
 ## Why This Looks Repeatable
 
-{args.why_repeatable.strip()}
+{why_repeatable}
 
 ## Required Inputs, Auth, Or Environment
 
-- TBD while discovering.
+{rendered_inputs}
 
 ## Commands And Observations
 
 | step | command or action | result | correction or note |
 | --- | --- | --- | --- |
-
+{rows}
 ## Failure Handling
 
-TBD while discovering.
+{rendered_failure}
 
 ## Verified Path
 
-- Not verified yet.
+{rendered_verified}
 
 ## Promotion Readiness
 
 """ + "".join(f"- [ ] {label}\n" for label in READINESS.values())
-    manifest = {"schema_version": 1, "lineage_id": discovery_id, "dependencies": []}
+    manifest = {
+        "schema_version": 1,
+        "lineage_id": discovery_id,
+        "dependencies": list(dependencies),
+    }
+    return path, text, manifest
+
+
+def create_discovery_bundle(
+    *, root: Path, force: bool = False, **render_args: Any,
+) -> tuple[Path, dict[str, Any]]:
+    """Write a rendered discovery document followed by its dependency manifest."""
+    path, text, manifest = render_discovery_bundle(root=root, **render_args)
+    if path.exists() and not force:
+        raise work_memory.WorkMemoryError("discovery-log-exists", 3)
     _atomic(path, text.encode())
     _write_json(path.with_suffix(".dependencies.json"), manifest)
+    return path, manifest
+
+
+def cmd_start(args: argparse.Namespace) -> dict[str, Any]:
+    root = _root(args.root)
+    date_text = args.date or datetime.now(UTC).strftime("%Y-%m-%d")
+    path, manifest = create_discovery_bundle(
+        root=root,
+        force=args.force,
+        date_text=date_text,
+        sequence_name=args.sequence_name,
+        outcome=args.outcome.strip(),
+        why_repeatable=args.why_repeatable.strip(),
+        created_at_utc=work_memory.utc_now(),
+    )
+    discovery_id = manifest["lineage_id"]
     return {"ok": True, "path": str(path), "manifest_path": str(path.with_suffix('.dependencies.json')),
             "discovery_id": discovery_id}
 

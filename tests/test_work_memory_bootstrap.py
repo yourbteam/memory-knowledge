@@ -206,6 +206,26 @@ def test_sealed_hash_adapter_rejects_repository_roots_drift():
     with pytest.raises(ControllerError, match="bootstrap-repository-roots-mismatch"):
         sealed(["/tmp/external/src/target.py"], "/tmp/other-roots.json")
 
+    snapshot = {"external": "/tmp/external"}
+    snapshot_sealed = bootstrap._sealed_artifact_hashes(
+        module,
+        [{"repository_key": "external", "path": "src/target.py"}],
+        ["a" * 64],
+        None,
+        snapshot,
+    )
+    assert snapshot_sealed(
+        ["/tmp/external/src/target.py"], repository_roots=snapshot,
+    ) == (
+        [{"repository_key": "external", "path": "src/target.py"}],
+        ["a" * 64],
+    )
+    with pytest.raises(ControllerError, match="bootstrap-repository-roots-mismatch"):
+        snapshot_sealed(
+            ["/tmp/external/src/target.py"],
+            repository_roots={"external": "/tmp/other"},
+        )
+
 
 def test_bootstrap_artifact_identity_preserves_repository_qualification():
     assert bootstrap._artifact_identity("scripts/target.py") == (

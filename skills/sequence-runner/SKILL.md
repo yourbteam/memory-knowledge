@@ -27,27 +27,48 @@ Use this skill as the entry point for repeatable operational sequences.
 
 ## Selection Rules
 
+- In the `memory-knowledge` repository, any documented pytest step must invoke
+  `scripts/run_pytest.sh`; direct `uv run pytest`, `python -m pytest`, and `pytest`
+  commands bypass the repository's writable-cache boundary and are not reusable commands.
 - For local Docker image build, health, or Codex-in-container checks, use `local-workflow-orch-image`.
-- If no registered sequence matches, do not improvise as if a sequence exists. Create a discovery log under `operations/sequences/discovery/` before or during execution, then append validated steps as they are discovered.
+- If no registered sequence matches, do not improvise as if a sequence exists. Create one
+  version-1 discovery spec containing the complete initial command rows and invoke the registered
+  `discovery-bootstrap` controller. It creates, selects, activates, and starts the exact discovery
+  bundle atomically. Use append/correction commands only for facts learned after that run begins.
 - If a command is not in a sequence doc or discovery log, derive it from a checked-in script or explicit tool `--help` output and guard it as `script` or `tool_help`.
 - Do not run repeatable operational commands from memory.
 - Do not print secrets, token values, challenge codes, auth payloads, or private environment values.
 
 ## Missing Sequence Path
 
-When no registered sequence matches, run:
+When no registered sequence matches, prepare one JSON spec with these exact fields (optional
+`inputs`, `failure_handling`, `verified_path`, and `dependencies` may also be supplied):
 
-```bash
-python3 scripts/sequence_discovery_log.py start --sequence-name "<short name>" --outcome "<intended outcome>" --why-repeatable "<why this will likely recur>"
+```json
+{
+  "schema_version": 1,
+  "task_id": "<task-id>",
+  "operation_kind": "<operation-kind>",
+  "date": "<YYYY-MM-DD>",
+  "sequence_name": "<short name>",
+  "outcome": "<intended outcome>",
+  "why_repeatable": "<why this will likely recur>",
+  "steps": [
+    {"step": "<step>", "command": "<command>", "result": "<expected result>", "note": "<note>"}
+  ]
+}
 ```
 
-Then append each real step that was executed or validated:
+Then invoke the controller once:
 
 ```bash
-python3 scripts/sequence_discovery_log.py append-step --file <log-path> --step "<step>" --command "<command or action>" --result "<result>" --note "<correction or note>"
+python3 scripts/discovery_bootstrap.py start --spec <spec-json>
 ```
 
-Use the discovery log as raw evidence. Promote it to `operations/sequences/<sequence-id>/sequence.md` only after the commands, required inputs, failure handling, and verification evidence are stable.
+The returned JSON is the authority for the discovery path, receipt and bundle hashes, run id, and
+event id. After the run begins, append validated observations or use the correction lifecycle when
+the selected bundle changes. Promote only after commands, inputs, failure handling, and same-path
+verification evidence are stable.
 
 ## Command Guard
 

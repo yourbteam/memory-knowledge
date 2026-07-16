@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "case_id": "mixed-maturity",
+  "category": "mixed-maturity",
+  "scopes": {
+    "current-synchronous-notifier": "CURRENT_RUNTIME",
+    "future-queue-consumer": "FUTURE_SYSTEM"
+  },
+  "predicates": [
+    {
+      "id": "mixed.current-notifier.retry-count",
+      "scope_id": "current-synchronous-notifier",
+      "maturity": "CURRENT_RUNTIME",
+      "value": 2,
+      "required_evidence_ids": [
+        "MX-CURRENT-01"
+      ],
+      "critical": true
+    },
+    {
+      "id": "mixed.future-consumer.duplicate-suppression-required",
+      "scope_id": "future-queue-consumer",
+      "maturity": "FUTURE_SYSTEM",
+      "value": true,
+      "required_evidence_ids": [
+        "MX-FUTURE-01"
+      ],
+      "critical": true
+    },
+    {
+      "id": "mixed.future-consumer.currently-implemented",
+      "scope_id": "future-queue-consumer",
+      "maturity": "FUTURE_SYSTEM",
+      "value": false,
+      "required_evidence_ids": [
+        "MX-STATUS-01"
+      ],
+      "critical": true
+    }
+  ],
+  "true_material_gaps": [],
+  "planner_rubric": [
+    "current_and_future_scopes_are_split",
+    "current_behavior_is_not_projected_onto_future_design",
+    "future_requirement_does_not_demand_runtime_evidence",
+    "future_consumer_implementation_boundary_is_grounded"
+  ]
+}

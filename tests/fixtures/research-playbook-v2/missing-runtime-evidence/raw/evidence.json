@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "evidence": [
+    {
+      "id": "MR-REQ-01",
+      "text": "In the current runtime, stale reservations must be cleared within five minutes."
+    },
+    {
+      "id": "MR-CODE-01",
+      "text": "src/reconciliation/worker.py::run_once scans stale reservations using RECONCILE_INTERVAL_SECONDS, but the supplied source excerpt does not contain the deployed value."
+    },
+    {
+      "id": "MR-ACCESS-01",
+      "text": "The deployed value and telemetry are unavailable to this research run. Production Operations owns an authorized read-only reconciliation-evidence export containing the deployed RECONCILE_INTERVAL_SECONDS value plus reservation_marked_stale_at and reservation_cleared_at timestamps keyed by reservation ID. A five-minute claim closes only when the export proves every sampled elapsed duration is at most 300 seconds."
+    }
+  ]
+}

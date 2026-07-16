@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "evidence": [
+    {
+      "id": "FS-REQ-01",
+      "text": "The future audit store must be append-only and preserve event order per account."
+    },
+    {
+      "id": "FS-DESIGN-01",
+      "text": "The approved design assigns each account a monotonic sequence number before appending an immutable event."
+    },
+    {
+      "id": "FS-STATUS-01",
+      "text": "The audit store is a future-system proposal and has no deployed runtime or runtime telemetry."
+    }
+  ]
+}

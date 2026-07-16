@@ -144,6 +144,7 @@ def _registered_verified(sequence_id: str, *, repo_roots_file: str | None) -> bo
     _, bundle_hash, _ = work_memory.resolve_bundle(
         mode="registered", subject_id=sequence_id, document=document, manifest=manifest,
         repo_roots_file=repo_roots_file,
+        include_bootstrap_trust_anchors=True,
     )
     events, _ = work_memory.load_ledger()
     runs: dict[str, dict[str, Any]] = {}
@@ -355,6 +356,27 @@ def cmd_status(args: argparse.Namespace) -> dict[str, Any]:
             "registered_verified": registered_verified}
 
 
+def _declare_bootstrap_readiness(
+    args: argparse.Namespace, state: dict[str, Any], *, root: Path,
+) -> bool:
+    """Declare derived readiness before qualification changes the proven bundle."""
+    unmet = set(state.get("unmet_predicates", []))
+    if "readiness" not in unmet or unmet - {"readiness", "two-same-path-successes"}:
+        return False
+    discovery = Path(args.file).resolve()
+    bootstrap_digest = sequence_discovery_log._metadata(
+        discovery.read_text(encoding="utf-8"), "BootstrapRequestSha256",
+    )
+    if not bootstrap_digest:
+        return False
+    for item in sorted(sequence_discovery_log.READINESS):
+        _json_command([
+            "python3", "scripts/sequence_discovery_log.py", "set-readiness",
+            "--file", str(discovery), "--item", item, "--checked", "yes",
+        ], root=root)
+    return True
+
+
 def cmd_drive(args: argparse.Namespace) -> dict[str, Any]:
     root = Path(args.root).resolve()
     runs = []
@@ -368,6 +390,10 @@ def cmd_drive(args: argparse.Namespace) -> dict[str, Any]:
                 "correction-required",
                 details={"open_blocker_ids": status["state"]["open_blocker_ids"]},
             )
+        if stage == "qualification" and _declare_bootstrap_readiness(
+            args, status["state"], root=root,
+        ):
+            continue
         if stage in {"qualification", "successor-verification"}:
             if len(runs) >= args.max_qualification_runs:
                 raise LifecycleError(

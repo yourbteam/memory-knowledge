@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "case_id": "missing-runtime-evidence",
+  "category": "missing-runtime-evidence",
+  "scopes": {
+    "current-reconciliation": "CURRENT_RUNTIME"
+  },
+  "predicates": [
+    {
+      "id": "missing.runtime-evidence.required-for-five-minute-claim",
+      "scope_id": "current-reconciliation",
+      "maturity": "CURRENT_RUNTIME",
+      "value": true,
+      "required_evidence_ids": [
+        "MR-REQ-01",
+        "MR-CODE-01",
+        "MR-ACCESS-01"
+      ],
+      "critical": true
+    },
+    {
+      "id": "missing.five-minute-runtime-behavior.verified",
+      "scope_id": "current-reconciliation",
+      "maturity": "CURRENT_RUNTIME",
+      "value": false,
+      "required_evidence_ids": [
+        "MR-ACCESS-01"
+      ],
+      "critical": true
+    }
+  ],
+  "true_material_gaps": [
+    "missing.required-runtime-evidence"
+  ],
+  "planner_rubric": [
+    "scope_is_current_runtime",
+    "missing_required_evidence_is_explicit",
+    "unverified_runtime_claim_is_not_asserted"
+  ]
+}

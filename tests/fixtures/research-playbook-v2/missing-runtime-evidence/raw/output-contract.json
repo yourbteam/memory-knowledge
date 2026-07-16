@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "case_id": "missing-runtime-evidence",
+  "scopes": {
+    "current-reconciliation": "CURRENT_RUNTIME"
+  },
+  "predicates": [
+    {
+      "id": "missing.runtime-evidence.required-for-five-minute-claim",
+      "scope_id": "current-reconciliation",
+      "maturity": "CURRENT_RUNTIME",
+      "research_value_type": "boolean",
+      "question": "Is deployed configuration and telemetry required to verify the five-minute current-runtime claim?"
+    },
+    {
+      "id": "missing.five-minute-runtime-behavior.verified",
+      "scope_id": "current-reconciliation",
+      "maturity": "CURRENT_RUNTIME",
+      "research_value_type": "boolean",
+      "question": "Has the supplied evidence verified that stale reservations are cleared within five minutes?"
+    }
+  ],
+  "material_gap_candidates": [
+    {
+      "id": "missing.required-runtime-evidence",
+      "description": "Required deployed configuration and telemetry are unavailable for the current-runtime timing claim."
+    },
+    {
+      "id": "missing.reconciliation-worker-implementation",
+      "description": "No reconciliation worker implementation exists."
+    }
+  ],
+  "planner_obligations": [
+    {
+      "id": "scope_is_current_runtime",
+      "description": "Treat the five-minute behavior as a claim about the current runtime."
+    },
+    {
+      "id": "missing_required_evidence_is_explicit",
+      "description": "Carry the missing deployed configuration and telemetry limitation explicitly."
+    },
+    {
+      "id": "unverified_runtime_claim_is_not_asserted",
+      "description": "Do not present the five-minute runtime behavior as verified."
+    }
+  ]
+}

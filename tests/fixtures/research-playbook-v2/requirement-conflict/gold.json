@@ -1,0 +1,40 @@
+{
+  "schema_version": 1,
+  "case_id": "requirement-conflict",
+  "category": "requirement-conflict",
+  "scopes": {
+    "current-customer-archive": "CURRENT_RUNTIME"
+  },
+  "predicates": [
+    {
+      "id": "conflict.archive-retention-and-pii-deletion.unreconciled",
+      "scope_id": "current-customer-archive",
+      "maturity": "CURRENT_RUNTIME",
+      "value": true,
+      "required_evidence_ids": [
+        "RC-REQ-01",
+        "RC-REQ-02",
+        "RC-SCOPE-01"
+      ],
+      "critical": true
+    },
+    {
+      "id": "conflict.approved-resolution.exists",
+      "scope_id": "current-customer-archive",
+      "maturity": "CURRENT_RUNTIME",
+      "value": false,
+      "required_evidence_ids": [
+        "RC-SCOPE-01"
+      ],
+      "critical": true
+    }
+  ],
+  "true_material_gaps": [
+    "conflict.archive-retention-versus-pii-deletion"
+  ],
+  "planner_rubric": [
+    "requirement_conflict_is_explicit",
+    "no_resolution_is_invented",
+    "planner_handoff_preserves_both_requirements"
+  ]
+}

@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "evidence": [
+    {
+      "id": "SI-SCOPE-01",
+      "text": "The frozen scope is signature verification only; replay prevention, retries, and provider availability are excluded."
+    },
+    {
+      "id": "SI-CODE-01",
+      "text": "The current webhook handler computes HMAC-SHA256 over the raw request body and compares it with the provider signature using constant-time comparison."
+    },
+    {
+      "id": "SI-TEST-01",
+      "text": "Tests reject a modified body and accept a matching provider signature."
+    }
+  ]
+}

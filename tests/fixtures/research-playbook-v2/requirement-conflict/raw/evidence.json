@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "evidence": [
+    {
+      "id": "RC-REQ-01",
+      "text": "Compliance requires every archived customer record to be retained for seven years."
+    },
+    {
+      "id": "RC-REQ-02",
+      "text": "Privacy requires personally identifying fields in every archived customer record to be deleted within thirty days of account closure."
+    },
+    {
+      "id": "RC-SCOPE-01",
+      "text": "Both requirements apply to the same customer archive. The Compliance and Privacy policy owners jointly own the resolution decision. Their required decision record must identify retained record fields, fields deleted within thirty days, effective date, and both approval IDs before archive behavior may change; no precedence, approved decision record, or approved redaction mechanism is supplied."
+    }
+  ]
+}

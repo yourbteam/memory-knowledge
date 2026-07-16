@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "evidence": [
+    {
+      "id": "MX-CURRENT-01",
+      "text": "The current synchronous notifier retries a failed delivery twice in the request process."
+    },
+    {
+      "id": "MX-FUTURE-01",
+      "text": "The proposed queue consumer will use a delivery key and must suppress duplicate deliveries."
+    },
+    {
+      "id": "MX-STATUS-01",
+      "text": "The queue consumer is not implemented; only the synchronous notifier exists in the current runtime."
+    },
+    {
+      "id": "MX-FUTURE-BOUNDARY-01",
+      "text": "The future queue consumer boundary is NotificationQueueConsumer.consume, owned by Notifications Platform. It will consume delivery_key, notification_id, recipient_id, and payload; persist or recognize delivery_key before invoking the downstream delivery adapter; and mark a repeated key as duplicate. The acceptance target test_duplicate_delivery_key_is_suppressed must prove that two messages with the same delivery_key cause exactly one downstream delivery and that the second message is marked duplicate."
+    }
+  ]
+}

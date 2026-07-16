@@ -16,6 +16,10 @@ reveals the plan was wrong, pause and re-plan rather than coding around it.
 ## Reach for
 
 - Repo-native tests, builds, linters, smoke tests, and direct behavior checks.
+- In the `memory-knowledge` repository, run pytest only through
+  `scripts/run_pytest.sh <test paths and pytest arguments>`. The launcher routes Python,
+  uv, and pytest cache writes away from read-only repository/home paths. Do not invoke
+  `uv run pytest`, `python -m pytest`, or `pytest` directly there.
 - Browser verification for local frontend changes when the target page or port is known.
 - A manual code-review pass over the diff before reporting done.
 - `verify-work` when Kamen asks for an independent review/fix convergence loop. Commits require separate commit-scoped approval.

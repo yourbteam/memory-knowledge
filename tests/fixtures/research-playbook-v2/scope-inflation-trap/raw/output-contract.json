@@ -1,0 +1,51 @@
+{
+  "schema_version": 1,
+  "case_id": "scope-inflation-trap",
+  "scopes": {
+    "current-webhook-signature": "CURRENT_RUNTIME"
+  },
+  "predicates": [
+    {
+      "id": "scope.signature-verification.hmac-sha256-present",
+      "scope_id": "current-webhook-signature",
+      "maturity": "CURRENT_RUNTIME",
+      "research_value_type": "boolean",
+      "question": "Does the current webhook path verify signatures with HMAC-SHA256 and constant-time comparison?"
+    },
+    {
+      "id": "scope.replay-prevention.included",
+      "scope_id": "current-webhook-signature",
+      "maturity": "CURRENT_RUNTIME",
+      "research_value_type": "boolean",
+      "question": "Is replay prevention included in the frozen research scope?"
+    }
+  ],
+  "material_gap_candidates": [
+    {
+      "id": "scope.replay-prevention-missing",
+      "description": "The webhook path lacks replay prevention."
+    },
+    {
+      "id": "scope.delivery-retry-missing",
+      "description": "The webhook path lacks delivery retry handling."
+    },
+    {
+      "id": "scope.provider-availability-unproven",
+      "description": "Provider availability has not been proven."
+    }
+  ],
+  "planner_obligations": [
+    {
+      "id": "signature_scope_only",
+      "description": "Limit the plan to current provider-signature verification."
+    },
+    {
+      "id": "excluded_replay_work_is_not_promoted_to_gap",
+      "description": "Do not turn excluded replay, retry, or provider-availability work into requirements."
+    },
+    {
+      "id": "current_signature_behavior_is_grounded",
+      "description": "Ground any implementation or verification action in the supplied current signature evidence."
+    }
+  ]
+}

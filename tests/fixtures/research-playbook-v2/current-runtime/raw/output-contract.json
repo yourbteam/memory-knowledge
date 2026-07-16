@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "case_id": "current-runtime",
+  "scopes": {
+    "current-order-submission": "CURRENT_RUNTIME"
+  },
+  "predicates": [
+    {
+      "id": "current.retry.reuses-client-order-id",
+      "scope_id": "current-order-submission",
+      "maturity": "CURRENT_RUNTIME",
+      "research_value_type": "boolean",
+      "question": "Does the current timeout retry reuse the original client order identifier?"
+    },
+    {
+      "id": "current.timeout-after-acceptance.test-covered",
+      "scope_id": "current-order-submission",
+      "maturity": "CURRENT_RUNTIME",
+      "research_value_type": "boolean",
+      "question": "Do current tests cover a timeout that occurs after exchange acceptance?"
+    }
+  ],
+  "material_gap_candidates": [
+    {
+      "id": "current.timeout-after-acceptance-test-missing",
+      "description": "The accepted-order timeout path lacks the evidence needed to prove duplicate-order safety."
+    },
+    {
+      "id": "current.client-order-id-not-reused",
+      "description": "The retry creates a new client order identifier."
+    }
+  ],
+  "planner_obligations": [
+    {
+      "id": "scope_is_current_runtime",
+      "description": "Keep implementation and verification grounded in the existing order-submission runtime."
+    },
+    {
+      "id": "gap_is_grounded_in_runtime_evidence",
+      "description": "Address only the runtime gap supported by the supplied code and test evidence."
+    },
+    {
+      "id": "handoff_preserves_idempotency_requirement",
+      "description": "Preserve the requirement that an ambiguous timeout must not create a second exchange order."
+    }
+  ]
+}

@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "case_id": "current-runtime",
+  "category": "current-runtime",
+  "scopes": {
+    "current-order-submission": "CURRENT_RUNTIME"
+  },
+  "predicates": [
+    {
+      "id": "current.retry.reuses-client-order-id",
+      "scope_id": "current-order-submission",
+      "maturity": "CURRENT_RUNTIME",
+      "value": true,
+      "required_evidence_ids": [
+        "CR-CODE-01"
+      ],
+      "critical": true
+    },
+    {
+      "id": "current.timeout-after-acceptance.test-covered",
+      "scope_id": "current-order-submission",
+      "maturity": "CURRENT_RUNTIME",
+      "value": false,
+      "required_evidence_ids": [
+        "CR-REQ-01",
+        "CR-TEST-01"
+      ],
+      "critical": true
+    }
+  ],
+  "true_material_gaps": [
+    "current.timeout-after-acceptance-test-missing"
+  ],
+  "planner_rubric": [
+    "scope_is_current_runtime",
+    "gap_is_grounded_in_runtime_evidence",
+    "handoff_preserves_idempotency_requirement"
+  ]
+}

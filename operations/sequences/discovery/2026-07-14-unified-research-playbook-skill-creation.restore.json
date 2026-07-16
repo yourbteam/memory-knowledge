@@ -1,0 +1,27 @@
+{
+  "schema_version": 1,
+  "operations": [
+    {
+      "kind": "move_aside",
+      "target": "research-playbook-v2"
+    },
+    {
+      "kind": "restore_file",
+      "source": "/private/tmp/convergence_state.pre-install.py",
+      "source_sha256": "e5cb79267b37c35fe2212cc51f7b703d0f06cb987f87845ec811c48789f71e5d",
+      "target": "_shared/convergence_state.py"
+    },
+    {
+      "kind": "restore_file",
+      "source": "/private/tmp/convergence_state.cpython-314.pyc",
+      "source_sha256": "eeeea6fe425f878e27ed57f2e8fa6c94138206a763b92c1b18b7906140873d2f",
+      "target": "_shared/__pycache__/convergence_state.cpython-314.pyc"
+    },
+    {
+      "kind": "restore_file",
+      "source": "/Users/kamenkamenov/.claude/skills/blocker-catalog/SKILL.md",
+      "source_sha256": "81fd8fd38c5dcd3854a2f16fadcaef01f113e9eacc13e0eec2b9e0aa89e221bb",
+      "target": "blocker-catalog/SKILL.md"
+    }
+  ]
+}

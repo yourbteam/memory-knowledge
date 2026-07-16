@@ -62,12 +62,14 @@ class ValidatorTests(unittest.TestCase):
         )
         self.assertEqual(errors,[])
 
-    def test_research_playbook_v2_is_managed_and_explicit_only(self):
+    def test_research_playbook_is_managed_canonical_entrypoint(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
-        self.assertIn("research-playbook-v2",managed)
-        metadata=(ROOT/"skills/research-playbook-v2/agents/openai.yaml").read_text()
-        self.assertIn("policy:\n  allow_implicit_invocation: false\n",metadata)
-        self.assertEqual(v.validate_openai(ROOT/"skills/research-playbook-v2/agents/openai.yaml"),[])
+        self.assertIn("research-playbook",managed)
+        self.assertNotIn("research-playbook-v2",managed)
+        metadata=(ROOT/"skills/research-playbook/agents/openai.yaml").read_text()
+        self.assertIn("$research-playbook",metadata)
+        self.assertNotIn("allow_implicit_invocation: false",metadata)
+        self.assertEqual(v.validate_openai(ROOT/"skills/research-playbook/agents/openai.yaml"),[])
 
     def test_policy_accepts_exact_unquoted_yaml_booleans(self):
         for value in ("true","false"):

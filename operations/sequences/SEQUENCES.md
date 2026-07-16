@@ -41,7 +41,6 @@ Use it when a task involves a multi-step command sequence that has been run befo
 | `github-app-repos-refresh` | Re-sync the available repository alias mapping from the configured GitHub App installation(s) after a repo is added to / removed from an App installation (admin `workflow.repos.refresh`), so `workflow.project.set <alias>` and per-user repo access see the current set. | `operations/sequences/github-app-repos-refresh/` | `mcp-agents-workflow:scripts/github_app_repos_refresh.py` | `workflow.repos.refresh` returns `ok:true`; the `added`/`removed` match the intended GitHub-side change; a follow-up `workflow.repos.list` shows the new alias; any `removed`-with-active-clone warnings reviewed. | `remote-operator` | `github-app-repos-refresh` |
 | `claude-auth-token-refresh` | Mint/refresh the Claude Code OAuth token and seed it into the local docker container AND Azure Key Vault `hrness` (`cli-auth-claude`/`-config`) — when the container's Claude CLI is "Not logged in"/401, or image/PDF (vision) phases fail with `INPUT_FILE_DOWNLOAD_FAILED` while link/codex phases still work, or after a rebuild/rotation. Subscriptions only, no API keys. | `operations/sequences/claude-auth-token-refresh/` | `mcp-agents-workflow:scripts/claude_auth_refresh.sh` (+ `scripts/rotate-credentials.sh` for the audited Azure path) | `claude --print` authenticates inside the container (`AUTH_OK`); a screenshot task's `download-detected-file-links` succeeds (`description_status: extracted`, no `INPUT_FILE_DOWNLOAD_FAILED`); Azure `/health` ok. | `auth,container` | `claude-auth-token-refresh` |
 | `taggable-api-deploy` | Deploy the taggable-api ASP.NET app to the Azure Web App `taggable-api-dev` after merging to main (or any checkout you want live on dev). | `operations/sequences/taggable-api-deploy/` | `taggable-api:scripts/deploy-api.sh` | `zipdeploy HTTP 200`, the `db-import` WebJob is still present (not clobbered), and `taggable-api-dev.../swagger/v1/swagger.json` returns HTTP 200. | `deploy` | `taggable-api-deploy` |
-| `taggable-api-authed-endpoint-verify` | Live-verify a deployed taggable-api `[Authorize(Passport)]` admin endpoint on dev — log in (creds from `~/.taggable-verify.env`, never printed) then call it and assert actual vs expected. Use after any change to an admin API endpoint. | `operations/sequences/taggable-api-authed-endpoint-verify/` | `taggable-api:scripts/verify-v3-report-scope.sh` (worked example; adapt per feature) | `login HTTP 200`; each case's actual matches expected (v3 report scope filter super-admin = 149/1/5/0/1 on `-optimized`, `.xlsx` returns 200 + valid file). | `verify,auth` | `taggable-api-authed-endpoint-verify` |
 | `taggable-admin-spa-deploy` | Build the taggable-admin-spa (Vite/React) front-end and deploy its static `dist/` build to the Azure Web App `taggable-admin` (RG `taggable`, Linux NODE 22-lts) after merging admin-UI changes. `VITE_API_BASE_URL` is baked at build (default dev `https://taggable-api-dev.azurewebsites.net/api`). Deploys via `az webapp deploy` (AAD auth) because SCM basic auth is disabled on the app. | `operations/sequences/taggable-admin-spa-deploy/` | `taggable-admin-spa:scripts/deploy-admin-spa.sh` | `az webapp deploy` exits 0 (`deploy accepted`), the dev API base is baked into the bundle (no `localhost` leak), and `taggable-admin.azurewebsites.net/` returns HTTP 200 serving a Vite `index-*.js` asset. | `deploy` | `taggable-admin-spa-deploy` |
 | `taggable-media-worker-deploy` | Deploy the `Taggable.MediaWorker` **continuous** WebJob to `taggable-api-dev` (RG `Umbraco`) — the background FFmpeg worker that turns pending `product_video` rows into 720p + watermark + poster renditions. Separate from the API deploy; does not touch the `db-import` WebJob. Proven end-to-end 2026-07-07 (worker `Running`, real video processed pending→ready). Prereqs: win-x64 ffmpeg in `tools/Taggable.MediaWorker/ffmpeg/`, `MediaUpload__Storage__*` App Settings, Always On, and the `product_video` migration applied. | `operations/sequences/taggable-media-worker-deploy/` | `taggable-api:scripts/deploy-media-worker.sh` | WebJob deploy HTTP 200/201 and `GET $SCM/api/continuouswebjobs/media-worker` reports `status: Running`; final line `DONE: deployed continuous WebJob media-worker ...`. | `deploy` | `taggable-media-worker-deploy` |
 | `airgapped-local-bulgarian-stt` | Set up (home/dev/prod) a self-hosted, air-gapped Bulgarian speech-to-text env (ffmpeg + faster-whisper, vendored weights) and transcribe a callcenter recording **offline with no network egress** (compliance NFR-7). Provision is online; process/verify run air-gapped; diarization comes from stereo channel-split, not a vendor. | `operations/sequences/airgapped-local-bulgarian-stt/` | `callcenter-harness:scripts/setup_airgapped_stt.sh` (+ `scripts/transcribe_airgapped.py`) | `verify <audio>` prints `VERIFY PASS`: transcript + per-word timestamps produced with network black-holed (dead proxy + `HF_HUB_OFFLINE=1`); model loaded from a local vendored dir. | `package` | `airgapped-local-bulgarian-stt` |
@@ -54,21 +53,24 @@ Use it when a task involves a multi-step command sequence that has been run befo
 
 | `commit-push-main` | Commit and push an explicitly approved file scope while preserving unrelated working-tree changes. | `operations/sequences/commit-push-main/` | memory-knowledge:scripts/scoped_git_publish.py | The script returns ok:true with local commit equal to remote_commit, and unrelated unstaged work remains untouched. | `other` | `discovery-9c51594b-6ca3-54a0-b7d7-31632ac2d48c` |
 
+| `discovery-bootstrap` | Create and activate a missing-sequence discovery from one validated spec without stale-bundle bootstrap churn | `operations/sequences/discovery-bootstrap/` | memory-knowledge:scripts/discovery_bootstrap.py | Controller returns ok:true with one discovery, matching bundle/receipt hashes, and one started run | `workflow-drive` | `discovery-1cd9d4cf-c214-58b4-b5a7-022f51a2d344` |
+
+| `discovery-candidate-reconciliation` | Audit all logged discovery sequences, decide which should promote, absorb, remain, supersede, or quarantine, and clean the active queue without deleting provenance. | `operations/sequences/discovery-candidate-reconciliation/` | python3 scripts/discovery_candidate_reconciliation.py | The controller returns ok true, every frozen candidate has an approved disposition, canonical promote rows reach registered verification, and the active index excludes only terminal rows while original logs remain. | `other` | `discovery-782832ed-7fa4-5efe-9765-463303ecd2a2` |
+
 
 ## Missing Sequence Discovery
 
 Use this path when the task is about to run a repeatable sequence but the `Available Sequences` table has no matching row.
 
-Start a discovery log:
+Create one version-1 bootstrap spec containing the task id, operation kind, fixed date, sequence
+name, outcome, repeatability reason, and complete initial command rows. Then run:
 
 ```bash
-python3 scripts/sequence_discovery_log.py start --sequence-name "<short name>" --outcome "<intended outcome>" --why-repeatable "<why this will likely recur>"
+python3 scripts/discovery_bootstrap.py start --spec <spec-json>
 ```
 
-Append each validated step:
-
-```bash
-python3 scripts/sequence_discovery_log.py append-step --file <log-path> --step "<step>" --command "<command or action>" --result "<result>" --note "<correction or note>"
-```
+The controller validates all inputs before mutation, creates the document and manifest before any
+receipt, selects and activates that exact bundle, and starts one deterministic run. Use discovery
+append/correction commands only for observations learned after that run begins.
 
 Promotion rule: do not create a registered sequence folder until the discovery log contains stable commands or documented human steps, required inputs, failure handling, and verification evidence.

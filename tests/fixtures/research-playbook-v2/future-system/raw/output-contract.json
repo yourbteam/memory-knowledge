@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "case_id": "future-system",
+  "scopes": {
+    "future-audit-store": "FUTURE_SYSTEM"
+  },
+  "predicates": [
+    {
+      "id": "future.audit-store.append-only-required",
+      "scope_id": "future-audit-store",
+      "maturity": "FUTURE_SYSTEM",
+      "research_value_type": "boolean",
+      "question": "Is append-only storage a requirement for the proposed audit store?"
+    },
+    {
+      "id": "future.audit-store.per-account-order-designed",
+      "scope_id": "future-audit-store",
+      "maturity": "FUTURE_SYSTEM",
+      "research_value_type": "boolean",
+      "question": "Does the approved design provide a mechanism for per-account event ordering?"
+    },
+    {
+      "id": "future.audit-store.runtime-proof-required",
+      "scope_id": "future-audit-store",
+      "maturity": "FUTURE_SYSTEM",
+      "research_value_type": "boolean",
+      "question": "Must this future-system research provide deployed runtime proof?"
+    }
+  ],
+  "material_gap_candidates": [
+    {
+      "id": "future.runtime-telemetry-missing",
+      "description": "The future audit store has no deployed telemetry."
+    },
+    {
+      "id": "future.per-account-ordering-mechanism-missing",
+      "description": "The future design lacks a per-account ordering mechanism."
+    }
+  ],
+  "planner_obligations": [
+    {
+      "id": "scope_is_future_system",
+      "description": "Plan the proposed audit store as future-system work."
+    },
+    {
+      "id": "no_nonexistent_runtime_proof_required",
+      "description": "Do not require deployed proof for behavior that does not exist yet."
+    },
+    {
+      "id": "design_requirements_are_preserved",
+      "description": "Preserve append-only behavior and per-account ordering in implementation and verification steps."
+    }
+  ]
+}

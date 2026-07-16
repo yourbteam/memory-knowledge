@@ -7,6 +7,15 @@ import pytest
 from scripts import discovery_promotion_lifecycle as lifecycle
 
 
+def test_registered_document_grounds_protected_correction_commands() -> None:
+    document = (
+        Path(__file__).parents[1]
+        / "operations/sequences/discovery-promotion-lifecycle/sequence.md"
+    ).read_text()
+    assert "python3 scripts/work_memory_bootstrap_launcher.py correct" in document
+    assert "python3 scripts/work_memory_bootstrap.py correct" in document
+
+
 def discovery(path: Path, *, status: str = "discovery") -> Path:
     path.write_text(f"""# Sequence Discovery Log: example
 
@@ -87,6 +96,141 @@ def test_drive_follows_qualification_promotion_registered_verification(
     result = lifecycle.cmd_drive(args)
     assert result["stage"] == "complete"
     assert len(qualified) == 2 and promoted == ["example"] and registered == ["example"]
+
+
+def test_drive_declares_bootstrap_readiness_before_qualification(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = discovery(tmp_path / "discovery.md")
+    text = path.read_text(encoding="utf-8")
+    text = text.replace(
+        "CreatedAtUtc: 2026-07-15T00:00:00Z\n",
+        "CreatedAtUtc: 2026-07-15T00:00:00Z\nBootstrapRequestSha256: " + "a" * 64 + "\n",
+    ).replace("- [x]", "- [ ]")
+    path.write_text(text, encoding="utf-8")
+    statuses = iter([
+        {
+            "stage": "qualification",
+            "state": {
+                "discovery_id": "discovery-example",
+                "unmet_predicates": ["two-same-path-successes", "readiness"],
+            },
+        },
+        {
+            "stage": "qualification",
+            "state": {
+                "discovery_id": "discovery-example",
+                "unmet_predicates": ["two-same-path-successes"],
+            },
+        },
+        {"stage": "promotion", "state": {"discovery_id": "discovery-example"}},
+        {"stage": "registered-verification", "state": {"discovery_id": "discovery-example"}},
+        {"stage": "complete", "state": {"discovery_id": "discovery-example"}},
+    ])
+    monkeypatch.setattr(lifecycle, "cmd_status", lambda args: next(statuses))
+    commands = []
+    monkeypatch.setattr(
+        lifecycle, "_json_command",
+        lambda command, *, root: commands.append(command) or {"ok": True},
+    )
+    qualified = []
+    monkeypatch.setattr(
+        lifecycle, "_qualify_once",
+        lambda args, state: qualified.append(state) or {"run_id": "run-one"},
+    )
+    monkeypatch.setattr(lifecycle, "_promote", lambda args, root: {})
+    monkeypatch.setattr(lifecycle, "_verify_registered", lambda args, root: {})
+    args = lifecycle.build_parser().parse_args([
+        "drive", "--file", str(path), "--sequence-id", "example",
+        "--use-when", "example", "--operation-kind", "other",
+        "--automation-display", "controller", "--pass-signal", "PASS",
+        "--root", str(tmp_path),
+    ])
+
+    assert lifecycle.cmd_drive(args)["stage"] == "complete"
+    readiness_commands = [command for command in commands if "set-readiness" in command]
+    assert len(readiness_commands) == len(lifecycle.sequence_discovery_log.READINESS)
+    assert [command[command.index("--item") + 1] for command in readiness_commands] == sorted(
+        lifecycle.sequence_discovery_log.READINESS
+    )
+    assert len(qualified) == 1
+
+
+def test_readiness_declaration_requires_bootstrap_proven_discovery(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = discovery(tmp_path / "discovery.md")
+    commands = []
+    monkeypatch.setattr(
+        lifecycle, "_json_command",
+        lambda command, *, root: commands.append(command) or {"ok": True},
+    )
+    args = lifecycle.build_parser().parse_args([
+        "drive", "--file", str(path), "--sequence-id", "example",
+        "--use-when", "example", "--operation-kind", "other",
+        "--automation-display", "controller", "--pass-signal", "PASS",
+        "--root", str(tmp_path),
+    ])
+
+    assert lifecycle._declare_bootstrap_readiness(
+        args,
+        {"unmet_predicates": ["two-same-path-successes", "readiness"]},
+        root=tmp_path,
+    ) is False
+    assert commands == []
+
+
+def test_readiness_declaration_rejects_other_structural_gaps(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = discovery(tmp_path / "discovery.md")
+    path.write_text(
+        path.read_text(encoding="utf-8").replace(
+            "CreatedAtUtc: 2026-07-15T00:00:00Z\n",
+            "CreatedAtUtc: 2026-07-15T00:00:00Z\nBootstrapRequestSha256: " + "a" * 64 + "\n",
+        ),
+        encoding="utf-8",
+    )
+    commands = []
+    monkeypatch.setattr(
+        lifecycle, "_json_command",
+        lambda command, *, root: commands.append(command) or {"ok": True},
+    )
+    args = lifecycle.build_parser().parse_args([
+        "drive", "--file", str(path), "--sequence-id", "example",
+        "--use-when", "example", "--operation-kind", "other",
+        "--automation-display", "controller", "--pass-signal", "PASS",
+        "--root", str(tmp_path),
+    ])
+
+    assert lifecycle._declare_bootstrap_readiness(
+        args,
+        {"unmet_predicates": ["inputs", "readiness"]},
+        root=tmp_path,
+    ) is False
+    assert commands == []
+
+
+def test_registered_verification_uses_selection_trust_anchor_bundle(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = tmp_path
+    document = root / "operations/sequences/example/sequence.md"
+    document.parent.mkdir(parents=True)
+    document.write_text("# example\n", encoding="utf-8")
+    document.with_name("dependencies.json").write_text("{}\n", encoding="utf-8")
+    captured = {}
+    monkeypatch.setattr(lifecycle.work_memory, "ROOT", root)
+
+    def resolve_bundle(**kwargs):
+        captured.update(kwargs)
+        return [], "a" * 64, "lineage-example"
+
+    monkeypatch.setattr(lifecycle.work_memory, "resolve_bundle", resolve_bundle)
+    monkeypatch.setattr(lifecycle.work_memory, "load_ledger", lambda: ([], "b" * 64))
+
+    assert lifecycle._registered_verified("example", repo_roots_file=None) is False
+    assert captured["include_bootstrap_trust_anchors"] is True
 
 
 def test_drive_stops_when_correction_is_required(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:

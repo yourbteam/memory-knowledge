@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "case_id": "future-system",
+  "category": "future-system",
+  "scopes": {
+    "future-audit-store": "FUTURE_SYSTEM"
+  },
+  "predicates": [
+    {
+      "id": "future.audit-store.append-only-required",
+      "scope_id": "future-audit-store",
+      "maturity": "FUTURE_SYSTEM",
+      "value": true,
+      "required_evidence_ids": [
+        "FS-REQ-01"
+      ],
+      "critical": true
+    },
+    {
+      "id": "future.audit-store.per-account-order-designed",
+      "scope_id": "future-audit-store",
+      "maturity": "FUTURE_SYSTEM",
+      "value": true,
+      "required_evidence_ids": [
+        "FS-DESIGN-01"
+      ],
+      "critical": true
+    },
+    {
+      "id": "future.audit-store.runtime-proof-required",
+      "scope_id": "future-audit-store",
+      "maturity": "FUTURE_SYSTEM",
+      "value": false,
+      "required_evidence_ids": [
+        "FS-STATUS-01"
+      ],
+      "critical": true
+    }
+  ],
+  "true_material_gaps": [],
+  "planner_rubric": [
+    "scope_is_future_system",
+    "no_nonexistent_runtime_proof_required",
+    "design_requirements_are_preserved"
+  ]
+}

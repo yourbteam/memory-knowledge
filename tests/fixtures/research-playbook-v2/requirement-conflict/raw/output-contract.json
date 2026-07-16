@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "case_id": "requirement-conflict",
+  "scopes": {
+    "current-customer-archive": "CURRENT_RUNTIME"
+  },
+  "predicates": [
+    {
+      "id": "conflict.archive-retention-and-pii-deletion.unreconciled",
+      "scope_id": "current-customer-archive",
+      "maturity": "CURRENT_RUNTIME",
+      "research_value_type": "boolean",
+      "question": "Are the seven-year archive retention and thirty-day PII deletion requirements unreconciled?"
+    },
+    {
+      "id": "conflict.approved-resolution.exists",
+      "scope_id": "current-customer-archive",
+      "maturity": "CURRENT_RUNTIME",
+      "research_value_type": "boolean",
+      "question": "Does the supplied evidence contain an approved resolution or redaction mechanism?"
+    }
+  ],
+  "material_gap_candidates": [
+    {
+      "id": "conflict.archive-retention-versus-pii-deletion",
+      "description": "The overlapping retention and deletion requirements have no approved reconciliation."
+    },
+    {
+      "id": "conflict.archive-retention-requirement-missing",
+      "description": "The archive has no retention requirement."
+    }
+  ],
+  "planner_obligations": [
+    {
+      "id": "requirement_conflict_is_explicit",
+      "description": "Keep the unresolved retention-versus-deletion conflict visible in the plan."
+    },
+    {
+      "id": "no_resolution_is_invented",
+      "description": "Do not invent precedence, redaction, or policy approval."
+    },
+    {
+      "id": "planner_handoff_preserves_both_requirements",
+      "description": "Preserve both requirements and assign the resolution decision to the proper approval boundary."
+    }
+  ]
+}

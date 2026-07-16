@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "evidence": [
+    {
+      "id": "CR-REQ-01",
+      "text": "A retry after an ambiguous submission timeout must not create a second exchange order."
+    },
+    {
+      "id": "CR-CODE-01",
+      "text": "src/orders/submit_order.py::submit_order retries once with the same client_order_id after a timeout."
+    },
+    {
+      "id": "CR-TEST-01",
+      "text": "tests/orders/test_submit_order.py::test_timeout_before_acceptance uses FakeExchange.submit_order and asserts FakeExchange.created_order_ids. It covers a timeout before acceptance but not timeout after exchange acceptance; the same fake can accept the first request, raise the caller-visible timeout, and expose the created-order count after retry."
+    }
+  ]
+}

@@ -253,6 +253,72 @@ def test_finalize_correction_is_one_atomic_idempotent_transaction(
     assert second["already_recorded"] is True
 
 
+def test_discovery_correction_selects_subject_document_after_registered_dependency(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    discovery = tmp_path / "operations/sequences/discovery/example.md"
+    discovery.parent.mkdir(parents=True)
+    discovery.write_text("# example\n\nDiscoveryId: discovery-example\n")
+    manifest = discovery.with_suffix(".dependencies.json")
+    manifest.write_text(json.dumps({
+        "schema_version": 1, "lineage_id": "discovery-example", "dependencies": [],
+    }))
+    artifact = tmp_path / "scripts/fix.py"
+    artifact.parent.mkdir()
+    artifact.write_text("fixed = True\n")
+    run_id, occurrence_id = str(uuid.uuid4()), str(uuid.uuid4())
+    blocker_id = "blk-" + "5" * 24
+    subject_path = str(discovery.relative_to(tmp_path))
+    manifest_path = str(manifest.relative_to(tmp_path))
+    dependency_path = "operations/sequences/dependency/sequence.md"
+    old_bundle = [
+        {"repository_key": "memory-knowledge", "path": dependency_path, "sha256": "1" * 64},
+        {"repository_key": "memory-knowledge", "path": subject_path, "sha256": "2" * 64},
+        {"repository_key": "memory-knowledge", "path": manifest_path, "sha256": "3" * 64},
+    ]
+    rows = [
+        event(
+            "run_started", run_id=run_id, subject_id="discovery-example",
+            lineage_id="discovery-example", mode="discovery", operation_kind="other",
+            source_bundle=old_bundle, source_bundle_hash="4" * 64,
+            classification_receipt_hash="5" * 64, selection_receipt_hash="6" * 64,
+            started_at_utc="2026-01-01T00:00:00Z",
+        ),
+        event(
+            "blocker_opened", run_id=run_id, blocker_id=blocker_id,
+            occurrence_id=occurrence_id, fingerprint="7" * 64,
+            subject_id="discovery-example", lineage_id="discovery-example",
+            step_id="audit", surface="controller", symptom="gap", evidence="audit",
+            impact="blocked", boundary="subject document", status="open",
+        ),
+    ]
+    captured: dict[str, object] = {}
+    new_bundle = old_bundle + [{
+        "repository_key": "memory-knowledge", "path": "scripts/fix.py", "sha256": "8" * 64,
+    }]
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: (rows, "9" * 64))
+    monkeypatch.setattr(
+        work_memory, "_artifact_hashes", lambda *args, **kwargs: (["scripts/fix.py"], ["8" * 64]),
+    )
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle",
+        lambda **kwargs: captured.update(kwargs) or (new_bundle, "a" * 64, "discovery-example"),
+    )
+    monkeypatch.setattr(work_memory, "transact", lambda request: {"ok": True})
+
+    work_memory.cmd_correct(SimpleNamespace(
+        run_id=run_id, blocker_id=blocker_id, occurrence_id=occurrence_id,
+        step_id="audit", changed_artifact=[str(artifact)], solution="stable fix",
+        reusable_behavior_changed="yes", supersedes_correction_id=None,
+        correction_id=str(uuid.uuid4()), event_id=None, transition_event_id=None,
+        repo_roots_file=None, finalize_failed_run=False,
+    ))
+
+    assert captured["document"] == discovery
+    assert captured["manifest"] == manifest
+
+
 def test_finalize_correction_preserves_existing_verification_quality(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -1041,6 +1107,109 @@ def test_successor_selection_carries_active_correction_after_intermediate_run(
 
     assert selected["predecessor_run_id"] == intermediate_run_id
     assert selected["verifies_correction_ids"] == [correction_id]
+
+
+def test_successor_selection_accepts_older_correction_after_non_overlapping_bundle_change(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    Namespace, events, artifact, correction_id = _prepare_successor_selection(
+        tmp_path, monkeypatch,
+    )
+    artifact_hash = work_memory.sha256_bytes(artifact.read_bytes())
+    current_bundle = [
+        {
+            "repository_key": "memory-knowledge",
+            "path": "scripts/deploy.sh",
+            "sha256": artifact_hash,
+        },
+        {
+            "repository_key": "memory-knowledge",
+            "path": "scripts/unrelated.py",
+            "sha256": "9" * 64,
+        },
+    ]
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: (current_bundle, "c" * 64, "lineage"),
+    )
+
+    selected = work_memory.cmd_select(Namespace(
+        task_id="successor", sequence_id="sequence", discovery_log=None, fingerprint=None,
+        verification_successor_of=events[0]["run_id"],
+        verifies_correction_id=[correction_id], repo_roots_file=None,
+    ))
+
+    assert selected["source_bundle_hash"] == "c" * 64
+    assert selected["verifies_correction_ids"] == [correction_id]
+
+
+def test_successor_selection_compares_carried_correction_to_raw_artifact_bytes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    Namespace, events, _, correction_id = _prepare_successor_selection(
+        tmp_path, monkeypatch,
+    )
+    discovery = tmp_path / "operations/sequences/discovery/case.md"
+    discovery.parent.mkdir(parents=True)
+    discovery.write_text("# discovery\nStatus: discovery\n")
+    raw_hash = work_memory.sha256_bytes(discovery.read_bytes())
+    correction = next(
+        item for item in events if item["event_type"] == "correction_recorded"
+    )
+    transition = next(
+        item for item in events if item["event_type"] == "bundle_transition_recorded"
+    )
+    correction["changed_artifacts"] = [
+        "operations/sequences/discovery/case.md",
+    ]
+    correction["changed_artifact_hashes"] = [raw_hash]
+    transition["changed_artifacts"] = correction["changed_artifacts"]
+    transition["changed_artifact_hashes"] = [raw_hash]
+    current_bundle = [{
+        "repository_key": "memory-knowledge",
+        "path": "operations/sequences/discovery/case.md",
+        "sha256": "9" * 64,
+    }]
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: (current_bundle, "c" * 64, "lineage"),
+    )
+
+    selected = work_memory.cmd_select(Namespace(
+        task_id="successor", sequence_id="sequence", discovery_log=None,
+        fingerprint=None, verification_successor_of=events[0]["run_id"],
+        verifies_correction_id=[correction_id], repo_roots_file=None,
+    ))
+
+    assert selected["source_bundle_hash"] == "c" * 64
+    assert selected["verifies_correction_ids"] == [correction_id]
+
+
+def test_successor_selection_rejects_older_correction_removed_by_later_bundle_change(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    Namespace, events, _, correction_id = _prepare_successor_selection(
+        tmp_path, monkeypatch, include_artifact=False,
+    )
+    events[0]["source_bundle"] = [{
+        "repository_key": "memory-knowledge",
+        "path": "scripts/deploy.sh",
+        "sha256": "a" * 64,
+    }]
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: ([], "c" * 64, "lineage"),
+    )
+
+    with pytest.raises(work_memory.WorkMemoryError, match="successor-correction-bundle-mismatch"):
+        work_memory.cmd_select(Namespace(
+            task_id="successor", sequence_id="sequence", discovery_log=None, fingerprint=None,
+            verification_successor_of=events[0]["run_id"],
+            verifies_correction_id=[correction_id], repo_roots_file=None,
+        ))
 
 
 def test_successor_selection_rejects_current_raw_artifact_mismatch(

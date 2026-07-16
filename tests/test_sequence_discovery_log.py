@@ -35,6 +35,26 @@ def test_start_creates_discovery_log_with_stable_name(tmp_path: Path) -> None:
     assert "This is the path used when no registered sequence matches." in text
 
 
+def test_start_legacy_output_matches_reusable_renderer(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(work_memory, "utc_now", lambda: "2026-07-15T00:00:00Z")
+    assert main([
+        "start", "--sequence-name", "Legacy Bytes", "--outcome", "Stay compatible.",
+        "--why-repeatable", "Existing callers depend on this output.",
+        "--root", str(tmp_path), "--date", "2026-07-15",
+    ]) == 0
+    path = tmp_path / "operations/sequences/discovery/2026-07-15-legacy-bytes.md"
+    _, expected, manifest = sequence_discovery_log.render_discovery_bundle(
+        root=tmp_path, date_text="2026-07-15", sequence_name="Legacy Bytes",
+        outcome="Stay compatible.",
+        why_repeatable="Existing callers depend on this output.",
+        created_at_utc="2026-07-15T00:00:00Z",
+    )
+    assert path.read_bytes() == expected.encode()
+    assert json.loads(path.with_suffix(".dependencies.json").read_text()) == manifest
+
+
 def test_first_metadata_insert_preserves_semantic_discovery_bytes(tmp_path: Path) -> None:
     main([
         "start", "--sequence-name", "Metadata Insert", "--outcome", "Stay stable.",
@@ -50,6 +70,27 @@ def test_first_metadata_insert_preserves_semantic_discovery_bytes(tmp_path: Path
     path.write_text(text, encoding="utf-8")
 
     assert work_memory.semantic_discovery_bytes(path) == before
+
+
+def test_discovery_state_bundle_includes_selection_trust_anchors(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    assert main([
+        "start", "--sequence-name", "Bundle Contract", "--outcome", "Match selection.",
+        "--why-repeatable", "Readiness must count selected runs.",
+        "--root", str(tmp_path), "--date", "2026-07-15",
+    ]) == 0
+    path = tmp_path / "operations/sequences/discovery/2026-07-15-bundle-contract.md"
+    captured: dict[str, object] = {}
+
+    def resolve_bundle(**kwargs):
+        captured.update(kwargs)
+        return [], "a" * 64, "discovery-example"
+
+    monkeypatch.setattr(work_memory, "resolve_bundle", resolve_bundle)
+    sequence_discovery_log._bundle(path)
+
+    assert captured["include_bootstrap_trust_anchors"] is True
 
 
 def test_append_step_records_command_result(tmp_path: Path) -> None:
@@ -140,6 +181,10 @@ def test_discovery_commands_resolve_cross_repository_dependencies(
         json.dumps({"workflow-orch": str(external_root)}), encoding="utf-8",
     )
     monkeypatch.setattr(work_memory, "ROOT", memory_root)
+    for relative in work_memory.BOOTSTRAP_TRUST_ANCHORS:
+        anchor = memory_root / relative
+        anchor.parent.mkdir(parents=True, exist_ok=True)
+        anchor.write_text(f"# {relative}\n", encoding="utf-8")
 
     assert main([
         "start", "--sequence-name", "Cross Repository", "--outcome", "Resolve dependencies.",

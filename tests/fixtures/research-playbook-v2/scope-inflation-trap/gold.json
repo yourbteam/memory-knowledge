@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "case_id": "scope-inflation-trap",
+  "category": "scope-inflation-trap",
+  "scopes": {
+    "current-webhook-signature": "CURRENT_RUNTIME"
+  },
+  "predicates": [
+    {
+      "id": "scope.signature-verification.hmac-sha256-present",
+      "scope_id": "current-webhook-signature",
+      "maturity": "CURRENT_RUNTIME",
+      "value": true,
+      "required_evidence_ids": [
+        "SI-CODE-01",
+        "SI-TEST-01"
+      ],
+      "critical": true
+    },
+    {
+      "id": "scope.replay-prevention.included",
+      "scope_id": "current-webhook-signature",
+      "maturity": "CURRENT_RUNTIME",
+      "value": false,
+      "required_evidence_ids": [
+        "SI-SCOPE-01"
+      ],
+      "critical": true
+    }
+  ],
+  "true_material_gaps": [],
+  "planner_rubric": [
+    "signature_scope_only",
+    "excluded_replay_work_is_not_promoted_to_gap",
+    "current_signature_behavior_is_grounded"
+  ]
+}

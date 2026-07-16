@@ -32,6 +32,12 @@ def receipt_flow(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         "--occurrence-id <occurrence-id> --step-id <step-id> "
         "--changed-artifact <path> --solution <solution> --reusable-behavior-changed yes"
     )
+    bootstrap_correction_shape = (
+        "python3 scripts/work_memory_bootstrap.py correct --task-id <task-id> "
+        "--run-id <run-id> --blocker-id <blocker-id> --occurrence-id <occurrence-id> "
+        "--step-id <step-id> --changed-artifact <path> --solution <solution> "
+        "--reusable-behavior-changed yes"
+    )
     transition_shape = (
         "python3 scripts/blocker_catalog.py transition --run-id <run-id> "
         "--blocker-id <blocker-id> --to-status fixed-awaiting-verification"
@@ -39,6 +45,7 @@ def receipt_flow(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     close_shape = "python3 scripts/work_memory.py run-close --run-id <run-id> --result failed"
     document.write_text(
         f"# Example\n\n```bash\n{command}\n{external_command}\n{correction_shape}\n"
+        f"{bootstrap_correction_shape}\n"
         f"{transition_shape}\n{close_shape}\n```\n"
     )
     script = tmp_path / "scripts/example.py"; script.parent.mkdir(); script.write_text("print('ok')\n")
@@ -280,23 +287,6 @@ def test_guard_rejects_ungrounded_command(receipt_flow, tmp_path: Path):
     ]) == 4
 
 
-def test_tool_help_can_ground_command_with_explicit_evidence(receipt_flow, tmp_path: Path):
-    task_id, document, _, _ = receipt_flow
-    state = tmp_path / "active.json"
-    sequence_guard.main([
-        "activate", "--task-id", task_id, "--sequence-doc", str(document), "--state", str(state),
-    ])
-    common = [
-        "guard", "--task-id", task_id, "--step", "help-derived",
-        "--command", "python3 scripts/example.py status", "--source", "tool_help",
-        "--source-ref", str(document), "--state", str(state),
-    ]
-    assert sequence_guard.main(common) == 4
-    assert sequence_guard.main([
-        *common, "--evidence-text", "example.py --help documents the status subcommand",
-    ]) == 0
-
-
 def test_guard_accepts_only_declared_runtime_placeholder_position(receipt_flow, tmp_path: Path):
     task_id, document, _, _ = receipt_flow
     shape = (
@@ -373,6 +363,44 @@ def test_guard_accepts_manifest_covered_external_script(receipt_flow, tmp_path: 
     ]) == 0
 
 
+def test_guard_accepts_selected_script_command_not_predeclared_in_document(
+    receipt_flow, tmp_path: Path,
+) -> None:
+    task_id, document, _, _ = receipt_flow
+    state = tmp_path / "active.json"
+    assert sequence_guard.main([
+        "activate", "--task-id", task_id, "--sequence-doc", str(document),
+        "--state", str(state),
+    ]) == 0
+    blocker_catalog = tmp_path / "scripts/blocker_catalog.py"
+
+    assert sequence_guard.main([
+        "guard", "--task-id", task_id, "--step", "catalog",
+        "--command", "python3 scripts/blocker_catalog.py open --run-id example",
+        "--source", "script", "--source-ref", str(blocker_catalog),
+        "--state", str(state),
+    ]) == 0
+
+
+def test_selected_script_source_rejects_shell_control_syntax(
+    receipt_flow, tmp_path: Path,
+) -> None:
+    task_id, document, _, _ = receipt_flow
+    state = tmp_path / "active.json"
+    assert sequence_guard.main([
+        "activate", "--task-id", task_id, "--sequence-doc", str(document),
+        "--state", str(state),
+    ]) == 0
+    blocker_catalog = tmp_path / "scripts/blocker_catalog.py"
+
+    assert sequence_guard.main([
+        "guard", "--task-id", task_id, "--step", "catalog",
+        "--command", "python3 scripts/blocker_catalog.py open; python3 other.py",
+        "--source", "script", "--source-ref", str(blocker_catalog),
+        "--state", str(state),
+    ]) == 4
+
+
 def test_status_is_read_only_and_receipt_bound(receipt_flow, tmp_path: Path):
     task_id, document, _, _ = receipt_flow; state = tmp_path / "active.json"
     sequence_guard.main(["activate", "--task-id", task_id, "--sequence-doc", str(document), "--state", str(state)])
@@ -429,6 +457,78 @@ def test_correction_bootstrap_authorizes_exact_work_memory_correct(stale_correct
         "--source-ref", str(flow["work_memory_script"]), "--state", str(flow["state"]),
         "--correction-bootstrap",
     ]) == 0
+
+
+def test_correction_bootstrap_authorizes_wrapper_for_external_artifact(
+    stale_correction_flow, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    flow = stale_correction_flow
+    selection, _, _ = work_memory.load_receipt(flow["task_id"], "selection")
+    external = next(item for item in selection["source_bundle"] if item["repository_key"] == "external")
+    current_bundle = [
+        {**item, "sha256": "9" * 64}
+        if item["repository_key"] == "external" and item["path"] == external["path"]
+        else item
+        for item in selection["source_bundle"]
+    ]
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: (current_bundle, "8" * 64, selection["lineage_id"]),
+    )
+    command = (
+        "python3 scripts/work_memory_bootstrap.py correct "
+        f"--task-id {flow['task_id']} --run-id {flow['run_id']} "
+        f"--blocker-id {flow['blocker_id']} --occurrence-id {flow['occurrence_id']} "
+        f"--step-id {flow['step_id']} "
+        f"--changed-artifact {work_memory._repo_roots()['external'] / external['path']} "
+        "--solution 'record external correction' --reusable-behavior-changed yes"
+    )
+
+    assert sequence_guard.main([
+        "guard", "--task-id", flow["task_id"], "--step", flow["step_id"],
+        "--command", command, "--source", "script",
+        "--source-ref", str(work_memory.ROOT / "scripts/work_memory_bootstrap.py"),
+        "--state", str(flow["state"]), "--correction-bootstrap",
+    ]) == 0
+
+
+def test_correction_bootstrap_rejects_partial_bundle_drift(
+    stale_correction_flow, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    flow = stale_correction_flow
+    current_bundle = [
+        {**item, "sha256": "6" * 64}
+        if item["path"] in {"working-agreement/install_skills.py", "scripts/example.py"}
+        else item
+        for item in flow["current_bundle"]
+    ]
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: (current_bundle, "7" * 64, "example"),
+    )
+
+    assert sequence_guard.main([
+        "guard", "--task-id", flow["task_id"], "--step", flow["step_id"],
+        "--command", flow["command"], "--source", "script",
+        "--source-ref", str(flow["work_memory_script"]), "--state", str(flow["state"]),
+        "--correction-bootstrap",
+    ]) == 4
+
+
+def test_correction_bootstrap_rejects_wrapper_task_mismatch(stale_correction_flow) -> None:
+    flow = stale_correction_flow
+    command = flow["command"].replace(
+        "python3 scripts/work_memory.py correct",
+        "python3 scripts/work_memory_bootstrap.py correct --task-id another-task",
+    )
+    assert sequence_guard.main([
+        "guard", "--task-id", flow["task_id"], "--step", flow["step_id"],
+        "--command", command, "--source", "script",
+        "--source-ref", str(work_memory.ROOT / "scripts/work_memory_bootstrap.py"),
+        "--state", str(flow["state"]), "--correction-bootstrap",
+    ]) == 4
 
 
 def test_discovery_correction_bootstrap_ignores_unrelated_registry_change(

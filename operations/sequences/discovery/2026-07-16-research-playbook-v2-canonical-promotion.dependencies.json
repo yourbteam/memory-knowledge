@@ -1,0 +1,1 @@
+{"dependencies":[{"kind":"file","path_or_sequence_id":"scripts/promote_research_playbook.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/run_pytest.sh","repository_key":"memory-knowledge"}],"lineage_id":"discovery-e239c5e0-5bff-58b1-a62f-99f64e686baf","schema_version":1}

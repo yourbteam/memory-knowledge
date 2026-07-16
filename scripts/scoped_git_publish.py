@@ -167,7 +167,7 @@ def _merge_commit_path(
             check=False,
             capture_output=True,
         )
-    if result.returncode == 1:
+    if 0 < result.returncode <= 127:
         return False
     if result.returncode:
         detail = result.stderr.decode(errors="replace").strip() or f"exit {result.returncode}"

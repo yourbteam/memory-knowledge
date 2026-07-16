@@ -1,0 +1,17 @@
+{
+  "schema_version": 1,
+  "case_ids": [
+    "current-runtime",
+    "future-system",
+    "missing-runtime-evidence",
+    "mixed-maturity",
+    "requirement-conflict",
+    "scope-inflation-trap"
+  ],
+  "matrix": [
+    "legacy:research",
+    "v2:research",
+    "v2:planner"
+  ],
+  "execution_count": 18
+}

@@ -102,6 +102,13 @@ def registered_fixture(root: Path) -> Path:
     return path
 
 
+def trust_anchor_fixture(root: Path) -> None:
+    for relative in work_memory.BOOTSTRAP_TRUST_ANCHORS:
+        path = root / relative
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(f"# probe fixture: {relative}\n")
+
+
 def run_probe(skills_root: Path, mode: str) -> dict:
     hashes = inspect_skills(skills_root)
     old_receipts, old_root = work_memory.RECEIPT_ROOT, work_memory.ROOT
@@ -121,8 +128,9 @@ def run_probe(skills_root: Path, mode: str) -> dict:
             task_id=task_id, operation_kind="workflow-drive" if mode == "registered" else "other",
             repeatable="yes", meaningful_steps=3,
         ))
+        work_memory.ROOT = temp.resolve()
+        trust_anchor_fixture(work_memory.ROOT)
         if mode == "registered":
-            work_memory.ROOT = temp.resolve()
             registered = registered_fixture(work_memory.ROOT)
             work_memory.registry_rows = lambda: ([{
                 "sequence_id": "probe", "folder": "operations/sequences/probe/",
@@ -134,7 +142,6 @@ def run_probe(skills_root: Path, mode: str) -> dict:
                 verifies_correction_id=None, repo_roots_file=None,
             ))
         else:
-            work_memory.ROOT = temp.resolve()
             discovery = discovery_fixture(work_memory.ROOT)
             selection = work_memory.cmd_select(Namespace(
                 task_id=task_id, sequence_id=None, discovery_log=str(discovery),

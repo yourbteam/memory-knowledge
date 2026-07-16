@@ -28,7 +28,8 @@ except ModuleNotFoundError:
 
 
 ALLOWED_SOURCES = {"sequence_doc", "discovery_log", "script", "tool_help"}
-CORRECTION_BOOTSTRAP_PREFIX = ("python3", "scripts/work_memory.py", "correct")
+CORRECTION_DIRECT_PREFIX = ("python3", "scripts/work_memory.py", "correct")
+CORRECTION_BOOTSTRAP_PREFIX = ("python3", "scripts/work_memory_bootstrap.py", "correct")
 POST_CORRECTION_TRANSITION_PREFIX = ("python3", "scripts/blocker_catalog.py", "transition")
 POST_CORRECTION_CLOSE_PREFIX = ("python3", "scripts/work_memory.py", "run-close")
 CORRECTION_REQUIRED_OPTIONS = {
@@ -153,10 +154,17 @@ def _control_plane_tokens(command: str, error_code: str) -> list[str]:
 
 def _parse_correction_command(command: str) -> dict[str, Any]:
     tokens = _control_plane_tokens(command, "invalid-correction-bootstrap-command")
-    if tuple(tokens[:3]) != CORRECTION_BOOTSTRAP_PREFIX:
+    prefix = tuple(tokens[:3])
+    if prefix == CORRECTION_DIRECT_PREFIX:
+        script_relative = "scripts/work_memory.py"
+        required = CORRECTION_REQUIRED_OPTIONS
+    elif prefix == CORRECTION_BOOTSTRAP_PREFIX:
+        script_relative = "scripts/work_memory_bootstrap.py"
+        required = CORRECTION_REQUIRED_OPTIONS | {"--task-id"}
+    else:
         raise work_memory.WorkMemoryError("invalid-correction-bootstrap-command", 4)
 
-    allowed = CORRECTION_REQUIRED_OPTIONS | CORRECTION_OPTIONAL_OPTIONS
+    allowed = required | CORRECTION_OPTIONAL_OPTIONS
     parsed: dict[str, Any] = {
         "--changed-artifact": [],
         "--supersedes-correction-id": [],
@@ -177,7 +185,7 @@ def _parse_correction_command(command: str) -> dict[str, Any]:
             parsed[option] = value
         index += 2
 
-    if not CORRECTION_REQUIRED_OPTIONS <= set(parsed):
+    if not required <= set(parsed):
         raise work_memory.WorkMemoryError("invalid-correction-bootstrap-command", 4)
     if parsed["--reusable-behavior-changed"] not in {"yes", "no"} or not parsed["--solution"].strip():
         raise work_memory.WorkMemoryError("invalid-correction-bootstrap-command", 4)
@@ -192,10 +200,13 @@ def _parse_correction_command(command: str) -> dict[str, Any]:
             work_memory.require_uuid(correction_id, "supersedes-correction-id")
         work_memory.require_id(parsed["--blocker-id"], "blocker-id")
         work_memory.require_id(parsed["--step-id"], "step-id")
+        if "--task-id" in parsed:
+            work_memory.require_id(parsed["--task-id"], "task-id")
     except work_memory.WorkMemoryError as exc:
         raise work_memory.WorkMemoryError("invalid-correction-bootstrap-command", 4) from exc
     if not parsed["--blocker-id"].startswith("blk-"):
         raise work_memory.WorkMemoryError("invalid-correction-bootstrap-command", 4)
+    parsed["_script_relative"] = script_relative
     return parsed
 
 
@@ -254,28 +265,25 @@ def _parse_post_correction_command(command: str) -> dict[str, str]:
     return {**parsed, "operation": operation}
 
 
-def _canonical_changed_artifacts(values: list[str]) -> list[str]:
-    root = work_memory.ROOT.resolve()
-    relative_paths: list[str] = []
-    for raw in values:
-        raw_path = Path(raw)
-        if raw_path.is_absolute():
-            raise work_memory.WorkMemoryError("invalid-correction-bootstrap-artifact", 4)
-        resolved = (root / raw_path).resolve()
-        try:
-            relative = str(resolved.relative_to(root))
-        except ValueError as exc:
-            raise work_memory.WorkMemoryError("invalid-correction-bootstrap-artifact", 4) from exc
-        if raw != relative or relative in relative_paths:
-            raise work_memory.WorkMemoryError("invalid-correction-bootstrap-artifact", 4)
-        relative_paths.append(relative)
+def _canonical_changed_artifacts(
+    values: list[str], repository_roots: dict[str, str] | None,
+) -> tuple[list[Any], set[tuple[str, str]]]:
+    normalized = [
+        str((work_memory.ROOT / value).resolve())
+        if not Path(value).is_absolute()
+        else value
+        for value in values
+    ]
     try:
-        artifacts, _ = work_memory._artifact_hashes(str(root / path) for path in relative_paths)
+        artifacts, _ = work_memory._artifact_hashes(
+            normalized, repository_roots=repository_roots,
+        )
     except work_memory.WorkMemoryError as exc:
         raise work_memory.WorkMemoryError("invalid-correction-bootstrap-artifact", 4) from exc
-    if artifacts != relative_paths:
+    artifact_keys = {work_memory._artifact_identity(artifact) for artifact in artifacts}
+    if len(artifact_keys) != len(artifacts):
         raise work_memory.WorkMemoryError("invalid-correction-bootstrap-artifact", 4)
-    return relative_paths
+    return artifacts, artifact_keys
 
 
 def _bundle_keys(bundle: list[dict[str, Any]]) -> dict[tuple[str, str], str]:
@@ -415,8 +423,10 @@ def _stale_bootstrap_context(
 
 def _verify_correction_bootstrap(args: argparse.Namespace) -> dict[str, Any]:
     parsed = _parse_correction_command(args.command.strip())
+    if parsed.get("--task-id", args.task_id) != args.task_id:
+        raise work_memory.WorkMemoryError("correction-bootstrap-task-mismatch", 4)
     context = _stale_bootstrap_context(
-        args, parsed["--run-id"], "scripts/work_memory.py",
+        args, parsed["--run-id"], parsed["_script_relative"],
     )
     class_hash = context["classification_receipt_hash"]
     selection_hash = context["selection_receipt_hash"]
@@ -442,14 +452,16 @@ def _verify_correction_bootstrap(args: argparse.Namespace) -> dict[str, Any]:
     ):
         raise work_memory.WorkMemoryError("correction-bootstrap-blocker-mismatch", 4)
 
-    artifacts = _canonical_changed_artifacts(parsed["--changed-artifact"])
+    repository_roots = context["start"].get("repository_roots")
+    artifacts, artifact_keys = _canonical_changed_artifacts(
+        parsed["--changed-artifact"], repository_roots,
+    )
     drifted_keys = {
         key for key in old_keys.keys() | current_keys.keys()
         if old_keys.get(key) != current_keys.get(key)
     }
-    artifact_keys = {("memory-knowledge", path) for path in artifacts}
-    if not artifact_keys & drifted_keys:
-        raise work_memory.WorkMemoryError("correction-bootstrap-artifact-not-in-bundle-drift", 4)
+    if artifact_keys != drifted_keys:
+        raise work_memory.WorkMemoryError("correction-bootstrap-artifact-drift-mismatch", 4)
 
     return {
         "ok": True, "task_id": args.task_id, "classification_receipt_hash": class_hash,
@@ -691,13 +703,20 @@ def cmd_guard(args: argparse.Namespace) -> dict[str, Any]:
     command = args.command.strip()
     if not command or not args.step.strip():
         raise work_memory.WorkMemoryError("step-and-command-required", 2)
-    document_text = Path(selection["document"]).read_text()
-    grounded = _shape_match(command, document_text)
-    if not grounded:
-        if args.source != "tool_help" or not (args.evidence_text or "").strip():
+    command_tokens = _control_plane_tokens(command, "invalid-guarded-command")
+    if args.source in {"sequence_doc", "discovery_log"}:
+        document_text = Path(selection["document"]).read_text()
+        if not _shape_match(command, document_text):
             raise work_memory.WorkMemoryError("command-not-grounded-in-selected-document", 4)
-    if args.source == "script" and source_ref.name not in command and str(source_ref) not in command:
-        raise work_memory.WorkMemoryError("command-does-not-invoke-source-script", 4)
+    elif args.source == "script":
+        source_names = {source_ref.name, str(source_ref)}
+        if not any(
+            token in source_names or token.endswith("/" + source_ref.name)
+            for token in command_tokens
+        ):
+            raise work_memory.WorkMemoryError("command-does-not-invoke-source-script", 4)
+    elif not (args.evidence_text or "").strip():
+        raise work_memory.WorkMemoryError("tool-help-evidence-required", 4)
     return {**verified, "ok": True, "step": args.step, "command_source": args.source,
             "source_ref": str(source_ref)}
 

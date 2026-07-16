@@ -1,0 +1,59 @@
+{
+  "schema_version": 1,
+  "case_id": "mixed-maturity",
+  "scopes": {
+    "current-synchronous-notifier": "CURRENT_RUNTIME",
+    "future-queue-consumer": "FUTURE_SYSTEM"
+  },
+  "predicates": [
+    {
+      "id": "mixed.current-notifier.retry-count",
+      "scope_id": "current-synchronous-notifier",
+      "maturity": "CURRENT_RUNTIME",
+      "research_value_type": "number",
+      "question": "How many retries does the current synchronous notifier perform?"
+    },
+    {
+      "id": "mixed.future-consumer.duplicate-suppression-required",
+      "scope_id": "future-queue-consumer",
+      "maturity": "FUTURE_SYSTEM",
+      "research_value_type": "boolean",
+      "question": "Must the proposed queue consumer suppress duplicate deliveries?"
+    },
+    {
+      "id": "mixed.future-consumer.currently-implemented",
+      "scope_id": "future-queue-consumer",
+      "maturity": "FUTURE_SYSTEM",
+      "research_value_type": "boolean",
+      "question": "Is the proposed queue consumer implemented in the current runtime?"
+    }
+  ],
+  "material_gap_candidates": [
+    {
+      "id": "mixed.future-runtime-proof-missing",
+      "description": "The future queue consumer has no deployed runtime proof."
+    },
+    {
+      "id": "mixed.current-retry-count-unknown",
+      "description": "The current synchronous retry count is unknown."
+    }
+  ],
+  "planner_obligations": [
+    {
+      "id": "current_and_future_scopes_are_split",
+      "description": "Keep current notifier work separate from future queue-consumer work."
+    },
+    {
+      "id": "current_behavior_is_not_projected_onto_future_design",
+      "description": "Do not assume the future consumer inherits the current notifier's retry behavior."
+    },
+    {
+      "id": "future_requirement_does_not_demand_runtime_evidence",
+      "description": "Verify future behavior through implementation acceptance criteria rather than nonexistent deployed evidence."
+    },
+    {
+      "id": "future_consumer_implementation_boundary_is_grounded",
+      "description": "Plan NotificationQueueConsumer.consume under Notifications Platform with its finite input contract, pre-delivery deduplication boundary, and duplicate-delivery acceptance target from MX-FUTURE-BOUNDARY-01."
+    }
+  ]
+}

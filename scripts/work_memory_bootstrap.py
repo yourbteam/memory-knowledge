@@ -100,9 +100,23 @@ def _artifact_identity(value: Any) -> tuple[str, str]:
 
 def _sealed_artifact_hashes(
     module: Any, artifacts: list[Any], hashes: list[str], expected_repo_roots_file: str | None,
+    expected_repository_roots: dict[str, str] | None = None,
 ):
-    def sealed(values: Sequence[str], repo_roots_file: str | None = None):
-        if repo_roots_file != expected_repo_roots_file:
+    def sealed(
+        values: Sequence[str], repo_roots_file: str | None = None,
+        repository_roots: dict[str, str] | None = None,
+    ):
+        if repository_roots is None:
+            matches_expected_roots = (
+                expected_repository_roots is None
+                and repo_roots_file == expected_repo_roots_file
+            )
+        else:
+            matches_expected_roots = (
+                repo_roots_file is None
+                and repository_roots == expected_repository_roots
+            )
+        if not matches_expected_roots:
             raise module.WorkMemoryError("bootstrap-repository-roots-mismatch", 4)
         return list(artifacts), list(hashes)
 
@@ -222,7 +236,7 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         raise BootstrapError("bootstrap-command-not-grounded")
     module = context["module"]
     events, _ = module.load_ledger()
-    _, related = _run_matches_selection(
+    start, related = _run_matches_selection(
         module, events, args.run_id, context["selection"],
         context["state"], context["classification"],
     )
@@ -247,10 +261,18 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         raise BootstrapError("bootstrap-blocker-mismatch")
 
     repo_roots_file = context["selection"].get("repository_roots_file")
+    repository_roots = start.get("repository_roots")
     args.repo_roots_file = repo_roots_file
     args.finalize_failed_run = True
     try:
-        artifacts, hashes = module._artifact_hashes(args.changed_artifact, repo_roots_file)
+        if repository_roots is None:
+            artifacts, hashes = module._artifact_hashes(
+                args.changed_artifact, repo_roots_file,
+            )
+        else:
+            artifacts, hashes = module._artifact_hashes(
+                args.changed_artifact, repository_roots=repository_roots,
+            )
     except module.WorkMemoryError as exc:
         raise BootstrapError("bootstrap-artifact-invalid", 2) from exc
     old_map = _bundle_map(context["selection"]["source_bundle"])
@@ -269,7 +291,7 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
     original_hashes = module._artifact_hashes
     original_resolve = module.resolve_bundle
     module._artifact_hashes = _sealed_artifact_hashes(
-        module, artifacts, hashes, repo_roots_file,
+        module, artifacts, hashes, repo_roots_file, repository_roots,
     )
     module.resolve_bundle = lambda **kwargs: (
         context["current_bundle"], context["current_bundle_hash"], context["selection"]["lineage_id"]

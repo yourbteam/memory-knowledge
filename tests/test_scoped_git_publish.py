@@ -294,3 +294,33 @@ def test_isolated_reconcile_auto_merges_clean_same_path_edits(
     assert result["conflict_paths"] == []
     assert git(repo, "rev-parse", "HEAD") == source_commit
     assert git(repo, "status", "--short") == source_status
+
+
+def test_merge_commit_path_treats_multiple_conflicts_as_content_conflict(
+    publish_repo: tuple[Path, Path], tmp_path: Path, monkeypatch,
+) -> None:
+    repo, _ = publish_repo
+    (repo / "included.txt").write_text("base\n")
+    git(repo, "add", "included.txt")
+    git(repo, "commit", "-m", "test: establish merge base")
+    merge_base = git(repo, "rev-parse", "HEAD")
+    (repo / "included.txt").write_text("local\n")
+    git(repo, "add", "included.txt")
+    git(repo, "commit", "-m", "test: establish local change")
+    local_commit = git(repo, "rev-parse", "HEAD")
+
+    destination = tmp_path / "destination"
+    destination.mkdir()
+    (destination / "included.txt").write_text("remote\n")
+    real_run = scoped_git_publish.subprocess.run
+
+    def conflict_run(args, **kwargs):
+        if len(args) > 1 and args[0:2] == ["git", "merge-file"]:
+            return subprocess.CompletedProcess(args, 10, stdout=b"", stderr=b"")
+        return real_run(args, **kwargs)
+
+    monkeypatch.setattr(scoped_git_publish.subprocess, "run", conflict_run)
+
+    assert not scoped_git_publish._merge_commit_path(
+        repo, merge_base, local_commit, "included.txt", destination,
+    )

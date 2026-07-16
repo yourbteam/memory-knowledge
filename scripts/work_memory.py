@@ -107,6 +107,15 @@ PERSONAL_PATTERNS = (
 )
 
 
+def configure_root(root: Path) -> None:
+    """Rebind canonical repository-owned paths for an isolated invocation or test root."""
+    global ROOT, LEDGER, BLOCKER_VIEW, REGISTRY
+    ROOT = root.resolve()
+    LEDGER = ROOT / "operations/work-memory/events.jsonl"
+    BLOCKER_VIEW = ROOT / "operations/blockers/BLOCKERS.md"
+    REGISTRY = ROOT / "operations/sequences/SEQUENCES.md"
+
+
 class WorkMemoryError(Exception):
     def __init__(self, code: str, exit_code: int = 3):
         super().__init__(code)
@@ -563,7 +572,11 @@ def _atomic_write(path: Path, data: bytes) -> None:
         tmp.unlink(missing_ok=True)
 
 
-def transact(request: dict[str, Any], ledger: Path = LEDGER, view: Path = BLOCKER_VIEW) -> dict[str, Any]:
+def transact(
+    request: dict[str, Any], ledger: Path | None = None, view: Path | None = None,
+) -> dict[str, Any]:
+    ledger = ledger or LEDGER
+    view = view or BLOCKER_VIEW
     lock = ledger.with_suffix(ledger.suffix + ".lock")
     lock.parent.mkdir(parents=True, exist_ok=True)
     with lock.open("a+b") as handle:
@@ -600,7 +613,8 @@ def render_blocker_view(events: list[dict[str, Any]], ledger_hash: str) -> str:
     return "\n".join(lines).rstrip() + "\n"
 
 
-def load_ledger(path: Path = LEDGER) -> tuple[list[dict[str, Any]], str]:
+def load_ledger(path: Path | None = None) -> tuple[list[dict[str, Any]], str]:
+    path = path or LEDGER
     data = path.read_bytes() if path.exists() else b""
     return parse_ledger_bytes(data), sha256_bytes(data)
 
@@ -764,7 +778,8 @@ def resolve_bundle(
     return entries, bundle_hash, lineage_id
 
 
-def registry_rows(path: Path = REGISTRY) -> tuple[list[dict[str, str]], str]:
+def registry_rows(path: Path | None = None) -> tuple[list[dict[str, str]], str]:
+    path = path or REGISTRY
     rows: list[dict[str, str]] = []
     for line in path.read_text().splitlines():
         if not line.startswith("| `"):
@@ -897,12 +912,35 @@ def _validate_successor_corrections(
         for correction_id in event.get("correction_ids", [])
     }
 
+    def raw_artifact_matches(artifact: Any, expected_hash: str) -> bool:
+        repository_key, relative = _artifact_identity(artifact)
+        if repository_key not in roots:
+            return False
+        try:
+            raw_hash = sha256_bytes(_safe_file(roots[repository_key], relative).read_bytes())
+        except WorkMemoryError:
+            return False
+        return raw_hash == expected_hash
+
     for correction_id in correction_ids:
         correction = active.get(correction_id)
         if correction is None:
             raise WorkMemoryError("successor-correction-not-active", 3)
         if transition_hashes.get(correction_id) != effective_bundle_hash:
-            raise WorkMemoryError("successor-correction-bundle-mismatch", 3)
+            # Corrections seal raw artifact bytes. Discovery documents may use a
+            # semantic hash in the source bundle, so require membership there
+            # and compare the correction hash against the file itself.
+            current_artifacts_match = all(
+                _artifact_identity(artifact) in bundle_paths
+                and raw_artifact_matches(artifact, expected_hash)
+                for artifact, expected_hash in zip(
+                    correction["changed_artifacts"],
+                    correction["changed_artifact_hashes"],
+                    strict=True,
+                )
+            )
+            if not current_artifacts_match:
+                raise WorkMemoryError("successor-correction-bundle-mismatch", 3)
         blocker_id = correction["blocker_id"]
         if blocker_states.get(blocker_id) != "fixed-awaiting-verification":
             raise WorkMemoryError("successor-correction-not-awaiting-verification", 3)
@@ -1171,7 +1209,11 @@ def _artifact_hashes(
     paths: Iterable[str], repo_roots_file: str | None = None,
     repository_roots: dict[str, str] | None = None,
 ) -> tuple[list[Any], list[str]]:
-    roots = _repo_roots(repo_roots_file, snapshot=repository_roots)
+    roots = (
+        _repo_roots(repo_roots_file)
+        if repository_roots is None
+        else _repo_roots(snapshot=repository_roots)
+    )
     artifacts: list[Any] = []
     hashes: list[str] = []
     for raw in paths:
@@ -1262,8 +1304,31 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         }
     if any(event["event_type"] in {"run_closed", "run_abandoned"} for event in related):
         raise WorkMemoryError("run-is-terminal", 3)
-    document = next(Path(item["path"]) for item in start["source_bundle"] if item["repository_key"] == "memory-knowledge" and item["path"].endswith(("sequence.md", ".md")))
-    document = ROOT / document
+    bundle_paths = {
+        item["path"]
+        for item in start["source_bundle"]
+        if item["repository_key"] == "memory-knowledge"
+    }
+    if start["mode"] == "registered":
+        document_relative = f"operations/sequences/{start['subject_id']}/sequence.md"
+    else:
+        document_relative = None
+        for relative in sorted(bundle_paths):
+            if not relative.endswith(".dependencies.json"):
+                continue
+            candidate_manifest = ROOT / relative
+            try:
+                candidate = json.loads(candidate_manifest.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError):
+                continue
+            if candidate.get("lineage_id") == start["lineage_id"]:
+                document_relative = relative.removesuffix(".dependencies.json") + ".md"
+                break
+        if document_relative is None:
+            raise WorkMemoryError("correction-subject-document-not-found", 3)
+    if document_relative not in bundle_paths:
+        raise WorkMemoryError("correction-subject-document-not-found", 3)
+    document = ROOT / document_relative
     manifest = document.with_name("dependencies.json") if start["mode"] == "registered" else document.with_suffix(".dependencies.json")
     new_bundle, new_hash, _ = resolve_bundle(
         mode=start["mode"], subject_id=start["subject_id"], document=document,
