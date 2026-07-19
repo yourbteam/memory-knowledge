@@ -7,6 +7,26 @@ description: Use before running any repeatable operational sequence for any proj
 
 Use this skill as the entry point for repeatable operational sequences.
 
+## Entry Gate
+
+Invoke this skill only after `task-intake` returns an operational receipt. Do not invoke it for the
+local-development fast path merely because work uses a shell command or has three or more local
+steps. Fast-path work consists of G26 preflight, the approved action, and direct verification.
+
+## Live Work Observation
+
+For a long-running stateful harness or workflow sequence, identify the real telemetry feed and the
+concrete runtime invariants before launch. Start a continuous watcher with the run: stream when
+available; otherwise poll active state at least once per minute. Milestone or final-status polling
+alone is insufficient.
+
+Use the feed to assess actual work-item identity, phase/state transitions, attempts/retries,
+forward progress, decisions, safe output references, and errors. Capture the earliest observed
+deviation and trace its producer, persisted/runtime state, and consumer before diagnosing or
+planning a fix. If the in-scope path cannot reveal its actual work, report an observability gap and
+do not claim live verification. Monitoring does not authorize intervention; classify the deviation
+under G20 and preserve approval boundaries.
+
 ## Workflow
 
 1. Locate the sequences root: `${MK_SEQUENCES_ROOT:-$HOME/memory-knowledge}` (the `memory-knowledge` repo). Run the guard/discovery scripts from there.
@@ -16,14 +36,16 @@ Use this skill as the entry point for repeatable operational sequences.
 5. Activate with `sequence_guard.py activate --task-id <task-id>` and exactly the selected `--sequence-doc` or `--discovery-log`. Activation by `--sequence-id` is retired.
 6. Start the durable run with `work_memory.py run-start --task-id <task-id>` and retain returned ids for exact retry.
 7. Before every operational command, run `sequence_guard.py guard --task-id <task-id>`.
-7. Only run commands whose guard source is `sequence_doc`, `discovery_log`, `script`, or `tool_help`.
-8. Run the documented script commands instead of inventing equivalent commands.
-9. If a command fails, invoke `blocker-catalog` before changing anything, then follow documented failure handling.
-10. Record corrections with `work_memory.py correct`; when the bundle changes, close the original run failed and select a fresh B-bound successor with paired `--verification-successor-of/--verifies-correction-id`.
-11. Record verification with explicit quality `same-path` when it exercised the real
+8. Only run commands whose guard source is `sequence_doc`, `discovery_log`, `script`, or `tool_help`.
+9. Run the documented script commands instead of inventing equivalent commands.
+10. If a command fails, classify it under G20. Invoke `blocker-catalog` before changing a
+    deliverable blocker or a repeated execution error; assign an incidental system defect
+    downstream without blocking the current deliverable.
+11. Record corrections with `work_memory.py correct`; when the bundle changes, close the original run failed and select a fresh B-bound successor with paired `--verification-successor-of/--verifies-correction-id`.
+12. Record verification with explicit quality `same-path` when it exercised the real
     corrected route, then close the run. Only discovery-mode runs call discovery `check`
     and `closeout`; registered runs never do.
-12. Before completion, read `work_memory.py summary`. Report prior eligible corrections used, warnings ignored, and measurable current/change-effect evidence.
+13. Before completion, read `work_memory.py summary`. Report prior eligible corrections used, warnings ignored, and measurable current/change-effect evidence.
 
 ## Selection Rules
 

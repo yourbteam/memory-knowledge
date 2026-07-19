@@ -21,6 +21,11 @@ Read the software constitution document before judging final output quality. Use
 
 Check whether the wrapper already sets writable state homes, timeout, output root, and mode flags. If it does not, report the missing mechanical runner setup before running a long live test.
 
+Identify the live telemetry source and the concrete runtime invariants for the in-scope execution
+path. Confirm the feed can expose actual work-item identity, phase/state transitions,
+attempts/retries, forward progress, decisions, safe output references, and errors. If it cannot,
+record the missing signal as an observability gap; do not substitute milestone status for it.
+
 ## Running The Canary
 
 Run syntax validation first when the wrapper was edited:
@@ -39,7 +44,9 @@ Do not use tool escalation for mock-only runs unless the wrapper writes outside 
 
 ## Monitor During Run
 
-Do not narrate progress from elapsed time alone. Poll or inspect evidence.
+Start a continuous watcher with the canary. Stream telemetry when available; otherwise poll active
+state at least once per minute. Do not narrate progress from elapsed time or planned milestones
+alone; inspect evidence of the work actually being performed.
 
 Monitor the wrapper output root and per-run files:
 
@@ -61,6 +68,15 @@ Monitor telemetry for:
 - repeated verifier/critic cycles
 - timeout markers
 - provider/network/session errors
+
+Assess those events for deviations in actual work: illegal or missing transitions, stalled forward
+progress, repeated work, retry or lease anomalies, wrong ownership or identity, and outputs that
+differ from their governing contract. Capture the earliest deviation and trace its producer,
+persisted/runtime state, and consumer before diagnosing or planning a fix.
+
+If the in-scope path cannot reveal what work it is doing, do not claim the run live-verified.
+Monitoring does not authorize automatic intervention; classify the deviation under G20 and
+preserve existing approval boundaries.
 
 If telemetry shows a likely never-ending loop, advise killing the run. After kill, inspect the ledger and telemetry before proposing a fix.
 

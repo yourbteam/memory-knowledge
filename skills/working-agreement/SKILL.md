@@ -30,15 +30,23 @@ If the task crosses modes, progress in order: research before planning when unde
 
 ## Work-Memory Gate
 
-For every task, invoke `task-intake` before any operational command. It must run the
-canonical classifier in `memory-knowledge/scripts/work_memory.py`; prose classification
-is not a substitute. A non-operational receipt permits ordinary bounded work. An
-operational receipt requires `sequence-runner`, a receipt-backed selection, and
-`sequence_guard.py activate` before commands.
+Use the local-development fast path without `task-intake` for repository reads/searches,
+approved file edits, repository-local formatting or generation limited to approved files,
+diffs, linters, type checks, bounded unit tests, and local installation of an approved managed
+artifact. The fast path is G26 preflight, the approved action, and direct verification only.
 
-When a command fails, invoke `blocker-catalog` before fixing it. Record the correction,
-update the reusable sequence/script when behavior changed, and require a fresh
-same-path successor verification before the correction becomes reusable. At substantive
+Invoke `task-intake` before crossing the governed operational boundary: deployments, remote
+systems, databases or migrations, containers or images, authentication or secrets,
+package/environment mutation, destructive cleanup, workflow drives, long live tests, a proven
+recurrent command sequence, the same execution failure fingerprint twice, or a genuinely unclear
+boundary. It must run the canonical classifier in `memory-knowledge/scripts/work_memory.py`;
+prose classification is not a substitute. An operational receipt requires `sequence-runner`, a
+receipt-backed selection, and `sequence_guard.py activate` before commands.
+
+When a command fails, classify it under G20. Correct a first execution error immediately; invoke
+`blocker-catalog` before fixing a deliverable blocker or a repeated execution error. Record a
+qualifying correction, update the reusable sequence/script when behavior changed, and require a
+fresh same-path successor verification before the correction becomes reusable. At substantive
 closeout invoke `auto-capture`; only evidence-backed work lessons may enter candidate
 review. Never persist people, preferences, diary/activity, transcript, or conversation
 history as memory.

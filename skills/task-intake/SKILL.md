@@ -30,9 +30,11 @@ The output should be short, concrete, and operational.
 
 ## Mandatory Operation Classification
 
-Before any shell, package, database, container, authentication, deployment, remote
-operator, cleanup, image, or multi-step workflow command, allocate a stable task id and
-run from the canonical `memory-knowledge` root:
+Allocate a stable task id and run the canonical classifier only before work crosses the governed
+operational boundary: package or environment mutation, database or migration work, containers or
+images, authentication or secrets, deployment, remote operators or systems, destructive cleanup,
+workflow drives, long live tests, a proven recurrent command sequence, the same execution failure
+fingerprint twice, or a genuinely unclear boundary. Run from the canonical `memory-knowledge` root:
 
 ```bash
 python3 scripts/work_memory.py classify --task-id "<task-id>" --operation-kind "<kind>" --repeatable "<yes|no>" --meaningful-steps <N>
@@ -42,6 +44,12 @@ Kinds are `image|container|auth|deploy|workflow-drive|package|database|remote-op
 Use the actual command flow, not the requested deliverable label. If the receipt says
 `operational`, hand off to `sequence-runner` before commands. Do not self-declare an
 exception or recreate the classifier logic in prose.
+
+Do not invoke classification for the local-development fast path: repository reads/searches,
+approved file edits, repository-local formatting or generation limited to approved files, diffs,
+linters, type checks, bounded unit tests, or local installation of an approved managed artifact.
+Shell use or three local steps alone do not make work operational. Fast-path work uses G26
+preflight, the approved action, and direct verification.
 
 ## Classification Outputs
 

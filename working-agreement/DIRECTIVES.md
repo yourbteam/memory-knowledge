@@ -1,7 +1,7 @@
 # Working Agreement — Directives
 <!-- Authority: Kamen authors. Claude proposes; nothing is binding until Kamen confirms. -->
 <!-- Confirm word: "lock it" promotes a proposed rule to live. Nothing else counts as confirmation. -->
-<!-- Last reviewed: 2026-07-13 -->
+<!-- Last reviewed: 2026-07-11 -->
 
 **Prime directive:** Before acting, consult these directives and follow them. They override default behavior.
 
@@ -28,18 +28,13 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
   memory-knowledge. If a higher-priority instruction prevents loading the directives, state that.
 - ✅ Begin every substantive response with one compact anchor in this exact shape:
   `directives=<artifact/revision>; mode=<mode>; scope=<scope>; exceptions=<none or conflict>`.
-  The anchor is the turn's **first text** — no narration, preamble, or consultation notes before
-  it. In a multi-part turn, per-part anchors may follow, but the turn still opens with one.
-- ✅ If full consultation is still pending when the turn starts (e.g. the hook delivered a
-  truncated preview), anchor first anyway with `exceptions=directives pending full read`, then
-  read the artifact and restate a corrected anchor only if something material changed.
 - ✅ The anchor must name the directive artifact actually consulted, the active task mode, the
   concrete scope being handled, and any higher-priority conflict or unresolved exception.
 - ✅ Expand into a rule-by-rule compliance audit only when Kamen explicitly asks for one, a
   directive conflict occurred, or unresolved compliance remains at closeout.
 - 🚫 No bare checkmarks or self-grades. Do not turn routine replies into a full G-rule matrix.
 
-**Set:** 2026-06-13 · **repeated:** 0 · **amended:** 2026-07-13 (Kamen "lock it" — anchor is first text; pending-read exception)
+**Set:** 2026-06-13 · **repeated:** 0
 
 ---
 
@@ -227,9 +222,13 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 
 ## G17 · Turn Repeated Execution Sequences Into Reusable Tools
 **Why:** When Codex runs multi-step operational sequences by memory or improvisation, it forgets prerequisites, misses flags, rebuilds things incorrectly, repeats known mistakes, and wastes Kamen's time. If a sequence will be used again, the correct result is not just "I got through it once"; the correct result is a reusable script and skill-backed runbook that preserves the working steps.
-- ✅ When executing any sequence that is likely to recur, has 3+ meaningful steps, touches external systems, builds images/packages, deploys, seeds auth, or requires special environment flags, record the exact steps as they are discovered.
+- ✅ Apply this directive when reusable tooling is part of the explicit deliverable, the sequence
+  has completed successfully at least twice, or the same manual correction has recurred. A first
+  incidental execution may record useful steps without expanding or blocking its original
+  deliverable.
+- ✅ When executing a qualifying sequence that is likely to recur, has 3+ meaningful steps, touches external systems, builds images/packages, deploys, seeds auth, or requires special environment flags, record the exact steps as they are discovered.
 - ✅ During the run, capture practical corrections: missing flags, wrong command shape, required env vars, auth prerequisites, build context, expected outputs, failure fingerprints, and the command that fixed each issue.
-- ✅ Before claiming the sequence is complete, convert the proven sequence into a checked-in shell or Python script unless Kamen explicitly says not to.
+- ✅ Before claiming that the reusable sequence itself is operationalized and complete, convert the proven sequence into a checked-in shell or Python script unless Kamen explicitly says not to.
 - ✅ If the sequence needs operator guidance, create or update a skill whose instructions call the script instead of re-describing the commands in prose.
 - ✅ The script must include preflight checks, clear failure messages, no secret printing, parameterized inputs, idempotent behavior where practical, and a final verification check.
 - ✅ On the next use of the same sequence, use the existing script/skill first. If it fails because reality changed, update the script/skill with the new confirmed fix before continuing manually.
@@ -237,6 +236,8 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 - 🚫 No repeatedly hand-running the same fragile command chain from memory.
 - 🚫 No leaving corrected steps only in conversation, terminal history, or ad hoc notes.
 - 🚫 No claiming a sequence is "figured out" while the reusable script/skill still encodes the old broken path.
+- 🚫 No forcing script or skill creation into an unrelated deliverable merely because an
+  incidental command sequence was observed once.
 
 **Set:** 2026-06-22 · **repeated:** 0
 
@@ -244,9 +245,21 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 
 ## G18 · Use Registered Sequences Before Reconstructing Steps
 **Why:** long goal-oriented work caused Codex to repeatedly rebuild fragile operational sequences from memory, forget required steps, and then patch mistakes mid-run. Repeatable sequences need a stable entry point so the correct steps are reused, and new sequences are captured while they are being discovered.
+- ✅ Ordinary local development uses the fast path: repository reads/searches, approved file edits,
+  repository-local formatting or generation limited to approved files, diffs, linters, type checks,
+  bounded unit tests, and local installation of an approved managed artifact. The fast path requires
+  G26 preflight, the approved action, and direct verification only.
+- ✅ Do not invoke task intake, sequence selection, activation, work-memory run lifecycle, or
+  blocker bookkeeping for fast-path work merely because it uses a shell command or has three or
+  more local steps.
+- ✅ Enter the governed operational path when work touches deployments, remote systems, databases
+  or migrations, containers or images, authentication or secrets, package/environment mutation,
+  destructive cleanup, workflow drives, long live tests, a proven recurrent command sequence, or
+  the same execution failure fingerprint twice. When the boundary is genuinely unclear, task
+  intake decides it.
 - ✅ Before starting any repeatable multi-step operational sequence, invoke `sequence-runner`.
 - ✅ Treat ANY turn that builds/runs an image, recreates a container, seeds auth, deploys, or drives a workflow as sequence-triggered by DEFAULT — grep `SEQUENCES.md` for a match FIRST, even when it feels like a one-off. (Amended 2026-07-10: the miss that motivated this was hand-running the greenfield build→container→auth→drive chain from memory instead of checking the catalog — where `local-workflow-orch-image` existed and the `greenfield-full-drive` sequence now does.)
-- ✅ On any operational/tooling turn, the G0 compliance anchor must STATE the sequence checked (its `sequence-id`, or "no match → discovery log") BEFORE the first operational command, so a skip is visible to Kamen instead of buried mid-flow.
+- ✅ On a governed operational-sequence turn, the G0 compliance anchor must STATE the sequence checked (its `sequence-id`, or "no match → discovery log") BEFORE the first operational command, so a skip is visible to Kamen instead of buried mid-flow.
 - ✅ If `sequence-runner` is unavailable in the current session, manually read `operations/sequences/SEQUENCES.md` before running commands.
 - ✅ If a matching sequence exists, follow its `sequence.md` and scripts instead of reconstructing equivalent commands from memory.
 - ✅ If no matching sequence exists, create a discovery log with `scripts/sequence_discovery_log.py start` before or during execution, then append validated steps with `scripts/sequence_discovery_log.py append-step`.
@@ -264,7 +277,10 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 
 ## G19 · Fork Tooling/Sequence Blockers Instead Of Carrying Them Forward
 **Why:** When the main goal hits a repeatable tooling, package, environment, auth, or sequence issue, continuing by improvising wastes time and leaves the same trap for the next run. The main goal should not absorb unrelated tooling churn, but the blocker also must not be left behind to fail again next time.
-- ✅ If a blocker prevents verification but is not the core product bug, pause the main work at that exact step.
+- ✅ Apply this remediation lane only to a qualified deliverable blocker: the requested outcome
+  cannot be produced or verified without resolving it. An execution error corrected on its first
+  occurrence and an incidental system defect assigned downstream do not qualify.
+- ✅ If a qualified deliverable blocker prevents verification but is not the core product bug, pause the main work at that exact step.
 - ✅ Launch a separate remediation lane/subagent with the failed command, exact error, expected outcome, and related sequence/script/package files.
 - ✅ The remediation lane must find the cause, fix the reusable boundary when needed, and prove the failing step now works.
 - ✅ If the issue came from a wrong command I sent, the remediation must update the sequence doc/script or discovery log so the mistake is not repeated.
@@ -280,12 +296,20 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 
 ## G20 · Catalog Every Blocker Before Fixing Or Resuming
 **Why:** During long goal pursuit, blockers were fixed with uneven records: some were table entries, some were buried in run notes, and some existed only in conversation. Without one durable catalog entry per blocker, Kamen cannot evaluate whether the work is converging, drifting, or repeatedly fixing symptoms.
-- ✅ When any blocker appears, create or update a durable blocker-catalog entry before attempting the fix or resuming the main goal. The entry must include the practical symptom, confirmed evidence, practical impact, blocker type, task/run ids when available, and the suspected or confirmed stable boundary.
+- ✅ Classify each failure before mandatory side-work as exactly one of:
+  - **execution error:** my malformed command or incorrect invocation; report it and correct it
+    once immediately, cataloguing it and entering the governed operational path only when the same
+    failure fingerprint occurs twice;
+  - **deliverable blocker:** the requested outcome cannot be produced or verified without a fix;
+    create or update its durable blocker-catalog entry before fixing it;
+  - **incidental system defect:** a real issue outside the current deliverable; record it once,
+    assign it downstream, and continue without launching remediation in the current task.
+- ✅ A required catalog entry must include the practical symptom, confirmed evidence, practical impact, blocker type, task/run ids when available, and the suspected or confirmed stable boundary.
 - ✅ When a blocker fix is implemented, update the same catalog entry with the solution summary, changed files or artifacts, verification evidence, remaining work, and whether it was verified through the same path Kamen uses.
 - ✅ When `playbook-convergence-loop` or a remediation lane is launched for a blocker, record the blocker id in the catalog first and carry that id through research, plan, implementation, review, and final reporting.
-- ✅ Before resuming goal pursuit after a blocker, check the catalog entry and state whether the blocker is `open`, `fixed-awaiting-verification`, `verified`, `closed`, `superseded`, or `non-gap`.
+- ✅ Before resuming goal pursuit after a deliverable blocker, check the catalog entry and state whether the blocker is `open`, `fixed-awaiting-verification`, `verified`, `closed`, `superseded`, or `non-gap`. An incidental system defect may remain open in its downstream assignment without blocking the current deliverable.
 - ✅ If no catalog helper exists for the repo, create a minimal catalog document or helper before continuing; do not rely on chat, terminal history, or scattered run notes as the control surface.
-- 🚫 No fixing a blocker without a catalog entry.
+- 🚫 No fixing a deliverable blocker, or a repeated execution error, without a catalog entry.
 - 🚫 No claiming a blocker is fixed without updating its catalog entry with practical solution and verification evidence.
 - 🚫 No resuming the main goal while the active blocker entry still lacks status, solution, or verification state.
 
@@ -293,8 +317,15 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 
 ## G21 · Always the grounded full implementation — never a deferred workaround
 **Why:** Claude repeatedly offered Kamen a "fast" patched option beside the correct one ("option 1: harden the flaky agent gate; option 2: make it deterministic — 1 is faster"), and framed shortcuts as legitimate choices. A patched version that half-implements a feature to check a box leaves the real defect in place, ships fragility (e.g. a deterministic decision driven by a non-deterministic agent that flakes), and creates "I'll come back to it someday" debt that never gets paid. Kamen's standing choice is the complete, root-grounded implementation that closes the feature out — every time.
-- ✅ When a defect or design gap has a grounded root fix and a faster surface patch, pursue the **grounded root fix** and do not present the shortcut as an option. If the grounded route is large, run it through the proper convergence loop (research → harden → plan → harden → approve → implement → live-verify), not a patch.
-- ✅ Fix the feature at its correct boundary so it is *complete*: no known-fragile mechanism left in place, no "temporary" behavior, no capability half-wired with the rest deferred. A feature is done when it works end-to-end by design, not when a single happy-path run passes.
+- ✅ When a defect or design gap has a grounded root fix and a faster surface patch, pursue the
+  **grounded root fix** and do not present the shortcut as an option.
+- ✅ When the grounded fix is large, divide it into bounded user-visible deliverables that preserve
+  the root-fix boundary and can each be completed and verified independently. Use only the phases
+  required by unresolved evidence. `playbook-convergence-loop` runs only when Kamen explicitly
+  invokes it; task size alone never triggers it.
+- ✅ A bounded deliverable is complete when every approved in-scope behavior works end-to-end
+  without a known workaround. Related capabilities outside that explicit deliverable must be
+  identified, but they do not automatically expand or block it.
 - ✅ If the grounded fix is genuinely out of scope for the current change, STOP and say so explicitly, name the full-implementation work it requires, and get Kamen's decision — do not silently ship the patch and move on.
 - ✅ Surface the tradeoff honestly (grounded cost vs shortcut), but state the recommendation as the grounded route; never ask Kamen to pick the shortcut to save time.
 - 🚫 No presenting a "faster workaround vs correct fix" menu and inviting Kamen to choose the workaround.
@@ -327,9 +358,80 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
 
 ## G24 · Reproduce-first before paying for the slow live loop
 **Why:** on large projects a fix's live-verification point can be an hour+ into a run, so gating every fix attempt on the full run costs ~an hour per iteration (we lived this: the lease + observability fixes needed a rebuild + ~1hr re-drive just to reach feature-0). A fast reproduction that runs the real code on real-captured inputs predicts live in seconds — proven when the GF-N3-LEASE-ORPHAN in-process test produced byte-identical `released: True` to the later ~75-min drive. (Set live 2026-07-11.)
-- ✅ When a fix's live verification point is far into a long/expensive run AND the defect is a recurring class, build a fast reproduction at the tightest boundary that runs the REAL code with REAL-captured failing inputs (per the `reproduce-first-verify` skill), verify red-before/green-after there, then insert + ONE live confirmation via the project's fast re-entry primitives.
+- ✅ When a fix's live verification point is far into a long/expensive run, the defect is a recurring class, AND it blocks the current deliverable, build a fast reproduction at the tightest boundary that runs the REAL code with REAL-captured failing inputs (per the `reproduce-first-verify` skill), verify red-before/green-after there, then insert + ONE live confirmation via the project's fast re-entry primitives.
 - ✅ Trustworthiness gate (hard): the reproduction MUST (i) run the same code path (no reimplementation; mocks only at true external edges), (ii) use real captured inputs (never guessed), (iii) be red-before/green-after. If it cannot satisfy all three, it is not a valid proxy — say so; do not claim the fix verified from it.
 - 🚫 No claiming a fix verified from a reproduction that reimplements the logic or feeds invented state (the false-confidence trap, G4).
 - 🚫 No skipping the single live confirmation — a passing reproduction proves the fix, not that the whole run now succeeds (each fix can unmask the next layer).
 
 **Set:** 2026-07-11 · **repeated:** 0
+
+## G25 · Bounded delivery outranks process expansion
+**Why:** When correctness and workflow rules continually expand the current phase, bounded work
+turns into recursive research, successor packages, and verification churn without producing the
+user-visible result the phase exists to deliver. Rigor must protect the deliverable, not prevent it.
+- ✅ Before work begins, define the smallest user-visible deliverable and its explicit stopping
+  condition.
+- ✅ A finding may expand the current phase only when evidence shows that deliverable would
+  otherwise be incorrect or unsafe. Otherwise assign the finding to its proper downstream phase,
+  such as planning, an implementation experiment, rollout verification, or review.
+- ✅ Reaching a time, attempt, round, or package cap stops the current work and produces the best
+  valid result plus clearly assigned remaining findings. It never automatically creates a successor
+  package or restarts the same phase.
+- ✅ When process rigor conflicts with bounded scope, the explicit deliverable and G1/G3 govern.
+  Bounded delivery does not permit knowingly incorrect, unsafe, or incomplete in-scope work.
+- 🚫 No treating every newly discovered unknown as a blocker for the current phase.
+- 🚫 No automatic successor package, recursive phase restart, or scope expansion merely because a
+  verifier can identify additional detail.
+
+**Set:** 2026-07-19 · **repeated:** 0
+
+## G26 · Preflight interpretation-sensitive actions once
+**Why:** Preventable command quoting and patch-construction mistakes create failed operations,
+invalid receipts, and avoidable recovery work before verification can even assess the intended
+change. A cheap deterministic construction check is faster than repairing those failures.
+- ✅ Before any governed file edit or shell command, perform one local construction preflight
+  proportionate to its syntax.
+- ✅ For a file edit, read the exact current target block and confirm that the proposed patch adds
+  every required postcondition, removes every forbidden old condition, and touches only the
+  approved scope before applying it.
+- ✅ For a shell command, inspect the final command string before execution. Treat backticks,
+  `$()`, variable expansion, globs, redirection, and nested quoting as interpretation-sensitive;
+  use literal single quotes or structured arguments when the content must remain literal, and use
+  shell evaluation only when it is intentional.
+- ✅ The preflight is one deterministic local pass. It does not launch a verifier, subagent,
+  hardening loop, remediation lane, or new durable artifact. If the preflight fails, correct the
+  construction before execution; failures after execution are classified under G20.
+- 🚫 No executing an interpretation-sensitive command without checking whether the shell will
+  transform content intended as literal data.
+- 🚫 No turning preflight into another iterative approval or verification workflow.
+
+**Set:** 2026-07-19 · **repeated:** 0
+
+## G27 · Observe live work before reasoning from milestones
+**Why:** Long-running harness and workflow runs can remain alive while doing the wrong work,
+repeating work, stalling, or corrupting state. Waiting for a planned milestone hides the earliest
+useful evidence and encourages theoretical diagnoses about what should have happened instead of
+diagnosing what the system actually did.
+- ✅ When building, modifying, or operating a long-running stateful harness or workflow, require
+  the in-scope execution path to emit structured evidence of actual work: work-item identity,
+  phase/state, transition, attempt/retry, elapsed time, progress or safe output reference,
+  decisions, and errors. Redact secrets and sensitive payloads.
+- ✅ Telemetry is part of done for behavior added or changed in the current scope. Do not turn this
+  into a blanket retrofit of unrelated existing paths.
+- ✅ Before starting a live run, identify the real telemetry source and the concrete runtime
+  invariants being observed. Start a continuous watcher with the run: stream when available;
+  otherwise poll active state at least once per minute. Milestone polling alone is insufficient.
+- ✅ Assess the feed for observed deviations in actual work: illegal or missing state transitions,
+  stalled forward progress, repeated work, retry or lease anomalies, wrong ownership or identity,
+  and output that differs from its governing contract.
+- ✅ Capture the earliest observed deviation and trace its producer → persisted/runtime state →
+  consumer before diagnosing or planning a fix. If obtainable runtime evidence exists, it outranks
+  theoretical reasoning from expected milestones.
+- ✅ If the in-scope path cannot reveal what work it is doing, treat that as an observability gap
+  and do not claim the behavior live-verified.
+- ✅ Monitoring does not authorize automatic intervention. Classify deviations under G20 and
+  preserve existing approval boundaries.
+- 🚫 No waiting only for a planned checkpoint while a live work feed is available.
+- 🚫 No requiring unrelated telemetry expansion merely because additional metrics could be useful.
+
+**Set:** 2026-07-19 · **repeated:** 0
