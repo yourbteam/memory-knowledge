@@ -1,0 +1,455 @@
+[
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "261e9560fe090df1996659926b184e4a03eaf5e3316a82e21727ef758de27b33",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required side: E4 supplies concrete ledger, independent-role, retry-cap, and convergence mechanics; E8 supplies bounded state, stage-transition, edit-ownership, and terminal-result patterns.",
+        "Demonstrated side: E1 confirms ordinary plan-playbook lacks those orchestration contracts, while E13 is only one existing ledger shape and does not prove ordinary deterministic orchestration.",
+        "Planner closure: P6 names the implementation patterns, fixture source, parent ownership, test location, repeated-input observable, required state and artifact set, retry decisions, and PASS/GAPS/BLOCKED/CAP_REACHED outcomes without claiming the runtime already exists."
+      ],
+      "fingerprint": "requirements-satisfaction:r6:ordinary-planning-lacks-bounded-runtime-contract",
+      "id": "GAP_R6_EXECUTABLE_ORCHESTRATION",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Operators following ordinary planning can currently invent different states, artifacts, role boundaries, retries, and completion outcomes from the same starting conditions.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R6_EXECUTABLE_ORCHESTRATION"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "30debf11b8674c6a719abf66d3be2a3e9ee91e0ec685d761fcce9a87dd858907",
+    "finding_type": "REQUIREMENT_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "E1 and E4 define the current one-shot aim and available verification mechanics; E10 and E14 demonstrate unresolved-choice patterns admitted by current planning.",
+        "Candidate obligation P3 supplies the negative cases, required completeness dimensions, owner, inputs, verification anchor, and terminal acceptance condition."
+      ],
+      "fingerprint": "requirements-coverage|000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327|GAP_R3_ONE_SHOT_COMPLETENESS",
+      "id": "GAP_R3_ONE_SHOT_COMPLETENESS",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "A downstream implementer must receive a plan with no remaining either-or choice, optional in-scope work, operator decision, or clarification dependency.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R3_ONE_SHOT_COMPLETENESS"
+      ],
+      "status": "OPEN",
+      "type": "REQUIREMENT_GAP"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "4490c7a65dcd0468f74e4b7c9feaf6660144d0ed3e5e039088a476cca47cd67f",
+    "finding_type": "REQUIREMENT_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "E1 establishes the missing ordinary orchestration contract; E4 and E8 provide grounded component and lifecycle patterns; E13 provides a bounded ledger-shape fixture.",
+        "Candidate obligation P6 covers deterministic state transitions, producer/verifier/critic/fixer separation, parent-only edits, retries, caps, artifact set, terminal outcomes, ownership, required inputs, and a repeat-execution closure test."
+      ],
+      "fingerprint": "requirements-coverage|000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327|GAP_R6_EXECUTABLE_ORCHESTRATION",
+      "id": "GAP_R6_EXECUTABLE_ORCHESTRATION",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Identical planning inputs must produce the same required states, role boundaries, artifacts, edit ownership, retry decisions, and terminal result without hidden operator invention.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R6_EXECUTABLE_ORCHESTRATION"
+      ],
+      "status": "OPEN",
+      "type": "REQUIREMENT_GAP"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "44fc40d3b1d5b7fbabb7389f5e06b266dcd319d2903b3005a5473f6532a29fb7",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "E1 establishes the current untested sufficient-understanding boundary and missing gate mechanics.",
+        "E3 grounds the validated research package and PASS/GAPS/BLOCKED/CAP_REACHED contract available for integration.",
+        "P2 names the implementation locations, three required observables, owner, inputs, and closure condition; E9 is explicitly identified as the test boundary to extend."
+      ],
+      "evidence_limitation": "The three entry and resume observables are future acceptance evidence, not current passing behavior.",
+      "fingerprint": "INTERNAL_READINESS|GAP_R2_EVIDENCE_GATE|R2_EVIDENCE_GATE|v1",
+      "id": "GAP_R2_EVIDENCE_GATE",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Planning can still begin or resume without a checkable evidence-sufficiency result; the planner must define the direct-entry gate, bounded pause state, and deterministic research-return rule.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R2_EVIDENCE_GATE"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "4fc9b9f9c3828b7cd023c8e2e10842b39b0008dfc11eca325a5efac2977970cf",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "E1 grounds the current ordinary substantial-plan approval wording.",
+        "E2 grounds the concrete consequence, cost, interview-style clarification, authorization, and stop requirements.",
+        "E8 grounds the explicit convergence-loop authorization boundary.",
+        "P5 provides ordinary and autonomous verification cases, owner, inputs, and a finite closure condition."
+      ],
+      "evidence_limitation": "The approval-path cases are specified observables to add and are not current passing evidence.",
+      "fingerprint": "INTERNAL_READINESS|GAP_R5_APPROVAL_CONTRACT|R5_APPROVAL_CONTRACT|v1",
+      "id": "GAP_R5_APPROVAL_CONTRACT",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Operators can ask for abstract or duplicate authorization; the planner must reconcile ordinary approval with already-authorized autonomous planning while preserving every mandatory stop boundary.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R5_APPROVAL_CONTRACT"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "5382e47e538a73ffd85f19b6a43f41faac8d68867206a9086c38c915961fece9",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required side: E2 requires concrete old-versus-new consequences and costs before decisions and defines bounded autonomous authorization plus mandatory stop boundaries; E8 confirms the explicit convergence-loop authorization boundary.",
+        "Demonstrated side: E1 prescribes a bare substantial-plan gate question and does not reconcile ordinary and already-authorized paths.",
+        "Planner closure: P5 identifies both approval paths, the authoritative rules, the test boundary, and observables for consequence and cost, duplicate-approval prevention, and every preserved G11 stop condition."
+      ],
+      "fingerprint": "requirements-satisfaction:r5:approval-paths-unreconciled",
+      "id": "GAP_R5_APPROVAL_CONTRACT",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "An operator can ask for approval without explaining its practical cost or can request authorization already granted by an explicit autonomous invocation.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R5_APPROVAL_CONTRACT"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "6769d431efc9d960ca4f68c1964045536efcd1552247199ea4c7ade4838a56ee",
+    "finding_type": "EVIDENCE_LIMIT",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "E9 shows that current tests cover ordering and delegation rather than output quality; E10 through E14 provide exact historical fixture sources but no common evaluator or linked downstream outcomes.",
+        "Candidate obligation P7 explicitly requires all three workflow classes, a common evaluator, frozen requirement identity, linked implementation outcomes, every acceptance dimension, zero clarification, ownership, required inputs, and fail-closed closure criteria."
+      ],
+      "fingerprint": "requirements-coverage|000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327|GAP_R7_PRACTICAL_EVIDENCE",
+      "id": "GAP_R7_PRACTICAL_EVIDENCE",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "The implementation must prove that representative small, substantial, and evidence-uncertain plans preserve requirements, resolve implementation and verification anchors, eliminate decisions, and reach downstream implementation with zero clarification need.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R7_PRACTICAL_EVIDENCE"
+      ],
+      "status": "OPEN",
+      "type": "EVIDENCE_LIMIT"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "6cde411e279226b667e8249f770d0ddb75e81a7c1a502f2fbc48154cec6d23bd",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required side: E5, E6, and E7 respectively define internal-readiness, requirements-coverage, and requirements-satisfaction gates, including artifact, edit-ownership, rerun, and convergence responsibilities.",
+        "Demonstrated side: E1 currently routes small plans to verify-plan, substantial plans to coverage then satisfaction, and leaves internal readiness optional; E11 and E12 demonstrate only task-specific coverage and satisfaction artifacts, not the complete ordinary-plan lifecycle.",
+        "Planner closure: P4 explicitly requires proportionate small and substantial entry into internal readiness then requirements coverage then requirements satisfaction; permitted response-sized or exact sibling artifacts; assessment-only lens roles and parent-owned edits; fresh full gate reruns after edits; and PASS/GAPS/BLOCKED/CAP_REACHED semantics. E8 is correctly limited to a reusable pattern rather than claimed current proof."
+      ],
+      "fingerprint": "requirements-satisfaction:r4:three-gate-lifecycle-not-integrated",
+      "id": "GAP_R4_HARDENING_INTEGRATION",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Ordinary planning does not yet guarantee that a plan becomes internally ready, complete in breadth, and valid end to end before it is handed to implementation.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R4_HARDENING_INTEGRATION"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "88dab474aa0e6fa13dda5a2911dc1338ee548cdd5441e67a3b34528716869f84",
+    "finding_type": "CONTRADICTION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "E1 contains the abstract ordinary approval prompt; E2 defines consequence, cost, authorization, and stop obligations; E8 confirms the autonomous authorization boundary.",
+        "Candidate obligation P5 resolves the ordinary and autonomous paths, includes all enumerated stop conditions, and supplies owner, inputs, verification cases, and closure semantics."
+      ],
+      "fingerprint": "requirements-coverage|000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327|GAP_R5_APPROVAL_CONTRACT",
+      "id": "GAP_R5_APPROVAL_CONTRACT",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Ordinary planning must present concrete consequences and cost before seeking approval, while an already authorized convergence run must avoid duplicate approval and still stop at every widened-scope boundary.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R5_APPROVAL_CONTRACT"
+      ],
+      "status": "OPEN",
+      "type": "CONTRADICTION"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "8dc75fb2b0a9b9888e2338defb69e097f953b573e6f23e26408059a6ef61382e",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "E1 identifies the missing ordinary-plan state and orchestration contract.",
+        "E4 and E8 ground reusable role, ledger, retry, state-transition, ownership, and terminal-result mechanics.",
+        "E13 provides an exact current ledger-shape fixture.",
+        "P6 supplies implementation anchors, a repeated-identical-input observable, owner, inputs, and a deterministic closure condition."
+      ],
+      "evidence_limitation": "E13 is only a ledger-shape fixture, and the repeated-execution orchestration test does not currently exist.",
+      "fingerprint": "INTERNAL_READINESS|GAP_R6_EXECUTABLE_ORCHESTRATION|R6_EXECUTABLE_ORCHESTRATION|v1",
+      "id": "GAP_R6_EXECUTABLE_ORCHESTRATION",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Identical planning inputs can still produce operator-invented lifecycle behavior; the planner must define deterministic state, artifacts, role separation, edit ownership, retry and cap decisions, and terminal results.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R6_EXECUTABLE_ORCHESTRATION"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "93528fe2249f4069d87607fea13f64b0e804b49facc5e838845a92da3f403681",
+    "finding_type": "REQUIREMENT_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "E1 establishes the incomplete current composition; E5, E6, and E7 define the three gate contracts; E8 supplies reusable stage and terminal patterns; E11 and E12 are bounded artifact-shape fixtures.",
+        "Candidate obligation P4 explicitly covers ordered entry, small versus substantial artifact forms, assessment-only roles, parent-owned edits, mandatory fresh reruns after edits, and PASS/GAPS/BLOCKED/CAP_REACHED semantics, with finite ownership and closure criteria."
+      ],
+      "fingerprint": "requirements-coverage|000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327|GAP_R4_HARDENING_INTEGRATION",
+      "id": "GAP_R4_HARDENING_INTEGRATION",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Planning V2 must run a complete, proportionate internal-readiness, requirements-coverage, then requirements-satisfaction lifecycle instead of leaving operators to infer which gates, artifacts, reruns, owners, or outcomes apply.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R4_HARDENING_INTEGRATION"
+      ],
+      "status": "OPEN",
+      "type": "REQUIREMENT_GAP"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "a3c27be5ffc438da9c63cdb11d1519223b79b640000887c1d8a7878f0462bc25",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "E9 grounds the current contract-test boundary and confirms that it does not evaluate plan output quality.",
+        "E10-E14 provide exact historical fixture sources and demonstrate the absence of a common evaluator and linked no-clarification outcomes.",
+        "P7 names the evaluator dimensions, required workflow classes, linked-record contents, owner, inputs, and terminal closure condition."
+      ],
+      "evidence_limitation": "E9-E14 are current source and absence evidence only; the evaluator results and linked zero-clarification records are explicitly future observables to create.",
+      "fingerprint": "INTERNAL_READINESS|GAP_R7_PRACTICAL_EVIDENCE|R7_PRACTICAL_EVIDENCE|v1",
+      "id": "GAP_R7_PRACTICAL_EVIDENCE",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "There is no representative proof that small, substantial, and evidence-uncertain plans reach implementation without clarification; the planner must specify and create the common evaluator, labeled cases, and linked downstream outcome records.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R7_PRACTICAL_EVIDENCE"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "a9aff8e43ccd4ac770a26001b72a9db1b223601948c854c72cbc675aacdbc463",
+    "finding_type": "EVIDENCE_LIMIT",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required side: E1 establishes the one-shot planning intent, while P7 defines the representative workflow classes and practical acceptance dimensions needed to observe that intent.",
+        "Demonstrated side: E9 tests ordering and delegation only; E10-E14 provide historical plans and audit artifacts but no common evaluator or linked downstream zero-clarification outcomes.",
+        "Planner closure: P7 identifies exact fixture sources, the evaluator location and owner, required labeled cases, linked outcome fields, and failure semantics. It explicitly treats the evaluator and outcome records as artifacts to create rather than evidence that already exists."
+      ],
+      "fingerprint": "requirements-satisfaction:r7:no-representative-linked-outcome-evidence",
+      "id": "GAP_R7_PRACTICAL_EVIDENCE",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "There is no current evidence that the planning contract consistently preserves requirements and enables clarification-free implementation across small, substantial, and evidence-uncertain work.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R7_PRACTICAL_EVIDENCE"
+      ],
+      "status": "OPEN",
+      "type": "EVIDENCE_LIMIT"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "ad34b9a79ba647616af41826d89cc77aabec6d86324496f7e68c47c515c35cd7",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required side: E1 defines the one-shot and no-unresolved-decision intent; E4 provides implementation-surface and convergence mechanics capable of checking it.",
+        "Demonstrated side: E10 and E14 contain concrete terminal plans that claim readiness while retaining either/or, optional, or operator-choice decisions.",
+        "Planner closure: P3 names the negative fixtures, required decision dimensions, test location, owner, and rejection and acceptance observables; these are outputs to implement, not existing guarantees."
+      ],
+      "fingerprint": "requirements-satisfaction:r3:terminal-plan-permits-decisions",
+      "id": "GAP_R3_ONE_SHOT_COMPLETENESS",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "A plan can declare itself complete while still forcing the implementer to choose between alternatives or decide whether an in-scope change is optional.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R3_ONE_SHOT_COMPLETENESS"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "d6cdfe8a892d9fe8faa854daa909d0c2553c906c022d9cec8ad87440cdab1992",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required side: E1 defines direct planning, research return, and sufficient understanding; E3 supplies the validated PASS package and READY-obligation semantics needed for deterministic resumption.",
+        "Demonstrated side: E1 confirms that ordinary plan-playbook currently has no sufficiency test, evidence artifact, gap status, or deterministic resume rule.",
+        "Planner closure: P2 identifies the plan-playbook and research-playbook boundaries, owner, three entry and resume cases, and observable closure conditions without claiming those cases currently pass."
+      ],
+      "fingerprint": "requirements-satisfaction:r2:evidence-gate-not-enforced",
+      "id": "GAP_R2_EVIDENCE_GATE",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Planning can currently begin or resume without a checkable demonstration that its evidence is sufficient, allowing unresolved unknowns to reach implementation.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R2_EVIDENCE_GATE"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "eb06f32e97aefae6c2ad2fa838a663d63bcf3de06398bc90c4fdece67a1c2f4b",
+    "finding_type": "REQUIREMENT_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "E1 establishes the current uncheckable direct-entry and resume boundary; E3 supplies the validated research-package and terminal-result contract.",
+        "Candidate obligation P2 includes direct-entry sufficiency, bounded pause on a mid-plan unknown, PASS-plus-READY resume semantics, owner, inputs, and observable closure cases."
+      ],
+      "fingerprint": "requirements-coverage|000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327|GAP_R2_EVIDENCE_GATE",
+      "id": "GAP_R2_EVIDENCE_GATE",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "A planner must prevent planning from starting or resuming on an untested claim of sufficient understanding while preserving grounded direct entry when research is unnecessary.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R2_EVIDENCE_GATE"
+      ],
+      "status": "OPEN",
+      "type": "REQUIREMENT_GAP"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "eeea0921ad86ad34e20be9d560634c36dc38d358314315e1ff0d8fda1890d2e4",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "E1 identifies the incomplete current plan-playbook ordering.",
+        "E5, E6, and E7 ground each gate's entry, artifact, ownership, rerun, and convergence contract.",
+        "E8 grounds reusable stage-order and PASS/GAPS/BLOCKED/CAP_REACHED semantics.",
+        "P4 names the exact ordered lifecycle, response-sized versus sibling-file artifact expectations, verification location, required inputs, owner, and closure condition."
+      ],
+      "evidence_limitation": "E8 is a reusable orchestration pattern and E11-E12 are artifact-shape fixtures; none currently proves that ordinary plan-playbook executes the complete three-gate lifecycle.",
+      "fingerprint": "INTERNAL_READINESS|GAP_R4_HARDENING_INTEGRATION|R4_HARDENING_INTEGRATION|v1",
+      "id": "GAP_R4_HARDENING_INTEGRATION",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Ordinary planning does not yet guarantee the complete hardening lifecycle; the planner must integrate internal readiness, requirements coverage, then requirements satisfaction with proportionate entry, exact artifact forms, parent-owned edits, mandatory reruns, and explicit terminal outcomes.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R4_HARDENING_INTEGRATION"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "fbff66271eaf655b9dcc4f4f15da97c42d798bbfd584b02988cba826767f0094",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "E1 and E4 ground the current one-shot directives and reusable verify-plan completeness machinery.",
+        "E10 and E14 provide exact unresolved-choice regression sources.",
+        "P3 supplies the implementation and verification anchors, owner, required inputs, and a closure condition covering scope, ownership, design, evidence, acceptance, sequencing, and clarification freedom."
+      ],
+      "evidence_limitation": "E10 and E14 are negative fixture sources and do not constitute passing one-shot evidence.",
+      "fingerprint": "INTERNAL_READINESS|GAP_R3_ONE_SHOT_COMPLETENESS|R3_ONE_SHOT_COMPLETENESS|v1",
+      "id": "GAP_R3_ONE_SHOT_COMPLETENESS",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "A downstream implementer can still receive unresolved alternatives or optional in-scope work; the planner must define and enforce the terminal completeness contract that rejects those states.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "R3_ONE_SHOT_COMPLETENESS"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  }
+]

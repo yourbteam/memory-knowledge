@@ -1,0 +1,493 @@
+[
+  {
+    "acceptance_intent": "The plan closes requirement G1 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "G1",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a70.1 passes.",
+        "description": "\u00a70.1",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a70.1",
+        "implementation_anchors": [
+          "Implement \u00a70.1 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a70.1."
+        ]
+      },
+      {
+        "closure_condition": "The acceptance observable for \u00a77 passes.",
+        "description": "\u00a77",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a77",
+        "implementation_anchors": [
+          "Implement \u00a77 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a77."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:G1",
+    "source": "fixture-authority:substantial-multisurface:G1",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement G1."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement G2 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "G2",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a70.2 passes.",
+        "description": "\u00a70.2",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a70.2",
+        "implementation_anchors": [
+          "Implement \u00a70.2 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a70.2."
+        ]
+      },
+      {
+        "closure_condition": "The acceptance observable for \u00a78 passes.",
+        "description": "\u00a78",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a78",
+        "implementation_anchors": [
+          "Implement \u00a78 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a78."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:G2",
+    "source": "fixture-authority:substantial-multisurface:G2",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement G2."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement G3 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "G3",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a70.3 passes.",
+        "description": "\u00a70.3",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a70.3",
+        "implementation_anchors": [
+          "Implement \u00a70.3 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a70.3."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:G3",
+    "source": "fixture-authority:substantial-multisurface:G3",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement G3."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement G4 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "G4",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a71.1 passes.",
+        "description": "\u00a71.1",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a71.1",
+        "implementation_anchors": [
+          "Implement \u00a71.1 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a71.1."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:G4",
+    "source": "fixture-authority:substantial-multisurface:G4",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement G4."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement G5 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "G5",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a71.2 passes.",
+        "description": "\u00a71.2",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a71.2",
+        "implementation_anchors": [
+          "Implement \u00a71.2 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a71.2."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:G5",
+    "source": "fixture-authority:substantial-multisurface:G5",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement G5."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement G6 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "G6",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a71.3 passes.",
+        "description": "\u00a71.3",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a71.3",
+        "implementation_anchors": [
+          "Implement \u00a71.3 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a71.3."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:G6",
+    "source": "fixture-authority:substantial-multisurface:G6",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement G6."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement G7 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "G7",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a71.4 passes.",
+        "description": "\u00a71.4",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a71.4",
+        "implementation_anchors": [
+          "Implement \u00a71.4 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a71.4."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:G7",
+    "source": "fixture-authority:substantial-multisurface:G7",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement G7."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement G8 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "G8",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a71.5 passes.",
+        "description": "\u00a71.5",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a71.5",
+        "implementation_anchors": [
+          "Implement \u00a71.5 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a71.5."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:G8",
+    "source": "fixture-authority:substantial-multisurface:G8",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement G8."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement X-DEPLOY with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "X-DEPLOY",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a72 passes.",
+        "description": "\u00a72",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a72",
+        "implementation_anchors": [
+          "Implement \u00a72 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a72."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:X-DEPLOY",
+    "source": "fixture-authority:substantial-multisurface:X-DEPLOY",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement X-DEPLOY."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement X-TEST with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "X-TEST",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a73 passes.",
+        "description": "\u00a73",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a73",
+        "implementation_anchors": [
+          "Implement \u00a73 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a73."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:X-TEST",
+    "source": "fixture-authority:substantial-multisurface:X-TEST",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement X-TEST."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement X-PROMOTE with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "X-PROMOTE",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a74 passes.",
+        "description": "\u00a74",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a74",
+        "implementation_anchors": [
+          "Implement \u00a74 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a74."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:X-PROMOTE",
+    "source": "fixture-authority:substantial-multisurface:X-PROMOTE",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement X-PROMOTE."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement X-SCOPE-FILES with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "X-SCOPE-FILES",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a75 passes.",
+        "description": "\u00a75",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a75",
+        "implementation_anchors": [
+          "Implement \u00a75 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a75."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:X-SCOPE-FILES",
+    "source": "fixture-authority:substantial-multisurface:X-SCOPE-FILES",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement X-SCOPE-FILES."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement X-COMPAT with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E11A",
+      "E11D"
+    ],
+    "id": "X-COMPAT",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for \u00a76 passes.",
+        "description": "\u00a76",
+        "evidence_ids": [
+          "E11A",
+          "E11D"
+        ],
+        "id": "\u00a76",
+        "implementation_anchors": [
+          "Implement \u00a76 within the charter's allowed paths."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for \u00a76."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "substantial-multisurface:X-COMPAT",
+    "source": "fixture-authority:substantial-multisurface:X-COMPAT",
+    "text": "Create a one-shot implementation plan that closes all eight grounded Memory/Directives gaps and their cross-cutting obligations. Requirement X-COMPAT."
+  }
+]

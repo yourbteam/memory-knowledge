@@ -1,59 +1,77 @@
 ---
 name: plan-playbook
-description: This skill should be used when the task is PLANNING — turning a goal into a checkable implementation plan before any code is written (deciding how to build something, sequencing the work, resolving design choices, producing a plan/spec document). It defines how Kamen and Codex run planning: which skills to reach for, how to harden the plan in proportion to its size, and the task-scoped rules that always apply. Do not use it for open-ended research, writing code, or reviewing a diff.
+description: Use when a goal must become a controller-bound, decision-complete implementation plan before code is written. Freeze grounded evidence, require the behavioral boundary matrix, and harden one plan revision through verify-plan plus independent internal-readiness, requirements-coverage, and requirements-satisfaction lenses. Do not use for open-ended research, code changes, or diff review.
 ---
 
-# Playbook: Plan
+# Plan Playbook
 
-When delegated by `playbook-convergence-loop`, verifier and critic agents are assessment-only and can inspect authoritative source/runtime evidence while remaining isolated from producer rationale. The parent alone edits the plan and state. Require the baseline guard before each edit or delegated pass, return the shared stage-result envelope, and make no commits by default.
+Produce a controller-bound plan package that a competent implementer can execute without rediscovery, unstated choices, or a second planning pass.
 
-*Turn a goal into a checkable implementation plan before building.*
+## Before planning
 
-**Aim:** a plan solid enough to build from one-shot — a competent implementer should not have to come back with a decision.
+1. Freeze the charter: objective, repositories, allowed paths, supplied-input root, exclusions, deliverables, approval boundaries, and change characteristics.
+2. Select exactly one entry mode from [entry-and-evidence.md](references/entry-and-evidence.md): `DIRECT` or `RESEARCH_PACKAGE`.
+3. Require grounded evidence for every requirement and non-empty implementation and verification anchors for every planner obligation. Insufficient evidence returns `BLOCKED/RESEARCH_REQUIRED`; do not draft around it.
+4. For direct invocation, derive the deterministic task root described in [entry-and-evidence.md](references/entry-and-evidence.md). A caller such as task-workflow supplies its already-created task root instead.
+5. Initialize the controller with that exact existing task root. The controller owns state, hashes, snapshots, attempts, findings, stage records, package emission, and authorization receipts.
+6. The canonical controller root is `<task-root>/.plan-playbook/`. When an existing task has only `<task-root>/.plan-playbook-v2/`, run `plan_package.py migrate-run-root --task-directory <task-root>` once before continuing. Never alias or dual-read the legacy root. The migration fails closed while an attempt, revision, emission transaction, blocked-state resume, or capped continuation is in flight; finish that operation with the legacy controller first.
 
-**Upstream — a plan rests on sufficient understanding (not a mandatory research step):** if the
-area is already understood (known cold, or just researched), plan directly. If not, do
-Research first (see `research-playbook`), then plan. If planning exposes an unknown mid-way,
-pause and research that point, then resume. The downstream hardening (`verify-plan` /
-coverage + satisfaction gates) is the safety net for a misjudged "I understand enough".
+## Ownership
 
-## Reach for
+The parent orchestrator is the only writer of plan text, surface maps, decisions, ledgers, findings dispositions, revisions, and task artifacts. Delegated agents are assessment-only and must be fresh, independently bound, and closed through the shared slot ledger.
 
-- Codex planning in the current thread when the user asks for a plan or the change needs a decision-complete implementation sequence.
-- `verify-plan` — to harden the plan in-conversation (verify-critic-fix loop).
+Never collapse a required role into the parent. Missing spawn, wait, close, or slot capability returns `BLOCKED`.
 
-## Hardening — plans are build-bound; scale review to concrete risk
+The parent must invoke this playbook directly; never delegate the whole planning run to a
+subagent. A task-intake, ownership, evidence, controller, or runtime `BLOCKED` result returns only
+the blocked state and required resolution. It must not include draft plan content. Downstream
+evaluation and implementation may consume only an emitted package whose current controller state
+and canonical validation both establish terminal `PASS`.
 
-- **Small, clear plan:** perform a direct source-grounding and P1/P2 check in the current thread.
-  Do not invoke `verify-plan` by default. Use it only when a concrete correctness, coverage, or
-  decision-completeness risk is identified, or when Kamen explicitly requests independent
-  hardening.
-- **Standard plan:** when a concrete risk warrants independent hardening, allow at most one
-  revision round.
-- **Substantial / build-critical plan:** raise a hand — "want the full gates?" — and
-  **wait** for Kamen's go. Do not launch the gates unilaterally. On his go, run in order
-  within at most two total revision rounds:
-  1. `requirements-coverage-gap-loop` — breadth (the requirement set is complete and every requirement is addressed or explicitly scoped out).
-  2. `requirements-satisfaction-gap-loop` — depth (each addressed requirement actually holds against the real runtime, stored data, and sibling features).
+## Build the plan
 
-  (`doc-gap-closure-loop` — internal readiness — is available too if the plan document
-  itself needs consistency/grounding hardening before the breadth/depth gates.)
+Create the exact package inputs in [plan-package.md](references/plan-package.md). The plan must:
 
-A revision round is one full assessment of one frozen candidate across the selected gates,
-followed by at most one parent revision. Any fresh full assessment consumes another round.
-The budget follows the objective across renamed or successor packages and cannot reset. At the cap,
-stop and return the best valid deliverable with remaining findings assigned downstream. If an
-actual blocker remains, report the deliverable as blocked; another round requires Kamen's explicit
-approval.
+- preserve every frozen requirement and exclusion;
+- make every in-scope decision and reject unresolved either/or, optional, or operator-choice language;
+- map each requirement and obligation to concrete files, entry points, contracts, implementation steps, and verification steps;
+- state practical before/after consequences and bounded implementation and verification cost;
+- contain no implementation work and no review-stage work.
 
-## Task-scoped directives
+Before drafting, complete the repository preflight and behavioral-boundary inventory required by
+[entry-and-evidence.md](references/entry-and-evidence.md). A claimed existing file, fixture,
+symbol, parser behavior, consumer, or verification command that was not confirmed from frozen
+source is missing evidence, not an implementer detail.
 
-- **P1 · Decision-complete, not omniscient.** A plan must resolve every product, architecture,
-  ownership, and implementation decision that available evidence can resolve. A runtime fact that
-  can only be learned by executing the real path must become a bounded implementation experiment
-  with its command or path, required evidence, success condition, and expected outcome branches.
-  Do not manufacture certainty to make the plan appear complete.
-- **P2 · Lock decisions and decision procedures.** Resolve actual choices; do not list arbitrary
-  options. When an unknowable runtime fact controls the next step, lock the experiment and the rule
-  for selecting the resulting branch. Genuinely unexpected evidence pauses implementation and
-  returns only that point to planning.
+Record the draft through the controller as one same-revision set. Do not edit controller snapshots or emitted package files directly.
+
+## Harden in fixed order
+
+Follow [hardening-lifecycle.md](references/hardening-lifecycle.md) exactly:
+
+1. `VERIFY_PLAN`
+2. `INTERNAL_READINESS`
+3. `REQUIREMENTS_COVERAGE`
+4. `REQUIREMENTS_SATISFACTION`
+
+The three later stages use the immutable contract `PLAN_PLAYBOOK_V2_HARDENING_LENSES_V1` in [hardening-lenses.md](references/hardening-lenses.md). Each runs in a different fresh subagent against the same plan hash and lens-contract hash. A PASS from one lens never satisfies another.
+
+Only the parent applies accepted fixes. Any plan revision invalidates all prior stage PASS results and restarts hardening at the next globally monotonic verify-plan iteration. Preserve consumed attempts and elapsed time.
+
+## Profiles and bounds
+
+- `LIGHT`: provisional `light` intake, one repository, `change_characteristics=["NONE"]`, one requirement, at most three obligations, at most 200 physical lines, and at most 12 deterministic document units. Maximum 3 rounds, 10 prepared agent attempts, and 20 minutes.
+- `SUBSTANTIAL`: `standard|heavy` intake or any LIGHT predicate violation. Maximum 3 rounds, 23 prepared attempts, and 60 minutes. One approved iteration-10 continuation raises the limits to 43 attempts and 120 minutes; it does not reset history.
+
+Reserve one attempt for each owned lens. Each role permits one retry. Repeated actionable-finding fingerprints, exhausted attempts, elapsed-time expiry, or the verify-plan iteration limit return `CAP_REACHED`, never PASS. Profiles only escalate.
+
+## Terminal behavior
+
+- `PASS`: all four ordered stages pass on one current plan hash; the three owned lenses also bind one lens-contract hash; every agent slot is released; package emission and canonical validation succeed.
+- `GAPS`: actionable findings require a parent-owned revision and a complete fresh hardening run.
+- `BLOCKED`: name the missing evidence, research return, runtime capability, or approval boundary. Do not emit a PASS package.
+- `CAP_REACHED`: name the exact exhausted cap. Do not reinterpret it as success.
+
+After PASS, follow [approval-and-routing.md](references/approval-and-routing.md). Ordinary use presents one package-bound granular implementation request with practical consequence and cost. Authorized convergence derives the same durable implementation receipt from its frozen outer authorization without asking twice. Neither path may enter Write Code until the controller validates the current package and authorization receipt.
+
+The comparison contract formerly stored in `references/evaluation.md` is historical promotion evidence, not a runtime planning gate. Secrets, commits, pushes, deployments, and external messages retain their separate approval boundaries.

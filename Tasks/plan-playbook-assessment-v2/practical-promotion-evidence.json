@@ -1,0 +1,99 @@
+{
+  "all_passed": true,
+  "candidate_tree_sha256": "f436ee3c1d6ead3e8d7b660b719ccd4f2f8eac9240dbe3fcdf9754ebd4cfec8c",
+  "scenarios": [
+    {
+      "allowed_paths": [
+        "tools/news_sweep_collector.py",
+        "tests/test_news_sweep_collector.py"
+      ],
+      "focused_command": [
+        "/Users/kamenkamenov/agentic-trading/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_news_sweep_collector.py"
+      ],
+      "full_command": [
+        "make",
+        "test",
+        "PYTHON=.venv/bin/python"
+      ],
+      "implementation_files": [
+        {
+          "path": "tools/news_sweep_collector.py",
+          "sha256": "1d1319a269b4a4645e3b3895d3791fa0d59978743e31af5e8ce20dc6c20ff93b"
+        },
+        {
+          "path": "tests/test_news_sweep_collector.py",
+          "sha256": "7972e6660eaf47d572de4e58aeebd53ccbc8e07737ab6e3c63568f6399ced467"
+        }
+      ],
+      "plan_path": "/Users/kamenkamenov/memory-knowledge/Tasks/plan-playbook-assessment-v2/practical-scenario-1-plan.md",
+      "plan_sha256": "f7514b3b64342f6252fae3bb019e2611dced1823694a7ffd319b1ba3e3d8a33c",
+      "repository": "/Users/kamenkamenov/agentic-trading",
+      "review_path": "/Users/kamenkamenov/memory-knowledge/Tasks/plan-playbook-assessment-v2/practical-scenario-1-review.json",
+      "review_sha256": "e471015188707ad5de70f7ca71396c04ab090bf72017bb2d55607901c156f1c5",
+      "scenario_id": "news-sweep-output-validation",
+      "verdict": "PASS"
+    },
+    {
+      "allowed_paths": [
+        "tools/shared_utils.py",
+        "tools/morning_gatherer.py",
+        "tools/exit_review_gatherer.py",
+        "tests/test_gatherer_regime_time_stops.py",
+        "tools/harness/datastore.py",
+        "tests/harness/test_harness_datastore.py"
+      ],
+      "focused_command": [
+        "/Users/kamenkamenov/agentic-trading/.venv/bin/python",
+        "-m",
+        "pytest",
+        "-q",
+        "tests/test_gatherer_regime_time_stops.py",
+        "tests/test_strategy_improvements.py",
+        "tests/harness/test_harness_datastore.py"
+      ],
+      "full_command": [
+        "make",
+        "test",
+        "PYTHON=.venv/bin/python"
+      ],
+      "implementation_files": [
+        {
+          "path": "tools/shared_utils.py",
+          "sha256": "7b3d0c477e631e71b9adc089f7cb46217083f9eedc77e06bbf26c42a4c065333"
+        },
+        {
+          "path": "tools/morning_gatherer.py",
+          "sha256": "a97b91fa749c54dcc859f43bf791b7ac484243cc2f5955795fcbe6bd4a18d6f1"
+        },
+        {
+          "path": "tools/exit_review_gatherer.py",
+          "sha256": "273d160458dea590043af7b87379be752110da67b27ee677a86d0ecf920a55f6"
+        },
+        {
+          "path": "tests/test_gatherer_regime_time_stops.py",
+          "sha256": "d5cfd379d6b64b0627558bf2a5c59aaf11181802d9b4cdb8432876c092f71f5b"
+        },
+        {
+          "path": "tools/harness/datastore.py",
+          "sha256": "dfc74d93d9b59e8b7951ccdd4860d020cac78108804d465dced621f342a2f15c"
+        },
+        {
+          "path": "tests/harness/test_harness_datastore.py",
+          "sha256": "47d4edb2d052d771756367488a7b0700bcd341d66b93785c8899f987f79e2397"
+        }
+      ],
+      "plan_path": "/Users/kamenkamenov/memory-knowledge/Tasks/plan-playbook-assessment-v2/practical-scenario-2-plan.md",
+      "plan_sha256": "8788b10cc259c8b61db4e776a26522457ccd0dca24b43cc2d564283bbca5c3ea",
+      "repository": "/Users/kamenkamenov/agentic-trading",
+      "review_path": "/Users/kamenkamenov/memory-knowledge/Tasks/plan-playbook-assessment-v2/practical-scenario-2-review.json",
+      "review_sha256": "aa40e9b63a1a671b47b2958a3fdc988419d03f0995c16a498f00851b64ddc706",
+      "scenario_id": "regime-aware-gatherer-time-stops",
+      "verdict": "PASS"
+    }
+  ],
+  "schema_version": 1
+}

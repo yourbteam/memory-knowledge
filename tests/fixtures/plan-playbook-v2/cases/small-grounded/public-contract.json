@@ -1,0 +1,34 @@
+{
+  "case_id": "small-grounded",
+  "negative_boundaries": [
+    {
+      "boundary_id": "B-SMALL-NARROW",
+      "statement": "Keep the change narrow and low-risk."
+    },
+    {
+      "boundary_id": "B-SMALL-SEMANTICS",
+      "statement": "Do not change readiness semantics beyond better diagnostics."
+    },
+    {
+      "boundary_id": "B-SMALL-STATUS",
+      "statement": "Preserve existing `status` transitions and dependency checks."
+    },
+    {
+      "boundary_id": "B-SMALL-NO-ROLLOUT",
+      "statement": "No schema, rollout, or remote changes required."
+    }
+  ],
+  "obligation_ids": [
+    "Update `src/memory_knowledge/db/health.py`.",
+    "Add a helper for stable exception formatting in readiness responses.",
+    "Use the helper for PostgreSQL, Qdrant, and Neo4j readiness failures.",
+    "Add a focused async unit test covering a blank Neo4j exception string."
+  ],
+  "planner_output_schema": "V2_PLANNER_V1",
+  "requirement_ids": [
+    "Objective",
+    "Constraints And Risks",
+    "Validation"
+  ],
+  "schema_version": 1
+}

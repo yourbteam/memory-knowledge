@@ -1,0 +1,136 @@
+{
+  "case_id": "substantial-multisurface",
+  "critical_obligation_ids": [
+    "\u00a70.1",
+    "\u00a70.2",
+    "\u00a70.3",
+    "\u00a71.1",
+    "\u00a71.2",
+    "\u00a71.3",
+    "\u00a71.4",
+    "\u00a71.5",
+    "\u00a72",
+    "\u00a73",
+    "\u00a74",
+    "\u00a75",
+    "\u00a76",
+    "\u00a77",
+    "\u00a78"
+  ],
+  "critical_requirement_ids": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5",
+    "G6",
+    "G7",
+    "G8",
+    "X-DEPLOY",
+    "X-TEST",
+    "X-PROMOTE",
+    "X-SCOPE-FILES",
+    "X-COMPAT"
+  ],
+  "expected_transitions": {
+    "legacy": [
+      {
+        "blocker_code": null,
+        "phase": "initial",
+        "terminal_verdict": "PASS"
+      }
+    ],
+    "v2": [
+      {
+        "blocker_code": null,
+        "phase": "initial",
+        "terminal_verdict": "PASS"
+      }
+    ]
+  },
+  "forbidden_evidence_claims": [
+    {
+      "claim": "Global Codex AGENTS.md loading and a Codex session-end hook are confirmed runtime capabilities.",
+      "evidence_ids": [
+        "E11P",
+        "E13"
+      ],
+      "id": "FE-SUBSTANTIAL-CODEX-RUNTIME"
+    },
+    {
+      "claim": "The corpus `kind` field is free-form.",
+      "evidence_ids": [
+        "E11P",
+        "E13"
+      ],
+      "id": "FE-SUBSTANTIAL-KIND-FREEFORM"
+    },
+    {
+      "claim": "The memory/directives analysis and audits alone resolve the canonical endpoint without the supplied endpoint decision evidence.",
+      "evidence_ids": [
+        "E11A",
+        "E12",
+        "E13"
+      ],
+      "id": "FE-SUBSTANTIAL-ENDPOINT-UNRESOLVED"
+    }
+  ],
+  "forbidden_scope_claims": [
+    {
+      "claim": "The plan may rewrite instruction files in third-party or cloned repositories.",
+      "evidence_ids": [
+        "E11P"
+      ],
+      "id": "FS-SUBSTANTIAL-THIRD-PARTY"
+    },
+    {
+      "claim": "The default repository cleanup may hard-delete data with `purge_repository`.",
+      "evidence_ids": [
+        "E11P",
+        "E13"
+      ],
+      "id": "FS-SUBSTANTIAL-PURGE"
+    },
+    {
+      "claim": "Captured evidence may automatically become a directive or global corpus entry.",
+      "evidence_ids": [
+        "E11P"
+      ],
+      "id": "FS-SUBSTANTIAL-AUTO-PROMOTE"
+    },
+    {
+      "claim": "The implementation includes model/embedding-gateway abstraction.",
+      "evidence_ids": [
+        "E11P"
+      ],
+      "id": "FS-SUBSTANTIAL-MODEL-GATEWAY"
+    },
+    {
+      "claim": "The implementation includes a global-corpus export tool.",
+      "evidence_ids": [
+        "E11P"
+      ],
+      "id": "FS-SUBSTANTIAL-GLOBAL-EXPORT"
+    },
+    {
+      "claim": "The implementation includes multi-user/RLS sharing.",
+      "evidence_ids": [
+        "E11P"
+      ],
+      "id": "FS-SUBSTANTIAL-MULTIUSER"
+    }
+  ],
+  "required_negative_boundary_ids": [
+    "B-SUBSTANTIAL-THIRD-PARTY",
+    "B-SUBSTANTIAL-GLOBAL-CODEX",
+    "B-SUBSTANTIAL-CODEX-CAPTURE",
+    "B-SUBSTANTIAL-TRUST",
+    "B-SUBSTANTIAL-PURGE",
+    "B-SUBSTANTIAL-COMPAT",
+    "B-SUBSTANTIAL-MODEL-GATEWAY",
+    "B-SUBSTANTIAL-GLOBAL-EXPORT",
+    "B-SUBSTANTIAL-MULTIUSER",
+    "B-SUBSTANTIAL-ENDPOINT"
+  ],
+  "schema_version": 1
+}

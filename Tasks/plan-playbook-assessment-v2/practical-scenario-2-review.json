@@ -1,0 +1,16 @@
+{
+  "findings": [],
+  "repository": "/Users/kamenkamenov/agentic-trading",
+  "reviewed_files": [
+    "tools/shared_utils.py",
+    "tools/morning_gatherer.py",
+    "tools/exit_review_gatherer.py",
+    "tests/test_gatherer_regime_time_stops.py",
+    "tools/harness/datastore.py",
+    "tests/harness/test_harness_datastore.py"
+  ],
+  "reviewer_agent_id": "019f809b-89c7-71c0-892c-5d90ac6f7f77",
+  "scenario_id": "regime-aware-gatherer-time-stops",
+  "schema_version": 1,
+  "verdict": "PASS"
+}

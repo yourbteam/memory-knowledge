@@ -1,0 +1,100 @@
+{
+  "artifact_hashes": {
+    "evidence-index.json": "f9f23f974cbdd0591c1461af392610d6cbde87dde677a40a6471803f4cc1ec4b",
+    "findings.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "planner-handoff.md": "b28f9d81feb2fdb1b5cbb4d9ddaa630488527acc4521e8c42fa09560b537f91f",
+    "requirements.json": "80697e2b41baac8219dd23c052f2cc748e266363d27029d5ad50b2276346c77d",
+    "research.md": "71578b268b3f5bb7df7ce75e8939a634c5c9d7de2fbbcbde0aa8d097e731694b"
+  },
+  "budget_use": {
+    "attempts_max": 15,
+    "attempts_used": 5,
+    "minutes_max_per_task": 60,
+    "rounds_max": 3,
+    "rounds_used": 1,
+    "workflow_minutes_used": 10.0
+  },
+  "candidate_hash": "c36f3bd50d59ae1bcf31eef9ba4ab4b0e0ab5e8b8651ecea2885141a4a7272e7",
+  "emitted_at": "2026-07-19T12:10:00Z",
+  "envelope_hash": "f2891c1c6f18717781c3312f1a4e38b7039504c027f9026c2a0df6b4fa05c656",
+  "lifecycle_evidence": [
+    {
+      "candidate_hash": "c36f3bd50d59ae1bcf31eef9ba4ab4b0e0ab5e8b8651ecea2885141a4a7272e7",
+      "close_evidence": {
+        "closed_by": "fixture-authority",
+        "role": "CORE_RESEARCHER"
+      },
+      "input_envelope_hash": "f2891c1c6f18717781c3312f1a4e38b7039504c027f9026c2a0df6b4fa05c656",
+      "output_hash": "85a2decd2d9584b855fb9752a887736f14953e87732cc6c0562d41ff62e36488",
+      "recorded_at": "2026-07-19T12:05:00Z",
+      "role": "CORE_RESEARCHER",
+      "round": 1,
+      "runtime_agent_id": "fixture-core_researcher",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "c36f3bd50d59ae1bcf31eef9ba4ab4b0e0ab5e8b8651ecea2885141a4a7272e7",
+      "close_evidence": {
+        "closed_by": "fixture-authority",
+        "role": "INTERNAL_READINESS"
+      },
+      "input_envelope_hash": "f2891c1c6f18717781c3312f1a4e38b7039504c027f9026c2a0df6b4fa05c656",
+      "output_hash": "1f6cce291681cca5cc34f44642a263ad8ac19fb24bf5980ac3566f82a8b137f1",
+      "recorded_at": "2026-07-19T12:05:00Z",
+      "role": "INTERNAL_READINESS",
+      "round": 1,
+      "runtime_agent_id": "fixture-internal_readiness",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "c36f3bd50d59ae1bcf31eef9ba4ab4b0e0ab5e8b8651ecea2885141a4a7272e7",
+      "close_evidence": {
+        "closed_by": "fixture-authority",
+        "role": "REQUIREMENTS_COVERAGE"
+      },
+      "input_envelope_hash": "f2891c1c6f18717781c3312f1a4e38b7039504c027f9026c2a0df6b4fa05c656",
+      "output_hash": "b85422919ee486033cb3da2e9f58cb75257f3a00b0a53b790027ba7ae7d503cc",
+      "recorded_at": "2026-07-19T12:05:00Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 1,
+      "runtime_agent_id": "fixture-requirements_coverage",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "c36f3bd50d59ae1bcf31eef9ba4ab4b0e0ab5e8b8651ecea2885141a4a7272e7",
+      "close_evidence": {
+        "closed_by": "fixture-authority",
+        "role": "REQUIREMENTS_SATISFACTION"
+      },
+      "input_envelope_hash": "f2891c1c6f18717781c3312f1a4e38b7039504c027f9026c2a0df6b4fa05c656",
+      "output_hash": "52433cc2c4f2b1451f142d770608fbe28375d4b6fe6070b13d57c1afa93dcdb8",
+      "recorded_at": "2026-07-19T12:05:00Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 1,
+      "runtime_agent_id": "fixture-requirements_satisfaction",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "c36f3bd50d59ae1bcf31eef9ba4ab4b0e0ab5e8b8651ecea2885141a4a7272e7",
+      "close_evidence": {
+        "closed_by": "fixture-authority",
+        "role": "ADJUDICATOR"
+      },
+      "input_envelope_hash": "f2891c1c6f18717781c3312f1a4e38b7039504c027f9026c2a0df6b4fa05c656",
+      "output_hash": "4d419a085ab98ced3dc41aaf1e1392c265bbc6b72aec28cde715a8fd344a2887",
+      "recorded_at": "2026-07-19T12:05:00Z",
+      "role": "ADJUDICATOR",
+      "round": 1,
+      "runtime_agent_id": "fixture-adjudicator",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "package_id": "research-package-d153576ad3a5903458741fb1",
+  "schema_version": 1,
+  "terminal_verdict": "PASS"
+}

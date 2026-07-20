@@ -1,0 +1,44 @@
+{
+  "schema_version": 1,
+  "repository": "/Users/kamenkamenov/memory-knowledge",
+  "branch": "main",
+  "head": "6daa425c962dd970670551792db2273380fd0c0b",
+  "plan_sha256": "1d770a88cac46583ad4a5e43f245b3e5eb2075888adb7316c2ad4e1cdc169ee8",
+  "sequence_id": "discovery-193fca0a-fee3-5854-900e-5047822fb419",
+  "run_id": "1d2ce3c3-095c-4498-acf1-f97a12e07e17",
+  "captured_at_utc": "2026-07-19T06:30:00Z",
+  "preexisting_modified_paths": {
+    "skills/research-playbook/scripts/research_package.py": "519c76e961689588f5de88d7d39c709ee0557a811e673cce38ad1cc3385378ba",
+    "tests/test_research_playbook_v2.py": "6ed21ec8cb774b48ab9f81e7a725aa08755278f0911eafb1c98ff99e36038226",
+    "tests/test_skill_contracts.py": "2c8fc2b7adbba95e5f26123da13d433725cfcda280c8731f8b7d2c8fda2212b5"
+  },
+  "existing_clean_paths": {
+    "skills/_shared/convergence_state.py": "de133861be1b953f4763ee13aa7a2eb2ae06bc2832d607f01682e3ed56a785f9",
+    "skills/_shared/agent_slot_ledger.py": "d916bccfb4e4ef827d3dd87b0bf6e92f7b94e090d41736c9b6cfac18286f6e28",
+    "working-agreement/install_skills.py": "7e9e3133149dae90b2f4fce6a1218279e6a198fa1a68fb7bd6bbb8a78c8cb5fe",
+    "skills/managed-skills.txt": "c51e438401214d2a7bb99fee28871e966f75354df12cf4f95edb3845e13a26b0",
+    "tests/test_agent_slot_ledger.py": "3f4642e21cfc55ac7349f24231d76232022cb400ad759bef851765af42a415d9",
+    "tests/test_validate_skills.py": "2c510bfc2aa5ace3f1be8c2adfb238cb867c6631f2d7eea28b54e111a464ead9",
+    "tests/test_install_skills.py": "fc91b3f40fce2fc941595b2f26e33fedf852cd12d84a1e3b67c3265342bc50ae"
+  },
+  "absent_source_paths": [
+    "skills/plan-playbook-v2",
+    "skills/_shared/tree_digest.py",
+    "scripts/evaluate_plan_playbook_v2.py",
+    "scripts/promote_plan_playbook.py",
+    "tests/fixtures/plan-playbook-v2",
+    "tests/test_plan_playbook_v2.py",
+    "tests/test_tree_digest.py",
+    "tests/test_plan_playbook_v2_evaluator.py",
+    "tests/test_promote_plan_playbook.py"
+  ],
+  "installed_projection_baseline": {
+    "_shared": "3e3cf48a3a3fd914fabb9e6e25a21870820ae6db3a2f47c4d2934e57877aca3a",
+    "plan-playbook": "72d1d8234fe6a37b51c1efad0f1634fb28f55e2c2fffea1865ed4964af0c777b",
+    "research-playbook": "fd67449fe41fa844e75eed1a3d86a2a9ab8cd48622e746f4a5300d8264eccfcb",
+    "task-workflow": "38f6a2accd96cf5a7e1a6f1ba19c4f60fbffde89de736d17fda23b3d871607dc",
+    "playbook-convergence-loop": "370925f10ea012921a877f56668d3c06181fad9088d0631cd0ebc392910697e1",
+    "plan-playbook-v2": null
+  },
+  "ownership_rule": "Preserve every preexisting byte outside the approved Planner v2 implementation surfaces; integrate with the three preexisting modified paths without reverting their baseline content."
+}

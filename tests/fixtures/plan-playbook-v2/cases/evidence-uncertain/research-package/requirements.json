@@ -1,0 +1,365 @@
+[
+  {
+    "acceptance_intent": "The plan closes requirement R1 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E14R"
+    ],
+    "id": "R1",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for Change 1 passes.",
+        "description": "Change 1",
+        "evidence_ids": [
+          "E14R"
+        ],
+        "id": "Change 1",
+        "implementation_anchors": [
+          "Implement Change 1 at its grounded source boundary."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for Change 1."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "evidence-uncertain:R1",
+    "source": "fixture-authority:evidence-uncertain:R1",
+    "text": "Consolidate the sequence registry into `memory-knowledge` and distribute it to Claude and Codex on every machine. Requirement R1."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement R2 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E14R"
+    ],
+    "id": "R2",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for Change 2 passes.",
+        "description": "Change 2",
+        "evidence_ids": [
+          "E14R"
+        ],
+        "id": "Change 2",
+        "implementation_anchors": [
+          "Implement Change 2 at its grounded source boundary."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for Change 2."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "evidence-uncertain:R2",
+    "source": "fixture-authority:evidence-uncertain:R2",
+    "text": "Consolidate the sequence registry into `memory-knowledge` and distribute it to Claude and Codex on every machine. Requirement R2."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement R3 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E14R"
+    ],
+    "id": "R3",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for Change 3 passes.",
+        "description": "Change 3",
+        "evidence_ids": [
+          "E14R"
+        ],
+        "id": "Change 3",
+        "implementation_anchors": [
+          "Implement Change 3 at its grounded source boundary."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for Change 3."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "evidence-uncertain:R3",
+    "source": "fixture-authority:evidence-uncertain:R3",
+    "text": "Consolidate the sequence registry into `memory-knowledge` and distribute it to Claude and Codex on every machine. Requirement R3."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement R4 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E14R"
+    ],
+    "id": "R4",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for Change 4 passes.",
+        "description": "Change 4",
+        "evidence_ids": [
+          "E14R"
+        ],
+        "id": "Change 4",
+        "implementation_anchors": [
+          "Implement Change 4 at its grounded source boundary."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for Change 4."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "evidence-uncertain:R4",
+    "source": "fixture-authority:evidence-uncertain:R4",
+    "text": "Consolidate the sequence registry into `memory-knowledge` and distribute it to Claude and Codex on every machine. Requirement R4."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement R5 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E14R"
+    ],
+    "id": "R5",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for Change 5 passes.",
+        "description": "Change 5",
+        "evidence_ids": [
+          "E14R"
+        ],
+        "id": "Change 5",
+        "implementation_anchors": [
+          "Implement Change 5 at its grounded source boundary."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for Change 5."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "evidence-uncertain:R5",
+    "source": "fixture-authority:evidence-uncertain:R5",
+    "text": "Consolidate the sequence registry into `memory-knowledge` and distribute it to Claude and Codex on every machine. Requirement R5."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement R6 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E14R"
+    ],
+    "id": "R6",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for Change 6 passes.",
+        "description": "Change 6",
+        "evidence_ids": [
+          "E14R"
+        ],
+        "id": "Change 6",
+        "implementation_anchors": [
+          "Implement Change 6 at its grounded source boundary."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for Change 6."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "evidence-uncertain:R6",
+    "source": "fixture-authority:evidence-uncertain:R6",
+    "text": "Consolidate the sequence registry into `memory-knowledge` and distribute it to Claude and Codex on every machine. Requirement R6."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement R7 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E14R"
+    ],
+    "id": "R7",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for Change 7 passes.",
+        "description": "Change 7",
+        "evidence_ids": [
+          "E14R"
+        ],
+        "id": "Change 7",
+        "implementation_anchors": [
+          "Implement Change 7 at its grounded source boundary."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for Change 7."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "evidence-uncertain:R7",
+    "source": "fixture-authority:evidence-uncertain:R7",
+    "text": "Consolidate the sequence registry into `memory-knowledge` and distribute it to Claude and Codex on every machine. Requirement R7."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement R8 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E14R"
+    ],
+    "id": "R8",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for GROUND-R8 passes.",
+        "description": "Ground and verify requirement R8.",
+        "evidence_ids": [
+          "E14R"
+        ],
+        "id": "GROUND-R8",
+        "implementation_anchors": [
+          "Implement GROUND-R8 at its grounded source boundary."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for GROUND-R8."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "evidence-uncertain:R8",
+    "source": "fixture-authority:evidence-uncertain:R8",
+    "text": "Consolidate the sequence registry into `memory-knowledge` and distribute it to Claude and Codex on every machine. Requirement R8."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement R9 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E14R"
+    ],
+    "id": "R9",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for GROUND-R9 passes.",
+        "description": "Ground and verify requirement R9.",
+        "evidence_ids": [
+          "E14R"
+        ],
+        "id": "GROUND-R9",
+        "implementation_anchors": [
+          "Implement GROUND-R9 at its grounded source boundary."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for GROUND-R9."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "evidence-uncertain:R9",
+    "source": "fixture-authority:evidence-uncertain:R9",
+    "text": "Consolidate the sequence registry into `memory-knowledge` and distribute it to Claude and Codex on every machine. Requirement R9."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement R10 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E14R"
+    ],
+    "id": "R10",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for GROUND-R10 passes.",
+        "description": "Ground and verify requirement R10.",
+        "evidence_ids": [
+          "E14R"
+        ],
+        "id": "GROUND-R10",
+        "implementation_anchors": [
+          "Implement GROUND-R10 at its grounded source boundary."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for GROUND-R10."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "evidence-uncertain:R10",
+    "source": "fixture-authority:evidence-uncertain:R10",
+    "text": "Consolidate the sequence registry into `memory-knowledge` and distribute it to Claude and Codex on every machine. Requirement R10."
+  },
+  {
+    "acceptance_intent": "The plan closes requirement R11 with executable validation.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E14R"
+    ],
+    "id": "R11",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The acceptance observable for GROUND-R11 passes.",
+        "description": "Ground and verify requirement R11.",
+        "evidence_ids": [
+          "E14R"
+        ],
+        "id": "GROUND-R11",
+        "implementation_anchors": [
+          "Implement GROUND-R11 at its grounded source boundary."
+        ],
+        "owner": "implementation owner",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "Verify the acceptance observable for GROUND-R11."
+        ]
+      }
+    ],
+    "research_value": "grounded",
+    "research_value_type": "string",
+    "scope_id": "evidence-uncertain:R11",
+    "source": "fixture-authority:evidence-uncertain:R11",
+    "text": "Consolidate the sequence registry into `memory-knowledge` and distribute it to Claude and Codex on every machine. Requirement R11."
+  }
+]

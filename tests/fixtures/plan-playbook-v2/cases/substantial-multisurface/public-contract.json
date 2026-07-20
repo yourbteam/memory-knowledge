@@ -1,0 +1,79 @@
+{
+  "case_id": "substantial-multisurface",
+  "negative_boundaries": [
+    {
+      "boundary_id": "B-SUBSTANTIAL-THIRD-PARTY",
+      "statement": "Explicitly out of scope: third-party/cloned repos that ship their own `CLAUDE.md`/`AGENTS.md` (e.g. `Downloads/OB1-main`) \u2014 never rewrite those."
+    },
+    {
+      "boundary_id": "B-SUBSTANTIAL-GLOBAL-CODEX",
+      "statement": "Do not rely on a global `~/.codex/AGENTS.md` (it doesn't exist today and global-load is unverified); per-project files are the load-guaranteed path."
+    },
+    {
+      "boundary_id": "B-SUBSTANTIAL-CODEX-CAPTURE",
+      "statement": "Codex capture is best-effort: either drive capture from the `notify` turn-ended program (detecting end-of-work heuristically) or treat Codex auto-capture as a documented follow-up."
+    },
+    {
+      "boundary_id": "B-SUBSTANTIAL-TRUST",
+      "statement": "Promotion stays manual via `run_learned_memory_commit_workflow` (approve/reject) \u2014 preserves the trust gate."
+    },
+    {
+      "boundary_id": "B-SUBSTANTIAL-PURGE",
+      "statement": "Never `purge_repository` (hard delete across PG/Qdrant/Neo4j) \u2014 soft only, reversible by reactivating."
+    },
+    {
+      "boundary_id": "B-SUBSTANTIAL-COMPAT",
+      "statement": "Every change must be backward-compatible: new params are optional with safe defaults; existing tool signatures, MCP contracts, DB columns, and call sites keep working; schema changes are additive (no drop/rename of live columns)."
+    },
+    {
+      "boundary_id": "B-SUBSTANTIAL-MODEL-GATEWAY",
+      "statement": "Model/embedding-gateway abstraction is out of scope for this implementation."
+    },
+    {
+      "boundary_id": "B-SUBSTANTIAL-GLOBAL-EXPORT",
+      "statement": "A global-corpus export tool is out of scope for this implementation."
+    },
+    {
+      "boundary_id": "B-SUBSTANTIAL-MULTIUSER",
+      "statement": "Multi-user/RLS sharing is out of scope while the system remains single-operator."
+    },
+    {
+      "boundary_id": "B-SUBSTANTIAL-ENDPOINT",
+      "statement": "Azure is canonical for all three brain consumers; localhost `:8000` is only an opt-in development override."
+    }
+  ],
+  "obligation_ids": [
+    "\u00a70.1",
+    "\u00a70.2",
+    "\u00a70.3",
+    "\u00a71.1",
+    "\u00a71.2",
+    "\u00a71.3",
+    "\u00a71.4",
+    "\u00a71.5",
+    "\u00a72",
+    "\u00a73",
+    "\u00a74",
+    "\u00a75",
+    "\u00a76",
+    "\u00a77",
+    "\u00a78"
+  ],
+  "planner_output_schema": "V2_PLANNER_V1",
+  "requirement_ids": [
+    "G1",
+    "G2",
+    "G3",
+    "G4",
+    "G5",
+    "G6",
+    "G7",
+    "G8",
+    "X-DEPLOY",
+    "X-TEST",
+    "X-PROMOTE",
+    "X-SCOPE-FILES",
+    "X-COMPAT"
+  ],
+  "schema_version": 1
+}

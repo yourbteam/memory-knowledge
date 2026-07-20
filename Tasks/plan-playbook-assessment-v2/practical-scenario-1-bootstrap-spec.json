@@ -1,0 +1,126 @@
+{
+  "schema_version": 1,
+  "task_id": "planner-v2-practical-scenario-1-drive",
+  "operation_kind": "workflow-drive",
+  "date": "2026-07-19",
+  "sequence_name": "Planner V2 Practical Scenario 1",
+  "outcome": "Prove whether Planner v2 can produce a plan that an independent implementer uses to complete one real bounded repository change without hidden context or manual rescue.",
+  "why_repeatable": "Each Planner v2 behavioral scenario uses the same plan, independent implementation, real verification, correction, and clean rerun loop.",
+  "steps": [
+    {
+      "step": "inspect-real-candidates",
+      "command": "rg -n TODO .",
+      "result": "Identify bounded unresolved behaviors from the real repository rather than inventing a synthetic task.",
+      "note": "Exclude generated, dependency, secret, and unrelated dirty surfaces from candidate selection."
+    },
+    {
+      "step": "capture-baseline",
+      "command": "git status --short",
+      "result": "Record the pre-scenario working-tree boundary so existing work is preserved.",
+      "note": "The scenario may not revert or absorb unrelated changes."
+    },
+    {
+      "step": "run-planner-v2",
+      "command": "python3 scripts/evaluate_plan_playbook_v2.py show --run <run-dir>",
+      "result": "Produce and retain one Planner v2 plan from the frozen real request and visible repository evidence.",
+      "note": "Do not manually rescue or supplement the planner output before implementation."
+    },
+    {
+      "step": "independent-implementation",
+      "command": "git diff --check",
+      "result": "An independent implementer changes only the approved scenario surface using the plan and repository evidence.",
+      "note": "Clarification requests and hidden-context dependencies are scenario failures and must be recorded."
+    },
+    {
+      "step": "real-verification",
+      "command": "scripts/run_pytest.sh <test-path>",
+      "result": "The repository-native focused behavior test passes on the implementation produced from the plan.",
+      "note": "Observed planner failures become targeted behavioral corrections, not abstract score adjustments."
+    },
+    {
+      "step": "scenario-review",
+      "command": "git diff --check",
+      "result": "Independent review confirms the implementation satisfies every frozen acceptance criterion without out-of-scope work.",
+      "note": "Rerun the same scenario cleanly after any Planner v2 correction before declaring it closed."
+    }
+  ],
+  "inputs": [
+    "The checked-out memory-knowledge repository and its current Planner v2 candidate.",
+    "The checked-out agentic-trading repository as the real scenario target.",
+    "One frozen bounded task selected from repository evidence before Planner v2 runs."
+  ],
+  "failure_handling": "Stop at the first practical failure, catalog the observed symptom and evidence, correct the Planner v2 boundary that caused it, then rerun the same scenario from a clean isolated implementation state.",
+  "verified_path": "Scenario passes only when an independent implementer can build the requested behavior from the Planner v2 plan and the real repository verification plus independent review both pass.",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "scripts/run_pytest.sh"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "scripts/evaluate_plan_playbook_v2.py"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/plan-playbook-v2/SKILL.md"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/plan-playbook-v2/scripts/plan_package.py"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/plan-playbook-v2/agents/openai.yaml"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/plan-playbook-v2/integration/playbook-convergence-loop.SKILL.md"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/plan-playbook-v2/integration/task-workflow.SKILL.md"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/plan-playbook-v2/references/approval-and-routing.md"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/plan-playbook-v2/references/evaluation.md"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/plan-playbook-v2/references/entry-and-evidence.md"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/plan-playbook-v2/references/hardening-lifecycle.md"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/plan-playbook-v2/references/plan-package.md"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/plan-playbook-v2/references/hardening-lenses.md"
+    },
+    {
+      "kind": "file",
+      "repository_key": "agentic-trading",
+      "path_or_sequence_id": "AGENTS.md"
+    }
+  ]
+}

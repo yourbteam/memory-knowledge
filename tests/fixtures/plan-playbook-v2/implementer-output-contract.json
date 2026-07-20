@@ -1,0 +1,156 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "additionalProperties": false,
+  "properties": {
+    "arm": {
+      "enum": [
+        "legacy",
+        "v2"
+      ]
+    },
+    "can_implement": {
+      "type": "boolean"
+    },
+    "case_id": {
+      "minLength": 1,
+      "type": "string"
+    },
+    "clarification_questions": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "consulted_sources": {
+      "description": "The UTF-8 byte-sorted unique union of consulted_source_paths from every implementation_actions and verification_actions item. This array must be empty when both action arrays are empty; do not include the input envelope, plan, output contract, manifests, or other files read only to perform the assessment.",
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "evidence_inventions": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "implementation_actions": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "action_id": {"minLength": 1, "type": "string"},
+          "anchor": {"minLength": 1, "type": "string"},
+          "change": {"minLength": 1, "type": "string"},
+          "consulted_source_paths": {
+            "description": "Only authorized implementation-source snapshot paths that ground this action. Do not include the input envelope, plan, output contract, or snapshot manifest.",
+            "items": {"minLength": 1, "type": "string"},
+            "type": "array"
+          },
+          "obligation_id": {"minLength": 1, "type": "string"},
+          "target_path": {"minLength": 1, "type": "string"}
+        },
+        "required": [
+          "action_id", "obligation_id", "target_path", "anchor", "change",
+          "consulted_source_paths"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    },
+    "missing_implementation_anchors": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "missing_verification_anchors": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "non_implementation_reason": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "plan_hash": {
+      "type": [
+        "string",
+        "null"
+      ]
+    },
+    "schema_version": {
+      "const": 1
+    },
+    "scope_inventions": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "unresolved_choices": {
+      "items": {
+        "type": "string"
+      },
+      "type": "array"
+    },
+    "verification_actions": {
+      "items": {
+        "additionalProperties": false,
+        "properties": {
+          "action_id": {"minLength": 1, "type": "string"},
+          "command": {"minLength": 1, "type": "string"},
+          "consulted_source_paths": {
+            "description": "Only authorized implementation-source snapshot paths that ground this action. Do not include the input envelope, plan, output contract, or snapshot manifest.",
+            "items": {"minLength": 1, "type": "string"},
+            "type": "array"
+          },
+          "expected_observable": {"minLength": 1, "type": "string"},
+          "obligation_id": {"minLength": 1, "type": "string"},
+          "test_path": {"minLength": 1, "type": "string"}
+        },
+        "required": [
+          "action_id", "obligation_id", "test_path", "command",
+          "expected_observable", "consulted_source_paths"
+        ],
+        "type": "object"
+      },
+      "type": "array"
+    }
+  },
+  "required": [
+    "schema_version",
+    "case_id",
+    "arm",
+    "plan_hash",
+    "can_implement",
+    "non_implementation_reason",
+    "clarification_questions",
+    "missing_implementation_anchors",
+    "missing_verification_anchors",
+    "unresolved_choices",
+    "scope_inventions",
+    "evidence_inventions",
+    "implementation_actions",
+    "verification_actions",
+    "consulted_sources"
+  ],
+  "x-consulted-sources-artifact": {
+    "identity_rule": "run_id must equal the immutable input envelope run_id.",
+    "json_schema": {
+      "additionalProperties": false,
+      "properties": {
+        "paths": {"items": {"type": "string"}, "type": "array"},
+        "run_id": {"minLength": 1, "type": "string"},
+        "schema_version": {"const": 1}
+      },
+      "required": ["paths", "run_id", "schema_version"],
+      "type": "object"
+    },
+    "paths_rule": "paths must equal output.json consulted_sources exactly."
+  },
+  "title": "IMPLEMENTER_V1",
+  "type": "object"
+}

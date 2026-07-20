@@ -1,0 +1,11 @@
+[
+  {
+    "accessed_at": null,
+    "id": "E14R",
+    "limitations": "Applies only to the reviewed consolidation task.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "sources/E14-consolidation-research.md",
+    "source_sha256": "71578b268b3f5bb7df7ce75e8939a634c5c9d7de2fbbcbde0aa8d097e731694b",
+    "supported_claim": "Grounds the sequence-registry consolidation requirements and boundaries."
+  }
+]

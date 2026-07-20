@@ -1,0 +1,215 @@
+{
+  "artifact_hashes": {
+    "evidence-index.json": "18700304159249184eb66f67c0ab83b94d5f926f592bcac5634040f6f51a3dd0",
+    "findings.json": "8f8502dc4324609837be237f36dbeae29b65ea37ace9f7bfec3b991413bb7530",
+    "planner-handoff.md": "92853cbf1072680ce3a1c9263eecaf868ef38fc7ac792e9cc4f4d455fa317211",
+    "requirements.json": "ab847275c9168999e6e05935a35f90331f952611f5ba71e3959981fdb3c07647",
+    "research.md": "357b0fe5482a4e8abbefca89c18ad89cb9def5cf50bfeec795f1510d5e061160"
+  },
+  "budget_use": {
+    "attempts_max": 15,
+    "attempts_used": 10,
+    "minutes_max": 60,
+    "minutes_used": 51.98657791666667,
+    "rounds_max": 3,
+    "rounds_used": 2
+  },
+  "candidate_hash": "000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327",
+  "emitted_at": "2026-07-16T18:49:13.962943Z",
+  "envelope_hash": "f21dadb3b210b6b4caf66042524ad558fb8b37dcee534b1bb42cad1746d17d7b",
+  "lifecycle_evidence": [
+    {
+      "candidate_hash": "ff858388404a7f1062bf14257914139da4b5714ef73d130e4be84c39040a9456",
+      "close_evidence": {
+        "close_tool": "multi_agent_v1__close_agent",
+        "closed_by": "parent-orchestrator",
+        "final_close_status": "completed",
+        "previous_status": "completed",
+        "release_state": "closed",
+        "reopened_only_to_rematerialize_completed_output": true
+      },
+      "input_envelope_hash": "f21dadb3b210b6b4caf66042524ad558fb8b37dcee534b1bb42cad1746d17d7b",
+      "output_hash": "ff858388404a7f1062bf14257914139da4b5714ef73d130e4be84c39040a9456",
+      "recorded_at": "2026-07-16T18:13:30.383808Z",
+      "role": "CORE_RESEARCHER",
+      "round": 1,
+      "runtime_agent_id": "019f6c14-d623-7521-aab6-9580c5fdc2fb",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "ff858388404a7f1062bf14257914139da4b5714ef73d130e4be84c39040a9456",
+      "close_evidence": {
+        "close_tool": "multi_agent_v1__close_agent",
+        "closed_by": "parent-orchestrator",
+        "final_close_status": "completed",
+        "previous_status": "completed",
+        "release_state": "closed",
+        "runtime_agent_id": "019f6c22-af3e-7ac3-83e6-3b066f0675c4"
+      },
+      "input_envelope_hash": "f21dadb3b210b6b4caf66042524ad558fb8b37dcee534b1bb42cad1746d17d7b",
+      "output_hash": "9b36ae3112a092bc9d69702313ecaa912cef2fc3656f872010a18c68eb5bcab9",
+      "recorded_at": "2026-07-16T18:23:14.075873Z",
+      "role": "INTERNAL_READINESS",
+      "round": 1,
+      "runtime_agent_id": "019f6c22-af3e-7ac3-83e6-3b066f0675c4",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "ff858388404a7f1062bf14257914139da4b5714ef73d130e4be84c39040a9456",
+      "close_evidence": {
+        "close_tool": "multi_agent_v1__close_agent",
+        "closed_by": "parent-orchestrator",
+        "final_close_status": "completed",
+        "previous_status": "completed",
+        "release_state": "closed",
+        "runtime_agent_id": "019f6c22-afaa-7ea1-b89d-de1b49f2461b"
+      },
+      "input_envelope_hash": "f21dadb3b210b6b4caf66042524ad558fb8b37dcee534b1bb42cad1746d17d7b",
+      "output_hash": "730ab16929e804797cac87aaadfe9188c1830d25a04f6133ed88e0ddccd49d05",
+      "recorded_at": "2026-07-16T18:23:22.168679Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 1,
+      "runtime_agent_id": "019f6c22-afaa-7ea1-b89d-de1b49f2461b",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "ff858388404a7f1062bf14257914139da4b5714ef73d130e4be84c39040a9456",
+      "close_evidence": {
+        "close_tool": "multi_agent_v1__close_agent",
+        "closed_by": "parent-orchestrator",
+        "final_close_status": "completed",
+        "previous_status": "completed",
+        "release_state": "closed",
+        "runtime_agent_id": "019f6c22-b01e-7ee0-8f38-9cff6453c801"
+      },
+      "input_envelope_hash": "f21dadb3b210b6b4caf66042524ad558fb8b37dcee534b1bb42cad1746d17d7b",
+      "output_hash": "95a4f32cdb3bf336dfbbcc6f733dd96c68ce0f82a1e1e90fe9d5b5cf76212fee",
+      "recorded_at": "2026-07-16T18:23:26.705903Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 1,
+      "runtime_agent_id": "019f6c22-b01e-7ee0-8f38-9cff6453c801",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "ff858388404a7f1062bf14257914139da4b5714ef73d130e4be84c39040a9456",
+      "close_evidence": {
+        "close_tool": "multi_agent_v1__close_agent",
+        "closed_by": "parent-orchestrator",
+        "final_close_status": "completed",
+        "previous_status": "completed",
+        "release_state": "closed",
+        "runtime_agent_id": "019f6c2f-a902-7262-b872-c43db8c1833c"
+      },
+      "input_envelope_hash": "f21dadb3b210b6b4caf66042524ad558fb8b37dcee534b1bb42cad1746d17d7b",
+      "output_hash": "6fc2ef288d44090f12947852833ef7a820ea202fe5f564ca8848182fb998e873",
+      "recorded_at": "2026-07-16T18:32:12.300247Z",
+      "role": "ADJUDICATOR",
+      "round": 1,
+      "runtime_agent_id": "019f6c2f-a902-7262-b872-c43db8c1833c",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327",
+      "close_evidence": {
+        "close_tool": "multi_agent_v1__close_agent",
+        "closed_by": "parent-orchestrator",
+        "final_close_status": "completed",
+        "previous_status": "completed",
+        "release_state": "closed",
+        "runtime_agent_id": "019f6c33-f302-7ad3-a3e2-78ba836c80aa"
+      },
+      "input_envelope_hash": "f21dadb3b210b6b4caf66042524ad558fb8b37dcee534b1bb42cad1746d17d7b",
+      "output_hash": "000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327",
+      "recorded_at": "2026-07-16T18:40:26.636947Z",
+      "role": "CORE_RESEARCHER",
+      "round": 2,
+      "runtime_agent_id": "019f6c33-f302-7ad3-a3e2-78ba836c80aa",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327",
+      "close_evidence": {
+        "close_tool": "multi_agent_v1__close_agent",
+        "closed_by": "parent-orchestrator",
+        "final_close_status": "completed",
+        "previous_status": "completed",
+        "release_state": "closed",
+        "runtime_agent_id": "019f6c3b-3ad3-7341-b1b0-179543f14187"
+      },
+      "input_envelope_hash": "f21dadb3b210b6b4caf66042524ad558fb8b37dcee534b1bb42cad1746d17d7b",
+      "output_hash": "0a64d2c042b4d502122963275f84ae70eb06cdd0fdf8cac624d2d81cad47bd0d",
+      "recorded_at": "2026-07-16T18:44:24.382540Z",
+      "role": "INTERNAL_READINESS",
+      "round": 2,
+      "runtime_agent_id": "019f6c3b-3ad3-7341-b1b0-179543f14187",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327",
+      "close_evidence": {
+        "close_tool": "multi_agent_v1__close_agent",
+        "closed_by": "parent-orchestrator",
+        "final_close_status": "completed",
+        "previous_status": "completed",
+        "release_state": "closed",
+        "runtime_agent_id": "019f6c3b-3b44-7810-8ddc-26303aee119e"
+      },
+      "input_envelope_hash": "f21dadb3b210b6b4caf66042524ad558fb8b37dcee534b1bb42cad1746d17d7b",
+      "output_hash": "1fdb8420f973e527d41cab25155744e19d18e8d7df29771aaa7860276e9e7bef",
+      "recorded_at": "2026-07-16T18:44:28.343776Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 2,
+      "runtime_agent_id": "019f6c3b-3b44-7810-8ddc-26303aee119e",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327",
+      "close_evidence": {
+        "close_tool": "multi_agent_v1__close_agent",
+        "closed_by": "parent-orchestrator",
+        "final_close_status": "completed",
+        "previous_status": "completed",
+        "release_state": "closed",
+        "runtime_agent_id": "019f6c3b-3bbe-7b90-a235-c5438162528c"
+      },
+      "input_envelope_hash": "f21dadb3b210b6b4caf66042524ad558fb8b37dcee534b1bb42cad1746d17d7b",
+      "output_hash": "3703c212ad6e91421922ee12efa3b5fa433f6e04307a2df60a798d527fac52af",
+      "recorded_at": "2026-07-16T18:44:32.284798Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 2,
+      "runtime_agent_id": "019f6c3b-3bbe-7b90-a235-c5438162528c",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "000875f1007a54450bbd150fd53a77e533183694e14f53fb5f2bbf1cf7e3b327",
+      "close_evidence": {
+        "close_tool": "multi_agent_v1__close_agent",
+        "closed_by": "parent-orchestrator",
+        "final_close_status": "completed",
+        "previous_status": "completed",
+        "release_state": "closed",
+        "runtime_agent_id": "019f6c3f-7999-7db1-a78c-fa43339385f8"
+      },
+      "input_envelope_hash": "f21dadb3b210b6b4caf66042524ad558fb8b37dcee534b1bb42cad1746d17d7b",
+      "output_hash": "10c1bbaadb70a0c4713e1462355d41c8aa43bf60f09c9df61c37eab7172166a8",
+      "recorded_at": "2026-07-16T18:49:10.516524Z",
+      "role": "ADJUDICATOR",
+      "round": 2,
+      "runtime_agent_id": "019f6c3f-7999-7db1-a78c-fa43339385f8",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "package_id": "research-package-6bb5a73005bb941714e43237",
+  "schema_version": 1,
+  "terminal_verdict": "PASS"
+}
