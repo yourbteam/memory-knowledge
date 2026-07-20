@@ -743,7 +743,18 @@ def validate_requirements(value: Any, *, direct: bool) -> list[dict[str, Any]]:
             raise PlanPackageError("INVALID_REQUIREMENTS", "duplicate requirement id")
         ids.add(rid)
         require_string(requirement["text"], "requirement text")
-        sorted_unique_strings(requirement["evidence_ids"], "requirement evidence_ids")
+        evidence_ids = requirement["evidence_ids"]
+        if direct:
+            sorted_unique_strings(evidence_ids, "requirement evidence_ids")
+        elif (
+            not isinstance(evidence_ids, list)
+            or any(not isinstance(item, str) or not item for item in evidence_ids)
+            or len(evidence_ids) != len(set(evidence_ids))
+        ):
+            raise PlanPackageError(
+                "INVALID_SCHEMA",
+                "research requirement evidence_ids must be unique non-empty strings",
+            )
         obligations = requirement["planner_obligations"]
         if not isinstance(obligations, list) or not obligations:
             raise PlanPackageError("INVALID_REQUIREMENTS", "planner_obligations must be non-empty")

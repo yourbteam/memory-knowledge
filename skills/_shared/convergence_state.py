@@ -6,7 +6,6 @@ import argparse
 import hashlib
 import json
 import os
-import shutil
 import subprocess
 import tempfile
 import uuid
@@ -17,6 +16,7 @@ SCHEMA_VERSION = 1
 VERDICTS = {"PASS", "GAPS", "BLOCKED", "CAP_REACHED"}
 STATUSES = {"research", "plan", "implementation", "review", "blocked", "cap_reached", "complete"}
 KINDS = {"autonomy", "directive", "commit", "continue", "scope-change", "exclude", "resume"}
+SHA256_RE = __import__("re").compile(r"^[0-9a-f]{64}$")
 TRANSITIONS = {
     "research": {"plan", "blocked", "cap_reached"},
     "plan": {"implementation", "research", "blocked", "cap_reached"},
@@ -61,43 +61,6 @@ def digest_managed(root: Path, children: list[str] | None) -> str | None:
     return h.hexdigest()
 
 
-def artifact_snapshot_root(state_path: Path) -> Path:
-    return state_path.parent / f"{state_path.name}.artifacts"
-
-
-def snapshot_artifact(state_path: Path, artifact: Path, expected_hash: str | None = None) -> tuple[str, str]:
-    artifact_hash = digest_tree(artifact)
-    if artifact_hash is None:
-        raise SystemExit(f"artifact does not exist: {artifact}")
-    if expected_hash is not None and artifact_hash != expected_hash:
-        raise SystemExit(f"artifact content does not match expected hash: {artifact}")
-    destination = artifact_snapshot_root(state_path) / artifact_hash
-    if destination.exists():
-        if digest_tree(destination) != artifact_hash:
-            raise SystemExit(f"artifact snapshot hash drift: {destination}")
-        return artifact_hash, str(destination)
-    destination.parent.mkdir(parents=True, exist_ok=True)
-    temporary = destination.parent / f".{artifact_hash}.{uuid.uuid4().hex}.tmp"
-    try:
-        if artifact.is_dir():
-            shutil.copytree(artifact, temporary)
-        else:
-            shutil.copy2(artifact, temporary)
-        if digest_tree(temporary) != artifact_hash:
-            raise SystemExit(f"artifact snapshot copy mismatch: {artifact}")
-        os.replace(temporary, destination)
-    finally:
-        if temporary.exists():
-            shutil.rmtree(temporary) if temporary.is_dir() else temporary.unlink()
-    return artifact_hash, str(destination)
-
-
-def artifact_record(state_path: Path, artifact_id: str, source: Path, kind: str, stage: str) -> dict:
-    artifact_hash, snapshot_path = snapshot_artifact(state_path, source)
-    return {"id": artifact_id, "path": str(source), "source_path": str(source),
-            "snapshot_path": snapshot_path, "hash": artifact_hash, "type": kind, "stage": stage}
-
-
 def atomic_write(path: Path, data: dict) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     fd, tmp = tempfile.mkstemp(prefix=".convergence-", suffix=".tmp", dir=path.parent)
@@ -113,10 +76,47 @@ def atomic_write(path: Path, data: dict) -> None:
             os.unlink(tmp)
 
 
+def canonical_bytes(data: dict) -> bytes:
+    return json.dumps(data, sort_keys=True, separators=(",", ":"), ensure_ascii=True).encode()
+
+
+def publish_immutable(path: Path, payload: bytes) -> None:
+    path.parent.mkdir(parents=True, exist_ok=True)
+    if path.exists():
+        if path.is_symlink() or not path.is_file() or path.read_bytes() != payload:
+            raise SystemExit("continuation authorization snapshot conflicts with existing bytes")
+        return
+    fd, tmp = tempfile.mkstemp(prefix=f".{path.name}.", dir=path.parent)
+    try:
+        with os.fdopen(fd, "wb") as handle:
+            handle.write(payload); handle.flush(); os.fsync(handle.fileno())
+        os.replace(tmp, path)
+        directory = os.open(path.parent, os.O_RDONLY)
+        try: os.fsync(directory)
+        finally: os.close(directory)
+    finally:
+        if os.path.exists(tmp): os.unlink(tmp)
+
+
 def load(path: Path) -> dict:
     data = json.loads(path.read_text())
     if data.get("schema_version") != SCHEMA_VERSION:
         raise SystemExit("unsupported convergence state schema")
+    if "cap_from_status" not in data:
+        if data.get("status") != "cap_reached":
+            data["cap_from_status"] = None
+        else:
+            legacy_target = data.get("blocked_from_status")
+            blocked_stage = data.get("blocked_stage")
+            ordinary_stages = {"research", "plan", "implementation", "review"}
+            if legacy_target == "blocked" and blocked_stage in ordinary_stages:
+                data["cap_from_status"] = "blocked"
+                data["blocked_from_status"] = blocked_stage
+            elif legacy_target in ordinary_stages and blocked_stage is None:
+                data["cap_from_status"] = legacy_target
+                data["blocked_from_status"] = None
+            else:
+                raise SystemExit("legacy capped task lacks a valid continuation lineage")
     return data
 
 
@@ -224,7 +224,7 @@ def blank_state(source: Path, objective: str, requirements: dict) -> dict:
         "requirements": requirements,
         "gaps": {}, "blockers": {}, "approvals": {},
         "repositories": {}, "managed_paths": {}, "stages": {}, "artifacts": {},
-        "blocked_from_status": None, "blocked_stage": None,
+        "blocked_from_status": None, "blocked_stage": None, "cap_from_status": None,
         "cap_stage": None, "cap_attempt": None,
         "created_at": now(), "updated_at": now(),
     }
@@ -411,40 +411,13 @@ def cmd_review_surface(args) -> int:
 
 def cmd_artifact(args) -> int:
     path, state = Path(args.state), load(Path(args.state)); artifact = Path(args.path).resolve()
-    record = artifact_record(path, args.id, artifact, args.kind, args.stage)
+    record = {"id": args.id, "path": str(artifact), "hash": digest_tree(artifact), "type": args.kind, "stage": args.stage}
     existing = state["artifacts"].get(args.id)
     if existing:
         if {key: existing.get(key) for key in record} == record: print("artifact already recorded"); return 0
         raise SystemExit("artifact id already exists with different content")
     state["artifacts"][args.id] = {**record, "created_at": now()}
     return save(path, state, "artifact recorded")
-
-
-def cmd_migrate_artifacts(args) -> int:
-    path, state = Path(args.state), load(Path(args.state)); events = state.setdefault("artifact_provenance_events", {})
-    migrated = 0
-    for artifact_id, artifact in state["artifacts"].items():
-        if artifact.get("snapshot_path"):
-            continue
-        source = Path(artifact["path"]); registered_hash = artifact.get("hash", artifact.get("sha256"))
-        observed_hash = digest_tree(source)
-        if observed_hash is None:
-            raise SystemExit(f"legacy artifact source is unavailable: {artifact_id}")
-        if observed_hash == registered_hash:
-            _, snapshot_path = snapshot_artifact(path, source, registered_hash)
-            artifact.update(source_path=str(source), snapshot_path=snapshot_path)
-        else:
-            _, observed_snapshot_path = snapshot_artifact(path, source, observed_hash)
-            record = {"artifact_id": artifact_id, "status": "legacy-source-advanced",
-                      "source_path": str(source), "registered_hash": registered_hash,
-                      "observed_hash": observed_hash, "observed_snapshot_path": observed_snapshot_path}
-            existing = events.get(artifact_id)
-            if existing and {key: existing.get(key) for key in record} != record:
-                raise SystemExit(f"legacy artifact provenance changed: {artifact_id}")
-            if not existing:
-                events[artifact_id] = {**record, "recorded_at": now()}
-        migrated += 1
-    return save(path, state, f"artifact provenance migrated: {migrated}")
 
 
 def cmd_requirement(args) -> int:
@@ -554,15 +527,12 @@ def cmd_stage(args) -> int:
         new_blocker_ids.append(blocker_id)
     artifact_ids = list(args.artifact_id or [])
     for raw_artifact in supplied.get("artifact_paths", []):
-        artifact_path = Path(raw_artifact).resolve(); artifact_hash = digest_tree(artifact_path)
-        if artifact_hash is None: raise SystemExit(f"artifact does not exist: {artifact_path}")
-        path_hash = digest_bytes(str(artifact_path).encode())[:12]
-        artifact_id = f"{stage}:{path_hash}:{artifact_hash[:12]}"
-        stage_artifact_record = artifact_record(path, artifact_id, artifact_path, "stage-evidence", stage)
+        artifact_path = Path(raw_artifact).resolve(); artifact_id = f"{stage}:{digest_bytes(str(artifact_path).encode())[:12]}"
+        artifact_record = {"id": artifact_id, "path": str(artifact_path), "hash": digest_tree(artifact_path), "type": "stage-evidence", "stage": stage}
         existing_artifact = state["artifacts"].get(artifact_id)
-        if existing_artifact and {key: existing_artifact.get(key) for key in stage_artifact_record} != stage_artifact_record:
+        if existing_artifact and {key: existing_artifact.get(key) for key in artifact_record} != artifact_record:
             raise SystemExit("stage artifact identity changed")
-        if not existing_artifact: state["artifacts"][artifact_id] = {**stage_artifact_record, "created_at": now()}
+        if not existing_artifact: state["artifacts"][artifact_id] = {**artifact_record, "created_at": now()}
         artifact_ids.append(artifact_id)
     if any(a not in state["artifacts"] for a in artifact_ids): raise SystemExit("stage references unknown artifact")
     assigned_gaps = supplied.get("assigned_gap_ids", args.assigned_gap_id or [])
@@ -586,7 +556,11 @@ def cmd_stage(args) -> int:
             if transition["id"] in gap_transitions: raise SystemExit("record transition ids must be unique per kind")
             gap = proposed_gaps.get(transition["id"])
             if not gap or gap.get("status") != transition["from_status"]: raise SystemExit("record transition from_status does not match")
-            if transition["from_status"] != "open" or transition["to_status"] not in {"closed", "superseded", "non-gap"}: raise SystemExit("unsupported gap transition")
+            allowed = {
+                ("open", "closed"), ("open", "superseded"), ("open", "non-gap"),
+                ("closed", "open"), ("non-gap", "open"),
+            }
+            if (transition["from_status"], transition["to_status"]) not in allowed: raise SystemExit("unsupported gap transition")
             if transition["to_status"] == "superseded":
                 replacement = transition.get("replacement_id")
                 if not replacement or replacement == transition["id"] or replacement not in proposed_gaps: raise SystemExit("superseded gap requires an existing replacement_id")
@@ -621,7 +595,8 @@ def cmd_stage(args) -> int:
         else:
             raise SystemExit("unsupported stage record transition kind")
     closing_ids = {gap_id for gap_id in closed_ids if proposed_gaps[gap_id].get("status") == "open"}
-    if closing_ids != set(gap_transitions): raise SystemExit("open gap closure requires one evidence-bearing transition")
+    reopening_ids = {gap_id for gap_id in open_ids if proposed_gaps[gap_id].get("status") in {"closed", "non-gap"}}
+    if closing_ids | reopening_ids != set(gap_transitions): raise SystemExit("gap status change requires one evidence-bearing transition")
     new_open = {gap["id"] for gap in supplied.get("new_gaps", []) if gap["status"] == "open"}
     effective_blocker_status = {blocker_id: blocker_transitions.get(blocker_id, {}).get("to_status", proposed_blockers[blocker_id].get("status")) for blocker_id in owned_blockers}
     terminal_blockers = {"closed", "superseded", "non-gap"}
@@ -649,6 +624,10 @@ def cmd_stage(args) -> int:
             transition = gap_transitions[gap_id]
             state["gaps"][gap_id].update(status=transition["to_status"], closure_evidence=transition["evidence"])
             if transition.get("replacement_id"): state["gaps"][gap_id]["replacement_id"] = transition["replacement_id"]
+    for gap_id in open_ids:
+        if gap_id in gap_transitions:
+            state["gaps"][gap_id].update(status="open", closure_evidence=None)
+            state["gaps"][gap_id].pop("replacement_id", None)
     payload = {"stage": stage, "outer_iteration": state["outer_iteration"], "attempt": attempt,
                "iteration": supplied.get("iteration", state["outer_iteration"]), "verdict": verdict,
                "assigned_requirement_ids": assigned_requirements, "assigned_gap_ids": assigned_gaps,
@@ -662,7 +641,7 @@ def cmd_stage(args) -> int:
     record = {**payload, "input_payload": supplied if args.result_file else None, "recorded_at": now()}
     state["stages"][stage_key] = record
     if verdict == "CAP_REACHED":
-        state["blocked_from_status"] = state["status"]; state["status"] = "cap_reached"
+        state["cap_from_status"] = state["status"]; state["status"] = "cap_reached"
         state["cap_stage"] = stage; state["cap_attempt"] = attempt
     elif verdict == "BLOCKED" and state["status"] != "blocked":
         state["blocked_from_status"] = state["status"]; state["blocked_stage"] = stage; state["status"] = "blocked"
@@ -737,9 +716,66 @@ def cmd_continue(args) -> int:
         raise SystemExit("stage is not at cap")
     if not args.operation_id or not approval_matches(state, args.approval_id, "continue", ["continue"], [args.stage], [], [], args.stage):
         raise SystemExit("continuation approval does not match")
-    state.update(status=state["blocked_from_status"], cap_stage=None, cap_attempt=None, blocked_from_status=None)
+    target = state.get("cap_from_status")
+    if target not in {"research", "plan", "implementation", "review", "blocked"}:
+        raise SystemExit("capped task lacks a valid continuation target")
+    state.update(status=target, cap_stage=None, cap_attempt=None, cap_from_status=None)
     consume_approval(state, args.approval_id, args.operation_id)
     return save(path, state, "stage continued")
+
+
+def cmd_grant_plan_continuation(args) -> int:
+    path, state = Path(args.state), load(Path(args.state))
+    if state.get("status") != "cap_reached" or state.get("cap_stage") != "plan" or not state.get("cap_attempt"):
+        raise SystemExit("plan continuation requires an active plan cap")
+    resume_status = state.get("cap_from_status")
+    blocked_stage = None
+    if resume_status == "blocked":
+        if state.get("blocked_from_status") != "plan" or state.get("blocked_stage") != "plan":
+            raise SystemExit("nested plan cap lacks preserved blocked(plan) lineage")
+        blocked_stage = "plan"
+    elif resume_status != "plan":
+        raise SystemExit("plan continuation cap must return to plan or blocked(plan)")
+    if (
+        not args.id or any(char not in "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789._-" for char in args.id)
+        or not args.plan_package_id.startswith("plan-package-")
+        or not SHA256_RE.fullmatch(args.inner_state_sha256)
+        or not SHA256_RE.fullmatch(args.plan_sha256)
+        or args.approved_from_iteration != 10
+        or args.approved_through_iteration != 20
+        or not args.approval_evidence.strip()
+    ):
+        raise SystemExit("invalid plan continuation authorization input")
+    snapshot = path.parent / "authorizations" / f"{args.id}.json"
+    fixed = {
+        "schema_version": 1, "authorization_id": args.id, "task_id": state["task_id"],
+        "outer_iteration": state["outer_iteration"], "stage": "plan", "kind": "continue",
+        "operations": ["continue"], "target_ids": ["plan"], "repository_roots": [],
+        "allowed_paths": [], "plan_package_id": args.plan_package_id,
+        "inner_state_sha256": args.inner_state_sha256, "plan_sha256": args.plan_sha256,
+        "approved_from_iteration": 10, "approved_through_iteration": 20,
+        "outer_resume_status": resume_status, "outer_blocked_stage": blocked_stage,
+        "approval_evidence": args.approval_evidence,
+    }
+    if snapshot.exists():
+        existing = json.loads(snapshot.read_text())
+        if {key: existing.get(key) for key in fixed} != fixed or set(existing) != set(fixed) | {"approved_at_utc"}:
+            raise SystemExit("continuation authorization snapshot conflicts with requested identity")
+        envelope = existing
+    else:
+        envelope = {**fixed, "approved_at_utc": now()}
+    payload = canonical_bytes(envelope)
+    publish_immutable(snapshot, payload)
+    evidence = f"path={snapshot.resolve()};sha256={digest_bytes(payload)}"
+    scope = {"kind": "continue", "operations": ["continue"], "target_ids": ["plan"], "repository_roots": [], "allowed_paths": [], "stage": "plan", "outer_iteration": state["outer_iteration"]}
+    record = {"status": "granted", "scope": scope, "evidence": evidence}
+    existing_approval = state["approvals"].get(args.id)
+    if existing_approval:
+        if existing_approval == record:
+            print("plan continuation approval already recorded"); return 0
+        raise SystemExit("continuation approval id already exists with different content or status")
+    state["approvals"][args.id] = record
+    return save(path, state, "plan continuation approval recorded")
 
 
 def cmd_resolve_approval(args) -> int:
@@ -824,7 +860,7 @@ def consume_approval(state, approval_id, operation_id) -> None:
 
 
 def cmd_check(args) -> int:
-    state = load(Path(args.state)); errors = []; warnings = []
+    state = load(Path(args.state)); errors = []
     if state["status"] not in {"research", "blocked"} and not state["repositories"] and not state["managed_paths"]:
         errors.append("non-research state lacks baseline")
     if state["status"] == "complete" and any(r.get("status") not in {"satisfied", "excluded"} for r in state["requirements"].values()):
@@ -843,29 +879,10 @@ def cmd_check(args) -> int:
         if missing: errors.append(f"{stage} references missing artifacts: {missing}")
         for artifact_id in result.get("artifact_ids", []):
             artifact = state["artifacts"].get(artifact_id)
-            if not artifact:
-                continue
-            registered_hash = artifact.get("hash", artifact.get("sha256")); snapshot_path = artifact.get("snapshot_path")
-            if snapshot_path:
-                if digest_tree(Path(snapshot_path)) != registered_hash:
-                    errors.append(f"{stage} artifact snapshot hash drift: {artifact_id}")
-                continue
-            event = state.get("artifact_provenance_events", {}).get(artifact_id)
-            if event and event.get("status") == "legacy-source-advanced":
-                valid = (event.get("artifact_id") == artifact_id
-                         and event.get("source_path") == artifact.get("path")
-                         and event.get("registered_hash") == registered_hash
-                         and digest_tree(Path(event.get("observed_snapshot_path", ""))) == event.get("observed_hash"))
-                if not valid:
-                    errors.append(f"{stage} legacy artifact provenance invalid: {artifact_id}")
-                else:
-                    warnings.append(f"WARN {stage} legacy artifact source advanced after registration: {artifact_id}")
-                continue
-            if digest_tree(Path(artifact["path"])) != registered_hash:
+            if artifact and digest_tree(Path(artifact["path"])) != artifact.get("hash", artifact.get("sha256")):
                 errors.append(f"{stage} artifact hash drift: {artifact_id}")
     if errors:
         print("\n".join(errors)); return 2
-    if warnings: print("\n".join(sorted(set(warnings))))
     print("PASS state check"); return 0
 
 
@@ -884,7 +901,6 @@ def parser() -> argparse.ArgumentParser:
     p = sub.add_parser("accept-baseline"); p.add_argument("state"); p.add_argument("--path", required=True); p.add_argument("--changed-path", action="append"); p.add_argument("--managed-child", action="append"); p.add_argument("--approval-id", required=True); p.add_argument("--stage", required=True); p.add_argument("--accept-generated-overlap", action="store_true"); p.set_defaults(func=cmd_accept)
     p = sub.add_parser("review-surface"); p.add_argument("state"); p.set_defaults(func=cmd_review_surface)
     p = sub.add_parser("register-artifact"); p.add_argument("state"); p.add_argument("--id", required=True); p.add_argument("--path", required=True); p.add_argument("--kind", required=True); p.add_argument("--stage", required=True); p.set_defaults(func=cmd_artifact)
-    p = sub.add_parser("migrate-artifact-provenance"); p.add_argument("state"); p.set_defaults(func=cmd_migrate_artifacts)
     p = sub.add_parser("set-requirement"); p.add_argument("state"); p.add_argument("--id", required=True); p.add_argument("--status", required=True); p.add_argument("--evidence"); p.add_argument("--approval-id"); p.add_argument("--operation-id"); p.add_argument("--stage"); p.set_defaults(func=cmd_requirement)
     p = sub.add_parser("add-requirement"); p.add_argument("state"); p.add_argument("--id", required=True); p.add_argument("--text", required=True); p.add_argument("--source", required=True); p.add_argument("--approval-id", required=True); p.add_argument("--operation-id", required=True); p.add_argument("--stage", required=True); p.set_defaults(func=cmd_add_requirement)
     p = sub.add_parser("record-gap"); p.add_argument("state"); p.add_argument("--id", required=True); p.add_argument("--requirement-ids", default="[]"); p.add_argument("--source-stage", required=True); p.add_argument("--impact", required=True); p.add_argument("--evidence", required=True); p.add_argument("--status", default="open"); p.add_argument("--closure-evidence"); p.set_defaults(func=cmd_gap)
@@ -893,6 +909,7 @@ def parser() -> argparse.ArgumentParser:
     p = sub.add_parser("block"); p.add_argument("state"); p.add_argument("--id", required=True); p.add_argument("--type", choices=["execution", "external", "approval"], required=True); p.add_argument("--stage", required=True); p.add_argument("--reason", required=True); p.add_argument("--required-evidence", required=True); p.add_argument("--resolution", choices=["evidence", "approval"], required=True); p.set_defaults(func=cmd_block)
     p = sub.add_parser("resume"); p.add_argument("state"); p.add_argument("--stage"); p.add_argument("--blocker-id", required=True); p.add_argument("--approval-id", required=True); p.add_argument("--operation-id", required=True); p.set_defaults(func=cmd_resume)
     p = sub.add_parser("continue-stage"); p.add_argument("state"); p.add_argument("--stage", required=True); p.add_argument("--approval-id", required=True); p.add_argument("--operation-id", required=True); p.set_defaults(func=cmd_continue)
+    p = sub.add_parser("grant-plan-continuation"); p.add_argument("state"); p.add_argument("--id", required=True); p.add_argument("--plan-package-id", required=True); p.add_argument("--inner-state-sha256", required=True); p.add_argument("--plan-sha256", required=True); p.add_argument("--approved-from-iteration", type=int, required=True); p.add_argument("--approved-through-iteration", type=int, required=True); p.add_argument("--approval-evidence", required=True); p.set_defaults(func=cmd_grant_plan_continuation)
     p = sub.add_parser("resolve-approval-blocker"); p.add_argument("state"); p.add_argument("--blocker-id", required=True); p.add_argument("--approval-id", required=True); p.add_argument("--operation-id", required=True); p.add_argument("--decision", choices=["approve", "reject"]); p.set_defaults(func=cmd_resolve_approval)
     p = sub.add_parser("grant-approval"); p.add_argument("state"); p.add_argument("--id", required=True); p.add_argument("--kind", required=True); p.add_argument("--operations", default="[]"); p.add_argument("--target-ids", default="[]"); p.add_argument("--repository-roots", default="[]"); p.add_argument("--allowed-paths", default="[]"); p.add_argument("--stage", required=True); p.add_argument("--evidence", required=True); p.set_defaults(func=cmd_approve)
     p = sub.add_parser("check"); p.add_argument("state"); p.set_defaults(func=cmd_check)

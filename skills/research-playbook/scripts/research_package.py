@@ -1496,6 +1496,45 @@ PLANNER_READINESS_FIELDS = {
     "closure_condition",
     "evidence_ids",
 }
+MANIFEST_FIELDS = {
+    "schema_version",
+    "package_id",
+    "terminal_verdict",
+    "candidate_hash",
+    "envelope_hash",
+    "artifact_hashes",
+    "budget_use",
+    "lifecycle_evidence",
+    "emitted_at",
+}
+ATTEMPT_FIELDS = {
+    "runtime_agent_id",
+    "role",
+    "round",
+    "candidate_hash",
+    "input_envelope_hash",
+    "status",
+    "output_hash",
+    "slot_closed",
+    "close_evidence",
+    "recorded_at",
+}
+CURRENT_BUDGET_USE_FIELDS = {
+    "rounds_used",
+    "rounds_max",
+    "attempts_used",
+    "attempts_max",
+    "workflow_minutes_used",
+    "minutes_max_per_task",
+}
+LEGACY_BUDGET_USE_FIELDS = {
+    "rounds_used",
+    "rounds_max",
+    "attempts_used",
+    "attempts_max",
+    "minutes_used",
+    "minutes_max",
+}
 
 
 def _json_payload(value: Any) -> bytes:
@@ -1505,6 +1544,13 @@ def _json_payload(value: Any) -> bytes:
 
 def _bytes_hash(payload: bytes) -> str:
     return hashlib.sha256(payload).hexdigest()
+
+
+def _validate_package_timestamp(value: Any, field: str) -> None:
+    try:
+        _as_utc(value)
+    except (TypeError, ValueError) as exc:
+        raise ResearchPackageError(f"research package {field} is invalid") from exc
 
 
 def _emitted_requirements(
@@ -1747,6 +1793,264 @@ def emit_package(
     }
 
 
+def _validated_emitted_requirements(
+    value: Any, indexed_evidence: set[str]
+) -> list[dict[str, Any]]:
+    if not isinstance(value, list) or not value:
+        raise ResearchPackageError("emitted requirements must be a non-empty list")
+    emitted_fields = REQUIREMENT_FIELDS | {"research_value", "evidence_ids"}
+    obligation_fields = {"id", "description"} | (PLANNER_READINESS_FIELDS - {"obligation_id"})
+    base_requirements: list[dict[str, Any]] = []
+    readiness: list[dict[str, Any]] = []
+    for index, item in enumerate(value):
+        if not isinstance(item, dict) or set(item) != emitted_fields:
+            raise ResearchPackageError(f"emitted requirement {index} has invalid fields")
+        obligations = item["planner_obligations"]
+        if not isinstance(obligations, list):
+            raise ResearchPackageError("emitted planner_obligations must be a list")
+        base_obligations: list[dict[str, str]] = []
+        for obligation in obligations:
+            if not isinstance(obligation, dict) or set(obligation) != obligation_fields:
+                raise ResearchPackageError("emitted planner obligation has invalid fields")
+            base_obligations.append(
+                {"id": obligation["id"], "description": obligation["description"]}
+            )
+            readiness.append(
+                {
+                    "obligation_id": obligation["id"],
+                    **{
+                        field: copy.deepcopy(obligation[field])
+                        for field in PLANNER_READINESS_FIELDS
+                        if field != "obligation_id"
+                    },
+                }
+            )
+        base_requirements.append(
+            {
+                field: copy.deepcopy(base_obligations if field == "planner_obligations" else item[field])
+                for field in REQUIREMENT_FIELDS
+            }
+        )
+        if _research_value_type(item["research_value"]) != item["research_value_type"]:
+            raise ResearchPackageError(
+                f"emitted requirement {item['id']} research_value type does not match"
+            )
+        evidence_ids = item["evidence_ids"]
+        if (
+            not isinstance(evidence_ids, list)
+            or len(evidence_ids) != len(set(evidence_ids))
+            or any(not isinstance(evidence_id, str) or not evidence_id for evidence_id in evidence_ids)
+            or not set(evidence_ids) <= indexed_evidence
+        ):
+            raise ResearchPackageError(
+                f"emitted requirement {item['id']} has invalid evidence_ids"
+            )
+    normalized = _normalize_requirements(base_requirements)
+    if normalized != base_requirements:
+        raise ResearchPackageError("emitted requirements are not canonical")
+    _planner_readiness_by_id(
+        {"requirements": normalized}, readiness, indexed_evidence
+    )
+    return copy.deepcopy(value)
+
+
+def _validate_emitted_findings(value: Any, requirement_ids: set[str]) -> None:
+    if not isinstance(value, list):
+        raise ResearchPackageError("findings.json must contain a list")
+    prior = ""
+    seen: set[str] = set()
+    for item in value:
+        if not isinstance(item, dict) or set(item) != {
+            "finding_fingerprint",
+            "raw_finding",
+            "finding_type",
+            "materiality",
+            "disposition",
+        }:
+            raise ResearchPackageError("emitted finding has invalid fields")
+        raw = item["raw_finding"]
+        if not isinstance(raw, dict) or not isinstance(raw.get("lens"), str):
+            raise ResearchPackageError("emitted finding raw_finding is invalid")
+        _validate_raw_findings([raw], raw["lens"])
+        fingerprint = finding_fingerprint(raw)
+        if item["finding_fingerprint"] != fingerprint or fingerprint in seen or fingerprint < prior:
+            raise ResearchPackageError("emitted findings are not uniquely fingerprint-sorted")
+        if item["finding_type"] not in FINDING_TYPES:
+            raise ResearchPackageError("emitted finding has invalid finding_type")
+        if item["materiality"] not in MATERIALITIES:
+            raise ResearchPackageError("emitted finding has invalid materiality")
+        if item["disposition"] not in DISPOSITIONS:
+            raise ResearchPackageError("emitted finding has invalid disposition")
+        if item["disposition"] in PASS_BLOCKING_DISPOSITIONS:
+            raise ResearchPackageError("PASS package contains a blocking finding disposition")
+        if not set(raw["requirement_ids"]) <= requirement_ids:
+            raise ResearchPackageError("emitted finding references an unknown requirement")
+        seen.add(fingerprint)
+        prior = fingerprint
+
+
+def _validate_manifest_lifecycle(manifest: dict[str, Any]) -> None:
+    budget = manifest["budget_use"]
+    if not isinstance(budget, dict) or set(budget) not in {
+        frozenset(CURRENT_BUDGET_USE_FIELDS),
+        frozenset(LEGACY_BUDGET_USE_FIELDS),
+    }:
+        raise ResearchPackageError("manifest budget_use has an unsupported exact field set")
+    for field in ("rounds_used", "rounds_max", "attempts_used", "attempts_max"):
+        value = budget[field]
+        if isinstance(value, bool) or not isinstance(value, int) or value < 1:
+            raise ResearchPackageError(f"manifest budget_use {field} must be a positive integer")
+    if budget["rounds_used"] > budget["rounds_max"] or budget["attempts_used"] > budget["attempts_max"]:
+        raise ResearchPackageError("manifest budget_use exceeds a governed cap")
+    elapsed_field = "workflow_minutes_used" if "workflow_minutes_used" in budget else "minutes_used"
+    maximum_field = "minutes_max_per_task" if "minutes_max_per_task" in budget else "minutes_max"
+    for field in (elapsed_field, maximum_field):
+        value = budget[field]
+        if isinstance(value, bool) or not isinstance(value, (int, float)) or value < 0:
+            raise ResearchPackageError(f"manifest budget_use {field} must be non-negative")
+    if budget[maximum_field] <= 0:
+        raise ResearchPackageError(f"manifest budget_use {maximum_field} must be positive")
+
+    attempts = manifest["lifecycle_evidence"]
+    if not isinstance(attempts, list) or len(attempts) != budget["attempts_used"]:
+        raise ResearchPackageError("manifest lifecycle count does not match budget_use")
+    runtime_ids: set[str] = set()
+    successful_roles: set[str] = set()
+    for attempt in attempts:
+        if not isinstance(attempt, dict) or set(attempt) != ATTEMPT_FIELDS:
+            raise ResearchPackageError("manifest lifecycle attempt has invalid fields")
+        runtime_id = attempt["runtime_agent_id"]
+        if not isinstance(runtime_id, str) or not runtime_id or runtime_id in runtime_ids:
+            raise ResearchPackageError("manifest lifecycle runtime_agent_id must be unique")
+        runtime_ids.add(runtime_id)
+        if attempt["role"] not in REQUIRED_ROLES or attempt["status"] not in ATTEMPT_STATUSES:
+            raise ResearchPackageError("manifest lifecycle attempt has invalid role or status")
+        if (
+            isinstance(attempt["round"], bool)
+            or not isinstance(attempt["round"], int)
+            or not 1 <= attempt["round"] <= budget["rounds_max"]
+        ):
+            raise ResearchPackageError("manifest lifecycle attempt has invalid round")
+        for field in ("input_envelope_hash", "output_hash"):
+            value = attempt[field]
+            if field == "output_hash" and value is None and attempt["status"] == "FAILED":
+                continue
+            if not isinstance(value, str) or not _SHA256_RE.fullmatch(value):
+                raise ResearchPackageError(f"manifest lifecycle attempt has invalid {field}")
+        candidate_hash = attempt["candidate_hash"]
+        allowed_null_candidate = (
+            candidate_hash is None
+            and attempt["role"] == CORE_RESEARCHER_ROLE
+            and attempt["status"] == "FAILED"
+            and attempt["round"] == 1
+        )
+        if not allowed_null_candidate and (
+            not isinstance(candidate_hash, str) or not _SHA256_RE.fullmatch(candidate_hash)
+        ):
+            raise ResearchPackageError("manifest lifecycle attempt has invalid candidate_hash")
+        _validate_package_timestamp(attempt["recorded_at"], "lifecycle recorded_at")
+        if not _attempt_lifecycle_complete(attempt):
+            raise ResearchPackageError("manifest lifecycle attempt is not closed")
+        if (
+            attempt["round"] == budget["rounds_used"]
+            and attempt["status"] == "SUCCEEDED"
+            and attempt["candidate_hash"] == manifest["candidate_hash"]
+            and attempt["input_envelope_hash"] == manifest["envelope_hash"]
+        ):
+            successful_roles.add(attempt["role"])
+    if successful_roles != set(REQUIRED_ROLES):
+        raise ResearchPackageError("manifest final round lacks the complete successful role set")
+
+
+def validate_package(package_directory: Path | str) -> dict[str, Any]:
+    """Validate one emitted research package without mutating it."""
+    supplied_root = Path(package_directory)
+    if supplied_root.is_symlink():
+        raise ResearchPackageError("research package root cannot be a symlink")
+    try:
+        package_root = supplied_root.resolve(strict=True)
+    except OSError as exc:
+        raise ResearchPackageError(f"research package root is unavailable: {exc}") from exc
+    if not package_root.is_dir():
+        raise ResearchPackageError("research package root must be a directory")
+    entries = {entry.name: entry for entry in package_root.iterdir()}
+    if set(entries) != set(EMITTED_FILES):
+        raise ResearchPackageError("research package must contain exactly the six owned files")
+    payloads: dict[str, bytes] = {}
+    parsed: dict[str, Any] = {}
+    for name in EMITTED_FILES:
+        path = entries[name]
+        if path.is_symlink() or not path.is_file():
+            raise ResearchPackageError(f"research package owned file is not a regular file: {name}")
+        payloads[name] = path.read_bytes()
+        if name.endswith(".json"):
+            try:
+                parsed[name] = json.loads(payloads[name].decode("utf-8"))
+            except (UnicodeDecodeError, json.JSONDecodeError) as exc:
+                raise ResearchPackageError(f"research package JSON is invalid: {name}") from exc
+        else:
+            try:
+                payloads[name].decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise ResearchPackageError(f"research package text is not UTF-8: {name}") from exc
+
+    manifest = parsed["manifest.json"]
+    if not isinstance(manifest, dict) or set(manifest) != MANIFEST_FIELDS:
+        raise ResearchPackageError("manifest has an invalid exact field set")
+    if manifest["schema_version"] != SCHEMA_VERSION:
+        raise ResearchPackageError("manifest has an unsupported schema_version")
+    if not isinstance(manifest["package_id"], str) or not re.fullmatch(
+        r"research-package-[0-9a-f]{24}", manifest["package_id"]
+    ):
+        raise ResearchPackageError("manifest package_id is invalid")
+    if manifest["terminal_verdict"] != "PASS":
+        raise ResearchPackageError("research package terminal_verdict must be PASS")
+    for field in ("candidate_hash", "envelope_hash"):
+        if not isinstance(manifest[field], str) or not _SHA256_RE.fullmatch(manifest[field]):
+            raise ResearchPackageError(f"manifest {field} is invalid")
+    _validate_package_timestamp(manifest["emitted_at"], "manifest emitted_at")
+    expected_artifacts = set(EMITTED_FILES) - {"manifest.json"}
+    if (
+        not isinstance(manifest["artifact_hashes"], dict)
+        or set(manifest["artifact_hashes"]) != expected_artifacts
+    ):
+        raise ResearchPackageError("manifest artifact_hashes has an invalid exact file set")
+    for name in expected_artifacts:
+        observed = _bytes_hash(payloads[name])
+        if manifest["artifact_hashes"].get(name) != observed:
+            raise ResearchPackageError(f"manifest artifact hash mismatch: {name}")
+    _validate_manifest_lifecycle(manifest)
+
+    evidence_index = parsed["evidence-index.json"]
+    indexed_evidence = _indexed_evidence_ids(evidence_index)
+    requirements = _validated_emitted_requirements(
+        parsed["requirements.json"], indexed_evidence
+    )
+    requirement_ids = {item["id"] for item in requirements}
+    _validate_emitted_findings(parsed["findings.json"], requirement_ids)
+
+    owned_files = sorted(
+        (
+            {"path": name, "sha256": _bytes_hash(payloads[name])}
+            for name in EMITTED_FILES
+        ),
+        key=lambda item: item["path"],
+    )
+    return {
+        "schema_version": SCHEMA_VERSION,
+        "valid": True,
+        "package_root": str(package_root),
+        "package_id": manifest["package_id"],
+        "terminal_verdict": manifest["terminal_verdict"],
+        "candidate_hash": manifest["candidate_hash"],
+        "envelope_hash": manifest["envelope_hash"],
+        "manifest_sha256": _bytes_hash(payloads["manifest.json"]),
+        "owned_files": owned_files,
+        "requirements": requirements,
+        "evidence_index": copy.deepcopy(evidence_index),
+    }
+
+
 def mutate_file(
     path: Path | str,
     operation: Callable[[dict[str, Any]], dict[str, Any]],
@@ -1848,6 +2152,11 @@ def build_parser() -> argparse.ArgumentParser:
     emit.add_argument("--planner-handoff", required=True)
     emit.add_argument("--now")
 
+    validate = subparsers.add_parser(
+        "validate-package", help="validate an emitted planner-ready package without mutation"
+    )
+    validate.add_argument("package_directory")
+
     show = subparsers.add_parser("show", help="print validated state")
     show.add_argument("state")
     return parser
@@ -1941,9 +2250,21 @@ def main(argv: Sequence[str] | None = None) -> int:
                 planner_handoff_markdown=_read_text(args.planner_handoff),
                 now=args.now,
             )
+        elif args.command == "validate-package":
+            result = validate_package(args.package_directory)
         else:
             result = load_state(args.state)
     except ResearchPackageError as exc:
+        if args.command == "validate-package":
+            _print_result(
+                {
+                    "schema_version": SCHEMA_VERSION,
+                    "valid": False,
+                    "reason": "INVALID_PACKAGE",
+                    "error": str(exc),
+                }
+            )
+            return 2
         _print_result({"verdict": "BLOCKED", "reason": "INVALID_OPERATION", "error": str(exc)})
         return 2
     _print_result(result)

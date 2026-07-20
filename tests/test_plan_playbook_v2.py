@@ -172,6 +172,23 @@ def requirement() -> dict:
     }
 
 
+def test_research_requirement_preserves_validated_source_evidence_order() -> None:
+    value = requirement()
+    value["evidence_ids"] = ["E1", "E4", "E10", "E14"]
+
+    assert PLAN_PACKAGE.validate_requirements([value], direct=False) == [value]
+
+    with pytest.raises(PLAN_PACKAGE.PlanPackageError, match="sorted and unique"):
+        PLAN_PACKAGE.validate_requirements([value], direct=True)
+
+    value["evidence_ids"].append("E4")
+    with pytest.raises(
+        PLAN_PACKAGE.PlanPackageError,
+        match="research requirement evidence_ids must be unique",
+    ):
+        PLAN_PACKAGE.validate_requirements([value], direct=False)
+
+
 def behavior_matrix() -> dict:
     return {
         "input_states": [

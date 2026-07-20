@@ -334,7 +334,7 @@ def test_approved_coherent_source_snapshots_are_byte_exact() -> None:
         "E12-coverage-audit.md": "e30ac6fc67f4efdb128d5c685f6574bbd061a0202ac1c898323fdca5dff7f0cd",
         "E13-satisfaction-audit.md": "66e6136ec48b2f4a713ff04f3034d8483f8d1c2bff2573a40cdf7b3595bd86fd",
         "E14-consolidation-plan.md": "88aa14be4bcc8e4c64af58026e94f861f3e74c8835b62e382c4cab7e70d34bad",
-        "E14-consolidation-research.md": "71578b268b3f5bb7df7ce75e8939a634c5c9d7de2fbbcbde0aa8d097e731694b",
+        "E14-consolidation-research.md": "b9a22ac4d27fe6a1d1e0b1a67a04bb69cbe0fb1f2d398315479edf04fe0cf8e4",
     }
     assert sorted(path.name for path in source_root.iterdir()) == sorted(expected)
     for name, digest in expected.items():

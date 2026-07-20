@@ -7,6 +7,7 @@ helper records that proof; it never closes runtime agents itself.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import tempfile
@@ -16,6 +17,69 @@ from pathlib import Path
 ACTIVE = {"reserved", "running", "completed"}
 RELEASABLE = {"closed", "abandoned", "released"}
 VERSION = 2
+
+_RELEASED_SLOT_TIMESTAMPS = (
+    "acquired_at", "bound_at", "completed_at", "closed_at", "abandoned_at",
+    "released_at",
+)
+
+
+def released_slot_projection(slot: dict) -> dict:
+    """Validate a released ledger slot and return its canonical projection."""
+    if not isinstance(slot, dict):
+        raise ValueError("released slot must be an object")
+    for field in ("id", "label"):
+        if not isinstance(slot.get(field), str) or not slot[field]:
+            raise ValueError(f"released slot {field} must be a non-empty string")
+    if slot.get("state") != "released":
+        raise ValueError("released slot state must be released")
+    agent_id = slot.get("agent_id")
+    if agent_id is not None and (not isinstance(agent_id, str) or not agent_id):
+        raise ValueError("released slot agent_id must be null or a non-empty string")
+    for field in _RELEASED_SLOT_TIMESTAMPS:
+        value = slot.get(field)
+        if value is not None and (not isinstance(value, int) or isinstance(value, bool)):
+            raise ValueError(f"released slot {field} must be null or an integer")
+
+    evidence = slot.get("evidence", {})
+    if not isinstance(evidence, dict):
+        raise ValueError("released slot evidence must be an object")
+    unknown_evidence = set(evidence) - {"close", "abandon_reason"}
+    if unknown_evidence:
+        raise ValueError("released slot evidence contains unknown fields")
+    for field in ("close", "abandon_reason"):
+        value = evidence.get(field)
+        if value is not None and (not isinstance(value, str) or not value):
+            raise ValueError(f"released slot evidence.{field} must be null or a non-empty string")
+
+    return {
+        "id": slot["id"],
+        "label": slot["label"],
+        "state": "released",
+        "agent_id": agent_id,
+        "acquired_at": slot.get("acquired_at"),
+        "bound_at": slot.get("bound_at"),
+        "completed_at": slot.get("completed_at"),
+        "closed_at": slot.get("closed_at"),
+        "abandoned_at": slot.get("abandoned_at"),
+        "released_at": slot.get("released_at"),
+        "evidence": {
+            "close": evidence.get("close"),
+            "abandon_reason": evidence.get("abandon_reason"),
+        },
+    }
+
+
+def released_slot_close_evidence_sha256(slot: dict) -> str:
+    """Hash the exact canonical released-slot projection bytes."""
+    projection = released_slot_projection(slot)
+    canonical = json.dumps(
+        projection,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=True,
+    ).encode("utf-8")
+    return hashlib.sha256(canonical).hexdigest()
 
 
 def atomic_write(path: Path, data: dict) -> None:
@@ -152,11 +216,22 @@ def cmd_abandon(args: argparse.Namespace) -> int:
     path, data = Path(args.ledger), load(Path(args.ledger))
     slot = select(data, args)
     if slot["state"] == "abandoned":
-        return 0
+        if (
+            slot.get("agent_id") == args.runtime_agent_id
+            and slot.get("evidence", {}).get("close") == args.close_evidence
+            and slot.get("evidence", {}).get("abandon_reason") == args.reason
+        ):
+            return 0
+        raise SystemExit("conflicting abandon replay")
     if slot["state"] != "reserved":
         raise SystemExit("abandon requires reserved state")
     if args.runtime_agent_id and not args.close_evidence:
         raise SystemExit("runtime agent abandonment requires close evidence")
+    if args.runtime_agent_id and any(
+        other is not slot and other.get("agent_id") == args.runtime_agent_id
+        for other in data["slots"]
+    ):
+        raise SystemExit("runtime agent id already exists in another slot")
     slot.update(state="abandoned", abandoned_at=int(time.time()))
     slot["evidence"]["abandon_reason"] = args.reason
     if args.runtime_agent_id:

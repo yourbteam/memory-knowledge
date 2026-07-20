@@ -1,10 +1,10 @@
 {
   "artifact_hashes": {
-    "evidence-index.json": "f9f23f974cbdd0591c1461af392610d6cbde87dde677a40a6471803f4cc1ec4b",
+    "evidence-index.json": "78c47e3a5be989bbcb6ae31de8dab497b3abf65c61e1cefc873b78709144cb63",
     "findings.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
     "planner-handoff.md": "b28f9d81feb2fdb1b5cbb4d9ddaa630488527acc4521e8c42fa09560b537f91f",
     "requirements.json": "80697e2b41baac8219dd23c052f2cc748e266363d27029d5ad50b2276346c77d",
-    "research.md": "71578b268b3f5bb7df7ce75e8939a634c5c9d7de2fbbcbde0aa8d097e731694b"
+    "research.md": "b9a22ac4d27fe6a1d1e0b1a67a04bb69cbe0fb1f2d398315479edf04fe0cf8e4"
   },
   "budget_use": {
     "attempts_max": 15,

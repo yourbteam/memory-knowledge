@@ -67,29 +67,12 @@ class StateTests(unittest.TestCase):
             result2=root/"pass.json"; payload=json.loads(result.read_text()); payload.update(attempt=2,verdict="PASS"); result2.write_text(json.dumps(payload))
             self.assertNotEqual(subprocess.run(cli+["record-stage",str(state),"--result-file",str(result2)],capture_output=True).returncode,0)
 
-    def test_artifact_snapshot_survives_source_update_and_detects_snapshot_tamper(self):
+    def test_artifact_hash_drift_fails_check(self):
         with tempfile.TemporaryDirectory() as raw:
             root=Path(raw); state,cli=self.make_state(root); self.stage_ready(state,root); artifact=root/"evidence"; artifact.write_text("one")
             subprocess.run(cli+["register-artifact",str(state),"--id","a","--path",str(artifact),"--kind","ledger","--stage","review"],check=True,capture_output=True)
             subprocess.run(cli+["record-stage",str(state),"--stage","review","--attempt","1","--verdict","PASS","--artifact-id","a"],check=True,capture_output=True)
-            artifact.write_text("two"); self.assertEqual(subprocess.run(cli+["check",str(state)],capture_output=True).returncode,0)
-            snapshot=Path(json.loads(state.read_text())["artifacts"]["a"]["snapshot_path"]); snapshot.write_text("tampered")
-            self.assertNotEqual(subprocess.run(cli+["check",str(state)],capture_output=True).returncode,0)
-
-    def test_legacy_artifact_migration_records_source_advance_without_rewriting_hash(self):
-        with tempfile.TemporaryDirectory() as raw:
-            root=Path(raw); state,cli=self.make_state(root); self.stage_ready(state,root); artifact=root/"evidence"; artifact.write_text("one")
-            registered_hash=s.digest_tree(artifact); data=json.loads(state.read_text())
-            data["artifacts"]["a"]={"id":"a","path":str(artifact),"hash":registered_hash,"type":"ledger","stage":"review"}
-            data["stages"]["review:1:1"]={"stage":"review","outer_iteration":1,"attempt":1,"verdict":"PASS","artifact_ids":["a"]}
-            state.write_text(json.dumps(data)); artifact.write_text("two")
-            self.assertNotEqual(subprocess.run(cli+["check",str(state)],capture_output=True).returncode,0)
-            subprocess.run(cli+["migrate-artifact-provenance",str(state)],check=True,capture_output=True)
-            checked=subprocess.run(cli+["check",str(state)],capture_output=True,text=True)
-            self.assertEqual(checked.returncode,0); self.assertIn("legacy artifact source advanced",checked.stdout)
-            migrated=json.loads(state.read_text()); self.assertEqual(migrated["artifacts"]["a"]["hash"],registered_hash)
-            event=migrated["artifact_provenance_events"]["a"]
-            self.assertEqual(event["registered_hash"],registered_hash); self.assertEqual(event["observed_hash"],s.digest_tree(artifact))
+            artifact.write_text("two"); self.assertNotEqual(subprocess.run(cli+["check",str(state)],capture_output=True).returncode,0)
 
     def test_unrelated_repo_change_does_not_block_allowed_path_guard(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -162,7 +145,7 @@ class StateTests(unittest.TestCase):
     def test_cap_reached_cannot_use_generic_resume(self):
         with tempfile.TemporaryDirectory() as raw:
             root=Path(raw); state,cli=self.make_state(root); data=json.loads(state.read_text())
-            data.update(status="cap_reached",blocked_from_status="review",cap_stage="review",cap_attempt=3); state.write_text(json.dumps(data))
+            data.update(status="cap_reached",cap_from_status="review",cap_stage="review",cap_attempt=3); state.write_text(json.dumps(data))
             self.assertNotEqual(subprocess.run(cli+["resume",str(state),"--stage","review"],capture_output=True).returncode,0)
 
     def test_approval_blocker_cannot_use_generic_resume(self):
@@ -212,12 +195,12 @@ class StateTests(unittest.TestCase):
     def test_cap_reached_continues_with_matching_approval(self):
         with tempfile.TemporaryDirectory() as raw:
             root=Path(raw); state,cli=self.make_state(root); data=json.loads(state.read_text())
-            data.update(status="cap_reached",blocked_from_status="review",cap_stage="review",cap_attempt=3); state.write_text(json.dumps(data))
+            data.update(status="cap_reached",cap_from_status="review",cap_stage="review",cap_attempt=3); state.write_text(json.dumps(data))
             subprocess.run(cli+["grant-approval",str(state),"--id","continue-review","--kind","continue","--operations",'["continue"]',"--target-ids",'["review"]',"--stage","review","--evidence","Kamen approved"],check=True,capture_output=True)
             command=cli+["continue-stage",str(state),"--stage","review","--approval-id","continue-review","--operation-id","continue-review-op"]
             subprocess.run(command,check=True,capture_output=True); subprocess.run(command,check=True,capture_output=True)
             data=json.loads(state.read_text()); self.assertEqual(data["status"],"review"); self.assertEqual(data["approvals"]["continue-review"]["status"],"consumed")
-            data.update(status="cap_reached",blocked_from_status="review",cap_stage="review",cap_attempt=4); state.write_text(json.dumps(data))
+            data.update(status="cap_reached",cap_from_status="review",cap_stage="review",cap_attempt=4); state.write_text(json.dumps(data))
             denied=command.copy(); denied[denied.index("continue-review-op")]="different-op"
             self.assertNotEqual(subprocess.run(denied,capture_output=True).returncode,0)
 
@@ -272,6 +255,62 @@ class StateTests(unittest.TestCase):
             subprocess.run(grant,check=True,capture_output=True)
             subprocess.run(cli+["set-requirement",str(state),"--id","R1","--status","excluded","--evidence","out of scope","--approval-id","exclude-r1","--operation-id","exclude-r1-op","--stage","review"],check=True,capture_output=True)
             self.assertNotEqual(subprocess.run(grant,capture_output=True).returncode,0)
+
+    def test_plan_continuation_authorization_preserves_direct_and_nested_return_state(self):
+        for nested in (False, True):
+            with self.subTest(nested=nested), tempfile.TemporaryDirectory() as raw:
+                root=Path(raw); state,cli=self.make_state(root); data=json.loads(state.read_text())
+                data.update(status="cap_reached",cap_stage="plan",cap_attempt=3,cap_from_status="blocked" if nested else "plan")
+                if nested: data.update(blocked_from_status="plan",blocked_stage="plan")
+                state.write_text(json.dumps(data))
+                approval_id="continue-plan"
+                grant=cli+["grant-plan-continuation",str(state),"--id",approval_id,"--plan-package-id","plan-package-"+"a"*24,"--inner-state-sha256","b"*64,"--plan-sha256","c"*64,"--approved-from-iteration","10","--approved-through-iteration","20","--approval-evidence","bounded approval"]
+                subprocess.run(grant,check=True,capture_output=True)
+                subprocess.run(grant,check=True,capture_output=True)
+                current=json.loads(state.read_text()); record=current["approvals"][approval_id]
+                snapshot=state.parent/"authorizations"/f"{approval_id}.json"; envelope=json.loads(snapshot.read_text())
+                self.assertEqual(record["evidence"],f"path={snapshot.resolve()};sha256={s.digest_file(snapshot)}")
+                self.assertEqual(envelope["outer_resume_status"],"blocked" if nested else "plan")
+                self.assertEqual(envelope["outer_blocked_stage"],"plan" if nested else None)
+                subprocess.run(cli+["continue-stage",str(state),"--stage","plan","--approval-id",approval_id,"--operation-id","continue-op"],check=True,capture_output=True)
+                resumed=json.loads(state.read_text()); self.assertEqual(resumed["status"],"blocked" if nested else "plan")
+                self.assertIsNone(resumed["cap_from_status"])
+                if nested:
+                    self.assertEqual(resumed["blocked_from_status"],"plan"); self.assertEqual(resumed["blocked_stage"],"plan")
+
+    def test_plan_continuation_rejects_ordinary_plan_state(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root=Path(raw); state,cli=self.make_state(root); data=json.loads(state.read_text()); data["status"]="plan"; state.write_text(json.dumps(data))
+            command=cli+["grant-plan-continuation",str(state),"--id","continue-plan","--plan-package-id","plan-package-"+"a"*24,"--inner-state-sha256","b"*64,"--plan-sha256","c"*64,"--approved-from-iteration","10","--approved-through-iteration","20","--approval-evidence","bounded approval"]
+            self.assertNotEqual(subprocess.run(command,capture_output=True).returncode,0)
+
+    def test_legacy_cap_migration_preserves_direct_and_nested_targets(self):
+        for nested in (False, True):
+            with self.subTest(nested=nested), tempfile.TemporaryDirectory() as raw:
+                root=Path(raw); state,cli=self.make_state(root); data=json.loads(state.read_text())
+                data.pop("cap_from_status")
+                data.update(status="cap_reached",cap_stage="plan",cap_attempt=3,
+                            blocked_from_status="blocked" if nested else "plan",
+                            blocked_stage="plan" if nested else None)
+                state.write_text(json.dumps(data))
+                subprocess.run(cli+["grant-approval",str(state),"--id","continue-plan","--kind","continue","--operations",'["continue"]',"--target-ids",'["plan"]',"--stage","plan","--evidence","bounded approval"],check=True,capture_output=True)
+                subprocess.run(cli+["continue-stage",str(state),"--stage","plan","--approval-id","continue-plan","--operation-id","continue-op"],check=True,capture_output=True)
+                resumed=json.loads(state.read_text())
+                self.assertEqual(resumed["status"],"blocked" if nested else "plan")
+                self.assertIsNone(resumed["cap_from_status"])
+                self.assertEqual(resumed["blocked_from_status"],"plan" if nested else None)
+                self.assertEqual(resumed["blocked_stage"],"plan" if nested else None)
+
+    def test_legacy_cap_migration_rejects_malformed_lineage(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root=Path(raw); state,cli=self.make_state(root); data=json.loads(state.read_text())
+            data.pop("cap_from_status")
+            data.update(status="cap_reached",cap_stage="plan",cap_attempt=3,
+                        blocked_from_status="blocked",blocked_stage=None)
+            state.write_text(json.dumps(data))
+            result=subprocess.run(cli+["status",str(state)],capture_output=True,text=True)
+            self.assertNotEqual(result.returncode,0)
+            self.assertIn("legacy capped task lacks a valid continuation lineage",result.stderr)
 
     def test_direct_record_ids_are_immutable(self):
         with tempfile.TemporaryDirectory() as raw:
@@ -334,6 +373,20 @@ class StateTests(unittest.TestCase):
             result.write_text(json.dumps({"stage":"review","iteration":1,"attempt":1,"assigned_requirement_ids":["R1"],"assigned_gap_ids":[],"owned_blocker_ids":[],"verdict":"GAPS","open_gap_ids":[],"closed_gap_ids":["G1"],"new_gaps":[closed],"new_blockers":[],"record_transitions":[],"evidence":[],"artifact_paths":[]}))
             self.assertNotEqual(subprocess.run(cli+["record-stage",str(state),"--result-file",str(result)],capture_output=True).returncode,0)
 
+    def test_gap_can_reopen_from_closed_and_non_gap_with_terminal_metadata_cleared(self):
+        for terminal_status in ("closed", "non-gap"):
+            with self.subTest(terminal_status=terminal_status), tempfile.TemporaryDirectory() as raw:
+                root=Path(raw); state,cli=self.make_state(root); self.stage_ready(state,root,status="plan"); result=root/"result.json"
+                opened={"stage":"plan","iteration":1,"attempt":1,"assigned_requirement_ids":["R1"],"assigned_gap_ids":["G1"],"owned_blocker_ids":[],"verdict":"GAPS","open_gap_ids":["G1"],"closed_gap_ids":[],"new_gaps":[{"id":"G1","requirement_ids":["R1"],"source_stage":"plan","impact":"x","evidence":"e","status":"open"}],"new_blockers":[],"record_transitions":[],"evidence":["open"],"artifact_paths":[]}
+                result.write_text(json.dumps(opened)); subprocess.run(cli+["record-stage",str(state),"--result-file",str(result)],check=True,capture_output=True)
+                closed={**opened,"attempt":2,"open_gap_ids":[],"closed_gap_ids":["G1"],"new_gaps":[],"record_transitions":[{"kind":"gap","id":"G1","from_status":"open","to_status":terminal_status,"evidence":"terminal evidence"}]}
+                result.write_text(json.dumps(closed)); subprocess.run(cli+["record-stage",str(state),"--result-file",str(result)],check=True,capture_output=True)
+                reopened={**opened,"attempt":3,"new_gaps":[],"record_transitions":[{"kind":"gap","id":"G1","from_status":terminal_status,"to_status":"open","evidence":"later assessment"}]}
+                result.write_text(json.dumps(reopened)); subprocess.run(cli+["record-stage",str(state),"--result-file",str(result)],check=True,capture_output=True)
+                current=json.loads(state.read_text())["gaps"]["G1"]
+                self.assertEqual(current["status"],"open"); self.assertIsNone(current["closure_evidence"]); self.assertNotIn("replacement_id",current)
+                subprocess.run(cli+["record-stage",str(state),"--result-file",str(result)],check=True,capture_output=True)
+
     def test_stage_exact_replay_and_attempt_order(self):
         with tempfile.TemporaryDirectory() as raw:
             root=Path(raw); state,cli=self.make_state(root); self.stage_ready(state,root); data=json.loads(state.read_text()); data["requirements"]["R1"]["status"]="satisfied"; state.write_text(json.dumps(data)); result=root/"result.json"
@@ -367,14 +420,12 @@ class StateTests(unittest.TestCase):
             root=Path(raw); state,cli=self.make_state(root); data=json.loads(state.read_text()); data["blockers"]["B1"]={"status":"resolved"}; state.write_text(json.dumps(data))
             self.assertNotEqual(subprocess.run(cli+["check",str(state)],capture_output=True).returncode,0)
 
-    def test_stage_artifacts_are_content_versioned(self):
+    def test_stage_artifact_identity_is_immutable(self):
         with tempfile.TemporaryDirectory() as raw:
             root=Path(raw); state,cli=self.make_state(root); self.stage_ready(state,root); data=json.loads(state.read_text()); data["requirements"]["R1"]["status"]="satisfied"; state.write_text(json.dumps(data)); artifact=root/"evidence"; artifact.write_text("one"); result=root/"result.json"
             payload={"stage":"review","iteration":1,"attempt":1,"assigned_requirement_ids":["R1"],"assigned_gap_ids":[],"owned_blocker_ids":[],"verdict":"PASS","open_gap_ids":[],"closed_gap_ids":[],"new_gaps":[],"new_blockers":[],"record_transitions":[],"evidence":[],"artifact_paths":[str(artifact)]}
             result.write_text(json.dumps(payload)); subprocess.run(cli+["record-stage",str(state),"--result-file",str(result)],check=True,capture_output=True)
-            artifact.write_text("two"); payload["attempt"]=2; result.write_text(json.dumps(payload)); subprocess.run(cli+["record-stage",str(state),"--result-file",str(result)],check=True,capture_output=True)
-            data=json.loads(state.read_text()); first=data["stages"]["review:1:1"]["artifact_ids"]; second=data["stages"]["review:1:2"]["artifact_ids"]
-            self.assertNotEqual(first,second); self.assertEqual(subprocess.run(cli+["check",str(state)],capture_output=True).returncode,0)
+            artifact.write_text("two"); payload["attempt"]=2; result.write_text(json.dumps(payload)); self.assertNotEqual(subprocess.run(cli+["record-stage",str(state),"--result-file",str(result)],capture_output=True).returncode,0)
 
     def test_candidate_ids_are_reserved_and_provenance_required(self):
         with tempfile.TemporaryDirectory() as raw:
