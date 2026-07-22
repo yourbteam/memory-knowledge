@@ -20,7 +20,7 @@ Verify-plan roles have a positive globally monotonic iteration, assigned slices,
 
 1. Validate the current draft, surface map, decisions, evidence identity, and verification ledger.
 2. Build a finite, content-bound obligation inventory. Permit one bootstrap assignment only before the inventory has assignment history; bootstrap supports nothing by itself.
-3. Run a verifier and critic on the same assignment and plan hash. The verifier returns exactly one `SUPPORTED|GAP|BLOCKED` assessment per assigned obligation. The critic independently approves or rejects inventory completeness, each assessment, and each finding disposition.
+3. Run a verifier and critic on the same assignment and plan hash. The verifier returns exactly one `SUPPORTED|GAP|BLOCKED` assessment per assigned obligation. The critic independently reassesses every assigned obligation, preserves every paired verifier finding unchanged, may add its own evidence-bound finding when inspection discovers a miss, and decides every finding disposition. Its approvals bind its own final assessments.
 4. Continue deterministic assignments until none remain. A finding touching a supported obligation resets it; changed section, evidence, or dependency bindings selectively invalidate affected assessments.
 5. Record `VERIFY_PLAN=PASS` only when `check --can-stop` proves an approved finite inventory, every non-excluded obligation critic-approved `SUPPORTED`, zero GAP/BLOCKED obligations, and zero actionable findings. Coarse section coverage cannot pass this gate.
 6. Run fresh `INTERNAL_READINESS` under the immutable owned-lens contract.
@@ -44,7 +44,7 @@ Every accepted role output binds `schema_version`, controller-derived attempt ID
 
 ## Findings and fixes
 
-Findings identify their stage, source role, requirement/obligation/coverage IDs, practical consequence, exact source or observed evidence, and `ACTIONABLE|NON_ACTIONABLE` classification. Actionable decisions are `FIX NOW` or `IMPLEMENT LATER`; non-actionable decisions are `ACKNOWLEDGE` or `DISMISS`. Only critic-approved verify-plan findings and the named owned-lens assessor's findings may drive a revision.
+Findings identify their stage, source role, requirement/obligation/coverage IDs, practical consequence, exact source or observed evidence, and `ACTIONABLE|NON_ACTIONABLE` classification. The critic cannot alter or omit a verifier finding, but it may add a `VERIFY_PLAN_CRITIC` finding grounded in the same frozen assignment. Actionable decisions are `FIX NOW` or `IMPLEMENT LATER`; non-actionable decisions are `ACKNOWLEDGE` or `DISMISS`. Only critic-approved verify-plan findings and the named owned-lens assessor's findings may drive a revision.
 
 `GAPS` returns control to the parent. The parent prepares the deterministic revision workspace, changes only its five proposal files, and records the revision with every accepted finding ID. The controller binds OPEN-to-APPLIED transitions, preserves immutable history, resets affected obligations, and invalidates all previous stage PASS records. The next attempt uses the next globally monotonic verify-plan iteration on the new plan hash.
 
@@ -53,6 +53,12 @@ Findings identify their stage, source role, requirement/obligation/coverage IDs,
 Every prepared attempt consumes budget before spawn. Each role permits one retry. Reserve three attempts for the owned lenses while verify-plan runs. LIGHT permits three revision rounds and at most three successful verifier/critic pairs; SUBSTANTIAL permits three revision rounds and at most ten pairs before an approved continuation. The one continuation permits ten more pairs without resetting attempts, elapsed time, findings, or iteration numbering.
 
 Two consecutive rounds with the same actionable-finding fingerprint, exhausted attempt or elapsed budgets, an unapproved inventory at the limit, or remaining GAP/BLOCKED obligations returns `CAP_REACHED`.
+
+For an ordinary SUBSTANTIAL revision whose wall-clock deadline expires, the controller may issue one exact-confirmation continuation-tranche request for that revision. Approval adds 3,600 seconds from approval time and three hardening rounds, preserves every existing attempt, revision, finding, and global verify-plan iteration, and is single-use for the bound revision. A later recorded revision may request its own tranche; the same revision cannot repeat one or combine it with the iteration-10 continuation.
+
+If the shared attempt cap is reached immediately after a successful current-revision verifier while exactly three attempts remain reserved for the owned lenses, the controller may issue one exact-confirmation paired-critic request. Approval increases the attempt cap by exactly one; it does not alter the three-attempt reserve, deadline, rounds, findings, revisions, or iteration numbering. The request binds the state hash, plan hash, revision, verifier attempt, verification iteration, and current budget values, and it cannot be reused or issued after the critic already exists.
+
+If the prior-revision critic consumed the final verify-plan capacity and returned GAPS, the corrected ordinary SUBSTANTIAL revision may issue one exact-confirmation verifier/critic-pair request before any current-revision attempt. Approval increases the attempt cap by exactly two. The request binds the successful prior critic output, its actionable findings' APPLIED transitions, the changed current plan hash, the next round and verification iteration, and current budget values. It cannot be reused, cannot be issued after a current-revision attempt exists, and does not alter the three-attempt owned-lens reserve, deadline, findings, revisions, or iteration numbering.
 
 ## Terminal mapping
 

@@ -202,6 +202,10 @@ def canonical_hash(value: Any) -> str:
     return hashlib.sha256(canonical_bytes(value)).hexdigest()
 
 
+def canonical_hash_sorted(values: list[dict[str, Any]]) -> list[dict[str, Any]]:
+    return sorted(values, key=canonical_hash)
+
+
 def bytes_hash(value: bytes) -> str:
     return hashlib.sha256(value).hexdigest()
 
@@ -384,7 +388,16 @@ def enumerate_assessment_source(root: Path) -> tuple[list[dict[str, str]], dict[
     records: list[dict[str, str]] = []
     payloads: dict[str, bytes] = {}
 
+    def is_controller_snapshot_archive(child_relative: PurePosixPath) -> bool:
+        parts = child_relative.parts
+        return any(
+            parts[index : index + 2] == (RUN_ROOT_NAME, "source-snapshots")
+            for index in range(len(parts) - 1)
+        )
+
     def add_file(child_relative: PurePosixPath) -> None:
+        if is_controller_snapshot_archive(child_relative):
+            return
         if child_relative.name == ".DS_Store" or any(
             part == ".env" or part.startswith(".env.")
             for part in child_relative.parts
@@ -453,6 +466,8 @@ def enumerate_assessment_source(root: Path) -> tuple[list[dict[str, str]], dict[
                 continue
             if entry.is_symlink():
                 raise PlanPackageError("UNSAFE_SOURCE_ENTRY", f"source snapshot rejects symlink: {child_relative}")
+            if is_controller_snapshot_archive(child_relative):
+                continue
             if entry.is_dir(follow_symlinks=False):
                 visit(Path(entry.path), child_relative)
                 continue
@@ -743,21 +758,10 @@ def validate_requirements(value: Any, *, direct: bool) -> list[dict[str, Any]]:
             raise PlanPackageError("INVALID_REQUIREMENTS", "duplicate requirement id")
         ids.add(rid)
         require_string(requirement["text"], "requirement text")
-        evidence_ids = requirement["evidence_ids"]
-        if direct:
-            sorted_unique_strings(evidence_ids, "requirement evidence_ids")
-        elif (
-            not isinstance(evidence_ids, list)
-            or any(not isinstance(item, str) or not item for item in evidence_ids)
-            or len(evidence_ids) != len(set(evidence_ids))
-        ):
-            raise PlanPackageError(
-                "INVALID_SCHEMA",
-                "research requirement evidence_ids must be unique non-empty strings",
-            )
+        sorted_unique_strings(requirement["evidence_ids"], "requirement evidence_ids")
         obligations = requirement["planner_obligations"]
-        if not isinstance(obligations, list) or not obligations:
-            raise PlanPackageError("INVALID_REQUIREMENTS", "planner_obligations must be non-empty")
+        if not isinstance(obligations, list):
+            raise PlanPackageError("INVALID_REQUIREMENTS", "planner_obligations must be an array")
         for obligation in obligations:
             require_exact(obligation, OBLIGATION_FIELDS, "planner obligation")
             oid = require_string(obligation["id"], "obligation id")
@@ -1742,9 +1746,7 @@ def validate_attempt_policy(path: Path, state: dict[str, Any], args: argparse.Na
             completed_critics = [
                 item["verification_iteration"]
                 for item in state["attempts"]
-                if item["state_revision"] == state["revision"]
-                and item["round"] == args.round
-                and item["role"] == "VERIFY_PLAN_CRITIC"
+                if item["role"] == "VERIFY_PLAN_CRITIC"
                 and item["status"] == "SUCCEEDED"
             ]
             expected_iteration = max(completed_critics, default=0) + 1
@@ -2062,10 +2064,28 @@ def validate_role_output(output: Any, state: dict[str, Any], attempt: dict[str, 
             raise PlanPackageError("OUTPUT_TAMPER", "paired verifier output changed")
         paired_verifier_output = load_json(verifier_path, "paired verifier output")
         evidence_attempt = verifiers[0]
-    findings = output["findings"]
-    if not isinstance(findings, list):
+    raw_findings = output["findings"]
+    if not isinstance(raw_findings, list):
         raise PlanPackageError("INVALID_ROLE_OUTPUT", "findings must be an array")
-    findings = [validate_finding(finding, evidence_attempt) for finding in findings]
+    if attempt["role"] == "VERIFY_PLAN_CRITIC":
+        verifier_findings = {
+            finding["id"]: finding for finding in paired_verifier_output.get("findings", [])
+        }
+        findings = []
+        seen_verifier_findings: set[str] = set()
+        for finding in raw_findings:
+            verifier_finding = verifier_findings.get(finding.get("id")) if isinstance(finding, dict) else None
+            if verifier_finding is not None:
+                if finding != verifier_finding:
+                    raise PlanPackageError("INVALID_ROLE_OUTPUT", "critic changed a paired verifier finding")
+                findings.append(validate_finding(finding, evidence_attempt))
+                seen_verifier_findings.add(finding["id"])
+            else:
+                findings.append(validate_finding(finding, attempt))
+        if seen_verifier_findings != set(verifier_findings):
+            raise PlanPackageError("INVALID_ROLE_OUTPUT", "critic omitted a paired verifier finding")
+    else:
+        findings = [validate_finding(finding, evidence_attempt) for finding in raw_findings]
     if [finding["id"] for finding in findings] != sorted({finding["id"] for finding in findings}):
         raise PlanPackageError("INVALID_ROLE_OUTPUT", "findings must be sorted by unique ID")
     assessments = validate_obligation_assessments(output["obligation_assessments"], evidence_attempt)
@@ -2080,7 +2100,7 @@ def validate_role_output(output: Any, state: dict[str, Any], attempt: dict[str, 
                 raise PlanPackageError("INVALID_ROLE_OUTPUT", "obligation finding snapshot must name an actionable finding")
             snapshot_ids.add(snapshot["id"])
     actionable_ids = {finding["id"] for finding in findings if finding["source_classification"] == "ACTIONABLE"}
-    if attempt["role"] in {"VERIFY_PLAN_VERIFIER", "VERIFY_PLAN_CRITIC"} and snapshot_ids != actionable_ids:
+    if attempt["role"] == "VERIFY_PLAN_VERIFIER" and snapshot_ids != actionable_ids:
         raise PlanPackageError("INVALID_ROLE_OUTPUT", "verify-plan actionable findings must exactly match assessment snapshots")
     transfer = validate_artifact_transfer(output["artifact_transfer"], state, attempt)
     if attempt["role"] == "VERIFY_PLAN_VERIFIER":
@@ -2089,8 +2109,16 @@ def validate_role_output(output: Any, state: dict[str, Any], attempt: dict[str, 
         return output
     dispositions = validate_dispositions(output["dispositions"], findings, attempt)
     if attempt["role"] == "VERIFY_PLAN_CRITIC":
-        if output["findings"] != paired_verifier_output.get("findings") or output["obligation_assessments"] != paired_verifier_output.get("obligation_assessments"):
-            raise PlanPackageError("INVALID_ROLE_OUTPUT", "critic findings and assessments must equal the paired verifier snapshots")
+        critic_actionable_ids = {
+            item["finding_id"]
+            for item in dispositions
+            if item["decision"] in {"FIX NOW", "IMPLEMENT LATER"}
+        }
+        if snapshot_ids != critic_actionable_ids:
+            raise PlanPackageError(
+                "INVALID_ROLE_OUTPUT",
+                "critic actionable dispositions must exactly match assessment snapshots",
+            )
         if output["inventory_approval"] is not None:
             validate_approval(output["inventory_approval"], INVENTORY_APPROVAL_FIELDS, "inventory approval")
         approvals = output["assessment_approvals"]
@@ -2198,15 +2226,275 @@ def cmd_record_verification_ledger(args: argparse.Namespace) -> dict[str, Any]:
     return state_result("record-verification-ledger", state, "VERIFICATION_LEDGER_RECORDED")
 
 
+def ledger_approval_ref(
+    *, attempt_id: str, snapshot_path: str, snapshot_sha256: str, approval: dict[str, Any]
+) -> dict[str, str]:
+    return {
+        "critic_attempt_id": attempt_id,
+        "critic_snapshot_path": snapshot_path,
+        "critic_snapshot_sha256": snapshot_sha256,
+        "approval_sha256": canonical_hash(approval),
+    }
+
+
+def project_verify_plan_ledger(
+    ledger: dict[str, Any], verifier: dict[str, Any], critic: dict[str, Any]
+) -> tuple[dict[str, Any], dict[str, Any]]:
+    """Translate a validated verifier/critic pair into the shared ledger contract."""
+    verification = ledger["plan_verification"]
+    inventory = next(
+        item
+        for item in verification["inventories"]
+        if item["inventory_sha256"] == verification["inventory_sha256"]
+    )
+    ledger_iteration = ledger["iteration"]
+    active_assignments = [
+        item
+        for item in verification["assignments"]
+        if item["iteration"] == ledger_iteration
+        and item["inventory_sha256"] == verification["inventory_sha256"]
+    ]
+    verifier_obligation_ids = [
+        item["obligation_id"] for item in verifier["obligation_assessments"]
+    ]
+    critic_obligation_ids = [
+        item["obligation_id"] for item in critic["obligation_assessments"]
+    ]
+    if (
+        len(active_assignments) != 1
+        or active_assignments[0]["assigned_obligation_ids"] != verifier_obligation_ids
+        or active_assignments[0]["assigned_obligation_ids"] != critic_obligation_ids
+    ):
+        raise PlanPackageError(
+            "LEDGER_ASSIGNMENT_MISMATCH",
+            "verifier and critic assessments must exactly match the active local ledger assignment",
+        )
+    dispositions = {item["finding_id"]: item for item in critic["dispositions"]}
+    translated_findings: dict[str, dict[str, Any]] = {}
+    for finding in critic["findings"]:
+        disposition = dispositions[finding["id"]]
+        core = {
+            "id": finding["id"],
+            "classification": disposition["decision"],
+            "obligation_ids": finding["obligation_ids"],
+            "iteration_first_seen": ledger_iteration,
+        }
+        translated_findings[finding["id"]] = {
+            **core,
+            "fingerprint": canonical_hash(core),
+            "status": (
+                "open"
+                if disposition["decision"] in {"FIX NOW", "IMPLEMENT LATER"}
+                else disposition["decision"].lower() + "d"
+            ),
+        }
+
+    existing_findings = {item["id"]: item for item in ledger["findings"]}
+    for finding_id, translated in translated_findings.items():
+        existing = existing_findings.get(finding_id)
+        if existing is not None and existing != translated:
+            raise PlanPackageError("FINDING_IDENTITY_CONFLICT", "shared-ledger finding identity changed")
+        existing_findings[finding_id] = translated
+    ledger["findings"] = sorted(existing_findings.values(), key=lambda item: item["id"])
+
+    approval_map = {item["obligation_id"]: item for item in critic["assessment_approvals"]}
+    translated_assessments: list[dict[str, Any]] = []
+    translated_approvals: list[dict[str, Any]] = []
+    for assessment in critic["obligation_assessments"]:
+        snapshots = [
+            {
+                key: translated_findings[snapshot["id"]][key]
+                for key in ("id", "fingerprint", "classification", "obligation_ids", "iteration_first_seen")
+            }
+            for snapshot in assessment["finding_snapshots"]
+        ]
+        projection = {
+            "iteration": ledger_iteration,
+            "obligation_id": assessment["obligation_id"],
+            "binding_sha256": assessment["binding_sha256"],
+            "status": assessment["status"],
+            "evidence": assessment["evidence"],
+            "finding_snapshots": snapshots,
+            "blocked_boundary": assessment["blocked_boundary"],
+        }
+        translated = {**projection, "assessment_fingerprint": canonical_hash(projection)}
+        source_approval = approval_map[assessment["obligation_id"]]
+        translated_approval = {
+            **source_approval,
+            "iteration": ledger_iteration,
+            "assessment_fingerprint": translated["assessment_fingerprint"],
+        }
+        translated_assessments.append(translated)
+        translated_approvals.append(translated_approval)
+
+    snapshot = {
+        "schema_version": 1,
+        "attempt_id": critic["attempt_id"],
+        "inventory_approval": critic["inventory_approval"],
+        "assessment_approvals": canonical_hash_sorted(translated_approvals),
+        "coverage_exclusion_approvals": canonical_hash_sorted(
+            critic["coverage_exclusion_approvals"]
+        ),
+    }
+    snapshot_sha256 = canonical_hash(snapshot)
+    snapshot_path = f".verify-plan/critic-outputs/{critic['attempt_id']}.json"
+
+    if critic["inventory_approval"] is not None:
+        inventory["completeness_approval"] = critic["inventory_approval"]
+        inventory["completeness_approval_ref"] = ledger_approval_ref(
+            attempt_id=critic["attempt_id"],
+            snapshot_path=snapshot_path,
+            snapshot_sha256=snapshot_sha256,
+            approval=critic["inventory_approval"],
+        )
+
+    prior_assessments = [
+        item
+        for item in verification["obligation_assessments"]
+        if item["iteration"] != ledger_iteration
+    ]
+    for assessment, approval in zip(translated_assessments, translated_approvals, strict=True):
+        prior_assessments.append(
+            {
+                **assessment,
+                "approval": approval,
+                "approval_ref": ledger_approval_ref(
+                    attempt_id=critic["attempt_id"],
+                    snapshot_path=snapshot_path,
+                    snapshot_sha256=snapshot_sha256,
+                    approval=approval,
+                ),
+            }
+        )
+    verification["obligation_assessments"] = sorted(
+        prior_assessments, key=lambda item: (item["iteration"], item["obligation_id"])
+    )
+    critic_record = {
+        "attempt_id": critic["attempt_id"],
+        "snapshot_path": snapshot_path,
+        "output_sha256": snapshot_sha256,
+    }
+    prior_outputs = [
+        item for item in verification["critic_outputs"]
+        if item["attempt_id"] != critic["attempt_id"]
+    ]
+    verification["critic_outputs"] = [*prior_outputs, critic_record]
+
+    translated_exclusions = []
+    for approval in critic["coverage_exclusion_approvals"]:
+        translated_exclusions.append(
+            {
+                **approval,
+                "approval_ref": ledger_approval_ref(
+                    attempt_id=critic["attempt_id"],
+                    snapshot_path=snapshot_path,
+                    snapshot_sha256=snapshot_sha256,
+                    approval=approval,
+                ),
+            }
+        )
+    verification["coverage_exclusion_approvals"].extend(translated_exclusions)
+
+    active_obligations = {item["id"]: item for item in inventory["obligations"]}
+    latest = {
+        obligation_id: max(
+            (
+                item for item in verification["obligation_assessments"]
+                if item["obligation_id"] == obligation_id
+                and item["binding_sha256"] == obligation["binding_sha256"]
+                and item["approval"]["decision"] == "APPROVED"
+            ),
+            key=lambda item: item["iteration"],
+            default=None,
+        )
+        for obligation_id, obligation in active_obligations.items()
+    }
+    open_by_obligation = {
+        obligation_id: any(
+            finding["classification"] in {"FIX NOW", "IMPLEMENT LATER"}
+            and finding["status"] == "open"
+            and obligation_id in finding["obligation_ids"]
+            for finding in ledger["findings"]
+        )
+        for obligation_id in active_obligations
+    }
+    inventory_approved = bool(
+        inventory["completeness_approval"]
+        and inventory["completeness_approval"]["decision"] == "APPROVED"
+    )
+    excluded = {
+        item["coverage_id"]: item["approved_status"] for item in translated_exclusions
+    }
+    resolved_finding_statuses = shared_contracts()[2].RESOLVED_STATUSES
+    for coverage in ledger["coverage_queue"]:
+        owned = [
+            obligation_id for obligation_id, obligation in active_obligations.items()
+            if obligation["coverage_id"] == coverage["id"]
+        ]
+        if coverage["id"] in excluded:
+            coverage["status"] = excluded[coverage["id"]]
+        elif inventory_approved and owned and all(
+            latest[item] is not None
+            and latest[item]["status"] == "SUPPORTED"
+            and not open_by_obligation[item]
+            for item in owned
+        ):
+            resolved_gap_history = any(
+                assessment["obligation_id"] in owned
+                and assessment["status"] == "GAP"
+                and assessment["approval"]["decision"] == "APPROVED"
+                and assessment["finding_snapshots"]
+                and all(
+                    snapshot["id"] in existing_findings
+                    and existing_findings[snapshot["id"]]["status"]
+                    in resolved_finding_statuses
+                    for snapshot in assessment["finding_snapshots"]
+                )
+                for assessment in verification["obligation_assessments"]
+            )
+            coverage["status"] = "fixed" if resolved_gap_history else "checked"
+        else:
+            coverage["status"] = "unverified"
+    return ledger, snapshot
+
+
+def cmd_project_verify_plan_ledger(args: argparse.Namespace) -> dict[str, Any]:
+    path = Path(args.state_json); state, _, _ = load_state(path)
+    if state["status"] != "HARDENING":
+        raise PlanPackageError("INVALID_TRANSITION", "projection requires HARDENING")
+    verifier = load_json(Path(args.verifier_output), "verifier output")
+    critic = load_json(Path(args.critic_output), "critic output")
+    verifier_attempt = find_attempt(state, verifier.get("attempt_id", ""))
+    critic_attempt = find_attempt(state, critic.get("attempt_id", ""))
+    if any(item["status"] != "SUCCEEDED" for item in (verifier_attempt, critic_attempt)):
+        raise PlanPackageError("INVALID_ATTEMPT", "projection requires successful attempts")
+    validate_role_output(verifier, state, verifier_attempt)
+    validate_role_output(critic, state, critic_attempt)
+    ledger_path = Path(args.ledger)
+    ledger = validate_ledger(ledger_path)
+    if canonical_hash(ledger) != state["verification_ledger_sha256"]:
+        raise PlanPackageError("LEDGER_BINDING_MISMATCH", "projection ledger is not current")
+    output_path = Path(args.out)
+    if output_path.parent.resolve(strict=True) != ledger_path.parent.resolve(strict=True):
+        raise PlanPackageError("UNSAFE_PATH", "projected ledger must remain beside its assets")
+    projected, snapshot = project_verify_plan_ledger(ledger, verifier, critic)
+    snapshot_path = output_path.parent / f".verify-plan/critic-outputs/{critic['attempt_id']}.json"
+    publish_immutable(snapshot_path, canonical_bytes(snapshot))
+    atomic_json(output_path, projected)
+    validate_ledger(output_path)
+    return state_result("project-verify-plan-ledger", state, "VERIFY_PLAN_LEDGER_PROJECTED")
+
+
 def cmd_record_findings(args: argparse.Namespace) -> dict[str, Any]:
     path = Path(args.state_json); state, _, _ = load_state(path)
     primary = load_json(Path(args.primary_output), "primary role output")
-    findings = primary.get("findings")
-    if not isinstance(findings, list): raise PlanPackageError("INVALID_FINDINGS", "role output findings must be an array")
     critic = load_json(Path(args.critic_output), "critic role output") if args.critic_output else None
     if args.stage == "VERIFY_PLAN" and critic is None: raise PlanPackageError("INVALID_FINDINGS", "VERIFY_PLAN requires critic output")
     if args.stage != "VERIFY_PLAN" and critic is not None: raise PlanPackageError("INVALID_FINDINGS", "owned lens forbids critic output")
-    dispositions = (critic if critic is not None else primary).get("dispositions")
+    source = critic if critic is not None else primary
+    findings = source.get("findings")
+    if not isinstance(findings, list): raise PlanPackageError("INVALID_FINDINGS", "role output findings must be an array")
+    dispositions = source.get("dispositions")
     if not isinstance(dispositions, list) or len(dispositions) != len(findings): raise PlanPackageError("INVALID_FINDINGS", "one disposition is required per finding")
     existing = {item["id"]: item for item in state["findings"]}
     for finding in findings:
@@ -2808,6 +3096,404 @@ def cmd_continue_hardening(args: argparse.Namespace) -> dict[str, Any]:
     return state_result("continue-hardening", state, "HARDENING_CONTINUED")
 
 
+def cmd_prepare_deadline_continuation_approval(args: argparse.Namespace) -> dict[str, Any]:
+    state, _, run_root = load_state(Path(args.state_json))
+    expired = parse_utc(now_utc()) > parse_utc(state["deadline_at_utc"])
+    deadline_cap = state["status"] == "CAP_REACHED" and state["cap_reason"] == "DEADLINE_EXCEEDED"
+    receipt_path = run_root / f"approvals/deadline-continuation-r{state['revision']}.json"
+    if (
+        state["approval_context"] != "ORDINARY"
+        or state["profile"] != "SUBSTANTIAL"
+        or state["status"] not in {"DRAFTED", "HARDENING", "CAP_REACHED"}
+        or not (expired or deadline_cap)
+        or receipt_path.exists()
+    ):
+        raise PlanPackageError("CONTINUATION_INELIGIBLE", "state is not eligible for deadline continuation")
+    base = {
+        "schema_version": 1,
+        "package_id": state["package_id"],
+        "revision": state["revision"],
+        "plan_sha256": state["plan_sha256"],
+        "state_sha256": canonical_hash(state),
+        "current_deadline_at_utc": state["deadline_at_utc"],
+        "current_max_rounds": state["budgets"]["max_rounds"],
+        "extension_seconds": 3600,
+        "extension_rounds": 3,
+        "scope": "DEADLINE_CONTINUATION",
+    }
+    basis = canonical_hash(base)
+    request = {
+        **base,
+        "approval_basis_sha256": basis,
+        "required_confirmation": f"APPROVE DEADLINE CONTINUATION {basis}",
+    }
+    request["request_sha256"] = canonical_hash(request)
+    expected = run_root / (
+        f"approvals/deadline-continuation-request-r{state['revision']}-"
+        f"{base['state_sha256']}.json"
+    )
+    if Path(args.out).absolute() != expected:
+        raise PlanPackageError("OUTPUT_PATH_MISMATCH", "deadline continuation request path is deterministic")
+    publish_immutable(expected, canonical_bytes(request))
+    return state_result(
+        "prepare-deadline-continuation-approval", state, "DEADLINE_CONTINUATION_APPROVAL_REQUIRED"
+    )
+
+
+def cmd_continue_deadline_hardening(args: argparse.Namespace) -> dict[str, Any]:
+    path = Path(args.state_json)
+    state, _, run_root = load_state(path)
+    request_path = run_root / (
+        f"approvals/deadline-continuation-request-r{state['revision']}-"
+        f"{canonical_hash(state)}.json"
+    )
+    receipt_path = run_root / f"approvals/deadline-continuation-r{state['revision']}.json"
+    if (
+        state["status"] == "HARDENING"
+        and state["budgets"]["continuation_approval_sha256"] is not None
+        and receipt_path.is_file()
+        and bytes_hash(receipt_path.read_bytes()) == state["budgets"]["continuation_approval_sha256"]
+    ):
+        return state_result("continue-deadline-hardening", state, "DEADLINE_HARDENING_CONTINUED")
+    supplied_request = Path(args.request).resolve(strict=True)
+    if supplied_request != request_path:
+        raise PlanPackageError("INVALID_CONTINUATION_APPROVAL", "deadline request path is not controller-owned")
+    request = load_json(request_path, "deadline continuation request")
+    if (
+        request.get("schema_version") != 1
+        or request.get("package_id") != state["package_id"]
+        or request.get("revision") != state["revision"]
+        or request.get("plan_sha256") != state["plan_sha256"]
+        or request.get("state_sha256") != canonical_hash(state)
+        or request.get("current_deadline_at_utc") != state["deadline_at_utc"]
+        or request.get("current_max_rounds") != state["budgets"]["max_rounds"]
+        or request.get("extension_seconds") != 3600
+        or request.get("extension_rounds") != 3
+        or request.get("scope") != "DEADLINE_CONTINUATION"
+        or request.get("approval_basis_sha256") != canonical_hash({
+            key: request[key]
+            for key in (
+                "schema_version", "package_id", "revision", "plan_sha256", "state_sha256",
+                "current_deadline_at_utc", "current_max_rounds", "extension_seconds",
+                "extension_rounds", "scope",
+            )
+        })
+        or request.get("request_sha256") != canonical_hash({
+            key: request[key] for key in request if key != "request_sha256"
+        })
+    ):
+        raise PlanPackageError("INVALID_CONTINUATION_APPROVAL", "deadline request binding is invalid")
+    response = Path(args.approval_response).read_bytes()
+    if response != request["required_confirmation"].encode():
+        raise PlanPackageError("APPROVAL_DENIED", "response does not exactly approve deadline continuation")
+    approved_at = now_utc()
+    new_deadline = parse_utc(approved_at) + timedelta(seconds=3600)
+    receipt = {
+        "schema_version": 1,
+        "package_id": state["package_id"],
+        "revision": state["revision"],
+        "plan_sha256": state["plan_sha256"],
+        "request_sha256": request["request_sha256"],
+        "scope": "DEADLINE_CONTINUATION",
+        "extension_seconds": 3600,
+        "extension_rounds": 3,
+        "prior_max_rounds": state["budgets"]["max_rounds"],
+        "new_max_rounds": state["budgets"]["max_rounds"] + 3,
+        "approved_at_utc": approved_at,
+        "new_deadline_at_utc": new_deadline.isoformat().replace("+00:00", "Z"),
+        "user_response_sha256": bytes_hash(response),
+    }
+    publish_immutable(receipt_path, canonical_bytes(receipt))
+    receipt_sha = bytes_hash(receipt_path.read_bytes())
+    state["budgets"]["continuation_approval_sha256"] = receipt_sha
+    state["budgets"]["max_elapsed_seconds"] = int(
+        (new_deadline - parse_utc(state["started_at_utc"])).total_seconds()
+    )
+    state["budgets"]["max_rounds"] = receipt["new_max_rounds"]
+    state["deadline_at_utc"] = receipt["new_deadline_at_utc"]
+    state.update(
+        status="HARDENING",
+        cap_reason=None,
+        cap_reached_at_utc=None,
+        cap_stage=None,
+        cap_completed_verification_iteration=None,
+    )
+    save_state(path, state)
+    return state_result("continue-deadline-hardening", state, "DEADLINE_HARDENING_CONTINUED")
+
+
+def awaiting_paired_critic(state: dict[str, Any]) -> dict[str, Any]:
+    verifiers = [
+        attempt for attempt in state["attempts"]
+        if attempt.get("state_revision") == state["revision"]
+        and attempt.get("role") == "VERIFY_PLAN_VERIFIER"
+        and attempt.get("status") == "SUCCEEDED"
+    ]
+    if not verifiers:
+        raise PlanPackageError(
+            "ATTEMPT_CONTINUATION_INELIGIBLE",
+            "attempt continuation requires a successful current-revision verifier",
+        )
+    verifier = max(verifiers, key=lambda item: item["attempt_sequence"])
+    current_attempts = [
+        attempt for attempt in state["attempts"]
+        if attempt.get("state_revision") == state["revision"]
+    ]
+    if (
+        not current_attempts
+        or max(current_attempts, key=lambda item: item["attempt_sequence"])["attempt_id"]
+        != verifier["attempt_id"]
+        or expected_attempt_role(state, verifier["round"]) != "VERIFY_PLAN_CRITIC"
+    ):
+        raise PlanPackageError(
+            "ATTEMPT_CONTINUATION_INELIGIBLE",
+            "the current revision is not awaiting the verifier's paired critic",
+        )
+    paired = [
+        attempt for attempt in state["attempts"]
+        if attempt.get("state_revision") == state["revision"]
+        and attempt.get("role") == "VERIFY_PLAN_CRITIC"
+        and attempt.get("verification_iteration") == verifier["verification_iteration"]
+    ]
+    if paired:
+        raise PlanPackageError(
+            "ATTEMPT_CONTINUATION_INELIGIBLE",
+            "the current-revision verifier already has a critic attempt",
+        )
+    return verifier
+
+
+def attempt_continuation_context(
+    state: dict[str, Any], run_root: Path, receipt_path: Path
+) -> dict[str, Any]:
+    budgets = state["budgets"]
+    if (
+        state["approval_context"] != "ORDINARY"
+        or state["profile"] != "SUBSTANTIAL"
+        or budgets["used_agent_attempts"]
+        != budgets["max_agent_attempts"] - budgets["reserved_later_stage_attempts"]
+        or budgets["reserved_later_stage_attempts"] != 3
+        or receipt_path.exists()
+    ):
+        raise PlanPackageError(
+            "ATTEMPT_CONTINUATION_INELIGIBLE",
+            "state is not eligible for a bounded attempt continuation",
+        )
+    if (
+        state["status"] == "CAP_REACHED"
+        and state["cap_reason"] == "AGENT_ATTEMPT_LIMIT"
+        and state["cap_stage"] == "VERIFY_PLAN"
+    ):
+        verifier = awaiting_paired_critic(state)
+        return {
+            "basis_attempt_id": verifier["attempt_id"],
+            "target_role": "VERIFY_PLAN_CRITIC",
+            "target_round": verifier["round"],
+            "target_verification_iteration": verifier["verification_iteration"],
+            "extension_attempts": 1,
+            "scope": "PAIRED_CRITIC_ATTEMPT_CONTINUATION",
+        }
+    current_attempts = [
+        attempt for attempt in state["attempts"]
+        if attempt.get("state_revision") == state["revision"]
+    ]
+    if state["status"] != "DRAFTED" or current_attempts or not state["attempts"]:
+        raise PlanPackageError(
+            "ATTEMPT_CONTINUATION_INELIGIBLE",
+            "state is neither awaiting a paired critic nor an attempt-free corrected revision",
+        )
+    prior_critic = max(state["attempts"], key=lambda item: item["attempt_sequence"])
+    if (
+        prior_critic.get("state_revision") != state["revision"] - 1
+        or prior_critic.get("role") != "VERIFY_PLAN_CRITIC"
+        or prior_critic.get("status") != "SUCCEEDED"
+        or not prior_critic.get("output_path")
+        or not SHA_RE.fullmatch(str(prior_critic.get("output_sha256")))
+    ):
+        raise PlanPackageError(
+            "ATTEMPT_CONTINUATION_INELIGIBLE",
+            "corrected revision does not follow a successful prior-revision critic",
+        )
+    output_path = contained_file(
+        run_root, prior_critic["output_path"], "prior critic output"
+    )
+    output_bytes = output_path.read_bytes()
+    output = load_json(output_path, "prior critic output")
+    if not isinstance(output, dict):
+        raise PlanPackageError(
+            "ATTEMPT_CONTINUATION_INELIGIBLE", "prior critic output is not an object"
+        )
+    dispositions = output.get("dispositions")
+    terminal = output.get("terminal_envelope")
+    actionable_ids = {
+        disposition.get("finding_id")
+        for disposition in dispositions if disposition.get("decision") in {"FIX NOW", "IMPLEMENT LATER"}
+    } if isinstance(dispositions, list) else set()
+    applied_ids = {
+        transition.get("finding_id")
+        for transition in state["finding_transitions"]
+        if transition.get("to_status") == "APPLIED"
+        and transition.get("applied_revision") == state["revision"]
+    }
+    if (
+        bytes_hash(output_bytes) != prior_critic["output_sha256"]
+        or output.get("attempt_id") != prior_critic["attempt_id"]
+        or not isinstance(terminal, dict)
+        or terminal.get("verdict") != "GAPS"
+        or not actionable_ids
+        or not all(isinstance(item, str) and item for item in actionable_ids)
+        or not actionable_ids.issubset(applied_ids)
+        or output.get("assessed_plan_sha256") == state["plan_sha256"]
+    ):
+        raise PlanPackageError(
+            "ATTEMPT_CONTINUATION_INELIGIBLE",
+            "corrected revision is not bound to fully applied prior critic gaps",
+        )
+    return {
+        "basis_attempt_id": prior_critic["attempt_id"],
+        "target_role": "VERIFY_PLAN_VERIFIER",
+        "target_round": 1 + max(attempt["round"] for attempt in state["attempts"]),
+        "target_verification_iteration": prior_critic["verification_iteration"] + 1,
+        "extension_attempts": 2,
+        "scope": "REVISION_VERIFY_PAIR_ATTEMPT_CONTINUATION",
+    }
+
+
+def cmd_prepare_attempt_continuation_approval(args: argparse.Namespace) -> dict[str, Any]:
+    state, _, run_root = load_state(Path(args.state_json))
+    budgets = state["budgets"]
+    receipt_path = run_root / f"approvals/attempt-continuation-r{state['revision']}.json"
+    context = attempt_continuation_context(state, run_root, receipt_path)
+    base = {
+        "schema_version": 1,
+        "package_id": state["package_id"],
+        "revision": state["revision"],
+        "plan_sha256": state["plan_sha256"],
+        "state_sha256": canonical_hash(state),
+        "current_max_agent_attempts": budgets["max_agent_attempts"],
+        "used_agent_attempts": budgets["used_agent_attempts"],
+        "reserved_later_stage_attempts": budgets["reserved_later_stage_attempts"],
+        **context,
+    }
+    basis = canonical_hash(base)
+    request = {
+        **base,
+        "approval_basis_sha256": basis,
+        "required_confirmation": f"APPROVE ATTEMPT CONTINUATION {basis}",
+    }
+    request["request_sha256"] = canonical_hash(request)
+    expected = run_root / (
+        f"approvals/attempt-continuation-request-r{state['revision']}-"
+        f"{base['state_sha256']}.json"
+    )
+    if Path(args.out).absolute() != expected:
+        raise PlanPackageError(
+            "OUTPUT_PATH_MISMATCH", "attempt continuation request path is deterministic"
+        )
+    publish_immutable(expected, canonical_bytes(request))
+    return state_result(
+        "prepare-attempt-continuation-approval",
+        state,
+        "ATTEMPT_CONTINUATION_APPROVAL_REQUIRED",
+    )
+
+
+def cmd_continue_attempt_hardening(args: argparse.Namespace) -> dict[str, Any]:
+    path = Path(args.state_json)
+    state, _, run_root = load_state(path)
+    receipt_path = run_root / f"approvals/attempt-continuation-r{state['revision']}.json"
+    if state["status"] == "HARDENING" and receipt_path.is_file():
+        receipt = load_json(receipt_path, "attempt continuation receipt")
+        if (
+            receipt.get("package_id") == state["package_id"]
+            and receipt.get("revision") == state["revision"]
+            and receipt.get("plan_sha256") == state["plan_sha256"]
+            and receipt.get("new_max_agent_attempts")
+            == state["budgets"]["max_agent_attempts"]
+            and receipt_path.read_bytes() == canonical_bytes(receipt)
+        ):
+            return state_result(
+                "continue-attempt-hardening", state, "ATTEMPT_HARDENING_CONTINUED"
+            )
+    request_path = run_root / (
+        f"approvals/attempt-continuation-request-r{state['revision']}-"
+        f"{canonical_hash(state)}.json"
+    )
+    supplied_request = Path(args.request).resolve(strict=True)
+    if supplied_request != request_path:
+        raise PlanPackageError(
+            "INVALID_ATTEMPT_CONTINUATION_APPROVAL",
+            "attempt continuation request path is not controller-owned",
+        )
+    request = load_json(request_path, "attempt continuation request")
+    budgets = state["budgets"]
+    try:
+        context = attempt_continuation_context(state, run_root, receipt_path)
+    except PlanPackageError as error:
+        raise PlanPackageError(
+            "INVALID_ATTEMPT_CONTINUATION_APPROVAL", str(error)
+        ) from error
+    base_fields = (
+        "schema_version", "package_id", "revision", "plan_sha256", "state_sha256",
+        "current_max_agent_attempts", "used_agent_attempts",
+        "reserved_later_stage_attempts", "basis_attempt_id", "target_role",
+        "target_round", "target_verification_iteration", "extension_attempts", "scope",
+    )
+    if (
+        request.get("schema_version") != 1
+        or request.get("package_id") != state["package_id"]
+        or request.get("revision") != state["revision"]
+        or request.get("plan_sha256") != state["plan_sha256"]
+        or request.get("state_sha256") != canonical_hash(state)
+        or request.get("current_max_agent_attempts") != budgets["max_agent_attempts"]
+        or request.get("used_agent_attempts") != budgets["used_agent_attempts"]
+        or request.get("reserved_later_stage_attempts") != 3
+        or any(request.get(key) != value for key, value in context.items())
+        or request.get("approval_basis_sha256")
+        != canonical_hash({key: request[key] for key in base_fields})
+        or request.get("request_sha256")
+        != canonical_hash({key: request[key] for key in request if key != "request_sha256"})
+    ):
+        raise PlanPackageError(
+            "INVALID_ATTEMPT_CONTINUATION_APPROVAL",
+            "attempt continuation request binding is invalid",
+        )
+    response = Path(args.approval_response).read_bytes()
+    if response != request["required_confirmation"].encode():
+        raise PlanPackageError("APPROVAL_DENIED", "response does not exactly approve attempt continuation")
+    approved_at = now_utc()
+    receipt = {
+        "schema_version": 1,
+        "package_id": state["package_id"],
+        "revision": state["revision"],
+        "plan_sha256": state["plan_sha256"],
+        "request_sha256": request["request_sha256"],
+        "scope": request["scope"],
+        "extension_attempts": context["extension_attempts"],
+        "prior_max_agent_attempts": state["budgets"]["max_agent_attempts"],
+        "new_max_agent_attempts": state["budgets"]["max_agent_attempts"] + context["extension_attempts"],
+        "basis_attempt_id": context["basis_attempt_id"],
+        "target_role": context["target_role"],
+        "target_round": context["target_round"],
+        "target_verification_iteration": context["target_verification_iteration"],
+        "approved_at_utc": approved_at,
+        "user_response_sha256": bytes_hash(response),
+    }
+    publish_immutable(receipt_path, canonical_bytes(receipt))
+    state["budgets"]["max_agent_attempts"] = receipt["new_max_agent_attempts"]
+    state.update(
+        status="HARDENING",
+        cap_reason=None,
+        cap_reached_at_utc=None,
+        cap_stage=None,
+        cap_completed_verification_iteration=None,
+    )
+    save_state(path, state)
+    return state_result(
+        "continue-attempt-hardening", state, "ATTEMPT_HARDENING_CONTINUED"
+    )
+
+
 def finding_evidence(finding: dict[str, Any]) -> str:
     records = finding.get("evidence")
     if not isinstance(records, list) or not records:
@@ -3160,9 +3846,14 @@ def parser() -> argparse.ArgumentParser:
     p = sub.add_parser("record-stage"); p.add_argument("state_json"); p.add_argument("--round", type=int, required=True); p.add_argument("--stage", choices=STAGES, required=True); p.add_argument("--source-attempt-id"); p.add_argument("--artifact"); p.set_defaults(handler=cmd_record_stage)
     p = sub.add_parser("record-findings"); p.add_argument("state_json"); p.add_argument("--round", type=int, required=True); p.add_argument("--stage", choices=STAGES, required=True); p.add_argument("--primary-output", required=True); p.add_argument("--critic-output"); p.set_defaults(handler=cmd_record_findings)
     p = sub.add_parser("record-verification-ledger"); p.add_argument("state_json"); p.add_argument("--ledger", required=True); p.add_argument("--expected-current-sha256", required=True); p.set_defaults(handler=cmd_record_verification_ledger)
+    p = sub.add_parser("project-verify-plan-ledger"); p.add_argument("state_json"); p.add_argument("--ledger", required=True); p.add_argument("--verifier-output", required=True); p.add_argument("--critic-output", required=True); p.add_argument("--out", required=True); p.set_defaults(handler=cmd_project_verify_plan_ledger)
     p = sub.add_parser("render-verify-summary"); p.add_argument("state_json"); p.add_argument("--out", required=True); p.set_defaults(handler=cmd_render_verify_summary)
     p = sub.add_parser("prepare-continuation-approval"); p.add_argument("state_json"); p.add_argument("--convergence-state", required=True); p.add_argument("--outer-approval-id", required=True); p.add_argument("--outer-operation-id", required=True); p.add_argument("--out", required=True); p.set_defaults(handler=cmd_prepare_continuation_approval)
     p = sub.add_parser("continue-hardening"); p.add_argument("state_json"); p.add_argument("--approval", required=True); p.set_defaults(handler=cmd_continue_hardening)
+    p = sub.add_parser("prepare-deadline-continuation-approval"); p.add_argument("state_json"); p.add_argument("--out", required=True); p.set_defaults(handler=cmd_prepare_deadline_continuation_approval)
+    p = sub.add_parser("continue-deadline-hardening"); p.add_argument("state_json"); p.add_argument("--request", required=True); p.add_argument("--approval-response", required=True); p.set_defaults(handler=cmd_continue_deadline_hardening)
+    p = sub.add_parser("prepare-attempt-continuation-approval"); p.add_argument("state_json"); p.add_argument("--out", required=True); p.set_defaults(handler=cmd_prepare_attempt_continuation_approval)
+    p = sub.add_parser("continue-attempt-hardening"); p.add_argument("state_json"); p.add_argument("--request", required=True); p.add_argument("--approval-response", required=True); p.set_defaults(handler=cmd_continue_attempt_hardening)
     p = sub.add_parser("prepare-revision"); p.add_argument("state_json"); p.add_argument("--evidence-index"); p.add_argument("--research-package"); p.set_defaults(handler=cmd_prepare_revision)
     p = sub.add_parser("record-revision"); p.add_argument("state_json"); p.add_argument("--proposal", required=True); p.add_argument("--closed-finding-id", action="append"); p.set_defaults(handler=cmd_record_revision)
     p = sub.add_parser("emit-package"); p.add_argument("state_json"); p.add_argument("task_directory"); p.set_defaults(handler=cmd_emit_package)

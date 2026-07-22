@@ -5,12 +5,14 @@ import importlib.util
 import json
 import subprocess
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
 
 ROOT = Path(__file__).parents[1]
 CONTROLLER = ROOT / "skills/plan-playbook/scripts/plan_package.py"
+VERIFICATION_LEDGER = ROOT / "skills/_shared/verification_ledger.py"
 
 CONTROLLER_SPEC = importlib.util.spec_from_file_location("plan_playbook_v2_package", CONTROLLER)
 assert CONTROLLER_SPEC is not None and CONTROLLER_SPEC.loader is not None
@@ -81,6 +83,12 @@ STATE_FIELDS = {
     "finding_transitions",
     "blockers",
 }
+
+
+def test_canonical_hash_sorted_uses_digest_order_not_json_order() -> None:
+    values = [{"id": "1"}, {"id": "3"}]
+
+    assert PLAN_PACKAGE.canonical_hash_sorted(values) == [values[1], values[0]]
 COMMANDS = {
     "hash-json",
     "migrate-run-root",
@@ -97,9 +105,14 @@ COMMANDS = {
     "record-stage",
     "record-findings",
     "record-verification-ledger",
+    "project-verify-plan-ledger",
     "render-verify-summary",
     "prepare-continuation-approval",
     "continue-hardening",
+    "prepare-deadline-continuation-approval",
+    "continue-deadline-hardening",
+    "prepare-attempt-continuation-approval",
+    "continue-attempt-hardening",
     "prepare-revision",
     "record-revision",
     "emit-package",
@@ -172,21 +185,22 @@ def requirement() -> dict:
     }
 
 
-def test_research_requirement_preserves_validated_source_evidence_order() -> None:
-    value = requirement()
-    value["evidence_ids"] = ["E1", "E4", "E10", "E14"]
+def test_research_requirements_allow_descriptive_rows_without_obligations() -> None:
+    descriptive = requirement()
+    descriptive.update(
+        id="R0",
+        text="Describe the grounded current behavior.",
+        planner_obligations=[],
+    )
+    actionable = requirement()
 
-    assert PLAN_PACKAGE.validate_requirements([value], direct=False) == [value]
+    validated = PLAN_PACKAGE.validate_requirements(
+        [descriptive, actionable], direct=False
+    )
 
-    with pytest.raises(PLAN_PACKAGE.PlanPackageError, match="sorted and unique"):
-        PLAN_PACKAGE.validate_requirements([value], direct=True)
-
-    value["evidence_ids"].append("E4")
-    with pytest.raises(
-        PLAN_PACKAGE.PlanPackageError,
-        match="research requirement evidence_ids must be unique",
-    ):
-        PLAN_PACKAGE.validate_requirements([value], direct=False)
+    assert validated == [descriptive, actionable]
+    assert validated[0]["planner_obligations"] == []
+    assert validated[1]["planner_obligations"][0]["status"] == "READY"
 
 
 def behavior_matrix() -> dict:
@@ -388,8 +402,8 @@ def move_to_legacy_run_root(workspace: dict) -> Path:
     return legacy_root
 
 
-def drafted_workspace(tmp_path: Path) -> tuple[dict, dict]:
-    workspace = direct_workspace(tmp_path)
+def drafted_workspace(tmp_path: Path, *, task_size: str = "light") -> tuple[dict, dict]:
+    workspace = direct_workspace(tmp_path, task_size=task_size)
     state = init_direct(workspace)
     run_root = Path(state["run_root"])
 
@@ -691,6 +705,492 @@ def test_cli_exposes_only_the_frozen_controller_commands() -> None:
     assert exposed == COMMANDS
 
 
+def test_verify_plan_iteration_remains_global_after_revision(tmp_path: Path) -> None:
+    workspace, state = drafted_workspace(tmp_path, task_size="standard")
+    state["revision"] = 2
+    state["attempts"] = [
+        {
+            "state_revision": 1,
+            "round": 1,
+            "role": role,
+            "verification_iteration": 1,
+            "status": "SUCCEEDED",
+            "assigned_coverage_ids": ["C01"],
+            "assigned_obligation_ids": ["P1"],
+        }
+        for role in ("VERIFY_PLAN_VERIFIER", "VERIFY_PLAN_CRITIC")
+    ]
+    args = SimpleNamespace(
+        round=2,
+        role="VERIFY_PLAN_VERIFIER",
+        verification_iteration=2,
+        assigned_coverage_id=["C01"],
+        assigned_obligation_id=["P1"],
+    )
+
+    PLAN_PACKAGE.validate_attempt_policy(workspace["state"], state, args)
+    args.verification_iteration = 1
+    with pytest.raises(PLAN_PACKAGE.PlanPackageError) as exc:
+        PLAN_PACKAGE.validate_attempt_policy(workspace["state"], state, args)
+    assert exc.value.code == "ITERATION_ORDER_VIOLATION"
+
+
+def test_ordinary_deadline_continuation_is_exact_and_single_use_per_revision(tmp_path: Path) -> None:
+    workspace, state = drafted_workspace(tmp_path, task_size="standard")
+    state["deadline_at_utc"] = "2020-01-01T00:00:00Z"
+    workspace["state"].write_bytes(canonical_bytes(state))
+    request_path = Path(state["run_root"]) / (
+        "approvals/deadline-continuation-request-r1-"
+        f"{sha256_bytes(canonical_bytes(state))}.json"
+    )
+
+    run_controller(
+        "prepare-deadline-continuation-approval",
+        workspace["state"],
+        "--out",
+        request_path,
+    )
+    request = json.loads(request_path.read_text(encoding="utf-8"))
+    response_path = tmp_path / "deadline-approval.txt"
+    response_path.write_text(request["required_confirmation"], encoding="utf-8")
+    run_controller(
+        "continue-deadline-hardening",
+        workspace["state"],
+        "--request",
+        request_path,
+        "--approval-response",
+        response_path,
+    )
+
+    continued = json.loads(workspace["state"].read_text(encoding="utf-8"))
+    assert continued["status"] == "HARDENING"
+    assert continued["budgets"]["continuation_approval_sha256"]
+    assert continued["budgets"]["max_agent_attempts"] == 23
+    assert continued["budgets"]["verify_plan_iteration_limit"] == 10
+    assert continued["budgets"]["max_rounds"] == state["budgets"]["max_rounds"] + 3
+    assert continued["deadline_at_utc"] > state["deadline_at_utc"]
+    payload = assert_rejected_without_mutation(
+        workspace,
+        "prepare-deadline-continuation-approval",
+        workspace["state"],
+        "--out",
+        request_path,
+    )
+    assert payload["code"] == "CONTINUATION_INELIGIBLE"
+
+    prior_receipt_sha = continued["budgets"]["continuation_approval_sha256"]
+    current_receipt = json.loads(
+        (Path(continued["run_root"]) / continued["revision_history"][-1]["receipt_path"]).read_text(
+            encoding="utf-8"
+        )
+    )
+    next_receipt = PLAN_PACKAGE.publish_revision(
+        continued,
+        Path(continued["run_root"]),
+        2,
+        {
+            "plan": continued["plan_sha256"],
+            "surface-map": continued["surface_map_sha256"],
+            "decisions": continued["decisions_sha256"],
+            "verification-ledger": continued["verification_ledger_sha256"],
+        },
+        current_receipt["plan_snapshot_path"],
+    )
+    continued["revision"] = 2
+    continued["revision_history"].append(next_receipt)
+    continued["status"] = "DRAFTED"
+    continued["deadline_at_utc"] = "2020-01-01T00:00:00Z"
+    workspace["state"].write_bytes(canonical_bytes(continued))
+    next_request_path = Path(continued["run_root"]) / (
+        "approvals/deadline-continuation-request-r2-"
+        f"{sha256_bytes(canonical_bytes(continued))}.json"
+    )
+    run_controller(
+        "prepare-deadline-continuation-approval",
+        workspace["state"],
+        "--out",
+        next_request_path,
+    )
+    next_request = json.loads(next_request_path.read_text(encoding="utf-8"))
+    assert next_request["current_max_rounds"] == continued["budgets"]["max_rounds"]
+    assert next_request["extension_rounds"] == 3
+    next_response_path = tmp_path / "deadline-approval-r2.txt"
+    next_response_path.write_text(
+        next_request["required_confirmation"], encoding="utf-8"
+    )
+    run_controller(
+        "continue-deadline-hardening",
+        workspace["state"],
+        "--request",
+        next_request_path,
+        "--approval-response",
+        next_response_path,
+    )
+    renewed = json.loads(workspace["state"].read_text(encoding="utf-8"))
+    assert renewed["budgets"]["continuation_approval_sha256"] != prior_receipt_sha
+    assert renewed["budgets"]["max_rounds"] == continued["budgets"]["max_rounds"] + 3
+
+
+def test_deadline_continuation_request_refreshes_after_state_change(tmp_path: Path) -> None:
+    workspace, state = drafted_workspace(tmp_path, task_size="standard")
+    state["deadline_at_utc"] = "2020-01-01T00:00:00Z"
+    workspace["state"].write_bytes(canonical_bytes(state))
+    old_request_path = Path(state["run_root"]) / (
+        "approvals/deadline-continuation-request-r1-"
+        f"{sha256_bytes(canonical_bytes(state))}.json"
+    )
+    run_controller(
+        "prepare-deadline-continuation-approval",
+        workspace["state"],
+        "--out",
+        old_request_path,
+    )
+    old_request_bytes = old_request_path.read_bytes()
+
+    current = json.loads(workspace["state"].read_text(encoding="utf-8"))
+    current["status"] = "HARDENING"
+    workspace["state"].write_bytes(canonical_bytes(current))
+    current_request_path = Path(current["run_root"]) / (
+        "approvals/deadline-continuation-request-r1-"
+        f"{sha256_bytes(canonical_bytes(current))}.json"
+    )
+    run_controller(
+        "prepare-deadline-continuation-approval",
+        workspace["state"],
+        "--out",
+        current_request_path,
+    )
+
+    assert current_request_path != old_request_path
+    assert old_request_path.read_bytes() == old_request_bytes
+    old_request = json.loads(old_request_bytes)
+    old_response_path = tmp_path / "old-deadline-approval.txt"
+    old_response_path.write_text(old_request["required_confirmation"], encoding="utf-8")
+    payload = assert_rejected_without_mutation(
+        workspace,
+        "continue-deadline-hardening",
+        workspace["state"],
+        "--request",
+        old_request_path,
+        "--approval-response",
+        old_response_path,
+    )
+    assert payload["code"] == "INVALID_CONTINUATION_APPROVAL"
+
+    current_request = json.loads(current_request_path.read_text(encoding="utf-8"))
+    current_response_path = tmp_path / "current-deadline-approval.txt"
+    current_response_path.write_text(
+        current_request["required_confirmation"], encoding="utf-8"
+    )
+    run_controller(
+        "continue-deadline-hardening",
+        workspace["state"],
+        "--request",
+        current_request_path,
+        "--approval-response",
+        current_response_path,
+    )
+
+    continued = json.loads(workspace["state"].read_text(encoding="utf-8"))
+    assert continued["status"] == "HARDENING"
+    assert continued["budgets"]["continuation_approval_sha256"]
+
+
+def test_attempt_continuation_is_bound_single_use_and_preserves_owned_lenses(
+    tmp_path: Path,
+) -> None:
+    workspace, state = drafted_workspace(tmp_path, task_size="standard")
+    state["attempts"] = [
+        {
+            "attempt_id": f"{sequence:064x}",
+            "attempt_sequence": sequence,
+            "state_revision": 0,
+            "round": 1,
+            "role": "INTERNAL_READINESS",
+            "status": "SUCCEEDED",
+        }
+        for sequence in range(1, 20)
+    ]
+    state["attempts"].append(
+        {
+            "attempt_id": f"{20:064x}",
+            "attempt_sequence": 20,
+            "state_revision": state["revision"],
+            "round": 1,
+            "role": "VERIFY_PLAN_VERIFIER",
+            "verification_iteration": 9,
+            "assigned_coverage_ids": ["C01"],
+            "assigned_obligation_ids": ["P1"],
+            "status": "SUCCEEDED",
+        }
+    )
+    state["budgets"]["used_agent_attempts"] = 20
+    state.update(
+        status="CAP_REACHED",
+        cap_reason="AGENT_ATTEMPT_LIMIT",
+        cap_reached_at_utc="2026-07-19T00:00:00Z",
+        cap_stage="VERIFY_PLAN",
+        cap_completed_verification_iteration=8,
+    )
+    workspace["state"].write_bytes(canonical_bytes(state))
+    original_state = workspace["state"].read_bytes()
+    request_path = Path(state["run_root"]) / (
+        "approvals/attempt-continuation-request-r1-"
+        f"{sha256_bytes(original_state)}.json"
+    )
+
+    run_controller(
+        "prepare-attempt-continuation-approval",
+        workspace["state"],
+        "--out",
+        request_path,
+    )
+    request = json.loads(request_path.read_text(encoding="utf-8"))
+    assert request["extension_attempts"] == 1
+    assert request["basis_attempt_id"] == f"{20:064x}"
+    assert request["target_role"] == "VERIFY_PLAN_CRITIC"
+    assert request["target_round"] == 1
+    assert request["target_verification_iteration"] == 9
+
+    wrong_response = tmp_path / "wrong-attempt-approval.txt"
+    wrong_response.write_text("Approved", encoding="utf-8")
+    payload = assert_rejected_without_mutation(
+        workspace,
+        "continue-attempt-hardening",
+        workspace["state"],
+        "--request",
+        request_path,
+        "--approval-response",
+        wrong_response,
+    )
+    assert payload["code"] == "APPROVAL_DENIED"
+
+    drifted = json.loads(original_state)
+    drifted["budgets"]["max_elapsed_seconds"] += 1
+    workspace["state"].write_bytes(canonical_bytes(drifted))
+    response = tmp_path / "attempt-approval.txt"
+    response.write_text(request["required_confirmation"], encoding="utf-8")
+    payload = assert_rejected_without_mutation(
+        workspace,
+        "continue-attempt-hardening",
+        workspace["state"],
+        "--request",
+        request_path,
+        "--approval-response",
+        response,
+    )
+    assert payload["code"] == "INVALID_ATTEMPT_CONTINUATION_APPROVAL"
+    workspace["state"].write_bytes(original_state)
+
+    run_controller(
+        "continue-attempt-hardening",
+        workspace["state"],
+        "--request",
+        request_path,
+        "--approval-response",
+        response,
+    )
+    continued = json.loads(workspace["state"].read_text(encoding="utf-8"))
+    assert continued["status"] == "HARDENING"
+    assert continued["budgets"]["max_agent_attempts"] == 24
+    assert continued["budgets"]["used_agent_attempts"] == 20
+
+    run_controller(
+        "continue-attempt-hardening",
+        workspace["state"],
+        "--request",
+        request_path,
+        "--approval-response",
+        response,
+    )
+    replayed = json.loads(workspace["state"].read_text(encoding="utf-8"))
+    assert replayed == continued
+    next_request = Path(state["run_root"]) / (
+        "approvals/attempt-continuation-request-r1-"
+        f"{sha256_bytes(canonical_bytes(continued))}.json"
+    )
+    payload = assert_rejected_without_mutation(
+        workspace,
+        "prepare-attempt-continuation-approval",
+        workspace["state"],
+        "--out",
+        next_request,
+    )
+    assert payload["code"] == "ATTEMPT_CONTINUATION_INELIGIBLE"
+
+    critic_input = role_input(continued, workspace, "VERIFY_PLAN_CRITIC")
+    critic_input["verification_iteration"] = 9
+    input_path = write_json(tmp_path / "critic-input.json", critic_input)
+    ledger_path = slot_ledger(tmp_path / "critic-slots.json", state="reserved", agent_id=None)
+    token_path = tmp_path / "critic-token.json"
+    run_controller(
+        "prepare-attempt",
+        workspace["state"],
+        "--round", 1,
+        "--role", "VERIFY_PLAN_CRITIC",
+        "--verification-iteration", 9,
+        "--assigned-coverage-id", "C01",
+        "--assigned-obligation-id", "P1",
+        "--slot-id", "s1",
+        "--slot-ledger", ledger_path,
+        "--input-envelope", input_path,
+        "--out", token_path,
+    )
+    admitted = json.loads(workspace["state"].read_text(encoding="utf-8"))
+    assert admitted["attempts"][-1]["role"] == "VERIFY_PLAN_CRITIC"
+    assert admitted["budgets"]["used_agent_attempts"] == 21
+    assert admitted["budgets"]["max_agent_attempts"] - 21 == 3
+
+
+def test_attempt_continuation_adds_only_corrected_revision_verify_pair(
+    tmp_path: Path,
+) -> None:
+    workspace, state = drafted_workspace(tmp_path, task_size="standard")
+    prior_plan_sha = state["plan_sha256"]
+    finding_id = "PPV2-REVISION-GAP"
+    fingerprint = "a" * 64
+    attempts = [
+        {
+            "attempt_id": f"{sequence:064x}",
+            "attempt_sequence": sequence,
+            "state_revision": 0,
+            "round": min(sequence, 8),
+            "role": "INTERNAL_READINESS",
+            "status": "SUCCEEDED",
+        }
+        for sequence in range(1, 21)
+    ]
+    critic_id = f"{21:064x}"
+    critic_rel = f"attempts/{critic_id}/output.json"
+    critic_output = {
+        "attempt_id": critic_id,
+        "assessed_plan_sha256": prior_plan_sha,
+        "terminal_envelope": {"verdict": "GAPS"},
+        "dispositions": [{"finding_id": finding_id, "decision": "FIX NOW"}],
+    }
+    critic_path = Path(state["run_root"]) / critic_rel
+    critic_path.parent.mkdir(parents=True, exist_ok=True)
+    critic_path.write_bytes(canonical_bytes(critic_output))
+    attempts.append(
+        {
+            "attempt_id": critic_id,
+            "attempt_sequence": 21,
+            "state_revision": state["revision"],
+            "round": 9,
+            "role": "VERIFY_PLAN_CRITIC",
+            "verification_iteration": 9,
+            "status": "SUCCEEDED",
+            "output_path": critic_rel,
+            "output_sha256": sha256_bytes(canonical_bytes(critic_output)),
+        }
+    )
+    state["attempts"] = attempts
+    state["budgets"].update(
+        used_agent_attempts=21,
+        max_agent_attempts=24,
+        max_rounds=10,
+        verify_plan_iteration_limit=10,
+    )
+    state["findings"] = [{"id": finding_id, "fingerprint": fingerprint}]
+    state["dispositions"] = [{
+        "finding_id": finding_id,
+        "finding_fingerprint": fingerprint,
+        "decision": "FIX NOW",
+        "status": "OPEN",
+        "assessment_sequence": 1,
+    }]
+    state["status"] = "GAPS"
+    workspace["state"].write_bytes(canonical_bytes(state))
+
+    run_root = Path(state["run_root"])
+    plan_rel, plan_sha = PLAN_PACKAGE.snapshot_bytes(
+        run_root,
+        "plan",
+        b"# Plan\n\nGrounded fixture plan.\n\nCorrected revision.\n",
+        "md",
+    )
+    hashes = {
+        "plan": plan_sha,
+        "surface-map": state["surface_map_sha256"],
+        "decisions": state["decisions_sha256"],
+        "verification-ledger": state["verification_ledger_sha256"],
+    }
+    receipt = PLAN_PACKAGE.publish_revision(state, run_root, 2, hashes, plan_rel)
+    state.update(status="DRAFTED", revision=2, plan_sha256=plan_sha, stage_results=[])
+    state["revision_history"].append(receipt)
+    state["finding_transitions"].append({
+        "finding_id": finding_id,
+        "to_status": "APPLIED",
+        "applied_revision": 2,
+    })
+    workspace["state"].write_bytes(canonical_bytes(state))
+    revised = json.loads(workspace["state"].read_text(encoding="utf-8"))
+    assert revised["revision"] == 2
+    assert revised["status"] == "DRAFTED"
+    assert revised["plan_sha256"] != prior_plan_sha
+    assert not [item for item in revised["attempts"] if item["state_revision"] == 2]
+
+    request_path = Path(revised["run_root"]) / (
+        "approvals/attempt-continuation-request-r2-"
+        f"{sha256_bytes(canonical_bytes(revised))}.json"
+    )
+    run_controller(
+        "prepare-attempt-continuation-approval",
+        workspace["state"],
+        "--out", request_path,
+    )
+    request = json.loads(request_path.read_text(encoding="utf-8"))
+    assert request["scope"] == "REVISION_VERIFY_PAIR_ATTEMPT_CONTINUATION"
+    assert request["basis_attempt_id"] == critic_id
+    assert request["target_role"] == "VERIFY_PLAN_VERIFIER"
+    assert request["target_round"] == 10
+    assert request["target_verification_iteration"] == 10
+    assert request["extension_attempts"] == 2
+
+    response = tmp_path / "revision-attempt-approval.txt"
+    response.write_text(request["required_confirmation"], encoding="utf-8")
+    run_controller(
+        "continue-attempt-hardening",
+        workspace["state"],
+        "--request", request_path,
+        "--approval-response", response,
+    )
+    continued = json.loads(workspace["state"].read_text(encoding="utf-8"))
+    assert continued["budgets"]["max_agent_attempts"] == 26
+    assert continued["budgets"]["used_agent_attempts"] == 21
+
+    verifier_args = SimpleNamespace(
+        round=10,
+        role="VERIFY_PLAN_VERIFIER",
+        verification_iteration=10,
+        assigned_coverage_id=["C01"],
+        assigned_obligation_id=["P1"],
+    )
+    PLAN_PACKAGE.validate_attempt_policy(workspace["state"], continued, verifier_args)
+    simulated = json.loads(canonical_bytes(continued))
+    simulated["attempts"].append({
+        "attempt_id": "f" * 64,
+        "attempt_sequence": 22,
+        "state_revision": 2,
+        "round": 10,
+        "role": "VERIFY_PLAN_VERIFIER",
+        "verification_iteration": 10,
+        "assigned_coverage_ids": ["C01"],
+        "assigned_obligation_ids": ["P1"],
+        "status": "SUCCEEDED",
+    })
+    simulated["budgets"]["used_agent_attempts"] = 22
+    critic_args = SimpleNamespace(
+        round=10,
+        role="VERIFY_PLAN_CRITIC",
+        verification_iteration=10,
+        assigned_coverage_id=["C01"],
+        assigned_obligation_id=["P1"],
+    )
+    PLAN_PACKAGE.validate_attempt_policy(workspace["state"], simulated, critic_args)
+    assert simulated["budgets"]["max_agent_attempts"] - 23 == 3
+
+
 def test_hash_json_uses_canonical_ascii_json_and_exact_output(tmp_path: Path) -> None:
     value = {"unicode": "\u03a9", "nested": {"z": None, "a": True}, "items": [2, 1]}
     source = tmp_path / "unordered.json"
@@ -874,6 +1374,29 @@ def test_init_snapshots_authorities_before_state_and_ignores_mutable_callers(tmp
     workspace["evidence_path"].write_text("[]", encoding="utf-8")
     _result, shown = run_controller("show", workspace["state"])
     assert canonical_bytes(shown) == original_state
+
+
+def test_source_snapshot_excludes_nested_prior_controller_archives(tmp_path: Path) -> None:
+    repository = tmp_path / "repository"
+    repository.mkdir()
+    subprocess.run(["git", "init", "-q", str(repository)], check=True)
+    (repository / "source.txt").write_text("ordinary repository source\n", encoding="utf-8")
+    task_root = repository / "Tasks" / "snapshot-regression"
+    task_root.mkdir(parents=True)
+    (task_root / "evidence.md").write_text("grounded task evidence\n", encoding="utf-8")
+    run_root = task_root / ".plan-playbook"
+    prior_archive = run_root / "source-snapshots" / "prior-controller-run"
+    (prior_archive / "tree").mkdir(parents=True)
+    (prior_archive / "tree" / "source.txt").write_text("stale nested source\n", encoding="utf-8")
+    (prior_archive / "manifest.json").write_text("{}", encoding="utf-8")
+
+    snapshot = PLAN_PACKAGE.create_source_snapshot(run_root, "fixture", repository)
+    manifest = json.loads((run_root / snapshot["manifest_path"]).read_text(encoding="utf-8"))
+    paths = [item["path"] for item in manifest["files"]]
+
+    assert "source.txt" in paths
+    assert "Tasks/snapshot-regression/evidence.md" in paths
+    assert not any(".plan-playbook/source-snapshots" in path for path in paths)
 
 
 def test_init_rejects_wrong_state_path_unknown_fields_and_symlink_roots(tmp_path: Path) -> None:
@@ -1405,6 +1928,418 @@ def test_critic_validates_copied_evidence_against_paired_verifier_attempt(
         assert payload["code"] == "INVALID_ROLE_OUTPUT"
     else:
         assert payload["code"] == "ATTEMPT_FINALIZED"
+
+
+def test_critic_can_add_a_missed_finding_and_replace_supported_assessment(
+    tmp_path: Path,
+) -> None:
+    workspace, state = drafted_workspace(tmp_path)
+    verifier_token_path, verifier_token = prepare_attempt(
+        tmp_path, workspace, state, "VERIFY_PLAN_VERIFIER"
+    )
+    verifier_assessment = {
+        "iteration": 1,
+        "obligation_id": "P1",
+        "binding_sha256": "1" * 64,
+        "status": "SUPPORTED",
+        "evidence": [{
+            "registry_kind": "PLAN_SECTION",
+            "id": "S1",
+            "claim": "The verifier assessed the assigned plan section.",
+        }],
+        "finding_snapshots": [],
+        "blocked_boundary": None,
+    }
+    verifier_assessment["assessment_fingerprint"] = sha256_bytes(
+        canonical_bytes(verifier_assessment)
+    )
+    verifier_output = role_output(state, verifier_token, "VERIFY_PLAN_VERIFIER")
+    verifier_output["obligation_assessments"] = [verifier_assessment]
+    verifier_output_path = write_json(tmp_path / "verifier-output.json", verifier_output)
+    verifier_slots = slot_ledger(
+        tmp_path / "verifier-slots.json",
+        state="released",
+        agent_id="agent-verifier-1",
+    )
+    run_controller(
+        "finalize-attempt",
+        workspace["state"],
+        "--attempt-token",
+        verifier_token_path,
+        "--slot-ledger",
+        verifier_slots,
+        "--status",
+        "SUCCEEDED",
+        "--runtime-agent-id",
+        "agent-verifier-1",
+        "--output",
+        verifier_output_path,
+    )
+
+    state = json.loads(workspace["state"].read_text(encoding="utf-8"))
+    critic_token_path, critic_token = prepare_attempt(
+        tmp_path, workspace, state, "VERIFY_PLAN_CRITIC"
+    )
+    finding_evidence = [{
+        "kind": "SOURCE",
+        "repository_key": "fixture",
+        "path": "source.py",
+        "line": 1,
+        "claim": "The default branch is erased before the new helper is called.",
+    }]
+    finding_basis = {
+        "stage": "VERIFY_PLAN",
+        "requirement_ids": ["R1"],
+        "obligation_ids": ["P1"],
+        "coverage_ids": ["C01"],
+        "practical_consequence": "A pre-close run can validate the unfinished current session.",
+        "evidence": finding_evidence,
+    }
+    finding = {
+        "id": "PPV2-CRITIC-MISSED-1",
+        "fingerprint": sha256_bytes(canonical_bytes(finding_basis)),
+        "round": 1,
+        "stage": "VERIFY_PLAN",
+        "source_role": "VERIFY_PLAN_CRITIC",
+        "requirement_ids": ["R1"],
+        "obligation_ids": ["P1"],
+        "coverage_ids": ["C01"],
+        "practical_consequence": finding_basis["practical_consequence"],
+        "evidence": finding_evidence,
+        "source_classification": "ACTIONABLE",
+    }
+    snapshot = {
+        "id": finding["id"],
+        "fingerprint": finding["fingerprint"],
+        "classification": "ACTIONABLE",
+        "obligation_ids": ["P1"],
+        "iteration_first_seen": 1,
+    }
+    critic_assessment = {
+        "iteration": 1,
+        "obligation_id": "P1",
+        "binding_sha256": verifier_assessment["binding_sha256"],
+        "status": "GAP",
+        "evidence": [{
+            "registry_kind": "PLAN_SECTION",
+            "id": "S1",
+            "claim": "Independent inspection found an uncovered default-path decision.",
+        }],
+        "finding_snapshots": [snapshot],
+        "blocked_boundary": None,
+    }
+    critic_assessment["assessment_fingerprint"] = sha256_bytes(
+        canonical_bytes(critic_assessment)
+    )
+    critic_output = role_output(state, critic_token, "VERIFY_PLAN_CRITIC")
+    critic_output["findings"] = [finding]
+    critic_output["obligation_assessments"] = [critic_assessment]
+    critic_output["dispositions"] = [{
+        "finding_id": finding["id"],
+        "finding_fingerprint": finding["fingerprint"],
+        "decision": "FIX NOW",
+        "rationale": "The critic confirmed a missed implementation decision.",
+        "parent_action": "Specify and test the default-path wiring.",
+        "new_finding_classification": None,
+    }]
+    critic_output["assessment_approvals"] = [{
+        "iteration": 1,
+        "obligation_id": "P1",
+        "binding_sha256": critic_assessment["binding_sha256"],
+        "assessment_fingerprint": critic_assessment["assessment_fingerprint"],
+        "decision": "APPROVED",
+        "rationale": "The critic assessment is grounded in the frozen plan section.",
+        "evidence": ["S1"],
+    }]
+    critic_output["coverage_exclusion_approvals"] = []
+    critic_output["terminal_envelope"] = {
+        "stage": "plan-verify",
+        "iteration": 1,
+        "attempt": 1,
+        "assigned_requirement_ids": ["R1"],
+        "assigned_gap_ids": [],
+        "owned_blocker_ids": [],
+        "verdict": "GAPS",
+        "open_gap_ids": [finding["id"]],
+        "closed_gap_ids": [],
+        "new_gaps": [finding],
+        "new_blockers": [],
+        "record_transitions": [],
+        "evidence": ["fixture:independent-critic-gap"],
+        "artifact_paths": [],
+    }
+    critic_output_path = write_json(tmp_path / "critic-output.json", critic_output)
+    critic_slots = slot_ledger(
+        tmp_path / "critic-slots.json",
+        state="released",
+        agent_id="agent-critic-1",
+    )
+
+    _result, payload = run_controller(
+        "finalize-attempt",
+        workspace["state"],
+        "--attempt-token",
+        critic_token_path,
+        "--slot-ledger",
+        critic_slots,
+        "--status",
+        "SUCCEEDED",
+        "--runtime-agent-id",
+        "agent-critic-1",
+        "--output",
+        critic_output_path,
+    )
+
+    assert payload["code"] == "ATTEMPT_FINALIZED"
+    run_controller(
+        "record-findings",
+        workspace["state"],
+        "--round",
+        1,
+        "--stage",
+        "VERIFY_PLAN",
+        "--primary-output",
+        verifier_output_path,
+        "--critic-output",
+        critic_output_path,
+    )
+    recorded = json.loads(workspace["state"].read_text(encoding="utf-8"))
+    assert [item["id"] for item in recorded["findings"]] == [finding["id"]]
+    assert recorded["dispositions"][-1]["finding_id"] == finding["id"]
+
+
+def test_project_verify_plan_ledger_translates_identity_and_marks_resolved_gap_fixed(
+    tmp_path: Path,
+) -> None:
+    plan_bytes = b"# Plan\nBody\n"
+    (tmp_path / "plan.md").write_bytes(plan_bytes)
+    (tmp_path / "evidence.txt").write_text("observed\n", encoding="utf-8")
+    (tmp_path / "dependency.txt").write_text("available\n", encoding="utf-8")
+    plan_sha = sha256_bytes(plan_bytes)
+    section = {
+        "id": "S1", "path": "plan.md", "start_line": 1, "end_line": 2,
+        "content_sha256": plan_sha,
+    }
+    evidence = {
+        "id": "E1",
+        "source_ref": {"repository_key": "fixture", "path": "evidence.txt", "selector": "WHOLE_FILE"},
+        "content_sha256": sha256_bytes(b"observed\n"),
+    }
+    dependency = {
+        "id": "D1",
+        "source_ref": {"repository_key": "fixture", "path": "dependency.txt", "selector": "WHOLE_FILE"},
+        "content_sha256": sha256_bytes(b"available\n"),
+    }
+    evidence_revision = sha256_bytes(canonical_bytes({
+        "evidence_items": [evidence], "dependencies": [dependency],
+    }))
+    obligation_base = {
+        "id": "P1", "coverage_id": "C01", "claim": "The plan is complete.",
+        "plan_section_refs": ["S1"], "evidence_refs": ["E1"], "dependency_refs": ["D1"],
+    }
+    binding = sha256_bytes(canonical_bytes({
+        "id": "P1", "coverage_id": "C01", "claim": "The plan is complete.",
+        "plan_sections": [section], "evidence_items": [evidence], "dependencies": [dependency],
+    }))
+    obligation = {**obligation_base, "binding_sha256": binding}
+    inventory_projection = {
+        "contract_version": 1, "plan_sha256": plan_sha,
+        "evidence_revision_sha256": evidence_revision, "plan_sections": [section],
+        "evidence_items": [evidence], "dependencies": [dependency], "obligations": [obligation],
+    }
+    inventory_sha = sha256_bytes(canonical_bytes(inventory_projection))
+    assignment_projection = {
+        "iteration": 1, "inventory_sha256": inventory_sha,
+        "assigned_obligation_ids": ["P1"],
+    }
+    ledger = {
+        "kind": "plan", "target": "plan.md", "active_plan_sha256": plan_sha,
+        "iteration": 1, "created_at": "2026-07-21T00:00:00+00:00",
+        "coverage_queue": [{
+            "id": "C01", "summary": "Primary surface", "risk": "high",
+            "status": "unverified", "evidence_to_inspect": ["plan.md"],
+        }],
+        "findings": [], "iteration_log": [],
+        "plan_verification": {
+            "contract_version": 1, "plan_sha256": plan_sha,
+            "evidence_revision_sha256": evidence_revision,
+            "inventory_sha256": inventory_sha,
+            "inventories": [{
+                "inventory_sha256": inventory_sha, "plan_sha256": plan_sha,
+                "evidence_revision_sha256": evidence_revision,
+                "plan_sections": [section], "evidence_items": [evidence],
+                "dependencies": [dependency], "obligations": [obligation],
+                "completeness_approval": None, "completeness_approval_ref": None,
+            }],
+            "assignments": [{
+                **assignment_projection,
+                "assignment_sha256": sha256_bytes(canonical_bytes(assignment_projection)),
+            }],
+            "obligation_assessments": [], "critic_outputs": [],
+            "coverage_exclusion_approvals": [],
+        },
+    }
+    fresh_revision_ledger = json.loads(json.dumps(ledger))
+    raw_finding_basis = {
+        "stage": "VERIFY_PLAN", "requirement_ids": ["R1"],
+        "obligation_ids": ["P1"], "coverage_ids": ["C01"],
+        "practical_consequence": "The plan can preserve stale output.",
+        "evidence": [{
+            "kind": "SOURCE", "repository_key": "fixture", "path": "source.py",
+            "line": 1, "claim": "The stale output remains readable.",
+        }],
+    }
+    raw_finding = {
+        "id": "VP-1", "fingerprint": sha256_bytes(canonical_bytes(raw_finding_basis)),
+        "round": 1, "stage": "VERIFY_PLAN", "source_role": "VERIFY_PLAN_VERIFIER",
+        "requirement_ids": ["R1"], "obligation_ids": ["P1"],
+        "coverage_ids": ["C01"],
+        "practical_consequence": raw_finding_basis["practical_consequence"],
+        "evidence": raw_finding_basis["evidence"], "source_classification": "ACTIONABLE",
+    }
+    raw_snapshot = {
+        "id": "VP-1", "fingerprint": raw_finding["fingerprint"],
+        "classification": "ACTIONABLE", "obligation_ids": ["P1"],
+        "iteration_first_seen": 1,
+    }
+    raw_assessment = {
+        "iteration": 1, "obligation_id": "P1", "binding_sha256": binding,
+        "status": "GAP",
+        "evidence": [{"registry_kind": "PLAN_SECTION", "id": "S1", "claim": "Gap remains."}],
+        "finding_snapshots": [raw_snapshot], "blocked_boundary": None,
+        "assessment_fingerprint": "a" * 64,
+    }
+    inventory_approval = {
+        "inventory_sha256": inventory_sha, "plan_sha256": plan_sha,
+        "evidence_revision_sha256": evidence_revision, "decision": "APPROVED",
+        "rationale": "The inventory is complete.", "evidence": ["S1"],
+    }
+    verifier = {
+        "verification_iteration": 1, "findings": [raw_finding],
+        "obligation_assessments": [raw_assessment],
+    }
+    critic = {
+        "attempt_id": "critic-1", "findings": [raw_finding],
+        "obligation_assessments": [raw_assessment],
+        "dispositions": [{
+            "finding_id": "VP-1", "finding_fingerprint": raw_finding["fingerprint"],
+            "decision": "FIX NOW", "rationale": "The gap is actionable.",
+            "parent_action": "Revise the plan.", "new_finding_classification": None,
+        }],
+        "inventory_approval": inventory_approval,
+        "assessment_approvals": [{
+            "iteration": 1, "obligation_id": "P1", "binding_sha256": binding,
+            "assessment_fingerprint": raw_assessment["assessment_fingerprint"],
+            "decision": "APPROVED", "rationale": "The assessment is grounded.",
+            "evidence": ["S1"],
+        }],
+        "coverage_exclusion_approvals": [],
+    }
+
+    projected, snapshot = PLAN_PACKAGE.project_verify_plan_ledger(ledger, verifier, critic)
+    snapshot_path = tmp_path / ".verify-plan/critic-outputs/critic-1.json"
+    snapshot_path.parent.mkdir(parents=True)
+    snapshot_path.write_bytes(canonical_bytes(snapshot))
+    ledger_path = write_json(tmp_path / "ledger.json", projected)
+
+    checked = subprocess.run(
+        ["python3", str(VERIFICATION_LEDGER), "check", str(ledger_path)],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+    assert checked.returncode == 0, checked.stderr
+    translated = projected["findings"][0]
+    assert translated["classification"] == "FIX NOW"
+    assert translated["fingerprint"] != raw_finding["fingerprint"]
+    assert projected["coverage_queue"][0]["status"] == "unverified"
+
+    translated["status"] = "fixed"
+    assignment_projection = {
+        "iteration": 2, "inventory_sha256": inventory_sha,
+        "assigned_obligation_ids": ["P1"],
+    }
+    projected["plan_verification"]["assignments"].append({
+        **assignment_projection,
+        "assignment_sha256": sha256_bytes(canonical_bytes(assignment_projection)),
+    })
+    projected["iteration"] = 2
+    supported_assessment = {
+        "iteration": 2, "obligation_id": "P1", "binding_sha256": binding,
+        "status": "SUPPORTED",
+        "evidence": [{
+            "registry_kind": "PLAN_SECTION", "id": "S1", "claim": "Gap is fixed.",
+        }],
+        "finding_snapshots": [], "blocked_boundary": None,
+        "assessment_fingerprint": "b" * 64,
+    }
+    verifier = {
+        "verification_iteration": 2, "findings": [],
+        "obligation_assessments": [supported_assessment],
+    }
+    critic = {
+        "attempt_id": "critic-2", "findings": [],
+        "obligation_assessments": [supported_assessment], "dispositions": [],
+        "inventory_approval": inventory_approval,
+        "assessment_approvals": [{
+            "iteration": 2, "obligation_id": "P1", "binding_sha256": binding,
+            "assessment_fingerprint": supported_assessment["assessment_fingerprint"],
+            "decision": "APPROVED", "rationale": "The fix is grounded.",
+            "evidence": ["S1"],
+        }],
+        "coverage_exclusion_approvals": [],
+    }
+
+    projected, snapshot = PLAN_PACKAGE.project_verify_plan_ledger(
+        projected, verifier, critic
+    )
+    (snapshot_path.parent / "critic-2.json").write_bytes(canonical_bytes(snapshot))
+    ledger_path = write_json(tmp_path / "ledger-fixed.json", projected)
+    checked = subprocess.run(
+        ["python3", str(VERIFICATION_LEDGER), "check", str(ledger_path)],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+
+    assert checked.returncode == 0, checked.stderr
+    assert projected["coverage_queue"][0]["status"] == "fixed"
+
+    global_assessment_projection = {
+        **{key: value for key, value in supported_assessment.items() if key != "assessment_fingerprint"},
+        "iteration": 4,
+    }
+    global_assessment = {
+        **global_assessment_projection,
+        "assessment_fingerprint": sha256_bytes(canonical_bytes(global_assessment_projection)),
+    }
+    verifier = {
+        "verification_iteration": 4, "findings": [],
+        "obligation_assessments": [global_assessment],
+    }
+    critic = {
+        "attempt_id": "critic-4", "findings": [],
+        "obligation_assessments": [global_assessment], "dispositions": [],
+        "inventory_approval": inventory_approval,
+        "assessment_approvals": [{
+            "iteration": 4, "obligation_id": "P1", "binding_sha256": binding,
+            "assessment_fingerprint": global_assessment["assessment_fingerprint"],
+            "decision": "APPROVED", "rationale": "The revision is grounded.",
+            "evidence": ["S1"],
+        }],
+        "coverage_exclusion_approvals": [],
+    }
+
+    projected, snapshot = PLAN_PACKAGE.project_verify_plan_ledger(
+        fresh_revision_ledger, verifier, critic
+    )
+    (snapshot_path.parent / "critic-4.json").write_bytes(canonical_bytes(snapshot))
+    ledger_path = write_json(tmp_path / "ledger-global-4-local-1.json", projected)
+    checked = subprocess.run(
+        ["python3", str(VERIFICATION_LEDGER), "check", str(ledger_path)],
+        cwd=ROOT, capture_output=True, text=True,
+    )
+
+    assert checked.returncode == 0, checked.stderr
+    assert [item["iteration"] for item in projected["plan_verification"]["assignments"]] == [1]
+    assert projected["plan_verification"]["obligation_assessments"][0]["iteration"] == 1
+    assert projected["plan_verification"]["obligation_assessments"][0]["approval"]["iteration"] == 1
 
 
 @pytest.mark.parametrize(
