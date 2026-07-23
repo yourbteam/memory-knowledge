@@ -330,6 +330,35 @@ def test_discovery_reconciliation_rolling_uses_controller_owned_constants():
     ]
 
 
+def test_blocker_backlog_execute_derives_controller_owned_index_and_run():
+    prepared = sequence_intake_adapters.prepare(
+        "blocker-backlog-reconciliation",
+        {
+            "operation": "execute",
+            "source_repository_key": "memory-knowledge",
+            "manifest": "/private/tmp/blockers.json",
+            "run_id": "run-123",
+        },
+        artifact_paths={},
+        repository_roots={"memory-knowledge": "/repos/memory"},
+    )
+
+    assert prepared["argv"] == [
+        "python3",
+        "/repos/memory/scripts/blocker_backlog_reconciliation.py",
+        "--root", "/repos/memory",
+        "execute",
+        "--manifest", "/private/tmp/blockers.json",
+        "--run-id", "run-123",
+        "--active-index", "/repos/memory/operations/blockers/ACTIVE.md",
+    ]
+    assert prepared["authorization"] == {
+        "effectful": True,
+        "operation": "execute",
+        "required": True,
+    }
+
+
 def test_discovery_promotion_drive_derives_repeated_operation_kind_flags():
     prepared = sequence_intake_adapters.prepare(
         "discovery-promotion-lifecycle",

@@ -340,6 +340,52 @@ def test_registered_pending_correction_routes_to_registered_successor(
     assert registered == ["example"]
 
 
+def test_registered_successor_reuses_pending_correction_task_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sequence = tmp_path / "operations/sequences/example/sequence.md"
+    sequence.parent.mkdir(parents=True)
+    sequence.write_text(
+        "| verify-automation | python3 -m pytest | passed | exact |\n"
+    )
+    pending = lifecycle.PendingCorrection(
+        blocker_id="blk-one", correction_id="correction-one",
+        predecessor_run_id="run-old", task_id="correction-task",
+    )
+    monkeypatch.setattr(lifecycle, "_registered_verified", lambda *args, **kwargs: False)
+    monkeypatch.setattr(lifecycle, "_pending_correction", lambda subject_id: pending)
+    classified = []
+    selected = {}
+    monkeypatch.setattr(
+        lifecycle, "_classify",
+        lambda task_id, **kwargs: classified.append(task_id),
+    )
+    monkeypatch.setattr(
+        lifecycle, "_select_and_start",
+        lambda **kwargs: selected.update(kwargs) or ("run-new", {
+            "verifies_correction_ids": ["correction-one"],
+            "relevant_blocker_ids": ["blk-one"],
+        }),
+    )
+    monkeypatch.setattr(
+        lifecycle, "_verify_run",
+        lambda **kwargs: {"run_id": kwargs["run_id"]},
+    )
+    args = lifecycle.build_parser().parse_args([
+        "drive", "--file", str(tmp_path / "discovery.md"),
+        "--sequence-id", "example", "--use-when", "example",
+        "--operation-kind", "workflow-drive",
+        "--automation-display", "controller", "--pass-signal", "PASS",
+        "--root", str(tmp_path),
+    ])
+
+    lifecycle._verify_registered(args, root=tmp_path)
+
+    assert classified == ["correction-task"]
+    assert selected["task_id"] == "correction-task"
+    assert selected["pending"] == pending
+
+
 def test_status_allows_controller_to_bootstrap_an_unbound_discovery(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -396,6 +442,143 @@ def test_pending_correction_folds_transition_events_without_subject_fields(
     assert lifecycle._pending_correction("discovery-example") == lifecycle.PendingCorrection(
         blocker_id="blk-one", correction_id="correction-one",
         predecessor_run_id="run-one", task_id="task-one",
+    )
+
+
+def test_pending_correction_ignores_correction_with_passed_verification(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events = [
+        {
+            "event_type": "run_started", "subject_id": "discovery-example",
+            "lineage_id": "discovery-example", "run_id": "legacy-run",
+        },
+        {
+            "event_type": "blocker_opened", "subject_id": "discovery-example",
+            "lineage_id": "discovery-example", "blocker_id": "blk-one",
+            "run_id": "legacy-run",
+        },
+        {
+            "event_type": "correction_recorded", "subject_id": "discovery-example",
+            "lineage_id": "discovery-example", "blocker_id": "blk-one",
+            "run_id": "legacy-run", "correction_id": "correction-one",
+        },
+        {
+            "event_type": "blocker_transitioned", "blocker_id": "blk-one",
+            "run_id": "legacy-run", "to_status": "fixed-awaiting-verification",
+        },
+        {
+            "event_type": "verification_recorded", "subject_id": "discovery-example",
+            "lineage_id": "discovery-example", "run_id": "successor-run",
+            "correction_ids": ["correction-one"], "outcome": "passed",
+            "quality": "same-path",
+        },
+    ]
+    monkeypatch.setattr(lifecycle.work_memory, "load_ledger", lambda: (events, "a" * 64))
+
+    assert lifecycle._pending_correction("discovery-example") is None
+
+
+def test_pending_correction_groups_same_predecessor_co_corrections(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    events = [{
+        "event_type": "run_started", "subject_id": "discovery-example",
+        "lineage_id": "discovery-example", "run_id": "run-one",
+        "task_id": "task-one",
+    }]
+    for blocker_id, correction_id in (
+        ("blk-one", "correction-one"),
+        ("blk-two", "correction-two"),
+    ):
+        events.extend([
+            {
+                "event_type": "blocker_opened",
+                "subject_id": "discovery-example",
+                "lineage_id": "discovery-example",
+                "blocker_id": blocker_id, "run_id": "run-one",
+            },
+            {
+                "event_type": "correction_recorded",
+                "subject_id": "discovery-example",
+                "lineage_id": "discovery-example",
+                "blocker_id": blocker_id, "run_id": "run-one",
+                "correction_id": correction_id,
+            },
+            {
+                "event_type": "blocker_transitioned",
+                "blocker_id": blocker_id, "run_id": "run-one",
+                "to_status": "fixed-awaiting-verification",
+            },
+        ])
+    monkeypatch.setattr(lifecycle.work_memory, "load_ledger", lambda: (events, "a" * 64))
+
+    pending = lifecycle._pending_correction("discovery-example")
+
+    assert pending is not None
+    assert pending.pairs == (
+        ("blk-one", "correction-one"),
+        ("blk-two", "correction-two"),
+    )
+
+
+def test_successor_verification_records_and_closes_complete_correction_group(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    document = tmp_path / "sequence.md"
+    document.write_text("# sequence\n")
+    pending = lifecycle.PendingCorrection(
+        blocker_id="blk-one", correction_id="correction-one",
+        predecessor_run_id="run-old", task_id="task-one",
+        co_corrections=(("blk-two", "correction-two"),),
+    )
+    monkeypatch.setattr(
+        lifecycle, "_guard_and_verify",
+        lambda **kwargs: type("Completed", (), {"returncode": 0})(),
+    )
+    monkeypatch.setattr(lifecycle, "_pending_correction", lambda subject_id: pending)
+    commands = []
+
+    def run(command, *, root):
+        commands.append(command)
+        return {"event_id": "verification-one"} if "verify" in command else {"ok": True}
+
+    monkeypatch.setattr(lifecycle, "_json_command", run)
+
+    lifecycle._verify_run(
+        run_id="run-new",
+        receipt={
+            "verifies_correction_ids": ["correction-two", "correction-one"],
+            "relevant_blocker_ids": ["blk-one", "blk-two"],
+        },
+        document=document,
+        task_id="task-one",
+        root=tmp_path,
+        command="python3 -m pytest",
+        source="sequence_doc",
+        subject_id="discovery-example",
+    )
+
+    verify = commands[0]
+    assert [
+        verify[index + 1]
+        for index, token in enumerate(verify[:-1])
+        if token == "--blocker-id"
+    ] == ["blk-one", "blk-two"]
+    assert [
+        verify[index + 1]
+        for index, token in enumerate(verify[:-1])
+        if token == "--correction-id"
+    ] == ["correction-one", "correction-two"]
+    transitions = [
+        command for command in commands
+        if "scripts/blocker_catalog.py" in command
+    ]
+    assert len(transitions) == 4
+    assert all(
+        "--remaining-work" in command
+        for command in transitions
+        if command[command.index("--to-status") + 1] == "closed"
     )
 
 
@@ -526,6 +709,45 @@ def test_correct_accepts_one_stable_artifact_manifest_argument(
     assert str(tmp_path / "tests/test_one.py") in correction
     assert "--finalize-failed-run" in correction
     assert "--correction-id" in correction
+
+
+def test_correct_carries_other_open_blockers_from_same_run_as_co_blockers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = discovery(tmp_path / "discovery.md")
+    artifact = tmp_path / "fix.py"
+    artifact.write_text("# fix\n")
+    events = [
+        {
+            "event_type": "blocker_opened", "subject_id": "discovery-example",
+            "blocker_id": "blk-primary", "occurrence_id": "occ-primary",
+            "run_id": "run-one", "step_id": "verify-automation",
+        },
+        {
+            "event_type": "blocker_opened", "subject_id": "discovery-example",
+            "blocker_id": "blk-secondary", "occurrence_id": "occ-secondary",
+            "run_id": "run-one", "step_id": "record-correction",
+        },
+    ]
+    monkeypatch.setattr(lifecycle.work_memory, "load_ledger", lambda: (events, "a" * 64))
+    commands = []
+    monkeypatch.setattr(
+        lifecycle, "_json_command",
+        lambda command, *, root: commands.append(command) or {
+            "correction_id": "correction-one",
+        },
+    )
+    args = lifecycle.build_parser().parse_args([
+        "correct", "--file", str(path), "--sequence-id", "example",
+        "--solution", "stable fix", "--changed-artifact", str(artifact),
+        "--reusable-behavior-changed", "yes", "--root", str(tmp_path),
+    ])
+
+    lifecycle.cmd_correct(args)
+
+    command = commands[0]
+    assert command[command.index("--blocker-id") + 1] == "blk-primary"
+    assert command[command.index("--co-blocker-id") + 1] == "blk-secondary"
 
 
 def test_registered_correction_forwards_repository_roots(

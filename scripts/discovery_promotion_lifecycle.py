@@ -36,6 +36,19 @@ class PendingCorrection:
     correction_id: str
     predecessor_run_id: str
     task_id: str
+    co_corrections: tuple[tuple[str, str], ...] = ()
+
+    @property
+    def pairs(self) -> tuple[tuple[str, str], ...]:
+        return ((self.blocker_id, self.correction_id), *self.co_corrections)
+
+    @property
+    def blocker_ids(self) -> tuple[str, ...]:
+        return tuple(blocker_id for blocker_id, _ in self.pairs)
+
+    @property
+    def correction_ids(self) -> tuple[str, ...]:
+        return tuple(correction_id for _, correction_id in self.pairs)
 
 
 PROTECTED_CORRECTION_PATHS = {
@@ -100,6 +113,15 @@ def _pending_correction(discovery_id: str) -> PendingCorrection | None:
     events, _ = work_memory.load_ledger()
     blockers: dict[str, dict[str, Any]] = {}
     corrections: dict[str, dict[str, Any]] = {}
+    verified_correction_ids = {
+        correction_id
+        for event in events
+        if (
+            event.get("event_type") == "verification_recorded"
+            and event.get("outcome") == "passed"
+        )
+        for correction_id in event.get("correction_ids", [])
+    }
     run_task_ids = {
         event["run_id"]: event["task_id"]
         for event in events
@@ -122,7 +144,11 @@ def _pending_correction(discovery_id: str) -> PendingCorrection | None:
     candidates = []
     for blocker_id, state in blockers.items():
         correction = corrections.get(blocker_id)
-        if state["status"] == "fixed-awaiting-verification" and correction:
+        if (
+            state["status"] == "fixed-awaiting-verification"
+            and correction
+            and correction["correction_id"] not in verified_correction_ids
+        ):
             task_id = run_task_ids.get(correction["run_id"])
             if task_id is None:
                 raise LifecycleError("pending-correction-task-id-missing")
@@ -132,9 +158,25 @@ def _pending_correction(discovery_id: str) -> PendingCorrection | None:
                 predecessor_run_id=correction["run_id"],
                 task_id=task_id,
             ))
-    if len(candidates) > 1:
-        raise LifecycleError("multiple-pending-corrections")
-    return candidates[0] if candidates else None
+    if not candidates:
+        return None
+    primary = candidates[0]
+    if any(
+        candidate.predecessor_run_id != primary.predecessor_run_id
+        or candidate.task_id != primary.task_id
+        for candidate in candidates[1:]
+    ):
+        raise LifecycleError("multiple-pending-correction-groups")
+    return PendingCorrection(
+        blocker_id=primary.blocker_id,
+        correction_id=primary.correction_id,
+        predecessor_run_id=primary.predecessor_run_id,
+        task_id=primary.task_id,
+        co_corrections=tuple(
+            (candidate.blocker_id, candidate.correction_id)
+            for candidate in candidates[1:]
+        ),
+    )
 
 
 def _open_blocker_ids(subject_id: str) -> list[str]:
@@ -191,8 +233,9 @@ def _select_and_start(
     if pending:
         select.extend([
             "--verification-successor-of", pending.predecessor_run_id,
-            "--verifies-correction-id", pending.correction_id,
         ])
+        for correction_id in pending.correction_ids:
+            select.extend(["--verifies-correction-id", correction_id])
     if repo_roots_file:
         select.extend(["--repo-roots-file", repo_roots_file])
     receipt = _json_command(select, root=root)
@@ -258,20 +301,32 @@ def _verify_run(
         "--outcome", "passed", "--quality", "same-path",
         "--evidence", "The controller executed the exact guard-authorized verify-automation command successfully.",
     ]
-    pending_blocker = None
+    pending_blockers: tuple[str, ...] = ()
     if pending_ids:
         pending = _pending_correction(subject_id)
-        if pending is None or pending.correction_id not in pending_ids or pending.blocker_id not in relevant:
+        if (
+            pending is None
+            or set(pending.correction_ids) != set(pending_ids)
+            or not set(pending.blocker_ids).issubset(relevant)
+        ):
             raise LifecycleError("successor-receipt-correction-mismatch")
-        pending_blocker = pending
-        verify.extend(["--blocker-id", pending.blocker_id, "--correction-id", pending.correction_id])
+        pending_blockers = pending.blocker_ids
+        for blocker_id, correction_id in pending.pairs:
+            verify.extend([
+                "--blocker-id", blocker_id,
+                "--correction-id", correction_id,
+            ])
     verification = _json_command(verify, root=root)
-    if pending_blocker:
+    for blocker_id in pending_blockers:
         for status in ("verified", "closed"):
             _json_command([
                 "python3", "scripts/blocker_catalog.py", "transition", "--run-id", run_id,
-                "--blocker-id", pending_blocker.blocker_id, "--to-status", status,
+                "--blocker-id", blocker_id, "--to-status", status,
                 "--verification-event-id", verification["event_id"],
+                *(
+                    ["--remaining-work", "none"]
+                    if status == "closed" else []
+                ),
             ], root=root)
     _json_command([
         "python3", "scripts/work_memory.py", "run-close", "--run-id", run_id,
@@ -325,10 +380,14 @@ def _promote(args: argparse.Namespace, *, root: Path) -> dict[str, Any]:
 def _verify_registered(args: argparse.Namespace, *, root: Path) -> dict[str, Any]:
     if _registered_verified(args.sequence_id, repo_roots_file=args.repo_roots_file):
         return {"already_verified": True}
-    task_id = f"registered-verify-{args.sequence_id}-{args.operation_kind[0]}"
+    pending = _pending_correction(args.sequence_id)
+    task_id = (
+        pending.task_id
+        if pending is not None
+        else f"registered-verify-{args.sequence_id}-{args.operation_kind[0]}"
+    )
     _classify(task_id, root=root, operation_kind=args.operation_kind[0])
     document = root / f"operations/sequences/{args.sequence_id}/sequence.md"
-    pending = _pending_correction(args.sequence_id)
     run_id, receipt = _select_and_start(
         task_id=task_id, discovery=None, sequence_id=args.sequence_id, root=root,
         repo_roots_file=args.repo_roots_file, pending=pending,
@@ -452,12 +511,19 @@ def _correct_subject(args: argparse.Namespace, subject_id: str) -> dict[str, Any
             blockers[event["blocker_id"]]["status"] = event["to_status"]
     open_items = [item for item in blockers.values() if item["status"] == "open"]
     pending = _pending_correction(subject_id)
-    if len(open_items) == 1:
+    co_blockers: list[dict[str, Any]] = []
+    if open_items:
         blocker = open_items[0]
+        co_blockers = open_items[1:]
     elif not open_items and pending is not None:
         blocker = blockers[pending.blocker_id]
     else:
         raise LifecycleError("expected-one-open-blocker", details={"count": len(open_items)})
+    if any(item["run_id"] != blocker["run_id"] for item in co_blockers):
+        raise LifecycleError(
+            "open-blockers-span-multiple-runs",
+            details={"blocker_ids": [item["blocker_id"] for item in open_items]},
+        )
     artifacts: list[str] = list(args.changed_artifact or [])
     if args.changed_artifacts_file:
         try:
@@ -529,6 +595,8 @@ def _correct_subject(args: argparse.Namespace, subject_id: str) -> dict[str, Any
             f"memory-knowledge:{blocker['run_id']}:{blocker['blocker_id']}:{blocker['occurrence_id']}",
         )),
     ])
+    for co_blocker in co_blockers:
+        command.extend(["--co-blocker-id", co_blocker["blocker_id"]])
     if not protected:
         command.append("--finalize-failed-run")
     for artifact in artifacts:

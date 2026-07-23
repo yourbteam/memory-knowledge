@@ -36,7 +36,9 @@ DISPOSITIONS = {
     "promote", "absorb", "remain-discovery", "supersede", "quarantine",
     "already-promoted",
 }
-TERMINAL_DISPOSITIONS = {"promote", "absorb", "supersede", "already-promoted"}
+TERMINAL_DISPOSITIONS = {
+    "promote", "absorb", "supersede", "quarantine", "already-promoted",
+}
 PROMOTION_FIELDS = {
     "sequence_id", "use_when", "operation_kinds", "automation_display",
     "pass_signal", "max_qualification_runs",
@@ -360,7 +362,8 @@ def _candidate_row(root: Path, relative: str, registry: list[dict[str, str]]) ->
 def audit(root: Path) -> dict[str, Any]:
     paths = _candidate_paths(root)
     registry, registry_hash = work_memory.registry_rows(
-        root / "operations/sequences/SEQUENCES.md"
+        root / "operations/sequences/SEQUENCES.md",
+        selected_sequence_id=SEQUENCE_ID,
     )
     return {
         "schema_version": SCHEMA_VERSION,
@@ -506,7 +509,10 @@ def validate_manifest(path: Path, root: Path, *, require_approval: bool = True) 
         raise ReconciliationError("candidate-set-drift")
     if snapshot.get("candidate_hashes") != _candidate_hashes(root, current_paths):
         raise ReconciliationError("candidate-content-drift")
-    _, registry_hash = work_memory.registry_rows(root / "operations/sequences/SEQUENCES.md")
+    _, registry_hash = work_memory.registry_rows(
+        root / "operations/sequences/SEQUENCES.md",
+        selected_sequence_id=SEQUENCE_ID,
+    )
     if snapshot.get("registry_hash") != registry_hash:
         raise ReconciliationError("registry-drift")
     rows = payload["candidates"]
@@ -977,7 +983,12 @@ def main(argv: Sequence[str] | None = None) -> int:
                 )
         print(json.dumps(result, sort_keys=True))
         return 0
-    except (ReconciliationError, OSError, json.JSONDecodeError) as exc:
+    except (
+        ReconciliationError,
+        work_memory.prevention_registry.RegistryError,
+        OSError,
+        json.JSONDecodeError,
+    ) as exc:
         print(json.dumps({"ok": False, "error": str(exc)}, sort_keys=True), file=sys.stderr)
         return 3
     finally:

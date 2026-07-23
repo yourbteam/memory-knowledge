@@ -536,6 +536,7 @@ def isolated_reconcile_and_resume(
                     "--source-ledger", str(repo / ledger_path),
                     "--ledger", str(isolated / ledger_path),
                     "--view", str(isolated / generated_view_path),
+                    "--reconcile-persisted-source",
                 ],
                 cwd=isolated,
                 check=False,

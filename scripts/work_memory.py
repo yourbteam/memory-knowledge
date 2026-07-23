@@ -149,7 +149,7 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
     "blocker_transitioned": (
         {"run_id", "blocker_id", "from_status", "to_status"},
         {"verification_event_id", "remaining_work", "supersession_evidence", "non_gap_evidence",
-         "reopen_evidence", "recovery_evidence"},
+         "reopen_evidence", "recovery_evidence", "reconciliation_basis_event_id"},
     ),
     "run_closed": (
         {"run_id", "subject_id", "lineage_id", "result", "completed_at_utc", "correction_count",
@@ -1001,6 +1001,10 @@ def _validate_event_values(event: dict[str, Any]) -> None:
             if len(reopen_fields) != 1:
                 raise WorkMemoryError("invalid-blocker-transition-fields", 2)
             expected_optional[target] = reopen_fields
+        if "reconciliation_basis_event_id" in optional_present:
+            if target not in {"verified", "closed"}:
+                raise WorkMemoryError("invalid-blocker-transition-fields", 2)
+            expected_optional[target].add("reconciliation_basis_event_id")
         if optional_present != expected_optional[target] or (target == "closed" and event["remaining_work"] != "none"):
             raise WorkMemoryError("invalid-blocker-transition-fields", 2)
         if target == "open":
@@ -1169,6 +1173,8 @@ def parse_ledger_bytes(data: bytes) -> list[dict[str, Any]]:
             event["event_id"] for event in events
             if event["event_type"] == "run_closed"
         },
+        legacy_post_terminal_event_ids={event["event_id"] for event in events},
+        legacy_nonopen_correction_event_ids={event["event_id"] for event in events},
     )
     return events
 
@@ -1551,6 +1557,8 @@ def validate_lifecycle(
     *,
     legacy_premature_fixed_event_ids: set[str] | None = None,
     legacy_open_terminal_event_ids: set[str] | None = None,
+    legacy_post_terminal_event_ids: set[str] | None = None,
+    legacy_nonopen_correction_event_ids: set[str] | None = None,
 ) -> None:
     event_index = _event_index(events)
     _ownership_snapshot(events)
@@ -1558,11 +1566,16 @@ def validate_lifecycle(
     validate_prevention_lifecycle(events)
     legacy_premature_fixed_event_ids = legacy_premature_fixed_event_ids or set()
     legacy_open_terminal_event_ids = legacy_open_terminal_event_ids or set()
+    legacy_post_terminal_event_ids = legacy_post_terminal_event_ids or set()
+    legacy_nonopen_correction_event_ids = (
+        legacy_nonopen_correction_event_ids or set()
+    )
     runs: dict[str, dict[str, Any]] = {}
     blockers: dict[str, str] = {}
     blocker_meta: dict[str, dict[str, Any]] = {}
     blocker_occurrences: dict[str, str] = {}
     blocker_occurrence_runs: dict[str, str] = {}
+    blocker_verified_evidence: dict[str, str] = {}
     legacy_stranded_fixed_sources: dict[str, str] = {}
     corrections: dict[str, dict[str, Any]] = {}
     verifications: dict[str, dict[str, Any]] = {}
@@ -1589,7 +1602,10 @@ def validate_lifecycle(
         if run_id is not None:
             if run_id not in runs:
                 raise WorkMemoryError("event-before-run-start", 3)
-            if runs[run_id]["terminal"] is not None:
+            if (
+                runs[run_id]["terminal"] is not None
+                and event["event_id"] not in legacy_post_terminal_event_ids
+            ):
                 raise WorkMemoryError("event-after-terminal", 3)
         if kind in {"blocker_opened", "pre_run_blocker_opened"}:
             if event["blocker_id"] in blockers:
@@ -1608,10 +1624,14 @@ def validate_lifecycle(
             blockers[event["blocker_id"]] = "open"
             blocker_occurrences[event["blocker_id"]] = event["occurrence_id"]
             blocker_occurrence_runs[event["blocker_id"]] = run_id
+            blocker_verified_evidence.pop(event["blocker_id"], None)
             legacy_stranded_fixed_sources.pop(event["blocker_id"], None)
             runs[run_id]["blockers"].add(event["blocker_id"])
         elif kind == "correction_recorded":
-            if blockers.get(event["blocker_id"]) != "open":
+            if (
+                blockers.get(event["blocker_id"]) != "open"
+                and event["event_id"] not in legacy_nonopen_correction_event_ids
+            ):
                 raise WorkMemoryError("correction-for-nonopen-blocker", 3)
             if event["correction_id"] in corrections:
                 raise WorkMemoryError("duplicate-correction-id", 3)
@@ -1871,12 +1891,25 @@ def validate_lifecycle(
             verification_id = event.get("verification_event_id")
             if verification_id:
                 verification = verifications.get(verification_id)
+                reconciliation_basis = event.get("reconciliation_basis_event_id")
+                is_reconciliation = reconciliation_basis is not None
+                transition_start = runs[event["run_id"]]["start"]
                 if (
                     not verification or verification["outcome"] != "passed"
                     or verification["quality"] != "same-path"
-                    or verification["run_id"] != event["run_id"]
                     or event["blocker_id"] not in verification["blocker_ids"]
                 ):
+                    raise WorkMemoryError("invalid-transition-verification", 3)
+                if is_reconciliation:
+                    if (
+                        reconciliation_basis != verification_id
+                        or transition_start["subject_id"]
+                        != "blocker-backlog-reconciliation"
+                    ):
+                        raise WorkMemoryError(
+                            "invalid-blocker-reconciliation-authority", 3,
+                        )
+                elif verification["run_id"] != event["run_id"]:
                     raise WorkMemoryError("invalid-transition-verification", 3)
                 candidates = [item for item in corrections.values() if item["blocker_id"] == event["blocker_id"]]
                 superseded = {
@@ -1886,7 +1919,7 @@ def validate_lifecycle(
                 }
                 active = [item for item in candidates if item["correction_id"] not in superseded]
                 active_ids = {item["correction_id"] for item in active}
-                successor = runs[event["run_id"]]["start"]
+                successor = runs[verification["run_id"]]["start"]
                 if (
                     not active_ids
                     or not active_ids <= set(verification["correction_ids"])
@@ -1894,6 +1927,17 @@ def validate_lifecycle(
                     or verification["lineage_id"] != blocker_meta[event["blocker_id"]]["lineage_id"]
                 ):
                     raise WorkMemoryError("verification-successor-binding-mismatch", 3)
+                if (
+                    is_reconciliation
+                    and current == "verified"
+                    and blocker_verified_evidence.get(event["blocker_id"])
+                    != verification_id
+                ):
+                    raise WorkMemoryError(
+                        "blocker-reconciliation-verification-mismatch", 3,
+                    )
+                if event["to_status"] == "verified":
+                    blocker_verified_evidence[event["blocker_id"]] = verification_id
             blockers[event["blocker_id"]] = event["to_status"]
         elif kind in {"run_closed", "run_abandoned"}:
             start = runs[run_id]["start"]
@@ -1945,6 +1989,8 @@ def stage_event_batch(existing: bytes, request: dict[str, Any]) -> tuple[bytes, 
             event["event_id"] for event in current
             if event["event_type"] == "run_closed"
         },
+        legacy_post_terminal_event_ids=set(_event_index(current)),
+        legacy_nonopen_correction_event_ids=set(_event_index(current)),
     )
     ledger_bytes = b"".join(canonical_bytes(event) for event in result_events)
     ledger_hash = sha256_bytes(ledger_bytes)
@@ -3808,6 +3854,20 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         for blocker_id in co_blocker_ids
     }
     supersedes = args.supersedes_correction_id or []
+    co_supersedes_values = (
+        getattr(args, "co_supersedes_correction_id", None) or []
+    )
+    if co_supersedes_values and len(co_supersedes_values) != len(co_blocker_ids):
+        raise WorkMemoryError("co-superseded-correction-count-mismatch", 2)
+    co_supersedes = (
+        {
+            blocker_id: require_uuid(value, "co-supersedes-correction-id")
+            for blocker_id, value in zip(
+                co_blocker_ids, co_supersedes_values, strict=True,
+            )
+        }
+        if co_supersedes_values else {}
+    )
     existing = next((
         event for event in events
         if event["event_type"] == "correction_recorded"
@@ -3856,6 +3916,10 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
                 co_correction is None
                 or any(co_correction.get(key) != value for key, value in expected_co.items())
                 or _superseded_correction_ids(co_correction)
+                != (
+                    {co_supersedes[blocker_id]}
+                    if blocker_id in co_supersedes else set()
+                )
             ):
                 raise WorkMemoryError("correction-id-conflict", 3)
         existing_transitions = [
@@ -4092,6 +4156,19 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         supersession_fields["supersedes_correction_id"] = supersedes[0]
     elif supersedes:
         supersession_fields["supersedes_correction_ids"] = supersedes
+    for blocker_id, old_correction_id in co_supersedes.items():
+        old_correction = next((
+            event for event in events
+            if event["event_type"] == "correction_recorded"
+            and event["correction_id"] == old_correction_id
+        ), None)
+        if (
+            old_correction is None
+            or old_correction.get("blocker_id") != blocker_id
+            or old_correction.get("occurrence_id")
+            != blocker_contexts[blocker_id]["occurrence_id"]
+        ):
+            raise WorkMemoryError("co-superseded-correction-not-found", 3)
     correction = _event(
         "correction_recorded", args.event_id, run_id=args.run_id, blocker_id=args.blocker_id,
         occurrence_id=args.occurrence_id, correction_id=correction_id, subject_id=start["subject_id"],
@@ -4109,6 +4186,10 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
             changed_artifacts=artifacts, changed_artifact_hashes=hashes,
             reusable_behavior_changed=args.reusable_behavior_changed == "yes",
             solution=args.solution, primary_correction_id=correction_id,
+            **(
+                {"supersedes_correction_id": co_supersedes[blocker_id]}
+                if blocker_id in co_supersedes else {}
+            ),
         )
         for blocker_id in co_blocker_ids
     ]
@@ -4568,17 +4649,35 @@ def cmd_merge_ledger(args: argparse.Namespace) -> dict[str, Any]:
                 continue
             target_by_id[event["event_id"]] = event
             unseen.append(event)
-        if unseen:
+        reconcile_persisted_source = bool(
+            getattr(args, "reconcile_persisted_source", False)
+        )
+        if unseen and not reconcile_persisted_source:
             writer_thread_id = (
                 host_thread_id() if _batch_requires_host_thread(unseen) else None
             )
             _authorize_event_batch(target_events, unseen, writer_thread_id)
         merged = target_events + unseen
+        persisted_event_ids = (
+            {event["event_id"] for event in target_events + source_events}
+            if reconcile_persisted_source
+            else set(_event_index(target_events))
+        )
         validate_lifecycle(
             merged,
             legacy_premature_fixed_event_ids={
                 event["event_id"] for event in target_events + source_events
             },
+            legacy_open_terminal_event_ids={
+                event["event_id"] for event in (
+                    target_events + source_events
+                    if reconcile_persisted_source
+                    else target_events
+                )
+                if event["event_type"] == "run_closed"
+            },
+            legacy_post_terminal_event_ids=persisted_event_ids,
+            legacy_nonopen_correction_event_ids=persisted_event_ids,
         )
         ledger_bytes = b"".join(canonical_bytes(event) for event in merged)
         ledger_hash = sha256_bytes(ledger_bytes)
@@ -4637,6 +4736,7 @@ def build_parser() -> argparse.ArgumentParser:
     merge_ledger = sub.add_parser("merge-ledger")
     merge_ledger.add_argument("--source-ledger", required=True)
     merge_ledger.add_argument("--ledger"); merge_ledger.add_argument("--view")
+    merge_ledger.add_argument("--reconcile-persisted-source", action="store_true")
     merge_ledger.set_defaults(func=cmd_merge_ledger)
     run_start = sub.add_parser("run-start")
     run_start.add_argument("--task-id", required=True); run_start.add_argument("--run-id"); run_start.add_argument("--event-id")
@@ -4670,7 +4770,9 @@ def build_parser() -> argparse.ArgumentParser:
     correct.add_argument("--co-blocker-id", action="append")
     correct.add_argument("--step-id", required=True); correct.add_argument("--changed-artifact", action="append", required=True)
     correct.add_argument("--solution", required=True); correct.add_argument("--reusable-behavior-changed", choices=["yes", "no"], required=True)
-    correct.add_argument("--supersedes-correction-id", action="append"); correct.add_argument("--correction-id"); correct.add_argument("--event-id"); correct.add_argument("--transition-event-id")
+    correct.add_argument("--supersedes-correction-id", action="append")
+    correct.add_argument("--co-supersedes-correction-id", action="append")
+    correct.add_argument("--correction-id"); correct.add_argument("--event-id"); correct.add_argument("--transition-event-id")
     correct.add_argument("--repo-roots-file"); correct.add_argument("--finalize-failed-run", action="store_true")
     correct.set_defaults(func=cmd_correct)
     preserve = sub.add_parser("preserve-corrections")

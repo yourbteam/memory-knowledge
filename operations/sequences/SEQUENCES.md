@@ -73,6 +73,8 @@ Use it when a task involves a multi-step command sequence that has been run befo
 
 | `workflow-resume-from-phase-live-confirmation` | A persisted United Partners workflow must continue from its exact first unfinished phase while preserving completed phase state and streaming the structured live watcher feed. | `operations/sequences/workflow-resume-from-phase-live-confirmation/` | scripts/run_client_regeneration.py --client <client> --resume-run <persisted-run-id> --from-phase <first-unfinished-phase> | A new child preserves all completed source phases, begins at the requested first unfinished phase, and reaches completion or one persisted diagnosable deviation while watcher telemetry remains active. | `workflow-drive` | `discovery-9c0393de-2d1b-5744-8e85-2f519d56edea` |
 
+| `blocker-backlog-reconciliation` | Audit the canonical blocker backlog and apply only an explicitly approved evidence-bound reconciliation manifest. | `operations/sequences/blocker-backlog-reconciliation/` | blocker backlog reconciliation controller | Controller returns ok true after registered same-path verification completes. | `cleanup` | `discovery-001aefd7-8d3a-55f9-ab45-b5ed2b90c4ee` |
+
 
 ## Missing Sequence Discovery
 

@@ -13,6 +13,7 @@ from collections.abc import Callable, Mapping, Sequence
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
+from uuid import NAMESPACE_URL, uuid5
 
 try:
     from scripts import (
@@ -91,6 +92,41 @@ def _artifact_paths(task_id: str, sequence_id: str) -> dict[str, str]:
     }
 
 
+def _active_selection_for_intake(
+    task_id: str, active_path: Path,
+) -> dict[str, Any]:
+    try:
+        return sequence_guard.verify_receipts(task_id, active_path)
+    except work_memory.WorkMemoryError as exc:
+        if exc.code != "stale-registry-receipt":
+            raise
+    selection, selection_hash, _ = work_memory.load_receipt(
+        task_id, "selection",
+    )
+    active = json.loads(active_path.read_text(encoding="utf-8"))
+    required = {
+        "task_id": task_id,
+        "mode": selection["mode"],
+        "subject_id": selection["subject_id"],
+        "lineage_id": selection["lineage_id"],
+        "document": str(Path(selection["document"]).resolve()),
+        "source_bundle_hash": selection["source_bundle_hash"],
+        "selection_receipt_hash": selection_hash,
+    }
+    if (
+        selection["mode"] != "registered"
+        or not isinstance(active, Mapping)
+        or any(active.get(key) != value for key, value in required.items())
+    ):
+        raise SequenceLaunchError("stale-registry-selection-mismatch")
+    return {
+        "mode": selection["mode"],
+        "subject_id": selection["subject_id"],
+        "selection": selection,
+        "stale_registry_receipt": True,
+    }
+
+
 def prepare_active_sequence(
     task_id: str,
     *,
@@ -99,7 +135,7 @@ def prepare_active_sequence(
     output_fn: Callable[[str], None] | None = None,
 ) -> dict[str, Any]:
     active_path = work_memory.receipt_path(task_id, "active")
-    verified = sequence_guard.verify_receipts(task_id, active_path)
+    verified = _active_selection_for_intake(task_id, active_path)
     if verified["mode"] != "registered":
         raise SequenceLaunchError("active-selection-is-not-registered")
     sequence_id = verified["subject_id"]
@@ -120,6 +156,10 @@ def prepare_active_sequence(
         input_fn=input_fn,
         output_fn=output_fn,
     )
+    if prepared.get("profile") in {"correct", "correct-registered"}:
+        prepared = _prepare_correction_bootstrap(
+            task_id, prepared, selection, repository_roots,
+        )
     return {
         "schema_version": 1,
         "task_id": task_id,
@@ -127,6 +167,139 @@ def prepare_active_sequence(
         "dispatch_status": "PREPARED_NOT_AUTHORIZED",
         "prepared": prepared,
     }
+
+
+def _required_argv_value(argv: Sequence[str], option: str) -> str:
+    if argv.count(option) != 1:
+        raise SequenceLaunchError(f"prepared-correction-option-invalid:{option}")
+    index = argv.index(option)
+    if index + 1 >= len(argv) or argv[index + 1].startswith("--"):
+        raise SequenceLaunchError(f"prepared-correction-option-invalid:{option}")
+    return argv[index + 1]
+
+
+def _prepare_correction_bootstrap(
+    task_id: str,
+    prepared: Mapping[str, Any],
+    selection: Mapping[str, Any],
+    repository_roots: Mapping[str, str],
+) -> dict[str, Any]:
+    argv = prepared.get("argv")
+    artifacts = prepared.get("artifacts")
+    if (
+        not isinstance(argv, list)
+        or not all(isinstance(token, str) for token in argv)
+        or not isinstance(artifacts, Mapping)
+        or not isinstance(artifacts.get("changed_artifacts"), Mapping)
+    ):
+        raise SequenceLaunchError("prepared-correction-invalid")
+    events, _ = work_memory.load_ledger()
+    terminal_run_ids = {
+        event["run_id"]
+        for event in events
+        if event.get("event_type") in {"run_closed", "run_abandoned"}
+    }
+    starts = [
+        event for event in events
+        if (
+            event.get("event_type") == "run_started"
+            and event.get("task_id") == task_id
+            and event.get("subject_id") == selection.get("subject_id")
+            and event.get("lineage_id") == selection.get("lineage_id")
+            and event["run_id"] not in terminal_run_ids
+        )
+    ]
+    if len(starts) != 1:
+        raise SequenceLaunchError("active-correction-run-ambiguous")
+    run_id = starts[0]["run_id"]
+    blockers: dict[str, dict[str, Any]] = {}
+    for event in events:
+        blocker_id = event.get("blocker_id")
+        kind = event.get("event_type")
+        if kind == "blocker_opened":
+            if (
+                event.get("subject_id") != selection.get("subject_id")
+                or event.get("lineage_id") != selection.get("lineage_id")
+            ):
+                continue
+            blockers[blocker_id] = {
+                "opened": event,
+                "status": "open",
+                "occurrence_id": event["occurrence_id"],
+                "run_id": event["run_id"],
+            }
+        elif kind == "blocker_recurred" and blocker_id in blockers:
+            blockers[blocker_id].update(
+                status="open",
+                occurrence_id=event["occurrence_id"],
+                run_id=event["run_id"],
+            )
+        elif kind == "blocker_transitioned" and blocker_id in blockers:
+            blockers[blocker_id]["status"] = event["to_status"]
+    open_blockers = [
+        (blocker_id, state)
+        for blocker_id, state in blockers.items()
+        if state["status"] == "open" and state["run_id"] == run_id
+    ]
+    if not open_blockers:
+        raise SequenceLaunchError("active-correction-blocker-missing")
+    primary_id, primary = open_blockers[0]
+    descriptor = artifacts["changed_artifacts"]
+    try:
+        changed = json.loads(descriptor["content"])
+    except (KeyError, TypeError, json.JSONDecodeError) as exc:
+        raise SequenceLaunchError("prepared-correction-artifacts-invalid") from exc
+    if not isinstance(changed, list) or not changed:
+        raise SequenceLaunchError("prepared-correction-artifacts-invalid")
+    changed_paths: list[str] = []
+    for item in changed:
+        if (
+            not isinstance(item, Mapping)
+            or set(item) != {"repository_key", "path"}
+            or item["repository_key"] not in repository_roots
+        ):
+            raise SequenceLaunchError("prepared-correction-artifacts-invalid")
+        changed_paths.append(str(
+            (Path(repository_roots[item["repository_key"]]) / item["path"]).resolve()
+        ))
+    solution = _required_argv_value(argv, "--solution")
+    reusable = _required_argv_value(argv, "--reusable-behavior-changed")
+    supplied_task = _required_argv_value(argv, "--task-id")
+    if supplied_task != task_id or reusable not in {"yes", "no"}:
+        raise SequenceLaunchError("prepared-correction-context-mismatch")
+    supersedes = [
+        argv[index + 1]
+        for index, token in enumerate(argv[:-1])
+        if token == "--supersedes-correction-id"
+    ]
+    repository_root = Path(repository_roots["memory-knowledge"])
+    bootstrap_argv = [
+        "python3",
+        str(repository_root / "scripts/work_memory_bootstrap_launcher.py"),
+        "correct",
+        "--task-id", task_id,
+        "--run-id", run_id,
+        "--blocker-id", primary_id,
+    ]
+    for blocker_id, _ in open_blockers[1:]:
+        bootstrap_argv.extend(["--co-blocker-id", blocker_id])
+    bootstrap_argv.extend([
+        "--occurrence-id", primary["occurrence_id"],
+        "--step-id", primary["opened"]["step_id"],
+        "--solution", solution,
+        "--reusable-behavior-changed", reusable,
+        "--correction-id", str(uuid5(
+            NAMESPACE_URL,
+            f"memory-knowledge:{run_id}:{primary_id}:{primary['occurrence_id']}",
+        )),
+    ])
+    for path in changed_paths:
+        bootstrap_argv.extend(["--changed-artifact", path])
+    for correction_id in supersedes:
+        bootstrap_argv.extend(["--supersedes-correction-id", correction_id])
+    result = dict(prepared)
+    result["argv"] = bootstrap_argv
+    return result
 
 
 def _materialize_artifacts(prepared: Mapping[str, Any]) -> None:
@@ -168,8 +341,14 @@ def _invoked_script(prepared: Mapping[str, Any]) -> Path:
     ):
         raise SequenceLaunchError("prepared-argv-invalid")
     repository_root = Path(repository["root"])
+    executable = Path(argv[0]).name if argv and isinstance(argv[0], str) else ""
+    script_tokens = (
+        argv[1:2]
+        if executable in {"python", "python3", "bash", "sh", "zsh"}
+        else argv[:1]
+    )
     candidates = []
-    for token in argv:
+    for token in script_tokens:
         if not isinstance(token, str) or Path(token).suffix not in {".py", ".sh"}:
             continue
         path = Path(token)
@@ -195,6 +374,40 @@ def _guard_prepared(task_id: str, prepared: Mapping[str, Any]) -> None:
     ):
         raise SequenceLaunchError("prepared-command-invalid")
     source = _invoked_script(prepared)
+    if profile in {"correct", "correct-registered"}:
+        selection, _, _ = work_memory.load_receipt(task_id, "selection")
+        roots = _repository_roots(selection)
+        current_source = source.resolve()
+        matches = [
+            item for item in selection["source_bundle"]
+            if item["repository_key"] in roots
+            and (Path(roots[item["repository_key"]]) / item["path"]).resolve()
+            == current_source
+        ]
+        artifacts = prepared.get("artifacts")
+        artifact = (
+            artifacts.get("changed_artifacts")
+            if isinstance(artifacts, Mapping)
+            else None
+        )
+        if (
+            len(matches) != 1
+            or work_memory.sha256_bytes(current_source.read_bytes())
+            != matches[0]["sha256"]
+            or len(argv) < 3
+            or Path(argv[1]).name != "work_memory_bootstrap_launcher.py"
+            or argv[2] != "correct"
+            or _required_argv_value(argv, "--task-id") != task_id
+            or "--changed-artifacts-file" in argv
+            or "--changed-artifact" not in argv
+            or not isinstance(artifact, Mapping)
+            or not isinstance(artifact.get("path"), str)
+            or not Path(artifact["path"]).resolve().is_relative_to(
+                Path("/private/tmp/sequence-intake", task_id).resolve()
+            )
+        ):
+            raise SequenceLaunchError("correction-orchestrator-not-sealed")
+        return
     sequence_guard.cmd_guard(SimpleNamespace(
         task_id=task_id,
         root=None,

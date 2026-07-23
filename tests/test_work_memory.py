@@ -389,6 +389,31 @@ def test_merge_ledger_appends_source_only_events_through_canonical_writer(tmp_pa
     assert not work_memory.blocker_view_stale(result["ledger_hash"], view)
 
 
+def test_merge_ledger_reconciles_already_persisted_legacy_history(tmp_path: Path):
+    target_events = run_events(0)
+    source_events = run_events(1)
+    target = tmp_path / "target.jsonl"
+    source = tmp_path / "source.jsonl"
+    view = tmp_path / "BLOCKERS.md"
+    target.write_bytes(
+        b"".join(work_memory.canonical_bytes(item) for item in target_events)
+    )
+    source.write_bytes(
+        b"".join(work_memory.canonical_bytes(item) for item in source_events)
+    )
+
+    result = work_memory.cmd_merge_ledger(SimpleNamespace(
+        source_ledger=str(source), ledger=str(target), view=str(view),
+        reconcile_persisted_source=True,
+    ))
+
+    merged, _ = work_memory.load_ledger(target)
+    assert result["appended_event_count"] == len(source_events)
+    assert [item["event_id"] for item in merged] == [
+        item["event_id"] for item in target_events + source_events
+    ]
+
+
 def test_merge_ledger_preserves_bounded_legacy_status_from_valid_source(tmp_path: Path):
     target_events = owned_run_events(0, "merge-target")
     run_id = str(uuid.uuid4())
@@ -1253,6 +1278,30 @@ def test_event_after_terminal_fails():
         )
 
 
+def test_persisted_event_after_terminal_loads_but_new_append_still_fails():
+    persisted = run_events(0)
+    late = event(
+        "verification_recorded", run_id=persisted[0]["run_id"], subject_id="sequence",
+        lineage_id="lineage", source_bundle_hash="a" * 64, outcome="passed",
+        quality="same-path", evidence="historical late event", blocker_ids=[],
+        correction_ids=[], changed_artifact_hashes=[],
+    )
+    existing = b"".join(
+        work_memory.canonical_bytes(item) for item in [*persisted, late]
+    )
+
+    assert work_memory.parse_ledger_bytes(existing)[-1] == late
+    with pytest.raises(work_memory.WorkMemoryError, match="event-after-terminal"):
+        work_memory.stage_event_batch(
+            b"".join(work_memory.canonical_bytes(item) for item in persisted),
+            {
+                "schema_version": 1,
+                "expected_ledger_hash": None,
+                "events": [late],
+            },
+        )
+
+
 def test_fixed_transition_requires_correction_for_current_occurrence():
     events = corrected_successor_events()
     run_id = str(uuid.uuid4())
@@ -1635,6 +1684,87 @@ def test_only_exact_same_path_successor_can_close_blocker():
     with pytest.raises(work_memory.WorkMemoryError, match="invalid-transition-verification"):
         work_memory.stage_event_batch(
             b"", {"schema_version": 1, "expected_ledger_hash": None, "events": forged}
+        )
+
+
+def test_backlog_reconciliation_can_close_stranded_verified_correction():
+    base = corrected_successor_events()
+    start_a, opened, correction, transition, awaiting, close_a = base[:6]
+    start_b, verification, _, _, close_b = base[6:]
+    reconciliation_run_id = str(uuid.uuid4())
+    reconciliation_start = event(
+        "run_started", run_id=reconciliation_run_id,
+        subject_id="blocker-backlog-reconciliation",
+        lineage_id="blocker-backlog-reconciliation",
+        mode="registered", operation_kind="other", source_bundle=[],
+        source_bundle_hash="4" * 64, classification_receipt_hash="5" * 64,
+        selection_receipt_hash="6" * 64,
+        started_at_utc="2026-01-01T00:04:00Z",
+    )
+    verified = event(
+        "blocker_transitioned", run_id=reconciliation_run_id,
+        blocker_id=opened["blocker_id"],
+        from_status="fixed-awaiting-verification", to_status="verified",
+        verification_event_id=verification["event_id"],
+        reconciliation_basis_event_id=verification["event_id"],
+    )
+    closed = event(
+        "blocker_transitioned", run_id=reconciliation_run_id,
+        blocker_id=opened["blocker_id"], from_status="verified",
+        to_status="closed", verification_event_id=verification["event_id"],
+        reconciliation_basis_event_id=verification["event_id"],
+        remaining_work="none",
+    )
+
+    work_memory.stage_event_batch(
+        b"",
+        {
+            "schema_version": 1,
+            "expected_ledger_hash": None,
+            "events": [
+                start_a, opened, correction, transition, awaiting, close_a,
+                start_b, verification, close_b, reconciliation_start,
+                verified, closed,
+            ],
+        },
+    )
+
+
+def test_only_registered_backlog_reconciliation_can_reuse_historical_verification():
+    base = corrected_successor_events()
+    start_a, opened, correction, transition, awaiting, close_a = base[:6]
+    start_b, verification, _, _, close_b = base[6:]
+    unrelated_run_id = str(uuid.uuid4())
+    unrelated_start = event(
+        "run_started", run_id=unrelated_run_id, subject_id="unrelated-sequence",
+        lineage_id="unrelated-sequence", mode="registered",
+        operation_kind="other", source_bundle=[], source_bundle_hash="4" * 64,
+        classification_receipt_hash="5" * 64,
+        selection_receipt_hash="6" * 64,
+        started_at_utc="2026-01-01T00:04:00Z",
+    )
+    forged = event(
+        "blocker_transitioned", run_id=unrelated_run_id,
+        blocker_id=opened["blocker_id"],
+        from_status="fixed-awaiting-verification", to_status="verified",
+        verification_event_id=verification["event_id"],
+        reconciliation_basis_event_id=verification["event_id"],
+    )
+
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match="invalid-blocker-reconciliation-authority",
+    ):
+        work_memory.stage_event_batch(
+            b"",
+            {
+                "schema_version": 1,
+                "expected_ledger_hash": None,
+                "events": [
+                    start_a, opened, correction, transition, awaiting, close_a,
+                    start_b, verification, close_b, unrelated_start, forged,
+                ],
+            },
         )
 
 

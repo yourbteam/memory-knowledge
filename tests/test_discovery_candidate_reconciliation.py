@@ -33,7 +33,9 @@ def candidate_root(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> Path:
     monkeypatch.setattr(reconciliation, "_git_head", lambda root: "a" * 40)
     monkeypatch.setattr(
         reconciliation.work_memory, "registry_rows",
-        lambda path=None: ([{"sequence_id": "registered-two", "lineage_id": "discovery-two"}], "b" * 64),
+        lambda path=None, selected_sequence_id=None: (
+            [{"sequence_id": "registered-two", "lineage_id": "discovery-two"}], "b" * 64
+        ),
     )
     monkeypatch.setattr(
         reconciliation.sequence_discovery_log, "discovery_state",
@@ -73,6 +75,44 @@ def test_audit_is_complete_and_leaves_every_decision_pending(candidate_root: Pat
     ]
     assert payload["candidates"][1]["registered_target_verified"] is True
     assert payload["candidates"][1]["registered_target_bundle_hash"] == "d" * 64
+
+
+def test_audit_live_validates_only_its_selected_owner(
+    candidate_root: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    calls: list[str | None] = []
+
+    def registry_rows(path=None, *, selected_sequence_id=None):
+        calls.append(selected_sequence_id)
+        return (
+            [{"sequence_id": "registered-two", "lineage_id": "discovery-two"}],
+            "b" * 64,
+        )
+
+    monkeypatch.setattr(reconciliation.work_memory, "registry_rows", registry_rows)
+    reconciliation.cmd_audit(SimpleNamespace(
+        root=str(candidate_root), output=str(tmp_path / "audit.json"),
+    ))
+    assert calls == ["discovery-candidate-reconciliation"]
+
+
+def test_main_returns_registry_failures_as_json(
+    candidate_root: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    def registry_rows(path=None, *, selected_sequence_id=None):
+        raise reconciliation.work_memory.prevention_registry.RegistryError(
+            "selected-owner-source-hash-drift"
+        )
+
+    monkeypatch.setattr(reconciliation.work_memory, "registry_rows", registry_rows)
+    returncode = reconciliation.main([
+        "--root", str(candidate_root), "audit",
+        "--output", str(tmp_path / "audit.json"),
+    ])
+    result = json.loads(capsys.readouterr().err)
+    assert returncode == 3
+    assert result == {"ok": False, "error": "selected-owner-source-hash-drift"}
 
 
 def test_mutating_audit_persists_source_owned_effect_identity(
@@ -279,7 +319,7 @@ def test_validate_rejects_candidate_content_and_registry_drift(
     path = approved_manifest(candidate_root, tmp_path)
     monkeypatch.setattr(
         reconciliation.work_memory, "registry_rows",
-        lambda registry=None: (
+        lambda registry=None, selected_sequence_id=None: (
             [{"sequence_id": "registered-two", "lineage_id": "discovery-two"}], "d" * 64
         ),
     )
@@ -327,6 +367,37 @@ def test_execute_checkpoints_and_preserves_discovery_logs(
     assert "one.md" in index.read_text()
     assert "two.md" not in index.read_text()
     assert {item: item.read_bytes() for item in before} == before
+
+
+def test_execute_removes_quarantine_from_active_index_and_preserves_logs(
+    candidate_root: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = approved_manifest(candidate_root, tmp_path)
+    payload = json.loads(path.read_text())
+    payload["candidates"][0].update(
+        disposition="quarantine",
+        decision_reason="Garbage candidate; preserve provenance outside the active queue.",
+    )
+    path.write_text(json.dumps(payload))
+    monkeypatch.setattr(
+        reconciliation.discovery_promotion_lifecycle, "_registered_verified",
+        lambda sequence_id, repo_roots_file=None: True,
+    )
+    index = candidate_root / "operations/sequences/discovery/ACTIVE.md"
+    discovery_logs = [
+        candidate_root / "operations/sequences/discovery/one.md",
+        candidate_root / "operations/sequences/discovery/two.md",
+    ]
+    before = {item: item.read_bytes() for item in discovery_logs}
+
+    reconciliation.cmd_execute(
+        SimpleNamespace(root=str(candidate_root), manifest=str(path), active_index=str(index)),
+    )
+
+    rendered = index.read_text()
+    assert "one.md" not in rendered
+    assert "two.md" not in rendered
+    assert {item: item.read_bytes() for item in discovery_logs} == before
 
 
 def test_execute_delegates_promote_once_and_resumes_checkpoint(

@@ -2,10 +2,12 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+from uuid import NAMESPACE_URL, uuid5
 
 import pytest
 
 from scripts import (
+    blocker_backlog_reconciliation,
     context_edit_guard,
     convergence_checkpoint_run,
     convergence_state_review_cycle,
@@ -54,6 +56,131 @@ def test_prepare_active_sequence_collects_semantics_without_dispatch(
     assert all("Response format:" in prompt for prompt in prompts)
     assert all("Example:" in prompt for prompt in prompts)
     assert all("Constraints:" in prompt for prompt in prompts)
+
+
+def test_stale_registry_still_allows_intake_from_exact_active_selection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    task_id = "task-123"
+    selection = {
+        "mode": "registered",
+        "subject_id": "taggable-api-deploy",
+        "lineage_id": "lineage",
+        "document": str(tmp_path / "sequence.md"),
+        "source_bundle_hash": "a" * 64,
+        "repository_roots": {"taggable-api": "/repos/taggable-api"},
+    }
+    active_path = tmp_path / "active.json"
+    active_path.write_text(json.dumps({
+        "task_id": task_id,
+        "mode": "registered",
+        "subject_id": "taggable-api-deploy",
+        "lineage_id": "lineage",
+        "document": str(tmp_path / "sequence.md"),
+        "source_bundle_hash": "a" * 64,
+        "selection_receipt_hash": "b" * 64,
+    }), encoding="utf-8")
+    monkeypatch.setattr(
+        sequence_intake_launch.sequence_guard,
+        "verify_receipts",
+        lambda *_args: (_ for _ in ()).throw(
+            sequence_intake_launch.work_memory.WorkMemoryError(
+                "stale-registry-receipt", 4,
+            )
+        ),
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch.work_memory,
+        "load_receipt",
+        lambda *_args: (selection, "b" * 64, active_path),
+    )
+
+    verified = sequence_intake_launch._active_selection_for_intake(
+        task_id, active_path,
+    )
+
+    assert verified["subject_id"] == "taggable-api-deploy"
+    assert verified["stale_registry_receipt"] is True
+
+
+def test_correction_intake_prepares_sealed_bootstrap_with_same_run_co_blockers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    task_id = "task-123"
+    run_id = "11111111-1111-4111-8111-111111111111"
+    primary_occurrence = "22222222-2222-4222-8222-222222222222"
+    repository = tmp_path / "memory"
+    (repository / "scripts").mkdir(parents=True)
+    (repository / "scripts/one.py").write_text("# changed\n")
+    prepared = {
+        "profile": "correct-registered",
+        "argv": [
+            "python3", str(repository / "scripts/discovery_promotion_lifecycle.py"),
+            "correct-registered", "--task-id", task_id,
+            "--solution", "Stable correction.",
+            "--reusable-behavior-changed", "yes",
+            "--supersedes-correction-id",
+            "33333333-3333-4333-8333-333333333333",
+        ],
+        "artifacts": {
+            "changed_artifacts": {
+                "path": "/private/tmp/sequence-intake/task-123/example/changed_artifacts.json",
+                "content": json.dumps([{
+                    "repository_key": "memory-knowledge",
+                    "path": "scripts/one.py",
+                }]),
+            },
+        },
+    }
+    selection = {
+        "subject_id": "discovery-promotion-lifecycle",
+        "lineage_id": "lineage-one",
+    }
+    events = [
+        {
+            "event_type": "run_started", "task_id": task_id,
+            "subject_id": selection["subject_id"],
+            "lineage_id": selection["lineage_id"], "run_id": run_id,
+        },
+        {
+            "event_type": "blocker_opened", "blocker_id": "blk-primary",
+            "subject_id": selection["subject_id"],
+            "lineage_id": selection["lineage_id"], "run_id": run_id,
+            "occurrence_id": primary_occurrence, "step_id": "verify",
+        },
+        {
+            "event_type": "blocker_opened", "blocker_id": "blk-secondary",
+            "subject_id": selection["subject_id"],
+            "lineage_id": selection["lineage_id"], "run_id": run_id,
+            "occurrence_id": "44444444-4444-4444-8444-444444444444",
+            "step_id": "dispatch",
+        },
+    ]
+    monkeypatch.setattr(
+        sequence_intake_launch.work_memory,
+        "load_ledger",
+        lambda: (events, "a" * 64),
+    )
+
+    result = sequence_intake_launch._prepare_correction_bootstrap(
+        task_id,
+        prepared,
+        selection,
+        {"memory-knowledge": str(repository)},
+    )
+
+    argv = result["argv"]
+    assert Path(argv[1]).name == "work_memory_bootstrap_launcher.py"
+    assert argv[2] == "correct"
+    assert argv[argv.index("--blocker-id") + 1] == "blk-primary"
+    assert argv[argv.index("--co-blocker-id") + 1] == "blk-secondary"
+    assert argv[argv.index("--correction-id") + 1] == str(uuid5(
+        NAMESPACE_URL,
+        f"memory-knowledge:{run_id}:blk-primary:{primary_occurrence}",
+    ))
+    assert argv[argv.index("--changed-artifact") + 1] == str(
+        repository / "scripts/one.py"
+    )
 
 
 def test_prepare_active_sequence_builds_artifacts_in_memory_only(
@@ -106,6 +233,22 @@ def test_invoked_script_resolves_machine_relative_script_from_repository():
     )
 
 
+def test_invoked_script_ignores_script_shaped_argument_values():
+    prepared = {
+        "argv": [
+            "python3",
+            "scripts/discovery_promotion_lifecycle.py",
+            "--automation-display",
+            "memory-knowledge:scripts/blocker_backlog_reconciliation.py",
+        ],
+        "repository": {"root": "/repos/memory"},
+    }
+
+    assert sequence_intake_launch._invoked_script(prepared) == Path(
+        "/repos/memory/scripts/discovery_promotion_lifecycle.py"
+    )
+
+
 def test_main_asks_for_task_reviews_payload_then_requires_authorization(
     monkeypatch, capsys,
 ):
@@ -142,6 +285,10 @@ def test_main_asks_for_task_reviews_payload_then_requires_authorization(
         (
             discovery_candidate_reconciliation,
             "discovery-candidate-reconciliation",
+        ),
+        (
+            blocker_backlog_reconciliation,
+            "blocker-backlog-reconciliation",
         ),
         (discovery_promotion_lifecycle, "discovery-promotion-lifecycle"),
         (convergence_checkpoint_run, "convergence-checkpoint-run"),

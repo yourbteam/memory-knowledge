@@ -14,6 +14,7 @@ from pathlib import Path
 from typing import Any, Sequence
 
 try:
+    from scripts import work_memory as current_work_memory
     from scripts.directive_guard import (
         DEFAULT_DIRECTIVES_PATH,
         DEFAULT_MAX_AGE_MINUTES,
@@ -21,6 +22,7 @@ try:
         check_directive_read_state,
     )
 except ModuleNotFoundError:
+    import work_memory as current_work_memory  # type: ignore
     from directive_guard import (  # type: ignore
         DEFAULT_DIRECTIVES_PATH,
         DEFAULT_MAX_AGE_MINUTES,
@@ -129,6 +131,10 @@ def _load_context(args: argparse.Namespace) -> dict[str, Any]:
     state = _read_json(state_path, "invalid-active-state")
     classification = _read_json(_receipt_path(args.task_id, "classification"), "invalid-classification-receipt")
     selection = _read_json(_receipt_path(args.task_id, "selection"), "invalid-selection-receipt")
+    owner_state = current_work_memory.validate_ownership_receipt(
+        args.task_id, classification,
+    )
+    current_work_memory.validate_ownership_receipt(args.task_id, selection)
     class_hash = _sha256(_canonical_bytes(classification))
     selection_hash = _sha256(_canonical_bytes(selection))
     expected_state = {
@@ -142,6 +148,7 @@ def _load_context(args: argparse.Namespace) -> dict[str, Any]:
         "document": str(Path(selection.get("document", "")).resolve()),
         "sealed_controller_path": CONTROLLER_PATH,
         "bootstrap_path": BOOTSTRAP_LOGICAL_PATH,
+        **current_work_memory._ownership_receipt_fields(args.task_id, owner_state),
     }
     if any(state.get(key) != value for key, value in expected_state.items()):
         raise BootstrapError("active-state-receipt-mismatch")
@@ -180,6 +187,11 @@ def _load_context(args: argparse.Namespace) -> dict[str, Any]:
     )
     if lineage != selection["lineage_id"]:
         raise BootstrapError("bootstrap-lineage-mismatch")
+    # Historical controller logic remains sealed, while canonical replay and writes
+    # use the current ownership-aware boundary. Otherwise a pre-ownership snapshot
+    # cannot parse the new durable ownership events that authorize its mutation.
+    module.load_ledger = current_work_memory.load_ledger
+    module.transact = current_work_memory.transact
     return {
         "module": module,
         "state": state,
@@ -204,12 +216,23 @@ def _run_matches_selection(
         "mode": selection["mode"],
         "source_bundle": selection["source_bundle"],
         "source_bundle_hash": selection["source_bundle_hash"],
-        "classification_receipt_hash": selection["classification_receipt_hash"],
-        "selection_receipt_hash": state["selection_receipt_hash"],
         "operation_kind": classification["operation_kind"],
     }
     if any(start.get(key) != value for key, value in expected.items()):
         raise BootstrapError("bootstrap-run-mismatch")
+    current_hashes = (
+        start.get("classification_receipt_hash")
+        == selection["classification_receipt_hash"]
+        and start.get("selection_receipt_hash")
+        == state["selection_receipt_hash"]
+    )
+    if not current_hashes:
+        try:
+            current_work_memory.validate_run_writer_continuity(
+                events, state["task_id"], run_id, start, selection,
+            )
+        except current_work_memory.WorkMemoryError as exc:
+            raise BootstrapError("bootstrap-run-mismatch") from exc
     return start, related
 
 
@@ -261,10 +284,18 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         raise BootstrapError("bootstrap-blocker-mismatch")
 
     repo_roots_file = context["selection"].get("repository_roots_file")
+    repository_roots = start.get("repository_roots")
     args.repo_roots_file = repo_roots_file
     args.finalize_failed_run = True
     try:
-        artifacts, hashes = module._artifact_hashes(args.changed_artifact, repo_roots_file)
+        if repository_roots is None:
+            artifacts, hashes = module._artifact_hashes(
+                args.changed_artifact, repo_roots_file,
+            )
+        else:
+            artifacts, hashes = module._artifact_hashes(
+                args.changed_artifact, repository_roots=repository_roots,
+            )
     except module.WorkMemoryError as exc:
         raise BootstrapError("bootstrap-artifact-invalid", 2) from exc
     old_map = _bundle_map(context["selection"]["source_bundle"])
@@ -283,7 +314,7 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
     original_hashes = module._artifact_hashes
     original_resolve = module.resolve_bundle
     module._artifact_hashes = _sealed_artifact_hashes(
-        module, artifacts, hashes, repo_roots_file, start.get("repository_roots"),
+        module, artifacts, hashes, repo_roots_file, repository_roots,
     )
     module.resolve_bundle = lambda **kwargs: (
         context["current_bundle"], context["current_bundle_hash"], context["selection"]["lineage_id"]
@@ -296,6 +327,75 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
     if result.get("changed_artifact_hashes") != hashes or result.get("new_bundle_hash") != context["current_bundle_hash"]:
         raise BootstrapError("bootstrap-execution-result-mismatch", 5)
     return {**result, "bootstrap_atomic": True, "sealed_controller_sha256": context["state"]["sealed_controller_sha256"]}
+
+
+def cmd_preserve_corrections(args: argparse.Namespace) -> dict[str, Any]:
+    context = _load_context(args)
+    grounded = "python3 scripts/work_memory_bootstrap_launcher.py preserve-corrections"
+    if grounded not in Path(context["selection"]["document"]).read_text():
+        raise BootstrapError("preservation-command-not-grounded")
+    module = context["module"]
+    if not hasattr(module, "cmd_preserve_corrections"):
+        raise BootstrapError("preservation-controller-contract-missing")
+    selection = context["selection"]
+    if (
+        context["current_bundle"] != selection.get("source_bundle")
+        or context["current_bundle_hash"] != selection.get("source_bundle_hash")
+    ):
+        raise BootstrapError("preservation-selected-bundle-stale")
+    events, _ = module.load_ledger()
+    target_rows = [
+        event for event in events
+        if event["event_type"] == "correction_recorded"
+        and event["correction_id"] == args.target_correction_id
+    ]
+    verification_rows = [
+        event for event in events
+        if event["event_type"] == "verification_recorded"
+        and event["event_id"] == args.target_verification_event_id
+    ]
+    if len(target_rows) != 1 or len(verification_rows) != 1:
+        raise BootstrapError("preservation-selected-proof-missing")
+    target, verification = target_rows[0], verification_rows[0]
+    verification_starts = [
+        event for event in events
+        if event["event_type"] == "run_started"
+        and event["run_id"] == verification["run_id"]
+    ]
+    if len(verification_starts) != 1:
+        raise BootstrapError("preservation-selected-verification-run-missing")
+    verification_start = verification_starts[0]
+    _, run_tasks = module._ownership_snapshot(events)
+    if (
+        run_tasks.get(target["run_id"]) != args.task_id
+        or run_tasks.get(verification["run_id"]) != args.task_id
+        or verification_start.get("selection_receipt_hash")
+        != context["state"].get("selection_receipt_hash")
+        or verification_start.get("predecessor_run_id") != target["run_id"]
+        or args.target_correction_id
+        not in verification_start.get("verifies_correction_ids", [])
+        or selection.get("predecessor_run_id") != target["run_id"]
+        or args.target_correction_id not in selection.get("verifies_correction_ids", [])
+        or args.target_correction_id not in verification["correction_ids"]
+        or verification["outcome"] != "passed"
+        or verification["quality"] != "same-path"
+        or verification["source_bundle_hash"] != selection["source_bundle_hash"]
+        or verification["subject_id"] != selection["subject_id"]
+        or verification["lineage_id"] != selection["lineage_id"]
+    ):
+        raise BootstrapError("preservation-selected-proof-mismatch")
+    args.authenticated_source_bundle = context["current_bundle"]
+    args.authenticated_source_bundle_hash = context["current_bundle_hash"]
+    try:
+        result = module.cmd_preserve_corrections(args)
+    except module.WorkMemoryError as exc:
+        raise BootstrapError(exc.code, exc.exit_code) from exc
+    if result.get("target_bundle_hash") != context["current_bundle_hash"]:
+        raise BootstrapError("preservation-execution-result-mismatch", 5)
+    return {
+        **result, "bootstrap_atomic": True,
+        "sealed_controller_sha256": context["state"]["sealed_controller_sha256"],
+    }
 
 
 def cmd_run_close(args: argparse.Namespace) -> dict[str, Any]:
@@ -331,16 +431,26 @@ def build_parser() -> argparse.ArgumentParser:
     _shared(correct)
     correct.add_argument("--run-id", required=True)
     correct.add_argument("--blocker-id", required=True)
+    correct.add_argument("--co-blocker-id", action="append")
     correct.add_argument("--occurrence-id", required=True)
     correct.add_argument("--step-id", required=True)
     correct.add_argument("--changed-artifact", action="append", required=True)
     correct.add_argument("--solution", required=True)
     correct.add_argument("--reusable-behavior-changed", choices=["yes", "no"], required=True)
     correct.add_argument("--supersedes-correction-id", action="append")
+    correct.add_argument("--co-supersedes-correction-id", action="append")
     correct.add_argument("--correction-id")
     correct.add_argument("--event-id")
     correct.add_argument("--transition-event-id")
     correct.set_defaults(func=cmd_correct)
+    preserve = sub.add_parser("preserve-corrections")
+    _shared(preserve)
+    preserve.add_argument("--preserved-task-id", required=True)
+    preserve.add_argument("--target-correction-id", required=True)
+    preserve.add_argument("--target-verification-event-id", required=True)
+    preserve.add_argument("--preserved-correction-id", action="append", required=True)
+    preserve.add_argument("--event-id")
+    preserve.set_defaults(func=cmd_preserve_corrections)
     close = sub.add_parser("run-close")
     _shared(close)
     close.add_argument("--run-id", required=True)

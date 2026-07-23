@@ -54,6 +54,7 @@ CANONICAL_SEQUENCE_IDS = (
     "commit-push-main",
     "discovery-bootstrap",
     "discovery-candidate-reconciliation",
+    "blocker-backlog-reconciliation",
     "convergence-checkpoint-run",
     "scoped-context-edit",
     "convergence-state-review-cycle",
@@ -921,6 +922,47 @@ DISCOVERY_RECONCILIATION_SPEC = {
             "The controller owns all child outputs below this root.", "path",
             required=True,
             when={"field": "operation", "equals": "drive"},
+        ),
+    ],
+}
+
+BLOCKER_BACKLOG_RECONCILIATION_SPEC = {
+    "schema_version": script_intake.SCHEMA_VERSION,
+    "fields": [
+        _semantic_field(
+            "operation", "Blocker backlog operation",
+            "One named operation.", "audit",
+            "Choose audit, validation, or approved execution.",
+            "choice", choices=["audit", "validate", "execute"], required=True,
+        ),
+        _semantic_field(
+            "source_repository_key", "Blocker controller repository",
+            "One registered repository name.", "memory-knowledge",
+            "Choose the repository containing the canonical blocker ledger.",
+            "choice", choices=["memory-knowledge"], required=True,
+        ),
+        _semantic_field(
+            "output", "Audit manifest output path",
+            "One absolute task-artifact or runtime-temporary path.",
+            "/private/tmp/blocker-backlog-reconciliation.json",
+            "The controller creates this file.", "path", required=True,
+            when={"field": "operation", "equals": "audit"},
+        ),
+        _semantic_field(
+            "manifest", "Approved blocker disposition manifest",
+            "One existing manifest file path.",
+            "/private/tmp/blocker-backlog-reconciliation.json",
+            "Provide the file path only; never paste or reconstruct its JSON.",
+            "path", required=True,
+            when={"field": "operation", "in": ["validate", "execute"]},
+        ),
+        _semantic_field(
+            "run_id", "Active reconciliation run identity",
+            "One exact active run identity.",
+            "00000000-0000-4000-8000-000000000000",
+            "Use the run started for the selected blocker reconciliation task.",
+            "string", required=True,
+            when={"field": "operation", "equals": "execute"},
         ),
     ],
 }
@@ -2671,6 +2713,53 @@ def _prepare_discovery_reconciliation(
     )
 
 
+def _prepare_blocker_backlog_reconciliation(
+    answers: Mapping[str, Any],
+    _artifact_paths: Mapping[str, str],
+    repository_roots: Mapping[str, str],
+) -> dict[str, Any]:
+    operation = _required_text(answers, "operation")
+    fields = {
+        "audit": {"output"},
+        "validate": {"manifest"},
+        "execute": {"manifest", "run_id"},
+    }
+    if operation not in fields:
+        raise AdapterError("unsupported-blocker-backlog-operation")
+    expected = {"operation", "source_repository_key", *fields[operation]}
+    if set(answers) != expected:
+        raise AdapterError(
+            "answer-fields-do-not-match-blocker-backlog-operation"
+        )
+    repository_key, repository = _registered_repository(
+        answers, repository_roots, answer_key="source_repository_key",
+    )
+    argv = [
+        "python3",
+        str(Path(repository, "scripts/blocker_backlog_reconciliation.py")),
+        "--root", repository, operation,
+    ]
+    if operation == "audit":
+        argv.extend(["--output", _required_text(answers, "output")])
+    else:
+        argv.extend(["--manifest", _required_text(answers, "manifest")])
+        if operation == "execute":
+            argv.extend([
+                "--run-id", _required_text(answers, "run_id"),
+                "--active-index",
+                str(Path(repository, "operations/blockers/ACTIVE.md")),
+            ])
+    return _script_payload(
+        sequence_id="blocker-backlog-reconciliation",
+        profile=operation,
+        argv=argv,
+        repository_key=repository_key,
+        repository_root=repository,
+        effectful=operation == "execute",
+        operation=operation,
+    )
+
+
 def _changed_artifacts(
     answers: Mapping[str, Any],
     repository_roots: Mapping[str, str],
@@ -3776,6 +3865,9 @@ ADAPTER_REGISTRY[
     "discovery-candidate-reconciliation"
 ] = _prepare_discovery_reconciliation
 ADAPTER_REGISTRY[
+    "blocker-backlog-reconciliation"
+] = _prepare_blocker_backlog_reconciliation
+ADAPTER_REGISTRY[
     "discovery-promotion-lifecycle"
 ] = _prepare_discovery_promotion
 ADAPTER_REGISTRY[
@@ -3817,6 +3909,7 @@ INTAKE_SPECS = {
     **OFFLINE_SPECS,
     "scoped-context-edit": SCOPED_CONTEXT_SPEC,
     "discovery-candidate-reconciliation": DISCOVERY_RECONCILIATION_SPEC,
+    "blocker-backlog-reconciliation": BLOCKER_BACKLOG_RECONCILIATION_SPEC,
     "discovery-promotion-lifecycle": DISCOVERY_PROMOTION_SPEC,
     "convergence-checkpoint-run": CONVERGENCE_CHECKPOINT_SPEC,
     "convergence-state-review-cycle": CONVERGENCE_REVIEW_SPEC,
