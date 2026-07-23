@@ -16,6 +16,9 @@ reveals the plan was wrong, pause and re-plan rather than coding around it.
 ## Reach for
 
 - Repo-native tests, builds, linters, smoke tests, and direct behavior checks.
+- `prototype-driven-implementation` when the outcome is concrete but important implementation
+  behavior remains uncertain, or when Kamen explicitly asks for a bounded sequence of grounded
+  prototypes. Its autonomy envelope does not override the working agreement's approval rules.
 - In the `memory-knowledge` repository, run pytest only through
   `scripts/run_pytest.sh <test paths and pytest arguments>`. The launcher routes Python,
   uv, and pytest cache writes away from read-only repository/home paths. Do not invoke

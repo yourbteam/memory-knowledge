@@ -10,6 +10,7 @@ phase-ledger-contract-hardener
 plan-playbook
 playbook-convergence-loop
 producer-foundry
+prototype-driven-implementation
 remote-mcp-operator
 remote-mcp-user-admin
 requirements-coverage-gap-loop

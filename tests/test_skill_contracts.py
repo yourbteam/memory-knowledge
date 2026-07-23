@@ -10,6 +10,17 @@ ROOT=Path(__file__).parents[1]/"skills"
 
 
 class ContractTests(unittest.TestCase):
+    def test_write_code_routes_grounded_prototype_work(self):
+        write_code=(ROOT/"write-code-playbook/SKILL.md").read_text()
+        prototype=(ROOT/"prototype-driven-implementation/SKILL.md").read_text()
+        managed=(ROOT/"managed-skills.txt").read_text().splitlines()
+        self.assertIn("`prototype-driven-implementation`",write_code)
+        self.assertIn("real captured success and failure cases",prototype)
+        self.assertIn("promote",prototype)
+        self.assertIn("revise",prototype)
+        self.assertIn("discard",prototype)
+        self.assertIn("prototype-driven-implementation",managed)
+
     def test_convergence_contracts(self):
         convergence=(ROOT/"playbook-convergence-loop/SKILL.md").read_text()
         self.assertIn("bounded autonomy",convergence); self.assertIn("close_agent",convergence); self.assertIn("guard-baseline",convergence)
