@@ -1,16 +1,1 @@
-{
-  "schema_version": 1,
-  "lineage_id": "mawf-playbook-speed-test",
-  "dependencies": [
-    {
-      "kind": "sequence",
-      "repository_key": "memory-knowledge",
-      "path_or_sequence_id": "mawf-playbook-blocker-reentry"
-    },
-    {
-      "kind": "file",
-      "repository_key": "mcp-agents-workflow",
-      "path_or_sequence_id": "dist/remote-mcp-operator/run.sh"
-    }
-  ]
-}
+{"dependencies":[{"kind":"file","path_or_sequence_id":"dist/remote-mcp-operator/run.sh","repository_key":"mcp-agents-workflow"},{"kind":"file","path_or_sequence_id":"scripts/script_intake.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_adapters.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_launch.py","repository_key":"memory-knowledge"},{"kind":"sequence","path_or_sequence_id":"mawf-playbook-blocker-reentry","repository_key":"memory-knowledge"}],"lineage_id":"mawf-playbook-speed-test","schema_version":1}

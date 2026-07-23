@@ -1,7 +1,7 @@
 # Working Agreement — Directives
 <!-- Authority: Kamen authors. Claude proposes; nothing is binding until Kamen confirms. -->
 <!-- Confirm word: "lock it" promotes a proposed rule to live. Nothing else counts as confirmation. -->
-<!-- Last reviewed: 2026-07-20 -->
+<!-- Last reviewed: 2026-07-23 -->
 
 **Prime directive:** Before acting, consult these directives and follow them. They override default behavior.
 
@@ -14,7 +14,7 @@ At the start of a task, name its mode and follow the matching playbook:
 | --- | --- | --- |
 | **Research** | gather/verify info, no code shipped | `research-playbook` |
 | **Plan** | turn a goal into a buildable plan | `plan-playbook` |
-| **Write code** | implement a change in the codebase | `write-code-playbook` |
+| **Write code** | implement a change in the codebase | `prototype-driven-implementation` |
 | **Review** | audit code / a diff / a doc | `review-playbook` |
 
 Modes chain: Research → Plan → Write code → Review (each rests on the one before).
@@ -447,3 +447,33 @@ diagnosing what the system actually did.
 - 🚫 No requiring unrelated telemetry expansion merely because additional metrics could be useful.
 
 **Set:** 2026-07-19 · **repeated:** 0
+
+## G28 · Prototype-driven implementation owns the implementation lifecycle
+**Why:** When research, planning, coding, and review run as independent implementation phases,
+most effort can move into hypothetical or synthetic work before the real production path reveals
+what is actually needed. Implementation should be driven by practical, runnable evidence, while
+the existing playbooks remain available as bounded sources of rigor.
+- ✅ Route every Write-code task through `prototype-driven-implementation` as the central
+  controller. A routine mechanical change collapses to one prototype: one bounded delta, direct
+  proof, and final review.
+- ✅ Start with Prototype 0 on the real code path to reproduce, characterize, or directly prove
+  the current behavior before broad implementation research or planning.
+- ✅ Pull Research, Plan, Write-code, and Review support only when an observed gap requires it.
+  Use the generated support projection for that role, not the full standalone playbook as a
+  competing controller.
+- ✅ Keep `research-playbook`, `plan-playbook`, `write-code-playbook`, and `review-playbook`
+  unchanged for their standalone task modes. Generate their bounded implementation-support
+  projections from a pinned manifest and fail drift checks when a source playbook changes.
+- ✅ A support projection must receive the approved outcome and envelope, current prototype and
+  observed gap, concrete evidence, exact support question, and allowed scope or budget. It must
+  return evidence, conclusion, unresolved uncertainty, and the recommended next delta.
+- ✅ Support projections may not seize lifecycle control, widen scope, launch successor phases or
+  packages, or declare the implementation complete. Control returns to the prototype loop, which
+  selects the next step from the remaining observed gap.
+- ✅ Completion requires accumulated-surface review and one end-to-end confirmation through the
+  real path the user will use.
+- 🚫 No speculative full implementation roadmap before Prototype 0.
+- 🚫 No letting a supporting playbook turn one observed question into an autonomous phase chain.
+- 🚫 No treating generated projections as hand-maintained forks of their source playbooks.
+
+**Set:** 2026-07-23 · **repeated:** 0

@@ -13,11 +13,12 @@ import sys
 import uuid
 from datetime import datetime
 from pathlib import Path
-from typing import Any, Sequence
+from typing import Any, Mapping, Sequence
 
 try:
-    from scripts import sequence_discovery_log, sequence_guard, work_memory
+    from scripts import sequence_candidate_contract, sequence_discovery_log, sequence_guard, work_memory
 except ImportError:
+    import sequence_candidate_contract  # type: ignore
     import sequence_discovery_log  # type: ignore
     import sequence_guard  # type: ignore
     import work_memory  # type: ignore
@@ -28,6 +29,7 @@ SPEC_KEYS = {
     "schema_version", "task_id", "operation_kind", "date", "sequence_name",
     "outcome", "why_repeatable", "steps", "inputs", "failure_handling",
     "verified_path", "dependencies",
+    "candidate_identity", "candidate_fingerprint", "observer_provenance",
 }
 REQUIRED_SPEC_KEYS = {
     "schema_version", "task_id", "operation_kind", "date", "sequence_name",
@@ -36,6 +38,7 @@ REQUIRED_SPEC_KEYS = {
 STEP_KEYS = {"step", "command", "result", "note"}
 DEPENDENCY_KEYS = {"kind", "repository_key", "path_or_sequence_id"}
 BOOTSTRAP_NAMESPACE = uuid.UUID("59080b26-4fd4-43bf-993e-4a988c95b223")
+PREVENTION_ID_RE = re.compile(r"[0-9a-f]{64}")
 
 
 def _load_json(value: str) -> Any:
@@ -143,14 +146,39 @@ def normalize_spec(raw: Any) -> dict[str, Any]:
         normalized["verified_path"] = _text(
             raw["verified_path"], "verified-path", forbid_tbd=True,
         )
+    v2_fields = {"candidate_identity", "candidate_fingerprint", "observer_provenance"}
+    present_v2 = v2_fields & set(raw)
+    if present_v2 and present_v2 != v2_fields:
+        raise work_memory.WorkMemoryError("incomplete-bootstrap-candidate-identity", 2)
+    if present_v2:
+        try:
+            identity = sequence_candidate_contract.validate_candidate_identity(
+                raw["candidate_identity"], raw["candidate_fingerprint"],
+            )
+        except sequence_candidate_contract.CandidateContractError as exc:
+            raise work_memory.WorkMemoryError(exc.code, 2) from exc
+        provenance = raw["observer_provenance"]
+        if (
+            not isinstance(provenance, dict)
+            or set(provenance) != {"decision_id", "observer_version", "rule_version"}
+            or provenance["observer_version"] != 1 or provenance["rule_version"] != 1
+        ):
+            raise work_memory.WorkMemoryError("invalid-bootstrap-observer-provenance", 2)
+        work_memory.require_uuid(provenance.get("decision_id"), "decision-id")
+        normalized.update(
+            candidate_identity=identity,
+            candidate_fingerprint=raw["candidate_fingerprint"],
+            observer_provenance=dict(provenance),
+        )
     work_memory._validate_work_only(normalized)
     return normalized
 
 
 def _validate_dependencies(
     dependencies: Sequence[dict[str, str]], repo_roots_file: str | None,
+    repository_roots: dict[str, str] | None = None,
 ) -> None:
-    roots = work_memory._repo_roots(repo_roots_file)
+    roots = work_memory._repo_roots(repo_roots_file, snapshot=repository_roots)
     for dependency in dependencies:
         kind = dependency["kind"]
         repository_key = dependency["repository_key"]
@@ -160,7 +188,7 @@ def _validate_dependencies(
             work_memory.resolve_bundle(
                 mode="registered", subject_id=value, document=document,
                 manifest=document.with_name("dependencies.json"),
-                repo_roots_file=repo_roots_file,
+                repo_roots_file=repo_roots_file, repository_roots=repository_roots,
             )
             continue
         if repository_key not in roots:
@@ -185,6 +213,58 @@ def _read_json(path: Path, error: str) -> dict[str, Any]:
 
 def _receipt_hash(path: Path) -> str:
     return work_memory.sha256_bytes(path.read_bytes())
+
+
+def _prevention_identity(
+    effect_id: str | None, preparation_sha256: str | None,
+) -> dict[str, str] | None:
+    if bool(effect_id) != bool(preparation_sha256):
+        raise work_memory.WorkMemoryError("incomplete-prevention-effect-identity", 2)
+    if effect_id is None:
+        return None
+    if (
+        PREVENTION_ID_RE.fullmatch(effect_id) is None
+        or PREVENTION_ID_RE.fullmatch(str(preparation_sha256)) is None
+    ):
+        raise work_memory.WorkMemoryError("invalid-prevention-effect-identity", 2)
+    return {
+        "effect_id": effect_id,
+        "preparation_artifact_sha256": str(preparation_sha256),
+    }
+
+
+def _write_prevention_receipt(
+    path: Path, *, identity: Mapping[str, str], status: str,
+    source_identity: Mapping[str, Any],
+) -> dict[str, Any]:
+    receipt = {
+        "schema_version": 1,
+        "owner_sequence_id": "discovery-bootstrap",
+        "profile_id": "start",
+        **dict(identity),
+        "status": status,
+        "source_identity": dict(source_identity),
+    }
+    if path.is_file():
+        existing = _read_json(path, "bootstrap-prevention-receipt-invalid")
+        if existing == receipt:
+            return receipt
+        if not (
+            existing.get("status") == "PREPARED"
+            and status == "APPLIED"
+            and all(
+                existing.get(key) == receipt.get(key)
+                for key in (
+                    "schema_version", "owner_sequence_id", "profile_id",
+                    "effect_id", "preparation_artifact_sha256", "source_identity",
+                )
+            )
+        ):
+            raise work_memory.WorkMemoryError(
+                "bootstrap-prevention-receipt-conflict", 4
+            )
+    work_memory._atomic_write(path, work_memory.canonical_bytes(receipt))
+    return receipt
 
 
 def _matching_run(
@@ -220,11 +300,29 @@ def _cleanup(created: Sequence[Path], task_dir: Path) -> None:
         )
 
 
-def bootstrap(spec: dict[str, Any], *, root: Path, repo_roots_file: str | None) -> dict[str, Any]:
+def bootstrap(
+    spec: dict[str, Any], *, root: Path, repo_roots_file: str | None,
+    repository_roots: dict[str, str] | None = None,
+    prevention_effect_id: str | None = None,
+    prevention_preparation_sha256: str | None = None,
+) -> dict[str, Any]:
+    prevention_identity = _prevention_identity(
+        prevention_effect_id, prevention_preparation_sha256,
+    )
     work_memory.configure_root(root)
+    if repo_roots_file and repository_roots is not None:
+        raise work_memory.WorkMemoryError("bootstrap-repository-roots-conflict", 2)
     resolved_roots_file = str(Path(repo_roots_file).expanduser().resolve()) if repo_roots_file else None
-    _validate_dependencies(spec["dependencies"], resolved_roots_file)
+    roots_snapshot = (
+        {key: str(path) for key, path in work_memory._repo_roots(snapshot=repository_roots).items()}
+        if repository_roots is not None else None
+    )
+    _validate_dependencies(spec["dependencies"], resolved_roots_file, roots_snapshot)
     request = {"spec": spec, "repo_roots_file": resolved_roots_file}
+    if roots_snapshot is not None:
+        request["repository_roots"] = roots_snapshot
+    if prevention_identity is not None:
+        request["prevention_identity"] = prevention_identity
     request_digest = work_memory.sha256_bytes(work_memory.canonical_bytes(request))
     task_id = spec["task_id"]
     task_dir = work_memory.RECEIPT_ROOT / task_id
@@ -240,6 +338,24 @@ def bootstrap(spec: dict[str, Any], *, root: Path, repo_roots_file: str | None) 
             / f"{spec['date']}-{sequence_discovery_log._slug(spec['sequence_name'])}.md"
         )
         manifest_path = document_path.with_suffix(".dependencies.json")
+        prevention_receipt_path = (
+            task_dir / "prevention-effects" / f"{prevention_effect_id}.json"
+            if prevention_identity is not None else None
+        )
+        prevention_source_identity = {
+            "bootstrap_request_sha256": request_digest,
+            "discovery_path": str(document_path),
+            "manifest_path": str(manifest_path),
+            "run_id": run_id,
+            "event_id": event_id,
+        }
+        if prevention_receipt_path is not None:
+            _write_prevention_receipt(
+                prevention_receipt_path,
+                identity=prevention_identity,
+                status="PREPARED",
+                source_identity=prevention_source_identity,
+            )
         created_at = work_memory.utc_now()
         if document_path.is_file():
             existing = document_path.read_text(encoding="utf-8")
@@ -259,6 +375,9 @@ def bootstrap(spec: dict[str, Any], *, root: Path, repo_roots_file: str | None) 
             verified_path=spec.get("verified_path"),
             dependencies=spec["dependencies"],
             bootstrap_request_sha256=request_digest,
+            candidate_identity=spec.get("candidate_identity"),
+            candidate_fingerprint=spec.get("candidate_fingerprint"),
+            observer_provenance=spec.get("observer_provenance"),
         )
 
         if document_path.exists():
@@ -304,7 +423,7 @@ def bootstrap(spec: dict[str, Any], *, root: Path, repo_roots_file: str | None) 
             bundle, bundle_hash, lineage = work_memory.resolve_bundle(
                 mode="discovery", subject_id=manifest["lineage_id"],
                 document=document_path, manifest=manifest_path,
-                repo_roots_file=resolved_roots_file,
+                repo_roots_file=resolved_roots_file, repository_roots=roots_snapshot,
                 include_bootstrap_trust_anchors=True,
             )
             selection_path = receipt_paths["selection"]
@@ -318,6 +437,8 @@ def bootstrap(spec: dict[str, Any], *, root: Path, repo_roots_file: str | None) 
                     "classification_receipt_hash": class_hash,
                     "repository_roots_file": resolved_roots_file,
                 }
+                if roots_snapshot is not None:
+                    expected_selection["repository_roots"] = roots_snapshot
                 if any(selection.get(key) != value for key, value in expected_selection.items()):
                     raise work_memory.WorkMemoryError("bootstrap-selection-conflict", 4)
             else:
@@ -325,6 +446,7 @@ def bootstrap(spec: dict[str, Any], *, root: Path, repo_roots_file: str | None) 
                     task_id=task_id, sequence_id=None, discovery_log=str(document_path),
                     fingerprint=None, verification_successor_of=None,
                     verifies_correction_id=None, repo_roots_file=resolved_roots_file,
+                    repository_roots=roots_snapshot,
                 ))
                 created.append(selection_path)
                 selection_hash = selection["selection_receipt_hash"]
@@ -355,7 +477,7 @@ def bootstrap(spec: dict[str, Any], *, root: Path, repo_roots_file: str | None) 
                 ))
                 created.append(active_path)
 
-            repository_roots = {
+            durable_roots = roots_snapshot or {
                 key: str(path)
                 for key, path in work_memory._repo_roots(resolved_roots_file).items()
             }
@@ -363,7 +485,7 @@ def bootstrap(spec: dict[str, Any], *, root: Path, repo_roots_file: str | None) 
                 "run_id": run_id, "subject_id": manifest["lineage_id"],
                 "lineage_id": lineage, "mode": "discovery",
                 "operation_kind": spec["operation_kind"], "source_bundle": bundle,
-                "source_bundle_hash": bundle_hash, "repository_roots": repository_roots,
+                "source_bundle_hash": bundle_hash, "repository_roots": durable_roots,
                 "classification_receipt_hash": class_hash,
                 "selection_receipt_hash": selection_hash,
             }
@@ -379,7 +501,16 @@ def bootstrap(spec: dict[str, Any], *, root: Path, repo_roots_file: str | None) 
                         raise
                     recovered = True
 
-            return {
+            prevention_receipt = None
+            if prevention_receipt_path is not None:
+                prevention_receipt = _write_prevention_receipt(
+                    prevention_receipt_path,
+                    identity=prevention_identity,
+                    status="APPLIED",
+                    source_identity=prevention_source_identity,
+                )
+
+            result = {
                 "ok": True, "bootstrap_request_sha256": request_digest,
                 "discovery_path": str(document_path), "discovery_id": manifest["lineage_id"],
                 "manifest_path": str(manifest_path), "task_id": task_id,
@@ -388,6 +519,12 @@ def bootstrap(spec: dict[str, Any], *, root: Path, repo_roots_file: str | None) 
                 "source_bundle_hash": bundle_hash, "run_id": run_id,
                 "event_id": event_id, "recovered": recovered,
             }
+            if prevention_receipt is not None:
+                result["preventionReceiptPath"] = str(prevention_receipt_path)
+                result["preventionReceiptSha256"] = work_memory.sha256_bytes(
+                    work_memory.canonical_bytes(prevention_receipt)
+                )
+            return result
         except Exception:
             if _matching_run(event_id, {}, fail_if_mismatch=False) is None:
                 for name, path in receipt_paths.items():
@@ -404,17 +541,37 @@ def build_parser() -> argparse.ArgumentParser:
     start.add_argument("--spec", required=True)
     start.add_argument("--root")
     start.add_argument("--repo-roots-file")
+    start.add_argument("--prevention-effect-id")
+    start.add_argument("--prevention-preparation-sha256")
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    values = list(sys.argv[1:] if argv is None else argv)
+    if not values:
+        try:
+            from scripts import sequence_intake_launch
+        except ModuleNotFoundError:
+            import sequence_intake_launch  # type: ignore
+        return sequence_intake_launch.main_for_sequence(
+            "discovery-bootstrap", [],
+        )
     try:
-        args = build_parser().parse_args(argv)
+        args = build_parser().parse_args(values)
         spec = normalize_spec(_load_json(args.spec))
         root = Path(args.root or ".").expanduser().resolve()
-        print(json.dumps(
-            bootstrap(spec, root=root, repo_roots_file=args.repo_roots_file), sort_keys=True,
-        ))
+        result = bootstrap(
+            spec, root=root, repo_roots_file=args.repo_roots_file,
+            prevention_effect_id=args.prevention_effect_id,
+            prevention_preparation_sha256=args.prevention_preparation_sha256,
+        )
+        if args.prevention_effect_id:
+            result = {
+                **result,
+                "preventionEffectId": args.prevention_effect_id,
+                "preventionPreparationSha256": args.prevention_preparation_sha256,
+            }
+        print(json.dumps(result, sort_keys=True))
         return 0
     except work_memory.WorkMemoryError as exc:
         print(json.dumps({"ok": False, "error": exc.code}, sort_keys=True), file=sys.stderr)

@@ -1,4 +1,4 @@
 interface:
   display_name: "Prototype-Driven Implementation"
-  short_description: "Build features through grounded prototype loops"
-  default_prompt: "Use $prototype-driven-implementation to implement this goal through a bounded sequence of grounded prototypes."
+  short_description: "Drive every implementation through real-path prototypes"
+  default_prompt: "Use $prototype-driven-implementation as the central controller for this implementation, starting with Prototype 0 on the real path and pulling bounded playbook support only from observed gaps."

@@ -1,11 +1,1 @@
-{
-  "schema_version": 1,
-  "lineage_id": "taggable-admin-spa-deploy",
-  "dependencies": [
-    {
-      "kind": "file",
-      "repository_key": "taggable-admin-spa",
-      "path_or_sequence_id": "scripts/deploy-admin-spa.sh"
-    }
-  ]
-}
+{"dependencies":[{"kind":"file","path_or_sequence_id":"scripts/script_intake.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_adapters.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_launch.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/deploy-admin-spa.sh","repository_key":"taggable-admin-spa"}],"lineage_id":"taggable-admin-spa-deploy","schema_version":1}

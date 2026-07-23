@@ -1,16 +1,1 @@
-{
-  "schema_version": 1,
-  "lineage_id": "greenfield-full-drive",
-  "dependencies": [
-    {
-      "kind": "file",
-      "repository_key": "mcp-agents-workflow",
-      "path_or_sequence_id": "scripts/greenfield_full_drive.sh"
-    },
-    {
-      "kind": "sequence",
-      "repository_key": "memory-knowledge",
-      "path_or_sequence_id": "local-workflow-orch-image"
-    }
-  ]
-}
+{"dependencies":[{"kind":"file","path_or_sequence_id":"scripts/greenfield_full_drive.sh","repository_key":"mcp-agents-workflow"},{"kind":"file","path_or_sequence_id":"scripts/script_intake.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_adapters.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_launch.py","repository_key":"memory-knowledge"},{"kind":"sequence","path_or_sequence_id":"local-workflow-orch-image","repository_key":"memory-knowledge"}],"lineage_id":"greenfield-full-drive","schema_version":1}

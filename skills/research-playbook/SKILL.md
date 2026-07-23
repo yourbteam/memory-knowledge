@@ -26,16 +26,17 @@ Use the runtime's slot-lifecycle contract for every subagent. Retain role, runti
 
 ## Shared Budget
 
-Enforce one budget across the whole run:
+Enforce structural budgets across the whole run and a time budget per individual `(round, role)` task:
 
 - maximum 3 candidate rounds;
 - maximum 15 total agent spawn attempts;
-- maximum 60 minutes elapsed;
+- maximum 60 minutes for each individual task, shared by its initial attempt and one retry;
 - at most 1 retry for a failed role;
 - every attempted spawn consumes the attempt budget;
 - 2 consecutive rounds with the same actionable-finding fingerprint return `CAP_REACHED`.
 
 A complete round uses one core researcher, three independent lenses, and one adjudicator. Spawn or output failure leaves the round incomplete. An incomplete round cannot pass.
+Total workflow elapsed time is informational and may exceed 60 minutes; it never terminalizes an otherwise bounded run.
 
 ## Terminal Rules
 

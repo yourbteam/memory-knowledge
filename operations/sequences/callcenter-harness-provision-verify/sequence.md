@@ -1,5 +1,23 @@
 # callcenter-harness-provision-verify
 
+<!-- BEGIN SEMANTIC INTAKE ENTRYPOINT -->
+## Operator entry point
+
+After selecting and activating this registered sequence, launch the shared controller with no
+arguments:
+
+```bash
+python3 scripts/sequence_intake_launch.py
+```
+
+Answer only the semantic questions shown. Every question includes its response format, an example,
+and constraints. The controller derives JSON, files, environment, flags, and argv; displays the
+exact prepared operation; and requires a separate yes/no authorization before guarded dispatch.
+
+Any argument-bearing commands below are machine-compatibility and verification evidence for the
+deterministic adapter. Operators and agents must not construct or invoke those forms directly.
+<!-- END SEMANTIC INTAKE ENTRYPOINT -->
+
 **Use when:** standing up the full `callcenter-harness` call-QA harness on a fresh macOS machine (or re-provisioning) — vendoring **both** STT models (small + large-v3), the redaction/prosody stack, verifying offline, then live-verifying M2–M5 smokes and a **large-v3 real call** on a recording. Air-gapped compliance (NFR-7): provision is online-once; running needs no network.
 
 **Composes:** `airgapped-local-bulgarian-stt` (STT venv + model) + `airgapped-redaction-stack` (PII/NER stack), then adds the QA smoke layer + large-v3 pipeline wiring that neither sub-sequence covers.

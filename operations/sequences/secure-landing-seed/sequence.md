@@ -1,5 +1,23 @@
 # secure-landing-seed
 
+<!-- BEGIN SEMANTIC INTAKE ENTRYPOINT -->
+## Operator entry point
+
+After selecting and activating this registered sequence, launch the shared controller with no
+arguments:
+
+```bash
+python3 scripts/sequence_intake_launch.py
+```
+
+Answer only the semantic questions shown. Every question includes its response format, an example,
+and constraints. The controller derives JSON, files, environment, flags, and argv; displays the
+exact prepared operation; and requires a separate yes/no authorization before guarded dispatch.
+
+Any argument-bearing commands below are machine-compatibility and verification evidence for the
+deterministic adapter. Operators and agents must not construct or invoke those forms directly.
+<!-- END SEMANTIC INTAKE ENTRYPOINT -->
+
 **Use when:** seeding the SECURE LANDING AREA with "original" call recordings for the callcenter-harness — the controlled zone the harness treats as the source of originals. Simulates ingestion by cloning audio from a source folder (e.g. `~/Downloads/audio-files`) into `~/.callcenter-harness/landing/`. The harness then treats each landing file as THE original; after a **verified-successful scrub** a separate cleanup deletes that original (+ raw ingest splits), so PII-bearing audio exists only transiently (Milestone 1: no PII persists).
 
 **Automation:** `callcenter-harness:scripts/seed_landing.sh` (seed) + `callcenter-harness:scripts/scrub_and_retire.py` (scrub + retire original). Proven 2026-07-07 (5 files seeded + checksum-verified + idempotent; 1 file scrubbed → original + raw splits retired, compliant kept). Run from repo root `~/callcenter-harness`.

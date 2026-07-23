@@ -1,11 +1,1 @@
-{
-  "schema_version": 1,
-  "lineage_id": "local-workflow-orch-image",
-  "dependencies": [
-    {
-      "kind": "file",
-      "repository_key": "mcp-agents-workflow",
-      "path_or_sequence_id": "scripts/local_workflow_orch_image_harness.py"
-    }
-  ]
-}
+{"dependencies":[{"kind":"file","path_or_sequence_id":"scripts/local_workflow_orch_image_harness.py","repository_key":"mcp-agents-workflow"},{"kind":"file","path_or_sequence_id":"scripts/script_intake.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_adapters.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_launch.py","repository_key":"memory-knowledge"}],"lineage_id":"local-workflow-orch-image","schema_version":1}

@@ -30,6 +30,59 @@ READINESS = {
     "promotion": "Ready to promote into `operations/sequences/<sequence-id>/sequence.md`.",
 }
 
+RECOVERY_STEPS: tuple[dict[str, str], ...] = (
+    {
+        "step": "record-correction",
+        "command": (
+            "python3 scripts/work_memory.py correct --run-id <run-id> "
+            "--blocker-id <blocker-id> --occurrence-id <occurrence-id> "
+            "--step-id <step-id> --changed-artifact <path> --solution <solution> "
+            "--reusable-behavior-changed yes"
+        ),
+        "result": "required after selected-bundle drift",
+        "note": "Use only when the selected controller remains unchanged.",
+    },
+    {
+        "step": "record-protected-correction",
+        "command": (
+            "python3 scripts/work_memory_bootstrap.py correct --task-id <task-id> "
+            "--run-id <run-id> --blocker-id <blocker-id> "
+            "--occurrence-id <occurrence-id> --step-id <step-id> "
+            "--changed-artifact <path> --solution <solution> "
+            "--reusable-behavior-changed yes"
+        ),
+        "result": "required after protected selected-bundle drift",
+        "note": "Use the activated sealed controller through the canonical guard.",
+    },
+    {
+        "step": "launch-protected-correction",
+        "command": (
+            "python3 scripts/work_memory_bootstrap_launcher.py correct --task-id <task-id> "
+            "--run-id <run-id> --blocker-id <blocker-id> "
+            "--occurrence-id <occurrence-id> --step-id <step-id> "
+            "--changed-artifact <path> --solution <solution> "
+            "--reusable-behavior-changed yes"
+        ),
+        "result": "required when the lifecycle controller selects sealed execution",
+        "note": "The lifecycle controller constructs this command; operators do not improvise it.",
+    },
+    {
+        "step": "transition-corrected-blocker",
+        "command": (
+            "python3 scripts/blocker_catalog.py transition --run-id <run-id> "
+            "--blocker-id <blocker-id> --to-status fixed-awaiting-verification"
+        ),
+        "result": "required after a non-atomic correction",
+        "note": "Run only after the correction event and bundle transition are durable.",
+    },
+    {
+        "step": "close-corrected-predecessor",
+        "command": "python3 scripts/work_memory.py run-close --run-id <run-id> --result failed",
+        "result": "required after every blocker is fixed-awaiting-verification",
+        "note": "The corrected bundle must be verified by a fresh bound successor.",
+    },
+)
+
 
 def _slug(value: str) -> str:
     return re.sub(r"[^a-z0-9]+", "-", value.lower()).strip("-") or "unnamed-sequence"
@@ -119,6 +172,9 @@ def render_discovery_bundle(
     verified_path: str | None = None,
     dependencies: Sequence[dict[str, str]] = (),
     bootstrap_request_sha256: str | None = None,
+    candidate_identity: dict[str, Any] | None = None,
+    candidate_fingerprint: str | None = None,
+    observer_provenance: dict[str, Any] | None = None,
 ) -> tuple[Path, str, dict[str, Any]]:
     """Render a complete discovery document and manifest without writing either."""
     path = root / DISCOVERY_DIR / f"{date_text}-{_slug(sequence_name)}.md"
@@ -127,11 +183,13 @@ def render_discovery_bundle(
         f"BootstrapRequestSha256: {bootstrap_request_sha256}\n"
         if bootstrap_request_sha256 else ""
     )
+    supplied_commands = {row["command"] for row in steps}
+    complete_steps = [*steps, *(row for row in RECOVERY_STEPS if row["command"] not in supplied_commands)]
     rows = "".join(
         "| " + " | ".join(
             (row["step"], row["command"], row["result"], row["note"])
         ) + " |\n"
-        for row in steps
+        for row in complete_steps
     )
     rendered_inputs = (
         "\n".join(f"- {item}" for item in inputs)
@@ -179,6 +237,12 @@ CreatedAtUtc: {created_at_utc}
         "lineage_id": discovery_id,
         "dependencies": list(dependencies),
     }
+    if candidate_identity is not None:
+        manifest.update(
+            candidate_identity=candidate_identity,
+            candidate_fingerprint=candidate_fingerprint,
+            observer_provenance=observer_provenance,
+        )
     return path, text, manifest
 
 
@@ -291,7 +355,18 @@ def discovery_state(
     starts = {event["run_id"]: event for event in events if event["event_type"] == "run_started" and event["mode"] == "discovery" and event["subject_id"] == discovery_id}
     if require_bound and not starts:
         raise work_memory.WorkMemoryError("discovery-not-bound-to-run", 3)
-    verifications = {event["run_id"] for event in events if event["event_type"] == "verification_recorded" and event["subject_id"] == discovery_id and event["source_bundle_hash"] == bundle_hash and event["outcome"] == "passed" and event["quality"] == "same-path"}
+    manifest = json.loads(path.with_suffix(".dependencies.json").read_text(encoding="utf-8"))
+    if "candidate_identity" in manifest:
+        verifications = {
+            run_id for run_id, start in starts.items()
+            if start["source_bundle_hash"] == bundle_hash
+            and work_memory.candidate_contract.final_effective_verification(
+                events, run_id=run_id, lineage_id=lineage,
+                source_bundle_hash=bundle_hash,
+            ) is not None
+        }
+    else:
+        verifications = {event["run_id"] for event in events if event["event_type"] == "verification_recorded" and event["subject_id"] == discovery_id and event["source_bundle_hash"] == bundle_hash and event["outcome"] == "passed" and event["quality"] == "same-path"}
     closes = [event for event in events if event["event_type"] == "run_closed" and event["subject_id"] == discovery_id and event["result"] == "passed" and event["run_id"] in starts and starts[event["run_id"]]["source_bundle_hash"] == bundle_hash and event["run_id"] in verifications]
     closes.sort(key=lambda event: (event["completed_at_utc"], event["run_id"]))
     open_blockers: set[str] = set()

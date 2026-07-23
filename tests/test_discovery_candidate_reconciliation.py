@@ -8,6 +8,8 @@ from types import SimpleNamespace
 import pytest
 
 from scripts import discovery_candidate_reconciliation as reconciliation
+from scripts import prevention_source_receipt
+from scripts import sequence_candidate_contract
 
 
 def discovery(root: Path, name: str, discovery_id: str, *, promoted: str | None = None) -> Path:
@@ -71,6 +73,142 @@ def test_audit_is_complete_and_leaves_every_decision_pending(candidate_root: Pat
     ]
     assert payload["candidates"][1]["registered_target_verified"] is True
     assert payload["candidates"][1]["registered_target_bundle_hash"] == "d" * 64
+
+
+def test_mutating_audit_persists_source_owned_effect_identity(
+    candidate_root: Path, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    output = tmp_path / "prevention-audit.json"
+    monkeypatch.setattr(prevention_source_receipt, "ROOT", tmp_path / "receipts")
+    prior_work_memory_configuration = (
+        reconciliation.work_memory.ROOT,
+        reconciliation.work_memory.LEDGER,
+        reconciliation.work_memory.BLOCKER_VIEW,
+        reconciliation.work_memory.REGISTRY,
+        reconciliation.work_memory.REGISTRY_GOVERNANCE_LEVEL,
+    )
+
+    returncode = reconciliation.main([
+        "--root", str(candidate_root), "audit", "--output", str(output),
+        "--prevention-effect-id", "e" * 64,
+        "--prevention-preparation-sha256", "f" * 64,
+    ])
+
+    result = json.loads(capsys.readouterr().out)
+    receipt = json.loads(
+        prevention_source_receipt.receipt_path("e" * 64).read_text(encoding="utf-8")
+    )
+    assert returncode == 0
+    assert receipt["status"] == "APPLIED"
+    assert receipt["profile_id"] == "audit"
+    assert receipt["result_identity"]["ok"] is True
+    assert result["preventionSourceReceiptSha256"] == (
+        prevention_source_receipt.receipt_sha256(receipt)
+    )
+    assert (
+        reconciliation.work_memory.ROOT,
+        reconciliation.work_memory.LEDGER,
+        reconciliation.work_memory.BLOCKER_VIEW,
+        reconciliation.work_memory.REGISTRY,
+        reconciliation.work_memory.REGISTRY_GOVERNANCE_LEVEL,
+    ) == prior_work_memory_configuration
+
+
+def test_candidate_identity_inventory_is_fresh_and_ignores_rendered_active_index(
+    tmp_path: Path,
+) -> None:
+    path = discovery(tmp_path, "identity", "discovery-identity")
+    identity, fingerprint = sequence_candidate_contract.build_candidate_identity({
+        "intended_outcome": "Run the exact operation.", "repeatability_reason": "It recurs.",
+        "repeatability_evidence_ids": ["prior"], "required_inputs": ["repository"],
+        "dependencies": [], "failure_handling": [{
+            "fingerprint": "a" * 64, "symptom": "fails", "response": "stop",
+        }], "verification_contract": {
+            "quality": "same-path", "expected_outcome": "passed", "success_evidence": "PASS",
+        }, "effect_class": "read-only", "environment_annotations": [],
+        "semantic_flag_annotations": [], "volatility_annotations": [],
+    }, [{
+        "step_ordinal": 0, "step_id": "inspect", "argv": ["tool", "inspect"],
+        "command_source": "discovery_log",
+        "source_ref": {"repository_key": "memory-knowledge", "path": str(path.relative_to(tmp_path))},
+        "operation_kind": "read-only",
+    }])
+    path.with_suffix(".dependencies.json").write_text(json.dumps({
+        "schema_version": 1, "lineage_id": "discovery-identity", "dependencies": [],
+        "candidate_identity": identity, "candidate_fingerprint": fingerprint,
+        "observer_provenance": {
+            "decision_id": "00000000-0000-4000-8000-000000000000",
+            "observer_version": 1, "rule_version": 1,
+        },
+    }))
+    (path.parent / "ACTIVE.md").write_text("# stale and intentionally ignored\n")
+
+    rows = reconciliation.candidate_identity_inventory(tmp_path)
+
+    assert [row["discovery_id"] for row in rows] == ["discovery-identity"]
+    assert rows[0]["candidate_fingerprint"] == fingerprint
+
+    start = {
+        "event_type": "run_started", "event_id": "run-start",
+        "run_id": "run", "subject_id": "discovery-identity",
+        "lineage_id": "discovery-identity", "source_bundle_hash": "b" * 64,
+        "repository_roots": {"memory-knowledge": str(tmp_path)},
+        "recorded_at_utc": "2026-07-16T00:00:00Z",
+    }
+    decision = {
+        "event_type": "observer_decision_recorded", "event_id": "decision-event",
+        "decision_id": "00000000-0000-4000-8000-000000000000",
+        "candidate_fingerprint": fingerprint,
+        "recorded_at_utc": "2026-07-16T00:00:01Z",
+    }
+    with pytest.raises(reconciliation.ReconciliationError, match="candidate-repository-root-drift"):
+        reconciliation.candidate_identity_inventory(
+            tmp_path, events=[start, decision],
+            repository_roots={"memory-knowledge": str(tmp_path / "moved")},
+        )
+
+
+def test_candidate_feedback_exposes_all_governed_outcome_kinds(tmp_path: Path) -> None:
+    path = discovery(tmp_path, "feedback", "discovery-feedback")
+    fingerprint = "f" * 64
+    decision_id = "00000000-0000-4000-8000-000000000000"
+    path.with_suffix(".dependencies.json").write_text(json.dumps({
+        "schema_version": 1, "lineage_id": "discovery-feedback",
+        "candidate_fingerprint": fingerprint,
+        "observer_provenance": {"decision_id": decision_id},
+    }))
+    checkpoint = path.parent / "feedback.checkpoint.json"
+    checkpoint.write_text(json.dumps({
+        "completed": {
+            str(path.relative_to(tmp_path)): {
+                "disposition": "absorb", "completed_at_utc": "2026-07-16T00:04:00Z",
+            },
+        },
+    }))
+    events = [
+        {
+            "event_type": "discovery_promoted", "event_id": "promoted",
+            "discovery_id": "discovery-feedback", "recorded_at_utc": "2026-07-16T00:01:00Z",
+        },
+        {
+            "event_type": "correction_recorded", "event_id": "corrected",
+            "lineage_id": "discovery-feedback", "recorded_at_utc": "2026-07-16T00:02:00Z",
+        },
+        {
+            "event_type": "observer_candidate_linked", "event_id": "linked",
+            "decision_id": decision_id, "candidate_fingerprint": fingerprint,
+            "target_kind": "registered", "recorded_at_utc": "2026-07-16T00:03:00Z",
+        },
+    ]
+
+    rows = reconciliation.candidate_lifecycle_feedback(
+        tmp_path, fingerprint=fingerprint, events=events,
+    )
+
+    assert {row["outcome_kind"] for row in rows} == {
+        "promotion", "correction", "registered-reuse", "dismissal",
+    }
 
 
 @pytest.mark.parametrize("verification_result", [False, reconciliation.work_memory.WorkMemoryError("missing-repository-root", 3)])
@@ -432,7 +570,8 @@ def test_drive_verifies_pending_correction_then_runs_and_closes_live(
     document.parent.mkdir(parents=True)
     document.write_text("# sequence\n")
     pending = reconciliation.discovery_promotion_lifecycle.PendingCorrection(
-        blocker_id="blk-one", correction_id="correction-one", predecessor_run_id="run-one",
+        blocker_id="blk-one", correction_id="correction-one",
+        predecessor_run_id="run-one", task_id="reconcile-once-verify",
     )
     monkeypatch.setattr(
         reconciliation.discovery_promotion_lifecycle, "_pending_correction", lambda subject: pending,

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import json
+import shlex
 import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -14,6 +15,9 @@ from scripts import work_memory
 from scripts.directive_guard import write_directive_read_state
 
 
+WRITER_THREAD_ID = "019f75a9-fd91-7650-a43f-d20de5e3ae16"
+
+
 @pytest.fixture
 def receipt_flow(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     directives = tmp_path / "DIRECTIVES.md"; directives.write_text("# Test\n")
@@ -22,11 +26,16 @@ def receipt_flow(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(sequence_guard, "DEFAULT_DIRECTIVES_PATH", directives)
     monkeypatch.setattr(sequence_guard, "DEFAULT_DIRECTIVE_STATE_PATH", directive_state)
     monkeypatch.setattr(work_memory, "RECEIPT_ROOT", tmp_path / "receipts")
+    monkeypatch.setattr(work_memory, "LEDGER", tmp_path / "operations/work-memory/events.jsonl")
+    monkeypatch.setattr(work_memory, "BLOCKER_VIEW", tmp_path / "operations/blockers/BLOCKERS.md")
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_THREAD_ID)
 
     document = tmp_path / "operations/sequences/example/sequence.md"
     document.parent.mkdir(parents=True)
     command = "python3 scripts/example.py run"
     external_command = "python3 scripts/external.py run"
+    observable_materializer_command = "python3 scripts/prevention_observable_materializer.py"
+    contract_materializer_command = "python3 scripts/prevention_contract_materializer.py"
     correction_shape = (
         "python3 scripts/work_memory.py correct --run-id <run-id> --blocker-id <blocker-id> "
         "--occurrence-id <occurrence-id> --step-id <step-id> "
@@ -38,6 +47,12 @@ def receipt_flow(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         "--step-id <step-id> --changed-artifact <path> --solution <solution> "
         "--reusable-behavior-changed yes"
     )
+    launcher_correction_shape = (
+        "python3 scripts/work_memory_bootstrap_launcher.py correct --task-id <task-id> "
+        "--run-id <run-id> --blocker-id <blocker-id> --occurrence-id <occurrence-id> "
+        "--step-id <step-id> --changed-artifact <path> --solution <solution> "
+        "--reusable-behavior-changed yes"
+    )
     transition_shape = (
         "python3 scripts/blocker_catalog.py transition --run-id <run-id> "
         "--blocker-id <blocker-id> --to-status fixed-awaiting-verification"
@@ -45,8 +60,9 @@ def receipt_flow(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     close_shape = "python3 scripts/work_memory.py run-close --run-id <run-id> --result failed"
     document.write_text(
         f"# Example\n\n```bash\n{command}\n{external_command}\n{correction_shape}\n"
-        f"{bootstrap_correction_shape}\n"
-        f"{transition_shape}\n{close_shape}\n```\n"
+        f"{bootstrap_correction_shape}\n{launcher_correction_shape}\n"
+        f"{transition_shape}\n{close_shape}\n{observable_materializer_command}\n"
+        f"{contract_materializer_command}\n```\n"
     )
     script = tmp_path / "scripts/example.py"; script.parent.mkdir(); script.write_text("print('ok')\n")
     work_memory_script = tmp_path / "scripts/work_memory.py"; work_memory_script.write_text("print('work memory')\n")
@@ -56,6 +72,10 @@ def receipt_flow(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     launcher_script.write_text("print('launcher')\n")
     blocker_catalog_script = tmp_path / "scripts/blocker_catalog.py"
     blocker_catalog_script.write_text("print('blocker catalog')\n")
+    observable_materializer_script = tmp_path / "scripts/prevention_observable_materializer.py"
+    observable_materializer_script.write_text("print('observable materializer')\n")
+    contract_materializer_script = tmp_path / "scripts/prevention_contract_materializer.py"
+    contract_materializer_script.write_text("print('contract materializer')\n")
     changed_artifact = tmp_path / "working-agreement/install_skills.py"
     changed_artifact.parent.mkdir(); changed_artifact.write_text("print('before')\n")
     external_root = tmp_path / "external"; external_script = external_root / "scripts/external.py"
@@ -71,27 +91,34 @@ def receipt_flow(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         {"repository_key": "memory-knowledge", "path": "scripts/work_memory_bootstrap_launcher.py",
          "sha256": work_memory.sha256_bytes(launcher_script.read_bytes())},
         {"repository_key": "memory-knowledge", "path": "scripts/blocker_catalog.py", "sha256": "7" * 64},
+        {"repository_key": "memory-knowledge", "path": "scripts/prevention_observable_materializer.py",
+         "sha256": work_memory.sha256_bytes(observable_materializer_script.read_bytes())},
+        {"repository_key": "memory-knowledge", "path": "scripts/prevention_contract_materializer.py",
+         "sha256": work_memory.sha256_bytes(contract_materializer_script.read_bytes())},
         {"repository_key": "memory-knowledge", "path": "working-agreement/install_skills.py", "sha256": "1" * 64},
         {"repository_key": "external", "path": "scripts/external.py", "sha256": "e" * 64},
     ]
     bundle_hash = "c" * 64
     registry_hash = "d" * 64
-    monkeypatch.setattr(work_memory, "registry_rows", lambda: ([{
+    monkeypatch.setattr(work_memory, "registry_rows", lambda **_kwargs: ([{
         "sequence_id": "example", "lineage_id": "example", "operation_kinds": "other",
     }], registry_hash))
     monkeypatch.setattr(work_memory, "resolve_bundle", lambda **kwargs: (bundle, bundle_hash, "example"))
     monkeypatch.setattr(work_memory, "ROOT", tmp_path)
-    monkeypatch.setattr(work_memory, "_repo_roots", lambda path=None, snapshot=None: {
+    monkeypatch.setattr(work_memory, "_repo_roots", lambda path=None: {
         "memory-knowledge": tmp_path, "external": external_root,
     })
 
     task_id = "task-example"
+    owner_state = work_memory._claim_task_writer(task_id)
+    ownership = work_memory._ownership_receipt_fields(task_id, owner_state)
     now = datetime.now(UTC).replace(microsecond=0)
     classification = {
         "schema_version": 1, "task_id": task_id, "operation_kind": "other",
         "repeatable": True, "meaningful_steps": 3, "verdict": "operational",
         "reason": "repeatable-or-multistep", "created_at_utc": now.isoformat(),
         "expires_at_utc": (now + timedelta(hours=24)).isoformat(),
+        **ownership,
     }
     _, class_hash = work_memory.write_receipt(task_id, "classification", classification)
     selection = {
@@ -101,6 +128,7 @@ def receipt_flow(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
         "mode": "registered", "subject_id": "example", "lineage_id": "example",
         "document": str(document), "manifest": str(manifest), "source_bundle": bundle,
         "source_bundle_hash": bundle_hash,
+        **ownership,
     }
     work_memory.write_receipt(task_id, "selection", selection)
     return task_id, document, script, command
@@ -227,7 +255,9 @@ def test_discovery_receipt_ignores_unrelated_registry_change(
     monkeypatch.setattr(
         work_memory,
         "registry_rows",
-        lambda: ([{"sequence_id": "unrelated", "lineage_id": "unrelated"}], "e" * 64),
+        lambda **_kwargs: (
+            [{"sequence_id": "unrelated", "lineage_id": "unrelated"}], "e" * 64
+        ),
     )
     state = tmp_path / "active.json"
 
@@ -249,7 +279,9 @@ def test_registered_receipt_rejects_registry_change(
     monkeypatch.setattr(
         work_memory,
         "registry_rows",
-        lambda: ([{"sequence_id": "unrelated", "lineage_id": "unrelated"}], "e" * 64),
+        lambda **_kwargs: (
+            [{"sequence_id": "unrelated", "lineage_id": "unrelated"}], "e" * 64
+        ),
     )
 
     assert sequence_guard.main([
@@ -264,6 +296,46 @@ def test_activation_rejects_retired_sequence_id(receipt_flow):
         "activate", "--task-id", task_id, "--sequence-id", "example",
         "--sequence-doc", str(document),
     ]) == 2
+
+
+def test_foreign_writer_cannot_activate_or_write_active_state(
+    receipt_flow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    task_id, document, _, _ = receipt_flow
+    state = tmp_path / "foreign-active.json"
+    monkeypatch.setenv(
+        "CODEX_THREAD_ID", "019ee569-0b44-7292-b806-a19fc34c09a2",
+    )
+
+    assert sequence_guard.main([
+        "activate", "--task-id", task_id,
+        "--sequence-doc", str(document), "--state", str(state),
+    ]) == 4
+    assert not state.exists()
+
+
+def test_paused_old_owner_cannot_overwrite_active_state_after_handoff(
+    receipt_flow, tmp_path: Path,
+):
+    from argparse import Namespace
+
+    task_id, document, _, _ = receipt_flow
+    state_path = tmp_path / "handoff-active.json"
+    assert sequence_guard.main([
+        "activate", "--task-id", task_id,
+        "--sequence-doc", str(document), "--state", str(state_path),
+    ]) == 0
+    stale_state = json.loads(state_path.read_text())
+    work_memory.cmd_task_writer_handoff(Namespace(
+        task_id=task_id,
+        to_thread_id="019ee569-0b44-7292-b806-a19fc34c09a2",
+        event_id=None,
+    ))
+    before = state_path.read_bytes()
+
+    with pytest.raises(work_memory.WorkMemoryError, match="task-writer-not-owner"):
+        sequence_guard._atomic_json(task_id, state_path, stale_state)
+    assert state_path.read_bytes() == before
 
 
 def test_registered_receipts_activate_and_guard(receipt_flow, tmp_path: Path):
@@ -285,6 +357,51 @@ def test_guard_rejects_ungrounded_command(receipt_flow, tmp_path: Path):
         "guard", "--task-id", task_id, "--step", "invent", "--command", "python3 made-up.py",
         "--source", "sequence_doc", "--source-ref", str(document), "--state", str(state),
     ]) == 4
+
+
+def test_shape_match_requires_explicit_authorization_for_56_repeated_options() -> None:
+    shape = (
+        "python3 scripts/work_memory.py correct --changed-artifact <path> "
+        "--solution <solution>"
+    )
+    artifact_options = " ".join(
+        f"--changed-artifact scripts/artifact-{index}.py"
+        for index in range(56)
+    )
+    command = (
+        f"python3 scripts/work_memory.py correct {artifact_options} "
+        "--solution bounded"
+    )
+
+    assert not sequence_guard._shape_match(command, shape)
+    assert sequence_guard._shape_match(
+        command,
+        shape,
+        repeatable_options=frozenset({"--changed-artifact"}),
+    )
+
+
+def test_selected_sequence_grounds_repeated_co_blockers_and_changed_artifacts() -> None:
+    document = Path(
+        "operations/sequences/discovery/"
+        "2026-07-17-prevention-owner-runtime-five-defect-convergence.md"
+    ).read_text()
+    command = (
+        "python3 scripts/work_memory_bootstrap_launcher.py correct "
+        f"--task-id exact-task --run-id {uuid.uuid4()} "
+        f"--blocker-id blk-{'1' * 24} "
+        f"--co-blocker-id blk-{'2' * 24} --co-blocker-id blk-{'3' * 24} "
+        f"--occurrence-id {uuid.uuid4()} --step-id exact-step "
+        "--changed-artifact scripts/work_memory.py "
+        "--changed-artifact scripts/work_memory_bootstrap.py "
+        "--solution exact-fix --reusable-behavior-changed yes "
+        f"--correction-id {uuid.uuid4()}"
+    )
+
+    assert sequence_guard._shape_match(
+        command, document,
+        repeatable_options=sequence_guard.CORRECTION_REPEATABLE_SHAPE_OPTIONS,
+    )
 
 
 def test_guard_accepts_only_declared_runtime_placeholder_position(receipt_flow, tmp_path: Path):
@@ -401,6 +518,75 @@ def test_selected_script_source_rejects_shell_control_syntax(
     ]) == 4
 
 
+def test_selected_script_source_accepts_literal_backticks_in_structured_argv(
+    receipt_flow, tmp_path: Path,
+) -> None:
+    task_id, document, _, _ = receipt_flow
+    state = tmp_path / "active.json"
+    assert sequence_guard.main([
+        "activate", "--task-id", task_id, "--sequence-doc", str(document),
+        "--state", str(state),
+    ]) == 0
+    blocker_catalog = tmp_path / "scripts/blocker_catalog.py"
+    argv = [
+        "python3", "scripts/blocker_catalog.py", "open", "--description",
+        "Update `src/memory_knowledge/db/health.py`.",
+    ]
+    args = sequence_guard.build_parser().parse_args([
+        "guard", "--task-id", task_id, "--step", "catalog",
+        "--command", shlex.join(argv), "--source", "script",
+        "--source-ref", str(blocker_catalog), "--state", str(state),
+    ])
+    args.command_argv = argv
+
+    result = sequence_guard.cmd_guard(args)
+
+    assert result["ok"] is True
+
+
+def test_selected_script_source_rejects_mismatched_structured_command(
+    receipt_flow, tmp_path: Path,
+) -> None:
+    task_id, document, _, _ = receipt_flow
+    state = tmp_path / "active.json"
+    assert sequence_guard.main([
+        "activate", "--task-id", task_id, "--sequence-doc", str(document),
+        "--state", str(state),
+    ]) == 0
+    args = sequence_guard.build_parser().parse_args([
+        "guard", "--task-id", task_id, "--step", "catalog",
+        "--command", "different-command", "--source", "script",
+        "--source-ref", str(tmp_path / "scripts/blocker_catalog.py"),
+        "--state", str(state),
+    ])
+    args.command_argv = ["python3", "scripts/blocker_catalog.py", "open"]
+
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-guarded-command"):
+        sequence_guard.cmd_guard(args)
+
+
+@pytest.mark.parametrize("invalid_token", ["bad\x00token", "bad\ntoken"])
+def test_selected_script_source_rejects_invalid_structured_argv_tokens(
+    receipt_flow, tmp_path: Path, invalid_token: str,
+) -> None:
+    task_id, document, _, _ = receipt_flow
+    state = tmp_path / "active.json"
+    assert sequence_guard.main([
+        "activate", "--task-id", task_id, "--sequence-doc", str(document),
+        "--state", str(state),
+    ]) == 0
+    args = sequence_guard.build_parser().parse_args([
+        "guard", "--task-id", task_id, "--step", "catalog",
+        "--command", "unused-structured-command", "--source", "script",
+        "--source-ref", str(tmp_path / "scripts/blocker_catalog.py"),
+        "--state", str(state),
+    ])
+    args.command_argv = ["python3", "scripts/blocker_catalog.py", invalid_token]
+
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-guarded-command"):
+        sequence_guard.cmd_guard(args)
+
+
 def test_status_is_read_only_and_receipt_bound(receipt_flow, tmp_path: Path):
     task_id, document, _, _ = receipt_flow; state = tmp_path / "active.json"
     sequence_guard.main(["activate", "--task-id", task_id, "--sequence-doc", str(document), "--state", str(state)])
@@ -425,6 +611,9 @@ def test_activate_seals_selected_controller_and_bootstrap(receipt_flow, tmp_path
     assert work_memory.sha256_bytes(controller.read_bytes()) == state["sealed_controller_sha256"]
     assert work_memory.sha256_bytes(bootstrap.read_bytes()) == state["bootstrap_sha256"]
     assert work_memory.sha256_bytes(base64.b64decode(state["sealed_bootstrap_b64"])) == state["bootstrap_sha256"]
+    assert work_memory.sha256_bytes(
+        base64.b64decode(state["sealed_bootstrap_launcher_b64"])
+    ) == state["bootstrap_launcher_sha256"]
     assert work_memory.sha256_bytes(launcher.read_bytes()) == state["bootstrap_launcher_sha256"]
 
 
@@ -449,6 +638,205 @@ def test_ordinary_guard_still_rejects_stale_source_bundle(stale_correction_flow,
     assert "stale-source-bundle" in capsys.readouterr().err
 
 
+@pytest.mark.parametrize(
+    ("step", "command", "script_name"),
+    [
+        (
+            "materialize-owner-observables",
+            "python3 scripts/prevention_observable_materializer.py",
+            "prevention_observable_materializer.py",
+        ),
+        (
+            "materialize-owner-contracts",
+            "python3 scripts/prevention_contract_materializer.py",
+            "prevention_contract_materializer.py",
+        ),
+    ],
+)
+def test_stale_guard_authorizes_exact_declared_source_derived_materializer(
+    stale_correction_flow, tmp_path: Path, step: str, command: str, script_name: str,
+) -> None:
+    flow = stale_correction_flow
+
+    assert sequence_guard.main([
+        "guard", "--task-id", flow["task_id"], "--step", step,
+        "--command", command, "--source", "script",
+        "--source-ref", str(tmp_path / "scripts" / script_name),
+        "--state", str(flow["state"]),
+    ]) == 0
+
+
+@pytest.mark.parametrize(
+    ("step", "command", "source_ref", "expected_error"),
+    [
+        (
+            "materialize-owner-contracts",
+            "python3 scripts/prevention_observable_materializer.py",
+            "scripts/prevention_observable_materializer.py",
+            "stale-source-bundle",
+        ),
+        (
+            "materialize-owner-observables",
+            "python3 scripts/prevention_observable_materializer.py --output elsewhere.json",
+            "scripts/prevention_observable_materializer.py",
+            "stale-source-bundle",
+        ),
+        (
+            "materialize-owner-observables",
+            "python3 scripts/prevention_observable_materializer.py",
+            "scripts/prevention_contract_materializer.py",
+            "invalid-source-derived-materializer-source",
+        ),
+    ],
+)
+def test_stale_guard_rejects_materializer_binding_tampering(
+    stale_correction_flow, tmp_path: Path, capsys: pytest.CaptureFixture[str],
+    step: str, command: str, source_ref: str, expected_error: str,
+) -> None:
+    flow = stale_correction_flow
+
+    assert sequence_guard.main([
+        "guard", "--task-id", flow["task_id"], "--step", step,
+        "--command", command, "--source", "script",
+        "--source-ref", str(tmp_path / source_ref), "--state", str(flow["state"]),
+    ]) == 4
+    assert expected_error in capsys.readouterr().err
+
+
+def test_stale_guard_rejects_drifted_source_derived_materializer(
+    stale_correction_flow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    flow = stale_correction_flow
+    current_bundle = [
+        {**item, "sha256": "9" * 64}
+        if item["path"] == "scripts/prevention_observable_materializer.py" else item
+        for item in flow["current_bundle"]
+    ]
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: (current_bundle, "8" * 64, "example"),
+    )
+
+    assert sequence_guard.main([
+        "guard", "--task-id", flow["task_id"],
+        "--step", "materialize-owner-observables",
+        "--command", "python3 scripts/prevention_observable_materializer.py",
+        "--source", "script",
+        "--source-ref", str(tmp_path / "scripts/prevention_observable_materializer.py"),
+        "--state", str(flow["state"]),
+    ]) == 4
+    assert (
+        "source-derived-materializer-preliminary-correction-required"
+        in capsys.readouterr().err
+    )
+
+
+def test_stale_guard_authorizes_drifted_materializer_only_after_exact_preliminary_correction(
+    stale_correction_flow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    flow = stale_correction_flow
+    correction_id = "55555555-5555-4555-8555-555555555555"
+    current_hash = "8" * 64
+    materializer_hash = "9" * 64
+    materializer_path = "scripts/prevention_observable_materializer.py"
+    current_bundle = [
+        {**item, "sha256": materializer_hash}
+        if item["path"] == materializer_path else item
+        for item in flow["current_bundle"]
+    ]
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: (current_bundle, current_hash, "example"),
+    )
+    flow["events"][0]["task_id"] = flow["task_id"]
+    flow["events"][1]["step_id"] = "materialize-owner-observables"
+    changed_artifacts = [materializer_path, "working-agreement/install_skills.py"]
+    changed_hashes = [materializer_hash, "2" * 64]
+    flow["events"].extend([
+        {
+            "schema_version": 1,
+            "event_id": "66666666-6666-4666-8666-666666666666",
+            "event_type": "correction_recorded",
+            "recorded_at_utc": "2026-07-14T00:02:00Z",
+            "run_id": flow["run_id"],
+            "blocker_id": flow["blocker_id"],
+            "occurrence_id": flow["occurrence_id"],
+            "correction_id": correction_id,
+            "subject_id": "example",
+            "lineage_id": "example",
+            "step_id": "materialize-owner-observables",
+            "changed_artifacts": changed_artifacts,
+            "changed_artifact_hashes": changed_hashes,
+            "reusable_behavior_changed": True,
+            "solution": "authenticate the changed materializer before regeneration",
+        },
+        {
+            "schema_version": 1,
+            "event_id": "77777777-7777-4777-8777-777777777777",
+            "event_type": "bundle_transition_recorded",
+            "recorded_at_utc": "2026-07-14T00:02:00Z",
+            "lineage_id": "example",
+            "old_bundle_hash": "c" * 64,
+            "new_bundle_hash": current_hash,
+            "transition_reason": "correction",
+            "run_id": flow["run_id"],
+            "correction_ids": [correction_id],
+            "changed_artifacts": changed_artifacts,
+            "changed_artifact_hashes": changed_hashes,
+        },
+    ])
+
+    assert sequence_guard.main([
+        "guard", "--task-id", flow["task_id"],
+        "--step", "materialize-owner-observables",
+        "--command", "python3 scripts/prevention_observable_materializer.py",
+        "--source", "script",
+        "--source-ref", str(tmp_path / materializer_path),
+        "--state", str(flow["state"]),
+        "--authorizing-correction-id", correction_id,
+    ]) == 0
+
+
+def test_stale_guard_requires_materializer_declaration_in_selected_document(
+    stale_correction_flow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    flow = stale_correction_flow
+    monkeypatch.setattr(sequence_guard, "_shape_match", lambda *args, **kwargs: False)
+
+    assert sequence_guard.main([
+        "guard", "--task-id", flow["task_id"],
+        "--step", "materialize-owner-observables",
+        "--command", "python3 scripts/prevention_observable_materializer.py",
+        "--source", "script",
+        "--source-ref", str(tmp_path / "scripts/prevention_observable_materializer.py"),
+        "--state", str(flow["state"]),
+    ]) == 4
+    assert "source-derived-materializer-not-declared" in capsys.readouterr().err
+
+
+def test_stale_guard_requires_materializer_active_selection_binding(
+    stale_correction_flow, tmp_path: Path, capsys: pytest.CaptureFixture[str],
+) -> None:
+    flow = stale_correction_flow
+    state = json.loads(flow["state"].read_text())
+    state["selection_receipt_hash"] = "0" * 64
+    flow["state"].write_text(json.dumps(state))
+
+    assert sequence_guard.main([
+        "guard", "--task-id", flow["task_id"],
+        "--step", "materialize-owner-observables",
+        "--command", "python3 scripts/prevention_observable_materializer.py",
+        "--source", "script",
+        "--source-ref", str(tmp_path / "scripts/prevention_observable_materializer.py"),
+        "--state", str(flow["state"]),
+    ]) == 4
+    assert "source-derived-materializer-active-state-mismatch" in capsys.readouterr().err
+
+
 def test_correction_bootstrap_authorizes_exact_work_memory_correct(stale_correction_flow):
     flow = stale_correction_flow
     assert sequence_guard.main([
@@ -457,6 +845,123 @@ def test_correction_bootstrap_authorizes_exact_work_memory_correct(stale_correct
         "--source-ref", str(flow["work_memory_script"]), "--state", str(flow["state"]),
         "--correction-bootstrap",
     ]) == 0
+
+
+def test_correction_bootstrap_authorizes_repeated_declared_changed_artifact_shape(
+    stale_correction_flow, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    flow = stale_correction_flow
+    current_bundle = [
+        {**item, "sha256": "6" * 64}
+        if item["path"] == "scripts/example.py" else item
+        for item in flow["current_bundle"]
+    ]
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: (current_bundle, "7" * 64, "example"),
+    )
+    command = flow["command"].replace(
+        "--changed-artifact working-agreement/install_skills.py",
+        "--changed-artifact working-agreement/install_skills.py "
+        "--changed-artifact scripts/example.py",
+    )
+
+    assert sequence_guard.main([
+        "guard", "--task-id", flow["task_id"], "--step", flow["step_id"],
+        "--command", command, "--source", "script",
+        "--source-ref", str(flow["work_memory_script"]), "--state", str(flow["state"]),
+        "--correction-bootstrap",
+    ]) == 0
+
+
+def test_correction_bootstrap_authorizes_authenticated_launcher_rotation(
+    stale_correction_flow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    flow = stale_correction_flow
+    trust_paths = {
+        "scripts/work_memory.py",
+        "scripts/work_memory_bootstrap.py",
+        "scripts/work_memory_bootstrap_launcher.py",
+    }
+    current_bundle = [
+        {**item, "sha256": "6" * 64}
+        if item["path"] in trust_paths else item
+        for item in flow["current_bundle"]
+    ]
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: (current_bundle, "7" * 64, "example"),
+    )
+    command = (
+        "python3 scripts/work_memory_bootstrap_launcher.py correct "
+        f"--task-id {flow['task_id']} --run-id {flow['run_id']} "
+        f"--blocker-id {flow['blocker_id']} --occurrence-id {flow['occurrence_id']} "
+        f"--step-id {flow['step_id']} "
+        "--changed-artifact working-agreement/install_skills.py "
+        "--changed-artifact scripts/work_memory.py "
+        "--changed-artifact scripts/work_memory_bootstrap.py "
+        "--changed-artifact scripts/work_memory_bootstrap_launcher.py "
+        "--solution 'rotate authenticated trust anchors' --reusable-behavior-changed yes"
+    )
+
+    assert sequence_guard.main([
+        "guard", "--task-id", flow["task_id"], "--step", flow["step_id"],
+        "--command", command, "--source", "script",
+        "--source-ref", str(tmp_path / "scripts/work_memory_bootstrap_launcher.py"),
+        "--state", str(flow["state"]), "--correction-bootstrap",
+    ]) == 0
+
+
+@pytest.mark.parametrize("tampered_head", [False, True])
+def test_legacy_launcher_rotation_requires_hash_verified_head_blob(
+    stale_correction_flow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    tampered_head: bool,
+) -> None:
+    flow = stale_correction_flow
+    state = json.loads(flow["state"].read_text())
+    launcher_blob = base64.b64decode(state.pop("sealed_bootstrap_launcher_b64"))
+    flow["state"].write_text(json.dumps(state))
+    trust_paths = {
+        "scripts/work_memory.py",
+        "scripts/work_memory_bootstrap.py",
+        "scripts/work_memory_bootstrap_launcher.py",
+    }
+    current_bundle = [
+        {**item, "sha256": "6" * 64}
+        if item["path"] in trust_paths else item
+        for item in flow["current_bundle"]
+    ]
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: (current_bundle, "7" * 64, "example"),
+    )
+    monkeypatch.setattr(
+        sequence_guard,
+        "_read_head_launcher_blob",
+        lambda root: b"tampered\n" if tampered_head else launcher_blob,
+    )
+    command = (
+        "python3 scripts/work_memory_bootstrap_launcher.py correct "
+        f"--task-id {flow['task_id']} --run-id {flow['run_id']} "
+        f"--blocker-id {flow['blocker_id']} --occurrence-id {flow['occurrence_id']} "
+        f"--step-id {flow['step_id']} "
+        "--changed-artifact working-agreement/install_skills.py "
+        "--changed-artifact scripts/work_memory.py "
+        "--changed-artifact scripts/work_memory_bootstrap.py "
+        "--changed-artifact scripts/work_memory_bootstrap_launcher.py "
+        "--solution 'rotate legacy trust anchors' --reusable-behavior-changed yes"
+    )
+
+    result = sequence_guard.main([
+        "guard", "--task-id", flow["task_id"], "--step", flow["step_id"],
+        "--command", command, "--source", "script",
+        "--source-ref", str(tmp_path / "scripts/work_memory_bootstrap_launcher.py"),
+        "--state", str(flow["state"]), "--correction-bootstrap",
+    ])
+    assert result == (4 if tampered_head else 0)
 
 
 def test_correction_bootstrap_authorizes_wrapper_for_external_artifact(
@@ -538,7 +1043,9 @@ def test_discovery_correction_bootstrap_ignores_unrelated_registry_change(
     monkeypatch.setattr(
         work_memory,
         "registry_rows",
-        lambda: ([{"sequence_id": "unrelated", "lineage_id": "unrelated"}], "e" * 64),
+        lambda **_kwargs: (
+            [{"sequence_id": "unrelated", "lineage_id": "unrelated"}], "e" * 64
+        ),
     )
 
     assert sequence_guard.main([
@@ -561,6 +1068,21 @@ def test_correction_bootstrap_parser_accepts_multiple_superseded_corrections():
         f"--supersedes-correction-id {second}"
     )
     assert parsed["--supersedes-correction-id"] == [first, second]
+
+
+def test_correction_bootstrap_parser_accepts_explicit_repeated_co_blockers():
+    first = "blk-" + "2" * 24
+    second = "blk-" + "3" * 24
+    parsed = sequence_guard._parse_correction_command(
+        "python3 scripts/work_memory_bootstrap_launcher.py correct "
+        f"--task-id example --run-id {uuid.uuid4()} --blocker-id blk-{'1' * 24} "
+        f"--co-blocker-id {first} --co-blocker-id {second} "
+        f"--occurrence-id {uuid.uuid4()} --step-id correction-schema "
+        "--changed-artifact scripts/work_memory.py --solution exact-co-fix "
+        "--reusable-behavior-changed yes"
+    )
+
+    assert parsed["--co-blocker-id"] == [first, second]
 
 
 def test_correction_bootstrap_rejects_non_script_source(stale_correction_flow):

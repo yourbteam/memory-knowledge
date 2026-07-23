@@ -1,13 +1,13 @@
 ---
 name: prototype-driven-implementation
-description: Implement a concrete feature or root fix through a bounded, adaptive sequence of small runnable prototypes grounded in real code paths and captured real cases. Use when the goal is clear but important implementation behavior remains uncertain, a full implementation would make failures expensive to diagnose, or the user explicitly asks for prototype-driven implementation. Do not use for open-ended research, document-only planning, routine mechanical edits, or synthetic demonstrations that cannot exercise the production boundary.
+description: Central controller for every code implementation, from routine mechanical changes to uncertain features and root fixes. Drive the work through a bounded, adaptive sequence of runnable prototypes grounded in real code paths and captured real cases, pulling generated Research, Plan, Write-code, and Review support projections only when observed gaps require them. Do not use for standalone research, document-only planning, or review with no implementation.
 ---
 
 # Prototype-Driven Implementation
 
-Reach the approved user-visible goal through the fewest evidence-producing prototypes. Let each
-observed outcome select the next unresolved risk; do not invent a complete prototype roadmap
-upfront.
+Own the complete implementation lifecycle. Reach the approved user-visible goal through the fewest
+evidence-producing prototypes, and let each observed outcome select the next unresolved gap. Do
+not invent a complete implementation roadmap upfront.
 
 ## Freeze the autonomy envelope
 
@@ -25,6 +25,11 @@ progress only when the governing working agreement recognizes this skill as an a
 mechanism; otherwise retain its existing change-by-change approval gates.
 
 ## Run the adaptive loop
+
+Start with **Prototype 0**. Exercise the real production path to reproduce, characterize, or
+directly prove the current behavior before broad implementation research or planning. If the
+change is routine and mechanical, Prototype 0 may establish the exact delta and become the only
+prototype after direct verification.
 
 For each prototype:
 
@@ -47,8 +52,28 @@ For each prototype:
    milestones and create no obligation to build them.
 
 Keep the record compact: hypothesis, delta, real evidence, verdict, and remaining gap. Reuse an
-existing task artifact or plan mechanism when one exists. Do not create a controller, installer,
-or supporting documentation merely to run the loop.
+existing task artifact or plan mechanism when one exists. This skill is the controller; do not
+create a second task-specific controller, installer, or supporting documentation merely to run the
+loop.
+
+## Pull bounded playbook support
+
+The standalone playbooks remain authoritative for standalone Research, Plan, Write-code, and
+Review tasks. During implementation, use only their generated support projections:
+
+- `references/research-support.md` for one blocking evidence question;
+- `references/plan-support.md` for one observed delta that needs implementation-ready decisions;
+- `references/write-code-support.md` for one approved product-code delta;
+- `references/review-support.md` for one retained delta or the final accumulated surface.
+
+Read a projection only when the current observed gap needs that capability. Supply the approved
+outcome and envelope, prototype identity and observed gap, concrete evidence, exact support
+question, and allowed scope or budget. Take back control after the projection returns its evidence,
+conclusion, unresolved uncertainty, and recommended next delta.
+
+Never let a projection widen scope, launch a successor phase or package, take lifecycle ownership,
+or declare the implementation complete. A projection's recommendation is evidence for the
+controller; it is not an automatic next milestone.
 
 ## Preserve the stable boundary
 
@@ -57,7 +82,8 @@ or supporting documentation merely to run the loop.
   an exception list around observed manifestations.
 - Retain only code that belongs in the final implementation. Temporary instrumentation is allowed
   when needed for proof, but remove it unless it remains useful operational telemetry.
-- Use focused checks during discovery. After promotion, run the relevant regression surface and
+- Use focused checks during discovery. After promotion, run the relevant regression surface.
+- Before completion, use the Review support projection on the accumulated retained surface and run
   one end-to-end confirmation through the path the user will use.
 
 ## Stop and report

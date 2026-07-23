@@ -1,16 +1,1 @@
-{
-  "schema_version": 1,
-  "lineage_id": "airgapped-local-bulgarian-stt",
-  "dependencies": [
-    {
-      "kind": "file",
-      "repository_key": "callcenter-harness",
-      "path_or_sequence_id": "scripts/setup_airgapped_stt.sh"
-    },
-    {
-      "kind": "file",
-      "repository_key": "callcenter-harness",
-      "path_or_sequence_id": "scripts/transcribe_airgapped.py"
-    }
-  ]
-}
+{"dependencies":[{"kind":"file","path_or_sequence_id":"scripts/setup_airgapped_stt.sh","repository_key":"callcenter-harness"},{"kind":"file","path_or_sequence_id":"scripts/transcribe_airgapped.py","repository_key":"callcenter-harness"},{"kind":"file","path_or_sequence_id":"scripts/script_intake.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_adapters.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_launch.py","repository_key":"memory-knowledge"}],"lineage_id":"airgapped-local-bulgarian-stt","schema_version":1}

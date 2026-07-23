@@ -23,10 +23,12 @@ Classify the task and use the matching playbook when relevant:
 
 - Research: `research-playbook`
 - Plan: `plan-playbook`
-- Write code: `write-code-playbook`
+- Write code: `prototype-driven-implementation`
 - Review: `review-playbook`
 
-If the task crosses modes, progress in order: research before planning when understanding is missing, planning before substantial implementation, and review after implementation.
+For Write-code tasks, `prototype-driven-implementation` owns the lifecycle and pulls bounded
+Research, Plan, Write-code, and Review support projections only when observed evidence requires
+them. For standalone non-implementation tasks, retain the matching playbook above.
 
 ## Work-Memory Gate
 

@@ -1,10 +1,12 @@
 from __future__ import annotations
 
+import json
 from pathlib import Path
 
 import pytest
 
 from scripts import discovery_promotion_lifecycle as lifecycle
+from scripts import prevention_source_receipt
 
 
 def test_registered_document_grounds_protected_correction_commands() -> None:
@@ -96,6 +98,41 @@ def test_drive_follows_qualification_promotion_registered_verification(
     result = lifecycle.cmd_drive(args)
     assert result["stage"] == "complete"
     assert len(qualified) == 2 and promoted == ["example"] and registered == ["example"]
+
+
+def test_drive_persists_source_owned_effect_identity_before_lifecycle_mutation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    path = discovery(tmp_path / "discovery.md")
+    stages = iter(["promotion", "complete"])
+    monkeypatch.setattr(lifecycle, "cmd_status", lambda args: {
+        "stage": next(stages), "state": {"discovery_id": "discovery-example"},
+    })
+    monkeypatch.setattr(lifecycle, "_promote", lambda args, root: {})
+    monkeypatch.setattr(prevention_source_receipt, "ROOT", tmp_path / "receipts")
+
+    returncode = lifecycle.main([
+        "drive", "--file", str(path), "--sequence-id", "example",
+        "--use-when", "example", "--operation-kind", "other",
+        "--automation-display", "controller", "--pass-signal", "PASS",
+        "--root", str(tmp_path),
+        "--prevention-effect-id", "e" * 64,
+        "--prevention-preparation-sha256", "f" * 64,
+    ])
+
+    result = json.loads(capsys.readouterr().out)
+    receipt = json.loads(
+        prevention_source_receipt.receipt_path("e" * 64).read_text(encoding="utf-8")
+    )
+    assert returncode == 0
+    assert receipt["status"] == "APPLIED"
+    assert receipt["profile_id"] == "drive"
+    assert receipt["result_identity"]["stage"] == "complete"
+    assert "next_stage" not in receipt["result_identity"]
+    assert result["preventionSourceReceiptSha256"] == (
+        prevention_source_receipt.receipt_sha256(receipt)
+    )
 
 
 def test_drive_declares_bootstrap_readiness_before_qualification(
@@ -260,7 +297,7 @@ def test_promoted_registered_blocker_takes_precedence_over_prior_verification(
         lifecycle, "_pending_correction",
         lambda subject_id: lifecycle.PendingCorrection(
             blocker_id="blk-old", correction_id="correction-old",
-            predecessor_run_id="run-old",
+            predecessor_run_id="run-old", task_id="task-old",
         ),
     )
     monkeypatch.setattr(lifecycle, "_open_blocker_ids", lambda subject_id: ["blk-registered"])
@@ -331,6 +368,15 @@ def test_pending_correction_folds_transition_events_without_subject_fields(
 ) -> None:
     events = [
         {
+            "event_type": "run_started", "subject_id": "legacy-sequence",
+            "lineage_id": "legacy-lineage", "run_id": "legacy-run",
+        },
+        {
+            "event_type": "run_started", "subject_id": "discovery-example",
+            "lineage_id": "discovery-example", "run_id": "run-one",
+            "task_id": "task-one",
+        },
+        {
             "event_type": "blocker_opened", "subject_id": "discovery-example",
             "lineage_id": "discovery-example", "blocker_id": "blk-one",
             "run_id": "run-one",
@@ -344,17 +390,73 @@ def test_pending_correction_folds_transition_events_without_subject_fields(
             "event_type": "blocker_transitioned", "blocker_id": "blk-one",
             "run_id": "run-one", "to_status": "fixed-awaiting-verification",
         },
-        {
-            "event_type": "run_closed", "subject_id": "discovery-example",
-            "run_id": "run-one", "result": "failed",
-        },
     ]
     monkeypatch.setattr(lifecycle.work_memory, "load_ledger", lambda: (events, "a" * 64))
 
     assert lifecycle._pending_correction("discovery-example") == lifecycle.PendingCorrection(
         blocker_id="blk-one", correction_id="correction-one",
-        predecessor_run_id="run-one",
+        predecessor_run_id="run-one", task_id="task-one",
     )
+
+
+def test_qualification_reuses_pending_correction_task_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = discovery(tmp_path / "discovery.md")
+    pending = lifecycle.PendingCorrection(
+        blocker_id="blk-one", correction_id="correction-one",
+        predecessor_run_id="run-one", task_id="bootstrap-task",
+    )
+    classified = []
+    selected = {}
+    monkeypatch.setattr(lifecycle, "_pending_correction", lambda subject_id: pending)
+    monkeypatch.setattr(
+        lifecycle, "_classify",
+        lambda task_id, **kwargs: classified.append(task_id),
+    )
+    monkeypatch.setattr(
+        lifecycle, "_select_and_start",
+        lambda **kwargs: selected.update(kwargs) or ("run-two", {}),
+    )
+    monkeypatch.setattr(lifecycle, "_verify_run", lambda **kwargs: {"run_id": "run-two"})
+    args = lifecycle.build_parser().parse_args([
+        "drive", "--file", str(path), "--sequence-id", "example",
+        "--use-when", "example", "--operation-kind", "other",
+        "--automation-display", "controller", "--pass-signal", "PASS",
+        "--root", str(tmp_path),
+    ])
+
+    assert lifecycle._qualify_once(
+        args, {"discovery_id": "discovery-example"},
+    ) == {"run_id": "run-two"}
+    assert classified == ["bootstrap-task"]
+    assert selected["task_id"] == "bootstrap-task"
+    assert selected["pending"] == pending
+
+
+def test_ordinary_qualification_keeps_generated_task_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    path = discovery(tmp_path / "discovery.md")
+    selected = {}
+    monkeypatch.setattr(lifecycle, "_pending_correction", lambda subject_id: None)
+    monkeypatch.setattr(lifecycle, "_classify", lambda *args, **kwargs: None)
+    monkeypatch.setattr(
+        lifecycle, "_select_and_start",
+        lambda **kwargs: selected.update(kwargs) or ("run-one", {}),
+    )
+    monkeypatch.setattr(lifecycle, "_verify_run", lambda **kwargs: {"run_id": "run-one"})
+    args = lifecycle.build_parser().parse_args([
+        "drive", "--file", str(path), "--sequence-id", "example",
+        "--use-when", "example", "--operation-kind", "other",
+        "--automation-display", "controller", "--pass-signal", "PASS",
+        "--root", str(tmp_path),
+    ])
+
+    lifecycle._qualify_once(args, {"discovery_id": "discovery-example"})
+
+    assert selected["task_id"] == "discovery-promote-example-other"
+    assert selected["pending"] is None
 
 
 def test_pending_correction_ignores_explicitly_superseded_blocker(
@@ -384,12 +486,17 @@ def test_correct_accepts_one_stable_artifact_manifest_argument(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     path = discovery(tmp_path / "discovery.md")
-    artifact_file = tmp_path / "artifacts.txt"
     (tmp_path / "scripts").mkdir()
     (tmp_path / "tests").mkdir()
-    (tmp_path / "scripts/one.py").write_text("# correction\n")
-    (tmp_path / "tests/test_one.py").write_text("# verification\n")
-    artifact_file.write_text("scripts/one.py\ntests/test_one.py\n")
+    (tmp_path / "scripts/one.py").write_text("# one\n")
+    (tmp_path / "tests/test_one.py").write_text("# one\n")
+    artifact_file = tmp_path / "artifacts.json"
+    artifact_file.write_text(json.dumps([
+        {"repository_key": "memory-knowledge", "path": "scripts/one.py"},
+        {"repository_key": "memory-knowledge", "path": "tests/test_one.py"},
+    ]))
+    roots_file = tmp_path / "roots.json"
+    roots_file.write_text(json.dumps({"memory-knowledge": str(tmp_path)}))
     events = [{
         "event_type": "blocker_opened", "subject_id": "discovery-example",
         "blocker_id": "blk-one", "occurrence_id": "occ-one", "run_id": "run-one",
@@ -409,12 +516,14 @@ def test_correct_accepts_one_stable_artifact_manifest_argument(
         "correct", "--file", str(path), "--sequence-id", "example",
         "--solution", "stable fix", "--changed-artifacts-file", str(artifact_file),
         "--reusable-behavior-changed", "yes", "--root", str(tmp_path),
+        "--repo-roots-file", str(roots_file),
     ])
 
     assert lifecycle.cmd_correct(args)["next_stage"] == "successor-verification"
     correction = commands[0]
     assert correction.count("--changed-artifact") == 2
-    assert "scripts/one.py" in correction and "tests/test_one.py" in correction
+    assert str(tmp_path / "scripts/one.py") in correction
+    assert str(tmp_path / "tests/test_one.py") in correction
     assert "--finalize-failed-run" in correction
     assert "--correction-id" in correction
 
@@ -422,13 +531,15 @@ def test_correct_accepts_one_stable_artifact_manifest_argument(
 def test_registered_correction_forwards_repository_roots(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    artifact_file = tmp_path / "artifacts.txt"
-    external_artifact = tmp_path / "external" / "scripts" / "fix.py"
-    external_artifact.parent.mkdir(parents=True)
-    external_artifact.write_text("# correction\n")
-    artifact_file.write_text(f"{external_artifact}\n")
+    repository = tmp_path / "external"
+    (repository / "scripts").mkdir(parents=True)
+    (repository / "scripts/fix.py").write_text("# fix\n")
+    artifact_file = tmp_path / "artifacts.json"
+    artifact_file.write_text(json.dumps([
+        {"repository_key": "external", "path": "scripts/fix.py"},
+    ]))
     roots_file = tmp_path / "roots.json"
-    roots_file.write_text("{}")
+    roots_file.write_text(json.dumps({"external": str(repository)}))
     events = [{
         "event_type": "blocker_opened", "subject_id": "example",
         "blocker_id": "blk-one", "occurrence_id": "occ-one", "run_id": "run-one",
@@ -453,69 +564,18 @@ def test_registered_correction_forwards_repository_roots(
     assert command[command.index("--repo-roots-file") + 1] == str(roots_file)
 
 
-def test_superseding_correction_gets_distinct_content_bound_id(
-    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    discovery_path = discovery(tmp_path / "discovery.md")
-    artifact = tmp_path / "sequence.md"
-    artifact.write_text("verified bundle\n")
-    old_correction_id = "correction-old"
-    events = [
-        {
-            "event_type": "blocker_opened", "subject_id": "discovery-example",
-            "blocker_id": "blk-one", "occurrence_id": "occ-one", "run_id": "run-one",
-            "step_id": "verify-automation",
-        },
-        {
-            "event_type": "correction_recorded", "subject_id": "discovery-example",
-            "blocker_id": "blk-one", "occurrence_id": "occ-one", "run_id": "run-one",
-            "correction_id": old_correction_id,
-        },
-        {
-            "event_type": "blocker_transitioned", "blocker_id": "blk-one",
-            "run_id": "run-one", "to_status": "fixed-awaiting-verification",
-        },
-        {
-            "event_type": "run_closed", "subject_id": "discovery-example",
-            "run_id": "run-one", "result": "failed",
-        },
-    ]
-    monkeypatch.setattr(lifecycle.work_memory, "load_ledger", lambda: (events, "a" * 64))
-    commands = []
-    monkeypatch.setattr(
-        lifecycle, "_json_command",
-        lambda command, *, root: commands.append(command) or {
-            "correction_id": command[command.index("--correction-id") + 1],
-        },
-    )
-    args = lifecycle.build_parser().parse_args([
-        "correct", "--file", str(discovery_path), "--sequence-id", "example",
-        "--solution", "record fresh evidence", "--changed-artifact", str(artifact),
-        "--reusable-behavior-changed", "no",
-        "--supersedes-correction-id", old_correction_id, "--root", str(tmp_path),
-    ])
-
-    first = lifecycle.cmd_correct(args)["correction_id"]
-    second = lifecycle.cmd_correct(args)["correction_id"]
-
-    assert first == second
-    assert first != old_correction_id
-    assert commands[0][commands[0].index("--supersedes-correction-id") + 1] == old_correction_id
-    assert "--finalize-failed-run" not in commands[0]
-
-    artifact.write_text("newer verified bundle\n")
-    third = lifecycle.cmd_correct(args)["correction_id"]
-    assert third != first
-
-
 def test_protected_correction_routes_through_activated_bootstrap(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     protected = tmp_path / "scripts/work_memory.py"
     protected.parent.mkdir()
     protected.write_text("# changed\n")
-    artifact_file = tmp_path / "artifacts.txt"
-    artifact_file.write_text(f"{protected}\n")
+    artifact_file = tmp_path / "artifacts.json"
+    artifact_file.write_text(json.dumps([
+        {"repository_key": "memory-knowledge", "path": "scripts/work_memory.py"},
+    ]))
+    roots_file = tmp_path / "roots.json"
+    roots_file.write_text(json.dumps({"memory-knowledge": str(tmp_path)}))
     events = [{
         "event_type": "blocker_opened", "subject_id": "example",
         "blocker_id": "blk-one", "occurrence_id": "occ-one", "run_id": "run-one",
@@ -531,6 +591,7 @@ def test_protected_correction_routes_through_activated_bootstrap(
         "correct-registered", "--subject-id", "example", "--task-id", "failed-task",
         "--solution", "stable fix", "--changed-artifacts-file", str(artifact_file),
         "--reusable-behavior-changed", "yes", "--root", str(tmp_path),
+        "--repo-roots-file", str(roots_file),
     ])
 
     lifecycle.cmd_correct_registered(args)
@@ -541,52 +602,31 @@ def test_protected_correction_routes_through_activated_bootstrap(
     assert "--finalize-failed-run" not in command
 
 
-def test_terminal_superseding_protected_correction_uses_verified_current_controller(
+def test_materialized_correction_rejects_unknown_repository_root(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
-    protected = tmp_path / "scripts/work_memory.py"
-    protected.parent.mkdir()
-    protected.write_text("# changed\n")
-    old_correction_id = "11111111-1111-4111-8111-111111111111"
-    events = [
-        {
-            "event_type": "blocker_opened", "subject_id": "example",
-            "blocker_id": "blk-one", "occurrence_id": "occ-one", "run_id": "run-one",
-            "step_id": "verify-automation",
-        },
-        {
-            "event_type": "correction_recorded", "subject_id": "example",
-            "blocker_id": "blk-one", "occurrence_id": "occ-one", "run_id": "run-one",
-            "correction_id": old_correction_id,
-        },
-        {
-            "event_type": "blocker_transitioned", "blocker_id": "blk-one",
-            "run_id": "run-one", "to_status": "fixed-awaiting-verification",
-        },
-        {
-            "event_type": "run_closed", "subject_id": "example",
-            "run_id": "run-one", "result": "failed",
-        },
-    ]
+    path = discovery(tmp_path / "discovery.md")
+    artifact_file = tmp_path / "artifacts.json"
+    artifact_file.write_text(json.dumps([
+        {"repository_key": "unknown", "path": "scripts/fix.py"},
+    ]))
+    roots_file = tmp_path / "roots.json"
+    roots_file.write_text(json.dumps({"memory-knowledge": str(tmp_path)}))
+    events = [{
+        "event_type": "blocker_opened", "subject_id": "discovery-example",
+        "blocker_id": "blk-one", "occurrence_id": "occ-one", "run_id": "run-one",
+        "step_id": "verify-automation",
+    }]
     monkeypatch.setattr(lifecycle.work_memory, "load_ledger", lambda: (events, "a" * 64))
-    monkeypatch.setattr(lifecycle, "_registered_verified", lambda *args, **kwargs: True)
-    commands = []
-    monkeypatch.setattr(
-        lifecycle, "_json_command",
-        lambda command, *, root: commands.append(command) or {
-            "correction_id": command[command.index("--correction-id") + 1],
-        },
-    )
     args = lifecycle.build_parser().parse_args([
-        "correct-registered", "--subject-id", "example", "--solution", "verified recovery",
-        "--changed-artifact", str(protected), "--reusable-behavior-changed", "yes",
-        "--supersedes-correction-id", old_correction_id, "--root", str(tmp_path),
+        "correct", "--file", str(path), "--sequence-id", "example",
+        "--solution", "stable fix", "--changed-artifacts-file", str(artifact_file),
+        "--reusable-behavior-changed", "yes", "--root", str(tmp_path),
+        "--repo-roots-file", str(roots_file),
     ])
 
-    lifecycle.cmd_correct_registered(args)
-
-    assert commands[0][1:3] == ["scripts/work_memory.py", "correct"]
-    assert "--task-id" not in commands[0]
+    with pytest.raises(lifecycle.LifecycleError, match="invalid-changed-artifact-identity"):
+        lifecycle.cmd_correct(args)
 
 
 def test_protected_correction_requires_failed_run_task_id(

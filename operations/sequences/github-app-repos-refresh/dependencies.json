@@ -1,11 +1,1 @@
-{
-  "schema_version": 1,
-  "lineage_id": "github-app-repos-refresh",
-  "dependencies": [
-    {
-      "kind": "file",
-      "repository_key": "mcp-agents-workflow",
-      "path_or_sequence_id": "scripts/github_app_repos_refresh.py"
-    }
-  ]
-}
+{"dependencies":[{"kind":"file","path_or_sequence_id":"scripts/github_app_repos_refresh.py","repository_key":"mcp-agents-workflow"},{"kind":"file","path_or_sequence_id":"scripts/script_intake.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_adapters.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_launch.py","repository_key":"memory-knowledge"}],"lineage_id":"github-app-repos-refresh","schema_version":1}

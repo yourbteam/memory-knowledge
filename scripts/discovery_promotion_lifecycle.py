@@ -16,8 +16,9 @@ from pathlib import Path
 from typing import Any, Sequence
 
 try:
-    from scripts import sequence_discovery_log, work_memory
+    from scripts import prevention_source_receipt, sequence_discovery_log, work_memory
 except ImportError:
+    import prevention_source_receipt  # type: ignore
     import sequence_discovery_log  # type: ignore
     import work_memory  # type: ignore
 
@@ -34,6 +35,7 @@ class PendingCorrection:
     blocker_id: str
     correction_id: str
     predecessor_run_id: str
+    task_id: str
 
 
 PROTECTED_CORRECTION_PATHS = {
@@ -42,33 +44,6 @@ PROTECTED_CORRECTION_PATHS = {
     "scripts/work_memory_bootstrap.py",
 }
 IMMUTABLE_LAUNCHER_PATH = "scripts/work_memory_bootstrap_launcher.py"
-
-
-def _correction_id(
-    *, root: Path, blocker: dict[str, Any], artifacts: list[str],
-    supersedes: list[str], solution: str, reusable_behavior_changed: str,
-) -> str:
-    artifact_fingerprints = []
-    for artifact in sorted(artifacts):
-        raw_path = Path(artifact)
-        resolved = (raw_path if raw_path.is_absolute() else root / raw_path).resolve()
-        if not resolved.is_file():
-            raise LifecycleError("changed-artifact-not-found", details={"artifact": artifact})
-        artifact_fingerprints.append({
-            "path": str(resolved),
-            "sha256": hashlib.sha256(resolved.read_bytes()).hexdigest(),
-        })
-    identity = json.dumps({
-        "run_id": blocker["run_id"],
-        "blocker_id": blocker["blocker_id"],
-        "occurrence_id": blocker["occurrence_id"],
-        "step_id": blocker["step_id"],
-        "artifacts": artifact_fingerprints,
-        "supersedes": sorted(supersedes),
-        "solution": solution,
-        "reusable_behavior_changed": reusable_behavior_changed,
-    }, sort_keys=True, separators=(",", ":"))
-    return str(uuid.uuid5(uuid.NAMESPACE_URL, f"memory-knowledge:{identity}"))
 
 
 def _metadata(path: Path, name: str) -> str:
@@ -98,7 +73,12 @@ def _json_command(command: list[str], *, root: Path) -> dict[str, Any]:
     except json.JSONDecodeError as exc:
         raise LifecycleError(
             "non-json-control-command",
-            details={"command": command, "exit_code": completed.returncode},
+            details={
+                "command": command,
+                "exit_code": completed.returncode,
+                "stdout": completed.stdout[-4000:],
+                "stderr": completed.stderr[-4000:],
+            },
         ) from exc
     if completed.returncode != 0 or payload.get("ok") is False:
         raise LifecycleError(
@@ -120,6 +100,11 @@ def _pending_correction(discovery_id: str) -> PendingCorrection | None:
     events, _ = work_memory.load_ledger()
     blockers: dict[str, dict[str, Any]] = {}
     corrections: dict[str, dict[str, Any]] = {}
+    run_task_ids = {
+        event["run_id"]: event["task_id"]
+        for event in events
+        if event.get("event_type") == "run_started" and event.get("task_id")
+    }
     for event in events:
         kind = event.get("event_type")
         if kind == "blocker_opened":
@@ -138,10 +123,14 @@ def _pending_correction(discovery_id: str) -> PendingCorrection | None:
     for blocker_id, state in blockers.items():
         correction = corrections.get(blocker_id)
         if state["status"] == "fixed-awaiting-verification" and correction:
+            task_id = run_task_ids.get(correction["run_id"])
+            if task_id is None:
+                raise LifecycleError("pending-correction-task-id-missing")
             candidates.append(PendingCorrection(
                 blocker_id=blocker_id,
                 correction_id=correction["correction_id"],
                 predecessor_run_id=correction["run_id"],
+                task_id=task_id,
             ))
     if len(candidates) > 1:
         raise LifecycleError("multiple-pending-corrections")
@@ -162,14 +151,6 @@ def _open_blocker_ids(subject_id: str) -> list[str]:
         elif event.get("event_type") == "blocker_transitioned" and blocker_id in states:
             states[blocker_id] = event["to_status"]
     return sorted(blocker_id for blocker_id, status in states.items() if status == "open")
-
-
-def _run_is_terminal(events: list[dict[str, Any]], run_id: str) -> bool:
-    return any(
-        event.get("run_id") == run_id
-        and event.get("event_type") in {"run_closed", "run_abandoned"}
-        for event in events
-    )
 
 
 def _registered_verified(sequence_id: str, *, repo_roots_file: str | None) -> bool:
@@ -302,9 +283,13 @@ def _verify_run(
 def _qualify_once(args: argparse.Namespace, state: dict[str, Any]) -> dict[str, Any]:
     root = Path(args.root).resolve()
     discovery = Path(args.file).resolve()
-    task_id = f"discovery-promote-{args.sequence_id}-{args.operation_kind[0]}"
-    _classify(task_id, root=root, operation_kind=args.operation_kind[0])
     pending = _pending_correction(state["discovery_id"])
+    task_id = (
+        pending.task_id
+        if pending is not None
+        else f"discovery-promote-{args.sequence_id}-{args.operation_kind[0]}"
+    )
+    _classify(task_id, root=root, operation_kind=args.operation_kind[0])
     run_id, receipt = _select_and_start(
         task_id=task_id, discovery=discovery, sequence_id=None, root=root,
         repo_roots_file=args.repo_roots_file, pending=pending,
@@ -473,13 +458,44 @@ def _correct_subject(args: argparse.Namespace, subject_id: str) -> dict[str, Any
         blocker = blockers[pending.blocker_id]
     else:
         raise LifecycleError("expected-one-open-blocker", details={"count": len(open_items)})
-    artifacts = list(args.changed_artifact or [])
+    artifacts: list[str] = list(args.changed_artifact or [])
     if args.changed_artifacts_file:
-        artifacts.extend(
-            line.strip()
-            for line in Path(args.changed_artifacts_file).read_text(encoding="utf-8").splitlines()
-            if line.strip()
-        )
+        try:
+            materialized = json.loads(
+                Path(args.changed_artifacts_file).read_text(encoding="utf-8")
+            )
+        except (OSError, json.JSONDecodeError) as exc:
+            raise LifecycleError("invalid-changed-artifacts-file") from exc
+        if not isinstance(materialized, list) or not materialized:
+            raise LifecycleError("invalid-changed-artifacts-file")
+        roots = work_memory._repo_roots(args.repo_roots_file)
+        for index, item in enumerate(materialized):
+            if (
+                not isinstance(item, dict)
+                or set(item) != {"repository_key", "path"}
+                or not isinstance(item["repository_key"], str)
+                or not isinstance(item["path"], str)
+                or item["repository_key"] not in roots
+                or Path(item["path"]).is_absolute()
+                or ".." in Path(item["path"]).parts
+            ):
+                raise LifecycleError(
+                    "invalid-changed-artifact-identity",
+                    details={"index": index},
+                )
+            repository_root = roots[item["repository_key"]]
+            resolved = (repository_root / item["path"]).resolve()
+            try:
+                resolved.relative_to(repository_root)
+            except ValueError as exc:
+                raise LifecycleError(
+                    "changed-artifact-root-escape", details={"index": index}
+                ) from exc
+            if not resolved.is_file():
+                raise LifecycleError(
+                    "changed-artifact-not-found", details={"index": index}
+                )
+            artifacts.append(str(resolved))
     artifacts = list(dict.fromkeys(artifacts))
     if not artifacts:
         raise LifecycleError("changed-artifacts-required")
@@ -494,44 +510,32 @@ def _correct_subject(args: argparse.Namespace, subject_id: str) -> dict[str, Any
         if relative == IMMUTABLE_LAUNCHER_PATH:
             raise LifecycleError("immutable-bootstrap-launcher-change")
         protected = protected or relative in PROTECTED_CORRECTION_PATHS
-    supersedes = list(args.supersedes_correction_id or [])
-    authenticated_current_recovery = (
-        protected
-        and bool(supersedes)
-        and _run_is_terminal(events, blocker["run_id"])
-        and _registered_verified(
-            "discovery-promotion-lifecycle",
-            repo_roots_file=args.repo_roots_file,
-        )
-    )
-    use_sealed_bootstrap = protected and not authenticated_current_recovery
-    if use_sealed_bootstrap and not args.task_id:
+    if protected and not args.task_id:
         raise LifecycleError("task-id-required-for-protected-correction")
     command = [
         "python3",
-        "scripts/work_memory_bootstrap_launcher.py" if use_sealed_bootstrap else "scripts/work_memory.py",
+        "scripts/work_memory_bootstrap_launcher.py" if protected else "scripts/work_memory.py",
         "correct",
     ]
-    if use_sealed_bootstrap:
+    if protected:
         command.extend(["--task-id", args.task_id])
-    correction_id = _correction_id(
-        root=root, blocker=blocker, artifacts=artifacts, supersedes=supersedes,
-        solution=args.solution, reusable_behavior_changed=args.reusable_behavior_changed,
-    )
     command.extend([
         "--run-id", blocker["run_id"],
         "--blocker-id", blocker["blocker_id"], "--occurrence-id", blocker["occurrence_id"],
         "--step-id", blocker["step_id"], "--solution", args.solution,
         "--reusable-behavior-changed", args.reusable_behavior_changed,
-        "--correction-id", correction_id,
+        "--correction-id", str(uuid.uuid5(
+            uuid.NAMESPACE_URL,
+            f"memory-knowledge:{blocker['run_id']}:{blocker['blocker_id']}:{blocker['occurrence_id']}",
+        )),
     ])
-    if not protected and not _run_is_terminal(events, blocker["run_id"]):
+    if not protected:
         command.append("--finalize-failed-run")
     for artifact in artifacts:
         command.extend(["--changed-artifact", artifact])
-    for superseded_correction_id in supersedes:
-        command.extend(["--supersedes-correction-id", superseded_correction_id])
-    if args.repo_roots_file and not use_sealed_bootstrap:
+    for correction_id in args.supersedes_correction_id or []:
+        command.extend(["--supersedes-correction-id", correction_id])
+    if args.repo_roots_file and not protected:
         command.extend(["--repo-roots-file", args.repo_roots_file])
     correction = _json_command(command, root=root)
     return {"ok": True, "correction_id": correction["correction_id"],
@@ -552,6 +556,8 @@ def _common(parser: argparse.ArgumentParser) -> None:
     parser.add_argument("--sequence-id", required=True)
     parser.add_argument("--repo-roots-file")
     parser.add_argument("--root", default=str(work_memory.ROOT))
+    parser.add_argument("--prevention-effect-id")
+    parser.add_argument("--prevention-preparation-sha256")
 
 
 def _correction_arguments(parser: argparse.ArgumentParser) -> None:
@@ -585,15 +591,91 @@ def build_parser() -> argparse.ArgumentParser:
     registered.add_argument("--subject-id", required=True)
     registered.add_argument("--root", default=str(work_memory.ROOT))
     registered.add_argument("--repo-roots-file")
+    registered.add_argument("--prevention-effect-id")
+    registered.add_argument("--prevention-preparation-sha256")
     _correction_arguments(registered)
     registered.set_defaults(func=cmd_correct_registered)
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    values = list(sys.argv[1:] if argv is None else argv)
+    if not values:
+        try:
+            from scripts import sequence_intake_launch
+        except ModuleNotFoundError:
+            import sequence_intake_launch  # type: ignore
+        return sequence_intake_launch.main_for_sequence(
+            "discovery-promotion-lifecycle", [],
+        )
     try:
-        args = build_parser().parse_args(argv)
-        print(json.dumps(args.func(args), sort_keys=True))
+        args = build_parser().parse_args(values)
+        source_identity = {
+            "profile": args.command,
+            "root_path_sha256": hashlib.sha256(
+                str(Path(args.root).resolve()).encode("utf-8")
+            ).hexdigest(),
+            "input_identities": {
+                name: (
+                    hashlib.sha256(Path(value).read_bytes()).hexdigest()
+                    if isinstance(value, str) and Path(value).is_file()
+                    else hashlib.sha256(str(value).encode("utf-8")).hexdigest()
+                )
+                for name, value in sorted(vars(args).items())
+                if name not in {
+                    "func", "prevention_effect_id",
+                    "prevention_preparation_sha256", "solution",
+                } and value is not None
+            },
+            "solution_sha256": (
+                hashlib.sha256(args.solution.encode("utf-8")).hexdigest()
+                if getattr(args, "solution", None) else None
+            ),
+        }
+        source_receipt = None
+        if args.command != "status" and (
+            args.prevention_effect_id or args.prevention_preparation_sha256
+        ):
+            source_receipt = prevention_source_receipt.prepare(
+                owner_sequence_id="discovery-promotion-lifecycle",
+                profile_id=args.command,
+                effect_id=args.prevention_effect_id,
+                preparation_artifact_sha256=args.prevention_preparation_sha256,
+                source_identity=source_identity,
+            )
+        result = args.func(args)
+        if source_receipt is not None:
+            result_identity = {
+                "ok": result.get("ok"),
+                "result_sha256": hashlib.sha256(
+                    json.dumps(
+                        result, sort_keys=True, separators=(",", ":")
+                    ).encode("utf-8")
+                ).hexdigest(),
+            }
+            if args.command == "drive":
+                result_identity["stage"] = result.get("stage")
+            else:
+                result_identity["next_stage"] = result.get("next_stage")
+            source_receipt = prevention_source_receipt.complete(
+                owner_sequence_id="discovery-promotion-lifecycle",
+                profile_id=args.command,
+                effect_id=args.prevention_effect_id,
+                preparation_artifact_sha256=args.prevention_preparation_sha256,
+                source_identity=source_identity,
+                result_identity=result_identity,
+            )
+        if args.prevention_effect_id:
+            result = {
+                **result,
+                "preventionEffectId": args.prevention_effect_id,
+                "preventionPreparationSha256": args.prevention_preparation_sha256,
+            }
+            if source_receipt is not None:
+                result["preventionSourceReceiptSha256"] = (
+                    prevention_source_receipt.receipt_sha256(source_receipt)
+                )
+        print(json.dumps(result, sort_keys=True))
         return 0
     except (LifecycleError, work_memory.WorkMemoryError) as exc:
         code = exc.code if hasattr(exc, "code") else str(exc)

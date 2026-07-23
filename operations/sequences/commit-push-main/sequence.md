@@ -1,5 +1,23 @@
 # commit-push-main
 
+<!-- BEGIN SEMANTIC INTAKE ENTRYPOINT -->
+## Operator entry point
+
+After selecting and activating this registered sequence, launch the shared controller with no
+arguments:
+
+```bash
+python3 scripts/sequence_intake_launch.py
+```
+
+Answer only the semantic questions shown. Every question includes its response format, an example,
+and constraints. The controller derives JSON, files, environment, flags, and argv; displays the
+exact prepared operation; and requires a separate yes/no authorization before guarded dispatch.
+
+Any argument-bearing commands below are machine-compatibility and verification evidence for the
+deterministic adapter. Operators and agents must not construct or invoke those forms directly.
+<!-- END SEMANTIC INTAKE ENTRYPOINT -->
+
 ## Use When
 
 Commit and push an explicitly approved file scope while preserving unrelated working-tree changes.
@@ -15,6 +33,10 @@ Commit and push an explicitly approved file scope while preserving unrelated wor
 - A non-empty commit message approved for the change being published.
 - An empty Git index before the sequence starts; unrelated unstaged and untracked work may remain.
 - Working Git push authentication and network access. No token values are printed or accepted as arguments.
+- GitHub CLI authentication is not a prerequisite and `gh auth status` must not gate this sequence.
+  The CLI may run in a sandbox that cannot access the operator's keyring, while the guarded Git
+  push uses a different credential path. Only the actual `git push` result from the deterministic
+  publish or resume operation is authoritative for Git remote authentication.
 - Explicit authorization to commit and push the named repository, branch, remote, and manifest scope.
 
 ## Commands
@@ -44,7 +66,9 @@ Commit and push an explicitly approved file scope while preserving unrelated wor
 - The Git helper never writes the ledger directly. It calls the canonical work-memory merge command, which validates the complete lifecycle and regenerates the derived blocker view atomically.
 - Each input ledger must validate independently before union. Historical events accepted by the persisted-ledger compatibility rule remain historical after import; the same shape submitted as a newly authored event is still rejected by the strict lifecycle contract.
 - If remote SHA verification differs from local HEAD, stop and preserve the local commit as evidence. Do not report success or start another publish.
-- Catalog every failure before correction or retry. Never print credentials or infer invalid authentication from a sandbox connectivity error.
+- Catalog every failure before correction or retry. Never print credentials or infer invalid
+  authentication from `gh auth status`, a sandbox connectivity error, or any other probe that does
+  not exercise the guarded Git remote operation.
 
 ## Verification
 

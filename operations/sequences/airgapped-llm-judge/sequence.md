@@ -1,5 +1,23 @@
 # airgapped-llm-judge
 
+<!-- BEGIN SEMANTIC INTAKE ENTRYPOINT -->
+## Operator entry point
+
+After selecting and activating this registered sequence, launch the shared controller with no
+arguments:
+
+```bash
+python3 scripts/sequence_intake_launch.py
+```
+
+Answer only the semantic questions shown. Every question includes its response format, an example,
+and constraints. The controller derives JSON, files, environment, flags, and argv; displays the
+exact prepared operation; and requires a separate yes/no authorization before guarded dispatch.
+
+Any argument-bearing commands below are machine-compatibility and verification evidence for the
+deterministic adapter. Operators and agents must not construct or invoke those forms directly.
+<!-- END SEMANTIC INTAKE ENTRYPOINT -->
+
 **Use when:** wiring the `callcenter-harness` command-mode eval (`execution_mode="command"`) to a **self-hosted, offline LLM judge** so script-adherence + emotion + active-listening are model-scored instead of the deterministic fixture. Runs fully offline via a loopback Ollama server (NFR-7: no external egress; loopback ≠ egress). **Depends on** the harness being provisioned (`callcenter-harness-provision-verify`).
 
 **Automation:** `callcenter-harness:scripts/setup_airgapped_judge.sh` (provision) + `callcenter-harness:scripts/judge_ollama.py` (the `CC_HARNESS_AGENT_COMMAND` adapter). Proven end-to-end 2026-07-07 (qwen2.5:32b, air-gapped smoke ALL PASS on a real BG call). Run from repo root `~/callcenter-harness`.

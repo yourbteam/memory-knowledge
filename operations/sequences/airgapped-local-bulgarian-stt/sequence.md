@@ -1,5 +1,23 @@
 # airgapped-local-bulgarian-stt
 
+<!-- BEGIN SEMANTIC INTAKE ENTRYPOINT -->
+## Operator entry point
+
+After selecting and activating this registered sequence, launch the shared controller with no
+arguments:
+
+```bash
+python3 scripts/sequence_intake_launch.py
+```
+
+Answer only the semantic questions shown. Every question includes its response format, an example,
+and constraints. The controller derives JSON, files, environment, flags, and argv; displays the
+exact prepared operation; and requires a separate yes/no authorization before guarded dispatch.
+
+Any argument-bearing commands below are machine-compatibility and verification evidence for the
+deterministic adapter. Operators and agents must not construct or invoke those forms directly.
+<!-- END SEMANTIC INTAKE ENTRYPOINT -->
+
 **Use when:** set up a self-hosted, air-gapped Bulgarian STT env (ffmpeg + faster-whisper, vendored weights) and transcribe a call-center recording offline with no network egress (NFR-7). Provision is online-once; process/verify run air-gapped. Diarization comes from stereo channel-split, not a vendor.
 
 **Automation:** `callcenter-harness:scripts/setup_airgapped_stt.sh` (+ `scripts/transcribe_airgapped.py`). Run from repo root `~/callcenter-harness`.

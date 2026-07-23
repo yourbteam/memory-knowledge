@@ -1,5 +1,23 @@
 # Sequence: taggable-api-deploy
 
+<!-- BEGIN SEMANTIC INTAKE ENTRYPOINT -->
+## Operator entry point
+
+After selecting and activating this registered sequence, launch the shared controller with no
+arguments:
+
+```bash
+python3 scripts/sequence_intake_launch.py
+```
+
+Answer only the semantic questions shown. Every question includes its response format, an example,
+and constraints. The controller derives JSON, files, environment, flags, and argv; displays the
+exact prepared operation; and requires a separate yes/no authorization before guarded dispatch.
+
+Any argument-bearing commands below are machine-compatibility and verification evidence for the
+deterministic adapter. Operators and agents must not construct or invoke those forms directly.
+<!-- END SEMANTIC INTAKE ENTRYPOINT -->
+
 Deploy the **taggable-api** ASP.NET app to the Azure Web App **`taggable-api-dev`** (RG `Umbraco`) via
 Kudu zip deploy. Use after merging changes to `main` (or any checkout you want live on dev).
 
@@ -30,7 +48,8 @@ reconstructed commands.
    ```
 2. Run the deploy (publish → zip → zipdeploy → verify), from a taggable-api checkout:
    ```bash
-   PATH="$HOME/.dotnet:$PATH" bash scripts/deploy-api.sh
+   export PATH=$HOME/.dotnet:$PATH
+   bash scripts/deploy-api.sh
    ```
    The script: preflights `az`/dotnet, `dotnet publish -c Release` (net8.0), zips (no pdb), gets Kudu
    publishing creds, POSTs the zip to `/api/zipdeploy`, then verifies.

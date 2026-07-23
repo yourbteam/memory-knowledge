@@ -1,6 +1,8 @@
 from __future__ import annotations
 
+import base64
 import json
+import threading
 import uuid
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
@@ -11,11 +13,317 @@ import pytest
 from scripts import work_memory
 
 
+WRITER_A = "019f75a9-fd91-7650-a43f-d20de5e3ae16"
+WRITER_B = "019ee569-0b44-7292-b806-a19fc34c09a2"
+
+
+@pytest.fixture(autouse=True)
+def isolated_writer_boundary(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_A)
+    monkeypatch.setattr(
+        work_memory, "LEDGER", tmp_path / "work-memory/events.jsonl",
+    )
+    monkeypatch.setattr(
+        work_memory, "BLOCKER_VIEW", tmp_path / "blockers/BLOCKERS.md",
+    )
+    monkeypatch.setattr(work_memory, "RECEIPT_ROOT", tmp_path / "receipts")
+
+
 def event(kind: str, **fields):
     return {
         "schema_version": 1, "event_id": str(uuid.uuid4()), "event_type": kind,
         "recorded_at_utc": fields.pop("recorded_at_utc", "2026-01-01T00:00:00Z"), **fields,
     }
+
+
+def test_resolve_bundle_maps_absolute_executable_to_declared_repository(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    memory_root = tmp_path / "memory-knowledge"
+    external_root = tmp_path / "united-partners"
+    document = memory_root / "operations/sequences/discovery/example.md"
+    manifest = document.with_suffix(".dependencies.json")
+    executable = external_root / "scripts/run_canary.py"
+    executable.parent.mkdir(parents=True)
+    executable.write_text("print('ok')\n")
+    document.parent.mkdir(parents=True)
+    document.write_text(
+        "CreatedAtUtc: 2026-01-01T00:00:00Z\n"
+        "## Intended Outcome\nRun the canary.\n"
+        "## Why This Looks Repeatable\nIt is scripted.\n"
+        "## Required Inputs, Auth, Or Environment\nNone.\n"
+        f"## Commands And Observations\npython3 {executable}\n"
+        "## Failure Handling\nStop.\n"
+        "## Verified Path\nPending.\n"
+        "## Promotion Readiness\nPending.\n"
+    )
+    manifest.write_text(json.dumps({
+        "schema_version": 1,
+        "lineage_id": "discovery-example",
+        "dependencies": [{
+            "kind": "file",
+            "repository_key": "united-partners",
+            "path_or_sequence_id": "scripts/run_canary.py",
+        }],
+    }))
+    monkeypatch.setattr(work_memory, "ROOT", memory_root)
+
+    bundle, _, lineage = work_memory.resolve_bundle(
+        mode="discovery",
+        subject_id="discovery-example",
+        document=document,
+        manifest=manifest,
+        repository_roots={
+            "memory-knowledge": str(memory_root),
+            "united-partners": str(external_root),
+        },
+    )
+
+    assert lineage == "discovery-example"
+    assert any(
+        item["repository_key"] == "united-partners"
+        and item["path"] == "scripts/run_canary.py"
+        for item in bundle
+    )
+
+
+def _resolve_nested_executable_bundle(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, declare_executable: bool,
+):
+    executable_path = "skills/research-playbook/scripts/research_package.py"
+    executable = tmp_path / executable_path
+    executable.parent.mkdir(parents=True)
+    executable.write_text("print('controller')\n", encoding="utf-8")
+    document = tmp_path / "operations/sequences/example/sequence.md"
+    document.parent.mkdir(parents=True)
+    document.write_text(
+        "# example\n\n"
+        f"python3 {executable_path} init state.json --charter charter.json\n",
+        encoding="utf-8",
+    )
+    manifest = document.with_name("dependencies.json")
+    dependencies = []
+    if declare_executable:
+        dependencies.append({
+            "kind": "file",
+            "repository_key": "memory-knowledge",
+            "path_or_sequence_id": executable_path,
+        })
+    manifest.write_text(json.dumps({
+        "schema_version": 1,
+        "lineage_id": "lineage-skill-controller",
+        "dependencies": dependencies,
+    }, sort_keys=True) + "\n", encoding="utf-8")
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    return work_memory.resolve_bundle(
+        mode="registered",
+        subject_id="example",
+        document=document,
+        manifest=manifest,
+        repository_roots={"memory-knowledge": str(tmp_path)},
+    )
+
+
+def test_resolve_bundle_accepts_manifest_covered_nested_executable_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    bundle, _, _ = _resolve_nested_executable_bundle(
+        tmp_path, monkeypatch, declare_executable=True,
+    )
+
+    assert "skills/research-playbook/scripts/research_package.py" in {
+        item["path"] for item in bundle
+    }
+
+
+def test_resolve_bundle_rejects_undeclared_nested_executable_with_full_path(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match=(
+            "executable-outside-manifest::skills/research-playbook/"
+            "scripts/research_package.py"
+        ),
+    ):
+        _resolve_nested_executable_bundle(
+            tmp_path, monkeypatch, declare_executable=False,
+        )
+
+
+def test_resolve_bundle_collapses_identical_parent_child_dependency(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    shared = tmp_path / "scripts/shared.py"
+    shared.parent.mkdir(parents=True)
+    shared.write_text("print('shared')\n", encoding="utf-8")
+    parent = tmp_path / "operations/sequences/parent/sequence.md"
+    child = tmp_path / "operations/sequences/child/sequence.md"
+    parent.parent.mkdir(parents=True)
+    child.parent.mkdir(parents=True)
+    parent.write_text("# Parent\n", encoding="utf-8")
+    child.write_text("# Child\n", encoding="utf-8")
+    shared_dependency = {
+        "kind": "file",
+        "repository_key": "memory-knowledge",
+        "path_or_sequence_id": "scripts/shared.py",
+    }
+    parent.with_name("dependencies.json").write_text(json.dumps({
+        "schema_version": 1,
+        "lineage_id": "parent",
+        "dependencies": [
+            shared_dependency,
+            {
+                "kind": "sequence",
+                "repository_key": "memory-knowledge",
+                "path_or_sequence_id": "child",
+            },
+        ],
+    }), encoding="utf-8")
+    child.with_name("dependencies.json").write_text(json.dumps({
+        "schema_version": 1,
+        "lineage_id": "child",
+        "dependencies": [shared_dependency],
+    }), encoding="utf-8")
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+
+    bundle, _, _ = work_memory.resolve_bundle(
+        mode="registered",
+        subject_id="parent",
+        document=parent,
+        manifest=parent.with_name("dependencies.json"),
+        repository_roots={"memory-knowledge": str(tmp_path)},
+    )
+
+    matches = [
+        item for item in bundle
+        if item["repository_key"] == "memory-knowledge"
+        and item["path"] == "scripts/shared.py"
+    ]
+    assert len(matches) == 1
+
+
+def _observer_context_payload():
+    return {
+        "intended_outcome": "Run a repeatable deployment.",
+        "repeatability_reason": "It recurs across releases.",
+        "repeatability_evidence_ids": ["task-repeatable"],
+        "required_inputs": ["target environment"],
+        "dependencies": [{"repository_key": "memory-knowledge", "path": "scripts/deploy.py"}],
+        "failure_handling": [],
+        "verification_contract": {
+            "quality": "same-path", "expected_outcome": "passed", "success_evidence": "DEPLOY OK",
+        },
+        "effect_class": "external-reversible",
+        "environment_annotations": [],
+        "semantic_flag_annotations": [],
+        "volatility_annotations": [],
+    }
+
+
+def _configure_observer_ledger(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    ledger = tmp_path / "operations/work-memory/events.jsonl"
+    view = tmp_path / "operations/blockers/BLOCKERS.md"
+    registry = tmp_path / "operations/sequences/SEQUENCES.md"
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    monkeypatch.setattr(work_memory, "LEDGER", ledger)
+    monkeypatch.setattr(work_memory, "BLOCKER_VIEW", view)
+    monkeypatch.setattr(work_memory, "REGISTRY", registry)
+    task_id = "observer-task"
+    state = work_memory._claim_task_writer(task_id)
+    run_id = str(uuid.uuid4())
+    start = event(
+        "run_started", run_id=run_id, subject_id="discovery", lineage_id="lineage",
+        mode="discovery", operation_kind="deploy", source_bundle=[],
+        source_bundle_hash="a" * 64, classification_receipt_hash="b" * 64,
+        selection_receipt_hash="c" * 64, started_at_utc="2026-01-01T00:00:00Z",
+        repository_roots={"memory-knowledge": str(tmp_path)},
+        task_id=task_id, **work_memory._ownership_receipt_fields(task_id, state),
+    )
+    work_memory.transact({"schema_version": 1, "expected_ledger_hash": None, "events": [start]})
+    return run_id
+
+
+def test_operation_context_claim_and_return_are_durable_and_idempotent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    run_id = _configure_observer_ledger(tmp_path, monkeypatch)
+    context_file = tmp_path / "context.json"
+    context_file.write_text(json.dumps(_observer_context_payload()), encoding="utf-8")
+    context = work_memory.cmd_record_operation_context(SimpleNamespace(
+        run_id=run_id, context_file=str(context_file),
+    ))
+    roots_hash = work_memory.sha256_bytes(work_memory.canonical_bytes({"memory-knowledge": str(tmp_path)}))
+    claim_args = SimpleNamespace(
+        run_id=run_id, context_id=context["context_id"], step_ordinal=0, step_id="deploy",
+        argv_json=json.dumps(["python3", "scripts/deploy.py"]), command_source="script",
+        source_ref_repository="memory-knowledge", source_ref_path="scripts/deploy.py",
+        repository_roots_hash=roots_hash,
+    )
+    claim = work_memory.cmd_execution_claim(claim_args)
+    returned = work_memory.cmd_execution_return(SimpleNamespace(
+        execution_id=claim["execution_id"], exit_code=0,
+    ))
+
+    monkeypatch.setattr(work_memory, "utc_now", lambda: "2030-01-01T00:00:00Z")
+    assert work_memory.cmd_record_operation_context(SimpleNamespace(
+        run_id=run_id, context_file=str(context_file),
+    ))["already_recorded"] is True
+    assert work_memory.cmd_execution_claim(claim_args)["already_recorded"] is True
+    assert work_memory.cmd_execution_return(SimpleNamespace(
+        execution_id=claim["execution_id"], exit_code=0,
+    ))["already_recorded"] is True
+    events, _ = work_memory.load_ledger()
+    assert [item["event_type"] for item in events[-3:]] == [
+        "operation_context_recorded", "execution_claimed", "execution_returned",
+    ]
+    assert returned["execution_id"] == claim["execution_id"]
+
+
+def test_execution_claim_requires_context_and_exact_root_binding(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    run_id = _configure_observer_ledger(tmp_path, monkeypatch)
+    with pytest.raises(work_memory.WorkMemoryError, match="operation-context-not-found"):
+        work_memory.cmd_execution_claim(SimpleNamespace(
+            run_id=run_id, context_id=str(uuid.uuid4()), step_ordinal=0, step_id="deploy",
+            argv_json='["true"]', command_source="script",
+            source_ref_repository="memory-knowledge", source_ref_path="scripts/deploy.py",
+            repository_roots_hash="f" * 64,
+        ))
+
+
+@pytest.mark.parametrize("secret_argument", [
+    "--password=hunter2",
+    "--api-key=abcdefghijklmnopqrstuvwxyz",
+    base64.urlsafe_b64encode(b"Bearer abcdefghijklmnopqrstuvwxyz").decode(),
+    '{"password":"hunter2"}',
+    '--config={"api_key":"abcdefghijklmnopqrstuvwxyz"}',
+    base64.urlsafe_b64encode(b'{"password":"hunter2"}').decode(),
+])
+def test_execution_claim_rejects_credential_shaped_argv(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, secret_argument: str,
+) -> None:
+    run_id = _configure_observer_ledger(tmp_path, monkeypatch)
+    context_file = tmp_path / "context.json"
+    context_file.write_text(json.dumps(_observer_context_payload()), encoding="utf-8")
+    context = work_memory.cmd_record_operation_context(SimpleNamespace(
+        run_id=run_id, context_file=str(context_file),
+    ))
+    roots_hash = work_memory.sha256_bytes(
+        work_memory.canonical_bytes({"memory-knowledge": str(tmp_path)})
+    )
+
+    with pytest.raises(work_memory.WorkMemoryError, match="prohibited"):
+        work_memory.cmd_execution_claim(SimpleNamespace(
+            run_id=run_id, context_id=context["context_id"], step_ordinal=0,
+            step_id="deploy", argv_json=json.dumps([
+                "python3", "scripts/deploy.py", secret_argument,
+            ]), command_source="script", source_ref_repository="memory-knowledge",
+            source_ref_path="scripts/deploy.py", repository_roots_hash=roots_hash,
+        ))
 
 
 def run_events(index: int, *, result: str = "passed", duration: int = 10, bundle: str = "a" * 64):
@@ -42,9 +350,25 @@ def run_events(index: int, *, result: str = "passed", duration: int = 10, bundle
     return [start, verification, close]
 
 
+def owned_run_events(index: int, task_id: str) -> list[dict[str, object]]:
+    claim = event(
+        "task_writer_claimed", task_id=task_id, writer_thread_id=WRITER_A,
+        ownership_generation=1,
+    )
+    state = {
+        "writer_thread_id": WRITER_A, "ownership_generation": 1,
+        "ownership_event_id": claim["event_id"],
+    }
+    records = run_events(index)
+    records[0].update(
+        task_id=task_id, **work_memory._ownership_receipt_fields(task_id, state),
+    )
+    return [claim, *records]
+
+
 def test_merge_ledger_appends_source_only_events_through_canonical_writer(tmp_path: Path):
-    target_events = run_events(0)
-    source_only = run_events(1)
+    target_events = owned_run_events(0, "merge-target")
+    source_only = owned_run_events(1, "merge-source")
     target = tmp_path / "target.jsonl"
     source = tmp_path / "source.jsonl"
     view = tmp_path / "BLOCKERS.md"
@@ -66,15 +390,26 @@ def test_merge_ledger_appends_source_only_events_through_canonical_writer(tmp_pa
 
 
 def test_merge_ledger_preserves_bounded_legacy_status_from_valid_source(tmp_path: Path):
-    target_events = run_events(0)
+    target_events = owned_run_events(0, "merge-target")
     run_id = str(uuid.uuid4())
     blocker_id = "blk-" + "9" * 24
+    source_claim = event(
+        "task_writer_claimed", task_id="merge-legacy-status",
+        writer_thread_id=WRITER_A, ownership_generation=1,
+    )
+    source_state = {
+        "writer_thread_id": WRITER_A, "ownership_generation": 1,
+        "ownership_event_id": source_claim["event_id"],
+    }
     source_events = [
+        source_claim,
         event(
             "run_started", run_id=run_id, subject_id="legacy", lineage_id="legacy-lineage",
             mode="discovery", operation_kind="other", source_bundle=[],
             source_bundle_hash="9" * 64, classification_receipt_hash="8" * 64,
             selection_receipt_hash="7" * 64, started_at_utc="2026-01-02T00:00:00Z",
+            task_id="merge-legacy-status",
+            **work_memory._ownership_receipt_fields("merge-legacy-status", source_state),
         ),
         event(
             "blocker_opened", run_id=run_id, blocker_id=blocker_id,
@@ -253,17 +588,19 @@ def test_finalize_correction_is_one_atomic_idempotent_transaction(
     assert second["already_recorded"] is True
 
 
-def test_terminal_failed_run_accepts_only_active_superseding_correction(
+def test_sealed_replay_finalizes_an_existing_unfinished_correction(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    """Reproduce the live dead end with the real cmd_correct replay branch."""
     sequence = tmp_path / "operations/sequences/example/sequence.md"
     sequence.parent.mkdir(parents=True)
     sequence.write_text("# example\n")
     artifact = tmp_path / "scripts/fix.py"
     artifact.parent.mkdir()
     artifact.write_text("fixed = True\n")
-    run_id, occurrence_id = str(uuid.uuid4()), str(uuid.uuid4())
-    old_correction_id, new_correction_id = str(uuid.uuid4()), str(uuid.uuid4())
+    run_id = str(uuid.uuid4())
+    occurrence_id = str(uuid.uuid4())
+    correction_id = str(uuid.uuid4())
     blocker_id = "blk-" + "8" * 24
     start = event(
         "run_started", run_id=run_id, subject_id="example", lineage_id="lineage",
@@ -279,9 +616,12 @@ def test_terminal_failed_run_accepts_only_active_superseding_correction(
         "blocker_opened", run_id=run_id, blocker_id=blocker_id,
         occurrence_id=occurrence_id, fingerprint="8" * 64, subject_id="example",
         lineage_id="lineage", step_id="review", surface="lifecycle", symptom="gap",
-        evidence="review", impact="blocked", boundary="controller", status="open",
+        evidence="captured live correction dead end", impact="blocked",
+        boundary="sealed correction replay", status="open",
     )
     current = [start, opened]
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: (current, "a" * 64))
     new_bundle = [
         start["source_bundle"][0],
         {
@@ -289,45 +629,318 @@ def test_terminal_failed_run_accepts_only_active_superseding_correction(
             "sha256": work_memory.sha256_bytes(artifact.read_bytes()),
         },
     ]
-    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
-    monkeypatch.setattr(work_memory, "load_ledger", lambda: (current, "a" * 64))
     monkeypatch.setattr(
-        work_memory, "resolve_bundle", lambda **kwargs: (new_bundle, "d" * 64, "lineage"),
+        work_memory, "resolve_bundle",
+        lambda **kwargs: (new_bundle, "d" * 64, "lineage"),
     )
+    calls = []
 
     def transact(request):
+        calls.append(request)
         raw = b"".join(work_memory.canonical_bytes(item) for item in current)
         ledger, _, result = work_memory.stage_event_batch(raw, request)
         current[:] = work_memory.parse_ledger_bytes(ledger)
         return result
 
     monkeypatch.setattr(work_memory, "transact", transact)
-    base = dict(
+    args = SimpleNamespace(
         run_id=run_id, blocker_id=blocker_id, occurrence_id=occurrence_id,
         step_id="review", changed_artifact=[str(artifact)], solution="stable fix",
-        reusable_behavior_changed="yes", event_id=None, transition_event_id=None,
-        repo_roots_file=None,
+        reusable_behavior_changed="yes", supersedes_correction_id=None,
+        correction_id=correction_id, event_id=None, transition_event_id=None,
+        repo_roots_file=None, finalize_failed_run=False,
     )
-    work_memory.cmd_correct(SimpleNamespace(
-        **base, supersedes_correction_id=None, correction_id=old_correction_id,
-        finalize_failed_run=True,
-    ))
 
-    artifact.write_text("fixed = 'new evidence'\n")
-    new_bundle[1]["sha256"] = work_memory.sha256_bytes(artifact.read_bytes())
-    result = work_memory.cmd_correct(SimpleNamespace(
-        **base, supersedes_correction_id=[old_correction_id],
-        correction_id=new_correction_id, finalize_failed_run=False,
-    ))
+    recorded = work_memory.cmd_correct(args)
+    assert [item["event_type"] for item in calls[0]["events"]] == [
+        "correction_recorded", "bundle_transition_recorded",
+    ]
 
-    assert result["correction_id"] == new_correction_id
-    replacement = next(
-        item for item in current
-        if item.get("event_type") == "correction_recorded"
-        and item.get("correction_id") == new_correction_id
+    args.finalize_failed_run = True
+    args.solution = "altered fix"
+    with pytest.raises(work_memory.WorkMemoryError, match="correction-id-conflict"):
+        work_memory.cmd_correct(args)
+    args.solution = "stable fix"
+
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle",
+        lambda **kwargs: (new_bundle, "e" * 64, "lineage"),
     )
-    assert replacement["supersedes_correction_id"] == old_correction_id
-    assert work_memory._active_correction_ids(current, blocker_id) == {new_correction_id}
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="existing-correction-bundle-mismatch",
+    ):
+        work_memory.cmd_correct(args)
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle",
+        lambda **kwargs: (new_bundle, "d" * 64, "lineage"),
+    )
+
+    partial = event(
+        "blocker_transitioned", run_id=run_id, blocker_id=blocker_id,
+        from_status="open", to_status="fixed-awaiting-verification",
+    )
+    current.append(partial)
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match="existing-correction-finalization-conflict",
+    ):
+        work_memory.cmd_correct(args)
+    current.pop()
+
+    finalized = work_memory.cmd_correct(args)
+    replayed = work_memory.cmd_correct(args)
+
+    assert recorded["correction_id"] == finalized["correction_id"] == correction_id
+    assert [item["event_type"] for item in calls[1]["events"]] == [
+        "blocker_transitioned", "run_closed",
+    ]
+    assert len(calls) == 2
+    assert replayed["already_recorded"] is True
+    assert sum(item["event_type"] == "correction_recorded" for item in current) == 1
+    assert sum(item["event_type"] == "bundle_transition_recorded" for item in current) == 1
+    assert sum(item["event_type"] == "blocker_transitioned" for item in current) == 1
+    assert sum(item["event_type"] == "run_closed" for item in current) == 1
+
+
+def _co_correction_flow(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, *, recovered_co: bool = False,
+):
+    sequence = tmp_path / "operations/sequences/example/sequence.md"
+    sequence.parent.mkdir(parents=True)
+    sequence.write_text("# example\n")
+    artifact = tmp_path / "scripts/fix.py"
+    artifact.parent.mkdir()
+    artifact.write_text("fixed = True\n")
+    run_id = str(uuid.uuid4())
+    primary_id = "blk-" + "1" * 24
+    co_id = "blk-" + "2" * 24
+    primary_occurrence = str(uuid.uuid4())
+    co_occurrence = str(uuid.uuid4())
+    start = event(
+        "run_started", run_id=run_id, subject_id="example", lineage_id="lineage",
+        mode="registered", operation_kind="workflow-drive",
+        source_bundle=[{
+            "repository_key": "memory-knowledge",
+            "path": "operations/sequences/example/sequence.md", "sha256": "a" * 64,
+        }], source_bundle_hash="a" * 64,
+        classification_receipt_hash="b" * 64, selection_receipt_hash="c" * 64,
+        started_at_utc="2026-01-01T00:00:00Z",
+    )
+    primary = event(
+        "blocker_opened", run_id=run_id, blocker_id=primary_id,
+        occurrence_id=primary_occurrence, fingerprint="1" * 64,
+        subject_id="example", lineage_id="lineage", step_id="primary-step",
+        surface="lifecycle", symptom="primary gap", evidence="review",
+        impact="blocked", boundary="controller", status="open",
+    )
+    co_run_id = str(uuid.uuid4()) if recovered_co else run_id
+    co = event(
+        "blocker_opened", run_id=co_run_id, blocker_id=co_id,
+        occurrence_id=co_occurrence, fingerprint="2" * 64,
+        subject_id="example", lineage_id="lineage", step_id="co-step",
+        surface="lifecycle", symptom="co gap", evidence="review",
+        impact="blocked", boundary="controller", status="open",
+    )
+    if recovered_co:
+        co_start = event(
+            "run_started", run_id=co_run_id, subject_id="example", lineage_id="lineage",
+            mode="registered", operation_kind="workflow-drive", source_bundle=[],
+            source_bundle_hash="0" * 64, classification_receipt_hash="1" * 64,
+            selection_receipt_hash="2" * 64, started_at_utc="2025-12-31T23:58:00Z",
+        )
+        co_close = event(
+            "run_closed", run_id=co_run_id, subject_id="example", lineage_id="lineage",
+            result="failed", completed_at_utc="2025-12-31T23:59:00Z",
+            correction_count=0, blocker_ids=[co_id], sequence_updated=False,
+            verification_quality="none",
+        )
+        recovered = event(
+            "blocker_transitioned", run_id=run_id, blocker_id=co_id,
+            from_status="open", to_status="open",
+            recovery_evidence="carry the co-blocker to the active run",
+        )
+        current = [co_start, co, co_close, start, primary, recovered]
+    else:
+        current = [start, primary, co]
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: (current, "a" * 64))
+    new_bundle = [
+        start["source_bundle"][0],
+        {
+            "repository_key": "memory-knowledge", "path": "scripts/fix.py",
+            "sha256": work_memory.sha256_bytes(artifact.read_bytes()),
+        },
+    ]
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle",
+        lambda **kwargs: (new_bundle, "d" * 64, "lineage"),
+    )
+    calls = []
+
+    def transact(request):
+        calls.append(request)
+        raw = b"".join(work_memory.canonical_bytes(item) for item in current)
+        ledger, _, result = work_memory.stage_event_batch(raw, request)
+        current[:] = work_memory.parse_ledger_bytes(ledger)
+        return result
+
+    monkeypatch.setattr(work_memory, "transact", transact)
+    correction_id = str(uuid.uuid4())
+    args = SimpleNamespace(
+        run_id=run_id, blocker_id=primary_id, occurrence_id=primary_occurrence,
+        co_blocker_id=[co_id], step_id="primary-step",
+        changed_artifact=[str(artifact)], solution="one fix closes both defects",
+        reusable_behavior_changed="yes", supersedes_correction_id=None,
+        correction_id=correction_id, event_id=None, transition_event_id=None,
+        repo_roots_file=None, finalize_failed_run=True,
+    )
+    return current, calls, args, co_id, co_occurrence, correction_id
+
+
+def test_finalize_correction_atomically_records_explicit_co_blocker_and_is_idempotent(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    current, calls, args, co_id, co_occurrence, correction_id = _co_correction_flow(
+        tmp_path, monkeypatch,
+    )
+
+    first = work_memory.cmd_correct(args)
+    second = work_memory.cmd_correct(args)
+
+    derived = str(uuid.uuid5(uuid.UUID(correction_id), co_id))
+    assert [item["event_type"] for item in calls[0]["events"]] == [
+        "correction_recorded", "correction_recorded", "bundle_transition_recorded",
+        "blocker_transitioned", "blocker_transitioned", "run_closed",
+    ]
+    co_correction = calls[0]["events"][1]
+    assert co_correction["correction_id"] == derived
+    assert co_correction["primary_correction_id"] == correction_id
+    assert co_correction["blocker_id"] == co_id
+    assert co_correction["occurrence_id"] == co_occurrence
+    assert co_correction["step_id"] == "co-step"
+    assert calls[0]["events"][2]["correction_ids"] == [correction_id, derived]
+    assert calls[0]["events"][-1]["correction_count"] == 2
+    assert len(calls) == 1
+    assert first["co_correction_ids"] == second["co_correction_ids"] == [derived]
+    assert second["already_recorded"] is True
+    assert current[-1]["event_type"] == "run_closed"
+
+
+def test_co_correction_explicitly_supersedes_prior_attempt_for_same_blocker(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    current, calls, args, co_id, co_occurrence, correction_id = _co_correction_flow(
+        tmp_path, monkeypatch,
+    )
+    prior_correction_id = str(uuid.uuid4())
+    current.append(event(
+        "correction_recorded", run_id=args.run_id, blocker_id=co_id,
+        occurrence_id=co_occurrence, correction_id=prior_correction_id,
+        subject_id="example", lineage_id="lineage", step_id="co-step",
+        changed_artifacts=["scripts/old-fix.py"],
+        changed_artifact_hashes=["e" * 64], reusable_behavior_changed=True,
+        solution="earlier incomplete attempt",
+    ))
+    args.co_supersedes_correction_id = [prior_correction_id]
+
+    first = work_memory.cmd_correct(args)
+    second = work_memory.cmd_correct(args)
+
+    derived = str(uuid.uuid5(uuid.UUID(correction_id), co_id))
+    co_correction = calls[0]["events"][1]
+    assert co_correction["correction_id"] == derived
+    assert co_correction["supersedes_correction_id"] == prior_correction_id
+    assert first["co_correction_ids"] == second["co_correction_ids"] == [derived]
+    assert second["already_recorded"] is True
+
+    superseded = {
+        correction_id
+        for item in current
+        if item["event_type"] == "correction_recorded"
+        for correction_id in work_memory._superseded_correction_ids(item)
+    }
+    active = {
+        item["correction_id"]
+        for item in current
+        if item["event_type"] == "correction_recorded"
+        and item["blocker_id"] == co_id
+        and item["correction_id"] not in superseded
+    }
+    assert active == {derived}
+
+
+def test_finalize_correction_accepts_co_blocker_recovered_to_primary_run(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    current, calls, args, co_id, co_occurrence, _ = _co_correction_flow(
+        tmp_path, monkeypatch, recovered_co=True,
+    )
+
+    result = work_memory.cmd_correct(args)
+
+    co_correction = next(
+        item for item in calls[0]["events"]
+        if item["event_type"] == "correction_recorded" and item["blocker_id"] == co_id
+    )
+    assert co_correction["occurrence_id"] == co_occurrence
+    assert result["co_correction_ids"] == [co_correction["correction_id"]]
+    assert current[-1]["event_type"] == "run_closed"
+
+
+def test_finalize_correction_omitted_co_blocker_rejects_run_close_atomically(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    current, _, args, _, _, _ = _co_correction_flow(tmp_path, monkeypatch)
+    before = list(current)
+    args.co_blocker_id = []
+
+    with pytest.raises(work_memory.WorkMemoryError, match="terminal-run-has-open-blockers"):
+        work_memory.cmd_correct(args)
+
+    assert current == before
+
+
+@pytest.mark.parametrize(
+    ("case", "error"),
+    [
+        ("unknown", "unknown-co-blocker"),
+        ("different-run", "co-blocker-different-run"),
+        ("different-task", "co-blocker-different-task"),
+        ("non-open", "co-blocker-not-open"),
+        ("duplicate", "duplicate-co-blocker"),
+        ("primary-duplicate", "duplicate-co-blocker"),
+    ],
+)
+def test_explicit_co_blocker_contract_rejects_invalid_binding(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, case: str, error: str,
+) -> None:
+    current, _, args, co_id, _, _ = _co_correction_flow(tmp_path, monkeypatch)
+    if case == "unknown":
+        args.co_blocker_id = ["blk-" + "9" * 24]
+    elif case in {"different-run", "different-task"}:
+        other_run = str(uuid.uuid4())
+        if case == "different-task":
+            current[0]["task_id"] = "task-a"
+        current.append(event(
+            "run_started", run_id=other_run, subject_id="example", lineage_id="lineage",
+            mode="registered", operation_kind="workflow-drive", source_bundle=[],
+            source_bundle_hash="3" * 64, classification_receipt_hash="4" * 64,
+            selection_receipt_hash="5" * 64, started_at_utc="2026-01-01T00:01:00Z",
+            **({"task_id": "task-b"} if case == "different-task" else {}),
+        ))
+        current[2]["run_id"] = other_run
+    elif case == "non-open":
+        current.append(event(
+            "blocker_transitioned", run_id=args.run_id, blocker_id=co_id,
+            from_status="open", to_status="non-gap", non_gap_evidence="not a defect",
+        ))
+    elif case == "duplicate":
+        args.co_blocker_id = [co_id, co_id]
+    else:
+        args.co_blocker_id = [args.blocker_id]
+
+    with pytest.raises(work_memory.WorkMemoryError, match=error):
+        work_memory.cmd_correct(args)
 
 
 def test_discovery_correction_selects_subject_document_after_registered_dependency(
@@ -665,6 +1278,89 @@ def test_fixed_transition_requires_correction_for_current_occurrence():
     with pytest.raises(work_memory.WorkMemoryError, match="blocker-correction-required"):
         work_memory.stage_event_batch(
             b"", {"schema_version": 1, "expected_ledger_hash": None, "events": events}
+        )
+
+
+def test_open_blocker_recovery_rebinds_terminal_occurrence_to_active_same_lineage_run():
+    old_run_id, recovery_run_id = str(uuid.uuid4()), str(uuid.uuid4())
+    blocker_id = "blk-" + "1" * 24
+    occurrence_id = str(uuid.uuid4())
+    legacy = [
+        event(
+            "run_started", run_id=old_run_id, subject_id="sequence", lineage_id="lineage",
+            mode="discovery", operation_kind="workflow-drive", source_bundle=[],
+            source_bundle_hash="a" * 64, classification_receipt_hash="1" * 64,
+            selection_receipt_hash="2" * 64, started_at_utc="2026-01-01T00:00:00Z",
+        ),
+        event(
+            "blocker_opened", run_id=old_run_id, blocker_id=blocker_id,
+            occurrence_id=occurrence_id, fingerprint="f" * 64, subject_id="sequence",
+            lineage_id="lineage", step_id="verify", surface="ledger", symptom="blocked",
+            evidence="confirmed", impact="cannot continue", boundary="event lifecycle", status="open",
+        ),
+        event(
+            "run_closed", run_id=old_run_id, subject_id="sequence", lineage_id="lineage",
+            result="failed", completed_at_utc="2026-01-01T00:01:00Z", correction_count=0,
+            blocker_ids=[blocker_id], sequence_updated=False, verification_quality="none",
+        ),
+    ]
+    additions = [
+        event(
+            "run_started", run_id=recovery_run_id, subject_id="sequence", lineage_id="lineage",
+            mode="discovery", operation_kind="workflow-drive", source_bundle=[],
+            source_bundle_hash="a" * 64, classification_receipt_hash="3" * 64,
+            selection_receipt_hash="4" * 64, started_at_utc="2026-01-01T00:02:00Z",
+        ),
+        event(
+            "blocker_transitioned", run_id=recovery_run_id, blocker_id=blocker_id,
+            from_status="open", to_status="open",
+            recovery_evidence="carry the unchanged occurrence to the active same-lineage run",
+        ),
+        event(
+            "correction_recorded", run_id=recovery_run_id, blocker_id=blocker_id,
+            occurrence_id=occurrence_id, correction_id=str(uuid.uuid4()),
+            subject_id="sequence", lineage_id="lineage", step_id="verify",
+            changed_artifacts=["scripts/verify.py"], changed_artifact_hashes=["e" * 64],
+            reusable_behavior_changed=True, solution="repair the stable boundary",
+        ),
+    ]
+
+    legacy_bytes = b"".join(work_memory.canonical_bytes(item) for item in legacy)
+    ledger, _, _ = work_memory.stage_event_batch(
+        legacy_bytes,
+        {"schema_version": 1, "expected_ledger_hash": None, "events": additions},
+    )
+
+    parsed = work_memory.parse_ledger_bytes(ledger)
+    assert parsed[-2]["from_status"] == parsed[-2]["to_status"] == "open"
+    assert parsed[-1]["occurrence_id"] == occurrence_id
+
+
+def test_open_blocker_recovery_rejects_same_run_open_to_open_transition():
+    run_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "1" * 24
+    events = [
+        event(
+            "run_started", run_id=run_id, subject_id="sequence", lineage_id="lineage",
+            mode="discovery", operation_kind="workflow-drive", source_bundle=[],
+            source_bundle_hash="a" * 64, classification_receipt_hash="1" * 64,
+            selection_receipt_hash="2" * 64, started_at_utc="2026-01-01T00:00:00Z",
+        ),
+        event(
+            "blocker_opened", run_id=run_id, blocker_id=blocker_id,
+            occurrence_id=str(uuid.uuid4()), fingerprint="f" * 64, subject_id="sequence",
+            lineage_id="lineage", step_id="verify", surface="ledger", symptom="blocked",
+            evidence="confirmed", impact="cannot continue", boundary="event lifecycle", status="open",
+        ),
+        event(
+            "blocker_transitioned", run_id=run_id, blocker_id=blocker_id,
+            from_status="open", to_status="open", recovery_evidence="same run is not recovery",
+        ),
+    ]
+
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-open-blocker-recovery"):
+        work_memory.stage_event_batch(
+            b"", {"schema_version": 1, "expected_ledger_hash": None, "events": events},
         )
 
 
@@ -1016,13 +1712,159 @@ def test_work_only_event_validator_rejects_secret_and_personal_text(value):
         )
 
 
+def _large_source_bundle(size: int) -> list[dict[str, str]]:
+    return [
+        {
+            "repository_key": "memory-knowledge",
+            "path": f"scripts/generated-{index:04d}.py",
+            "sha256": f"{index:064x}",
+        }
+        for index in range(size)
+    ]
+
+
+def test_run_started_accepts_authenticated_source_bundle_above_generic_array_limit():
+    start = run_events(0)[0]
+    start["source_bundle"] = _large_source_bundle(101)
+    start["source_bundle_hash"] = work_memory.sha256_bytes(
+        work_memory.canonical_bytes(start["source_bundle"])
+    )
+
+    work_memory._validate_event_shape(start)
+    assert work_memory.parse_ledger_bytes(
+        work_memory.canonical_bytes(start) + b"\n"
+    ) == [start]
+
+
+def test_run_started_rejects_source_bundle_above_its_explicit_limit():
+    start = run_events(0)[0]
+    start["source_bundle"] = _large_source_bundle(
+        work_memory.SOURCE_BUNDLE_MAX_ITEMS + 1
+    )
+
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match=r"work-memory-array-too-large:\$\.source_bundle",
+    ):
+        work_memory._validate_event_shape(start)
+
+
+def test_work_only_validator_keeps_generic_array_limit():
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match=r"work-memory-array-too-large:\$\.items",
+    ):
+        work_memory._validate_work_only(
+            {"items": list(range(work_memory.WORK_MEMORY_ARRAY_MAX_ITEMS + 1))}
+        )
+
+
+def _observer_decision(evidence_count: int) -> dict:
+    return event(
+        "observer_decision_recorded",
+        decision_id=str(uuid.uuid4()), observer_version=1, rule_version=1,
+        config_hash="1" * 64, trigger_event_id=str(uuid.uuid4()),
+        trigger_type="run_closed", ledger_snapshot_hash="2" * 64,
+        evidence_event_ids=[str(uuid.uuid4()) for _ in range(evidence_count)],
+        evidence_set_hash="3" * 64, candidate_identity=None,
+        candidate_fingerprint=None,
+        eligibility={"version": 1, "eligible": False, "triggers": [], "reasons": []},
+        value_components=[], threshold=20, considered_registered_ids=[],
+        considered_discovery_ids=[], disposition="NO_CANDIDATE",
+        target_kind=None, target_id=None,
+        suppression={
+            "rule_version": 1, "suppressed": False, "reason": None,
+            "expires_at_utc": None,
+        },
+        cap_cursor=None, safe_failure_code="CAP_REACHED",
+    )
+
+
+def test_observer_decision_evidence_uses_explicit_bounded_limit():
+    work_memory._validate_event_shape(_observer_decision(512))
+
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match=r"work-memory-array-too-large:\$\.evidence_event_ids",
+    ):
+        work_memory._validate_event_shape(_observer_decision(513))
+
+
+@pytest.mark.parametrize("bundle,error", [
+    ([{"repository_key": "memory-knowledge", "path": "scripts/a.py"}],
+     "invalid-source-bundle-entry"),
+    (_large_source_bundle(1) * 2, "duplicate-source-bundle-entry"),
+])
+def test_run_started_rejects_invalid_source_bundle_entries(bundle, error):
+    start = run_events(0)[0]
+    start["source_bundle"] = bundle
+
+    with pytest.raises(work_memory.WorkMemoryError, match=error):
+        work_memory._validate_event_shape(start)
+
+
 def test_transact_commits_ledger_and_generated_view(tmp_path: Path):
     ledger, view = tmp_path / "events.jsonl", tmp_path / "BLOCKERS.md"
+    work_memory.LEDGER = ledger
+    work_memory.BLOCKER_VIEW = view
+    task_id = "transact-task"
+    state = work_memory._claim_task_writer(task_id)
+    records = run_events(0)
+    records[0].update(
+        task_id=task_id,
+        **work_memory._ownership_receipt_fields(task_id, state),
+    )
     result = work_memory.transact(
-        {"schema_version": 1, "expected_ledger_hash": None, "events": run_events(0)}, ledger, view
+        {"schema_version": 1, "expected_ledger_hash": None, "events": records}, ledger, view
     )
     assert result["ledger_hash"] == work_memory.sha256_bytes(ledger.read_bytes())
     assert f"Ledger-SHA256: `{result['ledger_hash']}`" in view.read_text()
+
+
+def test_custom_ledger_cannot_default_to_the_canonical_blocker_view(tmp_path: Path):
+    custom_ledger = tmp_path / "custom-events.jsonl"
+    canonical_before = (
+        work_memory.BLOCKER_VIEW.read_bytes()
+        if work_memory.BLOCKER_VIEW.is_file() else None
+    )
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="ledger-view-authority-mismatch",
+    ):
+        work_memory.transact(
+            {"schema_version": 1, "expected_ledger_hash": None, "events": []},
+            ledger=custom_ledger,
+        )
+    assert not custom_ledger.exists()
+    assert (
+        work_memory.BLOCKER_VIEW.read_bytes()
+        if work_memory.BLOCKER_VIEW.is_file() else None
+    ) == canonical_before
+
+
+def test_merge_and_repair_require_an_explicit_custom_ledger_view_pair(tmp_path: Path):
+    source = tmp_path / "source.jsonl"
+    source.write_bytes(b"")
+    custom_ledger = tmp_path / "custom-events.jsonl"
+    canonical_before = (
+        work_memory.BLOCKER_VIEW.read_bytes()
+        if work_memory.BLOCKER_VIEW.is_file() else None
+    )
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="ledger-view-authority-mismatch",
+    ):
+        work_memory.cmd_merge_ledger(SimpleNamespace(
+            source_ledger=str(source), ledger=str(custom_ledger), view=None,
+        ))
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="ledger-view-authority-mismatch",
+    ):
+        work_memory.cmd_repair_view(SimpleNamespace(
+            ledger=str(custom_ledger), view=None,
+        ))
+    assert (
+        work_memory.BLOCKER_VIEW.read_bytes()
+        if work_memory.BLOCKER_VIEW.is_file() else None
+    ) == canonical_before
 
 
 def test_malformed_ledger_reports_line_number():
@@ -1082,6 +1924,930 @@ def test_change_effect_keeps_operation_kinds_isolated():
     assert effect["comparison"]["after"]["closed_runs"] == 3
 
 
+def _owned_run_start(task_id: str, state: dict[str, object]) -> dict[str, object]:
+    return event(
+        "run_started", run_id=str(uuid.uuid4()), subject_id="sequence",
+        lineage_id="lineage", mode="discovery", operation_kind="other",
+        source_bundle=[], source_bundle_hash="a" * 64,
+        classification_receipt_hash="b" * 64,
+        selection_receipt_hash="c" * 64,
+        started_at_utc="2026-01-01T00:00:00Z",
+        task_id=task_id,
+        **work_memory._ownership_receipt_fields(task_id, state),
+    )
+
+
+def test_pre_run_blocker_open_is_bound_to_current_task_writer_ownership(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    task_id = "selection-blocked-task"
+    state = work_memory._claim_task_writer(task_id)
+    opened = event(
+        "pre_run_blocker_opened", task_id=task_id,
+        ownership_event_id=state["ownership_event_id"],
+        blocker_id="blk-" + "1" * 24, occurrence_id=str(uuid.uuid4()),
+        fingerprint="2" * 64, subject_id=task_id, lineage_id=task_id,
+        step_id="select", surface="registry", symptom="selection blocked",
+        evidence="source hash drift", impact="no run can start",
+        boundary="owner source binding", status="open",
+    )
+
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [opened],
+    })
+    assert work_memory.parse_ledger_bytes(work_memory.LEDGER.read_bytes())[-1] == opened
+
+    other_task = "different-task"
+    other_state = work_memory._claim_task_writer(other_task)
+    rejected = {
+        **opened, "event_id": str(uuid.uuid4()), "blocker_id": "blk-" + "3" * 24,
+        "occurrence_id": str(uuid.uuid4()), "ownership_event_id": other_state["ownership_event_id"],
+    }
+    with pytest.raises(work_memory.WorkMemoryError, match="pre-run-blocker-ownership-mismatch"):
+        work_memory.transact({
+            "schema_version": 1, "expected_ledger_hash": None, "events": [rejected],
+        })
+
+
+def test_pre_run_blocker_lifecycle_requires_bound_correction_and_same_command_verification():
+    task_id = "selection-blocked-task"
+    ownership_event_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "4" * 24
+    occurrence_id = str(uuid.uuid4())
+    correction_id = str(uuid.uuid4())
+    opened = event(
+        "pre_run_blocker_opened", task_id=task_id,
+        ownership_event_id=ownership_event_id, blocker_id=blocker_id,
+        occurrence_id=occurrence_id, fingerprint="5" * 64,
+        subject_id=task_id, lineage_id=task_id, step_id="select",
+        surface="registry", symptom="selection blocked", evidence="hash drift",
+        impact="no run", boundary="owner source binding", status="open",
+    )
+    correction = event(
+        "pre_run_correction_recorded", task_id=task_id,
+        ownership_event_id=ownership_event_id, blocker_id=blocker_id,
+        occurrence_id=occurrence_id, correction_id=correction_id,
+        step_id="select", changed_artifacts=["scripts/work_memory.py"],
+        changed_artifact_hashes=["6" * 64], solution="refresh owner binding",
+        reusable_behavior_changed=True,
+    )
+    fixed = event(
+        "pre_run_blocker_transitioned", task_id=task_id,
+        ownership_event_id=ownership_event_id, blocker_id=blocker_id,
+        occurrence_id=occurrence_id, from_status="open",
+        to_status="fixed-awaiting-verification",
+    )
+    verification = event(
+        "pre_run_verification_recorded", task_id=task_id,
+        ownership_event_id=ownership_event_id, blocker_id=blocker_id,
+        occurrence_id=occurrence_id, correction_id=correction_id,
+        verification_command="python3 scripts/work_memory.py select --task-id selection-blocked-task",
+        outcome="passed", quality="same-command",
+        evidence="original drift cleared; selector reached ordinary ambiguity",
+        changed_artifact_hashes=["6" * 64],
+    )
+    verified = event(
+        "pre_run_blocker_transitioned", task_id=task_id,
+        ownership_event_id=ownership_event_id, blocker_id=blocker_id,
+        occurrence_id=occurrence_id, from_status="fixed-awaiting-verification",
+        to_status="verified", verification_event_id=verification["event_id"],
+    )
+    closed = event(
+        "pre_run_blocker_transitioned", task_id=task_id,
+        ownership_event_id=ownership_event_id, blocker_id=blocker_id,
+        occurrence_id=occurrence_id, from_status="verified", to_status="closed",
+        verification_event_id=verification["event_id"], remaining_work="none",
+    )
+
+    work_memory.validate_lifecycle([opened, correction, fixed, verification, verified, closed])
+
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-pre-run-transition-verification"):
+        work_memory.validate_lifecycle([opened, correction, fixed, verified])
+
+
+def test_pre_run_blocker_lifecycle_transacts_under_task_ownership():
+    task_id = "selection-blocked-task"
+    state = work_memory._claim_task_writer(task_id)
+    blocker_id = "blk-" + "7" * 24
+    occurrence_id = str(uuid.uuid4())
+    correction_id = str(uuid.uuid4())
+    opened = event(
+        "pre_run_blocker_opened", task_id=task_id,
+        ownership_event_id=state["ownership_event_id"], blocker_id=blocker_id,
+        occurrence_id=occurrence_id, fingerprint="8" * 64,
+        subject_id=task_id, lineage_id=task_id, step_id="select",
+        surface="registry", symptom="selection blocked", evidence="hash drift",
+        impact="no run", boundary="owner source binding", status="open",
+    )
+    work_memory.transact({"schema_version": 1, "expected_ledger_hash": None, "events": [opened]})
+    correction = event(
+        "pre_run_correction_recorded", task_id=task_id,
+        ownership_event_id=state["ownership_event_id"], blocker_id=blocker_id,
+        occurrence_id=occurrence_id, correction_id=correction_id, step_id="select",
+        changed_artifacts=["scripts/work_memory.py"],
+        changed_artifact_hashes=["9" * 64], solution="refresh owner binding",
+        reusable_behavior_changed=True,
+    )
+    fixed = event(
+        "pre_run_blocker_transitioned", task_id=task_id,
+        ownership_event_id=state["ownership_event_id"], blocker_id=blocker_id,
+        occurrence_id=occurrence_id, from_status="open",
+        to_status="fixed-awaiting-verification",
+    )
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None,
+        "events": [correction, fixed],
+    })
+    verification = event(
+        "pre_run_verification_recorded", task_id=task_id,
+        ownership_event_id=state["ownership_event_id"], blocker_id=blocker_id,
+        occurrence_id=occurrence_id, correction_id=correction_id,
+        verification_command="python3 scripts/work_memory.py select --task-id selection-blocked-task",
+        outcome="passed", quality="same-command", evidence="original drift cleared",
+        changed_artifact_hashes=["9" * 64],
+    )
+    verified = event(
+        "pre_run_blocker_transitioned", task_id=task_id,
+        ownership_event_id=state["ownership_event_id"], blocker_id=blocker_id,
+        occurrence_id=occurrence_id, from_status="fixed-awaiting-verification",
+        to_status="verified", verification_event_id=verification["event_id"],
+    )
+    closed = event(
+        "pre_run_blocker_transitioned", task_id=task_id,
+        ownership_event_id=state["ownership_event_id"], blocker_id=blocker_id,
+        occurrence_id=occurrence_id, from_status="verified", to_status="closed",
+        verification_event_id=verification["event_id"], remaining_work="none",
+    )
+    work_memory.transact({"schema_version": 1, "expected_ledger_hash": None, "events": [verification]})
+    work_memory.transact({"schema_version": 1, "expected_ledger_hash": None, "events": [verified]})
+    work_memory.transact({"schema_version": 1, "expected_ledger_hash": None, "events": [closed]})
+
+    assert f"## {blocker_id}" in work_memory.BLOCKER_VIEW.read_text()
+    assert "- Status: `closed`" in work_memory.BLOCKER_VIEW.read_text()
+
+
+def test_same_writer_mutates_owned_run_and_other_writer_cannot(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    state = work_memory._claim_task_writer("owned-task")
+    start = _owned_run_start("owned-task", state)
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [start],
+    })
+    before = work_memory.LEDGER.read_bytes()
+    terminal = event(
+        "run_abandoned", run_id=start["run_id"], subject_id="sequence",
+        lineage_id="lineage", completed_at_utc="2026-01-01T00:01:00Z",
+        reason="bounded stop",
+    )
+
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_B)
+    with pytest.raises(work_memory.WorkMemoryError, match="task-writer-not-owner"):
+        work_memory.transact({
+            "schema_version": 1, "expected_ledger_hash": None, "events": [terminal],
+        })
+    assert work_memory.LEDGER.read_bytes() == before
+
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_A)
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [terminal],
+    })
+    assert work_memory.parse_ledger_bytes(work_memory.LEDGER.read_bytes())[-1] == terminal
+
+
+def test_foreign_task_cannot_mutate_an_existing_blocker_lineage(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    state_a = work_memory._claim_task_writer("blocker-task-a")
+    start_a = _owned_run_start("blocker-task-a", state_a)
+    blocker_id = "blk-" + "1" * 24
+    occurrence_id = str(uuid.uuid4())
+    opened = event(
+        "blocker_opened", run_id=start_a["run_id"], blocker_id=blocker_id,
+        occurrence_id=occurrence_id, fingerprint="d" * 64,
+        subject_id="sequence", lineage_id="lineage", step_id="owned-step",
+        surface="work-memory", symptom="shared mutation", evidence="captured",
+        impact="wrong task can change blocker", boundary="writer ownership",
+        status="open",
+    )
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None,
+        "events": [start_a, opened],
+    })
+
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_B)
+    state_b = work_memory._claim_task_writer("blocker-task-b")
+    start_b = _owned_run_start("blocker-task-b", state_b)
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [start_b],
+    })
+    before = work_memory.LEDGER.read_bytes()
+    correction = event(
+        "correction_recorded", run_id=start_b["run_id"], blocker_id=blocker_id,
+        occurrence_id=occurrence_id, correction_id=str(uuid.uuid4()),
+        subject_id="sequence", lineage_id="lineage", step_id="owned-step",
+        changed_artifacts=["scripts/work_memory.py"],
+        changed_artifact_hashes=["e" * 64], reusable_behavior_changed=True,
+        solution="foreign mutation must be rejected",
+    )
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="cross-task-blocker-mutation",
+    ):
+        work_memory.transact({
+            "schema_version": 1, "expected_ledger_hash": None,
+            "events": [correction],
+        })
+    assert work_memory.LEDGER.read_bytes() == before
+
+
+def test_owned_recovery_adopts_matching_legacy_open_blocker(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    legacy_run_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "1" * 24
+    occurrence_id = str(uuid.uuid4())
+    legacy = [
+        event(
+            "run_started", run_id=legacy_run_id, subject_id="sequence", lineage_id="lineage",
+            mode="discovery", operation_kind="workflow-drive", source_bundle=[],
+            source_bundle_hash="a" * 64, classification_receipt_hash="1" * 64,
+            selection_receipt_hash="2" * 64, started_at_utc="2026-01-01T00:00:00Z",
+        ),
+        event(
+            "blocker_opened", run_id=legacy_run_id, blocker_id=blocker_id,
+            occurrence_id=occurrence_id, fingerprint="f" * 64, subject_id="sequence",
+            lineage_id="lineage", step_id="verify", surface="ledger", symptom="blocked",
+            evidence="confirmed", impact="cannot continue", boundary="event lifecycle", status="open",
+        ),
+        event(
+            "run_closed", run_id=legacy_run_id, subject_id="sequence", lineage_id="lineage",
+            result="failed", completed_at_utc="2026-01-01T00:01:00Z", correction_count=0,
+            blocker_ids=[blocker_id], sequence_updated=False, verification_quality="none",
+        ),
+    ]
+    work_memory.LEDGER.parent.mkdir(parents=True, exist_ok=True)
+    work_memory.LEDGER.write_bytes(
+        b"".join(work_memory.canonical_bytes(item) for item in legacy)
+    )
+    state = work_memory._claim_task_writer("recovery-task")
+    recovery_start = _owned_run_start("recovery-task", state)
+    recovery_start["subject_id"] = "sequence"
+    recovery_start["lineage_id"] = "lineage"
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [recovery_start],
+    })
+    recovery = event(
+        "blocker_transitioned", run_id=recovery_start["run_id"], blocker_id=blocker_id,
+        from_status="open", to_status="open",
+        recovery_evidence="adopt the legacy blocker into its matching active task",
+    )
+
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [recovery],
+    })
+    correction = event(
+        "correction_recorded", run_id=recovery_start["run_id"], blocker_id=blocker_id,
+        occurrence_id=occurrence_id, correction_id=str(uuid.uuid4()),
+        subject_id="sequence", lineage_id="lineage", step_id="verify",
+        changed_artifacts=["scripts/work_memory.py"], changed_artifact_hashes=["e" * 64],
+        reusable_behavior_changed=True, solution="repair the stable boundary",
+    )
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [correction],
+    })
+
+    assert work_memory.parse_ledger_bytes(work_memory.LEDGER.read_bytes())[-2:] == [
+        recovery, correction,
+    ]
+
+
+def test_successor_selection_must_keep_the_predecessor_task_identity():
+    state = work_memory._claim_task_writer("predecessor-task")
+    start = _owned_run_start("predecessor-task", state)
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [start],
+    })
+    events, _ = work_memory.load_ledger()
+
+    work_memory._require_predecessor_task_ownership(
+        events, start["run_id"], "predecessor-task",
+    )
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="cross-task-successor-selection",
+    ):
+        work_memory._require_predecessor_task_ownership(
+            events, start["run_id"], "foreign-task",
+        )
+
+
+def test_different_task_ids_allow_different_writers(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    first = work_memory._claim_task_writer("task-a")
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_B)
+    second = work_memory._claim_task_writer("task-b")
+
+    assert first["writer_thread_id"] == WRITER_A
+    assert second["writer_thread_id"] == WRITER_B
+    tasks, _ = work_memory._ownership_snapshot(
+        work_memory.parse_ledger_bytes(work_memory.LEDGER.read_bytes()),
+    )
+    assert tasks["task-a"]["writer_thread_id"] == WRITER_A
+    assert tasks["task-b"]["writer_thread_id"] == WRITER_B
+
+
+def test_foreign_writer_cannot_select_or_create_a_selection_receipt(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    work_memory.cmd_classify(Namespace(
+        task_id="foreign-selection", operation_kind="other",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_B)
+    with pytest.raises(work_memory.WorkMemoryError, match="task-writer-not-owner"):
+        work_memory.cmd_select(Namespace(
+            task_id="foreign-selection", sequence_id=None, discovery_log=None,
+            fingerprint=None, verification_successor_of=None,
+            verifies_correction_id=None, repo_roots_file=None,
+        ))
+    assert not work_memory.receipt_path("foreign-selection", "selection").exists()
+
+
+def test_owner_handoff_invalidates_old_owner_and_enables_new_owner(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    work_memory.cmd_classify(Namespace(
+        task_id="handoff-task", operation_kind="other",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    classification, _, _ = work_memory.load_receipt(
+        "handoff-task", "classification",
+    )
+    result = work_memory.cmd_task_writer_handoff(Namespace(
+        task_id="handoff-task", to_thread_id=WRITER_B, event_id=None,
+    ))
+    assert result["writer_thread_id"] == WRITER_B
+
+    with pytest.raises(work_memory.WorkMemoryError, match="task-writer-not-owner"):
+        work_memory.validate_ownership_receipt("handoff-task", classification)
+
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_B)
+    work_memory.cmd_classify(Namespace(
+        task_id="handoff-task", operation_kind="other",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    refreshed, _, _ = work_memory.load_receipt(
+        "handoff-task", "classification",
+    )
+    work_memory.validate_ownership_receipt("handoff-task", refreshed)
+    assert refreshed["ownership_generation"] == 2
+
+
+def test_paused_old_owner_receipt_write_revalidates_after_handoff(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    work_memory.cmd_classify(Namespace(
+        task_id="paused-writer", operation_kind="other",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    stale_payload, _, _ = work_memory.load_receipt(
+        "paused-writer", "classification",
+    )
+    work_memory.cmd_task_writer_handoff(Namespace(
+        task_id="paused-writer", to_thread_id=WRITER_B, event_id=None,
+    ))
+    current_bytes = work_memory.receipt_path(
+        "paused-writer", "classification",
+    ).read_bytes()
+
+    with pytest.raises(work_memory.WorkMemoryError, match="task-writer-not-owner"):
+        work_memory.write_receipt(
+            "paused-writer", "classification", stale_payload,
+        )
+    assert work_memory.receipt_path(
+        "paused-writer", "classification",
+    ).read_bytes() == current_bytes
+
+
+def test_non_owner_cannot_handoff_and_ledger_is_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    work_memory._claim_task_writer("handoff-denied")
+    before = work_memory.LEDGER.read_bytes()
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_B)
+    with pytest.raises(work_memory.WorkMemoryError, match="task-writer-not-owner"):
+        work_memory.cmd_task_writer_handoff(Namespace(
+            task_id="handoff-denied", to_thread_id=WRITER_A, event_id=None,
+        ))
+    assert work_memory.LEDGER.read_bytes() == before
+
+
+def test_raw_handoff_cannot_bypass_receipt_rotation():
+    from argparse import Namespace
+
+    work_memory.cmd_classify(Namespace(
+        task_id="handoff-refresh-bound", operation_kind="other",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    state = work_memory.require_task_writer("handoff-refresh-bound")
+    before = work_memory.LEDGER.read_bytes()
+    incomplete = event(
+        "task_writer_handoff_recorded", task_id="handoff-refresh-bound",
+        from_writer_thread_id=WRITER_A, to_writer_thread_id=WRITER_B,
+        ownership_generation=state["ownership_generation"] + 1,
+        previous_ownership_event_id=state["ownership_event_id"],
+    )
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="task-writer-handoff-refresh-mismatch",
+    ):
+        work_memory.transact({
+            "schema_version": 1, "expected_ledger_hash": None,
+            "events": [incomplete],
+        })
+    assert work_memory.LEDGER.read_bytes() == before
+
+
+def test_missing_host_thread_id_rejects_without_mutation(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.delenv("CODEX_THREAD_ID")
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="host-codex-thread-id-required",
+    ):
+        work_memory.transact({
+            "schema_version": 1,
+            "expected_ledger_hash": None,
+            "events": [event(
+                "task_writer_claimed", task_id="missing-host",
+                writer_thread_id=WRITER_A, ownership_generation=1,
+            )],
+        })
+    assert not work_memory.LEDGER.exists()
+
+
+def test_prevention_only_transaction_does_not_require_host_thread_id_but_work_does(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    monkeypatch.delenv("CODEX_THREAD_ID")
+    prevention = event(
+        "action_intent_recorded", task_id="task-123",
+        run_id="4f642f31-f326-4b2c-92e4-753826ecad9f",
+        branch_ref="task/task-123", worktree_id="a" * 64,
+        intent_id=str(uuid.uuid4()), requested_sequence_id="discovery-bootstrap",
+        requested_implementation_id="b" * 64, compatibility_key="c" * 64,
+        action_class="BASH",
+        parameters=[{"name": "spec", "value": {"tag": "PATH", "value": "spec.json"}}],
+    )
+
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None,
+        "events": [prevention],
+    })
+    before = work_memory.LEDGER.read_bytes()
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="host-codex-thread-id-required",
+    ):
+        work_memory.transact({
+            "schema_version": 1, "expected_ledger_hash": None,
+            "events": [event(
+                "task_writer_claimed", task_id="work-task",
+                writer_thread_id=WRITER_A, ownership_generation=1,
+            )],
+        })
+    assert work_memory.LEDGER.read_bytes() == before
+
+
+def test_non_run_observer_event_does_not_require_host_thread_id(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    records = owned_run_events(0, "observer-owner-task")
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": records,
+    })
+    terminal = records[-1]
+    decision = event(
+        "observer_decision_recorded", decision_id=str(uuid.uuid4()),
+        observer_version=1, rule_version=1, config_hash="1" * 64,
+        trigger_event_id=terminal["event_id"], trigger_type="run_closed",
+        ledger_snapshot_hash="2" * 64, evidence_event_ids=[],
+        evidence_set_hash="3" * 64, candidate_identity=None,
+        candidate_fingerprint=None,
+        eligibility={"version": 1, "eligible": False, "triggers": [], "reasons": []},
+        value_components=[], threshold=1, considered_registered_ids=[],
+        considered_discovery_ids=[], disposition="NO_CANDIDATE",
+        target_kind=None, target_id=None,
+        suppression={
+            "rule_version": 1, "suppressed": False, "reason": None,
+            "expires_at_utc": None,
+        },
+        cap_cursor=None, safe_failure_code="NO_ELIGIBLE_CANDIDATE",
+    )
+    monkeypatch.delenv("CODEX_THREAD_ID")
+
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [decision],
+    })
+    assert work_memory.parse_ledger_bytes(work_memory.LEDGER.read_bytes())[-1] == decision
+
+
+def test_atomic_claim_race_selects_exactly_one_writer(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    barrier = threading.Barrier(2)
+    writers = {"writer-a": WRITER_A, "writer-b": WRITER_B}
+    monkeypatch.setattr(
+        work_memory, "host_thread_id",
+        lambda: writers[threading.current_thread().name],
+    )
+    results: list[tuple[str, str]] = []
+
+    def claim() -> None:
+        barrier.wait()
+        try:
+            state = work_memory._claim_task_writer("raced-task")
+            results.append(("ok", state["writer_thread_id"]))
+        except work_memory.WorkMemoryError as exc:
+            results.append(("error", exc.code))
+
+    threads = [
+        threading.Thread(target=claim, name="writer-a"),
+        threading.Thread(target=claim, name="writer-b"),
+    ]
+    for thread in threads:
+        thread.start()
+    for thread in threads:
+        thread.join()
+
+    assert [status for status, _ in results].count("ok") == 1
+    assert [status for status, _ in results].count("error") == 1
+    claims = [
+        item for item in work_memory.parse_ledger_bytes(
+            work_memory.LEDGER.read_bytes(),
+        )
+        if item["event_type"] == "task_writer_claimed"
+        and item["task_id"] == "raced-task"
+    ]
+    assert len(claims) == 1
+
+
+def _write_legacy_run(task_id: str = "legacy-task") -> tuple[str, str, str]:
+    classification = {
+        "schema_version": 1, "task_id": task_id, "operation_kind": "other",
+        "repeatable": True, "meaningful_steps": 3, "verdict": "operational",
+        "reason": "repeatable-or-multistep", "created_at_utc": "2026-01-01T00:00:00Z",
+        "expires_at_utc": "2030-01-01T00:00:00Z",
+    }
+    classification_bytes = work_memory.canonical_bytes(classification)
+    classification_path = work_memory.receipt_path(task_id, "classification")
+    classification_path.parent.mkdir(parents=True, exist_ok=True)
+    classification_path.write_bytes(classification_bytes)
+    class_hash = work_memory.sha256_bytes(classification_bytes)
+    selection = {
+        "schema_version": 1, "task_id": task_id,
+        "created_at_utc": "2026-01-01T00:00:00Z",
+        "expires_at_utc": "2030-01-01T00:00:00Z",
+        "classification_receipt_hash": class_hash, "registry_hash": "d" * 64,
+        "mode": "discovery", "subject_id": "legacy-sequence",
+        "lineage_id": "legacy-lineage", "document": "/tmp/legacy-sequence.md",
+        "manifest": "/tmp/legacy-dependencies.json", "source_bundle": [],
+        "source_bundle_hash": "a" * 64,
+    }
+    selection_bytes = work_memory.canonical_bytes(selection)
+    work_memory.receipt_path(task_id, "selection").write_bytes(selection_bytes)
+    selection_hash = work_memory.sha256_bytes(selection_bytes)
+    active = {
+        "schema_version": 1, "task_id": task_id, "mode": "discovery",
+        "subject_id": "legacy-sequence", "lineage_id": "legacy-lineage",
+        "document": str(Path("/tmp/legacy-sequence.md").resolve()),
+        "source_bundle_hash": "a" * 64,
+        "classification_receipt_hash": class_hash,
+        "selection_receipt_hash": selection_hash,
+        "sealed_controller_b64": base64.b64encode(b"sealed controller").decode(),
+        "sealed_bootstrap_b64": base64.b64encode(b"sealed bootstrap").decode(),
+        "sealed_bootstrap_launcher_b64": base64.b64encode(b"sealed launcher").decode(),
+    }
+    active_path = work_memory.receipt_path(task_id, "active")
+    active_path.parent.mkdir(parents=True, exist_ok=True)
+    active_path.write_bytes(work_memory.canonical_bytes(active))
+    run_id = str(uuid.uuid4())
+    start = event(
+        "run_started", run_id=run_id, subject_id="legacy-sequence",
+        lineage_id="legacy-lineage", mode="discovery", operation_kind="other",
+        source_bundle=[], source_bundle_hash="a" * 64,
+        classification_receipt_hash=class_hash,
+        selection_receipt_hash=selection_hash,
+        started_at_utc="2026-01-01T00:00:00Z",
+    )
+    work_memory.LEDGER.parent.mkdir(parents=True, exist_ok=True)
+    work_memory.LEDGER.write_bytes(work_memory.canonical_bytes(start))
+    return run_id, class_hash, selection_hash
+
+
+def test_legacy_run_claim_binds_owner_upgrades_receipts_and_is_retryable(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    run_id, old_class_hash, old_selection_hash = _write_legacy_run()
+    first = work_memory.cmd_legacy_run_writer_claim(Namespace(
+        task_id="legacy-task", run_id=run_id, event_id=None, state=None,
+    ))
+    events = work_memory.parse_ledger_bytes(work_memory.LEDGER.read_bytes())
+    assert [item["event_type"] for item in events[-2:]] == [
+        "task_writer_claimed", "legacy_run_writer_bound",
+    ]
+    binding = work_memory.validate_legacy_run_binding(
+        events, "legacy-task", run_id, events[0],
+        work_memory.load_receipt("legacy-task", "selection")[0],
+    )
+    assert binding["classification_receipt_hash"] == old_class_hash
+    assert binding["selection_receipt_hash"] == old_selection_hash
+    classification, class_hash, _ = work_memory.load_receipt(
+        "legacy-task", "classification",
+    )
+    selection, selection_hash, _ = work_memory.load_receipt(
+        "legacy-task", "selection",
+    )
+    work_memory.validate_ownership_receipt("legacy-task", classification)
+    work_memory.validate_ownership_receipt("legacy-task", selection)
+    active = json.loads(work_memory.receipt_path("legacy-task", "active").read_text())
+    assert active["classification_receipt_hash"] == class_hash
+    assert active["selection_receipt_hash"] == selection_hash
+    assert active["sealed_controller_b64"] == base64.b64encode(b"sealed controller").decode()
+    assert active["sealed_bootstrap_launcher_b64"] == base64.b64encode(
+        b"sealed launcher",
+    ).decode()
+
+    before = work_memory.LEDGER.read_bytes()
+    retry = work_memory.cmd_legacy_run_writer_claim(Namespace(
+        task_id="legacy-task", run_id=run_id, event_id=None, state=None,
+    ))
+    assert work_memory.LEDGER.read_bytes() == before
+    assert retry["legacy_run_writer_binding_event_id"] == first[
+        "legacy_run_writer_binding_event_id"
+    ]
+
+    work_memory.cmd_task_writer_handoff(Namespace(
+        task_id="legacy-task", to_thread_id=WRITER_B, event_id=None,
+    ))
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_B)
+    after_handoff = work_memory.cmd_legacy_run_writer_claim(Namespace(
+        task_id="legacy-task", run_id=run_id, event_id=None, state=None,
+    ))
+    assert after_handoff["writer_thread_id"] == WRITER_B
+
+
+def test_active_trust_snapshot_validation_requires_launcher_bytes_for_durable_state():
+    snapshots = {
+        "scripts/work_memory.py": b"controller\n",
+        "scripts/work_memory_bootstrap.py": b"bootstrap\n",
+        "scripts/work_memory_bootstrap_launcher.py": b"launcher\n",
+    }
+    selection = {
+        "source_bundle": [
+            {
+                "repository_key": "memory-knowledge", "path": path,
+                "sha256": work_memory.sha256_bytes(value),
+            }
+            for path, value in snapshots.items()
+        ],
+    }
+    active = {
+        "sealed_controller_sha256": work_memory.sha256_bytes(snapshots["scripts/work_memory.py"]),
+        "sealed_controller_b64": base64.b64encode(snapshots["scripts/work_memory.py"]).decode(),
+        "bootstrap_sha256": work_memory.sha256_bytes(
+            snapshots["scripts/work_memory_bootstrap.py"],
+        ),
+        "sealed_bootstrap_b64": base64.b64encode(
+            snapshots["scripts/work_memory_bootstrap.py"],
+        ).decode(),
+        "bootstrap_launcher_sha256": work_memory.sha256_bytes(
+            snapshots["scripts/work_memory_bootstrap_launcher.py"],
+        ),
+        "sealed_bootstrap_launcher_b64": base64.b64encode(
+            snapshots["scripts/work_memory_bootstrap_launcher.py"],
+        ).decode(),
+    }
+    work_memory._validate_active_trust_snapshots(active, selection)
+    legacy = {**active}
+    del legacy["sealed_bootstrap_launcher_b64"]
+    with pytest.raises(work_memory.WorkMemoryError, match="active-trust-snapshot-invalid"):
+        work_memory._validate_active_trust_snapshots(legacy, selection)
+    work_memory._validate_active_trust_snapshots(
+        legacy, selection, allow_legacy_missing_launcher=True,
+    )
+
+
+def _write_active_owned_receipts(task_id: str) -> tuple[dict[str, object], str, str]:
+    from argparse import Namespace
+
+    classified = work_memory.cmd_classify(Namespace(
+        task_id=task_id, operation_kind="other", repeatable="yes",
+        meaningful_steps=3,
+    ))
+    classification, class_hash, _ = work_memory.load_receipt(task_id, "classification")
+    ownership = {
+        key: classification[key] for key in (
+            "writer_thread_id", "ownership_generation", "ownership_event_id",
+            "ownership_sha256",
+        )
+    }
+    selection = {
+        "schema_version": 1, "task_id": task_id,
+        "created_at_utc": "2026-01-01T00:00:00Z",
+        "expires_at_utc": "2030-01-01T00:00:00Z",
+        "classification_receipt_hash": class_hash, "registry_hash": "d" * 64,
+        "mode": "discovery", "subject_id": "sequence", "lineage_id": "lineage",
+        "document": "/tmp/sequence.md", "manifest": "/tmp/dependencies.json",
+        "source_bundle": [], "source_bundle_hash": "a" * 64, **ownership,
+    }
+    _, selection_hash = work_memory.write_receipt(task_id, "selection", selection)
+    active = {
+        "schema_version": 1, "task_id": task_id, "mode": "discovery",
+        "subject_id": "sequence", "lineage_id": "lineage",
+        "document": str(Path("/tmp/sequence.md").resolve()),
+        "source_bundle_hash": "a" * 64,
+        "classification_receipt_hash": class_hash,
+        "selection_receipt_hash": selection_hash,
+        "sealed_controller_b64": base64.b64encode(b"controller").decode(),
+        "sealed_bootstrap_b64": base64.b64encode(b"bootstrap").decode(),
+        "sealed_bootstrap_launcher_b64": base64.b64encode(b"launcher").decode(),
+        **ownership,
+    }
+    active_path = work_memory.receipt_path(task_id, "active")
+    active_path.write_bytes(work_memory.canonical_bytes(active))
+    return classified, class_hash, selection_hash
+
+
+def test_handoff_preserves_active_run_and_refreshes_target_receipts(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    state, class_hash, selection_hash = _write_active_owned_receipts("active-task")
+    start = event(
+        "run_started", run_id=str(uuid.uuid4()), subject_id="sequence",
+        lineage_id="lineage", mode="discovery", operation_kind="other",
+        source_bundle=[], source_bundle_hash="a" * 64,
+        classification_receipt_hash=class_hash,
+        selection_receipt_hash=selection_hash,
+        started_at_utc="2026-01-01T00:00:00Z", task_id="active-task",
+        **{
+            key: state[key] for key in (
+                "writer_thread_id", "ownership_generation", "ownership_event_id",
+                "ownership_sha256",
+            )
+        },
+    )
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [start],
+    })
+    work_memory.cmd_task_writer_handoff(Namespace(
+        task_id="active-task", to_thread_id=WRITER_B, event_id=None,
+    ))
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_B)
+    classification, refreshed_class_hash, _ = work_memory.load_receipt(
+        "active-task", "classification",
+    )
+    selection, refreshed_selection_hash, _ = work_memory.load_receipt(
+        "active-task", "selection",
+    )
+    work_memory.validate_ownership_receipt("active-task", classification)
+    work_memory.validate_ownership_receipt("active-task", selection)
+    active = json.loads(work_memory.receipt_path("active-task", "active").read_text())
+    assert active["classification_receipt_hash"] == refreshed_class_hash
+    assert active["selection_receipt_hash"] == refreshed_selection_hash
+    assert active["sealed_bootstrap_launcher_b64"] == base64.b64encode(b"launcher").decode()
+    events = work_memory.parse_ledger_bytes(work_memory.LEDGER.read_bytes())
+    assert work_memory.validate_run_writer_continuity(
+        events, "active-task", start["run_id"], start, selection,
+    ) == start
+
+
+def test_target_can_repair_receipts_after_handoff_commit_interruption(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    _write_active_owned_receipts("repair-task")
+    apply_refresh = work_memory._apply_owner_refresh_plan
+    delayed_writes: list[tuple[Path, str, bytes]] = []
+
+    def interrupt_after_commit(task_id, writes):
+        delayed_writes.extend(writes)
+        raise OSError("simulated interruption")
+
+    monkeypatch.setattr(
+        work_memory, "_apply_owner_refresh_plan", interrupt_after_commit,
+    )
+    with pytest.raises(OSError, match="simulated interruption"):
+        work_memory.cmd_task_writer_handoff(Namespace(
+            task_id="repair-task", to_thread_id=WRITER_B, event_id=None,
+        ))
+
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_B)
+    monkeypatch.setattr(work_memory, "_apply_owner_refresh_plan", apply_refresh)
+    refreshed = work_memory.cmd_task_writer_refresh(Namespace(task_id="repair-task"))
+    assert refreshed["writer_thread_id"] == WRITER_B
+    repaired_active = json.loads(
+        work_memory.receipt_path("repair-task", "active").read_text(),
+    )
+    assert repaired_active["sealed_bootstrap_launcher_b64"] == base64.b64encode(
+        b"launcher",
+    ).decode()
+    work_memory.cmd_classify(Namespace(
+        task_id="repair-task", operation_kind="other",
+        repeatable="yes", meaningful_steps=4,
+    ))
+    target_classification = work_memory.receipt_path(
+        "repair-task", "classification",
+    ).read_bytes()
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="task-writer-refresh-cas-mismatch",
+    ):
+        apply_refresh("repair-task", delayed_writes)
+    assert work_memory.receipt_path(
+        "repair-task", "classification",
+    ).read_bytes() == target_classification
+    selection, _, _ = work_memory.load_receipt("repair-task", "selection")
+    assert selection["writer_thread_id"] == WRITER_B
+
+
+def test_merge_ledger_rejects_foreign_owner_without_mutating_target(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    state = work_memory._claim_task_writer("merge-owned-task")
+    start = _owned_run_start("merge-owned-task", state)
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [start],
+    })
+    before = work_memory.LEDGER.read_bytes()
+    source = tmp_path / "foreign-events.jsonl"
+    source.write_bytes(before + work_memory.canonical_bytes(event(
+        "run_abandoned", run_id=start["run_id"], subject_id="sequence",
+        lineage_id="lineage", completed_at_utc="2026-01-01T00:01:00Z",
+        reason="foreign writer",
+    )))
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_B)
+
+    with pytest.raises(work_memory.WorkMemoryError, match="task-writer-not-owner"):
+        work_memory.cmd_merge_ledger(SimpleNamespace(
+            source_ledger=str(source), ledger=None, view=None,
+        ))
+    assert work_memory.LEDGER.read_bytes() == before
+
+
+def test_merge_ledger_accepts_current_owner_after_canonical_handoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    state, class_hash, selection_hash = _write_active_owned_receipts("merge-handoff-task")
+    start = event(
+        "run_started", run_id=str(uuid.uuid4()), subject_id="sequence",
+        lineage_id="lineage", mode="discovery", operation_kind="other",
+        source_bundle=[], source_bundle_hash="a" * 64,
+        classification_receipt_hash=class_hash,
+        selection_receipt_hash=selection_hash,
+        started_at_utc="2026-01-01T00:00:00Z", task_id="merge-handoff-task",
+        **{
+            key: state[key] for key in (
+                "writer_thread_id", "ownership_generation", "ownership_event_id",
+                "ownership_sha256",
+            )
+        },
+    )
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [start],
+    })
+    work_memory.cmd_task_writer_handoff(Namespace(
+        task_id="merge-handoff-task", to_thread_id=WRITER_B, event_id=None,
+    ))
+    canonical = work_memory.LEDGER.read_bytes()
+    terminal = event(
+        "run_abandoned", run_id=start["run_id"], subject_id="sequence",
+        lineage_id="lineage", completed_at_utc="2026-01-01T00:01:00Z",
+        reason="current owner import",
+    )
+    source = tmp_path / "current-owner-events.jsonl"
+    source.write_bytes(canonical + work_memory.canonical_bytes(terminal))
+
+    monkeypatch.setenv("CODEX_THREAD_ID", WRITER_B)
+    result = work_memory.cmd_merge_ledger(SimpleNamespace(
+        source_ledger=str(source), ledger=None, view=None,
+    ))
+    assert result["appended_event_count"] == 1
+    assert work_memory.parse_ledger_bytes(work_memory.LEDGER.read_bytes())[-1] == terminal
+
+
 def test_classification_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     monkeypatch.setattr(work_memory, "RECEIPT_ROOT", tmp_path)
     from argparse import Namespace
@@ -1101,7 +2867,7 @@ def test_selection_uses_verified_fingerprint_correction(tmp_path: Path, monkeypa
     events = corrected_successor_events()
     fingerprint = next(item["fingerprint"] for item in events if item["event_type"] == "blocker_opened")
     monkeypatch.setattr(work_memory, "RECEIPT_ROOT", tmp_path)
-    monkeypatch.setattr(work_memory, "registry_rows", lambda: ([{
+    monkeypatch.setattr(work_memory, "registry_rows", lambda **_kwargs: ([{
         "sequence_id": "sequence", "folder": "operations/sequences/sequence/",
         "operation_kinds": "deploy", "lineage_id": "lineage",
     }], "9" * 64))
@@ -1120,6 +2886,64 @@ def test_selection_uses_verified_fingerprint_correction(tmp_path: Path, monkeypa
     assert selected["selection_reason"] == "fingerprint-link"
     assert selected["eligible_corrections"][0]["solution"] == "use the corrected flag"
     assert selected["recent_run_ids"][0] == events[6]["run_id"]
+
+
+def test_explicit_discovery_selection_does_not_load_registered_registry(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from argparse import Namespace
+
+    discovery = tmp_path / "operations/sequences/discovery/repair.md"
+    discovery.parent.mkdir(parents=True)
+    discovery.write_text("# repair\n\nDiscoveryId: discovery-repair\n")
+    manifest = discovery.with_suffix(".dependencies.json")
+    manifest.write_text(json.dumps({
+        "schema_version": 1,
+        "lineage_id": "discovery-repair",
+        "dependencies": [],
+    }))
+    bundle = [
+        {
+            "repository_key": "memory-knowledge",
+            "path": str(discovery.relative_to(tmp_path)),
+            "sha256": "a" * 64,
+        },
+        {
+            "repository_key": "memory-knowledge",
+            "path": str(manifest.relative_to(tmp_path)),
+            "sha256": "b" * 64,
+        },
+    ]
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    monkeypatch.setattr(work_memory, "RECEIPT_ROOT", tmp_path / "receipts")
+    monkeypatch.setattr(
+        work_memory,
+        "registry_rows",
+        lambda **_kwargs: (_ for _ in ()).throw(AssertionError("registry must not load")),
+    )
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: (bundle, "c" * 64, "discovery-repair"),
+    )
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: ([], "d" * 64))
+
+    work_memory.cmd_classify(Namespace(
+        task_id="registry-repair", operation_kind="workflow-drive",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    selected = work_memory.cmd_select(Namespace(
+        task_id="registry-repair", sequence_id=None,
+        discovery_log=str(discovery), fingerprint=None,
+        verification_successor_of=None, verifies_correction_id=None,
+        repo_roots_file=None, repository_roots=None,
+    ))
+
+    assert selected["mode"] == "discovery"
+    assert selected["subject_id"] == "discovery-repair"
+    assert selected["registry_hash"] == work_memory.sha256_bytes(
+        work_memory.canonical_bytes([])
+    )
 
 
 def _prepare_successor_selection(
@@ -1143,17 +2967,36 @@ def _prepare_successor_selection(
 
     monkeypatch.setattr(work_memory, "ROOT", tmp_path)
     monkeypatch.setattr(work_memory, "RECEIPT_ROOT", tmp_path / "receipts")
-    monkeypatch.setattr(work_memory, "registry_rows", lambda: ([{
+    monkeypatch.setattr(work_memory, "registry_rows", lambda **_kwargs: ([{
         "sequence_id": "sequence", "folder": "operations/sequences/sequence/",
         "operation_kinds": "deploy", "lineage_id": "lineage",
     }], "9" * 64))
     monkeypatch.setattr(
         work_memory, "resolve_bundle", lambda **kwargs: (bundle, "b" * 64, "lineage"),
     )
-    monkeypatch.setattr(work_memory, "load_ledger", lambda path=work_memory.LEDGER: (events, "8" * 64))
     work_memory.cmd_classify(Namespace(
         task_id="successor", operation_kind="deploy", repeatable="yes", meaningful_steps=3,
     ))
+    ownership_events, _ = work_memory.load_ledger()
+    claim = next(
+        item for item in ownership_events
+        if item["event_type"] == "task_writer_claimed"
+        and item["task_id"] == "successor"
+    )
+    owner_state = {
+        "writer_thread_id": claim["writer_thread_id"],
+        "ownership_generation": claim["ownership_generation"],
+        "ownership_event_id": claim["event_id"],
+    }
+    ownership = work_memory._ownership_receipt_fields("successor", owner_state)
+
+    def owned_fixture_ledger(path=work_memory.LEDGER):
+        for item in events:
+            if item["event_type"] == "run_started" and "task_id" not in item:
+                item.update(task_id="successor", **ownership)
+        return [claim, *events], "8" * 64
+
+    monkeypatch.setattr(work_memory, "load_ledger", owned_fixture_ledger)
     return Namespace, events, artifact, correction["correction_id"]
 
 
@@ -1332,6 +3175,7 @@ def test_successor_selection_accepts_an_explicitly_removed_bundle_artifact(
         "sha256": "a" * 64,
     }]
     predecessor_run_id = predecessor["run_id"]
+    artifact.write_text("regenerated after correction\n")
 
     selected = work_memory.cmd_select(Namespace(
         task_id="successor", sequence_id="sequence", discovery_log=None, fingerprint=None,
@@ -1341,6 +3185,40 @@ def test_successor_selection_accepts_an_explicitly_removed_bundle_artifact(
 
     assert selected["source_bundle"] == []
     assert artifact.is_file()
+
+
+def test_run_start_accepts_regenerated_explicitly_removed_artifact(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    Namespace, events, artifact, correction_id = _prepare_successor_selection(
+        tmp_path, monkeypatch, include_artifact=False,
+    )
+    predecessor = events[0]
+    predecessor["source_bundle"] = [{
+        "repository_key": "memory-knowledge", "path": "scripts/deploy.sh",
+        "sha256": "a" * 64,
+    }]
+    predecessor_run_id = predecessor["run_id"]
+    work_memory.cmd_select(Namespace(
+        task_id="successor", sequence_id="sequence", discovery_log=None,
+        fingerprint=None, verification_successor_of=predecessor_run_id,
+        verifies_correction_id=[correction_id], repo_roots_file=None,
+    ))
+    artifact.write_text("regenerated between selection and run start\n")
+    captured: dict[str, object] = {}
+
+    def capture_transaction(batch):
+        captured["event"] = batch["events"][0]
+        return {"ok": True, "event_ids": [batch["events"][0]["event_id"]]}
+
+    monkeypatch.setattr(work_memory, "transact", capture_transaction)
+    work_memory.cmd_run_start(Namespace(task_id="successor", run_id=None, event_id=None))
+
+    started = captured["event"]
+    assert isinstance(started, dict)
+    assert started["predecessor_run_id"] == predecessor_run_id
+    assert started["verifies_correction_ids"] == [correction_id]
+    assert started["source_bundle_hash"] == "b" * 64
 
 
 def test_run_start_rechecks_raw_successor_artifact_binding(
@@ -1367,7 +3245,7 @@ def test_verified_fingerprint_link_precedes_operation_kind_candidates(
     events = corrected_successor_events()
     fingerprint = next(item["fingerprint"] for item in events if item["event_type"] == "blocker_opened")
     monkeypatch.setattr(work_memory, "RECEIPT_ROOT", tmp_path)
-    monkeypatch.setattr(work_memory, "registry_rows", lambda: ([
+    monkeypatch.setattr(work_memory, "registry_rows", lambda **_kwargs: ([
         {"sequence_id": "sequence", "folder": "operations/sequences/sequence/",
          "operation_kinds": "repair", "lineage_id": "lineage"},
         {"sequence_id": "unrelated-deploy", "folder": "operations/sequences/unrelated-deploy/",
@@ -1399,7 +3277,7 @@ def test_fingerprint_link_rejects_stale_current_bundle(tmp_path: Path, monkeypat
     events = corrected_successor_events()
     fingerprint = next(item["fingerprint"] for item in events if item["event_type"] == "blocker_opened")
     monkeypatch.setattr(work_memory, "RECEIPT_ROOT", tmp_path)
-    monkeypatch.setattr(work_memory, "registry_rows", lambda: ([{
+    monkeypatch.setattr(work_memory, "registry_rows", lambda **_kwargs: ([{
         "sequence_id": "sequence", "folder": "operations/sequences/sequence/",
         "operation_kinds": "deploy", "lineage_id": "lineage",
     }], "9" * 64))
@@ -1443,7 +3321,7 @@ def test_fingerprint_tie_break_prefers_higher_success_count_before_lexical(
                  "result": "passed"},
             ])
     monkeypatch.setattr(work_memory, "RECEIPT_ROOT", tmp_path)
-    monkeypatch.setattr(work_memory, "registry_rows", lambda: ([
+    monkeypatch.setattr(work_memory, "registry_rows", lambda **_kwargs: ([
         {"sequence_id": subject, "folder": f"operations/sequences/{subject}/",
          "operation_kinds": "deploy", "lineage_id": subject}
         for subject in ("alpha", "zeta")
@@ -1483,11 +3361,13 @@ def test_no_retired_run_ledger_or_stale_activation_examples():
 
 
 def test_repository_work_memory_ledger_replays_and_view_is_current():
-    events, ledger_hash = work_memory.load_ledger()
+    ledger = work_memory.ROOT / "operations/work-memory/events.jsonl"
+    view = work_memory.ROOT / "operations/blockers/BLOCKERS.md"
+    events, ledger_hash = work_memory.load_ledger(ledger)
 
     assert events
     assert len(ledger_hash) == 64
-    assert not work_memory.blocker_view_stale(ledger_hash)
+    assert not work_memory.blocker_view_stale(ledger_hash, view)
 
 
 def test_only_canonical_scripts_write_event_ledger():
@@ -1496,4 +3376,9 @@ def test_only_canonical_scripts_write_event_ledger():
         text = path.read_text()
         if "events.jsonl" in text or "stage_event_batch(" in text:
             writers.append(path.name)
-    assert sorted(writers) == ["sequence_promote.py", "work_memory.py"]
+    assert sorted(writers) == [
+        "prevention_journal.py",
+        "prevention_owner_acceptance_fixtures.py",
+        "sequence_promote.py",
+        "work_memory.py",
+    ]

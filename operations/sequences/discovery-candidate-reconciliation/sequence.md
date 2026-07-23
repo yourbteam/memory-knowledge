@@ -1,5 +1,23 @@
 # discovery-candidate-reconciliation
 
+<!-- BEGIN SEMANTIC INTAKE ENTRYPOINT -->
+## Operator entry point
+
+After selecting and activating this registered sequence, launch the shared controller with no
+arguments:
+
+```bash
+python3 scripts/sequence_intake_launch.py
+```
+
+Answer only the semantic questions shown. Every question includes its response format, an example,
+and constraints. The controller derives JSON, files, environment, flags, and argv; displays the
+exact prepared operation; and requires a separate yes/no authorization before guarded dispatch.
+
+Any argument-bearing commands below are machine-compatibility and verification evidence for the
+deterministic adapter. Operators and agents must not construct or invoke those forms directly.
+<!-- END SEMANTIC INTAKE ENTRYPOINT -->
+
 ## Use When
 
 Audit all logged discovery sequences, decide which should promote, absorb, remain, supersede, or quarantine, and clean the active queue without deleting provenance.
@@ -28,7 +46,7 @@ Run the governed reconciliation lifecycle from one command: verify the current r
 | bootstrap-controller | Create scripts/discovery_candidate_reconciliation.py and tests/test_discovery_candidate_reconciliation.py before dependency binding and source-bundle selection. | The controller and test entry points exist before a guarded implementation run is selected. | Selection fails closed when a recorded executable is absent; scaffold the registered entry point first, then bind it into the discovery manifest. |
 | verify-automation | scripts/run_pytest.sh tests/test_discovery_candidate_reconciliation.py tests/test_discovery_promotion_lifecycle.py -q | planned | Exercise complete inventory, manifest validation, fail-closed drift, lifecycle delegation, checkpointing, one-shot correction/verification/live closure, and non-destructive active-index cleanup. |
 | execute-approved | python3 scripts/discovery_candidate_reconciliation.py execute --manifest <manifest> --active-index <active-index> | planned | Drive only approved promote rows through discovery_promotion_lifecycle.py; terminal non-promotion rows change only the generated active queue and never delete discovery provenance. |
-| execute-rolling | python3 scripts/discovery_candidate_reconciliation.py execute-rolling --baseline operations/sequences/discovery/reconciliation-policy.json --output-dir <output-root> --active-index operations/sequences/discovery/ACTIVE.md --max-attempts 6 | planned | Run only from a separate registered run after the current bundle's correction successor has verified and closed. Reapply the approved retain-only policy to the complete current log, allocate a unique invocation directory under the reusable output root, retry bounded candidate-set arrival races, but stop on any existing decision change, any new non-retain candidate, target proof drift, or terminal-allowlist change. |
+| execute-rolling | python3 scripts/discovery_candidate_reconciliation.py --root <repository-root> execute-rolling --baseline operations/sequences/discovery/reconciliation-policy.json --output-dir <output-root> --active-index operations/sequences/discovery/ACTIVE.md --max-attempts 6 | planned | Run only from a separate registered run after the current bundle's correction successor has verified and closed. Reapply the approved retain-only policy to the complete current log, allocate a unique invocation directory under the reusable output root, retry bounded candidate-set arrival races, but stop on any existing decision change, any new non-retain candidate, target proof drift, or terminal-allowlist change. |
 | validate-dispositions | python3 scripts/discovery_candidate_reconciliation.py validate --manifest <manifest> | planned | Require exact candidate-set and HEAD match plus complete evidence-backed dispositions before execution. |
 | audit-candidates | python3 scripts/discovery_candidate_reconciliation.py audit --output <manifest> | planned | Freeze repository HEAD and enumerate every discovery log with lifecycle, registry, blocker, readiness, and verification facts; no repository mutations. |
 

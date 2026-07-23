@@ -1,16 +1,1 @@
-{
-  "schema_version": 1,
-  "lineage_id": "claude-auth-token-refresh",
-  "dependencies": [
-    {
-      "kind": "file",
-      "repository_key": "mcp-agents-workflow",
-      "path_or_sequence_id": "scripts/claude_auth_refresh.sh"
-    },
-    {
-      "kind": "file",
-      "repository_key": "mcp-agents-workflow",
-      "path_or_sequence_id": "scripts/rotate-credentials.sh"
-    }
-  ]
-}
+{"dependencies":[{"kind":"file","path_or_sequence_id":"scripts/claude_auth_refresh.sh","repository_key":"mcp-agents-workflow"},{"kind":"file","path_or_sequence_id":"scripts/rotate-credentials.sh","repository_key":"mcp-agents-workflow"},{"kind":"file","path_or_sequence_id":"scripts/script_intake.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_adapters.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_launch.py","repository_key":"memory-knowledge"}],"lineage_id":"claude-auth-token-refresh","schema_version":1}

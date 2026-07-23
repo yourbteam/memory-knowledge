@@ -1,11 +1,1 @@
-{
-  "schema_version": 1,
-  "lineage_id": "taggable-media-worker-deploy",
-  "dependencies": [
-    {
-      "kind": "file",
-      "repository_key": "taggable-api",
-      "path_or_sequence_id": "scripts/deploy-media-worker.sh"
-    }
-  ]
-}
+{"dependencies":[{"kind":"file","path_or_sequence_id":"scripts/script_intake.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_adapters.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_launch.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/deploy-media-worker.sh","repository_key":"taggable-api"}],"lineage_id":"taggable-media-worker-deploy","schema_version":1}

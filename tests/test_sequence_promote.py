@@ -7,7 +7,7 @@ from pathlib import Path
 
 import pytest
 
-from scripts import sequence_promote, work_memory
+from scripts import sequence_candidate_contract, sequence_promote, work_memory
 
 
 def configure_state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
@@ -112,7 +112,29 @@ def test_exact_committed_promotion_retry_is_idempotent(tmp_path: Path, monkeypat
     discovery_id, sequence_id = "discovery-id", "registered-id"
     discovery = tmp_path / "operations/sequences/discovery/retry.md"
     promoted_discovery(discovery, discovery_id, sequence_id)
-    source_manifest = {"schema_version": 1, "lineage_id": discovery_id, "dependencies": []}
+    identity, fingerprint = sequence_candidate_contract.build_candidate_identity({
+        "intended_outcome": "Retry promotion.", "repeatability_reason": "Stable.",
+        "repeatability_evidence_ids": ["prior-run"], "required_inputs": ["input"],
+        "dependencies": [], "failure_handling": [{
+            "fingerprint": "a" * 64, "symptom": "command fails", "response": "stop",
+        }], "verification_contract": {
+            "quality": "same-path", "expected_outcome": "passed", "success_evidence": "PASS",
+        }, "effect_class": "idempotent-local", "environment_annotations": [],
+        "semantic_flag_annotations": [], "volatility_annotations": [],
+    }, [{
+        "step_ordinal": 0, "step_id": "run", "argv": ["echo", "ok"],
+        "command_source": "sequence_doc",
+        "source_ref": {"repository_key": "memory-knowledge", "path": "operations/sequences/retry.md"},
+        "operation_kind": "other",
+    }])
+    provenance = {
+        "decision_id": str(uuid.uuid4()), "observer_version": 1, "rule_version": 1,
+    }
+    source_manifest = {
+        "schema_version": 1, "lineage_id": discovery_id, "dependencies": [],
+        "candidate_identity": identity, "candidate_fingerprint": fingerprint,
+        "observer_provenance": provenance,
+    }
     discovery.with_suffix(".dependencies.json").write_text(json.dumps(source_manifest))
     sequence_path = tmp_path / f"operations/sequences/{sequence_id}/sequence.md"
     sequence_path.parent.mkdir(parents=True)
@@ -148,6 +170,10 @@ def test_registered_bundle_from_staged_accepts_cross_repository_dependency(
     memory_root = tmp_path / "memory"
     external_root = tmp_path / "external"
     memory_root.mkdir()
+    for relative in work_memory.BOOTSTRAP_TRUST_ANCHORS:
+        anchor = memory_root / relative
+        anchor.parent.mkdir(parents=True, exist_ok=True)
+        anchor.write_text(f"# {relative}\n")
     dependency = external_root / "scripts" / "external.py"
     dependency.parent.mkdir(parents=True)
     dependency.write_text("print('external')\n")
@@ -176,3 +202,6 @@ def test_registered_bundle_from_staged_accepts_cross_repository_dependency(
         item["repository_key"] == "external" and item["path"] == "scripts/external.py"
         for item in entries
     )
+    assert set(work_memory.BOOTSTRAP_TRUST_ANCHORS) <= {
+        item["path"] for item in entries if item["repository_key"] == "memory-knowledge"
+    }

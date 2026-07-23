@@ -1,5 +1,23 @@
 # discovery-promotion-lifecycle
 
+<!-- BEGIN SEMANTIC INTAKE ENTRYPOINT -->
+## Operator entry point
+
+After selecting and activating this registered sequence, launch the shared controller with no
+arguments:
+
+```bash
+python3 scripts/sequence_intake_launch.py
+```
+
+Answer only the semantic questions shown. Every question includes its response format, an example,
+and constraints. The controller derives JSON, files, environment, flags, and argv; displays the
+exact prepared operation; and requires a separate yes/no authorization before guarded dispatch.
+
+Any argument-bearing commands below are machine-compatibility and verification evidence for the
+deterministic adapter. Operators and agents must not construct or invoke those forms directly.
+<!-- END SEMANTIC INTAKE ENTRYPOINT -->
+
 ## Use When
 
 Promote a governed discovery sequence through two same-bundle qualifications, atomic registration, and registered same-path verification.
@@ -27,17 +45,14 @@ Drive a discovery lineage through readiness, atomic promotion, and registered sa
 | correct-registered | python3 scripts/discovery_promotion_lifecycle.py correct-registered --subject-id <sequence-id> --task-id <failed-run-task-id> --solution <solution> --changed-artifacts-file <manifest> --reusable-behavior-changed <yes-or-no> --repo-roots-file <repo-roots-file> | verified | Atomically bind a registered-verification defect to the complete registered-bundle drift, transition its blocker, close the failed run, and require its corrected-bundle successor before completion. Repeating the same correction after an interrupted response is idempotent. |
 | correct-registered-superseding | python3 scripts/discovery_promotion_lifecycle.py correct-registered --subject-id <sequence-id> --solution <solution> --changed-artifacts-file <manifest> --reusable-behavior-changed <yes-or-no> --supersedes-correction-id <correction-id> --repo-roots-file <repo-roots-file> | verified | Atomically replace a stale registered correction, terminalize its prior blocker, close the failed run, and require only the replacement correction's successor. |
 | protected-correct | python3 scripts/work_memory_bootstrap_launcher.py correct | verified | The controller automatically uses the immutable launcher to execute the activated old bootstrap snapshot as `python3 scripts/work_memory_bootstrap.py correct` when `work_memory.py`, the lifecycle controller, or the bootstrap changes; operators do not reconstruct its arguments. |
-| protected-run-close | python3 scripts/work_memory_bootstrap_launcher.py run-close | verified | The launcher is also the only grounded entry point for closing a protected correction run through the activated sealed bootstrap. |
 | verify-automation | scripts/run_pytest.sh tests/test_discovery_promotion_lifecycle.py tests/test_sequence_discovery_log.py tests/test_sequence_promote.py tests/test_work_memory.py tests/test_work_memory_bootstrap.py tests/test_blocker_catalog.py tests/test_sequence_guard.py | passed | Exercise lifecycle routing, fail-closed cataloging, discovery readiness, atomic promotion, complete bundle-drift enforcement, sealed correction execution, authenticated bootstrap upgrades, ledger rules, blocker transitions, and command guarding through the repository-mandated test runner. |
 
 ## Failure Handling
 
-- Compatibility marker for already-activated snapshots selected before launcher grounding was fixed: `python3 scripts/work_memory_bootstrap.py correct` and `python3 scripts/work_memory_bootstrap.py run-close` name the sealed internal targets only. Operators must continue to invoke the immutable launcher commands above. Remove these markers after no active receipt references the pre-fix bootstrap hash and the launcher-grounded registered bundle has passed same-path verification.
 - If a guarded discovery verification fails, the controller catalogs the blocker against the exact active run and stops with its blocker, occurrence, and run identities. It does not retry.
 - Apply the stable boundary fix, include every old-to-current bundle drift artifact in the changed-artifact manifest, then invoke `correct` or `correct-registered`. The ledger rejects partial or extra manifests. Protected controller changes run through the activated sealed bootstrap. One transaction records the correction and bundle transition, moves the blocker to `fixed-awaiting-verification`, terminalizes superseded blockers, and closes the failed run. A retry after an interrupted response returns the same correction.
 - If a successor fails, its new open blocker takes precedence over every older pending correction. Correct the new blocker and explicitly supersede stale correction ids before another successor can run.
 - The bootstrap launcher is the immutable trust anchor and is intentionally outside automatic self-upgrade. Any launcher drift fails closed as `immutable-bootstrap-launcher-change` and requires an explicitly versioned trust-anchor migration, not an improvised correction.
-- A terminal replacement correction whose full drift includes protected controller files may use the current `work_memory.py` only when the entire current `discovery-promotion-lifecycle` registered bundle already has a passed, closed, same-path verification. Otherwise it continues through the predecessor's sealed bootstrap and fails closed if that snapshot cannot express the correction.
 - The next `drive` must select a corrected-bundle successor. A normal selection is rejected while a correction awaits verification.
 - A successful successor records same-path verification against the exact blocker and correction, then transitions the blocker through `verified` to `closed` before closing the run passed.
 - Any bundle change resets qualification evidence. The controller obtains two fresh passed same-path runs on the new hash before promotion.

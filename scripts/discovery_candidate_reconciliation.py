@@ -15,11 +15,16 @@ from typing import Any, Sequence
 from uuid import uuid4
 
 try:
-    from scripts import discovery_promotion_lifecycle, sequence_discovery_log, work_memory
+    from scripts import (
+        discovery_promotion_lifecycle, sequence_candidate_contract,
+        sequence_discovery_log, work_memory, prevention_source_receipt,
+    )
 except ImportError:
     import discovery_promotion_lifecycle  # type: ignore
+    import sequence_candidate_contract  # type: ignore
     import sequence_discovery_log  # type: ignore
     import work_memory  # type: ignore
+    import prevention_source_receipt  # type: ignore
 
 
 class ReconciliationError(RuntimeError):
@@ -40,6 +45,182 @@ ROLLING_POLICY = "rolling-retain-only"
 SEQUENCE_ID = "discovery-candidate-reconciliation"
 ROLLING_BASELINE = "operations/sequences/discovery/reconciliation-policy.json"
 ACTIVE_INDEX = "operations/sequences/discovery/ACTIVE.md"
+
+
+def candidate_identity_inventory(
+    root: Path, *, events: list[dict[str, Any]] | None = None,
+    repository_roots: dict[str, str] | None = None,
+) -> list[dict[str, Any]]:
+    """Return a fresh, read-only inventory of active v2 discovery identities."""
+    rows: list[dict[str, Any]] = []
+    folder = root / "operations/sequences/discovery"
+    for manifest_path in sorted(folder.glob("*.dependencies.json")):
+        document = Path(str(manifest_path)[:-len(".dependencies.json")] + ".md")
+        if not document.is_file():
+            continue
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+            identity = manifest.get("candidate_identity")
+            fingerprint = manifest.get("candidate_fingerprint")
+            if identity is None and fingerprint is None:
+                continue
+            identity = sequence_candidate_contract.validate_candidate_identity(
+                identity, fingerprint,
+            )
+            text = document.read_text(encoding="utf-8")
+            status = _metadata(text, "Status") or "discovery"
+            if status in {"promoted", "superseded", "quarantined"}:
+                continue
+            discovery_id = _metadata(text, "DiscoveryId")
+            if not discovery_id or manifest.get("lineage_id") != discovery_id:
+                raise ReconciliationError("candidate-identity-lineage-mismatch")
+            if events is not None:
+                feedback = candidate_lifecycle_feedback(
+                    root, fingerprint=fingerprint, events=events,
+                )
+                if feedback and feedback[-1]["disposition"] in {
+                    "promoted", "promote", "absorb", "supersede", "already-promoted",
+                    "quarantine",
+                }:
+                    continue
+                if any(
+                    event["event_type"] == "discovery_promoted"
+                    and event["discovery_id"] == discovery_id for event in events
+                ):
+                    continue
+                starts = [
+                    event for event in events
+                    if event["event_type"] == "run_started"
+                    and event["lineage_id"] == discovery_id
+                    and event["subject_id"] == discovery_id
+                ]
+                root_snapshots = {
+                    json.dumps(event.get("repository_roots"), sort_keys=True)
+                    for event in starts if event.get("repository_roots") is not None
+                }
+                if len(root_snapshots) != 1:
+                    raise ReconciliationError("candidate-repository-roots-ambiguous")
+                roots = json.loads(next(iter(root_snapshots)))
+                if repository_roots is not None and roots != repository_roots:
+                    raise ReconciliationError("candidate-repository-root-drift")
+                try:
+                    _, bundle_hash, lineage_id = work_memory.resolve_bundle(
+                        mode="discovery", subject_id=discovery_id, document=document,
+                        manifest=manifest_path, repository_roots=roots,
+                        include_bootstrap_trust_anchors=True,
+                    )
+                except work_memory.WorkMemoryError as exc:
+                    raise ReconciliationError(exc.code) from exc
+                if lineage_id != discovery_id or not any(
+                    event["source_bundle_hash"] == bundle_hash for event in starts
+                ):
+                    raise ReconciliationError("candidate-current-bundle-unbound")
+                provenance = manifest.get("observer_provenance")
+                decision = next((
+                    event for event in events
+                    if event["event_type"] == "observer_decision_recorded"
+                    and provenance is not None
+                    and event["decision_id"] == provenance.get("decision_id")
+                ), None)
+                if decision is None or decision.get("candidate_fingerprint") != fingerprint:
+                    raise ReconciliationError("candidate-observer-provenance-unbound")
+            rows.append({
+                "discovery_id": discovery_id,
+                "lineage_id": discovery_id,
+                "path": str(document.relative_to(root)),
+                "manifest_path": str(manifest_path.relative_to(root)),
+                "candidate_identity": identity,
+                "candidate_fingerprint": fingerprint,
+                "observer_provenance": manifest.get("observer_provenance"),
+            })
+        except (OSError, json.JSONDecodeError, sequence_candidate_contract.CandidateContractError) as exc:
+            raise ReconciliationError(
+                f"invalid-candidate-identity:{manifest_path.name}"
+            ) from exc
+    return rows
+
+
+def candidate_lifecycle_feedback(
+    root: Path, *, fingerprint: str, events: list[dict[str, Any]],
+) -> list[dict[str, str]]:
+    """Return immutable governed dispositions joined to observer provenance."""
+    manifests: dict[str, tuple[str, str]] = {}
+    folder = root / "operations/sequences/discovery"
+    for manifest_path in sorted(folder.glob("*.dependencies.json")):
+        try:
+            manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        if manifest.get("candidate_fingerprint") != fingerprint:
+            continue
+        document = Path(str(manifest_path)[:-len(".dependencies.json")] + ".md")
+        discovery_id = manifest.get("lineage_id")
+        if document.is_file() and isinstance(discovery_id, str):
+            manifests[str(document.relative_to(root))] = (
+                discovery_id, manifest.get("observer_provenance", {}).get("decision_id", ""),
+            )
+    feedback: list[dict[str, str]] = []
+    for event in events:
+        if event["event_type"] != "discovery_promoted":
+            continue
+        match = next((item for item in manifests.values() if item[0] == event["discovery_id"]), None)
+        if match is not None:
+            feedback.append({
+                "disposition": "promoted", "recorded_at_utc": event["recorded_at_utc"],
+                "discovery_id": event["discovery_id"], "decision_id": match[1],
+                "outcome_kind": "promotion",
+            })
+    for event in events:
+        if (
+            event["event_type"] == "observer_candidate_linked"
+            and event.get("candidate_fingerprint") == fingerprint
+            and event.get("target_kind") == "registered"
+        ):
+            feedback.append({
+                "disposition": "registered-reuse",
+                "recorded_at_utc": event["recorded_at_utc"],
+                "discovery_id": "", "decision_id": event["decision_id"],
+                "outcome_kind": "registered-reuse",
+            })
+        elif event["event_type"] == "correction_recorded":
+            match = next((
+                item for item in manifests.values()
+                if item[0] == event.get("lineage_id")
+            ), None)
+            if match is not None:
+                feedback.append({
+                    "disposition": "corrected",
+                    "recorded_at_utc": event["recorded_at_utc"],
+                    "discovery_id": match[0], "decision_id": match[1],
+                    "outcome_kind": "correction",
+                })
+    for checkpoint_path in sorted(folder.glob("*.checkpoint.json")):
+        try:
+            checkpoint = json.loads(checkpoint_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        completed = checkpoint.get("completed")
+        if not isinstance(completed, dict):
+            continue
+        for path, row in completed.items():
+            if path not in manifests or not isinstance(row, dict):
+                continue
+            disposition = row.get("disposition")
+            completed_at = row.get("completed_at_utc")
+            if disposition not in DISPOSITIONS or not isinstance(completed_at, str):
+                continue
+            discovery_id, decision_id = manifests[path]
+            outcome_kind = {
+                "promote": "promotion", "absorb": "dismissal",
+                "supersede": "supersession", "quarantine": "quarantine",
+                "already-promoted": "promotion", "remain-discovery": "retention",
+            }[disposition]
+            feedback.append({
+                "disposition": disposition, "recorded_at_utc": completed_at,
+                "discovery_id": discovery_id, "decision_id": decision_id,
+                "outcome_kind": outcome_kind,
+            })
+    return sorted(feedback, key=lambda row: (row["recorded_at_utc"], row["disposition"]))
 
 
 def _canonical(value: Any) -> bytes:
@@ -241,7 +422,7 @@ def _load_rolling_baseline(path: Path) -> dict[str, Any]:
     if approval.get("policy") != ROLLING_POLICY:
         raise ReconciliationError("invalid-rolling-policy")
     allowlist = approval.get("terminal_allowlist")
-    if not isinstance(allowlist, list) or not allowlist or len(set(allowlist)) != len(allowlist):
+    if not isinstance(allowlist, list) or len(set(allowlist)) != len(allowlist):
         raise ReconciliationError("invalid-terminal-allowlist")
     if not isinstance(baseline.get("candidates"), list):
         raise ReconciliationError("invalid-rolling-baseline")
@@ -597,7 +778,8 @@ def _run_live_rolling(
         repo_roots_file=None, pending=None,
     )
     command = [
-        "python3", "scripts/discovery_candidate_reconciliation.py", "execute-rolling",
+        "python3", "scripts/discovery_candidate_reconciliation.py",
+        "--root", str(root), "execute-rolling",
         "--baseline", ROLLING_BASELINE,
         "--output-dir", str(output_root),
         "--active-index", ACTIVE_INDEX,
@@ -708,17 +890,104 @@ def build_parser() -> argparse.ArgumentParser:
     drive_p.add_argument("--task-id", required=True)
     drive_p.add_argument("--output-root", required=True)
     drive_p.set_defaults(func=cmd_drive)
+    for command_parser in (
+        audit_p, validate_p, execute_p, rolling_p, drive_p,
+    ):
+        command_parser.add_argument("--prevention-effect-id")
+        command_parser.add_argument("--prevention-preparation-sha256")
     return parser
 
 
 def main(argv: Sequence[str] | None = None) -> int:
+    values = list(sys.argv[1:] if argv is None else argv)
+    if not values:
+        try:
+            from scripts import sequence_intake_launch
+        except ModuleNotFoundError:
+            import sequence_intake_launch  # type: ignore
+        return sequence_intake_launch.main_for_sequence(
+            "discovery-candidate-reconciliation", [],
+        )
+    prior_work_memory_configuration = (
+        work_memory.ROOT,
+        work_memory.LEDGER,
+        work_memory.BLOCKER_VIEW,
+        work_memory.REGISTRY,
+        work_memory.REGISTRY_GOVERNANCE_LEVEL,
+    )
     try:
-        args = build_parser().parse_args(argv)
-        print(json.dumps(args.func(args), sort_keys=True))
+        args = build_parser().parse_args(values)
+        work_memory.configure_root(Path(args.root))
+        source_identity = {
+            "profile": args.command,
+            "root_path_sha256": hashlib.sha256(
+                str(Path(args.root).resolve()).encode("utf-8")
+            ).hexdigest(),
+            "input_identities": {
+                name: (
+                    hashlib.sha256(Path(value).read_bytes()).hexdigest()
+                    if isinstance(value, str) and Path(value).is_file()
+                    else hashlib.sha256(str(value).encode("utf-8")).hexdigest()
+                )
+                for name, value in sorted(vars(args).items())
+                if name not in {
+                    "func", "prevention_effect_id",
+                    "prevention_preparation_sha256",
+                } and value is not None
+            },
+        }
+        source_receipt = None
+        if args.command != "validate" and (
+            args.prevention_effect_id or args.prevention_preparation_sha256
+        ):
+            source_receipt = prevention_source_receipt.prepare(
+                owner_sequence_id=SEQUENCE_ID,
+                profile_id=args.command,
+                effect_id=args.prevention_effect_id,
+                preparation_artifact_sha256=args.prevention_preparation_sha256,
+                source_identity=source_identity,
+            )
+        result = args.func(args)
+        if source_receipt is not None:
+            source_receipt = prevention_source_receipt.complete(
+                owner_sequence_id=SEQUENCE_ID,
+                profile_id=args.command,
+                effect_id=args.prevention_effect_id,
+                preparation_artifact_sha256=args.prevention_preparation_sha256,
+                source_identity=source_identity,
+                result_identity={
+                    "ok": result.get("ok"),
+                    "stage": result.get("stage", args.command),
+                    "result_sha256": hashlib.sha256(
+                        json.dumps(
+                            result, sort_keys=True, separators=(",", ":")
+                        ).encode("utf-8")
+                    ).hexdigest(),
+                },
+            )
+        if args.prevention_effect_id:
+            result = {
+                **result,
+                "preventionEffectId": args.prevention_effect_id,
+                "preventionPreparationSha256": args.prevention_preparation_sha256,
+            }
+            if source_receipt is not None:
+                result["preventionSourceReceiptSha256"] = (
+                    prevention_source_receipt.receipt_sha256(source_receipt)
+                )
+        print(json.dumps(result, sort_keys=True))
         return 0
     except (ReconciliationError, OSError, json.JSONDecodeError) as exc:
         print(json.dumps({"ok": False, "error": str(exc)}, sort_keys=True), file=sys.stderr)
         return 3
+    finally:
+        (
+            work_memory.ROOT,
+            work_memory.LEDGER,
+            work_memory.BLOCKER_VIEW,
+            work_memory.REGISTRY,
+            work_memory.REGISTRY_GOVERNANCE_LEVEL,
+        ) = prior_work_memory_configuration
 
 
 if __name__ == "__main__":

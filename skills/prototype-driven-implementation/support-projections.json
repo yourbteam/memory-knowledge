@@ -1,0 +1,78 @@
+{
+  "schema_version": 1,
+  "common": {
+    "required_inputs": [
+      "approved outcome and autonomy envelope",
+      "current prototype identity and observed gap",
+      "concrete code-path or runtime evidence",
+      "one exact support question",
+      "allowed scope and budget"
+    ],
+    "required_returns": [
+      "evidence",
+      "conclusion",
+      "unresolved uncertainty",
+      "recommended next delta"
+    ],
+    "forbidden": [
+      "taking lifecycle control from the prototype controller",
+      "widening the approved outcome, repositories, paths, scope, or budget",
+      "launching a successor phase, package, or autonomous playbook chain",
+      "declaring the implementation complete"
+    ]
+  },
+  "projections": [
+    {
+      "role": "research",
+      "source": "skills/research-playbook/SKILL.md",
+      "source_sha256": "33f1f6e1928cc08bfe1b925fd02f2b2986a467047547da54278f4fc56b916ba9",
+      "output": "research-support.md",
+      "purpose": "Answer one blocking evidence question exposed by the current prototype.",
+      "instructions": [
+        "Investigate only the supplied question and evidence boundary.",
+        "Prefer the real repository, runtime artifact, contract, or primary source that can decide the question.",
+        "Separate confirmed evidence from unresolved uncertainty; do not build a general research package.",
+        "Recommend only the smallest evidence-backed delta the controller should evaluate next."
+      ]
+    },
+    {
+      "role": "plan",
+      "source": "skills/plan-playbook/SKILL.md",
+      "source_sha256": "4591ca3acca0d703b5004a23ad0ae90be4ffd5bb0ca12a044adf98168f1b537b",
+      "output": "plan-support.md",
+      "purpose": "Make one observed implementation delta decision-complete.",
+      "instructions": [
+        "Plan only the supplied observed gap, not the full implementation lifecycle.",
+        "Ground every file, symbol, contract, and verification point in supplied or directly inspected evidence.",
+        "State the behavioral boundary, exact change, and proof needed for this delta.",
+        "Return unresolved decisions to the controller instead of spawning more planning."
+      ]
+    },
+    {
+      "role": "write-code",
+      "source": "skills/write-code-playbook/SKILL.md",
+      "source_sha256": "03b095f40bc979140146bb5d10329b69f4a252c4ead184be51220871080dc6d4",
+      "output": "write-code-support.md",
+      "purpose": "Implement one controller-approved product-code delta safely.",
+      "instructions": [
+        "Change only the approved delta and preserve unrelated user work.",
+        "Inspect the real producer, boundary, and consumer before editing; fix the stable contract rather than accumulating exceptions.",
+        "Run the narrow proof chosen for this prototype and report the actual evidence.",
+        "Return control after the delta and its focused verification; do not continue to another implementation step."
+      ]
+    },
+    {
+      "role": "review",
+      "source": "skills/review-playbook/SKILL.md",
+      "source_sha256": "7af04e52186cd9ed983866f736b1d4faebcf718112a73b531c82c0a026106656",
+      "output": "review-support.md",
+      "purpose": "Audit one retained delta or the final accumulated implementation surface.",
+      "instructions": [
+        "Review the supplied surface against the approved outcome, observed gap, and governing evidence.",
+        "Lead with actionable correctness, security, regression, and requirement-coverage findings.",
+        "Distinguish a blocking defect from optional improvement and cite exact evidence.",
+        "Return findings to the controller; only the controller combines review with end-to-end proof and decides completion."
+      ]
+    }
+  ]
+}

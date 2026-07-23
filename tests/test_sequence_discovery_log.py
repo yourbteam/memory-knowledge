@@ -33,6 +33,24 @@ def test_start_creates_discovery_log_with_stable_name(tmp_path: Path) -> None:
     assert "RegisteredSequenceMatch: none" in text
     assert "Prove the missing-sequence branch records a file." in text
     assert "This is the path used when no registered sequence matches." in text
+    assert "python3 scripts/work_memory.py correct" in text
+    assert "python3 scripts/work_memory_bootstrap.py correct" in text
+    assert "python3 scripts/work_memory_bootstrap_launcher.py correct" in text
+
+
+def test_renderer_injects_each_canonical_recovery_row_once(tmp_path: Path) -> None:
+    _, text, _ = sequence_discovery_log.render_discovery_bundle(
+        root=tmp_path,
+        date_text="2026-07-16",
+        sequence_name="Recovery Contract",
+        outcome="Remain recoverable after selected-bundle drift.",
+        why_repeatable="Every generated discovery may need correction.",
+        created_at_utc="2026-07-16T00:00:00Z",
+        steps=[dict(sequence_discovery_log.RECOVERY_STEPS[0])],
+    )
+
+    for row in sequence_discovery_log.RECOVERY_STEPS:
+        assert text.count(row["command"]) == 1
 
 
 def test_start_legacy_output_matches_reusable_renderer(

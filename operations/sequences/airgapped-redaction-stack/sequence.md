@@ -1,5 +1,23 @@
 # airgapped-redaction-stack
 
+<!-- BEGIN SEMANTIC INTAKE ENTRYPOINT -->
+## Operator entry point
+
+After selecting and activating this registered sequence, launch the shared controller with no
+arguments:
+
+```bash
+python3 scripts/sequence_intake_launch.py
+```
+
+Answer only the semantic questions shown. Every question includes its response format, an example,
+and constraints. The controller derives JSON, files, environment, flags, and argv; displays the
+exact prepared operation; and requires a separate yes/no authorization before guarded dispatch.
+
+Any argument-bearing commands below are machine-compatibility and verification evidence for the
+deterministic adapter. Operators and agents must not construct or invoke those forms directly.
+<!-- END SEMANTIC INTAKE ENTRYPOINT -->
+
 **Use when:** provision the offline PII-redaction + prosody stack (Bulgarian NER + GLiNER, vendored) into the cc-harness STT venv for the `callcenter-harness` S2 redaction stage. Detection runs offline (NFR-7). **Depends on** `airgapped-local-bulgarian-stt` (the venv must already exist).
 
 **Automation:** `callcenter-harness:scripts/setup_airgapped_redaction.sh`. Run from repo root `~/callcenter-harness`.

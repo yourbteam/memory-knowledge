@@ -1,6 +1,6 @@
 # Repeatable Operational Sequences
 
-This registry is the canonical, **cross-project** home (in the `memory-knowledge` repo) for repeatable operational sequences — the first place to check before running one. A sequence's automation may live in another repo; the `automation` column names it as `<repo-key>:<path>` (e.g. `mcp-agents-workflow:scripts/…`, `taggable-api:tools/…`).
+This registry is the canonical, **cross-project** home (in the `memory-knowledge` repo) for repeatable operational sequences — the first place to check before running one. A sequence's automation may live in another repo; the `automation` column names the machine target as `<repo-key>:<path>` (e.g. `mcp-agents-workflow:scripts/…`, `taggable-api:tools/…`). It is not an operator command template.
 
 Use it when a task involves a multi-step command sequence that has been run before or is likely to be run again. The matching sequence folder owns the executable steps, scripts, required inputs, failure handling, and verification evidence. If no registered sequence matches, create a discovery log before or during execution so the real steps can be promoted into a registered sequence after they are validated.
 
@@ -19,8 +19,15 @@ Use it when a task involves a multi-step command sequence that has been run befo
   python3 scripts/work_memory.py select --task-id "<task-id>" --sequence-id "<sequence-id>"
   python3 scripts/sequence_guard.py activate --task-id "<task-id>" --sequence-doc "operations/sequences/<sequence-id>/sequence.md"
   ```
+- Start normal operator use through one no-argument controller:
+  ```bash
+  python3 scripts/sequence_intake_launch.py
+  ```
+  Answer only its semantic questions. It derives all JSON, files, environment, flags, and argv,
+  shows the exact prepared operation, and asks for separate authorization before guarded dispatch.
 - Before running a sequence command, guard it with `scripts/sequence_guard.py guard` and one of the allowed command sources: `sequence_doc`, `discovery_log`, `script`, or `tool_help`.
-- Prefer the scripts named by the sequence document over reconstructed shell commands.
+- Do not invoke the `automation` column or argument-bearing runbook examples directly. They are
+  machine compatibility and verification evidence consumed by the registered adapter.
 - Do not print secrets, tokens, auth payloads, or private challenge values in sequence output.
 - If a sequence step fails, record the failed step and exact error before changing the sequence.
 - If the same manual correction is needed twice, update the sequence document or script before claiming the sequence is reusable.
@@ -33,6 +40,7 @@ Use it when a task involves a multi-step command sequence that has been run befo
 | --- | --- | --- | --- | --- | --- | --- |
 | `local-workflow-orch-image` | Build and locally validate a `workflow-orch` Docker image before deploying server/runtime changes, testing Codex auth inside the image, or reproducing deployed container behavior locally. | `operations/sequences/local-workflow-orch-image/` | `mcp-agents-workflow:scripts/local_workflow_orch_image_harness.py` | Docker image exists, container health passes, optional Codex auth seed/probe passes when requested. | `container,image` | `local-workflow-orch-image` |
 | `greenfield-full-drive` | Run the WHOLE local greenfield end-to-end drive (spec → N1 evaluation → N2 decomposition → N3 feature DAG) as ONE command: preflight+prune → build (real exit check) → recreate container on 18082 → seed codex+git auth → regenerate operator env → drive onto a chosen branch → verify. Composes `local-workflow-orch-image` primitives; use for any greenfield drive / re-drive after an engine change, and to keep a benchmark's `main` untouched via `--branch <test-branch>`. | `operations/sequences/greenfield-full-drive/` | `mcp-agents-workflow:scripts/greenfield_full_drive.sh` | Script prints `[ok] sequence complete`; container `/health` ok; and the N3 `program-drive READY` log shows `onto branch '<your --branch>'` (branch-target gate) BEFORE any S1c merge. | `workflow-drive,container` | `greenfield-full-drive` |
+| `greenfield-recreate-resume` | Resume a HALTED greenfield N3 program on a RECREATED local container (after an image rebuild / `docker rm`) as ONE command, restoring every runtime credential/config a recreate wipes: heal operator env (JWT + artifact-repo keys) → seed MK token from KV → recreate container → reseed git auth for BOTH the artifact repo and the feature repo → single-branch warm `/home/lakmus-runtime` → resume the DAG detached. Distinct from `greenfield-full-drive` (new program) and from a bare `docker restart` (state survives — use `greenfield_resume_dag.py` alone). | `operations/sequences/greenfield-recreate-resume/` | `mcp-agents-workflow:scripts/greenfield_recreate_resume.sh` | Script prints `[ok] recreate-resume launched`; `docker logs` shows `greenfield N3-DAG: starting feature feat-<k>` (and `adopting deterministic claimed run … for <stage>` for an adopted feature), NOT `work branch unresolvable`. | `workflow-drive,container` | `greenfield-recreate-resume` |
 | `remote-mcp-user-onboarding` | Add or repair an employee for deployed Remote MCP/MAWF access, including challenge login, repo access, MAWF identity, and token delivery. | `operations/sequences/remote-mcp-user-onboarding/` | `mcp-agents-workflow:dist/remote-mcp-user-admin/remote_mcp_user_admin_tui.py` plus `mcp__memory_knowledge.mawf_upsert_user` | Deployed `/auth/challenge` returns `ok` or a challenge status for the user, MAWF user is active, allowed repos contain only the canonical memory repository key, and the token file exists with owner-only permissions. | `remote-operator,auth` | `remote-mcp-user-onboarding` |
 | `taggable-source-reload` | Idempotently re-load a source's per-table CSV export into `taggable-dev` via the `db-import` WebJob (weekly/ad-hoc reload of app/app2/app3) — no wipe. | `operations/sequences/taggable-source-reload/` | `taggable-api:tools/Taggable.MigrationRunner/scripts/reload-source.sh` | WebJob run status Success; `OauthAccessTokens` count stable (no PK collision / no doubling); big tables grow modestly not doubled; other `system_record_id`s untouched; DB scaled back to S1. | `database,remote-operator` | `taggable-source-reload` |
 | `mawf-playbook-full-test` | Regression-test the MAWF 4-playbook chain (Research → Plan → Write-code → Review) end-to-end on the local image **through all optional gates**, stopping on the first blocker (fix via `/playbook-convergence-loop`, re-enter per `mawf-playbook-blocker-reentry`). | `operations/sequences/mawf-playbook-full-test/` | `mcp-agents-workflow:scripts/mawf_playbook_test_sequence.py` (`--gate-policy` full) | Chain reaches Review with **both** optional gates driven to zero `COVERAGE_GAP`. | `workflow-drive,container` | `mawf-playbook-full-test` |
@@ -52,28 +60,34 @@ Use it when a task involves a multi-step command sequence that has been run befo
 | `discovery-promotion-lifecycle` | Promote a governed discovery sequence through two same-bundle qualifications, atomic registration, and registered same-path verification. | `operations/sequences/discovery-promotion-lifecycle/` | memory-knowledge:scripts/discovery_promotion_lifecycle.py | The controller returns stage complete after a passed registered same-path run. | `workflow-drive` | `discovery-b6658d35-7870-5d15-9f4b-d316138cec83` |
 
 | `commit-push-main` | Commit and push an explicitly approved file scope while preserving unrelated working-tree changes. | `operations/sequences/commit-push-main/` | memory-knowledge:scripts/scoped_git_publish.py | The script returns ok:true with local commit equal to remote_commit, and unrelated unstaged work remains untouched. | `other` | `discovery-9c51594b-6ca3-54a0-b7d7-31632ac2d48c` |
-| `taggable-payout-pdf-visual-diff` | Verify the operator payout PDF (rendered by taggable-api `getPayoutReportPdf`/`PayoutReportPdfWriter`) matches the source template PDF element-by-element — ranked pixel-diff regions + a structural diff of every text run (font/size/colour/position), separators and fills — so template regressions are caught objectively, not by eye. Render a live PDF first with `verify-payout-report.sh`. | `operations/sequences/taggable-payout-pdf-visual-diff/` | `taggable-api:scripts/pdf_visual_diff.py` (+ `scripts/verify-payout-report.sh`) | Zero font/colour/size deltas both pages; positional deltas <~8pt; ranked pixel regions only intended data (refund/legal-name/values); live PDF embeds DM Sans + PT Mono (no Lato). | `verify,pdf,template` | `taggable-payout-pdf-visual-diff` |
 
 | `discovery-bootstrap` | Create and activate a missing-sequence discovery from one validated spec without stale-bundle bootstrap churn | `operations/sequences/discovery-bootstrap/` | memory-knowledge:scripts/discovery_bootstrap.py | Controller returns ok:true with one discovery, matching bundle/receipt hashes, and one started run | `workflow-drive` | `discovery-1cd9d4cf-c214-58b4-b5a7-022f51a2d344` |
 
 | `discovery-candidate-reconciliation` | Audit all logged discovery sequences, decide which should promote, absorb, remain, supersede, or quarantine, and clean the active queue without deleting provenance. | `operations/sequences/discovery-candidate-reconciliation/` | python3 scripts/discovery_candidate_reconciliation.py | The controller returns ok true, every frozen candidate has an approved disposition, canonical promote rows reach registered verification, and the active index excludes only terminal rows while original logs remain. | `other` | `discovery-782832ed-7fa4-5efe-9765-463303ecd2a2` |
 
-| `screenshot-page-source-locator` | Locate the route, owning page/template, behavior script, styles, and data boundary behind a UI page from a screenshot, including duplicate or ambiguous variants. | `operations/sequences/screenshot-page-source-locator/` | memory-knowledge:scripts/screenshot_source_locator.py | The helper and agent trace identify the evidence-backed route, page/template, behavior script, styles, data boundary, and any unresolved discriminator; verification tests pass. | `read-only` | `discovery-66c9c758-8b03-5e3b-9622-faa1044070c9` |
+| `convergence-checkpoint-run` | Run an already guard-authorized command when convergence baseline checks repeatedly race legitimate concurrent appends to the canonical memory-knowledge work-memory ledger and generated blocker view; serialize only that shared pair and fail on any other drift. | `operations/sequences/convergence-checkpoint-run/` | memory-knowledge:scripts/convergence_checkpoint_run.py | CONVERGENCE CHECKPOINT COMMAND OK | `other` | `discovery-240e46ff-483d-51e7-94cc-3adb208506d2` |
+
+| `scoped-context-edit` | Guard a repository semantic edit that must use one exact anchor, one small apply_patch, stale-context rejection, and scoped post-edit verification. | `operations/sequences/scoped-context-edit/` | memory-knowledge:scripts/context_edit_guard.py self-check | SCOPED CONTEXT EDIT OK | `other` | `discovery-1c6cdb98-3710-5220-895a-11ae9a2822c8` |
+
+| `convergence-state-review-cycle` | Apply bounded convergence review state operations without manual JSON list encoding. | `operations/sequences/convergence-state-review-cycle/` | python3 scripts/convergence_state_review_cycle.py apply --request <request-json> | CONVERGENCE STATE REVIEW CYCLE OK | `workflow-drive` | `discovery-5771be28-92af-5f65-ac15-546114a90d01` |
+
+| `workflow-resume-from-phase-live-confirmation` | A persisted United Partners workflow must continue from its exact first unfinished phase while preserving completed phase state and streaming the structured live watcher feed. | `operations/sequences/workflow-resume-from-phase-live-confirmation/` | scripts/run_client_regeneration.py --client <client> --resume-run <persisted-run-id> --from-phase <first-unfinished-phase> | A new child preserves all completed source phases, begins at the requested first unfinished phase, and reaches completion or one persisted diagnosable deviation while watcher telemetry remains active. | `workflow-drive` | `discovery-9c0393de-2d1b-5744-8e85-2f519d56edea` |
 
 
 ## Missing Sequence Discovery
 
 Use this path when the task is about to run a repeatable sequence but the `Available Sequences` table has no matching row.
 
-Create one version-1 bootstrap spec containing the task id, operation kind, fixed date, sequence
-name, outcome, repeatability reason, and complete initial command rows. Then run:
+Select and activate the registered `discovery-bootstrap` sequence, then launch:
 
 ```bash
-python3 scripts/discovery_bootstrap.py start --spec <spec-json>
+python3 scripts/sequence_intake_launch.py
 ```
 
-The controller validates all inputs before mutation, creates the document and manifest before any
-receipt, selects and activates that exact bundle, and starts one deterministic run. Use discovery
-append/correction commands only for observations learned after that run begins.
+Answer its semantic questions. For each step, name a checked-in zero-input Python or shell script;
+the adapter creates the version-1 bootstrap JSON and command rows. The controller validates all
+inputs before mutation, creates the document and manifest before any receipt, selects and activates
+that exact bundle, and starts one deterministic run. Use discovery append/correction commands only
+for observations learned after that run begins.
 
 Promotion rule: do not create a registered sequence folder until the discovery log contains stable commands or documented human steps, required inputs, failure handling, and verification evidence.

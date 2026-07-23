@@ -193,6 +193,7 @@ def _registered_bundle_from_staged(
             mode="registered", subject_id=sequence_id, document=temp_dir / "sequence.md",
             manifest=temp_dir / "dependencies.json",
             repo_roots_file=repo_roots_file,
+            include_bootstrap_trust_anchors=True,
         )
         prefix = str(temp_dir.relative_to(work_memory.ROOT))
         final = f"operations/sequences/{sequence_id}"
@@ -241,6 +242,9 @@ def cmd_promote(args: argparse.Namespace) -> dict[str, Any]:
                 "schema_version": 1, "lineage_id": state["discovery_id"],
                 "dependencies": source_manifest["dependencies"],
             }
+            for field in ("candidate_identity", "candidate_fingerprint", "observer_provenance"):
+                if field in source_manifest:
+                    expected_manifest[field] = source_manifest[field]
             expected_sequence = _sequence_text(
                 discovery, args.sequence_id, args.use_when, args.pass_signal
             )
@@ -254,6 +258,7 @@ def cmd_promote(args: argparse.Namespace) -> dict[str, Any]:
                 mode="registered", subject_id=args.sequence_id, document=sequence_path,
                 manifest=registered_manifest_path,
                 repo_roots_file=repo_roots_file,
+                include_bootstrap_trust_anchors=True,
             )
             row = next(
                 (item for item in work_memory.registry_rows()[0]
@@ -302,6 +307,9 @@ def cmd_promote(args: argparse.Namespace) -> dict[str, Any]:
             raise work_memory.WorkMemoryError("discovery-lineage-mismatch", 3)
         registered_manifest = {"schema_version": 1, "lineage_id": state["discovery_id"],
                                "dependencies": manifest["dependencies"]}
+        for field in ("candidate_identity", "candidate_fingerprint", "observer_provenance"):
+            if field in manifest:
+                registered_manifest[field] = manifest[field]
         manifest_bytes = work_memory.canonical_bytes(registered_manifest)
         sequence_bytes = _sequence_text(discovery, args.sequence_id, args.use_when, args.pass_signal)
         bundle, new_bundle_hash = _registered_bundle_from_staged(

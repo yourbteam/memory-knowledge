@@ -13,9 +13,67 @@ import tempfile
 from pathlib import Path
 from typing import Sequence
 
+try:
+    from scripts import (
+        prevention_source_receipt,
+        script_intake,
+        sequence_intake_adapters,
+        work_memory,
+    )
+except ModuleNotFoundError:  # direct script execution
+    import prevention_source_receipt
+    import script_intake
+    import sequence_intake_adapters
+    import work_memory
+
 
 class PublishError(RuntimeError):
     """A safe, operator-actionable publish failure."""
+
+
+EFFECT_AUTHORIZATION_SPEC = {
+    "schema_version": script_intake.SCHEMA_VERSION,
+    "fields": [
+        {
+            "id": "authorize",
+            "prompt": "Authorize the reviewed commit or push operation now",
+            "response_format": "One yes or no answer.",
+            "example": "no",
+            "constraints": (
+                "Answer yes only after reviewing the prepared operation, "
+                "repository, branch, remote, and file scope shown above."
+            ),
+            "type": "boolean",
+            "required": True,
+        },
+    ],
+}
+
+
+def _bind_prevention_trailers(
+    message: str, effect_id: str | None, preparation_sha256: str | None,
+) -> str:
+    if not effect_id and not preparation_sha256:
+        return message
+    if not effect_id or not preparation_sha256:
+        raise PublishError("incomplete prevention effect identity")
+    trailers = {
+        "Prevention-Effect-ID": effect_id,
+        "Prevention-Preparation-SHA256": preparation_sha256,
+    }
+    existing = {}
+    for line in message.splitlines():
+        for name in trailers:
+            prefix = f"{name}:"
+            if line.startswith(prefix):
+                existing[name] = line[len(prefix):].strip()
+    if existing and existing != trailers:
+        raise PublishError("conflicting prevention commit identity")
+    if existing == trailers:
+        return message
+    return message.rstrip() + "\n\n" + "\n".join(
+        f"{name}: {value}" for name, value in trailers.items()
+    )
 
 
 def _git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProcess[str]:
@@ -34,8 +92,24 @@ def _git(repo: Path, *args: str, check: bool = True) -> subprocess.CompletedProc
 def _manifest_paths(repo: Path, manifest: Path) -> list[str]:
     if not manifest.is_file():
         raise PublishError(f"manifest not found: {manifest}")
+    text = manifest.read_text(encoding="utf-8")
+    try:
+        decoded = json.loads(text)
+    except json.JSONDecodeError:
+        decoded = None
+    if decoded is not None:
+        if (
+            not isinstance(decoded, list) or not decoded
+            or any(not isinstance(item, str) or not item for item in decoded)
+        ):
+            raise PublishError("manifest JSON must be a non-empty string list")
+        rows = [(number, value) for number, value in enumerate(decoded, start=1)]
+    else:
+        # Bounded compatibility for existing checked sequence manifests. New
+        # controller materialization is the canonical JSON-list producer.
+        rows = list(enumerate(text.splitlines(), start=1))
     paths: list[str] = []
-    for number, raw in enumerate(manifest.read_text(encoding="utf-8").splitlines(), start=1):
+    for number, raw in rows:
         value = raw.strip()
         if not value or value.startswith("#"):
             continue
@@ -404,16 +478,13 @@ def isolated_reconcile_and_resume(
     merge_base = _git(repo, "merge-base", commit_sha, remote_sha).stdout.strip()
     local_paths = _changed_paths(repo, merge_base, commit_sha)
     remote_paths = _changed_paths(repo, merge_base, remote_sha)
-    if not local_paths <= scope:
-        raise PublishError(
-            "preserved commit escapes publish scope: " + ", ".join(sorted(local_paths - scope))
-        )
-    if scope != local_paths | overlay:
+    preserved_local_paths = (local_paths & scope) - overlay
+    if scope != preserved_local_paths | overlay:
         raise PublishError(
             "publish scope is not fully sourced by commit or overlay; "
-            f"missing={sorted(scope - (local_paths | overlay))}"
+            f"missing={sorted(scope - (preserved_local_paths | overlay))}"
         )
-    overlaps = local_paths & remote_paths
+    overlaps = (local_paths & scope) & remote_paths
     if bool(ledger_path) != bool(generated_view_path):
         raise PublishError("ledger path and generated view path must be provided together")
     semantic_paths = overlay | ({ledger_path, generated_view_path} if ledger_path else set())
@@ -443,7 +514,7 @@ def isolated_reconcile_and_resume(
         generated_paths = {ledger_path, generated_view_path} if ledger_path else set()
         auto_merged: list[str] = []
         unsupported: list[str] = []
-        for relative in sorted(local_paths - overlay - generated_paths):
+        for relative in sorted(preserved_local_paths - generated_paths):
             if relative in remote_paths:
                 if _merge_commit_path(repo, merge_base, commit_sha, relative, isolated):
                     auto_merged.append(relative)
@@ -541,7 +612,7 @@ def publish(
     *, repo: Path, manifest: Path, message: str, branch: str, remote: str, execute: bool,
 ) -> dict[str, object]:
     repo = repo.resolve()
-    if not message.strip():
+    if execute and not message.strip():
         raise PublishError("commit message must not be empty")
     paths = _preflight(repo, branch, remote, manifest)
     if not execute:
@@ -620,12 +691,111 @@ def build_parser() -> argparse.ArgumentParser:
     parser.add_argument("--overlay-manifest", type=Path)
     parser.add_argument("--ledger-path")
     parser.add_argument("--generated-view-path")
+    parser.add_argument("--prevention-effect-id")
+    parser.add_argument("--prevention-preparation-sha256")
     return parser
+
+
+def _run_semantic_intake() -> int:
+    try:
+        roots = {
+            key: str(path)
+            for key, path in work_memory._repo_roots().items()
+        }
+        with tempfile.TemporaryDirectory(prefix="commit-push-intake-") as raw_root:
+            root = Path(raw_root).resolve()
+            prepared = sequence_intake_adapters.collect_and_prepare(
+                "commit-push-main",
+                artifact_paths={
+                    "approved_paths": str(root / "approved-paths.txt"),
+                    "overlay_paths": str(root / "overlay-paths.txt"),
+                },
+                repository_roots=roots,
+            )
+            print(json.dumps({
+                "event": "intake-prepared",
+                "prepared": prepared,
+            }, sort_keys=True), file=sys.stderr)
+            if prepared["authorization"]["required"]:
+                confirmation = script_intake.collect(EFFECT_AUTHORIZATION_SPEC)
+                if not confirmation["authorize"]:
+                    print(json.dumps({
+                        "ok": False,
+                        "error": "effect-authorization-declined",
+                    }, sort_keys=True), file=sys.stderr)
+                    return 130
+            for artifact in prepared["artifacts"].values():
+                path = Path(artifact["path"]).resolve()
+                try:
+                    path.relative_to(root)
+                except ValueError as exc:
+                    raise PublishError(
+                        "intake-artifact-path-outside-temporary-root"
+                    ) from exc
+                path.write_text(artifact["content"], encoding="utf-8")
+            return main(prepared["argv"][2:])
+    except script_intake.IntakeCancelled:
+        print(json.dumps({
+            "ok": False,
+            "error": "intake-cancelled",
+        }, sort_keys=True), file=sys.stderr)
+        return 130
+    except (
+        sequence_intake_adapters.AdapterError,
+        work_memory.WorkMemoryError,
+    ) as exc:
+        error = exc.code if isinstance(exc, work_memory.WorkMemoryError) else str(exc)
+        print(json.dumps({
+            "ok": False,
+            "error": error,
+        }, sort_keys=True), file=sys.stderr)
+        return 2
 
 
 def main(argv: Sequence[str] | None = None) -> int:
     try:
-        args = build_parser().parse_args(argv)
+        values = list(sys.argv[1:] if argv is None else argv)
+        if not values:
+            return _run_semantic_intake()
+        args = build_parser().parse_args(values)
+        if args.resume_commit:
+            profile = (
+                "isolated-reconcile-and-resume" if args.isolated_reconcile_remote
+                else "isolated-integrate-and-resume" if args.isolated_integrate_remote
+                else "integrate-remote-and-resume" if args.integrate_remote
+                else "resume-push"
+            )
+        else:
+            profile = "publish" if args.execute else "dry-run"
+        source_identity = {
+            "repository_path_sha256": hashlib.sha256(
+                str(args.repo.expanduser().resolve()).encode("utf-8")
+            ).hexdigest(),
+            "profile": profile,
+            "branch": args.branch,
+            "remote_key": args.remote,
+            "manifest_sha256": (
+                hashlib.sha256(args.manifest.read_bytes()).hexdigest()
+                if args.manifest is not None and args.manifest.is_file() else None
+            ),
+            "overlay_manifest_sha256": (
+                hashlib.sha256(args.overlay_manifest.read_bytes()).hexdigest()
+                if args.overlay_manifest is not None and args.overlay_manifest.is_file()
+                else None
+            ),
+            "resume_commit": args.resume_commit,
+        }
+        source_receipt = None
+        if profile != "dry-run" and (
+            args.prevention_effect_id or args.prevention_preparation_sha256
+        ):
+            source_receipt = prevention_source_receipt.prepare(
+                owner_sequence_id="commit-push-main",
+                profile_id=profile,
+                effect_id=args.prevention_effect_id,
+                preparation_artifact_sha256=args.prevention_preparation_sha256,
+                source_identity=source_identity,
+            )
         if args.resume_commit:
             if args.execute:
                 raise PublishError("--resume-commit cannot be combined with --execute")
@@ -646,7 +816,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                     repo=args.repo,
                     manifest=args.manifest,
                     overlay_manifest=args.overlay_manifest,
-                    message=args.message,
+                    message=_bind_prevention_trailers(
+                        args.message, args.prevention_effect_id,
+                        args.prevention_preparation_sha256,
+                    ),
                     branch=args.branch,
                     remote=args.remote,
                     commit_sha=args.resume_commit,
@@ -663,7 +836,10 @@ def main(argv: Sequence[str] | None = None) -> int:
                     repo=args.repo,
                     manifest=args.manifest,
                     overlay_manifest=args.overlay_manifest,
-                    message=args.message,
+                    message=_bind_prevention_trailers(
+                        args.message, args.prevention_effect_id,
+                        args.prevention_preparation_sha256,
+                    ),
                     branch=args.branch,
                     remote=args.remote,
                     commit_sha=args.resume_commit,
@@ -697,16 +873,45 @@ def main(argv: Sequence[str] | None = None) -> int:
                 or args.isolated_reconcile_remote or args.overlay_manifest
             ):
                 raise PublishError("remote-integration options require --resume-commit")
-            if args.manifest is None or args.message is None:
-                raise PublishError("--manifest and --message are required unless --resume-commit is used")
+            if args.manifest is None or (args.execute and args.message is None):
+                raise PublishError(
+                    "--manifest is required; --message is additionally required for publish"
+                )
             result = publish(
                 repo=args.repo,
                 manifest=args.manifest,
-                message=args.message,
+                message=_bind_prevention_trailers(
+                    args.message or "", args.prevention_effect_id,
+                    args.prevention_preparation_sha256,
+                ),
                 branch=args.branch,
                 remote=args.remote,
                 execute=args.execute,
             )
+        if source_receipt is not None:
+            source_receipt = prevention_source_receipt.complete(
+                owner_sequence_id="commit-push-main",
+                profile_id=profile,
+                effect_id=args.prevention_effect_id,
+                preparation_artifact_sha256=args.prevention_preparation_sha256,
+                source_identity=source_identity,
+                result_identity={
+                    "profile": profile,
+                    "commit": result.get("commit"),
+                    "remote_commit": result.get("remote_commit"),
+                    "ok": result.get("ok"),
+                },
+            )
+        if args.prevention_effect_id:
+            result = {
+                **result,
+                "preventionEffectId": args.prevention_effect_id,
+                "preventionPreparationSha256": args.prevention_preparation_sha256,
+            }
+            if source_receipt is not None:
+                result["preventionSourceReceiptSha256"] = (
+                    prevention_source_receipt.receipt_sha256(source_receipt)
+                )
         print(json.dumps(result, sort_keys=True))
         return 0
     except PublishError as exc:
