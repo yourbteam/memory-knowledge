@@ -37,8 +37,34 @@ BLOCKER_VIEW = ROOT / "operations/blockers/BLOCKERS.md"
 REGISTRY = ROOT / "operations/sequences/SEQUENCES.md"
 RECEIPT_ROOT = Path("/private/tmp/work-memory")
 HOST_THREAD_ENV = "CODEX_THREAD_ID"
+CLIENT_KIND_ENV = "MK_CLIENT_KIND"
+CLIENT_SESSION_ENV = "MK_CLIENT_SESSION_ID"
+CLAUDE_SESSION_ENV = "CLAUDE_SESSION_ID"
+CLIENT_KINDS = {"codex", "claude"}
+OWNERSHIP_SCHEMA_VERSIONS = {1, 2}
 OWNERSHIP_EVENT_TYPES = {
     "task_writer_claimed", "task_writer_handoff_recorded", "legacy_run_writer_bound",
+}
+V1_RUN_OWNERSHIP_FIELDS = {
+    "task_id", "writer_thread_id", "ownership_generation",
+    "ownership_event_id", "ownership_sha256",
+}
+V2_RUN_OWNERSHIP_FIELDS = {
+    "task_id", "writer_id", "writer_client_kind", "writer_session_id",
+    "ownership_generation", "ownership_event_id", "ownership_sha256",
+}
+V2_EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
+    "task_writer_claimed": (
+        {"task_id", "writer_id", "writer_client_kind", "writer_session_id",
+         "ownership_generation"}, set(),
+    ),
+    "task_writer_handoff_recorded": (
+        {"task_id", "from_writer_id", "to_writer_id", "to_writer_client_kind",
+         "to_writer_session_id", "ownership_generation", "previous_ownership_event_id"},
+        {"previous_classification_receipt_hash", "refreshed_classification_receipt_hash",
+         "previous_selection_receipt_hash", "refreshed_selection_receipt_hash",
+         "previous_active_state_hash", "refreshed_active_state_hash"},
+    ),
 }
 PRE_RUN_BLOCKER_EVENT_TYPES = {
     "pre_run_blocker_opened", "pre_run_correction_recorded",
@@ -93,7 +119,8 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
          "started_at_utc"},
         {"predecessor_run_id", "verifies_correction_ids", "repository_roots",
          "task_id", "writer_thread_id", "ownership_generation",
-         "ownership_event_id", "ownership_sha256"},
+         "ownership_event_id", "ownership_sha256",
+         "writer_id", "writer_client_kind", "writer_session_id"},
     ),
     "blocker_opened": (
         {"run_id", "blocker_id", "occurrence_id", "fingerprint", "subject_id", "lineage_id",
@@ -421,6 +448,40 @@ def host_thread_id() -> str:
     return canonical
 
 
+WRITER_ID_NAMESPACE = uuid.uuid5(uuid.NAMESPACE_URL, "memory-knowledge:work-memory:writer")
+
+
+def writer_identity() -> dict[str, Any]:
+    """Versioned host/session identity. Legacy CODEX_THREAD_ID stays a schema-v1 writer;
+    a Claude session (or any explicit client identity) is a schema-v2 writer whose neutral
+    ledger UUID is derived from client kind plus session, so cross-client records cannot collide."""
+    kind = os.environ.get(CLIENT_KIND_ENV)
+    if kind is not None and kind not in CLIENT_KINDS:
+        raise WorkMemoryError("invalid-client-kind", 4)
+    session = os.environ.get(CLIENT_SESSION_ENV)
+    if kind is None:
+        if os.environ.get(HOST_THREAD_ENV):
+            thread = host_thread_id()
+            return {"schema_version": 1, "writer_client_kind": "codex",
+                    "writer_session_id": thread, "writer_id": thread}
+        if os.environ.get(CLAUDE_SESSION_ENV):
+            kind, session = "claude", os.environ.get(CLAUDE_SESSION_ENV)
+        else:
+            raise WorkMemoryError("host-codex-thread-id-required", 4)
+    elif kind == "codex" and not session:
+        thread = host_thread_id()
+        return {"schema_version": 1, "writer_client_kind": "codex",
+                "writer_session_id": thread, "writer_id": thread}
+    elif kind == "claude" and not session:
+        session = os.environ.get(CLAUDE_SESSION_ENV)
+    if not session:
+        raise WorkMemoryError("client-session-id-required", 4)
+    canonical = require_uuid(session, "client-session-id")
+    writer_id = str(uuid.uuid5(WRITER_ID_NAMESPACE, f"{kind}:{canonical}"))
+    return {"schema_version": 2, "writer_client_kind": kind,
+            "writer_session_id": canonical, "writer_id": writer_id}
+
+
 def _ownership_sha256(
     task_id: str, writer_thread_id: str, generation: int, ownership_event_id: str,
 ) -> str:
@@ -432,30 +493,56 @@ def _ownership_sha256(
     }))
 
 
+def _ownership_sha256_v2(
+    task_id: str, writer_id: str, writer_client_kind: str, writer_session_id: str,
+    generation: int, ownership_event_id: str,
+) -> str:
+    return sha256_bytes(canonical_bytes({
+        "task_id": task_id,
+        "writer_id": writer_id,
+        "writer_client_kind": writer_client_kind,
+        "writer_session_id": writer_session_id,
+        "ownership_generation": generation,
+        "ownership_event_id": ownership_event_id,
+    }))
+
+
+def _state_ownership_sha256(task_id: str, state: dict[str, Any]) -> str:
+    if state.get("schema_version") == 2:
+        return _ownership_sha256_v2(
+            task_id, state["writer_thread_id"], state["writer_client_kind"],
+            state["writer_session_id"], state["ownership_generation"],
+            state["ownership_event_id"],
+        )
+    return _ownership_sha256(
+        task_id, state["writer_thread_id"], state["ownership_generation"],
+        state["ownership_event_id"],
+    )
+
+
 def _ownership_receipt_fields(task_id: str, state: dict[str, Any]) -> dict[str, Any]:
+    if state.get("schema_version") == 2:
+        return {
+            "writer_id": state["writer_thread_id"],
+            "writer_client_kind": state["writer_client_kind"],
+            "writer_session_id": state["writer_session_id"],
+            "ownership_generation": state["ownership_generation"],
+            "ownership_event_id": state["ownership_event_id"],
+            "ownership_sha256": _state_ownership_sha256(task_id, state),
+        }
     return {
         "writer_thread_id": state["writer_thread_id"],
         "ownership_generation": state["ownership_generation"],
         "ownership_event_id": state["ownership_event_id"],
-        "ownership_sha256": _ownership_sha256(
-            task_id, state["writer_thread_id"], state["ownership_generation"],
-            state["ownership_event_id"],
-        ),
+        "ownership_sha256": _state_ownership_sha256(task_id, state),
     }
 
 
 def _prefixed_ownership_receipt_fields(
     prefix: str, task_id: str, state: dict[str, Any],
 ) -> dict[str, Any]:
-    return {
-        f"{prefix}_writer_thread_id": state["writer_thread_id"],
-        f"{prefix}_ownership_generation": state["ownership_generation"],
-        f"{prefix}_ownership_event_id": state["ownership_event_id"],
-        f"{prefix}_ownership_sha256": _ownership_sha256(
-            task_id, state["writer_thread_id"], state["ownership_generation"],
-            state["ownership_event_id"],
-        ),
-    }
+    return {f"{prefix}_{key}": value
+            for key, value in _ownership_receipt_fields(task_id, state).items()}
 
 
 def _ownership_snapshot(
@@ -470,48 +557,71 @@ def _ownership_snapshot(
             task_id = event["task_id"]
             if task_id in tasks or event["ownership_generation"] != 1:
                 raise WorkMemoryError("task-writer-already-claimed", 3)
-            tasks[task_id] = {
-                "writer_thread_id": event["writer_thread_id"],
-                "ownership_generation": 1,
-                "ownership_event_id": event["event_id"],
-            }
+            if event.get("schema_version") == 2:
+                tasks[task_id] = {
+                    "schema_version": 2,
+                    "writer_thread_id": event["writer_id"],
+                    "writer_client_kind": event["writer_client_kind"],
+                    "writer_session_id": event["writer_session_id"],
+                    "ownership_generation": 1,
+                    "ownership_event_id": event["event_id"],
+                }
+            else:
+                tasks[task_id] = {
+                    "writer_thread_id": event["writer_thread_id"],
+                    "ownership_generation": 1,
+                    "ownership_event_id": event["event_id"],
+                }
             continue
         if kind == "task_writer_handoff_recorded":
             task_id = event["task_id"]
             current = tasks.get(task_id)
+            if event.get("schema_version") == 2:
+                from_writer = event["from_writer_id"]
+                to_writer = event["to_writer_id"]
+            else:
+                from_writer = event["from_writer_thread_id"]
+                to_writer = event["to_writer_thread_id"]
             if (
                 current is None
-                or event["from_writer_thread_id"] != current["writer_thread_id"]
+                or from_writer != current["writer_thread_id"]
                 or event["previous_ownership_event_id"] != current["ownership_event_id"]
                 or event["ownership_generation"] != current["ownership_generation"] + 1
-                or event["to_writer_thread_id"] == event["from_writer_thread_id"]
+                or to_writer == from_writer
             ):
                 raise WorkMemoryError("invalid-task-writer-handoff", 3)
-            tasks[task_id] = {
-                "writer_thread_id": event["to_writer_thread_id"],
-                "ownership_generation": event["ownership_generation"],
-                "ownership_event_id": event["event_id"],
-            }
+            if event.get("schema_version") == 2:
+                tasks[task_id] = {
+                    "schema_version": 2,
+                    "writer_thread_id": to_writer,
+                    "writer_client_kind": event["to_writer_client_kind"],
+                    "writer_session_id": event["to_writer_session_id"],
+                    "ownership_generation": event["ownership_generation"],
+                    "ownership_event_id": event["event_id"],
+                }
+            else:
+                tasks[task_id] = {
+                    "writer_thread_id": to_writer,
+                    "ownership_generation": event["ownership_generation"],
+                    "ownership_event_id": event["event_id"],
+                }
             continue
         if kind == "run_started":
             run_id = event["run_id"]
             starts[run_id] = event
-            ownership_fields = {
-                "task_id", "writer_thread_id", "ownership_generation",
-                "ownership_event_id", "ownership_sha256",
-            }
-            present = ownership_fields & set(event)
+            present = (V1_RUN_OWNERSHIP_FIELDS | V2_RUN_OWNERSHIP_FIELDS) & set(event)
             if not present:
                 runs[run_id] = None
                 continue
-            if present != ownership_fields:
+            family = V2_RUN_OWNERSHIP_FIELDS if "writer_id" in event else V1_RUN_OWNERSHIP_FIELDS
+            if present != family:
                 raise WorkMemoryError("incomplete-run-writer-binding", 2)
             task_id = event["task_id"]
             current = tasks.get(task_id)
             if current is None:
                 raise WorkMemoryError("run-task-writer-unclaimed", 3)
-            expected = _ownership_receipt_fields(task_id, current)
-            if any(event[key] != value for key, value in expected.items()):
+            expected = {"task_id": task_id, **_ownership_receipt_fields(task_id, current)}
+            if set(expected) != family or any(event.get(key) != value for key, value in expected.items()):
                 raise WorkMemoryError("run-task-writer-binding-mismatch", 3)
             runs[run_id] = task_id
             continue
@@ -524,6 +634,8 @@ def _ownership_snapshot(
                 raise WorkMemoryError("legacy-run-not-unbound", 3)
             if current is None:
                 raise WorkMemoryError("legacy-run-task-writer-unclaimed", 3)
+            if current.get("schema_version") == 2:
+                raise WorkMemoryError("legacy-run-writer-binding-mismatch", 3)
             expected = _ownership_receipt_fields(task_id, current)
             if (
                 event["writer_thread_id"] != expected["writer_thread_id"]
@@ -621,7 +733,11 @@ def _validate_event_shape(event: dict[str, Any]) -> None:
     event_type = event.get("event_type")
     if event_type not in EVENT_FIELDS:
         raise WorkMemoryError("unknown-event-type", 2)
-    required, optional = EVENT_FIELDS[event_type]
+    version = event.get("schema_version")
+    if version == 2 and event_type in V2_EVENT_FIELDS:
+        required, optional = V2_EVENT_FIELDS[event_type]
+    else:
+        required, optional = EVENT_FIELDS[event_type]
     allowed = BASE_FIELDS | required | optional
     missing = (BASE_FIELDS | required) - set(event)
     extra = set(event) - allowed
@@ -629,7 +745,7 @@ def _validate_event_shape(event: dict[str, Any]) -> None:
         raise WorkMemoryError("missing-event-fields:" + ",".join(sorted(missing)), 2)
     if extra:
         raise WorkMemoryError("unknown-event-fields:" + ",".join(sorted(extra)), 2)
-    if event.get("schema_version") != SCHEMA_VERSION:
+    if version != SCHEMA_VERSION and not (version == 2 and event_type in V2_EVENT_FIELDS):
         raise WorkMemoryError("unsupported-event-schema", 2)
     require_uuid(event["event_id"], "event-id")
     parse_utc(event["recorded_at_utc"])
@@ -674,13 +790,27 @@ def _validate_event_values(event: dict[str, Any]) -> None:
             require_uuid(event[field], field.replace("_", "-"))
     if kind in OWNERSHIP_EVENT_TYPES:
         require_id(event["task_id"], "task-id")
+        v2_ownership = event.get("schema_version") == 2
         if kind == "task_writer_claimed":
-            require_uuid(event["writer_thread_id"], "writer-thread-id")
+            if v2_ownership:
+                require_uuid(event["writer_id"], "writer-id")
+                require_uuid(event["writer_session_id"], "writer-session-id")
+                if event["writer_client_kind"] not in CLIENT_KINDS:
+                    raise WorkMemoryError("invalid-writer-client-kind", 2)
+            else:
+                require_uuid(event["writer_thread_id"], "writer-thread-id")
             if event["ownership_generation"] != 1:
                 raise WorkMemoryError("invalid-ownership-generation", 2)
         elif kind == "task_writer_handoff_recorded":
-            require_uuid(event["from_writer_thread_id"], "from-writer-thread-id")
-            require_uuid(event["to_writer_thread_id"], "to-writer-thread-id")
+            if v2_ownership:
+                require_uuid(event["from_writer_id"], "from-writer-id")
+                require_uuid(event["to_writer_id"], "to-writer-id")
+                require_uuid(event["to_writer_session_id"], "to-writer-session-id")
+                if event["to_writer_client_kind"] not in CLIENT_KINDS:
+                    raise WorkMemoryError("invalid-writer-client-kind", 2)
+            else:
+                require_uuid(event["from_writer_thread_id"], "from-writer-thread-id")
+                require_uuid(event["to_writer_thread_id"], "to-writer-thread-id")
             require_uuid(event["previous_ownership_event_id"], "previous-ownership-event-id")
             if (
                 isinstance(event["ownership_generation"], bool)
@@ -856,16 +986,19 @@ def _validate_event_values(event: dict[str, Any]) -> None:
             raise WorkMemoryError("incomplete-successor-binding", 2)
         if "verifies_correction_ids" in event:
             _require_list(event, "verifies_correction_ids", nonempty=True)
-        ownership_fields = {
-            "task_id", "writer_thread_id", "ownership_generation",
-            "ownership_event_id", "ownership_sha256",
-        }
-        present = ownership_fields & set(event)
-        if present and present != ownership_fields:
+        present = (V1_RUN_OWNERSHIP_FIELDS | V2_RUN_OWNERSHIP_FIELDS) & set(event)
+        family = V2_RUN_OWNERSHIP_FIELDS if "writer_id" in event else V1_RUN_OWNERSHIP_FIELDS
+        if present and present != family:
             raise WorkMemoryError("incomplete-run-writer-binding", 2)
         if present:
             require_id(event["task_id"], "task-id")
-            require_uuid(event["writer_thread_id"], "writer-thread-id")
+            if "writer_id" in event:
+                require_uuid(event["writer_id"], "writer-id")
+                require_uuid(event["writer_session_id"], "writer-session-id")
+                if event["writer_client_kind"] not in CLIENT_KINDS:
+                    raise WorkMemoryError("invalid-writer-client-kind", 2)
+            else:
+                require_uuid(event["writer_thread_id"], "writer-thread-id")
             require_uuid(event["ownership_event_id"], "ownership-event-id")
             _require_hash(event["ownership_sha256"], "ownership-sha256")
             if (
@@ -1430,15 +1563,17 @@ def _validate_correction_preservation_records(
     for index, event in enumerate(events):
         kind = event["event_type"]
         if kind == "task_writer_claimed":
+            v2_claim = event.get("schema_version") == 2
             task_states[event["task_id"]] = {
-                "writer_thread_id": event["writer_thread_id"],
+                "writer_thread_id": event["writer_id"] if v2_claim else event["writer_thread_id"],
                 "ownership_generation": event["ownership_generation"],
                 "ownership_event_id": event["event_id"],
             }
             continue
         if kind == "task_writer_handoff_recorded":
+            v2_handoff = event.get("schema_version") == 2
             task_states[event["task_id"]] = {
-                "writer_thread_id": event["to_writer_thread_id"],
+                "writer_thread_id": event["to_writer_id"] if v2_handoff else event["to_writer_thread_id"],
                 "ownership_generation": event["ownership_generation"],
                 "ownership_event_id": event["event_id"],
             }
@@ -2071,34 +2206,50 @@ def _authorize_event_batch(
 
     for event in additions:
         kind = event["event_type"]
+        v2_ownership = event.get("schema_version") == 2
         if kind == "task_writer_claimed":
             task_id = event["task_id"]
-            if event["writer_thread_id"] != writer_thread_id:
+            claimed_writer = event["writer_id"] if v2_ownership else event["writer_thread_id"]
+            if claimed_writer != writer_thread_id:
                 raise WorkMemoryError("task-writer-host-mismatch", 4)
             if task_id in tasks:
                 raise WorkMemoryError("task-writer-already-claimed", 4)
-            tasks[task_id] = {
+            state = {
                 "writer_thread_id": writer_thread_id,
                 "ownership_generation": 1,
                 "ownership_event_id": event["event_id"],
             }
+            if v2_ownership:
+                state.update({
+                    "schema_version": 2,
+                    "writer_client_kind": event["writer_client_kind"],
+                    "writer_session_id": event["writer_session_id"],
+                })
+            tasks[task_id] = state
             continue
         if kind == "task_writer_handoff_recorded":
             task_id = event["task_id"]
             current = tasks.get(task_id)
+            from_writer = event["from_writer_id"] if v2_ownership else event["from_writer_thread_id"]
             if (
                 current is None
                 or current["writer_thread_id"] != writer_thread_id
-                or event["from_writer_thread_id"] != writer_thread_id
+                or from_writer != writer_thread_id
                 or event["previous_ownership_event_id"] != current["ownership_event_id"]
                 or event["ownership_generation"] != current["ownership_generation"] + 1
             ):
                 raise WorkMemoryError("task-writer-handoff-not-authorized", 4)
             new_state = {
-                "writer_thread_id": event["to_writer_thread_id"],
+                "writer_thread_id": event["to_writer_id"] if v2_ownership else event["to_writer_thread_id"],
                 "ownership_generation": event["ownership_generation"],
                 "ownership_event_id": event["event_id"],
             }
+            if v2_ownership:
+                new_state.update({
+                    "schema_version": 2,
+                    "writer_client_kind": event["to_writer_client_kind"],
+                    "writer_session_id": event["to_writer_session_id"],
+                })
             expected_refresh, _ = _handoff_refresh_plan(
                 task_id, current, new_state,
             )
@@ -2307,7 +2458,7 @@ def transact(
             fcntl.flock(handle.fileno(), fcntl.LOCK_EX)
             existing = ledger.read_bytes() if ledger.exists() else b""
             writer_thread_id = (
-                host_thread_id() if _batch_requires_host_thread(requested_events) else None
+                writer_identity()["writer_id"] if _batch_requires_host_thread(requested_events) else None
             )
             _authorize_event_batch(
                 parse_ledger_bytes(existing), requested_events, writer_thread_id,
@@ -2617,26 +2768,53 @@ def task_writer_state(task_id: str) -> dict[str, Any] | None:
 
 
 def require_task_writer(task_id: str) -> dict[str, Any]:
-    writer_thread_id = host_thread_id()
+    identity = writer_identity()
     state = task_writer_state(task_id)
     if state is None:
         raise WorkMemoryError("task-writer-unclaimed", 4)
-    if state["writer_thread_id"] != writer_thread_id:
+    if state["writer_thread_id"] != identity["writer_id"]:
         raise WorkMemoryError("task-writer-not-owner", 4)
     return state
 
 
-def _claim_task_writer(task_id: str) -> dict[str, Any]:
-    writer_thread_id = host_thread_id()
-    state = task_writer_state(task_id)
-    if state is not None:
-        if state["writer_thread_id"] != writer_thread_id:
-            raise WorkMemoryError("task-writer-not-owner", 4)
-        return state
-    event = _event(
-        "task_writer_claimed", task_id=task_id, writer_thread_id=writer_thread_id,
+def _identity_claim_event(task_id: str, identity: dict[str, Any]) -> dict[str, Any]:
+    if identity["schema_version"] == 2:
+        event = _event(
+            "task_writer_claimed", task_id=task_id, writer_id=identity["writer_id"],
+            writer_client_kind=identity["writer_client_kind"],
+            writer_session_id=identity["writer_session_id"], ownership_generation=1,
+        )
+        event["schema_version"] = 2
+        return event
+    return _event(
+        "task_writer_claimed", task_id=task_id, writer_thread_id=identity["writer_id"],
         ownership_generation=1,
     )
+
+
+def _identity_claim_state(identity: dict[str, Any], event_id: str) -> dict[str, Any]:
+    state = {
+        "writer_thread_id": identity["writer_id"],
+        "ownership_generation": 1,
+        "ownership_event_id": event_id,
+    }
+    if identity["schema_version"] == 2:
+        state.update({
+            "schema_version": 2,
+            "writer_client_kind": identity["writer_client_kind"],
+            "writer_session_id": identity["writer_session_id"],
+        })
+    return state
+
+
+def _claim_task_writer(task_id: str) -> dict[str, Any]:
+    identity = writer_identity()
+    state = task_writer_state(task_id)
+    if state is not None:
+        if state["writer_thread_id"] != identity["writer_id"]:
+            raise WorkMemoryError("task-writer-not-owner", 4)
+        return state
+    event = _identity_claim_event(task_id, identity)
     try:
         transact({
             "schema_version": 1, "expected_ledger_hash": None, "events": [event],
@@ -2645,14 +2823,10 @@ def _claim_task_writer(task_id: str) -> dict[str, Any]:
         if exc.code != "task-writer-already-claimed":
             raise
         raced = task_writer_state(task_id)
-        if raced is None or raced["writer_thread_id"] != writer_thread_id:
+        if raced is None or raced["writer_thread_id"] != identity["writer_id"]:
             raise WorkMemoryError("task-writer-not-owner", 4) from exc
         return raced
-    return {
-        "writer_thread_id": writer_thread_id,
-        "ownership_generation": 1,
-        "ownership_event_id": event["event_id"],
-    }
+    return _identity_claim_state(identity, event["event_id"])
 
 
 def validate_ownership_receipt(task_id: str, payload: dict[str, Any]) -> dict[str, Any]:
@@ -3355,29 +3529,62 @@ def cmd_task_writer_refresh(args: argparse.Namespace) -> dict[str, Any]:
 
 
 def cmd_task_writer_handoff(args: argparse.Namespace) -> dict[str, Any]:
-    writer_thread_id = host_thread_id()
-    target_thread_id = require_uuid(args.to_thread_id, "to-writer-thread-id")
-    if target_thread_id != args.to_thread_id:
+    identity = writer_identity()
+    to_client_kind = getattr(args, "to_client_kind", None)
+    if to_client_kind is None and not args.to_thread_id:
         raise WorkMemoryError("invalid-to-writer-thread-id", 2)
     state = require_task_writer(args.task_id)
     event_id = args.event_id or str(uuid.uuid4())
-    new_state = {
-        "writer_thread_id": target_thread_id,
-        "ownership_generation": state["ownership_generation"] + 1,
-        "ownership_event_id": event_id,
-    }
+    if to_client_kind is not None:
+        if to_client_kind not in CLIENT_KINDS:
+            raise WorkMemoryError("invalid-writer-client-kind", 2)
+        to_session_id = require_uuid(
+            getattr(args, "to_session_id", None), "to-writer-session-id",
+        )
+        target_writer_id = str(uuid.uuid5(WRITER_ID_NAMESPACE, f"{to_client_kind}:{to_session_id}"))
+        new_state = {
+            "schema_version": 2,
+            "writer_thread_id": target_writer_id,
+            "writer_client_kind": to_client_kind,
+            "writer_session_id": to_session_id,
+            "ownership_generation": state["ownership_generation"] + 1,
+            "ownership_event_id": event_id,
+        }
+    else:
+        target_thread_id = require_uuid(args.to_thread_id, "to-writer-thread-id")
+        if target_thread_id != args.to_thread_id:
+            raise WorkMemoryError("invalid-to-writer-thread-id", 2)
+        new_state = {
+            "writer_thread_id": target_thread_id,
+            "ownership_generation": state["ownership_generation"] + 1,
+            "ownership_event_id": event_id,
+        }
     refresh_metadata, refresh_writes = _handoff_refresh_plan(
         args.task_id, state, new_state,
     )
-    event = _event(
-        "task_writer_handoff_recorded", event_id,
-        task_id=args.task_id,
-        from_writer_thread_id=writer_thread_id,
-        to_writer_thread_id=target_thread_id,
-        ownership_generation=new_state["ownership_generation"],
-        previous_ownership_event_id=state["ownership_event_id"],
-        **refresh_metadata,
-    )
+    if to_client_kind is not None:
+        event = _event(
+            "task_writer_handoff_recorded", event_id,
+            task_id=args.task_id,
+            from_writer_id=identity["writer_id"],
+            to_writer_id=new_state["writer_thread_id"],
+            to_writer_client_kind=new_state["writer_client_kind"],
+            to_writer_session_id=new_state["writer_session_id"],
+            ownership_generation=new_state["ownership_generation"],
+            previous_ownership_event_id=state["ownership_event_id"],
+            **refresh_metadata,
+        )
+        event["schema_version"] = 2
+    else:
+        event = _event(
+            "task_writer_handoff_recorded", event_id,
+            task_id=args.task_id,
+            from_writer_thread_id=identity["writer_id"],
+            to_writer_thread_id=new_state["writer_thread_id"],
+            ownership_generation=new_state["ownership_generation"],
+            previous_ownership_event_id=state["ownership_event_id"],
+            **refresh_metadata,
+        )
     result = transact({
         "schema_version": 1, "expected_ledger_hash": None, "events": [event],
     })
@@ -4654,7 +4861,7 @@ def cmd_merge_ledger(args: argparse.Namespace) -> dict[str, Any]:
         )
         if unseen and not reconcile_persisted_source:
             writer_thread_id = (
-                host_thread_id() if _batch_requires_host_thread(unseen) else None
+                writer_identity()["writer_id"] if _batch_requires_host_thread(unseen) else None
             )
             _authorize_event_batch(target_events, unseen, writer_thread_id)
         merged = target_events + unseen
@@ -4727,7 +4934,9 @@ def build_parser() -> argparse.ArgumentParser:
     select.add_argument("--repo-roots-file"); select.set_defaults(func=cmd_select)
     handoff = sub.add_parser("task-writer-handoff")
     handoff.add_argument("--task-id", required=True)
-    handoff.add_argument("--to-thread-id", required=True)
+    handoff.add_argument("--to-thread-id")
+    handoff.add_argument("--to-client-kind", choices=sorted(CLIENT_KINDS))
+    handoff.add_argument("--to-session-id")
     handoff.add_argument("--event-id")
     handoff.set_defaults(func=cmd_task_writer_handoff)
     transact_p = sub.add_parser("transact")

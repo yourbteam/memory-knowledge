@@ -1,0 +1,42 @@
+{
+  "schema_version": 2,
+  "scope": "five owner-runtime defects plus authenticated launcher/controller handoff only",
+  "scope_sha256": "9b388ca9af4d43de2051fdea5e8b35d60d1788f911bb22bb54befbb7cf00ce2f",
+  "current_artifacts": {
+    "owner_contract_sha256": "518de1a6dda242e9ebe5afcf7975566aab19204a5827372dcbbe818f00948da7",
+    "owner_source_verification_sha256": "190ed5c8f170aac057cebc806d9dc6b765486403c07cebabba3504703105a78e",
+    "owner_observable_evidence_sha256": "19dcfe061d61295469ed51841d97c2ae02f62d299a6e640980df3e30932d4266",
+    "mcp_prevention_hook_sha256": "9cef4196f85a48a3db0dc796cd928d1f174b88d2e04d4b0d84056681637cafa2",
+    "mcp_prevention_hook_bridge_sha256": "00f98bf90aec18e81c6c4a779ef7bc603819d25e8508655ba672ca51081359bb",
+    "mcp_codex_cli_sha256": "0605545661b901b485abf4f6e2e27b4b2896810d1c139f7243fc62f8eb6e19d9",
+    "prevention_host_sha256": "fdcfe76b4a4fc6c1b401dc0a1c861a377e23512fa87f9caf29381aa2fd4597c7"
+  },
+  "implementation_outcome": {
+    "available_owner_count": 10,
+    "custodian_evidence_required_owner_count": 6,
+    "unavailable_owner_count": 9,
+    "verified_executable_owner_count": 10,
+    "standalone_owner_count": 9,
+    "parent_gated_owner_count": 1,
+    "meaning": "Availability remains frozen at 10/6/9. All ten AVAILABLE owners have acceptance-backed executable contracts; blocker re-entry remains parent-only."
+  },
+  "correction_blockers": [
+    "blk-91162a77721129e0fbb851a9",
+    "blk-954f799a93f2d87873ca14b6",
+    "blk-d9ddc5e70453d136de495dfa",
+    "blk-d670a3ce497876bc25ad61f7",
+    "blk-b2a793151f4b88a10b01bd40"
+  ],
+  "review": {
+    "iteration": 6,
+    "verdict": "PENDING_FINAL_INDEPENDENT_REVIEW",
+    "meaning": "The review-v2 gaps were corrected; closure awaits a fresh independent assessment of the current bytes."
+  },
+  "current_verification": [
+    "owner acceptance, observable, and executable-contract materializer checks: PASS",
+    "focused owner-runtime correction suite after review-v2 corrections: 102 passed",
+    "authenticated fixed-controller ordinary-hook and fail-closed channel tests: 13 passed",
+    "focused MCP owner/launcher suite after the controller-channel correction: 66 passed",
+    "full memory suite: 1362 passed, 1 skipped, one corrected non-empty-manifest fixture pending full rerun"
+  ]
+}

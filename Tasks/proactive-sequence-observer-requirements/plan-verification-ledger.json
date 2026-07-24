@@ -1,0 +1,39 @@
+{
+  "kind": "plan",
+  "target": "Tasks/proactive-sequence-observer-requirements/plan.md",
+  "iteration": 2,
+  "created_at": "2026-07-16T13:44:31.407140+00:00",
+  "coverage_queue": [
+    {"id":"COV-01","summary":"Shared CandidateIdentity and fingerprint contract","risk":"high","status":"checked","evidence_to_inspect":["Tasks/sequence-knowledge-flywheel/research.md","scripts/discovery_bootstrap.py","scripts/sequence_promote.py"]},
+    {"id":"COV-02","summary":"Final-effective verification reducer","risk":"high","status":"checked","evidence_to_inspect":["scripts/work_memory.py","scripts/sequence_discovery_log.py","scripts/discovery_promotion_lifecycle.py"]},
+    {"id":"COV-03","summary":"Ledger execution and observer event schemas and transactions","risk":"high","status":"checked","evidence_to_inspect":["scripts/work_memory.py","tests/test_work_memory.py"]},
+    {"id":"COV-04","summary":"Guard-to-dispatch checked invoker boundary","risk":"high","status":"checked","evidence_to_inspect":["scripts/sequence_guard.py","skills/sequence-runner/SKILL.md"]},
+    {"id":"COV-05","summary":"Bounded deterministic observer evaluator","risk":"high","status":"checked","evidence_to_inspect":["Tasks/proactive-sequence-observer-requirements/research-package/requirements.json"]},
+    {"id":"COV-06","summary":"Registered-first identity matching","risk":"high","status":"checked","evidence_to_inspect":["operations/sequences/SEQUENCES.md","scripts/work_memory.py"]},
+    {"id":"COV-07","summary":"Fresh active-discovery identity matching","risk":"high","status":"checked","evidence_to_inspect":["scripts/discovery_candidate_reconciliation.py","scripts/sequence_discovery_log.py"]},
+    {"id":"COV-08","summary":"Canonical bootstrap, identity persistence, and promotion copy","risk":"high","status":"checked","evidence_to_inspect":["scripts/discovery_bootstrap.py","scripts/sequence_promote.py","scripts/discovery_promotion_lifecycle.py"]},
+    {"id":"COV-09","summary":"Post-terminal trigger and originating-run failure isolation","risk":"high","status":"checked","evidence_to_inspect":["scripts/work_memory.py"]},
+    {"id":"COV-10","summary":"Secret, repository-root, and effect safety","risk":"high","status":"checked","evidence_to_inspect":["scripts/work_memory.py","scripts/sequence_guard.py"]},
+    {"id":"COV-11","summary":"Concurrency, crash recovery, idempotency, and hard caps","risk":"high","status":"checked","evidence_to_inspect":["scripts/work_memory.py","scripts/discovery_bootstrap.py","scripts/convergence_checkpoint_run.py"]},
+    {"id":"COV-12","summary":"Governed lifecycle feedback and bounded suppression","risk":"medium","status":"checked","evidence_to_inspect":["scripts/discovery_candidate_reconciliation.py","scripts/discovery_promotion_lifecycle.py"]},
+    {"id":"COV-13","summary":"Legacy v1 compatibility and observer disablement","risk":"high","status":"checked","evidence_to_inspect":["tests/test_work_memory.py","tests/test_sequence_discovery_log.py","tests/test_discovery_promotion_lifecycle.py"]},
+    {"id":"COV-14","summary":"Complete requirement matrix and one end-to-end registered reuse proof","risk":"high","status":"checked","evidence_to_inspect":["Tasks/proactive-sequence-observer-requirements/research-package/requirements.json","tests"]},
+    {"id":"COV-15","summary":"Mechanical frozen-scope enforcement","risk":"high","status":"checked","evidence_to_inspect":["working-agreement/DIRECTIVES.md","Tasks/proactive-sequence-observer-requirements/research-package/planner-handoff.md"]}
+  ],
+  "findings": [
+    {"id":"VP-01","iteration_first_seen":1,"classification":"DISMISS","status":"dismissed","coverage_id":"COV-03","action":"Plan already corrected with exact operation_context_recorded producer and consumption boundary."},
+    {"id":"VP-02","iteration_first_seen":1,"classification":"DISMISS","status":"dismissed","coverage_id":"COV-05","action":"Plan already corrected with numeric value components and threshold."},
+    {"id":"VP-03","iteration_first_seen":1,"classification":"DISMISS","status":"dismissed","coverage_id":"COV-11","action":"Plan already corrected with numeric caps, order, cursor, and no-widening resume."},
+    {"id":"VP-04","iteration_first_seen":1,"classification":"DISMISS","status":"dismissed","coverage_id":"COV-01","action":"Plan already corrected with finite typed volatility annotations and producer."},
+    {"id":"VP-05","iteration_first_seen":1,"classification":"DISMISS","status":"dismissed","coverage_id":"COV-12","action":"Plan already corrected with suppression identity, periods, and reconsideration triggers."},
+    {"id":"VP-06","iteration_first_seen":1,"classification":"DISMISS","status":"dismissed","coverage_id":"COV-04","action":"Plan already corrected to direct guard-accepted argv with shell disabled and explicit legacy behavior."},
+    {"id":"VP-07","iteration_first_seen":1,"classification":"FIX NOW","status":"fixed","coverage_id":"COV-09","action":"Locked deterministic bootstrap task/date/request identity, success mapping, lock order, and crash retry cases."},
+    {"id":"VP-08","iteration_first_seen":1,"classification":"FIX NOW","status":"fixed","coverage_id":"COV-06","action":"Added exact legacy ambiguity screen, typed hold, and no-duplicate fixtures."},
+    {"id":"VP-09","iteration_first_seen":1,"classification":"FIX NOW","status":"fixed","coverage_id":"COV-03","action":"Enumerated exact event fields, types/enums/null rules, UUIDv5 identities, CLI flags, success payloads, safe errors, and exit classes."},
+    {"id":"VP-10","iteration_first_seen":1,"classification":"FIX NOW","status":"fixed","coverage_id":"COV-01","action":"Restored explicit shared effect-class attestation while keeping operation_kind as the value-risk input."}
+  ],
+  "iteration_log": [
+    {"iteration":1,"mode":"inventory+slice","verifier_findings":10,"fix_now":4,"implement_later":0,"acknowledge":0,"dismiss":6,"coverage_checked":["COV-01","COV-03","COV-04","COV-05","COV-06","COV-09","COV-11","COV-12"],"coverage_remaining_high_medium":7,"note":"Four critic-confirmed gaps fixed; follow-up verification pending."},
+    {"iteration":2,"mode":"fix+remaining-coverage","verifier_findings":2,"fix_now":2,"implement_later":0,"acknowledge":0,"dismiss":0,"coverage_checked":["COV-01","COV-02","COV-03","COV-04","COV-05","COV-06","COV-07","COV-08","COV-09","COV-10","COV-11","COV-12","COV-13","COV-14","COV-15"],"coverage_remaining_high_medium":0,"note":"Bootstrap-result audit and trigger/cap contradictions fixed; final critic reported no actionable gap."}
+  ]
+}

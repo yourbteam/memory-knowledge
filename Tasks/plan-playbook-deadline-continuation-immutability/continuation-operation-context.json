@@ -1,0 +1,34 @@
+{
+  "intended_outcome": "Consume the exact current Decision 5 deadline approval and resume the existing hardening state without restarting completed work.",
+  "required_inputs": [
+    "current controller-owned deadline request",
+    "exact user confirmation",
+    "current Decision 5 controller state"
+  ],
+  "dependencies": [
+    {
+      "repository_key": "codex-skills",
+      "path": "plan-playbook/scripts/plan_package.py"
+    }
+  ],
+  "environment_annotations": [],
+  "semantic_flag_annotations": [],
+  "volatility_annotations": [],
+  "repeatability_reason": "Substantial Plan Playbook packages consume exact deadline approvals through the same controller command.",
+  "repeatability_evidence_ids": [
+    "blk-c18f8e0d20976eaa33241da1"
+  ],
+  "failure_handling": [
+    {
+      "fingerprint": "c18f8e0d20976eaa33241da17f29229e9a9c6ee94ef2a8e3a8926724ee3c7a5d",
+      "symptom": "The supplied request or approval does not bind the current controller state.",
+      "response": "Stop without mutating state and regenerate a current controller-owned request."
+    }
+  ],
+  "effect_class": "idempotent-local",
+  "verification_contract": {
+    "expected_outcome": "passed",
+    "quality": "same-path",
+    "success_evidence": "The installed controller returns DEADLINE_HARDENING_CONTINUED and the state records the continuation receipt with a new deadline."
+  }
+}

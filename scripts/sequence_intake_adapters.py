@@ -4002,3 +4002,120 @@ def collect_and_prepare(
         artifact_paths=artifact_paths,
         repository_roots=repository_roots,
     )
+
+
+INTAKE_CONTRACTS_PATH = "operations/sequences/sequence-intake-contracts.json"
+INTAKE_CONTRACT_VERSION = 1
+LOCAL_REPOSITORY_KEY = "memory-knowledge"
+
+
+def _registry_automation_rows(registry_path: Any) -> dict[str, str]:
+    rows: dict[str, str] = {}
+    for line in Path(registry_path).read_text().splitlines():
+        if not line.startswith("| `"):
+            continue
+        cells = [cell.strip() for cell in line.strip().strip("|").split("|")]
+        if len(cells) < 4:
+            continue
+        sequence_id = cells[0].strip("`")
+        rows[sequence_id] = cells[3].strip("`").strip()
+    return rows
+
+
+def build_intake_contracts(root: Any) -> dict[str, Any]:
+    """Deterministic machine binding between every runnable sequence adapter and its caller.
+
+    A changed local entrypoint source changes its recorded hash, so a stale binding fails
+    closed at check time until adapter compatibility is re-verified and this file rebuilt.
+    Cross-repository entrypoints are bound by their registry source-receipt identity.
+    """
+    root = Path(root)
+    registry = _registry_automation_rows(root / "operations/sequences/SEQUENCES.md")
+    adapter_source_sha256 = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
+    entries: list[dict[str, Any]] = []
+    non_runnable: list[dict[str, str]] = []
+    problems: list[str] = []
+    for sequence_id in sorted(set(ADAPTER_REGISTRY) | set(registry)):
+        if sequence_id not in ADAPTER_REGISTRY:
+            problems.append(f"registry-row-without-canonical-sequence:{sequence_id}")
+            continue
+        adapter = ADAPTER_REGISTRY[sequence_id]
+        if adapter is None:
+            non_runnable.append({
+                "sequence_id": sequence_id,
+                "reason": "no intake adapter is registered; the sequence is not dispatchable "
+                          "through zero-input intake and must not be improvised",
+            })
+            continue
+        spec = INTAKE_SPECS.get(sequence_id)
+        if spec is None:
+            problems.append(f"adapter-without-intake-spec:{sequence_id}")
+            continue
+        automation = registry.get(sequence_id, "")
+        entry: dict[str, Any] = {
+            "sequence_id": sequence_id,
+            "entrypoint": automation or None,
+            "contract_version": INTAKE_CONTRACT_VERSION,
+            "adapter_id": getattr(adapter, "__name__", adapter.__class__.__name__),
+            "adapter_source_sha256": adapter_source_sha256,
+            "semantic_fields": [field["id"] for field in spec["fields"]],
+            "required_inputs": sorted(
+                field["id"] for field in spec["fields"] if field.get("required")
+            ),
+            "optional_inputs": sorted(
+                field["id"] for field in spec["fields"] if not field.get("required")
+            ),
+            "argv_shape": {
+                "derivation": "scripts/sequence_intake_adapters.py:prepare",
+                "caller_constructs_argv": False,
+                "artifact_inputs": list(ARTIFACT_IDS.get(sequence_id, ())),
+            },
+            "verification_case_ids": [
+                "tests/test_sequence_intake_adapters.py",
+                "tests/test_sequence_intake_launch.py",
+            ],
+        }
+        if automation.startswith(f"{LOCAL_REPOSITORY_KEY}:"):
+            source_path = root / automation.split(":", 1)[1].split()[0]
+            if source_path.is_file():
+                entry["entrypoint_source_sha256"] = hashlib.sha256(
+                    source_path.read_bytes()
+                ).hexdigest()
+            else:
+                problems.append(f"entrypoint-source-missing:{sequence_id}:{source_path}")
+        elif automation:
+            entry["entrypoint_source_receipt"] = automation
+        entries.append(entry)
+    if problems:
+        raise AdapterError("intake-contract-build-failed:" + ";".join(sorted(problems)))
+    return {
+        "schema_version": 1,
+        "contract_version": INTAKE_CONTRACT_VERSION,
+        "adapter_source_sha256": adapter_source_sha256,
+        "entries": entries,
+        "non_runnable": non_runnable,
+    }
+
+
+def check_intake_contracts(root: Any) -> list[str]:
+    """Return drift errors between the stored contract file and the rebuilt binding."""
+    root = Path(root)
+    stored_path = root / INTAKE_CONTRACTS_PATH
+    if not stored_path.is_file():
+        return [f"intake-contracts-missing:{stored_path}"]
+    try:
+        stored = json.loads(stored_path.read_text())
+    except ValueError:
+        return [f"intake-contracts-unreadable:{stored_path}"]
+    rebuilt = build_intake_contracts(root)
+    if stored == rebuilt:
+        return []
+    errors: list[str] = []
+    stored_entries = {row.get("sequence_id"): row for row in stored.get("entries", [])}
+    rebuilt_entries = {row["sequence_id"]: row for row in rebuilt["entries"]}
+    for sequence_id in sorted(set(stored_entries) | set(rebuilt_entries)):
+        if stored_entries.get(sequence_id) != rebuilt_entries.get(sequence_id):
+            errors.append(f"intake-contract-drift:{sequence_id}")
+    if stored.get("non_runnable") != rebuilt["non_runnable"]:
+        errors.append("intake-contract-drift:non-runnable-set")
+    return errors or ["intake-contract-drift:document-level"]

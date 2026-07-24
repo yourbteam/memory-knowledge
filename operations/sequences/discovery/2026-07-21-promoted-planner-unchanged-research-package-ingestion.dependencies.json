@@ -1,0 +1,56 @@
+{
+  "dependencies": [
+    {
+      "kind": "file",
+      "path_or_sequence_id": "Tasks/research-playbook-real-validation-s1/planner-charter.json",
+      "repository_key": "agentic-trading"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "Tasks/research-playbook-real-validation-s1/prepare_plan_hardening.py",
+      "repository_key": "agentic-trading"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "Tasks/research-playbook-real-validation-s1/research-package/manifest.json",
+      "repository_key": "agentic-trading"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "skills/_shared/agent_slot_ledger.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "skills/_shared/verification_ledger.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "skills/plan-playbook/SKILL.md",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "skills/plan-playbook/references/hardening-lifecycle.md",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "skills/plan-playbook/scripts/plan_package.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_plan_playbook_v2.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_verification_ledger.py",
+      "repository_key": "memory-knowledge"
+    }
+  ],
+  "lineage_id": "discovery-e4c5ff56-41f6-5482-97ab-7de2166e4a7e",
+  "schema_version": 1
+}

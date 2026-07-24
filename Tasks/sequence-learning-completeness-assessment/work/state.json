@@ -1,0 +1,2170 @@
+{
+  "attempts": [
+    {
+      "candidate_hash": "490d8add1d05927d0d2c32a9368057292dbd8abd4bb9de2ae60771d1a502e198",
+      "close_evidence": {
+        "close_evidence": "agent status completed and slot released",
+        "completion_evidence": "collaboration FINAL_ANSWER received with terminal candidate JSON",
+        "release_state": "released",
+        "role": "CORE_RESEARCHER",
+        "round": 1,
+        "runtime_agent_id": "/root/sequence_learning_core_r1"
+      },
+      "input_envelope_hash": "76d6387d72ea1774fd5a9b30f31997006f64df9bbf33e2ba62caa8d7b7450038",
+      "output_hash": "490d8add1d05927d0d2c32a9368057292dbd8abd4bb9de2ae60771d1a502e198",
+      "recorded_at": "2026-07-16T18:20:50.154352Z",
+      "role": "CORE_RESEARCHER",
+      "round": 1,
+      "runtime_agent_id": "/root/sequence_learning_core_r1",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "490d8add1d05927d0d2c32a9368057292dbd8abd4bb9de2ae60771d1a502e198",
+      "close_evidence": {
+        "close_evidence": "collaboration interrupt returned previous_status running; path prefix then showed zero agents.",
+        "completion_evidence": "Interrupted before terminal output after thread-limit discovery.",
+        "failure_reason": "runtime thread limit prevented complete concurrent lens round",
+        "release_state": "released",
+        "role": "INTERNAL_READINESS",
+        "round": 1,
+        "runtime_agent_id": "/root/sequence_learning_readiness_r1"
+      },
+      "input_envelope_hash": "76d6387d72ea1774fd5a9b30f31997006f64df9bbf33e2ba62caa8d7b7450038",
+      "output_hash": null,
+      "recorded_at": "2026-07-16T18:22:37.795061Z",
+      "role": "INTERNAL_READINESS",
+      "round": 1,
+      "runtime_agent_id": "/root/sequence_learning_readiness_r1",
+      "slot_closed": true,
+      "status": "FAILED"
+    },
+    {
+      "candidate_hash": "490d8add1d05927d0d2c32a9368057292dbd8abd4bb9de2ae60771d1a502e198",
+      "close_evidence": {
+        "close_evidence": "No live slot existed to close because the retry failed before allocation.",
+        "completion_evidence": "No agent thread was created; collaboration.spawn_agent returned agent thread limit reached.",
+        "failure_reason": "The current root task tree reached the collaboration agent-thread ceiling, preventing the mandatory fresh internal-readiness retry.",
+        "release_state": "not-allocated",
+        "role": "INTERNAL_READINESS",
+        "round": 1,
+        "runtime_agent_id": "/root/sequence_learning_readiness_r1_retry"
+      },
+      "input_envelope_hash": "76d6387d72ea1774fd5a9b30f31997006f64df9bbf33e2ba62caa8d7b7450038",
+      "output_hash": null,
+      "recorded_at": "2026-07-16T18:30:46.032696Z",
+      "role": "INTERNAL_READINESS",
+      "round": 1,
+      "runtime_agent_id": "/root/sequence_learning_readiness_r1_retry",
+      "slot_closed": true,
+      "status": "FAILED"
+    },
+    {
+      "candidate_hash": "490d8add1d05927d0d2c32a9368057292dbd8abd4bb9de2ae60771d1a502e198",
+      "close_evidence": {
+        "close_evidence": "Agent status completed after terminal envelope delivery.",
+        "completion_evidence": "collaboration FINAL_ANSWER received with a valid terminal lens envelope.",
+        "release_state": "released",
+        "role": "REQUIREMENTS_SATISFACTION",
+        "round": 1,
+        "runtime_agent_id": "/root/sequence_learning_satisfaction_r1"
+      },
+      "input_envelope_hash": "76d6387d72ea1774fd5a9b30f31997006f64df9bbf33e2ba62caa8d7b7450038",
+      "output_hash": "8ef47d4b540bd23c89dfb3f0afa78cbfa3706b129fbd0e1f2d384003e236503f",
+      "recorded_at": "2026-07-16T18:32:49.045900Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 1,
+      "runtime_agent_id": "/root/sequence_learning_satisfaction_r1",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "490d8add1d05927d0d2c32a9368057292dbd8abd4bb9de2ae60771d1a502e198",
+      "close_evidence": {
+        "close_evidence": "Agent status completed after terminal envelope delivery.",
+        "completion_evidence": "collaboration FINAL_ANSWER received with a valid terminal lens envelope.",
+        "release_state": "released",
+        "role": "REQUIREMENTS_COVERAGE",
+        "round": 1,
+        "runtime_agent_id": "/root/sequence_learning_coverage_r1"
+      },
+      "input_envelope_hash": "76d6387d72ea1774fd5a9b30f31997006f64df9bbf33e2ba62caa8d7b7450038",
+      "output_hash": "96e6c214f6607a539487095ee42131488f4df605162aa0a0293925c9eff8eba6",
+      "recorded_at": "2026-07-16T18:34:17.491175Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 1,
+      "runtime_agent_id": "/root/sequence_learning_coverage_r1",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "budgets": {
+    "deadline_at": "2026-07-16T19:07:51.779383Z",
+    "max_attempts": 15,
+    "max_minutes": 60,
+    "max_role_retries": 1,
+    "max_rounds": 3,
+    "started_at": "2026-07-16T18:07:51.779383Z"
+  },
+  "candidates": {
+    "candidate-15dddf58a5c569ee30c4b631": {
+      "candidate_hash": "490d8add1d05927d0d2c32a9368057292dbd8abd4bb9de2ae60771d1a502e198",
+      "candidate_id": "candidate-15dddf58a5c569ee30c4b631",
+      "candidate_payload": {
+        "evidence_index": [
+          {
+            "accessed_at": null,
+            "id": "EV-CHARTER",
+            "limitations": "Intent, not runtime proof.",
+            "source_kind": "SUPPLIED_INPUT",
+            "source_locator": "Tasks/sequence-learning-completeness-assessment/work/charter.json",
+            "source_sha256": "0aeb49a8799dfaf6dec4c72806caa0ad6566d68d57904e62421613acd2003b80",
+            "supported_claim": "Frozen scope and envisioned closed learning loop."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-REQUIREMENTS",
+            "limitations": "Future behavior is not current proof.",
+            "source_kind": "SUPPLIED_INPUT",
+            "source_locator": "Tasks/sequence-learning-completeness-assessment/work/requirements.json",
+            "source_sha256": "31bb077032a6ca5f3a3a873884bfbafe113943a810bc0c4dc54d93dfe9d864db",
+            "supported_claim": "Frozen current and future requirements and acceptance intents."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-WORK-MEMORY",
+            "limitations": "Only covers callers that use it.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "scripts/work_memory.py",
+            "source_sha256": "57e9a3f3d39f1948a99d6ce5d7dff4b3c16d69172a458610adcf45cf44985691",
+            "supported_claim": "Durable schemas, lifecycle, selector, correction/successor, observer hook, safety, and metrics."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-OBSERVER",
+            "limitations": "Cannot see or intercept unrecorded actions.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "scripts/sequence_observer.py",
+            "source_sha256": "c9da4fca23e66f15f23d16e4de8680329f4bc984a97c3976dde42ad5f23493e8",
+            "supported_claim": "Post-close checked-execution reconstruction, matching, scoring, suppression, and four advisory outcomes."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-CHECKED-EXEC",
+            "limitations": "Only argv subprocess when explicitly used.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "scripts/sequence_checked_exec.py",
+            "source_sha256": "b42d71f26c1eae13bb81478d40fb2b365fdf05019a20679cddd3c3f9c33c798c",
+            "supported_claim": "Guard/claim/subprocess argv/return authoritative wrapper."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-GUARD",
+            "limitations": "Not a global dispatcher interceptor.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "scripts/sequence_guard.py",
+            "source_sha256": "ee40cb2e0949e553fa214c97a852b3a1661f8ea67ef33b1d1ee15afecbc4bda2",
+            "supported_claim": "Receipt, activation, bundle, and source enforcement after explicit invocation."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-RUNNER-SKILL",
+            "limitations": "Advisory unless host-enforced.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md",
+            "source_sha256": "f10305ba36471c15da77465c09fba567c4161c2f756c4c334c828c8a72ab1ee2",
+            "supported_claim": "Advises classify/select/activate/guard/correct/verify."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-CANDIDATE-CONTRACT",
+            "limitations": "Limited to represented steps.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "scripts/sequence_candidate_contract.py",
+            "source_sha256": "62a0d67cf16bc1affbe08b38a61f7348efe7dd3317d72d5fd0e76654ad003599",
+            "supported_claim": "Canonical operation context, step identity, provenance, volatility, fingerprint, verification."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-BOOTSTRAP",
+            "limitations": "Does not discover actions.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "scripts/discovery_bootstrap.py",
+            "source_sha256": "a1c16783567bb8bbb84be2e59a636bf6ef73d7ba85fc684c706bcda6590f8d30",
+            "supported_claim": "Atomic idempotent discovery creation from complete validated spec."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-DISCOVERY",
+            "limitations": "No silver/gold terms.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "scripts/sequence_discovery_log.py",
+            "source_sha256": "514de41339174c776e38d0b3bbcb14728d55babcadb985952d8c09aa2df6dec7",
+            "supported_claim": "Discovery completeness/readiness and two same-path qualifications."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-LIFECYCLE",
+            "limitations": "No self-diagnosis ingestion or versioned replacement.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "scripts/discovery_promotion_lifecycle.py",
+            "source_sha256": "49e66d7a0e5944419f7e59902056740e7510302e21ad4e707bd263ced822b731",
+            "supported_claim": "Separate qualification, promotion, registered verification, blocker/correction/successor drive."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PROMOTION",
+            "limitations": "Not registered-version replacement.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "scripts/sequence_promote.py",
+            "source_sha256": "0296522c7cfd1a8c5e7d0cb4b448cbd58de9766002d79c806ac19715fdd3785f",
+            "supported_claim": "Locked journaled atomic discovery-to-registration install."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-RECONCILIATION",
+            "limitations": "No false-match feedback; consumption partial.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "scripts/discovery_candidate_reconciliation.py",
+            "source_sha256": "a846e823d027d229e3a7642776dda4d1bbb2e5cbbe192f38dd115223ac14ae9b",
+            "supported_claim": "Identity inventory and governed immutable lifecycle feedback."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-BLOCKER",
+            "limitations": "Does not mutate sequence content.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "scripts/blocker_catalog.py",
+            "source_sha256": "f00c3e30ef4c55349b7529eff7fb784f74fe532bbd3b91e532517e790aad7e28",
+            "supported_claim": "Lineage/step/surface/error fingerprint and states."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-REGISTRY",
+            "limitations": "No machine applicability or silver/gold state.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "operations/sequences/SEQUENCES.md",
+            "source_sha256": "b421f4064a8807896b275abd1b40c4af3d29043dab1dbc30205de1a35d2c91b9",
+            "supported_claim": "Canonical registered rows and promotion policy."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-OBSERVER-TESTS",
+            "limitations": "No pre-dispatch or self-diagnosis proof.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "tests/test_sequence_observer.py",
+            "source_sha256": "df8aeb4d0f4bd6fe1eed93b7e2441beb05c5228ac79692f18acdd0313aed1f6b",
+            "supported_claim": "Observer proposal, incomplete evidence, matching, caps, suppression, correction scoring, no dispatch."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-OBSERVER-E2E",
+            "limitations": "Later run is not pre-action invocation.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "tests/test_sequence_observer_end_to_end.py",
+            "source_sha256": "0974565d888444f16aa1be057152517947639715be6bd57209a7bdcc5df96f80",
+            "supported_claim": "Governed success to discovery, explicit lifecycle, promotion, verification, later post-close registered link."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-LIFECYCLE-TESTS",
+            "limitations": "No automatic causal repair.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "tests/test_discovery_promotion_lifecycle.py",
+            "source_sha256": "502c10bb927b92af5164d0b8215280743fc99ba007da972f0aa57d818ef60267",
+            "supported_claim": "Lifecycle, blocker, correction, registered successor tests."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-WORK-MEMORY-TESTS",
+            "limitations": "No non-shell producers.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "tests/test_work_memory.py",
+            "source_sha256": "a7d45046423a849a60350285c3e001efeef298f111d683bb268d1dac4366bd57",
+            "supported_claim": "Correction sealing, successor binding, stale rejection, selection, canonical writers."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-EXECUTOR",
+            "limitations": "No individual tool-action event stream.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/agents/executor.py",
+            "source_sha256": "a2ac8a1e24a3614d7849b2f2de1840e0126ea56b7b379dc9072d317b82812e16",
+            "supported_claim": "Managed model dispatch reduced to aggregate output, handoff, artifacts, usage, metadata."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-CODEX-CLI",
+            "limitations": "No per-tool actions.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/cli/codex_cli.py",
+            "source_sha256": "3de69c4f299e9cf842a457a8ee08db325c833f68688d35e93cbd547d889e5e6d",
+            "supported_claim": "Codex wrapper returns aggregate content/output/error/duration/usage."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-WORKFLOW-STATE",
+            "limitations": "Not authoritative individual actions.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/workflow_state_store.py",
+            "source_sha256": "003acfff63e22abb2e3d51d1f3a89d487dea219f74937ac1e7e9d31fe1190147",
+            "supported_claim": "Atomic phase output/handoff/artifact/metric resume state."
+          }
+        ],
+        "material_gaps": [
+          "GAP-OBSERVATION",
+          "GAP-PREACT",
+          "GAP-SUCCESS-CAPTURE",
+          "GAP-CORRECTION",
+          "GAP-REGISTERED-REPAIR",
+          "GAP-LEVELS",
+          "GAP-METRICS",
+          "GAP-FEEDBACK",
+          "GAP-DURABILITY",
+          "GAP-ACCEPTANCE"
+        ],
+        "planner_readiness_draft": [
+          {
+            "closure_condition": "Actions outside governed work-memory plus sequence_checked_exec are invisible.",
+            "evidence_ids": [
+              "EV-WORK-MEMORY",
+              "EV-OBSERVER",
+              "EV-CHECKED-EXEC",
+              "EV-CANDIDATE-CONTRACT"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-CUR-001",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "The model can improvise before the guard sees an action.",
+            "evidence_ids": [
+              "EV-RUNNER-SKILL",
+              "EV-GUARD",
+              "EV-WORK-MEMORY",
+              "EV-OBSERVER",
+              "EV-EXECUTOR"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-CUR-002",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "The passing E2E does not prove autonomous learning or next-time invocation.",
+            "evidence_ids": [
+              "EV-OBSERVER",
+              "EV-BOOTSTRAP",
+              "EV-LIFECYCLE",
+              "EV-OBSERVER-E2E"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-CUR-003",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "A wrong action may be cataloged without ever correcting the path used next time.",
+            "evidence_ids": [
+              "EV-BLOCKER",
+              "EV-WORK-MEMORY",
+              "EV-LIFECYCLE",
+              "EV-OBSERVER"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-CUR-004",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Defective and corrected registered versions are not separately governed selection objects.",
+            "evidence_ids": [
+              "EV-PROMOTION",
+              "EV-LIFECYCLE",
+              "EV-RECONCILIATION",
+              "EV-WORK-MEMORY",
+              "EV-OBSERVER"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-CUR-005",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "The system cannot truthfully report silver growth, gold reuse, false matches, or wrong-step recurrence.",
+            "evidence_ids": [
+              "EV-REGISTRY",
+              "EV-DISCOVERY",
+              "EV-WORK-MEMORY",
+              "EV-OBSERVER"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-CUR-006",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Most model behavior cannot enter the observer.",
+            "evidence_ids": [
+              "EV-WORK-MEMORY",
+              "EV-CHECKED-EXEC",
+              "EV-EXECUTOR",
+              "EV-CODEX-CLI",
+              "EV-WORKFLOW-STATE"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-CUR-007",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Universal observation cannot be claimed from checked shell commands alone.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-WORK-MEMORY",
+              "EV-CANDIDATE-CONTRACT",
+              "EV-EXECUTOR",
+              "EV-CODEX-CLI"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-001",
+            "owner": "sequence-learning implementation owner plus Codex host/runtime owner",
+            "required_inputs": [
+              "Authoritative host action/pre-dispatch/self-diagnosis integration boundary"
+            ],
+            "status": "GAP",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Known correct paths are used before an improvised wrong step occurs.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-WORK-MEMORY",
+              "EV-GUARD",
+              "EV-OBSERVER",
+              "EV-RUNNER-SKILL"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-002",
+            "owner": "sequence-learning implementation owner plus Codex host/runtime owner",
+            "required_inputs": [
+              "Authoritative host action/pre-dispatch/self-diagnosis integration boundary"
+            ],
+            "status": "GAP",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Success paths become reusable without manual reconstruction.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-CANDIDATE-CONTRACT",
+              "EV-OBSERVER",
+              "EV-BOOTSTRAP"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-003",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Unsupported explanations cannot rewrite sequences, but grounded tells are no longer discarded.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-BLOCKER",
+              "EV-WORK-MEMORY",
+              "EV-OBSERVER"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-004",
+            "owner": "sequence-learning implementation owner plus Codex host/runtime owner",
+            "required_inputs": [
+              "Authoritative host action/pre-dispatch/self-diagnosis integration boundary"
+            ],
+            "status": "GAP",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "The next matching task receives the correction or a fail-closed hold, never the known-wrong action.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-WORK-MEMORY",
+              "EV-GUARD",
+              "EV-WORK-MEMORY-TESTS"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-005",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Old defective versions remain auditable but non-selectable.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-PROMOTION",
+              "EV-LIFECYCLE",
+              "EV-WORK-MEMORY"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-006",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Capture and real reuse become distinct measurable stages.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-DISCOVERY",
+              "EV-PROMOTION",
+              "EV-OBSERVER-E2E"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-007",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Progress measures learning effectiveness rather than event volume.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-WORK-MEMORY",
+              "EV-OBSERVER"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-008",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Repeated evidence converges on one lineage without backlog churn.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-CANDIDATE-CONTRACT",
+              "EV-OBSERVER",
+              "EV-BOOTSTRAP",
+              "EV-RECONCILIATION"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-009",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Interruptions and branch divergence cannot lose corrections or duplicate candidates.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-WORK-MEMORY",
+              "EV-BOOTSTRAP",
+              "EV-PROMOTION",
+              "EV-WORKFLOW-STATE"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-010",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "The loop learns applicability and causality without accumulating sensitive conversation memory.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-WORK-MEMORY",
+              "EV-CHARTER"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-011",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Learning cannot silently execute, approve, or promote.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-OBSERVER",
+              "EV-GUARD",
+              "EV-LIFECYCLE",
+              "EV-RECONCILIATION",
+              "EV-OBSERVER-TESTS"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-012",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Past outcomes improve recognition without hidden self-tuning.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-OBSERVER",
+              "EV-RECONCILIATION",
+              "EV-WORK-MEMORY"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-013",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          },
+          {
+            "closure_condition": "Completion is proven by changed next-run behavior, not post-run catalog entries.",
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-OBSERVER-E2E",
+              "EV-LIFECYCLE-TESTS",
+              "EV-WORK-MEMORY-TESTS"
+            ],
+            "implementation_anchors": [],
+            "obligation_id": "PO-FUT-014",
+            "owner": "sequence-learning implementation owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": []
+          }
+        ],
+        "requirement_statuses": [
+          {
+            "evidence_ids": [
+              "EV-WORK-MEMORY",
+              "EV-OBSERVER",
+              "EV-CHECKED-EXEC",
+              "EV-CANDIDATE-CONTRACT"
+            ],
+            "requirement_id": "CUR-001",
+            "research_value": {
+              "boundary": "post-close checked-execution evidence",
+              "finding": "The observer triggers after committed run_closed and reconstructs only complete passed checked argv executions with exact context and same-path verification.",
+              "practical_consequence": "Actions outside governed work-memory plus sequence_checked_exec are invisible.",
+              "status": "partial"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-RUNNER-SKILL",
+              "EV-GUARD",
+              "EV-WORK-MEMORY",
+              "EV-OBSERVER",
+              "EV-EXECUTOR"
+            ],
+            "requirement_id": "CUR-002",
+            "research_value": {
+              "boundary": "no global pre-dispatch interceptor",
+              "finding": "Sequence recognition starts only when the model follows advisory skill instructions; guard enforcement begins after explicit selection and activation, and exact identity matching is post-close.",
+              "practical_consequence": "The model can improvise before the guard sees an action.",
+              "status": "missing"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-OBSERVER",
+              "EV-BOOTSTRAP",
+              "EV-LIFECYCLE",
+              "EV-OBSERVER-E2E"
+            ],
+            "requirement_id": "CUR-003",
+            "research_value": {
+              "boundary": "automatic capture only for checked governed success",
+              "finding": "A complete governed success can auto-bootstrap discovery, but unrecorded success cannot; qualification/promotion is separately invoked and registered matching occurs only after a later run.",
+              "practical_consequence": "The passing E2E does not prove autonomous learning or next-time invocation.",
+              "status": "partial"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-BLOCKER",
+              "EV-WORK-MEMORY",
+              "EV-LIFECYCLE",
+              "EV-OBSERVER"
+            ],
+            "requirement_id": "CUR-004",
+            "research_value": {
+              "boundary": "correction verification exists; correction synthesis/canonicalization does not",
+              "finding": "No durable producer binds model self-diagnosis to an action. Blockers and corrections are durable, but reusable content changes only after an explicit bundle edit and successor verification.",
+              "practical_consequence": "A wrong action may be cataloged without ever correcting the path used next time.",
+              "status": "missing"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-PROMOTION",
+              "EV-LIFECYCLE",
+              "EV-RECONCILIATION",
+              "EV-WORK-MEMORY",
+              "EV-OBSERVER"
+            ],
+            "requirement_id": "CUR-005",
+            "research_value": {
+              "boundary": "durable lifecycle without versioned registered repair",
+              "finding": "Promotion, registered verification, reuse feedback, and correction evidence are durable; registered repair evolves a bundle in one lineage rather than creating an auditable replacement version and atomic cutover.",
+              "practical_consequence": "Defective and corrected registered versions are not separately governed selection objects.",
+              "status": "partial"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REGISTRY",
+              "EV-DISCOVERY",
+              "EV-WORK-MEMORY",
+              "EV-OBSERVER"
+            ],
+            "requirement_id": "CUR-006",
+            "research_value": {
+              "boundary": "no level or effectiveness contract",
+              "finding": "Silver and gold are not canonical states. Discovery-ready, promoted/verified, and post-run registered reuse are only analogues; effectiveness denominators are absent.",
+              "practical_consequence": "The system cannot truthfully report silver growth, gold reuse, false matches, or wrong-step recurrence.",
+              "status": "missing"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-WORK-MEMORY",
+              "EV-CHECKED-EXEC",
+              "EV-EXECUTOR",
+              "EV-CODEX-CLI",
+              "EV-WORKFLOW-STATE"
+            ],
+            "requirement_id": "CUR-007",
+            "research_value": {
+              "boundary": "checked subprocess only",
+              "finding": "Only checked shell argv has an authoritative action/outcome ledger path. MCP calls, edits, browser actions, subagents, self-reports, and remote model tool actions are absent or aggregate-only.",
+              "practical_consequence": "Most model behavior cannot enter the observer.",
+              "status": "partial"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-WORK-MEMORY",
+              "EV-CANDIDATE-CONTRACT",
+              "EV-EXECUTOR",
+              "EV-CODEX-CLI"
+            ],
+            "requirement_id": "FUT-001",
+            "research_value": {
+              "compatibility": "Existing event safety and candidate identity are reusable.",
+              "finding": "Every in-scope action class needs a named authoritative dispatch producer, closed non-secret event, stable identity, outcome binding, and observer consumer; unsupported classes must fail visibly.",
+              "gap_ids": [
+                "GAP-OBSERVATION"
+              ],
+              "practical_consequence": "Universal observation cannot be claimed from checked shell commands alone.",
+              "status": "required"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-WORK-MEMORY",
+              "EV-GUARD",
+              "EV-OBSERVER",
+              "EV-RUNNER-SKILL"
+            ],
+            "requirement_id": "FUT-002",
+            "research_value": {
+              "finding": "Exact compatible registered-sequence matching must run before dispatch and require selection, activation, and guard without bypassing approvals.",
+              "gap_ids": [
+                "GAP-PREACT"
+              ],
+              "practical_consequence": "Known correct paths are used before an improvised wrong step occurs.",
+              "status": "required"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-CANDIDATE-CONTRACT",
+              "EV-OBSERVER",
+              "EV-BOOTSTRAP"
+            ],
+            "requirement_id": "FUT-003",
+            "research_value": {
+              "finding": "No-match successful behavior must create one complete deduplicated canonical discovery only from ordered passed action/outcome evidence.",
+              "gap_ids": [
+                "GAP-SUCCESS-CAPTURE"
+              ],
+              "practical_consequence": "Success paths become reusable without manual reconstruction.",
+              "status": "required"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-BLOCKER",
+              "EV-WORK-MEMORY",
+              "EV-OBSERVER"
+            ],
+            "requirement_id": "FUT-004",
+            "research_value": {
+              "finding": "A model self-diagnosis is a signal, not proof; it must join to exact action, failure, blocker, replacement, and verification evidence or create a typed hold.",
+              "gap_ids": [
+                "GAP-CORRECTION",
+                "GAP-OBSERVATION"
+              ],
+              "practical_consequence": "Unsupported explanations cannot rewrite sequences, but grounded tells are no longer discarded.",
+              "status": "required"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-WORK-MEMORY",
+              "EV-GUARD",
+              "EV-WORK-MEMORY-TESTS"
+            ],
+            "requirement_id": "FUT-005",
+            "research_value": {
+              "finding": "After causal and same-path proof, canonical content must exclude the wrong step and include the corrected step, prerequisites, fingerprint, response, and verification.",
+              "gap_ids": [
+                "GAP-CORRECTION"
+              ],
+              "practical_consequence": "The next matching task receives the correction or a fail-closed hold, never the known-wrong action.",
+              "status": "required"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-PROMOTION",
+              "EV-LIFECYCLE",
+              "EV-WORK-MEMORY"
+            ],
+            "requirement_id": "FUT-006",
+            "research_value": {
+              "finding": "Registered repair needs auditable replacement identity, quarantine of the defective version, requalification, verification, and atomic selection cutover.",
+              "gap_ids": [
+                "GAP-REGISTERED-REPAIR"
+              ],
+              "practical_consequence": "Old defective versions remain auditable but non-selectable.",
+              "status": "required"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-DISCOVERY",
+              "EV-PROMOTION",
+              "EV-OBSERVER-E2E"
+            ],
+            "requirement_id": "FUT-007",
+            "research_value": {
+              "finding": "Silver and gold need machine-readable entry, promotion, demotion, supersession, and expiry. A grounded base is silver=complete qualified reusable path and gold=registered path proven by governed reuse.",
+              "gap_ids": [
+                "GAP-LEVELS"
+              ],
+              "practical_consequence": "Capture and real reuse become distinct measurable stages.",
+              "status": "required"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-WORK-MEMORY",
+              "EV-OBSERVER"
+            ],
+            "requirement_id": "FUT-008",
+            "research_value": {
+              "finding": "Metrics need eligible denominators and provenance for matches, silver creation, gold transition, invocation, corrected reuse, duplicates, false matches, evidence holds, and known-wrong recurrence.",
+              "gap_ids": [
+                "GAP-METRICS"
+              ],
+              "practical_consequence": "Progress measures learning effectiveness rather than event volume.",
+              "status": "required"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-CANDIDATE-CONTRACT",
+              "EV-OBSERVER",
+              "EV-BOOTSTRAP",
+              "EV-RECONCILIATION"
+            ],
+            "requirement_id": "FUT-009",
+            "research_value": {
+              "finding": "Stable identity, registered/discovery precedence, collision failure, locking, caps, and suppression must extend across all action and repair producers.",
+              "gap_ids": [
+                "GAP-SUCCESS-CAPTURE",
+                "GAP-FEEDBACK"
+              ],
+              "practical_consequence": "Repeated evidence converges on one lineage without backlog churn.",
+              "status": "required"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-WORK-MEMORY",
+              "EV-BOOTSTRAP",
+              "EV-PROMOTION",
+              "EV-WORKFLOW-STATE"
+            ],
+            "requirement_id": "FUT-010",
+            "research_value": {
+              "finding": "The full learning loop needs one branch-safe synchronization and resume contract spanning observation, matching, candidate, correction, level, promotion, and reuse.",
+              "gap_ids": [
+                "GAP-DURABILITY"
+              ],
+              "practical_consequence": "Interruptions and branch divergence cannot lose corrections or duplicate candidates.",
+              "status": "required"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-WORK-MEMORY",
+              "EV-CHARTER"
+            ],
+            "requirement_id": "FUT-011",
+            "research_value": {
+              "finding": "Every new producer must use closed minimal schemas rejecting credentials, personal data, transcripts, hidden reasoning, and raw outputs while preserving safe provenance.",
+              "gap_ids": [
+                "GAP-OBSERVATION"
+              ],
+              "practical_consequence": "The loop learns applicability and causality without accumulating sensitive conversation memory.",
+              "status": "required"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-OBSERVER",
+              "EV-GUARD",
+              "EV-LIFECYCLE",
+              "EV-RECONCILIATION",
+              "EV-OBSERVER-TESTS"
+            ],
+            "requirement_id": "FUT-012",
+            "research_value": {
+              "finding": "Observation, recommendation, dispatch approval, correction approval, qualification, promotion, registration, and directive authority must remain separate and fail closed.",
+              "gap_ids": [],
+              "practical_consequence": "Learning cannot silently execute, approve, or promote.",
+              "status": "grounded"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-OBSERVER",
+              "EV-RECONCILIATION",
+              "EV-WORK-MEMORY"
+            ],
+            "requirement_id": "FUT-013",
+            "research_value": {
+              "finding": "Promotion, reuse, correction, quarantine, dismissal, supersession, false-match, and recurrence outcomes must join immutably to identity and be consumed only by declared rule versions.",
+              "gap_ids": [
+                "GAP-FEEDBACK"
+              ],
+              "practical_consequence": "Past outcomes improve recognition without hidden self-tuning.",
+              "status": "required"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQUIREMENTS",
+              "EV-OBSERVER-E2E",
+              "EV-LIFECYCLE-TESTS",
+              "EV-WORK-MEMORY-TESTS"
+            ],
+            "requirement_id": "FUT-014",
+            "research_value": {
+              "finding": "Two real-boundary proofs are required: success becomes silver then gold and is selected pre-dispatch; wrong action becomes a verified replacement and is not repeated.",
+              "gap_ids": [
+                "GAP-ACCEPTANCE",
+                "GAP-PREACT",
+                "GAP-CORRECTION"
+              ],
+              "practical_consequence": "Completion is proven by changed next-run behavior, not post-run catalog entries.",
+              "status": "required"
+            }
+          }
+        ],
+        "research_sections": {
+          "CUR-001": {
+            "current_future_boundary": "post-close checked-execution evidence",
+            "grounded_conclusion": "The observer triggers after committed run_closed and reconstructs only complete passed checked argv executions with exact context and same-path verification.",
+            "limitations": "No additional research limitation established.",
+            "practical_consequence": "Actions outside governed work-memory plus sequence_checked_exec are invisible."
+          },
+          "CUR-002": {
+            "current_future_boundary": "no global pre-dispatch interceptor",
+            "grounded_conclusion": "Sequence recognition starts only when the model follows advisory skill instructions; guard enforcement begins after explicit selection and activation, and exact identity matching is post-close.",
+            "limitations": "No additional research limitation established.",
+            "practical_consequence": "The model can improvise before the guard sees an action."
+          },
+          "CUR-003": {
+            "current_future_boundary": "automatic capture only for checked governed success",
+            "grounded_conclusion": "A complete governed success can auto-bootstrap discovery, but unrecorded success cannot; qualification/promotion is separately invoked and registered matching occurs only after a later run.",
+            "limitations": "No additional research limitation established.",
+            "practical_consequence": "The passing E2E does not prove autonomous learning or next-time invocation."
+          },
+          "CUR-004": {
+            "current_future_boundary": "correction verification exists; correction synthesis/canonicalization does not",
+            "grounded_conclusion": "No durable producer binds model self-diagnosis to an action. Blockers and corrections are durable, but reusable content changes only after an explicit bundle edit and successor verification.",
+            "limitations": "No additional research limitation established.",
+            "practical_consequence": "A wrong action may be cataloged without ever correcting the path used next time."
+          },
+          "CUR-005": {
+            "current_future_boundary": "durable lifecycle without versioned registered repair",
+            "grounded_conclusion": "Promotion, registered verification, reuse feedback, and correction evidence are durable; registered repair evolves a bundle in one lineage rather than creating an auditable replacement version and atomic cutover.",
+            "limitations": "No additional research limitation established.",
+            "practical_consequence": "Defective and corrected registered versions are not separately governed selection objects."
+          },
+          "CUR-006": {
+            "current_future_boundary": "no level or effectiveness contract",
+            "grounded_conclusion": "Silver and gold are not canonical states. Discovery-ready, promoted/verified, and post-run registered reuse are only analogues; effectiveness denominators are absent.",
+            "limitations": "No additional research limitation established.",
+            "practical_consequence": "The system cannot truthfully report silver growth, gold reuse, false matches, or wrong-step recurrence."
+          },
+          "CUR-007": {
+            "current_future_boundary": "checked subprocess only",
+            "grounded_conclusion": "Only checked shell argv has an authoritative action/outcome ledger path. MCP calls, edits, browser actions, subagents, self-reports, and remote model tool actions are absent or aggregate-only.",
+            "limitations": "No additional research limitation established.",
+            "practical_consequence": "Most model behavior cannot enter the observer."
+          },
+          "FUT-001": {
+            "current_future_boundary": "Existing event safety and candidate identity are reusable.",
+            "grounded_conclusion": "Every in-scope action class needs a named authoritative dispatch producer, closed non-secret event, stable identity, outcome binding, and observer consumer; unsupported classes must fail visibly.",
+            "limitations": "Planner must close GAP-OBSERVATION",
+            "practical_consequence": "Universal observation cannot be claimed from checked shell commands alone."
+          },
+          "FUT-002": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "Exact compatible registered-sequence matching must run before dispatch and require selection, activation, and guard without bypassing approvals.",
+            "limitations": "Planner must close GAP-PREACT",
+            "practical_consequence": "Known correct paths are used before an improvised wrong step occurs."
+          },
+          "FUT-003": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "No-match successful behavior must create one complete deduplicated canonical discovery only from ordered passed action/outcome evidence.",
+            "limitations": "Planner must close GAP-SUCCESS-CAPTURE",
+            "practical_consequence": "Success paths become reusable without manual reconstruction."
+          },
+          "FUT-004": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "A model self-diagnosis is a signal, not proof; it must join to exact action, failure, blocker, replacement, and verification evidence or create a typed hold.",
+            "limitations": "Planner must close GAP-CORRECTION, GAP-OBSERVATION",
+            "practical_consequence": "Unsupported explanations cannot rewrite sequences, but grounded tells are no longer discarded."
+          },
+          "FUT-005": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "After causal and same-path proof, canonical content must exclude the wrong step and include the corrected step, prerequisites, fingerprint, response, and verification.",
+            "limitations": "Planner must close GAP-CORRECTION",
+            "practical_consequence": "The next matching task receives the correction or a fail-closed hold, never the known-wrong action."
+          },
+          "FUT-006": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "Registered repair needs auditable replacement identity, quarantine of the defective version, requalification, verification, and atomic selection cutover.",
+            "limitations": "Planner must close GAP-REGISTERED-REPAIR",
+            "practical_consequence": "Old defective versions remain auditable but non-selectable."
+          },
+          "FUT-007": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "Silver and gold need machine-readable entry, promotion, demotion, supersession, and expiry. A grounded base is silver=complete qualified reusable path and gold=registered path proven by governed reuse.",
+            "limitations": "Planner must close GAP-LEVELS",
+            "practical_consequence": "Capture and real reuse become distinct measurable stages."
+          },
+          "FUT-008": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "Metrics need eligible denominators and provenance for matches, silver creation, gold transition, invocation, corrected reuse, duplicates, false matches, evidence holds, and known-wrong recurrence.",
+            "limitations": "Planner must close GAP-METRICS",
+            "practical_consequence": "Progress measures learning effectiveness rather than event volume."
+          },
+          "FUT-009": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "Stable identity, registered/discovery precedence, collision failure, locking, caps, and suppression must extend across all action and repair producers.",
+            "limitations": "Planner must close GAP-SUCCESS-CAPTURE, GAP-FEEDBACK",
+            "practical_consequence": "Repeated evidence converges on one lineage without backlog churn."
+          },
+          "FUT-010": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "The full learning loop needs one branch-safe synchronization and resume contract spanning observation, matching, candidate, correction, level, promotion, and reuse.",
+            "limitations": "Planner must close GAP-DURABILITY",
+            "practical_consequence": "Interruptions and branch divergence cannot lose corrections or duplicate candidates."
+          },
+          "FUT-011": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "Every new producer must use closed minimal schemas rejecting credentials, personal data, transcripts, hidden reasoning, and raw outputs while preserving safe provenance.",
+            "limitations": "Planner must close GAP-OBSERVATION",
+            "practical_consequence": "The loop learns applicability and causality without accumulating sensitive conversation memory."
+          },
+          "FUT-012": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "Observation, recommendation, dispatch approval, correction approval, qualification, promotion, registration, and directive authority must remain separate and fail closed.",
+            "limitations": "No additional research limitation established.",
+            "practical_consequence": "Learning cannot silently execute, approve, or promote."
+          },
+          "FUT-013": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "Promotion, reuse, correction, quarantine, dismissal, supersession, false-match, and recurrence outcomes must join immutably to identity and be consumed only by declared rule versions.",
+            "limitations": "Planner must close GAP-FEEDBACK",
+            "practical_consequence": "Past outcomes improve recognition without hidden self-tuning."
+          },
+          "FUT-014": {
+            "current_future_boundary": "future acceptance grounded in current boundaries",
+            "grounded_conclusion": "Two real-boundary proofs are required: success becomes silver then gold and is selected pre-dispatch; wrong action becomes a verified replacement and is not repeated.",
+            "limitations": "Planner must close GAP-ACCEPTANCE, GAP-PREACT, GAP-CORRECTION",
+            "practical_consequence": "Completion is proven by changed next-run behavior, not post-run catalog entries."
+          }
+        },
+        "schema_version": 1
+      },
+      "envelope_hash": "76d6387d72ea1774fd5a9b30f31997006f64df9bbf33e2ba62caa8d7b7450038",
+      "envelope_payload": {
+        "allowed_operations": [
+          "read files under authoritative roots",
+          "run rg/sed/git diff/status and research_package.py hash-json read-only verification",
+          "return assessment JSON"
+        ],
+        "authoritative_roots": [
+          "/Users/kamenkamenov/memory-knowledge",
+          "/Users/kamenkamenov/mcp-agents-workflow",
+          "/Users/kamenkamenov/.codex/skills"
+        ],
+        "charter_canonical_json_sha256": "03922d6b4eb1a973855451ef2972516088ea9e5b34f7f0739f97f9d7a5797c88",
+        "charter_path": "/Users/kamenkamenov/memory-knowledge/Tasks/sequence-learning-completeness-assessment/work/charter.json",
+        "forbidden_context": [
+          "conversation history",
+          "producer rationale",
+          "expected conclusions",
+          "other agent outputs",
+          "gold fixtures",
+          "implementation plans"
+        ],
+        "hash_contract": "sha256-canonical-json-utf8-no-trailing-newline-v1",
+        "requirements_canonical_json_sha256": "061db2e97955141603e8e1cda5c97603541441b70bde7e9683ad8ee958d7515f",
+        "requirements_path": "/Users/kamenkamenov/memory-knowledge/Tasks/sequence-learning-completeness-assessment/work/requirements.json",
+        "round": 1,
+        "schema_version": 1,
+        "scope_hash": "b34ca525c787dafd4a75d873242d0127057f2b8cce687df8c8d57f246a6e2e06",
+        "verification_command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py hash-json <json-file>"
+      },
+      "evidence_availability": {
+        "CURRENT_RUNTIME": "AVAILABLE",
+        "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+        "authoritative_roots": "AVAILABLE",
+        "external_evidence": "NOT_YET_APPLICABLE"
+      },
+      "recorded_at": "2026-07-16T18:20:06.087427Z"
+    }
+  },
+  "charter": {
+    "authoritative_roots": [
+      "/Users/kamenkamenov/memory-knowledge",
+      "/Users/kamenkamenov/mcp-agents-workflow",
+      "/Users/kamenkamenov/.codex/skills"
+    ],
+    "budget": {
+      "maximum_agent_spawn_attempts": 15,
+      "maximum_candidate_rounds": 3,
+      "maximum_elapsed_minutes": 60,
+      "maximum_retries_per_role": 1,
+      "repeated_actionable_fingerprint_cap": 2
+    },
+    "charter_id": "sequence-learning-completeness-20260716-v1",
+    "exclusions": [
+      "implementation planning, file-by-file change design, code edits, prompt rewrites, deployment, migration sequencing, or rollout actions",
+      "promoting or cleaning existing sequence discoveries",
+      "designing a dashboard or user interface",
+      "evaluating the quality of every existing sequence",
+      "capturing conversation transcripts, hidden reasoning, personal data, credentials, or raw terminal output as durable knowledge",
+      "granting the observer authority to execute effectful actions or bypass existing approval and promotion gates"
+    ],
+    "in_scope": [
+      "memory-knowledge durable work ledger, sequence observer, candidate identity, checked execution, blocker/correction lifecycle, selector/guard, discovery bootstrap/log, promotion, registration, reconciliation, and sequence-runner contracts",
+      "mcp-agents-workflow model execution and orchestration boundaries only where needed to determine whether model actions are observable or interceptable",
+      "deployed Codex skill entry points only where needed to distinguish advisory instructions from enforced runtime behavior",
+      "present-state completeness findings and complete future-system behavioral, safety, lifecycle, measurement, and acceptance requirements"
+    ],
+    "objective": "Assess the completeness of the currently implemented proactive sequence observer against the envisioned closed sequence-learning system, and produce a planner-ready definition of the complete solution's required outcomes.",
+    "required_output_package": [
+      "manifest.json",
+      "research.md",
+      "requirements.json",
+      "evidence-index.json",
+      "findings.json",
+      "planner-handoff.md"
+    ],
+    "research_questions": [
+      "Which model actions and outcomes are durably observable today, and which remain outside the authoritative evidence boundary?",
+      "Can the current system recognize and invoke an existing sequence before the model improvises, or does it only evaluate evidence after a governed run closes?",
+      "Can a successful unrecorded path become a complete discovery, qualify, promote, and be reused without manual reconstruction?",
+      "When the model identifies that one of its own actions caused an issue, is that causal correction joined to the originating sequence and used to prevent the same wrong step next time?",
+      "Can an existing registered sequence be corrected, versioned, requalified, and safely replace its defective version?",
+      "What exact evidence-based meanings and transitions should silver and gold have, and how will growth, reuse, and recurrence reduction be measured?",
+      "What final end-to-end acceptance behavior proves the system learns both success paths and corrections rather than merely cataloging issues?"
+    ],
+    "schema_version": 1,
+    "supplied_input": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+    "terminal_rules": [
+      "PASS requires one core researcher, three independent PASS lenses on identical candidate/envelope hashes, a fresh adjudicator with no actionable research finding, grounded READY records for every planner obligation, validated hashes, and zero active agent slots.",
+      "GAPS means research-actionable findings remain inside the frozen scope.",
+      "BLOCKED means required accessible evidence or a named approval route is unavailable.",
+      "CAP_REACHED means a shared budget cap or repeated actionable-fingerprint rule fired."
+    ]
+  },
+  "charter_hash": "03922d6b4eb1a973855451ef2972516088ea9e5b34f7f0739f97f9d7a5797c88",
+  "created_at": "2026-07-16T18:07:51.779383Z",
+  "evidence_availability": {
+    "CURRENT_RUNTIME": "AVAILABLE",
+    "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+    "authoritative_roots": "AVAILABLE",
+    "external_evidence": "NOT_YET_APPLICABLE"
+  },
+  "operational_maturity": "MIXED",
+  "package_id": "research-package-93135184aa76791ab93ed55c",
+  "requirements": [
+    {
+      "acceptance_intent": "Every action class the current observer can and cannot reconstruct from authoritative persisted evidence is identified.",
+      "evidence_availability": "AVAILABLE",
+      "id": "CUR-001",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry the proven current observation boundary and uncovered action classes into planning.",
+          "id": "PO-CUR-001"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "current-observer-boundary",
+      "source": {
+        "current_anchors": [
+          "scripts/sequence_observer.py",
+          "scripts/work_memory.py",
+          "scripts/sequence_checked_exec.py",
+          "tests/test_sequence_observer.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Determine the exact current durable observation boundary: trigger, accepted evidence, represented action types, and decisions produced."
+    },
+    {
+      "acceptance_intent": "Trace model intent through selection, activation, guard, and dispatch, distinguishing advisory compliance from runtime interception.",
+      "evidence_availability": "AVAILABLE",
+      "id": "CUR-002",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Expose the proven enforcement/advisory distinction and missing pre-action boundary to planning.",
+          "id": "PO-CUR-002"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "current-preaction-reuse",
+      "source": {
+        "current_anchors": [
+          "skills/sequence-runner/SKILL.md",
+          "scripts/work_memory.py",
+          "scripts/sequence_guard.py",
+          "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Determine whether current sequence recognition and activation is enforced before a model action or depends on the model following advisory skill instructions."
+    },
+    {
+      "acceptance_intent": "Prove which success-path capture and lifecycle transitions are automatic, opt-in, or manual.",
+      "evidence_availability": "AVAILABLE",
+      "id": "CUR-003",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry every manual or absent success-learning transition into planning.",
+          "id": "PO-CUR-003"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "current-success-learning",
+      "source": {
+        "current_anchors": [
+          "scripts/sequence_observer.py",
+          "scripts/discovery_bootstrap.py",
+          "scripts/discovery_promotion_lifecycle.py",
+          "tests/test_sequence_observer_end_to_end.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Determine whether a successful unrecorded operation currently becomes a complete discovery candidate and traverses qualification, promotion, registered verification, and reuse."
+    },
+    {
+      "acceptance_intent": "Trace issue production, cataloging, correction/successor verification, sequence mutation authority, and reuse.",
+      "evidence_availability": "AVAILABLE",
+      "id": "CUR-004",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry blocker-to-sequence correction gaps and reusable boundaries into planning.",
+          "id": "PO-CUR-004"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "current-correction-learning",
+      "source": {
+        "current_anchors": [
+          "scripts/blocker_catalog.py",
+          "scripts/work_memory.py",
+          "scripts/sequence_discovery_log.py",
+          "scripts/sequence_promote.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Determine how blocker and correction evidence relates to sequence content and whether a causally wrong step updates a discovery or registered sequence."
+    },
+    {
+      "acceptance_intent": "Establish which lifecycle outcomes are durable and which alter future selection or observer decisions.",
+      "evidence_availability": "AVAILABLE",
+      "id": "CUR-005",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Preserve current gate authority and identify absent feedback transitions.",
+          "id": "PO-CUR-005"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "current-lifecycle-feedback",
+      "source": {
+        "current_anchors": [
+          "scripts/discovery_promotion_lifecycle.py",
+          "scripts/discovery_candidate_reconciliation.py",
+          "scripts/sequence_promote.py",
+          "scripts/sequence_observer.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Determine current promotion, registered verification, reuse, supersession, and correction feedback semantics."
+    },
+    {
+      "acceptance_intent": "Identify canonical level definitions and measurable capture, promotion, reuse, correction, and recurrence counts.",
+      "evidence_availability": "AVAILABLE",
+      "id": "CUR-006",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry grounded level semantics and missing metric contracts into planning.",
+          "id": "PO-CUR-006"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "current-levels-metrics",
+      "source": {
+        "current_anchors": [
+          "operations/sequences/SEQUENCES.md",
+          "scripts/work_memory.py",
+          "scripts/sequence_observer.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Determine whether silver and gold levels, transition criteria, and outcome metrics exist in current contracts."
+    },
+    {
+      "acceptance_intent": "Map each action class to its authoritative producer, durable record, observer consumer, enforcement point, or confirmed absence.",
+      "evidence_availability": "AVAILABLE",
+      "id": "CUR-007",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry the complete action-class coverage matrix and missing producers into planning.",
+          "id": "PO-CUR-007"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "current-action-coverage",
+      "source": {
+        "current_anchors": [
+          "scripts/sequence_checked_exec.py",
+          "scripts/sequence_observer.py",
+          "src/workflow_orch/agents/executor.py",
+          "src/workflow_orch/cli",
+          "/Users/kamenkamenov/.codex/skills"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Determine current coverage across shell commands, MCP/tool calls, file edits, browser actions, subagent actions, reasoning self-reports, and remote workflow model actions."
+    },
+    {
+      "acceptance_intent": "Every action class has a named producer, canonical non-secret event, stable identity, outcome link, and observer consumer; unsupported classes fail visibly.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-001",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan the authoritative action-observation coverage matrix and fail-visible boundary.",
+          "id": "PO-FUT-001"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-universal-observation",
+      "source": {
+        "current_anchors": [
+          "scripts/work_memory.py",
+          "scripts/sequence_candidate_contract.py",
+          "src/workflow_orch/agents/executor.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Observe every in-scope model action at an authoritative action boundary without relying on hidden reasoning, conversation replay, or voluntary self-report as proof."
+    },
+    {
+      "acceptance_intent": "A matching gold sequence is selected before dispatch; improvisation is rejected or explicitly governed when applicability is established.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-002",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan deterministic applicability matching and pre-dispatch enforcement without bypassing approvals.",
+          "id": "PO-FUT-002"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-preaction-trigger",
+      "source": {
+        "current_anchors": [
+          "scripts/work_memory.py",
+          "scripts/sequence_guard.py",
+          "skills/sequence-runner/SKILL.md"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Before dispatch, identify an exact compatible registered sequence and require its governed activation/guard path when one exists."
+    },
+    {
+      "acceptance_intent": "One deduplicated discovery contains grounded inputs, steps, dependencies, failure handling, verification, provenance, and no guessed command.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-003",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan complete success-path capture through canonical bootstrap.",
+          "id": "PO-FUT-003"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-success-capture",
+      "source": {
+        "current_anchors": [
+          "scripts/sequence_observer.py",
+          "scripts/discovery_bootstrap.py",
+          "scripts/sequence_candidate_contract.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "When no compatible sequence exists, construct a complete candidate only from the proven ordered success path and enter canonical discovery."
+    },
+    {
+      "acceptance_intent": "Link the tell to the exact action and failure, distinguish assertion from proof, and open a correction candidate or typed evidence gap.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-004",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan the self-diagnosis signal contract and evidence-backed causal join.",
+          "id": "PO-FUT-004"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-self-identified-issue",
+      "source": {
+        "current_anchors": [
+          "scripts/blocker_catalog.py",
+          "scripts/work_memory.py",
+          "scripts/sequence_observer.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Treat a model statement that its own action caused an issue as a high-value signal, while requiring grounded action, failure, blocker, and verification evidence for causal authority."
+    },
+    {
+      "acceptance_intent": "A subsequent matching task cannot receive the superseded wrong step; it receives the verified correction or a fail-closed hold.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-005",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan correction-to-canonical-path transition and non-repetition proof.",
+          "id": "PO-FUT-005"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-correction-capture",
+      "source": {
+        "current_anchors": [
+          "scripts/work_memory.py",
+          "scripts/sequence_discovery_log.py",
+          "scripts/sequence_guard.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Once a wrong step and replacement are proven, exclude the wrong step from the canonical reusable path and include the corrected step, prerequisites, failure fingerprint, and same-path evidence."
+    },
+    {
+      "acceptance_intent": "The old version remains auditable and non-selectable after cutover; the new version becomes selectable only after gates pass.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-006",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan versioned registered repair, containment, requalification, and cutover.",
+          "id": "PO-FUT-006"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-registered-repair",
+      "source": {
+        "current_anchors": [
+          "scripts/sequence_promote.py",
+          "scripts/discovery_promotion_lifecycle.py",
+          "scripts/discovery_candidate_reconciliation.py",
+          "operations/sequences/SEQUENCES.md"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Repair a defective registered sequence through versioned replacement, provenance, requalification, registered verification, and atomic cutover rather than unverified in-place editing."
+    },
+    {
+      "acceptance_intent": "Silver and gold are canonical machine-readable lifecycle states; silver is a complete proven reusable path and gold is a registered path proven by governed reuse, with exact policy finalized from evidence.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-007",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan canonical level semantics and transitions using existing lifecycle authority.",
+          "id": "PO-FUT-007"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-level-contract",
+      "source": {
+        "current_anchors": [
+          "scripts/discovery_promotion_lifecycle.py",
+          "scripts/sequence_promote.py",
+          "operations/sequences/SEQUENCES.md"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Define evidence-based silver and gold levels with explicit entry, promotion, demotion, supersession, and expiration rules."
+    },
+    {
+      "acceptance_intent": "Metrics cover eligible observations, matches, silver creation, silver-to-gold transitions, reuse, corrected reuse, duplicates, known-wrong-step recurrence, false matches, and evidence holds.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-008",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan durable metric definitions, denominators, provenance, and thresholds.",
+          "id": "PO-FUT-008"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-effectiveness-metrics",
+      "source": {
+        "current_anchors": [
+          "scripts/work_memory.py",
+          "scripts/sequence_observer.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Measure learning-loop growth and effectiveness, not merely event volume."
+    },
+    {
+      "acceptance_intent": "Identical evidence creates one lineage; registered/discovery identity wins; low-value or unchanged rejected evidence creates no backlog churn.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-009",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan identity, matching, suppression, collision, and concurrency contracts.",
+          "id": "PO-FUT-009"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-dedupe-noise",
+      "source": {
+        "current_anchors": [
+          "scripts/sequence_candidate_contract.py",
+          "scripts/sequence_observer.py",
+          "scripts/discovery_candidate_reconciliation.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Keep candidate creation and sequence repair deduplicated, bounded, and noise-resistant across concurrency, identity drift, low-value activity, and unchanged evidence."
+    },
+    {
+      "acceptance_intent": "Any interruption resumes without duplicate candidates, lost corrections, stale selection, or branch-local evidence loss.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-010",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan durable ownership, identity, resume, and branch synchronization across transitions.",
+          "id": "PO-FUT-010"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-durability-resume",
+      "source": {
+        "current_anchors": [
+          "scripts/work_memory.py",
+          "scripts/discovery_bootstrap.py",
+          "scripts/discovery_promotion_lifecycle.py",
+          "src/workflow_orch/workflow_state_store.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Keep all observation, candidate, correction, promotion, level, and reuse state durable, resumable, multi-run, and branch-safe."
+    },
+    {
+      "acceptance_intent": "Schemas reject credentials, auth payloads, transcripts, hidden reasoning, and raw outputs; every decision cites safe evidence and limitations.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-011",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan safe closed schemas and redaction at every new producer.",
+          "id": "PO-FUT-011"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-safe-evidence",
+      "source": {
+        "current_anchors": [
+          "scripts/work_memory.py",
+          "scripts/sequence_candidate_contract.py",
+          "working-agreement/DIRECTIVES.md"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Keep learning evidence minimal, non-secret, non-personal, and explainable while retaining provenance for applicability, causality, correction, and success."
+    },
+    {
+      "acceptance_intent": "Observation, recommendation, execution approval, correction approval, qualification, promotion, registration, and directives remain separate fail-closed authorities.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-012",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan authority boundaries and bypass-negative tests.",
+          "id": "PO-FUT-012"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-governance",
+      "source": {
+        "current_anchors": [
+          "scripts/sequence_guard.py",
+          "scripts/discovery_promotion_lifecycle.py",
+          "working-agreement/DIRECTIVES.md"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Do not grant the observer authority to execute effects, approve actions, promote sequences, modify directives, or bypass lifecycle gates."
+    },
+    {
+      "acceptance_intent": "Promotion, reuse, correction, quarantine, dismissal, supersession, false match, and recurrence join to candidate identity and affect only declared future rule versions.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-013",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan immutable feedback and versioned consumption without silent self-tuning.",
+          "id": "PO-FUT-013"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-feedback-learning",
+      "source": {
+        "current_anchors": [
+          "scripts/discovery_candidate_reconciliation.py",
+          "scripts/sequence_observer.py",
+          "scripts/work_memory.py"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Feed governed outcomes into future recognition and repair decisions through immutable versioned rules."
+    },
+    {
+      "acceptance_intent": "One scenario proves unrecorded success becomes silver then gold and is invoked next time; another proves a wrong step is diagnosed, corrected, incorporated, and not repeated.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-014",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan real-boundary matrices and two lifecycle-spanning acceptance proofs.",
+          "id": "PO-FUT-014"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-end-to-end-proof",
+      "source": {
+        "current_anchors": [
+          "tests/test_sequence_observer_end_to_end.py",
+          "tests/test_discovery_promotion_lifecycle.py",
+          "tests/test_work_memory.py",
+          "mcp-agents-workflow/tests"
+        ],
+        "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time."
+      },
+      "text": "Prove the complete loop on real boundaries for success learning and correction learning."
+    }
+  ],
+  "requirements_hash": "061db2e97955141603e8e1cda5c97603541441b70bde7e9683ad8ee958d7515f",
+  "result": {
+    "actionable_fingerprints": [],
+    "candidate_hash": null,
+    "envelope_hash": null,
+    "reason": "AWAITING_LENS_RESULTS",
+    "verdict": "IN_PROGRESS"
+  },
+  "rounds": [
+    {
+      "actionable_fingerprints": [],
+      "adjudication": null,
+      "candidate_hash": "490d8add1d05927d0d2c32a9368057292dbd8abd4bb9de2ae60771d1a502e198",
+      "candidate_id": "candidate-15dddf58a5c569ee30c4b631",
+      "envelope_hash": "76d6387d72ea1774fd5a9b30f31997006f64df9bbf33e2ba62caa8d7b7450038",
+      "lenses": {
+        "REQUIREMENTS_COVERAGE": {
+          "candidate_hash": "490d8add1d05927d0d2c32a9368057292dbd8abd4bb9de2ae60771d1a502e198",
+          "envelope_hash": "76d6387d72ea1774fd5a9b30f31997006f64df9bbf33e2ba62caa8d7b7450038",
+          "lens": "REQUIREMENTS_COVERAGE",
+          "lens_result_id": "lens-result-d00655a83f7c8ff652081d58",
+          "raw_findings": [
+            {
+              "evidence": [
+                "requirements.json FUT-001 requires a named producer, canonical non-secret event, stable identity, outcome link, observer consumer, and visible failure for every action class.",
+                "candidate-round-1.json requirement_statuses CUR-007 establishes that only checked shell argv currently has an authoritative action/outcome path; MCP calls, edits, browser actions, subagents, self-reports, and remote model actions are absent or aggregate-only.",
+                "candidate evidence EV-WORK-MEMORY, EV-CHECKED-EXEC, EV-EXECUTOR, and EV-CODEX-CLI ground the current boundary; FUT-004 and FUT-011 define the causal-join and safe-evidence obligations."
+              ],
+              "fingerprint": "requirements-coverage|gap-observation|authoritative-action-producer-matrix",
+              "id": "GAP-OBSERVATION",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Without an authoritative producer and safe event contract for every in-scope action class, most model behavior remains invisible and causal corrections cannot be grounded.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-001",
+                "FUT-004",
+                "FUT-011"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "requirements.json FUT-002 requires exact compatible-sequence identification and governed activation before dispatch, while FUT-014 requires next-run pre-dispatch selection in the success acceptance proof.",
+                "candidate-round-1.json requirement_statuses CUR-002 concludes that recognition is advisory, guard enforcement begins only after explicit activation, and exact identity matching is post-close.",
+                "candidate evidence EV-RUNNER-SKILL, EV-GUARD, EV-WORK-MEMORY, EV-OBSERVER, and EV-EXECUTOR grounds the missing interception boundary."
+              ],
+              "fingerprint": "requirements-coverage|gap-preact|matching-before-dispatch",
+              "id": "GAP-PREACT",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Until applicability matching and governed activation occur before dispatch, the model can improvise even when a correct registered sequence already exists.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-002",
+                "FUT-014"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "requirements.json FUT-003 requires one complete discovery built only from the proven ordered success path; FUT-009 requires stable identity, deduplication, collision handling, concurrency control, and noise suppression.",
+                "candidate-round-1.json requirement_statuses CUR-003 establishes that automatic capture currently applies only to complete checked governed success and that qualification and promotion remain separately invoked.",
+                "candidate evidence EV-CANDIDATE-CONTRACT, EV-OBSERVER, EV-BOOTSTRAP, and EV-RECONCILIATION grounds reusable candidate structure and the missing broader producer."
+              ],
+              "fingerprint": "requirements-coverage|gap-success-capture|proven-path-to-canonical-discovery",
+              "id": "GAP-SUCCESS-CAPTURE",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A successful path that was not already governed cannot become reusable without manual reconstruction unless planning supplies the ordered-evidence capture, completeness, identity, and deduplication mechanism.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-003",
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "requirements.json FUT-004 treats self-diagnosis as a signal requiring exact action, failure, blocker, replacement, and verification evidence; FUT-005 requires removal of the proven wrong step; FUT-014 requires lifecycle-spanning non-recurrence proof.",
+                "candidate-round-1.json requirement_statuses CUR-004 concludes that no durable producer binds self-diagnosis to an action and that reusable content changes only after explicit bundle editing and successor verification.",
+                "candidate evidence EV-BLOCKER, EV-WORK-MEMORY, EV-GUARD, EV-LIFECYCLE, and EV-WORK-MEMORY-TESTS grounds existing correction evidence and the absent synthesis/canonicalization boundary."
+              ],
+              "fingerprint": "requirements-coverage|gap-correction|causal-join-and-nonrecurrence",
+              "id": "GAP-CORRECTION",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A model-reported mistake can remain only a catalog entry unless planning defines the evidence-backed causal join, corrected canonical content, fail-closed hold, and proof that the wrong step is not selected again.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-004",
+                "FUT-005",
+                "FUT-014"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "requirements.json FUT-006 requires replacement identity, provenance, quarantine, requalification, registered verification, atomic cutover, and preservation of the old version as auditable but non-selectable.",
+                "candidate-round-1.json requirement_statuses CUR-005 concludes that current repair evolves one bundle lineage rather than producing an auditable replacement version and cutover.",
+                "candidate evidence EV-PROMOTION, EV-LIFECYCLE, EV-RECONCILIATION, and EV-WORK-MEMORY grounds current lifecycle authority and the missing registered-version mechanism."
+              ],
+              "fingerprint": "requirements-coverage|gap-registered-repair|versioned-replacement-and-cutover",
+              "id": "GAP-REGISTERED-REPAIR",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Without versioned replacement and atomic cutover, defective and corrected registered content cannot be governed as separately auditable selection objects.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-006"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "requirements.json FUT-007 defines silver as a complete proven reusable path and gold as a registered path proven by governed reuse, and requires explicit lifecycle transitions.",
+                "candidate-round-1.json requirement_statuses CUR-006 establishes that silver and gold do not currently exist as canonical states, while FUT-007 carries the grounded meanings and required transition set.",
+                "candidate evidence EV-DISCOVERY, EV-PROMOTION, EV-REGISTRY, and EV-OBSERVER-E2E grounds the existing lifecycle analogues from which the planner must finalize policy."
+              ],
+              "fingerprint": "requirements-coverage|gap-levels|silver-gold-lifecycle-policy",
+              "id": "GAP-LEVELS",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Silver capture and gold reuse cannot be reported or governed consistently until planning turns the grounded meanings into exact machine-readable entry, promotion, demotion, supersession, and expiration rules.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-007"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "requirements.json FUT-008 requires measurement of eligible observations, matches, silver creation, silver-to-gold transitions, reuse, corrected reuse, duplicates, known-wrong recurrence, false matches, and evidence holds.",
+                "candidate-round-1.json requirement_statuses CUR-006 establishes that effectiveness denominators are absent, and FUT-008 carries the complete required metric families.",
+                "candidate evidence EV-WORK-MEMORY and EV-OBSERVER grounds current event and observer state but no complete effectiveness contract."
+              ],
+              "fingerprint": "requirements-coverage|gap-metrics|effectiveness-denominators-and-thresholds",
+              "id": "GAP-METRICS",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The system cannot distinguish genuine learning from increased event volume until each effectiveness metric has a durable definition, eligible denominator, provenance, and threshold.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-008"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "requirements.json FUT-013 requires promotion, reuse, correction, quarantine, dismissal, supersession, false-match, and recurrence outcomes to join to candidate identity and affect only declared future rule versions.",
+                "requirements.json FUT-009 adds identity precedence, collision, concurrency, boundedness, and unchanged-evidence suppression obligations.",
+                "candidate evidence EV-RECONCILIATION, EV-OBSERVER, EV-CANDIDATE-CONTRACT, and EV-WORK-MEMORY grounds existing immutable feedback and identifies false-match and consumption limitations."
+              ],
+              "fingerprint": "requirements-coverage|gap-feedback|identity-bound-versioned-consumption",
+              "id": "GAP-FEEDBACK",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Governed outcomes cannot safely improve later matching or repair unless planning defines how they join to stable identity and are consumed by explicit immutable rule versions without duplicate churn or silent self-tuning.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-009",
+                "FUT-013"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "requirements.json FUT-010 requires observation, candidate, correction, promotion, level, and reuse state to remain durable, resumable, multi-run, and branch-safe.",
+                "candidate-round-1.json requirement_statuses FUT-010 identifies the required synchronization and resume contract and its no-loss/no-duplication acceptance outcome.",
+                "candidate evidence EV-WORK-MEMORY, EV-BOOTSTRAP, EV-PROMOTION, and EV-WORKFLOW-STATE grounds existing partial persistence boundaries."
+              ],
+              "fingerprint": "requirements-coverage|gap-durability|cross-transition-resume-and-branch-safety",
+              "id": "GAP-DURABILITY",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Interruptions or branch divergence can lose corrections, preserve stale selections, or duplicate candidates unless one ownership and synchronization contract spans the entire learning lifecycle.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-010"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "requirements.json FUT-014 requires one scenario where unrecorded success becomes silver then gold and is invoked next time, plus one where a wrong step is diagnosed, corrected, incorporated, and not repeated.",
+                "candidate-round-1.json requirement_statuses FUT-014 carries both scenarios and explicitly requires changed next-run behavior.",
+                "candidate evidence EV-OBSERVER-E2E, EV-LIFECYCLE-TESTS, and EV-WORK-MEMORY-TESTS grounds current partial proofs and their limitations."
+              ],
+              "fingerprint": "requirements-coverage|gap-acceptance|two-real-boundary-lifecycle-proofs",
+              "id": "GAP-ACCEPTANCE",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Completion could otherwise be claimed from post-run catalog records without proving that future behavior changed, so planning must preserve two real-boundary lifecycle proofs covering successful reuse and corrected non-recurrence.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-014"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          ],
+          "recorded_at": "2026-07-16T18:34:27.646887Z",
+          "runtime_agent_id": "/root/sequence_learning_coverage_r1",
+          "verdict": "PASS"
+        },
+        "REQUIREMENTS_SATISFACTION": {
+          "candidate_hash": "490d8add1d05927d0d2c32a9368057292dbd8abd4bb9de2ae60771d1a502e198",
+          "envelope_hash": "76d6387d72ea1774fd5a9b30f31997006f64df9bbf33e2ba62caa8d7b7450038",
+          "lens": "REQUIREMENTS_SATISFACTION",
+          "lens_result_id": "lens-result-a0ead2cce3f1cecb182dc915",
+          "raw_findings": [
+            {
+              "evidence": [
+                "EV-REQUIREMENTS defines authoritative producers, stable identity, outcome linkage, safe schemas, and fail-visible unsupported classes.",
+                "EV-CHECKED-EXEC limits authoritative action capture to explicitly wrapped argv subprocesses; EV-EXECUTOR and EV-CODEX-CLI retain aggregate model output rather than individual tool-action events."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-OBSERVATION:authoritative-action-boundary",
+              "id": "GAP-OBSERVATION",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Without a planner-owned host integration boundary, most model actions remain invisible and the learning loop can silently miss behavior outside checked shell execution.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-001",
+                "FUT-004",
+                "FUT-011"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "EV-REQUIREMENTS requires matching and enforced activation before dispatch.",
+                "EV-RUNNER-SKILL is advisory, EV-GUARD enforces only after explicit activation, and EV-OBSERVER records decisions from run_closed evidence after execution."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-PREACT:pre-dispatch-enforcement",
+              "id": "GAP-PREACT",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Known correct sequences will not prevent improvisation until the planner places applicability matching and governed activation before the actual dispatch boundary.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-002",
+                "FUT-014"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "EV-REQUIREMENTS defines complete evidence-only discovery and deduplication outcomes.",
+                "EV-OBSERVER can propose/bootstrap only from represented closed-run evidence, while EV-BOOTSTRAP validates a supplied complete spec but does not discover actions; EV-OBSERVER-E2E proves the governed path only."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-SUCCESS-CAPTURE:ordered-success-to-discovery",
+              "id": "GAP-SUCCESS-CAPTURE",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Successful behavior outside the governed checked-execution path will still require manual reconstruction unless planning connects ordered authoritative action outcomes to one deduplicated canonical discovery.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-003",
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "EV-REQUIREMENTS requires an evidence-backed causal join, canonical corrected content, and non-repetition proof.",
+                "EV-BLOCKER and EV-WORK-MEMORY persist blocker/correction/successor evidence, but EV-OBSERVER and EV-LIFECYCLE provide no producer that turns model self-diagnosis into an approved content repair."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-CORRECTION:causal-repair-to-canonical-path",
+              "id": "GAP-CORRECTION",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A model can identify its mistake yet the next matching task can still receive the wrong path unless planning joins the signal to grounded failure evidence and performs a verified canonical replacement or fail-closed hold.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-004",
+                "FUT-005",
+                "FUT-014"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "EV-REQUIREMENTS defines versioned replacement and selectable-state acceptance.",
+                "EV-PROMOTION installs discoveries as registered sequences, while EV-LIFECYCLE and EV-WORK-MEMORY govern corrections within existing lineage/bundle evidence rather than a separately selectable replacement-version cutover."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-REGISTERED-REPAIR:versioned-cutover",
+              "id": "GAP-REGISTERED-REPAIR",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A defective registered sequence cannot be safely replaced while preserving an auditable old version and preventing stale selection until the planner defines quarantine, replacement identity, requalification, and atomic cutover.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-006"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "EV-REQUIREMENTS supplies the lifecycle intent and grounded base semantics but explicitly leaves exact policy to be finalized.",
+                "EV-DISCOVERY, EV-PROMOTION, EV-REGISTRY, and EV-OBSERVER-E2E expose qualification, registration, verification, and post-run reuse analogues without canonical silver/gold state transitions."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-LEVELS:canonical-silver-gold-policy",
+              "id": "GAP-LEVELS",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The system cannot distinguish captured reusable knowledge from proven real reuse until planning finalizes machine-readable silver and gold states and every transition that changes selectability.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-007"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "EV-REQUIREMENTS defines the required effectiveness measures.",
+                "EV-WORK-MEMORY implements run-oriented metrics such as closed-run pass rates and corrections per run, while EV-OBSERVER records post-close decisions; neither evidence surface defines the complete learning-loop denominators or thresholds."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-METRICS:effectiveness-denominators",
+              "id": "GAP-METRICS",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Event counts could increase while learning remains ineffective unless planning defines eligible denominators, provenance, and thresholds for capture, real reuse, correction, false matches, holds, and recurrence.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-008"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "EV-REQUIREMENTS requires immutable identity joins and declared future rule versions.",
+                "EV-RECONCILIATION governs immutable lifecycle dispositions and EV-OBSERVER consumes selected correction/reuse evidence, but the evidence index explicitly records partial consumption and no false-match feedback contract."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-FEEDBACK:versioned-outcome-consumption",
+              "id": "GAP-FEEDBACK",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Past outcomes can be durably recorded yet remain behaviorally inert unless planning specifies exactly how versioned rules consume promotion, reuse, correction, quarantine, dismissal, false-match, and recurrence evidence.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-009",
+                "FUT-013"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "EV-REQUIREMENTS defines interruption, duplicate, lost-correction, stale-selection, and branch-safety acceptance.",
+                "EV-WORK-MEMORY, EV-BOOTSTRAP, and EV-PROMOTION provide durable atomic pieces, while EV-WORKFLOW-STATE persists workflow phase state; no cited current boundary owns synchronization across observation, candidate, correction, level, promotion, and reuse together."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-DURABILITY:cross-lifecycle-sync",
+              "id": "GAP-DURABILITY",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A restart or branch divergence can duplicate candidates, lose corrections, or preserve stale selection unless planning assigns one durable synchronization and resume contract across every learning transition.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "FUT-010"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "EV-REQUIREMENTS already requires two explicit real-boundary proofs: success learning through next-run invocation and correction learning through non-repetition.",
+                "EV-OBSERVER-E2E, EV-LIFECYCLE-TESTS, and EV-WORK-MEMORY-TESTS establish that current tests stop short of those future proofs; FUT-014 is FUTURE_SYSTEM, so missing deployed proof is expected and planner-owned acceptance work."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-ACCEPTANCE:future-proof-restatement",
+              "id": "GAP-ACCEPTANCE",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "CLEANUP",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Treating absent deployed proof as another material research gap would duplicate the already-frozen future acceptance obligation rather than give the planner a new decision or mechanism to resolve.",
+              "proposed_disposition": "REJECT_NON_GAP",
+              "requirement_ids": [
+                "FUT-014"
+              ],
+              "status": "OPEN",
+              "type": "NON_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-16T18:33:05.435230Z",
+          "runtime_agent_id": "/root/sequence_learning_satisfaction_r1",
+          "verdict": "PASS"
+        }
+      },
+      "round_id": "lens-round-45f3397aad3fdf29bb8ad45b",
+      "round_number": 1
+    }
+  ],
+  "schema_version": 1,
+  "scope_hash": "b34ca525c787dafd4a75d873242d0127057f2b8cce687df8c8d57f246a6e2e06",
+  "updated_at": "2026-07-16T18:34:27.646897Z",
+  "verdict": "IN_PROGRESS"
+}

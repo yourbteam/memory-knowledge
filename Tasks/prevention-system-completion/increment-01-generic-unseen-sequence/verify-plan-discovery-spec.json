@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "task_id": "prevention-generic-exec-increment-01-plan-verify-run",
+  "operation_kind": "read-only",
+  "date": "2026-07-19",
+  "sequence_name": "bounded-generic-execution-plan-verification",
+  "outcome": "Independently verify the approved generic unseen-sequence execution plan against the current prevention implementation before source edits.",
+  "why_repeatable": "Every bounded implementation increment needs the same ledger-backed verifier and critic plan-readiness check.",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/verify-plan/scripts/verification_ledger.py"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "skills/_shared/verification_ledger.py"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "scripts/blocker_catalog.py"
+    }
+  ],
+  "steps": [
+    {
+      "step": "initialize-plan-verification-ledger",
+      "command": "python3 skills/verify-plan/scripts/verification_ledger.py init --kind plan --target Tasks/prevention-system-completion/increment-01-generic-unseen-sequence/plan.md --plan-sha256 9dafc8f645acc3b2ed401868c43b07857a86f8095be2292d5d50dfc9dd5b6320 --evidence-revision-sha256 1ab02069a09269a0a48444e8dd88df7c78d831207c763f173bc5b32ec5fa0463 --output Tasks/prevention-system-completion/increment-01-generic-unseen-sequence/verify-plan-ledger.json",
+      "result": "A task-local plan verification ledger is initialized.",
+      "note": "Use the checked-in verify-plan wrapper as the command authority."
+    },
+    {
+      "step": "check-plan-verification-ledger",
+      "command": "python3 skills/verify-plan/scripts/verification_ledger.py check Tasks/prevention-system-completion/increment-01-generic-unseen-sequence/verify-plan-ledger.json",
+      "result": "The updated verification ledger is structurally valid.",
+      "note": "Run before each independent verifier or critic pass."
+    },
+    {
+      "step": "check-plan-verification-convergence",
+      "command": "python3 skills/verify-plan/scripts/verification_ledger.py check Tasks/prevention-system-completion/increment-01-generic-unseen-sequence/verify-plan-ledger.json --can-stop",
+      "result": "The ledger proves no actionable findings or unchecked high/medium coverage remain.",
+      "note": "This is the terminal readiness gate before implementation."
+    }
+  ]
+}

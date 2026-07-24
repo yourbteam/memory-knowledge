@@ -1,0 +1,630 @@
+{
+  "owners": [
+    {
+      "action_class": "COMPOSITE",
+      "availability_policy": "AVAILABLE",
+      "canonical_call": "python3 /Users/kamenkamenov/mcp-agents-workflow/scripts/local_workflow_orch_image_harness.py <command> [declared argparse flags]",
+      "effect_identity": "Docker image tag, container name, host port/port file, copied code-project path, seeded Codex/Git auth in container, or probe result depending on subcommand.",
+      "evidence_id": "EV-D3-SRC-LOCAL-WORKFLOW-ORCH-IMAGE",
+      "full_unit_budget": "One script invocation. Internal bounded waits/retries are declared in source: health timeout default 180s; run retries requested port bind up to 6 times before fallback; build retries once after no-space escalation.",
+      "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/local_workflow_orch_image_harness.py",
+      "implementation_source_sha256": "3cf45608f60d360e1dd1eaf9ba10fdfd2a9ec3a8c930efa899ffdf118107322b",
+      "owner_contract_sha256": "a4863b25ce06331bb3f563a0d93d0ff57bec2255122ed3d7b0f7c478d06f1f08",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "parameter_schema": {
+        "command": {
+          "enum": [
+            "build",
+            "run",
+            "health",
+            "copy-code-project",
+            "logs",
+            "stop",
+            "seed-codex-auth",
+            "seed-git-auth",
+            "probe-codex",
+            "require-real-memory-knowledge"
+          ]
+        },
+        "required_by_command": {
+          "build": [
+            "tag"
+          ],
+          "copy-code-project": [
+            "container",
+            "source"
+          ],
+          "health": [
+            "port or port_file"
+          ],
+          "logs": [
+            "container"
+          ],
+          "probe-codex": [
+            "container"
+          ],
+          "require-real-memory-knowledge": [
+            "real_memory_knowledge=true"
+          ],
+          "run": [
+            "tag",
+            "name",
+            "port",
+            "env_file"
+          ],
+          "seed-codex-auth": [
+            "container"
+          ],
+          "seed-git-auth": [
+            "container"
+          ],
+          "stop": [
+            "container"
+          ]
+        }
+      },
+      "reconciliation_rule": "Use emitted sorted JSON fields per subcommand: ok, imageTag, containerName/containerId, port, health, copiedPath, seedResult, probes, or removed. Nonzero subprocess exits raise SystemExit and fail the unit.",
+      "recurrence_policy": "RECURRENT",
+      "sequence_id": "local-workflow-orch-image",
+      "terminal_schema": {
+        "failure": "nonzero exit or JSON with ok=false for probe-codex when a probe fails",
+        "success": "JSON object with ok=true for all commands except logs, which streams docker logs and exits 0"
+      }
+    },
+    {
+      "action_class": "COMPOSITE",
+      "availability_policy": "AVAILABLE",
+      "canonical_call": "bash /Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_full_drive.sh --repo <repo> [--spec <file>] [--branch <branch>] [declared flags]",
+      "effect_identity": "Local workflow-orch image/container and detached greenfield N1 or N3 drive pinned to selected repo, branch, container, and port.",
+      "evidence_id": "EV-D3-SRC-GREENFIELD-FULL-DRIVE",
+      "full_unit_budget": "One end-to-end shell sequence. Source declares build, container recreate with three off-port retries, 30 health polling attempts, auth seeding unless skipped, optional checkpoint restore, and one greenfield evaluation or driveDag start.",
+      "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_full_drive.sh",
+      "implementation_source_sha256": "aea47b779974be3011829c09367faf12fc2ae45faa6af0711d432b7f1e915783",
+      "owner_contract_sha256": "26fea661a64b9a709529e09d604e7b76993e7fd7f91f4cd85bdfe22a88d47c75",
+      "owner_sequence_id": "greenfield-full-drive",
+      "parameter_schema": {
+        "optional": [
+          "branch",
+          "tag",
+          "env_file",
+          "keyvault",
+          "container",
+          "port",
+          "skip_build",
+          "skip_auth",
+          "no_fresh",
+          "drive_dag",
+          "restore_checkpoint",
+          "resume_from_checkpoint",
+          "start_feature_index",
+          "parallel_width"
+        ],
+        "required": [
+          "repo"
+        ],
+        "required_unless_drive_dag": [
+          "spec"
+        ]
+      },
+      "reconciliation_rule": "The script exits nonzero at first failed step via die. Success requires health check and prints final ok marker after showing watch commands; branch override verification is operator responsibility noted by the source.",
+      "recurrence_policy": "RECURRENT",
+      "sequence_id": "greenfield-full-drive",
+      "terminal_schema": {
+        "failure": "[FAIL] message on stderr and nonzero exit",
+        "success": "marker text includes sequence complete after health and drive start"
+      }
+    },
+    {
+      "availability_policy": "CUSTODIAN_EVIDENCE_REQUIRED",
+      "evidence_id": "EV-D3-SRC-REMOTE-MCP-USER-ONBOARDING",
+      "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/dist/remote-mcp-user-admin/remote_mcp_user_admin_tui.py",
+      "implementation_source_sha256": "1f20c0897ac9ac5a7446e6b1bc453ebf64f7eb94b339eb31f9570447aa8cbca8",
+      "implementation_source_status": "ACCESSIBLE_HELPER_BUT_CONTRACT_UNAVAILABLE",
+      "reason": "one authoritative machine-readable owner/result contract across TUI, MCP, HTTP, filesystem, and fallback paths",
+      "sequence_id": "remote-mcp-user-onboarding"
+    },
+    {
+      "availability_policy": "UNAVAILABLE",
+      "evidence_id": null,
+      "implementation_source": null,
+      "implementation_source_sha256": null,
+      "implementation_source_status": "UNAVAILABLE",
+      "reason": "/Users/kamenkamenov/taggable-api/tools/Taggable.MigrationRunner/scripts/reload-source.sh was not accessible in the authorized roots",
+      "sequence_id": "taggable-source-reload"
+    },
+    {
+      "availability_policy": "CUSTODIAN_EVIDENCE_REQUIRED",
+      "evidence_id": "EV-D3-SRC-MAWF-PLAYBOOK",
+      "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py",
+      "implementation_source_sha256": "037b3e8d81023c885e10dae2965deccaebf335cde3ce64313e96597998b3c223",
+      "implementation_source_status": "ACCESSIBLE_HELPER_BUT_CONTRACT_UNAVAILABLE",
+      "reason": "exact aggregate transition/result envelope for the full gate-policy driver",
+      "sequence_id": "mawf-playbook-full-test"
+    },
+    {
+      "availability_policy": "CUSTODIAN_EVIDENCE_REQUIRED",
+      "evidence_id": "EV-D3-SRC-MAWF-PLAYBOOK",
+      "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py",
+      "implementation_source_sha256": "037b3e8d81023c885e10dae2965deccaebf335cde3ce64313e96597998b3c223",
+      "implementation_source_status": "ACCESSIBLE_HELPER_BUT_CONTRACT_UNAVAILABLE",
+      "reason": "exact aggregate transition/result envelope for the speed gate-policy driver",
+      "sequence_id": "mawf-playbook-speed-test"
+    },
+    {
+      "action_class": "SUBSEQUENCE",
+      "availability_policy": "AVAILABLE",
+      "canonical_call": "python3 /Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py reenter --mode <mode> --task-guid <id> [declared flags]",
+      "effect_identity": "A MAWF playbook chain reentry request for the named task/workflow/run after a convergence-loop fix.",
+      "evidence_id": "EV-D3-SRC-MAWF-PLAYBOOK",
+      "full_unit_budget": "One reentry invocation. The source dispatches to start-over, restart-workflow, or resume and invokes the packaged remote operator once for the selected reentry action.",
+      "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py",
+      "implementation_source_sha256": "037b3e8d81023c885e10dae2965deccaebf335cde3ce64313e96597998b3c223",
+      "owner_contract_sha256": "e3a9b2e60ea5a4b7f7a1990141466b68037ad3759e91f5efb6ba3061677abab3",
+      "owner_sequence_id": "mawf-playbook-blocker-reentry",
+      "parameter_schema": {
+        "command": {
+          "enum": [
+            "reenter"
+          ]
+        },
+        "mode": {
+          "enum": [
+            "start-over",
+            "restart-workflow",
+            "resume"
+          ]
+        },
+        "optional": [
+          "workflow_name",
+          "run_id",
+          "repo",
+          "branch",
+          "prompt_file",
+          "gate_policy",
+          "task_action",
+          "chain_mode",
+          "operator_env",
+          "operator_cwd",
+          "dry_run"
+        ],
+        "required": [
+          "mode",
+          "task_guid"
+        ]
+      },
+      "reconciliation_rule": "Classify returned operator envelope and emit stage=reenter, mode, workflow, verdict, finalOk, and errorCode. Dry-run returns operator command instead of executing.",
+      "recurrence_policy": "RECURRENT",
+      "sequence_id": "mawf-playbook-blocker-reentry",
+      "terminal_schema": {
+        "failure": "argparse failure or operator/config failure raises nonzero before JSON result",
+        "success": "JSON object with stage='reenter', selected mode, verdict object, finalOk and errorCode fields; script returns 0 after emitting result"
+      }
+    },
+    {
+      "availability_policy": "CUSTODIAN_EVIDENCE_REQUIRED",
+      "evidence_id": "EV-D3-SRC-GITHUB-APP-REPOS-REFRESH",
+      "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/github_app_repos_refresh.py",
+      "implementation_source_sha256": "a40389bbde39cf33f217bf8d79300c105c0080a7ac024d89285e18588a5da0ee",
+      "implementation_source_status": "ACCESSIBLE_HELPER_BUT_CONTRACT_UNAVAILABLE",
+      "reason": "complete wrapper argv/auth/result envelope",
+      "sequence_id": "github-app-repos-refresh"
+    },
+    {
+      "action_class": "COMPOSITE",
+      "availability_policy": "AVAILABLE",
+      "canonical_call": "bash /Users/kamenkamenov/mcp-agents-workflow/scripts/claude_auth_refresh.sh <command> [--token-file <path>] [--config-file <path>] [--container <name>] [--keyvault <name>] [--dry-run]",
+      "effect_identity": "Claude subscription OAuth credential state in local container, host CLI, Azure Key Vault, and optional remote reseed endpoint depending on command.",
+      "evidence_id": "EV-D3-SRC-CLAUDE-AUTH-TOKEN-REFRESH",
+      "full_unit_budget": "One shell invocation. Source fails closed when token/keychain/container/az prerequisites are absent; verify commands bound Claude CLI checks at 60 seconds.",
+      "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/claude_auth_refresh.sh",
+      "implementation_source_sha256": "bad8f0e2fc9dc15a28a4cc7bead7d7872d9238182188200d656d518e4b6a988c",
+      "owner_contract_sha256": "5d14a5008b283813f709edb7080c4bee25e09a63ead326153d3a7cf06115e949",
+      "owner_sequence_id": "claude-auth-token-refresh",
+      "parameter_schema": {
+        "command": {
+          "enum": [
+            "status",
+            "mint",
+            "seed-local",
+            "seed-host",
+            "push-kv",
+            "reseed-azure",
+            "verify",
+            "all"
+          ]
+        },
+        "optional": [
+          "token_file",
+          "config_file",
+          "container",
+          "keyvault",
+          "dry_run"
+        ]
+      },
+      "reconciliation_rule": "Commands use pass/die functions. Success is command-specific marker output; failure exits through die with nonzero status. No token is printed.",
+      "recurrence_policy": "RECURRENT",
+      "sequence_id": "claude-auth-token-refresh",
+      "terminal_schema": {
+        "failure": "colored error text and nonzero exit from die",
+        "success": "human-readable status/pass output; verify/all require local and/or host AUTH_OK checks where applicable"
+      }
+    },
+    {
+      "availability_policy": "UNAVAILABLE",
+      "evidence_id": null,
+      "implementation_source": null,
+      "implementation_source_sha256": null,
+      "implementation_source_status": "UNAVAILABLE",
+      "reason": "/Users/kamenkamenov/taggable-api/scripts/deploy-api.sh was not accessible in the authorized roots",
+      "sequence_id": "taggable-api-deploy"
+    },
+    {
+      "availability_policy": "UNAVAILABLE",
+      "evidence_id": null,
+      "implementation_source": null,
+      "implementation_source_sha256": null,
+      "implementation_source_status": "UNAVAILABLE",
+      "reason": "/Users/kamenkamenov/taggable-admin-spa/scripts/deploy-admin-spa.sh was not accessible in the authorized roots",
+      "sequence_id": "taggable-admin-spa-deploy"
+    },
+    {
+      "availability_policy": "UNAVAILABLE",
+      "evidence_id": null,
+      "implementation_source": null,
+      "implementation_source_sha256": null,
+      "implementation_source_status": "UNAVAILABLE",
+      "reason": "/Users/kamenkamenov/taggable-api/scripts/deploy-media-worker.sh was not accessible in the authorized roots",
+      "sequence_id": "taggable-media-worker-deploy"
+    },
+    {
+      "availability_policy": "UNAVAILABLE",
+      "evidence_id": null,
+      "implementation_source": null,
+      "implementation_source_sha256": null,
+      "implementation_source_status": "OUTSIDE_FROZEN_ROOTS",
+      "reason": "/Users/kamenkamenov/callcenter-harness/scripts/setup_airgapped_stt.sh is outside the frozen authoritative roots",
+      "sequence_id": "airgapped-local-bulgarian-stt"
+    },
+    {
+      "availability_policy": "UNAVAILABLE",
+      "evidence_id": null,
+      "implementation_source": null,
+      "implementation_source_sha256": null,
+      "implementation_source_status": "OUTSIDE_FROZEN_ROOTS",
+      "reason": "/Users/kamenkamenov/callcenter-harness/scripts/setup_airgapped_redaction.sh is outside the frozen authoritative roots",
+      "sequence_id": "airgapped-redaction-stack"
+    },
+    {
+      "availability_policy": "CUSTODIAN_EVIDENCE_REQUIRED",
+      "evidence_id": null,
+      "implementation_source": null,
+      "implementation_source_sha256": null,
+      "implementation_source_status": "CONTRACT_UNAVAILABLE",
+      "reason": "single authoritative composite implementation source or machine-readable owner/result envelope for the provision/verify workflow",
+      "sequence_id": "callcenter-harness-provision-verify"
+    },
+    {
+      "availability_policy": "UNAVAILABLE",
+      "evidence_id": null,
+      "implementation_source": null,
+      "implementation_source_sha256": null,
+      "implementation_source_status": "OUTSIDE_FROZEN_ROOTS",
+      "reason": "/Users/kamenkamenov/callcenter-harness/scripts/setup_airgapped_judge.sh is outside the frozen authoritative roots",
+      "sequence_id": "airgapped-llm-judge"
+    },
+    {
+      "availability_policy": "UNAVAILABLE",
+      "evidence_id": null,
+      "implementation_source": null,
+      "implementation_source_sha256": null,
+      "implementation_source_status": "OUTSIDE_FROZEN_ROOTS",
+      "reason": "/Users/kamenkamenov/callcenter-harness/scripts/seed_landing.sh is outside the frozen authoritative roots",
+      "sequence_id": "secure-landing-seed"
+    },
+    {
+      "availability_policy": "UNAVAILABLE",
+      "evidence_id": null,
+      "implementation_source": null,
+      "implementation_source_sha256": null,
+      "implementation_source_status": "OUTSIDE_FROZEN_ROOTS",
+      "reason": "/Users/kamenkamenov/callcenter-harness/scripts/test_engine_upgrades.py is outside the frozen authoritative roots",
+      "sequence_id": "callcenter-harness-engine-invariants"
+    },
+    {
+      "action_class": "PYTHON_SCRIPT",
+      "availability_policy": "AVAILABLE",
+      "canonical_call": "python3 /Users/kamenkamenov/memory-knowledge/scripts/discovery_promotion_lifecycle.py <command> [declared argparse flags]",
+      "effect_identity": "Discovery log qualification, promotion to registered sequence, registered same-path verification, or correction recording for a discovery/registered subject.",
+      "evidence_id": "EV-D3-SRC-DISCOVERY-PROMOTION-LIFECYCLE",
+      "full_unit_budget": "One lifecycle command. drive loops through status, qualification, promotion, registered verification, and successor verification with max_qualification_runs plus six transition iterations before lifecycle-transition-limit-exceeded.",
+      "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_promotion_lifecycle.py",
+      "implementation_source_sha256": "49e66d7a0e5944419f7e59902056740e7510302e21ad4e707bd263ced822b731",
+      "owner_contract_sha256": "baa936d87e4960c650688afa4c80bc03a933553755dd0899a35c857faed91dac",
+      "owner_sequence_id": "discovery-promotion-lifecycle",
+      "parameter_schema": {
+        "command": {
+          "enum": [
+            "status",
+            "drive",
+            "correct",
+            "correct-registered"
+          ]
+        },
+        "common_required": [
+          "file",
+          "sequence_id"
+        ],
+        "correct_registered_required": [
+          "subject_id",
+          "solution",
+          "reusable_behavior_changed"
+        ],
+        "correct_required": [
+          "solution",
+          "reusable_behavior_changed"
+        ],
+        "drive_required": [
+          "use_when",
+          "operation_kind",
+          "automation_display",
+          "pass_signal"
+        ],
+        "optional": [
+          "repo_roots_file",
+          "root",
+          "task_id",
+          "changed_artifact",
+          "changed_artifacts_file",
+          "supersedes_correction_id",
+          "max_qualification_runs"
+        ]
+      },
+      "reconciliation_rule": "Each control command must return JSON ok=true; guarded verification failure opens a blocker and raises LifecycleError; main emits JSON success or JSON error with exit code 3/5.",
+      "recurrence_policy": "RECURRENT",
+      "sequence_id": "discovery-promotion-lifecycle",
+      "terminal_schema": {
+        "failure": "JSON object on stderr with ok=false and error code",
+        "success": "JSON object with ok=true and stage/state/run/verification fields for status/drive/correct commands"
+      }
+    },
+    {
+      "action_class": "PYTHON_SCRIPT",
+      "availability_policy": "AVAILABLE",
+      "canonical_call": "python3 /Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py --repo <repo> [--manifest <file> --message <msg> --execute | --resume-commit <sha> ...]",
+      "effect_identity": "A manifest-bounded commit/push, resume push, or isolated remote reconciliation to a named branch/remote.",
+      "evidence_id": "EV-D3-SRC-COMMIT-PUSH-MAIN",
+      "full_unit_budget": "One publish/resume invocation. No internal retry loop. Remote integration modes fetch/rebase or isolated clone once and fail closed on conflicts/scope drift.",
+      "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
+      "implementation_source_sha256": "55206e0b25c6eeb7df9d98775ff8d0c1ff69df0565d9add3a0d9487a5d40fe54",
+      "owner_contract_sha256": "2fe39a88c88223193887a8dedef6f4359b86dfc589697e44ab1a240757b37aa7",
+      "owner_sequence_id": "commit-push-main",
+      "parameter_schema": {
+        "optional": [
+          "branch",
+          "remote",
+          "execute",
+          "resume_commit",
+          "integrate_remote",
+          "isolated_integrate_remote",
+          "isolated_reconcile_remote",
+          "overlay_manifest",
+          "ledger_path",
+          "generated_view_path"
+        ],
+        "required": [
+          "repo"
+        ],
+        "required_unless_resume": [
+          "manifest",
+          "message"
+        ]
+      },
+      "reconciliation_rule": "Preflight enforces repo root, branch, clean index, manifest scope, changed paths, no force push, remote SHA verification, and optional ledger semantic merge. Failures raise PublishError and emit ok=false JSON.",
+      "recurrence_policy": "RECURRENT",
+      "sequence_id": "commit-push-main",
+      "terminal_schema": {
+        "failure": "JSON object on stderr with ok=false and error text; exit 2",
+        "success": "JSON object with ok=true, mode, repo/source_repo, branch, remote, paths, commit and remote_commit fields depending on mode"
+      }
+    },
+    {
+      "action_class": "PYTHON_SCRIPT",
+      "availability_policy": "AVAILABLE",
+      "canonical_call": "python3 /Users/kamenkamenov/memory-knowledge/scripts/discovery_bootstrap.py start --spec <json-or-path> [--root <root>] [--repo-roots-file <file>]",
+      "effect_identity": "A missing-sequence discovery bundle, classification receipt, selection receipt, active guard state, and run_started event derived from bootstrap_request_sha256.",
+      "evidence_id": "EV-D3-SRC-DISCOVERY-BOOTSTRAP",
+      "full_unit_budget": "One atomic bootstrap invocation under /private/tmp/work-memory/.discovery-bootstrap.lock. It creates or validates discovery/manifest/receipt/active-state artifacts and starts one deterministic run id.",
+      "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_bootstrap.py",
+      "implementation_source_sha256": "a1c16783567bb8bbb84be2e59a636bf6ef73d7ba85fc684c706bcda6590f8d30",
+      "owner_contract_sha256": "da2eba1725ef492cecf18b8ee818a2a67d25ec97155fc459454c2128fa481cdd",
+      "owner_sequence_id": "discovery-bootstrap",
+      "parameter_schema": {
+        "command": {
+          "enum": [
+            "start"
+          ]
+        },
+        "optional": [
+          "root",
+          "repo_roots_file"
+        ],
+        "required": [
+          "spec"
+        ],
+        "spec_optional": [
+          "inputs",
+          "failure_handling",
+          "verified_path",
+          "dependencies",
+          "candidate_identity",
+          "candidate_fingerprint",
+          "observer_provenance"
+        ],
+        "spec_required": [
+          "schema_version",
+          "task_id",
+          "operation_kind",
+          "date",
+          "sequence_name",
+          "outcome",
+          "why_repeatable",
+          "steps"
+        ]
+      },
+      "reconciliation_rule": "Existing artifacts are accepted only if byte-identical to expected content; conflicts raise WorkMemoryError. On failure before run_started, created artifacts are cleaned up.",
+      "recurrence_policy": "RECURRENT",
+      "sequence_id": "discovery-bootstrap",
+      "terminal_schema": {
+        "failure": "JSON object on stderr with ok=false and error code; WorkMemoryError exit code or 5 for OS/JSON failures",
+        "success": "JSON object with ok=true, bootstrap_request_sha256, discovery_path, discovery_id, manifest_path, task_id, receipt hashes, source_bundle_hash, run_id, event_id, recovered"
+      }
+    },
+    {
+      "action_class": "PYTHON_SCRIPT",
+      "availability_policy": "AVAILABLE",
+      "canonical_call": "python3 /Users/kamenkamenov/memory-knowledge/scripts/discovery_candidate_reconciliation.py <command> [declared argparse flags]",
+      "effect_identity": "Candidate audit manifest, validated reconciliation manifest, active discovery index, rolling invocation directory/checkpoint, or registered reconciliation drive evidence.",
+      "evidence_id": "EV-D3-SRC-DISCOVERY-CANDIDATE-RECONCILIATION",
+      "full_unit_budget": "One reconciliation command. execute-rolling has max_attempts default 6. drive performs current bundle verification and one live rolling run through guarded execute-rolling.",
+      "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_candidate_reconciliation.py",
+      "implementation_source_sha256": "a846e823d027d229e3a7642776dda4d1bbb2e5cbbe192f38dd115223ac14ae9b",
+      "owner_contract_sha256": "3cde79698af14f2a6d6f0f79ee3cf7b2f3d41c00981fa8134b1a5029570573e0",
+      "owner_sequence_id": "discovery-candidate-reconciliation",
+      "parameter_schema": {
+        "command": {
+          "enum": [
+            "audit",
+            "validate",
+            "execute",
+            "execute-rolling",
+            "drive"
+          ]
+        },
+        "optional": [
+          "root",
+          "max_attempts"
+        ],
+        "required_by_command": {
+          "audit": [
+            "output"
+          ],
+          "drive": [
+            "task_id",
+            "output_root"
+          ],
+          "execute": [
+            "manifest",
+            "active_index"
+          ],
+          "execute-rolling": [
+            "baseline",
+            "output_dir",
+            "active_index"
+          ],
+          "validate": [
+            "manifest"
+          ]
+        }
+      },
+      "reconciliation_rule": "Snapshot hashes, repository head, candidate set, candidate content, registry hash, dispositions, approvals, target bundle hashes, and registered verification are validated before execution. Failures raise ReconciliationError and emit ok=false JSON.",
+      "recurrence_policy": "RECURRENT",
+      "sequence_id": "discovery-candidate-reconciliation",
+      "terminal_schema": {
+        "failure": "JSON object on stderr with ok=false and error; exit 3",
+        "success": "JSON object with ok=true plus command-specific manifest_hash/candidate_count/completed_count/active_index/checkpoint/stage fields"
+      }
+    },
+    {
+      "action_class": "PYTHON_SCRIPT",
+      "availability_policy": "AVAILABLE",
+      "canonical_call": "python3 /Users/kamenkamenov/memory-knowledge/scripts/convergence_checkpoint_run.py --state <file> --repo <repo> --approval-id <id> --command-json <file> [--helper <file>] [--stage <stage>] [--lock-timeout-seconds <float>]",
+      "effect_identity": "A helper-accepted convergence baseline for canonical shared ledger/blocker view followed by execution of the approved argv command.",
+      "evidence_id": "EV-D3-SRC-CONVERGENCE-CHECKPOINT-RUN",
+      "full_unit_budget": "One checkpoint command invocation. Shared-ledger lock acquisition is bounded by lock_timeout_seconds default 30.0.",
+      "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_checkpoint_run.py",
+      "implementation_source_sha256": "39da9360585a6b08d416a90a320e8a762fff195adde2c5a2c07890b9a81248e7",
+      "owner_contract_sha256": "41e7470d1c0596b5bee61c0e5327047c7e387fb823c406742837eaadd2eccaf2",
+      "owner_sequence_id": "convergence-checkpoint-run",
+      "parameter_schema": {
+        "command_json_shape": {
+          "argv": "nonempty list of strings",
+          "schema_version": 1
+        },
+        "optional": [
+          "helper",
+          "stage",
+          "lock_timeout_seconds"
+        ],
+        "required": [
+          "state",
+          "repo",
+          "approval_id",
+          "command_json"
+        ]
+      },
+      "reconciliation_rule": "Requires state/helper/command_json regular files, repo directory, canonical ledger/view pair, nonempty approval id, accept-baseline and guard-baseline helper success, then command exit 0. Success prints fixed pass signal.",
+      "recurrence_policy": "RECURRENT",
+      "sequence_id": "convergence-checkpoint-run",
+      "terminal_schema": {
+        "failure": "stderr contains a CheckpointError code or helper/command output; exit code is 2, 4, or failing command code",
+        "success": "stdout includes CONVERGENCE CHECKPOINT COMMAND OK and exit 0"
+      }
+    },
+    {
+      "availability_policy": "CUSTODIAN_EVIDENCE_REQUIRED",
+      "evidence_id": "EV-D3-SRC-SCOPED-CONTEXT-EDIT",
+      "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/context_edit_guard.py",
+      "implementation_source_sha256": "f5f1a2334656f85fe2cf1b5b6e167ae04fa18ccb75c0ee87f32d7ac3f472f3c0",
+      "implementation_source_status": "ACCESSIBLE_GUARD_BUT_CONTRACT_UNAVAILABLE",
+      "reason": "typed patch payload/executor boundary for the complete owner contract",
+      "sequence_id": "scoped-context-edit"
+    },
+    {
+      "action_class": "PYTHON_SCRIPT",
+      "availability_policy": "AVAILABLE",
+      "canonical_call": "python3 /Users/kamenkamenov/memory-knowledge/scripts/convergence_state_review_cycle.py apply --request <file> [--helper <file>] [--dry-run]",
+      "effect_identity": "Bounded convergence review-state mutations described by the request file, followed by final helper verification.",
+      "evidence_id": "EV-D3-SRC-CONVERGENCE-STATE-REVIEW-CYCLE",
+      "full_unit_budget": "One request application. Executes every requested helper operation once, then helper check and status once.",
+      "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_state_review_cycle.py",
+      "implementation_source_sha256": "594a12be5f8c29d17fd69d3e5cbf22e8f099e465e6e2fc8cc244dad1aa0e275e",
+      "owner_contract_sha256": "f891701903bd19b669b134f218c27f42d4a512d4621f3a3e9af194a4d9f94df9",
+      "owner_sequence_id": "convergence-state-review-cycle",
+      "parameter_schema": {
+        "operation_kinds": [
+          "record-gap",
+          "grant-autonomy",
+          "grant-scope-change",
+          "accept-baseline",
+          "guard-baseline",
+          "record-stage",
+          "transition",
+          "check",
+          "status"
+        ],
+        "optional": [
+          "helper",
+          "dry_run"
+        ],
+        "positional_apply": "optional literal apply",
+        "request_shape": {
+          "operations": "nonempty list of typed operations",
+          "schema_version": 1,
+          "state": "regular file path"
+        },
+        "required": [
+          "request"
+        ]
+      },
+      "reconciliation_rule": "Request schema and per-operation exact field sets are validated. List-valued helper flags use one canonical JSON serialization. Dry-run emits safe commands. Nonzero helper result raises ReviewCycleError with sanitized detail.",
+      "recurrence_policy": "RECURRENT",
+      "sequence_id": "convergence-state-review-cycle",
+      "terminal_schema": {
+        "failure": "JSON object with ok=false and error code; exit code from ReviewCycleError",
+        "success": "JSON object with ok=true, status COMPLETE, operation_count, and pass_signal; dry-run returns status DRY_RUN and commands"
+      }
+    }
+  ],
+  "research_candidate_sha256": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+  "schema_version": 1
+}

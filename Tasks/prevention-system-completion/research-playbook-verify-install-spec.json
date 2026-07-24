@@ -1,0 +1,43 @@
+{
+  "schema_version": 1,
+  "task_id": "prevention-system-completion-research-playbook-verify-install",
+  "operation_kind": "package",
+  "date": "2026-07-18",
+  "sequence_name": "research-playbook-per-task-budget-verify-install",
+  "outcome": "Verify the corrected per-task research deadline contract, transactionally install only research-playbook, and prove the formerly blocked controller path.",
+  "why_repeatable": "Managed skill changes repeatedly require focused tests, manifest validation, scoped installation, and installed same-path verification.",
+  "steps": [
+    {
+      "step": "focused-tests",
+      "command": "scripts/run_pytest.sh tests/test_research_playbook_v2.py tests/test_research_run.py",
+      "result": "All controller and driver tests pass, including long-workflow and shared-retry-deadline cases.",
+      "note": "Use the repository-mandated test runner."
+    },
+    {
+      "step": "validate-managed-skills",
+      "command": "python3 working-agreement/validate_skills.py --skills-root skills --manifest skills/managed-skills.txt",
+      "result": "Managed skill source and manifest validate.",
+      "note": "Must pass before installation."
+    },
+    {
+      "step": "install-research-playbook",
+      "command": "python3 working-agreement/install_skills.py --source skills --manifest skills/managed-skills.txt --target codex --only research-playbook",
+      "result": "Only research-playbook is transactionally installed into the Codex skills root.",
+      "note": "Requires filesystem approval for the managed Codex skills directory."
+    },
+    {
+      "step": "installed-same-path",
+      "command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py show Tasks/prevention-system-completion/research-v10/work/state.json",
+      "result": "The installed controller reads the legacy capped state without treating workflow age as a live mutation deadline.",
+      "note": "Follow with a fresh successor controller for immutable same-path PASS proof."
+    }
+  ],
+  "failure_handling": "Catalog any failed step before correction; do not install if focused tests or validation fail; never patch the installed copy directly.",
+  "verified_path": "Focused tests, managed-skill validation, scoped install, installed controller read, fresh successor same-path completion.",
+  "dependencies": [
+    {"kind":"file","repository_key":"memory-knowledge","path_or_sequence_id":"scripts/run_pytest.sh"},
+    {"kind":"file","repository_key":"memory-knowledge","path_or_sequence_id":"working-agreement/validate_skills.py"},
+    {"kind":"file","repository_key":"memory-knowledge","path_or_sequence_id":"working-agreement/install_skills.py"},
+    {"kind":"file","repository_key":"codex-skills","path_or_sequence_id":"research-playbook/scripts/research_package.py"}
+  ]
+}

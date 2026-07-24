@@ -1,0 +1,92 @@
+{
+  "schema_version": 1,
+  "run_id": "research-package-93135184aa76791ab93ed55c",
+  "catalog_boundary": "Task-local fallback because the canonical blocker ledger only accepts operational work-memory runs and this research task has a non-operational classifier receipt.",
+  "blockers": [
+    {
+      "id": "SLR-R2-B001",
+      "step_id": "fresh-run-scope-check",
+      "status": "closed",
+      "practical_symptom": "The initialized controller's first scope check stopped at argument validation.",
+      "confirmed_evidence": "research_package.py reported that scope-check requires --operational-maturity.",
+      "practical_impact": "Fresh-run scope immutability was not yet independently revalidated.",
+      "blocker_type": "caller-command-contract",
+      "stable_boundary": "research_package.py scope-check invocation",
+      "solution_summary": "Re-ran the same controller scope-check with the required --operational-maturity MIXED argument.",
+      "verification_evidence": [
+        "Controller returned reason SCOPE_UNCHANGED, scope_hash b34ca525c787dafd4a75d873242d0127057f2b8cce687df8c8d57f246a6e2e06, verdict IN_PROGRESS."
+      ],
+      "remaining_work": "none"
+    },
+    {
+      "id": "SLR-R2-B002",
+      "step_id": "catalog-first-failure",
+      "status": "non-gap",
+      "practical_symptom": "blocker_catalog.py rejected the research package ID as run-not-found.",
+      "confirmed_evidence": "blocker_catalog.py requires a run_started event; work_memory.py select rejects the task's non-operational classification before a run can be created.",
+      "practical_impact": "This research run cannot use the canonical operational blocker ledger without falsifying its classification or entering forbidden sequence routing.",
+      "blocker_type": "catalog-applicability-boundary",
+      "stable_boundary": "work-memory operational run lifecycle",
+      "solution_summary": "Use this task-local catalog for the non-operational research package only; do not alter the classifier or route through sequence selection.",
+      "verification_evidence": [
+        "scripts/work_memory.py cmd_select rejects any classification whose verdict is not operational.",
+        "scripts/blocker_catalog.py _run requires a run_started event for the supplied run ID."
+      ],
+      "remaining_work": "none"
+    },
+    {
+      "id": "SLR-R2-B003",
+      "step_id": "materialize-candidate-round-2",
+      "status": "closed",
+      "practical_symptom": "The atomic apply_patch rejected the candidate update because an expected CUR-005/CUR-006/CUR-007 line did not match the file's actual JSON key order.",
+      "confirmed_evidence": "apply_patch verification failed before mutation and named the unmatched expected lines.",
+      "practical_impact": "The five adjudicated research fixes are not yet materialized in candidate round 2.",
+      "blocker_type": "parent-materialization-context-mismatch",
+      "stable_boundary": "Exact current candidate-round-2.json text used as apply_patch context",
+      "solution_summary": "Inspected the exact materialized JSON, split the update into granular patches, and preserved the established public gap IDs.",
+      "verification_evidence": [
+        "record-candidate accepted candidate-round-2.json with canonical hash 5c054ff0e8f58d7683e5bdc9b1fed76b03423e83c237e2af20021cca087d9076 and envelope hash be096f98f367a7d7c06000013e14423207dd15ab9a3eefa1a246344e2fd632ab."
+      ],
+      "remaining_work": "none"
+    },
+    {
+      "id": "SLR-R2-B004",
+      "step_id": "round-3-controller-status-read",
+      "status": "closed",
+      "practical_symptom": "The controller status read rejected an unsupported --state option.",
+      "confirmed_evidence": "research_package.py show reported that state is positional.",
+      "practical_impact": "No controller state was read by that invocation; no state was mutated.",
+      "blocker_type": "caller-command-contract",
+      "stable_boundary": "research_package.py show CLI",
+      "solution_summary": "Read show -h and use the positional state argument.",
+      "verification_evidence": ["show -h documents: research_package.py show state"],
+      "remaining_work": "none"
+    },
+    {
+      "id": "SLR-R2-B005",
+      "step_id": "round-3-candidate-schema-inspection",
+      "status": "closed",
+      "practical_symptom": "A read-only jq query used requirement_status instead of requirement_statuses.",
+      "confirmed_evidence": "jq reported that it could not iterate over null; candidate keys show requirement_statuses.",
+      "practical_impact": "The requested records were not displayed by that invocation; no file was mutated.",
+      "blocker_type": "caller-schema-contract",
+      "stable_boundary": "candidate schema_version 1 top-level keys",
+      "solution_summary": "Inspected candidate keys and queried the exact plural field.",
+      "verification_evidence": ["jq returned CUR-002, FUT-007, and FUT-008 from requirement_statuses."],
+      "remaining_work": "none"
+    },
+    {
+      "id": "SLR-R2-B006",
+      "step_id": "round-3-candidate-materialization",
+      "status": "closed",
+      "practical_symptom": "A multiline patch could not match the report stored as one escaped JSON string.",
+      "confirmed_evidence": "apply_patch rejected the expected CUR-002 multiline context before mutation.",
+      "practical_impact": "Round-3 corrections were not applied by that attempt.",
+      "blocker_type": "parent-materialization-context-mismatch",
+      "stable_boundary": "Exact serialized research_markdown line",
+      "solution_summary": "Derived an exact-line patch from the current serialized candidate and applied the two adjudicated corrections.",
+      "verification_evidence": ["apply_patch accepted the exact-line update; JSON validation follows before controller record."],
+      "remaining_work": "none"
+    }
+  ]
+}

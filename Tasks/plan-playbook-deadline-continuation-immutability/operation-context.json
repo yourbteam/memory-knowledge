@@ -1,0 +1,38 @@
+{
+  "intended_outcome": "Verify state-addressed deadline requests, install the validated Plan Playbook, and generate the current Decision 5 continuation request.",
+  "required_inputs": [
+    "canonical Plan Playbook controller",
+    "focused deadline-continuation regression",
+    "current Decision 5 controller state"
+  ],
+  "dependencies": [
+    {
+      "repository_key": "memory-knowledge",
+      "path": "skills/plan-playbook/scripts/plan_package.py"
+    },
+    {
+      "repository_key": "memory-knowledge",
+      "path": "tests/test_plan_playbook_v2.py"
+    }
+  ],
+  "environment_annotations": [],
+  "semantic_flag_annotations": [],
+  "volatility_annotations": [],
+  "repeatability_reason": "Every substantial package can need a deadline request after controller state changes.",
+  "repeatability_evidence_ids": [
+    "blk-c18f8e0d20976eaa33241da1"
+  ],
+  "failure_handling": [
+    {
+      "fingerprint": "c18f8e0d20976eaa33241da17f29229e9a9c6ee94ef2a8e3a8926724ee3c7a5d",
+      "symptom": "A stale immutable request prevents generating the current approval request.",
+      "response": "Stop, preserve the stale request, and fix the controller request-identity contract before retrying."
+    }
+  ],
+  "effect_class": "idempotent-local",
+  "verification_contract": {
+    "expected_outcome": "passed",
+    "quality": "same-path",
+    "success_evidence": "Focused tests pass, installed bytes match canonical bytes, and the installed controller publishes the current Decision 5 request."
+  }
+}

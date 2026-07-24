@@ -1022,7 +1022,11 @@ def cmd_next_assignment(args: argparse.Namespace) -> int:
             item for item in data["plan_verification"]["inventories"]
             if item["inventory_sha256"] == data["plan_verification"]["inventory_sha256"]
         )
-        if active["completeness_approval"] is not None or assignments:
+        active_assignments = [
+            item for item in assignments
+            if item["inventory_sha256"] == active["inventory_sha256"]
+        ]
+        if active["completeness_approval"] is not None or active_assignments:
             print("ERROR: inventory-not-approved", file=sys.stderr)
             return 1
     blocked = [item for item, value in state["states"].items() if value == "blocked"]

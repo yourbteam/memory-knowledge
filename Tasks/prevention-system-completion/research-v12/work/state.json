@@ -1,0 +1,595 @@
+{
+  "attempts": [
+    {
+      "candidate_hash": "344894ba980c52f2ecd1d7e0d25e4dcffebda348a2d0fdab3801877dfc890447",
+      "close_evidence": {
+        "agent_id": "/root/source_query_contract_core",
+        "release_state": "completed",
+        "runtime_status": "completed",
+        "terminal_output_received": true
+      },
+      "input_envelope_hash": "ecfd3fd5167cc0a4454ca2cc1daf6c7b1e89afef209d952a7e473355b9b64dfe",
+      "output_hash": "344894ba980c52f2ecd1d7e0d25e4dcffebda348a2d0fdab3801877dfc890447",
+      "recorded_at": "2026-07-19T07:00:27.124084Z",
+      "role": "CORE_RESEARCHER",
+      "round": 1,
+      "runtime_agent_id": "/root/source_query_contract_core",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "budgets": {
+    "deadline_at": "2026-07-19T07:51:13.427610Z",
+    "max_attempts": 15,
+    "max_minutes": 60,
+    "max_role_retries": 1,
+    "max_rounds": 3,
+    "started_at": "2026-07-19T06:51:13.427610Z"
+  },
+  "candidates": {
+    "candidate-80a46680577e20cc20531dee": {
+      "candidate_hash": "344894ba980c52f2ecd1d7e0d25e4dcffebda348a2d0fdab3801877dfc890447",
+      "candidate_id": "candidate-80a46680577e20cc20531dee",
+      "candidate_payload": {
+        "evidence_index": [
+          {
+            "accessed_at": null,
+            "id": "EV-GATEWAY-CURRENT",
+            "limitations": "No ID-only production gateway or production composition root is implemented.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_controller.py",
+            "source_sha256": "46311190ac6a4256c10953e28f78d0a1dbfa482d102357723445003eb3a12a40",
+            "supported_claim": "PreventionController.execute accepts an ActionIntent and records the caller-supplied typed payload; host-runtime composition accepts a SourceEdgeRegistry only through a broader host authority."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-ACTION-INTENT-SCHEMA",
+            "limitations": "It does not define same-journal context reconstruction.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_contract.py",
+            "source_sha256": "311a1f546617bfadd36335b3d0040db5f7b4083d054022c721fbfd1b66a93416",
+            "supported_claim": "ActionIntent contains intent, task, run, owner, implementation, compatibility, action-class, and typed-parameter identity but no context_id."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-RUNTIME-PREPARATION",
+            "limitations": "The source request does not provide an authenticated artifact-store resolver.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_owner_runtime.py",
+            "source_sha256": "b8a38ed96d40a807f843afc36853e6ba96a3a5ccf8ca8d7be9cd30178e570646",
+            "supported_claim": "OwnerRuntime writes and re-reads a content-addressed preparation artifact containing resolved parameters, root bindings, binding receipts, effect identity, observation targets, and prepared identities."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PROBE-IMPLEMENTATION",
+            "limitations": "No concrete production edge or closed route-specific acquisition/result union exists.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_source_probes.py",
+            "source_sha256": "a03650805836169c4d4a7141979516d1f852f253fddb7d0557d1cc915b160c06",
+            "supported_claim": "The code enumerates all 43 provider rows and five edge kinds but defines only an edge Protocol, one-owner-to-one-edge routing, and a generic hash/boolean capture."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-ROUTE-CATALOG",
+            "limitations": "Several acquisition authorities are descriptions rather than implemented resolvers.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-executable-contracts.json",
+            "source_sha256": "d9a34090fb0b32d6cbec78291031f259d1569ec6d8bad34f5283059269c53644",
+            "supported_claim": "Ten AVAILABLE executable owners have exactly 43 finite profiles with materialized parameters, trusted roots/providers, observables, and profile-specific terminal policies."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-OBSERVABLE-ADMISSION",
+            "limitations": "Fixture probe schemas do not establish production acquisition.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-observable-evidence.json",
+            "source_sha256": "7c6871d185662308443fdb5060d0a54d9244af6b515687c0657fd41e804cc101",
+            "supported_claim": "Every route has finite probe IDs and fixture schemas, while the artifact-level admission effect remains PROVIDER_IMPLEMENTED_SOURCE_PATH_UNVERIFIED."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-SOURCE-RECEIPTS",
+            "limitations": "Receipt presence alone cannot satisfy reconciliation or terminal semantics.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_source_receipt.py",
+            "source_sha256": "e569ee5da7043681d9f432410417a620d4ebadc776cf5f6ed7992ac1aa81e2a8",
+            "supported_claim": "Receipts bind owner, profile, effect, preparation hash, safe source identity, status, and result identity, and explicitly never substitute for authoritative domain state."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-ACCEPTANCE-EDGE",
+            "limitations": "It is acceptance-only and cannot serve as production evidence.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_owner_acceptance_producer.py",
+            "source_sha256": "da3016153e230743d923f7c2b5037d17d3f96005450714e4b5df20fd778de405",
+            "supported_claim": "AcceptanceSourceEdge is the only concrete capture path; it resolves preparation from an acceptance root and derives expected probe hashes rather than querying the production domain."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-OWNER-SOURCES",
+            "limitations": "The sources perform owner operations; they do not implement the production query gateway.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-observable-evidence.json",
+            "source_sha256": "7c6871d185662308443fdb5060d0a54d9244af6b515687c0657fd41e804cc101",
+            "supported_claim": "The evidence artifact binds the ten real owner source sets and their finite local-state, Git, Docker, credential, and operator observables and identity mechanisms."
+          }
+        ],
+        "material_gaps": [
+          "MG-P1-CONTEXT-INTENT-RECONSTRUCTION",
+          "MG-P2-PRODUCTION-ROUTE-CONTRACTS",
+          "MG-P2-MULTI-EDGE-COMPOSITION",
+          "MG-P3-PRODUCTION-AUTHORITY-COMPOSITION",
+          "MG-P4-REAL-SAME-PATH-EVIDENCE"
+        ],
+        "planner_readiness_constraints": {
+          "PO-P1-GATEWAY": {
+            "closure_condition": "The four-ID call reconstructs exactly one recorded typed intent and reaches only PreventionController.execute; caller-supplied execution material is invalid.",
+            "evidence_ids": [
+              "EV-GATEWAY-CURRENT",
+              "EV-ACTION-INTENT-SCHEMA",
+              "EV-RUNTIME-PREPARATION"
+            ],
+            "implementation_anchors": [
+              "scripts/prevention_controller.py:PreventionController.execute",
+              "scripts/prevention_contract.py:ActionIntent.from_json",
+              "scripts/work_memory.py run/context/writer replay"
+            ],
+            "owner": "registered-operation production gateway",
+            "required_inputs": [
+              "task_id",
+              "run_id",
+              "context_id",
+              "intent_id"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "one same-journal intent",
+              "context/run/writer mismatch rejects before effects",
+              "no non-ID gateway inputs"
+            ]
+          },
+          "PO-P2-SOURCE-QUERIES": {
+            "closure_condition": "All 43 rows have locator reconstruction, read-only acquisition, closed result schema, semantic predicate, receipt limitation, required-edge set, and deterministic unavailable-authority result.",
+            "evidence_ids": [
+              "EV-ROUTE-CATALOG",
+              "EV-PROBE-IMPLEMENTATION",
+              "EV-OWNER-SOURCES",
+              "EV-SOURCE-RECEIPTS",
+              "EV-RUNTIME-PREPARATION"
+            ],
+            "implementation_anchors": [
+              "scripts/prevention_source_probes.py:PROVIDER_SPECS",
+              "scripts/prevention_owner_runtime.py:OwnerRuntime.prepare",
+              "owner-executable-contracts.json terminal policies",
+              "owner-observable-evidence.json owner sources"
+            ],
+            "owner": "production source-query materializer and concrete source-edge providers",
+            "required_inputs": [
+              "journal-owned preparation artifact resolver",
+              "LOCAL_STATE authority",
+              "GIT repository/remote registry",
+              "DOCKER daemon authority",
+              "CREDENTIAL provider registries",
+              "OPERATOR authenticated status authority"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "43 closed route contracts",
+              "finite required-edge set",
+              "raw facts rather than expected-hash echo",
+              "fresh domain read",
+              "missing authority fails closed"
+            ]
+          },
+          "PO-P3-COMPOSITION": {
+            "closure_condition": "The composition root derives every authority from persisted or configured sources and executes registered intents without universal interception infrastructure.",
+            "evidence_ids": [
+              "EV-GATEWAY-CURRENT",
+              "EV-PROBE-IMPLEMENTATION",
+              "EV-RUNTIME-PREPARATION"
+            ],
+            "implementation_anchors": [
+              "scripts/prevention_controller.py",
+              "scripts/prevention_owner_runtime.py:OwnerRuntime",
+              "authenticated work-memory writer/journal construction"
+            ],
+            "owner": "registered-operation production composition root",
+            "required_inputs": [
+              "persisted capacity",
+              "trusted binding providers",
+              "finite provider registries",
+              "concrete source edges"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "deterministic construction",
+              "absent authority rejects before effects",
+              "ordinary Codex actions remain outside scope"
+            ]
+          },
+          "PO-P4-PROOF": {
+            "closure_condition": "No production claim depends on AcceptanceSourceEdge or expected-hash reconstruction; every supported route has same-path evidence and unsupported authority fails closed.",
+            "evidence_ids": [
+              "EV-OBSERVABLE-ADMISSION",
+              "EV-ACCEPTANCE-EDGE",
+              "EV-OWNER-SOURCES"
+            ],
+            "implementation_anchors": [
+              "production gateway",
+              "concrete route edges",
+              "real owner sources",
+              "OwnerRuntime reconciliation and terminalization"
+            ],
+            "owner": "production same-path verification suite and live evidence operator",
+            "required_inputs": [
+              "configured authorities for the supported live route",
+              "explicit unavailable-authority expectation for unsupported routes"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "43-route production matrix",
+              "crash-after-source recovery",
+              "fresh semantic terminal read",
+              "replay",
+              "capacity/binding/writer rejection"
+            ]
+          }
+        },
+        "requirement_statuses": [
+          {
+            "evidence_ids": [
+              "EV-GATEWAY-CURRENT",
+              "EV-ACTION-INTENT-SCHEMA",
+              "EV-RUNTIME-PREPARATION"
+            ],
+            "requirement_id": "P1-PRODUCTION-GATEWAY",
+            "research_value": {
+              "current_state": "No production gateway reconstructs an existing intent; execute currently accepts and records a caller-constructed ActionIntent, and ActionIntent has no context_id.",
+              "forbidden_inputs": [
+                "owner argv",
+                "owner JSON",
+                "budget",
+                "trusted roots",
+                "source edges",
+                "implementation hashes"
+              ],
+              "required_boundary": "Accept only task_id, run_id, context_id, and intent_id; resolve the authenticated work-memory lifecycle and one writer; bind context through the existing run lineage; reconstruct exactly one same-journal typed intent; reject mismatches; call only PreventionController.execute."
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-ROUTE-CATALOG",
+              "EV-PROBE-IMPLEMENTATION",
+              "EV-OWNER-SOURCES",
+              "EV-SOURCE-RECEIPTS",
+              "EV-RUNTIME-PREPARATION"
+            ],
+            "requirement_id": "P2-SOURCE-QUERY-CONTRACTS",
+            "research_value": {
+              "edge_groups": {
+                "CREDENTIAL": {
+                  "count": 8,
+                  "routes": [
+                    "claude-auth-token-refresh/all",
+                    "claude-auth-token-refresh/mint",
+                    "claude-auth-token-refresh/push-kv",
+                    "claude-auth-token-refresh/reseed-azure",
+                    "claude-auth-token-refresh/seed-host",
+                    "claude-auth-token-refresh/seed-local",
+                    "claude-auth-token-refresh/status",
+                    "claude-auth-token-refresh/verify"
+                  ]
+                },
+                "DOCKER": {
+                  "count": 10,
+                  "routes": [
+                    "local-workflow-orch-image/build",
+                    "local-workflow-orch-image/copy-code-project",
+                    "local-workflow-orch-image/health",
+                    "local-workflow-orch-image/logs",
+                    "local-workflow-orch-image/probe-codex",
+                    "local-workflow-orch-image/require-real-memory-knowledge",
+                    "local-workflow-orch-image/run",
+                    "local-workflow-orch-image/seed-codex-auth",
+                    "local-workflow-orch-image/seed-git-auth",
+                    "local-workflow-orch-image/stop"
+                  ]
+                },
+                "GIT": {
+                  "count": 6,
+                  "routes": [
+                    "commit-push-main/dry-run",
+                    "commit-push-main/integrate-remote-and-resume",
+                    "commit-push-main/isolated-integrate-and-resume",
+                    "commit-push-main/isolated-reconcile-and-resume",
+                    "commit-push-main/publish",
+                    "commit-push-main/resume-push"
+                  ]
+                },
+                "LOCAL_STATE": {
+                  "count": 13,
+                  "routes": [
+                    "convergence-checkpoint-run/default",
+                    "convergence-state-review-cycle/apply",
+                    "convergence-state-review-cycle/dry-run",
+                    "discovery-bootstrap/start",
+                    "discovery-candidate-reconciliation/audit",
+                    "discovery-candidate-reconciliation/drive",
+                    "discovery-candidate-reconciliation/execute",
+                    "discovery-candidate-reconciliation/execute-rolling",
+                    "discovery-candidate-reconciliation/validate",
+                    "discovery-promotion-lifecycle/correct",
+                    "discovery-promotion-lifecycle/correct-registered",
+                    "discovery-promotion-lifecycle/drive",
+                    "discovery-promotion-lifecycle/status"
+                  ]
+                },
+                "OPERATOR": {
+                  "count": 6,
+                  "routes": [
+                    "greenfield-full-drive/create-program",
+                    "greenfield-full-drive/resume-program",
+                    "greenfield-full-drive/start-from-spec",
+                    "mawf-playbook-blocker-reentry/restart-workflow",
+                    "mawf-playbook-blocker-reentry/resume",
+                    "mawf-playbook-blocker-reentry/start-over"
+                  ]
+                }
+              },
+              "family_contracts": {
+                "CREDENTIAL": "Resolve typed container, vault, deployment, and credential/config handles from verified preparation; read only safe fingerprints, versions, tags, status and AUTH_OK markers; never secret bytes; require Docker or operator edges when the route crosses those domains.",
+                "DOCKER": "Resolve prepared image/container/port/source/destination handles; use inspect, logs, read-only exec, health reads, and absence checks; return typed image/container identity, labels, bindings, safe hashes and markers; require credential/Git edges for mixed seed routes.",
+                "GIT": "Resolve repository and remote keys through trusted registries; use read-only Git object, branch, index, diff, merge-base, remote and trailer queries; return typed local/remote identities and manifest-scoped state.",
+                "LOCAL_STATE": "Resolve hash-verified preparation, trusted task/runtime/discovery/ledger roots and named files; read canonical artifacts and source-owned receipts or read-only helper status; return route-specific typed facts and hashes.",
+                "OPERATOR": "Resolve program/task/run/delegation/operator handles; query authenticated Greenfield or MAWF status and remote Git where required; return typed durable program/workflow/run lineage and terminal state."
+              },
+              "implementability": "Five authority families are sufficient as a registry, but one edge per owner is not; each route must declare a finite required-edge set and a closed route-specific raw result contract.",
+              "ownership_reconstruction": [
+                "resolve and hash-verify the same journal-owned preparation artifact",
+                "verify effect, owner, contract, and profile identity",
+                "derive locators only from resolved_parameters, root_bindings, and binding_receipts",
+                "bind external ownership through labels, trailers, durable IDs, or receipts",
+                "never accept expected hashes or locators from the caller"
+              ],
+              "receipt_rule": "Receipts support effect ownership only; a fresh domain read proves the semantic postcondition.",
+              "route_count": 43
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-GATEWAY-CURRENT",
+              "EV-PROBE-IMPLEMENTATION",
+              "EV-RUNTIME-PREPARATION"
+            ],
+            "requirement_id": "P3-PRODUCTION-COMPOSITION",
+            "research_value": {
+              "current_state": "The controller accepts typed component interfaces but no production composition root constructs them; the existing host constructor depends on the excluded universal-interception capability event.",
+              "fail_closed_inputs": [
+                "foreign writer",
+                "missing context/run lineage",
+                "missing capacity",
+                "missing binding receipt",
+                "missing repository/root registry",
+                "missing Docker authority",
+                "missing credential/operator handle",
+                "missing required route edge"
+              ],
+              "required_order": [
+                "resolve authenticated work-memory run/context/writer",
+                "construct same-ownership PreventionJournal",
+                "load typed owner registry",
+                "construct capacity authority",
+                "construct binding and provider registries",
+                "construct finite source-edge authorities",
+                "reconstruct recorded ActionIntent",
+                "invoke execute"
+              ],
+              "scope_correction": "Production registration must not depend on universal Codex interception or FD 198."
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-OBSERVABLE-ADMISSION",
+              "EV-ACCEPTANCE-EDGE",
+              "EV-OWNER-SOURCES"
+            ],
+            "requirement_id": "P4-REAL-SAME-PATH-PROOF",
+            "research_value": {
+              "acceptance_boundary": "Every supported route traverses the four-ID gateway, real journal/controller/runtime, all required concrete edges, real source, crash reconciliation, and semantic terminal re-observation; unavailable authority returns fail closed.",
+              "current_state": "All observable rows remain source-path unverified and the only concrete capture implementation derives acceptance hashes instead of querying production domains.",
+              "required_matrix": {
+                "cases": [
+                  "positive",
+                  "semantic negative",
+                  "crash after source effect",
+                  "recovered terminal",
+                  "conflicting ownership",
+                  "replay",
+                  "insufficient capacity",
+                  "missing binding",
+                  "foreign writer"
+                ],
+                "routes": 43
+              }
+            }
+          }
+        ],
+        "research_markdown": "The production boundary is finite: ten registered operational owners, 43 profiles, and five authority families. The stable gateway accepts only task_id, run_id, context_id, and intent_id and reconstructs the exact same-journal ActionIntent from the authenticated one-writer lifecycle. Preparation already contains normalized parameters, root bindings, and binding receipts; source locators must be reconstructed internally from its content-addressed artifact. The five families are LOCAL_STATE (13), GIT (6), DOCKER (10), CREDENTIAL (8), and OPERATOR (6), but some routes require a finite set of families rather than one owner-selected edge. Each route therefore needs a closed source_query_contract containing trusted locator reconstruction, read-only acquisition, typed raw result schema, terminal semantic predicate, receipt limitation, and explicit unavailable-authority state. Receipts prove effect ownership, while fresh domain reads prove semantic truth. Current acceptance captures cannot be promoted to production evidence. Missing provider implementations are future implementation work; their names, required inputs, fail-closed states, and verification boundary are finite and handed to planning.",
+        "schema_version": 1
+      },
+      "envelope_hash": "ecfd3fd5167cc0a4454ca2cc1daf6c7b1e89afef209d952a7e473355b9b64dfe",
+      "envelope_payload": {
+        "authoritative_roots": [
+          "/Users/kamenkamenov/memory-knowledge",
+          "/Users/kamenkamenov/mcp-agents-workflow"
+        ],
+        "charter": {
+          "canonical_json_sha256": "b7cc1063196bf908a080383d0266f33d25c7beb8ad79919a30daa639db850638",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v12/charter.json"
+        },
+        "hash_contract": "sha256-canonical-json-utf8-no-trailing-newline-v1",
+        "requirements": {
+          "canonical_json_sha256": "d757099b821d1c6109da679c9a3a2cfae7eac89d323b2c0de177d719d912dce6",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v12/requirements.json"
+        },
+        "round": 1,
+        "schema_version": 1,
+        "scope_hash": "53d7a536be1a25282cb7ba4ba8ab26e8a3dd7a4f98ca234a87c7e01ca15deed7",
+        "verification_command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py hash-json <json-file>"
+      },
+      "evidence_availability": {
+        "CURRENT_RUNTIME": "AVAILABLE",
+        "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+        "authoritative_roots": "AVAILABLE",
+        "external_evidence": "NOT_YET_APPLICABLE"
+      },
+      "recorded_at": "2026-07-19T07:00:00.112557Z"
+    }
+  },
+  "charter": {
+    "authoritative_roots": [
+      "/Users/kamenkamenov/memory-knowledge",
+      "/Users/kamenkamenov/mcp-agents-workflow"
+    ],
+    "budget": {
+      "maximum_agent_spawn_attempts": 15,
+      "maximum_candidate_rounds": 3,
+      "maximum_elapsed_minutes": 60,
+      "maximum_retries_per_role": 1
+    },
+    "charter_id": "prevention-registered-owner-production-composition-20260719",
+    "exclusions": [
+      "universal interception of ordinary Codex Bash, edit, browser, MCP, or subagent actions",
+      "global controller FD 198 or new Codex authentication/hook infrastructure",
+      "changing the 10 AVAILABLE / 6 CUSTODIAN_EVIDENCE_REQUIRED / 9 UNAVAILABLE classification",
+      "new owners, phase-ledger contracts, deployment, commit, push, secret access, external messages, or inferred acquisition paths"
+    ],
+    "in_scope": [
+      "the ten existing AVAILABLE owners and their 43 already-materialized profiles",
+      "an ID-only registered-owner execution gateway and work-memory one-writer production composition root",
+      "five production source-edge kinds: LOCAL_STATE, GIT, DOCKER, CREDENTIAL, and OPERATOR",
+      "existing source-owned receipts, owner sources, trusted-root contracts, provider handles, budget authority, and same-path tests in memory-knowledge and mcp-agents-workflow"
+    ],
+    "objective": "Ground the finite production composition required to run the ten approved registered operational owners through PreventionController and OwnerRuntime, including an ID-only gateway, authoritative capacity and bindings, and real source-query contracts for the existing 43 owner/profile routes.",
+    "required_output_package": [
+      "manifest.json",
+      "research.md",
+      "requirements.json",
+      "evidence-index.json",
+      "findings.json",
+      "planner-handoff.md"
+    ],
+    "research_questions": [
+      "How does the real registered-operation entrypoint reconstruct one already-recorded typed ActionIntent from task/run/context/intent identity without accepting owner argv, JSON, budgets, roots, or source edges?",
+      "What persisted one-writer ownership and repository-root evidence constructs the production PreventionJournal and controller composition root?",
+      "What exact trusted locator, acquisition method, result schema, and semantic predicate must each of the 43 existing profile routes materialize for the five source-edge kinds?",
+      "Which budget-capacity, binding-provider, approval, credential-handle, remote-repository, Docker, Git, local-state, and operator inputs already have authoritative acquisition routes, and which must fail closed?",
+      "What same-path evidence proves real execution, crash reconciliation, and semantic terminal verification without acceptance fixtures or universal Codex tool interception?"
+    ],
+    "schema_version": 1,
+    "supplied_input": "The approved practical boundary governs registered operational workflows only. Audit proved the ten owners are acceptance-executable but lack a production controller composition, real source edges, external bindings, capacity construction, and materialized source acquisition recipes.",
+    "terminal_rules": [
+      "PASS requires the core candidate, all three independent lenses, and adjudication to agree that every production acquisition route is grounded or explicitly fail closed.",
+      "GAPS means a correction remains possible from the two authoritative repositories.",
+      "BLOCKED means a required real provider, authority, or source locator has no accessible or named acquisition route.",
+      "No fixture-generated observation may be represented as production evidence."
+    ]
+  },
+  "charter_hash": "b7cc1063196bf908a080383d0266f33d25c7beb8ad79919a30daa639db850638",
+  "created_at": "2026-07-19T06:51:13.427610Z",
+  "evidence_availability": {
+    "CURRENT_RUNTIME": "AVAILABLE",
+    "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+    "authoritative_roots": "AVAILABLE",
+    "external_evidence": "NOT_YET_APPLICABLE"
+  },
+  "operational_maturity": "MIXED",
+  "package_id": "research-package-29df17fdbcac2f48d85ff5c4",
+  "requirements": [
+    {
+      "acceptance_intent": "No caller-supplied owner argv, JSON, budgets, roots, source edges, or implementation hashes cross the production boundary.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "P1-PRODUCTION-GATEWAY",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Name the exact producer, persisted inputs, reconstruction rules, ownership checks, and invocation path.",
+          "id": "PO-P1-GATEWAY"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "registered-owner-production-gateway",
+      "source": {
+        "finding": "no-production-controller-entrypoint"
+      },
+      "text": "Ground one production registered-owner gateway that accepts only task_id, run_id, context_id, and intent_id; reconstructs the exact same-journal typed ActionIntent; validates one-writer ownership and repository roots; and calls only PreventionController.execute."
+    },
+    {
+      "acceptance_intent": "All 43 routes are grounded from real owner sources or explicitly blocked; no edge receives or echoes expected result hashes.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "P2-SOURCE-QUERY-CONTRACTS",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Produce an exhaustive 43-route acquisition matrix grouped across the five finite edge kinds.",
+          "id": "PO-P2-SOURCE-QUERIES"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "production-source-query-contracts",
+      "source": {
+        "finding": "probe-names-have-no-production-acquisition-contract"
+      },
+      "text": "Materialize a closed source_query_contract for every existing owner/profile route, containing the trusted locator bindings, read-only acquisition method, result schema, semantic predicate, receipt role, and source-of-truth limitation required by its source edge."
+    },
+    {
+      "acceptance_intent": "Capacity, roots, approvals, handles, and source edges come only from persisted or configured authorities; absent inputs fail before effects.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "P3-PRODUCTION-COMPOSITION",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Name each required authority, acquisition route, construction order, and fail-closed state.",
+          "id": "PO-P3-COMPOSITION"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "registered-owner-production-composition",
+      "source": {
+        "finding": "no-production-composition-root"
+      },
+      "text": "Ground production construction for PreventionJournal, BudgetAuthority capacity, TrustedBindingProvider plus finite external providers, SourceEdgeRegistry, and the controller using the same authenticated work-memory lifecycle."
+    },
+    {
+      "acceptance_intent": "Production claims rest on real composition and domain reads, not AcceptanceSourceEdge or reconstructed expected observations.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "P4-REAL-SAME-PATH-PROOF",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Define the finite same-path test and live-evidence matrix for all ten owners and 43 profiles.",
+          "id": "PO-P4-PROOF"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "registered-owner-production-proof",
+      "source": {
+        "finding": "acceptance-fixture-only-execution"
+      },
+      "text": "Ground same-path verification for each supported route through the production gateway and concrete edges, including crash-after-source reconciliation, semantic terminal re-observation, replay, insufficient capacity, missing binding, and foreign-writer rejection."
+    }
+  ],
+  "requirements_hash": "d757099b821d1c6109da679c9a3a2cfae7eac89d323b2c0de177d719d912dce6",
+  "result": {
+    "actionable_fingerprints": [],
+    "candidate_hash": null,
+    "envelope_hash": null,
+    "reason": "AWAITING_LENS_RESULTS",
+    "verdict": "IN_PROGRESS"
+  },
+  "rounds": [],
+  "schema_version": 1,
+  "scope_hash": "53d7a536be1a25282cb7ba4ba8ab26e8a3dd7a4f98ca234a87c7e01ca15deed7",
+  "updated_at": "2026-07-19T07:00:27.124170Z",
+  "verdict": "IN_PROGRESS"
+}

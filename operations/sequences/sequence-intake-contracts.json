@@ -1,0 +1,1106 @@
+{
+  "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+  "contract_version": 1,
+  "entries": [
+    {
+      "adapter_id": "<lambda>",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "callcenter-harness:scripts/setup_airgapped_judge.sh` + `scripts/judge_ollama.py",
+      "entrypoint_source_receipt": "callcenter-harness:scripts/setup_airgapped_judge.sh` + `scripts/judge_ollama.py",
+      "optional_inputs": [
+        "model"
+      ],
+      "required_inputs": [
+        "audio",
+        "operation",
+        "source_repository_key"
+      ],
+      "semantic_fields": [
+        "operation",
+        "source_repository_key",
+        "model",
+        "audio"
+      ],
+      "sequence_id": "airgapped-llm-judge",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "<lambda>",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "callcenter-harness:scripts/setup_airgapped_stt.sh` (+ `scripts/transcribe_airgapped.py`)",
+      "entrypoint_source_receipt": "callcenter-harness:scripts/setup_airgapped_stt.sh` (+ `scripts/transcribe_airgapped.py`)",
+      "optional_inputs": [],
+      "required_inputs": [
+        "audio",
+        "model",
+        "operation",
+        "source_repository_key"
+      ],
+      "semantic_fields": [
+        "operation",
+        "source_repository_key",
+        "model",
+        "audio"
+      ],
+      "sequence_id": "airgapped-local-bulgarian-stt",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "<lambda>",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "callcenter-harness:scripts/setup_airgapped_redaction.sh",
+      "entrypoint_source_receipt": "callcenter-harness:scripts/setup_airgapped_redaction.sh",
+      "optional_inputs": [],
+      "required_inputs": [
+        "operation",
+        "source_repository_key"
+      ],
+      "semantic_fields": [
+        "operation",
+        "source_repository_key"
+      ],
+      "sequence_id": "airgapped-redaction-stack",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_blocker_backlog_reconciliation",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "blocker backlog reconciliation controller",
+      "entrypoint_source_receipt": "blocker backlog reconciliation controller",
+      "optional_inputs": [],
+      "required_inputs": [
+        "manifest",
+        "operation",
+        "output",
+        "run_id",
+        "source_repository_key"
+      ],
+      "semantic_fields": [
+        "operation",
+        "source_repository_key",
+        "output",
+        "manifest",
+        "run_id"
+      ],
+      "sequence_id": "blocker-backlog-reconciliation",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "<lambda>",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "callcenter-harness:scripts/test_engine_upgrades.py",
+      "entrypoint_source_receipt": "callcenter-harness:scripts/test_engine_upgrades.py",
+      "optional_inputs": [],
+      "required_inputs": [
+        "audio",
+        "operation",
+        "source_repository_key"
+      ],
+      "semantic_fields": [
+        "operation",
+        "source_repository_key",
+        "audio"
+      ],
+      "sequence_id": "callcenter-harness-engine-invariants",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_callcenter_provision",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "callcenter-harness:scripts/setup_airgapped_stt.sh` + `scripts/setup_airgapped_redaction.sh` + `scripts/cc_*smoke*.py",
+      "entrypoint_source_receipt": "callcenter-harness:scripts/setup_airgapped_stt.sh` + `scripts/setup_airgapped_redaction.sh` + `scripts/cc_*smoke*.py",
+      "optional_inputs": [],
+      "required_inputs": [
+        "action",
+        "recording",
+        "repository_key"
+      ],
+      "semantic_fields": [
+        "repository_key",
+        "action",
+        "recording"
+      ],
+      "sequence_id": "callcenter-harness-provision-verify",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_claude_auth",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "mcp-agents-workflow:scripts/claude_auth_refresh.sh` (+ `scripts/rotate-credentials.sh` for the audited Azure path)",
+      "entrypoint_source_receipt": "mcp-agents-workflow:scripts/claude_auth_refresh.sh` (+ `scripts/rotate-credentials.sh` for the audited Azure path)",
+      "optional_inputs": [
+        "config_source",
+        "container",
+        "deployment",
+        "dry_run",
+        "keyvault_name",
+        "verify_targets"
+      ],
+      "required_inputs": [
+        "config_file",
+        "credential_source",
+        "operation",
+        "source_repository_key",
+        "token_file"
+      ],
+      "semantic_fields": [
+        "operation",
+        "source_repository_key",
+        "credential_source",
+        "token_file",
+        "config_source",
+        "config_file",
+        "container",
+        "keyvault_name",
+        "deployment",
+        "verify_targets",
+        "dry_run"
+      ],
+      "sequence_id": "claude-auth-token-refresh",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_commit_push",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [
+          "approved_paths",
+          "overlay_paths"
+        ],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "memory-knowledge:scripts/scoped_git_publish.py",
+      "entrypoint_source_sha256": "3a3be60bd395fde15cd2c9919fd93df53568e3fbe622f3d18944137373655478",
+      "optional_inputs": [
+        "approved_paths",
+        "branch",
+        "generated_view_path",
+        "ledger_path",
+        "overlay_paths",
+        "remote"
+      ],
+      "required_inputs": [
+        "message",
+        "operation",
+        "repository_key",
+        "resume_commit"
+      ],
+      "semantic_fields": [
+        "operation",
+        "repository_key",
+        "approved_paths",
+        "overlay_paths",
+        "message",
+        "branch",
+        "remote",
+        "resume_commit",
+        "ledger_path",
+        "generated_view_path"
+      ],
+      "sequence_id": "commit-push-main",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_convergence_checkpoint",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "memory-knowledge:scripts/convergence_checkpoint_run.py",
+      "entrypoint_source_sha256": "107afe04109f9e03e59ce6885dd98ba6c0c0f4fe8dbf4e85f2273bac48286ff8",
+      "optional_inputs": [
+        "stage"
+      ],
+      "required_inputs": [
+        "approval_id",
+        "child_intent_file",
+        "source_repository_key",
+        "state"
+      ],
+      "semantic_fields": [
+        "source_repository_key",
+        "state",
+        "approval_id",
+        "child_intent_file",
+        "stage"
+      ],
+      "sequence_id": "convergence-checkpoint-run",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_convergence_review",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [
+          "request"
+        ],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "python3 scripts/convergence_state_review_cycle.py apply --request <request-json>",
+      "entrypoint_source_receipt": "python3 scripts/convergence_state_review_cycle.py apply --request <request-json>",
+      "optional_inputs": [
+        "operations"
+      ],
+      "required_inputs": [
+        "expected_final_status",
+        "operation",
+        "source_repository_key",
+        "state"
+      ],
+      "semantic_fields": [
+        "operation",
+        "source_repository_key",
+        "state",
+        "expected_final_status",
+        "operations"
+      ],
+      "sequence_id": "convergence-state-review-cycle",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_discovery_bootstrap",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [
+          "spec"
+        ],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "memory-knowledge:scripts/discovery_bootstrap.py",
+      "entrypoint_source_sha256": "db7fb226f24b4ef2ba857a6a2c3912688f5a49f73fe084ded04659c43dbdbe90",
+      "optional_inputs": [
+        "inputs",
+        "repo_roots_file",
+        "steps"
+      ],
+      "required_inputs": [
+        "date",
+        "failure_handling",
+        "operation_kind",
+        "outcome",
+        "sequence_name",
+        "source_repository_key",
+        "task_id",
+        "verified_path",
+        "why_repeatable"
+      ],
+      "semantic_fields": [
+        "source_repository_key",
+        "task_id",
+        "operation_kind",
+        "date",
+        "sequence_name",
+        "outcome",
+        "why_repeatable",
+        "steps",
+        "inputs",
+        "failure_handling",
+        "verified_path",
+        "repo_roots_file"
+      ],
+      "sequence_id": "discovery-bootstrap",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_discovery_reconciliation",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "python3 scripts/discovery_candidate_reconciliation.py",
+      "entrypoint_source_receipt": "python3 scripts/discovery_candidate_reconciliation.py",
+      "optional_inputs": [],
+      "required_inputs": [
+        "manifest",
+        "operation",
+        "output",
+        "output_directory",
+        "output_root",
+        "source_repository_key",
+        "task_id"
+      ],
+      "semantic_fields": [
+        "operation",
+        "source_repository_key",
+        "output",
+        "manifest",
+        "output_directory",
+        "task_id",
+        "output_root"
+      ],
+      "sequence_id": "discovery-candidate-reconciliation",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_discovery_promotion",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [
+          "changed_artifacts"
+        ],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "memory-knowledge:scripts/discovery_promotion_lifecycle.py",
+      "entrypoint_source_sha256": "c081fc06fd37389edce2eedd5662b4f33f9a082231f2ddbef6d65f4afd9ba4c9",
+      "optional_inputs": [
+        "changed_artifacts",
+        "operation_kinds",
+        "repo_roots_file",
+        "supersedes_correction_ids",
+        "superseding",
+        "task_id"
+      ],
+      "required_inputs": [
+        "automation_display",
+        "discovery_file",
+        "operation",
+        "pass_signal",
+        "reusable_behavior_changed",
+        "sequence_id",
+        "solution",
+        "source_repository_key",
+        "subject_id",
+        "use_when"
+      ],
+      "semantic_fields": [
+        "operation",
+        "source_repository_key",
+        "discovery_file",
+        "sequence_id",
+        "subject_id",
+        "repo_roots_file",
+        "use_when",
+        "operation_kinds",
+        "automation_display",
+        "pass_signal",
+        "task_id",
+        "solution",
+        "changed_artifacts",
+        "reusable_behavior_changed",
+        "superseding",
+        "supersedes_correction_ids"
+      ],
+      "sequence_id": "discovery-promotion-lifecycle",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_github_refresh",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "mcp-agents-workflow:scripts/github_app_repos_refresh.py",
+      "entrypoint_source_receipt": "mcp-agents-workflow:scripts/github_app_repos_refresh.py",
+      "optional_inputs": [],
+      "required_inputs": [
+        "actor_email",
+        "durability",
+        "operation",
+        "operator_env",
+        "repository_key",
+        "server_url"
+      ],
+      "semantic_fields": [
+        "repository_key",
+        "server_url",
+        "operator_env",
+        "actor_email",
+        "durability",
+        "operation"
+      ],
+      "sequence_id": "github-app-repos-refresh",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_greenfield",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "mcp-agents-workflow:scripts/greenfield_full_drive.sh",
+      "entrypoint_source_receipt": "mcp-agents-workflow:scripts/greenfield_full_drive.sh",
+      "optional_inputs": [
+        "branch",
+        "container",
+        "fresh",
+        "keyvault_name",
+        "parallel_width",
+        "port",
+        "skip_auth",
+        "skip_build",
+        "start_feature_index",
+        "tag"
+      ],
+      "required_inputs": [
+        "decomposition_run_id",
+        "decomposition_task_id",
+        "env_file",
+        "expected_spec_hash",
+        "mode",
+        "program_drive_id",
+        "source_repository_key",
+        "spec_relative_path",
+        "spec_repository_key",
+        "target_repository"
+      ],
+      "semantic_fields": [
+        "mode",
+        "source_repository_key",
+        "target_repository",
+        "branch",
+        "tag",
+        "container",
+        "port",
+        "env_file",
+        "skip_build",
+        "skip_auth",
+        "keyvault_name",
+        "fresh",
+        "start_feature_index",
+        "parallel_width",
+        "spec_repository_key",
+        "spec_relative_path",
+        "decomposition_task_id",
+        "decomposition_run_id",
+        "program_drive_id",
+        "expected_spec_hash"
+      ],
+      "sequence_id": "greenfield-full-drive",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_greenfield_recreate",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "mcp-agents-workflow:scripts/greenfield_recreate_resume.sh",
+      "entrypoint_source_receipt": "mcp-agents-workflow:scripts/greenfield_recreate_resume.sh",
+      "optional_inputs": [
+        "container",
+        "expected_spec_hash",
+        "image_tag",
+        "keyvault",
+        "parallel_width",
+        "port",
+        "rebuild_image",
+        "start_feature_index"
+      ],
+      "required_inputs": [
+        "decomposition_task_id",
+        "feature_repository",
+        "program_drive_id",
+        "repository_key"
+      ],
+      "semantic_fields": [
+        "repository_key",
+        "feature_repository",
+        "program_drive_id",
+        "decomposition_task_id",
+        "rebuild_image",
+        "container",
+        "image_tag",
+        "port",
+        "keyvault",
+        "start_feature_index",
+        "parallel_width",
+        "expected_spec_hash"
+      ],
+      "sequence_id": "greenfield-recreate-resume",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_local_image",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "mcp-agents-workflow:scripts/local_workflow_orch_image_harness.py",
+      "entrypoint_source_receipt": "mcp-agents-workflow:scripts/local_workflow_orch_image_harness.py",
+      "optional_inputs": [
+        "destination",
+        "port_file",
+        "seed_timeout_seconds",
+        "source_relative_path",
+        "tail",
+        "timeout_seconds"
+      ],
+      "required_inputs": [
+        "code_repository_key",
+        "container",
+        "env_file",
+        "git_repository_key",
+        "health_location",
+        "health_port",
+        "health_port_file",
+        "keyvault_name",
+        "operation",
+        "port",
+        "seed_port_file",
+        "source_repository_key",
+        "tag"
+      ],
+      "semantic_fields": [
+        "operation",
+        "source_repository_key",
+        "tag",
+        "container",
+        "port",
+        "port_file",
+        "env_file",
+        "health_location",
+        "health_port",
+        "health_port_file",
+        "timeout_seconds",
+        "code_repository_key",
+        "source_relative_path",
+        "destination",
+        "tail",
+        "keyvault_name",
+        "git_repository_key",
+        "seed_port_file",
+        "seed_timeout_seconds"
+      ],
+      "sequence_id": "local-workflow-orch-image",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_mawf_blocker",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "\u2014 (sub-sequence; invoked by full/speed)",
+      "entrypoint_source_receipt": "\u2014 (sub-sequence; invoked by full/speed)",
+      "optional_inputs": [
+        "dry_run"
+      ],
+      "required_inputs": [
+        "action",
+        "blocker_id",
+        "code_repository",
+        "evidence_file",
+        "gate_policy",
+        "prompt_file",
+        "repository_key",
+        "run_id",
+        "summary",
+        "task_guid",
+        "workflow_name"
+      ],
+      "semantic_fields": [
+        "repository_key",
+        "action",
+        "task_guid",
+        "workflow_name",
+        "run_id",
+        "code_repository",
+        "prompt_file",
+        "gate_policy",
+        "blocker_id",
+        "summary",
+        "evidence_file",
+        "dry_run"
+      ],
+      "sequence_id": "mawf-playbook-blocker-reentry",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "<lambda>",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "mcp-agents-workflow:scripts/mawf_playbook_test_sequence.py` (`--gate-policy` full)",
+      "entrypoint_source_receipt": "mcp-agents-workflow:scripts/mawf_playbook_test_sequence.py` (`--gate-policy` full)",
+      "optional_inputs": [
+        "branch",
+        "completed_workflow",
+        "dry_run",
+        "rebuild_image",
+        "task_action"
+      ],
+      "required_inputs": [
+        "action",
+        "code_project_source",
+        "code_repository",
+        "prompt_file",
+        "repository_key",
+        "run_id",
+        "task_guid",
+        "workflow_name"
+      ],
+      "semantic_fields": [
+        "repository_key",
+        "action",
+        "task_guid",
+        "run_id",
+        "workflow_name",
+        "code_project_source",
+        "rebuild_image",
+        "code_repository",
+        "prompt_file",
+        "task_action",
+        "branch",
+        "completed_workflow",
+        "dry_run"
+      ],
+      "sequence_id": "mawf-playbook-full-test",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "<lambda>",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "mcp-agents-workflow:scripts/mawf_playbook_test_sequence.py` (`--gate-policy` speed)",
+      "entrypoint_source_receipt": "mcp-agents-workflow:scripts/mawf_playbook_test_sequence.py` (`--gate-policy` speed)",
+      "optional_inputs": [
+        "branch",
+        "completed_workflow",
+        "dry_run",
+        "rebuild_image",
+        "task_action"
+      ],
+      "required_inputs": [
+        "action",
+        "code_project_source",
+        "code_repository",
+        "prompt_file",
+        "repository_key",
+        "run_id",
+        "task_guid",
+        "workflow_name"
+      ],
+      "semantic_fields": [
+        "repository_key",
+        "action",
+        "task_guid",
+        "run_id",
+        "workflow_name",
+        "code_project_source",
+        "rebuild_image",
+        "code_repository",
+        "prompt_file",
+        "task_action",
+        "branch",
+        "completed_workflow",
+        "dry_run"
+      ],
+      "sequence_id": "mawf-playbook-speed-test",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_remote_onboarding",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "mcp-agents-workflow:dist/remote-mcp-user-admin/remote_mcp_user_admin_tui.py` plus `mcp__memory_knowledge.mawf_upsert_user",
+      "entrypoint_source_receipt": "mcp-agents-workflow:dist/remote-mcp-user-admin/remote_mcp_user_admin_tui.py` plus `mcp__memory_knowledge.mawf_upsert_user",
+      "optional_inputs": [],
+      "required_inputs": [
+        "action",
+        "actor_email",
+        "confirmation_file",
+        "field",
+        "repo_access_operation",
+        "repo_alias",
+        "repository_key",
+        "role",
+        "selected_user_id",
+        "server_url",
+        "state_file",
+        "status_action",
+        "token_output_file",
+        "value"
+      ],
+      "semantic_fields": [
+        "repository_key",
+        "server_url",
+        "actor_email",
+        "action",
+        "state_file",
+        "selected_user_id",
+        "value",
+        "field",
+        "role",
+        "repo_alias",
+        "repo_access_operation",
+        "status_action",
+        "confirmation_file",
+        "token_output_file"
+      ],
+      "sequence_id": "remote-mcp-user-onboarding",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_scoped_context",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "memory-knowledge:scripts/context_edit_guard.py self-check",
+      "entrypoint_source_sha256": "6a5718ba68f226aefc73d54fd20d155a0387ea6c7e9f5f74a752360527a17805",
+      "optional_inputs": [
+        "allowed_paths",
+        "forbidden_after",
+        "required_after"
+      ],
+      "required_inputs": [
+        "anchor",
+        "operation",
+        "receipt",
+        "source_repository_key",
+        "target",
+        "target_repository_key"
+      ],
+      "semantic_fields": [
+        "operation",
+        "source_repository_key",
+        "receipt",
+        "target_repository_key",
+        "target",
+        "anchor",
+        "allowed_paths",
+        "required_after",
+        "forbidden_after"
+      ],
+      "sequence_id": "scoped-context-edit",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "<lambda>",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "callcenter-harness:scripts/seed_landing.sh` + `scripts/scrub_and_retire.py",
+      "entrypoint_source_receipt": "callcenter-harness:scripts/seed_landing.sh` + `scripts/scrub_and_retire.py",
+      "optional_inputs": [
+        "landing_directory",
+        "source_directory"
+      ],
+      "required_inputs": [
+        "operation",
+        "recording",
+        "scrub_scope",
+        "source_repository_key"
+      ],
+      "semantic_fields": [
+        "operation",
+        "source_repository_key",
+        "landing_directory",
+        "source_directory",
+        "scrub_scope",
+        "recording"
+      ],
+      "sequence_id": "secure-landing-seed",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "<lambda>",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "taggable-admin-spa:scripts/deploy-admin-spa.sh",
+      "entrypoint_source_receipt": "taggable-admin-spa:scripts/deploy-admin-spa.sh",
+      "optional_inputs": [
+        "api_base",
+        "verify"
+      ],
+      "required_inputs": [
+        "repository_key"
+      ],
+      "semantic_fields": [
+        "repository_key",
+        "api_base",
+        "verify"
+      ],
+      "sequence_id": "taggable-admin-spa-deploy",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "<lambda>",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "taggable-api:scripts/deploy-api.sh",
+      "entrypoint_source_receipt": "taggable-api:scripts/deploy-api.sh",
+      "optional_inputs": [
+        "verify"
+      ],
+      "required_inputs": [
+        "repository_key"
+      ],
+      "semantic_fields": [
+        "repository_key",
+        "verify"
+      ],
+      "sequence_id": "taggable-api-deploy",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "<lambda>",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "taggable-api:scripts/deploy-media-worker.sh",
+      "entrypoint_source_receipt": "taggable-api:scripts/deploy-media-worker.sh",
+      "optional_inputs": [
+        "verify"
+      ],
+      "required_inputs": [
+        "repository_key"
+      ],
+      "semantic_fields": [
+        "repository_key",
+        "verify"
+      ],
+      "sequence_id": "taggable-media-worker-deploy",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_taggable_reload",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "taggable-api:tools/Taggable.MigrationRunner/scripts/reload-source.sh",
+      "entrypoint_source_receipt": "taggable-api:tools/Taggable.MigrationRunner/scripts/reload-source.sh",
+      "optional_inputs": [
+        "manage_database_tier",
+        "webjob_missing"
+      ],
+      "required_inputs": [
+        "export_directory",
+        "repository_key",
+        "source_record_id"
+      ],
+      "semantic_fields": [
+        "repository_key",
+        "export_directory",
+        "source_record_id",
+        "webjob_missing",
+        "manage_database_tier"
+      ],
+      "sequence_id": "taggable-source-reload",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
+      "adapter_id": "_prepare_workflow_phase_resume",
+      "adapter_source_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+      "argv_shape": {
+        "artifact_inputs": [],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "scripts/run_client_regeneration.py --client <client> --resume-run <persisted-run-id> --from-phase <first-unfinished-phase>",
+      "entrypoint_source_receipt": "scripts/run_client_regeneration.py --client <client> --resume-run <persisted-run-id> --from-phase <first-unfinished-phase>",
+      "optional_inputs": [],
+      "required_inputs": [
+        "client",
+        "first_unfinished_phase",
+        "repository_key",
+        "source_run_id"
+      ],
+      "semantic_fields": [
+        "repository_key",
+        "client",
+        "source_run_id",
+        "first_unfinished_phase"
+      ],
+      "sequence_id": "workflow-resume-from-phase-live-confirmation",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    }
+  ],
+  "non_runnable": [],
+  "schema_version": 1
+}

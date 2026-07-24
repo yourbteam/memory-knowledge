@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "verdict": "CAP_REACHED",
+  "recorded_at": "2026-07-19T10:30:00Z",
+  "scope_hash": "00a0321f205cc00aee248e0e503e5d398c773ef8aa95b7b3160099daeb7b7f21",
+  "latest_candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+  "latest_envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+  "attempts_used": 11,
+  "attempts_allowed": 15,
+  "attempts_remaining": 4,
+  "attempts_required_for_fresh_complete_round": 5,
+  "active_slots": 0,
+  "reason": "Round 2 produced four adjudicated FIX_IN_RESEARCH findings. A candidate edit requires a fresh core researcher, all three independent lenses, and a fresh adjudicator. The four remaining attempts cannot complete that five-role round, and an incomplete round cannot pass.",
+  "accepted_remaining_fixes": [
+    "Remove prior-round adjudication labels and reasoning from the candidate input boundary so a fresh lens receives no excluded context.",
+    "Inventory and disposition the distinct current obligations of research, plan, write-code, and review playbooks, with exact evidence anchors and one owner per obligation.",
+    "Include scripts/backfill_corpus.py and reconcile the proposed directive heading/identity scheme with the current G-number-only parser before claiming force-current adoption works.",
+    "Define corpus rollback that deactivates forward-only replacement identities and add a rollback-state oracle; restoring files and rerunning the current predecessor algorithm is insufficient."
+  ],
+  "continuation_rule": "Do not resume Lane B. A successor directive-research run may reuse this frozen scope, candidates, raw lenses, and adjudications, but must receive a fresh bounded attempt budget and complete one full clean round before PASS."
+}

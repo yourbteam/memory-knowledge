@@ -1,0 +1,105 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "id": "MG-O1",
+      "fingerprint": "requirements-coverage:MG-O1:owner-derived-complete-budget",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O1-FUTURE-BUDGET"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Planning must replace caller-supplied budgets with complete owner-derived reservations before effects, including progressive task/frontier reservation for greenfield execution.",
+      "evidence": [
+        "candidate-round-3.json#/requirement_statuses/O1-CURRENT-BUDGET records caller-supplied UnitBudget admission and possible understatement.",
+        "candidate-round-3.json#/requirement_statuses/O1-FUTURE-BUDGET defines owner-derived complete reservation, the 3,600,000 ms atomic-task rule, progressive greenfield frontier composition, and pre-effect rejection or checkpoint behavior.",
+        "candidate-round-3.json#/planner_readiness_constraints/PO-O1-BUDGET and PO-O1-BUDGET-ACCEPTANCE provide implementation anchors, verification anchors, owners, and observable closure conditions."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O2",
+      "fingerprint": "requirements-coverage:MG-O2:typed-owner-reconciliation",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O2-CURRENT-RECONCILE",
+        "O2-FUTURE-RECONCILE"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Planning must replace unconditional INDETERMINATE recovery with the selected owner reconciler so already-applied effects are skipped, not-applied effects execute once, and indeterminate effects stop safely.",
+      "evidence": [
+        "candidate-round-3.json#/requirement_statuses/O2-CURRENT-RECONCILE records unconditional INDETERMINATE recovery, no owner reconciler dispatch, and all ten current owner observables.",
+        "candidate-round-3.json#/requirement_statuses/O2-FUTURE-RECONCILE defines the three reconciliation results, selected content-addressed boundary, resume behavior, and persisted identities.",
+        "candidate-round-3.json#/planner_readiness_constraints/PO-O2-RECONCILE and PO-O2-RECONCILE-ACCEPTANCE provide implementation anchors, same-path verification anchors, owners, and closure conditions."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O3",
+      "fingerprint": "requirements-coverage:MG-O3:semantic-terminal-closure",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O3-CURRENT-TERMINAL",
+        "O3-FUTURE-TERMINAL"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Planning must make terminal success depend on exact owner-semantic evidence and an exactly-once event/artifact pair so exit zero, detached launch, malformed evidence, and conflicting replay cannot falsely close work.",
+      "evidence": [
+        "candidate-round-3.json#/requirement_statuses/O3-CURRENT-TERMINAL records return-code-zero terminalization, absent semantic validation and owner_terminal event, and all ten current terminal surfaces.",
+        "candidate-round-3.json#/requirement_statuses/O3-FUTURE-TERMINAL defines ordered schema parsing, semantic verification, authority re-observation, exactly-once event/artifact recording, replay behavior, and negative cases.",
+        "candidate-round-3.json#/planner_readiness_constraints/PO-O3-TERMINAL and PO-O3-TERMINAL-ACCEPTANCE provide implementation anchors, positive and negative verification anchors, owners, and closure conditions."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O4",
+      "fingerprint": "requirements-coverage:MG-O4:parent-delegation-admission",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O4-CURRENT-PARENT",
+        "O4-FUTURE-PARENT"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Planning must prevent standalone execution of the sole child-only owner by requiring and atomically consuming a matching active-parent delegation before budget admission, argv construction, or operator effects.",
+      "evidence": [
+        "candidate-round-3.json#/requirement_statuses/O4-CURRENT-PARENT identifies the sole child, both allowed parents, their current availability, the 24 standalone rows, and absent dispatch enforcement.",
+        "candidate-round-3.json#/requirement_statuses/O4-FUTURE-PARENT defines the delegation event, active-parent identity match, atomic consumption, rejection boundary, and availability/admission separation.",
+        "candidate-round-3.json#/planner_readiness_constraints/PO-O4-PARENT and PO-O4-PARENT-ACCEPTANCE provide implementation anchors, invalid and valid verification cases, owners, and closure conditions."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O5",
+      "fingerprint": "requirements-coverage:MG-O5:typed-parameter-provider-binding",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O5-CURRENT-PARAMETERS",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Planning must replace hard-coded parameter and path handling with the selected proposal schema plus typed root, repository, resource, provider, and approval bindings so unresolved or escaping inputs fail before effect preparation.",
+      "evidence": [
+        "candidate-round-3.json#/requirement_statuses/O5-CURRENT-PARAMETERS records hard-coded validation, incomplete path containment, absent providers, and all ten current owner parameter surfaces.",
+        "candidate-round-3.json#/requirement_statuses/O5-FUTURE-PARAMETERS defines schema authority, exact validation and binding steps, grounded locator classes, shell-free construction, and fail-closed unresolved binding behavior.",
+        "candidate-round-3.json#/planner_readiness_constraints/PO-O5-PARAMETERS and PO-O5-PARAMETERS-ACCEPTANCE provide implementation anchors, boundary and negative verification cases, owners, and closure conditions."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    }
+  ]
+}

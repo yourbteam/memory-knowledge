@@ -6,15 +6,75 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import sys
 from datetime import UTC, datetime, timedelta
 from pathlib import Path
 from typing import Any, Sequence
+
+try:
+    from scripts import script_intake
+except ModuleNotFoundError:  # direct script execution
+    import script_intake
 
 
 DEFAULT_DIRECTIVES_PATH = Path("/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md")
 DEFAULT_STATE_PATH = Path("/private/tmp/workflow-orch-directive-guard.json")
 DEFAULT_MAX_AGE_MINUTES = 1440
 SCHEMA_VERSION = 1
+INTAKE_SPEC = {
+    "schema_version": script_intake.SCHEMA_VERSION,
+    "fields": [
+        {
+            "id": "command_name",
+            "prompt": "Directive guard action",
+            "response_format": "One action name as plain text.",
+            "example": "read",
+            "constraints": "Use exactly one allowed value; do not add quotes or JSON.",
+            "type": "choice",
+            "choices": ["read", "check"],
+            "required": True,
+        },
+        {
+            "id": "mode",
+            "prompt": "Sequence or task mode",
+            "response_format": "One non-empty mode identifier as plain text.",
+            "example": "greenfield-full-drive",
+            "constraints": "Do not add quotes, flags, or JSON.",
+            "type": "string",
+            "required": True,
+            "when": {"field": "command_name", "equals": "read"},
+        },
+        {
+            "id": "directives_path",
+            "prompt": "Canonical directives path",
+            "response_format": "One filesystem path as plain text.",
+            "example": "/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md",
+            "constraints": "Press Enter for the displayed default; do not add quotes.",
+            "type": "path",
+            "default": str(DEFAULT_DIRECTIVES_PATH),
+        },
+        {
+            "id": "state",
+            "prompt": "Directive-read state path",
+            "response_format": "One filesystem path as plain text.",
+            "example": "/private/tmp/workflow-orch-directive-guard.json",
+            "constraints": "Press Enter for the displayed default; do not add quotes.",
+            "type": "path",
+            "default": str(DEFAULT_STATE_PATH),
+        },
+        {
+            "id": "max_age_minutes",
+            "prompt": "Maximum directive-read age in minutes",
+            "response_format": "One positive whole number written with digits.",
+            "example": "60",
+            "constraints": "Value must be at least 1; do not add units or JSON.",
+            "type": "integer",
+            "default": DEFAULT_MAX_AGE_MINUTES,
+            "minimum": 1,
+            "when": {"field": "command_name", "equals": "check"},
+        },
+    ],
+}
 
 
 def _utc_now() -> datetime:
@@ -162,9 +222,33 @@ def build_parser() -> argparse.ArgumentParser:
     return parser
 
 
+def run_intake(answers: dict[str, Any]) -> int:
+    command_name = answers["command_name"]
+    if command_name == "read":
+        args = argparse.Namespace(
+            mode=answers["mode"],
+            directives_path=answers["directives_path"],
+            state=answers["state"],
+        )
+        return cmd_read(args)
+    args = argparse.Namespace(
+        directives_path=answers["directives_path"],
+        state=answers["state"],
+        max_age_minutes=answers["max_age_minutes"],
+    )
+    return cmd_check(args)
+
+
 def main(argv: Sequence[str] | None = None) -> int:
+    values = list(sys.argv[1:] if argv is None else argv)
+    if not values:
+        try:
+            return run_intake(script_intake.collect(INTAKE_SPEC))
+        except script_intake.IntakeCancelled as exc:
+            print(json.dumps({"ok": False, "error": str(exc)}), file=sys.stderr)
+            return 130
     parser = build_parser()
-    args = parser.parse_args(argv)
+    args = parser.parse_args(values)
     return int(args.func(args))
 
 

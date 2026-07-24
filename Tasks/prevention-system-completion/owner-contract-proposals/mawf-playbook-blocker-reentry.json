@@ -1,0 +1,133 @@
+{
+  "schema_version": 1,
+  "proposal_status": "APPROVED",
+  "owner_sequence_id": "mawf-playbook-blocker-reentry",
+  "availability_policy": "AVAILABLE",
+  "standalone": false,
+  "allowed_parent_sequence_ids": [
+    "mawf-playbook-full-test",
+    "mawf-playbook-speed-test"
+  ],
+  "execution_admission": "REJECT_UNLESS_ACTIVE_PARENT_DELEGATION",
+  "authority": "Kamen",
+  "authority_approvals": {
+    "budget_and_roots": {
+      "status": "APPROVED",
+      "decision_id": "mawf-playbook-blocker-reentry-budget-roots-v1"
+    },
+    "parent_delegation_and_runtime": {
+      "status": "APPROVED",
+      "decision_id": "mawf-playbook-blocker-reentry-parent-runtime-v1"
+    },
+    "source_proof_identity_correction": {
+      "status": "APPROVED",
+      "decision_id": "fb68b897-6a21-4273-8000-8ea34c99d335"
+    },
+    "semantic_intake": {
+      "status": "APPROVED",
+      "decision_id": "mawf-playbook-blocker-reentry-semantic-intake-v1"
+    }
+  },
+  "source": {
+    "path": "/Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py",
+    "sha256": "b640cbe2ec7d7e56f845d3fe1580a2917ea53810d5860d666db58aad751d3bae",
+    "approved_post_correction_sha256": "d8b390f31e10738a5075f0038a0b240b582fa643fbba5e2da4c6669c1027067f",
+    "source_correction_decision_id": "mawf-playbook-blocker-reentry-semantic-intake-v1"
+  },
+  "unit_budget": {
+    "schema_version": 1,
+    "owner_sequence_id": "mawf-playbook-blocker-reentry",
+    "productive_milliseconds": 3600000,
+    "mandatory_role_milliseconds": {
+      "CORE": 3600000,
+      "INTERNAL_READINESS": 3600000,
+      "REQUIREMENTS_COVERAGE": 3600000,
+      "REQUIREMENTS_SATISFACTION": 3600000
+    },
+    "adjudication_milliseconds": 3600000,
+    "materialization_milliseconds": 3600000,
+    "terminal_milliseconds": 3600000,
+    "retry_milliseconds": 0,
+    "duration_milliseconds": 28800000,
+    "derivation": "One complete non-composite owner unit under the approved 60-minute-per-atomic-task policy; any retry remains inside productive execution."
+  },
+  "trusted_roots": {
+    "mcp-agents-workflow": "/Users/kamenkamenov/mcp-agents-workflow",
+    "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
+    "runtime-temp": "/private/tmp",
+    "container-workspaces": "/workspaces",
+    "operator-env-provider": "The configured durable local-operator environment provider; represented only by a secret handle"
+  },
+  "parent_delegation_contract": {
+    "producer": "The active full-test or speed-test parent owner runtime",
+    "durable_event": "child_delegation_recorded",
+    "event_fields": [
+      "delegation_id",
+      "parent_effect_id",
+      "parent_owner_sequence_id",
+      "child_owner_sequence_id",
+      "child_intent_id",
+      "blocker_id",
+      "verification_event_id",
+      "mode",
+      "task_id",
+      "run_id",
+      "branch_ref",
+      "worktree_id"
+    ],
+    "admission_checks": [
+      "parent_owner_sequence_id is one of the two allowed parents",
+      "parent effect state exists and is STARTED",
+      "delegation and child journal ownership exactly match task_id, run_id, branch_ref, and worktree_id",
+      "child_owner_sequence_id and child_intent_id match the requested child",
+      "blocker_id has a same-path passed verification_event_id",
+      "delegation is unconsumed or was previously consumed by this identical child effect_id",
+      "delegation consumption and child effect preparation are one atomic journal transition"
+    ],
+    "rejection_boundary": "Reject before budget reservation, argv construction, or any operator call. A caller-supplied parent id or copied delegation payload has no authority without the matching same-journal parent effect and event."
+  },
+  "parameter_contract": {
+    "delegation_id": {"type": "UUID", "required": true},
+    "mode": {"type": "ENUM", "values": ["resume", "restart-workflow", "start-over"], "required": true},
+    "task_guid": {"type": "STRING", "minimum_length": 1, "required": true},
+    "workflow_name": {"type": "ENUM", "values": ["research-workflow", "plan-workflow", "acceptance-requirements-precode-workflow", "write-code-workflow", "review-workflow"], "required_unless": "start-over"},
+    "run_id": {"type": "UUID", "required_for": "resume"},
+    "repo": {"type": "PATH", "trusted_root": "container-workspaces", "resolution_scope": "REMOTE_EXTERNAL_EDGE", "mode": "READ_DIRECTORY", "required_for": ["restart-workflow", "start-over"]},
+    "prompt_root_key": {"type": "ENUM", "values": ["mcp-agents-workflow", "memory-knowledge", "runtime-temp"], "required_for": ["restart-workflow", "start-over"]},
+    "prompt_file": {"type": "PATH", "trusted_root_from": "prompt_root_key", "mode": "READ_FILE", "required_for": ["restart-workflow", "start-over"]},
+    "branch": {"type": "STRING", "minimum_length": 1, "required": false},
+    "gate_policy": {"type": "ENUM", "values": ["full", "speed"], "derived_from": "parent_owner_sequence_id"},
+    "chain_mode": {"type": "STRING", "derived_from": "gate_policy"},
+    "operator_env": {"type": "SECRET_HANDLE", "provider": "operator-env-provider"},
+    "operator_cwd": {"type": "PATH", "fixed_root": "runtime-temp", "fixed_relative_path": "."},
+    "dry_run": {"type": "BOOLEAN", "fixed": false},
+    "field_authority": "Every value except delegation_id is copied from the durable parent blocker/re-entry state or derived by the child contract; the external caller cannot override it."
+  },
+  "effect_and_reconciliation_contract": {
+    "effect_identity": "delegation_id plus parent_effect_id plus mode plus task_guid plus blocked workflow/run identity plus verified blocker correction",
+    "prepare": "Persist the deterministic target run/control identity before the operator call and atomically bind delegation consumption to child effect preparation.",
+    "reconciliation": {
+      "resume": "Query the original run. A matching active/waiting/completed post-resume state is ALREADY_APPLIED; the unchanged failed state with no accepted control receipt is NOT_APPLIED; identity disagreement is INDETERMINATE.",
+      "restart-workflow": "Query deterministic child run identity and task lineage. A matching new workflow run is ALREADY_APPLIED; proved absence with the original blocked run unchanged is NOT_APPLIED; multiple or divergent new runs are INDETERMINATE.",
+      "start-over": "Query deterministic restarted research-run identity under the same task. A matching new run is ALREADY_APPLIED; proved absence with no accepted start-over receipt is NOT_APPLIED; multiple or divergent runs are INDETERMINATE."
+    },
+    "resume_rule": "An ALREADY_APPLIED running/waiting result returns control to the parent without issuing a second operator action."
+  },
+  "terminal_contract": {
+    "common": [
+      "Process return code is zero.",
+      "The operator envelope has no errorCode and does not classify as blocked or unknown.",
+      "A durable target run identity is present and belongs to task_guid and the requested/derived workflow.",
+      "A semantic state query proves the target run is running, waiting at a recognized gate/clarification, completed, or chain-complete.",
+      "The output includes mode, workflow, taskGuid, targetRunId, verdict, finalOk, and errorCode.",
+      "Exactly one owner_terminal event and matching terminal artifact exist for child effect_id."
+    ],
+    "mode_specific": {
+      "resume": "targetRunId equals the requested run_id and the state no longer represents an unacknowledged failed control action.",
+      "restart-workflow": "targetRunId is a new run of workflow_name under task_guid and upstream task lineage remains unchanged.",
+      "start-over": "targetRunId is a new research-workflow run under task_guid produced by the acknowledged start-over action."
+    },
+    "source_correction": "cmd_reenter must return nonzero for blocked/unknown/error envelopes and must emit targetRunId; its current unconditional return zero and omitted run identity cannot terminalize success."
+  },
+  "authority_decisions_required": []
+}

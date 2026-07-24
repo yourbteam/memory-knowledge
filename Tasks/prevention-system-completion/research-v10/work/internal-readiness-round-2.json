@@ -1,0 +1,105 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "id": "MG-O1",
+      "fingerprint": "mg-o1-owner-derived-complete-budget-planner-handoff",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O1-FUTURE-BUDGET"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The planner must replace caller-supplied budgets with owner-derived complete reservations before effects, including the approved greenfield rule that reserves every materialized task or parallel frontier component-wise without inventing a whole-workflow duration.",
+      "evidence": [
+        "candidate-round-2.json public material-gap classification MG-O1 and requirement_statuses O1-CURRENT-BUDGET/O1-FUTURE-BUDGET",
+        "candidate-round-2.json planner_readiness_constraints PO-O1-BUDGET and PO-O1-BUDGET-ACCEPTANCE provide grounded implementation anchors, verification observables, owners, closure conditions, and evidence IDs",
+        "EV-CONTROLLER, EV-BUDGET, EV-AUTH, and EV-PROP-GREENFIELD ground the current caller-supplied boundary and the approved 3,600,000ms atomic-task progressive-frontier algorithm"
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O2",
+      "fingerprint": "mg-o2-owner-specific-started-effect-reconciliation-planner-handoff",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O2-CURRENT-RECONCILE",
+        "O2-FUTURE-RECONCILE"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The planner must replace unconditional INDETERMINATE recovery with the selected owner reconciler so a recovered STARTED effect skips proven applied work, executes proven absent work once, and stops on a genuine conflict.",
+      "evidence": [
+        "candidate-round-2.json public material-gap classification MG-O2 and the ten-owner reconciliation observable matrix in O2-CURRENT-RECONCILE",
+        "candidate-round-2.json planner_readiness_constraints PO-O2-RECONCILE and PO-O2-RECONCILE-ACCEPTANCE provide grounded runtime/test anchors and explicit ALREADY_APPLIED, NOT_APPLIED, and INDETERMINATE closure observables",
+        "EV-RUNTIME plus EV-SRC-LOCAL through EV-SRC-REVIEW ground the current recovery boundary and each current owner observable; EV-PROP-LOCAL through EV-PROP-REVIEW ground the approved target reconcilers"
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O3",
+      "fingerprint": "mg-o3-semantic-terminal-verification-exactly-once-planner-handoff",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O3-CURRENT-TERMINAL",
+        "O3-FUTURE-TERMINAL"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The planner must prevent exit zero from terminalizing an owner until its exact result schema and semantic authority are verified, then persist exactly one matching owner_terminal event and artifact with deterministic replay behavior.",
+      "evidence": [
+        "candidate-round-2.json public material-gap classification MG-O3 and the ten-owner terminal-evidence matrix in O3-CURRENT-TERMINAL",
+        "candidate-round-2.json planner_readiness_constraints PO-O3-TERMINAL and PO-O3-TERMINAL-ACCEPTANCE identify the EXECUTED/event boundaries, owner, negative cases, exactly-once tests, and closure conditions",
+        "EV-RUNTIME and EV-EVENTS ground the current zero-exit/event-schema behavior; the ten EV-SRC and ten EV-PROP items ground current semantic observables and approved target terminal contracts"
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O4",
+      "fingerprint": "mg-o4-child-only-parent-delegation-planner-handoff",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O4-CURRENT-PARENT",
+        "O4-FUTURE-PARENT"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The planner must make mawf-playbook-blocker-reentry non-admissible as a standalone call and atomically consume a matching active delegation from either named allowed parent before budget, argv construction, or operator execution.",
+      "evidence": [
+        "candidate-round-2.json public material-gap classification MG-O4 and O4-CURRENT-PARENT identify the sole child, both allowed parents, their current availability, and the 24 standalone rows",
+        "candidate-round-2.json planner_readiness_constraints PO-O4-PARENT and PO-O4-PARENT-ACCEPTANCE provide controller/journal/test anchors, invalid and valid observables, ownership, and closure conditions",
+        "EV-PARENTS, EV-CONTRACTS, EV-CONTROLLER, EV-ADAPTERS, and EV-PROP-REENTRY ground the current relation, missing enforcement, and approved target delegation contract"
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O5",
+      "fingerprint": "mg-o5-materialized-schema-trusted-binding-planner-handoff",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O5-CURRENT-PARAMETERS",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The planner must replace hard-coded parameter/path rules with the selected proposal schema and typed root, repository, resource, provider, and approval resolvers so no raw or escaping value reaches argv or an effect.",
+      "evidence": [
+        "candidate-round-2.json public material-gap classification MG-O5 and the ten-owner current parameter/path matrix in O5-CURRENT-PARAMETERS",
+        "candidate-round-2.json planner_readiness_constraints PO-O5-PARAMETERS and PO-O5-PARAMETERS-ACCEPTANCE identify contract/adapter/resolver/test anchors, all required negative observables, ownership, and closure conditions",
+        "EV-ADAPTERS, EV-EVENTS, EV-REMOTE-REPO, EV-AUTH, and EV-PROP-LOCAL through EV-PROP-REVIEW ground the current hard-coded boundary and every approved target binding"
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    }
+  ]
+}

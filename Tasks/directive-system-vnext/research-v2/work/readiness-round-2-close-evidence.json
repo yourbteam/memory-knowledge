@@ -1,0 +1,1 @@
+{"runtime_agent_id":"/root/directive_vnext_v2_readiness_r2_retry","runtime_status":"completed","slot_id":"s10","slot_state":"released","evidence":"Fresh retry returned exact terminal envelope after obeying explicit excluded-path boundary."}

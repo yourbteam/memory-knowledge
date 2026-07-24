@@ -1,0 +1,47 @@
+{
+  "schema_version": 1,
+  "charter_id": "prevention-owner-runtime-terminal-closure-20260717",
+  "objective": "Ground the exact authoritative contracts required to close the five owner-runtime defects found in review: complete budget admission, crash reconciliation, semantic terminal verification, parent-only child execution, and trusted typed path binding.",
+  "research_questions": [
+    "What complete machine-readable UnitBudget can each of the ten AVAILABLE owners derive from authoritative code and which owners must fail closed until such evidence exists?",
+    "What durable effect identity and owner-specific reconciliation observable can distinguish already-applied, not-applied, and genuinely indeterminate execution after a crash?",
+    "What semantic terminal evidence must each owner validate beyond process exit code before one terminal event is emitted?",
+    "Which owner rows are child-only, what parent context proves valid delegation, and where must standalone dispatch be rejected?",
+    "How must each typed parameter, especially paths, be validated against the materialized parameter schema and trusted repository roots before argv construction?"
+  ],
+  "in_scope": [
+    "the five P1 findings from the owner-runtime review and only their existing prevention-system requirements",
+    "memory-knowledge owner contracts, registry, adapters, controller, runtime, budget authority, work-memory ledger, sequence documents, dependency manifests, and tests",
+    "mcp-agents-workflow implementation scripts referenced by the ten AVAILABLE owner contracts when needed to establish their real command, timeout, terminal, or effect behavior"
+  ],
+  "exclusions": [
+    "new owner availability decisions, the six custodian-evidence owners, the nine unavailable owners, unrelated prevention features, deployment, commit, push, secrets, credentials, phase-ledger changes, or external messages",
+    "implementation planning or code edits during research",
+    "inventing numeric budgets, reconciliation outcomes, terminal markers, parent context, parameter fields, paths, or command behavior not established by authoritative evidence"
+  ],
+  "authoritative_roots": [
+    "/Users/kamenkamenov/memory-knowledge",
+    "/Users/kamenkamenov/mcp-agents-workflow"
+  ],
+  "supplied_input": "The independently reviewed owner-runtime slice is safe but incomplete in five precise ways: STARTED effects stop permanently without reconciliation; exit zero is terminalized without semantic verification; budgets are caller-supplied rather than owner-authoritative; mawf-playbook-blocker-reentry executes without a parent; and parameter/path validation is not bound to the materialized schema and trusted roots.",
+  "required_output_package": [
+    "manifest.json",
+    "research.md",
+    "requirements.json",
+    "evidence-index.json",
+    "findings.json",
+    "planner-handoff.md"
+  ],
+  "budget": {
+    "maximum_candidate_rounds": 3,
+    "maximum_agent_spawn_attempts": 15,
+    "maximum_elapsed_minutes": 60,
+    "maximum_retries_per_role": 1
+  },
+  "terminal_rules": [
+    "PASS requires all three lenses to pass the same candidate and envelope hashes, a fresh adjudicator with no research-actionable finding, every planner obligation READY, exact package validation, and zero active agent slots.",
+    "GAPS means research-stage corrections remain inside this frozen charter.",
+    "BLOCKED means required accessible evidence or a named approval route is unavailable.",
+    "CAP_REACHED means the shared time, round, attempt, retry, or repeated-fingerprint cap fired."
+  ]
+}

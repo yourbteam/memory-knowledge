@@ -1,0 +1,100 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "id": "MG-O1",
+      "fingerprint": "mg-o1-owner-derived-complete-unit-budget-planner-gap-v1",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O1-FUTURE-BUDGET"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "Until implementation replaces caller-supplied budgets with the selected owner's complete content-addressed budget, a caller can understate required work and obtain admission without reserving the full productive, gate, adjudication, materialization, terminal, and retry cost.",
+      "evidence": [
+        "Required-behavior side: EV-REQ defines pre-effect complete-budget derivation and rejection; EV-AUTH plus EV-PROP-LOCAL, EV-PROP-GREENFIELD, EV-PROP-REENTRY, EV-PROP-AUTH, EV-PROP-PROMOTION, EV-PROP-PUBLISH, EV-PROP-BOOTSTRAP, EV-PROP-RECONCILIATION, EV-PROP-CHECKPOINT, and EV-PROP-REVIEW define the ten approved owner-derived fixed, progressive, frontier, or child-composed budget contracts.",
+        "Missing-behavior side: EV-CONTROLLER (scripts/prevention_controller.py:45-65,231-255) accepts a constructor-supplied unit_budgets mapping and admits the selected value; EV-BUDGET (scripts/prevention_budget.py:56-109,177-225) validates and reserves the supplied UnitBudget but does not derive it from the selected owner contract."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O2",
+      "fingerprint": "mg-o2-typed-started-effect-reconciliation-planner-gap-v1",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O2-CURRENT-RECONCILE",
+        "O2-FUTURE-RECONCILE"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "A crash after an owner effect but before result persistence cannot currently be proved applied or not applied, so recovery stops permanently instead of safely skipping an applied effect or executing a proved-absent effect once.",
+      "evidence": [
+        "Required-behavior side: EV-REQ requires owner-specific reconciliation to ALREADY_APPLIED, NOT_APPLIED, or genuinely unresolved; EV-PROP-LOCAL, EV-PROP-GREENFIELD, EV-PROP-REENTRY, EV-PROP-AUTH, EV-PROP-PROMOTION, EV-PROP-PUBLISH, EV-PROP-BOOTSTRAP, EV-PROP-RECONCILIATION, EV-PROP-CHECKPOINT, and EV-PROP-REVIEW define effect identities, authoritative observables, and resume rules for all ten owners.",
+        "Missing-behavior side: EV-RUNTIME (scripts/prevention_owner_runtime.py:89-103,115-158,160-177) persists only the generic argv-derived effect identity and maps every recovered STARTED state directly to INDETERMINATE without selecting or invoking an owner reconciler; the ten EV-SRC-* items ground the current same-path observables that remain unwired."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O3",
+      "fingerprint": "mg-o3-semantic-exactly-once-terminalization-planner-gap-v1",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O3-CURRENT-TERMINAL",
+        "O3-FUTURE-TERMINAL"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "An owner can currently be recorded terminal after exit zero even when its semantic result is malformed, failed, skipped, detached, or contradicted by authoritative state, and there is no durable owner-terminal event paired with the artifact.",
+      "evidence": [
+        "Required-behavior side: EV-REQ requires exact schema validation, semantic verification, visible negative cases, and exactly one durable terminal event; EV-PROP-LOCAL, EV-PROP-GREENFIELD, EV-PROP-REENTRY, EV-PROP-AUTH, EV-PROP-PROMOTION, EV-PROP-PUBLISH, EV-PROP-BOOTSTRAP, EV-PROP-RECONCILIATION, EV-PROP-CHECKPOINT, and EV-PROP-REVIEW define the ten owner-specific terminal schemas, re-observations, and replay rules.",
+        "Missing-behavior side: EV-RUNTIME (scripts/prevention_owner_runtime.py:181-215) hashes stdout/stderr, treats returncode zero as sufficient, and writes a generic terminal artifact without owner-semantic verification; EV-EVENTS (scripts/work_memory.py:132-203) defines effect_reconciled but no owner_terminal event schema."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O4",
+      "fingerprint": "mg-o4-active-parent-delegation-admission-planner-gap-v1",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O4-CURRENT-PARENT",
+        "O4-FUTURE-PARENT"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "The child-only blocker-reentry owner can currently be selected and dispatched without a live allowed parent, so direct, forged, stale, or already-consumed child invocation is not rejected before budget reservation and operator execution.",
+      "evidence": [
+        "Required-behavior side: EV-REQ and EV-PARENTS identify mawf-playbook-blocker-reentry as the sole non-standalone owner with parents mawf-playbook-full-test and mawf-playbook-speed-test; EV-PROP-REENTRY (owner-contract-proposals/mawf-playbook-blocker-reentry.json:4-11,51-77) requires a matching same-journal STARTED parent and atomic child_delegation_recorded consumption before budget, argv, or operator work.",
+        "Missing-behavior side: EV-CONTROLLER (scripts/prevention_controller.py:231-255) proceeds from selection to budget/runtime without parent-context admission; EV-ADAPTERS (scripts/prevention_adapters.py:132-167,209-239) validates mode/task fields and availability but does not validate standalone, allowed parents, an active parent state, or a delegation event; EV-EVENTS has no child_delegation_recorded schema."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O5",
+      "fingerprint": "mg-o5-materialized-parameter-root-provider-binding-planner-gap-v1",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O5-CURRENT-PARAMETERS",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "Current hard-coded adapters can construct argv from values that were not validated against the selected proposal schema or bound through trusted root, repository, resource, secret, approval, and provider resolvers, leaving type drift and path or authority bypasses possible before effects.",
+      "evidence": [
+        "Required-behavior side: EV-REQ requires exact materialized-schema validation and pre-argv rejection of wrong fields, tags, enums, unknown roots, absolute paths, traversal, and symlink escape; EV-AUTH and all ten EV-PROP-* items define the approved parameter contracts, trusted roots, providers, receipt bindings, and fail-closed validation boundaries; EV-REMOTE-REPO grounds the configured remote repository resolver.",
+        "Missing-behavior side: EV-ADAPTERS (scripts/prevention_adapters.py:61-112,115-203,209-239) uses fixed Python field lists and conditionals, converts accepted values directly to argv, and does not load the selected proposal parameter_contract/trusted_roots or perform root/provider/receipt resolution and symlink containment; EV-CONTROLLER passes the registry row directly to this path, and EV-EVENTS lacks typed provider/approval receipt events."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    }
+  ]
+}

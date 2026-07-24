@@ -1,0 +1,185 @@
+{
+  "authority": "Kamen",
+  "authority_approvals": {
+    "budget_and_roots": {
+      "decision_id": "convergence-checkpoint-run-budget-boundaries-v1",
+      "status": "APPROVED"
+    },
+    "helper_cli_alignment": {
+      "decision_id": "convergence-checkpoint-helper-cli-alignment-20260720",
+      "status": "APPROVED"
+    },
+    "implementation_claude_parity_20260724": {
+      "decision_id": "convergence-checkpoint-run-claude-parity-source-correction-20260724",
+      "status": "APPROVED"
+    },
+    "runtime_and_terminal": {
+      "decision_id": "convergence-checkpoint-run-runtime-terminal-v1",
+      "status": "APPROVED"
+    },
+    "semantic_intake": {
+      "decision_id": "convergence-checkpoint-run-semantic-intake-v1",
+      "status": "APPROVED"
+    }
+  },
+  "authority_decisions_required": [],
+  "availability_policy": "AVAILABLE",
+  "baseline_approval_contract": {
+    "admission": "The approval record must exist in the state, match exactly, and remain applicable to the prepared state hash. Contract approval is not baseline acceptance approval.",
+    "helper_receipt": "accept-baseline and guard-baseline must emit structured receipts containing approval id, prior/new state hashes, accepted path hashes, stage, outer iteration, verdict, and helper hash.",
+    "required_match": {
+      "allowed_paths": [
+        "operations/blockers/BLOCKERS.md",
+        "operations/work-memory/events.jsonl"
+      ],
+      "kind": "autonomy",
+      "operations": [
+        "accept-baseline"
+      ],
+      "outer_iteration": "current state outer_iteration",
+      "repository_root": "memory-knowledge",
+      "stage": "derived exact stage"
+    }
+  },
+  "child_execution_contract": {
+    "admission": "child_owner_sequence_id resolves to the exact content-addressed executable contract; child parameters validate; its complete UnitBudget is reserved; guard_receipt_id binds the same contract/parameters/source; and the child has an implemented STARTED reconciler and semantic terminal verifier.",
+    "dispatch": "After the baseline lock is released, prepare and execute the typed child through prevention owner dispatch; never invoke subprocess.run on caller argv.",
+    "rejection": "A raw argv array, shell command, exit-zero-only child, stale guard receipt, or incomplete child contract rejects before baseline acceptance or lock acquisition."
+  },
+  "effect_and_reconciliation_contract": {
+    "baseline_reconciliation": {
+      "ALREADY_APPLIED": "The state contains exactly one matching structured accept-baseline receipt and a passing guard receipt for the prepared approval, stage, outer iteration, repository, ledger/view hashes, and helper hash.",
+      "INDETERMINATE": "State, approval, unrelated baseline paths, helper, ledger/view identity, acceptance receipt, or guard receipt conflicts with preparation.",
+      "NOT_APPLIED": "The prepared state and baseline hashes remain unchanged and no matching acceptance receipt exists."
+    },
+    "child_reconciliation": "Delegate to the exact child owner reconciler using child effect id. A semantic child terminal artifact is ALREADY_APPLIED; no prepared child effect after a valid checkpoint is NOT_APPLIED; child identity disagreement or INDETERMINATE result stops the parent.",
+    "effect_identity": "prepared convergence state hash plus approval id/scope plus repository/helper hashes plus canonical ledger/view pre-hashes plus child owner/contract/intent/guard identities",
+    "prepare": "Persist the full identity, expected baseline transition, fixed lock target, child effect id, complete composed UnitBudget, and initially observed state/ledger/view hashes before baseline acceptance.",
+    "resume_rule": "If baseline acceptance is already applied, do not accept it again; resume only the child. If the child is already applied, do not execute it again. Lock timeout remains a non-applied failure and never broadens accepted drift."
+  },
+  "owner_sequence_id": "convergence-checkpoint-run",
+  "parameter_contract": {
+    "approval_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "required": true,
+      "type": "STRING"
+    },
+    "child_intent": {
+      "fields": [
+        "child_owner_sequence_id",
+        "child_contract_sha256",
+        "child_intent_id",
+        "child_parameters",
+        "guard_receipt_id"
+      ],
+      "required": true,
+      "type": "EXACT_OBJECT"
+    },
+    "child_intent_file": {
+      "materializes": "child_intent",
+      "mode": "READ_REGULAR_FILE",
+      "required": false,
+      "trusted_roots": [
+        "task-artifact-root",
+        "runtime-temp"
+      ],
+      "type": "PATH"
+    },
+    "helper": {
+      "caller_supplied": false,
+      "fixed": "convergence-helper",
+      "required_sha256": "82c11a852ffa373be821106577b2b2c2b62cb6c537a98b829bfe97e16fd0b8ae",
+      "type": "PATH"
+    },
+    "lock_timeout_seconds": {
+      "caller_supplied": false,
+      "fixed": 30.0,
+      "type": "NUMBER"
+    },
+    "repo": {
+      "caller_supplied": false,
+      "fixed_root": "memory-knowledge",
+      "type": "PATH"
+    },
+    "stage": {
+      "caller_supplied": false,
+      "derived_from": "the exact approval scope in state at the current outer_iteration",
+      "type": "STRING"
+    },
+    "state": {
+      "mode": "READ_WRITE_REGULAR_FILE",
+      "required": true,
+      "schema": "convergence_state.py current schema",
+      "trusted_roots": [
+        "task-artifact-root",
+        "runtime-temp"
+      ],
+      "type": "PATH"
+    },
+    "validation_boundary": "Before budget reservation, validate state schema/hash, fixed repository/helper/ledger/view identities, helper hash, approval scope and current outer iteration, typed child intent/contract/parameters, child guard receipt, and complete child UnitBudget. Reject arbitrary argv, helper, repo, stage, lock timeout, or paths outside trusted roots."
+  },
+  "proposal_status": "APPROVED",
+  "schema_version": 1,
+  "source": {
+    "dependencies_sha256": "98ccc872ffac8e9114e0120816e83bec675554440f9c4331390672814b66c981",
+    "helper_path": "/Users/kamenkamenov/.codex/skills/_shared/convergence_state.py",
+    "helper_sha256": "82c11a852ffa373be821106577b2b2c2b62cb6c537a98b829bfe97e16fd0b8ae",
+    "implementation_approved_post_correction_sha256": "107afe04109f9e03e59ce6885dd98ba6c0c0f4fe8dbf4e85f2273bac48286ff8",
+    "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_checkpoint_run.py",
+    "implementation_sha256": "70962f95a2a9df988c6e33bcb599a497f0f8fbf41258d8bf504c8e2559e82a0d",
+    "implementation_source_correction_decision_id": "convergence-checkpoint-run-claude-parity-source-correction-20260724",
+    "sequence_approved_post_correction_sha256": "e4a4fc81269a11ad3a1d1754199b97d3ecca5aba562bf885b8bd485546c40c64",
+    "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/convergence-checkpoint-run/sequence.md",
+    "sequence_sha256": "a31c6225caa60e30393dbcd11828cfa4832801d3b7ee734cd11a47fc20788f12",
+    "sequence_source_correction_decision_id": "convergence-checkpoint-run-semantic-intake-v1",
+    "source_receipt_helper_path": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_source_receipt.py",
+    "source_receipt_helper_sha256": "e569ee5da7043681d9f432410417a620d4ebadc776cf5f6ed7992ac1aa81e2a8"
+  },
+  "standalone": true,
+  "terminal_contract": {
+    "common": [
+      "The checkpoint owner process return code is zero.",
+      "Structured accept-baseline and guard-baseline receipts semantically match preparation.",
+      "The exact typed child has one successful semantic terminal artifact; child exit zero or the legacy pass string alone is insufficient.",
+      "Exactly one checkpoint owner_terminal event and matching terminal artifact exist for parent effect_id."
+    ],
+    "source_corrections": [
+      "Fix repository, helper, ledger/view, stage, and lock-timeout authority instead of accepting caller paths and values.",
+      "Replace schema-v1 arbitrary argv command JSON with a typed content-addressed child intent and exact guard receipt.",
+      "Compose the complete child UnitBudget with the parent's eight-hour budget before accepting the baseline.",
+      "Persist structured helper receipts and reconcile baseline acceptance after crashes instead of rerunning accept/guard blindly.",
+      "Terminalize only from the child's semantic terminal artifact and exactly one parent terminal event, not the fixed pass string.",
+      "Use the current accept-baseline generated-overlap flag so the checkpoint controller and authoritative convergence helper share one executable CLI contract."
+    ],
+    "success": "The terminal artifact names state/approval/stage/outer-iteration hashes, helper and repository identities, accepted ledger/view baseline hashes, guard verdict, child owner/contract/intent/effect ids, child UnitBudget hash, child terminal artifact hash, and parent verdict. Any unrelated baseline drift, stale approval/guard, or child semantic failure prevents success."
+  },
+  "trusted_roots": {
+    "canonical-blocker-view": "/Users/kamenkamenov/memory-knowledge/operations/blockers/BLOCKERS.md",
+    "canonical-ledger": "/Users/kamenkamenov/memory-knowledge/operations/work-memory/events.jsonl",
+    "convergence-helper": "/Users/kamenkamenov/.codex/skills/_shared/convergence_state.py",
+    "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
+    "runtime-temp": "/private/tmp",
+    "task-artifact-root": "/Users/kamenkamenov/memory-knowledge/Tasks"
+  },
+  "unit_budget": {
+    "adjudication_milliseconds": 3600000,
+    "atomic_task_cap_milliseconds": 3600000,
+    "duration_formula_milliseconds": "28800000 + CHILD_DURATION_MILLISECONDS",
+    "mandatory_role_milliseconds": {
+      "CORE": 3600000,
+      "INTERNAL_READINESS": 3600000,
+      "REQUIREMENTS_COVERAGE": 3600000,
+      "REQUIREMENTS_SATISFACTION": 3600000
+    },
+    "materialization_milliseconds": 3600000,
+    "owner_sequence_id": "convergence-checkpoint-run",
+    "parent_productive_milliseconds": 3600000,
+    "reservation_mode": "OWNER_DERIVED_CHILD_COMPOSITION",
+    "reservation_rule": "Reserve the complete eight-hour parent budget and the complete child UnitBudget before baseline acceptance. The child retains its own sixty-minute atomic-task caps and progressive reservation rules; callers cannot supply either budget.",
+    "schema_version": 1,
+    "terminal_milliseconds": 3600000,
+    "variables": {
+      "CHILD_DURATION_MILLISECONDS": "The exact complete UnitBudget duration loaded from the content-addressed executable child owner contract after child parameters are materialized."
+    }
+  }
+}

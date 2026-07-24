@@ -1,0 +1,62 @@
+{
+  "max": 4,
+  "slots": [
+    {
+      "acquired_at": 1784307262,
+      "agent_id": "codex-exec-terminal-68578",
+      "bound_at": 1784307407,
+      "closed_at": 1784307782,
+      "completed_at": 1784307765,
+      "evidence": {
+        "close": "/private/tmp/research-v5-internal-readiness-close.json"
+      },
+      "id": "s1",
+      "label": "continuation-internal-readiness",
+      "released_at": 1784307795,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784307274,
+      "agent_id": "codex-exec-terminal-98143",
+      "bound_at": 1784307417,
+      "closed_at": 1784307824,
+      "completed_at": 1784307812,
+      "evidence": {
+        "close": "/private/tmp/research-v5-coverage-close.json"
+      },
+      "id": "s2",
+      "label": "continuation-requirements-coverage",
+      "released_at": 1784307840,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784307286,
+      "agent_id": "codex-exec-terminal-57841",
+      "bound_at": 1784307430,
+      "closed_at": 1784307871,
+      "completed_at": 1784307856,
+      "evidence": {
+        "close": "/private/tmp/research-v5-satisfaction-close.json"
+      },
+      "id": "s3",
+      "label": "continuation-requirements-satisfaction",
+      "released_at": 1784307884,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784308108,
+      "agent_id": "codex-exec-terminal-61056",
+      "bound_at": 1784308215,
+      "closed_at": 1784308637,
+      "completed_at": 1784308619,
+      "evidence": {
+        "close": "/private/tmp/research-v5-adjudicator-close.json"
+      },
+      "id": "s4",
+      "label": "continuation-adjudicator",
+      "released_at": 1784308656,
+      "state": "released"
+    }
+  ],
+  "version": 2
+}

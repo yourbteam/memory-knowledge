@@ -1,0 +1,67 @@
+{
+  "schema_version": 1,
+  "captured_at": "2026-07-19T09:35:00Z",
+  "repositories": {
+    "memory_knowledge": "/Users/kamenkamenov/memory-knowledge",
+    "mcp_agents_workflow": "/Users/kamenkamenov/mcp-agents-workflow"
+  },
+  "constraints": {
+    "commit": false,
+    "push": false,
+    "deploy": false,
+    "secret_access": false,
+    "external_messages": false,
+    "destructive_actions": false,
+    "phase_ledger_contract_changes": false,
+    "preserve_unrelated_dirty_tree": true
+  },
+  "directive_research": {
+    "root": "Tasks/directive-system-vnext/research-v1",
+    "scope_hash": "2918a67cb8947a970beaa6b02f6245236ea4666c837956b9deffecd05b032ce1",
+    "charter_canonical_sha256": "e2bc609ade60584a0f6837b9327ecbf2c2fca388831a02e06b5cfc69138a9a6d",
+    "requirements_canonical_sha256": "38535514f7f447d531f40f54220ddf59861c79037f4709237f5a43d57e881e75",
+    "envelope_canonical_sha256": "a99d76851d2995447359814d2dfeab9d6b17bcd1e62b671a6d473d9e76839b90",
+    "candidate_canonical_sha256": "668d99127a311e7572ca60409837cf42c49086d3b8083a2d1bb0a9a807cfaa27",
+    "state_file_sha256": "58f097f7d7d5b23b4e1fdaac762b19b9e4bdca7086c8270ca58ef350bac034b3",
+    "recorded_roles": [
+      "CORE_RESEARCHER",
+      "INTERNAL_READINESS",
+      "REQUIREMENTS_COVERAGE"
+    ],
+    "missing_roles": [
+      "REQUIREMENTS_SATISFACTION",
+      "ADJUDICATOR"
+    ],
+    "round_1_terminal": false,
+    "live_directives_changed": false
+  },
+  "prevention": {
+    "main_plan_sha256": "1ec28909c29d51b61ba467786727ec8301e417c6a2c6e0cb4ed228dab43113a4",
+    "active_increment_analysis_sha256": "6b6304add6c446aa9214ed192ad11fbfbf79b5bfb8d78e6c52139f0249e4f0ab",
+    "active_increment_plan_sha256": "9dafc8f645acc3b2ed401868c43b07857a86f8095be2292d5d50dfc9dd5b6320",
+    "active_increment_plan_verification_ledger_sha256": "8c99f6dcc4b4c422ab2c6102f1b97c07d6bc8b1c0addfa2a834d041ce91be6c6",
+    "owner_runtime_closeout_sha256": "a2344bc7ba0eea19893caa3cccf52501046cb8f158a3382ca9bd5eb5ff28b38e",
+    "owner_executable_contracts_sha256": "d9a34090fb0b32d6cbec78291031f259d1569ec6d8bad34f5283059269c53644",
+    "owner_contracts_sha256": "f13602a9094227eb986af83164ab95cfc26d93fa5ec537dc852fbb6ab73d29af",
+    "owner_observable_evidence_sha256": "7c6871d185662308443fdb5060d0a54d9244af6b515687c0657fd41e804cc101",
+    "owner_source_verification_sha256": "a94592706b407873b5cbc2dd828b92ab64dfba61726c03dbbade85f7ebf115e2",
+    "memory_sources": {
+      "scripts/prevention_adapters.py": "98132a3e95f5703358b6daf3ea68d51f2e850327698a057821f5ff038ce512cc",
+      "scripts/prevention_controller.py": "46311190ac6a4256c10953e28f78d0a1dbfa482d102357723445003eb3a12a40",
+      "scripts/prevention_owner_runtime.py": "b8a38ed96d40a807f843afc36853e6ba96a3a5ccf8ca8d7be9cd30178e570646",
+      "scripts/prevention_source_probes.py": "a03650805836169c4d4a7141979516d1f852f253fddb7d0557d1cc915b160c06",
+      "scripts/prevention_contract_materializer.py": "3eaaa1a8fcd3a5aed0952f31f84a55949f8e594d7d53ce566e8bfa7d99e9fded"
+    },
+    "mcp_sources": {
+      "src/workflow_orch/prevention_hook.py": "9cef4196f85a48a3db0dc796cd928d1f174b88d2e04d4b0d84056681637cafa2",
+      "src/workflow_orch/prevention_hook_bridge.py": "00f98bf90aec18e81c6c4a779ef7bc603819d25e8508655ba672ca51081359bb",
+      "src/workflow_orch/cli/codex_cli.py": "0605545661b901b485abf4f6e2e27b4b2896810d1c139f7243fc62f8eb6e19d9",
+      "tests/test_prevention_hook.py": "472365cd8e22b3f984e0d8da5ed2447ed994349db30af3ffce82d05dc975de99"
+    },
+    "active_increment_files_present": {
+      "scripts/prevention_generic_contract.py": false,
+      "tests/prevention/test_generic_sequence_execution.py": false
+    },
+    "terminal_complete": false
+  }
+}

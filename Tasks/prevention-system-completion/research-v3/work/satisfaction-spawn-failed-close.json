@@ -1,0 +1,11 @@
+{
+  "runtime": "codex-collaboration",
+  "runtime_agent_id": "spawn-failed:/root/prevention_successor_satisfaction",
+  "role": "REQUIREMENTS_SATISFACTION",
+  "round": 1,
+  "status": "SPAWN_FAILED",
+  "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+  "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+  "slot_closed": true,
+  "completion_evidence": "The runtime rejected the concurrent spawn before creating an agent; therefore no slot was acquired."
+}

@@ -1,0 +1,11 @@
+{
+  "runtime_agent_id": "/root/owner_terminal_readiness",
+  "role": "INTERNAL_READINESS",
+  "round": 1,
+  "status": "COMPLETED",
+  "input_envelope_hash": "16a9e5f76cda8979dc36f3f17027ab2b0836cfc1c0b50bd423823150f99421cd",
+  "candidate_hash": "2fbe3de862b2703a5169c9d7df746bd4572332f69d4f25948c4e4173d7bee2cc",
+  "output_hash": "cf3307bb3e45844aca9890553a7390060209e3dbb21729ad14facd210f636ad9",
+  "completion_evidence": "Fresh internal-readiness lens verified the fixed hashes, classified all five public gaps, and returned BLOCKED with five evidence/readiness gaps plus one in-scope research correction.",
+  "slot_closed": true
+}

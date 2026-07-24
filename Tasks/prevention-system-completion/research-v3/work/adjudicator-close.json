@@ -1,0 +1,12 @@
+{
+  "runtime": "codex-collaboration",
+  "runtime_agent_id": "/root/prevention_successor_adjudicator",
+  "role": "ADJUDICATOR",
+  "round": 1,
+  "status": "COMPLETED",
+  "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+  "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+  "output_hash": "8c983bc6a66f267687d1fb57a475b83e39ea00de6b3f26994e7142d7821b0de7",
+  "slot_closed": true,
+  "completion_evidence": "Fresh adjudicator classified all 27 raw findings with no research-actionable disposition and released its active slot."
+}

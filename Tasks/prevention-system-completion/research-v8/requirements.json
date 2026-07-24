@@ -1,0 +1,112 @@
+[
+  {
+    "id": "O1-CURRENT-BUDGET",
+    "text": "Determine what authoritative machine-readable complete-unit budget data currently exists for each of the ten AVAILABLE owners and where current code permits caller understatement or lacks evidence.",
+    "source": {"finding": "owner-budget-can-be-understated", "requirement_ids": ["FUT-BUDGET", "FUT-ENTRYPOINT"]},
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Return exact producer, fields, units, and coverage; absent values remain explicit and are never inferred from prose.",
+    "scope_id": "owner-runtime-budget-current",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-O1-BUDGET", "description": "Carry authoritative per-owner complete-unit budget inputs and fail-closed missing-evidence states into planning."}]
+  },
+  {
+    "id": "O1-FUTURE-BUDGET",
+    "text": "Every executable owner must derive its complete atomic UnitBudget from its content-addressed owner contract before preparation or launch; callers cannot supply or understate it.",
+    "source": {"finding": "owner-budget-can-be-understated", "requirement_ids": ["FUT-BUDGET", "FUT-ENTRYPOINT"]},
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Admission includes core, three gates, adjudication, and materialization overhead and rejects missing, incomplete, or insufficient budgets before side effects.",
+    "scope_id": "owner-runtime-budget-future",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-O1-BUDGET-ACCEPTANCE", "description": "Plan per-owner derivation, understatement rejection, missing-evidence rejection, and pre-effect admission tests."}]
+  },
+  {
+    "id": "O2-CURRENT-RECONCILE",
+    "text": "Determine the current durable effect identities and authoritative observables available to reconcile STARTED effects for the ten AVAILABLE owners after interruption.",
+    "source": {"finding": "started-effect-permanently-indeterminate", "requirement_ids": ["FUT-RESUME", "FUT-CORRECTION"]},
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Map each owner to a real same-path observable or explicit unresolved state without rerunning a possibly applied effect.",
+    "scope_id": "owner-runtime-reconcile-current",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-O2-RECONCILE", "description": "Carry owner-specific effect identity and reconciliation evidence boundaries into planning."}]
+  },
+  {
+    "id": "O2-FUTURE-RECONCILE",
+    "text": "Resume must reconcile a STARTED effect through its owner-specific typed contract into ALREADY_APPLIED, NOT_APPLIED, or genuinely unresolved before deciding whether execution can continue.",
+    "source": {"finding": "started-effect-permanently-indeterminate", "requirement_ids": ["FUT-RESUME", "FUT-CORRECTION"]},
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "A crash after side effect and before result persistence never blindly duplicates the effect and can terminalize when authoritative state proves completion.",
+    "scope_id": "owner-runtime-reconcile-future",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-O2-RECONCILE-ACCEPTANCE", "description": "Plan red-before/green-after crash-window and idempotent-resume verification for each supported reconciliation class."}]
+  },
+  {
+    "id": "O3-CURRENT-TERMINAL",
+    "text": "Determine the authoritative terminal schema, pass marker, artifact, or state observable for each of the ten AVAILABLE owners and prove where current runtime equates exit zero with success.",
+    "source": {"finding": "exit-zero-terminalized-without-verification", "requirement_ids": ["FUT-RESUME", "FUT-METRICS"]},
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Return exact semantic terminal evidence or an explicit fail-closed absence for every AVAILABLE owner.",
+    "scope_id": "owner-runtime-terminal-current",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-O3-TERMINAL", "description": "Carry semantic verification and one-terminal-event contracts into planning."}]
+  },
+  {
+    "id": "O3-FUTURE-TERMINAL",
+    "text": "Process exit zero cannot terminalize an owner; the runtime must validate its content-addressed terminal schema and append exactly one durable terminal event only after semantic verification passes.",
+    "source": {"finding": "exit-zero-terminalized-without-verification", "requirement_ids": ["FUT-RESUME", "FUT-METRICS"]},
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Missing or malformed envelope, absent pass signal, failed artifact/state check, and replayed terminalization all fail visibly and deterministically.",
+    "scope_id": "owner-runtime-terminal-future",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-O3-TERMINAL-ACCEPTANCE", "description": "Plan semantic success/failure and exactly-once terminal event tests."}]
+  },
+  {
+    "id": "O4-CURRENT-PARENT",
+    "text": "Determine which registered owners are non-standalone children, the authoritative parent relation, and the current dispatch path that permits direct execution.",
+    "source": {"finding": "blocker-reentry-directly-executable", "requirement_ids": ["FUT-ENTRYPOINT", "FUT-TYPED"]},
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Name the exact child row, parent owner, required active parent context, and rejection boundary.",
+    "scope_id": "owner-runtime-parent-current",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-O4-PARENT", "description": "Carry the child-only delegation contract and standalone rejection boundary into planning."}]
+  },
+  {
+    "id": "O4-FUTURE-PARENT",
+    "text": "A non-standalone child owner must be invokable only through a validated active parent adapter context and must reject direct selection or dispatch.",
+    "source": {"finding": "blocker-reentry-directly-executable", "requirement_ids": ["FUT-ENTRYPOINT", "FUT-TYPED"]},
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Direct child intent fails before side effects; parent-bound invocation preserves parent run, policy, and lifecycle identity.",
+    "scope_id": "owner-runtime-parent-future",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-O4-PARENT-ACCEPTANCE", "description": "Plan direct-rejection, forged-parent, stale-parent, and valid-delegation tests."}]
+  },
+  {
+    "id": "O5-CURRENT-PARAMETERS",
+    "text": "Determine the current effective parameter schemas, enum/tag rules, repository-root bindings, and path normalization behavior for the ten AVAILABLE owners.",
+    "source": {"finding": "parameters-not-schema-or-root-bound", "requirement_ids": ["FUT-TYPED", "ACC-ZERO-RAW"]},
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Prove which parameter and path constraints are authoritative versus hardcoded, absent, or only prose.",
+    "scope_id": "owner-runtime-parameters-current",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-O5-PARAMETERS", "description": "Carry materialized schema and trusted-root resolution contracts into planning."}]
+  },
+  {
+    "id": "O5-FUTURE-PARAMETERS",
+    "text": "Every owner parameter must validate against the content-addressed materialized schema; paths must be normalized, reject absolute or traversal escapes, and resolve only through named trusted repository-root bindings before argv construction.",
+    "source": {"finding": "parameters-not-schema-or-root-bound", "requirement_ids": ["FUT-TYPED", "ACC-ZERO-RAW"]},
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Wrong type/tag/enum, extra or missing field, unknown root, absolute path, traversal, and symlink escape fail before command construction or effects.",
+    "scope_id": "owner-runtime-parameters-future",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-O5-PARAMETERS-ACCEPTANCE", "description": "Plan complete schema, trusted-root, and path-escape acceptance tests."}]
+  }
+]

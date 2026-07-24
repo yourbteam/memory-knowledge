@@ -1,0 +1,24 @@
+{
+  "schema_version": 1,
+  "source_adjudication_sha256": "919fedb81d12a01c6f31b65615de1409417b258aff8cd37bab8850decf5ade8f",
+  "candidate_sha256": "94add1a651bffff27d46eca4c5093df221508b212e21878a15eebf3adba702a5",
+  "corrections": [
+    {
+      "finding_id": "IR-R1-OWNER-BY-OWNER-CURRENT-MATRICES",
+      "required_change": "Index the actual current implementation source for all ten AVAILABLE owners and provide owner-by-owner, command-or-mode-aware current budget producer/fields, effect identity and observable, terminal marker/state, and effective parameter/path behavior. Keep current behavior separate from approved targets."
+    },
+    {
+      "finding_id": "IR-R1-PROPOSAL-EVIDENCE-INTEGRITY",
+      "required_change": "Replace the directory-level proposal evidence claim with ten individual LOCAL_FILE evidence entries, each carrying its own exact file SHA-256, and map every future requirement/readiness claim to the applicable proposal evidence IDs."
+    },
+    {
+      "finding_id": "RCOV-O1-GREENFIELD-COMPLETE-BUDGET",
+      "required_change": "State the approved greenfield budget as a complete progressive UnitBudget algorithm: every durable task is classified into exactly one productive or mandatory role/overhead dimension, every atomic task carries a 3,600,000ms total including retry, every next task or parallel frontier is fully reserved before launch, the workflow aggregate is the component-wise sum of all materialized task vectors, and any missing required role, untyped task, unresolved next frontier, or insufficient reservation rejects or checkpoints before effects. Do not invent a fixed whole-workflow duration."
+    }
+  ],
+  "excluded_changes": [
+    "No owner availability relabeling",
+    "No production registry value invention",
+    "No implementation, deployment, commit, push, credential access, or phase-ledger change"
+  ]
+}

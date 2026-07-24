@@ -1,0 +1,148 @@
+{
+  "verdict": "GAPS",
+  "findings": [
+    {
+      "id": "MG-O1",
+      "fingerprint": "mg-o1-approved-budget-contracts-remain-unmaterialized-and-caller-budget-admission-remains-live",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O1-FUTURE-BUDGET"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "Approval established complete fixed, formula, frontier, and child-composed budget contracts, but no invocation is protected until planning replaces caller-supplied UnitBudget admission with contract-selected derivation and pre-effect rejection; this is implementation work, not a missing authority decision.",
+      "evidence": [
+        "scripts/prevention_controller.py:45-65 accepts unit_budgets from the controller caller, and scripts/prevention_controller.py:231-256 admits that mapping without deriving it from the selected owner contract.",
+        "Tasks/prevention-system-completion/owner-authority-decisions.json records APPROVED budget decisions, and all ten files under Tasks/prevention-system-completion/owner-contract-proposals/ contain approved fixed, formula, frontier, or child-composed budget contracts with no remaining authority_decisions_required.",
+        "The frozen O1-FUTURE-BUDGET acceptance boundary requires owner-derived complete admission before effects; deployed proof is NOT_YET_APPLICABLE and therefore does not block planning."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O2",
+      "fingerprint": "mg-o2-approved-owner-reconcilers-remain-unmaterialized-and-started-always-stops-indeterminate",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O2-CURRENT-RECONCILE",
+        "O2-FUTURE-RECONCILE"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "A crash after an owner side effect can still strand the run permanently and cannot yet prove applied versus safe-to-retry; the approved per-owner identities and observables make the target feasible, but typed reconciler dispatch and crash-window verification remain implementation work.",
+      "evidence": [
+        "scripts/prevention_owner_runtime.py:160-177 maps every recovered STARTED state to INDETERMINATE and raises instead of selecting an owner reconciler.",
+        "Each of the ten APPROVED owner-contract-proposals defines effect_and_reconciliation_contract, including ALREADY_APPLIED, NOT_APPLIED, and conflict/INDETERMINATE boundaries appropriate to its owner surface.",
+        "O2-FUTURE-RECONCILE is FUTURE_SYSTEM with evidence availability NOT_YET_APPLICABLE, so absence of deployed reconciliation is the public implementation gap rather than a research blocker by itself."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O3",
+      "fingerprint": "mg-o3-approved-semantic-terminal-contracts-remain-unmaterialized-and-exit-zero-still-terminalizes",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O3-CURRENT-TERMINAL",
+        "O3-FUTURE-TERMINAL"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "An owner can still be recorded successful when it exits zero with missing, malformed, detached, blocked, or semantically failed output; all ten semantic success predicates are approved, but parsing, re-observation, and exactly-once terminal event/artifact enforcement remain implementation work.",
+      "evidence": [
+        "scripts/prevention_owner_runtime.py:199-215 checks only returncode before writing a TERMINAL artifact and never validates owner stdout or re-observes owner state.",
+        "scripts/work_memory.py:132-199 defines effect_reconciled but no owner_terminal event schema.",
+        "Each of the ten APPROVED owner-contract-proposals defines a command- or mode-specific terminal_contract and exactly-one owner_terminal requirement; O3-FUTURE-TERMINAL is FUTURE_SYSTEM, so live proof is correctly deferred to implementation acceptance."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O4",
+      "fingerprint": "mg-o4-child-only-contract-approved-but-parent-delegation-admission-is-unimplemented-and-parents-remain-frozen-nonexecutable",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O4-CURRENT-PARENT",
+        "O4-FUTURE-PARENT"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "Direct blocker-reentry can still bypass parent ownership today; planning can implement fail-closed direct/forged/stale rejection and atomic delegation consumption, but frozen availability means real admission must remain closed until one of its two allowed parents separately gains an executable contract and active matching journal state.",
+      "evidence": [
+        "Tasks/prevention-system-completion/owner-migration-manifest.json records mawf-playbook-blocker-reentry as standalone=false with only mawf-playbook-full-test and mawf-playbook-speed-test as parents; both parent rows remain CUSTODIAN_EVIDENCE_REQUIRED in owner-contracts.json.",
+        "scripts/prevention_controller.py:136-173 makes eligibility depend on recurrence, availability, old contract hash, and action class but not standalone/parent context, while scripts/prevention_controller.py:175-229 dispatches without validating a parent journal event.",
+        "owner-contract-proposals/mawf-playbook-blocker-reentry.json is APPROVED and defines the same-journal STARTED-parent checks, atomic child_delegation_recorded consumption, and rejection before budget/argv/operator; implementing that gate does not approve either frozen parent or change the 10/6/9 availability split."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O5",
+      "fingerprint": "mg-o5-approved-materialized-schemas-and-provider-boundaries-remain-unimplemented-behind-hard-coded-argv-validation",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O5-CURRENT-PARAMETERS",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "Wrong-mode fields, unresolved resource or approval keys, and root-relative paths that escape through resolution can still reach command construction; planning has approved schemas and fail-closed provider names, but must implement contract-hash selection, typed resolution, containment, non-secret receipts, and admission rejection before argv or typed-child dispatch.",
+      "evidence": [
+        "scripts/prevention_adapters.py:27-112 hard-codes BASE_ARGV, FLAG_ORDER, and PATH_PARAMETERS, scripts/prevention_adapters.py:115-123 rejects secret handles instead of resolving them, and scripts/prevention_adapters.py:132-239 validates owner conditionals then inserts raw values into argv without trusted-root or symlink containment.",
+        "scripts/work_memory.py:1157-1174 grounds one local repository-key locator and /Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/git_runtime.py:17-62 grounds the configured remote repository mapping path, while the candidate correctly states that dynamic secret/resource/approval providers have no prevention resolver today.",
+        "All ten APPROVED proposal parameter_contract/trusted_roots sections define the target field, root, provider, approval, and fail-closed admission boundaries; their runtime wiring is FUTURE_SYSTEM implementation work and production registrations remain separate operator/authority configuration."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "RS-V10-PROPOSAL-PROVENANCE",
+      "fingerprint": "future-requirements-depend-on-ten-proposals-but-ev-proposals-hashes-only-one-file-under-a-directory-locator",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-FUTURE-BUDGET",
+        "O2-FUTURE-RECONCILE",
+        "O3-FUTURE-TERMINAL",
+        "O4-FUTURE-PARENT",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "FACT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "A fresh planner cannot prove which exact revision of nine of the ten approved contracts defines the future behavior, so contract materialization could silently use a different budget, reconciler, terminal predicate, delegation rule, or schema than this research assessed.",
+      "evidence": [
+        "candidate-round-1.json evidence item EV-PROPOSALS uses the directory Tasks/prevention-system-completion/owner-contract-proposals as source_locator but declares source_sha256 40ed6643594bbf830e642f5a9b3edf21020d9fb143b5ff8ff0c641fea3f70f7b and explicitly says that value is only the local-workflow-orch-image proposal file hash.",
+        "The ten proposal files have ten distinct canonical identities (for example local-workflow-orch-image 8103185d68990d2ee2cc1d0c406e0a36d91436bbf14ca7453ea483005b47c607, greenfield-full-drive 2c2b0dc9cfa6d342d024f40405d3e145abbd4d70f0bf54738c60f275340a9762, and mawf-playbook-blocker-reentry 878d88172f4f3bcb1692203e14f9a89df4eaf49a3b02d5e1d8444ff6f9523ed); one file-byte hash cannot content-address the directory or the other nine contracts.",
+        "The planner-handoff evidence contract requires each LOCAL_FILE source_locator and source_sha256 to identify the actual local evidence; the five future requirement statuses all rely on EV-PROPOSALS."
+      ],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "RS-V10-CURRENT-OWNER-TRACE",
+      "fingerprint": "current-reconcile-and-terminal-values-aggregate-ten-owners-while-evidence-index-traces-only-three-owner-sources",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O2-CURRENT-RECONCILE",
+        "O3-CURRENT-TERMINAL"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "Planning would still have to rediscover the exact current effect identity, authoritative same-path observable, and semantic success/failure surface for seven owners, so the promised owner-specific crash and terminal tests are not one-shot implementable from the candidate package.",
+      "evidence": [
+        "O2-CURRENT-RECONCILE requires an owner-by-owner map of durable identities and same-path observables, but candidate requirement_statuses provides one aggregate available_observables string and cites only EV-RUNTIME plus EV-LOCAL-SOURCE, EV-GREENFIELD-SOURCE, and EV-REENTRY-SOURCE.",
+        "O3-CURRENT-TERMINAL requires the exact terminal schema/pass marker/artifact/state observable for every AVAILABLE owner, but its candidate value says current outputs are ignored and again cites only the runtime and those same three owner sources rather than the current implementations of claude-auth-token-refresh, discovery-promotion-lifecycle, commit-push-main, discovery-bootstrap, discovery-candidate-reconciliation, convergence-checkpoint-run, and convergence-state-review-cycle.",
+        "The candidate research_markdown:21-41 summarizes all ten surfaces, but summaries and approved future proposal source_corrections do not replace exact current producer/consumer evidence for the seven omitted owner implementations; negative satisfaction conclusions require evidence for both the required boundary and the missing current behavior."
+      ],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    }
+  ]
+}

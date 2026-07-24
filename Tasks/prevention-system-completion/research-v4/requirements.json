@@ -1,0 +1,68 @@
+[
+  {
+    "id": "D1-CURRENT-HOST",
+    "text": "Determine the current Codex hook discovery, launch, worktree, configuration, authentication, and supported-action behavior that makes project-local interception non-durable or identifies a stronger host boundary.",
+    "source": {"gap_id": "project-hook-not-durable-in-task-worktrees", "requirement_ids": ["CUR-INTERCEPTION", "CUR-RESUME", "ACC-ZERO-RAW"]},
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Name the authoritative launch boundary, exact hook input/output contract, worktree behavior, action coverage, and credential limitation without speculation.",
+    "scope_id": "three-defect-host-current",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-D1-HOST", "description": "Carry the grounded worktree-safe interception boundary, supported surfaces, fail-closed preflight, and authentication constraint into planning."}]
+  },
+  {
+    "id": "D1-FUTURE-HOST",
+    "text": "The workflow launcher must establish worktree-independent pre-action interception before a governed Codex session begins, prove the live hook before work, and fail closed when enforcement or authorized authentication is unavailable.",
+    "source": {"gap_id": "project-hook-not-durable-in-task-worktrees", "requirement_ids": ["FUT-INTERCEPTION", "FUT-RESUME", "ACC-ZERO-RAW"]},
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "An ordinary repository and a Git worktree both prove interception before mutation; unavailable hook support or authentication produces a visible pre-launch rejection.",
+    "scope_id": "three-defect-host-future",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-D1-HOST-ACCEPTANCE", "description": "Plan ordinary-repository, worktree, unsupported-action, hook-challenge, resume, and authentication-boundary verification."}]
+  },
+  {
+    "id": "D2-CURRENT-ELIGIBILITY",
+    "text": "Determine whether the current OwnerSpec, registry, prevention event contract, controller, and metrics persist an authoritative pre-dispatch recurring-action eligibility fact and identify the exact absent producer/consumer fields.",
+    "source": {"gap_id": "registered-use-denominator-has-no-authoritative-event", "requirement_ids": ["CUR-METRICS", "ACC-REGISTERED-95"]},
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Prove the present denominator inputs or their absence across registry production, controller persistence, and metric aggregation.",
+    "scope_id": "three-defect-eligibility-current",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-D2-ELIGIBILITY", "description": "Carry the exact authoritative recurrence metadata, eligibility event, producer timing, immutable inputs, and denominator consumer into planning."}]
+  },
+  {
+    "id": "D2-FUTURE-ELIGIBILITY",
+    "text": "Every governed intent must persist a controller-derived recurring-action eligibility decision from a frozen registry revision before dispatch so the registered-use denominator is reproducible and cannot be reclassified after outcome.",
+    "source": {"gap_id": "registered-use-denominator-has-no-authoritative-event", "requirement_ids": ["FUT-METRICS", "ACC-REGISTERED-95"]},
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "The metric query derives numerator and denominator only from durable events and a content-addressed registry snapshot, including explicit ineligible reason codes.",
+    "scope_id": "three-defect-eligibility-future",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-D2-ELIGIBILITY-ACCEPTANCE", "description": "Plan tamper, outcome-reclassification, missing-registry, ineligible-intent, and 95-percent threshold tests."}]
+  },
+  {
+    "id": "D3-CURRENT-OWNER-CONTRACTS",
+    "text": "Inventory all 25 owner rows and determine, from authoritative source implementations, which concrete parameter schema, canonical argv or typed call, action class, full-unit budget, durable effect identity, reconciliation rule, terminal schema, recurrence eligibility, and availability facts are materialized versus only named or described in prose.",
+    "source": {"gap_id": "owner-contract-ids-have-no-materialized-constants", "requirement_ids": ["CUR-ENTRYPOINT", "CUR-TYPED", "CUR-RESUME"]},
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Return an exact 25-row coverage map whose positive facts cite authoritative implementation evidence and whose unavailable facts fail closed rather than being invented.",
+    "scope_id": "three-defect-owner-contracts-current",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-D3-OWNER-CONTRACTS", "description": "Carry a finite materialized 25-owner contract input, evidence provenance, and explicit unavailable-owner state into planning."}]
+  },
+  {
+    "id": "D3-FUTURE-OWNER-CONTRACTS",
+    "text": "Each of the 25 registered owner IDs must resolve to a content-addressed executable typed contract or an explicit fail-closed unavailable state; runtime code must not infer executable behavior from prose or identifier names.",
+    "source": {"gap_id": "owner-contract-ids-have-no-materialized-constants", "requirement_ids": ["FUT-ENTRYPOINT", "FUT-TYPED", "FUT-RESUME"]},
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Registry initialization validates every materialized contract and source hash; dispatch/reconcile/terminal behavior is deterministic; missing evidence prevents owner registration.",
+    "scope_id": "three-defect-owner-contracts-future",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-D3-OWNER-CONTRACTS-ACCEPTANCE", "description": "Plan schema validation, all-25 coverage, source-hash drift, no-prose-inference, unavailable-owner, dispatch, crash/reconcile, and terminal tests."}]
+  }
+]

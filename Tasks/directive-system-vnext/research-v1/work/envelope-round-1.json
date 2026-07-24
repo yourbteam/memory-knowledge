@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "scope_hash": "2918a67cb8947a970beaa6b02f6245236ea4666c837956b9deffecd05b032ce1",
+  "charter_path": "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v1/charter.json",
+  "charter_canonical_json_sha256": "e2bc609ade60584a0f6837b9327ecbf2c2fca388831a02e06b5cfc69138a9a6d",
+  "requirements_path": "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v1/requirements.json",
+  "requirements_canonical_json_sha256": "38535514f7f447d531f40f54220ddf59861c79037f4709237f5a43d57e881e75",
+  "hash_contract": "sha256-canonical-json-utf8-no-trailing-newline-v1",
+  "authoritative_roots": [
+    "/Users/kamenkamenov/memory-knowledge",
+    "/Users/kamenkamenov/.codex/skills",
+    "/Users/kamenkamenov/mcp-agents-workflow"
+  ],
+  "required_current_evidence": [
+    "/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md",
+    "/Users/kamenkamenov/memory-knowledge/working-agreement/generate_projections.py",
+    "/Users/kamenkamenov/memory-knowledge/working-agreement/inject-directives.sh",
+    "/Users/kamenkamenov/memory-knowledge/working-agreement/sync_corpus.py",
+    "/Users/kamenkamenov/memory-knowledge/working-agreement/install_skills.py",
+    "/Users/kamenkamenov/memory-knowledge/AGENTS.md",
+    "/Users/kamenkamenov/memory-knowledge/skills/working-agreement/SKILL.md",
+    "/Users/kamenkamenov/memory-knowledge/skills/task-intake/SKILL.md",
+    "/Users/kamenkamenov/memory-knowledge/skills/sequence-runner/SKILL.md",
+    "/Users/kamenkamenov/memory-knowledge/skills/blocker-catalog/SKILL.md",
+    "/Users/kamenkamenov/memory-knowledge/skills/reproduce-first-verify/SKILL.md",
+    "/Users/kamenkamenov/memory-knowledge/scripts/work_memory.py",
+    "/Users/kamenkamenov/memory-knowledge/scripts/sequence_guard.py",
+    "/Users/kamenkamenov/memory-knowledge/scripts/blocker_catalog.py",
+    "/Users/kamenkamenov/memory-knowledge/tests/test_generate_projections.py",
+    "/Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py",
+    "/Users/kamenkamenov/memory-knowledge/operations/work-memory/events.jsonl"
+  ],
+  "allowed_operations": [
+    "read files under authoritative roots",
+    "run rg, sed, git status, git log, git show, git diff, shasum, and research_package.py hash-json as read-only evidence checks",
+    "return one assessment-only JSON candidate or terminal envelope without editing files or task state"
+  ],
+  "forbidden_context": [
+    "conversation history beyond the frozen supplied_input",
+    "producer rationale or expected replacement wording",
+    "other research-agent outputs",
+    "implementation plans or code edits",
+    "gold fixtures or hidden expected answers",
+    "claims that the directives alone caused the incident without testing agent non-compliance"
+  ],
+  "verification_command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py hash-json <json-file>"
+}

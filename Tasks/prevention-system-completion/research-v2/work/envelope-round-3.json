@@ -1,0 +1,21 @@
+{
+  "schema_version": 1,
+  "scope_hash": "d176322c52c46358431c3a0cd76a97363f70e1dc069323ca8c3ff72df4a0f7e6",
+  "charter": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v2/charter.json",
+    "sha256": "026f3a90f7a25aec1ad6deaf62d5331c27507a51dbdf68b4a0fef762cebfce93"
+  },
+  "requirements": {
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research/requirements.json",
+    "sha256": "e3a5ed1ec378a9abe2c6702046ee4e916d39e7c6771dcce7fc44784735ef8cf1"
+  },
+  "authoritative_roots": [
+    "/Users/kamenkamenov/memory-knowledge",
+    "/Users/kamenkamenov/mcp-agents-workflow",
+    "/Users/kamenkamenov/.codex/skills",
+    "https://learn.chatgpt.com/docs/hooks#pretooluse"
+  ],
+  "hash_contract": "sha256-canonical-json-utf8-no-trailing-newline-v1",
+  "verification_command": "python3 skills/research-playbook/scripts/research_package.py hash-json <json-file>",
+  "round": 3
+}

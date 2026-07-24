@@ -1,254 +1,39 @@
 {
-  "schema_version": 1,
-  "proposal_status": "APPROVED",
-  "owner_sequence_id": "commit-push-main",
-  "availability_policy": "AVAILABLE",
-  "standalone": true,
   "authority": "Kamen",
-  "contract_approval_is_not_execution_authorization": true,
   "authority_approvals": {
     "budget_and_roots": {
-      "status": "APPROVED",
-      "decision_id": "commit-push-main-budget-roots-authorization-v1"
-    },
-    "runtime_and_terminal": {
-      "status": "APPROVED",
-      "decision_id": "commit-push-main-runtime-terminal-v1"
-    },
-    "semantic_intake": {
-      "status": "APPROVED",
-      "decision_id": "commit-push-main-semantic-intake-v1"
+      "decision_id": "commit-push-main-budget-roots-authorization-v1",
+      "status": "APPROVED"
     },
     "git_auth_boundary": {
-      "status": "APPROVED",
-      "decision_id": "commit-push-main-git-auth-boundary-20260723"
+      "decision_id": "commit-push-main-git-auth-boundary-20260723",
+      "status": "APPROVED"
+    },
+    "implementation_claude_parity_20260724": {
+      "decision_id": "commit-push-main-uncommitted-publish-fix-adoption-20260724",
+      "status": "APPROVED"
+    },
+    "runtime_and_terminal": {
+      "decision_id": "commit-push-main-runtime-terminal-v1",
+      "status": "APPROVED"
+    },
+    "semantic_intake": {
+      "decision_id": "commit-push-main-semantic-intake-v1",
+      "status": "APPROVED"
+    },
+    "sequence_intake_adapter_claude_parity_20260724": {
+      "decision_id": "commit-push-main-claude-parity-source-correction-20260724",
+      "status": "APPROVED"
     }
   },
-  "source": {
-    "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
-    "implementation_sha256": "27912869dd33e97847aab13f26e00957888ec58f96832a263987d419bd4b3f45",
-    "implementation_approved_post_correction_sha256": "e70dafd1bf200ae7d0abfa0c8a2fa9a3f84c248464a6e683a40b58720f61d2a8",
-    "implementation_source_correction_decision_id": "commit-push-main-semantic-intake-v1",
-    "intake_path": "/Users/kamenkamenov/memory-knowledge/scripts/script_intake.py",
-    "intake_sha256": "9955319d6c29bdf64025896e2bc9f4e1740866a88c3f0bfd1e0a3a042882b5cc",
-    "intake_approved_post_correction_sha256": "d98f2cb8a37faf773e40cc2b9d5904cc610841f520a63c21df8e1ebf2f667f1e",
-    "intake_source_correction_decision_id": "commit-push-main-semantic-intake-v1",
-    "sequence_intake_adapter_path": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_intake_adapters.py",
-    "sequence_intake_adapter_sha256": "fff0e930bc88b833aace9b02119282b10b5026da2268cb58f31a3b361a176091",
-    "sequence_intake_adapter_approved_post_correction_sha256": "eb0c23a5d67e62fb7ebf38c15860e8a486454cef99de13799e8f3a36d47556b6",
-    "sequence_intake_adapter_source_correction_decision_id": "commit-push-main-semantic-intake-v1",
-    "source_receipt_helper_path": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_source_receipt.py",
-    "source_receipt_helper_sha256": "e569ee5da7043681d9f432410417a620d4ebadc776cf5f6ed7992ac1aa81e2a8",
-    "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/commit-push-main/sequence.md",
-    "sequence_sha256": "08706c31a48e96f58e2119fdbc16d9a79c72f22fa84f830d708cf7dca4e319dd",
-    "sequence_approved_post_correction_sha256": "daa618bf35ba1e74ecebc08df7934a45e5d10a7be1c3ad7d4df434ce0990a69f",
-    "sequence_source_correction_decision_id": "commit-push-main-git-auth-boundary-20260723",
-    "dependencies_sha256": "90f1b468d1fecf61fa0fa4ba0c739102939518d6977763e5bcc51544698ffb63"
-  },
-  "unit_budget": {
-    "schema_version": 1,
-    "owner_sequence_id": "commit-push-main",
-    "atomic_task_cap_milliseconds": 3600000,
-    "mandatory_role_milliseconds": {
-      "CORE": 3600000,
-      "INTERNAL_READINESS": 3600000,
-      "REQUIREMENTS_COVERAGE": 3600000,
-      "REQUIREMENTS_SATISFACTION": 3600000
-    },
-    "adjudication_milliseconds": 3600000,
-    "materialization_milliseconds": 3600000,
-    "terminal_milliseconds": 3600000,
-    "retry_rule": "Retries remain inside the originating atomic task cap.",
-    "mode_profiles": {
-      "dry-run": {
-        "productive_task_count": 1,
-        "duration_milliseconds": 28800000
-      },
-      "publish": {
-        "productive_task_count": 4,
-        "duration_milliseconds": 39600000,
-        "productive_tasks": [
-          "preflight-and-prepare",
-          "stage-and-commit",
-          "push",
-          "remote-semantic-verification"
-        ]
-      },
-      "resume-push": {
-        "productive_task_count": 3,
-        "duration_milliseconds": 36000000,
-        "productive_tasks": [
-          "resume-preflight",
-          "push",
-          "remote-semantic-verification"
-        ]
-      },
-      "integrate-remote-and-resume": {
-        "productive_task_count": 6,
-        "duration_milliseconds": 46800000
-      },
-      "isolated-integrate-and-resume": {
-        "productive_task_count": 6,
-        "duration_milliseconds": 46800000
-      },
-      "isolated-reconcile-and-resume": {
-        "productive_task_count": 7,
-        "duration_milliseconds": 50400000,
-        "productive_tasks": [
-          "source-and-authorization-preflight",
-          "fetch-and-snapshot-remote",
-          "create-isolated-clone",
-          "bounded-content-and-ledger-reconciliation",
-          "stage-and-commit",
-          "push",
-          "remote-and-source-semantic-verification"
-        ]
-      }
-    },
-    "reservation_mode": "OWNER_DERIVED_PROGRESSIVE",
-    "reservation_rule": "The owner derives the mode profile and reserves every next productive task before launch. It may pause only at a journaled boundary; callers cannot supply or reduce budgets."
-  },
-  "trusted_roots": {
-    "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
-    "runtime-temp": "/private/tmp",
-    "repository-registry": "The configured repository registry resolving repository keys to canonical worktree roots, Git object format, and approved remote keys",
-    "publication-authorization-store": "The durable approval store containing exact, unconsumed publication authorization receipts"
-  },
-  "parameter_contract": {
-    "mode": {
-      "type": "ENUM",
-      "values": [
-        "dry-run",
-        "publish",
-        "resume-push",
-        "integrate-remote-and-resume",
-        "isolated-integrate-and-resume",
-        "isolated-reconcile-and-resume"
-      ],
-      "required": true
-    },
-    "repository_key": {
-      "type": "ENUM_FROM_REGISTRY",
-      "registry": "repository-registry",
-      "required": true
-    },
-    "branch": {
-      "type": "GIT_BRANCH_NAME",
-      "required": true
-    },
-    "remote_key": {
-      "type": "ENUM_FROM_REPOSITORY",
-      "repository_from": "repository_key",
-      "required": true
-    },
-    "manifest": {
-      "type": "NONEMPTY_SET",
-      "item_type": "REPOSITORY_RELATIVE_FILE_PATH",
-      "trusted_root_from": "repository_key",
-      "required_unless": "resume-push"
-    },
-    "manifest_file": {
-      "type": "PATH",
-      "trusted_roots": [
-        "memory-knowledge",
-        "runtime-temp"
-      ],
-      "mode": "READ_REGULAR_FILE",
-      "materializes": "manifest",
-      "required": false
-    },
-    "overlay_manifest": {
-      "type": "SET",
-      "item_type": "REPOSITORY_RELATIVE_FILE_PATH",
-      "trusted_root_from": "repository_key",
-      "subset_of": "manifest",
-      "required_for": [
-        "isolated-integrate-and-resume",
-        "isolated-reconcile-and-resume"
-      ]
-    },
-    "overlay_manifest_file": {
-      "type": "PATH",
-      "trusted_roots": [
-        "memory-knowledge",
-        "runtime-temp"
-      ],
-      "mode": "READ_REGULAR_FILE",
-      "materializes": "overlay_manifest",
-      "required": false
-    },
-    "message": {
-      "type": "STRING",
-      "minimum_length": 1,
-      "maximum_length": 4000,
-      "forbid_ai_attribution_trailers": true,
-      "required_for": [
-        "publish",
-        "isolated-integrate-and-resume",
-        "isolated-reconcile-and-resume"
-      ]
-    },
-    "resume_commit": {
-      "type": "FULL_GIT_OBJECT_ID",
-      "object_format_from": "repository_key",
-      "required_for": [
-        "resume-push",
-        "integrate-remote-and-resume",
-        "isolated-integrate-and-resume",
-        "isolated-reconcile-and-resume"
-      ]
-    },
-    "ledger_path": {
-      "type": "REPOSITORY_RELATIVE_FILE_PATH",
-      "fixed": "operations/work-memory/events.jsonl",
-      "required_when": "isolated-reconcile-and-resume includes the work-memory ledger"
-    },
-    "generated_view_path": {
-      "type": "REPOSITORY_RELATIVE_FILE_PATH",
-      "fixed": "operations/blockers/BLOCKERS.md",
-      "required_with": "ledger_path"
-    },
-    "authorization_receipt_id": {
-      "type": "UUID",
-      "provider": "publication-authorization-store",
-      "required_unless": "dry-run"
-    },
-    "validation_boundary": "Resolve the repository and remote from trusted registries; materialize manifests; reject absolute paths, symlinks, traversal, directories, duplicates, paths outside the repository, mode-inapplicable fields, invalid Git refs/object ids, or authorization mismatches before budget reservation or effect preparation. No caller-supplied repository root or remote URL is accepted. A no-argument operator launch asks only semantic, format-guided questions; the registered adapter alone derives manifest files and argv, and every mutating profile requires a separate post-review authorization confirmation."
-  },
-  "publication_authorization_contract": {
-    "receipt_fields": [
-      "authorization_receipt_id",
-      "repository_key",
-      "canonical_repository_identity",
-      "mode",
-      "branch",
-      "remote_key",
-      "resolved_remote_url_sha256",
-      "manifest_sha256",
-      "overlay_manifest_sha256",
-      "message_sha256",
-      "expected_source_head",
-      "approved_at_utc",
-      "approved_by"
-    ],
-    "admission": "The exact durable receipt must exist, be unconsumed, and match every applicable normalized field. Contract approval, plan approval, or approval for another repository/scope is not publication authorization.",
-    "consumption": "Bind and consume the authorization receipt atomically with owner effect preparation. An identical replay by the same effect id is allowed; every other reuse is rejected."
-  },
+  "authority_decisions_required": [],
+  "availability_policy": "AVAILABLE",
+  "contract_approval_is_not_execution_authorization": true,
   "effect_and_reconciliation_contract": {
     "dry-run": {
       "effect_class": "OBSERVATION",
       "effect_identity": "repository identity plus branch plus remote-url hash plus source HEAD plus manifest and worktree-content hashes",
       "reconciliation": "Replay the exact preflight; return a typed eligibility report and perform no staging, commit, fetch, rebase, or push."
-    },
-    "publish": {
-      "effect_identity": "authorization receipt id plus repository identity plus initial HEAD plus branch plus remote-url hash plus manifest/content hash plus approved message hash",
-      "prepare": "Persist all identity fields, source/index/worktree snapshots, deterministic effect trailer, and authorization consumption before git add.",
-      "local_reconciliation": "If HEAD is the prepared initial HEAD and the index is empty, the local mutation is NOT_APPLIED. If HEAD is one direct child carrying the exact Prevention-Effect-ID trailer, approved message, parent, author/committer policy, and manifest-only tree delta, it is ALREADY_APPLIED_LOCAL. Any other HEAD/index/scope state is INDETERMINATE.",
-      "remote_reconciliation": "Resolve the remote branch head. Exact equality to the identified local effect commit is ALREADY_APPLIED_REMOTE; the prepared prior remote head with local effect commit retained is NOT_APPLIED_REMOTE; remote advance, missing effect commit, or conflicting effect marker is INDETERMINATE."
-    },
-    "resume-push": {
-      "effect_identity": "authorization receipt id plus repository identity plus exact effect-marked HEAD commit plus branch and remote-url hash",
-      "reconciliation": "Require the exact prepared effect commit at HEAD, empty index, and unchanged authorized identities; reconcile the remote branch exactly as publish without creating another commit."
     },
     "integrate-remote-and-resume": {
       "effect_identity": "authorization receipt id plus original effect commit plus fetched remote head plus merge base plus manifest hash",
@@ -265,8 +50,163 @@
       "prepare": "Persist source and remote snapshots, approved semantic paths, canonical ledger identities, and deterministic isolated commit metadata before reconciliation.",
       "reconciliation": "Require the exact effect-marked remote commit, authorized tree delta, canonical ledger union, regenerated blocker view, and byte-identical source snapshot for ALREADY_APPLIED. Unchanged remote/source with no effect commit is NOT_APPLIED; any semantic, remote, or source disagreement is INDETERMINATE."
     },
+    "publish": {
+      "effect_identity": "authorization receipt id plus repository identity plus initial HEAD plus branch plus remote-url hash plus manifest/content hash plus approved message hash",
+      "local_reconciliation": "If HEAD is the prepared initial HEAD and the index is empty, the local mutation is NOT_APPLIED. If HEAD is one direct child carrying the exact Prevention-Effect-ID trailer, approved message, parent, author/committer policy, and manifest-only tree delta, it is ALREADY_APPLIED_LOCAL. Any other HEAD/index/scope state is INDETERMINATE.",
+      "prepare": "Persist all identity fields, source/index/worktree snapshots, deterministic effect trailer, and authorization consumption before git add.",
+      "remote_reconciliation": "Resolve the remote branch head. Exact equality to the identified local effect commit is ALREADY_APPLIED_REMOTE; the prepared prior remote head with local effect commit retained is NOT_APPLIED_REMOTE; remote advance, missing effect commit, or conflicting effect marker is INDETERMINATE."
+    },
+    "resume-push": {
+      "effect_identity": "authorization receipt id plus repository identity plus exact effect-marked HEAD commit plus branch and remote-url hash",
+      "reconciliation": "Require the exact prepared effect commit at HEAD, empty index, and unchanged authorized identities; reconcile the remote branch exactly as publish without creating another commit."
+    },
     "resume_rule": "Continue only the first NOT_APPLIED stage. Never create a second effect-marked commit or push after ALREADY_APPLIED_REMOTE; every INDETERMINATE state stops without force push, reset, stash, or destructive cleanup."
   },
+  "owner_sequence_id": "commit-push-main",
+  "parameter_contract": {
+    "authorization_receipt_id": {
+      "provider": "publication-authorization-store",
+      "required_unless": "dry-run",
+      "type": "UUID"
+    },
+    "branch": {
+      "required": true,
+      "type": "GIT_BRANCH_NAME"
+    },
+    "generated_view_path": {
+      "fixed": "operations/blockers/BLOCKERS.md",
+      "required_with": "ledger_path",
+      "type": "REPOSITORY_RELATIVE_FILE_PATH"
+    },
+    "ledger_path": {
+      "fixed": "operations/work-memory/events.jsonl",
+      "required_when": "isolated-reconcile-and-resume includes the work-memory ledger",
+      "type": "REPOSITORY_RELATIVE_FILE_PATH"
+    },
+    "manifest": {
+      "item_type": "REPOSITORY_RELATIVE_FILE_PATH",
+      "required_unless": "resume-push",
+      "trusted_root_from": "repository_key",
+      "type": "NONEMPTY_SET"
+    },
+    "manifest_file": {
+      "materializes": "manifest",
+      "mode": "READ_REGULAR_FILE",
+      "required": false,
+      "trusted_roots": [
+        "memory-knowledge",
+        "runtime-temp"
+      ],
+      "type": "PATH"
+    },
+    "message": {
+      "forbid_ai_attribution_trailers": true,
+      "maximum_length": 4000,
+      "minimum_length": 1,
+      "required_for": [
+        "publish",
+        "isolated-integrate-and-resume",
+        "isolated-reconcile-and-resume"
+      ],
+      "type": "STRING"
+    },
+    "mode": {
+      "required": true,
+      "type": "ENUM",
+      "values": [
+        "dry-run",
+        "publish",
+        "resume-push",
+        "integrate-remote-and-resume",
+        "isolated-integrate-and-resume",
+        "isolated-reconcile-and-resume"
+      ]
+    },
+    "overlay_manifest": {
+      "item_type": "REPOSITORY_RELATIVE_FILE_PATH",
+      "required_for": [
+        "isolated-integrate-and-resume",
+        "isolated-reconcile-and-resume"
+      ],
+      "subset_of": "manifest",
+      "trusted_root_from": "repository_key",
+      "type": "SET"
+    },
+    "overlay_manifest_file": {
+      "materializes": "overlay_manifest",
+      "mode": "READ_REGULAR_FILE",
+      "required": false,
+      "trusted_roots": [
+        "memory-knowledge",
+        "runtime-temp"
+      ],
+      "type": "PATH"
+    },
+    "remote_key": {
+      "repository_from": "repository_key",
+      "required": true,
+      "type": "ENUM_FROM_REPOSITORY"
+    },
+    "repository_key": {
+      "registry": "repository-registry",
+      "required": true,
+      "type": "ENUM_FROM_REGISTRY"
+    },
+    "resume_commit": {
+      "object_format_from": "repository_key",
+      "required_for": [
+        "resume-push",
+        "integrate-remote-and-resume",
+        "isolated-integrate-and-resume",
+        "isolated-reconcile-and-resume"
+      ],
+      "type": "FULL_GIT_OBJECT_ID"
+    },
+    "validation_boundary": "Resolve the repository and remote from trusted registries; materialize manifests; reject absolute paths, symlinks, traversal, directories, duplicates, paths outside the repository, mode-inapplicable fields, invalid Git refs/object ids, or authorization mismatches before budget reservation or effect preparation. No caller-supplied repository root or remote URL is accepted. A no-argument operator launch asks only semantic, format-guided questions; the registered adapter alone derives manifest files and argv, and every mutating profile requires a separate post-review authorization confirmation."
+  },
+  "proposal_status": "APPROVED",
+  "publication_authorization_contract": {
+    "admission": "The exact durable receipt must exist, be unconsumed, and match every applicable normalized field. Contract approval, plan approval, or approval for another repository/scope is not publication authorization.",
+    "consumption": "Bind and consume the authorization receipt atomically with owner effect preparation. An identical replay by the same effect id is allowed; every other reuse is rejected.",
+    "receipt_fields": [
+      "authorization_receipt_id",
+      "repository_key",
+      "canonical_repository_identity",
+      "mode",
+      "branch",
+      "remote_key",
+      "resolved_remote_url_sha256",
+      "manifest_sha256",
+      "overlay_manifest_sha256",
+      "message_sha256",
+      "expected_source_head",
+      "approved_at_utc",
+      "approved_by"
+    ]
+  },
+  "schema_version": 1,
+  "source": {
+    "dependencies_sha256": "90f1b468d1fecf61fa0fa4ba0c739102939518d6977763e5bcc51544698ffb63",
+    "implementation_approved_post_correction_sha256": "3a3be60bd395fde15cd2c9919fd93df53568e3fbe622f3d18944137373655478",
+    "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
+    "implementation_sha256": "27912869dd33e97847aab13f26e00957888ec58f96832a263987d419bd4b3f45",
+    "implementation_source_correction_decision_id": "commit-push-main-uncommitted-publish-fix-adoption-20260724",
+    "intake_approved_post_correction_sha256": "d98f2cb8a37faf773e40cc2b9d5904cc610841f520a63c21df8e1ebf2f667f1e",
+    "intake_path": "/Users/kamenkamenov/memory-knowledge/scripts/script_intake.py",
+    "intake_sha256": "9955319d6c29bdf64025896e2bc9f4e1740866a88c3f0bfd1e0a3a042882b5cc",
+    "intake_source_correction_decision_id": "commit-push-main-semantic-intake-v1",
+    "sequence_approved_post_correction_sha256": "daa618bf35ba1e74ecebc08df7934a45e5d10a7be1c3ad7d4df434ce0990a69f",
+    "sequence_intake_adapter_approved_post_correction_sha256": "99a2fc4fdacabcbd390a2474df4fe98bd47b102e8bd2058adcbf7f0dd3b34676",
+    "sequence_intake_adapter_path": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_intake_adapters.py",
+    "sequence_intake_adapter_sha256": "fff0e930bc88b833aace9b02119282b10b5026da2268cb58f31a3b361a176091",
+    "sequence_intake_adapter_source_correction_decision_id": "commit-push-main-claude-parity-source-correction-20260724",
+    "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/commit-push-main/sequence.md",
+    "sequence_sha256": "08706c31a48e96f58e2119fdbc16d9a79c72f22fa84f830d708cf7dca4e319dd",
+    "sequence_source_correction_decision_id": "commit-push-main-git-auth-boundary-20260723",
+    "source_receipt_helper_path": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_source_receipt.py",
+    "source_receipt_helper_sha256": "e569ee5da7043681d9f432410417a620d4ebadc776cf5f6ed7992ac1aa81e2a8"
+  },
+  "standalone": true,
   "terminal_contract": {
     "common": [
       "The process return code is zero.",
@@ -276,11 +216,11 @@
     ],
     "mode_specific": {
       "dry-run": "Repository identity, branch, remote, source HEAD, empty index, manifest paths, and worktree change hashes match the report; no Git mutation occurred.",
-      "publish": "The exact effect-marked local commit has the approved parent, message, metadata policy, and manifest-only delta; local HEAD and remote branch head equal that commit; the index is empty; unrelated paths retain their prepared state.",
-      "resume-push": "The authorized effect commit remains local HEAD and equals remote branch head; no new local commit was created.",
       "integrate-remote-and-resume": "The integrated effect-marked commit descends from the prepared remote head, preserves the authorized manifest-only delta, equals local and remote heads, and leaves no rebase/index state.",
       "isolated-integrate-and-resume": "The effect-marked isolated commit equals remote head, contains only the authorized manifest/overlay delta, and the source repository snapshot is byte-identical to preparation.",
-      "isolated-reconcile-and-resume": "The effect-marked reconciled commit equals remote head, contains only the authorized scope, satisfies the approved three-way/overlay/ledger rules, regenerates the blocker view canonically, and leaves the source snapshot unchanged."
+      "isolated-reconcile-and-resume": "The effect-marked reconciled commit equals remote head, contains only the authorized scope, satisfies the approved three-way/overlay/ledger rules, regenerates the blocker view canonically, and leaves the source snapshot unchanged.",
+      "publish": "The exact effect-marked local commit has the approved parent, message, metadata policy, and manifest-only delta; local HEAD and remote branch head equal that commit; the index is empty; unrelated paths retain their prepared state.",
+      "resume-push": "The authorized effect commit remains local HEAD and equals remote branch head; no new local commit was created."
     },
     "source_corrections": [
       "Replace free repository paths and remote names with trusted repository/remote registry keys and materialized manifest sets.",
@@ -290,5 +230,73 @@
       "Route no-argument operator use through shared semantic intake; reject operator-authored argv, derive manifests and flags in the registered adapter, show the prepared operation before dispatch, and require a separate confirmation for every mutating profile."
     ]
   },
-  "authority_decisions_required": []
+  "trusted_roots": {
+    "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
+    "publication-authorization-store": "The durable approval store containing exact, unconsumed publication authorization receipts",
+    "repository-registry": "The configured repository registry resolving repository keys to canonical worktree roots, Git object format, and approved remote keys",
+    "runtime-temp": "/private/tmp"
+  },
+  "unit_budget": {
+    "adjudication_milliseconds": 3600000,
+    "atomic_task_cap_milliseconds": 3600000,
+    "mandatory_role_milliseconds": {
+      "CORE": 3600000,
+      "INTERNAL_READINESS": 3600000,
+      "REQUIREMENTS_COVERAGE": 3600000,
+      "REQUIREMENTS_SATISFACTION": 3600000
+    },
+    "materialization_milliseconds": 3600000,
+    "mode_profiles": {
+      "dry-run": {
+        "duration_milliseconds": 28800000,
+        "productive_task_count": 1
+      },
+      "integrate-remote-and-resume": {
+        "duration_milliseconds": 46800000,
+        "productive_task_count": 6
+      },
+      "isolated-integrate-and-resume": {
+        "duration_milliseconds": 46800000,
+        "productive_task_count": 6
+      },
+      "isolated-reconcile-and-resume": {
+        "duration_milliseconds": 50400000,
+        "productive_task_count": 7,
+        "productive_tasks": [
+          "source-and-authorization-preflight",
+          "fetch-and-snapshot-remote",
+          "create-isolated-clone",
+          "bounded-content-and-ledger-reconciliation",
+          "stage-and-commit",
+          "push",
+          "remote-and-source-semantic-verification"
+        ]
+      },
+      "publish": {
+        "duration_milliseconds": 39600000,
+        "productive_task_count": 4,
+        "productive_tasks": [
+          "preflight-and-prepare",
+          "stage-and-commit",
+          "push",
+          "remote-semantic-verification"
+        ]
+      },
+      "resume-push": {
+        "duration_milliseconds": 36000000,
+        "productive_task_count": 3,
+        "productive_tasks": [
+          "resume-preflight",
+          "push",
+          "remote-semantic-verification"
+        ]
+      }
+    },
+    "owner_sequence_id": "commit-push-main",
+    "reservation_mode": "OWNER_DERIVED_PROGRESSIVE",
+    "reservation_rule": "The owner derives the mode profile and reserves every next productive task before launch. It may pause only at a journaled boundary; callers cannot supply or reduce budgets.",
+    "retry_rule": "Retries remain inside the originating atomic task cap.",
+    "schema_version": 1,
+    "terminal_milliseconds": 3600000
+  }
 }

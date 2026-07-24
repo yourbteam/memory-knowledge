@@ -1,0 +1,60 @@
+{
+  "max": 3,
+  "slots": [
+    {
+      "acquired_at": 1784451295,
+      "agent_id": "/root/directive_vnext_core_r1",
+      "bound_at": 1784451317,
+      "closed_at": 1784452167,
+      "completed_at": 1784452153,
+      "evidence": {
+        "close": "collaboration runtime reported FINAL_ANSWER and completed"
+      },
+      "id": "s1",
+      "label": "round1-core-researcher",
+      "released_at": 1784452168,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784452327,
+      "agent_id": "/root/directive_vnext_readiness_r1",
+      "bound_at": 1784452386,
+      "closed_at": 1784452974,
+      "completed_at": 1784452974,
+      "evidence": {
+        "close": "Tasks/directive-system-vnext/research-v1/work/readiness-close-evidence.json"
+      },
+      "id": "s2",
+      "label": "round1-internal-readiness",
+      "released_at": 1784452975,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784452327,
+      "agent_id": "/root/directive_vnext_coverage_r1",
+      "bound_at": 1784452386,
+      "closed_at": 1784452975,
+      "completed_at": 1784452975,
+      "evidence": {
+        "close": "Tasks/directive-system-vnext/research-v1/work/coverage-close-evidence.json"
+      },
+      "id": "s3",
+      "label": "round1-requirements-coverage",
+      "released_at": 1784452975,
+      "state": "released"
+    },
+    {
+      "abandoned_at": 1784452502,
+      "acquired_at": 1784452327,
+      "agent_id": null,
+      "evidence": {
+        "abandon_reason": "agent-thread-limit-prevented-spawn"
+      },
+      "id": "s4",
+      "label": "round1-requirements-satisfaction",
+      "released_at": 1784452502,
+      "state": "released"
+    }
+  ],
+  "version": 2
+}

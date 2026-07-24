@@ -1,0 +1,128 @@
+[
+  {
+    "accessed_at": null,
+    "id": "E1",
+    "limitations": "The file is the ordinary plan-playbook contract; behavior supplied only by separately invoked skills is not contained here.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/plan-playbook/SKILL.md",
+    "source_sha256": "80c43a49dfe3b2b0a958db48275928dfb6ff1ce64ca43f9324cddd78b93aaed3",
+    "supported_claim": "Lines 3, 10-18, and 20-42 define plan-mode boundaries, the sufficient-understanding assertion, optional research return, hardening selection, the abstract substantial-plan approval request, and the P1/P2 one-shot aims. The file contains no state schema, required plan artifact, evidence-sufficiency test, retry budget, role lifecycle, or terminal envelope."
+  },
+  {
+    "accessed_at": null,
+    "id": "E2",
+    "limitations": "The directives can override ambiguous playbook prose but do not themselves provide the missing plan artifact or orchestration contract.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md",
+    "source_sha256": "ba43669860bb143c917f0e6468209e97de253d122cc7baada09846c2ea65edd9",
+    "supported_claim": "Lines 10-20 define Research, Plan, Write code, and Review routing. G2 requires concrete old-versus-new consequences and cost before a decision. G5 controls clarification. G11 requires granular approval and states that explicit playbook-convergence-loop invocation authorizes bounded approved-plan edits while preserving stop boundaries."
+  },
+  {
+    "accessed_at": null,
+    "id": "E3",
+    "limitations": "This is an explicit upstream integration boundary, not part of ordinary plan-playbook; plan-playbook does not require this package as its entry artifact.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/research-playbook/SKILL.md",
+    "source_sha256": "37c5d4565f88fc88077fa2dee343899f03dcd33dfa6fcbaa47a484a984a73775",
+    "supported_claim": "Lines 10-25 and 40-52 define a bounded research runtime, frozen charter, structured candidate, validated package, READY planner obligations, budgets, hashes, and PASS/GAPS/BLOCKED/CAP_REACHED results."
+  },
+  {
+    "accessed_at": null,
+    "id": "E4",
+    "limitations": "This contract applies when verify-plan is actually invoked; plan-playbook does not make its ledger and terminal output the universal plan result.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/verify-plan/SKILL.md",
+    "source_sha256": "f1ce0afde3fa74ef46dc6625a470ef110f38219e3429804714bc30891e625c2e",
+    "supported_claim": "Lines 16-20, 37-62, 82-246, and 278-342 define an implementation-surface map, verification ledger, verifier and critic roles, coverage queue, findings classifications, iterative updates, a ten-iteration cap, convergence checks, and required summary output."
+  },
+  {
+    "accessed_at": null,
+    "id": "E5",
+    "limitations": "Plan-playbook describes this gate as merely available when needed rather than integrating it into every applicable substantial-plan lifecycle.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/doc-gap-closure-loop/SKILL.md",
+    "source_sha256": "74677876112cc15e4eec4a74f7d6abb852952e5e81fd65f8c192964b550e71be",
+    "supported_claim": "The skill defines internal-readiness scope, assessment-only delegation, deterministic document units, cycle artifacts, gap ledgers, post-edit full reruns, and a no-edit convergence cycle."
+  },
+  {
+    "accessed_at": null,
+    "id": "E6",
+    "limitations": "It proves breadth only and cannot independently enforce plan document readiness or end-to-end satisfaction.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/requirements-coverage-gap-loop/SKILL.md",
+    "source_sha256": "cf3304a12dc4ddc60a933a0e799ea3395cf5c0899f99ba2b5131bc11cb36439d",
+    "supported_claim": "The skill defines breadth convergence over a complete requirement set, stable requirement obligations, cycle artifacts, CGAP records, fresh reassessment after edits, and an explicit handoff to satisfaction."
+  },
+  {
+    "accessed_at": null,
+    "id": "E7",
+    "limitations": "It presupposes upstream readiness and coverage and does not compose the full plan lifecycle by itself.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/requirements-satisfaction-gap-loop/SKILL.md",
+    "source_sha256": "70a8c9ac79020696dca1919c445e442bcb24aa43e9cf976d02b15760cc7af658",
+    "supported_claim": "The skill defines depth assessment after coverage, end-to-end runtime and data traces, SGAP records, cycle artifacts, post-edit reassessment, and terminal readiness proof."
+  },
+  {
+    "accessed_at": null,
+    "id": "E8",
+    "limitations": "This is a broader explicitly invoked research-to-review workflow, not the default runtime for ordinary plan-playbook.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/playbook-convergence-loop/SKILL.md",
+    "source_sha256": "d43c1ab30bf3c4616eca0a66adc73ef161a1c2b0c389227c32fea770ac03f1e3",
+    "supported_claim": "Lines 10-25 define bounded authorization and state guards; lines 26-55 define independent-role and slot lifecycle; lines 57-78 order stages and define PASS/GAPS/BLOCKED/CAP_REACHED behavior. Planning uses verify-plan followed by coverage and satisfaction under explicit autonomous invocation."
+  },
+  {
+    "accessed_at": null,
+    "id": "E9",
+    "limitations": "The bounded search excluded all fixtures, including the expressly excluded research-playbook-v2 fixtures.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py",
+    "source_sha256": "97333cde3febca9be8339ebfde5a6f452c58f3219168481c33061343a52576b5",
+    "supported_claim": "This was the only non-fixture test returned by a bounded tests/** search for plan-playbook, one-shot implementation, decision-complete plan, plan verification, verify-plan, or full gates. Lines 8-32 check convergence ordering and delegated evidence separation; they do not execute plan-playbook or evaluate generated plan usability."
+  },
+  {
+    "accessed_at": null,
+    "id": "E10",
+    "limitations": "This is a historical task artifact and does not establish how every invocation of the current skill behaves.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/memory-directives-second-brain-gaps/plan.md",
+    "source_sha256": "43a8e2308e0aab9e5f2fcf8a5753a518b06158cef40c56a12a6e2c19e5d3f8cc",
+    "supported_claim": "Line 3 identifies the artifact as a plan-playbook plan. Lines 166-167 declare no open decisions, while line 71 leaves an either/or choice between a Codex implementation and a follow-up, and line 149 retains an optional directive change."
+  },
+  {
+    "accessed_at": null,
+    "id": "E11",
+    "limitations": "It is task-specific, allows a recorded open decision at convergence, and does not prove one-shot implementation or ordinary playbook orchestration.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/memory-directives-second-brain-gaps/artifacts/plan.coverage-audit.md",
+    "source_sha256": "e30ac6fc67f4efdb128d5c685f6574bbd061a0202ac1c898323fdca5dff7f0cd",
+    "supported_claim": "The artifact records a coverage cycle, requirement matrix, gap ledger, edits, fresh reassessment, and breadth convergence, demonstrating practical use of the coverage skill."
+  },
+  {
+    "accessed_at": null,
+    "id": "E12",
+    "limitations": "The artifact proves that a depth audit was produced, not that unresolved implementation choices were eliminated or that implementation succeeded without clarification.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/memory-directives-second-brain-gaps/artifacts/plan.satisfaction-audit.md",
+    "source_sha256": "66e6136ec48b2f4a713ff04f3034d8483f8d1c2bff2573a40cdf7b3595bd86fd",
+    "supported_claim": "The artifact records end-to-end traces, SGAP findings, edits, a fresh depth pass, and a convergence claim. Its Codex capture resolution explicitly permits either best-effort behavior or a documented follow-up."
+  },
+  {
+    "accessed_at": null,
+    "id": "E13",
+    "limitations": "It is one substantial case and contains no downstream implementation outcome, clarification count, small-case result, or evidence-uncertain-case result.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/proactive-sequence-observer-requirements/plan-verification-ledger.json",
+    "source_sha256": "ba56ffce3663b3a5528985efe0927ba53dab53309372be8613e26239f47192ee",
+    "supported_claim": "The current ledger contains fifteen risk-ranked coverage items, stable VP findings, critic classifications, fixes, and two iterations ending with zero remaining high or medium coverage items."
+  },
+  {
+    "accessed_at": null,
+    "id": "E14",
+    "limitations": "The artifact has no common evaluator result or linked proof that downstream implementation proceeded without choosing between the alternatives.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/sequence-registry-consolidation/consolidation.plan.md",
+    "source_sha256": "88aa14be4bcc8e4c64af58026e94f861f3e74c8835b62e382c4cab7e70d34bad",
+    "supported_claim": "Lines 94-107 assert folded verify-plan, coverage, and satisfaction convergence and call the plan one-shot executable, while line 70 retains an operator choice about moved sequence folders."
+  }
+]

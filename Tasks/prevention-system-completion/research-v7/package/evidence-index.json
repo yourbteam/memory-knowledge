@@ -1,0 +1,326 @@
+[
+  {
+    "accessed_at": null,
+    "id": "EV-FROZEN-CHARTER",
+    "limitations": "Charter is a requirement authority, not runtime evidence.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/charter.json",
+    "source_sha256": "809c017559a21368f5cfd32bca0f09407f53e234496833e8094ca252b7dbae7f",
+    "supported_claim": "Defines the frozen three-defect research scope and exclusions."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-FROZEN-REQS",
+    "limitations": "Specifies required behavior but does not prove current runtime behavior.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/requirements.json",
+    "source_sha256": "8bbf53bf287c6b1a442e1e584c54908f9730416221a9edae83e83260d40efc17",
+    "supported_claim": "Defines the six frozen requirements and their acceptance intent."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-R2-INTERNAL-READINESS",
+    "limitations": "Lens finding only; adjudication controls disposition.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v5/work/internal-readiness-round-2.json",
+    "source_sha256": "a8bfef38172f68b30e678dcdda702a35856cae53928903ed770aa672fd434d67",
+    "supported_claim": "Names round-2 D1, D2, and D3 research gaps and their practical consequences."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-R2-COVERAGE",
+    "limitations": "Lens finding only; adjudication controls disposition.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v5/work/coverage-round-2.json",
+    "source_sha256": "d427622abe538cf8aac7e5fdaeacd3d3e22b99bb9ace1aebced2ecff12e92181",
+    "supported_claim": "Names round-2 D3 out-of-frozen-roots callcenter owner evidence gap."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-R2-SATISFACTION",
+    "limitations": "Lens finding only; adjudication controls disposition.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v5/work/satisfaction-round-2.json",
+    "source_sha256": "0e4f599784aa83ae2d286f6670202457076b65b4267d7cf44b3dce3a640f7e6c",
+    "supported_claim": "Confirms the five callcenter owners cannot be treated as source-grounded inside the frozen roots."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-R2-ADJUDICATION",
+    "limitations": "Adjudication is disposition evidence, not implementation source.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v5/work/adjudication-round-2.json",
+    "source_sha256": "094cf3e5e86ff16a3b783c5fb8504deb87f0d09191bb6befb0d3c255cb0162f1",
+    "supported_claim": "Classifies D1 as evidence limitation, D2 as planner decision handoff, and D3 materialization as research-fixable while rejecting scope widening for callcenter sources."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D1-WRAPPER",
+    "limitations": "Does not prove official Codex hook semantics.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/cli/codex_cli.py",
+    "source_sha256": "3de69c4f299e9cf842a457a8ee08db325c833f68688d35e93cbd547d889e5e6d",
+    "supported_claim": "Codex is launched in a target working directory with sandbox, approval, model, and config flags, but without hook installation or preflight proof."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D1-EXECUTOR",
+    "limitations": "Does not configure Codex hooks.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/agents/executor.py",
+    "source_sha256": "a2ac8a1e24a3614d7849b2f2de1840e0126ea56b7b379dc9072d317b82812e16",
+    "supported_claim": "The workflow executor selects the task worktree as the Codex working directory."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D1-TRANSLATOR",
+    "limitations": "Does not prove launcher process behavior.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/agents/tool_translator.py",
+    "source_sha256": "06a24478078ef051d3842d25e03659170b117453228651d05c675d9e8b43c32b",
+    "supported_claim": "Codex tool translation controls sandbox/approval/MCP names but not pre-action host interception."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D1-CREDENTIAL-REFRESH",
+    "limitations": "No credentials were read; this is absence evidence for the required D1 provider boundary.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/credential_refresh.py",
+    "source_sha256": "4e5c66f9a5a5b1308cef4c9cd9e38795739b556f4e4c99e7a5dc3930d2b471cc",
+    "supported_claim": "The inspected auth maintenance path checks a Codex auth file path and refresh metadata; it is not evidence of an authorized per-session authenticated-session provider that avoids reading or copying credentials."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D1-OFFICIAL-PRETOOL",
+    "limitations": "Does not wire prevention_host into workflow-orch.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/private/tmp/openai-codex-hook-source/codex-rs/hooks/src/events/pre_tool_use.rs",
+    "source_sha256": "7c986625bfc296903b1352193ccf060c05dce33a3c805e0b3f9ccc49f6403a8e",
+    "supported_claim": "Official Codex source defines the PreToolUse request and outcome contract."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D1-OFFICIAL-DISCOVERY",
+    "limitations": "Does not prove workflow-orch provisions any trusted source.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/private/tmp/openai-codex-hook-source/codex-rs/hooks/src/engine/discovery.rs",
+    "source_sha256": "21f27353da32edfebf91d85a6658f6207c3bae36e253a0d253369ef2c37e7136",
+    "supported_claim": "Official Codex source distinguishes config sources, managed source metadata, current_hash, trusted_hash, and trust status comparison behavior."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D1-OFFICIAL-OUTPUT",
+    "limitations": "Does not establish project hook durability in worktrees.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/private/tmp/openai-codex-hook-source/codex-rs/hooks/src/engine/output_parser.rs",
+    "source_sha256": "910f5543da2e4e8564acad34284be904fc9bc9c7eb25607a81399fb3e4bb7e5c",
+    "supported_claim": "Official Codex parser supports PreToolUse deny/block behavior and allow with updated input under the hook-specific output contract."
+  },
+  {
+    "accessed_at": "2026-07-17T00:00:00Z",
+    "id": "EV-D1-WORKTREE-ISSUE",
+    "limitations": "External issue evidence; it is not a formal API guarantee and has no local file hash.",
+    "source_kind": "EXTERNAL",
+    "source_locator": "https://github.com/openai/codex/issues/27133",
+    "source_sha256": null,
+    "supported_claim": "The authorized issue reports that project-level hooks are ignored in a git worktree while user-level hooks fire."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D1-HOST",
+    "limitations": "No launcher currently invokes it before governed work.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_host.py",
+    "source_sha256": "f9f9412e4982b5816a8197ab9c39a4f0ab4288325a9c751abf08c7d990c69b8b",
+    "supported_claim": "The local host adapter parses Bash/apply_patch/MCP hook inputs, fails closed on controller errors, and verifies signed host receipts."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D2-EVENTS",
+    "limitations": "Absence evidence only; future event schema must be implemented.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/work_memory.py",
+    "source_sha256": "729bfcd846e324c31a60e76c7eac57de4a5f23cc6db4e2725d20a74ae8a4b16f",
+    "supported_claim": "Prevention event schemas include intent, host capability, dispatch, registered reuse, and prevented failure events, but no immutable recurring eligibility event or denominator query producer."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D2-CONTROLLER",
+    "limitations": "Does not prove all callers use this controller.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_controller.py",
+    "source_sha256": "23ce029a86134087207d1b7a88785315d694382144e423f19c2efc216affc630",
+    "supported_claim": "The controller records typed intent before dispatch but does not persist registry hash, owner contract hash, recurrence policy, availability policy, eligibility, or ineligible reason."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D2-REGISTRY",
+    "limitations": "Does not produce metric eligibility.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_registry.py",
+    "source_sha256": "b5720a7711d207bcc6dbfef971bb4d94f20ef81bd318571286195453bc1f63bc",
+    "supported_claim": "The registry returns rows and a content hash, but does not define recurrence or availability policy."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D2-SELECTOR",
+    "limitations": "Selection is downstream of the required pre-dispatch eligibility producer.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_selector.py",
+    "source_sha256": "5755fc22fc2814779a90d840ff1d30e8e0eaedd8935145496fa038238c841dbb",
+    "supported_claim": "The selector emits dispatch selected/rejected decisions but no denominator eligibility fact."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-MANIFEST",
+    "limitations": "Identifier strings do not prove executable behavior.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-migration-manifest.json",
+    "source_sha256": "0ee6c3be164e4e7d932641b0cba9d0aab8117a3fdd0942fc759d70ccae429bcc",
+    "supported_claim": "Contains 25 owner rows with identifier strings but no materialized executable constants or implementation source hashes."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-CONTRACT",
+    "limitations": "Does not prove dispatch/reconcile/terminal behavior.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_contract.py",
+    "source_sha256": "3a0c888ff1c2ddb5f76a734df13fb73e49c29d5c888ad0e42626930443bb14bd",
+    "supported_claim": "OwnerRegistry validates manifest shape, cardinality, source-inventory hash, and evidence pointers but not executable owner constants."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-DESCRIPTORS",
+    "limitations": "Descriptor prose is not implementation evidence.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-descriptors.json",
+    "source_sha256": "51112bd2daeba085174aee15d74f2fd78df55c78ab42c952a7fd0e3dd181cda4",
+    "supported_claim": "Records descriptor status for all 25 rows and identifies six rows requiring custodian evidence."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SEQUENCES",
+    "limitations": "Catalog prose is not executable owner evidence.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/operations/sequences/SEQUENCES.md",
+    "source_sha256": "b421f4064a8807896b275abd1b40c4af3d29043dab1dbc30205de1a35d2c91b9",
+    "supported_claim": "Lists the 25 registered sequence ids and their catalog anchors."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-LOCAL-WORKFLOW-ORCH-IMAGE",
+    "limitations": "Contract is materialized at the script CLI boundary, not a lower-level typed API.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/local_workflow_orch_image_harness.py",
+    "source_sha256": "3cf45608f60d360e1dd1eaf9ba10fdfd2a9ec3a8c930efa899ffdf118107322b",
+    "supported_claim": "Accessible implementation source and materialized script CLI contract for local-workflow-orch-image."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-GREENFIELD-FULL-DRIVE",
+    "limitations": "Terminal contract is marker/exit-code based shell output, not a single JSON envelope.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_full_drive.sh",
+    "source_sha256": "aea47b779974be3011829c09367faf12fc2ae45faa6af0711d432b7f1e915783",
+    "supported_claim": "Accessible implementation source and materialized script CLI contract for greenfield-full-drive."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-REMOTE-MCP-USER-ONBOARDING",
+    "limitations": "Descriptor still requires custodian evidence for one deterministic owner/result contract across TUI, MCP, HTTP, filesystem, and fallback paths.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/dist/remote-mcp-user-admin/remote_mcp_user_admin_tui.py",
+    "source_sha256": "1f20c0897ac9ac5a7446e6b1bc453ebf64f7eb94b339eb31f9570447aa8cbca8",
+    "supported_claim": "Accessible helper source for remote-mcp-user-onboarding."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-MAWF-PLAYBOOK",
+    "limitations": "Full/speed rows still require custodian evidence for an exact aggregate transition/result envelope.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py",
+    "source_sha256": "037b3e8d81023c885e10dae2965deccaebf335cde3ce64313e96597998b3c223",
+    "supported_claim": "Accessible implementation source for mawf-playbook-blocker-reentry and helper source for both MAWF playbook test drivers."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-GITHUB-APP-REPOS-REFRESH",
+    "limitations": "Descriptor still requires custodian evidence for the wrapper argv/auth/result contract.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/github_app_repos_refresh.py",
+    "source_sha256": "a40389bbde39cf33f217bf8d79300c105c0080a7ac024d89285e18588a5da0ee",
+    "supported_claim": "Accessible helper source for github-app-repos-refresh."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-CLAUDE-AUTH-TOKEN-REFRESH",
+    "limitations": "Terminal contract is marker/exit-code based shell output, not a single JSON envelope.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/claude_auth_refresh.sh",
+    "source_sha256": "bad8f0e2fc9dc15a28a4cc7bead7d7872d9238182188200d656d518e4b6a988c",
+    "supported_claim": "Accessible implementation source and materialized shell CLI contract for claude-auth-token-refresh."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-DISCOVERY-PROMOTION-LIFECYCLE",
+    "limitations": "Contract is materialized at the script CLI boundary.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_promotion_lifecycle.py",
+    "source_sha256": "49e66d7a0e5944419f7e59902056740e7510302e21ad4e707bd263ced822b731",
+    "supported_claim": "Accessible implementation source and materialized JSON CLI contract for discovery-promotion-lifecycle."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-COMMIT-PUSH-MAIN",
+    "limitations": "Contract is materialized at the script CLI boundary.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
+    "source_sha256": "55206e0b25c6eeb7df9d98775ff8d0c1ff69df0565d9add3a0d9487a5d40fe54",
+    "supported_claim": "Accessible implementation source and materialized JSON CLI contract for commit-push-main."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-DISCOVERY-BOOTSTRAP",
+    "limitations": "Contract is materialized at the script CLI boundary.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_bootstrap.py",
+    "source_sha256": "a1c16783567bb8bbb84be2e59a636bf6ef73d7ba85fc684c706bcda6590f8d30",
+    "supported_claim": "Accessible implementation source and materialized JSON CLI contract for discovery-bootstrap."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-DISCOVERY-CANDIDATE-RECONCILIATION",
+    "limitations": "Contract is materialized at the script CLI boundary.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_candidate_reconciliation.py",
+    "source_sha256": "a846e823d027d229e3a7642776dda4d1bbb2e5cbbe192f38dd115223ac14ae9b",
+    "supported_claim": "Accessible implementation source and materialized JSON CLI contract for discovery-candidate-reconciliation."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-CONVERGENCE-CHECKPOINT-RUN",
+    "limitations": "Terminal success is pass-signal stdout, not a JSON envelope.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_checkpoint_run.py",
+    "source_sha256": "39da9360585a6b08d416a90a320e8a762fff195adde2c5a2c07890b9a81248e7",
+    "supported_claim": "Accessible implementation source and materialized CLI contract for convergence-checkpoint-run."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-SCOPED-CONTEXT-EDIT",
+    "limitations": "Descriptor still requires custodian evidence for a typed patch payload/executor boundary.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/context_edit_guard.py",
+    "source_sha256": "f5f1a2334656f85fe2cf1b5b6e167ae04fa18ccb75c0ee87f32d7ac3f472f3c0",
+    "supported_claim": "Accessible guard source for scoped-context-edit."
+  },
+  {
+    "accessed_at": null,
+    "id": "EV-D3-SRC-CONVERGENCE-STATE-REVIEW-CYCLE",
+    "limitations": "Contract is materialized at the script CLI boundary.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_state_review_cycle.py",
+    "source_sha256": "594a12be5f8c29d17fd69d3e5cbf22e8f099e465e6e2fc8cc244dad1aa0e275e",
+    "supported_claim": "Accessible implementation source and materialized JSON CLI contract for convergence-state-review-cycle."
+  }
+]

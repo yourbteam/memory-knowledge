@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `065f9f19cf8d852ae0093d7758270c05927b33e94aed86ce75580a2d0ccb9d01`
+Ledger-SHA256: `cb1a7a903fffe31b9709daba1617be0a42f0493727c37db929168cb50a717341`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -3910,6 +3910,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: All three bounded platform-lock guide attempts failed the same grounding contract and the source run blocked at compose-platform-lock-session-guide.
 - Evidence: up-run-87ba98207ae2 records platform_lock_guide_grounding_invalid after the three-attempt correction implementation passed focused tests.
 
+## blk-6602d5f0b7c4ebdc9d1f51c7
+
+- Status: `open`
+- Subject: `claude-parity-residual-drift-remediation`
+- Step: `doc-projection-check`
+- Surface: `operations/sequences semantic-intake doc projection`
+- Symptom: sequence_intake_doc_projection check fails: blocker-backlog-reconciliation sequence.md+dependencies.json diverge from the generator at HEAD b0e730d, and discovery-promotion-lifecycle/dependencies.json carries an uncommitted reformat
+- Evidence: scripts/sequence_intake_doc_projection.py run(check=True) exit 1; git status shows dependencies.json modified; blocker-backlog files clean at HEAD yet drift from generator output
+
 ## blk-663f98228359c7ee35ffb4e2
 
 - Status: `closed`
@@ -7167,6 +7176,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: Guard activation rejects the refreshed discovery bundle because the task selection receipt still seals the pre-refresh bundle.
 - Evidence: set-dependencies produced source_bundle_hash 0a034ab142e1b1d12c91a399516cf0cf31649b60153efca1d685599fa608b30d; subsequent sequence_guard.py activate returned stale-source-bundle.
+
+## blk-bebe8d88bcca4c00c18aca09
+
+- Status: `open`
+- Subject: `claude-parity-residual-drift-remediation`
+- Step: `plan-evaluator-fixture-check`
+- Surface: `tests/test_plan_playbook_v2_evaluator.py source snapshot`
+- Symptom: evaluator test pins sha 71578b26 for tests/fixtures/plan-playbook-v2/sources/E14-consolidation-research.md but the committed fixture at HEAD hashes b9a22ac4
+- Evidence: git log deccde8 committed the fixture; test expectation not updated in the same change; 8 evaluator tests fail at HEAD
 
 ## blk-bec03ce3f78be19efc3d30a1
 

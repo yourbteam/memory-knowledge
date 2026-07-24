@@ -1,0 +1,334 @@
+[
+  {
+    "acceptance_intent": "A fresh operator can determine when to enter, pause, resume, and exit planning without silently crossing task modes.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E1",
+      "E2"
+    ],
+    "id": "R1_ROUTING_BOUNDARIES",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The added contract test passes while observing every existing enter, pause, resume, exit, and no-cross-mode boundary in the authoritative router and ordinary plan-playbook.",
+        "description": "Preserve or repair the grounded task-mode routing and transition boundaries established by R1.",
+        "evidence_ids": [
+          "E1",
+          "E2",
+          "E9"
+        ],
+        "id": "P1_GROUND_ROUTING_BOUNDARIES",
+        "implementation_anchors": [
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md lines 10-20: authoritative Research → Plan → Write code → Review router",
+          "/Users/kamenkamenov/memory-knowledge/skills/plan-playbook/SKILL.md line 3 and lines 14-23, 37-42: excluded modes, direct entry, pause-to-research, resume, completion, and decision boundaries"
+        ],
+        "owner": "skills/plan-playbook owner, with preservation assertions owned by tests/test_skill_contracts.py",
+        "required_inputs": [
+          "Current task-mode router text from DIRECTIVES.md",
+          "Current plan-playbook entry, pause, resume, completion, and excluded-mode text"
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Extend /Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py ContractTests with a plan-playbook routing-boundary contract test that reads DIRECTIVES.md and plan-playbook/SKILL.md and asserts the Plan route remains between Research and Write code, the research/write-code/review exclusions remain explicit, direct planning entry remains available, an unknown pauses to research and then resumes, and P1/P2 prevent completion with an unresolved decision"
+        ]
+      }
+    ],
+    "research_value": true,
+    "research_value_type": "boolean",
+    "scope_id": "plan-playbook-current-runtime",
+    "source": "user-approved assessment objective plus working-agreement task-mode router",
+    "text": "The current plan-playbook must route planning tasks correctly and preserve explicit boundaries against research, implementation, and review work."
+  },
+  {
+    "acceptance_intent": "Planning begins only with sufficient grounded inputs, and an unknown discovered mid-plan has an explicit bounded route back to research.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E1",
+      "E3"
+    ],
+    "id": "R2_EVIDENCE_GATE",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "All three contract cases pass and expose one checkable direct-entry result, one bounded pause-to-research result, and one deterministic resume rule tied to the validated research terminal outcome.",
+        "description": "Preserve or repair the evidence-sufficiency and bounded research-return contract established by R2.",
+        "evidence_ids": [
+          "E1",
+          "E3",
+          "E9"
+        ],
+        "id": "P2_GROUND_EVIDENCE_GATE",
+        "implementation_anchors": [
+          "/Users/kamenkamenov/memory-knowledge/skills/plan-playbook/SKILL.md lines 14-18: current direct-planning, research-first, pause, and resume boundary",
+          "/Users/kamenkamenov/memory-knowledge/skills/research-playbook/SKILL.md lines 16-25 and 40-52: validated research package, READY planner obligations, and PASS/GAPS/BLOCKED/CAP_REACHED terminal contract"
+        ],
+        "owner": "skills/plan-playbook owner, with entry and resume observables owned by tests/test_skill_contracts.py",
+        "required_inputs": [
+          "Current sufficient-understanding and mid-plan unknown wording from plan-playbook",
+          "Current research package readiness and terminal-result contract from research-playbook",
+          "Direct-entry, mid-plan-unknown, and research-return case inputs for the contract test"
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Extend /Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py ContractTests with three observable plan-entry cases: grounded direct-entry inputs produce an affirmative evidence-sufficiency result and enter planning without mandatory research; a mid-plan unknown produces an evidence-gap result and pauses without continuing the plan; and only a validated research PASS package whose planner obligations are READY resumes the same plan, while GAPS, BLOCKED, and CAP_REACHED do not resume it"
+        ]
+      }
+    ],
+    "research_value": false,
+    "research_value_type": "boolean",
+    "scope_id": "plan-playbook-current-runtime",
+    "source": "plan-playbook upstream-understanding claim plus research-to-plan handoff objective",
+    "text": "The current plan-playbook must establish sufficient authoritative understanding before planning and define a deterministic evidence-gap response."
+  },
+  {
+    "acceptance_intent": "A competent implementer can execute the resulting plan without returning to the user for a design, scope, ownership, evidence, or acceptance decision.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E1",
+      "E4",
+      "E10",
+      "E14"
+    ],
+    "id": "R3_ONE_SHOT_COMPLETENESS",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The terminal contract test rejects both current unresolved-choice patterns and accepts only a plan whose required decision dimensions are resolved and whose downstream implementer has no clarification decision left.",
+        "description": "Preserve or repair the explicit one-shot output and decision-completeness contract established by R3.",
+        "evidence_ids": [
+          "E1",
+          "E4",
+          "E9",
+          "E10",
+          "E14"
+        ],
+        "id": "P3_GROUND_ONE_SHOT_CONTRACT",
+        "implementation_anchors": [
+          "/Users/kamenkamenov/memory-knowledge/skills/plan-playbook/SKILL.md lines 12 and 37-42: one-shot aim and P1/P2 decision rules",
+          "/Users/kamenkamenov/memory-knowledge/skills/verify-plan/SKILL.md lines 37-60 and 246-276: implementation-surface inventory and convergence checks"
+        ],
+        "owner": "skills/plan-playbook owner, with terminal completeness assertions owned by tests/test_skill_contracts.py",
+        "required_inputs": [
+          "P1 and P2 one-shot directives",
+          "Verify-plan implementation-surface and convergence contracts",
+          "The unresolved-choice examples in E10 and E14 as negative fixture inputs"
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Use /Users/kamenkamenov/memory-knowledge/Tasks/memory-directives-second-brain-gaps/plan.md lines 71, 149, and 166-167 and /Users/kamenkamenov/memory-knowledge/Tasks/sequence-registry-consolidation/consolidation.plan.md lines 64-72 and 94-107 as unresolved-choice regression fixture sources, not passing evidence",
+          "Extend /Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py ContractTests with a terminal one-shot contract test that rejects a plan carrying the fixture-derived either/or, optional in-scope, or operator-choice states and passes only when scope, ownership, design, evidence, acceptance, and sequencing are resolved with no remaining implementation decision or clarification request"
+        ]
+      }
+    ],
+    "research_value": false,
+    "research_value_type": "boolean",
+    "scope_id": "plan-playbook-current-runtime",
+    "source": "plan-playbook aim and P1/P2 task-scoped directives plus user assessment objective",
+    "text": "The current plan-playbook must define and enforce a decision-complete one-shot plan contract that leaves no implementation decision or clarification request to the downstream implementer."
+  },
+  {
+    "acceptance_intent": "Small and substantial plans receive proportionate hardening without missing a gate, duplicating responsibility, or treating prose quality as end-to-end satisfaction.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E1",
+      "E5",
+      "E6",
+      "E7",
+      "E8",
+      "E11",
+      "E12"
+    ],
+    "id": "R4_HARDENING_INTEGRATION",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The ordinary-plan contract test proves proportionate small and substantial entry into one ordered internal-readiness, coverage, and satisfaction lifecycle, with each gate's exact artifact form, parent-only edits, mandatory post-edit fresh reruns, and PASS/GAPS/BLOCKED/CAP_REACHED terminal behavior.",
+        "description": "Preserve or repair the ordered and executable plan-hardening lifecycle established by R4.",
+        "evidence_ids": [
+          "E1",
+          "E5",
+          "E6",
+          "E7",
+          "E8",
+          "E9",
+          "E11",
+          "E12"
+        ],
+        "id": "P4_GROUND_HARDENING_FLOW",
+        "implementation_anchors": [
+          "/Users/kamenkamenov/memory-knowledge/skills/plan-playbook/SKILL.md lines 25-35: current small/substantial hardening split and incomplete gate order",
+          "/Users/kamenkamenov/memory-knowledge/skills/doc-gap-closure-loop/SKILL.md sections Scope Boundary and Handoff, Convergence Standard, Required Assessment Artifact, Planning Rules, Validation Rules, and Non-Convergence Rule: internal-readiness gate, .gap-audit.md or permitted response artifact, parent edit ownership, and fresh no-edit rerun",
+          "/Users/kamenkamenov/memory-knowledge/skills/requirements-coverage-gap-loop/SKILL.md sections Convergence Standard, Required Assessment Artifact, Planning & Execution Rules, Validation Rules, Non-Convergence Rule, and Handoff: breadth gate, .coverage-audit.md or permitted tiny-case artifact, parent edit ownership, and fresh rerun",
+          "/Users/kamenkamenov/memory-knowledge/skills/requirements-satisfaction-gap-loop/SKILL.md sections Convergence Standard, Required Assessment Artifact, Planning & Execution Rules, Validation Rules, Non-Convergence Rule, and Handoff: depth gate, .satisfaction-audit.md or permitted tiny-case artifact, parent edit ownership, and fresh rerun"
+        ],
+        "owner": "skills/plan-playbook owner; the parent/orchestrator owns plan and state edits, and tests/test_skill_contracts.py owns lifecycle assertions",
+        "required_inputs": [
+          "Internal-readiness entry, artifact, rerun, ownership, and terminal contract",
+          "Coverage entry, artifact, rerun, ownership, and terminal contract",
+          "Satisfaction entry, artifact, rerun, ownership, and terminal contract",
+          "Current small and substantial plan classification behavior"
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Extend /Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py ContractTests with an ordinary-plan lifecycle contract test that observes the exact order internal readiness → requirements coverage → requirements satisfaction for every applicable plan; verifies that small/tiny plans use only the response-sized artifact forms permitted by each gate while substantial plans produce the sibling .gap-audit.md, .coverage-audit.md, and .satisfaction-audit.md artifacts; verifies that assessment roles do not edit and the parent owns plan and state edits; requires a fresh full rerun of the current gate after every edit; and permits advancement only on PASS while preserving GAPS, BLOCKED, and CAP_REACHED as non-success terminal outcomes",
+          "Use /Users/kamenkamenov/memory-knowledge/Tasks/memory-directives-second-brain-gaps/artifacts/plan.coverage-audit.md and plan.satisfaction-audit.md as current artifact-shape fixtures only; do not treat them as proof that ordinary plan-playbook runs the complete three-gate lifecycle",
+          "Use /Users/kamenkamenov/memory-knowledge/skills/playbook-convergence-loop/SKILL.md lines 57-78 only as the grounded source for reusable stage-order and terminal-result semantics; do not treat it as current ordinary-plan lifecycle proof"
+        ]
+      }
+    ],
+    "research_value": false,
+    "research_value_type": "boolean",
+    "scope_id": "plan-playbook-current-runtime",
+    "source": "plan-playbook hardening section and supporting hardening skill contracts",
+    "text": "The current plan-playbook must integrate internal readiness, requirements coverage, and requirements satisfaction in the correct order with complete entry, output, rerun, and terminal semantics."
+  },
+  {
+    "acceptance_intent": "The operator knows exactly when approval is already present, when a new decision is required, what consequence must be shown, and when execution must stop.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E1",
+      "E2",
+      "E8"
+    ],
+    "id": "R5_APPROVAL_CONTRACT",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The approval-path cases pass for ordinary and already-authorized autonomous planning, proving when approval is present, when a new decision is required, what consequence and cost precede it, and where execution stops.",
+        "description": "Preserve or repair the concrete approval and autonomous-authorization boundaries established by R5.",
+        "evidence_ids": [
+          "E1",
+          "E2",
+          "E8",
+          "E9"
+        ],
+        "id": "P5_GROUND_APPROVAL_FLOW",
+        "implementation_anchors": [
+          "/Users/kamenkamenov/memory-knowledge/skills/plan-playbook/SKILL.md lines 25-35: current substantial-plan approval wording",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md G1, G2, G5, and G11: grasp, concrete consequence and cost, one-at-a-time clarification, bounded authorization, and stop boundaries",
+          "/Users/kamenkamenov/memory-knowledge/skills/playbook-convergence-loop/SKILL.md lines 10-14: explicit autonomous convergence authorization boundary"
+        ],
+        "owner": "skills/plan-playbook owner, with approval-path assertions owned by tests/test_skill_contracts.py",
+        "required_inputs": [
+          "Current ordinary substantial-plan approval wording",
+          "G2 concrete consequence and cost contract",
+          "G11 autonomous authorization and stop boundaries",
+          "Current playbook-convergence-loop invocation boundary"
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Extend /Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py ContractTests with approval-path cases asserting that an ordinary substantial-plan decision is requested only after concrete old-versus-new behavior and cost are shown, an explicitly invoked playbook-convergence-loop path does not request the same authorization again, and either path stops when G11 requires a new scope, repository, commit, deployment, destructive action, credential, external-message, or directive-promotion decision"
+        ]
+      }
+    ],
+    "research_value": false,
+    "research_value_type": "boolean",
+    "scope_id": "plan-playbook-current-runtime",
+    "source": "plan-playbook substantial-plan approval text plus DIRECTIVES.md G1, G2, G5, and G11",
+    "text": "The current plan-playbook approval behavior must be concrete and consistent with the working agreement, including autonomous convergence authorization and user-decision boundaries."
+  },
+  {
+    "acceptance_intent": "Two competent operators following the playbook can run the same planning lifecycle without inventing hidden state transitions, role combinations, artifact schemas, or completion rules.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E1",
+      "E4",
+      "E8",
+      "E13"
+    ],
+    "id": "R6_EXECUTABLE_ORCHESTRATION",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "Two executions of the ordinary planning contract from the same inputs produce the same required states, role boundaries, artifacts, retry decisions, edit ownership, and terminal result without hidden operator invention.",
+        "description": "Preserve or repair the bounded executable orchestration contract established by R6.",
+        "evidence_ids": [
+          "E1",
+          "E4",
+          "E8",
+          "E9",
+          "E13"
+        ],
+        "id": "P6_GROUND_EXECUTABLE_ORCHESTRATION",
+        "implementation_anchors": [
+          "/Users/kamenkamenov/memory-knowledge/skills/plan-playbook/SKILL.md lines 8 and 20-42: current delegated ownership, hardening, and completion guidance lacking an ordinary state contract",
+          "/Users/kamenkamenov/memory-knowledge/skills/verify-plan/SKILL.md lines 37-62, 82-246, and 278-342: implementation-surface map, ledger, independent verifier/critic roles, iteration cap, convergence checks, and result summary",
+          "/Users/kamenkamenov/memory-knowledge/skills/playbook-convergence-loop/SKILL.md lines 10-78: bounded state, independent-role lifecycle, stage transitions, edit ownership, and terminal envelope",
+          "/Users/kamenkamenov/memory-knowledge/Tasks/proactive-sequence-observer-requirements/plan-verification-ledger.json: concrete current ledger shape available as a fixture source"
+        ],
+        "owner": "skills/plan-playbook owner; the parent/orchestrator owns state and edits, and tests/test_skill_contracts.py owns deterministic orchestration assertions",
+        "required_inputs": [
+          "Current plan-playbook delegated and ordinary guidance",
+          "Verify-plan role, ledger, retry, and convergence contract",
+          "Playbook-convergence-loop state and terminal contract",
+          "Existing E13 verification-ledger shape"
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Extend /Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py ContractTests with an ordinary-plan orchestration contract test that starts twice from identical inputs and asserts the same required state transitions, artifact set, producer/verifier/critic/fixer separation, parent-only edits, retry and cap decisions, and PASS/GAPS/BLOCKED/CAP_REACHED terminal result",
+          "Use /Users/kamenkamenov/memory-knowledge/Tasks/proactive-sequence-observer-requirements/plan-verification-ledger.json only as the current ledger-shape fixture; it does not currently prove the ordinary orchestration closure condition"
+        ]
+      }
+    ],
+    "research_value": false,
+    "research_value_type": "boolean",
+    "scope_id": "plan-playbook-current-runtime",
+    "source": "user request to assess practical usability plus comparison target established by upgraded research-playbook",
+    "text": "The current plan-playbook must provide an executable bounded orchestration contract for plan state, artifacts, independent roles, retries, edits, and terminal results."
+  },
+  {
+    "acceptance_intent": "Representative cases and evaluators prove requirement preservation, decision completeness, implementation anchoring, verification anchoring, and absence of clarification needs.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "E1",
+      "E9",
+      "E10",
+      "E11",
+      "E12",
+      "E13",
+      "E14"
+    ],
+    "id": "R7_PRACTICAL_EVIDENCE",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The created evaluator and linked outcome records cover small, substantial, and evidence-uncertain cases and prove for each case that requirements are preserved, implementation and verification anchors resolve, decisions are complete, and downstream implementation requires zero clarification.",
+        "description": "Preserve or repair the representative practical evaluation and acceptance evidence established by R7.",
+        "evidence_ids": [
+          "E1",
+          "E9",
+          "E10",
+          "E11",
+          "E12",
+          "E13",
+          "E14"
+        ],
+        "id": "P7_GROUND_PRACTICAL_EVALUATION",
+        "implementation_anchors": [
+          "/Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py: grounded test boundary to extend with the missing common evaluator",
+          "/Users/kamenkamenov/memory-knowledge/Tasks/memory-directives-second-brain-gaps/plan.md: exact historical plan fixture source",
+          "/Users/kamenkamenov/memory-knowledge/Tasks/memory-directives-second-brain-gaps/artifacts/plan.coverage-audit.md: exact historical coverage-artifact fixture source",
+          "/Users/kamenkamenov/memory-knowledge/Tasks/memory-directives-second-brain-gaps/artifacts/plan.satisfaction-audit.md: exact historical satisfaction-artifact fixture source",
+          "/Users/kamenkamenov/memory-knowledge/Tasks/proactive-sequence-observer-requirements/plan-verification-ledger.json: exact historical verification-ledger fixture source",
+          "/Users/kamenkamenov/memory-knowledge/Tasks/sequence-registry-consolidation/consolidation.plan.md: exact historical plan fixture source"
+        ],
+        "owner": "skills/plan-playbook owner, with the common evaluator and linked outcome assertions owned by tests/test_skill_contracts.py",
+        "required_inputs": [
+          "The exact E10 plan, E11 coverage audit, E12 satisfaction audit, E13 verification ledger, and E14 plan as fixture sources",
+          "A frozen requirement and acceptance set for each labeled fixture case derived from those sources"
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Extend /Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py with one common representative-plan evaluator that consumes labeled small, substantial, and evidence-uncertain fixture cases sourced from the exact E10-E14 artifacts and emits per-case results for requirement preservation, implementation-anchor resolution, verification-anchor resolution, decision completeness, and clarification need",
+          "Create a linked downstream outcome record for each evaluated case containing the fixture identity, frozen requirement identity, implementation-run identity, clarification requests or count, resolved implementation and verification anchors, and acceptance result; treat these records as outputs to create because no such linked evidence currently exists",
+          "Require the common evaluator to fail unless all three workflow classes are present, every acceptance dimension passes, and every linked downstream outcome records zero clarification need; do not treat E9-E14 as current passing evidence for these outcomes"
+        ]
+      }
+    ],
+    "research_value": false,
+    "research_value_type": "boolean",
+    "scope_id": "plan-playbook-current-runtime",
+    "source": "user request to assess plan-playbook the way research-playbook was assessed",
+    "text": "The current plan-playbook must have grounded evidence from representative small, substantial, and evidence-uncertain planning workflows that its outputs are practically implementable one-shot."
+  }
+]

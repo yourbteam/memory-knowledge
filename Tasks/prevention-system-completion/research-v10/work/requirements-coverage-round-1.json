@@ -1,0 +1,166 @@
+{
+  "verdict": "GAPS",
+  "findings": [
+    {
+      "id": "RCOV-O1-GREENFIELD-COMPLETE-BUDGET",
+      "fingerprint": "coverage:o1:greenfield-complete-unit-budget-not-enumerated",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O1-FUTURE-BUDGET"
+      ],
+      "type": "REQUIREMENT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "A fresh planner cannot specify exact pre-effect admission for greenfield-full-drive without inventing the mandatory research, adjudication, materialization, terminal, and productive components that must make up its complete UnitBudget; the candidate currently treats an atomic-frontier reservation rule as if it were that complete machine-readable budget.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v8/requirements.json: O1-CURRENT-BUDGET requires exact producer, fields, units, and coverage for each of ten owners, and O1-FUTURE-BUDGET requires admission to include core, three gates, adjudication, materialization overhead, and rejection of incomplete budgets.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json: O1-FUTURE-BUDGET profiles gives greenfield-full-drive only as 'owner-derived atomic frontier', unlike the numeric or formula profiles supplied for the other owners, while research_markdown says all five future requirements are grounded.",
+        "Tasks/prevention-system-completion/owner-contract-proposals/greenfield-full-drive.json: budget_contract provides an atomic-task cap, scale caps, frontier reservation rules, and prose derivation, but no complete UnitBudget fields or base role/adjudication/materialization/terminal components.",
+        "Tasks/prevention-system-completion/owner-authority-decisions.json: greenfield-full-drive-progressive-reservation-v1 approves the cap and progressive frontier rule but does not approve a complete UnitBudget vector; availability remains separable from executable admission, so the research can explicitly preserve fail-closed non-admission until that evidence exists."
+      ],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "RCOV-O23-OWNER-SOURCE-MATRIX",
+      "fingerprint": "coverage:o2-o3:seven-owner-current-source-matrix-absent",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O2-CURRENT-RECONCILE",
+        "O3-CURRENT-TERMINAL"
+      ],
+      "type": "REQUIREMENT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "The planner cannot tell which exact current observable or terminal signal exists for seven of the ten owners, so it would have to rediscover command behavior before designing reconcilers and semantic verifiers; aggregate prose does not satisfy the frozen per-owner mapping requirement.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v8/requirements.json: O2-CURRENT-RECONCILE requires each of ten owners to map to a real same-path observable or explicit unresolved state, and O3-CURRENT-TERMINAL requires exact semantic terminal evidence or explicit fail-closed absence for every AVAILABLE owner.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json: O2-CURRENT-RECONCILE collapses all available observables into one string and cites only EV-RUNTIME, EV-LOCAL-SOURCE, EV-GREENFIELD-SOURCE, and EV-REENTRY-SOURCE; O3-CURRENT-TERMINAL likewise cites owner implementation sources only for local-image, greenfield, and reentry.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json: research_markdown enumerates all ten owner surfaces, but for claude-auth-token-refresh, discovery-promotion-lifecycle, commit-push-main, discovery-bootstrap, discovery-candidate-reconciliation, convergence-checkpoint-run, and convergence-state-review-cycle it does not provide an explicit owner-by-owner current reconciliation-observable and terminal-evidence/absence row.",
+        "Tasks/prevention-system-completion/owner-contract-proposals/*.json: the seven omitted proposal records name accessible implementation_path and implementation_sha256 evidence inside the frozen roots, so this is fixable by indexing those sources and decomposing the two current requirement values per owner rather than an unavailable-evidence blocker."
+      ],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "RCOV-EVIDENCE-PROPOSAL-PROVENANCE",
+      "fingerprint": "coverage:evidence:proposal-directory-bound-to-one-file-hash",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-FUTURE-BUDGET",
+        "O2-FUTURE-RECONCILE",
+        "O3-FUTURE-TERMINAL",
+        "O4-FUTURE-PARENT",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "FACT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "The package cannot prove which approved proposal supports each future owner contract: every future requirement and all ten readiness records rely on one evidence ID whose locator is a directory but whose hash identifies only local-workflow-orch-image.json.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json: EV-PROPOSALS has source_kind LOCAL_FILE, source_locator ending in owner-contract-proposals, and source_sha256 40ed6643594bbf830e642f5a9b3edf21020d9fb143b5ff8ff0c641fea3f70f7b; its own limitations state that this is the local-workflow proposal file hash while individual proposal hashes remain elsewhere.",
+        "shasum -a 256 Tasks/prevention-system-completion/owner-contract-proposals/*.json: 40ed6643594bbf830e642f5a9b3edf21020d9fb143b5ff8ff0c641fea3f70f7b is exactly local-workflow-orch-image.json; the other nine files have distinct hashes.",
+        "/Users/kamenkamenov/.codex/skills/research-playbook/references/planner-handoff.md: each LOCAL_FILE evidence item requires a source locator and its 64-hex source SHA-256, and requirement evidence IDs must jointly establish the research value; a directory locator paired with one member file's hash does not establish the other nine proposal claims.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json: every FUTURE requirement status cites EV-PROPOSALS and every planner_readiness_constraints record ultimately depends on EV-PROPOSALS for the approved target contract surface."
+      ],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O1",
+      "fingerprint": "planner:mg-o1:owner-derived-complete-budget-admission",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O1-FUTURE-BUDGET"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Until implementation replaces caller-supplied budgets with complete contract-derived admission, a caller can understate work and launch an owner without reserving the real unit cost; this remains legitimate planner-owned work after the research budget gaps are corrected.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json: Public material-gap classification MG-O1 and the O1 requirement statuses.",
+        "Tasks/prevention-system-completion/research-v8/requirements.json: O1-CURRENT-BUDGET and O1-FUTURE-BUDGET."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O2",
+      "fingerprint": "planner:mg-o2:typed-started-effect-reconciliation",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O2-CURRENT-RECONCILE",
+        "O2-FUTURE-RECONCILE"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Recovered STARTED effects currently stop as INDETERMINATE even when authoritative state can prove whether the effect happened, so the planner must wire contract-selected identities, observables, and typed reconciliation outcomes without blindly replaying effects.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json: Public material-gap classification MG-O2 and the O2 requirement statuses.",
+        "Tasks/prevention-system-completion/research-v8/requirements.json: O2-CURRENT-RECONCILE and O2-FUTURE-RECONCILE."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O3",
+      "fingerprint": "planner:mg-o3:semantic-exactly-once-terminalization",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O3-CURRENT-TERMINAL",
+        "O3-FUTURE-TERMINAL"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "An exit-zero owner can currently be recorded as successful without proving its promised outcome, so the planner must add command-specific semantic re-observation and exactly one durable terminal event/artifact pair.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json: Public material-gap classification MG-O3 and the O3 requirement statuses.",
+        "Tasks/prevention-system-completion/research-v8/requirements.json: O3-CURRENT-TERMINAL and O3-FUTURE-TERMINAL."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O4",
+      "fingerprint": "planner:mg-o4:parent-only-child-delegation",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O4-CURRENT-PARENT",
+        "O4-FUTURE-PARENT"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The sole child-only owner can currently be dispatched without a live allowed parent, so the planner must reject standalone use and atomically bind child preparation to one verified, unconsumed parent delegation.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json: Public material-gap classification MG-O4 and the O4 requirement statuses.",
+        "Tasks/prevention-system-completion/research-v8/requirements.json: O4-CURRENT-PARENT and O4-FUTURE-PARENT."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O5",
+      "fingerprint": "planner:mg-o5:materialized-schema-trusted-binding",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O5-CURRENT-PARAMETERS",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Hard-coded adapter lists can currently accept parameters without proving the selected approved schema, provider, repository root, or symlink-contained path, so the planner must bind every field through the materialized contract before constructing argv or a typed child call.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json: Public material-gap classification MG-O5 and the O5 requirement statuses.",
+        "Tasks/prevention-system-completion/research-v8/requirements.json: O5-CURRENT-PARAMETERS and O5-FUTURE-PARAMETERS."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    }
+  ]
+}

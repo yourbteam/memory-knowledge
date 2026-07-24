@@ -1,0 +1,41 @@
+{
+  "schema_version": 1,
+  "source_round": 1,
+  "candidate_hash": "b15d60f5f2fe04738753aa9c93347532d53320902462cab3536228dbc9b30768",
+  "adjudication_id": "adjudication-ae93c2c122dd863b312ef72b",
+  "accepted_fix_count": 4,
+  "corrections": [
+    {
+      "id": "GAP-PLANNER-READINESS-GROUNDING",
+      "required_change": "Every planner obligation must identify exact current file and symbol or operational boundary anchors, exact current or new test locations and observables, a concrete code or authority owner, finite required inputs with acquisition or decision contracts, a measurable closure condition, and supporting evidence IDs. Proposed component labels alone are not implementation anchors."
+    },
+    {
+      "id": "RCOV-CURRENT-COVERAGE-MATRICES-MISSING",
+      "required_change": "Add complete current-state matrices for all 25 registered sequences, every governed mechanical operation and raw or typed boundary, every intent-to-reuse lifecycle transition, every long-running controller and atomic-unit admission component, every durable transition/effect boundary including branch and multiple-run ownership, and every required metric producer, denominator, aggregation window, exclusion rule, and query status. Treat external automation internals as unproved and require black-box adapter acceptance rather than inventing facts."
+    },
+    {
+      "id": "RCOV-ACC-OVERHEAD-ACCEPTANCE-PARTIAL",
+      "required_change": "Define the overhead acceptance contract explicitly: mechanical_seconds divided by governed_active_seconds must be at most 0.10 and should reach 0.05; report the observed value within the 5-to-10-percent band. Exclude user-approval wait, external service or rate-limit wait, and intentionally productive model or domain execution only when separately event-classified; never exclude local retries, command reconstruction, malformed-input recovery, guard or selector work, or correction overhead."
+    },
+    {
+      "id": "GAP-AUTHORITATIVE-INTERCEPTION",
+      "required_change": "Replace generic host-adapter claims with a per-action enforcement matrix. For Bash, apply_patch, and MCP, ground PreToolUse denial or rewrite plus registry applicability selection. For unified shell, WebSearch or built-in browser paths, subagent launch, and any non-MCP remote workflow path not covered by PreToolUse, state that the current host cannot provide complete interception. A future governed runner may satisfy the requirement only by structurally withholding unsupported tools from the granted tool manifest or by a future host-owned pre-dispatch hook; if neither is available, the action class must fail visibly as unsupported and the package must carry that host capability as an explicit implementation dependency rather than claiming a present adapter."
+    }
+  ],
+  "carried_dispositions": {
+    "HANDOFF_TO_PLANNER": [
+      "GAP-ENTRYPOINT-SYSTEM-WIDE",
+      "GAP-TYPED-DISPATCH",
+      "GAP-AUTHORITATIVE-INTERCEPTION",
+      "GAP-MANDATORY-CORRECTION",
+      "GAP-CAUSAL-LEARNING",
+      "GAP-FULL-UNIT-ADMISSION",
+      "GAP-COMMON-DURABLE-RESUME",
+      "GAP-SYSTEM-METRICS"
+    ],
+    "ACCEPT_LIMITATION": [
+      "GAP-FINITE-EVIDENCE-COMPLETENESS"
+    ]
+  },
+  "scope_change": false
+}

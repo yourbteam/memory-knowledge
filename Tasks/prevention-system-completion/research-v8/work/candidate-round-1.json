@@ -1,0 +1,145 @@
+{
+  "schema_version": 1,
+  "research_markdown": "# Owner-runtime terminal closure\n\nAll five reviewed defects are confirmed at stable boundaries. The selected owner contract contains no machine-readable UnitBudget for any of the ten AVAILABLE owners, while the controller accepts caller-supplied values. Every named reconciler resolves to a fail-closed placeholder and STARTED effects are always made INDETERMINATE. Exit zero is terminalized without loading a semantic terminal contract; blocker re-entry can even exit zero when finalOk is false. Blocker re-entry is the sole non-standalone owner, but ActionIntent and dispatch carry no active-parent proof and both named parents currently require custodian evidence. Parameter validation uses hardcoded adapter tables rather than the selected schema, and paths have no per-parameter trusted-root binding, traversal rejection, or resolved containment proof.\n\nThe stable boundary is fail-closed materialization. An owner may execute only when its content-addressed contract supplies: a complete authoritative UnitBudget; an implemented typed reconciler with effect-bound observables; an executable semantic terminal verifier; valid parent delegation when non-standalone; and a complete parameter schema with per-path root bindings. No numeric budget, effect result, terminal marker, parent context, or path root may be inferred from prose or identifiers. Existing deterministic observables make bootstrap and promotion the strongest reconciliation candidates, but no current prevention reconciler invokes them. Owners lacking finite custodian inputs remain non-executable rather than retaining an inaccurate AVAILABLE label.",
+  "evidence_index": [
+    {
+      "id": "EV-REQ",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v8/requirements.json",
+      "source_sha256": "574c42fcb1755a65b700332d3011f7540b66e73e3ecdc3d939240f4da1bdaae7",
+      "accessed_at": null,
+      "supported_claim": "Defines all ten frozen current/future requirements and acceptance boundaries.",
+      "limitations": "Requirement authority, not current-runtime proof."
+    },
+    {
+      "id": "EV-OWNER-CONTRACTS",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contracts.json",
+      "source_sha256": "f13602a9094227eb986af83164ab95cfc26d93fa5ec537dc852fbb6ab73d29af",
+      "accessed_at": null,
+      "supported_claim": "The ten AVAILABLE rows contain prose budget, reconciliation, terminal, effect, and parameter descriptions but no numeric machine-readable UnitBudget.",
+      "limitations": "Descriptive fields are not executable typed contracts."
+    },
+    {
+      "id": "EV-MANIFEST",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-migration-manifest.json",
+      "source_sha256": "0ee6c3be164e4e7d932641b0cba9d0aab8117a3fdd0942fc759d70ccae429bcc",
+      "accessed_at": null,
+      "supported_claim": "Names owner contract symbols and shows blocker re-entry is non-standalone with exactly two parent IDs.",
+      "limitations": "Contains no active-parent proof or per-path root assignment."
+    },
+    {
+      "id": "EV-BUDGET",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_budget.py",
+      "source_sha256": "23fbc50e66326151cca4976eea433d0d54a208d559e816bd5a5765042dcc6429",
+      "accessed_at": null,
+      "supported_claim": "UnitBudget is numeric but permits empty mandatory roles and zero overheads and has no owner-derived producer.",
+      "limitations": "Defines arithmetic, not authoritative per-owner values."
+    },
+    {
+      "id": "EV-CONTROLLER",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_controller.py",
+      "source_sha256": "78c99d8b9a72863d8d23af0a7523bf7c32e9b77b3b51e9eae33124a328f281b1",
+      "accessed_at": null,
+      "supported_claim": "Accepts caller-supplied budgets, ignores standalone and parent metadata, and invokes the owner runtime after reservation.",
+      "limitations": "Does not own semantic reconciliation or terminal parsing."
+    },
+    {
+      "id": "EV-RUNTIME",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_owner_runtime.py",
+      "source_sha256": "f5d05096f2fe7ec5a01d57505893a040dd63b7138c7928a4d074f4d7adfeb01e",
+      "accessed_at": null,
+      "supported_claim": "Persists effect identities but maps every STARTED effect to INDETERMINATE and every zero-exit EXECUTED effect to TERMINAL without semantic validation.",
+      "limitations": "Does not invoke owner reconciler or terminal contract symbols."
+    },
+    {
+      "id": "EV-ADAPTERS",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_adapters.py",
+      "source_sha256": "225e3d7b308a828e59ba29993dbfb2b20b092dd17c67609b0db80749f4a1b96a",
+      "accessed_at": null,
+      "supported_claim": "Uses hardcoded parameter/path tables, passes paths unchanged, exposes blocker re-entry directly, and resolves every reconciler symbol to a fail-closed placeholder.",
+      "limitations": "Does not consume owner schemas, roots, parent metadata, or terminal contracts."
+    },
+    {
+      "id": "EV-CONTRACT",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_contract.py",
+      "source_sha256": "21d908eb9f7ac2a08a536d2c32542733563535d615c8e57cac804f3bf0f48c5c",
+      "accessed_at": null,
+      "supported_claim": "ActionIntent has no parent context; PATH JSON rejects absolute input but not traversal or resolved escape, and direct dataclass construction bypasses JSON validation.",
+      "limitations": "Materialized owner schema is not converted to executable ParameterSpec records."
+    },
+    {
+      "id": "EV-WORK-MEMORY",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/work_memory.py",
+      "source_sha256": "98803326b602ffc5d36f2f402c26d25604cef83c6426a38948f332cf40c8307b",
+      "accessed_at": null,
+      "supported_claim": "Defines the three reconciliation outcomes and trusted-root containment helpers available for reuse.",
+      "limitations": "Those helpers are not connected to owner runtime dispatch."
+    },
+    {
+      "id": "EV-BLOCKER-SOURCE",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py",
+      "source_sha256": "037b3e8d81023c885e10dae2965deccaebf335cde3ce64313e96597998b3c223",
+      "accessed_at": null,
+      "supported_claim": "Re-entry emits verdict/finalOk/errorCode but returns zero unconditionally after non-dry execution.",
+      "limitations": "Does not validate prevention parent context."
+    },
+    {
+      "id": "EV-BOOTSTRAP-SOURCE",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_bootstrap.py",
+      "source_sha256": "a1c16783567bb8bbb84be2e59a636bf6ef73d7ba85fc684c706bcda6590f8d30",
+      "accessed_at": null,
+      "supported_claim": "Implements deterministic artifact, bundle, receipt, run, event, and retry-recovery identities suitable for a typed reconciler.",
+      "limitations": "The prevention runtime does not invoke that recovery logic."
+    },
+    {
+      "id": "EV-PROMOTION-SOURCE",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_promotion_lifecycle.py",
+      "source_sha256": "49e66d7a0e5944419f7e59902056740e7510302e21ad4e707bd263ced822b731",
+      "accessed_at": null,
+      "supported_claim": "Implements explicit lifecycle identities and terminal stages suitable for typed reconciliation and terminal verification.",
+      "limitations": "No prevention reconciler or terminal verifier currently calls it."
+    }
+  ],
+  "material_gaps": [
+    "MG-O1-OWNER-BUDGET-EVIDENCE-ABSENT",
+    "MG-O2-OWNER-RECONCILERS-ABSENT",
+    "MG-O3-SEMANTIC-TERMINAL-VERIFICATION-ABSENT",
+    "MG-O4-ACTIVE-PARENT-CONTEXT-ABSENT",
+    "MG-O5-SCHEMA-ROOT-BINDING-ABSENT"
+  ],
+  "planner_readiness_constraints": {
+    "PO-O1-BUDGET": {"status":"READY","implementation_anchors":["owner-contracts.json AVAILABLE rows","prevention_budget.UnitBudget","PreventionController.execute"],"verification_anchors":["missing/incomplete contract budget rejects before prepare"],"required_inputs":["Each implementation-source custodian supplies authoritative numeric complete-unit values and provenance; otherwise the owner remains fail closed."],"owner":"prevention owner-contract maintainer and named implementation-source custodian","closure_condition":"Every executable owner content-addresses a complete UnitBudget and caller values are ignored/rejected.","evidence_ids":["EV-REQ","EV-OWNER-CONTRACTS","EV-BUDGET","EV-CONTROLLER"]},
+    "PO-O1-BUDGET-ACCEPTANCE": {"status":"READY","implementation_anchors":["prevention_registry.load_owner_contracts","BudgetAuthority.admit","PreventionController.execute ordering"],"verification_anchors":["understatement, missing role, identity mismatch, exact-boundary, no-runner cases"],"required_inputs":["Authoritative per-owner budget payloads from PO-O1-BUDGET."],"owner":"prevention budget verification maintainer","closure_condition":"All invalid budgets reject before effects and exact complete budgets admit once.","evidence_ids":["EV-REQ","EV-BUDGET","EV-CONTROLLER"]},
+    "PO-O2-RECONCILE": {"status":"READY","implementation_anchors":["OwnerRuntime effect states","prevention_adapters reconcile symbols","work_memory reconciliation enum","real implementation observables"],"verification_anchors":["STARTED invokes reconciler without handler and persists one outcome"],"required_inputs":["Each owner custodian supplies a finite effect-bound observable contract; unbound owners remain INDETERMINATE."],"owner":"prevention runtime maintainer and implementation-source custodian","closure_condition":"Every reconciler is content-addressed and never blindly reruns STARTED effects.","evidence_ids":["EV-REQ","EV-RUNTIME","EV-ADAPTERS","EV-WORK-MEMORY","EV-BOOTSTRAP-SOURCE","EV-PROMOTION-SOURCE"]},
+    "PO-O2-RECONCILE-ACCEPTANCE": {"status":"READY","implementation_anchors":["owner-runtime crash fixture","owner-specific artifact/ledger observable boundaries"],"verification_anchors":["red-before/green-after crash window; repeated resume; mismatch remains INDETERMINATE"],"required_inputs":["Captured same-path states for each supported observable class."],"owner":"prevention verification maintainer","closure_condition":"Supported owner classes reconcile without duplication; unsupported cases stop unresolved.","evidence_ids":["EV-REQ","EV-RUNTIME","EV-BOOTSTRAP-SOURCE","EV-PROMOTION-SOURCE"]},
+    "PO-O3-TERMINAL": {"status":"READY","implementation_anchors":["OwnerRuntime EXECUTED branch","manifest terminal symbols","owner terminal descriptions"],"verification_anchors":["zero exit plus false/missing evidence does not terminalize; valid evidence emits once"],"required_inputs":["Each owner custodian materializes its command-specific terminal verifier; child terminal remains parent-owned."],"owner":"prevention runtime and owner-contract maintainers","closure_condition":"No owner terminalizes from exit code alone and exactly one semantic terminal record exists.","evidence_ids":["EV-REQ","EV-OWNER-CONTRACTS","EV-MANIFEST","EV-RUNTIME","EV-BLOCKER-SOURCE"]},
+    "PO-O3-TERMINAL-ACCEPTANCE": {"status":"READY","implementation_anchors":["owner-runtime runner/result boundary","semantic terminal event schema"],"verification_anchors":["malformed, false, absent marker, artifact mismatch, replay, and valid cases"],"required_inputs":["Valid and invalid fixtures from each real owner output contract."],"owner":"prevention verification maintainer","closure_condition":"Semantic failure and exactly-once success are proven for every executable owner class.","evidence_ids":["EV-REQ","EV-RUNTIME","EV-BLOCKER-SOURCE"]},
+    "PO-O4-PARENT": {"status":"READY","implementation_anchors":["manifest blocker-reentry row","ActionIntent","PreventionController eligibility","blocker adapter"],"verification_anchors":["direct child rejects before budget; valid active parent binds lifecycle identity"],"required_inputs":[],"owner":"prevention typed-dispatch maintainer","closure_condition":"Child executes only through an eligible active named parent and remains fail closed while both parents lack evidence.","evidence_ids":["EV-REQ","EV-MANIFEST","EV-CONTROLLER","EV-ADAPTERS","EV-BLOCKER-SOURCE"]},
+    "PO-O4-PARENT-ACCEPTANCE": {"status":"READY","implementation_anchors":["typed-dispatch tests","journal ownership boundary"],"verification_anchors":["direct, forged, mismatched, stale, unavailable, and valid parent cases"],"required_inputs":[],"owner":"prevention verification maintainer","closure_condition":"Every invalid delegation rejects before effects and valid delegation preserves parent identity.","evidence_ids":["EV-REQ","EV-MANIFEST","EV-CONTROLLER"]},
+    "PO-O5-PARAMETERS": {"status":"READY","implementation_anchors":["ParameterSpec/ParameterValue/ActionIntent","owner registry","adapter validation","work_memory trusted-root helpers"],"verification_anchors":["schema-exact validation and root-contained resolution before argv"],"required_inputs":["Each custodian supplies a finite per-path root-key assignment; absent assignments keep the owner fail closed."],"owner":"prevention owner-contract/adapter maintainers and implementation-source custodian","closure_condition":"Selected owner schema is authoritative and every path has a trusted root or rejects.","evidence_ids":["EV-REQ","EV-OWNER-CONTRACTS","EV-MANIFEST","EV-CONTRACT","EV-ADAPTERS","EV-WORK-MEMORY"]},
+    "PO-O5-PARAMETERS-ACCEPTANCE": {"status":"READY","implementation_anchors":["adapter invocation-plan boundary","canonical ActionIntent parsing","trusted-root containment helper"],"verification_anchors":["type/tag/enum/cardinality/extra/missing/root/absolute/traversal/symlink matrix"],"required_inputs":["Canonical valid fixtures and per-path root binding table from owner evidence."],"owner":"prevention verification maintainer","closure_condition":"All invalid inputs fail before argv/effects and valid inputs match real parser argv.","evidence_ids":["EV-REQ","EV-CONTRACT","EV-ADAPTERS","EV-WORK-MEMORY"]}
+  },
+  "requirement_statuses": [
+    {"requirement_id":"O1-CURRENT-BUDGET","research_value":{"owner_count":10,"machine_readable_owner_budgets":0,"caller_understatement_confirmed":true,"stable_policy":"all ten fail closed until authoritative complete-unit values are content-addressed"},"evidence_ids":["EV-REQ","EV-OWNER-CONTRACTS","EV-BUDGET","EV-CONTROLLER"]},
+    {"requirement_id":"O1-FUTURE-BUDGET","research_value":{"source":"selected owner contract only","mandatory_coverage":["core","internal-readiness","requirements-coverage","requirements-satisfaction","adjudication","materialization","terminal","retry"],"order":"validate and reserve before preparation","failure":"missing, incomplete, overridden, mismatched, or insufficient rejects"},"evidence_ids":["EV-REQ","EV-OWNER-CONTRACTS","EV-BUDGET","EV-CONTROLLER"]},
+    {"requirement_id":"O2-CURRENT-RECONCILE","research_value":{"durable_identities":["journal_id","effect_id","idempotency_key"],"implemented_owner_reconcilers":0,"started_behavior":"always INDETERMINATE","strongest_observable_candidates":["discovery-bootstrap","discovery-promotion-lifecycle"],"current_supported_owners":0},"evidence_ids":["EV-REQ","EV-RUNTIME","EV-ADAPTERS","EV-WORK-MEMORY","EV-BOOTSTRAP-SOURCE","EV-PROMOTION-SOURCE"]},
+    {"requirement_id":"O2-FUTURE-RECONCILE","research_value":{"outcomes":["ALREADY_APPLIED","NOT_APPLIED","INDETERMINATE"],"rule":"invoke typed reconciler without handler; persist evidence-bound outcome; only NOT_APPLIED may execute once","containment":"unbound observable remains INDETERMINATE"},"evidence_ids":["EV-REQ","EV-RUNTIME","EV-WORK-MEMORY"]},
+    {"requirement_id":"O3-CURRENT-TERMINAL","research_value":{"current_rule":"returncode zero terminalizes","semantic_contract_loaded":false,"semantic_event_emitted":false,"false_success_example":"blocker re-entry can return zero with finalOk false","owners_enforcing_terminal_schema":0},"evidence_ids":["EV-REQ","EV-OWNER-CONTRACTS","EV-RUNTIME","EV-BLOCKER-SOURCE"]},
+    {"requirement_id":"O3-FUTURE-TERMINAL","research_value":{"exit_zero":"necessary but insufficient","required_steps":["load contract","parse envelope/marker","validate artifact/state and identity","persist evidence","emit exactly one terminal event"],"child_rule":"parent-owned terminal only"},"evidence_ids":["EV-REQ","EV-MANIFEST","EV-RUNTIME","EV-BLOCKER-SOURCE"]},
+    {"requirement_id":"O4-CURRENT-PARENT","research_value":{"child_only_rows":["mawf-playbook-blocker-reentry"],"parents":["mawf-playbook-full-test","mawf-playbook-speed-test"],"parent_availability":"both CUSTODIAN_EVIDENCE_REQUIRED","intent_parent_context":false,"direct_dispatch_possible":true},"evidence_ids":["EV-REQ","EV-MANIFEST","EV-CONTROLLER","EV-ADAPTERS","EV-BLOCKER-SOURCE"]},
+    {"requirement_id":"O4-FUTURE-PARENT","research_value":{"direct_policy":"reject before budget or preparation","valid_parents":["mawf-playbook-full-test","mawf-playbook-speed-test"],"binding":["task","run","branch","worktree","gate policy","lifecycle status"],"current_result":"child remains fail closed"},"evidence_ids":["EV-REQ","EV-MANIFEST","EV-CONTROLLER"]},
+    {"requirement_id":"O5-CURRENT-PARAMETERS","research_value":{"validation_source":"hardcoded adapter tables","materialized_schema_consumed":false,"per_path_root_bindings":false,"traversal_checked":false,"symlink_escape_checked":false,"repeated_parameters_supported":false,"trusted_root_helpers_available_but_unused":true},"evidence_ids":["EV-REQ","EV-OWNER-CONTRACTS","EV-MANIFEST","EV-CONTRACT","EV-ADAPTERS","EV-WORK-MEMORY"]},
+    {"requirement_id":"O5-FUTURE-PARAMETERS","research_value":{"source":"selected content-addressed parameter schema","checks":["fields","requiredness","type","tag","enum","cardinality","secret policy"],"path_pipeline":["declared root","reject absolute/traversal","resolve symlinks","prove containment","apply existence/type policy","construct argv"],"missing_input":"finite per-path root assignment"},"evidence_ids":["EV-REQ","EV-MANIFEST","EV-CONTRACT","EV-ADAPTERS","EV-WORK-MEMORY"]}
+  ]
+}

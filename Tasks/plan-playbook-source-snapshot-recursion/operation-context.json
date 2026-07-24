@@ -1,0 +1,38 @@
+{
+  "intended_outcome": "Prevent recursive Plan Playbook controller archives from blocking grounded Decision 5 package validation.",
+  "repeatability_reason": "Every fresh Plan Playbook controller snapshots an allowed repository that can contain prior controller archives.",
+  "repeatability_evidence_ids": [
+    "blk-0ed9f07c51859cfe4d69b5fd"
+  ],
+  "required_inputs": [
+    "canonical plan_package.py",
+    "focused source-snapshot regression",
+    "grounded Decision 5 revision-4 artifacts"
+  ],
+  "dependencies": [
+    {
+      "repository_key": "memory-knowledge",
+      "path": "skills/plan-playbook/scripts/plan_package.py"
+    },
+    {
+      "repository_key": "memory-knowledge",
+      "path": "tests/test_plan_playbook_v2.py"
+    }
+  ],
+  "failure_handling": [
+    {
+      "fingerprint": "0ed9f07c51859cfe4d69b5fd9040550fc9040ebd073eab3a591f8a48617cacab",
+      "symptom": "Source snapshots recursively contain earlier source snapshots until path creation fails.",
+      "response": "Fix the canonical inclusion contract, verify focused behavior, install the validated skill, and rerun the same Decision 5 draft binding."
+    }
+  ],
+  "verification_contract": {
+    "quality": "same-path",
+    "expected_outcome": "passed",
+    "success_evidence": "Installed controller returns DRAFT_RECORDED for the exact Decision 5 revision-4 draft."
+  },
+  "effect_class": "idempotent-local",
+  "environment_annotations": [],
+  "semantic_flag_annotations": [],
+  "volatility_annotations": []
+}

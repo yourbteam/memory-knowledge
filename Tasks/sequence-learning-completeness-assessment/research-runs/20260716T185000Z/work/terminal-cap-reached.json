@@ -1,0 +1,42 @@
+{
+  "schema_version": 1,
+  "package_id": "research-package-93135184aa76791ab93ed55c",
+  "terminal_verdict": "CAP_REACHED",
+  "reason": "TIME_BUDGET",
+  "deadline_at": "2026-07-16T19:50:00Z",
+  "terminal_check_at": "2026-07-16T19:50:01Z",
+  "controller_result": {
+    "verdict": "CAP_REACHED",
+    "reason": "TIME_BUDGET",
+    "candidate_hash": null,
+    "envelope_hash": null,
+    "actionable_fingerprints": []
+  },
+  "in_flight_agents": [],
+  "package_emitted": false,
+  "completed_before_cap": [
+    "Two complete core/lens/adjudication rounds",
+    "Round-3 fresh core research",
+    "Parent materialization of the two round-2 FIX_IN_RESEARCH corrections into candidate-round-3.json"
+  ],
+  "remaining_research_gates": [
+    "Controller registration of candidate-round-3.json against envelope-round-3.json",
+    "Fresh round-3 INTERNAL_READINESS lens on the registered candidate and envelope hashes",
+    "Fresh round-3 REQUIREMENTS_COVERAGE lens on the identical registered candidate and envelope hashes",
+    "Fresh round-3 REQUIREMENTS_SATISFACTION lens on the identical registered candidate and envelope hashes",
+    "Fresh round-3 adjudication of every raw lens finding",
+    "Controller validation that no FIX_IN_RESEARCH findings remain",
+    "Controller validation of all 21 planner-readiness records with non-empty grounded implementation and verification anchors",
+    "Emission and manifest verification of the exact six-file package"
+  ],
+  "unvalidated_candidate_material_gaps": [
+    "MG-001 action-producer coverage",
+    "MG-002 pre-dispatch interception",
+    "MG-003 closed success-learning loop",
+    "MG-004 causal self-diagnosis-to-repair join",
+    "MG-005 immutable registered repair",
+    "MG-006 silver/gold and effectiveness contracts",
+    "MG-007 cross-runtime/branch-safe state ownership"
+  ],
+  "note": "The seven material gaps are candidate planning findings, not controller-validated planner handoff findings, because the final fresh lens/adjudication/readiness round did not run. No PASS package may be emitted from this run."
+}

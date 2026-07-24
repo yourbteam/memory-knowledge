@@ -83,10 +83,78 @@ class InstallerTests(unittest.TestCase):
             installer.recover(journal)
             self.assertEqual((dest/"value").read_text(),"original")
 
-    def test_both_requires_reconciled_record(self):
-        text=(ROOT/"working-agreement/install_skills.py").read_text()
-        self.assertIn("cross-client variants are not reconciled",text)
-        self.assertIn("--reconciliation",text)
+    def _gate_fixture(self, root: Path):
+        source = root/"source"; claude = root/"claude"; state = root/"state"
+        (source/"one").mkdir(parents=True)
+        (source/"one/SKILL.md").write_text("---\nname: one\ndescription: test\n---\nbody\n")
+        manifest = source/"managed-skills.txt"; manifest.write_text("one\n")
+        return source, manifest, claude, state
+
+    def _run_main(self, source, manifest, claude, state, *extra):
+        command = [sys.executable, str(ROOT/"working-agreement/install_skills.py"),
+                   "--source", str(source), "--manifest", str(manifest),
+                   "--claude-root", str(claude), "--state-dir", str(state), *extra]
+        return subprocess.run(command, capture_output=True, text=True)
+
+    def test_claude_target_without_reconciliation_is_refused(self):
+        with tempfile.TemporaryDirectory() as raw:
+            source, manifest, claude, state = self._gate_fixture(Path(raw))
+            result = self._run_main(source, manifest, claude, state, "--target", "claude")
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("requires --reconciliation", result.stderr)
+            self.assertFalse(claude.exists())
+
+    def test_incomplete_or_nonterminal_reconciliation_is_refused(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw); source, manifest, claude, state = self._gate_fixture(root)
+            reconciliation = root/"reconciliation.json"
+            reconciliation.write_text(json.dumps({"rows": []}))
+            result = self._run_main(source, manifest, claude, state,
+                                    "--target", "claude", "--reconciliation", str(reconciliation))
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("lacks a decision", result.stderr)
+            reconciliation.write_text(json.dumps({"rows": [{"name": "one", "status": "claude-divergent-preserved"}]}))
+            result = self._run_main(source, manifest, claude, state,
+                                    "--target", "claude", "--reconciliation", str(reconciliation))
+            self.assertNotEqual(result.returncode, 0)
+            self.assertIn("not a terminal reconciliation decision", result.stderr)
+            self.assertFalse(claude.exists())
+
+    def test_projection_manifest_reconciliation_fails_closed_on_drift(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw); source, manifest, claude, state = self._gate_fixture(root)
+            entry = {"disposition": "SHARED_IDENTICAL", "targets": ["codex", "claude"],
+                     "scenario_groups": ["CAP-SHARED"], "canonical_tree_sha256": installer.tree_hash(source/"one"),
+                     "projected_tree_sha256": installer.tree_hash(source/"one"), "generator": None,
+                     "generator_sha256": None, "divergence_reason": None}
+            reconciliation = root/"projections.json"
+            reconciliation.write_text(json.dumps({"schema_version": 1, "entries": {"one": entry}}))
+            ok = self._run_main(source, manifest, claude, state,
+                                "--target", "claude", "--reconciliation", str(reconciliation))
+            self.assertEqual(ok.returncode, 0, ok.stderr)
+            self.assertEqual(installer.tree_hash(claude/"one"), entry["canonical_tree_sha256"])
+            (source/"one/SKILL.md").write_text("---\nname: one\ndescription: test\n---\ndrifted\n")
+            drifted = self._run_main(source, manifest, claude, state,
+                                     "--target", "claude", "--reconciliation", str(reconciliation))
+            self.assertNotEqual(drifted.returncode, 0)
+            self.assertIn("canonical tree changed after projection", drifted.stderr)
+
+    def test_unmanaged_installed_skills_are_preserved_and_reported(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw); source, manifest, claude, state = self._gate_fixture(root)
+            (claude/"legacy-loop").mkdir(parents=True); (claude/"legacy-loop/keep").write_text("yes")
+            entry = {"disposition": "SHARED_IDENTICAL", "targets": ["codex", "claude"],
+                     "scenario_groups": ["CAP-SHARED"], "canonical_tree_sha256": installer.tree_hash(source/"one"),
+                     "projected_tree_sha256": installer.tree_hash(source/"one"), "generator": None,
+                     "generator_sha256": None, "divergence_reason": None}
+            reconciliation = root/"projections.json"
+            reconciliation.write_text(json.dumps({"schema_version": 1, "entries": {"one": entry}}))
+            result = self._run_main(source, manifest, claude, state,
+                                    "--target", "claude", "--reconciliation", str(reconciliation))
+            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertIn("unmanaged preserved", result.stdout)
+            self.assertIn("legacy-loop", result.stdout)
+            self.assertEqual((claude/"legacy-loop/keep").read_text(), "yes")
 
     def test_recover_new_install_after_rename_before_journal_bit(self):
         with tempfile.TemporaryDirectory() as raw:

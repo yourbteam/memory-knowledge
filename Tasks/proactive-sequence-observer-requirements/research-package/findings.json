@@ -1,0 +1,29 @@
+[
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "5f8b38fb7864d174f17c1993b8b8eeb9972bf768a92d4cec4b817392c7592ec7",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "candidate states no general checked dispatcher exists",
+        "future_command_invoker_adapter is an explicit future contract",
+        "no current general invoker surface exists in frozen evidence"
+      ],
+      "fingerprint": "internal-readiness:missing-real-command-invoker-anchor",
+      "id": "IR-OBS-INVOKER-ANCHOR",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "BLOCKER",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "A fresh planner must choose where governed command execution is intercepted because no general dispatcher exists today.",
+      "proposed_disposition": "BLOCKED_ON_EVIDENCE",
+      "requirement_ids": [
+        "OBS-002",
+        "OBS-004",
+        "OBS-005"
+      ],
+      "status": "OPEN",
+      "type": "EVIDENCE_LIMIT"
+    }
+  }
+]

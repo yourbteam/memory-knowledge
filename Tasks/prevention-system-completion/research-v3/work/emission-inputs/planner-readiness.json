@@ -1,0 +1,502 @@
+[
+  {
+    "obligation_id": "PO-CUR-ENTRYPOINT",
+    "status": "READY",
+    "implementation_anchors": [
+      "operations/sequences/SEQUENCES.md Available Sequences rows 34-64",
+      "migration inventory keyed by all 25 sequence_id values; representative typed owner pattern skills/research-playbook/scripts/research_run.py:Operation, ResearchDriver.run"
+    ],
+    "verification_anchors": [
+      "tests/prevention/test_owner_coverage.py: assert 25/25 rows resolve to exactly one executable owner and kill/reinvoke each adapter resumes without operator command reconstruction",
+      "black-box adapter contract for every automation outside the finite evidence set: initialize->work->gate->terminal observables"
+    ],
+    "required_inputs": [
+      "the frozen 25-row owner_matrix",
+      "each external automation custodian's executable invocation and terminal pass signal"
+    ],
+    "owner": "prevention controller implementer plus each registry automation custodian named by EV-REGISTRY",
+    "closure_condition": "Every frozen registry row has one owner adapter and the coverage test reports 25/25 with no prose-only or multi-entry ambiguity.",
+    "evidence_ids": [
+      "EV-REGISTRY",
+      "EV-RESEARCH"
+    ]
+  },
+  {
+    "obligation_id": "PO-CUR-TYPED",
+    "status": "READY",
+    "implementation_anchors": [
+      "scripts/work_memory.py:EVENT_FIELDS/build_parser/transact",
+      "scripts/sequence_checked_exec.py:build_parser/run",
+      "scripts/sequence_guard.py:cmd_guard",
+      "skills/research-playbook/scripts/research_run.py:Operation/apply_candidate_correction"
+    ],
+    "verification_anchors": [
+      "tests/prevention/test_typed_dispatch.py: unknown operation, extra field, raw JSON/text patch, free command string, and malformed argv all fail before mutation",
+      "governed-run event query raw_dispatch_count=0"
+    ],
+    "required_inputs": [
+      "typed_raw_operation_matrix",
+      "closed schema for each listed governed operation"
+    ],
+    "owner": "memory-knowledge prevention controller implementer",
+    "closure_condition": "All raw rows in the matrix are replaced by closed typed calls and injected raw paths produce zero effects.",
+    "evidence_ids": [
+      "EV-LEDGER",
+      "EV-GUARD",
+      "EV-CHECKED",
+      "EV-RESEARCH"
+    ]
+  },
+  {
+    "obligation_id": "PO-CUR-INTERCEPTION",
+    "status": "READY",
+    "implementation_anchors": [
+      "managed Codex PreToolUse hook for Bash/apply_patch/MCP using registry applicability selection",
+      "mcp-agents-workflow/src/workflow_orch/agents/tool_translator.py:translate_to_claude/translate_to_codex for structural tool grants",
+      "future host-owned pre-dispatch hook decision gate for unsupported classes"
+    ],
+    "verification_anchors": [
+      "tests/prevention/test_action_surface_interception.py: direct Bash/apply_patch/MCP are denied or rewritten before mutation",
+      "unified shell, WebSearch/browser, subagent launch, and non-MCP remote attempts are absent from granted manifest or visibly fail unsupported; no silent advisory fallback"
+    ],
+    "required_inputs": [
+      "managed hook deployment authority",
+      "host capability decision: structural withholding now or future hook for each unsupported class",
+      "registry applicability selector contract"
+    ],
+    "owner": "Codex host/admin policy owner and mcp-agents-workflow tool-grant implementer",
+    "closure_condition": "Every action class in the interception matrix either traverses an authoritative pre-dispatch selector or is structurally unavailable and fails visibly.",
+    "evidence_ids": [
+      "EV-HOOKS",
+      "EV-TOOL-MANIFEST",
+      "EV-GUARD"
+    ]
+  },
+  {
+    "obligation_id": "PO-CUR-CORRECTION",
+    "status": "READY",
+    "implementation_anchors": [
+      "scripts/blocker_catalog.py:fingerprint/cmd_open",
+      "scripts/work_memory.py:correction_recorded/bundle_transition_recorded/select successor bindings",
+      "scripts/discovery_promotion_lifecycle.py:_pending_correction/_verify_run"
+    ],
+    "verification_anchors": [
+      "tests/prevention/test_mandatory_successor.py: same-path verified correction creates prohibited predecessor and selector returns only successor",
+      "fresh compatible action increments prevented_failure_count and creates no execution_claimed for predecessor fingerprint"
+    ],
+    "required_inputs": [
+      "canonical operation compatibility key",
+      "same-path verification event identity",
+      "explicit correction supersession mapping"
+    ],
+    "owner": "memory-knowledge work-memory and selector implementer",
+    "closure_condition": "A verified correction makes predecessor dispatch impossible and a fresh compatible task deterministically executes the successor.",
+    "evidence_ids": [
+      "EV-BLOCKER",
+      "EV-LEDGER",
+      "EV-LIFECYCLE"
+    ]
+  },
+  {
+    "obligation_id": "PO-CUR-LEARNING",
+    "status": "READY",
+    "implementation_anchors": [
+      "scripts/sequence_observer.py:observe_committed_run/_reconstruct/_persist_event",
+      "scripts/discovery_bootstrap.py:bootstrap",
+      "scripts/discovery_promotion_lifecycle.py:cmd_drive",
+      "scripts/discovery_candidate_reconciliation.py:candidate_lifecycle_feedback"
+    ],
+    "verification_anchors": [
+      "extend tests/test_sequence_observer_end_to_end.py so the second compatible intent selects the registered implementation before execution",
+      "one lineage query returns every transition key from intent through registered reuse with no manual join"
+    ],
+    "required_inputs": [
+      "intent compatibility key",
+      "producer/consumer/key/observable transition matrix",
+      "preserved promotion approval manifest authority"
+    ],
+    "owner": "observer, discovery lifecycle, and reconciliation maintainers in memory-knowledge",
+    "closure_condition": "One durable lineage automatically advances across every matrix transition and later reuse is pre-action and registered.",
+    "evidence_ids": [
+      "EV-OBSERVER",
+      "EV-BOOTSTRAP",
+      "EV-LIFECYCLE",
+      "EV-RECON",
+      "EV-OBSERVER-TEST"
+    ]
+  },
+  {
+    "obligation_id": "PO-CUR-BUDGET",
+    "status": "READY",
+    "implementation_anchors": [
+      "skills/research-playbook/scripts/research_run.py:admit_round/_admit_operation/_retry_or_stop",
+      "common controller adapter admission interface for every long owner"
+    ],
+    "verification_anchors": [
+      "tests/prevention/test_full_unit_admission.py: one unit below required budget launches zero roles/effects and emits durable rejection",
+      "component audit includes core, 3 lenses, adjudicator, materialization, bounded retries, and terminal emission"
+    ],
+    "required_inputs": [
+      "per-role worst-case/quantile cost policy",
+      "materialization and terminal overhead estimate",
+      "bounded retry allowance",
+      "long-controller inventory"
+    ],
+    "owner": "research controller maintainer and each long-controller adapter custodian",
+    "closure_condition": "Every long controller reserves the whole atomic unit before launch; boundary tests show no under-budget start.",
+    "evidence_ids": [
+      "EV-RESEARCH",
+      "EV-REGISTRY"
+    ]
+  },
+  {
+    "obligation_id": "PO-CUR-RESUME",
+    "status": "READY",
+    "implementation_anchors": [
+      "skills/research-playbook/scripts/research_run.py:_controller_mutation/_emit/ResearchDriver.run",
+      "scripts/sequence_promote.py:recover/cmd_promote",
+      "scripts/discovery_candidate_reconciliation.py:_load_checkpoint/cmd_execute",
+      "workflow_state_store.py:save_state/load_state"
+    ],
+    "verification_anchors": [
+      "tests/prevention/test_transition_crash_matrix.py: crash before/after every transition and effect, reinvoke, assert next valid transition and one effect",
+      "branch A/B and multiple run IDs cannot consume or overwrite each other's journals"
+    ],
+    "required_inputs": [
+      "common transition enum",
+      "effect identity schema",
+      "branch/worktree ownership key",
+      "reconciliation rule per matrix row"
+    ],
+    "owner": "memory-knowledge prevention journal implementer and workflow-orch state-store maintainer",
+    "closure_condition": "Crash matrix passes for every row, every effect is exactly-once reconciled, and branch/multiple-run isolation holds.",
+    "evidence_ids": [
+      "EV-RESEARCH",
+      "EV-PROMOTE",
+      "EV-RECON",
+      "EV-WF-STATE"
+    ]
+  },
+  {
+    "obligation_id": "PO-CUR-METRICS",
+    "status": "READY",
+    "implementation_anchors": [
+      "scripts/work_memory.py:EVENT_FIELDS/_metrics/summarize",
+      "scripts/sequence_observer.py:_persist_event",
+      "skills/research-playbook/scripts/research_run.py:Metrics/_event/_terminate"
+    ],
+    "verification_anchors": [
+      "tests/prevention/test_metric_contracts.py validates producer, denominator, window, exclusion, query for every metric row",
+      "representative governed-run corpus reproduces queries and thresholds"
+    ],
+    "required_inputs": [
+      "metric matrix",
+      "representative window definition",
+      "event-class taxonomy for permitted overhead exclusions"
+    ],
+    "owner": "memory-knowledge telemetry/query implementer",
+    "closure_condition": "Every required metric has canonical events and a reproducible query; no required row remains partial/missing.",
+    "evidence_ids": [
+      "EV-LEDGER",
+      "EV-OBSERVER",
+      "EV-RESEARCH"
+    ]
+  },
+  {
+    "obligation_id": "PO-FUT-ENTRYPOINT",
+    "status": "READY",
+    "implementation_anchors": [
+      "new prevention sequence-owner registry adjacent to operations/sequences/SEQUENCES.md",
+      "adapter interface modeled on ResearchDriver.run but keyed by sequence_id"
+    ],
+    "verification_anchors": [
+      "tests/prevention/test_owner_coverage.py and black-box adapter acceptance suite"
+    ],
+    "required_inputs": [
+      "25-row owner_matrix",
+      "external custodian adapter descriptors"
+    ],
+    "owner": "prevention controller implementer",
+    "closure_condition": "Exactly one typed invocation owns every registered sequence from initialization to terminal emission.",
+    "evidence_ids": [
+      "EV-REGISTRY",
+      "EV-RESEARCH"
+    ]
+  },
+  {
+    "obligation_id": "PO-FUT-TYPED",
+    "status": "READY",
+    "implementation_anchors": [
+      "new closed Operation registry beside scripts/work_memory.py:EVENT_FIELDS",
+      "replace sequence_guard command strings and sequence_checked_exec arbitrary argv with typed operation payloads"
+    ],
+    "verification_anchors": [
+      "tests/prevention/test_typed_dispatch.py negative corpus and raw_dispatch_count=0"
+    ],
+    "required_inputs": [
+      "typed_raw_operation_matrix"
+    ],
+    "owner": "prevention dispatcher implementer",
+    "closure_condition": "Only registered typed operations can mutate governed state; unknown/extra/malformed input fails before effect.",
+    "evidence_ids": [
+      "EV-LEDGER",
+      "EV-GUARD",
+      "EV-CHECKED"
+    ]
+  },
+  {
+    "obligation_id": "PO-FUT-INTERCEPTION",
+    "status": "READY",
+    "implementation_anchors": [
+      "managed PreToolUse selector for Bash/apply_patch/MCP",
+      "structural tool withholding in host/tool manifest for unsupported classes",
+      "future host hook dependency gate"
+    ],
+    "verification_anchors": [
+      "action-surface bypass suite covers shell, edit, MCP, browser/search, subagent, and remote"
+    ],
+    "required_inputs": [
+      "host owner decision for unsupported classes",
+      "managed hook installation route"
+    ],
+    "owner": "Codex host/admin policy owner",
+    "closure_condition": "No granted mechanical action bypasses the selector; unsupported action classes are not granted or visibly fail.",
+    "evidence_ids": [
+      "EV-HOOKS",
+      "EV-TOOL-MANIFEST"
+    ]
+  },
+  {
+    "obligation_id": "PO-FUT-CORRECTION",
+    "status": "READY",
+    "implementation_anchors": [
+      "extend work_memory EVENT_FIELDS with prohibition/successor selection events and stable compatibility key",
+      "selector gate before execution_claimed"
+    ],
+    "verification_anchors": [
+      "failure-injection and fresh-task mandatory-successor tests"
+    ],
+    "required_inputs": [
+      "compatibility-key schema",
+      "same-path proof contract"
+    ],
+    "owner": "work-memory/selector implementer",
+    "closure_condition": "Verified correction atomically prohibits predecessor and makes successor the only dispatch result.",
+    "evidence_ids": [
+      "EV-LEDGER",
+      "EV-BLOCKER",
+      "EV-LIFECYCLE"
+    ]
+  },
+  {
+    "obligation_id": "PO-FUT-LEARNING",
+    "status": "READY",
+    "implementation_anchors": [
+      "single lineage controller joining sequence_observer, discovery_bootstrap, discovery_promotion_lifecycle, and candidate reconciliation",
+      "preserve approval manifest validation in discovery_candidate_reconciliation.validate_manifest"
+    ],
+    "verification_anchors": [
+      "extended end-to-end lifecycle test with pre-action reuse and missing-evidence fail-visible assertions"
+    ],
+    "required_inputs": [
+      "intent_to_reuse_transition_matrix",
+      "approval authority inputs"
+    ],
+    "owner": "memory-knowledge learning-controller implementer",
+    "closure_condition": "Every transition advances automatically only after its evidence/approval predicate and one lineage proves later reuse.",
+    "evidence_ids": [
+      "EV-OBSERVER",
+      "EV-BOOTSTRAP",
+      "EV-LIFECYCLE",
+      "EV-RECON",
+      "EV-OBSERVER-TEST"
+    ]
+  },
+  {
+    "obligation_id": "PO-FUT-BUDGET",
+    "status": "READY",
+    "implementation_anchors": [
+      "replace research_run.admit_round formula with full UnitBudget object",
+      "common admission adapter for all long owners"
+    ],
+    "verification_anchors": [
+      "under-budget boundary suite across long_controller_full_unit_budget_matrix"
+    ],
+    "required_inputs": [
+      "deterministic cost components and retry policy per owner"
+    ],
+    "owner": "prevention admission-controller implementer",
+    "closure_condition": "A durable admission decision reserves every full-unit component before any long effect starts.",
+    "evidence_ids": [
+      "EV-RESEARCH",
+      "EV-REGISTRY"
+    ]
+  },
+  {
+    "obligation_id": "PO-FUT-RESUME",
+    "status": "READY",
+    "implementation_anchors": [
+      "common PREPARED/COMMITTED transition/effect journal modeled on research_run._controller_mutation and sequence_promote.recover",
+      "workflow_state_store durable_generation integration adapter"
+    ],
+    "verification_anchors": [
+      "full crash/branch/multiple-run matrix"
+    ],
+    "required_inputs": [
+      "transition/effect schema",
+      "branch ownership identity"
+    ],
+    "owner": "prevention journal implementer plus workflow-orch state maintainer",
+    "closure_condition": "Every completed transition resumes at the next state and no completed effect repeats across crashes, branches, or runs.",
+    "evidence_ids": [
+      "EV-RESEARCH",
+      "EV-PROMOTE",
+      "EV-WF-STATE"
+    ]
+  },
+  {
+    "obligation_id": "PO-FUT-METRICS",
+    "status": "READY",
+    "implementation_anchors": [
+      "canonical telemetry events in scripts/work_memory.py:EVENT_FIELDS",
+      "query module adjacent to work_memory.summarize",
+      "event-classified timing in ResearchDriver.Metrics generalized system-wide"
+    ],
+    "verification_anchors": [
+      "metric contract unit tests and reproducible representative-corpus queries"
+    ],
+    "required_inputs": [
+      "metric_producer_denominator_window_exclusion_query_matrix",
+      "representative workload policy"
+    ],
+    "owner": "telemetry/query implementer",
+    "closure_condition": "All seven required metrics reproduce from authoritative events with explicit denominators/windows/exclusions.",
+    "evidence_ids": [
+      "EV-LEDGER",
+      "EV-OBSERVER",
+      "EV-RESEARCH"
+    ]
+  },
+  {
+    "obligation_id": "PO-ACC-ZERO-RAW",
+    "status": "READY",
+    "implementation_anchors": [
+      "typed dispatcher and authoritative interceptor described by PO-FUT-TYPED/PO-FUT-INTERCEPTION"
+    ],
+    "verification_anchors": [
+      "negative governed-run corpus reports raw_dispatch_count=0 and every injected raw path has zero mutations"
+    ],
+    "required_inputs": [
+      "raw-path injection corpus from typed_raw_operation_matrix"
+    ],
+    "owner": "prevention dispatcher test owner",
+    "closure_condition": "Zero raw JSON/text patch and zero untyped dispatch events over the acceptance corpus.",
+    "evidence_ids": [
+      "EV-LEDGER",
+      "EV-GUARD",
+      "EV-CHECKED",
+      "EV-RESEARCH"
+    ]
+  },
+  {
+    "obligation_id": "PO-ACC-ZERO-REPEAT",
+    "status": "READY",
+    "implementation_anchors": [
+      "pre-dispatch predecessor prohibition keyed by blocker_catalog.fingerprint"
+    ],
+    "verification_anchors": [
+      "repeat attempt increments prevented_failure_count and leaves execution_claimed absent for predecessor"
+    ],
+    "required_inputs": [
+      "verified predecessor/successor fixture"
+    ],
+    "owner": "selector and telemetry test owner",
+    "closure_condition": "No prohibited fingerprint executes after same-path successor verification.",
+    "evidence_ids": [
+      "EV-BLOCKER",
+      "EV-LEDGER"
+    ]
+  },
+  {
+    "obligation_id": "PO-ACC-BUDGET",
+    "status": "READY",
+    "implementation_anchors": [
+      "full UnitBudget admission gate before LAUNCH_ROLE/equivalent effect"
+    ],
+    "verification_anchors": [
+      "one-unit-below tests for every long controller assert zero launches plus durable rejection"
+    ],
+    "required_inputs": [
+      "long controller budget matrix"
+    ],
+    "owner": "admission-controller test owner",
+    "closure_condition": "Every under-budget case is rejected before work starts.",
+    "evidence_ids": [
+      "EV-RESEARCH",
+      "EV-REGISTRY"
+    ]
+  },
+  {
+    "obligation_id": "PO-ACC-MANDATORY-CORRECTION",
+    "status": "READY",
+    "implementation_anchors": [
+      "compatibility selector consumes verified correction successor mapping before execution claim"
+    ],
+    "verification_anchors": [
+      "fresh task with matching intent dispatches successor without operator choice"
+    ],
+    "required_inputs": [
+      "matching-intent fixture and same-path verified correction fixture"
+    ],
+    "owner": "selector end-to-end test owner",
+    "closure_condition": "The first compatible action after verification uses only the corrected successor.",
+    "evidence_ids": [
+      "EV-LEDGER",
+      "EV-LIFECYCLE",
+      "EV-OBSERVER-TEST"
+    ]
+  },
+  {
+    "obligation_id": "PO-ACC-REGISTERED-95",
+    "status": "READY",
+    "implementation_anchors": [
+      "canonical eligible_recurring_action and registered_dispatch events in work_memory EVENT_FIELDS",
+      "query module computes registered_dispatches/eligible_recurring_actions"
+    ],
+    "verification_anchors": [
+      "representative fixed-window query returns ratio >=0.95 with numerator and denominator IDs"
+    ],
+    "required_inputs": [
+      "representative recurring-action window and eligibility policy"
+    ],
+    "owner": "telemetry/query acceptance owner",
+    "closure_condition": "Reproducible acceptance report is >=0.95 and includes every eligible recurring action.",
+    "evidence_ids": [
+      "EV-LEDGER",
+      "EV-OBSERVER"
+    ]
+  },
+  {
+    "obligation_id": "PO-ACC-OVERHEAD",
+    "status": "READY",
+    "implementation_anchors": [
+      "generalize research_run.Metrics with explicit event classes and governed_active_seconds denominator",
+      "never classify local retries, reconstruction, malformed recovery, guard/selector, or correction as exclusions"
+    ],
+    "verification_anchors": [
+      "representative real-run corpus reports mechanical_seconds/governed_active_seconds <=0.10 and observed distance to desired <=0.05",
+      "exclusion audit permits only separately classified user-approval wait, external service/rate-limit wait, and intentionally productive model/domain execution"
+    ],
+    "required_inputs": [
+      "representative workload corpus",
+      "event-class taxonomy",
+      "window and aggregation policy"
+    ],
+    "owner": "telemetry/query acceptance owner",
+    "closure_condition": "Hard gate <=0.10 passes; report also states whether desired <=0.05 passes, with prohibited exclusions counted as mechanical.",
+    "evidence_ids": [
+      "EV-RESEARCH",
+      "EV-REQS"
+    ]
+  }
+]

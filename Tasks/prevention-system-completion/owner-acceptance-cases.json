@@ -1,0 +1,1853 @@
+{
+  "schema_version": 1,
+  "rows": [
+    {
+      "case_id": "claude-auth-token-refresh/all/v1",
+      "owner_sequence_id": "claude-auth-token-refresh",
+      "profile_id": "all",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "claude-auth-token-refresh/all/parameters-v1",
+      "source_executor_id": "claude-auth-token-refresh/real-source-v1",
+      "external_edge_kind": "CREDENTIAL",
+      "external_fixture_ids": {
+        "positive": "claude-auth-token-refresh/all/positive-v1",
+        "semantic_negative": "claude-auth-token-refresh/all/semantic-negative-v1",
+        "not_applied": "claude-auth-token-refresh/all/not-applied-v1",
+        "already_applied": "claude-auth-token-refresh/all/already-applied-v1",
+        "conflicting_identity": "claude-auth-token-refresh/all/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "claude-auth-token-refresh/mint/v1",
+      "owner_sequence_id": "claude-auth-token-refresh",
+      "profile_id": "mint",
+      "effect_class": "NON_MUTATING",
+      "typed_parameter_fixture_id": "claude-auth-token-refresh/mint/parameters-v1",
+      "source_executor_id": "claude-auth-token-refresh/real-source-v1",
+      "external_edge_kind": "CREDENTIAL",
+      "external_fixture_ids": {
+        "positive": "claude-auth-token-refresh/mint/positive-v1",
+        "semantic_negative": "claude-auth-token-refresh/mint/semantic-negative-v1",
+        "not_applied": "claude-auth-token-refresh/mint/not-applied-v1",
+        "already_applied": "claude-auth-token-refresh/mint/already-applied-v1",
+        "conflicting_identity": "claude-auth-token-refresh/mint/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "claude-auth-token-refresh/push-kv/v1",
+      "owner_sequence_id": "claude-auth-token-refresh",
+      "profile_id": "push-kv",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "claude-auth-token-refresh/push-kv/parameters-v1",
+      "source_executor_id": "claude-auth-token-refresh/real-source-v1",
+      "external_edge_kind": "CREDENTIAL",
+      "external_fixture_ids": {
+        "positive": "claude-auth-token-refresh/push-kv/positive-v1",
+        "semantic_negative": "claude-auth-token-refresh/push-kv/semantic-negative-v1",
+        "not_applied": "claude-auth-token-refresh/push-kv/not-applied-v1",
+        "already_applied": "claude-auth-token-refresh/push-kv/already-applied-v1",
+        "conflicting_identity": "claude-auth-token-refresh/push-kv/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "claude-auth-token-refresh/reseed-azure/v1",
+      "owner_sequence_id": "claude-auth-token-refresh",
+      "profile_id": "reseed-azure",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "claude-auth-token-refresh/reseed-azure/parameters-v1",
+      "source_executor_id": "claude-auth-token-refresh/real-source-v1",
+      "external_edge_kind": "CREDENTIAL",
+      "external_fixture_ids": {
+        "positive": "claude-auth-token-refresh/reseed-azure/positive-v1",
+        "semantic_negative": "claude-auth-token-refresh/reseed-azure/semantic-negative-v1",
+        "not_applied": "claude-auth-token-refresh/reseed-azure/not-applied-v1",
+        "already_applied": "claude-auth-token-refresh/reseed-azure/already-applied-v1",
+        "conflicting_identity": "claude-auth-token-refresh/reseed-azure/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "claude-auth-token-refresh/seed-host/v1",
+      "owner_sequence_id": "claude-auth-token-refresh",
+      "profile_id": "seed-host",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "claude-auth-token-refresh/seed-host/parameters-v1",
+      "source_executor_id": "claude-auth-token-refresh/real-source-v1",
+      "external_edge_kind": "CREDENTIAL",
+      "external_fixture_ids": {
+        "positive": "claude-auth-token-refresh/seed-host/positive-v1",
+        "semantic_negative": "claude-auth-token-refresh/seed-host/semantic-negative-v1",
+        "not_applied": "claude-auth-token-refresh/seed-host/not-applied-v1",
+        "already_applied": "claude-auth-token-refresh/seed-host/already-applied-v1",
+        "conflicting_identity": "claude-auth-token-refresh/seed-host/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "claude-auth-token-refresh/seed-local/v1",
+      "owner_sequence_id": "claude-auth-token-refresh",
+      "profile_id": "seed-local",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "claude-auth-token-refresh/seed-local/parameters-v1",
+      "source_executor_id": "claude-auth-token-refresh/real-source-v1",
+      "external_edge_kind": "CREDENTIAL",
+      "external_fixture_ids": {
+        "positive": "claude-auth-token-refresh/seed-local/positive-v1",
+        "semantic_negative": "claude-auth-token-refresh/seed-local/semantic-negative-v1",
+        "not_applied": "claude-auth-token-refresh/seed-local/not-applied-v1",
+        "already_applied": "claude-auth-token-refresh/seed-local/already-applied-v1",
+        "conflicting_identity": "claude-auth-token-refresh/seed-local/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "claude-auth-token-refresh/status/v1",
+      "owner_sequence_id": "claude-auth-token-refresh",
+      "profile_id": "status",
+      "effect_class": "NON_MUTATING",
+      "typed_parameter_fixture_id": "claude-auth-token-refresh/status/parameters-v1",
+      "source_executor_id": "claude-auth-token-refresh/real-source-v1",
+      "external_edge_kind": "CREDENTIAL",
+      "external_fixture_ids": {
+        "positive": "claude-auth-token-refresh/status/positive-v1",
+        "semantic_negative": "claude-auth-token-refresh/status/semantic-negative-v1",
+        "not_applied": "claude-auth-token-refresh/status/not-applied-v1",
+        "already_applied": "claude-auth-token-refresh/status/already-applied-v1",
+        "conflicting_identity": "claude-auth-token-refresh/status/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "claude-auth-token-refresh/verify/v1",
+      "owner_sequence_id": "claude-auth-token-refresh",
+      "profile_id": "verify",
+      "effect_class": "NON_MUTATING",
+      "typed_parameter_fixture_id": "claude-auth-token-refresh/verify/parameters-v1",
+      "source_executor_id": "claude-auth-token-refresh/real-source-v1",
+      "external_edge_kind": "CREDENTIAL",
+      "external_fixture_ids": {
+        "positive": "claude-auth-token-refresh/verify/positive-v1",
+        "semantic_negative": "claude-auth-token-refresh/verify/semantic-negative-v1",
+        "not_applied": "claude-auth-token-refresh/verify/not-applied-v1",
+        "already_applied": "claude-auth-token-refresh/verify/already-applied-v1",
+        "conflicting_identity": "claude-auth-token-refresh/verify/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "commit-push-main/dry-run/v1",
+      "owner_sequence_id": "commit-push-main",
+      "profile_id": "dry-run",
+      "effect_class": "NON_MUTATING",
+      "typed_parameter_fixture_id": "commit-push-main/dry-run/parameters-v1",
+      "source_executor_id": "commit-push-main/real-source-v1",
+      "external_edge_kind": "GIT",
+      "external_fixture_ids": {
+        "positive": "commit-push-main/dry-run/positive-v1",
+        "semantic_negative": "commit-push-main/dry-run/semantic-negative-v1",
+        "not_applied": "commit-push-main/dry-run/not-applied-v1",
+        "already_applied": "commit-push-main/dry-run/already-applied-v1",
+        "conflicting_identity": "commit-push-main/dry-run/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "commit-push-main/integrate-remote-and-resume/v1",
+      "owner_sequence_id": "commit-push-main",
+      "profile_id": "integrate-remote-and-resume",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "commit-push-main/integrate-remote-and-resume/parameters-v1",
+      "source_executor_id": "commit-push-main/real-source-v1",
+      "external_edge_kind": "GIT",
+      "external_fixture_ids": {
+        "positive": "commit-push-main/integrate-remote-and-resume/positive-v1",
+        "semantic_negative": "commit-push-main/integrate-remote-and-resume/semantic-negative-v1",
+        "not_applied": "commit-push-main/integrate-remote-and-resume/not-applied-v1",
+        "already_applied": "commit-push-main/integrate-remote-and-resume/already-applied-v1",
+        "conflicting_identity": "commit-push-main/integrate-remote-and-resume/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "commit-push-main/isolated-integrate-and-resume/v1",
+      "owner_sequence_id": "commit-push-main",
+      "profile_id": "isolated-integrate-and-resume",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "commit-push-main/isolated-integrate-and-resume/parameters-v1",
+      "source_executor_id": "commit-push-main/real-source-v1",
+      "external_edge_kind": "GIT",
+      "external_fixture_ids": {
+        "positive": "commit-push-main/isolated-integrate-and-resume/positive-v1",
+        "semantic_negative": "commit-push-main/isolated-integrate-and-resume/semantic-negative-v1",
+        "not_applied": "commit-push-main/isolated-integrate-and-resume/not-applied-v1",
+        "already_applied": "commit-push-main/isolated-integrate-and-resume/already-applied-v1",
+        "conflicting_identity": "commit-push-main/isolated-integrate-and-resume/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "commit-push-main/isolated-reconcile-and-resume/v1",
+      "owner_sequence_id": "commit-push-main",
+      "profile_id": "isolated-reconcile-and-resume",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "commit-push-main/isolated-reconcile-and-resume/parameters-v1",
+      "source_executor_id": "commit-push-main/real-source-v1",
+      "external_edge_kind": "GIT",
+      "external_fixture_ids": {
+        "positive": "commit-push-main/isolated-reconcile-and-resume/positive-v1",
+        "semantic_negative": "commit-push-main/isolated-reconcile-and-resume/semantic-negative-v1",
+        "not_applied": "commit-push-main/isolated-reconcile-and-resume/not-applied-v1",
+        "already_applied": "commit-push-main/isolated-reconcile-and-resume/already-applied-v1",
+        "conflicting_identity": "commit-push-main/isolated-reconcile-and-resume/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "commit-push-main/publish/v1",
+      "owner_sequence_id": "commit-push-main",
+      "profile_id": "publish",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "commit-push-main/publish/parameters-v1",
+      "source_executor_id": "commit-push-main/real-source-v1",
+      "external_edge_kind": "GIT",
+      "external_fixture_ids": {
+        "positive": "commit-push-main/publish/positive-v1",
+        "semantic_negative": "commit-push-main/publish/semantic-negative-v1",
+        "not_applied": "commit-push-main/publish/not-applied-v1",
+        "already_applied": "commit-push-main/publish/already-applied-v1",
+        "conflicting_identity": "commit-push-main/publish/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "commit-push-main/resume-push/v1",
+      "owner_sequence_id": "commit-push-main",
+      "profile_id": "resume-push",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "commit-push-main/resume-push/parameters-v1",
+      "source_executor_id": "commit-push-main/real-source-v1",
+      "external_edge_kind": "GIT",
+      "external_fixture_ids": {
+        "positive": "commit-push-main/resume-push/positive-v1",
+        "semantic_negative": "commit-push-main/resume-push/semantic-negative-v1",
+        "not_applied": "commit-push-main/resume-push/not-applied-v1",
+        "already_applied": "commit-push-main/resume-push/already-applied-v1",
+        "conflicting_identity": "commit-push-main/resume-push/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "convergence-checkpoint-run/default/v1",
+      "owner_sequence_id": "convergence-checkpoint-run",
+      "profile_id": "default",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "convergence-checkpoint-run/default/parameters-v1",
+      "source_executor_id": "convergence-checkpoint-run/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "convergence-checkpoint-run/default/positive-v1",
+        "semantic_negative": "convergence-checkpoint-run/default/semantic-negative-v1",
+        "not_applied": "convergence-checkpoint-run/default/not-applied-v1",
+        "already_applied": "convergence-checkpoint-run/default/already-applied-v1",
+        "conflicting_identity": "convergence-checkpoint-run/default/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "convergence-state-review-cycle/apply/v1",
+      "owner_sequence_id": "convergence-state-review-cycle",
+      "profile_id": "apply",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "convergence-state-review-cycle/apply/parameters-v1",
+      "source_executor_id": "convergence-state-review-cycle/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "convergence-state-review-cycle/apply/positive-v1",
+        "semantic_negative": "convergence-state-review-cycle/apply/semantic-negative-v1",
+        "not_applied": "convergence-state-review-cycle/apply/not-applied-v1",
+        "already_applied": "convergence-state-review-cycle/apply/already-applied-v1",
+        "conflicting_identity": "convergence-state-review-cycle/apply/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "convergence-state-review-cycle/dry-run/v1",
+      "owner_sequence_id": "convergence-state-review-cycle",
+      "profile_id": "dry-run",
+      "effect_class": "NON_MUTATING",
+      "typed_parameter_fixture_id": "convergence-state-review-cycle/dry-run/parameters-v1",
+      "source_executor_id": "convergence-state-review-cycle/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "convergence-state-review-cycle/dry-run/positive-v1",
+        "semantic_negative": "convergence-state-review-cycle/dry-run/semantic-negative-v1",
+        "not_applied": "convergence-state-review-cycle/dry-run/not-applied-v1",
+        "already_applied": "convergence-state-review-cycle/dry-run/already-applied-v1",
+        "conflicting_identity": "convergence-state-review-cycle/dry-run/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "discovery-bootstrap/start/v1",
+      "owner_sequence_id": "discovery-bootstrap",
+      "profile_id": "start",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "discovery-bootstrap/start/parameters-v1",
+      "source_executor_id": "discovery-bootstrap/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "discovery-bootstrap/start/positive-v1",
+        "semantic_negative": "discovery-bootstrap/start/semantic-negative-v1",
+        "not_applied": "discovery-bootstrap/start/not-applied-v1",
+        "already_applied": "discovery-bootstrap/start/already-applied-v1",
+        "conflicting_identity": "discovery-bootstrap/start/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "discovery-candidate-reconciliation/audit/v1",
+      "owner_sequence_id": "discovery-candidate-reconciliation",
+      "profile_id": "audit",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "discovery-candidate-reconciliation/audit/parameters-v1",
+      "source_executor_id": "discovery-candidate-reconciliation/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "discovery-candidate-reconciliation/audit/positive-v1",
+        "semantic_negative": "discovery-candidate-reconciliation/audit/semantic-negative-v1",
+        "not_applied": "discovery-candidate-reconciliation/audit/not-applied-v1",
+        "already_applied": "discovery-candidate-reconciliation/audit/already-applied-v1",
+        "conflicting_identity": "discovery-candidate-reconciliation/audit/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "discovery-candidate-reconciliation/drive/v1",
+      "owner_sequence_id": "discovery-candidate-reconciliation",
+      "profile_id": "drive",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "discovery-candidate-reconciliation/drive/parameters-v1",
+      "source_executor_id": "discovery-candidate-reconciliation/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "discovery-candidate-reconciliation/drive/positive-v1",
+        "semantic_negative": "discovery-candidate-reconciliation/drive/semantic-negative-v1",
+        "not_applied": "discovery-candidate-reconciliation/drive/not-applied-v1",
+        "already_applied": "discovery-candidate-reconciliation/drive/already-applied-v1",
+        "conflicting_identity": "discovery-candidate-reconciliation/drive/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "discovery-candidate-reconciliation/execute/v1",
+      "owner_sequence_id": "discovery-candidate-reconciliation",
+      "profile_id": "execute",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "discovery-candidate-reconciliation/execute/parameters-v1",
+      "source_executor_id": "discovery-candidate-reconciliation/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "discovery-candidate-reconciliation/execute/positive-v1",
+        "semantic_negative": "discovery-candidate-reconciliation/execute/semantic-negative-v1",
+        "not_applied": "discovery-candidate-reconciliation/execute/not-applied-v1",
+        "already_applied": "discovery-candidate-reconciliation/execute/already-applied-v1",
+        "conflicting_identity": "discovery-candidate-reconciliation/execute/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "discovery-candidate-reconciliation/execute-rolling/v1",
+      "owner_sequence_id": "discovery-candidate-reconciliation",
+      "profile_id": "execute-rolling",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "discovery-candidate-reconciliation/execute-rolling/parameters-v1",
+      "source_executor_id": "discovery-candidate-reconciliation/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "discovery-candidate-reconciliation/execute-rolling/positive-v1",
+        "semantic_negative": "discovery-candidate-reconciliation/execute-rolling/semantic-negative-v1",
+        "not_applied": "discovery-candidate-reconciliation/execute-rolling/not-applied-v1",
+        "already_applied": "discovery-candidate-reconciliation/execute-rolling/already-applied-v1",
+        "conflicting_identity": "discovery-candidate-reconciliation/execute-rolling/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "discovery-candidate-reconciliation/validate/v1",
+      "owner_sequence_id": "discovery-candidate-reconciliation",
+      "profile_id": "validate",
+      "effect_class": "NON_MUTATING",
+      "typed_parameter_fixture_id": "discovery-candidate-reconciliation/validate/parameters-v1",
+      "source_executor_id": "discovery-candidate-reconciliation/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "discovery-candidate-reconciliation/validate/positive-v1",
+        "semantic_negative": "discovery-candidate-reconciliation/validate/semantic-negative-v1",
+        "not_applied": "discovery-candidate-reconciliation/validate/not-applied-v1",
+        "already_applied": "discovery-candidate-reconciliation/validate/already-applied-v1",
+        "conflicting_identity": "discovery-candidate-reconciliation/validate/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "discovery-promotion-lifecycle/correct/v1",
+      "owner_sequence_id": "discovery-promotion-lifecycle",
+      "profile_id": "correct",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "discovery-promotion-lifecycle/correct/parameters-v1",
+      "source_executor_id": "discovery-promotion-lifecycle/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "discovery-promotion-lifecycle/correct/positive-v1",
+        "semantic_negative": "discovery-promotion-lifecycle/correct/semantic-negative-v1",
+        "not_applied": "discovery-promotion-lifecycle/correct/not-applied-v1",
+        "already_applied": "discovery-promotion-lifecycle/correct/already-applied-v1",
+        "conflicting_identity": "discovery-promotion-lifecycle/correct/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "discovery-promotion-lifecycle/correct-registered/v1",
+      "owner_sequence_id": "discovery-promotion-lifecycle",
+      "profile_id": "correct-registered",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "discovery-promotion-lifecycle/correct-registered/parameters-v1",
+      "source_executor_id": "discovery-promotion-lifecycle/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "discovery-promotion-lifecycle/correct-registered/positive-v1",
+        "semantic_negative": "discovery-promotion-lifecycle/correct-registered/semantic-negative-v1",
+        "not_applied": "discovery-promotion-lifecycle/correct-registered/not-applied-v1",
+        "already_applied": "discovery-promotion-lifecycle/correct-registered/already-applied-v1",
+        "conflicting_identity": "discovery-promotion-lifecycle/correct-registered/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "discovery-promotion-lifecycle/drive/v1",
+      "owner_sequence_id": "discovery-promotion-lifecycle",
+      "profile_id": "drive",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "discovery-promotion-lifecycle/drive/parameters-v1",
+      "source_executor_id": "discovery-promotion-lifecycle/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "discovery-promotion-lifecycle/drive/positive-v1",
+        "semantic_negative": "discovery-promotion-lifecycle/drive/semantic-negative-v1",
+        "not_applied": "discovery-promotion-lifecycle/drive/not-applied-v1",
+        "already_applied": "discovery-promotion-lifecycle/drive/already-applied-v1",
+        "conflicting_identity": "discovery-promotion-lifecycle/drive/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "discovery-promotion-lifecycle/status/v1",
+      "owner_sequence_id": "discovery-promotion-lifecycle",
+      "profile_id": "status",
+      "effect_class": "NON_MUTATING",
+      "typed_parameter_fixture_id": "discovery-promotion-lifecycle/status/parameters-v1",
+      "source_executor_id": "discovery-promotion-lifecycle/real-source-v1",
+      "external_edge_kind": "LOCAL_STATE",
+      "external_fixture_ids": {
+        "positive": "discovery-promotion-lifecycle/status/positive-v1",
+        "semantic_negative": "discovery-promotion-lifecycle/status/semantic-negative-v1",
+        "not_applied": "discovery-promotion-lifecycle/status/not-applied-v1",
+        "already_applied": "discovery-promotion-lifecycle/status/already-applied-v1",
+        "conflicting_identity": "discovery-promotion-lifecycle/status/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "greenfield-full-drive/create-program/v1",
+      "owner_sequence_id": "greenfield-full-drive",
+      "profile_id": "create-program",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "greenfield-full-drive/create-program/parameters-v1",
+      "source_executor_id": "greenfield-full-drive/real-source-v1",
+      "external_edge_kind": "OPERATOR",
+      "external_fixture_ids": {
+        "positive": "greenfield-full-drive/create-program/positive-v1",
+        "semantic_negative": "greenfield-full-drive/create-program/semantic-negative-v1",
+        "not_applied": "greenfield-full-drive/create-program/not-applied-v1",
+        "already_applied": "greenfield-full-drive/create-program/already-applied-v1",
+        "conflicting_identity": "greenfield-full-drive/create-program/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "greenfield-full-drive/resume-program/v1",
+      "owner_sequence_id": "greenfield-full-drive",
+      "profile_id": "resume-program",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "greenfield-full-drive/resume-program/parameters-v1",
+      "source_executor_id": "greenfield-full-drive/real-source-v1",
+      "external_edge_kind": "OPERATOR",
+      "external_fixture_ids": {
+        "positive": "greenfield-full-drive/resume-program/positive-v1",
+        "semantic_negative": "greenfield-full-drive/resume-program/semantic-negative-v1",
+        "not_applied": "greenfield-full-drive/resume-program/not-applied-v1",
+        "already_applied": "greenfield-full-drive/resume-program/already-applied-v1",
+        "conflicting_identity": "greenfield-full-drive/resume-program/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "greenfield-full-drive/start-from-spec/v1",
+      "owner_sequence_id": "greenfield-full-drive",
+      "profile_id": "start-from-spec",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "greenfield-full-drive/start-from-spec/parameters-v1",
+      "source_executor_id": "greenfield-full-drive/real-source-v1",
+      "external_edge_kind": "OPERATOR",
+      "external_fixture_ids": {
+        "positive": "greenfield-full-drive/start-from-spec/positive-v1",
+        "semantic_negative": "greenfield-full-drive/start-from-spec/semantic-negative-v1",
+        "not_applied": "greenfield-full-drive/start-from-spec/not-applied-v1",
+        "already_applied": "greenfield-full-drive/start-from-spec/already-applied-v1",
+        "conflicting_identity": "greenfield-full-drive/start-from-spec/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "greenfield-full-drive/validate-fresh/v1",
+      "owner_sequence_id": "greenfield-full-drive",
+      "profile_id": "validate-fresh",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "greenfield-full-drive/validate-fresh/parameters-v1",
+      "source_executor_id": "greenfield-full-drive/real-source-v1",
+      "external_edge_kind": "OPERATOR",
+      "external_fixture_ids": {
+        "positive": "greenfield-full-drive/validate-fresh/positive-v1",
+        "semantic_negative": "greenfield-full-drive/validate-fresh/semantic-negative-v1",
+        "not_applied": "greenfield-full-drive/validate-fresh/not-applied-v1",
+        "already_applied": "greenfield-full-drive/validate-fresh/already-applied-v1",
+        "conflicting_identity": "greenfield-full-drive/validate-fresh/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "local-workflow-orch-image/build/v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "profile_id": "build",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "local-workflow-orch-image/build/parameters-v1",
+      "source_executor_id": "local-workflow-orch-image/real-source-v1",
+      "external_edge_kind": "DOCKER",
+      "external_fixture_ids": {
+        "positive": "local-workflow-orch-image/build/positive-v1",
+        "semantic_negative": "local-workflow-orch-image/build/semantic-negative-v1",
+        "not_applied": "local-workflow-orch-image/build/not-applied-v1",
+        "already_applied": "local-workflow-orch-image/build/already-applied-v1",
+        "conflicting_identity": "local-workflow-orch-image/build/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "local-workflow-orch-image/copy-code-project/v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "profile_id": "copy-code-project",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "local-workflow-orch-image/copy-code-project/parameters-v1",
+      "source_executor_id": "local-workflow-orch-image/real-source-v1",
+      "external_edge_kind": "DOCKER",
+      "external_fixture_ids": {
+        "positive": "local-workflow-orch-image/copy-code-project/positive-v1",
+        "semantic_negative": "local-workflow-orch-image/copy-code-project/semantic-negative-v1",
+        "not_applied": "local-workflow-orch-image/copy-code-project/not-applied-v1",
+        "already_applied": "local-workflow-orch-image/copy-code-project/already-applied-v1",
+        "conflicting_identity": "local-workflow-orch-image/copy-code-project/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "local-workflow-orch-image/health/v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "profile_id": "health",
+      "effect_class": "NON_MUTATING",
+      "typed_parameter_fixture_id": "local-workflow-orch-image/health/parameters-v1",
+      "source_executor_id": "local-workflow-orch-image/real-source-v1",
+      "external_edge_kind": "DOCKER",
+      "external_fixture_ids": {
+        "positive": "local-workflow-orch-image/health/positive-v1",
+        "semantic_negative": "local-workflow-orch-image/health/semantic-negative-v1",
+        "not_applied": "local-workflow-orch-image/health/not-applied-v1",
+        "already_applied": "local-workflow-orch-image/health/already-applied-v1",
+        "conflicting_identity": "local-workflow-orch-image/health/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "local-workflow-orch-image/logs/v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "profile_id": "logs",
+      "effect_class": "NON_MUTATING",
+      "typed_parameter_fixture_id": "local-workflow-orch-image/logs/parameters-v1",
+      "source_executor_id": "local-workflow-orch-image/real-source-v1",
+      "external_edge_kind": "DOCKER",
+      "external_fixture_ids": {
+        "positive": "local-workflow-orch-image/logs/positive-v1",
+        "semantic_negative": "local-workflow-orch-image/logs/semantic-negative-v1",
+        "not_applied": "local-workflow-orch-image/logs/not-applied-v1",
+        "already_applied": "local-workflow-orch-image/logs/already-applied-v1",
+        "conflicting_identity": "local-workflow-orch-image/logs/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "local-workflow-orch-image/probe-codex/v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "profile_id": "probe-codex",
+      "effect_class": "NON_MUTATING",
+      "typed_parameter_fixture_id": "local-workflow-orch-image/probe-codex/parameters-v1",
+      "source_executor_id": "local-workflow-orch-image/real-source-v1",
+      "external_edge_kind": "DOCKER",
+      "external_fixture_ids": {
+        "positive": "local-workflow-orch-image/probe-codex/positive-v1",
+        "semantic_negative": "local-workflow-orch-image/probe-codex/semantic-negative-v1",
+        "not_applied": "local-workflow-orch-image/probe-codex/not-applied-v1",
+        "already_applied": "local-workflow-orch-image/probe-codex/already-applied-v1",
+        "conflicting_identity": "local-workflow-orch-image/probe-codex/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "local-workflow-orch-image/require-real-memory-knowledge/v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "profile_id": "require-real-memory-knowledge",
+      "effect_class": "NON_MUTATING",
+      "typed_parameter_fixture_id": "local-workflow-orch-image/require-real-memory-knowledge/parameters-v1",
+      "source_executor_id": "local-workflow-orch-image/real-source-v1",
+      "external_edge_kind": "DOCKER",
+      "external_fixture_ids": {
+        "positive": "local-workflow-orch-image/require-real-memory-knowledge/positive-v1",
+        "semantic_negative": "local-workflow-orch-image/require-real-memory-knowledge/semantic-negative-v1",
+        "not_applied": "local-workflow-orch-image/require-real-memory-knowledge/not-applied-v1",
+        "already_applied": "local-workflow-orch-image/require-real-memory-knowledge/already-applied-v1",
+        "conflicting_identity": "local-workflow-orch-image/require-real-memory-knowledge/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "NOT_APPLICABLE"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "local-workflow-orch-image/run/v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "profile_id": "run",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "local-workflow-orch-image/run/parameters-v1",
+      "source_executor_id": "local-workflow-orch-image/real-source-v1",
+      "external_edge_kind": "DOCKER",
+      "external_fixture_ids": {
+        "positive": "local-workflow-orch-image/run/positive-v1",
+        "semantic_negative": "local-workflow-orch-image/run/semantic-negative-v1",
+        "not_applied": "local-workflow-orch-image/run/not-applied-v1",
+        "already_applied": "local-workflow-orch-image/run/already-applied-v1",
+        "conflicting_identity": "local-workflow-orch-image/run/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "local-workflow-orch-image/seed-codex-auth/v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "profile_id": "seed-codex-auth",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "local-workflow-orch-image/seed-codex-auth/parameters-v1",
+      "source_executor_id": "local-workflow-orch-image/real-source-v1",
+      "external_edge_kind": "DOCKER",
+      "external_fixture_ids": {
+        "positive": "local-workflow-orch-image/seed-codex-auth/positive-v1",
+        "semantic_negative": "local-workflow-orch-image/seed-codex-auth/semantic-negative-v1",
+        "not_applied": "local-workflow-orch-image/seed-codex-auth/not-applied-v1",
+        "already_applied": "local-workflow-orch-image/seed-codex-auth/already-applied-v1",
+        "conflicting_identity": "local-workflow-orch-image/seed-codex-auth/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "local-workflow-orch-image/seed-git-auth/v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "profile_id": "seed-git-auth",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "local-workflow-orch-image/seed-git-auth/parameters-v1",
+      "source_executor_id": "local-workflow-orch-image/real-source-v1",
+      "external_edge_kind": "DOCKER",
+      "external_fixture_ids": {
+        "positive": "local-workflow-orch-image/seed-git-auth/positive-v1",
+        "semantic_negative": "local-workflow-orch-image/seed-git-auth/semantic-negative-v1",
+        "not_applied": "local-workflow-orch-image/seed-git-auth/not-applied-v1",
+        "already_applied": "local-workflow-orch-image/seed-git-auth/already-applied-v1",
+        "conflicting_identity": "local-workflow-orch-image/seed-git-auth/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "local-workflow-orch-image/stop/v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "profile_id": "stop",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "local-workflow-orch-image/stop/parameters-v1",
+      "source_executor_id": "local-workflow-orch-image/real-source-v1",
+      "external_edge_kind": "DOCKER",
+      "external_fixture_ids": {
+        "positive": "local-workflow-orch-image/stop/positive-v1",
+        "semantic_negative": "local-workflow-orch-image/stop/semantic-negative-v1",
+        "not_applied": "local-workflow-orch-image/stop/not-applied-v1",
+        "already_applied": "local-workflow-orch-image/stop/already-applied-v1",
+        "conflicting_identity": "local-workflow-orch-image/stop/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "mawf-playbook-blocker-reentry/restart-workflow/v1",
+      "owner_sequence_id": "mawf-playbook-blocker-reentry",
+      "profile_id": "restart-workflow",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "mawf-playbook-blocker-reentry/restart-workflow/parameters-v1",
+      "source_executor_id": "mawf-playbook-blocker-reentry/real-source-v1",
+      "external_edge_kind": "OPERATOR",
+      "external_fixture_ids": {
+        "positive": "mawf-playbook-blocker-reentry/restart-workflow/positive-v1",
+        "semantic_negative": "mawf-playbook-blocker-reentry/restart-workflow/semantic-negative-v1",
+        "not_applied": "mawf-playbook-blocker-reentry/restart-workflow/not-applied-v1",
+        "already_applied": "mawf-playbook-blocker-reentry/restart-workflow/already-applied-v1",
+        "conflicting_identity": "mawf-playbook-blocker-reentry/restart-workflow/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "mawf-playbook-blocker-reentry/resume/v1",
+      "owner_sequence_id": "mawf-playbook-blocker-reentry",
+      "profile_id": "resume",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "mawf-playbook-blocker-reentry/resume/parameters-v1",
+      "source_executor_id": "mawf-playbook-blocker-reentry/real-source-v1",
+      "external_edge_kind": "OPERATOR",
+      "external_fixture_ids": {
+        "positive": "mawf-playbook-blocker-reentry/resume/positive-v1",
+        "semantic_negative": "mawf-playbook-blocker-reentry/resume/semantic-negative-v1",
+        "not_applied": "mawf-playbook-blocker-reentry/resume/not-applied-v1",
+        "already_applied": "mawf-playbook-blocker-reentry/resume/already-applied-v1",
+        "conflicting_identity": "mawf-playbook-blocker-reentry/resume/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    },
+    {
+      "case_id": "mawf-playbook-blocker-reentry/start-over/v1",
+      "owner_sequence_id": "mawf-playbook-blocker-reentry",
+      "profile_id": "start-over",
+      "effect_class": "MUTATION",
+      "typed_parameter_fixture_id": "mawf-playbook-blocker-reentry/start-over/parameters-v1",
+      "source_executor_id": "mawf-playbook-blocker-reentry/real-source-v1",
+      "external_edge_kind": "OPERATOR",
+      "external_fixture_ids": {
+        "positive": "mawf-playbook-blocker-reentry/start-over/positive-v1",
+        "semantic_negative": "mawf-playbook-blocker-reentry/start-over/semantic-negative-v1",
+        "not_applied": "mawf-playbook-blocker-reentry/start-over/not-applied-v1",
+        "already_applied": "mawf-playbook-blocker-reentry/start-over/already-applied-v1",
+        "conflicting_identity": "mawf-playbook-blocker-reentry/start-over/conflicting-identity-v1"
+      },
+      "proof_applicability": [
+        {
+          "proof_kind": "controller_runtime_positive",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "controller_runtime_semantic_negative",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "crash_reconciliation",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "terminal_semantics",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "effect_identity_source_binding",
+          "applicability": "REQUIRED"
+        },
+        {
+          "proof_kind": "production_source_probe_backend",
+          "applicability": "REQUIRED"
+        }
+      ]
+    }
+  ]
+}

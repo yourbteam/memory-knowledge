@@ -1,0 +1,722 @@
+[
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "0ee1910f151ed3af8c1e6ed172fd272e0361e90d9ee3040366dc447f3ac8566f",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required behavior: EV-REQS requires canonical producers, denominators, windows, exclusions, and reproducible queries for registered use, raw dispatch, failure time, repeated fingerprints, promoted reuse, prevented failures, and mechanical overhead, including >=0.95 registered use and <=0.10 overhead.",
+        "Missing event and denominator evidence: EV-LEDGER has execution, blocker, correction, and observer event schemas plus repeated_blocker_count, but no canonical eligible_recurring_action, registered_dispatch, raw_dispatch, or prevented_failure producer/query; bypasses remain invisible.",
+        "Stored and surfaced timing evidence: EV-RESEARCH at research_run.py:219-258 reports only one-run mechanical_seconds divided by mechanical plus role-active seconds and has no system-wide governed-run denominator or separately event-classified exclusion policy.",
+        "Feasible planner boundary: the candidate metric matrix fixes each producer/denominator/window/exclusion/query contract and explicitly includes retries, reconstruction, malformed recovery, guard, selector, and correction time, so future representative-corpus measurement is an implementation acceptance task rather than a research gap."
+      ],
+      "fingerprint": "requirements-satisfaction:system-metrics:missing-authoritative-events-denominators-windows-and-real-run-queries",
+      "id": "GAP-SYSTEM-METRICS",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "The system cannot yet prove that prevention works or that its cost is acceptable: bypassed actions emit no event, registered-use and reuse lack eligible denominators, prevented failures lack a producer, and research-only timing cannot establish real system-wide overhead.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-METRICS",
+        "FUT-METRICS",
+        "ACC-ZERO-RAW",
+        "ACC-ZERO-REPEAT",
+        "ACC-REGISTERED-95",
+        "ACC-OVERHEAD"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "4139314442ad50bb2aeea34759e34c82795ebf416e9169585a7b0c7a9413dbe0",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research/requirements.json: FUT-INTERCEPTION explicitly covers shell, MCP/tool, file edit, browser, subagent, and remote-workflow classes with fail-closed behavior.",
+        "/private/tmp/prevention-successor-core-candidate.json: requirement_statuses.CUR-INTERCEPTION.action_surface_matrix covers Bash, apply_patch, MCP, unified shell, WebSearch/browser, subagent launch, and non-MCP remote, with an explicit resolution for supported and unsupported classes."
+      ],
+      "fingerprint": "requirements-coverage:GAP-AUTHORITATIVE-INTERCEPTION:all-action-classes",
+      "id": "GAP-AUTHORITATIVE-INTERCEPTION",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Planning must decide and implement an authoritative pre-dispatch route for every action class; unsupported classes must be structurally withheld or fail visibly rather than bypass prevention.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-INTERCEPTION",
+        "FUT-INTERCEPTION"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "48925ecba2c8e1d57540d3d2c94d0dc24c25f0c4ad656a11cc4cf924c0418ce8",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required behavior: EV-REQS requires atomic reservation of core work, all three lenses, adjudication, expected materialization, terminal overhead, and bounded retries before any long role or effect starts.",
+        "Missing current behavior: EV-RESEARCH at research_run.py:151-173 calculates required time as only 3*(role_timeout+termination_grace) although MANDATORY_ROLES has five roles, and the admission formula contains no materialization, terminal, or retry component.",
+        "System-wide producer evidence: EV-LIFECYCLE and EV-RECON expose long controllers without a proved equivalent full-unit admission gate, while EV-REGISTRY names additional owners whose budget contracts are unproved.",
+        "Feasible planner boundary: the candidate defines the UnitBudget components, long-controller inventory, durable rejection, and one-unit-below zero-launch test, so missing future deployment remains planner-owned."
+      ],
+      "fingerprint": "requirements-satisfaction:full-unit-admission:partial-time-window-reservation-before-long-work",
+      "id": "GAP-FULL-UNIT-ADMISSION",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "A long round can start even when the remaining budget cannot finish its mandatory roles, materialization, bounded retries, and terminal work, leaving an admitted unit stranded after expensive work has begun.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-BUDGET",
+        "FUT-BUDGET",
+        "ACC-BUDGET-ADMISSION"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "4ef64d49a0a854c4e7b6ca43b8c9bb13ee58099e20e4b05dee84b7fd33a1d20b",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research/requirements.json: resume requirements cover every transition, effect identity, interruption, multiple run, branch safety, exact-once reconciliation, and crash tests.",
+        "/private/tmp/prevention-successor-core-candidate.json: CUR-RESUME.durable_transition_effect_branch_multiple_run_matrix decomposes eight current surfaces across transition, effect identity, branch, multiple-run, resume, and status; FUT-RESUME and its planner constraints define the common target and crash matrix."
+      ],
+      "fingerprint": "requirements-coverage:GAP-COMMON-DURABLE-RESUME:journal-effect-branch-run",
+      "id": "GAP-COMMON-DURABLE-RESUME",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Planning must establish one atomic transition/effect journal with reconciliation, branch or worktree ownership, and multiple-run identity so reinvocation resumes without repeating completed effects or reconstructing commands.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-RESUME",
+        "FUT-RESUME"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "5a887ee4a43e09813fbded7948d4bbaf9ba490667be3a8f284c35e653ee55c06",
+    "finding_type": "EVIDENCE_LIMIT",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "EV-REGISTRY supplies the finite 25-row adapter inventory, automation display, and pass signal while explicitly limiting its claim to declared ownership.",
+        "Candidate CUR-ENTRYPOINT marks external rows BLACK_BOX_REQUIRED, and PO-CUR-ENTRYPOINT/PO-FUT-ENTRYPOINT supply the black-box adapter contract, external invocation and terminal-signal inputs, owner-coverage test, and 25/25 closure condition."
+      ],
+      "evidence_limitation": "Automation internals outside the authoritative finite evidence set were not inspected; no claim about their internal typing, admission, or resume behavior is made until each adapter passes the specified black-box contract.",
+      "fingerprint": "internal-readiness:finite-evidence-completeness:external-automation-black-box-boundary",
+      "id": "GAP-FINITE-EVIDENCE-COMPLETENESS",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "The package cannot claim knowledge of external automation internals, but the planner can proceed safely by treating each frozen registry row as a bounded adapter and requiring observable initialization-to-terminal, kill/reinvoke, and single-owner acceptance before migration closes.",
+      "proposed_disposition": "ACCEPT_LIMITATION",
+      "requirement_ids": [
+        "CUR-ENTRYPOINT",
+        "CUR-TYPED",
+        "CUR-BUDGET",
+        "FUT-ENTRYPOINT"
+      ],
+      "status": "OPEN",
+      "type": "EVIDENCE_LIMIT"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "5ae95c242341c5ee6834a9eb3d772ea22e10eaef204159a00cf13f44b295664a",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "EV-LEDGER, EV-GUARD, EV-CHECKED, EV-BOOTSTRAP, EV-LIFECYCLE, EV-RECON, EV-PROMOTE, and EV-RESEARCH ground each current typed or raw boundary in the candidate typed_raw_operation_matrix.",
+        "Candidate PO-CUR-TYPED, PO-FUT-TYPED, and PO-ACC-ZERO-RAW anchor implementation at work_memory.py:EVENT_FIELDS/build_parser/transact, sequence_checked_exec.py:build_parser/run, sequence_guard.py:cmd_guard, and research_run.py:Operation/apply_candidate_correction, with tests/prevention/test_typed_dispatch.py and raw_dispatch_count=0 as closure observables."
+      ],
+      "fingerprint": "internal-readiness:typed-dispatch:replace-finite-raw-boundary-matrix",
+      "id": "GAP-TYPED-DISPATCH",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Governed actions can still enter through raw JSON files, shell strings, arbitrary argv, free text, and rendered text until the planner replaces every raw row in the finite operation matrix with a closed typed call.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-TYPED",
+        "FUT-TYPED",
+        "ACC-ZERO-RAW"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "5fc7e1d604152f8187930d2f9c9b3ea0ea76201cddf06452879156be55aac04a",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required behavior: EV-REQS requires every completed transition and effect identity to be atomically durable, branch-safe, multiple-run safe, and idempotently resumed at the next valid transition.",
+        "Existing producer evidence: EV-RESEARCH and EV-PROMOTE provide strong local PREPARED/COMMITTED reconciliation, while EV-WF-STATE atomically stores workflow generations and transitions.",
+        "Missing consumer/effect evidence: EV-CHECKED can leave an execution claim without reconciling the subprocess effect, EV-RECON checkpoints path completion without a common external-effect identity, and EV-WF-STATE does not prove exact-once external effects or branch ownership.",
+        "Feasible planner boundary: the candidate requires a common transition enum, effect identity schema, per-effect reconciliation rule, branch/worktree key, and crash matrix rather than falsely inferring future exact-once behavior from current local journals."
+      ],
+      "fingerprint": "requirements-satisfaction:common-durable-resume:local-journals-without-system-wide-effect-identity-and-branch-ownership",
+      "id": "GAP-COMMON-DURABLE-RESUME",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "After a crash or branch change, some controllers can reconstruct state but cannot prove that an external effect happened exactly once or that another run or branch will not consume the same state, so safe entry-point reinvocation is not system-wide.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-RESUME",
+        "FUT-RESUME"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "60d0151fe91cb72554b426a11ff8b75ef750032480f5553fe00b155f851bfdf6",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research/requirements.json: CUR-LEARNING and FUT-LEARNING enumerate the complete intent-to-reuse causal chain and preserved gate behavior.",
+        "/private/tmp/prevention-successor-core-candidate.json: CUR-LEARNING.intent_to_reuse_transition_matrix decomposes 11 transitions with producer, consumer, key, observable, and current status; FUT-LEARNING and PO-CUR-LEARNING define the automatic pre-action target."
+      ],
+      "fingerprint": "requirements-coverage:GAP-CAUSAL-LEARNING:intent-through-preaction-reuse",
+      "id": "GAP-CAUSAL-LEARNING",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Planning must join the currently manual, opt-in, explicit-invocation, and post-execution transitions into one durable lineage that reaches registered reuse before the later action executes while preserving qualification and promotion approval gates.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-LEARNING",
+        "FUT-LEARNING"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "69384449a838b75f23dfd4b4d545f027a7be5f11b411a38646b3f68e6de6ba98",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "EV-OBSERVER, EV-BOOTSTRAP, EV-LIFECYCLE, EV-RECON, and EV-OBSERVER-TEST ground the candidate intent_to_reuse_transition_matrix and show that the current end-to-end test proves post-execution LINK_REGISTERED rather than prevention.",
+        "Candidate PO-CUR-LEARNING and PO-FUT-LEARNING name the memory-knowledge learning-controller owner, exact producer/consumer/key/observable inputs, sequence_observer.py:observe_committed_run/_reconstruct/_persist_event and lifecycle/reconciliation symbols, the extended observer end-to-end test, and the one-lineage pre-action reuse closure condition."
+      ],
+      "fingerprint": "internal-readiness:causal-learning:join-intent-through-preaction-reuse",
+      "id": "GAP-CAUSAL-LEARNING",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Discovery and promotion remain partly manual and later reuse is recognized only after execution, so the planner must join the finite transition matrix into one durable controller that selects registered work before the next action.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-LEARNING",
+        "FUT-LEARNING"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "ACCEPT_LIMITATION",
+    "finding_fingerprint": "7ab6920c142680e386eae3ad791fb20964df2f73f5c21b14e8d63ee0847f8b71",
+    "finding_type": "EVIDENCE_LIMIT",
+    "materiality": "CLEANUP",
+    "raw_finding": {
+      "evidence": [
+        "Required behavior: EV-REQS demands complete current entry-point coverage and future one-owner acceptance for every registered sequence.",
+        "Evidence limit: EV-REGISTRY proves the finite 25-row declared set but states that external and multi-component automation internals are outside the inspected evidence and must not be assumed.",
+        "Bounded planning route: PO-CUR-ENTRYPOINT and PO-FUT-ENTRYPOINT require each named custodian's executable invocation and terminal pass signal, with 25/25 black-box adapter coverage as the closure condition."
+      ],
+      "evidence_limitation": "External automation internals outside the frozen local evidence set were not inspected; only their registry declarations and required black-box acceptance boundary are established.",
+      "fingerprint": "requirements-satisfaction:finite-evidence-completeness:external-automation-internals-bounded-by-black-box-acceptance",
+      "id": "GAP-FINITE-EVIDENCE-COMPLETENESS",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "CLEANUP",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "The package cannot claim that every external automation already has one complete executable owner, but this bounded uncertainty does not prevent planning because each uninspected owner has an explicit custodian input and black-box initialization-to-terminal acceptance route.",
+      "proposed_disposition": "ACCEPT_LIMITATION",
+      "requirement_ids": [
+        "CUR-ENTRYPOINT",
+        "FUT-ENTRYPOINT"
+      ],
+      "status": "OPEN",
+      "type": "EVIDENCE_LIMIT"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "7c61a4c6aa5d237106afb00def7a4892bf5fb6fe36a0f4eb606c766d158c766e",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "EV-LEDGER, EV-OBSERVER, and EV-RESEARCH ground the candidate metric_producer_denominator_window_exclusion_query_matrix and show which events or queries are missing or research-only.",
+        "Candidate PO-CUR-METRICS, PO-FUT-METRICS, PO-ACC-REGISTERED-95, and PO-ACC-OVERHEAD name the telemetry/query owner, metric matrix and representative-corpus inputs, work_memory.py:EVENT_FIELDS/_metrics/summarize and ResearchDriver.Metrics anchors, tests/prevention/test_metric_contracts.py, >=0.95 registered-use and <=0.10 hard-overhead closure gates, and the separately reported <=0.05 desired target."
+      ],
+      "fingerprint": "internal-readiness:system-metrics:canonical-seven-row-event-query-contract",
+      "id": "GAP-SYSTEM-METRICS",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "The completion thresholds cannot be trusted or reproduced until planning assigns canonical event producers, denominators, windows, exclusions, and queries to all seven required metrics and runs them over a representative governed corpus.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-METRICS",
+        "FUT-METRICS",
+        "ACC-REGISTERED-95",
+        "ACC-OVERHEAD"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "8d9b34046b39fee8721949c94fce2d1225994c6cb0b9375292364fa93d4b0df6",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required behavior: EV-REQS requires automatic pre-dispatch selection or fail-closed handling across shell, MCP/tool, file-edit, browser, subagent, and remote-workflow action classes.",
+        "Missing current behavior: EV-GUARD and EV-CHECKED are opt-in wrappers; EV-HOOKS and the official Hooks documentation at lines 1065-1068 state that PreToolUse covers Bash, apply_patch, and MCP but is incomplete for unified_exec and does not cover WebSearch or other non-shell, non-MCP calls.",
+        "Consumer-side boundary: EV-TOOL-MANIFEST shows Claude tool grants can be structural while translate_to_codex currently returns only sandbox and approval policy, so unsupported Codex classes have no proved per-tool withholding path in this repository.",
+        "Feasible planner boundary: the candidate correctly limits managed PreToolUse to supported classes and requires structural withholding, a future host hook, or visible unsupported failure for every other class; absent deployment of that future boundary is not a research-stage gap."
+      ],
+      "fingerprint": "requirements-satisfaction:authoritative-interception:opt-in-guards-and-incomplete-host-pretool-coverage",
+      "id": "GAP-AUTHORITATIVE-INTERCEPTION",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "A direct action can bypass today’s voluntary guard, and Codex hooks cannot honestly promise interception for every action class; without a host-owned decision per class, ungoverned shell, search/browser, subagent, or remote work could execute before prevention logic sees it.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-INTERCEPTION",
+        "FUT-INTERCEPTION",
+        "ACC-ZERO-RAW"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "9863aca789c8be91102534eb45437233c86cd651a225ac3d2f9caf624b15cbb3",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research/requirements.json: correction and acceptance requirements cover failure, verification, prohibition, forced selection, recurrence telemetry, and fresh-task reuse.",
+        "/private/tmp/prevention-successor-core-candidate.json: CUR-CORRECTION.trace covers the lifecycle and marks prohibition and mandatory selection absent; FUT-CORRECTION, ACC-ZERO-REPEAT, ACC-MANDATORY-CORRECTION, and their planner constraints provide exact target observables."
+      ],
+      "fingerprint": "requirements-coverage:GAP-MANDATORY-CORRECTION:prohibit-and-force-successor",
+      "id": "GAP-MANDATORY-CORRECTION",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Planning must make a same-path-verified successor the only compatible future dispatch, while recording prevented predecessor attempts without creating an execution claim for the prohibited fingerprint.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-CORRECTION",
+        "FUT-CORRECTION",
+        "ACC-ZERO-REPEAT",
+        "ACC-MANDATORY-CORRECTION"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "9b185071f09ec27206d483a6f5e2f5f2ae264f40bf3a579ca736d912aead3694",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "EV-BLOCKER, EV-LEDGER, and EV-LIFECYCLE ground the existing fingerprint, correction, successor-binding, and same-path verification surfaces while explicitly limiting current prohibition and mandatory selection.",
+        "Candidate PO-CUR-CORRECTION, PO-FUT-CORRECTION, PO-ACC-ZERO-REPEAT, and PO-ACC-MANDATORY-CORRECTION name the work-memory/selector owner, compatibility-key and proof inputs, blocker_catalog.py:fingerprint/cmd_open and work_memory.py event anchors, mandatory-successor tests, and exact no-predecessor/fresh-task closure observables."
+      ],
+      "fingerprint": "internal-readiness:mandatory-correction:prohibit-predecessor-select-successor",
+      "id": "GAP-MANDATORY-CORRECTION",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "The system can record a repeated failure today but cannot prevent it; planning must atomically prohibit the failed fingerprint and make its same-path-verified successor the only compatible dispatch result.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-CORRECTION",
+        "FUT-CORRECTION",
+        "ACC-ZERO-REPEAT",
+        "ACC-MANDATORY-CORRECTION"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "9b58f519117e2540ba6623a38d82cacbc5f68be30bbbc74c57c6ad71975caf2f",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required behavior: EV-REQS defines CUR-ENTRYPOINT as complete current system-wide owner coverage and FUT-ENTRYPOINT as one deterministic executable owner per sequence.",
+        "Missing current behavior: EV-REGISTRY proves 25 declared registry rows but explicitly cannot prove the external or multi-component automation internals; EV-RESEARCH proves a strong single-owner pattern only for the representative research sequence.",
+        "Feasible planner boundary: the candidate owner_matrix, black-box initialize-to-terminal adapter contract, and per-sequence owner adapter preserve the requirement without demanding nonexistent future runtime proof."
+      ],
+      "fingerprint": "requirements-satisfaction:entrypoint-system-wide:declared-registry-without-single-executable-owner-coverage",
+      "id": "GAP-ENTRYPOINT-SYSTEM-WIDE",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Operators must still reconstruct or trust undeclared internal command chains for some registered sequences, so a kill-and-reinvoke cannot yet be guaranteed to resume through one owner from initialization to terminal emission.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-ENTRYPOINT",
+        "FUT-ENTRYPOINT"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "a740d5d154a173b33157ebbd396baeb4cffd3657defacda78552e788f232fb97",
+    "finding_type": "EVIDENCE_LIMIT",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "/private/tmp/prevention-successor-core-candidate.json: EV-REGISTRY limits its claim to declared ownership, CUR-ENTRYPOINT marks external and uninspected rows BLACK_BOX_REQUIRED, PO-CUR-ENTRYPOINT names each external automation custodian and requires 25/25 adapter acceptance, and the research markdown explicitly states this limitation.",
+        "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v2/charter.json: authoritative roots are finite and do not include every external automation repository named by the frozen registry."
+      ],
+      "evidence_limitation": "The frozen evidence set proves registry declarations and local representative mechanisms, but not the internals of every external automation; the explicit custodian-owned black-box acceptance contract contains that uncertainty without claiming runtime proof.",
+      "fingerprint": "requirements-coverage:GAP-FINITE-EVIDENCE-COMPLETENESS:black-box-custodian-route",
+      "id": "GAP-FINITE-EVIDENCE-COMPLETENESS",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "External automation internals cannot be treated as proved, so planning must preserve the bounded black-box adapter route and require each named custodian to supply an executable invocation and initialization-to-terminal acceptance signal before migration closure.",
+      "proposed_disposition": "ACCEPT_LIMITATION",
+      "requirement_ids": [
+        "CUR-ENTRYPOINT",
+        "CUR-BUDGET",
+        "FUT-ENTRYPOINT"
+      ],
+      "status": "OPEN",
+      "type": "EVIDENCE_LIMIT"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "b6ab6fcc2224452404e78688c9c42188bc70cf2e8e3804bc8558563722dee6cf",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "EV-RESEARCH grounds research_run.py:admit_round/_admit_operation/_retry_or_stop and the confirmed three-window formula despite five roles; EV-LIFECYCLE, EV-RECON, and EV-REGISTRY bound the remaining long-controller inventory.",
+        "Candidate PO-CUR-BUDGET, PO-FUT-BUDGET, and PO-ACC-BUDGET name the admission-controller and adapter custodians, finite cost components and long-controller inputs, tests/prevention/test_full_unit_admission.py, and the one-unit-below zero-launch durable-rejection closure."
+      ],
+      "fingerprint": "internal-readiness:full-unit-admission:reserve-all-components-before-launch",
+      "id": "GAP-FULL-UNIT-ADMISSION",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Long work can start without budget for mandatory downstream roles, materialization, retries, or terminal emission until every long controller uses a complete atomic-unit reservation before launch.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-BUDGET",
+        "FUT-BUDGET",
+        "ACC-BUDGET-ADMISSION"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "c66d434a860aa97ec5ff476eb63ddfecc638124dab9ed76de03e0445a4d63340",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required behavior: EV-REQS requires one durable intent-to-registered-reuse lineage that advances automatically while preserving qualification and approval gates.",
+        "Missing current behavior: EV-OBSERVER operates after a context-rich run closes, EV-BOOTSTRAP begins only from an already supplied discovery specification, EV-LIFECYCLE begins after discovery and requires explicit drive invocation, and EV-RECON owns a separate approval-gated reconciliation path.",
+        "Consumer-side outcome: EV-OBSERVER-TEST emits LINK_REGISTERED only after the later seed run, so later compatible intent is not yet consumed by a pre-action registered selector.",
+        "Feasible planner boundary: the candidate transition matrix names each producer, consumer, key, observable, missing automatic edge, and preserved approval authority, which is sufficient for planner-owned controller composition rather than more research."
+      ],
+      "fingerprint": "requirements-satisfaction:causal-learning:manual-opt-in-and-post-hoc-transition-islands",
+      "id": "GAP-CAUSAL-LEARNING",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "The system can qualify and promote a discovered sequence yet still fail to reuse it before the next matching action, because intent, execution, diagnosis, correction, promotion, and later dispatch are not one automatically advancing causal lineage.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-LEARNING",
+        "FUT-LEARNING",
+        "ACC-MANDATORY-CORRECTION",
+        "ACC-REGISTERED-95"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "c73f636f9fd883005a8a1bd6bda588b978dd042366f6ed74803b19ee5fe46dd3",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "EV-REGISTRY: operations/sequences/SEQUENCES.md Available Sequences rows 34-64 supplies the finite 25-row inventory, declared automation, and pass signal.",
+        "Candidate PO-CUR-ENTRYPOINT and PO-FUT-ENTRYPOINT name the prevention-controller owner, the owner-adapter interface modeled on ResearchDriver.run, the black-box adapter inputs, tests/prevention/test_owner_coverage.py, and the 25/25 closure condition."
+      ],
+      "fingerprint": "internal-readiness:entrypoint-system-wide:25-row-owner-adapter-migration",
+      "id": "GAP-ENTRYPOINT-SYSTEM-WIDE",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "A fresh implementation planner must migrate every one of the 25 frozen registry rows to exactly one typed owner adapter, including the non-standalone and composite rows, or operators will still reconstruct parts of a sequence manually.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-ENTRYPOINT",
+        "FUT-ENTRYPOINT"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "c9a58ea1ca675ce03f24966e0a7444e015f58befe63787e14424c2f8f0370304",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "EV-HOOKS bounds official PreToolUse support to Bash, apply_patch/Edit/Write, and MCP while documenting incomplete unified-shell interception and no WebSearch/non-shell non-MCP interception.",
+        "EV-TOOL-MANIFEST grounds the current structural grant surface at tool_translator.py:translate_to_claude/translate_to_codex; candidate PO-CUR-INTERCEPTION and PO-FUT-INTERCEPTION name the Codex host/admin policy owner, managed-hook installation and host-capability decisions, the action-surface bypass suite, and the no-bypass closure condition."
+      ],
+      "fingerprint": "internal-readiness:authoritative-interception:host-gate-all-action-classes",
+      "id": "GAP-AUTHORITATIVE-INTERCEPTION",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Bash, edits, MCP, unified shell, browser/search, subagents, and remote actions will remain bypassable unless the planner assigns every class either an authoritative pre-dispatch selector or structural unavailability with a visible failure.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-INTERCEPTION",
+        "FUT-INTERCEPTION",
+        "ACC-ZERO-RAW"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "ca137cf0a0ee0ee9e877b9f064a7d4cffad7fdd98ca64adec257d0d7991cc7db",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research/requirements.json: metric and acceptance requirements require producer, denominator, window, exclusions, query, representative corpus, registered-use threshold, and overhead gate.",
+        "/private/tmp/prevention-successor-core-candidate.json: CUR-METRICS.metric_producer_denominator_window_exclusion_query_matrix covers seven metric rows; overhead_contract and ACC-OVERHEAD explicitly set mechanical_seconds/governed_active_seconds, hard_max 0.10, desired_max 0.05, three separately event-classified permitted exclusions, and six categories that may never be excluded."
+      ],
+      "fingerprint": "requirements-coverage:GAP-SYSTEM-METRICS:seven-metrics-and-overhead-contract",
+      "id": "GAP-SYSTEM-METRICS",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Planning must create canonical system-wide events and reproducible queries for all seven enforcement metrics, including at least 95% registered use and a real-run mechanical-overhead ratio that passes the 10% hard limit and reports position against the 5% desired target.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-METRICS",
+        "FUT-METRICS",
+        "ACC-REGISTERED-95",
+        "ACC-OVERHEAD"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "ce3a6e487d14e4ba06b60546f2ed85457165f357127ffa19f5dfc74edc9fd765",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research/requirements.json: budget requirements explicitly enumerate every atomic cost component and the negative under-budget launch boundary.",
+        "/private/tmp/prevention-successor-core-candidate.json: CUR-BUDGET.long_controller_full_unit_budget_matrix covers the representative research controller, promotion lifecycle, reconciliation controller, and the frozen registry-owner set; FUT-BUDGET, ACC-BUDGET-ADMISSION, and their planner constraints provide the reservation and rejection contract."
+      ],
+      "fingerprint": "requirements-coverage:GAP-FULL-UNIT-ADMISSION:complete-atomic-cost",
+      "id": "GAP-FULL-UNIT-ADMISSION",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Planning must reserve core work, three gates, adjudication, materialization, terminal emission, and bounded retries before any long controller launches, with a durable zero-launch rejection one unit below the required budget.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-BUDGET",
+        "FUT-BUDGET",
+        "ACC-BUDGET-ADMISSION"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "d6b345df8251db75c089b434200ba2ed71fc43769063a4f9f560fd64660c5230",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required behavior: EV-REQS requires atomic predecessor prohibition, mandatory verified-successor dispatch, zero repeated fingerprints, and fresh-task reuse without operator choice.",
+        "Missing current behavior: EV-BLOCKER records and counts stable failure fingerprints but does not prohibit dispatch; EV-LEDGER records corrections and successor evidence but has no predecessor-prohibition event or mandatory selector; EV-LIFECYCLE verifies successors only after its controller is explicitly invoked.",
+        "Surfaced outcome evidence: EV-OBSERVER-TEST proves the second seed action executes before LINK_REGISTERED is emitted, demonstrating post-execution recognition rather than pre-action mandatory selection.",
+        "Feasible planner boundary: the candidate supplies a compatibility key, same-path proof identity, atomic supersession mapping, pre-execution selector, and the exact prevented_failure versus execution_claimed observables needed for implementation acceptance."
+      ],
+      "fingerprint": "requirements-satisfaction:mandatory-correction:verified-successor-recorded-without-predecessor-prohibition-or-forced-selection",
+      "id": "GAP-MANDATORY-CORRECTION",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Even after a correction passes the same path, the next compatible task can still execute the failed predecessor or choose another route, so recurrence prevention and mandatory reuse do not hold.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-CORRECTION",
+        "FUT-CORRECTION",
+        "ACC-ZERO-REPEAT",
+        "ACC-MANDATORY-CORRECTION"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "f5c397f9bb77d55197ae72816c929dca5afb4d0e12e56ad8201f8161e2a6dc65",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "EV-LEDGER, EV-CHECKED, EV-BOOTSTRAP, EV-LIFECYCLE, EV-PROMOTE, EV-RECON, EV-RESEARCH, and EV-WF-STATE ground every row of the candidate durable_transition_effect_branch_multiple_run_matrix.",
+        "Candidate PO-CUR-RESUME and PO-FUT-RESUME name the prevention-journal and workflow-state owners, common transition/effect/branch inputs, exact research_run.py, sequence_promote.py, reconciliation, and WorkflowStateStore symbols, tests/prevention/test_transition_crash_matrix.py, and exact-once branch/run closure."
+      ],
+      "fingerprint": "internal-readiness:common-durable-resume:journal-transition-effect-branch-run",
+      "id": "GAP-COMMON-DURABLE-RESUME",
+      "lens": "INTERNAL_READINESS",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Current resume guarantees are isolated by component, so crashes or branch/run overlap can still repeat external effects unless planning introduces one common transition/effect identity and reconciliation contract across owners.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-RESUME",
+        "FUT-RESUME"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "f6be79b14121de56711e6e677dc5936707fd531499de4aa04dd99a844d5c49c6",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research/requirements.json: CUR-ENTRYPOINT and FUT-ENTRYPOINT require system-wide single-owner coverage and safe reinvocation.",
+        "/private/tmp/prevention-successor-core-candidate.json: requirement_statuses.CUR-ENTRYPOINT.owner_matrix enumerates all 25 sequence_id rows and planner_readiness_constraints.PO-CUR-ENTRYPOINT supplies the migration and 25/25 closure contract."
+      ],
+      "fingerprint": "requirements-coverage:GAP-ENTRYPOINT-SYSTEM-WIDE:25-row-owner-migration",
+      "id": "GAP-ENTRYPOINT-SYSTEM-WIDE",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Planning must give every one of the 25 frozen registry rows exactly one typed owner from initialization through terminal emission, including an explicit composition decision for composite and non-standalone rows.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-ENTRYPOINT",
+        "FUT-ENTRYPOINT"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  },
+  {
+    "disposition": "HANDOFF_TO_PLANNER",
+    "finding_fingerprint": "fb12533348df504f429357c2c20693cc86429903cbe1f95848e95a5b105b4ba9",
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "Required behavior: EV-REQS requires closed typed operations and ACC-ZERO-RAW requires zero raw JSON/text patching and zero untyped dispatch in governed runs.",
+        "Missing current behavior: EV-GUARD documents command-string validation, EV-CHECKED accepts an argparse remainder and executes arbitrary argv, EV-LEDGER retains JSON-file and free-text input boundaries, and EV-LIFECYCLE executes shlex-split command strings.",
+        "Feasible planner boundary: EV-LEDGER and EV-RESEARCH already demonstrate closed event and Operation-enum schemas that can ground a closed operation registry and negative pre-mutation validation corpus."
+      ],
+      "fingerprint": "requirements-satisfaction:typed-dispatch:raw-command-json-and-arbitrary-argv-mutation-boundaries",
+      "id": "GAP-TYPED-DISPATCH",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Governed work can still reach mutations through reconstructed command strings, JSON files, or arbitrary argv, so malformed or unregistered operations are not uniformly rejected before effects occur and zero-raw execution cannot yet hold.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-TYPED",
+        "FUT-TYPED",
+        "ACC-ZERO-RAW"
+      ],
+      "status": "OPEN",
+      "type": "SATISFACTION_GAP"
+    }
+  },
+  {
+    "disposition": "MERGE_DUPLICATE",
+    "finding_fingerprint": "fd26060650a1f3f32e5fffae57f13b0b506bdd255ad13e0ded87780e9ddac9fa",
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "raw_finding": {
+      "evidence": [
+        "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research/requirements.json: CUR-TYPED, FUT-TYPED, and ACC-ZERO-RAW define the positive typed-dispatch and negative zero-raw obligations.",
+        "/private/tmp/prevention-successor-core-candidate.json: requirement_statuses.CUR-TYPED.typed_raw_operation_matrix classifies 15 operation boundaries and PO-CUR-TYPED names the closed-schema migration and zero-effect acceptance."
+      ],
+      "fingerprint": "requirements-coverage:GAP-TYPED-DISPATCH:closed-operation-migration",
+      "id": "GAP-TYPED-DISPATCH",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "materiality": "PLANNING",
+      "originating_stage": "RESEARCH",
+      "practical_consequence": "Planning must replace every inventoried raw shell, arbitrary-argv, JSON-file, JSON-string, free-text, and rendered-text mutation boundary with a closed typed operation so injected raw paths fail before mutation.",
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "requirement_ids": [
+        "CUR-TYPED",
+        "FUT-TYPED",
+        "ACC-ZERO-RAW"
+      ],
+      "status": "OPEN",
+      "type": "PLANNER_DECISION"
+    }
+  }
+]

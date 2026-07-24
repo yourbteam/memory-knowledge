@@ -1,0 +1,46 @@
+[
+  {
+    "id": "P1-PRODUCTION-GATEWAY",
+    "text": "Ground one production registered-owner gateway that accepts only task_id, run_id, context_id, and intent_id; reconstructs the exact same-journal typed ActionIntent; validates one-writer ownership and repository roots; and calls only PreventionController.execute.",
+    "source": {"finding": "no-production-controller-entrypoint"},
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "No caller-supplied owner argv, JSON, budgets, roots, source edges, or implementation hashes cross the production boundary.",
+    "scope_id": "registered-owner-production-gateway",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-P1-GATEWAY", "description": "Name the exact producer, persisted inputs, reconstruction rules, ownership checks, and invocation path."}]
+  },
+  {
+    "id": "P2-SOURCE-QUERY-CONTRACTS",
+    "text": "Materialize a closed source_query_contract for every existing owner/profile route, containing the trusted locator bindings, read-only acquisition method, result schema, semantic predicate, receipt role, and source-of-truth limitation required by its source edge.",
+    "source": {"finding": "probe-names-have-no-production-acquisition-contract"},
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "All 43 routes are grounded from real owner sources or explicitly blocked; no edge receives or echoes expected result hashes.",
+    "scope_id": "production-source-query-contracts",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-P2-SOURCE-QUERIES", "description": "Produce an exhaustive 43-route acquisition matrix grouped across the five finite edge kinds."}]
+  },
+  {
+    "id": "P3-PRODUCTION-COMPOSITION",
+    "text": "Ground production construction for PreventionJournal, BudgetAuthority capacity, TrustedBindingProvider plus finite external providers, SourceEdgeRegistry, and the controller using the same authenticated work-memory lifecycle.",
+    "source": {"finding": "no-production-composition-root"},
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Capacity, roots, approvals, handles, and source edges come only from persisted or configured authorities; absent inputs fail before effects.",
+    "scope_id": "registered-owner-production-composition",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-P3-COMPOSITION", "description": "Name each required authority, acquisition route, construction order, and fail-closed state."}]
+  },
+  {
+    "id": "P4-REAL-SAME-PATH-PROOF",
+    "text": "Ground same-path verification for each supported route through the production gateway and concrete edges, including crash-after-source reconciliation, semantic terminal re-observation, replay, insufficient capacity, missing binding, and foreign-writer rejection.",
+    "source": {"finding": "acceptance-fixture-only-execution"},
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Production claims rest on real composition and domain reads, not AcceptanceSourceEdge or reconstructed expected observations.",
+    "scope_id": "registered-owner-production-proof",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-P4-PROOF", "description": "Define the finite same-path test and live-evidence matrix for all ten owners and 43 profiles."}]
+  }
+]

@@ -1,0 +1,11 @@
+{
+  "runtime": "codex-collaboration",
+  "runtime_agent_id": "/root/prevention_core_v2",
+  "role": "CORE_RESEARCHER",
+  "round": 1,
+  "status": "INTERRUPTED",
+  "candidate_hash": "b15d60f5f2fe04738753aa9c93347532d53320902462cab3536228dbc9b30768",
+  "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+  "slot_closed": true,
+  "completion_evidence": "The agent exceeded three bounded waits, was interrupted from running state, and list_agents then reported it as interrupted rather than active."
+}

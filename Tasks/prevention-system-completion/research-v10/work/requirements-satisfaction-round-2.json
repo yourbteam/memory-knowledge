@@ -1,0 +1,189 @@
+{
+  "verdict": "GAPS",
+  "findings": [
+    {
+      "id": "SAT-R2-NEGATIVE-EVIDENCE-PAIRING",
+      "fingerprint": "requirements-satisfaction:r2:current-negative-answers-missing-required-behavior-evidence",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O2-CURRENT-RECONCILE",
+        "O3-CURRENT-TERMINAL",
+        "O4-CURRENT-PARENT",
+        "O5-CURRENT-PARAMETERS"
+      ],
+      "type": "FACT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "A fresh planner cannot audit from each current requirement record why the observed current behavior fails that requirement, because every negative current answer cites only implementation-side evidence and omits the evidence item that defines the required behavior; the research contract requires both sides even when the prose conclusion is correct.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-2.json#/requirement_statuses: O1-CURRENT-BUDGET cites EV-CONTROLLER, EV-BUDGET, and ten EV-SRC items but not EV-REQ while asserting understatement_possible=true.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-2.json#/requirement_statuses: O2-CURRENT-RECONCILE, O3-CURRENT-TERMINAL, O4-CURRENT-PARENT, and O5-CURRENT-PARAMETERS likewise assert absent dispatch, semantic validation/event, parent enforcement, or materialized schema/root/provider binding without citing EV-REQ.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-2.json#/evidence_index/EV-REQ exists, is hash-authenticated, and explicitly carries the ten frozen requirements and acceptance intent, so the missing required-behavior side is accessible inside the frozen roots rather than blocked.",
+        "/Users/kamenkamenov/.codex/skills/research-playbook/references/lenses-and-findings.md: a negative coverage or satisfaction answer whose evidence IDs cover only one side requires FIX_IN_RESEARCH."
+      ],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O1",
+      "fingerprint": "requirements-satisfaction:r2:mg-o1:owner-derived-complete-budget-not-implemented",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-FUTURE-BUDGET"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Until implementation replaces caller-supplied UnitBudget objects with contract-derived complete reservations, an executable owner can still be launched from an understated budget; the planner must implement owner/command/mode derivation and pre-effect rejection, including progressive greenfield frontier reservation.",
+      "evidence": [
+        "scripts/prevention_controller.py:51-65,242-258 accepts unit_budgets supplied to PreventionController and admits the selected value.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-2.json#/requirement_statuses/O1-FUTURE-BUDGET and #/planner_readiness_constraints/PO-O1-BUDGET provide the approved target algorithm, exact implementation boundary, tests, and closure condition.",
+        "All ten hash-verified approved proposals expose unit_budget or the greenfield budget_contract; their proposal_status is APPROVED, availability_policy is AVAILABLE, and authority_decisions_required is empty."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O2",
+      "fingerprint": "requirements-satisfaction:r2:mg-o2:typed-owner-reconciliation-not-implemented",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O2-FUTURE-RECONCILE"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "A crash after an effect but before result persistence still stops every owner as INDETERMINATE, so the planner must dispatch the selected content-addressed owner reconciler and use its ALREADY_APPLIED, NOT_APPLIED, or INDETERMINATE result without duplicating effects.",
+      "evidence": [
+        "scripts/prevention_owner_runtime.py:166-176 records INDETERMINATE unconditionally for recovered STARTED state.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-2.json#/requirement_statuses/O2-FUTURE-RECONCILE and #/planner_readiness_constraints/PO-O2-RECONCILE ground the three-result dispatch boundary and acceptance observables.",
+        "Each of the ten hash-verified approved proposals contains an effect_and_reconciliation_contract tied to its owner surface."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O3",
+      "fingerprint": "requirements-satisfaction:r2:mg-o3:semantic-terminal-verification-not-implemented",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O3-FUTURE-TERMINAL"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Exit zero still creates a terminal artifact without owner-semantic proof, so malformed, detached, blocked, or semantically failed owner output can be recorded as success; the planner must compose each approved verifier with exactly one owner_terminal event and matching artifact.",
+      "evidence": [
+        "scripts/prevention_owner_runtime.py:199-214 checks only nonzero return code before creating the terminal artifact.",
+        "scripts/work_memory.py:132-200 defines effect_reconciled but no owner_terminal event schema.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-2.json#/requirement_statuses/O3-FUTURE-TERMINAL and #/planner_readiness_constraints/PO-O3-TERMINAL ground the exact ordering, replay rule, all-ten-owner verification boundary, and acceptance observables."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O4",
+      "fingerprint": "requirements-satisfaction:r2:mg-o4:child-parent-delegation-not-enforced",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O4-FUTURE-PARENT"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The AVAILABLE blocker-reentry child can still be selected without an active allowed parent, so the planner must reject direct, forged, stale, consumed, or foreign delegation before budget reservation or argv construction and atomically consume only a matching active-parent delegation.",
+      "evidence": [
+        "Tasks/prevention-system-completion/owner-migration-manifest.json#/rows/6 marks mawf-playbook-blocker-reentry standalone=false with parents mawf-playbook-full-test and mawf-playbook-speed-test; all other 24 rows are standalone.",
+        "scripts/prevention_controller.py:73-258 and scripts/prevention_adapters.py:209-240 contain no standalone/parent/delegation admission check.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-2.json#/requirement_statuses/O4-FUTURE-PARENT and #/planner_readiness_constraints/PO-O4-PARENT ground the same-journal identity, atomic consumption boundary, owner, and tests."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O5",
+      "fingerprint": "requirements-satisfaction:r2:mg-o5:materialized-schema-root-provider-binding-not-implemented",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Hard-coded adapter lists still permit proposal schema, trusted-root, repository, provider, approval, and symlink-containment rules to be bypassed or remain unresolved, so the planner must materialize the selected parameter contract and resolve every binding before constructing shell-free argv or a typed child call.",
+      "evidence": [
+        "scripts/prevention_adapters.py:25-127,147-240 hard-codes BASE_ARGV, FLAG_ORDER, PATH_PARAMETERS, and per-owner conditionals; it does not load proposal parameter_contract/trusted_roots or resolve symlink containment, providers, approvals, or parent bindings.",
+        "scripts/work_memory.py:1157-1172 grounds local repository lookup and mcp-agents-workflow/src/workflow_orch/git_runtime.py:17-67 grounds configured remote repository mapping, but neither is injected into current prevention adapter admission.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-2.json#/requirement_statuses/O5-FUTURE-PARAMETERS and #/planner_readiness_constraints/PO-O5-PARAMETERS ground the materialized contract hash, resolvers, failure boundary, owner, and all-ten-owner acceptance cases."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "CORR-R2-OWNER-SURFACE-MATRIX",
+      "fingerprint": "requirements-satisfaction:r2:correction:all-ten-current-owner-surfaces-present",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O2-CURRENT-RECONCILE",
+        "O3-CURRENT-TERMINAL",
+        "O5-CURRENT-PARAMETERS"
+      ],
+      "type": "NON_GAP",
+      "materiality": "CLEANUP",
+      "practical_consequence": "No AVAILABLE owner surface disappears from the current-state research: a planner can see the budget bound, effect observable, terminal behavior, and parameter/path surface for each of the same ten owners, while the proposal contracts remain explicitly future behavior.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-2.json#/research_markdown/Owner-by-owner-current-matrix contains one row each for local-workflow-orch-image, greenfield-full-drive, mawf-playbook-blocker-reentry, claude-auth-token-refresh, discovery-promotion-lifecycle, commit-push-main, discovery-bootstrap, discovery-candidate-reconciliation, convergence-checkpoint-run, and convergence-state-review-cycle.",
+        "The four corresponding CURRENT_RUNTIME requirement_status owner_matrix objects cover the same ten names and cite all ten EV-SRC items; every cited local evidence SHA-256 matches its current file bytes."
+      ],
+      "proposed_disposition": "REJECT_NON_GAP",
+      "status": "CLOSED",
+      "closure_evidence": "All ten owner rows are present across the approved current surfaces; the remaining defect is evidence pairing in SAT-R2-NEGATIVE-EVIDENCE-PAIRING, not owner omission."
+    },
+    {
+      "id": "CORR-R2-GREENFIELD-PROGRESSIVE-BUDGET",
+      "fingerprint": "requirements-satisfaction:r2:correction:greenfield-progressive-frontier-budget-grounded",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-FUTURE-BUDGET"
+      ],
+      "type": "NON_GAP",
+      "materiality": "CLEANUP",
+      "practical_consequence": "The planner is not forced to invent a fixed whole-workflow duration for greenfield: each materialized atomic task has the approved 3,600,000 ms total cap including retries, every launchable frontier is fully reserved before effects, and the workflow total grows by component-wise composition of materialized task vectors.",
+      "evidence": [
+        "Tasks/prevention-system-completion/owner-authority-decisions.json:27-36 approves the 3,600,000 ms atomic-task cap including retries and exact sum of constituent task budgets; lines 116-126 approve owner-derived frontier reservation and pre-effect pause on insufficient capacity.",
+        "Tasks/prevention-system-completion/owner-contract-proposals/greenfield-full-drive.json:50-64 materializes each next task/frontier, forbids caller budgets, reserves every frontier member, and keeps the parent durable across capacity pauses.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-2.json#/requirement_statuses/O1-FUTURE-BUDGET preserves no fixed workflow duration and fails closed on missing role, untyped task, unresolved frontier, or insufficient reservation."
+      ],
+      "proposed_disposition": "REJECT_NON_GAP",
+      "status": "CLOSED",
+      "closure_evidence": "The approved authority decision, proposal budget contract, candidate research value, readiness owner, and greenfield frontier acceptance checks form a finite FUTURE_SYSTEM planning contract; deployed runtime proof is correctly NOT_YET_APPLICABLE."
+    },
+    {
+      "id": "CORR-R2-AVAILABILITY-VS-ADMISSION",
+      "fingerprint": "requirements-satisfaction:r2:correction:availability-does-not-imply-admission",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-FUTURE-BUDGET",
+        "O4-CURRENT-PARENT",
+        "O4-FUTURE-PARENT",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "NON_GAP",
+      "materiality": "CLEANUP",
+      "practical_consequence": "The policy count does not accidentally authorize effects: AVAILABLE only identifies an owner with accessible approved contract evidence, while execution remains fail-closed until materialization and every applicable budget, lifecycle, parent, parameter, root, provider, approval, receipt, and terminal gate passes; the AVAILABLE child remains non-admissible without an executable active parent.",
+      "evidence": [
+        "Tasks/prevention-system-completion/owner-contracts.json has exactly 10 AVAILABLE, 6 CUSTODIAN_EVIDENCE_REQUIRED, and 9 UNAVAILABLE rows.",
+        "All ten hash-verified owner proposals are APPROVED and AVAILABLE with no unresolved authority_decisions_required, but local-workflow-orch-image and greenfield-full-drive explicitly retain REJECT_UNTIL_APPROVED_AND_MATERIALIZED and blocker-reentry retains REJECT_UNLESS_ACTIVE_PARENT_DELEGATION.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-2.json#/research_markdown and #/requirement_statuses/O4-FUTURE-PARENT state the availability/admission separation; the two allowed MAWF parents remain CUSTODIAN_EVIDENCE_REQUIRED, so the child is not presently admissible standalone."
+      ],
+      "proposed_disposition": "REJECT_NON_GAP",
+      "status": "CLOSED",
+      "closure_evidence": "The candidate preserves the 10/6/9 availability policy without treating approval or availability as execution authorization and gives the parent-only child a concrete pre-effect admission boundary."
+    }
+  ]
+}

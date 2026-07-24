@@ -1,0 +1,236 @@
+{
+  "schema_version": 1,
+  "proposal_status": "APPROVED",
+  "approved_at_utc": "2026-07-17T22:08:50Z",
+  "owner_sequence_id": "local-workflow-orch-image",
+  "availability_policy": "AVAILABLE",
+  "execution_admission": "REJECT_UNTIL_APPROVED_AND_MATERIALIZED",
+  "authority": "Kamen",
+  "authority_approvals": {
+    "unit_budget": {
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:03:47Z",
+      "decision_id": "local-workflow-orch-image-complete-unit-budget-v1"
+    },
+    "trusted_roots": {
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:05:06Z",
+      "decision_id": "local-workflow-orch-image-trusted-roots-v1"
+    },
+    "parameter_additions": {
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:06:05Z",
+      "decision_id": "local-workflow-orch-image-repository-key-fields-v1"
+    },
+    "effect_reconciliation_terminal": {
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:08:50Z",
+      "decision_id": "local-workflow-orch-image-runtime-contract-v1"
+    },
+    "semantic_intake": {
+      "status": "APPROVED",
+      "decision_id": "local-workflow-orch-image-semantic-intake-v1"
+    }
+  },
+  "sources": [
+    {
+      "path": "/Users/kamenkamenov/mcp-agents-workflow/scripts/local_workflow_orch_image_harness.py",
+      "sha256": "2ae45612bc4b960b49f55c27a2fc0c194886b9581467708ea1c5c1112bf810ef",
+      "approved_post_correction_sha256": "32d1fcd33653e8055baa10b5935d368d555d22930c48b93d9590da9370166b7b",
+      "source_correction_decision_id": "local-workflow-orch-image-semantic-intake-v1"
+    },
+    {
+      "path": "/Users/kamenkamenov/mcp-agents-workflow/scripts/prevention_source_receipt.py",
+      "sha256": "06dedab9168d0aa4e45d7e4b039494b8ff2a6ab93bf0f026b5a286f38a61476f"
+    },
+    {
+      "path": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/credential_refresh.py",
+      "sha256": "4e5c66f9a5a5b1308cef4c9cd9e38795739b556f4e4c99e7a5dc3930d2b471cc"
+    },
+    {
+      "path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/local-workflow-orch-image/sequence.md",
+      "role": "operator contract and pass criteria"
+    }
+  ],
+  "unit_budget": {
+    "schema_version": 1,
+    "owner_sequence_id": "local-workflow-orch-image",
+    "productive_milliseconds": 3600000,
+    "mandatory_role_milliseconds": {
+      "CORE": 3600000,
+      "INTERNAL_READINESS": 3600000,
+      "REQUIREMENTS_COVERAGE": 3600000,
+      "REQUIREMENTS_SATISFACTION": 3600000
+    },
+    "adjudication_milliseconds": 3600000,
+    "materialization_milliseconds": 3600000,
+    "terminal_milliseconds": 3600000,
+    "retry_milliseconds": 0,
+    "token_units": null,
+    "monetary_micros": null,
+    "duration_milliseconds": 28800000,
+    "derivation": "Eight separately scheduled atomic tasks at the approved 3600000 millisecond per-task cap. Retries remain inside the productive task cap and receive no separate reservation."
+  },
+  "trusted_roots": {
+    "mcp-agents-workflow": "/Users/kamenkamenov/mcp-agents-workflow",
+    "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
+    "runtime-temp": "/private/tmp",
+    "container-workspaces": "/workspaces"
+  },
+  "parameter_contract": {
+    "common": {
+      "command": {
+        "type": "ENUM",
+        "values": [
+          "build",
+          "run",
+          "health",
+          "copy-code-project",
+          "logs",
+          "stop",
+          "seed-codex-auth",
+          "seed-git-auth",
+          "probe-codex",
+          "require-real-memory-knowledge"
+        ],
+        "required": true
+      }
+    },
+    "by_command": {
+      "build": {
+        "tag": {"type": "STRING", "required": true},
+        "working_directory": {"type": "PATH", "fixed_root": "mcp-agents-workflow", "fixed_relative_path": "."}
+      },
+      "run": {
+        "tag": {"type": "STRING", "required": true},
+        "name": {"type": "STRING", "required": true},
+        "port": {"type": "INTEGER", "minimum": 1, "maximum": 65535, "required": true},
+        "port_file": {"type": "PATH", "trusted_root": "runtime-temp", "mode": "WRITE_FILE", "required": false},
+        "env_file": {"type": "SECRET_HANDLE", "trusted_root": "runtime-temp", "mode": "READ_FILE", "required": true}
+      },
+      "health": {
+        "port": {"type": "INTEGER", "minimum": 1, "maximum": 65535, "required_unless": "port_file"},
+        "port_file": {"type": "PATH", "trusted_root": "runtime-temp", "mode": "READ_FILE", "required_unless": "port"},
+        "timeout_seconds": {"type": "INTEGER", "minimum": 1, "maximum": 3600, "default": 180}
+      },
+      "copy-code-project": {
+        "container": {"type": "STRING", "required": true},
+        "source_repository_key": {"type": "ENUM", "values": ["mcp-agents-workflow", "memory-knowledge"], "required": true},
+        "source": {"type": "PATH", "trusted_root_from": "source_repository_key", "mode": "READ_DIRECTORY", "required": true},
+        "destination": {"type": "PATH", "trusted_root": "container-workspaces", "mode": "WRITE_DIRECTORY", "resolution_scope": "REMOTE_EXTERNAL_EDGE", "default": "."}
+      },
+      "logs": {
+        "container": {"type": "STRING", "required": true},
+        "tail": {"type": "INTEGER", "minimum": 1, "required": false}
+      },
+      "stop": {
+        "container": {"type": "STRING", "required": true}
+      },
+      "seed-codex-auth": {
+        "container": {"type": "STRING", "required": true},
+        "keyvault_name": {"type": "STRING", "required": true},
+        "force": {"type": "BOOLEAN", "fixed": false}
+      },
+      "seed-git-auth": {
+        "container": {"type": "STRING", "required": true},
+        "keyvault_name": {"type": "STRING", "required": true},
+        "repository_key": {"type": "ENUM", "values": ["mcp-agents-workflow", "memory-knowledge"], "required": true},
+        "port": {"type": "INTEGER", "minimum": 1, "maximum": 65535, "required_unless": "port_file"},
+        "port_file": {"type": "PATH", "trusted_root": "runtime-temp", "mode": "READ_FILE", "required_unless": "port"},
+        "health_timeout_seconds": {"type": "INTEGER", "minimum": 1, "maximum": 3600, "default": 180},
+        "no_restart_after_seed": {"type": "BOOLEAN", "fixed": false}
+      },
+      "probe-codex": {
+        "container": {"type": "STRING", "required": true}
+      },
+      "require-real-memory-knowledge": {
+        "real_memory_knowledge": {"type": "BOOLEAN", "fixed": true}
+      }
+    },
+    "path_rules": [
+      "Reject absolute caller paths; accept a root key plus a relative path only.",
+      "Resolve symlinks and prove containment in the named trusted root before argv construction.",
+      "For write targets, resolve and validate the nearest existing parent before creation.",
+      "Never read, persist, hash, or print secret-handle contents in the prevention controller."
+    ]
+  },
+  "effect_and_reconciliation_contract": {
+    "build": {
+      "effect_identity": "effect_id plus image tag plus pre-execution image id plus build-context source hash",
+      "implementation_requirement": "Pass a prevention effect-id label to docker build.",
+      "already_applied": "The tag resolves to an image whose prevention effect-id label equals effect_id.",
+      "not_applied": "The tag is absent or still resolves to the prepared pre-execution image id.",
+      "indeterminate": "The tag resolves to a different image without the expected effect-id label."
+    },
+    "run": {
+      "effect_identity": "effect_id plus requested container name plus prepared pre-execution container id",
+      "implementation_requirement": "Reject an existing same-name container unless it carries the local-workflow-orch-image owner label; record any accepted prior container id before removal; pass owner and prevention effect-id labels to docker run.",
+      "already_applied": "The named container exists with the expected effect-id label and declared image and port binding.",
+      "not_applied": "The accepted prepared container still exists, or its authorized removal completed but no replacement container exists; replay can safely create the labeled replacement.",
+      "indeterminate": "The name is occupied by a container without the expected effect-id label."
+    },
+    "health": {
+      "effect_identity": "none; observational task",
+      "reconciliation": "NOT_APPLIED_AND_REPLAY_SAFE"
+    },
+    "copy-code-project": {
+      "effect_identity": "effect_id plus container id plus source repository key and source hash plus destination",
+      "implementation_requirement": "Copy into an effect-specific staging directory, perform all git configuration there, write an effect receipt, then atomically rename into the final destination.",
+      "already_applied": "The final destination has the expected effect receipt and source hash.",
+      "not_applied": "Neither final receipt nor effect staging directory exists.",
+      "indeterminate": "A staging directory, conflicting destination, or mismatched receipt exists."
+    },
+    "logs": {
+      "effect_identity": "none; observational task",
+      "reconciliation": "NOT_APPLIED_AND_REPLAY_SAFE"
+    },
+    "stop": {
+      "effect_identity": "effect_id plus prepared container id and name",
+      "implementation_requirement": "Reject a same-name container that lacks the local-workflow-orch-image owner label before removal.",
+      "already_applied": "The prepared container id no longer exists.",
+      "not_applied": "The prepared container id still exists under the prepared name.",
+      "indeterminate": "The name now refers to a different container id."
+    },
+    "seed-codex-auth": {
+      "effect_identity": "effect_id plus container id plus Key Vault name handle; no secret material",
+      "already_applied": "A live, non-secret Codex no-tool probe returns the exact approved OK marker.",
+      "not_applied": "Required credential/config files are definitively absent.",
+      "indeterminate": "Credential files exist but the live probe does not prove usable authentication."
+    },
+    "seed-git-auth": {
+      "effect_identity": "effect_id plus container id plus Key Vault name handle plus repository key",
+      "already_applied": "The restarted service is healthy, uses GitRemoteManager, and a non-mutating authenticated URL acquisition probe succeeds for repository_key without emitting credentials.",
+      "not_applied": "Required GitHub App configuration or PEM files are definitively absent.",
+      "indeterminate": "Files exist but health, manager type, or authenticated acquisition is not proven."
+    },
+    "probe-codex": {
+      "effect_identity": "none; observational task",
+      "reconciliation": "NOT_APPLIED_AND_REPLAY_SAFE"
+    },
+    "require-real-memory-knowledge": {
+      "effect_identity": "none; validation-only task",
+      "reconciliation": "NOT_APPLIED_AND_REPLAY_SAFE"
+    }
+  },
+  "terminal_contract": {
+    "common": [
+      "Process return code is zero.",
+      "Exactly one command-specific semantic verifier passes.",
+      "Exactly one durable owner_terminal event and one matching terminal artifact are emitted for effect_id.",
+      "A duplicate identical terminalization returns the existing event; a conflicting or second event fails closed."
+    ],
+    "by_command": {
+      "build": "JSON ok is true, imageTag equals the request, and docker inspect proves the expected effect-id label.",
+      "run": "JSON ok is true; container id/name, requested and actual ports, image tag, port-file value, and docker inspect label/binding all agree.",
+      "health": "JSON ok is true, port agrees with the request or port file, and health.status is exactly ok.",
+      "copy-code-project": "JSON ok is true and non-mutating container checks prove the receipt, source hash, safe-directory entries, and local origin value.",
+      "logs": "docker logs succeeds; the owner emits a structured envelope containing ok=true and a hash of captured log bytes, never success after an ignored Docker error.",
+      "stop": "The prepared container id is absent; the owner never emits removed=true solely because docker rm was attempted.",
+      "seed-codex-auth": "seedResult.codex is exactly seeded or skipped (local is newer), contains no error or skipped-empty state, and the exact live Codex OK probe passes.",
+      "seed-git-auth": "All required seed results are seeded, exists, or seeded+enriched; restart is true; health.status is ok; GitRemoteManager and authenticated acquisition probes pass without credential output.",
+      "probe-codex": "JSON ok is true; exactly the noTool and tool probes exist; both return code zero and each output matches its exact approved OK marker.",
+      "require-real-memory-knowledge": "JSON ok and realMemoryKnowledge are both true."
+    }
+  },
+  "authority_decisions_required": []
+}

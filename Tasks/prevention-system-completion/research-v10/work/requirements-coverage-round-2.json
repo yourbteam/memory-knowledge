@@ -1,0 +1,178 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "id": "MG-O1",
+      "fingerprint": "mg-o1-owner-derived-complete-budget-planner-handoff",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O1-FUTURE-BUDGET"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Implementation must remove caller-controlled UnitBudget values and admit each of the ten owners only from its approved owner- and command-specific complete budget, including progressive frontier reservation for greenfield-full-drive; the research already identifies the current understatement boundary and the approved target contracts.",
+      "evidence": [
+        "candidate-round-2.json#material_gaps[MG-O1] and #requirement_statuses[O1-CURRENT-BUDGET,O1-FUTURE-BUDGET]",
+        "candidate-round-2.json#research_markdown/Complete greenfield progressive UnitBudget algorithm",
+        "candidate-round-2.json#planner_readiness_constraints[PO-O1-BUDGET,PO-O1-BUDGET-ACCEPTANCE]"
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O2",
+      "fingerprint": "mg-o2-typed-owner-reconciler-planner-handoff",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O2-CURRENT-RECONCILE",
+        "O2-FUTURE-RECONCILE"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Implementation must replace unconditional INDETERMINATE recovery with the selected owner reconciler so interrupted work is skipped, resumed once, or stopped according to ALREADY_APPLIED, NOT_APPLIED, or INDETERMINATE; the ten current observables and ten approved target contracts are already mapped.",
+      "evidence": [
+        "candidate-round-2.json#material_gaps[MG-O2] and #requirement_statuses[O2-CURRENT-RECONCILE,O2-FUTURE-RECONCILE]",
+        "candidate-round-2.json#research_markdown/Owner-by-owner current matrix",
+        "candidate-round-2.json#planner_readiness_constraints[PO-O2-RECONCILE,PO-O2-RECONCILE-ACCEPTANCE]"
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O3",
+      "fingerprint": "mg-o3-semantic-owner-terminal-planner-handoff",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O3-CURRENT-TERMINAL",
+        "O3-FUTURE-TERMINAL"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Implementation must prevent exit zero from terminalizing work until the exact owner schema and semantic observable pass, then create exactly one matching owner_terminal event and artifact; the current terminal surface and target order are fully identified for all ten owners.",
+      "evidence": [
+        "candidate-round-2.json#material_gaps[MG-O3] and #requirement_statuses[O3-CURRENT-TERMINAL,O3-FUTURE-TERMINAL]",
+        "candidate-round-2.json#research_markdown/Owner-by-owner current matrix",
+        "candidate-round-2.json#planner_readiness_constraints[PO-O3-TERMINAL,PO-O3-TERMINAL-ACCEPTANCE]"
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O4",
+      "fingerprint": "mg-o4-parent-bound-child-delegation-planner-handoff",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O4-CURRENT-PARENT",
+        "O4-FUTURE-PARENT"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Implementation must reject direct mawf-playbook-blocker-reentry dispatch and atomically consume a matching same-journal delegation from one of its two named active parents before budget or argv construction; research confirms it is the sole child-only row and preserves the other 24 rows as standalone.",
+      "evidence": [
+        "candidate-round-2.json#material_gaps[MG-O4] and #requirement_statuses[O4-CURRENT-PARENT,O4-FUTURE-PARENT]",
+        "candidate-round-2.json#research_markdown/Current lifecycle, parent, and binding conclusions",
+        "candidate-round-2.json#planner_readiness_constraints[PO-O4-PARENT,PO-O4-PARENT-ACCEPTANCE]"
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O5",
+      "fingerprint": "mg-o5-materialized-schema-trusted-binding-planner-handoff",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O5-CURRENT-PARAMETERS",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Implementation must replace hard-coded parameter and path handling with each selected proposal schema, named trusted-root and provider resolution, symlink-safe containment, and shell-free argv or typed-child construction; the current gaps and all target resolver boundaries are already grounded.",
+      "evidence": [
+        "candidate-round-2.json#material_gaps[MG-O5] and #requirement_statuses[O5-CURRENT-PARAMETERS,O5-FUTURE-PARAMETERS]",
+        "candidate-round-2.json#research_markdown/Current lifecycle, parent, and binding conclusions",
+        "candidate-round-2.json#planner_readiness_constraints[PO-O5-PARAMETERS,PO-O5-PARAMETERS-ACCEPTANCE]"
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "RC2-CORRECTED-OWNER-COMMAND-EVIDENCE",
+      "fingerprint": "round2-corrected-owner-command-current-evidence-covered",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O2-CURRENT-RECONCILE",
+        "O3-CURRENT-TERMINAL",
+        "O4-CURRENT-PARENT",
+        "O5-CURRENT-PARAMETERS"
+      ],
+      "type": "NON_GAP",
+      "materiality": "CLEANUP",
+      "practical_consequence": "A planner does not need additional research to discover which current owner and command surfaces establish budget bounds, effect identity, terminal evidence, parent status, or parameter/path behavior: every one of the ten AVAILABLE owners has a separate current-source evidence item and an owner-matrix entry.",
+      "evidence": [
+        "candidate-round-2.json#research_markdown/Owner-by-owner current matrix contains all ten AVAILABLE owners",
+        "candidate-round-2.json#evidence_index contains EV-SRC-LOCAL, EV-SRC-GREENFIELD, EV-SRC-REENTRY, EV-SRC-AUTH, EV-SRC-PROMOTION, EV-SRC-PUBLISH, EV-SRC-BOOTSTRAP, EV-SRC-RECONCILIATION, EV-SRC-CHECKPOINT, and EV-SRC-REVIEW",
+        "candidate-round-2.json#requirement_statuses contains one current owner_matrix for each applicable current requirement"
+      ],
+      "proposed_disposition": "REJECT_NON_GAP",
+      "status": "CLOSED",
+      "closure_evidence": "All ten EV-SRC source_sha256 values match their declared local files, and all five current requirement statuses cite the corresponding current-source evidence set."
+    },
+    {
+      "id": "RC2-CORRECTED-GREENFIELD-BUDGET",
+      "fingerprint": "round2-corrected-greenfield-progressive-budget-covered",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-FUTURE-BUDGET"
+      ],
+      "type": "NON_GAP",
+      "materiality": "CLEANUP",
+      "practical_consequence": "Greenfield planning can preserve progressive discovery without inventing a fixed whole-workflow duration because the candidate defines the atomic cap, full next-task/frontier reservation, component-wise aggregation, checkpoint-before-effect boundary, and every fail-closed incomplete-frontier case.",
+      "evidence": [
+        "candidate-round-2.json#research_markdown/Complete greenfield progressive UnitBudget algorithm",
+        "candidate-round-2.json#requirement_statuses[O1-FUTURE-BUDGET]",
+        "candidate-round-2.json#evidence_index[EV-AUTH,EV-PROP-GREENFIELD]"
+      ],
+      "proposed_disposition": "REJECT_NON_GAP",
+      "status": "CLOSED",
+      "closure_evidence": "The O1-FUTURE-BUDGET value records 3,600,000ms atomic tasks including retry, fully reserved materialized task/frontier vectors, component-wise aggregation, and rejection or durable checkpointing before effects when typing or capacity is incomplete."
+    },
+    {
+      "id": "RC2-CORRECTED-READINESS-MAPPING",
+      "fingerprint": "round2-corrected-ten-obligation-readiness-covered",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O1-FUTURE-BUDGET",
+        "O2-CURRENT-RECONCILE",
+        "O2-FUTURE-RECONCILE",
+        "O3-CURRENT-TERMINAL",
+        "O3-FUTURE-TERMINAL",
+        "O4-CURRENT-PARENT",
+        "O4-FUTURE-PARENT",
+        "O5-CURRENT-PARAMETERS",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "NON_GAP",
+      "materiality": "CLEANUP",
+      "practical_consequence": "Every frozen planner obligation can be placed into a one-shot plan without inventing an owner, input, implementation surface, verification observable, or closure rule because all ten obligation IDs have complete READY records and resolvable evidence.",
+      "evidence": [
+        "envelope-round-2.json#requirements points to the frozen ten-requirement set with ten unique planner obligations",
+        "candidate-round-2.json#planner_readiness_constraints contains exactly PO-O1-BUDGET, PO-O1-BUDGET-ACCEPTANCE, PO-O2-RECONCILE, PO-O2-RECONCILE-ACCEPTANCE, PO-O3-TERMINAL, PO-O3-TERMINAL-ACCEPTANCE, PO-O4-PARENT, PO-O4-PARENT-ACCEPTANCE, PO-O5-PARAMETERS, and PO-O5-PARAMETERS-ACCEPTANCE",
+        "candidate-round-2.json#evidence_index contains ten individually hashed EV-SRC owner items and ten individually hashed EV-PROP owner items"
+      ],
+      "proposed_disposition": "REJECT_NON_GAP",
+      "status": "CLOSED",
+      "closure_evidence": "The readiness-key set exactly matches the frozen planner-obligation set; every record is READY, has implementation and verification anchors, a named owner, a closure condition, required_inputs, and only evidence IDs that resolve in the candidate evidence index."
+    }
+  ]
+}

@@ -1,0 +1,738 @@
+[
+  {
+    "acceptance_intent": "Return exact producer, fields, units, and coverage; absent values remain explicit and are never inferred from prose.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "EV-REQ",
+      "EV-CONTROLLER",
+      "EV-BUDGET",
+      "EV-SRC-LOCAL",
+      "EV-SRC-GREENFIELD",
+      "EV-SRC-REENTRY",
+      "EV-SRC-AUTH",
+      "EV-SRC-PROMOTION",
+      "EV-SRC-PUBLISH",
+      "EV-SRC-BOOTSTRAP",
+      "EV-SRC-RECONCILIATION",
+      "EV-SRC-CHECKPOINT",
+      "EV-SRC-REVIEW"
+    ],
+    "id": "O1-CURRENT-BUDGET",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "No caller budget remains; every launched unit has a complete owner-derived reservation before effects.",
+        "description": "Carry authoritative per-owner complete-unit budget inputs and fail-closed missing-evidence states into planning.",
+        "evidence_ids": [
+          "EV-CONTROLLER",
+          "EV-BUDGET",
+          "EV-AUTH",
+          "EV-PROP-LOCAL",
+          "EV-PROP-GREENFIELD",
+          "EV-PROP-REENTRY",
+          "EV-PROP-AUTH",
+          "EV-PROP-PROMOTION",
+          "EV-PROP-PUBLISH",
+          "EV-PROP-BOOTSTRAP",
+          "EV-PROP-RECONCILIATION",
+          "EV-PROP-CHECKPOINT",
+          "EV-PROP-REVIEW"
+        ],
+        "id": "PO-O1-BUDGET",
+        "implementation_anchors": [
+          "scripts/prevention_controller.py PreventionController.execute",
+          "scripts/prevention_budget.py UnitBudget/BudgetAuthority",
+          "ten approved proposal budget contracts"
+        ],
+        "owner": "prevention runtime implementation",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "owner/command/mode exact and one-below admission",
+          "greenfield task/frontier component-wise reservation"
+        ]
+      }
+    ],
+    "research_value": {
+      "owner_matrix": {
+        "claude-auth-token-refresh": "one shell invocation; 60s verifies",
+        "commit-push-main": "one invocation; no retries",
+        "convergence-checkpoint-run": "one invocation; 30s lock default",
+        "convergence-state-review-cycle": "one request; operations then check/status",
+        "discovery-bootstrap": "one locked atomic invocation",
+        "discovery-candidate-reconciliation": "one command; rolling default six",
+        "discovery-promotion-lifecycle": "one command; qualification plus six transitions",
+        "greenfield-full-drive": "one shell sequence; build/port/health/auth/drive bounds",
+        "local-workflow-orch-image": "one invocation; health/port/build bounds",
+        "mawf-playbook-blocker-reentry": "one reentry/operator action"
+      },
+      "producer": "caller-supplied PreventionController.unit_budgets admitted by BudgetAuthority",
+      "understatement_possible": true
+    },
+    "research_value_type": "object",
+    "scope_id": "owner-runtime-budget-current",
+    "source": {
+      "finding": "owner-budget-can-be-understated",
+      "requirement_ids": [
+        "FUT-BUDGET",
+        "FUT-ENTRYPOINT"
+      ]
+    },
+    "text": "Determine what authoritative machine-readable complete-unit budget data currently exists for each of the ten AVAILABLE owners and where current code permits caller understatement or lacks evidence."
+  },
+  {
+    "acceptance_intent": "Admission includes core, three gates, adjudication, and materialization overhead and rejects missing, incomplete, or insufficient budgets before side effects.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "EV-AUTH",
+      "EV-BUDGET",
+      "EV-PROP-LOCAL",
+      "EV-PROP-GREENFIELD",
+      "EV-PROP-REENTRY",
+      "EV-PROP-AUTH",
+      "EV-PROP-PROMOTION",
+      "EV-PROP-PUBLISH",
+      "EV-PROP-BOOTSTRAP",
+      "EV-PROP-RECONCILIATION",
+      "EV-PROP-CHECKPOINT",
+      "EV-PROP-REVIEW"
+    ],
+    "id": "O1-FUTURE-BUDGET",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "All ten target budget algorithms, including progressive greenfield composition without fixed workflow duration, pass red-before/green-after acceptance.",
+        "description": "Plan per-owner derivation, understatement rejection, missing-evidence rejection, and pre-effect admission tests.",
+        "evidence_ids": [
+          "EV-REQ",
+          "EV-BUDGET",
+          "EV-AUTH",
+          "EV-PROP-GREENFIELD"
+        ],
+        "id": "PO-O1-BUDGET-ACCEPTANCE",
+        "implementation_anchors": [
+          "tests/prevention/test_full_unit_admission.py",
+          "tests/prevention/test_typed_dispatch.py"
+        ],
+        "owner": "prevention tests",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "missing/incomplete/understated/insufficient pre-effect rejection",
+          "greenfield missing-role/untyped/unresolved-frontier/checkpoint cases"
+        ]
+      }
+    ],
+    "research_value": {
+      "atomic_task_milliseconds": 3600000,
+      "caller_budget_allowed": false,
+      "failure": "missing, incomplete, unresolved or insufficient rejects before effect",
+      "greenfield_algorithm": "classify every durable task into exactly one productive or mandatory role/overhead dimension; include retry in each atomic total; reserve every next task/frontier before launch; aggregate by component-wise sum of materialized task vectors; reject or checkpoint before effects on missing role, untyped task, unresolved frontier, or insufficient reservation; no fixed whole-workflow duration"
+    },
+    "research_value_type": "object",
+    "scope_id": "owner-runtime-budget-future",
+    "source": {
+      "finding": "owner-budget-can-be-understated",
+      "requirement_ids": [
+        "FUT-BUDGET",
+        "FUT-ENTRYPOINT"
+      ]
+    },
+    "text": "Every executable owner must derive its complete atomic UnitBudget from its content-addressed owner contract before preparation or launch; callers cannot supply or understate it."
+  },
+  {
+    "acceptance_intent": "Map each owner to a real same-path observable or explicit unresolved state without rerunning a possibly applied effect.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "EV-REQ",
+      "EV-RUNTIME",
+      "EV-SRC-LOCAL",
+      "EV-SRC-GREENFIELD",
+      "EV-SRC-REENTRY",
+      "EV-SRC-AUTH",
+      "EV-SRC-PROMOTION",
+      "EV-SRC-PUBLISH",
+      "EV-SRC-BOOTSTRAP",
+      "EV-SRC-RECONCILIATION",
+      "EV-SRC-CHECKPOINT",
+      "EV-SRC-REVIEW"
+    ],
+    "id": "O2-CURRENT-RECONCILE",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "Every approved owner/command dispatches its content-addressed reconciler; hard-coded STARTED handling is removed.",
+        "description": "Carry owner-specific effect identity and reconciliation evidence boundaries into planning.",
+        "evidence_ids": [
+          "EV-RUNTIME",
+          "EV-PROP-LOCAL",
+          "EV-PROP-GREENFIELD",
+          "EV-PROP-REENTRY",
+          "EV-PROP-AUTH",
+          "EV-PROP-PROMOTION",
+          "EV-PROP-PUBLISH",
+          "EV-PROP-BOOTSTRAP",
+          "EV-PROP-RECONCILIATION",
+          "EV-PROP-CHECKPOINT",
+          "EV-PROP-REVIEW"
+        ],
+        "id": "PO-O2-RECONCILE",
+        "implementation_anchors": [
+          "scripts/prevention_owner_runtime.py OwnerRuntime.run",
+          "registry effect_reconciler",
+          "ten proposal effect_and_reconciliation_contract objects"
+        ],
+        "owner": "prevention runtime implementation",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "ALREADY_APPLIED skips",
+          "NOT_APPLIED executes once",
+          "INDETERMINATE stops"
+        ]
+      }
+    ],
+    "research_value": {
+      "owner_matrix": {
+        "claude-auth-token-refresh": "container/host/vault/remote credential probes",
+        "commit-push-main": "HEAD/index/worktree/manifest/remote head",
+        "convergence-checkpoint-run": "state/baseline/ledger/view/child result",
+        "convergence-state-review-cycle": "request/state/helper results",
+        "discovery-bootstrap": "deterministic bundle bytes and run id",
+        "discovery-candidate-reconciliation": "repo/candidate/registry hashes, manifests/checkpoints",
+        "discovery-promotion-lifecycle": "discovery/registered lifecycle and blocker artifacts",
+        "greenfield-full-drive": "image/container plus durable drive state",
+        "local-workflow-orch-image": "Docker resources/emitted JSON",
+        "mawf-playbook-blocker-reentry": "operator task/workflow/run envelope"
+      },
+      "owner_reconciler_dispatch": false,
+      "started_behavior": "always INDETERMINATE"
+    },
+    "research_value_type": "object",
+    "scope_id": "owner-runtime-reconcile-current",
+    "source": {
+      "finding": "started-effect-permanently-indeterminate",
+      "requirement_ids": [
+        "FUT-RESUME",
+        "FUT-CORRECTION"
+      ]
+    },
+    "text": "Determine the current durable effect identities and authoritative observables available to reconcile STARTED effects for the ten AVAILABLE owners after interruption."
+  },
+  {
+    "acceptance_intent": "A crash after side effect and before result persistence never blindly duplicates the effect and can terminalize when authoritative state proves completion.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "EV-AUTH",
+      "EV-RUNTIME",
+      "EV-PROP-LOCAL",
+      "EV-PROP-GREENFIELD",
+      "EV-PROP-REENTRY",
+      "EV-PROP-AUTH",
+      "EV-PROP-PROMOTION",
+      "EV-PROP-PUBLISH",
+      "EV-PROP-BOOTSTRAP",
+      "EV-PROP-RECONCILIATION",
+      "EV-PROP-CHECKPOINT",
+      "EV-PROP-REVIEW"
+    ],
+    "id": "O2-FUTURE-RECONCILE",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Each owner reconciliation class is red-before/green-after against its current same-path observable.",
+        "description": "Plan red-before/green-after crash-window and idempotent-resume verification for each supported reconciliation class.",
+        "evidence_ids": [
+          "EV-RUNTIME",
+          "EV-SRC-LOCAL",
+          "EV-SRC-GREENFIELD",
+          "EV-SRC-REENTRY",
+          "EV-SRC-AUTH",
+          "EV-SRC-PROMOTION",
+          "EV-SRC-PUBLISH",
+          "EV-SRC-BOOTSTRAP",
+          "EV-SRC-RECONCILIATION",
+          "EV-SRC-CHECKPOINT",
+          "EV-SRC-REVIEW"
+        ],
+        "id": "PO-O2-RECONCILE-ACCEPTANCE",
+        "implementation_anchors": [
+          "tests/prevention/test_owner_runtime.py",
+          "ten indexed current owner sources"
+        ],
+        "owner": "prevention tests",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "crash after effect before result",
+          "same real code path and captured authority",
+          "no duplicate mutation"
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "selected content-addressed owner/command reconciler before repeat execution",
+      "identity": "persist proposal-required identities, pre-state, hashes, deterministic children/stages and non-secret provider versions during prepare",
+      "results": [
+        "ALREADY_APPLIED",
+        "NOT_APPLIED",
+        "INDETERMINATE"
+      ],
+      "resume": "skip applied, execute first not-applied, stop indeterminate"
+    },
+    "research_value_type": "object",
+    "scope_id": "owner-runtime-reconcile-future",
+    "source": {
+      "finding": "started-effect-permanently-indeterminate",
+      "requirement_ids": [
+        "FUT-RESUME",
+        "FUT-CORRECTION"
+      ]
+    },
+    "text": "Resume must reconcile a STARTED effect through its owner-specific typed contract into ALREADY_APPLIED, NOT_APPLIED, or genuinely unresolved before deciding whether execution can continue."
+  },
+  {
+    "acceptance_intent": "Return exact semantic terminal evidence or an explicit fail-closed absence for every AVAILABLE owner.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "EV-REQ",
+      "EV-RUNTIME",
+      "EV-EVENTS",
+      "EV-SRC-LOCAL",
+      "EV-SRC-GREENFIELD",
+      "EV-SRC-REENTRY",
+      "EV-SRC-AUTH",
+      "EV-SRC-PROMOTION",
+      "EV-SRC-PUBLISH",
+      "EV-SRC-BOOTSTRAP",
+      "EV-SRC-RECONCILIATION",
+      "EV-SRC-CHECKPOINT",
+      "EV-SRC-REVIEW"
+    ],
+    "id": "O3-CURRENT-TERMINAL",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "Exit zero alone never terminalizes and each selected semantic verifier is mandatory.",
+        "description": "Carry semantic verification and one-terminal-event contracts into planning.",
+        "evidence_ids": [
+          "EV-RUNTIME",
+          "EV-EVENTS",
+          "EV-PROP-LOCAL",
+          "EV-PROP-GREENFIELD",
+          "EV-PROP-REENTRY",
+          "EV-PROP-AUTH",
+          "EV-PROP-PROMOTION",
+          "EV-PROP-PUBLISH",
+          "EV-PROP-BOOTSTRAP",
+          "EV-PROP-RECONCILIATION",
+          "EV-PROP-CHECKPOINT",
+          "EV-PROP-REVIEW"
+        ],
+        "id": "PO-O3-TERMINAL",
+        "implementation_anchors": [
+          "scripts/prevention_owner_runtime.py EXECUTED block",
+          "scripts/work_memory.py PREVENTION_EVENT_FIELDS",
+          "ten proposal terminal_contract objects"
+        ],
+        "owner": "prevention runtime/event implementation",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "exact schema and semantic re-observation",
+          "one event/artifact pair",
+          "replay conflict"
+        ]
+      }
+    ],
+    "research_value": {
+      "gate": "returncode zero",
+      "owner_matrix": {
+        "claude-auth-token-refresh": "human pass/status markers",
+        "commit-push-main": "JSON ok=true and remote SHA",
+        "convergence-checkpoint-run": "fixed pass string plus zero",
+        "convergence-state-review-cycle": "COMPLETE or DRY_RUN from helper exits",
+        "discovery-bootstrap": "JSON ok=true and artifact ids",
+        "discovery-candidate-reconciliation": "JSON ok=true and command fields",
+        "discovery-promotion-lifecycle": "JSON ok=true",
+        "greenfield-full-drive": "sequence complete after detached start",
+        "local-workflow-orch-image": "JSON ok=true except logs exit zero",
+        "mawf-playbook-blocker-reentry": "stage/mode/verdict/finalOk/errorCode; process can return zero after blocked/error"
+      },
+      "owner_terminal_event": false,
+      "semantic_validation": false
+    },
+    "research_value_type": "object",
+    "scope_id": "owner-runtime-terminal-current",
+    "source": {
+      "finding": "exit-zero-terminalized-without-verification",
+      "requirement_ids": [
+        "FUT-RESUME",
+        "FUT-METRICS"
+      ]
+    },
+    "text": "Determine the authoritative terminal schema, pass marker, artifact, or state observable for each of the ten AVAILABLE owners and prove where current runtime equates exit zero with success."
+  },
+  {
+    "acceptance_intent": "Missing or malformed envelope, absent pass signal, failed artifact/state check, and replayed terminalization all fail visibly and deterministically.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "EV-AUTH",
+      "EV-RUNTIME",
+      "EV-EVENTS",
+      "EV-PROP-LOCAL",
+      "EV-PROP-GREENFIELD",
+      "EV-PROP-REENTRY",
+      "EV-PROP-AUTH",
+      "EV-PROP-PROMOTION",
+      "EV-PROP-PUBLISH",
+      "EV-PROP-BOOTSTRAP",
+      "EV-PROP-RECONCILIATION",
+      "EV-PROP-CHECKPOINT",
+      "EV-PROP-REVIEW"
+    ],
+    "id": "O3-FUTURE-TERMINAL",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "All ten owner surfaces have positive/negative semantic and exactly-once tests.",
+        "description": "Plan semantic success/failure and exactly-once terminal event tests.",
+        "evidence_ids": [
+          "EV-RUNTIME",
+          "EV-EVENTS",
+          "EV-SRC-LOCAL",
+          "EV-SRC-GREENFIELD",
+          "EV-SRC-REENTRY",
+          "EV-SRC-AUTH",
+          "EV-SRC-PROMOTION",
+          "EV-SRC-PUBLISH",
+          "EV-SRC-BOOTSTRAP",
+          "EV-SRC-RECONCILIATION",
+          "EV-SRC-CHECKPOINT",
+          "EV-SRC-REVIEW"
+        ],
+        "id": "PO-O3-TERMINAL-ACCEPTANCE",
+        "implementation_anchors": [
+          "tests/prevention/test_owner_runtime.py",
+          "tests/prevention/test_prevention_event_contract.py",
+          "ten indexed current owner sources"
+        ],
+        "owner": "prevention tests",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "zero plus malformed/failed owner evidence",
+          "detached remains nonterminal",
+          "identical/conflicting replay"
+        ]
+      }
+    ],
+    "research_value": {
+      "duplicate": "identical replay returns existing; conflict fails",
+      "failure": "missing, malformed, failed, skipped, detached or child-conflict cannot succeed",
+      "order": [
+        "zero exit",
+        "parse exact schema",
+        "run approved semantic verifier",
+        "re-observe authority",
+        "append one owner_terminal",
+        "write matching artifact"
+      ]
+    },
+    "research_value_type": "object",
+    "scope_id": "owner-runtime-terminal-future",
+    "source": {
+      "finding": "exit-zero-terminalized-without-verification",
+      "requirement_ids": [
+        "FUT-RESUME",
+        "FUT-METRICS"
+      ]
+    },
+    "text": "Process exit zero cannot terminalize an owner; the runtime must validate its content-addressed terminal schema and append exactly one durable terminal event only after semantic verification passes."
+  },
+  {
+    "acceptance_intent": "Name the exact child row, parent owner, required active parent context, and rejection boundary.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "EV-REQ",
+      "EV-PARENTS",
+      "EV-CONTRACTS",
+      "EV-CONTROLLER",
+      "EV-ADAPTERS",
+      "EV-SRC-REENTRY"
+    ],
+    "id": "O4-CURRENT-PARENT",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "The sole child executes only from a matching active allowed parent while the other 24 rows stay standalone.",
+        "description": "Carry the child-only delegation contract and standalone rejection boundary into planning.",
+        "evidence_ids": [
+          "EV-PARENTS",
+          "EV-CONTROLLER",
+          "EV-ADAPTERS",
+          "EV-PROP-REENTRY"
+        ],
+        "id": "PO-O4-PARENT",
+        "implementation_anchors": [
+          "owner-migration-manifest standalone/parents",
+          "controller eligibility/dispatch",
+          "new child_delegation_recorded event",
+          "reentry proposal"
+        ],
+        "owner": "prevention controller/journal implementation",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "direct/forged/stale/inactive reject",
+          "valid allowed parent atomically consumes delegation"
+        ]
+      }
+    ],
+    "research_value": {
+      "child": "mawf-playbook-blocker-reentry",
+      "dispatch_enforcement": false,
+      "other_rows": "24 standalone",
+      "parent_availability": "both CUSTODIAN_EVIDENCE_REQUIRED",
+      "parents": [
+        "mawf-playbook-full-test",
+        "mawf-playbook-speed-test"
+      ],
+      "standalone": false
+    },
+    "research_value_type": "object",
+    "scope_id": "owner-runtime-parent-current",
+    "source": {
+      "finding": "blocker-reentry-directly-executable",
+      "requirement_ids": [
+        "FUT-ENTRYPOINT",
+        "FUT-TYPED"
+      ]
+    },
+    "text": "Determine which registered owners are non-standalone children, the authoritative parent relation, and the current dispatch path that permits direct execution."
+  },
+  {
+    "acceptance_intent": "Direct child intent fails before side effects; parent-bound invocation preserves parent run, policy, and lifecycle identity.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "EV-AUTH",
+      "EV-PARENTS",
+      "EV-PROP-REENTRY"
+    ],
+    "id": "O4-FUTURE-PARENT",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Every invalid case fails before budget/argv and both valid parent paths preserve identity.",
+        "description": "Plan direct-rejection, forged-parent, stale-parent, and valid-delegation tests.",
+        "evidence_ids": [
+          "EV-PARENTS",
+          "EV-CONTRACTS",
+          "EV-PROP-REENTRY"
+        ],
+        "id": "PO-O4-PARENT-ACCEPTANCE",
+        "implementation_anchors": [
+          "tests/prevention/test_typed_dispatch.py",
+          "delegation event tests"
+        ],
+        "owner": "prevention tests",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "direct, forged, stale, consumed and foreign ownership",
+          "both allowed parents",
+          "availability/admission separation"
+        ]
+      }
+    ],
+    "research_value": {
+      "atomic": "consume delegation with child preparation",
+      "availability": "child remains AVAILABLE but non-admissible standalone",
+      "rejection": "before budget, argv or operator",
+      "required_event": "child_delegation_recorded",
+      "required_parent_state": "same-journal STARTED allowed parent with matching task/run/branch/worktree/child/blocker/verification identity"
+    },
+    "research_value_type": "object",
+    "scope_id": "owner-runtime-parent-future",
+    "source": {
+      "finding": "blocker-reentry-directly-executable",
+      "requirement_ids": [
+        "FUT-ENTRYPOINT",
+        "FUT-TYPED"
+      ]
+    },
+    "text": "A non-standalone child owner must be invokable only through a validated active parent adapter context and must reject direct selection or dispatch."
+  },
+  {
+    "acceptance_intent": "Prove which parameter and path constraints are authoritative versus hardcoded, absent, or only prose.",
+    "evidence_availability": "AVAILABLE",
+    "evidence_ids": [
+      "EV-REQ",
+      "EV-ADAPTERS",
+      "EV-SRC-LOCAL",
+      "EV-SRC-GREENFIELD",
+      "EV-SRC-REENTRY",
+      "EV-SRC-AUTH",
+      "EV-SRC-PROMOTION",
+      "EV-SRC-PUBLISH",
+      "EV-SRC-BOOTSTRAP",
+      "EV-SRC-RECONCILIATION",
+      "EV-SRC-CHECKPOINT",
+      "EV-SRC-REVIEW"
+    ],
+    "id": "O5-CURRENT-PARAMETERS",
+    "operational_maturity": "CURRENT_RUNTIME",
+    "planner_obligations": [
+      {
+        "closure_condition": "Materialized schemas and typed resolvers replace hard-coded validation for every owner.",
+        "description": "Carry materialized schema and trusted-root resolution contracts into planning.",
+        "evidence_ids": [
+          "EV-ADAPTERS",
+          "EV-EVENTS",
+          "EV-REMOTE-REPO",
+          "EV-PROP-LOCAL",
+          "EV-PROP-GREENFIELD",
+          "EV-PROP-REENTRY",
+          "EV-PROP-AUTH",
+          "EV-PROP-PROMOTION",
+          "EV-PROP-PUBLISH",
+          "EV-PROP-BOOTSTRAP",
+          "EV-PROP-RECONCILIATION",
+          "EV-PROP-CHECKPOINT",
+          "EV-PROP-REVIEW"
+        ],
+        "id": "PO-O5-PARAMETERS",
+        "implementation_anchors": [
+          "scripts/prevention_contract.py ParameterValue",
+          "scripts/prevention_adapters.py build_invocation",
+          "scripts/work_memory.py _repo_roots",
+          "git_runtime.py build_git_manager_from_settings",
+          "ten proposal parameter_contract/trusted_roots"
+        ],
+        "owner": "prevention contract/provider/adapter implementation",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "contract hash selected",
+          "all bindings resolve before argv",
+          "non-secret preparation evidence",
+          "unresolved key rejects"
+        ]
+      }
+    ],
+    "research_value": {
+      "owner_matrix": {
+        "claude-auth-token-refresh": "8 commands/raw credential and resource values",
+        "commit-push-main": "flag modes/caller repo,remote,manifest",
+        "convergence-checkpoint-run": "raw command_json plus state,repo,helper,stage,timeout",
+        "convergence-state-review-cycle": "request v1 plus raw state/helper",
+        "discovery-bootstrap": "start/spec plus caller root/repo-roots",
+        "discovery-candidate-reconciliation": "5 commands/caller root,index,policy,attempt paths",
+        "discovery-promotion-lifecycle": "4 commands/raw file/root/repo-roots and verification",
+        "greenfield-full-drive": "raw repo/spec/checkpoint/env/drive flags",
+        "local-workflow-orch-image": "10 argparse commands/caller paths",
+        "mawf-playbook-blocker-reentry": "3 modes/raw repo,prompt,operator values"
+      },
+      "paths": "absolute rejected but relative values not root-resolved or symlink-contained",
+      "providers": false,
+      "schema": "hard-coded adapter lists and conditionals"
+    },
+    "research_value_type": "object",
+    "scope_id": "owner-runtime-parameters-current",
+    "source": {
+      "finding": "parameters-not-schema-or-root-bound",
+      "requirement_ids": [
+        "FUT-TYPED",
+        "ACC-ZERO-RAW"
+      ]
+    },
+    "text": "Determine the current effective parameter schemas, enum/tag rules, repository-root bindings, and path normalization behavior for the ten AVAILABLE owners."
+  },
+  {
+    "acceptance_intent": "Wrong type/tag/enum, extra or missing field, unknown root, absolute path, traversal, and symlink escape fail before command construction or effects.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "EV-AUTH",
+      "EV-ADAPTERS",
+      "EV-EVENTS",
+      "EV-REMOTE-REPO",
+      "EV-PROP-LOCAL",
+      "EV-PROP-GREENFIELD",
+      "EV-PROP-REENTRY",
+      "EV-PROP-AUTH",
+      "EV-PROP-PROMOTION",
+      "EV-PROP-PUBLISH",
+      "EV-PROP-BOOTSTRAP",
+      "EV-PROP-RECONCILIATION",
+      "EV-PROP-CHECKPOINT",
+      "EV-PROP-REVIEW"
+    ],
+    "id": "O5-FUTURE-PARAMETERS",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "No raw path, resource, secret, approval or arbitrary argv bypass reaches effect preparation.",
+        "description": "Plan complete schema, trusted-root, and path-escape acceptance tests.",
+        "evidence_ids": [
+          "EV-ADAPTERS",
+          "EV-EVENTS",
+          "EV-AUTH",
+          "EV-PROP-LOCAL",
+          "EV-PROP-GREENFIELD",
+          "EV-PROP-REENTRY",
+          "EV-PROP-AUTH",
+          "EV-PROP-PROMOTION",
+          "EV-PROP-PUBLISH",
+          "EV-PROP-BOOTSTRAP",
+          "EV-PROP-RECONCILIATION",
+          "EV-PROP-CHECKPOINT",
+          "EV-PROP-REVIEW"
+        ],
+        "id": "PO-O5-PARAMETERS-ACCEPTANCE",
+        "implementation_anchors": [
+          "tests/prevention/test_owner_adapters.py",
+          "tests/prevention/test_owner_contract_materialization.py",
+          "provider/receipt tests"
+        ],
+        "owner": "prevention tests",
+        "required_inputs": [],
+        "status": "READY",
+        "verification_anchors": [
+          "wrong/missing/extra/mode-inapplicable",
+          "unknown key",
+          "absolute/traversal/symlink/write-parent escape",
+          "secret non-disclosure",
+          "all ten owner modes"
+        ]
+      }
+    ],
+    "research_value": {
+      "failure": "unresolved binding rejects applicable invocation without changing availability",
+      "locators": {
+        "dynamic": "controller-owned typed resolver keyed by approved provider name",
+        "local_repositories": "work_memory._repo_roots",
+        "remote_repositories": "build_git_manager_from_settings repo_mapping",
+        "static_roots": "proposal trusted_roots"
+      },
+      "schema_authority": "selected approved proposal parameter_contract hash",
+      "validation": [
+        "exact fields/type/tag/enum/range/union",
+        "resolve root/repository/resource/provider/approval key",
+        "normalize relative path and resolve symlink",
+        "prove target/write-parent containment",
+        "bind non-secret identity/version",
+        "construct shell-free argv or typed child call"
+      ]
+    },
+    "research_value_type": "object",
+    "scope_id": "owner-runtime-parameters-future",
+    "source": {
+      "finding": "parameters-not-schema-or-root-bound",
+      "requirement_ids": [
+        "FUT-TYPED",
+        "ACC-ZERO-RAW"
+      ]
+    },
+    "text": "Every owner parameter must validate against the content-addressed materialized schema; paths must be normalized, reject absolute or traversal escapes, and resolve only through named trusted repository-root bindings before argv construction."
+  }
+]

@@ -500,6 +500,44 @@ class VerificationLedgerTests(unittest.TestCase):
         self.assertEqual(result.returncode, 0, result.stderr)
         self.assertEqual(json.loads(result.stdout)["next_obligation_ids"], ["O1"])
 
+    def test_next_assignment_bootstraps_new_inventory_after_prior_assignment(self):
+        path, ledger = self._build_plan_ledger(coverage_status="unverified")
+        verification = ledger["plan_verification"]
+        prior = verification["inventories"][0]
+        obligation = dict(prior["obligations"][0])
+        obligation["claim"] = "Revised claim O1"
+        obligation["binding_sha256"] = digest({
+            "id": obligation["id"],
+            "coverage_id": obligation["coverage_id"],
+            "claim": obligation["claim"],
+            "plan_sections": prior["plan_sections"],
+            "evidence_items": prior["evidence_items"],
+            "dependencies": prior["dependencies"],
+        })
+        current = {
+            **prior,
+            "obligations": [obligation],
+            "completeness_approval": None,
+            "completeness_approval_ref": None,
+        }
+        current["inventory_sha256"] = digest({
+            "contract_version": 1,
+            "plan_sha256": current["plan_sha256"],
+            "evidence_revision_sha256": current["evidence_revision_sha256"],
+            "plan_sections": current["plan_sections"],
+            "evidence_items": current["evidence_items"],
+            "dependencies": current["dependencies"],
+            "obligations": current["obligations"],
+        })
+        verification["inventories"].append(current)
+        verification["inventory_sha256"] = current["inventory_sha256"]
+        path.write_text(json.dumps(ledger), encoding="utf-8")
+
+        self.assertEqual(self.run_cli(SHARED, "check", path).returncode, 0)
+        result = self.run_cli(SHARED, "next-assignment", path, "--limit", "1")
+        self.assertEqual(result.returncode, 0, result.stderr)
+        self.assertEqual(json.loads(result.stdout)["next_obligation_ids"], ["O1"])
+
     def test_next_assignment_refuses_pending_assignment(self):
         path, ledger = self._build_plan_ledger(coverage_status="unverified")
         ledger["plan_verification"]["obligation_assessments"] = []

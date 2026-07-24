@@ -3512,3 +3512,129 @@ def test_only_canonical_scripts_write_event_ledger():
         "sequence_promote.py",
         "work_memory.py",
     ]
+
+
+CLAUDE_SESSION_A = "7c0f2c4e-9b1d-4c53-8a10-2f47c4b6de01"
+CLAUDE_SESSION_B = "8d1e3d5f-0c2e-4d64-9b21-3a58d5c7ef12"
+
+
+def _claude_identity(monkeypatch: pytest.MonkeyPatch, session: str) -> None:
+    monkeypatch.delenv("CODEX_THREAD_ID", raising=False)
+    monkeypatch.setenv("MK_CLIENT_KIND", "claude")
+    monkeypatch.setenv("MK_CLIENT_SESSION_ID", session)
+
+
+def test_claude_identity_claims_v2_ownership_without_codex_thread(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    _claude_identity(monkeypatch, CLAUDE_SESSION_A)
+    work_memory.cmd_classify(Namespace(
+        task_id="claude-owned-task", operation_kind="other",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    receipt, _, _ = work_memory.load_receipt("claude-owned-task", "classification")
+    assert receipt["writer_client_kind"] == "claude"
+    assert receipt["writer_session_id"] == CLAUDE_SESSION_A
+    assert "writer_thread_id" not in receipt
+    work_memory.validate_ownership_receipt("claude-owned-task", receipt)
+    events, _ = work_memory.load_ledger(work_memory.LEDGER)
+    claim = next(e for e in events if e["event_type"] == "task_writer_claimed")
+    assert claim["schema_version"] == 2
+    assert claim["writer_client_kind"] == "claude"
+    identity = work_memory.writer_identity()
+    assert claim["writer_id"] == identity["writer_id"]
+    assert identity["writer_id"] != CLAUDE_SESSION_A
+
+
+def test_codex_to_claude_handoff_preserves_v1_claim_and_creates_v2_generation(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    work_memory.cmd_classify(Namespace(
+        task_id="cross-client-task", operation_kind="other",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    frozen_v1_receipt, _, _ = work_memory.load_receipt(
+        "cross-client-task", "classification",
+    )
+    assert frozen_v1_receipt["writer_thread_id"] == WRITER_A
+    result = work_memory.cmd_task_writer_handoff(Namespace(
+        task_id="cross-client-task", to_thread_id=None,
+        to_client_kind="claude", to_session_id=CLAUDE_SESSION_A, event_id=None,
+    ))
+    assert result["writer_client_kind"] == "claude"
+    assert result["ownership_generation"] == 2
+
+    events, _ = work_memory.load_ledger(work_memory.LEDGER)
+    claim = next(e for e in events if e["event_type"] == "task_writer_claimed")
+    assert claim["schema_version"] == 1
+    assert claim["writer_thread_id"] == WRITER_A
+    handoff = next(e for e in events if e["event_type"] == "task_writer_handoff_recorded")
+    assert handoff["schema_version"] == 2
+    assert handoff["from_writer_id"] == WRITER_A
+
+    with pytest.raises(work_memory.WorkMemoryError, match="task-writer-not-owner"):
+        work_memory.validate_ownership_receipt("cross-client-task", frozen_v1_receipt)
+
+    _claude_identity(monkeypatch, CLAUDE_SESSION_A)
+    work_memory.cmd_classify(Namespace(
+        task_id="cross-client-task", operation_kind="other",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    refreshed, _, _ = work_memory.load_receipt("cross-client-task", "classification")
+    assert refreshed["ownership_generation"] == 2
+    assert refreshed["writer_client_kind"] == "claude"
+    work_memory.validate_ownership_receipt("cross-client-task", refreshed)
+
+
+def test_colliding_session_from_other_host_identity_is_rejected(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    _claude_identity(monkeypatch, CLAUDE_SESSION_A)
+    work_memory.cmd_classify(Namespace(
+        task_id="claude-collision-task", operation_kind="other",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    _claude_identity(monkeypatch, CLAUDE_SESSION_B)
+    with pytest.raises(work_memory.WorkMemoryError, match="task-writer-not-owner"):
+        work_memory.cmd_classify(Namespace(
+            task_id="claude-collision-task", operation_kind="other",
+            repeatable="yes", meaningful_steps=3,
+        ))
+    monkeypatch.delenv("MK_CLIENT_KIND", raising=False)
+    monkeypatch.delenv("MK_CLIENT_SESSION_ID", raising=False)
+    monkeypatch.setenv("CODEX_THREAD_ID", CLAUDE_SESSION_A)
+    with pytest.raises(work_memory.WorkMemoryError, match="task-writer-not-owner"):
+        work_memory.cmd_classify(Namespace(
+            task_id="claude-collision-task", operation_kind="other",
+            repeatable="yes", meaningful_steps=3,
+        ))
+
+
+def test_frozen_v1_ledger_and_receipts_replay_unchanged(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    work_memory.cmd_classify(Namespace(
+        task_id="frozen-v1-task", operation_kind="other",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    frozen_ledger = work_memory.LEDGER.read_bytes()
+    receipt, _, _ = work_memory.load_receipt("frozen-v1-task", "classification")
+    expected_sha = work_memory._ownership_sha256(
+        "frozen-v1-task", receipt["writer_thread_id"],
+        receipt["ownership_generation"], receipt["ownership_event_id"],
+    )
+    assert receipt["ownership_sha256"] == expected_sha
+
+    events, digest = work_memory.load_ledger(work_memory.LEDGER)
+    assert work_memory.LEDGER.read_bytes() == frozen_ledger
+    for entry in events:
+        assert entry["schema_version"] == 1
+    work_memory.validate_ownership_receipt("frozen-v1-task", receipt)

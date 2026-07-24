@@ -1,0 +1,100 @@
+{
+  "verdict": "PASS",
+  "findings": [
+    {
+      "id": "MG-O1",
+      "fingerprint": "mg-o1-owner-derived-complete-unit-budget",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O1-FUTURE-BUDGET"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The planner must replace caller-supplied UnitBudget values with complete owner-contract-derived reservations, including progressive greenfield frontier reservation, or execution can still begin with understated work and overhead.",
+      "evidence": [
+        "Required-behavior side: EV-REQ defines O1-FUTURE-BUDGET and EV-AUTH plus EV-PROP-LOCAL, EV-PROP-GREENFIELD, EV-PROP-REENTRY, EV-PROP-AUTH, EV-PROP-PROMOTION, EV-PROP-PUBLISH, EV-PROP-BOOTSTRAP, EV-PROP-RECONCILIATION, EV-PROP-CHECKPOINT, and EV-PROP-REVIEW ground complete owner-derived budgets and pre-effect admission.",
+        "Demonstrated-absence side: EV-CONTROLLER and EV-BUDGET show that current execution selects and admits caller-supplied unit_budgets rather than deriving the complete vector from the selected content-addressed owner contract."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O2",
+      "fingerprint": "mg-o2-owner-specific-started-effect-reconciliation",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O2-CURRENT-RECONCILE",
+        "O2-FUTURE-RECONCILE"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The planner must dispatch the selected owner's typed reconciler after a STARTED interruption, or already-applied effects cannot be proved safe to skip and not-applied effects cannot resume deterministically.",
+      "evidence": [
+        "Required-behavior side: EV-REQ defines O2-FUTURE-RECONCILE and EV-AUTH plus all ten EV-PROP-* records ground the ALREADY_APPLIED, NOT_APPLIED, and INDETERMINATE result contract and owner-specific durable identities.",
+        "Demonstrated-absence side: EV-RUNTIME shows that current STARTED recovery always returns INDETERMINATE, while EV-SRC-LOCAL, EV-SRC-GREENFIELD, EV-SRC-REENTRY, EV-SRC-AUTH, EV-SRC-PROMOTION, EV-SRC-PUBLISH, EV-SRC-BOOTSTRAP, EV-SRC-RECONCILIATION, EV-SRC-CHECKPOINT, and EV-SRC-REVIEW ground the current owner observables that are not yet dispatched as typed reconcilers."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O3",
+      "fingerprint": "mg-o3-semantic-terminal-verification-and-event",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O3-CURRENT-TERMINAL",
+        "O3-FUTURE-TERMINAL"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The planner must require exact owner-semantic verification before recording one matching owner_terminal event and artifact, or exit zero can still falsely terminalize detached, malformed, failed, or unverified work.",
+      "evidence": [
+        "Required-behavior side: EV-REQ defines O3-FUTURE-TERMINAL and EV-AUTH plus all ten EV-PROP-* terminal contracts ground exact schema parsing, semantic re-observation, deterministic failure, and exactly-once replay behavior.",
+        "Demonstrated-absence side: EV-RUNTIME shows that current zero exit directly creates the terminal artifact, EV-EVENTS shows owner_terminal is absent from the current event schema, and the ten EV-SRC-* records ground each current owner's weaker terminal observable."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O4",
+      "fingerprint": "mg-o4-child-only-active-parent-delegation",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O4-CURRENT-PARENT",
+        "O4-FUTURE-PARENT"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The planner must make mawf-playbook-blocker-reentry consume a matching active-parent delegation atomically before budget, argv, or operator work, or the sole child-only owner remains directly executable without its required parent context.",
+      "evidence": [
+        "Required-behavior side: EV-REQ defines O4-FUTURE-PARENT, while EV-AUTH, EV-PARENTS, and EV-PROP-REENTRY ground the same-journal STARTED parent identity, allowed-parent set, child_delegation_recorded event, and atomic consumption contract.",
+        "Demonstrated-absence side: EV-PARENTS identifies mawf-playbook-blocker-reentry as the sole non-standalone child, and EV-CONTROLLER plus EV-ADAPTERS show that current eligibility and dispatch do not validate or consume its parent relation."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O5",
+      "fingerprint": "mg-o5-materialized-parameter-schema-and-trusted-bindings",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O5-CURRENT-PARAMETERS",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The planner must validate the selected materialized parameter schema and resolve every root, repository, resource, provider, approval, and symlink-contained path before argv construction, or raw and hard-coded inputs can still bypass the approved owner contract.",
+      "evidence": [
+        "Required-behavior side: EV-REQ defines O5-FUTURE-PARAMETERS; EV-AUTH, EV-REMOTE-REPO, and all ten EV-PROP-* records ground exact schema validation, trusted-root containment, typed provider lookup, non-secret binding evidence, and fail-closed unresolved keys.",
+        "Demonstrated-absence side: EV-ADAPTERS shows current validation is hard-coded and does not resolve proposal schemas, trusted roots, providers, or parents; EV-EVENTS shows typed provider and approval receipts are absent; the ten EV-SRC-* records ground the raw current parameter and path surfaces."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    }
+  ]
+}

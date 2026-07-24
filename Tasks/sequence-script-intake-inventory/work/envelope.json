@@ -1,0 +1,74 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "objective": "Inventory every canonical registered sequence and every actual automation entrypoint across locally available repositories, classify current input construction, and derive the complete future no-argument shared-intake migration surface without editing or executing those operations.",
+  "frozen_inputs": {
+    "charter": "Tasks/sequence-script-intake-inventory/work/charter.json",
+    "requirements": "Tasks/sequence-script-intake-inventory/work/requirements.json",
+    "evidence_availability": "Tasks/sequence-script-intake-inventory/work/evidence-availability.json"
+  },
+  "authoritative_evidence_roots": [
+    "/Users/kamenkamenov/memory-knowledge/operations/sequences/SEQUENCES.md",
+    "/Users/kamenkamenov/memory-knowledge/operations/sequences/*/sequence.md",
+    "/Users/kamenkamenov/memory-knowledge/operations/sequences/*/dependencies.json",
+    "/Users/kamenkamenov/memory-knowledge/skills/sequence-runner/SKILL.md",
+    "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md",
+    "/Users/kamenkamenov/memory-knowledge/scripts",
+    "/Users/kamenkamenov/mcp-agents-workflow",
+    "/Users/kamenkamenov/taggable-api",
+    "/Users/kamenkamenov/FoodCycleScience-admin",
+    "/Users/kamenkamenov/callcenter-harness",
+    "/Users/kamenkamenov/united-partners"
+  ],
+  "required_inventory_fields": [
+    "sequence_id",
+    "operation_kinds",
+    "sequence_folder",
+    "declared_automation",
+    "resolved_entrypoints",
+    "repository_key",
+    "repository_root",
+    "entrypoint_kind",
+    "availability",
+    "current_invocation",
+    "current_input_sources",
+    "no_argument_behavior",
+    "model_authored_structure",
+    "authoritative_call_sites",
+    "migration_disposition",
+    "effect_authorization_boundary",
+    "evidence_ids",
+    "evidence_limitations"
+  ],
+  "candidate_contract": {
+    "required_top_level_fields": [
+      "title",
+      "summary",
+      "registry_snapshot",
+      "sequence_inventory",
+      "repository_summary",
+      "call_site_inventory",
+      "migration_summary",
+      "evidence_index",
+      "requirement_statuses",
+      "material_gaps"
+    ],
+    "requirement_status_fields": [
+      "requirement_id",
+      "research_value",
+      "evidence_ids"
+    ],
+    "material_gaps": "Unique non-empty finding IDs only. Use an empty array if no research-actionable gap remains.",
+    "evidence_rule": "Every material statement and every inventory row must cite stable evidence IDs that resolve to exact file and line or exact file anchors in evidence_index. Do not guess unavailable paths or interfaces.",
+    "completeness_rule": "The sequence-id set and count must exactly match the canonical registry. Explicitly include commit-push-main, taggable-api-deploy, taggable-admin-spa-deploy, and taggable-media-worker-deploy."
+  },
+  "constraints": [
+    "Read-only inspection only; do not edit repositories or execute operational entrypoints.",
+    "Do not expose secrets or inspect credential values.",
+    "Treat sub-sequences, MCP-backed operations, composed automation, and human-only steps as first-class inventory shapes rather than forcing each row into one-script form.",
+    "Separate deterministic intake construction from approval or effect authorization.",
+    "Do not infer that a no-argument help or default path is a compliant guided intake; verify question guidance and deterministic structure construction from code.",
+    "Do not omit a registry row because its repository key or display name differs from the local folder name."
+  ],
+  "candidate_output_path": "Tasks/sequence-script-intake-inventory/work/candidate-round-1.json"
+}

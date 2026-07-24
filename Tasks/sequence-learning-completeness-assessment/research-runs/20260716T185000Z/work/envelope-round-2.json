@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "round": 2,
+  "scope_hash": "b34ca525c787dafd4a75d873242d0127057f2b8cce687df8c8d57f246a6e2e06",
+  "charter_path": "/Users/kamenkamenov/memory-knowledge/Tasks/sequence-learning-completeness-assessment/research-runs/20260716T185000Z/work/charter.json",
+  "charter_canonical_json_sha256": "03922d6b4eb1a973855451ef2972516088ea9e5b34f7f0739f97f9d7a5797c88",
+  "requirements_path": "/Users/kamenkamenov/memory-knowledge/Tasks/sequence-learning-completeness-assessment/research-runs/20260716T185000Z/work/requirements.json",
+  "requirements_canonical_json_sha256": "061db2e97955141603e8e1cda5c97603541441b70bde7e9683ad8ee958d7515f",
+  "hash_contract": "sha256-canonical-json-utf8-no-trailing-newline-v1",
+  "authoritative_roots": [
+    "/Users/kamenkamenov/memory-knowledge",
+    "/Users/kamenkamenov/mcp-agents-workflow",
+    "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md"
+  ],
+  "allowed_operations": [
+    "read files under authoritative roots",
+    "run rg/sed/git diff/status and research_package.py hash-json read-only verification",
+    "return assessment JSON"
+  ],
+  "forbidden_context": [
+    "conversation history",
+    "producer rationale",
+    "expected conclusions",
+    "other agent outputs",
+    "gold fixtures",
+    "implementation plans"
+  ],
+  "verification_command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py hash-json <json-file>"
+}

@@ -1,0 +1,12 @@
+{
+  "schema_version": 1,
+  "slot_ledger": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/agent-slots.json",
+  "fixed_commands": [
+    "python3 /Users/kamenkamenov/memory-knowledge/skills/_shared/agent_slot_ledger.py guard <ledger>",
+    "python3 /Users/kamenkamenov/memory-knowledge/skills/_shared/agent_slot_ledger.py acquire <ledger> --label <label>",
+    "python3 /Users/kamenkamenov/memory-knowledge/skills/_shared/agent_slot_ledger.py bind-agent <ledger> --slot-id <slot-id> --agent-id <agent-id>",
+    "python3 /Users/kamenkamenov/memory-knowledge/skills/_shared/agent_slot_ledger.py mark-completed <ledger> --slot-id <slot-id> --completion-evidence <completion-evidence>",
+    "python3 /Users/kamenkamenov/memory-knowledge/skills/_shared/agent_slot_ledger.py mark-closed <ledger> --slot-id <slot-id> --close-evidence <close-evidence>",
+    "python3 /Users/kamenkamenov/memory-knowledge/skills/_shared/agent_slot_ledger.py release <ledger> --slot-id <slot-id>"
+  ]
+}

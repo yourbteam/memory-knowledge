@@ -1,0 +1,19 @@
+{
+  "authoritative_roots": [
+    "/Users/kamenkamenov/memory-knowledge",
+    "/Users/kamenkamenov/mcp-agents-workflow"
+  ],
+  "charter": {
+    "canonical_json_sha256": "b7cc1063196bf908a080383d0266f33d25c7beb8ad79919a30daa639db850638",
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v12/charter.json"
+  },
+  "hash_contract": "sha256-canonical-json-utf8-no-trailing-newline-v1",
+  "requirements": {
+    "canonical_json_sha256": "d757099b821d1c6109da679c9a3a2cfae7eac89d323b2c0de177d719d912dce6",
+    "path": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v12/requirements.json"
+  },
+  "round": 1,
+  "schema_version": 1,
+  "scope_hash": "53d7a536be1a25282cb7ba4ba8ab26e8a3dd7a4f98ca234a87c7e01ca15deed7",
+  "verification_command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py hash-json <json-file>"
+}

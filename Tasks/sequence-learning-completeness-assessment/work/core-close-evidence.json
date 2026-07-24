@@ -1,0 +1,8 @@
+{
+  "runtime_agent_id": "/root/sequence_learning_core_r1",
+  "role": "CORE_RESEARCHER",
+  "round": 1,
+  "completion_evidence": "collaboration FINAL_ANSWER received with terminal candidate JSON",
+  "close_evidence": "agent status completed and slot released",
+  "release_state": "released"
+}

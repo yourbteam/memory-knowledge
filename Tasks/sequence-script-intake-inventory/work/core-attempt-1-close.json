@@ -1,0 +1,7 @@
+{
+  "runtime_status": "interrupted",
+  "slot_closed": true,
+  "slot_released": true,
+  "reason": "The first core pass did not return within the bounded parent reporting window and was stopped before producing a candidate.",
+  "terminal_output_received": false
+}

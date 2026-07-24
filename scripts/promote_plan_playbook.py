@@ -31,7 +31,10 @@ PLAN_GATES = (
 )
 LIVE_SLOT_LABEL = "plan-playbook-canonical-routing-smoke"
 TRUSTED_REPO_ROOT = Path(__file__).resolve().parents[1]
-TRUSTED_INSTALLED_ROOT = (Path.home() / ".codex/skills").resolve()
+TRUSTED_INSTALLED_ROOTS = (
+    (Path.home() / ".codex/skills").resolve(),
+    (Path.home() / ".claude/skills").resolve(),
+)
 TARGET_REPO_ROOT = (Path.home() / "agentic-trading").resolve()
 PRACTICAL_TASK_ROOT = TRUSTED_REPO_ROOT / "Tasks/plan-playbook-assessment-v2"
 TRUSTED_SCENARIOS: dict[str, dict[str, Any]] = {
@@ -313,7 +316,7 @@ def tracked_paths(repo_root: Path, installed_root: Path) -> dict[str, Path]:
 def validate_operation_roots(repo_root: Path, installed_root: Path) -> None:
     if repo_root.resolve() != TRUSTED_REPO_ROOT:
         raise PromotionError("untrusted-repository-root")
-    if installed_root.expanduser().resolve() != TRUSTED_INSTALLED_ROOT:
+    if installed_root.expanduser().resolve() not in TRUSTED_INSTALLED_ROOTS:
         raise PromotionError("untrusted-installed-root")
 
 

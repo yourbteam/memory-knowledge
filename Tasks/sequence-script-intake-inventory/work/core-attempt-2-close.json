@@ -1,0 +1,7 @@
+{
+  "runtime_status": "completed",
+  "slot_closed": true,
+  "slot_released": true,
+  "terminal_output_received": true,
+  "parent_materialization": "The core retry returned all 27 rows; the parent normalized evidence hashes and preserved the candidate's classifications."
+}

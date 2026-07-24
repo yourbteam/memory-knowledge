@@ -1,0 +1,9 @@
+{
+  "runtime_agent_id": "/root/sequence_learning_readiness_r1",
+  "role": "INTERNAL_READINESS",
+  "round": 1,
+  "completion_evidence": "Interrupted before terminal output after thread-limit discovery.",
+  "close_evidence": "collaboration interrupt returned previous_status running; path prefix then showed zero agents.",
+  "release_state": "released",
+  "failure_reason": "runtime thread limit prevented complete concurrent lens round"
+}

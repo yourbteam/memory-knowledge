@@ -1,0 +1,135 @@
+{
+  "artifact_hashes": {
+    "evidence-index.json": "1bc5fa5f591967677a015691fdfc3ab7ff0d9221602a5cb1316462a20e058e2a",
+    "findings.json": "f88bb7ec3f209d7e0fe0336502fbc0d1789d0d4c8b576a3c6ed7bdabdbac98db",
+    "planner-handoff.md": "117c6123c7dd153defdf1b9918413c6e121c22a83e1e938a2f12f79fd31fabf4",
+    "requirements.json": "d0a0d2c4d8c415f62a00b8bd8ef935a940bfb67cb07fdc39c76caa4feec359d8",
+    "research.md": "e8e76d553e865a670dab60282bd08c8450d960029e8495103f0951a4fc41d4f7"
+  },
+  "budget_use": {
+    "attempts_max": 15,
+    "attempts_used": 5,
+    "minutes_max_per_task": 60,
+    "rounds_max": 3,
+    "rounds_used": 3,
+    "workflow_minutes_used": 4.633991633333333
+  },
+  "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+  "emitted_at": "2026-07-18T07:23:22.512543Z",
+  "envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+  "lifecycle_evidence": [
+    {
+      "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "close_evidence": {
+        "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "completion_evidence": "Fresh round-3 core applied only the adjudicated EV-REQ evidence pairing correction and closed.",
+        "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+        "output_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "role": "CORE_RESEARCHER",
+        "round": 3,
+        "runtime_agent_id": "/root/research_v10_round3_core",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+      "output_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "recorded_at": "2026-07-18T07:19:05.816892Z",
+      "role": "CORE_RESEARCHER",
+      "round": 3,
+      "runtime_agent_id": "/root/research_v10_round3_core",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "close_evidence": {
+        "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "completion_evidence": "Fresh round-3 readiness PASS envelope written and validated.",
+        "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+        "output_hash": "b6311bc98c2c9396d3222b25a6063d3bdef07664d1cce668de48b3dd5358ce28",
+        "role": "INTERNAL_READINESS",
+        "round": 3,
+        "runtime_agent_id": "/root/research_v10_round3_ir",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+      "output_hash": "b6311bc98c2c9396d3222b25a6063d3bdef07664d1cce668de48b3dd5358ce28",
+      "recorded_at": "2026-07-18T07:19:05.931148Z",
+      "role": "INTERNAL_READINESS",
+      "round": 3,
+      "runtime_agent_id": "/root/research_v10_round3_ir",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "close_evidence": {
+        "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "completion_evidence": "Fresh round-3 coverage PASS envelope written and validated.",
+        "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+        "output_hash": "91aef6db64b1e72bb03694745580d54d21c8d1849c87c3c1c2e6536ecdca0184",
+        "role": "REQUIREMENTS_COVERAGE",
+        "round": 3,
+        "runtime_agent_id": "/root/research_v10_round3_coverage",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+      "output_hash": "91aef6db64b1e72bb03694745580d54d21c8d1849c87c3c1c2e6536ecdca0184",
+      "recorded_at": "2026-07-18T07:19:06.043469Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 3,
+      "runtime_agent_id": "/root/research_v10_round3_coverage",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "close_evidence": {
+        "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "completion_evidence": "Fresh round-3 satisfaction PASS envelope written and validated.",
+        "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+        "output_hash": "4b613b480e5d09dce426b9081e70af6725ee4e7fd11f640aac97b1a4fe66bad3",
+        "role": "REQUIREMENTS_SATISFACTION",
+        "round": 3,
+        "runtime_agent_id": "/root/research_v10_round3_satisfaction",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+      "output_hash": "4b613b480e5d09dce426b9081e70af6725ee4e7fd11f640aac97b1a4fe66bad3",
+      "recorded_at": "2026-07-18T07:19:06.156819Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 3,
+      "runtime_agent_id": "/root/research_v10_round3_satisfaction",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "close_evidence": {
+        "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "completion_evidence": "Fresh independent adjudicator covered every round-3 raw finding exactly once; all five distinct findings are planner handoffs and all remaining findings are merged duplicates.",
+        "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+        "output_hash": "7de8abff40a4f087799b3f82157f2c8529cd33ab630cac5181173cbd05180c05",
+        "role": "ADJUDICATOR",
+        "round": 3,
+        "runtime_agent_id": "/root/research_v11_final_adjudicator",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+      "output_hash": "7de8abff40a4f087799b3f82157f2c8529cd33ab630cac5181173cbd05180c05",
+      "recorded_at": "2026-07-18T07:23:22.473161Z",
+      "role": "ADJUDICATOR",
+      "round": 3,
+      "runtime_agent_id": "/root/research_v11_final_adjudicator",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "package_id": "research-package-e5c683067a7d7e35f8b2efd9",
+  "schema_version": 1,
+  "terminal_verdict": "PASS"
+}

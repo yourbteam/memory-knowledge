@@ -1,0 +1,96 @@
+{
+  "verdict": "GAPS",
+  "findings": [
+    {
+      "id": "RCOV-001",
+      "fingerprint": "inv001-lineage-absent-from-all-sequence-rows",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-001"],
+      "type": "REQUIREMENT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "Canonical sequence identity cannot be preserved because the inventory omits lineage IDs.",
+      "evidence": ["INV-001 requires lineage; the registry defines it and candidate rows omit it."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "RCOV-002",
+      "fingerprint": "inv002-inv003-entrypoints-grouped-wildcard-or-subcommand-only",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-002", "INV-003"],
+      "type": "REQUIREMENT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "Real executables could be omitted or assigned the wrong schema because grouped rows do not classify every concrete entrypoint.",
+      "evidence": ["Wildcard smoke scripts, bare subcommands, and combined multi-program input descriptions remain in the candidate."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "RCOV-003",
+      "fingerprint": "inv004-authoritative-call-sites-not-enumerated",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-004"],
+      "type": "REQUIREMENT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "Direct argument-bearing instructions can remain live because exact call sites and generated command paths are not enumerated.",
+      "evidence": ["Call-site inventory contains generic glob surfaces and labels instead of exact files/anchors."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "RCOV-004",
+      "fingerprint": "cross-requirement-evidence-not-row-exact",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-001", "INV-002", "INV-003", "INV-004", "INV-005", "INV-006", "INV-007"],
+      "type": "EVIDENCE_LIMIT",
+      "materiality": "BLOCKER",
+      "practical_consequence": "Representative evidence cannot independently prove each row's interface classification.",
+      "evidence": ["Representative MAWF, taggable, callcenter, and memory-knowledge sources are reused for unrelated entrypoints."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "RCOV-005",
+      "fingerprint": "inv005-no-per-entrypoint-question-and-payload-contract",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-005"],
+      "type": "REQUIREMENT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "A planner would still need to invent each questionnaire and payload transform.",
+      "evidence": ["The candidate gives a generic stable contract but no per-entrypoint semantic fields and derived output mapping."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "RCOV-006",
+      "fingerprint": "inv007-admin-repository-availability-contradiction",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-002", "INV-007"],
+      "type": "CONTRADICTION",
+      "materiality": "BLOCKER",
+      "practical_consequence": "The admin deployment could be wrongly excluded because a local SPA repository exists even though the registered deploy script is absent.",
+      "evidence": ["FoodCycleScience-admin exists locally; candidate says the repository is unavailable. The correct state is repository-key mapping/script owner unresolved."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "RCOV-007",
+      "fingerprint": "inv007-handoff-lacks-file-compatibility-and-verification-map",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-007"],
+      "type": "REQUIREMENT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "Implementation cannot be safely sequenced by repository because exact files, consumers, and verification anchors are missing.",
+      "evidence": ["Repository summary provides counts and generic tests, not file-by-file implementation and compatibility mappings."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    }
+  ]
+}

@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "sources": [
+    {
+      "path": "scripts/prevention_adapters.py",
+      "sha256": "98132a3e95f5703358b6daf3ea68d51f2e850327698a057821f5ff038ce512cc"
+    },
+    {
+      "path": "scripts/prevention_controller.py",
+      "sha256": "46311190ac6a4256c10953e28f78d0a1dbfa482d102357723445003eb3a12a40"
+    },
+    {
+      "path": "scripts/prevention_owner_runtime.py",
+      "sha256": "b8a38ed96d40a807f843afc36853e6ba96a3a5ccf8ca8d7be9cd30178e570646"
+    },
+    {
+      "path": "scripts/prevention_source_probes.py",
+      "sha256": "a03650805836169c4d4a7141979516d1f852f253fddb7d0557d1cc915b160c06"
+    },
+    {
+      "path": "scripts/sequence_candidate_contract.py",
+      "sha256": "62a0d67cf16bc1affbe08b38a61f7348efe7dd3317d72d5fd0e76654ad003599"
+    }
+  ]
+}

@@ -1,0 +1,231 @@
+{
+  "schema_version": 1,
+  "proposal_status": "APPROVED",
+  "owner_sequence_id": "claude-auth-token-refresh",
+  "availability_policy": "AVAILABLE",
+  "standalone": true,
+  "authority": "Kamen",
+  "authority_approvals": {
+    "budget_and_roots": {
+      "status": "APPROVED",
+      "decision_id": "claude-auth-token-refresh-budget-roots-v1"
+    },
+    "runtime_and_terminal": {
+      "status": "APPROVED",
+      "decision_id": "claude-auth-token-refresh-runtime-terminal-v1"
+    },
+    "semantic_intake": {
+      "status": "APPROVED",
+      "decision_id": "claude-auth-token-refresh-semantic-intake-v1"
+    }
+  },
+  "source": {
+    "implementation_path": "/Users/kamenkamenov/mcp-agents-workflow/scripts/claude_auth_refresh.sh",
+    "implementation_sha256": "e11ffb3d51002750b6c6950d3c3231f0591a461f166d74b6586372fda0bc04da",
+    "implementation_approved_post_correction_sha256": "9591d591dcf6d5782b99db4d1d9a92f42ed683a2eaeb2a53ef129ff0b9310ca1",
+    "implementation_source_correction_decision_id": "claude-auth-token-refresh-semantic-intake-v1",
+    "audited_rotation_path": "/Users/kamenkamenov/mcp-agents-workflow/scripts/rotate-credentials.sh",
+    "audited_rotation_sha256": "95648ac548847bc6d5642839611e2a862a8fb7d1d981a1032169c84ba14d1e4b",
+    "keychain_helper_path": "/Users/kamenkamenov/mcp-agents-workflow/scripts/macos_keychain_secret.py",
+    "keychain_helper_sha256": "2340875e36149fe98a022631b9e59f3b26331b8ac08c485acf260df9257327bb",
+    "source_receipt_helper_path": "/Users/kamenkamenov/mcp-agents-workflow/scripts/prevention_source_receipt.py",
+    "source_receipt_helper_sha256": "06dedab9168d0aa4e45d7e4b039494b8ff2a6ab93bf0f026b5a286f38a61476f",
+    "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/claude-auth-token-refresh/sequence.md"
+  },
+  "unit_budget": {
+    "schema_version": 1,
+    "owner_sequence_id": "claude-auth-token-refresh",
+    "productive_milliseconds": 3600000,
+    "mandatory_role_milliseconds": {
+      "CORE": 3600000,
+      "INTERNAL_READINESS": 3600000,
+      "REQUIREMENTS_COVERAGE": 3600000,
+      "REQUIREMENTS_SATISFACTION": 3600000
+    },
+    "adjudication_milliseconds": 3600000,
+    "materialization_milliseconds": 3600000,
+    "terminal_milliseconds": 3600000,
+    "retry_milliseconds": 0,
+    "duration_milliseconds": 28800000,
+    "derivation": "One complete owner unit under the approved 60-minute-per-atomic-task policy; retries remain inside productive execution. The composite all command uses typed child effects inside the same productive task rather than caller-supplied child budgets."
+  },
+  "trusted_roots": {
+    "mcp-agents-workflow": "/Users/kamenkamenov/mcp-agents-workflow",
+    "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
+    "runtime-temp": "/private/tmp",
+    "container-credential-root": "/home/cli-auth/.claude",
+    "host-credential-provider": "The configured host Claude credential provider; represented only by a secret handle",
+    "host-config-provider": "The configured host Claude config provider; represented only by a secret handle",
+    "docker-resource-registry": "The trusted Docker resource registry, resolving an approved container key to an exact container id",
+    "key-vault-registry": "The trusted Azure Key Vault registry, resolving an approved vault key to an exact resource id",
+    "deployment-registry": "The trusted remote deployment registry, resolving an approved deployment key to an exact HTTPS endpoint and authenticated operator handle"
+  },
+  "parameter_contract": {
+    "command": {
+      "type": "ENUM",
+      "values": [
+        "status",
+        "mint",
+        "seed-local",
+        "seed-host",
+        "push-kv",
+        "reseed-azure",
+        "verify",
+        "all"
+      ],
+      "required": true
+    },
+    "credential_source": {
+      "type": "TAGGED_UNION",
+      "variants": {
+        "runtime_temp_file": {
+          "path_type": "PATH",
+          "trusted_root": "runtime-temp",
+          "mode": "READ_FILE_NO_LOG"
+        },
+        "host_credential": {
+          "handle_type": "SECRET_HANDLE",
+          "provider": "host-credential-provider"
+        },
+        "approved_container_credential": {
+          "container_key_type": "RESOURCE_KEY",
+          "registry": "docker-resource-registry",
+          "fixed_relative_path": ".credentials.json"
+        }
+      },
+      "required_for": [
+        "seed-local",
+        "seed-host",
+        "push-kv",
+        "all"
+      ]
+    },
+    "config_source": {
+      "type": "TAGGED_UNION",
+      "variants": {
+        "runtime_temp_file": {
+          "path_type": "PATH",
+          "trusted_root": "runtime-temp",
+          "mode": "READ_FILE_NO_LOG"
+        },
+        "host_config": {
+          "handle_type": "SECRET_HANDLE",
+          "provider": "host-config-provider"
+        }
+      },
+      "required": false
+    },
+    "container_key": {
+      "type": "RESOURCE_KEY",
+      "registry": "docker-resource-registry",
+      "required_for": [
+        "status",
+        "seed-local",
+        "all"
+      ],
+      "also_required_when": "credential_source is approved_container_credential or verify_targets contains local-container"
+    },
+    "vault_key": {
+      "type": "RESOURCE_KEY",
+      "registry": "key-vault-registry",
+      "required_for": [
+        "status",
+        "push-kv",
+        "all"
+      ]
+    },
+    "deployment_key": {
+      "type": "RESOURCE_KEY",
+      "registry": "deployment-registry",
+      "required_for": [
+        "reseed-azure",
+        "all"
+      ],
+      "also_required_when": "verify_targets contains remote-claude"
+    },
+    "verify_targets": {
+      "type": "SET_ENUM",
+      "values": [
+        "local-container",
+        "host",
+        "remote-claude"
+      ],
+      "minimum_items": 1,
+      "required_for": "verify",
+      "derived_for": "all"
+    },
+    "dry_run": {
+      "type": "BOOLEAN",
+      "default": false
+    },
+    "validation_boundary": "Reject unknown fields, invalid tagged unions, unregistered resource keys, unresolved secret handles, non-regular files, symlinks, traversal, and resolved paths outside the selected trusted root before budget reservation or effect preparation. Raw credential values and arbitrary endpoint, vault, container, or host paths are never caller parameters."
+  },
+  "effect_and_reconciliation_contract": {
+    "secret_rule": "Credential contents never enter argv, logs, journal events, terminal artifacts, or error text. The owner may retain only a non-secret content SHA-256 and provider/resource version identifiers.",
+    "command_effects": {
+      "status": {
+        "effect_class": "OBSERVATION",
+        "reconciliation": "Replay the typed local, host, and vault status probes; absence is an explicit observed state, never a skipped success."
+      },
+      "mint": {
+        "effect_class": "OPERATOR_INSTRUCTION",
+        "reconciliation": "Replay-safe; emits the fixed mint instructions and performs no credential read or mutation."
+      },
+      "seed-local": {
+        "effect_identity": "resolved container id plus fixed credential path plus source credential fingerprint plus optional config fingerprint",
+        "prepare": "Persist the resolved container identity and non-secret source fingerprints before any copy.",
+        "reconciliation": "Hash the installed credential/config inside the same container and run the bounded exact AUTH_OK probe. Matching fingerprints and a passing probe are ALREADY_APPLIED; proved old fingerprints are NOT_APPLIED; a replaced container, partial fingerprint match, or conflicting target is INDETERMINATE."
+      },
+      "seed-host": {
+        "effect_identity": "host credential provider slot plus source credential fingerprint plus operating-system target kind",
+        "prepare": "Persist the provider slot id, OS target kind, and non-secret source fingerprint before mutation.",
+        "reconciliation": "The provider compares the installed credential fingerprint and runs the bounded exact host AUTH_OK probe. Match plus pass is ALREADY_APPLIED; proved prior fingerprint is NOT_APPLIED; disagreement or an unreadable post-write slot is INDETERMINATE."
+      },
+      "push-kv": {
+        "effect_identity": "resolved vault resource id plus fixed secret names plus source credential/config fingerprints",
+        "prepare": "Persist the vault resource id, fixed secret names, source fingerprints, and pre-write secret version ids before upload.",
+        "reconciliation": "Key Vault metadata tags bind each new version to effect_id and the non-secret source fingerprint. Matching enabled versions are ALREADY_APPLIED; unchanged pre-write versions are NOT_APPLIED; divergent or partially updated secret versions are INDETERMINATE."
+      },
+      "reseed-azure": {
+        "effect_identity": "resolved deployment id plus authenticated reseed request id plus expected Key Vault version ids",
+        "prepare": "Persist deployment id, request id, and expected vault versions before the authenticated reseed call.",
+        "reconciliation": "Query the authenticated reseed/status surfaces. A receipt for request id followed by remote Claude status valid and a credential file version at least the expected vault version is ALREADY_APPLIED; explicit absence with the old remote version is NOT_APPLIED; timeout without queryable receipt or conflicting versions is INDETERMINATE."
+      },
+      "verify": {
+        "effect_class": "OBSERVATION",
+        "reconciliation": "Replay every selected bounded probe and retain its typed result; no selected target may be silently skipped."
+      },
+      "all": {
+        "effect_identity": "parent effect id plus the deterministic seed-local, seed-host, push-kv, reseed-azure, and verify child effect ids",
+        "prepare": "Persist the complete ordered child graph and all resolved resource identities before the first mutation.",
+        "reconciliation": "Reconcile each child independently and continue only from the first NOT_APPLIED child; any INDETERMINATE child keeps the parent INDETERMINATE and prevents a duplicate write."
+      }
+    },
+    "dry_run_rule": "dry_run=true performs no credential read or mutation and terminalizes only as DRY_RUN, never APPLIED."
+  },
+  "terminal_contract": {
+    "common": [
+      "The process return code is zero.",
+      "A schema-valid non-secret terminal artifact names command, effect_id, verdict, resolved resource ids, observation/result codes, and child effect ids where applicable.",
+      "Every command-required semantic condition passes; warning or skipped output cannot satisfy a required condition.",
+      "Exactly one owner_terminal event and one matching terminal artifact exist for effect_id."
+    ],
+    "command_specific": {
+      "status": "Typed observations exist for every requested/required status surface, including explicit PRESENT, ABSENT, VALID, INVALID, UNREACHABLE, or NOT_CONFIGURED states; success means the report is complete, not that credentials are valid.",
+      "mint": "The fixed operator instructions are emitted and no credential source was accessed.",
+      "seed-local": "Installed fingerprints match the prepared sources in the resolved container and its exact Claude probe returns AUTH_OK within 60 seconds.",
+      "seed-host": "The installed host credential fingerprint matches the prepared source and the exact host Claude probe returns AUTH_OK within 60 seconds.",
+      "push-kv": "The credential secret version and, when supplied, config secret version exist, are enabled, carry this effect id, and match the non-secret source fingerprints; config absence is explicit when no config was supplied.",
+      "reseed-azure": "The authenticated reseed receipt matches request id and remote Claude credential status is valid with the expected source version; generic HTTP health is insufficient.",
+      "verify": "Every selected target returns its exact semantic pass marker; a missing CLI, stopped container, unreachable remote, or skipped probe fails verification.",
+      "all": "Every required child effect is semantically successful in order, remote Claude verification passes, temporary secret material owned by the effect is deleted, and the parent emits one terminal event."
+    },
+    "source_corrections": [
+      "Replace eval-based command construction with typed argv/provider calls after schema validation.",
+      "Do not suppress reseed request failures or accept generic /health output as Claude credential success.",
+      "Do not let missing host/container/remote targets silently pass when that target is required.",
+      "Emit a structured non-secret terminal artifact instead of relying on colored human-readable markers."
+    ]
+  },
+  "authority_decisions_required": []
+}

@@ -1,0 +1,1228 @@
+{
+  "attempts": [
+    {
+      "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+      "close_evidence": {
+        "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+        "completion_evidence": "Fresh core researcher completed; candidate validated; runtime close confirmed; durable slot released.",
+        "input_envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+        "output_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+        "role": "CORE_RESEARCHER",
+        "round": 1,
+        "runtime": "codex-collaboration",
+        "runtime_agent_id": "/root/three_defect_core_retry",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+      "output_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+      "recorded_at": "2026-07-17T00:11:00Z",
+      "role": "CORE_RESEARCHER",
+      "round": 1,
+      "runtime_agent_id": "/root/three_defect_core_retry",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+      "close_evidence": {
+        "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+        "completion_evidence": "Independent internal-readiness lens returned GAPS; output collected; runtime close confirmed; durable slot released.",
+        "input_envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+        "output_hash": "ce7255e8cedda64167a6c7e1e6b25d6b4fd7059c14c998fb97558d48641aae18",
+        "role": "INTERNAL_READINESS",
+        "round": 1,
+        "runtime": "codex-collaboration",
+        "runtime_agent_id": "/root/three_defect_readiness",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+      "output_hash": "ce7255e8cedda64167a6c7e1e6b25d6b4fd7059c14c998fb97558d48641aae18",
+      "recorded_at": "2026-07-17T00:21:00Z",
+      "role": "INTERNAL_READINESS",
+      "round": 1,
+      "runtime_agent_id": "/root/three_defect_readiness",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+      "close_evidence": {
+        "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+        "completion_evidence": "Independent coverage lens returned GAPS; output collected; runtime close confirmed; durable slot released.",
+        "input_envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+        "output_hash": "8779bc60ee8c080095cd63f96d8453b0b668d6c6d760af879d63c9afbcfd2fdd",
+        "role": "REQUIREMENTS_COVERAGE",
+        "round": 1,
+        "runtime": "codex-collaboration",
+        "runtime_agent_id": "/root/three_defect_coverage_retry",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+      "output_hash": "8779bc60ee8c080095cd63f96d8453b0b668d6c6d760af879d63c9afbcfd2fdd",
+      "recorded_at": "2026-07-17T00:22:00Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 1,
+      "runtime_agent_id": "/root/three_defect_coverage_retry",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+      "close_evidence": {
+        "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+        "completion_evidence": "Independent satisfaction lens returned GAPS; output collected; runtime close confirmed; durable slot released.",
+        "input_envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+        "output_hash": "9363865ff79e8052eb72ee356fa0290c7960705c4f48a3707358bf5b231fb494",
+        "role": "REQUIREMENTS_SATISFACTION",
+        "round": 1,
+        "runtime": "codex-collaboration",
+        "runtime_agent_id": "/root/three_defect_satisfaction_retry",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+      "output_hash": "9363865ff79e8052eb72ee356fa0290c7960705c4f48a3707358bf5b231fb494",
+      "recorded_at": "2026-07-17T00:23:00Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 1,
+      "runtime_agent_id": "/root/three_defect_satisfaction_retry",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+      "close_evidence": {
+        "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+        "completion_evidence": "Fresh independent adjudicator classified all nine raw findings; output collected; runtime close confirmed; durable slot released.",
+        "input_envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+        "output_hash": "d0328b13e2e61a6caf5521f9afeb2ebcfa4d46e08deaaa0579d1bf40c4ff02c6",
+        "role": "ADJUDICATOR",
+        "round": 1,
+        "runtime": "codex-collaboration",
+        "runtime_agent_id": "/root/three_defect_adjudicator_r1",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+      "output_hash": "d0328b13e2e61a6caf5521f9afeb2ebcfa4d46e08deaaa0579d1bf40c4ff02c6",
+      "recorded_at": "2026-07-17T00:27:00Z",
+      "role": "ADJUDICATOR",
+      "round": 1,
+      "runtime_agent_id": "/root/three_defect_adjudicator_r1",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "budgets": {
+    "deadline_at": "2026-07-17T01:00:00Z",
+    "max_attempts": 15,
+    "max_minutes": 60,
+    "max_role_retries": 1,
+    "max_rounds": 3,
+    "started_at": "2026-07-17T00:00:00Z"
+  },
+  "candidates": {
+    "candidate-48b99c38fd8a5ce8e0019f6c": {
+      "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+      "candidate_id": "candidate-48b99c38fd8a5ce8e0019f6c",
+      "candidate_payload": {
+        "evidence_index": [
+          {
+            "accessed_at": null,
+            "id": "EV-FROZEN-REQS",
+            "limitations": "Specifies required behavior but does not prove current runtime behavior.",
+            "source_kind": "SUPPLIED_INPUT",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/requirements.json",
+            "source_sha256": "8bbf53bf287c6b1a442e1e584c54908f9730416221a9edae83e83260d40efc17",
+            "supported_claim": "Defines the six frozen current/future requirements and acceptance boundaries for the three defects."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-WRAPPER",
+            "limitations": "Does not prove Codex behavior after launch.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/cli/codex_cli.py",
+            "source_sha256": "3de69c4f299e9cf842a457a8ee08db325c833f68688d35e93cbd547d889e5e6d",
+            "supported_claim": "CodexCliWrapper launches Codex in task cwd and supplies sandbox, approval, model, and optional config without a governed home, hook preflight, or authentication boundary."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-EXECUTOR",
+            "limitations": "Does not configure or verify hooks.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/agents/executor.py",
+            "source_sha256": "a2ac8a1e24a3614d7849b2f2de1840e0126ea56b7b379dc9072d317b82812e16",
+            "supported_claim": "AgentExecutor chooses the task worktree as the Codex working directory."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-TRANSLATOR",
+            "limitations": "Does not prove a hook executes.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/agents/tool_translator.py",
+            "source_sha256": "06a24478078ef051d3842d25e03659170b117453228651d05c675d9e8b43c32b",
+            "supported_claim": "Tool translation produces governed flags and allowed MCP server names but no launcher capability receipt or hook challenge."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-OFFICIAL-HOOK",
+            "limitations": "Does not provide launcher integration.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/private/tmp/openai-codex-hook-source/codex-rs/hooks/src/events/pre_tool_use.rs",
+            "source_sha256": "7c986625bfc296903b1352193ccf060c05dce33a3c805e0b3f9ccc49f6403a8e",
+            "supported_claim": "Official source defines structured PreToolUse request fields and blocking or updated-input results."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-DISCOVERY",
+            "limitations": "Does not guarantee project discovery in worktrees.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/private/tmp/openai-codex-hook-source/codex-rs/hooks/src/engine/discovery.rs",
+            "source_sha256": "21f27353da32edfebf91d85a6658f6207c3bae36e253a0d253369ef2c37e7136",
+            "supported_claim": "Official hook discovery distinguishes project from user/system configuration sources."
+          },
+          {
+            "accessed_at": "2026-07-17T14:00:00Z",
+            "id": "EV-D1-WORKTREE",
+            "limitations": "User-reported reproduction, not a supported design contract.",
+            "source_kind": "EXTERNAL",
+            "source_locator": "https://github.com/openai/codex/issues/27133",
+            "source_sha256": null,
+            "supported_claim": "Documents a reproduction where project hooks fire in an ordinary repository but not a Git worktree, while user hooks fire in both."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-HOST",
+            "limitations": "No current workflow launcher provisions or proves this adapter.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_host.py",
+            "source_sha256": "f9f9412e4982b5816a8197ab9c39a4f0ab4288325a9c751abf08c7d990c69b8b",
+            "supported_claim": "Parses Bash, apply_patch, and MCP hook inputs, fails closed on controller errors, and verifies a session/config/hook/PID-bound HMAC receipt."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D2-EVENTS",
+            "limitations": "Does not fix the future event schema.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/work_memory.py",
+            "source_sha256": "729bfcd846e324c31a60e76c7eac57de4a5f23cc6db4e2725d20a74ae8a4b16f",
+            "supported_claim": "Prevention event fields contain intent and dispatch events but no pre-dispatch recurring eligibility event, registry revision, or registered-use query contract."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D2-CONTROLLER",
+            "limitations": "Does not prove every external caller uses the controller.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_controller.py",
+            "source_sha256": "23ce029a86134087207d1b7a88785315d694382144e423f19c2efc216affc630",
+            "supported_claim": "Intent persistence precedes dispatch but contains no registry revision or recurring eligibility decision."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D2-REGISTRY",
+            "limitations": "Does not define recurrence policy.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_registry.py",
+            "source_sha256": "b5720a7711d207bcc6dbfef971bb4d94f20ef81bd318571286195453bc1f63bc",
+            "supported_claim": "Registry loading returns rows and a content hash but does not produce a durable eligibility decision."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-MANIFEST",
+            "limitations": "Identifier strings do not materialize behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-migration-manifest.json",
+            "source_sha256": "0ee6c3be164e4e7d932641b0cba9d0aab8117a3fdd0942fc759d70ccae429bcc",
+            "supported_claim": "Contains 25 unique rows and only named contract identifiers, repository metadata, and parent references; no executable constants or owner implementation hashes."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-CONTRACT",
+            "limitations": "Does not prove owner invocation, reconcile, or terminal behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_contract.py",
+            "source_sha256": "3a0c888ff1c2ddb5f76a734df13fb73e49c29d5c888ad0e42626930443bb14bd",
+            "supported_claim": "MigrationOwnerSpec validates identifier-shaped names and inventory identity but does not resolve or validate executable owner fields."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-DESCRIPTORS",
+            "limitations": "Descriptors are provenance/prose, not executable constants.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-descriptors.json",
+            "source_sha256": "51112bd2daeba085174aee15d74f2fd78df55c78ab42c952a7fd0e3dd181cda4",
+            "supported_claim": "Enumerates 25 owner source and automation declarations; four declared taggable/admin sources are unavailable in accessible roots."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SEQUENCES",
+            "limitations": "Catalog prose does not prove executable typed contracts.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/operations/sequences/SEQUENCES.md",
+            "source_sha256": "b421f4064a8807896b275abd1b40c4af3d29043dab1dbc30205de1a35d2c91b9",
+            "supported_claim": "Canonical catalog enumerates the same finite 25 operational sequences and their source anchors."
+          }
+        ],
+        "material_gaps": [
+          "GAP-WORKTREE-SAFE-HOST",
+          "GAP-AUTHORITATIVE-RECURRING-ELIGIBILITY",
+          "GAP-MATERIALIZED-25-OWNER-CONTRACTS"
+        ],
+        "planner_readiness_constraints": {
+          "PO-D1-HOST": {
+            "closure_condition": "One launcher-owned host configuration and verified capability receipt govern both repository forms.",
+            "evidence_ids": [
+              "EV-D1-WRAPPER",
+              "EV-D1-OFFICIAL-HOOK",
+              "EV-D1-DISCOVERY",
+              "EV-D1-WORKTREE",
+              "EV-D1-HOST"
+            ],
+            "implementation_anchors": [
+              "CodexCliWrapper launch boundary",
+              "official PreToolUse contract",
+              "prevention_host receipt verifier"
+            ],
+            "owner": "workflow-orch Codex launcher owner",
+            "required_inputs": [
+              "authorized authentication boundary that does not read or copy credentials"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "ordinary repository and worktree live hook challenge before mutation",
+              "unsupported surface structurally withheld or visibly rejected",
+              "authentication or enforcement absence rejects pre-launch"
+            ]
+          },
+          "PO-D1-HOST-ACCEPTANCE": {
+            "closure_condition": "Every governed mutation has a live host proof or the session fails closed.",
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D1-WRAPPER",
+              "EV-D1-HOST"
+            ],
+            "implementation_anchors": [
+              "D1 launcher and host-capability boundary"
+            ],
+            "owner": "workflow-orch acceptance owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": [
+              "ordinary/worktree, unsupported-action, challenge, resume, and authentication cases"
+            ]
+          },
+          "PO-D2-ELIGIBILITY": {
+            "closure_condition": "Ledger replay yields the same denominator after later registry or outcome changes.",
+            "evidence_ids": [
+              "EV-D2-EVENTS",
+              "EV-D2-CONTROLLER",
+              "EV-D2-REGISTRY",
+              "EV-D3-CONTRACT"
+            ],
+            "implementation_anchors": [
+              "intent producer",
+              "register-before-dispatch controller boundary",
+              "registry content hash",
+              "prevention event schema"
+            ],
+            "owner": "prevention controller and telemetry owner",
+            "required_inputs": [
+              "finite recurrence and availability policy in owner contracts"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "immutable eligibility precedes dispatch",
+              "denominator uses only durable records"
+            ]
+          },
+          "PO-D2-ELIGIBILITY-ACCEPTANCE": {
+            "closure_condition": "Numerator and denominator reproduce from immutable events.",
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D2-EVENTS",
+              "EV-D2-CONTROLLER"
+            ],
+            "implementation_anchors": [
+              "D2 pre-dispatch event and registry snapshot"
+            ],
+            "owner": "prevention telemetry acceptance owner",
+            "required_inputs": [
+              "representative governed window"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "tamper, reclassification, missing-registry, ineligible-intent, and threshold cases"
+            ]
+          },
+          "PO-D3-OWNER-CONTRACTS": {
+            "closure_condition": "Every row resolves to a content-addressed executable contract or explicit unavailable state.",
+            "evidence_ids": [
+              "EV-D3-MANIFEST",
+              "EV-D3-CONTRACT",
+              "EV-D3-DESCRIPTORS",
+              "EV-D3-SEQUENCES"
+            ],
+            "implementation_anchors": [
+              "MigrationOwnerSpec and registry validation",
+              "25-row source inventory"
+            ],
+            "owner": "prevention registry and owner-contract owner",
+            "required_inputs": [
+              "owner source for each currently unavailable external owner before it can become available"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "all-25 source-hash resolution",
+              "missing source becomes explicit unavailable state"
+            ]
+          },
+          "PO-D3-OWNER-CONTRACTS-ACCEPTANCE": {
+            "closure_condition": "Unresolved IDs are rejected and accepted owners behave deterministically.",
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D3-MANIFEST",
+              "EV-D3-CONTRACT",
+              "EV-D3-DESCRIPTORS"
+            ],
+            "implementation_anchors": [
+              "D3 registry initialization boundary"
+            ],
+            "owner": "prevention owner-contract acceptance owner",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": [
+              "schema, all-25 coverage, hash drift, no-prose inference, unavailable-owner, dispatch, reconcile, terminal"
+            ]
+          }
+        },
+        "requirement_statuses": [
+          {
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D1-WRAPPER",
+              "EV-D1-EXECUTOR",
+              "EV-D1-TRANSLATOR",
+              "EV-D1-OFFICIAL-HOOK",
+              "EV-D1-DISCOVERY",
+              "EV-D1-WORKTREE",
+              "EV-D1-HOST"
+            ],
+            "requirement_id": "D1-CURRENT-HOST",
+            "research_value": {
+              "current_hook": "structured PreToolUse exists but prevention_host is not launched",
+              "current_launch": "task cwd plus inherited/overlay environment; no governed hook preflight",
+              "gap": "no launcher-owned worktree-independent enforcement or authorized authentication boundary",
+              "worktree_fact": "project hooks fail in the documented worktree reproduction while user hooks fire"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D1-WRAPPER",
+              "EV-D1-OFFICIAL-HOOK",
+              "EV-D1-WORKTREE",
+              "EV-D1-HOST"
+            ],
+            "requirement_id": "D1-FUTURE-HOST",
+            "research_value": {
+              "acceptance": "ordinary repository and worktree intercept before mutation without credential reading or copying",
+              "required": "launcher-owned worktree-independent host configuration and live challenge before governed session",
+              "supported_surface": [
+                "Bash",
+                "apply_patch",
+                "MCP"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D2-EVENTS",
+              "EV-D2-CONTROLLER",
+              "EV-D2-REGISTRY",
+              "EV-D3-MANIFEST",
+              "EV-D3-CONTRACT"
+            ],
+            "requirement_id": "D2-CURRENT-ELIGIBILITY",
+            "research_value": {
+              "consumer": "no authoritative eligibility event or denominator",
+              "gap": "later state can reclassify eligibility",
+              "producer": "intent lacks registry revision and eligibility",
+              "registry": "hashable but no recurrence or availability policy"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D2-EVENTS",
+              "EV-D2-CONTROLLER",
+              "EV-D2-REGISTRY"
+            ],
+            "requirement_id": "D2-FUTURE-ELIGIBILITY",
+            "research_value": {
+              "acceptance": "later outcome or registry edits cannot reclassify an intent",
+              "denominator": "durable eligibility and dispatch events with explicit ineligible reasons",
+              "required": "controller persists eligibility before dispatch from a frozen registry revision"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D3-MANIFEST",
+              "EV-D3-CONTRACT",
+              "EV-D3-DESCRIPTORS",
+              "EV-D3-SEQUENCES"
+            ],
+            "requirement_id": "D3-CURRENT-OWNER-CONTRACTS",
+            "research_value": {
+              "gap": "all rows name IDs only and missing sources cannot be invented",
+              "inventory_count": 25,
+              "local_source_count": 21,
+              "materialized_field_counts": {
+                "action_class": 0,
+                "availability": 0,
+                "canonical_call": 0,
+                "effect_identity": 0,
+                "full_unit_budget": 0,
+                "parameter_schema": 0,
+                "reconciliation": 0,
+                "recurrence": 0,
+                "terminal_schema": 0
+              },
+              "unavailable_owner_count": 4
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D3-MANIFEST",
+              "EV-D3-CONTRACT",
+              "EV-D3-DESCRIPTORS"
+            ],
+            "requirement_id": "D3-FUTURE-OWNER-CONTRACTS",
+            "research_value": {
+              "acceptance": "all-25 coverage, source drift rejection, unavailable-owner rejection, deterministic dispatch/reconcile/terminal",
+              "required": "each of 25 IDs resolves to content-addressed executable typed contract or explicit unavailable state",
+              "validation": "no runtime inference from identifiers or prose"
+            }
+          }
+        ],
+        "research_markdown": "# Three-defect closure research\n\nAll three defects are confirmed.\n\n## Worktree-safe interception\n\nThe current workflow launcher starts Codex in the task working directory and supplies sandbox, approval, model, and optional provider configuration. It does not create or verify a governed Codex home, hook configuration, controller channel, receipt, or live hook challenge. Official Codex source defines structured PreToolUse input and a blocking/rewrite result, while project and user/system hooks come from distinct configuration sources. The documented worktree reproduction shows project-local hooks being ignored in a Git worktree while user hooks fire. The stable authority is therefore launcher-owned, per-session configuration plus preflight proof; project discovery cannot be the enforcement boundary. The local prevention host already parses Bash, apply_patch, and MCP calls and verifies a PID/session/config/hook-bound HMAC receipt, but no launcher wires it or establishes an authentication path without reading or copying credentials.\n\n## Authoritative recurring eligibility\n\nThe registry is content-hashable but OwnerSpec contains no recurrence or availability policy. Action intent is persisted before dispatch without a registry revision or eligibility decision. Dispatch and the event ledger contain no immutable eligibility reason or registered-use denominator. Post-run observer eligibility is a different discovery concept. The stable denominator boundary is a controller-produced pre-dispatch eligibility event derived from a frozen registry revision, containing recurrence, availability, and explicit ineligible reason inputs. Later registry state or outcome must not reclassify it.\n\n## Materialized owner contracts\n\nThe manifest contains 25 unique rows but every row stores identifier strings only. Current validation checks cardinality, source inventory hash, identifier syntax, and parent references; it does not resolve parameter schemas, canonical argv or typed calls, action class, full-unit budget, effect identity, reconciliation, terminal schema, recurrence eligibility, availability, or implementation source hashes. Materialized coverage for each of those fields is therefore 0/25. All 25 rows have sequence/source anchors. Twenty-one have at least one inspected local owner implementation; taggable-source-reload, taggable-api-deploy, taggable-admin-spa-deploy, and taggable-media-worker-deploy declare owner sources unavailable in the accessible roots. Those four must be explicit unavailable owners unless their source is separately supplied. Runtime behavior may not be inferred from prose or identifier names.\n\nThe 25 authoritative owner anchors are: local-workflow-orch-image→scripts/local_workflow_orch_image_harness.py; greenfield-full-drive→scripts/greenfield_full_drive.sh; remote-mcp-user-onboarding→dist/remote-mcp-user-admin/remote_mcp_user_admin_tui.py; taggable-source-reload→unavailable declared taggable-api reload-source.sh; mawf-playbook-full-test, mawf-playbook-speed-test, and mawf-playbook-blocker-reentry→scripts/mawf_playbook_test_sequence.py; github-app-repos-refresh→scripts/github_app_repos_refresh.py; claude-auth-token-refresh→scripts/claude_auth_refresh.sh and scripts/rotate-credentials.sh; taggable-api-deploy→unavailable declared taggable-api deploy-api.sh; taggable-admin-spa-deploy→unavailable declared taggable-admin-spa deploy-admin-spa.sh; taggable-media-worker-deploy→unavailable declared taggable-api deploy-media-worker.sh; airgapped-local-bulgarian-stt→callcenter-harness setup_airgapped_stt.sh; airgapped-redaction-stack→setup_airgapped_redaction.sh; callcenter-harness-provision-verify→the STT/redaction setup and cc smoke sources; airgapped-llm-judge→setup_airgapped_judge.sh and judge_ollama.py; secure-landing-seed→seed_landing.sh and scrub_and_retire.py; callcenter-harness-engine-invariants→test_engine_upgrades.py; discovery-promotion-lifecycle→scripts/discovery_promotion_lifecycle.py; commit-push-main→scripts/scoped_git_publish.py; discovery-bootstrap→scripts/discovery_bootstrap.py; discovery-candidate-reconciliation→scripts/discovery_candidate_reconciliation.py; convergence-checkpoint-run→scripts/convergence_checkpoint_run.py; scoped-context-edit→scripts/context_edit_guard.py; convergence-state-review-cycle→scripts/convergence_state_review_cycle.py.\n\n## Acceptance boundary\n\nOrdinary repositories and worktrees must both reject governed mutation if live host proof or authorized authentication is unavailable. Registered-use must reproduce only from immutable pre-dispatch eligibility and dispatch events tied to a registry content hash. Registry initialization must resolve each owner to a content-addressed executable contract or explicit unavailable state.",
+        "schema_version": 1
+      },
+      "envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+      "envelope_payload": {
+        "authoritative_roots": [
+          "/Users/kamenkamenov/memory-knowledge",
+          "/Users/kamenkamenov/mcp-agents-workflow",
+          "/private/tmp/openai-codex-hook-source",
+          "https://github.com/openai/codex/issues/27133"
+        ],
+        "charter": {
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/charter.json",
+          "sha256": "809c017559a21368f5cfd32bca0f09407f53e234496833e8094ca252b7dbae7f"
+        },
+        "hash_contract": "sha256-canonical-json-utf8-no-trailing-newline-v1",
+        "requirements": {
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/requirements.json",
+          "sha256": "8bbf53bf287c6b1a442e1e584c54908f9730416221a9edae83e83260d40efc17"
+        },
+        "round": 1,
+        "schema_version": 1,
+        "scope_hash": "54f9f1f702c6c73a128b86e6da932b5d5c1993298d5ff497c93ea1645e184917",
+        "verification_command": "python3 /Users/kamenkamenov/memory-knowledge/skills/research-playbook/scripts/research_package.py hash-json <json-file>"
+      },
+      "evidence_availability": {
+        "CURRENT_RUNTIME": "AVAILABLE",
+        "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+        "authoritative_roots": "AVAILABLE",
+        "external_evidence": "AVAILABLE"
+      },
+      "recorded_at": "2026-07-17T00:10:00Z"
+    }
+  },
+  "charter": {
+    "authoritative_roots": [
+      "/Users/kamenkamenov/memory-knowledge",
+      "/Users/kamenkamenov/mcp-agents-workflow",
+      "/private/tmp/openai-codex-hook-source",
+      "https://github.com/openai/codex/issues/27133"
+    ],
+    "budget": {
+      "maximum_agent_spawn_attempts": 15,
+      "maximum_candidate_rounds": 3,
+      "maximum_elapsed_minutes": 60,
+      "maximum_retries_per_role": 1
+    },
+    "charter_id": "prevention-system-three-defect-closure-20260717",
+    "exclusions": [
+      "any fourth defect, unrelated cleanup, deployment, commit, push, secret access, credential copying, phase-ledger change, or external message",
+      "implementation planning or code edits during research",
+      "inventing parameter, command, budget, effect, reconciliation, terminal, recurrence, or authentication facts not established by authoritative evidence"
+    ],
+    "in_scope": [
+      "the three recorded implementation gaps and only the original requirement IDs attached to them",
+      "mcp-agents-workflow Codex launch, tool translation, and host-hook boundaries",
+      "memory-knowledge prevention contracts, event ledger, registry, metrics, owner descriptors, migration manifest, sequence catalog, and authoritative owner implementations",
+      "official OpenAI Codex hook schemas, discovery behavior, worktree behavior, configuration, and authentication boundaries"
+    ],
+    "objective": "Ground the exact stable closure boundary for the three implementation defects proven after the prevention-system plan passed: worktree-safe host interception, an authoritative recurring-action eligibility denominator, and executable materialized contracts for all 25 registered sequence owners.",
+    "required_output_package": [
+      "manifest.json",
+      "research.md",
+      "requirements.json",
+      "evidence-index.json",
+      "findings.json",
+      "planner-handoff.md"
+    ],
+    "research_questions": [
+      "Which Codex-owned launch boundary can enforce PreToolUse interception in ordinary repositories and Git worktrees without depending on project hook discovery or reading credentials?",
+      "Which durable controller fact makes recurring-action eligibility reproducible before dispatch and therefore makes the registered-use denominator authoritative?",
+      "Which exact source evidence and materialized fields are required to turn each of the 25 owner contract identifiers into an executable typed owner without inferring behavior from prose?"
+    ],
+    "schema_version": 1,
+    "supplied_input": "The approved implementation found three additional defects: project-local Codex hooks are not durable in task worktrees; recurring-action eligibility has no persisted authoritative fact; and the 25 owner manifest rows name contract IDs but do not materialize their executable constants. Research must identify a stable, bounded, implementable closure for exactly these defects.",
+    "terminal_rules": [
+      "PASS requires all three lenses to pass the same candidate and envelope hashes, a fresh adjudicator with no research-actionable finding, every planner obligation READY, exact package validation, and zero active agent slots.",
+      "GAPS means research-stage corrections remain inside this frozen charter.",
+      "BLOCKED means required accessible evidence or a named approval route is unavailable.",
+      "CAP_REACHED means the shared time, round, attempt, retry, or repeated-fingerprint cap fired."
+    ]
+  },
+  "charter_hash": "e89e200c7c9ba9e43fa6cb4eb7fe5bad491d0c9e42e671d2a269cb7a23ee441f",
+  "created_at": "2026-07-17T00:00:00Z",
+  "evidence_availability": {
+    "CURRENT_RUNTIME": "AVAILABLE",
+    "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+    "authoritative_roots": "AVAILABLE",
+    "external_evidence": "AVAILABLE"
+  },
+  "operational_maturity": "MIXED",
+  "package_id": "research-package-bf8b1f49ed2a3519dd16ba94",
+  "requirements": [
+    {
+      "acceptance_intent": "Name the authoritative launch boundary, exact hook input/output contract, worktree behavior, action coverage, and credential limitation without speculation.",
+      "evidence_availability": "AVAILABLE",
+      "id": "D1-CURRENT-HOST",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry the grounded worktree-safe interception boundary, supported surfaces, fail-closed preflight, and authentication constraint into planning.",
+          "id": "PO-D1-HOST"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "three-defect-host-current",
+      "source": {
+        "gap_id": "project-hook-not-durable-in-task-worktrees",
+        "requirement_ids": [
+          "CUR-INTERCEPTION",
+          "CUR-RESUME",
+          "ACC-ZERO-RAW"
+        ]
+      },
+      "text": "Determine the current Codex hook discovery, launch, worktree, configuration, authentication, and supported-action behavior that makes project-local interception non-durable or identifies a stronger host boundary."
+    },
+    {
+      "acceptance_intent": "An ordinary repository and a Git worktree both prove interception before mutation; unavailable hook support or authentication produces a visible pre-launch rejection.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "D1-FUTURE-HOST",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan ordinary-repository, worktree, unsupported-action, hook-challenge, resume, and authentication-boundary verification.",
+          "id": "PO-D1-HOST-ACCEPTANCE"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "three-defect-host-future",
+      "source": {
+        "gap_id": "project-hook-not-durable-in-task-worktrees",
+        "requirement_ids": [
+          "FUT-INTERCEPTION",
+          "FUT-RESUME",
+          "ACC-ZERO-RAW"
+        ]
+      },
+      "text": "The workflow launcher must establish worktree-independent pre-action interception before a governed Codex session begins, prove the live hook before work, and fail closed when enforcement or authorized authentication is unavailable."
+    },
+    {
+      "acceptance_intent": "Prove the present denominator inputs or their absence across registry production, controller persistence, and metric aggregation.",
+      "evidence_availability": "AVAILABLE",
+      "id": "D2-CURRENT-ELIGIBILITY",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry the exact authoritative recurrence metadata, eligibility event, producer timing, immutable inputs, and denominator consumer into planning.",
+          "id": "PO-D2-ELIGIBILITY"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "three-defect-eligibility-current",
+      "source": {
+        "gap_id": "registered-use-denominator-has-no-authoritative-event",
+        "requirement_ids": [
+          "CUR-METRICS",
+          "ACC-REGISTERED-95"
+        ]
+      },
+      "text": "Determine whether the current OwnerSpec, registry, prevention event contract, controller, and metrics persist an authoritative pre-dispatch recurring-action eligibility fact and identify the exact absent producer/consumer fields."
+    },
+    {
+      "acceptance_intent": "The metric query derives numerator and denominator only from durable events and a content-addressed registry snapshot, including explicit ineligible reason codes.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "D2-FUTURE-ELIGIBILITY",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan tamper, outcome-reclassification, missing-registry, ineligible-intent, and 95-percent threshold tests.",
+          "id": "PO-D2-ELIGIBILITY-ACCEPTANCE"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "three-defect-eligibility-future",
+      "source": {
+        "gap_id": "registered-use-denominator-has-no-authoritative-event",
+        "requirement_ids": [
+          "FUT-METRICS",
+          "ACC-REGISTERED-95"
+        ]
+      },
+      "text": "Every governed intent must persist a controller-derived recurring-action eligibility decision from a frozen registry revision before dispatch so the registered-use denominator is reproducible and cannot be reclassified after outcome."
+    },
+    {
+      "acceptance_intent": "Return an exact 25-row coverage map whose positive facts cite authoritative implementation evidence and whose unavailable facts fail closed rather than being invented.",
+      "evidence_availability": "AVAILABLE",
+      "id": "D3-CURRENT-OWNER-CONTRACTS",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry a finite materialized 25-owner contract input, evidence provenance, and explicit unavailable-owner state into planning.",
+          "id": "PO-D3-OWNER-CONTRACTS"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "three-defect-owner-contracts-current",
+      "source": {
+        "gap_id": "owner-contract-ids-have-no-materialized-constants",
+        "requirement_ids": [
+          "CUR-ENTRYPOINT",
+          "CUR-TYPED",
+          "CUR-RESUME"
+        ]
+      },
+      "text": "Inventory all 25 owner rows and determine, from authoritative source implementations, which concrete parameter schema, canonical argv or typed call, action class, full-unit budget, durable effect identity, reconciliation rule, terminal schema, recurrence eligibility, and availability facts are materialized versus only named or described in prose."
+    },
+    {
+      "acceptance_intent": "Registry initialization validates every materialized contract and source hash; dispatch/reconcile/terminal behavior is deterministic; missing evidence prevents owner registration.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "D3-FUTURE-OWNER-CONTRACTS",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan schema validation, all-25 coverage, source-hash drift, no-prose-inference, unavailable-owner, dispatch, crash/reconcile, and terminal tests.",
+          "id": "PO-D3-OWNER-CONTRACTS-ACCEPTANCE"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "three-defect-owner-contracts-future",
+      "source": {
+        "gap_id": "owner-contract-ids-have-no-materialized-constants",
+        "requirement_ids": [
+          "FUT-ENTRYPOINT",
+          "FUT-TYPED",
+          "FUT-RESUME"
+        ]
+      },
+      "text": "Each of the 25 registered owner IDs must resolve to a content-addressed executable typed contract or an explicit fail-closed unavailable state; runtime code must not infer executable behavior from prose or identifier names."
+    }
+  ],
+  "requirements_hash": "9cb5682f0c351322a8498b4efbfb19d95e0a15cd8d0335285291630876bdb7eb",
+  "result": {
+    "actionable_fingerprints": [],
+    "candidate_hash": null,
+    "envelope_hash": null,
+    "reason": "TIME_BUDGET",
+    "verdict": "CAP_REACHED"
+  },
+  "rounds": [
+    {
+      "actionable_fingerprints": [
+        "5b14fc8aea44c07c9b85e5347734eeea528c95561273d601364a6ac3ef70edc6",
+        "63e141ba8a94985a840ca460a09e31a676e59c65ac55a8f2387872bc06cf973a",
+        "b3ed83c2a406897be6fa28f6644f04ae08b9c5873e8f255f16b1a7916efcc4de",
+        "ca43a86ea864657dfbfcc731fb4561babf78b51e4a90699b1b302cd3f61b3f8f"
+      ],
+      "adjudication": {
+        "adjudication_id": "adjudication-9e2bb75611cf51350ecf4b04",
+        "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+        "envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+        "findings": [
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "36f8b2f6da0d1c3e52d56b458ddfbe63346bf7a48dce7e1678013673f373d960",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: requirements.json D3-CURRENT-OWNER-CONTRACTS requires an exact 25-row map whose positive facts cite authoritative implementation evidence and whose unavailable facts fail closed; D3-FUTURE-OWNER-CONTRACTS requires every ID to resolve to an executable content-addressed contract or explicit unavailable state.",
+                "Missing-behavior side: candidate-round-1.json claims 21 owners have inspected local implementations and only four are unavailable, but provides no per-owner authoritative implementation evidence or source hashes. Its cited owner-descriptors.json concludes that only 19 of 25 have plan-ready descriptors and names six owners requiring custodian evidence before a deterministic typed adapter can be specified. The candidate therefore neither supports its 21/4 assertion nor gives the required explicit unavailable state for all unresolved owners."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-MATERIALIZED-25-OWNER-CONTRACTS:unsupported-21-source-claim-and-unresolved-owner-state",
+              "id": "GAP-MATERIALIZED-25-OWNER-CONTRACTS",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner could treat all but four owners as source-grounded and materializable, although six registered owners still lack the evidence needed for a deterministic typed adapter; this risks inventing executable behavior instead of failing closed.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D3-CURRENT-OWNER-CONTRACTS",
+                "D3-FUTURE-OWNER-CONTRACTS"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "5b14fc8aea44c07c9b85e5347734eeea528c95561273d601364a6ac3ef70edc6",
+            "finding_type": "REQUIREMENT_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "D3-CURRENT-OWNER-CONTRACTS requires an exact 25-row coverage map whose positive facts cite authoritative implementation evidence.",
+                "candidate-round-1 evidence_index contains EV-D3-MANIFEST, EV-D3-CONTRACT, EV-D3-DESCRIPTORS, and EV-D3-SEQUENCES, but no evidence items for the 21 inspected owner implementations.",
+                "The research_markdown lists owner anchors and states that 21 have inspected implementations, while requirement_statuses only supply aggregate 25/21/4 counts rather than per-owner implementation-backed field coverage."
+              ],
+              "fingerprint": "requirements-coverage:gap-materialized-25-owner-contracts:missing-per-owner-implementation-evidence:v1",
+              "id": "GAP-MATERIALIZED-25-OWNER-CONTRACTS",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The claimed 25-owner coverage map cannot yet support deterministic implementation because the candidate does not cite authoritative implementation evidence for the 21 locally available owners or record the required per-owner field coverage; only the four unavailable owners are explicitly bounded.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D3-CURRENT-OWNER-CONTRACTS",
+                "D3-FUTURE-OWNER-CONTRACTS"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "63e141ba8a94985a840ca460a09e31a676e59c65ac55a8f2387872bc06cf973a",
+            "finding_type": "FACT_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "EV-D2-EVENTS",
+                "EV-D2-CONTROLLER",
+                "EV-D2-REGISTRY",
+                "EV-D3-CONTRACT"
+              ],
+              "fingerprint": "internal-readiness:gap-authoritative-recurring-eligibility:unowned-policy-input",
+              "id": "GAP-AUTHORITATIVE-RECURRING-ELIGIBILITY",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot make the registered-use denominator reproducible because the claimed READY obligation requires a finite recurrence-and-availability policy but supplies neither its exact immutable decision inputs nor a grounded owner and route for providing them before the controller records eligibility.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D2-CURRENT-ELIGIBILITY",
+                "D2-FUTURE-ELIGIBILITY"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "6ea3070f8e5f26090edc53d6527d61eaf9959b6bc3687f4e3150f98b21d87f53",
+            "finding_type": "CONTRADICTION",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "EV-D3-DESCRIPTORS",
+                "EV-D3-MANIFEST",
+                "EV-D3-CONTRACT",
+                "EV-D3-SEQUENCES"
+              ],
+              "fingerprint": "internal-readiness:gap-materialized-25-owner-contracts:descriptor-unresolved-coverage",
+              "id": "GAP-MATERIALIZED-25-OWNER-CONTRACTS",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner would treat all but four owners as source-grounded even though the authoritative descriptor records six owners requiring custodian evidence; it therefore cannot produce a complete fail-closed 25-owner contract or its all-owner verification without rediscovering missing evidence.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D3-CURRENT-OWNER-CONTRACTS",
+                "D3-FUTURE-OWNER-CONTRACTS"
+              ],
+              "status": "OPEN",
+              "type": "CONTRADICTION"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "a2ae26f96c9b0c48179b1d0feb19053b676f702089e7d5f7b44ef51df8c55a34",
+            "finding_type": "PLANNER_DECISION",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "candidate-round-1 research_markdown establishes launcher-owned per-session configuration plus a live preflight proof as the stable boundary.",
+                "EV-D1-WRAPPER, EV-D1-OFFICIAL-HOOK, EV-D1-DISCOVERY, EV-D1-WORKTREE, and EV-D1-HOST ground the current boundary and its limitations.",
+                "D1-FUTURE-HOST acceptance intent and PO-D1-HOST-ACCEPTANCE define the required ordinary-repository, worktree, unsupported-action, challenge, resume, and authentication verification."
+              ],
+              "fingerprint": "requirements-coverage:gap-worktree-safe-host:planner-handoff:v1",
+              "id": "GAP-WORKTREE-SAFE-HOST",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner must turn the established launcher-owned host boundary into concrete changes and acceptance checks; research already establishes the worktree-safe boundary and does not need another research-stage decision.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "D1-CURRENT-HOST",
+                "D1-FUTURE-HOST"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "b3ed83c2a406897be6fa28f6644f04ae08b9c5873e8f255f16b1a7916efcc4de",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: requirements.json D1-CURRENT-HOST requires the exact Codex launch/configuration/authentication behavior, and D1-FUTURE-HOST requires worktree-independent interception with visible pre-launch rejection when enforcement or authorized authentication is unavailable.",
+                "Missing-behavior side: candidate-round-1.json says the stable authority is launcher-owned per-session configuration, but EV-D1-WRAPPER only establishes that CodexCliWrapper starts `codex mcp-server` in the task cwd with an optional environment overlay; it does not provision a hook configuration, create a governed home, run a hook challenge, or establish authorized authentication. EV-D1-DISCOVERY distinguishes system, user, and project sources but does not establish which source the launcher can safely provision per session. EV-D1-HOST proves only that prevention_host can verify a receipt after it is invoked."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-WORKTREE-SAFE-HOST:unproven-per-session-config-and-auth-boundary",
+              "id": "GAP-WORKTREE-SAFE-HOST",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner could implement a launcher-owned hook around an unproved configuration and authentication route, leaving governed mutation able to start without the claimed worktree-independent host proof or a defined fail-closed authentication boundary.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D1-CURRENT-HOST",
+                "D1-FUTURE-HOST"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "c040cabebbc36711665694f1c4cab7bd0f478eb5739eaaea51cb70d23eed405f",
+            "finding_type": "FACT_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "EV-D1-WRAPPER",
+                "EV-D1-DISCOVERY",
+                "EV-D1-OFFICIAL-HOOK",
+                "EV-D1-HOST"
+              ],
+              "fingerprint": "internal-readiness:gap-worktree-safe-host:launcher-config-auth-route",
+              "id": "GAP-WORKTREE-SAFE-HOST",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot implement or prove worktree-safe interception because the package names a launcher-owned per-session configuration and an authentication constraint without grounding the configuration installation mechanism, capability-proof route, or authorized authentication route that the launcher must use.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D1-CURRENT-HOST",
+                "D1-FUTURE-HOST"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "ca43a86ea864657dfbfcc731fb4561babf78b51e4a90699b1b302cd3f61b3f8f",
+            "finding_type": "REQUIREMENT_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "D2-CURRENT-ELIGIBILITY acceptance intent requires proof across registry production, controller persistence, and metric aggregation.",
+                "candidate-round-1 provides EV-D2-EVENTS, EV-D2-CONTROLLER, and EV-D2-REGISTRY, but no metric-aggregation source evidence or evidence-index entry.",
+                "The candidate asserts \"no authoritative eligibility event or denominator\" and \"no registered-use query contract\" without an authoritative current metric consumer anchor."
+              ],
+              "fingerprint": "requirements-coverage:gap-authoritative-recurring-eligibility:missing-metric-consumer-evidence:v1",
+              "id": "GAP-AUTHORITATIVE-RECURRING-ELIGIBILITY",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot safely rely on the claimed denominator boundary because the candidate does not prove what the current metric aggregation consumes or demonstrate its absence; a later metric consumer could already derive or override eligibility differently.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D2-CURRENT-ELIGIBILITY",
+                "D2-FUTURE-ELIGIBILITY"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "dfc38d43bf4cd47c21d12d0e6fde44cb9f953c611d710466e7fa5523144af7a1",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: requirements.json D2-CURRENT-ELIGIBILITY explicitly requires tracing OwnerSpec, registry, prevention event contract, controller, and metrics; D2-FUTURE-ELIGIBILITY requires numerator and denominator derived only from durable events and a content-addressed registry snapshot.",
+                "Missing-behavior side: candidate-round-1.json supplies EV-D2-EVENTS, EV-D2-CONTROLLER, EV-D2-REGISTRY, EV-D3-MANIFEST, and EV-D3-CONTRACT, but no metric aggregation/query producer or consumer evidence. Its D2-CURRENT-ELIGIBILITY research value asserts `consumer: no authoritative eligibility event or denominator` without evidence that identifies the present metric consumer or proves its absence; the cited controller only shows intent persistence and selector dispatch."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-AUTHORITATIVE-RECURRING-ELIGIBILITY:missing-metric-consumer-and-denominator-trace",
+              "id": "GAP-AUTHORITATIVE-RECURRING-ELIGIBILITY",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner could persist a new eligibility field at intent registration yet leave the registered-use numerator or denominator unimplemented or reading a different event shape, so the 95-percent measure would remain non-reproducible.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D2-CURRENT-ELIGIBILITY",
+                "D2-FUTURE-ELIGIBILITY"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          }
+        ],
+        "recorded_at": "2026-07-17T00:28:00Z",
+        "runtime_agent_id": "/root/three_defect_adjudicator_r1"
+      },
+      "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+      "candidate_id": "candidate-48b99c38fd8a5ce8e0019f6c",
+      "envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+      "lenses": {
+        "INTERNAL_READINESS": {
+          "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+          "envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+          "lens": "INTERNAL_READINESS",
+          "lens_result_id": "lens-result-1f437cc3d1bbfcc17e2711c8",
+          "raw_findings": [
+            {
+              "evidence": [
+                "EV-D1-WRAPPER",
+                "EV-D1-DISCOVERY",
+                "EV-D1-OFFICIAL-HOOK",
+                "EV-D1-HOST"
+              ],
+              "fingerprint": "internal-readiness:gap-worktree-safe-host:launcher-config-auth-route",
+              "id": "GAP-WORKTREE-SAFE-HOST",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot implement or prove worktree-safe interception because the package names a launcher-owned per-session configuration and an authentication constraint without grounding the configuration installation mechanism, capability-proof route, or authorized authentication route that the launcher must use.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D1-CURRENT-HOST",
+                "D1-FUTURE-HOST"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            },
+            {
+              "evidence": [
+                "EV-D2-EVENTS",
+                "EV-D2-CONTROLLER",
+                "EV-D2-REGISTRY",
+                "EV-D3-CONTRACT"
+              ],
+              "fingerprint": "internal-readiness:gap-authoritative-recurring-eligibility:unowned-policy-input",
+              "id": "GAP-AUTHORITATIVE-RECURRING-ELIGIBILITY",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot make the registered-use denominator reproducible because the claimed READY obligation requires a finite recurrence-and-availability policy but supplies neither its exact immutable decision inputs nor a grounded owner and route for providing them before the controller records eligibility.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D2-CURRENT-ELIGIBILITY",
+                "D2-FUTURE-ELIGIBILITY"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            },
+            {
+              "evidence": [
+                "EV-D3-DESCRIPTORS",
+                "EV-D3-MANIFEST",
+                "EV-D3-CONTRACT",
+                "EV-D3-SEQUENCES"
+              ],
+              "fingerprint": "internal-readiness:gap-materialized-25-owner-contracts:descriptor-unresolved-coverage",
+              "id": "GAP-MATERIALIZED-25-OWNER-CONTRACTS",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner would treat all but four owners as source-grounded even though the authoritative descriptor records six owners requiring custodian evidence; it therefore cannot produce a complete fail-closed 25-owner contract or its all-owner verification without rediscovering missing evidence.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D3-CURRENT-OWNER-CONTRACTS",
+                "D3-FUTURE-OWNER-CONTRACTS"
+              ],
+              "status": "OPEN",
+              "type": "CONTRADICTION"
+            }
+          ],
+          "recorded_at": "2026-07-17T00:24:00Z",
+          "runtime_agent_id": "/root/three_defect_readiness",
+          "verdict": "GAPS"
+        },
+        "REQUIREMENTS_COVERAGE": {
+          "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+          "envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+          "lens": "REQUIREMENTS_COVERAGE",
+          "lens_result_id": "lens-result-b4c0d2381436fafcdc767dbf",
+          "raw_findings": [
+            {
+              "evidence": [
+                "candidate-round-1 research_markdown establishes launcher-owned per-session configuration plus a live preflight proof as the stable boundary.",
+                "EV-D1-WRAPPER, EV-D1-OFFICIAL-HOOK, EV-D1-DISCOVERY, EV-D1-WORKTREE, and EV-D1-HOST ground the current boundary and its limitations.",
+                "D1-FUTURE-HOST acceptance intent and PO-D1-HOST-ACCEPTANCE define the required ordinary-repository, worktree, unsupported-action, challenge, resume, and authentication verification."
+              ],
+              "fingerprint": "requirements-coverage:gap-worktree-safe-host:planner-handoff:v1",
+              "id": "GAP-WORKTREE-SAFE-HOST",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner must turn the established launcher-owned host boundary into concrete changes and acceptance checks; research already establishes the worktree-safe boundary and does not need another research-stage decision.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "D1-CURRENT-HOST",
+                "D1-FUTURE-HOST"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "D2-CURRENT-ELIGIBILITY acceptance intent requires proof across registry production, controller persistence, and metric aggregation.",
+                "candidate-round-1 provides EV-D2-EVENTS, EV-D2-CONTROLLER, and EV-D2-REGISTRY, but no metric-aggregation source evidence or evidence-index entry.",
+                "The candidate asserts \"no authoritative eligibility event or denominator\" and \"no registered-use query contract\" without an authoritative current metric consumer anchor."
+              ],
+              "fingerprint": "requirements-coverage:gap-authoritative-recurring-eligibility:missing-metric-consumer-evidence:v1",
+              "id": "GAP-AUTHORITATIVE-RECURRING-ELIGIBILITY",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot safely rely on the claimed denominator boundary because the candidate does not prove what the current metric aggregation consumes or demonstrate its absence; a later metric consumer could already derive or override eligibility differently.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D2-CURRENT-ELIGIBILITY",
+                "D2-FUTURE-ELIGIBILITY"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            },
+            {
+              "evidence": [
+                "D3-CURRENT-OWNER-CONTRACTS requires an exact 25-row coverage map whose positive facts cite authoritative implementation evidence.",
+                "candidate-round-1 evidence_index contains EV-D3-MANIFEST, EV-D3-CONTRACT, EV-D3-DESCRIPTORS, and EV-D3-SEQUENCES, but no evidence items for the 21 inspected owner implementations.",
+                "The research_markdown lists owner anchors and states that 21 have inspected implementations, while requirement_statuses only supply aggregate 25/21/4 counts rather than per-owner implementation-backed field coverage."
+              ],
+              "fingerprint": "requirements-coverage:gap-materialized-25-owner-contracts:missing-per-owner-implementation-evidence:v1",
+              "id": "GAP-MATERIALIZED-25-OWNER-CONTRACTS",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The claimed 25-owner coverage map cannot yet support deterministic implementation because the candidate does not cite authoritative implementation evidence for the 21 locally available owners or record the required per-owner field coverage; only the four unavailable owners are explicitly bounded.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D3-CURRENT-OWNER-CONTRACTS",
+                "D3-FUTURE-OWNER-CONTRACTS"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-17T00:25:00Z",
+          "runtime_agent_id": "/root/three_defect_coverage_retry",
+          "verdict": "GAPS"
+        },
+        "REQUIREMENTS_SATISFACTION": {
+          "candidate_hash": "16ba7c96698ec0c8d98405e468816727711e576d00a3e5d274e6c100dd1aea2f",
+          "envelope_hash": "5c458cb548398076d64f089581051d079cfe04decd26f163842b2af61c6cf5c3",
+          "lens": "REQUIREMENTS_SATISFACTION",
+          "lens_result_id": "lens-result-3e73010750b6c4d5f601f71e",
+          "raw_findings": [
+            {
+              "evidence": [
+                "Required-behavior side: requirements.json D1-CURRENT-HOST requires the exact Codex launch/configuration/authentication behavior, and D1-FUTURE-HOST requires worktree-independent interception with visible pre-launch rejection when enforcement or authorized authentication is unavailable.",
+                "Missing-behavior side: candidate-round-1.json says the stable authority is launcher-owned per-session configuration, but EV-D1-WRAPPER only establishes that CodexCliWrapper starts `codex mcp-server` in the task cwd with an optional environment overlay; it does not provision a hook configuration, create a governed home, run a hook challenge, or establish authorized authentication. EV-D1-DISCOVERY distinguishes system, user, and project sources but does not establish which source the launcher can safely provision per session. EV-D1-HOST proves only that prevention_host can verify a receipt after it is invoked."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-WORKTREE-SAFE-HOST:unproven-per-session-config-and-auth-boundary",
+              "id": "GAP-WORKTREE-SAFE-HOST",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner could implement a launcher-owned hook around an unproved configuration and authentication route, leaving governed mutation able to start without the claimed worktree-independent host proof or a defined fail-closed authentication boundary.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D1-CURRENT-HOST",
+                "D1-FUTURE-HOST"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "Required-behavior side: requirements.json D2-CURRENT-ELIGIBILITY explicitly requires tracing OwnerSpec, registry, prevention event contract, controller, and metrics; D2-FUTURE-ELIGIBILITY requires numerator and denominator derived only from durable events and a content-addressed registry snapshot.",
+                "Missing-behavior side: candidate-round-1.json supplies EV-D2-EVENTS, EV-D2-CONTROLLER, EV-D2-REGISTRY, EV-D3-MANIFEST, and EV-D3-CONTRACT, but no metric aggregation/query producer or consumer evidence. Its D2-CURRENT-ELIGIBILITY research value asserts `consumer: no authoritative eligibility event or denominator` without evidence that identifies the present metric consumer or proves its absence; the cited controller only shows intent persistence and selector dispatch."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-AUTHORITATIVE-RECURRING-ELIGIBILITY:missing-metric-consumer-and-denominator-trace",
+              "id": "GAP-AUTHORITATIVE-RECURRING-ELIGIBILITY",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner could persist a new eligibility field at intent registration yet leave the registered-use numerator or denominator unimplemented or reading a different event shape, so the 95-percent measure would remain non-reproducible.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D2-CURRENT-ELIGIBILITY",
+                "D2-FUTURE-ELIGIBILITY"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "Required-behavior side: requirements.json D3-CURRENT-OWNER-CONTRACTS requires an exact 25-row map whose positive facts cite authoritative implementation evidence and whose unavailable facts fail closed; D3-FUTURE-OWNER-CONTRACTS requires every ID to resolve to an executable content-addressed contract or explicit unavailable state.",
+                "Missing-behavior side: candidate-round-1.json claims 21 owners have inspected local implementations and only four are unavailable, but provides no per-owner authoritative implementation evidence or source hashes. Its cited owner-descriptors.json concludes that only 19 of 25 have plan-ready descriptors and names six owners requiring custodian evidence before a deterministic typed adapter can be specified. The candidate therefore neither supports its 21/4 assertion nor gives the required explicit unavailable state for all unresolved owners."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-MATERIALIZED-25-OWNER-CONTRACTS:unsupported-21-source-claim-and-unresolved-owner-state",
+              "id": "GAP-MATERIALIZED-25-OWNER-CONTRACTS",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner could treat all but four owners as source-grounded and materializable, although six registered owners still lack the evidence needed for a deterministic typed adapter; this risks inventing executable behavior instead of failing closed.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D3-CURRENT-OWNER-CONTRACTS",
+                "D3-FUTURE-OWNER-CONTRACTS"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-17T00:26:00Z",
+          "runtime_agent_id": "/root/three_defect_satisfaction_retry",
+          "verdict": "GAPS"
+        }
+      },
+      "round_id": "lens-round-a49b3d89b3ef16b14260627b",
+      "round_number": 1
+    }
+  ],
+  "schema_version": 1,
+  "scope_hash": "54f9f1f702c6c73a128b86e6da932b5d5c1993298d5ff497c93ea1645e184917",
+  "updated_at": "2026-07-17T16:38:00.832374Z",
+  "verdict": "CAP_REACHED"
+}

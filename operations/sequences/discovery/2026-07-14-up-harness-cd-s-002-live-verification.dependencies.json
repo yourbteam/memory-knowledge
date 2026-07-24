@@ -1,0 +1,136 @@
+{
+  "dependencies": [
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/work_memory.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/work_memory_bootstrap.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/blocker_catalog.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/sequence_guard.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_sequence_guard.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_work_memory.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "operations/sequences/discovery/2026-07-14-up-harness-cd-s-002-live-verification.repositories.json",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/run_cd_s_002_upgrade_canary.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/replay_cd_s_002_final_strategy.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/codex_role_command.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/verify_harness.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/strategy_brief.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/touchpoints.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/platform_decisions.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/final_strategy.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/engine/runner.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/public_claim_inventory.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/controlled_qna.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_final_strategy.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_platform_decisions.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_public_claim_inventory.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_controlled_qna.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_strategy_brief_prompt.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_touchpoints.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_workflows.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/integration/test_command_workflow.py",
+      "repository_key": "united-partners"
+    }
+  ],
+  "lineage_id": "discovery-5ec2431f-c39d-5996-ad95-cbda520fe59a",
+  "schema_version": 1
+}

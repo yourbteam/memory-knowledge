@@ -1,0 +1,48 @@
+{
+  "schema_version": 1,
+  "charter_id": "prevention-system-three-defect-closure-20260717",
+  "objective": "Ground the exact stable closure boundary for the three implementation defects proven after the prevention-system plan passed: worktree-safe host interception, an authoritative recurring-action eligibility denominator, and executable materialized contracts for all 25 registered sequence owners.",
+  "research_questions": [
+    "Which Codex-owned launch boundary can enforce PreToolUse interception in ordinary repositories and Git worktrees without depending on project hook discovery or reading credentials?",
+    "Which durable controller fact makes recurring-action eligibility reproducible before dispatch and therefore makes the registered-use denominator authoritative?",
+    "Which exact source evidence and materialized fields are required to turn each of the 25 owner contract identifiers into an executable typed owner without inferring behavior from prose?"
+  ],
+  "in_scope": [
+    "the three recorded implementation gaps and only the original requirement IDs attached to them",
+    "mcp-agents-workflow Codex launch, tool translation, and host-hook boundaries",
+    "memory-knowledge prevention contracts, event ledger, registry, metrics, owner descriptors, migration manifest, sequence catalog, and authoritative owner implementations",
+    "official OpenAI Codex hook schemas, discovery behavior, worktree behavior, configuration, and authentication boundaries"
+  ],
+  "exclusions": [
+    "any fourth defect, unrelated cleanup, deployment, commit, push, secret access, credential copying, phase-ledger change, or external message",
+    "implementation planning or code edits during research",
+    "inventing parameter, command, budget, effect, reconciliation, terminal, recurrence, or authentication facts not established by authoritative evidence"
+  ],
+  "authoritative_roots": [
+    "/Users/kamenkamenov/memory-knowledge",
+    "/Users/kamenkamenov/mcp-agents-workflow",
+    "/private/tmp/openai-codex-hook-source",
+    "https://github.com/openai/codex/issues/27133"
+  ],
+  "supplied_input": "The approved implementation found three additional defects: project-local Codex hooks are not durable in task worktrees; recurring-action eligibility has no persisted authoritative fact; and the 25 owner manifest rows name contract IDs but do not materialize their executable constants. Research must identify a stable, bounded, implementable closure for exactly these defects.",
+  "required_output_package": [
+    "manifest.json",
+    "research.md",
+    "requirements.json",
+    "evidence-index.json",
+    "findings.json",
+    "planner-handoff.md"
+  ],
+  "budget": {
+    "maximum_candidate_rounds": 3,
+    "maximum_agent_spawn_attempts": 15,
+    "maximum_elapsed_minutes": 60,
+    "maximum_retries_per_role": 1
+  },
+  "terminal_rules": [
+    "PASS requires all three lenses to pass the same candidate and envelope hashes, a fresh adjudicator with no research-actionable finding, every planner obligation READY, exact package validation, and zero active agent slots.",
+    "GAPS means research-stage corrections remain inside this frozen charter.",
+    "BLOCKED means required accessible evidence or a named approval route is unavailable.",
+    "CAP_REACHED means the shared time, round, attempt, retry, or repeated-fingerprint cap fired."
+  ]
+}

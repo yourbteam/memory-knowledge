@@ -1,0 +1,848 @@
+{
+  "evidence_index": [
+    {
+      "accessed_at": null,
+      "id": "EV-REQ",
+      "limitations": "Defines acceptance intent, not implementation.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v8/requirements.json",
+      "source_sha256": "574c42fcb1755a65b700332d3011f7540b66e73e3ecdc3d939240f4da1bdaae7",
+      "supported_claim": "Ten frozen object-valued requirements and ten planner obligations cover the five current/future boundaries."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-AUTH",
+      "limitations": "Approval is not runtime materialization.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-authority-decisions.json",
+      "source_sha256": "6f1693980e911946a5766a00c9b9153286ab3385ff2fb50ff6d2198a44014306",
+      "supported_claim": "Approves the ten target proposals and the greenfield 3,600,000ms atomic-task cap and progressive reservation rule; execution authorization remains separate."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-CONTRACTS",
+      "limitations": "Contains old current contracts, not materialized proposals.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contracts.json",
+      "source_sha256": "f13602a9094227eb986af83164ab95cfc26d93fa5ec537dc852fbb6ab73d29af",
+      "supported_claim": "Current policy is exactly 10 AVAILABLE, 6 CUSTODIAN_EVIDENCE_REQUIRED, 9 UNAVAILABLE and indexes each AVAILABLE implementation source/current contract."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-PARENTS",
+      "limitations": "Current dispatch does not enforce the relation.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-migration-manifest.json",
+      "source_sha256": "0ee6c3be164e4e7d932641b0cba9d0aab8117a3fdd0942fc759d70ccae429bcc",
+      "supported_claim": "Only blocker-reentry is child-only with two named MAWF parents; the other 24 rows are standalone."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-CONTROLLER",
+      "limitations": "Does not define target derivation.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_controller.py",
+      "source_sha256": "78c99d8b9a72863d8d23af0a7523bf7c32e9b77b3b51e9eae33124a328f281b1",
+      "supported_claim": "Execution selects caller-supplied unit_budgets and lacks parent/provider admission."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-BUDGET",
+      "limitations": "Does not derive owner vectors.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_budget.py",
+      "source_sha256": "23fbc50e66326151cca4976eea433d0d54a208d559e816bd5a5765042dcc6429",
+      "supported_claim": "UnitBudget exposes productive, role, adjudication, materialization, terminal, retry and optional dimensions; authority admits a supplied vector."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-RUNTIME",
+      "limitations": "No typed reconciler or semantic verifier.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_owner_runtime.py",
+      "source_sha256": "f5d05096f2fe7ec5a01d57505893a040dd63b7138c7928a4d074f4d7adfeb01e",
+      "supported_claim": "Current STARTED recovery always becomes INDETERMINATE and zero exit creates the terminal artifact."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-EVENTS",
+      "limitations": "New event payloads remain future work.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/work_memory.py",
+      "source_sha256": "98803326b602ffc5d36f2f402c26d25604cef83c6426a38948f332cf40c8307b",
+      "supported_claim": "Current prevention event schemas omit owner_terminal, delegation and typed provider/approval receipts; _repo_roots grounds local repository lookup."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-ADAPTERS",
+      "limitations": "Does not describe post-launch owner internals.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_adapters.py",
+      "source_sha256": "225e3d7b308a828e59ba29993dbfb2b20b092dd17c67609b0db80749f4a1b96a",
+      "supported_claim": "Current validation is hard-coded and does not resolve proposal schemas, trusted roots, providers, or parents."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-REMOTE-REPO",
+      "limitations": "Prevention does not inject it today.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/git_runtime.py",
+      "source_sha256": "781b18181777a30a3023f9a8efaf8a97ef3943bef0b104bd20d064c471cf1f19",
+      "supported_claim": "Configured repo_mapping_path constructs GitRemoteManager and grounds remote repository-key lookup."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-SRC-LOCAL",
+      "limitations": "Does not implement prevention lifecycle.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/local_workflow_orch_image_harness.py",
+      "source_sha256": "3cf45608f60d360e1dd1eaf9ba10fdfd2a9ec3a8c930efa899ffdf118107322b",
+      "supported_claim": "Current local-image command, budget-bound, identity/observable, terminal and parameter/path behavior in the owner matrix."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-SRC-GREENFIELD",
+      "limitations": "Does not define the approved complete progressive UnitBudget.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_full_drive.sh",
+      "source_sha256": "aea47b779974be3011829c09367faf12fc2ae45faa6af0711d432b7f1e915783",
+      "supported_claim": "Current full-drive retries/polls, detached-drive identity, sequence-complete terminal marker and raw flag/path surface."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-SRC-REENTRY",
+      "limitations": "No prevention parent journal.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py",
+      "source_sha256": "037b3e8d81023c885e10dae2965deccaebf335cde3ce64313e96597998b3c223",
+      "supported_claim": "Current reentry modes, operator identity/envelope, zero-exit behavior and raw parameters."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-SRC-AUTH",
+      "limitations": "No typed provider contract.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/claude_auth_refresh.sh",
+      "source_sha256": "bad8f0e2fc9dc15a28a4cc7bead7d7872d9238182188200d656d518e4b6a988c",
+      "supported_claim": "Current auth command bounds, credential observables, pass/die terminal markers and raw credential/resource inputs."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-SRC-PROMOTION",
+      "limitations": "No content-addressed child-owner execution.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_promotion_lifecycle.py",
+      "source_sha256": "49e66d7a0e5944419f7e59902056740e7510302e21ad4e707bd263ced822b731",
+      "supported_claim": "Current lifecycle loop bounds, discovery observables, JSON terminal envelope and file/root/verification surfaces."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-SRC-PUBLISH",
+      "limitations": "No typed authorization-receipt provider.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
+      "source_sha256": "55206e0b25c6eeb7df9d98775ff8d0c1ff69df0565d9add3a0d9487a5d40fe54",
+      "supported_claim": "Current publish mode bounds, Git effect observables, JSON terminal and caller repo/remote/path surfaces."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-SRC-BOOTSTRAP",
+      "limitations": "Caller root is not proposal-bound.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_bootstrap.py",
+      "source_sha256": "a1c16783567bb8bbb84be2e59a636bf6ef73d7ba85fc684c706bcda6590f8d30",
+      "supported_claim": "Current atomic bootstrap bound, deterministic artifacts, JSON terminal and spec/root surface."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-SRC-RECONCILIATION",
+      "limitations": "No selected proposal reconciler.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_candidate_reconciliation.py",
+      "source_sha256": "a846e823d027d229e3a7642776dda4d1bbb2e5cbbe192f38dd115223ac14ae9b",
+      "supported_claim": "Current command/attempt bounds, manifest/checkpoint observables, JSON terminal and raw authority paths."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-SRC-CHECKPOINT",
+      "limitations": "Child semantic terminal is not composed.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_checkpoint_run.py",
+      "source_sha256": "39da9360585a6b08d416a90a320e8a762fff195adde2c5a2c07890b9a81248e7",
+      "supported_claim": "Current lock bound, baseline/child observables, fixed pass marker and arbitrary command_json/path surface."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-SRC-REVIEW",
+      "limitations": "No per-operation durable receipts.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_state_review_cycle.py",
+      "source_sha256": "594a12be5f8c29d17fd69d3e5cbf22e8f099e465e6e2fc8cc244dad1aa0e275e",
+      "supported_claim": "Current request-operation bounds, state/helper observables, COMPLETE/DRY_RUN terminal and request/helper path behavior."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-PROP-LOCAL",
+      "limitations": "Future contract, not deployed behavior.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/local-workflow-orch-image.json",
+      "source_sha256": "40ed6643594bbf830e642f5a9b3edf21020d9fb143b5ff8ff0c641fea3f70f7b",
+      "supported_claim": "Approved target contract for local-workflow-orch-image."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-PROP-GREENFIELD",
+      "limitations": "No fixed whole-workflow duration is approved.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/greenfield-full-drive.json",
+      "source_sha256": "ccb418ac97c42a14528af87f5b92f3d81ebd52f6a798d41128713d875c4a0661",
+      "supported_claim": "Approved target progressive greenfield budget, schema, identity, reconciliation and terminal contract."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-PROP-REENTRY",
+      "limitations": "Future contract, not deployed behavior.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/mawf-playbook-blocker-reentry.json",
+      "source_sha256": "f1d68f707dd470be8f26ce1339b6eedafc6122f55c8c3fa36bead5e515fc2fa1",
+      "supported_claim": "Approved child-only reentry target contract."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-PROP-AUTH",
+      "limitations": "Future contract, not deployed behavior.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/claude-auth-token-refresh.json",
+      "source_sha256": "67568d84429bf6e9b786b8462b43554e3d660388e2ec373a1e897f4bc4770e9e",
+      "supported_claim": "Approved typed auth-provider and semantic terminal target contract."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-PROP-PROMOTION",
+      "limitations": "Future contract, not deployed behavior.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/discovery-promotion-lifecycle.json",
+      "source_sha256": "b32d8a9f4d84238ade32212852e90512fdd309d36a05dac3ef23425ab3ad5ea1",
+      "supported_claim": "Approved promotion lifecycle target contract."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-PROP-PUBLISH",
+      "limitations": "Does not authorize a publication.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/commit-push-main.json",
+      "source_sha256": "1fa2ba7c000788492c6d7f0b9bbbe8bfd0cac6afbcdb8a1ba59901dc54174482",
+      "supported_claim": "Approved publication modes, receipt, effect identity, reconciliation and terminal contract."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-PROP-BOOTSTRAP",
+      "limitations": "Future contract, not deployed behavior.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/discovery-bootstrap.json",
+      "source_sha256": "0fea4c0a2142f41ddce8d687eb533e5b9f55b68ca59e01c2a05b58b296c633df",
+      "supported_claim": "Approved bootstrap target contract."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-PROP-RECONCILIATION",
+      "limitations": "Future contract, not deployed behavior.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/discovery-candidate-reconciliation.json",
+      "source_sha256": "b7f1e6204578f936677dd13c8123e0b4d66690bca6ec1f9d0f9121aada4c9a82",
+      "supported_claim": "Approved candidate-reconciliation command/formula target contract."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-PROP-CHECKPOINT",
+      "limitations": "Future contract, not deployed behavior.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/convergence-checkpoint-run.json",
+      "source_sha256": "f17216aa2b181e4018571311a85dc10d4f0d35475869bf360e06aa181719a29a",
+      "supported_claim": "Approved typed-child checkpoint target contract."
+    },
+    {
+      "accessed_at": null,
+      "id": "EV-PROP-REVIEW",
+      "limitations": "Future contract, not deployed behavior.",
+      "source_kind": "LOCAL_FILE",
+      "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/convergence-state-review-cycle.json",
+      "source_sha256": "1c7edfe4e71c496d0e4c1df11a6e09c3e3c7e8b2722266f7ab9f3e53e861ae1e",
+      "supported_claim": "Approved review-cycle v2 and durable-operation target contract."
+    }
+  ],
+  "material_gaps": [
+    "MG-O1",
+    "MG-O2",
+    "MG-O3",
+    "MG-O4",
+    "MG-O5"
+  ],
+  "planner_readiness_constraints": {
+    "PO-O1-BUDGET": {
+      "closure_condition": "No caller budget remains; every launched unit has a complete owner-derived reservation before effects.",
+      "evidence_ids": [
+        "EV-CONTROLLER",
+        "EV-BUDGET",
+        "EV-AUTH",
+        "EV-PROP-LOCAL",
+        "EV-PROP-GREENFIELD",
+        "EV-PROP-REENTRY",
+        "EV-PROP-AUTH",
+        "EV-PROP-PROMOTION",
+        "EV-PROP-PUBLISH",
+        "EV-PROP-BOOTSTRAP",
+        "EV-PROP-RECONCILIATION",
+        "EV-PROP-CHECKPOINT",
+        "EV-PROP-REVIEW"
+      ],
+      "implementation_anchors": [
+        "scripts/prevention_controller.py PreventionController.execute",
+        "scripts/prevention_budget.py UnitBudget/BudgetAuthority",
+        "ten approved proposal budget contracts"
+      ],
+      "owner": "prevention runtime implementation",
+      "required_inputs": [],
+      "status": "READY",
+      "verification_anchors": [
+        "owner/command/mode exact and one-below admission",
+        "greenfield task/frontier component-wise reservation"
+      ]
+    },
+    "PO-O1-BUDGET-ACCEPTANCE": {
+      "closure_condition": "All ten target budget algorithms, including progressive greenfield composition without fixed workflow duration, pass red-before/green-after acceptance.",
+      "evidence_ids": [
+        "EV-REQ",
+        "EV-BUDGET",
+        "EV-AUTH",
+        "EV-PROP-GREENFIELD"
+      ],
+      "implementation_anchors": [
+        "tests/prevention/test_full_unit_admission.py",
+        "tests/prevention/test_typed_dispatch.py"
+      ],
+      "owner": "prevention tests",
+      "required_inputs": [],
+      "status": "READY",
+      "verification_anchors": [
+        "missing/incomplete/understated/insufficient pre-effect rejection",
+        "greenfield missing-role/untyped/unresolved-frontier/checkpoint cases"
+      ]
+    },
+    "PO-O2-RECONCILE": {
+      "closure_condition": "Every approved owner/command dispatches its content-addressed reconciler; hard-coded STARTED handling is removed.",
+      "evidence_ids": [
+        "EV-RUNTIME",
+        "EV-PROP-LOCAL",
+        "EV-PROP-GREENFIELD",
+        "EV-PROP-REENTRY",
+        "EV-PROP-AUTH",
+        "EV-PROP-PROMOTION",
+        "EV-PROP-PUBLISH",
+        "EV-PROP-BOOTSTRAP",
+        "EV-PROP-RECONCILIATION",
+        "EV-PROP-CHECKPOINT",
+        "EV-PROP-REVIEW"
+      ],
+      "implementation_anchors": [
+        "scripts/prevention_owner_runtime.py OwnerRuntime.run",
+        "registry effect_reconciler",
+        "ten proposal effect_and_reconciliation_contract objects"
+      ],
+      "owner": "prevention runtime implementation",
+      "required_inputs": [],
+      "status": "READY",
+      "verification_anchors": [
+        "ALREADY_APPLIED skips",
+        "NOT_APPLIED executes once",
+        "INDETERMINATE stops"
+      ]
+    },
+    "PO-O2-RECONCILE-ACCEPTANCE": {
+      "closure_condition": "Each owner reconciliation class is red-before/green-after against its current same-path observable.",
+      "evidence_ids": [
+        "EV-RUNTIME",
+        "EV-SRC-LOCAL",
+        "EV-SRC-GREENFIELD",
+        "EV-SRC-REENTRY",
+        "EV-SRC-AUTH",
+        "EV-SRC-PROMOTION",
+        "EV-SRC-PUBLISH",
+        "EV-SRC-BOOTSTRAP",
+        "EV-SRC-RECONCILIATION",
+        "EV-SRC-CHECKPOINT",
+        "EV-SRC-REVIEW"
+      ],
+      "implementation_anchors": [
+        "tests/prevention/test_owner_runtime.py",
+        "ten indexed current owner sources"
+      ],
+      "owner": "prevention tests",
+      "required_inputs": [],
+      "status": "READY",
+      "verification_anchors": [
+        "crash after effect before result",
+        "same real code path and captured authority",
+        "no duplicate mutation"
+      ]
+    },
+    "PO-O3-TERMINAL": {
+      "closure_condition": "Exit zero alone never terminalizes and each selected semantic verifier is mandatory.",
+      "evidence_ids": [
+        "EV-RUNTIME",
+        "EV-EVENTS",
+        "EV-PROP-LOCAL",
+        "EV-PROP-GREENFIELD",
+        "EV-PROP-REENTRY",
+        "EV-PROP-AUTH",
+        "EV-PROP-PROMOTION",
+        "EV-PROP-PUBLISH",
+        "EV-PROP-BOOTSTRAP",
+        "EV-PROP-RECONCILIATION",
+        "EV-PROP-CHECKPOINT",
+        "EV-PROP-REVIEW"
+      ],
+      "implementation_anchors": [
+        "scripts/prevention_owner_runtime.py EXECUTED block",
+        "scripts/work_memory.py PREVENTION_EVENT_FIELDS",
+        "ten proposal terminal_contract objects"
+      ],
+      "owner": "prevention runtime/event implementation",
+      "required_inputs": [],
+      "status": "READY",
+      "verification_anchors": [
+        "exact schema and semantic re-observation",
+        "one event/artifact pair",
+        "replay conflict"
+      ]
+    },
+    "PO-O3-TERMINAL-ACCEPTANCE": {
+      "closure_condition": "All ten owner surfaces have positive/negative semantic and exactly-once tests.",
+      "evidence_ids": [
+        "EV-RUNTIME",
+        "EV-EVENTS",
+        "EV-SRC-LOCAL",
+        "EV-SRC-GREENFIELD",
+        "EV-SRC-REENTRY",
+        "EV-SRC-AUTH",
+        "EV-SRC-PROMOTION",
+        "EV-SRC-PUBLISH",
+        "EV-SRC-BOOTSTRAP",
+        "EV-SRC-RECONCILIATION",
+        "EV-SRC-CHECKPOINT",
+        "EV-SRC-REVIEW"
+      ],
+      "implementation_anchors": [
+        "tests/prevention/test_owner_runtime.py",
+        "tests/prevention/test_prevention_event_contract.py",
+        "ten indexed current owner sources"
+      ],
+      "owner": "prevention tests",
+      "required_inputs": [],
+      "status": "READY",
+      "verification_anchors": [
+        "zero plus malformed/failed owner evidence",
+        "detached remains nonterminal",
+        "identical/conflicting replay"
+      ]
+    },
+    "PO-O4-PARENT": {
+      "closure_condition": "The sole child executes only from a matching active allowed parent while the other 24 rows stay standalone.",
+      "evidence_ids": [
+        "EV-PARENTS",
+        "EV-CONTROLLER",
+        "EV-ADAPTERS",
+        "EV-PROP-REENTRY"
+      ],
+      "implementation_anchors": [
+        "owner-migration-manifest standalone/parents",
+        "controller eligibility/dispatch",
+        "new child_delegation_recorded event",
+        "reentry proposal"
+      ],
+      "owner": "prevention controller/journal implementation",
+      "required_inputs": [],
+      "status": "READY",
+      "verification_anchors": [
+        "direct/forged/stale/inactive reject",
+        "valid allowed parent atomically consumes delegation"
+      ]
+    },
+    "PO-O4-PARENT-ACCEPTANCE": {
+      "closure_condition": "Every invalid case fails before budget/argv and both valid parent paths preserve identity.",
+      "evidence_ids": [
+        "EV-PARENTS",
+        "EV-CONTRACTS",
+        "EV-PROP-REENTRY"
+      ],
+      "implementation_anchors": [
+        "tests/prevention/test_typed_dispatch.py",
+        "delegation event tests"
+      ],
+      "owner": "prevention tests",
+      "required_inputs": [],
+      "status": "READY",
+      "verification_anchors": [
+        "direct, forged, stale, consumed and foreign ownership",
+        "both allowed parents",
+        "availability/admission separation"
+      ]
+    },
+    "PO-O5-PARAMETERS": {
+      "closure_condition": "Materialized schemas and typed resolvers replace hard-coded validation for every owner.",
+      "evidence_ids": [
+        "EV-ADAPTERS",
+        "EV-EVENTS",
+        "EV-REMOTE-REPO",
+        "EV-PROP-LOCAL",
+        "EV-PROP-GREENFIELD",
+        "EV-PROP-REENTRY",
+        "EV-PROP-AUTH",
+        "EV-PROP-PROMOTION",
+        "EV-PROP-PUBLISH",
+        "EV-PROP-BOOTSTRAP",
+        "EV-PROP-RECONCILIATION",
+        "EV-PROP-CHECKPOINT",
+        "EV-PROP-REVIEW"
+      ],
+      "implementation_anchors": [
+        "scripts/prevention_contract.py ParameterValue",
+        "scripts/prevention_adapters.py build_invocation",
+        "scripts/work_memory.py _repo_roots",
+        "git_runtime.py build_git_manager_from_settings",
+        "ten proposal parameter_contract/trusted_roots"
+      ],
+      "owner": "prevention contract/provider/adapter implementation",
+      "required_inputs": [],
+      "status": "READY",
+      "verification_anchors": [
+        "contract hash selected",
+        "all bindings resolve before argv",
+        "non-secret preparation evidence",
+        "unresolved key rejects"
+      ]
+    },
+    "PO-O5-PARAMETERS-ACCEPTANCE": {
+      "closure_condition": "No raw path, resource, secret, approval or arbitrary argv bypass reaches effect preparation.",
+      "evidence_ids": [
+        "EV-ADAPTERS",
+        "EV-EVENTS",
+        "EV-AUTH",
+        "EV-PROP-LOCAL",
+        "EV-PROP-GREENFIELD",
+        "EV-PROP-REENTRY",
+        "EV-PROP-AUTH",
+        "EV-PROP-PROMOTION",
+        "EV-PROP-PUBLISH",
+        "EV-PROP-BOOTSTRAP",
+        "EV-PROP-RECONCILIATION",
+        "EV-PROP-CHECKPOINT",
+        "EV-PROP-REVIEW"
+      ],
+      "implementation_anchors": [
+        "tests/prevention/test_owner_adapters.py",
+        "tests/prevention/test_owner_contract_materialization.py",
+        "provider/receipt tests"
+      ],
+      "owner": "prevention tests",
+      "required_inputs": [],
+      "status": "READY",
+      "verification_anchors": [
+        "wrong/missing/extra/mode-inapplicable",
+        "unknown key",
+        "absolute/traversal/symlink/write-parent escape",
+        "secret non-disclosure",
+        "all ten owner modes"
+      ]
+    }
+  },
+  "requirement_statuses": [
+    {
+      "evidence_ids": [
+        "EV-CONTROLLER",
+        "EV-BUDGET",
+        "EV-SRC-LOCAL",
+        "EV-SRC-GREENFIELD",
+        "EV-SRC-REENTRY",
+        "EV-SRC-AUTH",
+        "EV-SRC-PROMOTION",
+        "EV-SRC-PUBLISH",
+        "EV-SRC-BOOTSTRAP",
+        "EV-SRC-RECONCILIATION",
+        "EV-SRC-CHECKPOINT",
+        "EV-SRC-REVIEW"
+      ],
+      "requirement_id": "O1-CURRENT-BUDGET",
+      "research_value": {
+        "owner_matrix": {
+          "claude-auth-token-refresh": "one shell invocation; 60s verifies",
+          "commit-push-main": "one invocation; no retries",
+          "convergence-checkpoint-run": "one invocation; 30s lock default",
+          "convergence-state-review-cycle": "one request; operations then check/status",
+          "discovery-bootstrap": "one locked atomic invocation",
+          "discovery-candidate-reconciliation": "one command; rolling default six",
+          "discovery-promotion-lifecycle": "one command; qualification plus six transitions",
+          "greenfield-full-drive": "one shell sequence; build/port/health/auth/drive bounds",
+          "local-workflow-orch-image": "one invocation; health/port/build bounds",
+          "mawf-playbook-blocker-reentry": "one reentry/operator action"
+        },
+        "producer": "caller-supplied PreventionController.unit_budgets admitted by BudgetAuthority",
+        "understatement_possible": true
+      }
+    },
+    {
+      "evidence_ids": [
+        "EV-AUTH",
+        "EV-BUDGET",
+        "EV-PROP-LOCAL",
+        "EV-PROP-GREENFIELD",
+        "EV-PROP-REENTRY",
+        "EV-PROP-AUTH",
+        "EV-PROP-PROMOTION",
+        "EV-PROP-PUBLISH",
+        "EV-PROP-BOOTSTRAP",
+        "EV-PROP-RECONCILIATION",
+        "EV-PROP-CHECKPOINT",
+        "EV-PROP-REVIEW"
+      ],
+      "requirement_id": "O1-FUTURE-BUDGET",
+      "research_value": {
+        "atomic_task_milliseconds": 3600000,
+        "caller_budget_allowed": false,
+        "failure": "missing, incomplete, unresolved or insufficient rejects before effect",
+        "greenfield_algorithm": "classify every durable task into exactly one productive or mandatory role/overhead dimension; include retry in each atomic total; reserve every next task/frontier before launch; aggregate by component-wise sum of materialized task vectors; reject or checkpoint before effects on missing role, untyped task, unresolved frontier, or insufficient reservation; no fixed whole-workflow duration"
+      }
+    },
+    {
+      "evidence_ids": [
+        "EV-RUNTIME",
+        "EV-SRC-LOCAL",
+        "EV-SRC-GREENFIELD",
+        "EV-SRC-REENTRY",
+        "EV-SRC-AUTH",
+        "EV-SRC-PROMOTION",
+        "EV-SRC-PUBLISH",
+        "EV-SRC-BOOTSTRAP",
+        "EV-SRC-RECONCILIATION",
+        "EV-SRC-CHECKPOINT",
+        "EV-SRC-REVIEW"
+      ],
+      "requirement_id": "O2-CURRENT-RECONCILE",
+      "research_value": {
+        "owner_matrix": {
+          "claude-auth-token-refresh": "container/host/vault/remote credential probes",
+          "commit-push-main": "HEAD/index/worktree/manifest/remote head",
+          "convergence-checkpoint-run": "state/baseline/ledger/view/child result",
+          "convergence-state-review-cycle": "request/state/helper results",
+          "discovery-bootstrap": "deterministic bundle bytes and run id",
+          "discovery-candidate-reconciliation": "repo/candidate/registry hashes, manifests/checkpoints",
+          "discovery-promotion-lifecycle": "discovery/registered lifecycle and blocker artifacts",
+          "greenfield-full-drive": "image/container plus durable drive state",
+          "local-workflow-orch-image": "Docker resources/emitted JSON",
+          "mawf-playbook-blocker-reentry": "operator task/workflow/run envelope"
+        },
+        "owner_reconciler_dispatch": false,
+        "started_behavior": "always INDETERMINATE"
+      }
+    },
+    {
+      "evidence_ids": [
+        "EV-AUTH",
+        "EV-RUNTIME",
+        "EV-PROP-LOCAL",
+        "EV-PROP-GREENFIELD",
+        "EV-PROP-REENTRY",
+        "EV-PROP-AUTH",
+        "EV-PROP-PROMOTION",
+        "EV-PROP-PUBLISH",
+        "EV-PROP-BOOTSTRAP",
+        "EV-PROP-RECONCILIATION",
+        "EV-PROP-CHECKPOINT",
+        "EV-PROP-REVIEW"
+      ],
+      "requirement_id": "O2-FUTURE-RECONCILE",
+      "research_value": {
+        "boundary": "selected content-addressed owner/command reconciler before repeat execution",
+        "identity": "persist proposal-required identities, pre-state, hashes, deterministic children/stages and non-secret provider versions during prepare",
+        "results": [
+          "ALREADY_APPLIED",
+          "NOT_APPLIED",
+          "INDETERMINATE"
+        ],
+        "resume": "skip applied, execute first not-applied, stop indeterminate"
+      }
+    },
+    {
+      "evidence_ids": [
+        "EV-RUNTIME",
+        "EV-EVENTS",
+        "EV-SRC-LOCAL",
+        "EV-SRC-GREENFIELD",
+        "EV-SRC-REENTRY",
+        "EV-SRC-AUTH",
+        "EV-SRC-PROMOTION",
+        "EV-SRC-PUBLISH",
+        "EV-SRC-BOOTSTRAP",
+        "EV-SRC-RECONCILIATION",
+        "EV-SRC-CHECKPOINT",
+        "EV-SRC-REVIEW"
+      ],
+      "requirement_id": "O3-CURRENT-TERMINAL",
+      "research_value": {
+        "gate": "returncode zero",
+        "owner_matrix": {
+          "claude-auth-token-refresh": "human pass/status markers",
+          "commit-push-main": "JSON ok=true and remote SHA",
+          "convergence-checkpoint-run": "fixed pass string plus zero",
+          "convergence-state-review-cycle": "COMPLETE or DRY_RUN from helper exits",
+          "discovery-bootstrap": "JSON ok=true and artifact ids",
+          "discovery-candidate-reconciliation": "JSON ok=true and command fields",
+          "discovery-promotion-lifecycle": "JSON ok=true",
+          "greenfield-full-drive": "sequence complete after detached start",
+          "local-workflow-orch-image": "JSON ok=true except logs exit zero",
+          "mawf-playbook-blocker-reentry": "stage/mode/verdict/finalOk/errorCode; process can return zero after blocked/error"
+        },
+        "owner_terminal_event": false,
+        "semantic_validation": false
+      }
+    },
+    {
+      "evidence_ids": [
+        "EV-AUTH",
+        "EV-RUNTIME",
+        "EV-EVENTS",
+        "EV-PROP-LOCAL",
+        "EV-PROP-GREENFIELD",
+        "EV-PROP-REENTRY",
+        "EV-PROP-AUTH",
+        "EV-PROP-PROMOTION",
+        "EV-PROP-PUBLISH",
+        "EV-PROP-BOOTSTRAP",
+        "EV-PROP-RECONCILIATION",
+        "EV-PROP-CHECKPOINT",
+        "EV-PROP-REVIEW"
+      ],
+      "requirement_id": "O3-FUTURE-TERMINAL",
+      "research_value": {
+        "duplicate": "identical replay returns existing; conflict fails",
+        "failure": "missing, malformed, failed, skipped, detached or child-conflict cannot succeed",
+        "order": [
+          "zero exit",
+          "parse exact schema",
+          "run approved semantic verifier",
+          "re-observe authority",
+          "append one owner_terminal",
+          "write matching artifact"
+        ]
+      }
+    },
+    {
+      "evidence_ids": [
+        "EV-PARENTS",
+        "EV-CONTRACTS",
+        "EV-CONTROLLER",
+        "EV-ADAPTERS",
+        "EV-SRC-REENTRY"
+      ],
+      "requirement_id": "O4-CURRENT-PARENT",
+      "research_value": {
+        "child": "mawf-playbook-blocker-reentry",
+        "dispatch_enforcement": false,
+        "other_rows": "24 standalone",
+        "parent_availability": "both CUSTODIAN_EVIDENCE_REQUIRED",
+        "parents": [
+          "mawf-playbook-full-test",
+          "mawf-playbook-speed-test"
+        ],
+        "standalone": false
+      }
+    },
+    {
+      "evidence_ids": [
+        "EV-AUTH",
+        "EV-PARENTS",
+        "EV-PROP-REENTRY"
+      ],
+      "requirement_id": "O4-FUTURE-PARENT",
+      "research_value": {
+        "atomic": "consume delegation with child preparation",
+        "availability": "child remains AVAILABLE but non-admissible standalone",
+        "rejection": "before budget, argv or operator",
+        "required_event": "child_delegation_recorded",
+        "required_parent_state": "same-journal STARTED allowed parent with matching task/run/branch/worktree/child/blocker/verification identity"
+      }
+    },
+    {
+      "evidence_ids": [
+        "EV-ADAPTERS",
+        "EV-SRC-LOCAL",
+        "EV-SRC-GREENFIELD",
+        "EV-SRC-REENTRY",
+        "EV-SRC-AUTH",
+        "EV-SRC-PROMOTION",
+        "EV-SRC-PUBLISH",
+        "EV-SRC-BOOTSTRAP",
+        "EV-SRC-RECONCILIATION",
+        "EV-SRC-CHECKPOINT",
+        "EV-SRC-REVIEW"
+      ],
+      "requirement_id": "O5-CURRENT-PARAMETERS",
+      "research_value": {
+        "owner_matrix": {
+          "claude-auth-token-refresh": "8 commands/raw credential and resource values",
+          "commit-push-main": "flag modes/caller repo,remote,manifest",
+          "convergence-checkpoint-run": "raw command_json plus state,repo,helper,stage,timeout",
+          "convergence-state-review-cycle": "request v1 plus raw state/helper",
+          "discovery-bootstrap": "start/spec plus caller root/repo-roots",
+          "discovery-candidate-reconciliation": "5 commands/caller root,index,policy,attempt paths",
+          "discovery-promotion-lifecycle": "4 commands/raw file/root/repo-roots and verification",
+          "greenfield-full-drive": "raw repo/spec/checkpoint/env/drive flags",
+          "local-workflow-orch-image": "10 argparse commands/caller paths",
+          "mawf-playbook-blocker-reentry": "3 modes/raw repo,prompt,operator values"
+        },
+        "paths": "absolute rejected but relative values not root-resolved or symlink-contained",
+        "providers": false,
+        "schema": "hard-coded adapter lists and conditionals"
+      }
+    },
+    {
+      "evidence_ids": [
+        "EV-AUTH",
+        "EV-ADAPTERS",
+        "EV-EVENTS",
+        "EV-REMOTE-REPO",
+        "EV-PROP-LOCAL",
+        "EV-PROP-GREENFIELD",
+        "EV-PROP-REENTRY",
+        "EV-PROP-AUTH",
+        "EV-PROP-PROMOTION",
+        "EV-PROP-PUBLISH",
+        "EV-PROP-BOOTSTRAP",
+        "EV-PROP-RECONCILIATION",
+        "EV-PROP-CHECKPOINT",
+        "EV-PROP-REVIEW"
+      ],
+      "requirement_id": "O5-FUTURE-PARAMETERS",
+      "research_value": {
+        "failure": "unresolved binding rejects applicable invocation without changing availability",
+        "locators": {
+          "dynamic": "controller-owned typed resolver keyed by approved provider name",
+          "local_repositories": "work_memory._repo_roots",
+          "remote_repositories": "build_git_manager_from_settings repo_mapping",
+          "static_roots": "proposal trusted_roots"
+        },
+        "schema_authority": "selected approved proposal parameter_contract hash",
+        "validation": [
+          "exact fields/type/tag/enum/range/union",
+          "resolve root/repository/resource/provider/approval key",
+          "normalize relative path and resolve symlink",
+          "prove target/write-parent containment",
+          "bind non-secret identity/version",
+          "construct shell-free argv or typed child call"
+        ]
+      }
+    }
+  ],
+  "research_markdown": "# Prevention owner-runtime terminal-closure research v10 round 2\n\nThe round-2 canonical envelope hash is `0ea40d3f4bf80ca4c417f61c0cd7797fecf89df00bd2feac4c95b21dd820505f`; its frozen charter and requirements remain unchanged. The owner policy remains exactly 10 `AVAILABLE`, 6 `CUSTODIAN_EVIDENCE_REQUIRED`, and 9 `UNAVAILABLE`. Availability is not admission: an AVAILABLE owner is executable only after its individually authenticated approved proposal is materialized and all budget, lifecycle, terminal, parent, parameter, root, provider, and receipt gates pass.\n\n## Public material-gap classification\n\n- `MG-O1`: `PLANNER_OWNED_IMPLEMENTATION_GAP`. Current execution accepts caller-supplied UnitBudget values; target execution derives a complete budget from the selected contract and rejects incomplete or insufficient reservation before effects.\n- `MG-O2`: `PLANNER_OWNED_IMPLEMENTATION_GAP`. Current recovered STARTED effects always become INDETERMINATE; target dispatches the selected typed owner reconciler to ALREADY_APPLIED, NOT_APPLIED, or INDETERMINATE.\n- `MG-O3`: `PLANNER_OWNED_IMPLEMENTATION_GAP`. Current exit zero creates the terminal artifact without owner-semantic verification or owner_terminal event; target verifies exact semantic evidence and records exactly one event/artifact pair.\n- `MG-O4`: `PLANNER_OWNED_IMPLEMENTATION_GAP`. `mawf-playbook-blocker-reentry` is the sole child-only owner, but current dispatch does not enforce its parent relation; target requires and atomically consumes a matching active-parent delegation.\n- `MG-O5`: `PLANNER_OWNED_IMPLEMENTATION_GAP`. Current adapters use hard-coded parameter/path rules and do not bind proposal schemas, trusted roots, providers, or symlink containment; target validates the materialized schema and all bindings before argv.\n\n## Owner-by-owner current matrix\n\nEach row is authenticated by its current-source evidence item and remains separate from the approved target proposal.\n\n- `local-workflow-orch-image`: budget producer/fields = one harness invocation with source-declared health timeout, port retries, and build retry; identity/observable = Docker image/container/port/copied path/auth/probe state and emitted JSON; terminal = command JSON `ok=true` except logs streams and exits zero; parameters/paths = ten argparse commands and command-specific fields, with caller paths and no materialized trusted-root resolver.\n- `greenfield-full-drive`: budget producer/fields = one shell sequence with build, three off-port retries, 30 health polls, auth, restore, and one detached drive start; identity/observable = image/container plus repo/branch/port and durable drive state; terminal = nonzero on failed step, but current success is only `sequence complete` after detached launch; parameters/paths = raw repo/spec/checkpoint/env and drive flags, not a proposal-schema/root binding.\n- `mawf-playbook-blocker-reentry`: budget producer/fields = one reentry invocation and one packaged operator action; identity/observable = task/workflow/run request and returned operator envelope; terminal = emitted stage/mode/verdict/finalOk/errorCode, while blocked/error envelopes can still be followed by process zero; parameters/paths = reenter plus three modes and raw repo/prompt/operator fields, with no enforced parent journal.\n- `claude-auth-token-refresh`: budget producer/fields = one shell invocation with fail-closed prerequisites and 60-second verify commands; identity/observable = credential state across container, host, vault, and optional remote endpoint; terminal = command-specific human pass/status markers through pass/die; parameters/paths = eight commands with raw token/config/container/vault inputs, not typed secret/resource providers.\n- `discovery-promotion-lifecycle`: budget producer/fields = one lifecycle command; drive permits max qualification runs plus six transition iterations; identity/observable = discovery/registered subject, lifecycle state, guarded verification and blocker artifacts; terminal = JSON `ok=true`, with errors JSON and exit 3/5; parameters/paths = four commands with raw file/root/repo-roots and Markdown-derived verification command surfaces.\n- `commit-push-main`: budget producer/fields = one publish/resume invocation with no retry; integration runs one fetch/rebase or isolated clone; identity/observable = repo/branch/remote, HEAD/index/worktree/manifest and remote head; terminal = JSON `ok=true` after remote SHA verification, errors exit 2; parameters/paths = flag-composed modes with caller repo/remote/manifest paths and no typed publication receipt binding.\n- `discovery-bootstrap`: budget producer/fields = one locked atomic bootstrap invocation; identity/observable = request hash, deterministic bundle/artifact/run IDs and exact existing bytes; terminal = JSON `ok=true` with artifact and run identities, failures emit JSON error; parameters/paths = start plus spec and optional root/repo-roots, current schema validates content but root remains caller-supplied.\n- `discovery-candidate-reconciliation`: budget producer/fields = one command; rolling defaults to six attempts and drive performs one guarded rolling run; identity/observable = repository/candidate/registry hashes, manifests, active index and checkpoints; terminal = JSON `ok=true` with command-specific fields, failures exit 3; parameters/paths = five commands with caller root/output/manifest/index/policy/attempt surfaces.\n- `convergence-checkpoint-run`: budget producer/fields = one invocation and 30-second default shared-ledger lock acquisition; identity/observable = convergence state, accepted/guarded baseline, ledger/view and child command result; terminal = fixed `CONVERGENCE CHECKPOINT COMMAND OK` plus exit zero; parameters/paths = state/repo/approval/command_json and optional helper/stage/timeout, including arbitrary argv schema v1.\n- `convergence-state-review-cycle`: budget producer/fields = one request application, each requested helper operation once, then check and status once; identity/observable = request/state and helper operation results; terminal = JSON status COMPLETE or DRY_RUN based on helper exits; parameters/paths = request v1, optional helper and apply/dry-run, with raw state/helper paths and no per-operation durable receipt.\n\n## Complete greenfield progressive UnitBudget algorithm\n\nThe approved target has no fixed whole-workflow duration and no invented aggregate value. Every durable task is classified into exactly one productive or mandatory role/overhead dimension. Every atomic task carries a total of 3,600,000 ms including retry. Before launch, the owner materializes the next task or parallel frontier from durable program state and fully reserves every task vector in that next task/frontier. The workflow aggregate is the component-wise sum of all materialized task vectors. A missing required role, an untyped task, an unresolved next frontier, or insufficient reservation rejects admission or persists a checkpoint before effects; continuation occurs only after a fully typed frontier can be fully reserved. This preserves progressive discovery while making every launched unit complete and pre-admitted.\n\n## Current lifecycle, parent, and binding conclusions\n\nCurrent checkpoints are PREPARED, STARTED, EXECUTED, TERMINAL. STARTED recovery does not dispatch owner reconcilers, and exit zero directly creates a terminal JSON artifact. The event schema has `effect_reconciled` but no `owner_terminal`, `child_delegation_recorded`, or typed provider/approval receipt event. Only blocker-reentry is child-only, with parents `mawf-playbook-full-test` and `mawf-playbook-speed-test`; both parents remain CUSTODIAN_EVIDENCE_REQUIRED, so the AVAILABLE child remains non-admissible until a parent is executable and active. The other 24 registry rows remain standalone. Static roots come from proposal trusted_roots; local repository resolution is grounded at `work_memory._repo_roots`; remote repository-key resolution is grounded at `build_git_manager_from_settings`; other approved providers require typed controller-owned resolvers and fail closed when unresolved.\n\nAll current requirements are answered from accessible, individually hashed implementation sources. All future requirements are grounded by ten individually hashed approved proposals and authority decisions; runtime proof remains NOT_YET_APPLICABLE. Planning must close MG-O1 through MG-O5 without changing 10/6/9 or authorizing deployment, commit, push, credential access, phase-ledger work, or external messages.",
+  "schema_version": 1
+}

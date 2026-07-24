@@ -1,0 +1,272 @@
+{
+  "schema_version": 1,
+  "authority": {
+    "name": "Kamen",
+    "scope": "Temporary central approval authority for the ten AVAILABLE prevention owner contracts"
+  },
+  "budget_method": "SOURCE_DERIVED_BOUNDS_PLUS_APPROVED_CAPS",
+  "decisions": [
+    {
+      "decision_id": "local-workflow-orch-image-build-attempt-cap-v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "status": "SUPERSEDED",
+      "approved_at_utc": "2026-07-17T21:51:50Z",
+      "source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/local_workflow_orch_image_harness.py",
+      "operation": "build",
+      "cap": {
+        "milliseconds_per_attempt": 1800000,
+        "maximum_attempts": 2,
+        "maximum_execution_milliseconds": 3600000
+      },
+      "enforcement_requirement": "Each docker build attempt must be terminated after 1800000 milliseconds; the no-space recovery path may perform at most one retry.",
+      "practical_consequence": "A build invocation cannot consume more than 3600000 milliseconds of docker build execution, while a valid build exceeding 1800000 milliseconds in one attempt fails closed and requires a newly approved contract revision.",
+      "superseded_by": "atomic-owner-task-total-cap-v1"
+    },
+    {
+      "decision_id": "atomic-owner-task-total-cap-v1",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T21:56:17Z",
+      "scope": "All executable prevention owner contracts",
+      "cap": {
+        "milliseconds_per_atomic_task": 3600000,
+        "includes_retries": true
+      },
+      "workflow_budget_rule": "A workflow budget is the exact sum of its constituent atomic task budgets and is not capped at 3600000 milliseconds.",
+      "enforcement_requirement": "The owner runtime must terminate an atomic task when its total elapsed execution, including retries, reaches 3600000 milliseconds.",
+      "practical_consequence": "Each task fails closed after 60 minutes, while a workflow made of multiple tasks can reserve and consume the sum of those task budgets beyond 60 minutes."
+    },
+    {
+      "decision_id": "local-workflow-orch-image-complete-unit-budget-v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:03:47Z",
+      "unit_budget": {
+        "productive_milliseconds": 3600000,
+        "mandatory_role_milliseconds": {
+          "CORE": 3600000,
+          "INTERNAL_READINESS": 3600000,
+          "REQUIREMENTS_COVERAGE": 3600000,
+          "REQUIREMENTS_SATISFACTION": 3600000
+        },
+        "adjudication_milliseconds": 3600000,
+        "materialization_milliseconds": 3600000,
+        "terminal_milliseconds": 3600000,
+        "retry_milliseconds": 0,
+        "duration_milliseconds": 28800000
+      },
+      "derivation": "Eight separately scheduled atomic tasks at the approved 3600000 millisecond cap; retries remain inside productive execution."
+    },
+    {
+      "decision_id": "local-workflow-orch-image-trusted-roots-v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:05:06Z",
+      "trusted_roots": {
+        "mcp-agents-workflow": "/Users/kamenkamenov/mcp-agents-workflow",
+        "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
+        "runtime-temp": "/private/tmp",
+        "container-workspaces": "/workspaces"
+      },
+      "containment_rule": "All caller paths are root-relative, resolved symlinks must remain inside the named root, and secret-file contents are never read or logged by the prevention controller."
+    },
+    {
+      "decision_id": "local-workflow-orch-image-repository-key-fields-v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:06:05Z",
+      "required_fields": {
+        "copy-code-project.source_repository_key": {
+          "allowed_values": ["mcp-agents-workflow", "memory-knowledge"],
+          "binds_path": "source"
+        },
+        "seed-git-auth.repository_key": {
+          "allowed_values": ["mcp-agents-workflow", "memory-knowledge"],
+          "verification_role": "Select the configured repository for the non-mutating authenticated URL acquisition probe."
+        }
+      },
+      "admission_rule": "Calls missing either command-applicable field are rejected before argv construction."
+    },
+    {
+      "decision_id": "local-workflow-orch-image-runtime-contract-v1",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:08:50Z",
+      "approved_surface": "The complete command-specific effect identity, crash reconciliation, semantic verifier, and exactly-once terminal contract in owner-contract-proposals/local-workflow-orch-image.json.",
+      "stable_behavior": "Docker resources are owner/effect labeled, copy uses staged atomic publication, owned removal is identity-bound, credential operations require non-secret live capability proof, observational commands are replay-safe, and exit zero never terminalizes without semantic verification."
+    },
+    {
+      "decision_id": "greenfield-full-drive-scale-caps-part-1-v1",
+      "owner_sequence_id": "greenfield-full-drive",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:13:40Z",
+      "maximum_features": 20,
+      "maximum_validation_defect_rounds": 5,
+      "remaining_capacity_decision": "maximum distinct fatal defects admitted in one validation round"
+    },
+    {
+      "decision_id": "greenfield-full-drive-defects-per-round-v1",
+      "owner_sequence_id": "greenfield-full-drive",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:14:45Z",
+      "maximum_distinct_fatal_defects_per_round": 4,
+      "maximum_validation_fix_chains": 20,
+      "derivation": "Five approved validation rounds multiplied by four distinct fatal defects per round."
+    },
+    {
+      "decision_id": "greenfield-full-drive-progressive-reservation-v1",
+      "owner_sequence_id": "greenfield-full-drive",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:17:43Z",
+      "reservation_mode": "OWNER_DERIVED_ATOMIC_FRONTIER",
+      "atomic_task_cap_milliseconds": 3600000,
+      "retry_rule": "Retries remain inside the originating atomic task cap.",
+      "parallel_rule": "Every task in a launchable parallel frontier must hold its own complete reservation before any member launches.",
+      "parent_rule": "The parent remains STARTED across the detached drive and may pause at a durable boundary when the next task/frontier lacks capacity.",
+      "caller_rule": "Callers cannot supply, reduce, or replace any child task budget."
+    },
+    {
+      "decision_id": "greenfield-full-drive-roots-parameters-v1",
+      "owner_sequence_id": "greenfield-full-drive",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:21:09Z",
+      "approved_surface": "The trusted_roots and parameter_contract objects in owner-contract-proposals/greenfield-full-drive.json.",
+      "stable_behavior": "Repository keys resolve through the configured remote registry; spec and secret-file paths use approved roots; durable create/resume modes require exact program identities; legacy host checkpoint authority is removed; skip modes require capability proof."
+    },
+    {
+      "decision_id": "greenfield-full-drive-runtime-contract-v1",
+      "owner_sequence_id": "greenfield-full-drive",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:22:36Z",
+      "approved_surface": "The effect_and_reconciliation_contract and terminal_contract objects in owner-contract-proposals/greenfield-full-drive.json.",
+      "stable_behavior": "Typed child receipts and programDriveId prevent duplicate relaunch; detached launch remains STARTED; only completed durable program state with validated live result, settled coverage, and matching remote branch head can emit one successful terminal event."
+    },
+    {
+      "decision_id": "mawf-playbook-blocker-reentry-budget-roots-v1",
+      "owner_sequence_id": "mawf-playbook-blocker-reentry",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:29:33Z",
+      "approved_surface": "The unit_budget, trusted_roots, and parameter path-boundary objects in owner-contract-proposals/mawf-playbook-blocker-reentry.json.",
+      "stable_behavior": "The non-standalone child owns an eight-task, 28,800,000ms complete budget; each atomic task is capped at 3,600,000ms including retries, and every repository, prompt, operator-working-directory, and secret-handle input is bound to an approved trusted root or provider."
+    },
+    {
+      "decision_id": "mawf-playbook-blocker-reentry-parent-runtime-v1",
+      "owner_sequence_id": "mawf-playbook-blocker-reentry",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:31:44Z",
+      "approved_surface": "The parent_delegation_contract, effect_and_reconciliation_contract, and terminal_contract objects in owner-contract-proposals/mawf-playbook-blocker-reentry.json.",
+      "stable_behavior": "Only an active full-test or speed-test parent can atomically delegate and consume a verified blocker-reentry action; crashes reconcile the exact target run per mode, and success requires a semantically valid target state plus exactly one child terminal event."
+    },
+    {
+      "decision_id": "claude-auth-token-refresh-budget-roots-v1",
+      "owner_sequence_id": "claude-auth-token-refresh",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:35:19Z",
+      "approved_surface": "The unit_budget, trusted_roots, and parameter_contract objects in owner-contract-proposals/claude-auth-token-refresh.json.",
+      "stable_behavior": "The owner holds an eight-task, 28,800,000ms complete budget; runtime credential files are confined to /private/tmp, while host credentials, containers, vaults, and deployments resolve only through trusted handles or registries, and secret values never enter caller arguments or durable evidence."
+    },
+    {
+      "decision_id": "claude-auth-token-refresh-runtime-terminal-v1",
+      "owner_sequence_id": "claude-auth-token-refresh",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:37:01Z",
+      "approved_surface": "The effect_and_reconciliation_contract and terminal_contract objects in owner-contract-proposals/claude-auth-token-refresh.json.",
+      "stable_behavior": "Each credential mutation is identified by resolved target and non-secret source fingerprint/version; crash recovery observes the exact target before retry, required verification targets cannot be skipped, generic health cannot prove Claude auth, and exactly one semantic terminal event is emitted."
+    },
+    {
+      "decision_id": "discovery-promotion-lifecycle-budget-roots-v1",
+      "owner_sequence_id": "discovery-promotion-lifecycle",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:45:08Z",
+      "approved_surface": "The unit_budget, trusted_roots, and parameter_contract objects in owner-contract-proposals/discovery-promotion-lifecycle.json.",
+      "stable_behavior": "Simple lifecycle commands own complete eight-hour budgets; drive owns a maximum sixteen-hour budget made of nine progressively reserved productive transitions plus seven research/terminal tasks, every atomic task remains capped at sixty minutes, and all discovery/repository/artifact paths resolve through trusted roots before execution."
+    },
+    {
+      "decision_id": "discovery-promotion-lifecycle-runtime-terminal-v1",
+      "owner_sequence_id": "discovery-promotion-lifecycle",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:45:49Z",
+      "approved_surface": "The verification_child_contract, effect_and_reconciliation_contract, and terminal_contract objects in owner-contract-proposals/discovery-promotion-lifecycle.json.",
+      "stable_behavior": "Verification executes only through a typed, budgeted, reconcilable child operation; lifecycle recovery re-observes bundle hashes, ledger events, promotion journal, blocker state, and child receipts, while completion requires consistent registered same-path proof and exactly one terminal event."
+    },
+    {
+      "decision_id": "commit-push-main-budget-roots-authorization-v1",
+      "owner_sequence_id": "commit-push-main",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:48:41Z",
+      "approved_surface": "The unit_budget, trusted_roots, parameter_contract, and publication_authorization_contract objects in owner-contract-proposals/commit-push-main.json.",
+      "stable_behavior": "Mode-specific complete budgets range from eight to fourteen hours with sixty-minute atomic tasks and progressive reservation; repositories/remotes and manifests resolve through trusted boundaries; every mutation requires a separate exact single-use publication receipt, and this contract approval authorizes no commit or push."
+    },
+    {
+      "decision_id": "commit-push-main-runtime-terminal-v1",
+      "owner_sequence_id": "commit-push-main",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:49:39Z",
+      "approved_surface": "The effect_and_reconciliation_contract and terminal_contract objects in owner-contract-proposals/commit-push-main.json.",
+      "stable_behavior": "An authorized publication is identified by a non-AI Prevention-Effect-ID commit trailer and exact parent/message/scope metadata; recovery reconciles local, remote, rebase, ledger, and source state before resuming, and terminal success requires the authorized commit at both local and remote heads with exactly one terminal event. No publication was authorized by this decision."
+    },
+    {
+      "decision_id": "discovery-bootstrap-budget-schema-v1",
+      "owner_sequence_id": "discovery-bootstrap",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:52:22Z",
+      "approved_surface": "The unit_budget, trusted_roots, and parameter_contract objects in owner-contract-proposals/discovery-bootstrap.json.",
+      "stable_behavior": "The bootstrap owner holds a complete eight-hour budget, fixes execution to the trusted memory-knowledge root, resolves specs/dependencies through approved roots and repository keys, and admits only bounded v2 specs carrying complete typed candidate identity, fingerprint, and observer provenance."
+    },
+    {
+      "decision_id": "discovery-bootstrap-runtime-terminal-v1",
+      "owner_sequence_id": "discovery-bootstrap",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:54:12Z",
+      "approved_surface": "The effect_and_reconciliation_contract and terminal_contract objects in owner-contract-proposals/discovery-bootstrap.json.",
+      "stable_behavior": "The owner prepares the exact discovery/manifest/receipt/guard/bundle/root/run artifact matrix; an exact prefix resumes from its first absence, a complete match is already applied, every conflict stops indeterminate, and semantic success requires all artifacts plus exactly one deterministic run and owner terminal event."
+    },
+    {
+      "decision_id": "discovery-candidate-reconciliation-budget-roots-v1",
+      "owner_sequence_id": "discovery-candidate-reconciliation",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:58:01Z",
+      "approved_surface": "The unit_budget, trusted_roots, parameter_contract, and disposition_approval_contract objects in owner-contract-proposals/discovery-candidate-reconciliation.json.",
+      "stable_behavior": "The owner computes numeric complete budgets from each exact frozen N/P candidate manifest, composes approved sixteen-hour promotion children, caps rolling at six deterministic progressively reserved attempts, fixes policy/index/root authority, and requires a separate exact single-use disposition approval receipt."
+    },
+    {
+      "decision_id": "discovery-candidate-reconciliation-runtime-terminal-v1",
+      "owner_sequence_id": "discovery-candidate-reconciliation",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T22:59:05Z",
+      "approved_surface": "The effect_and_reconciliation_contract and terminal_contract objects in owner-contract-proposals/discovery-candidate-reconciliation.json.",
+      "stable_behavior": "Deterministic attempt/candidate child identities and semantic promotion receipts prevent duplicate work after crashes; candidate arrival is retried only under unchanged retain policy, semantic drift stops indeterminate, and terminal success requires complete candidate proof, stable re-audit, canonical active index, preserved provenance, and exactly one terminal event."
+    },
+    {
+      "decision_id": "convergence-checkpoint-run-budget-boundaries-v1",
+      "owner_sequence_id": "convergence-checkpoint-run",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T23:02:13Z",
+      "approved_surface": "The unit_budget, trusted_roots, parameter_contract, baseline_approval_contract, and child_execution_contract objects in owner-contract-proposals/convergence-checkpoint-run.json.",
+      "stable_behavior": "The checkpoint reserves its complete eight-hour parent budget plus the exact child UnitBudget; repository/helper/ledger/view/stage/timeout authority is fixed or approval-derived; baseline approval covers only the canonical shared pair; and arbitrary argv is replaced by a guarded typed executable child. This decision grants no baseline acceptance."
+    },
+    {
+      "decision_id": "convergence-checkpoint-run-runtime-terminal-v1",
+      "owner_sequence_id": "convergence-checkpoint-run",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T23:02:56Z",
+      "approved_surface": "The effect_and_reconciliation_contract and terminal_contract objects in owner-contract-proposals/convergence-checkpoint-run.json.",
+      "stable_behavior": "Structured baseline/guard receipts prevent repeated acceptance after a crash; deterministic typed child reconciliation prevents repeated execution; parent success composes the exact child semantic terminal artifact and emits exactly one parent terminal event rather than trusting exit zero or the legacy pass string."
+    },
+    {
+      "decision_id": "convergence-state-review-cycle-budget-schema-v1",
+      "owner_sequence_id": "convergence-state-review-cycle",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T23:09:12Z",
+      "approved_surface": "The unit_budget, trusted_roots, parameter_contract, and external_approval_contract objects in owner-contract-proposals/convergence-state-review-cycle.json.",
+      "stable_behavior": "The owner derives a complete (M+9)-hour budget from the exact ordered operation count; executable requests require v2 request/operation identities, initial state hash, expected final status, fixed helper, and trusted paths; autonomy/scope grants require separate exact external approval receipts."
+    },
+    {
+      "decision_id": "convergence-state-review-cycle-runtime-terminal-v1",
+      "owner_sequence_id": "convergence-state-review-cycle",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-07-17T23:10:01Z",
+      "approved_surface": "The effect_and_reconciliation_contract and terminal_contract objects in owner-contract-proposals/convergence-state-review-cycle.json.",
+      "stable_behavior": "Atomic semantic receipts keyed by request/operation id allow crash recovery from the first absent operation and stop on predecessor disagreement; final structured check/status distinguishes cycle_status APPLIED from verified convergence_status and emits exactly one owner terminal event."
+    }
+  ]
+}

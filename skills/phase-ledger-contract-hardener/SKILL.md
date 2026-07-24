@@ -27,7 +27,8 @@ Ask only when the target phase, contract path, or intended mode is not discovera
 2. Run the deterministic audit script:
 
 ```bash
-python3 /Users/kamenkamenov/.codex/skills/phase-ledger-contract-hardener/scripts/contract_attribute_audit.py \
+SKILL_ROOT="$(cd "$(dirname "<path-to-this-SKILL.md>")" && pwd)"  # the installed skill directory on any client, or skills/phase-ledger-contract-hardener/ in the canonical memory-knowledge repo
+python3 "$SKILL_ROOT/scripts/contract_attribute_audit.py" \
   --universal <universal-contract.md> \
   --phase <phase-contract.md>
 ```

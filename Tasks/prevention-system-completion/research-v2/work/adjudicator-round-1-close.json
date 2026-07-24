@@ -1,0 +1,12 @@
+{
+  "runtime": "codex-collaboration",
+  "runtime_agent_id": "/root/prevention_adjudicator_v2",
+  "role": "ADJUDICATOR",
+  "round": 1,
+  "status": "COMPLETED",
+  "candidate_hash": "b15d60f5f2fe04738753aa9c93347532d53320902462cab3536228dbc9b30768",
+  "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+  "output_hash": "5620a2924a4bc0957df28f498aa046f6a4986d4d8f1d4bdce35717e1a017c719",
+  "slot_closed": true,
+  "completion_evidence": "The fresh adjudicator returned a 22-item terminal classification, list_agents reports terminal completion, and no adjudicator slot remains active."
+}

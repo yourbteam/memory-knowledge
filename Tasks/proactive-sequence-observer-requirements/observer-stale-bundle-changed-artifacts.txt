@@ -1,0 +1,16 @@
+operations/sequences/discovery/2026-07-16-proactive-sequence-observer-build.dependencies.json
+scripts/discovery_bootstrap.py
+scripts/discovery_candidate_reconciliation.py
+scripts/sequence_candidate_contract.py
+scripts/sequence_checked_exec.py
+scripts/sequence_discovery_log.py
+scripts/sequence_guard.py
+scripts/sequence_observer.py
+scripts/sequence_promote.py
+scripts/work_memory.py
+tests/test_discovery_bootstrap.py
+tests/test_discovery_candidate_reconciliation.py
+tests/test_sequence_observer.py
+tests/test_sequence_observer_end_to_end.py
+tests/test_sequence_promote.py
+tests/test_work_memory.py

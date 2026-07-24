@@ -58,6 +58,40 @@ def names(manifest: Path) -> list[str]:
     return [x.strip() for x in manifest.read_text().splitlines() if x.strip() and not x.lstrip().startswith("#")]
 
 
+TERMINAL_ROW_STATUSES = {"shared-identical", "generated-projection", "client-not-applicable"}
+
+
+def _projection_module():
+    import importlib.util
+    tool = Path(__file__).with_name("project_client_skills.py")
+    spec = importlib.util.spec_from_file_location("project_client_skills", tool)
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def reconciliation_errors(path: Path, source: Path, manifest: Path, selected: list[str]) -> list[str]:
+    """A Claude-targeting install requires one complete, current decision per managed skill."""
+    data = json.loads(path.read_text())
+    if isinstance(data.get("entries"), dict):
+        pcs = _projection_module()
+        managed = names(manifest)
+        errors = pcs.structural_errors(data["entries"], managed)
+        errors += pcs.currency_errors(source, data["entries"], selected)
+        errors += [f"{name}: disposition BLOCKED refuses installation"
+                   for name in selected if data["entries"].get(name, {}).get("disposition") == "BLOCKED"]
+        return errors
+    rows = {row.get("name"): row for row in data.get("rows", [])}
+    errors = []
+    missing = sorted(set(selected) - set(rows))
+    if missing: errors.append("reconciliation lacks a decision for: " + ", ".join(missing))
+    for name in selected:
+        status = rows.get(name, {}).get("status")
+        if name in rows and status not in TERMINAL_ROW_STATUSES:
+            errors.append(f"{name}: status {status!r} is not a terminal reconciliation decision")
+    return errors
+
+
 def selected_names(manifest: Path, only: list[str] | None = None) -> list[str]:
     managed = names(manifest)
     if only is None:
@@ -110,8 +144,12 @@ def install(source: Path, manifest: Path, destinations: list[Path], state_dir: P
         if hold: time.sleep(hold)
         txn = state_dir / f"txn-{os.getpid()}"; txn.mkdir()
         entries = []
+        managed = set(names(manifest))
         for destination_index, destination_root in enumerate(destinations):
             destination_root.mkdir(parents=True, exist_ok=True)
+            unmanaged = sorted(p.name for p in destination_root.iterdir() if p.is_dir() and p.name not in managed)
+            if unmanaged:
+                print(f"unmanaged preserved in {destination_root}: " + ", ".join(unmanaged))
             for name in install_names:
                 src, dest = source / name, destination_root / name
                 staged = txn / "staged" / str(destination_index) / name
@@ -154,12 +192,14 @@ def main() -> int:
     ap.add_argument("--reconciliation", type=Path)
     ap.add_argument("--only", action="append", help="Install only this manifest-managed skill; repeatable")
     ap.add_argument("--hold-lock", type=float, default=0, help=argparse.SUPPRESS); args = ap.parse_args()
-    if args.target == "both":
-        if not args.accept_cross_client: raise SystemExit("--target both requires --accept-cross-client")
-        if not args.reconciliation: raise SystemExit("--target both requires --reconciliation")
-        rows = json.loads(args.reconciliation.read_text()).get("rows", [])
-        unresolved = [row["name"] for row in rows if row.get("status") == "claude-divergent-preserved"]
-        if unresolved: raise SystemExit("cross-client variants are not reconciled: " + ", ".join(unresolved))
+    if args.target == "both" and not args.accept_cross_client:
+        raise SystemExit("--target both requires --accept-cross-client")
+    if args.target in ("claude", "both"):
+        if not args.reconciliation:
+            raise SystemExit(f"--target {args.target} mutates the Claude root and requires --reconciliation")
+        selected = selected_names(args.manifest.resolve(), args.only)
+        errors = reconciliation_errors(args.reconciliation, args.source.resolve(), args.manifest.resolve(), selected)
+        if errors: raise SystemExit("reconciliation refused:\n" + "\n".join(errors))
     destinations = [args.codex_root] if args.target == "codex" else [args.claude_root] if args.target == "claude" else [args.codex_root, args.claude_root]
     install(args.source.resolve(), args.manifest.resolve(), destinations, args.state_dir.resolve(), args.hold_lock, args.only); return 0
 

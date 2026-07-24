@@ -1,0 +1,494 @@
+[
+  {
+    "id": "CUR-001",
+    "text": "Determine the exact current durable observation boundary: trigger, accepted evidence, represented action types, and decisions produced.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/sequence_observer.py",
+        "scripts/work_memory.py",
+        "scripts/sequence_checked_exec.py",
+        "tests/test_sequence_observer.py"
+      ]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Every action class the current observer can and cannot reconstruct from authoritative persisted evidence is identified.",
+    "scope_id": "current-observer-boundary",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-CUR-001",
+        "description": "Carry the proven current observation boundary and uncovered action classes into planning."
+      }
+    ]
+  },
+  {
+    "id": "CUR-002",
+    "text": "Determine whether current sequence recognition and activation is enforced before a model action or depends on the model following advisory skill instructions.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "skills/sequence-runner/SKILL.md",
+        "scripts/work_memory.py",
+        "scripts/sequence_guard.py",
+        "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md"
+      ]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Trace model intent through selection, activation, guard, and dispatch, distinguishing advisory compliance from runtime interception.",
+    "scope_id": "current-preaction-reuse",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-CUR-002",
+        "description": "Expose the proven enforcement/advisory distinction and missing pre-action boundary to planning."
+      }
+    ]
+  },
+  {
+    "id": "CUR-003",
+    "text": "Determine whether a successful unrecorded operation currently becomes a complete discovery candidate and traverses qualification, promotion, registered verification, and reuse.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/sequence_observer.py",
+        "scripts/discovery_bootstrap.py",
+        "scripts/discovery_promotion_lifecycle.py",
+        "tests/test_sequence_observer_end_to_end.py"
+      ]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Prove which success-path capture and lifecycle transitions are automatic, opt-in, or manual.",
+    "scope_id": "current-success-learning",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-CUR-003",
+        "description": "Carry every manual or absent success-learning transition into planning."
+      }
+    ]
+  },
+  {
+    "id": "CUR-004",
+    "text": "Determine how blocker and correction evidence relates to sequence content and whether a causally wrong step updates a discovery or registered sequence.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/blocker_catalog.py",
+        "scripts/work_memory.py",
+        "scripts/sequence_discovery_log.py",
+        "scripts/sequence_promote.py"
+      ]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Trace issue production, cataloging, correction/successor verification, sequence mutation authority, and reuse.",
+    "scope_id": "current-correction-learning",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-CUR-004",
+        "description": "Carry blocker-to-sequence correction gaps and reusable boundaries into planning."
+      }
+    ]
+  },
+  {
+    "id": "CUR-005",
+    "text": "Determine current promotion, registered verification, reuse, supersession, and correction feedback semantics.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/discovery_promotion_lifecycle.py",
+        "scripts/discovery_candidate_reconciliation.py",
+        "scripts/sequence_promote.py",
+        "scripts/sequence_observer.py"
+      ]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Establish which lifecycle outcomes are durable and which alter future selection or observer decisions.",
+    "scope_id": "current-lifecycle-feedback",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-CUR-005",
+        "description": "Preserve current gate authority and identify absent feedback transitions."
+      }
+    ]
+  },
+  {
+    "id": "CUR-006",
+    "text": "Determine whether silver and gold levels, transition criteria, and outcome metrics exist in current contracts.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "operations/sequences/SEQUENCES.md",
+        "scripts/work_memory.py",
+        "scripts/sequence_observer.py"
+      ]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Identify canonical level definitions and measurable capture, promotion, reuse, correction, and recurrence counts.",
+    "scope_id": "current-levels-metrics",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-CUR-006",
+        "description": "Carry grounded level semantics and missing metric contracts into planning."
+      }
+    ]
+  },
+  {
+    "id": "CUR-007",
+    "text": "Determine current coverage across shell commands, MCP/tool calls, file edits, browser actions, subagent actions, reasoning self-reports, and remote workflow model actions.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/sequence_checked_exec.py",
+        "scripts/sequence_observer.py",
+        "src/workflow_orch/agents/executor.py",
+        "src/workflow_orch/cli",
+        "/Users/kamenkamenov/.codex/skills"
+      ]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Map each action class to its authoritative producer, durable record, observer consumer, enforcement point, or confirmed absence.",
+    "scope_id": "current-action-coverage",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-CUR-007",
+        "description": "Carry the complete action-class coverage matrix and missing producers into planning."
+      }
+    ]
+  },
+  {
+    "id": "FUT-001",
+    "text": "Observe every in-scope model action at an authoritative action boundary without relying on hidden reasoning, conversation replay, or voluntary self-report as proof.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/work_memory.py",
+        "scripts/sequence_candidate_contract.py",
+        "src/workflow_orch/agents/executor.py"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Every action class has a named producer, canonical non-secret event, stable identity, outcome link, and observer consumer; unsupported classes fail visibly.",
+    "scope_id": "future-universal-observation",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-001",
+        "description": "Plan the authoritative action-observation coverage matrix and fail-visible boundary."
+      }
+    ]
+  },
+  {
+    "id": "FUT-002",
+    "text": "Before dispatch, identify an exact compatible registered sequence and require its governed activation/guard path when one exists.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/work_memory.py",
+        "scripts/sequence_guard.py",
+        "skills/sequence-runner/SKILL.md"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "A matching gold sequence is selected before dispatch; improvisation is rejected or explicitly governed when applicability is established.",
+    "scope_id": "future-preaction-trigger",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-002",
+        "description": "Plan deterministic applicability matching and pre-dispatch enforcement without bypassing approvals."
+      }
+    ]
+  },
+  {
+    "id": "FUT-003",
+    "text": "When no compatible sequence exists, construct a complete candidate only from the proven ordered success path and enter canonical discovery.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/sequence_observer.py",
+        "scripts/discovery_bootstrap.py",
+        "scripts/sequence_candidate_contract.py"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "One deduplicated discovery contains grounded inputs, steps, dependencies, failure handling, verification, provenance, and no guessed command.",
+    "scope_id": "future-success-capture",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-003",
+        "description": "Plan complete success-path capture through canonical bootstrap."
+      }
+    ]
+  },
+  {
+    "id": "FUT-004",
+    "text": "Treat a model statement that its own action caused an issue as a high-value signal, while requiring grounded action, failure, blocker, and verification evidence for causal authority.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/blocker_catalog.py",
+        "scripts/work_memory.py",
+        "scripts/sequence_observer.py"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Link the tell to the exact action and failure, distinguish assertion from proof, and open a correction candidate or typed evidence gap.",
+    "scope_id": "future-self-identified-issue",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-004",
+        "description": "Plan the self-diagnosis signal contract and evidence-backed causal join."
+      }
+    ]
+  },
+  {
+    "id": "FUT-005",
+    "text": "Once a wrong step and replacement are proven, exclude the wrong step from the canonical reusable path and include the corrected step, prerequisites, failure fingerprint, and same-path evidence.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/work_memory.py",
+        "scripts/sequence_discovery_log.py",
+        "scripts/sequence_guard.py"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "A subsequent matching task cannot receive the superseded wrong step; it receives the verified correction or a fail-closed hold.",
+    "scope_id": "future-correction-capture",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-005",
+        "description": "Plan correction-to-canonical-path transition and non-repetition proof."
+      }
+    ]
+  },
+  {
+    "id": "FUT-006",
+    "text": "Repair a defective registered sequence through versioned replacement, provenance, requalification, registered verification, and atomic cutover rather than unverified in-place editing.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/sequence_promote.py",
+        "scripts/discovery_promotion_lifecycle.py",
+        "scripts/discovery_candidate_reconciliation.py",
+        "operations/sequences/SEQUENCES.md"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "The old version remains auditable and non-selectable after cutover; the new version becomes selectable only after gates pass.",
+    "scope_id": "future-registered-repair",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-006",
+        "description": "Plan versioned registered repair, containment, requalification, and cutover."
+      }
+    ]
+  },
+  {
+    "id": "FUT-007",
+    "text": "Define evidence-based silver and gold levels with explicit entry, promotion, demotion, supersession, and expiration rules.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/discovery_promotion_lifecycle.py",
+        "scripts/sequence_promote.py",
+        "operations/sequences/SEQUENCES.md"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Silver and gold are canonical machine-readable lifecycle states; silver is a complete proven reusable path and gold is a registered path proven by governed reuse, with exact policy finalized from evidence.",
+    "scope_id": "future-level-contract",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-007",
+        "description": "Plan canonical level semantics and transitions using existing lifecycle authority."
+      }
+    ]
+  },
+  {
+    "id": "FUT-008",
+    "text": "Measure learning-loop growth and effectiveness, not merely event volume.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/work_memory.py",
+        "scripts/sequence_observer.py"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Metrics cover eligible observations, matches, silver creation, silver-to-gold transitions, reuse, corrected reuse, duplicates, known-wrong-step recurrence, false matches, and evidence holds.",
+    "scope_id": "future-effectiveness-metrics",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-008",
+        "description": "Plan durable metric definitions, denominators, provenance, and thresholds."
+      }
+    ]
+  },
+  {
+    "id": "FUT-009",
+    "text": "Keep candidate creation and sequence repair deduplicated, bounded, and noise-resistant across concurrency, identity drift, low-value activity, and unchanged evidence.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/sequence_candidate_contract.py",
+        "scripts/sequence_observer.py",
+        "scripts/discovery_candidate_reconciliation.py"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Identical evidence creates one lineage; registered/discovery identity wins; low-value or unchanged rejected evidence creates no backlog churn.",
+    "scope_id": "future-dedupe-noise",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-009",
+        "description": "Plan identity, matching, suppression, collision, and concurrency contracts."
+      }
+    ]
+  },
+  {
+    "id": "FUT-010",
+    "text": "Keep all observation, candidate, correction, promotion, level, and reuse state durable, resumable, multi-run, and branch-safe.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/work_memory.py",
+        "scripts/discovery_bootstrap.py",
+        "scripts/discovery_promotion_lifecycle.py",
+        "src/workflow_orch/workflow_state_store.py"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Any interruption resumes without duplicate candidates, lost corrections, stale selection, or branch-local evidence loss.",
+    "scope_id": "future-durability-resume",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-010",
+        "description": "Plan durable ownership, identity, resume, and branch synchronization across transitions."
+      }
+    ]
+  },
+  {
+    "id": "FUT-011",
+    "text": "Keep learning evidence minimal, non-secret, non-personal, and explainable while retaining provenance for applicability, causality, correction, and success.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/work_memory.py",
+        "scripts/sequence_candidate_contract.py",
+        "working-agreement/DIRECTIVES.md"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Schemas reject credentials, auth payloads, transcripts, hidden reasoning, and raw outputs; every decision cites safe evidence and limitations.",
+    "scope_id": "future-safe-evidence",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-011",
+        "description": "Plan safe closed schemas and redaction at every new producer."
+      }
+    ]
+  },
+  {
+    "id": "FUT-012",
+    "text": "Do not grant the observer authority to execute effects, approve actions, promote sequences, modify directives, or bypass lifecycle gates.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/sequence_guard.py",
+        "scripts/discovery_promotion_lifecycle.py",
+        "working-agreement/DIRECTIVES.md"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Observation, recommendation, execution approval, correction approval, qualification, promotion, registration, and directives remain separate fail-closed authorities.",
+    "scope_id": "future-governance",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-012",
+        "description": "Plan authority boundaries and bypass-negative tests."
+      }
+    ]
+  },
+  {
+    "id": "FUT-013",
+    "text": "Feed governed outcomes into future recognition and repair decisions through immutable versioned rules.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "scripts/discovery_candidate_reconciliation.py",
+        "scripts/sequence_observer.py",
+        "scripts/work_memory.py"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Promotion, reuse, correction, quarantine, dismissal, supersession, false match, and recurrence join to candidate identity and affect only declared future rule versions.",
+    "scope_id": "future-feedback-learning",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-013",
+        "description": "Plan immutable feedback and versioned consumption without silent self-tuning."
+      }
+    ]
+  },
+  {
+    "id": "FUT-014",
+    "text": "Prove the complete loop on real boundaries for success learning and correction learning.",
+    "source": {
+      "user_intent": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+      "current_anchors": [
+        "tests/test_sequence_observer_end_to_end.py",
+        "tests/test_discovery_promotion_lifecycle.py",
+        "tests/test_work_memory.py",
+        "mcp-agents-workflow/tests"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "One scenario proves unrecorded success becomes silver then gold and is invoked next time; another proves a wrong step is diagnosed, corrected, incorporated, and not repeated.",
+    "scope_id": "future-end-to-end-proof",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-FUT-014",
+        "description": "Plan real-boundary matrices and two lifecycle-spanning acceptance proofs."
+      }
+    ]
+  }
+]

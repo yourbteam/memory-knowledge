@@ -1,0 +1,124 @@
+{
+  "schema_version": 1,
+  "task_id": "prevention-system-completion-v8-discovery",
+  "operation_kind": "workflow-drive",
+  "date": "2026-07-17",
+  "sequence_name": "prevention owner-runtime five-defect convergence",
+  "outcome": "Resume the frozen research-v8 package, harden it through the three independent lenses and adjudication, update the bounded plan, implement only the five owner-runtime fixes, verify both repositories when changed, independently review the accumulated surface, and close the linked blockers only after same-path proof.",
+  "why_repeatable": "The research package controller, subagent lifecycle, planning transition, implementation checks, accumulated-surface review, and blocker lifecycle form a guarded multi-step convergence workflow whose exact ordering and evidence must survive task continuation.",
+  "inputs": [
+    "Frozen scope hash 9b388ca9af4d43de2051fdea5e8b35d60d1788f911bb22bb54befbb7cf00ce2f",
+    "Frozen candidate hash 2fbe3de862b2703a5169c9d7df746bd4572332f69d4f25948c4e4173d7bee2cc",
+    "Frozen envelope hash 16a9e5f76cda8979dc36f3f17027ab2b0836cfc1c0b50bd423823150f99421cd",
+    "Authorized roots memory-knowledge and mcp-agents-workflow",
+    "No commit push deploy secret access external messages or phase-ledger contract changes"
+  ],
+  "steps": [
+    {
+      "step": "verify-frozen-hashes",
+      "command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py hash-json <json-file>",
+      "result": "Candidate and envelope canonical hashes equal the frozen handoff values.",
+      "note": "Run separately for candidate-round-1.json and envelope.json before any research-state mutation."
+    },
+    {
+      "step": "run-independent-lenses",
+      "command": "collaboration.spawn_agent <lens-role>",
+      "result": "Fresh REQUIREMENTS_COVERAGE and REQUIREMENTS_SATISFACTION agents return exact terminal envelopes on identical hashes, and every public material-gap ID is classified across the three lenses.",
+      "note": "Spawn both concurrently; agents are assessment-only and cannot see each other."
+    },
+    {
+      "step": "record-lens-attempt",
+      "command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py record-attempt <state-json> --runtime-agent-id <agent-id> --role <role> --round 1 --candidate-hash 2fbe3de862b2703a5169c9d7df746bd4572332f69d4f25948c4e4173d7bee2cc --input-envelope-hash 16a9e5f76cda8979dc36f3f17027ab2b0836cfc1c0b50bd423823150f99421cd --status SUCCEEDED --output-hash <output-hash> --slot-closed --close-evidence <close-json>",
+      "result": "The successful closed role attempt is durably recorded before its lens result.",
+      "note": "Run once per successful coverage and satisfaction agent with its unchanged output hash and close evidence."
+    },
+    {
+      "step": "record-lens-result",
+      "command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py record-lens <state-json> --round 1 --lens <lens-role> --runtime-agent-id <agent-id> --candidate-hash 2fbe3de862b2703a5169c9d7df746bd4572332f69d4f25948c4e4173d7bee2cc --envelope-hash 16a9e5f76cda8979dc36f3f17027ab2b0836cfc1c0b50bd423823150f99421cd --terminal-envelope <terminal-envelope-json>",
+      "result": "The exact unchanged terminal envelope is accepted for the frozen round.",
+      "note": "Controller ordering requires record-attempt first."
+    },
+    {
+      "step": "run-independent-adjudicator",
+      "command": "collaboration.spawn_agent <adjudicator-role>",
+      "result": "A fresh assessment-only adjudicator classifies every raw finding from all three lenses without editing the candidate.",
+      "note": "Input is limited to the charter, candidate, and three raw lens outputs."
+    },
+    {
+      "step": "record-adjudication",
+      "command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py record-adjudication <state-json> --round <round-number> --runtime-agent-id <agent-id> --candidate-hash <candidate-hash> --envelope-hash <envelope-hash> --adjudications <adjudications-json>",
+      "result": "All raw findings receive one valid disposition and the controller returns the next research state.",
+      "note": "Record the successful closed adjudicator attempt before this command."
+    },
+    {
+      "step": "apply-research-fixes",
+      "command": "apply_patch <adjudicated-research-fix-patch>",
+      "result": "Only adjudicated FIX_IN_RESEARCH corrections change the candidate; owner availability remains frozen and execution admission is separate.",
+      "note": "Any candidate edit triggers a complete fresh core plus three lenses plus adjudicator round."
+    },
+    {
+      "step": "emit-terminal-research-package",
+      "command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py emit-package <state-json> <output-directory> --research <research-markdown> --evidence-index <evidence-index-json> --planner-readiness <planner-readiness-json> --planner-handoff <planner-handoff-markdown>",
+      "result": "Exactly six planner-ready package files are emitted only from a controller-validated PASS.",
+      "note": "A truthful BLOCKED or GAPS terminal result stops before planning."
+    },
+    {
+      "step": "update-bounded-plan",
+      "command": "apply_patch <five-defect-plan-patch>",
+      "result": "The existing plan is updated only for the five authorized owner-runtime defects with one-shot implementation and verification steps.",
+      "note": "Do not change the frozen requirement set or phase-ledger contracts."
+    },
+    {
+      "step": "implement-five-defect-slice",
+      "command": "apply_patch <approved-implementation-patch>",
+      "result": "Owner-authoritative budgets, crash reconciliation, semantic exactly-once terminalization, parent-only child admission, and schema-root validation are implemented at their stable boundaries.",
+      "note": "Preserve unrelated dirty-tree changes and do not commit."
+    },
+    {
+      "step": "run-focused-memory-tests",
+      "command": "scripts/run_pytest.sh tests/prevention/test_owner_adapters.py tests/prevention/test_owner_runtime.py tests/prevention/test_typed_dispatch.py",
+      "result": "Focused prevention tests pass on the implemented revision.",
+      "note": "Add newly created focused test paths to the guarded command before running them."
+    },
+    {
+      "step": "run-full-memory-tests",
+      "command": "scripts/run_pytest.sh",
+      "result": "The complete memory-knowledge suite passes on the implemented revision.",
+      "note": "Use only the repository launcher."
+    },
+    {
+      "step": "run-python-lint",
+      "command": "python3 -m compileall scripts tests/prevention",
+      "result": "All changed Python and prevention test surfaces compile successfully.",
+      "note": "Run from memory-knowledge and add an MCP same-path test command only if that repository changes."
+    },
+    {
+      "step": "run-independent-accumulated-review",
+      "command": "collaboration.spawn_agent <review-role>",
+      "result": "Independent reviewer and critic find no actionable gap across committed, staged, unstaged, and untracked in-scope surfaces and all required runtime evidence.",
+      "note": "Parent alone applies validated fixes and repeats focused verification."
+    },
+    {
+      "step": "verify-and-close-blockers",
+      "command": "python3 scripts/blocker_catalog.py transition --run-id <successor-run-id> --blocker-id <blocker-id> --to-status <status> --verification-event-id <event-id> --remaining-work none",
+      "result": "Each corrected blocker advances through fixed-awaiting-verification, verified, and closed only after same-path evidence; remaining_work is none only when true.",
+      "note": "Use work_memory.py correct and a fresh successor run before verified or closed."
+    }
+  ],
+  "failure_handling": "Stop at the failing step, catalog the exact blocker before correction, keep product and tooling blockers separate, update the reusable boundary when behavior changed, and require a fresh same-path successor verification before resuming.",
+  "verified_path": "The run is complete only when research is terminal PASS, the bounded plan is one-shot ready, the five fixes are implemented, focused and full suites plus applicable MCP checks and compile/lint pass on one revision, independent accumulated-surface review has no actionable finding, all agents are closed, and linked blockers are closed with same-path evidence.",
+  "dependencies": [
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "Tasks/prevention-system-completion/research-v8/charter.json"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "Tasks/prevention-system-completion/research-v8/requirements.json"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "Tasks/prevention-system-completion/research-v8/work/envelope.json"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "Tasks/prevention-system-completion/research-v8/work/candidate-round-1.json"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "Tasks/prevention-system-completion/plan.md"},
+    {"kind": "glob", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/prevention_*.py"},
+    {"kind": "glob", "repository_key": "memory-knowledge", "path_or_sequence_id": "tests/prevention/test_*.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/run_pytest.sh"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/blocker_catalog.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/work_memory.py"},
+    {"kind": "file", "repository_key": "mcp-agents-workflow", "path_or_sequence_id": "scripts/mawf_playbook_test_sequence.py"},
+    {"kind": "file", "repository_key": "codex-skills", "path_or_sequence_id": "research-playbook/scripts/research_package.py"}
+  ]
+}

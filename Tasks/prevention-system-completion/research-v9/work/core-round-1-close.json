@@ -1,0 +1,11 @@
+{
+  "runtime_agent_id": "/root/research_v9_core",
+  "role": "CORE_RESEARCHER",
+  "round": 1,
+  "status": "COMPLETED",
+  "input_envelope_hash": "16a9e5f76cda8979dc36f3f17027ab2b0836cfc1c0b50bd423823150f99421cd",
+  "candidate_hash": "9334734e87ebe81093b10f1ef3f1d3a07bb5b81f8857394d8ab9a106cc287c53",
+  "output_hash": "9334734e87ebe81093b10f1ef3f1d3a07bb5b81f8857394d8ab9a106cc287c53",
+  "completion_evidence": "Fresh assessment-only core researcher returned the schema-valid candidate and materialized the identical terminal payload.",
+  "slot_closed": true
+}

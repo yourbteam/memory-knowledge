@@ -1,0 +1,57 @@
+{
+  "schema_version": 1,
+  "charter_id": "directive-system-vnext-20260719-v3",
+  "objective": "Determine a generally valid replacement architecture and complete G0-G24 specification that preserves the working agreement's safety and quality intent while preventing directives, playbooks, blockers, and governance tooling from creating unauthorized scope, recursive remediation, contradictory obligations, or process bloat.",
+  "research_questions": [
+    "Which observed failures came from directive wording or precedence, which came from playbook and tooling contracts, and which came from agent non-compliance?",
+    "What authority hierarchy makes user scope, safety, correctness, playbooks, and operational sequences compose without contradiction?",
+    "Which current G0-G24 obligations are universal invariants, task-envelope fields, playbook procedures, operational sequence details, duplicates, or incident-specific overcorrections?",
+    "How should product defects, authorized enabling-work defects, out-of-scope tooling failures, harmless invocation mistakes, and consequential anomalies behave without either unsafe bypass or automatic remediation scope?",
+    "What complete replacement preserves every justified current intent while removing unconditional process recursion and cognitive overload?",
+    "Which canonical, generated, installed, corpus, and repository projection surfaces consume the directive contract, and what validation is required before promotion?",
+    "Which representative task scenarios are sufficient to prove the replacement gives one practical action or one explicit stop condition without hidden scope expansion?"
+  ],
+  "in_scope": [
+    "working-agreement/DIRECTIVES.md G0-G24, its task-mode router, precedence semantics, rationales, and incident-driven obligations",
+    "working-agreement projection, installation, injection, and corpus synchronization boundaries insofar as they consume or distribute directive text",
+    "working-agreement, task-intake, sequence-runner, blocker-catalog, research, plan, implementation, review, verification, and reproduce-first skill contracts insofar as they duplicate or operationalize directive obligations",
+    "current work-memory, sequence-guard, and blocker lifecycle contracts only as evidence of practical consequences and recursion boundaries",
+    "a complete future directive architecture, G0-G24 traceability map, behavioral scenario matrix, validation contract, and planner-ready change obligations"
+  ],
+  "exclusions": [
+    "editing or promoting the live directives, generated AGENTS.md projections, installed skills, corpus records, work-memory ledger, blocker catalog, or prevention-system implementation during research",
+    "repairing work-memory, sequence, blocker, agent-lifecycle, or verification tooling encountered during this audit",
+    "changing user safety policy, system or developer instructions, repository permissions, commit policy, deployment policy, or secret-handling rules",
+    "rewriting unrelated playbooks or operational sequences beyond identifying exact downstream obligations",
+    "committing, pushing, deploying, accessing secrets, sending external messages, or changing phase-ledger contracts",
+    "using the current prevention task as the sole design case or optimizing the replacement only for one incident"
+  ],
+  "authoritative_roots": [
+    "/Users/kamenkamenov/memory-knowledge",
+    "/Users/kamenkamenov/.codex/skills",
+    "/Users/kamenkamenov/mcp-agents-workflow",
+    "/Users/kamenkamenov/.claude/settings.json",
+    "/Users/kamenkamenov/.codex/config.toml"
+  ],
+  "supplied_input": "The directive system must be accurate, practical, grounded, generally useful, non-contradictory, and resistant to scope bloat. It must distinguish defects in the rules from agent inability or non-compliance rather than using the rules as an excuse.",
+  "required_output_package": [
+    "manifest.json",
+    "research.md",
+    "requirements.json",
+    "evidence-index.json",
+    "findings.json",
+    "planner-handoff.md"
+  ],
+  "budget": {
+    "maximum_candidate_rounds": 3,
+    "maximum_agent_spawn_attempts": 15,
+    "maximum_elapsed_minutes": 60,
+    "maximum_retries_per_role": 1
+  },
+  "terminal_rules": [
+    "PASS requires a core researcher, three independent PASS lenses on one identical candidate and envelope hash, a fresh adjudicator with no actionable research finding, grounded READY records for every planner obligation, validated hashes, and zero active research-agent slots.",
+    "GAPS means a correction inside the frozen research scope remains necessary.",
+    "BLOCKED means required authoritative evidence or a finite named decision route is unavailable.",
+    "CAP_REACHED means the frozen candidate-round, spawn-attempt, retry, repeated-fingerprint, or per-role time budget was exhausted."
+  ]
+}

@@ -1,0 +1,72 @@
+{
+  "schema_version": 1,
+  "round": 1,
+  "status": "BLOCKED_INCOMPLETE_ROUND",
+  "candidate_hash": "95cc8af7a2fe1954d470451b18809641015044df266726f63567f0d2f3c82112",
+  "envelope_hash": "255a232c2203077b02b2f5befdcadb5761166e5c8481c5f285df6d69daeb7ca0",
+  "completed_roles": [
+    "CORE_RESEARCHER",
+    "INTERNAL_READINESS",
+    "REQUIREMENTS_COVERAGE"
+  ],
+  "missing_roles": [
+    "REQUIREMENTS_SATISFACTION",
+    "ADJUDICATOR"
+  ],
+  "runtime_blocker": {
+    "blocker_id": "blk-e6ac7b7c37f0f15242d37466",
+    "fingerprint": "e6ac7b7c37f0f15242d37466adddaddd9b8d2ad7ee7b6665fd41fd2180c6e015",
+    "cause": "The collaboration runtime rejected the third fresh parent-level lens with agent thread limit reached and exposes no agent-close operation.",
+    "constraint": "The research playbook forbids merging, serializing, or reusing lens roles as a fallback."
+  },
+  "internal_readiness_verdict": "GAPS",
+  "coverage_verdict": "GAPS",
+  "research_fix_candidates_pending_adjudication": [
+    {
+      "id": "ROUND1-INVENTORIES",
+      "practical_gap": "The candidate proves system-wide incompleteness but does not enumerate every registered sequence, mechanical operation class, long-running controller, durable lifecycle, and current metric contract needed for a one-shot plan.",
+      "source_findings": [
+        "IR-CURRENT-COVERAGE-INVENTORIES",
+        "COV-CURRENT-SYSTEM-INVENTORIES",
+        "COV-CURRENT-METRIC-CONTRACT-INVENTORY"
+      ]
+    },
+    {
+      "id": "ROUND1-ACTION-BOUNDARIES",
+      "practical_gap": "The six claimed bypassable action classes do not yet have authoritative producer, pre-effect interception, downstream consumer, owner, and verification anchors.",
+      "source_findings": [
+        "IR-INTERCEPTION-ANCHORS",
+        "COV-ACTION-SURFACE-COMPLETENESS"
+      ]
+    },
+    {
+      "id": "ROUND1-CAUSAL-TRANSITIONS",
+      "practical_gap": "Correction and learning are not mapped transition by transition from intent through mandatory verified successor reuse, including exact producers, consumers, causal keys, and observables.",
+      "source_findings": [
+        "IR-CORRECTION-LEARNING-TRANSITIONS",
+        "COV-CAUSAL-TRANSITION-DECOMPOSITION"
+      ]
+    }
+  ],
+  "material_gap_classification_summary": {
+    "planner_owned_system_gaps": [
+      "GAP-ENTRYPOINT-SYSTEM",
+      "GAP-TYPED-OPERATION-REGISTRY",
+      "GAP-AUTOMATIC-ACTION-INTERCEPTOR",
+      "GAP-MANDATORY-CORRECTED-SUCCESSOR",
+      "GAP-AUTOMATIC-CAUSAL-LIFECYCLE",
+      "GAP-FULL-UNIT-BUDGET-ADMISSION",
+      "GAP-COMMON-DURABLE-RESUME",
+      "GAP-SYSTEM-WIDE-METRICS"
+    ],
+    "future_acceptance_items_already_frozen_not_separate_gaps": [
+      "GAP-ACC-ZERO-RAW-PROOF",
+      "GAP-ACC-ZERO-REPEAT-PROOF",
+      "GAP-ACC-UNDER-BUDGET-DENIAL",
+      "GAP-ACC-FRESH-TASK-CORRECTION-REUSE",
+      "GAP-ACC-REGISTERED-USE-DENOMINATOR",
+      "GAP-ACC-REAL-RUN-OVERHEAD"
+    ]
+  },
+  "resume_condition": "Resume only when the runtime can allocate a fresh third parent-level satisfaction lens and later a fresh adjudicator with close evidence; do not treat this incomplete round as PASS."
+}

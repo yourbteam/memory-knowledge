@@ -1,0 +1,146 @@
+[
+  {
+    "id": "EV-REGISTRY",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/operations/sequences/SEQUENCES.md",
+    "source_sha256": "b421f4064a8807896b275abd1b40c4af3d29043dab1dbc30205de1a35d2c91b9",
+    "accessed_at": null,
+    "supported_claim": "The canonical registry contains exactly 25 sequence rows and names each row's folder, automation display, pass signal, operation kinds, and lineage; one row is explicitly a non-standalone sub-sequence and several rows name multiple or external automation components.",
+    "limitations": "The registry proves declared ownership only; automation internals outside the finite evidence set are unproved and require black-box adapter acceptance."
+  },
+  {
+    "id": "EV-LEDGER",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/work_memory.py",
+    "source_sha256": "57e9a3f3d39f1948a99d6ce5d7dff4b3c16d69172a458610adcf45cf44985691",
+    "accessed_at": null,
+    "supported_claim": "EVENT_FIELDS is a closed event schema for run, blocker, correction, transition, verification, operation context, execution claim/return, and observer events; build_parser exposes typed lifecycle commands, while --context-file, --argv-json, --request-json, and several free-text CLI fields remain raw file/string boundaries. summarize/_metrics reports run quality and repeated blockers but not the required system-wide enforcement metrics.",
+    "limitations": "It does not automatically intercept host actions and does not define registered-use, raw-dispatch, prevented-failure, or system-wide overhead denominators."
+  },
+  {
+    "id": "EV-GUARD",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_guard.py",
+    "source_sha256": "ee40cb2e0949e553fa214c97a852b3a1661f8ea67ef33b1d1ee15afecbc4bda2",
+    "accessed_at": null,
+    "supported_claim": "cmd_activate binds selection receipts and hashes; cmd_guard validates a voluntarily supplied command string against sequence_doc, discovery_log, script, or tool_help provenance and contains bounded correction-bootstrap checks.",
+    "limitations": "The guard is opt-in and command-string based; it cannot prove that every action reaches it."
+  },
+  {
+    "id": "EV-CHECKED",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_checked_exec.py",
+    "source_sha256": "b42d71f26c1eae13bb81478d40fb2b365fdf05019a20679cddd3c3f9c33c798c",
+    "accessed_at": null,
+    "supported_claim": "run performs guard, durable execution_claim, subprocess.run(argv), and durable execution_return for one exact argv, with source-repository binding.",
+    "limitations": "It is an opt-in Bash/subprocess wrapper, accepts arbitrary remainder argv, and has no host-wide interception authority."
+  },
+  {
+    "id": "EV-BLOCKER",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/blocker_catalog.py",
+    "source_sha256": "f00c3e30ef4c55349b7529eff7fb784f74fe532bbd3b91e532517e790aad7e28",
+    "accessed_at": null,
+    "supported_claim": "normalize_error_signature and fingerprint produce stable blocker fingerprints; cmd_open records first occurrence or recurrence and cmd_transition advances the blocker state.",
+    "limitations": "Fingerprint recording does not itself prohibit a later execution or dispatch a verified successor."
+  },
+  {
+    "id": "EV-OBSERVER",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_observer.py",
+    "source_sha256": "c9da4fca23e66f15f23d16e4de8680329f4bc984a97c3976dde42ad5f23493e8",
+    "accessed_at": null,
+    "supported_claim": "observe_committed_run reconstructs a candidate from one closed governed run, selects LINK_REGISTERED/LINK_DISCOVERY/PROPOSE_DISCOVERY/NO_CANDIDATE, persists decision/link/bootstrap events, and is invoked automatically by work_memory run-close only when operation context exists and the observer is enabled/auto.",
+    "limitations": "It observes after execution, may fail safely without rolling back the closed run, and links reuse evidence but does not force future dispatch."
+  },
+  {
+    "id": "EV-BOOTSTRAP",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_bootstrap.py",
+    "source_sha256": "a1c16783567bb8bbb84be2e59a636bf6ef73d7ba85fc684c706bcda6590f8d30",
+    "accessed_at": null,
+    "supported_claim": "normalize_spec validates an exact discovery bootstrap object; bootstrap atomically/idempotently creates the discovery bundle, classification/selection/activation receipts, and deterministic run-start identity.",
+    "limitations": "Input is still supplied through a JSON spec file and the controller starts discovery but does not own the complete promotion/reuse lifecycle."
+  },
+  {
+    "id": "EV-LIFECYCLE",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_promotion_lifecycle.py",
+    "source_sha256": "49e66d7a0e5944419f7e59902056740e7510302e21ad4e707bd263ced822b731",
+    "accessed_at": null,
+    "supported_claim": "cmd_drive owns qualification, promotion, registered same-path verification, and correction-required stops; _verify_run uses guarded shlex-split shell execution and records verification/closure; status is recomputed from documents and ledger rather than a single durable transition journal.",
+    "limitations": "The lifecycle begins after a discovery exists, uses command strings/JSON CLI parsing, and does not force later compatible actions to select the promoted sequence."
+  },
+  {
+    "id": "EV-RECON",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_candidate_reconciliation.py",
+    "source_sha256": "a846e823d027d229e3a7642776dda4d1bbb2e5cbbe192f38dd115223ac14ae9b",
+    "accessed_at": null,
+    "supported_claim": "cmd_execute and cmd_execute_rolling use an approval-gated disposition manifest and a checkpoint keyed by manifest hash; cmd_drive verifies the current bundle and runs the guarded rolling controller.",
+    "limitations": "Checkpoint completion is path-keyed, external lifecycle effects are reconciled by current state, and no common effect-identity journal spans branch changes or all sequence owners."
+  },
+  {
+    "id": "EV-PROMOTE",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_promote.py",
+    "source_sha256": "0296522c7cfd1a8c5e7d0cb4b448cbd58de9766002d79c806ac19715fdd3785f",
+    "accessed_at": null,
+    "supported_claim": "cmd_promote uses a PREPARED/APPLYING/COMMITTED journal, crash recovery, atomic target replacement, registry insertion, and promotion/transition ledger events.",
+    "limitations": "This durable protocol covers promotion only, is not a common transition/effect journal, and does not establish branch-safe multiple-run ownership for other operations."
+  },
+  {
+    "id": "EV-RESEARCH",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/research-playbook/scripts/research_run.py",
+    "source_sha256": "8f4716236fd23d8a65879dd1dfa818f6886960504ea246c5c94f1ae9893333f2",
+    "accessed_at": null,
+    "supported_claim": "ResearchDriver is one typed Operation-enum controller with PREPARED/COMMITTED effect reconciliation, single-writer lock, resume-token-bound frozen inputs, package reconciliation, and interval metrics. admit_round reserves 3*(role_timeout+grace) despite five mandatory roles and omits materialization, terminal work, and retry allowance from initial admission; retry uses a later heuristic. Metrics subtract role time and expose mechanical_ratio but have no event-classified exclusion contract or real governed-corpus gate.",
+    "limitations": "This is one representative sequence, not the system-wide owner, budget, resume, or metric implementation."
+  },
+  {
+    "id": "EV-OBSERVER-TEST",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/tests/test_sequence_observer_end_to_end.py",
+    "source_sha256": "0974565d888444f16aa1be057152517947639715be6bd57209a7bdcc5df96f80",
+    "accessed_at": null,
+    "supported_claim": "test_observed_candidate_traverses_real_lifecycle_then_reuses_registered proves a synthetic local path from observed closed run to proposed discovery, two qualifications, promotion, registered verification, and a later observer LINK_REGISTERED decision.",
+    "limitations": "The second run still executes the seed sequence before the observer links the registered sequence; the test does not prove pre-action selection, mandatory reuse, recurrence prevention, system-wide coverage, or real-run overhead."
+  },
+  {
+    "id": "EV-WF-STATE",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/workflow_state_store.py",
+    "source_sha256": "003acfff63e22abb2e3d51d1f3a89d487dea219f74937ac1e7e9d31fe1190147",
+    "accessed_at": null,
+    "supported_claim": "WorkflowStateStore atomically saves/loads per-run JSON and persists durable_generation, last_durable_transition, last_durable_phase_id, approval checkpoint, phases, fan-out items, and histories.",
+    "limitations": "This evidence does not prove exact-once external effects, a common journal with memory-knowledge, branch ownership, or crash tests across every transition."
+  },
+  {
+    "id": "EV-TOOL-MANIFEST",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/agents/tool_translator.py",
+    "source_sha256": "0e281d047e8c790e64584bde395012c2f5f20d9cf899eea6735a23c5342b603b",
+    "accessed_at": null,
+    "supported_claim": "translate_to_claude builds explicit allowed tool names, including Task/WebSearch/MCP/Bash; translate_to_codex returns only sandbox and approval_policy and does not construct a per-tool withholding manifest.",
+    "limitations": "It proves a potential Claude structural-withholding surface and a missing Codex one in this translator, not that every host supports or enforces withholding."
+  },
+  {
+    "id": "EV-HOOKS",
+    "source_kind": "EXTERNAL",
+    "source_locator": "https://learn.chatgpt.com/docs/hooks#pretooluse",
+    "source_sha256": null,
+    "accessed_at": "2026-07-17T10:06:58Z",
+    "supported_claim": "Official Codex hook documentation states PreToolUse matchers support Bash, apply_patch/Edit/Write, and MCP tool names; supported calls can be denied or rewritten. It explicitly states interception is incomplete for unified_exec and does not intercept WebSearch or other non-shell, non-MCP calls.",
+    "limitations": "The documentation supplies no pre-dispatch coverage for subagent launch or non-MCP remote paths; those classes therefore require structural withholding or a future host-owned hook, otherwise visible unsupported failure."
+  },
+  {
+    "id": "EV-REQS",
+    "source_kind": "SUPPLIED_INPUT",
+    "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research/requirements.json",
+    "source_sha256": "e3a5ed1ec378a9abe2c6702046ee4e916d39e7c6771dcce7fc44784735ef8cf1",
+    "accessed_at": null,
+    "supported_claim": "The frozen scope contains exactly 22 object-valued requirements: eight current, eight future, and six acceptance requirements, each with one planner obligation.",
+    "limitations": "Requirements define required outcomes but do not prove current implementation."
+  }
+]

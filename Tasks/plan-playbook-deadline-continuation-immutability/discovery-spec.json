@@ -1,0 +1,63 @@
+{
+  "schema_version": 1,
+  "task_id": "plan-playbook-deadline-continuation-immutability",
+  "operation_kind": "package",
+  "date": "2026-07-22",
+  "sequence_name": "plan-playbook-deadline-continuation-immutability-remediation",
+  "outcome": "Plan Playbook can issue a fresh immutable deadline-continuation request after valid controller state changes, then generate the current Decision 5 request without weakening exact approval binding.",
+  "why_repeatable": "Any substantial Plan Playbook package can cross its deadline after verifier or ledger state changes, so revision-only immutable request identity can dead-end future packages.",
+  "steps": [
+    {
+      "step": "verify-deadline-request-state-addressing",
+      "command": "scripts/run_pytest.sh tests/test_plan_playbook_v2.py -k deadline_continuation",
+      "result": "Focused tests prove red-before/green-after behavior for a stale request followed by a fresh state-addressed request and exact continuation.",
+      "note": "The repository launcher imports the edited controller and provides the bounded runtime check."
+    },
+    {
+      "step": "install-canonical-plan-playbook",
+      "command": "python3 working-agreement/install_skills.py --source skills --manifest skills/managed-skills.txt --target codex --only plan-playbook",
+      "result": "Only the validated canonical Plan Playbook projection is installed into the Codex skills root.",
+      "note": "Installation follows the existing managed-skills boundary."
+    },
+    {
+      "step": "generate-current-decision5-continuation-request",
+      "command": "python3 /Users/kamenkamenov/.codex/skills/plan-playbook/scripts/plan_package.py prepare-deadline-continuation-approval /Users/kamenkamenov/united-partners/Tasks/up-decision5-operational-alignment-package-completion/.plan-playbook/state.json --out <request-path>",
+      "result": "The controller publishes the current state-addressed immutable request and returns DEADLINE_CONTINUATION_APPROVAL_REQUIRED.",
+      "note": "The concrete request path is derived from the controller state hash after the corrected contract is installed."
+    }
+  ],
+  "dependencies": [
+    {
+      "kind": "file",
+      "path_or_sequence_id": "skills/plan-playbook/scripts/plan_package.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_plan_playbook_v2.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/run_pytest.sh",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "working-agreement/install_skills.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "skills/managed-skills.txt",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "plan-playbook/scripts/plan_package.py",
+      "repository_key": "codex-skills"
+    }
+  ],
+  "failure_handling": "Any repeated fingerprint stops the sequence and updates blocker blk-c18f8e0d20976eaa33241da1 before another retry.",
+  "verified_path": "The installed controller must generate a new current-state Decision 5 request while preserving the stale immutable request."
+}

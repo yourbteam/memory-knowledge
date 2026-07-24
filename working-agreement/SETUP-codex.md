@@ -16,8 +16,12 @@ working-agreement/install-skills.sh
 
 The installer defaults to Codex. It serializes writers with a machine-wide lock, journals and
 recovers interrupted transactions, replaces managed directories exactly, verifies hashes, and
-preserves unrelated skills. Claude variants are not changed unless reconciled and explicitly
-installed with `--target both --accept-cross-client`.
+preserves unrelated skills. Any Claude-targeting install (`--target claude` or `both`) requires
+the complete, current reconciliation manifest
+(`--reconciliation working-agreement/client-skill-projections.json`) plus
+`--accept-cross-client` for `both`, and refuses on canonical drift or missing dispositions.
+The tracked `.githooks/post-merge` hook (activate with `git config core.hooksPath .githooks`)
+refreshes both clients through the same gate on every pull.
 
 ## Publish Repository Projections
 

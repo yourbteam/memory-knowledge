@@ -1,0 +1,1615 @@
+[
+  {
+    "acceptance_intent": "Given governed task activity, the observer returns exactly one of NO_CANDIDATE, LINK_REGISTERED, LINK_DISCOVERY, or PROPOSE_DISCOVERY, and never executes an observed command or advances lifecycle state beyond creating/linking a discovery candidate.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-REQ",
+      "E-GUARD",
+      "E-LIFE"
+    ],
+    "id": "OBS-001",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Given governed task activity, the observer returns exactly one of NO_CANDIDATE, LINK_REGISTERED, LINK_DISCOVERY, or PROPOSE_DISCOVERY, and never executes an observed command or advances lifecycle state beyond creating/linking a discovery candidate.",
+        "description": "Implement the finite observer outcome contract at a named canonical entry point and prove that execution and promotion APIs are not called.",
+        "evidence_ids": [
+          "E-REQ",
+          "E-GUARD",
+          "E-LIFE"
+        ],
+        "id": "PO-001",
+        "implementation_anchors": [
+          "scripts/discovery_promotion_lifecycle.py",
+          "skills/sequence-runner/SKILL.md"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall be advisory and capture-oriented: it may identify, link, or propose a sequence candidate, but it shall not execute candidate commands, approve effects, qualify runs, promote discoveries, register sequences, or change directives."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Given governed task activity, the observer returns exactly one of NO_CANDIDATE, LINK_REGISTERED, LINK_DISCOVERY, or PROPOSE_DISCOVERY, and never executes an observed command or advances lifecycle state beyond creating/linking a discovery candidate."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "new bounded evaluator beside unchanged guard and lifecycle authorities",
+      "finding": "No observer outcome contract exists; require exactly four advisory outcomes and zero execution or lifecycle authority.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "observer-boundary",
+    "source": {
+      "current_anchors": [
+        "skills/sequence-runner/SKILL.md",
+        "scripts/discovery_promotion_lifecycle.py"
+      ],
+      "user_intent": "Proactively identify correct and valuable sequences to record without self-expanding scope."
+    },
+    "text": "The observer shall be advisory and capture-oriented: it may identify, link, or propose a sequence candidate, but it shall not execute candidate commands, approve effects, qualify runs, promote discoveries, register sequences, or change directives."
+  },
+  {
+    "acceptance_intent": "Two separate governed tasks can be correlated after their temporary classification, selection, and active receipts expire, using only canonical repository-owned persisted evidence; the stored observation excludes raw outputs, secrets, personal content, and full conversation text.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-GUARD"
+    ],
+    "id": "OBS-002",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Two separate governed tasks can be correlated after their temporary classification, selection, and active receipts expire, using only canonical repository-owned persisted evidence; the stored observation excludes raw outputs, secrets, personal content, and full conversation text.",
+        "description": "Add the minimum durable observation producer/record at the work-memory and sequence-guard boundary, with an explicit schema and retention ownership.",
+        "evidence_ids": [
+          "E-WM",
+          "E-GUARD"
+        ],
+        "id": "PO-002",
+        "implementation_anchors": [
+          "/private/tmp/work-memory",
+          "scripts/sequence_guard.py",
+          "scripts/work_memory.py:EVENT_FIELDS"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The system shall persist a minimal canonical non-secret observation record sufficient to correlate unrecorded operational behavior across tasks and sessions; it shall not depend on ephemeral receipts, terminal history, or conversation memory as the durable source of truth."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Two separate governed tasks can be correlated after their temporary classification, selection, and active receipts expire, using only canonical repository-owned persisted evidence; the stored observation excludes raw outputs, secrets, personal content, and full conversation text."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "guard provenance plus dispatcher result persisted by work_memory",
+      "finding": "Durable events omit guarded command observations and temporary receipts expire; persist a safe authorization-to-result observation.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "evidence-input",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py:EVENT_FIELDS",
+        "scripts/sequence_guard.py",
+        "/private/tmp/work-memory"
+      ],
+      "limitation": "The current durable ledger has no command-observation event and temporary receipts expire."
+    },
+    "text": "The system shall persist a minimal canonical non-secret observation record sufficient to correlate unrecorded operational behavior across tasks and sessions; it shall not depend on ephemeral receipts, terminal history, or conversation memory as the durable source of truth."
+  },
+  {
+    "acceptance_intent": "Evaluation occurs only after a canonical terminal or checkpoint event with a stable evidence snapshot; an in-progress run cannot create or mutate an observer candidate, and retrying the same trigger is idempotent.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-GUARD"
+    ],
+    "id": "OBS-003",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Evaluation occurs only after a canonical terminal or checkpoint event with a stable evidence snapshot; an in-progress run cannot create or mutate an observer candidate, and retrying the same trigger is idempotent.",
+        "description": "Choose and wire the finite post-run/task-close trigger using existing run-close/abandon or equivalent canonical boundaries, including idempotent retry identity.",
+        "evidence_ids": [
+          "E-WM",
+          "E-GUARD"
+        ],
+        "id": "PO-003",
+        "implementation_anchors": [
+          "scripts/work_memory.py:run_abandoned",
+          "scripts/work_memory.py:run_closed"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall run only at bounded canonical completion/checkpoint boundaries and shall never inspect or rewrite a live run while its operational state is still changing."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Evaluation occurs only after a canonical terminal or checkpoint event with a stable evidence snapshot; an in-progress run cannot create or mutate an observer candidate, and retrying the same trigger is idempotent."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "post-terminal/checkpoint consumer",
+      "finding": "Evaluate only deterministic terminal or explicitly bounded checkpoint snapshots; in-progress evidence cannot mutate candidates.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "triggering",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py:run_closed",
+        "scripts/work_memory.py:run_abandoned"
+      ],
+      "directive_anchors": [
+        "G17",
+        "G22"
+      ]
+    },
+    "text": "The observer shall run only at bounded canonical completion/checkpoint boundaries and shall never inspect or rewrite a live run while its operational state is still changing."
+  },
+  {
+    "acceptance_intent": "Eligibility fixtures cover every standing trigger: three or more meaningful steps, likely recurrence, external-system interaction, image/container/auth/deploy/workflow drive, special environment or flags, and a repeated corrected failure; trivial read-only and isolated one-step work remains ineligible unless another explicit trigger applies.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-DIRECTIVES",
+      "E-RUNNER"
+    ],
+    "id": "OBS-004",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Eligibility fixtures cover every standing trigger: three or more meaningful steps, likely recurrence, external-system interaction, image/container/auth/deploy/workflow drive, special environment or flags, and a repeated corrected failure; trivial read-only and isolated one-step work remains ineligible unless another explicit trigger applies.",
+        "description": "Encode the complete eligibility predicate from G17/G18 and task-intake operation classes as one versioned deterministic contract.",
+        "evidence_ids": [
+          "E-WM",
+          "E-DIRECTIVES",
+          "E-RUNNER"
+        ],
+        "id": "PO-004",
+        "implementation_anchors": [
+          "scripts/work_memory.py:ALWAYS_OPERATIONAL",
+          "skills/task-intake/SKILL.md",
+          "working-agreement/DIRECTIVES.md:G17-G18"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall apply one explicit, versioned eligibility predicate that covers the complete standing repeatability and operational-risk triggers and excludes work that has no credible reuse value."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Eligibility fixtures cover every standing trigger: three or more meaningful steps, likely recurrence, external-system interaction, image/container/auth/deploy/workflow drive, special environment or flags, and a repeated corrected failure; trivial read-only and isolated one-step work remains ineligible unless another explicit trigger applies."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "future observation producer plus observer eligibility",
+      "finding": "Encode G17/G18 and operation-kind eligibility as a finite versioned predicate; add safe capture for G17-eligible one-step external operations that currently leave no durable run, without changing task classification.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "candidate-eligibility",
+    "source": {
+      "current_anchors": [
+        "working-agreement/DIRECTIVES.md:G17-G18",
+        "scripts/work_memory.py:ALWAYS_OPERATIONAL",
+        "skills/task-intake/SKILL.md"
+      ],
+      "user_intent": "Identify valuable recurring sequences proactively."
+    },
+    "text": "The observer shall apply one explicit, versioned eligibility predicate that covers the complete standing repeatability and operational-risk triggers and excludes work that has no credible reuse value."
+  },
+  {
+    "acceptance_intent": "A proposed candidate contains an ordered, finite step list whose command/action source and observed result are grounded; missing order, missing steps, or inferred commands produces NO_CANDIDATE with reasons rather than a partial discovery.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-GUARD",
+      "E-BOOT"
+    ],
+    "id": "OBS-005",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "A proposed candidate contains an ordered, finite step list whose command/action source and observed result are grounded; missing order, missing steps, or inferred commands produces NO_CANDIDATE with reasons rather than a partial discovery.",
+        "description": "Define how ordered observed steps are reconstructed only from canonical guard/script/sequence evidence and how incomplete observations fail closed.",
+        "evidence_ids": [
+          "E-GUARD",
+          "E-BOOT"
+        ],
+        "id": "PO-005",
+        "implementation_anchors": [
+          "scripts/discovery_bootstrap.py",
+          "scripts/sequence_guard.py"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall propose a sequence only when it can reconstruct the complete ordered operation from canonical evidence without inventing, paraphrasing, or guessing commands or actions."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "A proposed candidate contains an ordered, finite step list whose command/action source and observed result are grounded; missing order, missing steps, or inferred commands produces NO_CANDIDATE with reasons rather than a partial discovery."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "guard provenance joined to dispatcher outcomes",
+      "finding": "Only complete ordered, result-bearing, canonically sourced steps may form a proposal; missing facts fail closed.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "candidate-correctness",
+    "source": {
+      "current_anchors": [
+        "scripts/discovery_bootstrap.py",
+        "scripts/sequence_guard.py"
+      ],
+      "directive_anchors": [
+        "G17",
+        "G18"
+      ]
+    },
+    "text": "The observer shall propose a sequence only when it can reconstruct the complete ordered operation from canonical evidence without inventing, paraphrasing, or guessing commands or actions."
+  },
+  {
+    "acceptance_intent": "Every proposal contains nonempty intended outcome, repeatability evidence, required inputs, dependencies, failure handling, verified path, and exact success evidence; absent required evidence yields a held/no-candidate result naming the missing field.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-BOOT",
+      "E-DISC"
+    ],
+    "id": "OBS-006",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Every proposal contains nonempty intended outcome, repeatability evidence, required inputs, dependencies, failure handling, verified path, and exact success evidence; absent required evidence yields a held/no-candidate result naming the missing field.",
+        "description": "Map observer evidence into the complete discovery bootstrap contract and define fail-closed behavior for each missing correctness field.",
+        "evidence_ids": [
+          "E-BOOT",
+          "E-DISC"
+        ],
+        "id": "PO-006",
+        "implementation_anchors": [
+          "Tasks/sequence-knowledge-flywheel/research.md",
+          "scripts/discovery_bootstrap.py",
+          "scripts/sequence_discovery_log.py"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "A proposed discovery shall be structurally complete enough for the existing readiness and promotion consumers: outcome, repeatability reason, steps, inputs, dependencies, failure behavior, and verification evidence are mandatory."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Every proposal contains nonempty intended outcome, repeatability evidence, required inputs, dependencies, failure handling, verified path, and exact success evidence; absent required evidence yields a held/no-candidate result naming the missing field."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "canonical bootstrap and discovery schema",
+      "finding": "Observer proposals must explicitly satisfy every discovery-readiness field, including evidence-backed empty dependencies.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "candidate-correctness",
+    "source": {
+      "current_anchors": [
+        "scripts/discovery_bootstrap.py",
+        "scripts/sequence_discovery_log.py",
+        "Tasks/sequence-knowledge-flywheel/research.md"
+      ],
+      "user_intent": "Record correctly structured candidates."
+    },
+    "text": "A proposed discovery shall be structurally complete enough for the existing readiness and promotion consumers: outcome, repeatability reason, steps, inputs, dependencies, failure behavior, and verification evidence are mandatory."
+  },
+  {
+    "acceptance_intent": "The value assessment returns a bounded component breakdown for recurrence evidence, time saved, correction/error reduction, operational risk reduced, and manual reconstruction avoided; a candidate must cross a configured threshold and at least one component must be supported by evidence.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-DIRECTIVES"
+    ],
+    "id": "OBS-007",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "The value assessment returns a bounded component breakdown for recurrence evidence, time saved, correction/error reduction, operational risk reduced, and manual reconstruction avoided; a candidate must cross a configured threshold and at least one component must be supported by evidence.",
+        "description": "Define a versioned, bounded value model using canonical run/blocker/correction evidence and explicit threshold semantics.",
+        "evidence_ids": [
+          "E-WM",
+          "E-DIRECTIVES"
+        ],
+        "id": "PO-007",
+        "implementation_anchors": [
+          "scripts/work_memory.py:run and correction metrics",
+          "working-agreement/DIRECTIVES.md:G17"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall distinguish value from mere occurrence using explicit evidence-backed components for recurrence, saved effort, error/correction reduction, operational risk, and avoided command reconstruction."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "The value assessment returns a bounded component breakdown for recurrence evidence, time saved, correction/error reduction, operational risk reduced, and manual reconstruction avoided; a candidate must cross a configured threshold and at least one component must be supported by evidence."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "ledger-derived observer decision only",
+      "finding": "Use a finite versioned value model over recurrence, saved effort, correction reduction, risk, and avoided reconstruction.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "candidate-value",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py:run and correction metrics",
+        "working-agreement/DIRECTIVES.md:G17"
+      ],
+      "user_intent": "Identify valuable rather than merely repeated sequences."
+    },
+    "text": "The observer shall distinguish value from mere occurrence using explicit evidence-backed components for recurrence, saved effort, error/correction reduction, operational risk, and avoided command reconstruction."
+  },
+  {
+    "acceptance_intent": "Every outcome includes rule version, component values, evidence IDs, threshold, final disposition, and reasons; the same evidence and configuration always produce byte-equivalent decision data.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-BOOT"
+    ],
+    "id": "OBS-008",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Every outcome includes rule version, component values, evidence IDs, threshold, final disposition, and reasons; the same evidence and configuration always produce byte-equivalent decision data.",
+        "description": "Specify the explainable decision receipt and deterministic serialization used by tests, audits, and later feedback.",
+        "evidence_ids": [
+          "E-WM",
+          "E-BOOT"
+        ],
+        "id": "PO-008",
+        "implementation_anchors": [
+          "scripts/discovery_bootstrap.py:deterministic bootstrap identity",
+          "scripts/work_memory.py:canonical_bytes"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "Every observer decision shall be deterministic and explainable from a versioned rule set, explicit component results, and stable evidence references; an opaque score alone is insufficient."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Every outcome includes rule version, component values, evidence IDs, threshold, final disposition, and reasons; the same evidence and configuration always produce byte-equivalent decision data."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "observer-owned canonical decision record",
+      "finding": "Persist deterministic explainable rule components, evidence, threshold, and outcome rather than an opaque score.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "candidate-value",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py:canonical_bytes",
+        "scripts/discovery_bootstrap.py:deterministic bootstrap identity"
+      ],
+      "directive_anchors": [
+        "G6",
+        "G9",
+        "G13"
+      ]
+    },
+    "text": "Every observer decision shall be deterministic and explainable from a versioned rule set, explicit component results, and stable evidence references; an opaque score alone is insufficient."
+  },
+  {
+    "acceptance_intent": "Before proposing anything, fixtures prove the observer performs registered selection/matching; an existing compatible registered sequence produces LINK_REGISTERED and no discovery write.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-REGISTRY",
+      "E-RUNNER",
+      "E-FLYWHEEL"
+    ],
+    "id": "OBS-009",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Before proposing anything, fixtures prove the observer performs registered selection/matching; an existing compatible registered sequence produces LINK_REGISTERED and no discovery write.",
+        "description": "Integrate registered-first matching through the authoritative registry/selector contract without a parallel registry implementation.",
+        "evidence_ids": [
+          "E-WM",
+          "E-REGISTRY",
+          "E-RUNNER",
+          "E-FLYWHEEL"
+        ],
+        "id": "PO-009",
+        "implementation_anchors": [
+          "operations/sequences/SEQUENCES.md",
+          "scripts/work_memory.py:cmd_select",
+          "skills/sequence-runner/SKILL.md"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall search the canonical registered sequence catalog first and shall link to a compatible registered sequence instead of creating a duplicate candidate."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Before proposing anything, fixtures prove the observer performs registered selection/matching; an existing compatible registered sequence produces LINK_REGISTERED and no discovery write."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "canonical CandidateIdentity plus registry and selector",
+      "finding": "Consume the sequence-flywheel CandidateIdentity for registered-first compatibility lookup; never use operation-kind fallback as semantic equivalence.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "deduplication",
+    "source": {
+      "current_anchors": [
+        "operations/sequences/SEQUENCES.md",
+        "scripts/work_memory.py:cmd_select",
+        "skills/sequence-runner/SKILL.md"
+      ],
+      "directive_anchors": [
+        "G18"
+      ]
+    },
+    "text": "The observer shall search the canonical registered sequence catalog first and shall link to a compatible registered sequence instead of creating a duplicate candidate."
+  },
+  {
+    "acceptance_intent": "A compatible active discovery produces LINK_DISCOVERY and appends only evidence allowed by the discovery contract; it never creates a second lineage for the same normalized behavior.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-DISC",
+      "E-RECON",
+      "E-FLYWHEEL"
+    ],
+    "id": "OBS-010",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "A compatible active discovery produces LINK_DISCOVERY and appends only evidence allowed by the discovery contract; it never creates a second lineage for the same normalized behavior.",
+        "description": "Define active-discovery lookup and evidence attachment using existing discovery identity and append/correction contracts.",
+        "evidence_ids": [
+          "E-DISC",
+          "E-RECON",
+          "E-FLYWHEEL"
+        ],
+        "id": "PO-010",
+        "implementation_anchors": [
+          "operations/sequences/discovery",
+          "scripts/discovery_bootstrap.py",
+          "scripts/sequence_discovery_log.py"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "After registered matching, the observer shall reuse a compatible active discovery lineage and accumulate grounded evidence rather than create duplicate discovery files."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "A compatible active discovery produces LINK_DISCOVERY and appends only evidence allowed by the discovery contract; it never creates a second lineage for the same normalized behavior."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "candidate identity, reconciliation dispositions, and discovery append interfaces",
+      "finding": "After registered lookup, use the same CandidateIdentity over a generated freshness-checked discovery population and canonical append contracts.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "deduplication",
+    "source": {
+      "current_anchors": [
+        "scripts/sequence_discovery_log.py",
+        "scripts/discovery_bootstrap.py",
+        "operations/sequences/discovery"
+      ],
+      "user_intent": "Avoid a wasteful discovery log."
+    },
+    "text": "After registered matching, the observer shall reuse a compatible active discovery lineage and accumulate grounded evidence rather than create duplicate discovery files."
+  },
+  {
+    "acceptance_intent": "Equivalent operations with different task IDs, timestamps, receipt locations, run IDs, and harmless argument values map to the same identity; changes to executable, step order, semantic flags, dependencies, effect class, or expected outcome map to different identities; collisions fail closed.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-BOOT",
+      "E-DISC",
+      "E-FLYWHEEL"
+    ],
+    "id": "OBS-011",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Equivalent operations with different task IDs, timestamps, receipt locations, run IDs, and harmless argument values map to the same identity; changes to executable, step order, semantic flags, dependencies, effect class, or expected outcome map to different identities; collisions fail closed.",
+        "description": "Define and version the semantic identity/fingerprint inputs, ignored volatility, collision handling, and compatibility with existing lineage metadata.",
+        "evidence_ids": [
+          "E-WM",
+          "E-BOOT",
+          "E-DISC",
+          "E-FLYWHEEL"
+        ],
+        "id": "PO-011",
+        "implementation_anchors": [
+          "Tasks/sequence-knowledge-flywheel/research.md:candidate identity",
+          "scripts/discovery_bootstrap.py:bootstrap_request_sha256",
+          "scripts/work_memory.py:source_bundle_hash"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "Candidate identity shall normalize only explicitly volatile fields and shall preserve behaviorally meaningful command, ordering, dependency, effect, and outcome differences."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Equivalent operations with different task IDs, timestamps, receipt locations, run IDs, and harmless argument values map to the same identity; changes to executable, step order, semantic flags, dependencies, effect class, or expected outcome map to different identities; collisions fail closed."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "one shared semantic identity alongside unchanged integrity hashes",
+      "finding": "Reuse the versioned sequence-flywheel CandidateIdentity; do not create an observer-specific fingerprint. Missing legacy identity is auditable and fails closed.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "deduplication",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py:source_bundle_hash",
+        "scripts/discovery_bootstrap.py:bootstrap_request_sha256",
+        "Tasks/sequence-knowledge-flywheel/research.md:candidate identity"
+      ],
+      "directive_anchors": [
+        "G8"
+      ]
+    },
+    "text": "Candidate identity shall normalize only explicitly volatile fields and shall preserve behaviorally meaningful command, ordering, dependency, effect, and outcome differences."
+  },
+  {
+    "acceptance_intent": "Observer-generated proposals are accepted by the canonical discovery bootstrap without manual repair, use only supported schema fields, and remain readable by existing discovery, readiness, promotion, registry, and sequence-runner consumers.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-BOOT",
+      "E-DISC",
+      "E-LIFE",
+      "E-PROMOTE",
+      "E-REGISTRY",
+      "E-RUNNER"
+    ],
+    "id": "OBS-012",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Observer-generated proposals are accepted by the canonical discovery bootstrap without manual repair, use only supported schema fields, and remain readable by existing discovery, readiness, promotion, registry, and sequence-runner consumers.",
+        "description": "Bind observer output to the authoritative discovery bootstrap schema/version and enumerate all downstream consumers that must remain compatible.",
+        "evidence_ids": [
+          "E-BOOT",
+          "E-DISC",
+          "E-LIFE",
+          "E-PROMOTE",
+          "E-REGISTRY",
+          "E-RUNNER"
+        ],
+        "id": "PO-012",
+        "implementation_anchors": [
+          "scripts/discovery_bootstrap.py:normalize_spec",
+          "scripts/discovery_promotion_lifecycle.py",
+          "scripts/sequence_discovery_log.py",
+          "scripts/sequence_promote.py"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall write candidates only through the canonical discovery bootstrap/append contracts and shall not introduce a parallel candidate format or direct file renderer."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Observer-generated proposals are accepted by the canonical discovery bootstrap without manual repair, use only supported schema fields, and remain readable by existing discovery, readiness, promotion, registry, and sequence-runner consumers."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "existing discovery producers and consumers",
+      "finding": "Create or enrich candidates only through supported bootstrap or append interfaces and prove compatibility through discovery, lifecycle, promotion, registry, and sequence-runner consumers.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "candidate-output",
+    "source": {
+      "current_anchors": [
+        "scripts/discovery_bootstrap.py:normalize_spec",
+        "scripts/sequence_discovery_log.py",
+        "scripts/discovery_promotion_lifecycle.py",
+        "scripts/sequence_promote.py"
+      ],
+      "user_intent": "Candidates must be usable by later promotion."
+    },
+    "text": "The observer shall write candidates only through the canonical discovery bootstrap/append contracts and shall not introduce a parallel candidate format or direct file renderer."
+  },
+  {
+    "acceptance_intent": "Crashes before, during, or after candidate creation produce zero or one candidate and one decision identity; identical retries return the same result; partial candidate, receipt, index, or ledger state is never visible.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-BOOT",
+      "E-T-WM",
+      "E-T-BOOT"
+    ],
+    "id": "OBS-013",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Crashes before, during, or after candidate creation produce zero or one candidate and one decision identity; identical retries return the same result; partial candidate, receipt, index, or ledger state is never visible.",
+        "description": "Use existing deterministic bootstrap and canonical ledger transactions to define idempotent observer decision/candidate creation across crash points.",
+        "evidence_ids": [
+          "E-WM",
+          "E-BOOT",
+          "E-T-WM",
+          "E-T-BOOT"
+        ],
+        "id": "PO-013",
+        "implementation_anchors": [
+          "scripts/discovery_bootstrap.py:atomic recovery",
+          "scripts/work_memory.py:transact"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "Observer decisions and candidate creation shall be atomic, deterministic, idempotent, and recoverable under duplicate triggers, process interruption, and lost responses."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Crashes before, during, or after candidate creation produce zero or one candidate and one decision identity; identical retries return the same result; partial candidate, receipt, index, or ledger state is never visible."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "canonical ledger and bootstrap transaction boundaries",
+      "finding": "Deterministic decision and candidate identities must yield zero-or-one complete visibility across retries, concurrency, and crashes.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "durability",
+    "source": {
+      "current_anchors": [
+        "scripts/discovery_bootstrap.py:atomic recovery",
+        "scripts/work_memory.py:transact"
+      ],
+      "directive_anchors": [
+        "G17",
+        "G18"
+      ]
+    },
+    "text": "Observer decisions and candidate creation shall be atomic, deterministic, idempotent, and recoverable under duplicate triggers, process interruption, and lost responses."
+  },
+  {
+    "acceptance_intent": "Recursive fixtures containing credentials, tokens, private keys, auth payloads, personal-profile fields, transcript/history fields, or encoded secret shapes are rejected before persistence; logs expose only safe fingerprints and field-level rejection codes.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-T-WM",
+      "E-T-BOOT"
+    ],
+    "id": "OBS-014",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Recursive fixtures containing credentials, tokens, private keys, auth payloads, personal-profile fields, transcript/history fields, or encoded secret shapes are rejected before persistence; logs expose only safe fingerprints and field-level rejection codes.",
+        "description": "Reuse the canonical work-memory secret/personal-content validator recursively across observation, decision, and candidate payloads.",
+        "evidence_ids": [
+          "E-WM",
+          "E-T-WM",
+          "E-T-BOOT"
+        ],
+        "id": "PO-014",
+        "implementation_anchors": [
+          "scripts/work_memory.py:FORBIDDEN_KEYS",
+          "scripts/work_memory.py:PERSONAL_PATTERNS",
+          "scripts/work_memory.py:SECRET_PATTERNS"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall reject secrets, credentials, auth material, personal data, transcripts, conversation history, and raw sensitive outputs recursively before any durable write or diagnostic emission."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Recursive fixtures containing credentials, tokens, private keys, auth payloads, personal-profile fields, transcript/history fields, or encoded secret shapes are rejected before persistence; logs expose only safe fingerprints and field-level rejection codes."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "work_memory validation strengthened only for bounded observer records",
+      "finding": "Use closed safe schemas plus recursive rejection of secrets, auth, personal, transcript, history, and encoded sensitive material.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "safety",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py:FORBIDDEN_KEYS",
+        "scripts/work_memory.py:SECRET_PATTERNS",
+        "scripts/work_memory.py:PERSONAL_PATTERNS"
+      ],
+      "directive_anchors": [
+        "G10",
+        "working-agreement Work-Memory Gate"
+      ]
+    },
+    "text": "The observer shall reject secrets, credentials, auth material, personal data, transcripts, conversation history, and raw sensitive outputs recursively before any durable write or diagnostic emission."
+  },
+  {
+    "acceptance_intent": "Every recorded step names one allowed provenance class—registered sequence document, discovery document, checked script, checked tool help, or canonical observer record derived from them—and unsupported memory/conversation provenance prevents proposal creation.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-GUARD",
+      "E-RUNNER",
+      "E-T-GUARD"
+    ],
+    "id": "OBS-015",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Every recorded step names one allowed provenance class—registered sequence document, discovery document, checked script, checked tool help, or canonical observer record derived from them—and unsupported memory/conversation provenance prevents proposal creation.",
+        "description": "Carry sequence_guard provenance into durable observations and validate every proposed step against the same finite provenance enum.",
+        "evidence_ids": [
+          "E-GUARD",
+          "E-RUNNER",
+          "E-T-GUARD"
+        ],
+        "id": "PO-015",
+        "implementation_anchors": [
+          "scripts/sequence_guard.py",
+          "skills/sequence-runner/SKILL.md"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "Every proposed command or action shall retain canonical provenance; conversation memory, reconstructed shell history, and unsupported aliases shall never be accepted as step authority."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Every recorded step names one allowed provenance class—registered sequence document, discovery document, checked script, checked tool help, or canonical observer record derived from them—and unsupported memory/conversation provenance prevents proposal creation."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "sequence_guard remains sole command-authority producer",
+      "finding": "Every observer-derived record retains one original guard provenance class and source reference plus derivation identity; it is not a fifth command-authority class.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "candidate-correctness",
+    "source": {
+      "current_anchors": [
+        "scripts/sequence_guard.py",
+        "skills/sequence-runner/SKILL.md"
+      ],
+      "directive_anchors": [
+        "G4",
+        "G18"
+      ]
+    },
+    "text": "Every proposed command or action shall retain canonical provenance; conversation memory, reconstructed shell history, and unsupported aliases shall never be accepted as step authority."
+  },
+  {
+    "acceptance_intent": "Repeated blocker fingerprints, correction solutions, changed artifacts, and verified successors can raise value and enrich failure handling only when they belong to compatible behavior identity and lineage; open, superseded, non-gap, proxy-only, or cross-lineage evidence cannot be presented as a proven fix.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-BLOCKER",
+      "E-LIFE"
+    ],
+    "id": "OBS-016",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Repeated blocker fingerprints, correction solutions, changed artifacts, and verified successors can raise value and enrich failure handling only when they belong to compatible behavior identity and lineage; open, superseded, non-gap, proxy-only, or cross-lineage evidence cannot be presented as a proven fix.",
+        "description": "Define lineage-safe blocker/correction evidence reduction using the existing status and successor-verification contracts.",
+        "evidence_ids": [
+          "E-WM",
+          "E-BLOCKER",
+          "E-LIFE"
+        ],
+        "id": "PO-016",
+        "implementation_anchors": [
+          "scripts/blocker_catalog.py",
+          "scripts/discovery_promotion_lifecycle.py:successor handling",
+          "scripts/work_memory.py:correction and blocker events"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall use blocker and correction history as reusable evidence only through exact lineage, status, bundle, and same-path successor bindings."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Repeated blocker fingerprints, correction solutions, changed artifacts, and verified successors can raise value and enrich failure handling only when they belong to compatible behavior identity and lineage; open, superseded, non-gap, proxy-only, or cross-lineage evidence cannot be presented as a proven fix."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "existing blocker, correction, and successor contracts",
+      "finding": "Use blocker and correction evidence only with compatible identity, lineage, occurrence, bundle, status, and verified successor bindings.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "learning",
+    "source": {
+      "current_anchors": [
+        "scripts/blocker_catalog.py",
+        "scripts/work_memory.py:correction and blocker events",
+        "scripts/discovery_promotion_lifecycle.py:successor handling"
+      ],
+      "directive_anchors": [
+        "G16",
+        "G19",
+        "G20"
+      ]
+    },
+    "text": "The observer shall use blocker and correction history as reusable evidence only through exact lineage, status, bundle, and same-path successor bindings."
+  },
+  {
+    "acceptance_intent": "A candidate can claim a verified path only from final-effective passed same-path verification on the exact behavior/bundle; proxy, failed, superseded, earlier-pass-then-fail, or unrelated verification remains explicit limitation evidence.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-DISC",
+      "E-LIFE",
+      "E-WM",
+      "E-FLYWHEEL"
+    ],
+    "id": "OBS-017",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "A candidate can claim a verified path only from final-effective passed same-path verification on the exact behavior/bundle; proxy, failed, superseded, earlier-pass-then-fail, or unrelated verification remains explicit limitation evidence.",
+        "description": "Implement exact verification-evidence reduction and tests for final-event, quality, lineage, stage, and bundle matching.",
+        "evidence_ids": [
+          "E-DISC",
+          "E-LIFE",
+          "E-WM",
+          "E-FLYWHEEL"
+        ],
+        "id": "PO-017",
+        "implementation_anchors": [
+          "Tasks/sequence-knowledge-flywheel/research.md:final-effective verification",
+          "scripts/sequence_discovery_log.py:readiness",
+          "scripts/work_memory.py:verification_recorded"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "Only final-effective, exact-bundle, same-path evidence may satisfy candidate verification; all weaker evidence shall be labeled and shall not be upgraded silently."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "A candidate can claim a verified path only from final-effective passed same-path verification on the exact behavior/bundle; proxy, failed, superseded, earlier-pass-then-fail, or unrelated verification remains explicit limitation evidence."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "shared versioned verification-consumer contract, not observer normalization",
+      "finding": "Use one ordered final-effective reducer across every verification consumer for versioned observer/flywheel-derived records; preserve legacy v1 interpretation unless explicitly migrated.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "candidate-correctness",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py:verification_recorded",
+        "scripts/sequence_discovery_log.py:readiness",
+        "Tasks/sequence-knowledge-flywheel/research.md:final-effective verification"
+      ],
+      "directive_anchors": [
+        "G13",
+        "G24"
+      ]
+    },
+    "text": "Only final-effective, exact-bundle, same-path evidence may satisfy candidate verification; all weaker evidence shall be labeled and shall not be upgraded silently."
+  },
+  {
+    "acceptance_intent": "Low-value, incomplete, duplicate, explicitly dismissed, quarantined, or repeatedly rejected identities produce stable suppression outcomes with reason and expiry/review policy; suppression never hides a later materially changed identity.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-RECON",
+      "E-DISC"
+    ],
+    "id": "OBS-018",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Low-value, incomplete, duplicate, explicitly dismissed, quarantined, or repeatedly rejected identities produce stable suppression outcomes with reason and expiry/review policy; suppression never hides a later materially changed identity.",
+        "description": "Define bounded suppression/dismissal identity, reason, expiry or reconsideration rules, and materially-changed re-entry behavior.",
+        "evidence_ids": [
+          "E-RECON",
+          "E-DISC"
+        ],
+        "id": "PO-018",
+        "implementation_anchors": [
+          "operations/sequences/discovery/ACTIVE.md",
+          "scripts/discovery_candidate_reconciliation.py"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall prevent discovery-log noise through explicit no-candidate and suppression records, while allowing reconsideration only when evidence or semantic identity materially changes."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Low-value, incomplete, duplicate, explicitly dismissed, quarantined, or repeatedly rejected identities produce stable suppression outcomes with reason and expiry/review policy; suppression never hides a later materially changed identity."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "observer suppression separate from lifecycle disposition",
+      "finding": "Record bounded suppression/no-candidate decisions and reconsider only on expiry, review, or material identity/evidence change.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "noise-control",
+    "source": {
+      "current_anchors": [
+        "scripts/discovery_candidate_reconciliation.py",
+        "operations/sequences/discovery/ACTIVE.md"
+      ],
+      "user_intent": "Avoid another wasteful discovery log."
+    },
+    "text": "The observer shall prevent discovery-log noise through explicit no-candidate and suppression records, while allowing reconsideration only when evidence or semantic identity materially changes."
+  },
+  {
+    "acceptance_intent": "An observer-created discovery follows the same readiness, two-current-bundle qualification, zero-open-blocker, atomic-promotion, registered-verification, correction, and successor gates as any other discovery; no observer confidence or value score changes these gates.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-DISC",
+      "E-LIFE",
+      "E-PROMOTE"
+    ],
+    "id": "OBS-019",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "An observer-created discovery follows the same readiness, two-current-bundle qualification, zero-open-blocker, atomic-promotion, registered-verification, correction, and successor gates as any other discovery; no observer confidence or value score changes these gates.",
+        "description": "Prove observer provenance is non-authoritative for promotion and preserve every existing lifecycle predicate and transition.",
+        "evidence_ids": [
+          "E-DISC",
+          "E-LIFE",
+          "E-PROMOTE"
+        ],
+        "id": "PO-019",
+        "implementation_anchors": [
+          "scripts/discovery_promotion_lifecycle.py",
+          "scripts/sequence_discovery_log.py",
+          "scripts/sequence_promote.py"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "Observer output shall never weaken or replace the existing discovery readiness, qualification, blocker, correction, atomic promotion, or registered verification contracts."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "An observer-created discovery follows the same readiness, two-current-bundle qualification, zero-open-blocker, atomic-promotion, registered-verification, correction, and successor gates as any other discovery; no observer confidence or value score changes these gates."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "existing discovery promotion lifecycle",
+      "finding": "Observer provenance and value are non-authoritative for readiness, blocker, correction, promotion, and registered verification predicates.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "promotion-boundary",
+    "source": {
+      "current_anchors": [
+        "scripts/sequence_discovery_log.py",
+        "scripts/discovery_promotion_lifecycle.py",
+        "scripts/sequence_promote.py"
+      ],
+      "user_intent": "Observer output must safely feed the existing lifecycle."
+    },
+    "text": "Observer output shall never weaken or replace the existing discovery readiness, qualification, blocker, correction, atomic promotion, or registered verification contracts."
+  },
+  {
+    "acceptance_intent": "For auth, deploy, database, remote, destructive, or otherwise effectful observations, the observer records only redacted command structure and prior evidence; it never replays, probes, dry-runs, requests credentials, or treats observation as authorization.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-GUARD",
+      "E-LIFE"
+    ],
+    "id": "OBS-020",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "For auth, deploy, database, remote, destructive, or otherwise effectful observations, the observer records only redacted command structure and prior evidence; it never replays, probes, dry-runs, requests credentials, or treats observation as authorization.",
+        "description": "Bind effect classification and redaction to existing operation kinds and enforce a hard no-dispatch boundary in observer tests.",
+        "evidence_ids": [
+          "E-WM",
+          "E-GUARD",
+          "E-LIFE"
+        ],
+        "id": "PO-020",
+        "implementation_anchors": [
+          "scripts/work_memory.py:operation kinds",
+          "skills/sequence-runner/SKILL.md"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall be passive for effectful operations: observation is never execution authority, approval, credential authority, replay safety, or permission to probe external systems."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "For auth, deploy, database, remote, destructive, or otherwise effectful observations, the observer records only redacted command structure and prior evidence; it never replays, probes, dry-runs, requests credentials, or treats observation as authorization."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "dispatch remains outside observer",
+      "finding": "Effectful operations contribute only safe prior evidence; observer replay, probing, credentials, and authorization inference are prohibited.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "safety",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py:operation kinds",
+        "skills/sequence-runner/SKILL.md"
+      ],
+      "directive_anchors": [
+        "G4",
+        "G15",
+        "G17"
+      ]
+    },
+    "text": "The observer shall be passive for effectful operations: observation is never execution authority, approval, credential authority, replay safety, or permission to probe external systems."
+  },
+  {
+    "acceptance_intent": "Concurrent observers and ledger writers produce one decision per trigger and at most one candidate per identity; repository/ledger drift outside declared observer writes fails closed; restart resumes from durable identity without duplicate writes.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-BOOT",
+      "E-PROMOTE"
+    ],
+    "id": "OBS-021",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Concurrent observers and ledger writers produce one decision per trigger and at most one candidate per identity; repository/ledger drift outside declared observer writes fails closed; restart resumes from durable identity without duplicate writes.",
+        "description": "Define lock, compare-and-swap, deterministic identity, and retry boundaries using the canonical ledger/bootstrap writers rather than ad hoc files.",
+        "evidence_ids": [
+          "E-WM",
+          "E-BOOT",
+          "E-PROMOTE"
+        ],
+        "id": "PO-021",
+        "implementation_anchors": [
+          "scripts/convergence_checkpoint_run.py",
+          "scripts/discovery_bootstrap.py",
+          "scripts/work_memory.py:transact"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall remain correct under concurrent ledger activity, duplicate triggers, crashes, and restarts, with fail-closed drift detection and no duplicate candidate lineage."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Concurrent observers and ledger writers produce one decision per trigger and at most one candidate per identity; repository/ledger drift outside declared observer writes fails closed; restart resumes from durable identity without duplicate writes."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "no observer free-form writer",
+      "finding": "Compose trigger, decision, dedupe, and creation with canonical locks, drift checks, and deterministic identities.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "durability",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py:transact",
+        "scripts/discovery_bootstrap.py",
+        "scripts/convergence_checkpoint_run.py"
+      ],
+      "directive_anchors": [
+        "G13",
+        "G17"
+      ]
+    },
+    "text": "The observer shall remain correct under concurrent ledger activity, duplicate triggers, crashes, and restarts, with fail-closed drift detection and no duplicate candidate lineage."
+  },
+  {
+    "acceptance_intent": "Configuration sets a finite evidence window, maximum observations, maximum candidates per invocation, maximum runtime, and deterministic truncation order; exceeding any bound returns a resumable bounded result and does not scan arbitrary repository history.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-CHARTER"
+    ],
+    "id": "OBS-022",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Configuration sets a finite evidence window, maximum observations, maximum candidates per invocation, maximum runtime, and deterministic truncation order; exceeding any bound returns a resumable bounded result and does not scan arbitrary repository history.",
+        "description": "Define explicit observer work limits, deterministic pagination/checkpointing, and cap-result observables.",
+        "evidence_ids": [
+          "E-WM",
+          "E-CHARTER"
+        ],
+        "id": "PO-022",
+        "implementation_anchors": [
+          "scripts/work_memory.py:summary reducers",
+          "skills/research-playbook/SKILL.md:bounded workflow"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "Every observer invocation shall have hard, configured bounds on evidence age/count, candidates emitted, elapsed time, and repository surfaces; caps shall stop cleanly rather than widen the scan."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Configuration sets a finite evidence window, maximum observations, maximum candidates per invocation, maximum runtime, and deterministic truncation order; exceeding any bound returns a resumable bounded result and does not scan arbitrary repository history."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "bounded observer invocation contract",
+      "finding": "Set finite age, evidence-count, candidate-count, elapsed-time, allowed-surface, and pagination/checkpoint limits.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "resource-bounds",
+    "source": {
+      "current_anchors": [
+        "skills/research-playbook/SKILL.md:bounded workflow",
+        "scripts/work_memory.py:summary reducers"
+      ],
+      "user_intent": "Keep the goal bounded and prevent self-expanding validation."
+    },
+    "text": "Every observer invocation shall have hard, configured bounds on evidence age/count, candidates emitted, elapsed time, and repository surfaces; caps shall stop cleanly rather than widen the scan."
+  },
+  {
+    "acceptance_intent": "Observer failure, timeout, malformed evidence, missing root, or persistence conflict returns a typed diagnostic and leaves the originating task/run result unchanged; it never blocks task close unless the canonical writer detects corruption of observer-owned state.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-BOOT"
+    ],
+    "id": "OBS-023",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Observer failure, timeout, malformed evidence, missing root, or persistence conflict returns a typed diagnostic and leaves the originating task/run result unchanged; it never blocks task close unless the canonical writer detects corruption of observer-owned state.",
+        "description": "Specify failure taxonomy, isolation boundary, retryability, and which integrity failures may block observer-owned state only.",
+        "evidence_ids": [
+          "E-WM",
+          "E-BOOT"
+        ],
+        "id": "PO-023",
+        "implementation_anchors": [
+          "scripts/discovery_bootstrap.py",
+          "scripts/work_memory.py"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "Observer failures shall be contained to observer processing and shall not rewrite, reclassify, or falsify the originating task/run outcome; every failure shall be typed and auditable."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Observer failure, timeout, malformed evidence, missing root, or persistence conflict returns a typed diagnostic and leaves the originating task/run result unchanged; it never blocks task close unless the canonical writer detects corruption of observer-owned state."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "originating terminal event is immutable input",
+      "finding": "Observer errors are typed and isolated; only observer-owned corruption may block observer processing, never change the originating run result.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "failure-isolation",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py",
+        "scripts/discovery_bootstrap.py"
+      ],
+      "directive_anchors": [
+        "G13",
+        "G14",
+        "G20"
+      ]
+    },
+    "text": "Observer failures shall be contained to observer processing and shall not rewrite, reclassify, or falsify the originating task/run outcome; every failure shall be typed and auditable."
+  },
+  {
+    "acceptance_intent": "Each decision exposes stable decision ID, observer version, trigger, evidence IDs/hashes, identity, matched registry/discovery IDs, eligibility/value breakdown, disposition, candidate ID if any, and safe failure code; no secret-bearing payload is logged.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-BLOCKER"
+    ],
+    "id": "OBS-024",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Each decision exposes stable decision ID, observer version, trigger, evidence IDs/hashes, identity, matched registry/discovery IDs, eligibility/value breakdown, disposition, candidate ID if any, and safe failure code; no secret-bearing payload is logged.",
+        "description": "Define the canonical observer decision/audit record and summary/reporting surfaces using safe stable identifiers.",
+        "evidence_ids": [
+          "E-WM",
+          "E-BLOCKER"
+        ],
+        "id": "PO-024",
+        "implementation_anchors": [
+          "operations/work-memory/events.jsonl",
+          "scripts/blocker_catalog.py",
+          "scripts/work_memory.py:event schema"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "Every observer invocation and disposition shall be auditable through a stable non-secret decision record that explains what was considered, matched, proposed, suppressed, or rejected."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Each decision exposes stable decision ID, observer version, trigger, evidence IDs/hashes, identity, matched registry/discovery IDs, eligibility/value breakdown, disposition, candidate ID if any, and safe failure code; no secret-bearing payload is logged."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "repository-owned canonical persistence",
+      "finding": "Every invocation needs an immutable safe decision record with identities, evidence hashes, match results, rule breakdown, disposition, and failure code.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "observability",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py:event schema",
+        "scripts/blocker_catalog.py",
+        "operations/work-memory/events.jsonl"
+      ],
+      "directive_anchors": [
+        "G6",
+        "G9",
+        "G13"
+      ]
+    },
+    "text": "Every observer invocation and disposition shall be auditable through a stable non-secret decision record that explains what was considered, matched, proposed, suppressed, or rejected."
+  },
+  {
+    "acceptance_intent": "Promotion, quarantine, dismissal, supersession, correction, and registered reuse outcomes can be joined back to the originating observer identity; feedback changes future decisions only through a versioned rule/config update and never mutates historical decisions.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-PROMOTE",
+      "E-LIFE",
+      "E-RECON",
+      "E-WM"
+    ],
+    "id": "OBS-025",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Promotion, quarantine, dismissal, supersession, correction, and registered reuse outcomes can be joined back to the originating observer identity; feedback changes future decisions only through a versioned rule/config update and never mutates historical decisions.",
+        "description": "Define provenance links from observer decisions to discovery/registry lifecycle outcomes and immutable versioned feedback consumption.",
+        "evidence_ids": [
+          "E-PROMOTE",
+          "E-LIFE",
+          "E-RECON",
+          "E-WM"
+        ],
+        "id": "PO-025",
+        "implementation_anchors": [
+          "scripts/discovery_candidate_reconciliation.py",
+          "scripts/discovery_promotion_lifecycle.py",
+          "scripts/work_memory.py:discovery_promoted"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer shall learn only from explicit governed lifecycle dispositions linked to its candidate identity; historical decisions remain immutable and implicit model adaptation is forbidden."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Promotion, quarantine, dismissal, supersession, correction, and registered reuse outcomes can be joined back to the originating observer identity; feedback changes future decisions only through a versioned rule/config update and never mutates historical decisions."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "immutable decisions plus authoritative lifecycle outcomes",
+      "finding": "Join governed lifecycle outcomes to observer identity; feedback affects only explicit future rule versions and never mutates history.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "learning",
+    "source": {
+      "current_anchors": [
+        "scripts/discovery_candidate_reconciliation.py",
+        "scripts/discovery_promotion_lifecycle.py",
+        "scripts/work_memory.py:discovery_promoted"
+      ],
+      "user_intent": "Improve identification quality over time."
+    },
+    "text": "The observer shall learn only from explicit governed lifecycle dispositions linked to its candidate identity; historical decisions remain immutable and implicit model adaptation is forbidden."
+  },
+  {
+    "acceptance_intent": "Existing registered sequences, discovery files, v1 bootstrap specifications, ledger events, selector behavior, explicit promotion commands, and reconciliation remain readable and behaviorally unchanged unless a new observer-owned record is present; observer disablement restores current behavior.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-BOOT",
+      "E-DISC",
+      "E-LIFE",
+      "E-PROMOTE",
+      "E-REGISTRY",
+      "E-RUNNER",
+      "E-RECON",
+      "E-FLYWHEEL"
+    ],
+    "id": "OBS-026",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Existing registered sequences, discovery files, v1 bootstrap specifications, ledger events, selector behavior, explicit promotion commands, and reconciliation remain readable and behaviorally unchanged unless a new observer-owned record is present; observer disablement restores current behavior.",
+        "description": "Plan additive schema/versioning and compatibility tests across current work-memory, discovery, promotion, registry, and runner consumers.",
+        "evidence_ids": [
+          "E-WM",
+          "E-BOOT",
+          "E-DISC",
+          "E-LIFE",
+          "E-PROMOTE",
+          "E-REGISTRY",
+          "E-RUNNER",
+          "E-RECON",
+          "E-FLYWHEEL"
+        ],
+        "id": "PO-026",
+        "implementation_anchors": [
+          "operations/sequences/SEQUENCES.md",
+          "scripts/discovery_bootstrap.py",
+          "scripts/discovery_promotion_lifecycle.py",
+          "scripts/sequence_discovery_log.py",
+          "scripts/work_memory.py"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "Observer integration shall be additive and backward compatible with all current sequence, discovery, ledger, promotion, registry, reconciliation, and resume behavior."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Existing registered sequences, discovery files, v1 bootstrap specifications, ledger events, selector behavior, explicit promotion commands, and reconciliation remain readable and behaviorally unchanged unless a new observer-owned record is present; observer disablement restores current behavior."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "explicit versioning, no silent reinterpretation",
+      "finding": "Observer integration is additive; disabled/absent state preserves legacy v1 discovery, selector, reconciliation, runner, resume, and promotion behavior, while versioned derived records opt into final-effective semantics.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "compatibility",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py",
+        "scripts/discovery_bootstrap.py",
+        "scripts/sequence_discovery_log.py",
+        "scripts/discovery_promotion_lifecycle.py",
+        "operations/sequences/SEQUENCES.md"
+      ],
+      "directive_anchors": [
+        "G8",
+        "G21"
+      ]
+    },
+    "text": "Observer integration shall be additive and backward compatible with all current sequence, discovery, ledger, promotion, registry, reconciliation, and resume behavior."
+  },
+  {
+    "acceptance_intent": "An observation names canonical repository keys and roots from governed receipts/bundles; candidate dependencies remain repository-qualified; unknown, missing, ambiguous, or changed roots yield a held diagnostic; the observer writes only to memory-knowledge-owned observer/discovery state.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-BOOT"
+    ],
+    "id": "OBS-027",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "An observation names canonical repository keys and roots from governed receipts/bundles; candidate dependencies remain repository-qualified; unknown, missing, ambiguous, or changed roots yield a held diagnostic; the observer writes only to memory-knowledge-owned observer/discovery state.",
+        "description": "Define repository-root provenance, cross-repository dependency identity, drift checks, and the single memory-knowledge write authority.",
+        "evidence_ids": [
+          "E-WM",
+          "E-BOOT"
+        ],
+        "id": "PO-027",
+        "implementation_anchors": [
+          "scripts/discovery_bootstrap.py:dependencies",
+          "scripts/work_memory.py:_repo_roots and source_bundle"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "Cross-repository observations shall preserve canonical repository ownership and root bindings, fail closed on ambiguity/drift, and never write into observed project repositories."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "An observation names canonical repository keys and roots from governed receipts/bundles; candidate dependencies remain repository-qualified; unknown, missing, ambiguous, or changed roots yield a held diagnostic; the observer writes only to memory-knowledge-owned observer/discovery state."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "observed repositories are read-only dependencies",
+      "finding": "Preserve repository-qualified bindings and write only memory-knowledge-owned state; missing, changed, escaping, or ambiguous roots fail closed.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "repository-boundary",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py:_repo_roots and source_bundle",
+        "scripts/discovery_bootstrap.py:dependencies"
+      ],
+      "directive_anchors": [
+        "G10",
+        "G11"
+      ]
+    },
+    "text": "Cross-repository observations shall preserve canonical repository ownership and root bindings, fail closed on ambiguity/drift, and never write into observed project repositories."
+  },
+  {
+    "acceptance_intent": "Core eligibility, identity, dedupe, safety, and disposition tests pass without network or model access; optional semantic assistance cannot create/alter authoritative decisions and its absence yields the same safe deterministic outcome.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-WM",
+      "E-GUARD",
+      "E-BOOT",
+      "E-DISC"
+    ],
+    "id": "OBS-028",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "Core eligibility, identity, dedupe, safety, and disposition tests pass without network or model access; optional semantic assistance cannot create/alter authoritative decisions and its absence yields the same safe deterministic outcome.",
+        "description": "Keep authoritative observer decisions in deterministic code/config and define any optional semantic helper as non-authoritative and fail-closed.",
+        "evidence_ids": [
+          "E-WM",
+          "E-GUARD",
+          "E-BOOT",
+          "E-DISC"
+        ],
+        "id": "PO-028",
+        "implementation_anchors": [
+          "scripts/discovery_bootstrap.py",
+          "scripts/work_memory.py"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer's authoritative eligibility, identity, safety, deduplication, and write decisions shall not depend on nondeterministic model output or external network services."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "Core eligibility, identity, dedupe, safety, and disposition tests pass without network or model access; optional semantic assistance cannot create/alter authoritative decisions and its absence yields the same safe deterministic outcome."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "optional assistance cannot change authoritative outcomes",
+      "finding": "Authoritative eligibility, identity, safety, dedupe, value, and disposition remain deterministic local code/configuration with offline parity.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "determinism",
+    "source": {
+      "current_anchors": [
+        "scripts/work_memory.py",
+        "scripts/discovery_bootstrap.py"
+      ],
+      "directive_anchors": [
+        "G13",
+        "G21"
+      ]
+    },
+    "text": "The observer's authoritative eligibility, identity, safety, deduplication, and write decisions shall not depend on nondeterministic model output or external network services."
+  },
+  {
+    "acceptance_intent": "The implementation verification matrix includes red-before/green-after tests for missing durable observations, eligible/ineligible triggers, complete/incomplete evidence, registered/discovery dedupe, identity stability/collision, secret rejection, effectful non-dispatch, concurrent idempotency, crash recovery, caps, failure isolation, compatibility, and end-to-end candidate-to-registered reuse through existing gates.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-T-WM",
+      "E-T-GUARD",
+      "E-T-BOOT",
+      "E-T-LIFE",
+      "E-REGISTRY",
+      "E-RUNNER",
+      "E-RECON"
+    ],
+    "id": "OBS-029",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "The implementation verification matrix includes red-before/green-after tests for missing durable observations, eligible/ineligible triggers, complete/incomplete evidence, registered/discovery dedupe, identity stability/collision, secret rejection, effectful non-dispatch, concurrent idempotency, crash recovery, caps, failure isolation, compatibility, and end-to-end candidate-to-registered reuse through existing gates.",
+        "description": "Produce a bounded verification plan mapping every observer requirement to focused unit/contract tests and one canonical end-to-end lifecycle proof.",
+        "evidence_ids": [
+          "E-T-WM",
+          "E-T-GUARD",
+          "E-T-BOOT",
+          "E-T-LIFE",
+          "E-REGISTRY",
+          "E-RUNNER",
+          "E-RECON"
+        ],
+        "id": "PO-029",
+        "implementation_anchors": [
+          "tests/test_discovery_bootstrap.py",
+          "tests/test_discovery_promotion_lifecycle.py",
+          "tests/test_sequence_guard.py",
+          "tests/test_work_memory.py"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "Verification shall prove every observer contract at the cheapest real boundary and include one end-to-end proof that a correct proposal enters the existing lifecycle and is later found as a registered sequence without bypassing any gate."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "The implementation verification matrix includes red-before/green-after tests for missing durable observations, eligible/ineligible triggers, complete/incomplete evidence, registered/discovery dedupe, identity stability/collision, secret rejection, effectful non-dispatch, concurrent idempotency, crash recovery, caps, failure isolation, compatibility, and end-to-end candidate-to-registered reuse through existing gates."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "existing cheapest real unit/contract boundaries",
+      "finding": "Map every OBS requirement to focused verification and one end-to-end proof through bootstrap, readiness, reconciliation, promotion, registered selection, runner guard, fresh registered verification, resume, and LINK_REGISTERED reuse.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "verification",
+    "source": {
+      "current_anchors": [
+        "tests/test_work_memory.py",
+        "tests/test_sequence_guard.py",
+        "tests/test_discovery_bootstrap.py",
+        "tests/test_discovery_promotion_lifecycle.py"
+      ],
+      "directive_anchors": [
+        "G24",
+        "WC1"
+      ]
+    },
+    "text": "Verification shall prove every observer contract at the cheapest real boundary and include one end-to-end proof that a correct proposal enters the existing lifecycle and is later found as a registered sequence without bypassing any gate."
+  },
+  {
+    "acceptance_intent": "A scope-enforcement test/configuration prevents the observer from reading unlisted roots, scanning chat/terminal history, modifying directives or lifecycle rules, executing commands, promoting sequences, cleaning backlog, contacting external systems, or adding validation unrelated to OBS-001 through OBS-029.",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "evidence_ids": [
+      "E-SCOPE",
+      "E-CHARTER",
+      "E-DIRECTIVES"
+    ],
+    "id": "OBS-030",
+    "operational_maturity": "FUTURE_SYSTEM",
+    "planner_obligations": [
+      {
+        "closure_condition": "A scope-enforcement test/configuration prevents the observer from reading unlisted roots, scanning chat/terminal history, modifying directives or lifecycle rules, executing commands, promoting sequences, cleaning backlog, contacting external systems, or adding validation unrelated to OBS-001 through OBS-029.",
+        "description": "Encode explicit allowed inputs, writes, side effects, and exclusions so implementation and review can reject scope expansion mechanically.",
+        "evidence_ids": [
+          "E-SCOPE",
+          "E-CHARTER",
+          "E-DIRECTIVES"
+        ],
+        "id": "PO-030",
+        "implementation_anchors": [
+          "skills/research-playbook/SKILL.md",
+          "working-agreement/DIRECTIVES.md:G1-G4,G11,G21"
+        ],
+        "owner": "memory-knowledge sequence-governance planner",
+        "required_inputs": [
+          "The observer implementation and its validation shall remain strictly inside the frozen feature boundary; adjacent telemetry, workflow, lifecycle, cleanup, deployment, model, or policy work is prohibited unless separately approved."
+        ],
+        "status": "READY",
+        "verification_anchors": [
+          "A scope-enforcement test/configuration prevents the observer from reading unlisted roots, scanning chat/terminal history, modifying directives or lifecycle rules, executing commands, promoting sequences, cleaning backlog, contacting external systems, or adding validation unrelated to OBS-001 through OBS-029."
+        ]
+      }
+    ],
+    "research_value": {
+      "boundary": "frozen scope allowlist and denylist",
+      "finding": "Mechanically deny unapproved surfaces, writes, side effects, external dependencies, policy changes, backlog cleanup, and unrelated validation.",
+      "status": "planner_ready"
+    },
+    "research_value_type": "object",
+    "scope_id": "scope-control",
+    "source": {
+      "current_anchors": [
+        "working-agreement/DIRECTIVES.md:G1-G4,G11,G21",
+        "skills/research-playbook/SKILL.md"
+      ],
+      "user_intent": "Keep research, planning, coding, and review bounded and focused."
+    },
+    "text": "The observer implementation and its validation shall remain strictly inside the frozen feature boundary; adjacent telemetry, workflow, lifecycle, cleanup, deployment, model, or policy work is prohibited unless separately approved."
+  }
+]

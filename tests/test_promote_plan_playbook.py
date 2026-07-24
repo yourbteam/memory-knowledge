@@ -104,7 +104,7 @@ def fake_repository(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
     repo = tmp_path / "repo"
     installed = tmp_path / "installed"
     PROMOTION.TRUSTED_REPO_ROOT = repo.resolve()
-    PROMOTION.TRUSTED_INSTALLED_ROOT = installed.resolve()
+    PROMOTION.TRUSTED_INSTALLED_ROOTS = (installed.resolve(),)
     candidate = repo / "skills/plan-playbook-v2"
     copy_candidate_fixture(candidate)
 

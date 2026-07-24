@@ -1,0 +1,57 @@
+{
+  "verdict": "GAPS",
+  "findings": [
+    {
+      "id": "IR-R1-LINEAGE-OMITTED",
+      "fingerprint": "internal-readiness:registry-lineage-not-preserved",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-001"],
+      "type": "REQUIREMENT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "The planner cannot preserve canonical sequence identity and discovery ancestry because every inventory row drops the registry lineage id.",
+      "evidence": ["operations/sequences/SEQUENCES.md defines lineage IDs; candidate sequence_inventory rows omit lineage_id although INV-001 requires it."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "IR-R1-REPRESENTATIVE-EVIDENCE",
+      "fingerprint": "internal-readiness:representative-evidence-used-for-uninspected-entrypoints",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-002", "INV-003", "INV-007"],
+      "type": "FACT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "A planner could implement schemas against asserted interfaces that were never directly inspected.",
+      "evidence": ["Several callcenter, memory-knowledge, MAWF, and taggable rows cite representative sources rather than their exact executable or bundle."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "IR-R1-ENTRYPOINTS-AGGREGATED",
+      "fingerprint": "internal-readiness:input-contracts-aggregated-above-entrypoint-level",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-002", "INV-003", "INV-005"],
+      "type": "REQUIREMENT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "The planner cannot derive one deterministic intake schema per executable because distinct entrypoints are collapsed into one sequence-level input description.",
+      "evidence": ["Multi-entrypoint rows have only one current invocation/input/no-arg/migration classification; wildcard and subcommand labels remain unresolved."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "IR-R1-CALLERS-UNRESOLVED",
+      "fingerprint": "internal-readiness:authoritative-call-sites-and-compatibility-consumers-unresolved",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-004", "INV-007"],
+      "type": "REQUIREMENT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "Direct argument-bearing paths could remain active and legacy compatibility cannot be distinguished from removable bypasses.",
+      "evidence": ["The candidate lists generic surfaces rather than exact path/anchor caller mappings and names no concrete machine compatibility consumers."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    }
+  ]
+}

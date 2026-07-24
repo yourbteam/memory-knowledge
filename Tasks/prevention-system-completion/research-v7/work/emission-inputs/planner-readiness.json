@@ -1,0 +1,228 @@
+[
+  {
+    "status": "READY",
+    "implementation_anchors": [
+      "CodexCliWrapper launch boundary in EV-D1-WRAPPER",
+      "official Codex config source/trust behavior and current_hash/trusted_hash behavior in EV-D1-OFFICIAL-DISCOVERY",
+      "official PreToolUse contract in EV-D1-OFFICIAL-PRETOOL and EV-D1-OFFICIAL-OUTPUT",
+      "HostCapabilities and receipt verifier in EV-D1-HOST and EV-D3-CONTRACT"
+    ],
+    "verification_anchors": [
+      "fresh per-session Codex home contains only launcher-installed hook config and no copied credentials",
+      "trusted hook installation proof records normalized current_hash and matching trusted_hash or fails closed",
+      "ordinary repository and git worktree both run the nonce-bound harmless PreToolUse challenge before mutation",
+      "signed HostCapabilities receipt records session_id, challenge_nonce, config_sha256, hook_sha256, trust/enabled state, class coverage, launcher_pid, and child_pid",
+      "missing authorized authenticated-session provider rejects before Codex launch"
+    ],
+    "required_inputs": [
+      "planner-owned injected authenticated-session provider interface for fresh Codex homes; if absent, production launch remains fail-closed"
+    ],
+    "owner": "workflow-orch Codex launcher owner",
+    "closure_condition": "Governed Codex sessions start only after launcher-owned configuration, trusted hook proof, successful nonce-bound challenge, signed HostCapabilities receipt, and injected-provider authentication; otherwise launch is visibly rejected.",
+    "evidence_ids": [
+      "EV-D1-WRAPPER",
+      "EV-D1-EXECUTOR",
+      "EV-D1-TRANSLATOR",
+      "EV-D1-CREDENTIAL-REFRESH",
+      "EV-D1-OFFICIAL-PRETOOL",
+      "EV-D1-OFFICIAL-DISCOVERY",
+      "EV-D1-OFFICIAL-OUTPUT",
+      "EV-D1-WORKTREE-ISSUE",
+      "EV-D1-HOST",
+      "EV-D3-CONTRACT"
+    ],
+    "obligation_id": "PO-D1-HOST"
+  },
+  {
+    "status": "READY",
+    "implementation_anchors": [
+      "launcher-owned fresh CODEX_HOME",
+      "trusted installed PreToolUse hook with current_hash/trusted_hash proof",
+      "nonce-bound harmless challenge",
+      "signed HostCapabilities receipt",
+      "fail-closed injected authentication boundary"
+    ],
+    "verification_anchors": [
+      "ordinary repo pass",
+      "git worktree pass",
+      "project hook ignored but launcher-owned hook still fires",
+      "unsupported tool class withheld or rejected",
+      "receipt replay rejected",
+      "receipt expiry rejected",
+      "auth provider missing rejected before launch",
+      "resume requires a fresh challenge and receipt"
+    ],
+    "required_inputs": [
+      "representative ordinary repository",
+      "representative git worktree",
+      "authorized authenticated-session provider evidence supplied through the injected provider interface"
+    ],
+    "owner": "workflow-orch acceptance owner",
+    "closure_condition": "Every governed mutation has live host proof independent of project hook discovery, and no session starts when enforcement or authorized authentication is unavailable.",
+    "evidence_ids": [
+      "EV-FROZEN-REQS",
+      "EV-D1-WRAPPER",
+      "EV-D1-OFFICIAL-DISCOVERY",
+      "EV-D1-OFFICIAL-PRETOOL",
+      "EV-D1-WORKTREE-ISSUE",
+      "EV-D1-HOST"
+    ],
+    "obligation_id": "PO-D1-HOST-ACCEPTANCE"
+  },
+  {
+    "status": "READY",
+    "implementation_anchors": [
+      "ActionIntent typed boundary in EV-D3-CONTRACT",
+      "PreventionController register-before-dispatch boundary in EV-D2-CONTROLLER",
+      "registry hash producer in EV-D2-REGISTRY",
+      "prevention journal event schema in EV-D2-EVENTS",
+      "dispatch consumer in EV-D2-SELECTOR"
+    ],
+    "verification_anchors": [
+      "eligibility event is appended after intent validation and before dispatch",
+      "event contains exactly intent_id, registry_sha256, owner_sequence_id, owner_contract_sha256, recurrence_policy, availability_policy, eligibility, ineligible_reason_code",
+      "recurrence_policy accepts only ONE_SHOT, RECURRENT, NOT_APPLICABLE",
+      "availability_policy accepts only AVAILABLE, UNAVAILABLE, CUSTODIAN_EVIDENCE_REQUIRED",
+      "ineligible_reason_code accepts only RECURRENCE_ONE_SHOT, RECURRENCE_NOT_APPLICABLE, AVAILABILITY_UNAVAILABLE, AVAILABILITY_CUSTODIAN_EVIDENCE_REQUIRED, OWNER_CONTRACT_UNRESOLVED, UNREGISTERED_ACTION_CLASS when eligibility=false",
+      "later registry edits do not change replayed denominator",
+      "later outcome edits do not change replayed numerator or denominator"
+    ],
+    "required_inputs": [
+      "materialized owner contracts carrying recurrence_policy and availability_policy",
+      "canonical ineligible_reason_code enum above"
+    ],
+    "owner": "prevention controller and telemetry owner",
+    "closure_condition": "Ledger replay reproduces the same registered-use numerator and denominator solely from immutable pre-dispatch eligibility and dispatch_selected records.",
+    "evidence_ids": [
+      "EV-D2-EVENTS",
+      "EV-D2-CONTROLLER",
+      "EV-D2-REGISTRY",
+      "EV-D2-SELECTOR",
+      "EV-D3-CONTRACT"
+    ],
+    "obligation_id": "PO-D2-ELIGIBILITY"
+  },
+  {
+    "status": "READY",
+    "implementation_anchors": [
+      "pre-dispatch eligibility event",
+      "dispatch_selected and dispatch_rejected events",
+      "registered-use metric query consumer"
+    ],
+    "verification_anchors": [
+      "RECURRENT plus AVAILABLE plus eligibility=true enters denominator",
+      "ONE_SHOT excludes denominator with RECURRENCE_ONE_SHOT",
+      "NOT_APPLICABLE excludes denominator with RECURRENCE_NOT_APPLICABLE",
+      "UNAVAILABLE excludes denominator with AVAILABILITY_UNAVAILABLE",
+      "CUSTODIAN_EVIDENCE_REQUIRED excludes denominator with AVAILABILITY_CUSTODIAN_EVIDENCE_REQUIRED",
+      "unresolved owner contract excludes denominator with OWNER_CONTRACT_UNRESOLVED",
+      "metric query fails closed when eligibility event is missing or duplicated",
+      "95 percent threshold uses durable events only"
+    ],
+    "required_inputs": [
+      "representative governed measurement window"
+    ],
+    "owner": "prevention telemetry acceptance owner",
+    "closure_condition": "registered_dispatches / eligible_recurring_actions is reproducible from durable records and cannot be reclassified after dispatch or outcome.",
+    "evidence_ids": [
+      "EV-FROZEN-REQS",
+      "EV-D2-EVENTS",
+      "EV-D2-CONTROLLER",
+      "EV-D2-REGISTRY",
+      "EV-D2-SELECTOR"
+    ],
+    "obligation_id": "PO-D2-ELIGIBILITY-ACCEPTANCE"
+  },
+  {
+    "status": "READY",
+    "implementation_anchors": [
+      "OwnerRegistry initialization in EV-D3-CONTRACT",
+      "25-row manifest in EV-D3-MANIFEST",
+      "descriptor custodian states in EV-D3-DESCRIPTORS",
+      "per-owner accessible source hashes and source-grounded contract maps EV-D3-SRC-* for exactly ten available owners"
+    ],
+    "verification_anchors": [
+      "all 25 rows are enumerated individually",
+      "exactly ten available rows require content-addressed implementation source and all materialized contract fields",
+      "five out-of-root callcenter rows are UNAVAILABLE and cannot dispatch",
+      "four missing taggable/admin rows are UNAVAILABLE and cannot dispatch",
+      "six custodian-required rows fail closed until named custodian evidence is supplied",
+      "descriptor hashes and sequence docs are never accepted as implementation evidence",
+      "every materialized contract field is validated from executable source or explicit unavailable state"
+    ],
+    "required_inputs": [
+      "custodian evidence for remote-mcp-user-onboarding",
+      "custodian evidence for mawf-playbook-full-test",
+      "custodian evidence for mawf-playbook-speed-test",
+      "custodian evidence for github-app-repos-refresh",
+      "custodian evidence for callcenter-harness-provision-verify",
+      "custodian evidence for scoped-context-edit",
+      "authorized in-root implementation source or explicit scope approval for any callcenter owner before it can become available",
+      "accessible implementation source for taggable-source-reload",
+      "accessible implementation source for taggable-api-deploy",
+      "accessible implementation source for taggable-admin-spa-deploy",
+      "accessible implementation source for taggable-media-worker-deploy"
+    ],
+    "owner": "prevention registry and owner-contract owner",
+    "closure_condition": "Registry initialization resolves every row to content-addressed executable constants or an explicit fail-closed unavailable/custodian-required state.",
+    "evidence_ids": [
+      "EV-D3-MANIFEST",
+      "EV-D3-CONTRACT",
+      "EV-D3-DESCRIPTORS",
+      "EV-D3-SEQUENCES",
+      "EV-D3-SRC-LOCAL-WORKFLOW-ORCH-IMAGE",
+      "EV-D3-SRC-GREENFIELD-FULL-DRIVE",
+      "EV-D3-SRC-MAWF-PLAYBOOK",
+      "EV-D3-SRC-CLAUDE-AUTH-TOKEN-REFRESH",
+      "EV-D3-SRC-DISCOVERY-PROMOTION-LIFECYCLE",
+      "EV-D3-SRC-COMMIT-PUSH-MAIN",
+      "EV-D3-SRC-DISCOVERY-BOOTSTRAP",
+      "EV-D3-SRC-DISCOVERY-CANDIDATE-RECONCILIATION",
+      "EV-D3-SRC-CONVERGENCE-CHECKPOINT-RUN",
+      "EV-D3-SRC-CONVERGENCE-STATE-REVIEW-CYCLE"
+    ],
+    "obligation_id": "PO-D3-OWNER-CONTRACTS"
+  },
+  {
+    "status": "READY",
+    "implementation_anchors": [
+      "D3 registry initialization boundary",
+      "25-row owner coverage matrix",
+      "source hash validation",
+      "availability_policy fail-closed behavior",
+      "ten-row materialized available owner contract map"
+    ],
+    "verification_anchors": [
+      "schema validation rejects missing materialized fields for available rows",
+      "all-25 coverage is required",
+      "source hash drift rejects registration",
+      "prose descriptor cannot satisfy executable fields",
+      "unavailable owner dispatch is rejected",
+      "custodian-required owner dispatch is rejected",
+      "available owner dispatch uses materialized canonical call",
+      "reconcile and terminal contracts are deterministic at the script CLI boundary"
+    ],
+    "required_inputs": [
+      "test fixture covering all 25 owner rows"
+    ],
+    "owner": "prevention owner-contract acceptance owner",
+    "closure_condition": "Accepted owners are executable and deterministic; unavailable and custodian-required owners fail closed without inferred behavior.",
+    "evidence_ids": [
+      "EV-FROZEN-REQS",
+      "EV-D3-MANIFEST",
+      "EV-D3-CONTRACT",
+      "EV-D3-DESCRIPTORS",
+      "EV-D3-SRC-LOCAL-WORKFLOW-ORCH-IMAGE",
+      "EV-D3-SRC-GREENFIELD-FULL-DRIVE",
+      "EV-D3-SRC-MAWF-PLAYBOOK",
+      "EV-D3-SRC-CLAUDE-AUTH-TOKEN-REFRESH",
+      "EV-D3-SRC-DISCOVERY-PROMOTION-LIFECYCLE",
+      "EV-D3-SRC-COMMIT-PUSH-MAIN",
+      "EV-D3-SRC-DISCOVERY-BOOTSTRAP",
+      "EV-D3-SRC-DISCOVERY-CANDIDATE-RECONCILIATION",
+      "EV-D3-SRC-CONVERGENCE-CHECKPOINT-RUN",
+      "EV-D3-SRC-CONVERGENCE-STATE-REVIEW-CYCLE"
+    ],
+    "obligation_id": "PO-D3-OWNER-CONTRACTS-ACCEPTANCE"
+  }
+]

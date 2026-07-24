@@ -1,0 +1,49 @@
+{
+  "schema_version": 1,
+  "charter_id": "prevention-registered-owner-production-composition-20260719",
+  "objective": "Ground the finite production composition required to run the ten approved registered operational owners through PreventionController and OwnerRuntime, including an ID-only gateway, authoritative capacity and bindings, and real source-query contracts for the existing 43 owner/profile routes.",
+  "research_questions": [
+    "How does the real registered-operation entrypoint reconstruct one already-recorded typed ActionIntent from task/run/context/intent identity without accepting owner argv, JSON, budgets, roots, or source edges?",
+    "What persisted one-writer ownership and repository-root evidence constructs the production PreventionJournal and controller composition root?",
+    "What exact trusted locator, acquisition method, result schema, and semantic predicate must each of the 43 existing profile routes materialize for the five source-edge kinds?",
+    "Which budget-capacity, binding-provider, approval, credential-handle, remote-repository, Docker, Git, local-state, and operator inputs already have authoritative acquisition routes, and which must fail closed?",
+    "What same-path evidence proves real execution, crash reconciliation, and semantic terminal verification without acceptance fixtures or universal Codex tool interception?"
+  ],
+  "in_scope": [
+    "the ten existing AVAILABLE owners and their 43 already-materialized profiles",
+    "an ID-only registered-owner execution gateway and work-memory one-writer production composition root",
+    "five production source-edge kinds: LOCAL_STATE, GIT, DOCKER, CREDENTIAL, and OPERATOR",
+    "existing source-owned receipts, owner sources, trusted-root contracts, provider handles, budget authority, and same-path tests in memory-knowledge and mcp-agents-workflow"
+  ],
+  "exclusions": [
+    "universal interception of ordinary Codex Bash, edit, browser, MCP, or subagent actions",
+    "global controller FD 198 or new Codex authentication/hook infrastructure",
+    "changing the 10 AVAILABLE / 6 CUSTODIAN_EVIDENCE_REQUIRED / 9 UNAVAILABLE classification",
+    "new owners, phase-ledger contracts, deployment, commit, push, secret access, external messages, or inferred acquisition paths"
+  ],
+  "authoritative_roots": [
+    "/Users/kamenkamenov/memory-knowledge",
+    "/Users/kamenkamenov/mcp-agents-workflow"
+  ],
+  "supplied_input": "The approved practical boundary governs registered operational workflows only. Audit proved the ten owners are acceptance-executable but lack a production controller composition, real source edges, external bindings, capacity construction, and materialized source acquisition recipes.",
+  "required_output_package": [
+    "manifest.json",
+    "research.md",
+    "requirements.json",
+    "evidence-index.json",
+    "findings.json",
+    "planner-handoff.md"
+  ],
+  "budget": {
+    "maximum_candidate_rounds": 3,
+    "maximum_agent_spawn_attempts": 15,
+    "maximum_elapsed_minutes": 60,
+    "maximum_retries_per_role": 1
+  },
+  "terminal_rules": [
+    "PASS requires the core candidate, all three independent lenses, and adjudication to agree that every production acquisition route is grounded or explicitly fail closed.",
+    "GAPS means a correction remains possible from the two authoritative repositories.",
+    "BLOCKED means a required real provider, authority, or source locator has no accessible or named acquisition route.",
+    "No fixture-generated observation may be represented as production evidence."
+  ]
+}

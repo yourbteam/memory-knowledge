@@ -1,0 +1,44 @@
+{
+  "verdict": "GAPS",
+  "findings": [
+    {
+      "id": "RSAT-001",
+      "fingerprint": "operator-intake-still-permits-literal-argv-authorship",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-003", "INV-005"],
+      "type": "SATISFACTION_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "The model can still freestyle executable and argv tokens, reproducing the failure the feature is intended to remove.",
+      "evidence": ["script_intake.py argv fields ask for an executable and literal tokens; sequence_checked_exec exposes that collector; the candidate does not prohibit such operator schemas."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "RSAT-002",
+      "fingerprint": "legacy-and-documented-bypasses-not-enumerated-or-enforced",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-004", "INV-005"],
+      "type": "SATISFACTION_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "Docs, generated next commands, wrappers, and public legacy CLIs could continue bypassing intake.",
+      "evidence": ["Generic bypass surfaces do not enumerate remote user-admin generated/retry commands or define an enforceable internal-only legacy boundary."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "RSAT-003",
+      "fingerprint": "machine-adapter-and-parameterless-test-exceptions-lack-direct-evidence-bindings",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": ["INV-002", "INV-005", "INV-007"],
+      "type": "SATISFACTION_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "Ungrounded exceptions could preserve public bypasses or wrap genuine internal contracts unnecessarily.",
+      "evidence": ["judge_ollama.py and test_engine_upgrades.py need direct evidence records and explicit caller/contract/verification boundaries."],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    }
+  ]
+}

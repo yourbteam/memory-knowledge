@@ -1,0 +1,29 @@
+{
+  "schema_version": 1,
+  "task_id": "prevention-system-completion-owner-budget-catalog-open",
+  "operation_kind": "workflow-drive",
+  "date": "2026-07-17",
+  "sequence_name": "open-governed-contract-blocker",
+  "outcome": "Open a confirmed contract-boundary blocker in the canonical work-memory ledger after the controller has created the governed run.",
+  "why_repeatable": "Any implementation or convergence run can discover a stable contract blocker that must be durably cataloged before correction.",
+  "inputs": [
+    "A confirmed non-secret error signature, symptom, evidence, impact, stable boundary, subject id, step id, and surface."
+  ],
+  "steps": [
+    {
+      "step": "open-contract-blocker",
+      "command": "python3 scripts/blocker_catalog.py open --run-id <run-id> --subject-id <subject-id> --step-id <step-id> --surface <surface> --error-signature <error-signature> --symptom <symptom> --evidence <evidence> --impact <impact> --boundary <boundary>",
+      "result": "The command returns canonical blocker, occurrence, and event identities and regenerates the blocker view.",
+      "note": "Use only non-secret evidence and retain every returned identity for correction and same-path verification."
+    }
+  ],
+  "failure_handling": "If the catalog rejects the run or payload, stop and correct the governed lifecycle or typed input; do not write the generated Markdown view manually.",
+  "verified_path": "The blocker-open event exists in the canonical ledger and the generated blocker view names the same blocker as open.",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "scripts/blocker_catalog.py"
+    }
+  ]
+}

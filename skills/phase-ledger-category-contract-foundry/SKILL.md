@@ -36,7 +36,8 @@ from); running it as bare `python3` or from another directory will abort with
 `PyYAML is required to inspect workflow YAML`:
 
 ```bash
-uv run python /Users/kamenkamenov/.codex/skills/phase-ledger-category-contract-foundry/scripts/phase_contract_inventory.py \
+SKILL_ROOT="$(cd "$(dirname "<path-to-this-SKILL.md>")" && pwd)"  # the installed skill directory on any client, or skills/phase-ledger-category-contract-foundry/ in the canonical memory-knowledge repo
+uv run python "$SKILL_ROOT/scripts/phase_contract_inventory.py" \
   --repo-root <repo-root> \
   --workflow <workflow-name> \
   --phase <phase-id-or-name> \

@@ -1,0 +1,1738 @@
+{
+  "attempts": [
+    {
+      "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+      "close_evidence": {
+        "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+        "completion_evidence": "User-approved clean external Codex subprocess completed read-only; parent corrected three mechanically verified raw artifact hashes; candidate validation passed; package registration was refused only by elapsed TIME_BUDGET.",
+        "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+        "output_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+        "role": "CORE_RESEARCHER",
+        "round": 2,
+        "runtime": "codex-exec-approved-substitution",
+        "runtime_agent_id": "codex-exec-019f70e1-aa12-7681-8a3e-343b4cc9c0f0",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+      "output_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+      "recorded_at": "2026-07-17T16:53:25.712478Z",
+      "role": "CORE_RESEARCHER",
+      "round": 2,
+      "runtime_agent_id": "codex-exec-019f70e1-aa12-7681-8a3e-343b4cc9c0f0",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+      "close_evidence": {
+        "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+        "completion_evidence": "Fresh independent internal-readiness lens completed read-only against the immutable round-two candidate and returned GAPS.",
+        "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+        "output_hash": "7cb979c93e1b5f7ba9d4ea5bd46f0386908e458d1ba297abdfb03cb1811ecc60",
+        "role": "INTERNAL_READINESS",
+        "round": 2,
+        "runtime": "codex-exec-approved-substitution",
+        "runtime_agent_id": "codex-exec-terminal-68578",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+      "output_hash": "7cb979c93e1b5f7ba9d4ea5bd46f0386908e458d1ba297abdfb03cb1811ecc60",
+      "recorded_at": "2026-07-17T17:06:11.557920Z",
+      "role": "INTERNAL_READINESS",
+      "round": 2,
+      "runtime_agent_id": "codex-exec-terminal-68578",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+      "close_evidence": {
+        "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+        "completion_evidence": "Fresh independent requirements-coverage lens completed read-only against the immutable round-two candidate and returned GAPS.",
+        "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+        "output_hash": "66504b1b2a9ea7b2c680f878afbe6b0fff0f24508a4d92b430dd03bf16ff2f2e",
+        "role": "REQUIREMENTS_COVERAGE",
+        "round": 2,
+        "runtime": "codex-exec-approved-substitution",
+        "runtime_agent_id": "codex-exec-terminal-98143",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+      "output_hash": "66504b1b2a9ea7b2c680f878afbe6b0fff0f24508a4d92b430dd03bf16ff2f2e",
+      "recorded_at": "2026-07-17T17:06:39.264122Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 2,
+      "runtime_agent_id": "codex-exec-terminal-98143",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+      "close_evidence": {
+        "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+        "completion_evidence": "Fresh independent requirements-satisfaction lens completed read-only against the immutable round-two candidate and returned GAPS.",
+        "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+        "output_hash": "ea9cf9e372ec31fc1bcca0fcc9dd3364ad6100ea7d932445bd2b1ad01c0d61c3",
+        "role": "REQUIREMENTS_SATISFACTION",
+        "round": 2,
+        "runtime": "codex-exec-approved-substitution",
+        "runtime_agent_id": "codex-exec-terminal-57841",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+      "output_hash": "ea9cf9e372ec31fc1bcca0fcc9dd3364ad6100ea7d932445bd2b1ad01c0d61c3",
+      "recorded_at": "2026-07-17T17:07:08.780141Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 2,
+      "runtime_agent_id": "codex-exec-terminal-57841",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+      "close_evidence": {
+        "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+        "completion_evidence": "Fresh adjudicator completed; parent normalized only invalid classification labels to the controller finite enums while preserving raw findings and dispositions.",
+        "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+        "output_hash": "c6fe4ae995ebfd5b0a484a72de45b22ce813cf51f60e2c98297e7610caeb63b3",
+        "role": "ADJUDICATOR",
+        "round": 2,
+        "runtime": "codex-exec-approved-substitution",
+        "runtime_agent_id": "codex-exec-terminal-61056",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+      "output_hash": "c6fe4ae995ebfd5b0a484a72de45b22ce813cf51f60e2c98297e7610caeb63b3",
+      "recorded_at": "2026-07-17T17:18:39.703564Z",
+      "role": "ADJUDICATOR",
+      "round": 2,
+      "runtime_agent_id": "codex-exec-terminal-61056",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "budgets": {
+    "deadline_at": "2026-07-17T17:50:21.311187Z",
+    "max_attempts": 15,
+    "max_minutes": 60,
+    "max_role_retries": 1,
+    "max_rounds": 3,
+    "started_at": "2026-07-17T16:50:21.311187Z"
+  },
+  "candidates": {
+    "candidate-ce5f65a5e5a8840def1d598f": {
+      "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+      "candidate_id": "candidate-ce5f65a5e5a8840def1d598f",
+      "candidate_payload": {
+        "evidence_index": [
+          {
+            "accessed_at": null,
+            "id": "EV-FROZEN-CHARTER",
+            "limitations": "Charter is a requirement authority, not runtime evidence.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/charter.json",
+            "source_sha256": "809c017559a21368f5cfd32bca0f09407f53e234496833e8094ca252b7dbae7f",
+            "supported_claim": "Defines the frozen three-defect research scope and exclusions."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-FROZEN-REQS",
+            "limitations": "Specifies required behavior but does not prove current runtime behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/requirements.json",
+            "source_sha256": "8bbf53bf287c6b1a442e1e584c54908f9730416221a9edae83e83260d40efc17",
+            "supported_claim": "Defines the six frozen requirements and their acceptance intent."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-R1-READINESS",
+            "limitations": "Lens finding only; round 2 must ground the fixes independently.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/work/internal-readiness-round-1.json",
+            "source_sha256": "071cafb71879e77ba753a5d3c662cdf6e85c6d774aa387d4e2d8791d5055fb38",
+            "supported_claim": "Names round-1 research-actionable gaps for D1 launcher/auth route, D2 policy input, and D3 six custodian-dependent rows."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-R1-COVERAGE",
+            "limitations": "Lens finding only; it does not supply implementation evidence.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/work/coverage-round-1.json",
+            "source_sha256": "f08c6414ca0213d81192a0e55e80906e2e9028056d3243a7b3996bb4af479993",
+            "supported_claim": "Names round-1 gaps for D2 current metric consumer evidence and D3 per-owner implementation evidence."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-R1-SATISFACTION",
+            "limitations": "Lens finding only; round 2 must provide the missing source trace.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/work/satisfaction-round-1.json",
+            "source_sha256": "03ab8966a82f786c10d96da96ffc97e057bf653643fb05db10c1247b78a8e427",
+            "supported_claim": "Names round-1 gaps for unproven per-session config/auth, missing D2 denominator trace, and unsupported D3 owner source claims."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-WRAPPER",
+            "limitations": "Does not prove official Codex hook semantics.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/cli/codex_cli.py",
+            "source_sha256": "3de69c4f299e9cf842a457a8ee08db325c833f68688d35e93cbd547d889e5e6d",
+            "supported_claim": "Codex is launched in a target working directory with sandbox, approval, model, and config flags, but without hook installation or preflight proof."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-EXECUTOR",
+            "limitations": "Does not configure Codex hooks.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/agents/executor.py",
+            "source_sha256": "a2ac8a1e24a3614d7849b2f2de1840e0126ea56b7b379dc9072d317b82812e16",
+            "supported_claim": "The workflow executor selects the task worktree as the Codex working directory."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-TRANSLATOR",
+            "limitations": "Does not prove launcher process behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/agents/tool_translator.py",
+            "source_sha256": "06a24478078ef051d3842d25e03659170b117453228651d05c675d9e8b43c32b",
+            "supported_claim": "Codex tool translation controls sandbox/approval/MCP names but not pre-action host interception."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-CREDENTIAL-REFRESH",
+            "limitations": "No credentials were read; this is absence evidence for the required D1 provider boundary.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/credential_refresh.py",
+            "source_sha256": "4e5c66f9a5a5b1308cef4c9cd9e38795739b556f4e4c99e7a5dc3930d2b471cc",
+            "supported_claim": "The inspected auth maintenance path checks a Codex auth file path and refresh metadata; it is not evidence of an authorized per-session authenticated-session provider that avoids reading or copying credentials."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-OFFICIAL-PRETOOL",
+            "limitations": "Does not wire prevention_host into workflow-orch.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/private/tmp/openai-codex-hook-source/codex-rs/hooks/src/events/pre_tool_use.rs",
+            "source_sha256": "7c986625bfc296903b1352193ccf060c05dce33a3c805e0b3f9ccc49f6403a8e",
+            "supported_claim": "Official Codex source defines the PreToolUse request and outcome contract."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-OFFICIAL-DISCOVERY",
+            "limitations": "Does not prove workflow-orch provisions any source.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/private/tmp/openai-codex-hook-source/codex-rs/hooks/src/engine/discovery.rs",
+            "source_sha256": "21f27353da32edfebf91d85a6658f6207c3bae36e253a0d253369ef2c37e7136",
+            "supported_claim": "Official Codex source distinguishes system, user, project, managed, and session config sources and their trust metadata."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-OFFICIAL-OUTPUT",
+            "limitations": "Does not establish project hook durability in worktrees.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/private/tmp/openai-codex-hook-source/codex-rs/hooks/src/engine/output_parser.rs",
+            "source_sha256": "910f5543da2e4e8564acad34284be904fc9bc9c7eb25607a81399fb3e4bb7e5c",
+            "supported_claim": "Official Codex parser supports PreToolUse deny/block behavior and allow with updated input under the hook-specific output contract."
+          },
+          {
+            "accessed_at": "2026-07-17T00:00:00Z",
+            "id": "EV-D1-WORKTREE-ISSUE",
+            "limitations": "External issue evidence; it is not a formal API guarantee and has no local file hash.",
+            "source_kind": "EXTERNAL",
+            "source_locator": "https://github.com/openai/codex/issues/27133",
+            "source_sha256": null,
+            "supported_claim": "The authorized issue reports that project-level hooks are ignored in a git worktree while user-level hooks fire."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D1-HOST",
+            "limitations": "No launcher currently invokes it before governed work.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_host.py",
+            "source_sha256": "f9f9412e4982b5816a8197ab9c39a4f0ab4288325a9c751abf08c7d990c69b8b",
+            "supported_claim": "The local host adapter parses Bash/apply_patch/MCP hook inputs, fails closed on controller errors, and verifies signed host receipts."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D2-EVENTS",
+            "limitations": "Absence evidence only; future event schema must be implemented.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/work_memory.py",
+            "source_sha256": "729bfcd846e324c31a60e76c7eac57de4a5f23cc6db4e2725d20a74ae8a4b16f",
+            "supported_claim": "Prevention event schemas include intent, host capability, dispatch, registered reuse, and prevented failure events, but no immutable recurring eligibility event or denominator query producer."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D2-CONTROLLER",
+            "limitations": "Does not prove all callers use this controller.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_controller.py",
+            "source_sha256": "23ce029a86134087207d1b7a88785315d694382144e423f19c2efc216affc630",
+            "supported_claim": "The controller records typed intent before dispatch but does not persist registry hash, owner contract hash, recurrence policy, availability policy, eligibility, or ineligible reason."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D2-REGISTRY",
+            "limitations": "Does not produce metric eligibility.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_registry.py",
+            "source_sha256": "b5720a7711d207bcc6dbfef971bb4d94f20ef81bd318571286195453bc1f63bc",
+            "supported_claim": "The registry returns rows and a content hash, but does not define recurrence or availability policy."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D2-SELECTOR",
+            "limitations": "Selection is downstream of the required pre-dispatch eligibility producer.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_selector.py",
+            "source_sha256": "5755fc22fc2814779a90d840ff1d30e8e0eaedd8935145496fa038238c841dbb",
+            "supported_claim": "The selector emits dispatch selected/rejected decisions but no denominator eligibility fact."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-MANIFEST",
+            "limitations": "Identifier strings do not prove executable behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-migration-manifest.json",
+            "source_sha256": "0ee6c3be164e4e7d932641b0cba9d0aab8117a3fdd0942fc759d70ccae429bcc",
+            "supported_claim": "Contains 25 owner rows with identifier strings but no materialized executable constants or implementation source hashes."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-CONTRACT",
+            "limitations": "Does not prove dispatch/reconcile/terminal behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_contract.py",
+            "source_sha256": "3a0c888ff1c2ddb5f76a734df13fb73e49c29d5c888ad0e42626930443bb14bd",
+            "supported_claim": "OwnerRegistry validates manifest shape, cardinality, source-inventory hash, and evidence pointers but not executable owner constants."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-DESCRIPTORS",
+            "limitations": "Descriptor prose is not implementation evidence.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-descriptors.json",
+            "source_sha256": "51112bd2daeba085174aee15d74f2fd78df55c78ab42c952a7fd0e3dd181cda4",
+            "supported_claim": "Records descriptor status for all 25 rows and identifies six rows requiring custodian evidence."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SEQUENCES",
+            "limitations": "Catalog prose is not executable owner evidence.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/operations/sequences/SEQUENCES.md",
+            "source_sha256": "b421f4064a8807896b275abd1b40c4af3d29043dab1dbc30205de1a35d2c91b9",
+            "supported_claim": "Lists the 25 registered sequence ids and their catalog anchors."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-LOCAL-WORKFLOW-ORCH-IMAGE",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/local_workflow_orch_image_harness.py",
+            "source_sha256": "3cf45608f60d360e1dd1eaf9ba10fdfd2a9ec3a8c930efa899ffdf118107322b",
+            "supported_claim": "Accessible implementation source for local-workflow-orch-image."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-GREENFIELD-FULL-DRIVE",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_full_drive.sh",
+            "source_sha256": "aea47b779974be3011829c09367faf12fc2ae45faa6af0711d432b7f1e915783",
+            "supported_claim": "Accessible implementation source for greenfield-full-drive."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-REMOTE-MCP-USER-ONBOARDING",
+            "limitations": "Descriptor still requires custodian evidence for one deterministic owner/result contract across TUI, MCP, HTTP, filesystem, and fallback paths.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/dist/remote-mcp-user-admin/remote_mcp_user_admin_tui.py",
+            "source_sha256": "1f20c0897ac9ac5a7446e6b1bc453ebf64f7eb94b339eb31f9570447aa8cbca8",
+            "supported_claim": "Accessible helper source for remote-mcp-user-onboarding."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-MAWF-PLAYBOOK",
+            "limitations": "Full/speed rows still require custodian evidence for an exact aggregate transition/result envelope.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py",
+            "source_sha256": "037b3e8d81023c885e10dae2965deccaebf335cde3ce64313e96597998b3c223",
+            "supported_claim": "Accessible implementation source for mawf-playbook blocker reentry and helper source for both MAWF playbook test drivers."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-GITHUB-APP-REPOS-REFRESH",
+            "limitations": "Descriptor still requires custodian evidence for the wrapper argv/auth/result contract.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/github_app_repos_refresh.py",
+            "source_sha256": "a40389bbde39cf33f217bf8d79300c105c0080a7ac024d89285e18588a5da0ee",
+            "supported_claim": "Accessible helper source for github-app-repos-refresh."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-CLAUDE-AUTH-TOKEN-REFRESH",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/claude_auth_refresh.sh",
+            "source_sha256": "bad8f0e2fc9dc15a28a4cc7bead7d7872d9238182188200d656d518e4b6a988c",
+            "supported_claim": "Accessible implementation source for claude-auth-token-refresh."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-AIRGAPPED-STT",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/callcenter-harness/scripts/setup_airgapped_stt.sh",
+            "source_sha256": "4f4dc5ed446561ec993aecfb0a42f097947040fd0b9bb4f4f08361bf77993221",
+            "supported_claim": "Accessible implementation source for airgapped-local-bulgarian-stt."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-AIRGAPPED-REDACTION",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/callcenter-harness/scripts/setup_airgapped_redaction.sh",
+            "source_sha256": "e368918634ccad9ab368897da31a87628e7cad603d328dcf9981f7183e4b75eb",
+            "supported_claim": "Accessible implementation source for airgapped-redaction-stack."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-AIRGAPPED-LLM-JUDGE",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/callcenter-harness/scripts/setup_airgapped_judge.sh",
+            "source_sha256": "2b08797b34656fd10b3052b8c7c85f97d27f7a03cc6ce931487a7413b7ca40d1",
+            "supported_claim": "Accessible implementation source for airgapped-llm-judge."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-SECURE-LANDING-SEED",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/callcenter-harness/scripts/seed_landing.sh",
+            "source_sha256": "f07aec3fe95a68ed1651eb747f3f0747e57278b01d24017e9fbb042ff7b5e1de",
+            "supported_claim": "Accessible implementation source for secure-landing-seed."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-CALLCENTER-ENGINE-INVARIANTS",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/callcenter-harness/scripts/test_engine_upgrades.py",
+            "source_sha256": "6197ad3d9212caf86792465dfea1fc775b795905ebada9988fef2220b00ed9bf",
+            "supported_claim": "Accessible implementation source for callcenter-harness-engine-invariants."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-DISCOVERY-PROMOTION-LIFECYCLE",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_promotion_lifecycle.py",
+            "source_sha256": "49e66d7a0e5944419f7e59902056740e7510302e21ad4e707bd263ced822b731",
+            "supported_claim": "Accessible implementation source for discovery-promotion-lifecycle."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-COMMIT-PUSH-MAIN",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
+            "source_sha256": "55206e0b25c6eeb7df9d98775ff8d0c1ff69df0565d9add3a0d9487a5d40fe54",
+            "supported_claim": "Accessible implementation source for commit-push-main."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-DISCOVERY-BOOTSTRAP",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_bootstrap.py",
+            "source_sha256": "a1c16783567bb8bbb84be2e59a636bf6ef73d7ba85fc684c706bcda6590f8d30",
+            "supported_claim": "Accessible implementation source for discovery-bootstrap."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-DISCOVERY-CANDIDATE-RECONCILIATION",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_candidate_reconciliation.py",
+            "source_sha256": "a846e823d027d229e3a7642776dda4d1bbb2e5cbbe192f38dd115223ac14ae9b",
+            "supported_claim": "Accessible implementation source for discovery-candidate-reconciliation."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-CONVERGENCE-CHECKPOINT-RUN",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_checkpoint_run.py",
+            "source_sha256": "39da9360585a6b08d416a90a320e8a762fff195adde2c5a2c07890b9a81248e7",
+            "supported_claim": "Accessible implementation source for convergence-checkpoint-run."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-SCOPED-CONTEXT-EDIT",
+            "limitations": "Descriptor still requires custodian evidence for a typed patch payload/executor boundary.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/context_edit_guard.py",
+            "source_sha256": "f5f1a2334656f85fe2cf1b5b6e167ae04fa18ccb75c0ee87f32d7ac3f472f3c0",
+            "supported_claim": "Accessible guard source for scoped-context-edit."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-D3-SRC-CONVERGENCE-STATE-REVIEW-CYCLE",
+            "limitations": "Source hash alone does not materialize all required owner contract fields.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_state_review_cycle.py",
+            "source_sha256": "594a12be5f8c29d17fd69d3e5cbf22e8f099e465e6e2fc8cc244dad1aa0e275e",
+            "supported_claim": "Accessible implementation source for convergence-state-review-cycle."
+          }
+        ],
+        "material_gaps": [
+          "GAP-WORKTREE-SAFE-HOST",
+          "GAP-AUTHORITATIVE-RECURRING-ELIGIBILITY",
+          "GAP-MATERIALIZED-25-OWNER-CONTRACTS"
+        ],
+        "planner_readiness_constraints": {
+          "PO-D1-HOST": {
+            "closure_condition": "Governed Codex sessions start only after launcher-owned configuration, successful nonce-bound challenge, and signed HostCapabilities receipt; otherwise launch is visibly rejected.",
+            "evidence_ids": [
+              "EV-D1-WRAPPER",
+              "EV-D1-EXECUTOR",
+              "EV-D1-TRANSLATOR",
+              "EV-D1-CREDENTIAL-REFRESH",
+              "EV-D1-OFFICIAL-PRETOOL",
+              "EV-D1-OFFICIAL-DISCOVERY",
+              "EV-D1-OFFICIAL-OUTPUT",
+              "EV-D1-WORKTREE-ISSUE",
+              "EV-D1-HOST",
+              "EV-D3-CONTRACT"
+            ],
+            "implementation_anchors": [
+              "CodexCliWrapper launch boundary in EV-D1-WRAPPER",
+              "official Codex config source/trust behavior in EV-D1-OFFICIAL-DISCOVERY",
+              "official PreToolUse contract in EV-D1-OFFICIAL-PRETOOL and EV-D1-OFFICIAL-OUTPUT",
+              "HostCapabilities and receipt verifier in EV-D1-HOST and EV-D3-CONTRACT"
+            ],
+            "owner": "workflow-orch Codex launcher owner",
+            "required_inputs": [
+              "authorized authenticated-session provider that can make a fresh per-session Codex home usable without reading or copying credentials"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "fresh per-session Codex home contains only launcher-installed hook config and no copied credentials",
+              "ordinary repository and git worktree both run the nonce-bound harmless PreToolUse challenge before mutation",
+              "signed HostCapabilities receipt records session_id, challenge_nonce, config_sha256, hook_sha256, trust/enabled state, class coverage, launcher_pid, and child_pid",
+              "missing authorized authenticated-session provider fails closed before Codex launch"
+            ]
+          },
+          "PO-D1-HOST-ACCEPTANCE": {
+            "closure_condition": "Every governed mutation has live host proof independent of project hook discovery, and no session starts when enforcement or authorized authentication is unavailable.",
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D1-WRAPPER",
+              "EV-D1-OFFICIAL-DISCOVERY",
+              "EV-D1-OFFICIAL-PRETOOL",
+              "EV-D1-WORKTREE-ISSUE",
+              "EV-D1-HOST"
+            ],
+            "implementation_anchors": [
+              "launcher-owned fresh CODEX_HOME",
+              "trusted installed PreToolUse hook",
+              "nonce-bound harmless challenge",
+              "signed HostCapabilities receipt",
+              "fail-closed authentication boundary"
+            ],
+            "owner": "workflow-orch acceptance owner",
+            "required_inputs": [
+              "representative ordinary repository",
+              "representative git worktree",
+              "authorized authenticated-session provider evidence"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "ordinary repo pass",
+              "git worktree pass",
+              "project hook ignored but launcher-owned hook still fires",
+              "unsupported tool class withheld or rejected",
+              "receipt replay rejected",
+              "receipt expiry rejected",
+              "auth provider missing rejected before launch",
+              "resume requires a fresh challenge and receipt"
+            ]
+          },
+          "PO-D2-ELIGIBILITY": {
+            "closure_condition": "Ledger replay reproduces the same registered-use denominator solely from immutable pre-dispatch eligibility and dispatch records.",
+            "evidence_ids": [
+              "EV-D2-EVENTS",
+              "EV-D2-CONTROLLER",
+              "EV-D2-REGISTRY",
+              "EV-D2-SELECTOR",
+              "EV-D3-CONTRACT"
+            ],
+            "implementation_anchors": [
+              "ActionIntent typed boundary in EV-D3-CONTRACT",
+              "PreventionController register-before-dispatch boundary in EV-D2-CONTROLLER",
+              "registry hash producer in EV-D2-REGISTRY",
+              "prevention journal event schema in EV-D2-EVENTS",
+              "dispatch consumer in EV-D2-SELECTOR"
+            ],
+            "owner": "prevention controller and telemetry owner",
+            "required_inputs": [
+              "materialized owner contracts carrying recurrence_policy and availability_policy",
+              "canonical ineligible_reason_code set owned by the telemetry/controller contract"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "eligibility event is appended after intent validation and before dispatch",
+              "event contains exactly intent_id, registry_sha256, owner_sequence_id, owner_contract_sha256, recurrence_policy, availability_policy, eligibility, ineligible_reason_code",
+              "recurrence_policy accepts only ONE_SHOT, RECURRENT, NOT_APPLICABLE",
+              "availability_policy accepts only AVAILABLE, UNAVAILABLE, CUSTODIAN_EVIDENCE_REQUIRED",
+              "later registry edits do not change replayed denominator",
+              "later outcome edits do not change replayed denominator"
+            ]
+          },
+          "PO-D2-ELIGIBILITY-ACCEPTANCE": {
+            "closure_condition": "registered_dispatches / eligible_recurring_actions is reproducible from durable records and cannot be reclassified after dispatch or outcome.",
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D2-EVENTS",
+              "EV-D2-CONTROLLER",
+              "EV-D2-REGISTRY",
+              "EV-D2-SELECTOR"
+            ],
+            "implementation_anchors": [
+              "pre-dispatch eligibility event",
+              "dispatch_selected and dispatch_rejected events",
+              "registered-use metric query consumer"
+            ],
+            "owner": "prevention telemetry acceptance owner",
+            "required_inputs": [
+              "representative governed measurement window"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "RECURRENT plus AVAILABLE plus selected dispatch enters denominator",
+              "ONE_SHOT excludes denominator with explicit reason",
+              "NOT_APPLICABLE excludes denominator with explicit reason",
+              "UNAVAILABLE excludes denominator with explicit reason",
+              "CUSTODIAN_EVIDENCE_REQUIRED excludes denominator with explicit reason",
+              "metric query fails closed when eligibility event is missing",
+              "95 percent threshold uses durable events only"
+            ]
+          },
+          "PO-D3-OWNER-CONTRACTS": {
+            "closure_condition": "Registry initialization resolves every row to content-addressed executable constants or an explicit fail-closed unavailable/custodian-required state.",
+            "evidence_ids": [
+              "EV-D3-MANIFEST",
+              "EV-D3-CONTRACT",
+              "EV-D3-DESCRIPTORS",
+              "EV-D3-SEQUENCES",
+              "EV-D3-SRC-LOCAL-WORKFLOW-ORCH-IMAGE",
+              "EV-D3-SRC-GREENFIELD-FULL-DRIVE",
+              "EV-D3-SRC-REMOTE-MCP-USER-ONBOARDING",
+              "EV-D3-SRC-MAWF-PLAYBOOK",
+              "EV-D3-SRC-GITHUB-APP-REPOS-REFRESH",
+              "EV-D3-SRC-CLAUDE-AUTH-TOKEN-REFRESH",
+              "EV-D3-SRC-AIRGAPPED-STT",
+              "EV-D3-SRC-AIRGAPPED-REDACTION",
+              "EV-D3-SRC-AIRGAPPED-LLM-JUDGE",
+              "EV-D3-SRC-SECURE-LANDING-SEED",
+              "EV-D3-SRC-CALLCENTER-ENGINE-INVARIANTS",
+              "EV-D3-SRC-DISCOVERY-PROMOTION-LIFECYCLE",
+              "EV-D3-SRC-COMMIT-PUSH-MAIN",
+              "EV-D3-SRC-DISCOVERY-BOOTSTRAP",
+              "EV-D3-SRC-DISCOVERY-CANDIDATE-RECONCILIATION",
+              "EV-D3-SRC-CONVERGENCE-CHECKPOINT-RUN",
+              "EV-D3-SRC-SCOPED-CONTEXT-EDIT",
+              "EV-D3-SRC-CONVERGENCE-STATE-REVIEW-CYCLE"
+            ],
+            "implementation_anchors": [
+              "OwnerRegistry initialization in EV-D3-CONTRACT",
+              "25-row manifest in EV-D3-MANIFEST",
+              "descriptor custodian states in EV-D3-DESCRIPTORS",
+              "per-owner accessible source hashes EV-D3-SRC-*"
+            ],
+            "owner": "prevention registry and owner-contract owner",
+            "required_inputs": [
+              "custodian evidence for remote-mcp-user-onboarding",
+              "custodian evidence for mawf-playbook-full-test",
+              "custodian evidence for mawf-playbook-speed-test",
+              "custodian evidence for github-app-repos-refresh",
+              "custodian evidence for callcenter-harness-provision-verify",
+              "custodian evidence for scoped-context-edit",
+              "accessible implementation source for taggable-source-reload",
+              "accessible implementation source for taggable-api-deploy",
+              "accessible implementation source for taggable-admin-spa-deploy",
+              "accessible implementation source for taggable-media-worker-deploy"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "all 25 rows are enumerated individually",
+              "available rows require a content-addressed implementation source",
+              "unavailable rows fail closed",
+              "custodian-required rows fail closed until the named custodian evidence is supplied",
+              "descriptor hashes and sequence docs are never accepted as implementation evidence",
+              "every materialized contract field is validated from executable source or explicit unavailable state"
+            ]
+          },
+          "PO-D3-OWNER-CONTRACTS-ACCEPTANCE": {
+            "closure_condition": "Accepted owners are executable and deterministic; unavailable and custodian-required owners fail closed without inferred behavior.",
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D3-MANIFEST",
+              "EV-D3-CONTRACT",
+              "EV-D3-DESCRIPTORS"
+            ],
+            "implementation_anchors": [
+              "D3 registry initialization boundary",
+              "25-row owner coverage matrix",
+              "source hash validation",
+              "availability_policy fail-closed behavior"
+            ],
+            "owner": "prevention owner-contract acceptance owner",
+            "required_inputs": [
+              "test fixture covering all 25 owner rows"
+            ],
+            "status": "READY",
+            "verification_anchors": [
+              "schema validation rejects missing materialized fields",
+              "all-25 coverage is required",
+              "source hash drift rejects registration",
+              "prose descriptor cannot satisfy executable fields",
+              "unavailable owner dispatch is rejected",
+              "custodian-required owner dispatch is rejected",
+              "available owner dispatch uses materialized canonical call",
+              "reconcile and terminal contracts are deterministic"
+            ]
+          }
+        },
+        "requirement_statuses": [
+          {
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D1-WRAPPER",
+              "EV-D1-EXECUTOR",
+              "EV-D1-TRANSLATOR",
+              "EV-D1-CREDENTIAL-REFRESH",
+              "EV-D1-OFFICIAL-PRETOOL",
+              "EV-D1-OFFICIAL-DISCOVERY",
+              "EV-D1-OFFICIAL-OUTPUT",
+              "EV-D1-WORKTREE-ISSUE",
+              "EV-D1-HOST",
+              "EV-D3-CONTRACT"
+            ],
+            "requirement_id": "D1-CURRENT-HOST",
+            "research_value": {
+              "facts": {
+                "auth_absence": "No inspected source proves an authorized authenticated-session provider for a fresh per-session Codex home; credential_refresh.py is not sufficient because it concerns auth file checking/refresh metadata.",
+                "current_launcher": "CodexCliWrapper launches Codex in the task cwd with sandbox, approval, model, and optional config; no inspected launcher source creates a governed Codex home, installs a hook config, proves trust, runs a challenge, or records HostCapabilities.",
+                "current_tool_translation": "Tool translation configures sandbox, approval, and MCP names; it does not intercept tool calls.",
+                "current_workdir": "AgentExecutor supplies the task worktree as the working directory.",
+                "local_host": "prevention_host parses Bash, apply_patch, and MCP hook requests and verifies signed receipts, but is not wired by the launcher.",
+                "official_config_boundary": "Codex hook discovery distinguishes system, user, project, managed, and session config sources with source-specific trust metadata.",
+                "official_hook_contract": "PreToolUse carries session/cwd/model/permission/tool/input identifiers and can deny/block or allow with updated input.",
+                "worktree_behavior": "Authorized external issue reports project hooks ignored in git worktrees while user hooks fire."
+              },
+              "inferences": {
+                "credential_rule": "never read or copy credentials; fail closed without an evidenced authorized authenticated-session provider",
+                "project_hook_discovery": "not a stable enforcement boundary for task worktrees",
+                "stable_boundary": "launcher-owned fresh per-session Codex home plus installed trusted PreToolUse hook, nonce-bound harmless challenge, and signed HostCapabilities receipt"
+              },
+              "planner_obligations": [
+                "implement launcher-owned fresh per-session Codex home/config installation",
+                "prove hook trust and installation from Codex config/discovery behavior",
+                "run a harmless nonce-bound PreToolUse challenge before mutation",
+                "record and verify signed HostCapabilities receipt",
+                "reject launch when auth provider or enforcement proof is unavailable"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D1-WRAPPER",
+              "EV-D1-OFFICIAL-PRETOOL",
+              "EV-D1-OFFICIAL-DISCOVERY",
+              "EV-D1-OFFICIAL-OUTPUT",
+              "EV-D1-WORKTREE-ISSUE",
+              "EV-D1-HOST",
+              "EV-D3-CONTRACT"
+            ],
+            "requirement_id": "D1-FUTURE-HOST",
+            "research_value": {
+              "fail_closed_cases": [
+                "missing hook support",
+                "missing trusted installation proof",
+                "failed challenge",
+                "receipt mismatch",
+                "receipt replay",
+                "receipt expiry",
+                "unsupported action class not structurally withheld",
+                "missing authorized authenticated-session provider"
+              ],
+              "planner_obligations": [
+                "verify ordinary repo and git worktree behavior",
+                "verify unsupported-action rejection",
+                "verify resume uses a fresh challenge/receipt",
+                "verify auth-unavailable rejection before Codex launch"
+              ],
+              "required_boundary": {
+                "auth": "authorized authenticated-session provider required; no credential reading or copying",
+                "challenge": "nonce-bound harmless PreToolUse challenge before governed work",
+                "codex_home": "launcher-owned fresh per-session Codex home or equivalent config home",
+                "receipt": "signed HostCapabilities receipt bound to session_id, challenge_nonce, config_sha256, hook_sha256, launcher_pid, child_pid, class coverage, and expiry",
+                "trust_and_installation": "trusted launcher-installed PreToolUse hook configuration, not project-local hook discovery"
+              }
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D2-EVENTS",
+              "EV-D2-CONTROLLER",
+              "EV-D2-REGISTRY",
+              "EV-D2-SELECTOR",
+              "EV-D3-CONTRACT"
+            ],
+            "requirement_id": "D2-CURRENT-ELIGIBILITY",
+            "research_value": {
+              "facts": {
+                "current_denominator": "No authoritative eligible_recurring_actions denominator exists in durable current events.",
+                "current_metric_consumer": "No accessible current registered-use metric consumer/query was found in scripts or tests; existing references are research/planning artifacts rather than implemented consumer source.",
+                "durable_persistence": "work_memory.py defines the journal event schemas; current persisted action_intent_recorded lacks registry_sha256, owner_contract_sha256, recurrence_policy, availability_policy, eligibility, and ineligible_reason_code.",
+                "producer": "PreventionController.register_intent records action_intent_recorded before dispatch.",
+                "registry": "prevention_registry.py returns content-hashed rows but rows have no recurrence_policy or availability_policy.",
+                "selector": "prevention_selector.py emits dispatch_selected or dispatch_rejected after intent recording, without denominator eligibility."
+              },
+              "inferences": {
+                "root_gap": "eligibility is not a durable pre-dispatch fact, so later registry/outcome state could reclassify the denominator if a metric were added downstream",
+                "stable_boundary": "controller-owned eligibility event before dispatch using a frozen registry revision"
+              },
+              "planner_obligations": [
+                "add recurrence_policy and availability_policy to materialized owner contracts",
+                "persist the exact immutable pre-dispatch eligibility fields",
+                "add a metric consumer that derives the denominator only from eligibility and dispatch events",
+                "make missing eligibility fail closed"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D2-EVENTS",
+              "EV-D2-CONTROLLER",
+              "EV-D2-REGISTRY",
+              "EV-D2-SELECTOR"
+            ],
+            "requirement_id": "D2-FUTURE-ELIGIBILITY",
+            "research_value": {
+              "denominator": "eligible_recurring_actions equals durable pre-dispatch records with recurrence_policy=RECURRENT, availability_policy=AVAILABLE, and eligibility=true inside the representative window.",
+              "durable_persistence": "prevention journal event in work_memory.py.",
+              "future_metric_consumer": "registered-use query over immutable eligibility and dispatch events.",
+              "immutable_pre_dispatch_fields": [
+                "intent_id",
+                "registry_sha256",
+                "owner_sequence_id",
+                "owner_contract_sha256",
+                "recurrence_policy",
+                "availability_policy",
+                "eligibility",
+                "ineligible_reason_code"
+              ],
+              "numerator": "registered_dispatches equals eligible intents with a durable selected registered/successor dispatch according to the implemented dispatch policy.",
+              "planner_obligations": [
+                "define canonical ineligible_reason_code values",
+                "test later registry mutation",
+                "test later outcome mutation",
+                "test missing eligibility fail closed",
+                "test threshold computation from durable events only"
+              ],
+              "producer": "PreventionController after typed intent validation and before Selector.select dispatch.",
+              "required_policy_enums": {
+                "availability_policy": [
+                  "AVAILABLE",
+                  "UNAVAILABLE",
+                  "CUSTODIAN_EVIDENCE_REQUIRED"
+                ],
+                "recurrence_policy": [
+                  "ONE_SHOT",
+                  "RECURRENT",
+                  "NOT_APPLICABLE"
+                ]
+              }
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D3-MANIFEST",
+              "EV-D3-CONTRACT",
+              "EV-D3-DESCRIPTORS",
+              "EV-D3-SEQUENCES",
+              "EV-D3-SRC-LOCAL-WORKFLOW-ORCH-IMAGE",
+              "EV-D3-SRC-GREENFIELD-FULL-DRIVE",
+              "EV-D3-SRC-REMOTE-MCP-USER-ONBOARDING",
+              "EV-D3-SRC-MAWF-PLAYBOOK",
+              "EV-D3-SRC-GITHUB-APP-REPOS-REFRESH",
+              "EV-D3-SRC-CLAUDE-AUTH-TOKEN-REFRESH",
+              "EV-D3-SRC-AIRGAPPED-STT",
+              "EV-D3-SRC-AIRGAPPED-REDACTION",
+              "EV-D3-SRC-AIRGAPPED-LLM-JUDGE",
+              "EV-D3-SRC-SECURE-LANDING-SEED",
+              "EV-D3-SRC-CALLCENTER-ENGINE-INVARIANTS",
+              "EV-D3-SRC-DISCOVERY-PROMOTION-LIFECYCLE",
+              "EV-D3-SRC-COMMIT-PUSH-MAIN",
+              "EV-D3-SRC-DISCOVERY-BOOTSTRAP",
+              "EV-D3-SRC-DISCOVERY-CANDIDATE-RECONCILIATION",
+              "EV-D3-SRC-CONVERGENCE-CHECKPOINT-RUN",
+              "EV-D3-SRC-SCOPED-CONTEXT-EDIT",
+              "EV-D3-SRC-CONVERGENCE-STATE-REVIEW-CYCLE"
+            ],
+            "requirement_id": "D3-CURRENT-OWNER-CONTRACTS",
+            "research_value": {
+              "facts": {
+                "available_source_rows": 15,
+                "custodian_evidence_required_rows": 6,
+                "inventory_count": 25,
+                "materialized_field_counts": {
+                  "action_class": 0,
+                  "availability_policy": 0,
+                  "canonical_argv_or_typed_call": 0,
+                  "effect_identity": 0,
+                  "full_unit_budget": 0,
+                  "implementation_source_hash_in_registry": 0,
+                  "parameter_schema": 0,
+                  "reconciliation": 0,
+                  "recurrence_policy": 0,
+                  "terminal_schema": 0
+                },
+                "unavailable_source_rows": 4
+              },
+              "inferences": {
+                "descriptor_rule": "owner-descriptors.json and SEQUENCES.md may guide provenance but cannot prove executability.",
+                "stable_boundary": "OwnerRegistry initialization must resolve executable constants and source hashes or persist an explicit fail-closed unavailable/custodian-required state."
+              },
+              "owner_rows": [
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-LOCAL-WORKFLOW-ORCH-IMAGE",
+                  "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/local_workflow_orch_image_harness.py",
+                  "implementation_source_sha256": "3cf45608f60d360e1dd1eaf9ba10fdfd2a9ec3a8c930efa899ffdf118107322b",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "local-workflow-orch-image"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-GREENFIELD-FULL-DRIVE",
+                  "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_full_drive.sh",
+                  "implementation_source_sha256": "aea47b779974be3011829c09367faf12fc2ae45faa6af0711d432b7f1e915783",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "greenfield-full-drive"
+                },
+                {
+                  "availability_policy": "CUSTODIAN_EVIDENCE_REQUIRED",
+                  "custodian_evidence": "one authoritative machine-readable owner/result contract across TUI, MCP, HTTP, filesystem, and fallback paths",
+                  "implementation_evidence_id": "EV-D3-SRC-REMOTE-MCP-USER-ONBOARDING",
+                  "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/dist/remote-mcp-user-admin/remote_mcp_user_admin_tui.py",
+                  "implementation_source_sha256": "1f20c0897ac9ac5a7446e6b1bc453ebf64f7eb94b339eb31f9570447aa8cbca8",
+                  "implementation_source_status": "ACCESSIBLE_HELPER_BUT_CONTRACT_UNAVAILABLE",
+                  "sequence_id": "remote-mcp-user-onboarding"
+                },
+                {
+                  "availability_policy": "UNAVAILABLE",
+                  "custodian_evidence": "/Users/kamenkamenov/taggable-api/tools/Taggable.MigrationRunner/scripts/reload-source.sh was not accessible in the authorized roots",
+                  "implementation_evidence_id": null,
+                  "implementation_source": null,
+                  "implementation_source_sha256": null,
+                  "implementation_source_status": "UNAVAILABLE",
+                  "sequence_id": "taggable-source-reload"
+                },
+                {
+                  "availability_policy": "CUSTODIAN_EVIDENCE_REQUIRED",
+                  "custodian_evidence": "exact aggregate transition/result envelope for the full gate-policy driver",
+                  "implementation_evidence_id": "EV-D3-SRC-MAWF-PLAYBOOK",
+                  "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py",
+                  "implementation_source_sha256": "037b3e8d81023c885e10dae2965deccaebf335cde3ce64313e96597998b3c223",
+                  "implementation_source_status": "ACCESSIBLE_HELPER_BUT_CONTRACT_UNAVAILABLE",
+                  "sequence_id": "mawf-playbook-full-test"
+                },
+                {
+                  "availability_policy": "CUSTODIAN_EVIDENCE_REQUIRED",
+                  "custodian_evidence": "exact aggregate transition/result envelope for the speed gate-policy driver",
+                  "implementation_evidence_id": "EV-D3-SRC-MAWF-PLAYBOOK",
+                  "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py",
+                  "implementation_source_sha256": "037b3e8d81023c885e10dae2965deccaebf335cde3ce64313e96597998b3c223",
+                  "implementation_source_status": "ACCESSIBLE_HELPER_BUT_CONTRACT_UNAVAILABLE",
+                  "sequence_id": "mawf-playbook-speed-test"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-MAWF-PLAYBOOK",
+                  "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py",
+                  "implementation_source_sha256": "037b3e8d81023c885e10dae2965deccaebf335cde3ce64313e96597998b3c223",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "mawf-playbook-blocker-reentry"
+                },
+                {
+                  "availability_policy": "CUSTODIAN_EVIDENCE_REQUIRED",
+                  "custodian_evidence": "complete wrapper argv/auth/result envelope",
+                  "implementation_evidence_id": "EV-D3-SRC-GITHUB-APP-REPOS-REFRESH",
+                  "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/github_app_repos_refresh.py",
+                  "implementation_source_sha256": "a40389bbde39cf33f217bf8d79300c105c0080a7ac024d89285e18588a5da0ee",
+                  "implementation_source_status": "ACCESSIBLE_HELPER_BUT_CONTRACT_UNAVAILABLE",
+                  "sequence_id": "github-app-repos-refresh"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-CLAUDE-AUTH-TOKEN-REFRESH",
+                  "implementation_source": "/Users/kamenkamenov/mcp-agents-workflow/scripts/claude_auth_refresh.sh",
+                  "implementation_source_sha256": "bad8f0e2fc9dc15a28a4cc7bead7d7872d9238182188200d656d518e4b6a988c",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "claude-auth-token-refresh"
+                },
+                {
+                  "availability_policy": "UNAVAILABLE",
+                  "custodian_evidence": "/Users/kamenkamenov/taggable-api/scripts/deploy-api.sh was not accessible in the authorized roots",
+                  "implementation_evidence_id": null,
+                  "implementation_source": null,
+                  "implementation_source_sha256": null,
+                  "implementation_source_status": "UNAVAILABLE",
+                  "sequence_id": "taggable-api-deploy"
+                },
+                {
+                  "availability_policy": "UNAVAILABLE",
+                  "custodian_evidence": "/Users/kamenkamenov/taggable-admin-spa/scripts/deploy-admin-spa.sh was not accessible in the authorized roots",
+                  "implementation_evidence_id": null,
+                  "implementation_source": null,
+                  "implementation_source_sha256": null,
+                  "implementation_source_status": "UNAVAILABLE",
+                  "sequence_id": "taggable-admin-spa-deploy"
+                },
+                {
+                  "availability_policy": "UNAVAILABLE",
+                  "custodian_evidence": "/Users/kamenkamenov/taggable-api/scripts/deploy-media-worker.sh was not accessible in the authorized roots",
+                  "implementation_evidence_id": null,
+                  "implementation_source": null,
+                  "implementation_source_sha256": null,
+                  "implementation_source_status": "UNAVAILABLE",
+                  "sequence_id": "taggable-media-worker-deploy"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-AIRGAPPED-STT",
+                  "implementation_source": "/Users/kamenkamenov/callcenter-harness/scripts/setup_airgapped_stt.sh",
+                  "implementation_source_sha256": "4f4dc5ed446561ec993aecfb0a42f097947040fd0b9bb4f4f08361bf77993221",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "airgapped-local-bulgarian-stt"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-AIRGAPPED-REDACTION",
+                  "implementation_source": "/Users/kamenkamenov/callcenter-harness/scripts/setup_airgapped_redaction.sh",
+                  "implementation_source_sha256": "e368918634ccad9ab368897da31a87628e7cad603d328dcf9981f7183e4b75eb",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "airgapped-redaction-stack"
+                },
+                {
+                  "availability_policy": "CUSTODIAN_EVIDENCE_REQUIRED",
+                  "custodian_evidence": "single authoritative composite implementation source or machine-readable owner/result envelope for the provision/verify workflow",
+                  "implementation_evidence_id": null,
+                  "implementation_source": null,
+                  "implementation_source_sha256": null,
+                  "implementation_source_status": "CONTRACT_UNAVAILABLE",
+                  "sequence_id": "callcenter-harness-provision-verify"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-AIRGAPPED-LLM-JUDGE",
+                  "implementation_source": "/Users/kamenkamenov/callcenter-harness/scripts/setup_airgapped_judge.sh",
+                  "implementation_source_sha256": "2b08797b34656fd10b3052b8c7c85f97d27f7a03cc6ce931487a7413b7ca40d1",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "airgapped-llm-judge"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-SECURE-LANDING-SEED",
+                  "implementation_source": "/Users/kamenkamenov/callcenter-harness/scripts/seed_landing.sh",
+                  "implementation_source_sha256": "f07aec3fe95a68ed1651eb747f3f0747e57278b01d24017e9fbb042ff7b5e1de",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "secure-landing-seed"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-CALLCENTER-ENGINE-INVARIANTS",
+                  "implementation_source": "/Users/kamenkamenov/callcenter-harness/scripts/test_engine_upgrades.py",
+                  "implementation_source_sha256": "6197ad3d9212caf86792465dfea1fc775b795905ebada9988fef2220b00ed9bf",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "callcenter-harness-engine-invariants"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-DISCOVERY-PROMOTION-LIFECYCLE",
+                  "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_promotion_lifecycle.py",
+                  "implementation_source_sha256": "49e66d7a0e5944419f7e59902056740e7510302e21ad4e707bd263ced822b731",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "discovery-promotion-lifecycle"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-COMMIT-PUSH-MAIN",
+                  "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
+                  "implementation_source_sha256": "55206e0b25c6eeb7df9d98775ff8d0c1ff69df0565d9add3a0d9487a5d40fe54",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "commit-push-main"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-DISCOVERY-BOOTSTRAP",
+                  "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_bootstrap.py",
+                  "implementation_source_sha256": "a1c16783567bb8bbb84be2e59a636bf6ef73d7ba85fc684c706bcda6590f8d30",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "discovery-bootstrap"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-DISCOVERY-CANDIDATE-RECONCILIATION",
+                  "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_candidate_reconciliation.py",
+                  "implementation_source_sha256": "a846e823d027d229e3a7642776dda4d1bbb2e5cbbe192f38dd115223ac14ae9b",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "discovery-candidate-reconciliation"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-CONVERGENCE-CHECKPOINT-RUN",
+                  "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_checkpoint_run.py",
+                  "implementation_source_sha256": "39da9360585a6b08d416a90a320e8a762fff195adde2c5a2c07890b9a81248e7",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "convergence-checkpoint-run"
+                },
+                {
+                  "availability_policy": "CUSTODIAN_EVIDENCE_REQUIRED",
+                  "custodian_evidence": "typed patch payload/executor boundary for the complete owner contract",
+                  "implementation_evidence_id": "EV-D3-SRC-SCOPED-CONTEXT-EDIT",
+                  "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/context_edit_guard.py",
+                  "implementation_source_sha256": "f5f1a2334656f85fe2cf1b5b6e167ae04fa18ccb75c0ee87f32d7ac3f472f3c0",
+                  "implementation_source_status": "ACCESSIBLE_GUARD_BUT_CONTRACT_UNAVAILABLE",
+                  "sequence_id": "scoped-context-edit"
+                },
+                {
+                  "availability_policy": "AVAILABLE",
+                  "custodian_evidence": null,
+                  "implementation_evidence_id": "EV-D3-SRC-CONVERGENCE-STATE-REVIEW-CYCLE",
+                  "implementation_source": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_state_review_cycle.py",
+                  "implementation_source_sha256": "594a12be5f8c29d17fd69d3e5cbf22e8f099e465e6e2fc8cc244dad1aa0e275e",
+                  "implementation_source_status": "ACCESSIBLE",
+                  "sequence_id": "convergence-state-review-cycle"
+                }
+              ],
+              "planner_obligations": [
+                "materialize parameter schema, canonical argv/typed call, action class, full-unit budget, effect identity, reconciliation, terminal schema, recurrence_policy, availability_policy, owner contract hash, and implementation source hash per row",
+                "reject the four unavailable taggable/admin rows until source is supplied",
+                "reject the six custodian-required rows until named custodian evidence is supplied",
+                "never reuse descriptor hashes as implementation evidence"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-FROZEN-REQS",
+              "EV-D3-MANIFEST",
+              "EV-D3-CONTRACT",
+              "EV-D3-DESCRIPTORS"
+            ],
+            "requirement_id": "D3-FUTURE-OWNER-CONTRACTS",
+            "research_value": {
+              "fail_closed_states": [
+                "UNAVAILABLE",
+                "CUSTODIAN_EVIDENCE_REQUIRED"
+              ],
+              "materialized_contract_fields": [
+                "sequence_id",
+                "owner_sequence_id",
+                "owner_contract_sha256",
+                "implementation_source_sha256",
+                "parameter_schema",
+                "canonical_argv_or_typed_call",
+                "action_class",
+                "full_unit_budget",
+                "effect_identity",
+                "reconciliation",
+                "terminal_schema",
+                "recurrence_policy",
+                "availability_policy"
+              ],
+              "planner_obligations": [
+                "validate every row at registry initialization",
+                "reject source hash drift",
+                "reject unresolved ids",
+                "reject prose-only executable claims",
+                "verify dispatch/reconcile/terminal behavior for available owners",
+                "verify unavailable and custodian-required owners cannot dispatch"
+              ],
+              "required": "Each registered owner id resolves to a content-addressed executable typed contract or explicit fail-closed state."
+            }
+          }
+        ],
+        "research_markdown": "# Round 2 CORE candidate\n\nFrozen envelope hash binding: df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f. Frozen scope hash binding: 54f9f1f702c6c73a128b86e6da932b5d5c1993298d5ff497c93ea1645e184917.\n\n## Facts\n\nD1 current launcher facts: CodexCliWrapper starts `codex mcp-server` or `codex exec` in the task working directory with sandbox, approval, model, and caller config flags. It does not create a fresh launcher-owned Codex home, install a hook config, prove trust, issue a challenge, or record a HostCapabilities receipt before governed work begins. AgentExecutor supplies the task worktree as the Codex working directory, and tool translation configures allowed MCP server names and sandbox/approval settings, not pre-tool interception.\n\nD1 authoritative Codex facts: official Codex hook source distinguishes System, User, Project, MDM, EnterpriseManaged, and SessionFlags config sources. The source marks System/MDM/EnterpriseManaged hook metadata trusted and User/Project untrusted in the inspected test. PreToolUse receives session, cwd, model, permission mode, tool name, tool input, and tool use id. PreToolUse output can deny/block or allow with updated input under the official parser. The authorized worktree issue reports that `<worktree-root>/.codex/hooks.json` is ignored in a git worktree while `~/.codex/hooks.json` fires; therefore project-local discovery is not the stable enforcement boundary for task worktrees.\n\nD1 local host facts: prevention_contract.py already defines a signed HostCapabilities object with session_id, challenge_nonce, config_sha256, hook_sha256, trust/enabled flags, class coverage sets, expiry, and host_signature. prevention_host.py parses Bash, apply_patch, and MCP PreToolUse inputs, denies unsupported tool names, fails closed on controller errors, and verifies an HMAC receipt bound to session, challenge nonce, config hash, hook hash, launcher PID, child PID, and freshness. No inspected launcher source wires this verifier into Codex startup, no inspected source runs a nonce-bound harmless PreToolUse challenge before governed mutation, and no inspected source proves an authorized authenticated-session provider that can seed a fresh Codex home without reading or copying credentials.\n\nD2 current facts: ActionIntent contains intent_id, task_id, run_id, requested_sequence_id, requested_implementation_id, compatibility_key, action_class, and parameters. MigrationOwnerSpec and the registry contain owner identifiers and a registry content hash, but no recurrence_policy and no availability_policy. PreventionController records action_intent_recorded before dispatch and then appends dispatch_selected or dispatch_rejected, but those events do not persist registry_sha256, owner_contract_sha256, recurrence policy, availability policy, eligibility, or ineligible reason. work_memory.py has prevention event schemas for action_intent_recorded, dispatch_selected, dispatch_rejected, registered_reuse_recorded, and prevented_failure_recorded, but no authoritative pre-dispatch eligibility event and no current registered-use denominator query producer in accessible scripts. Searches of the authorized source set found historical research references to the metric but no implemented current metric consumer.\n\nD2 future boundary: the producer must be PreventionController immediately after typed intent validation and before dispatch selection. The durable persistence target must be the prevention journal. The immutable pre-dispatch fields are exactly intent_id, registry_sha256, owner_sequence_id, owner_contract_sha256, recurrence_policy, availability_policy, eligibility, ineligible_reason_code. recurrence_policy has exactly ONE_SHOT, RECURRENT, NOT_APPLICABLE. availability_policy has exactly AVAILABLE, UNAVAILABLE, CUSTODIAN_EVIDENCE_REQUIRED. The future metric consumer must compute the registered-use denominator only from durable pre-dispatch eligibility records and dispatch records, not from later registry state or outcome.\n\nD3 current facts: the migration manifest has 25 rows and only identifier strings for handler, parameter_contract, argv_contract, effect_identity_contract, reconciler, and terminal_contract. OwnerRegistry validates cardinality, source inventory hash, identifier syntax, evidence pointer identity, lineage identity, and parent references. It does not resolve executable constants or validate materialized parameter schema, canonical argv/typed call, action class, full-unit budget, effect identity, reconciliation rule, terminal schema, recurrence policy, availability policy, or implementation source hash. Descriptor prose is provenance only and does not prove executability. Round 1's 21/4 available/unavailable claim was unsupported. Round 2 resolves all 25 rows individually: 15 rows have an accessible concrete implementation source; 4 taggable/admin rows are unavailable because the concrete source file was not found in accessible roots; 6 rows preserve the confirmed CUSTODIAN_EVIDENCE_REQUIRED state because the descriptor identifies missing deterministic owner/result evidence even when a local helper file is accessible.\n\n## Inferences\n\nD1 stable fix boundary is launcher-owned, worktree-independent Codex session construction: create a fresh per-session CODEX_HOME or equivalent config home under launcher control, install a minimal trusted PreToolUse hook configuration for prevention_host, validate installation/trust/source state from authoritative Codex config behavior, run a nonce-bound harmless PreToolUse challenge before any governed mutation, and record a signed HostCapabilities receipt. If an authorized authenticated-session provider is not evidenced, the launcher must fail closed rather than read or copy credentials.\n\nD2 stable fix boundary is not a metric-side heuristic. The eligibility denominator has to be produced before dispatch from the frozen registry revision and owner contract hash, persisted durably, and then consumed by the metric query. Later dispatch success, failure, promotion, or registry edits must not reclassify eligibility.\n\nD3 stable fix boundary is registry initialization. Each row must resolve either to a content-addressed executable owner contract or to an explicit fail-closed unavailable/custodian-required state. Runtime may not infer executable behavior from row names, handler strings, contract id strings, sequence docs, descriptor prose, or descriptor hashes.\n\n## Planner obligations\n\nPlan D1 as a launcher integration, not a project hook. Include ordinary repo, git worktree, unsupported-tool, challenge-failure, receipt-replay, expired-receipt, missing-auth-provider, and resume cases.\n\nPlan D2 as an event-schema and metric-consumer change with the exact immutable pre-dispatch fields and exact policy enums above. Include tests for one-shot exclusion, recurrent available inclusion, unavailable exclusion, custodian-required exclusion, later registry mutation, later outcome mutation, and missing eligibility fail-closed behavior.\n\nPlan D3 as a materialized owner-contract registry change with a 25-row initialization matrix. Include all-field validation, source hash drift, no-prose-inference, unavailable owner rejection, custodian-required owner rejection, dispatch, reconciliation, and terminal parsing tests.",
+        "schema_version": 1
+      },
+      "envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+      "envelope_payload": {
+        "authoritative_roots": [
+          "/Users/kamenkamenov/memory-knowledge",
+          "/Users/kamenkamenov/mcp-agents-workflow",
+          "/private/tmp/openai-codex-hook-source",
+          "https://github.com/openai/codex/issues/27133"
+        ],
+        "charter": {
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/charter.json",
+          "sha256": "809c017559a21368f5cfd32bca0f09407f53e234496833e8094ca252b7dbae7f"
+        },
+        "hash_contract": "sha256-canonical-json-utf8-no-trailing-newline-v1",
+        "requirements": {
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/requirements.json",
+          "sha256": "8bbf53bf287c6b1a442e1e584c54908f9730416221a9edae83e83260d40efc17"
+        },
+        "round": 2,
+        "schema_version": 1,
+        "scope_hash": "54f9f1f702c6c73a128b86e6da932b5d5c1993298d5ff497c93ea1645e184917",
+        "verification_command": "python3 /Users/kamenkamenov/memory-knowledge/skills/research-playbook/scripts/research_package.py hash-json <json-file>"
+      },
+      "evidence_availability": {
+        "CURRENT_RUNTIME": "AVAILABLE",
+        "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+        "authoritative_roots": "AVAILABLE",
+        "external_evidence": "AVAILABLE"
+      },
+      "recorded_at": "2026-07-17T16:51:36.282249Z"
+    }
+  },
+  "charter": {
+    "authoritative_roots": [
+      "/Users/kamenkamenov/memory-knowledge",
+      "/Users/kamenkamenov/mcp-agents-workflow",
+      "/private/tmp/openai-codex-hook-source",
+      "https://github.com/openai/codex/issues/27133"
+    ],
+    "budget": {
+      "maximum_agent_spawn_attempts": 15,
+      "maximum_candidate_rounds": 3,
+      "maximum_elapsed_minutes": 60,
+      "maximum_retries_per_role": 1
+    },
+    "charter_id": "prevention-system-three-defect-closure-20260717",
+    "exclusions": [
+      "any fourth defect, unrelated cleanup, deployment, commit, push, secret access, credential copying, phase-ledger change, or external message",
+      "implementation planning or code edits during research",
+      "inventing parameter, command, budget, effect, reconciliation, terminal, recurrence, or authentication facts not established by authoritative evidence"
+    ],
+    "in_scope": [
+      "the three recorded implementation gaps and only the original requirement IDs attached to them",
+      "mcp-agents-workflow Codex launch, tool translation, and host-hook boundaries",
+      "memory-knowledge prevention contracts, event ledger, registry, metrics, owner descriptors, migration manifest, sequence catalog, and authoritative owner implementations",
+      "official OpenAI Codex hook schemas, discovery behavior, worktree behavior, configuration, and authentication boundaries"
+    ],
+    "objective": "Ground the exact stable closure boundary for the three implementation defects proven after the prevention-system plan passed: worktree-safe host interception, an authoritative recurring-action eligibility denominator, and executable materialized contracts for all 25 registered sequence owners.",
+    "required_output_package": [
+      "manifest.json",
+      "research.md",
+      "requirements.json",
+      "evidence-index.json",
+      "findings.json",
+      "planner-handoff.md"
+    ],
+    "research_questions": [
+      "Which Codex-owned launch boundary can enforce PreToolUse interception in ordinary repositories and Git worktrees without depending on project hook discovery or reading credentials?",
+      "Which durable controller fact makes recurring-action eligibility reproducible before dispatch and therefore makes the registered-use denominator authoritative?",
+      "Which exact source evidence and materialized fields are required to turn each of the 25 owner contract identifiers into an executable typed owner without inferring behavior from prose?"
+    ],
+    "schema_version": 1,
+    "supplied_input": "The approved implementation found three additional defects: project-local Codex hooks are not durable in task worktrees; recurring-action eligibility has no persisted authoritative fact; and the 25 owner manifest rows name contract IDs but do not materialize their executable constants. Research must identify a stable, bounded, implementable closure for exactly these defects.",
+    "terminal_rules": [
+      "PASS requires all three lenses to pass the same candidate and envelope hashes, a fresh adjudicator with no research-actionable finding, every planner obligation READY, exact package validation, and zero active agent slots.",
+      "GAPS means research-stage corrections remain inside this frozen charter.",
+      "BLOCKED means required accessible evidence or a named approval route is unavailable.",
+      "CAP_REACHED means the shared time, round, attempt, retry, or repeated-fingerprint cap fired."
+    ]
+  },
+  "charter_hash": "e89e200c7c9ba9e43fa6cb4eb7fe5bad491d0c9e42e671d2a269cb7a23ee441f",
+  "created_at": "2026-07-17T16:50:21.311187Z",
+  "evidence_availability": {
+    "CURRENT_RUNTIME": "AVAILABLE",
+    "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+    "authoritative_roots": "AVAILABLE",
+    "external_evidence": "AVAILABLE"
+  },
+  "operational_maturity": "MIXED",
+  "package_id": "research-package-bf8b1f49ed2a3519dd16ba94",
+  "requirements": [
+    {
+      "acceptance_intent": "Name the authoritative launch boundary, exact hook input/output contract, worktree behavior, action coverage, and credential limitation without speculation.",
+      "evidence_availability": "AVAILABLE",
+      "id": "D1-CURRENT-HOST",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry the grounded worktree-safe interception boundary, supported surfaces, fail-closed preflight, and authentication constraint into planning.",
+          "id": "PO-D1-HOST"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "three-defect-host-current",
+      "source": {
+        "gap_id": "project-hook-not-durable-in-task-worktrees",
+        "requirement_ids": [
+          "CUR-INTERCEPTION",
+          "CUR-RESUME",
+          "ACC-ZERO-RAW"
+        ]
+      },
+      "text": "Determine the current Codex hook discovery, launch, worktree, configuration, authentication, and supported-action behavior that makes project-local interception non-durable or identifies a stronger host boundary."
+    },
+    {
+      "acceptance_intent": "An ordinary repository and a Git worktree both prove interception before mutation; unavailable hook support or authentication produces a visible pre-launch rejection.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "D1-FUTURE-HOST",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan ordinary-repository, worktree, unsupported-action, hook-challenge, resume, and authentication-boundary verification.",
+          "id": "PO-D1-HOST-ACCEPTANCE"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "three-defect-host-future",
+      "source": {
+        "gap_id": "project-hook-not-durable-in-task-worktrees",
+        "requirement_ids": [
+          "FUT-INTERCEPTION",
+          "FUT-RESUME",
+          "ACC-ZERO-RAW"
+        ]
+      },
+      "text": "The workflow launcher must establish worktree-independent pre-action interception before a governed Codex session begins, prove the live hook before work, and fail closed when enforcement or authorized authentication is unavailable."
+    },
+    {
+      "acceptance_intent": "Prove the present denominator inputs or their absence across registry production, controller persistence, and metric aggregation.",
+      "evidence_availability": "AVAILABLE",
+      "id": "D2-CURRENT-ELIGIBILITY",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry the exact authoritative recurrence metadata, eligibility event, producer timing, immutable inputs, and denominator consumer into planning.",
+          "id": "PO-D2-ELIGIBILITY"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "three-defect-eligibility-current",
+      "source": {
+        "gap_id": "registered-use-denominator-has-no-authoritative-event",
+        "requirement_ids": [
+          "CUR-METRICS",
+          "ACC-REGISTERED-95"
+        ]
+      },
+      "text": "Determine whether the current OwnerSpec, registry, prevention event contract, controller, and metrics persist an authoritative pre-dispatch recurring-action eligibility fact and identify the exact absent producer/consumer fields."
+    },
+    {
+      "acceptance_intent": "The metric query derives numerator and denominator only from durable events and a content-addressed registry snapshot, including explicit ineligible reason codes.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "D2-FUTURE-ELIGIBILITY",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan tamper, outcome-reclassification, missing-registry, ineligible-intent, and 95-percent threshold tests.",
+          "id": "PO-D2-ELIGIBILITY-ACCEPTANCE"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "three-defect-eligibility-future",
+      "source": {
+        "gap_id": "registered-use-denominator-has-no-authoritative-event",
+        "requirement_ids": [
+          "FUT-METRICS",
+          "ACC-REGISTERED-95"
+        ]
+      },
+      "text": "Every governed intent must persist a controller-derived recurring-action eligibility decision from a frozen registry revision before dispatch so the registered-use denominator is reproducible and cannot be reclassified after outcome."
+    },
+    {
+      "acceptance_intent": "Return an exact 25-row coverage map whose positive facts cite authoritative implementation evidence and whose unavailable facts fail closed rather than being invented.",
+      "evidence_availability": "AVAILABLE",
+      "id": "D3-CURRENT-OWNER-CONTRACTS",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry a finite materialized 25-owner contract input, evidence provenance, and explicit unavailable-owner state into planning.",
+          "id": "PO-D3-OWNER-CONTRACTS"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "three-defect-owner-contracts-current",
+      "source": {
+        "gap_id": "owner-contract-ids-have-no-materialized-constants",
+        "requirement_ids": [
+          "CUR-ENTRYPOINT",
+          "CUR-TYPED",
+          "CUR-RESUME"
+        ]
+      },
+      "text": "Inventory all 25 owner rows and determine, from authoritative source implementations, which concrete parameter schema, canonical argv or typed call, action class, full-unit budget, durable effect identity, reconciliation rule, terminal schema, recurrence eligibility, and availability facts are materialized versus only named or described in prose."
+    },
+    {
+      "acceptance_intent": "Registry initialization validates every materialized contract and source hash; dispatch/reconcile/terminal behavior is deterministic; missing evidence prevents owner registration.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "D3-FUTURE-OWNER-CONTRACTS",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan schema validation, all-25 coverage, source-hash drift, no-prose-inference, unavailable-owner, dispatch, crash/reconcile, and terminal tests.",
+          "id": "PO-D3-OWNER-CONTRACTS-ACCEPTANCE"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "three-defect-owner-contracts-future",
+      "source": {
+        "gap_id": "owner-contract-ids-have-no-materialized-constants",
+        "requirement_ids": [
+          "FUT-ENTRYPOINT",
+          "FUT-TYPED",
+          "FUT-RESUME"
+        ]
+      },
+      "text": "Each of the 25 registered owner IDs must resolve to a content-addressed executable typed contract or an explicit fail-closed unavailable state; runtime code must not infer executable behavior from prose or identifier names."
+    }
+  ],
+  "requirements_hash": "9cb5682f0c351322a8498b4efbfb19d95e0a15cd8d0335285291630876bdb7eb",
+  "result": {
+    "actionable_fingerprints": [
+      "27e55939247e7197fd4bf9e6b2df6f6ea032ad8220986caced1724eec2b878eb",
+      "a26a2232bf7c640f74de88825d3d8b11aad970e1d807986cf0ad9de7efefd3b0"
+    ],
+    "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+    "envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+    "reason": "SCOPE_APPROVAL_REQUIRED",
+    "verdict": "BLOCKED"
+  },
+  "rounds": [
+    {
+      "actionable_fingerprints": [
+        "27e55939247e7197fd4bf9e6b2df6f6ea032ad8220986caced1724eec2b878eb",
+        "a26a2232bf7c640f74de88825d3d8b11aad970e1d807986cf0ad9de7efefd3b0"
+      ],
+      "adjudication": {
+        "adjudication_id": "adjudication-b4c8ea928b543f8a527de108",
+        "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+        "envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+        "findings": [
+          {
+            "disposition": "REQUEST_SCOPE_APPROVAL",
+            "finding_fingerprint": "27e55939247e7197fd4bf9e6b2df6f6ea032ad8220986caced1724eec2b878eb",
+            "finding_type": "SCOPE_CHANGE",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "Hash binding verified: candidate f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c and envelope df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f.",
+                "envelope-round-2.json and charter.json authorize only /Users/kamenkamenov/memory-knowledge, /Users/kamenkamenov/mcp-agents-workflow, /private/tmp/openai-codex-hook-source, and https://github.com/openai/codex/issues/27133 as authoritative roots.",
+                "candidate-round-2.json marks airgapped-local-bulgarian-stt, airgapped-redaction-stack, airgapped-llm-judge, secure-landing-seed, and callcenter-harness-engine-invariants as AVAILABLE with implementation evidence ids EV-D3-SRC-AIRGAPPED-STT, EV-D3-SRC-AIRGAPPED-REDACTION, EV-D3-SRC-AIRGAPPED-LLM-JUDGE, EV-D3-SRC-SECURE-LANDING-SEED, and EV-D3-SRC-CALLCENTER-ENGINE-INVARIANTS.",
+                "Those five evidence_index source_locators are under /Users/kamenkamenov/callcenter-harness, which is not inside any frozen authoritative root.",
+                "requirements.json D3-CURRENT-OWNER-CONTRACTS requires positive facts to cite authoritative implementation evidence and unavailable facts to fail closed; D3-FUTURE-OWNER-CONTRACTS requires every owner to resolve to a content-addressed executable contract or an explicit fail-closed state."
+              ],
+              "fingerprint": "requirements-coverage:gap-d3-authorized-owner-evidence:out-of-envelope-owner-sources:v1",
+              "id": "GAP-D3-AUTHORIZED-OWNER-EVIDENCE",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner would treat five D3 owners as AVAILABLE and source-grounded even though their cited implementation files are outside the frozen authoritative roots, so those rows do not yet have authoritative source-specific evidence or an explicit fail-closed unavailable/custodian state.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D3-CURRENT-OWNER-CONTRACTS",
+                "D3-FUTURE-OWNER-CONTRACTS"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          },
+          {
+            "disposition": "ACCEPT_LIMITATION",
+            "finding_fingerprint": "42ef559e74eb3ccee19d14cee6d20eae9e4e543de864177d03689db6ed36bed3",
+            "finding_type": "EVIDENCE_LIMIT",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "candidate_hash=f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c; envelope_hash=df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+                "candidate-round-2 PO-D1-HOST marks READY while required_inputs still names an authorized authenticated-session provider that can make a fresh per-session Codex home usable without reading or copying credentials.",
+                "candidate-round-2 D1 facts state no inspected launcher source creates a governed Codex home, installs hook config, proves trust, runs a challenge, records HostCapabilities, or proves the authorized authenticated-session provider.",
+                "EV-D1-OFFICIAL-DISCOVERY grounds Codex hook source/trust categories but does not ground a launcher-installable trusted source route; EV-D1-WRAPPER, EV-D1-EXECUTOR, and EV-D1-TRANSLATOR ground the current absence; EV-D1-HOST only grounds the local verifier after invocation."
+              ],
+              "fingerprint": "internal-readiness:r2:f4fb4c176a759b09:gap-worktree-safe-host:unresolved-trust-auth-route",
+              "id": "GAP-WORKTREE-SAFE-HOST",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner still cannot implement the happy-path worktree-safe launch without rediscovery because the candidate requires a launcher-owned trusted Codex hook configuration and authorized fresh-session authentication, but does not ground which trusted config route the launcher can provision or how a fresh CODEX_HOME becomes authenticated without reading or copying credentials.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D1-CURRENT-HOST",
+                "D1-FUTURE-HOST"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "5d5dadb3ba38b8d76ffa92535083c811ca94015edab8f5aa53fa66ef03fe5203",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "Hash binding verified: candidate-round-2.json canonical hash is f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c and envelope-round-2.json canonical hash is df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f.",
+                "envelope-round-2.json and charter.json freeze authoritative_roots to /Users/kamenkamenov/memory-knowledge, /Users/kamenkamenov/mcp-agents-workflow, /private/tmp/openai-codex-hook-source, and https://github.com/openai/codex/issues/27133; /Users/kamenkamenov/callcenter-harness is not included.",
+                "candidate-round-2.json marks airgapped-local-bulgarian-stt, airgapped-redaction-stack, airgapped-llm-judge, secure-landing-seed, and callcenter-harness-engine-invariants as AVAILABLE using EV-D3-SRC-* evidence whose source_locator values are /Users/kamenkamenov/callcenter-harness/... paths outside every frozen local authoritative root.",
+                "requirements.json D3-CURRENT-OWNER-CONTRACTS requires positive owner facts to cite authoritative implementation evidence and unavailable facts to fail closed; D3-FUTURE-OWNER-CONTRACTS requires each owner ID to resolve to a content-addressed executable typed contract or an explicit fail-closed unavailable state."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-D3-OWNER-SOURCE-EVIDENCE-OUTSIDE-FROZEN-ROOTS:callcenter-sources-outside-envelope-authoritative-roots",
+              "id": "GAP-D3-OWNER-SOURCE-EVIDENCE-OUTSIDE-FROZEN-ROOTS",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner could treat five callcenter owners as source-grounded and available even though their implementation evidence is outside the frozen authoritative roots; the implementation would then either silently widen the research scope or risk inferring executable owner behavior without authorized evidence.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D3-CURRENT-OWNER-CONTRACTS",
+                "D3-FUTURE-OWNER-CONTRACTS"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          },
+          {
+            "disposition": "HANDOFF_TO_PLANNER",
+            "finding_fingerprint": "6182c0fb321744d1b0178168fc8dc34e16d958856930a1be97424509bfbe771a",
+            "finding_type": "PLANNER_DECISION",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "candidate_hash=f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c; envelope_hash=df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+                "candidate-round-2 PO-D2-ELIGIBILITY required_inputs names a canonical ineligible_reason_code set owned by the telemetry/controller contract, but candidate-round-2 D2-FUTURE-ELIGIBILITY lists a planner obligation to define those values instead of supplying them.",
+                "candidate-round-2 D2-FUTURE-ELIGIBILITY defines registered_dispatches as eligible intents with a selected registered/successor dispatch according to the implemented dispatch policy, which is not an exact planner-ready durable query contract.",
+                "EV-D2-EVENTS, EV-D2-CONTROLLER, EV-D2-REGISTRY, and EV-D2-SELECTOR ground the current absence of eligibility and denominator facts; EV-D3-CONTRACT grounds that owner contracts currently lack recurrence_policy and availability_policy."
+              ],
+              "fingerprint": "internal-readiness:r2:f4fb4c176a759b09:gap-authoritative-recurring-eligibility:missing-reason-query-contract",
+              "id": "GAP-AUTHORITATIVE-RECURRING-ELIGIBILITY",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner would still have to invent policy facts for the registered-use denominator because the candidate leaves the canonical ineligible_reason_code set and the exact metric numerator/query contract undefined while marking the obligation READY.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D2-CURRENT-ELIGIBILITY",
+                "D2-FUTURE-ELIGIBILITY"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "a26a2232bf7c640f74de88825d3d8b11aad970e1d807986cf0ad9de7efefd3b0",
+            "finding_type": "FACT_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "candidate_hash=f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c; envelope_hash=df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+                "candidate-round-2 D3-CURRENT-OWNER-CONTRACTS reports materialized_field_counts of 0 for parameter_schema, canonical_argv_or_typed_call, action_class, full_unit_budget, effect_identity, reconciliation, terminal_schema, recurrence_policy, availability_policy, and implementation_source_hash_in_registry.",
+                "candidate-round-2 owner_rows provide implementation_source and sha256 for available/helper rows, but do not extract the executable constants needed to build the materialized contracts without rereading those sources.",
+                "candidate-round-2 PO-D3-OWNER-CONTRACTS marks READY while its closure condition still requires resolving every row to executable constants or fail-closed state; EV-D3-MANIFEST, EV-D3-CONTRACT, EV-D3-DESCRIPTORS, and EV-D3-SEQUENCES each explicitly limit descriptor/catalog/identifier evidence as non-executable."
+              ],
+              "fingerprint": "internal-readiness:r2:f4fb4c176a759b09:gap-materialized-25-owner-contracts:source-hash-only-no-contract-fields",
+              "id": "GAP-MATERIALIZED-25-OWNER-CONTRACTS",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot produce a one-shot implementation plan for the owner registry because the candidate supplies source paths, hashes, and fail-closed states, but not the concrete per-owner parameter schemas, canonical calls, budgets, effects, reconciliation rules, terminal schemas, or recurrence values that the requirement asks the research package to make implementation-ready.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D3-CURRENT-OWNER-CONTRACTS",
+                "D3-FUTURE-OWNER-CONTRACTS"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            }
+          }
+        ],
+        "recorded_at": "2026-07-17T17:18:53.490366Z",
+        "runtime_agent_id": "codex-exec-terminal-61056"
+      },
+      "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+      "candidate_id": "candidate-ce5f65a5e5a8840def1d598f",
+      "envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+      "lenses": {
+        "INTERNAL_READINESS": {
+          "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+          "envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+          "lens": "INTERNAL_READINESS",
+          "lens_result_id": "lens-result-556cb1debfc1de58dfd696b7",
+          "raw_findings": [
+            {
+              "evidence": [
+                "candidate_hash=f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c; envelope_hash=df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+                "candidate-round-2 PO-D1-HOST marks READY while required_inputs still names an authorized authenticated-session provider that can make a fresh per-session Codex home usable without reading or copying credentials.",
+                "candidate-round-2 D1 facts state no inspected launcher source creates a governed Codex home, installs hook config, proves trust, runs a challenge, records HostCapabilities, or proves the authorized authenticated-session provider.",
+                "EV-D1-OFFICIAL-DISCOVERY grounds Codex hook source/trust categories but does not ground a launcher-installable trusted source route; EV-D1-WRAPPER, EV-D1-EXECUTOR, and EV-D1-TRANSLATOR ground the current absence; EV-D1-HOST only grounds the local verifier after invocation."
+              ],
+              "fingerprint": "internal-readiness:r2:f4fb4c176a759b09:gap-worktree-safe-host:unresolved-trust-auth-route",
+              "id": "GAP-WORKTREE-SAFE-HOST",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner still cannot implement the happy-path worktree-safe launch without rediscovery because the candidate requires a launcher-owned trusted Codex hook configuration and authorized fresh-session authentication, but does not ground which trusted config route the launcher can provision or how a fresh CODEX_HOME becomes authenticated without reading or copying credentials.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D1-CURRENT-HOST",
+                "D1-FUTURE-HOST"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            },
+            {
+              "evidence": [
+                "candidate_hash=f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c; envelope_hash=df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+                "candidate-round-2 PO-D2-ELIGIBILITY required_inputs names a canonical ineligible_reason_code set owned by the telemetry/controller contract, but candidate-round-2 D2-FUTURE-ELIGIBILITY lists a planner obligation to define those values instead of supplying them.",
+                "candidate-round-2 D2-FUTURE-ELIGIBILITY defines registered_dispatches as eligible intents with a selected registered/successor dispatch according to the implemented dispatch policy, which is not an exact planner-ready durable query contract.",
+                "EV-D2-EVENTS, EV-D2-CONTROLLER, EV-D2-REGISTRY, and EV-D2-SELECTOR ground the current absence of eligibility and denominator facts; EV-D3-CONTRACT grounds that owner contracts currently lack recurrence_policy and availability_policy."
+              ],
+              "fingerprint": "internal-readiness:r2:f4fb4c176a759b09:gap-authoritative-recurring-eligibility:missing-reason-query-contract",
+              "id": "GAP-AUTHORITATIVE-RECURRING-ELIGIBILITY",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner would still have to invent policy facts for the registered-use denominator because the candidate leaves the canonical ineligible_reason_code set and the exact metric numerator/query contract undefined while marking the obligation READY.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D2-CURRENT-ELIGIBILITY",
+                "D2-FUTURE-ELIGIBILITY"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            },
+            {
+              "evidence": [
+                "candidate_hash=f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c; envelope_hash=df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+                "candidate-round-2 D3-CURRENT-OWNER-CONTRACTS reports materialized_field_counts of 0 for parameter_schema, canonical_argv_or_typed_call, action_class, full_unit_budget, effect_identity, reconciliation, terminal_schema, recurrence_policy, availability_policy, and implementation_source_hash_in_registry.",
+                "candidate-round-2 owner_rows provide implementation_source and sha256 for available/helper rows, but do not extract the executable constants needed to build the materialized contracts without rereading those sources.",
+                "candidate-round-2 PO-D3-OWNER-CONTRACTS marks READY while its closure condition still requires resolving every row to executable constants or fail-closed state; EV-D3-MANIFEST, EV-D3-CONTRACT, EV-D3-DESCRIPTORS, and EV-D3-SEQUENCES each explicitly limit descriptor/catalog/identifier evidence as non-executable."
+              ],
+              "fingerprint": "internal-readiness:r2:f4fb4c176a759b09:gap-materialized-25-owner-contracts:source-hash-only-no-contract-fields",
+              "id": "GAP-MATERIALIZED-25-OWNER-CONTRACTS",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot produce a one-shot implementation plan for the owner registry because the candidate supplies source paths, hashes, and fail-closed states, but not the concrete per-owner parameter schemas, canonical calls, budgets, effects, reconciliation rules, terminal schemas, or recurrence values that the requirement asks the research package to make implementation-ready.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D3-CURRENT-OWNER-CONTRACTS",
+                "D3-FUTURE-OWNER-CONTRACTS"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-17T17:06:24.286809Z",
+          "runtime_agent_id": "codex-exec-terminal-68578",
+          "verdict": "GAPS"
+        },
+        "REQUIREMENTS_COVERAGE": {
+          "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+          "envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+          "lens": "REQUIREMENTS_COVERAGE",
+          "lens_result_id": "lens-result-b30871d18e1baa798b85144d",
+          "raw_findings": [
+            {
+              "evidence": [
+                "Hash binding verified: candidate f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c and envelope df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f.",
+                "envelope-round-2.json and charter.json authorize only /Users/kamenkamenov/memory-knowledge, /Users/kamenkamenov/mcp-agents-workflow, /private/tmp/openai-codex-hook-source, and https://github.com/openai/codex/issues/27133 as authoritative roots.",
+                "candidate-round-2.json marks airgapped-local-bulgarian-stt, airgapped-redaction-stack, airgapped-llm-judge, secure-landing-seed, and callcenter-harness-engine-invariants as AVAILABLE with implementation evidence ids EV-D3-SRC-AIRGAPPED-STT, EV-D3-SRC-AIRGAPPED-REDACTION, EV-D3-SRC-AIRGAPPED-LLM-JUDGE, EV-D3-SRC-SECURE-LANDING-SEED, and EV-D3-SRC-CALLCENTER-ENGINE-INVARIANTS.",
+                "Those five evidence_index source_locators are under /Users/kamenkamenov/callcenter-harness, which is not inside any frozen authoritative root.",
+                "requirements.json D3-CURRENT-OWNER-CONTRACTS requires positive facts to cite authoritative implementation evidence and unavailable facts to fail closed; D3-FUTURE-OWNER-CONTRACTS requires every owner to resolve to a content-addressed executable contract or an explicit fail-closed state."
+              ],
+              "fingerprint": "requirements-coverage:gap-d3-authorized-owner-evidence:out-of-envelope-owner-sources:v1",
+              "id": "GAP-D3-AUTHORIZED-OWNER-EVIDENCE",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner would treat five D3 owners as AVAILABLE and source-grounded even though their cited implementation files are outside the frozen authoritative roots, so those rows do not yet have authoritative source-specific evidence or an explicit fail-closed unavailable/custodian state.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D3-CURRENT-OWNER-CONTRACTS",
+                "D3-FUTURE-OWNER-CONTRACTS"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-17T17:06:53.004963Z",
+          "runtime_agent_id": "codex-exec-terminal-98143",
+          "verdict": "GAPS"
+        },
+        "REQUIREMENTS_SATISFACTION": {
+          "candidate_hash": "f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c",
+          "envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+          "lens": "REQUIREMENTS_SATISFACTION",
+          "lens_result_id": "lens-result-549485e658b012032ec10c2c",
+          "raw_findings": [
+            {
+              "evidence": [
+                "Hash binding verified: candidate-round-2.json canonical hash is f4fb4c176a759b0928b6c1246db756d8eca9e5bcd85efd73af42f36f9a5e934c and envelope-round-2.json canonical hash is df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f.",
+                "envelope-round-2.json and charter.json freeze authoritative_roots to /Users/kamenkamenov/memory-knowledge, /Users/kamenkamenov/mcp-agents-workflow, /private/tmp/openai-codex-hook-source, and https://github.com/openai/codex/issues/27133; /Users/kamenkamenov/callcenter-harness is not included.",
+                "candidate-round-2.json marks airgapped-local-bulgarian-stt, airgapped-redaction-stack, airgapped-llm-judge, secure-landing-seed, and callcenter-harness-engine-invariants as AVAILABLE using EV-D3-SRC-* evidence whose source_locator values are /Users/kamenkamenov/callcenter-harness/... paths outside every frozen local authoritative root.",
+                "requirements.json D3-CURRENT-OWNER-CONTRACTS requires positive owner facts to cite authoritative implementation evidence and unavailable facts to fail closed; D3-FUTURE-OWNER-CONTRACTS requires each owner ID to resolve to a content-addressed executable typed contract or an explicit fail-closed unavailable state."
+              ],
+              "fingerprint": "requirements-satisfaction:GAP-D3-OWNER-SOURCE-EVIDENCE-OUTSIDE-FROZEN-ROOTS:callcenter-sources-outside-envelope-authoritative-roots",
+              "id": "GAP-D3-OWNER-SOURCE-EVIDENCE-OUTSIDE-FROZEN-ROOTS",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner could treat five callcenter owners as source-grounded and available even though their implementation evidence is outside the frozen authoritative roots; the implementation would then either silently widen the research scope or risk inferring executable owner behavior without authorized evidence.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "D3-CURRENT-OWNER-CONTRACTS",
+                "D3-FUTURE-OWNER-CONTRACTS"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-17T17:07:23.105664Z",
+          "runtime_agent_id": "codex-exec-terminal-57841",
+          "verdict": "GAPS"
+        }
+      },
+      "round_id": "lens-round-8f47ac94bfbf1de0359c5c14",
+      "round_number": 2
+    }
+  ],
+  "schema_version": 1,
+  "scope_hash": "54f9f1f702c6c73a128b86e6da932b5d5c1993298d5ff497c93ea1645e184917",
+  "updated_at": "2026-07-17T17:18:53.490377Z",
+  "verdict": "BLOCKED"
+}

@@ -1,4 +1,10 @@
 #!/usr/bin/env bash
-# memory-knowledge post-merge hook: after every `git pull`/merge, re-sync skills into Claude + Codex.
-# Activated per machine by `install-skills.sh` (sets core.hooksPath=.githooks).
-exec "$(git rev-parse --show-toplevel)/working-agreement/install-skills.sh"
+# memory-knowledge post-merge hook: after every `git pull`/merge, refresh BOTH client skill
+# trees from canonical, gated by the repository-owned projection/reconciliation manifest.
+# Activated per machine during setup with: git config core.hooksPath .githooks
+# Fails visibly (non-zero, no mutation) when either client projection is stale or invalid;
+# the wrapper validates canonical skills and both client projections before any install.
+repo="$(git rev-parse --show-toplevel)"
+exec "$repo/working-agreement/install-skills.sh" \
+  --target both --accept-cross-client \
+  --reconciliation "$repo/working-agreement/client-skill-projections.json"

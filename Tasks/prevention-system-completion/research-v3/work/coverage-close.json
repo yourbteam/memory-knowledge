@@ -1,0 +1,12 @@
+{
+  "runtime": "codex-collaboration",
+  "runtime_agent_id": "/root/prevention_successor_coverage",
+  "role": "REQUIREMENTS_COVERAGE",
+  "round": 1,
+  "status": "COMPLETED",
+  "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+  "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+  "output_hash": "6f521ad50b75edc1c649e2fd374c711dc5e167a397b996f9826949732efa1ca8",
+  "slot_closed": true,
+  "completion_evidence": "Fresh independent lens returned PASS with nine explicit findings and released its active slot."
+}

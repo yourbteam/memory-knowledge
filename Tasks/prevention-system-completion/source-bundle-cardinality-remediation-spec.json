@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "task_id": "prevention-source-bundle-cardinality-remediation-v1",
+  "operation_kind": "workflow-drive",
+  "date": "2026-07-19",
+  "sequence_name": "prevention source-bundle cardinality remediation",
+  "outcome": "A valid authenticated dependency bundle with 101 files can start a work-memory run, while the generic 100-item ceiling continues to reject oversized unrelated arrays.",
+  "why_repeatable": "Large multi-repository convergence bundles can legitimately exceed 100 authenticated files, and run-start must apply a stable field-specific contract instead of failing at the generic JSON-array boundary.",
+  "dependencies": [
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "scripts/run_pytest.sh"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "scripts/work_memory.py"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "tests/test_work_memory.py"
+    },
+    {
+      "kind": "file",
+      "repository_key": "memory-knowledge",
+      "path_or_sequence_id": "scripts/blocker_catalog.py"
+    }
+  ],
+  "steps": [
+    {
+      "step": "reproduce-source-bundle-limit",
+      "command": "scripts/run_pytest.sh tests/test_work_memory.py -q",
+      "result": "Focused work-memory tests include a red-before case for a 101-entry run source_bundle.",
+      "note": "Use only the repository pytest launcher."
+    },
+    {
+      "step": "fix-source-bundle-contract",
+      "command": "apply_patch <source-bundle-field-limit-patch>",
+      "result": "Only run_started.source_bundle receives an authoritative higher bound; unrelated arrays keep the generic ceiling.",
+      "note": "No manifest pruning and no global array-limit relaxation."
+    },
+    {
+      "step": "verify-focused-work-memory",
+      "command": "scripts/run_pytest.sh tests/test_work_memory.py -q",
+      "result": "The 101-entry source bundle passes and an unrelated 101-item array remains rejected.",
+      "note": "This is the focused regression gate."
+    },
+    {
+      "step": "record-correction",
+      "command": "python3 scripts/work_memory_bootstrap_launcher.py correct --task-id <task-id> --run-id <run-id> --blocker-id <blocker-id> --occurrence-id <occurrence-id> --step-id fix-source-bundle-contract --changed-artifact scripts/work_memory.py --changed-artifact tests/test_work_memory.py --solution <solution> --reusable-behavior-changed yes",
+      "result": "The exact two-file correction is recorded and the failed remediation run closes.",
+      "note": "Use the sealed correction launcher; do not bypass stale-bundle guards."
+    },
+    {
+      "step": "same-path-successor-proof",
+      "command": "python3 scripts/work_memory.py run-start --task-id prevention-materializer-selection-deadlock-remediation-v1",
+      "result": "The original valid 101-file successor starts unchanged.",
+      "note": "This is the required same-path proof for resuming owner-runtime verification."
+    }
+  ],
+  "inputs": [
+    "Original successor selection receipt hash 64e3b1624154a7c1d3c3cd47c934314cd68951c290d4254acbcc6016d4e04883",
+    "Original successor bundle hash a3866ca40254bc10e6add81353a7aea9db24f045486c71633a96a52889661e0c"
+  ],
+  "failure_handling": "Catalog the exact failure before editing; any correction requires a fresh remediation successor and the original 101-file run-start must pass unchanged.",
+  "verified_path": "The remediation is complete only after focused tests pass and the original prevention-materializer successor run-start succeeds on bundle a3866ca4 without removing dependencies."
+}

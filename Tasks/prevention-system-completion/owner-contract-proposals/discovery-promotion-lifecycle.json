@@ -1,0 +1,306 @@
+{
+  "authority": "Kamen",
+  "authority_approvals": {
+    "budget_and_roots": {
+      "decision_id": "discovery-promotion-lifecycle-budget-roots-v1",
+      "status": "APPROVED"
+    },
+    "correction_successor_task_identity": {
+      "decision_id": "discovery-promotion-task-identity-remediation-20260720",
+      "status": "APPROVED"
+    },
+    "multi_correction_successor": {
+      "decision_id": "discovery-promotion-multi-correction-successor-20260723",
+      "status": "APPROVED"
+    },
+    "pending_correction_reconciliation": {
+      "decision_id": "discovery-promotion-pending-correction-reconciliation-20260723",
+      "status": "APPROVED"
+    },
+    "registered_successor_task_identity": {
+      "decision_id": "discovery-promotion-registered-successor-task-20260723",
+      "status": "APPROVED"
+    },
+    "runtime_and_terminal": {
+      "decision_id": "discovery-promotion-lifecycle-runtime-terminal-v1",
+      "status": "APPROVED"
+    },
+    "semantic_intake": {
+      "decision_id": "discovery-promotion-lifecycle-semantic-intake-v1",
+      "status": "APPROVED"
+    },
+    "sequence_debt_adoption_20260724": {
+      "decision_id": "discovery-promotion-lifecycle-head-sequence-doc-adoption-20260724",
+      "status": "APPROVED"
+    }
+  },
+  "authority_decisions_required": [],
+  "availability_policy": "AVAILABLE",
+  "effect_and_reconciliation_contract": {
+    "correct": {
+      "effect_identity": "subject id plus blocker id plus occurrence id plus failed run id plus deterministic correction id plus complete changed-artifact hash set",
+      "prepare": "Resolve exactly one eligible blocker and persist the deterministic correction identity and complete current artifact hashes before correction.",
+      "reconciliation": "Matching correction_recorded, bundle transition, fixed-awaiting-verification blocker state, and failed-run closure is ALREADY_APPLIED; unchanged eligible blocker is NOT_APPLIED; partial, extra, stale, or conflicting correction evidence is INDETERMINATE."
+    },
+    "correct-registered": {
+      "effect_identity": "registered subject id plus blocker id plus occurrence id plus failed run id plus deterministic correction id plus complete changed-artifact hash set",
+      "prepare": "Apply the same correction preparation contract against the registered subject bundle.",
+      "reconciliation": "Apply the same exact ledger, transition, blocker, and run-closure checks against the registered subject; identical retry returns the original correction receipt."
+    },
+    "drive": {
+      "effect_identity": "discovery id plus source bundle hash plus target sequence id plus normalized promotion metadata hash",
+      "prepare": "Persist the parent effect, fixed nine-transition ceiling, resolved roots, target metadata, and deterministic next-stage child identity before the first transition.",
+      "resume_rule": "Resume from the first NOT_APPLIED transition. Never rerun an ALREADY_APPLIED child, promotion, or ledger transition; any INDETERMINATE transition stops the parent.",
+      "stage_reconciliation": {
+        "promotion": "Delegate to sequence_promote journal recovery and then require matching discovery_promoted event, registry row, target sequence bundle hash, and dependency manifest. Exact match is ALREADY_APPLIED; proved absence is NOT_APPLIED; target or journal conflict is INDETERMINATE.",
+        "qualification": "A matching child terminal artifact plus same-bundle verification_recorded and passed run_closed events is ALREADY_APPLIED; no child preparation/evidence is NOT_APPLIED; partial or conflicting ledger evidence is INDETERMINATE.",
+        "readiness": "Recompute readiness metadata and bundle hash. Exact derived readiness is ALREADY_APPLIED; unchanged metadata is NOT_APPLIED; unexplained bundle drift is INDETERMINATE.",
+        "registered_verification": "A matching typed child terminal artifact plus registered same-bundle same-path verification and passed close is ALREADY_APPLIED; absence is NOT_APPLIED; partial/conflicting evidence is INDETERMINATE."
+      }
+    },
+    "status": {
+      "effect_class": "OBSERVATION",
+      "reconciliation": "Replay discovery_state and registered state reads against the same discovery id, sequence id, source bundle hash, registry hash, and ledger head; return explicit stage and blocker/correction state."
+    }
+  },
+  "owner_sequence_id": "discovery-promotion-lifecycle",
+  "parameter_contract": {
+    "automation_display": {
+      "maximum_length": 1000,
+      "minimum_length": 1,
+      "required_for": "drive",
+      "type": "STRING"
+    },
+    "changed_artifacts": {
+      "item_schema": {
+        "path": {
+          "mode": "EXISTING_REGULAR_FILE",
+          "trusted_root_from": "repository_key",
+          "type": "REPOSITORY_RELATIVE_PATH"
+        },
+        "repository_key": {
+          "registry": "repo_roots_file or configured default repository-root-registry",
+          "type": "ENUM_FROM_REGISTRY"
+        }
+      },
+      "required_for": [
+        "correct",
+        "correct-registered"
+      ],
+      "type": "NONEMPTY_LIST"
+    },
+    "changed_artifacts_file": {
+      "materializes": "changed_artifacts",
+      "mode": "READ_REGULAR_FILE",
+      "required": false,
+      "trusted_roots": [
+        "discovery-root",
+        "runtime-temp"
+      ],
+      "type": "PATH"
+    },
+    "command": {
+      "required": true,
+      "type": "ENUM",
+      "values": [
+        "status",
+        "drive",
+        "correct",
+        "correct-registered"
+      ]
+    },
+    "file": {
+      "mode": "READ_WRITE_REGULAR_FILE",
+      "required_for": [
+        "status",
+        "drive",
+        "correct"
+      ],
+      "trusted_root": "discovery-root",
+      "type": "PATH"
+    },
+    "max_qualification_runs": {
+      "caller_supplied": false,
+      "fixed": 3,
+      "type": "INTEGER"
+    },
+    "operation_kind": {
+      "minimum_items": 1,
+      "required_for": "drive",
+      "type": "SET_ENUM",
+      "values": [
+        "auth",
+        "cleanup",
+        "container",
+        "database",
+        "deploy",
+        "image",
+        "other",
+        "package",
+        "read-only",
+        "remote-operator",
+        "single-build",
+        "single-test",
+        "workflow-drive"
+      ]
+    },
+    "pass_signal": {
+      "maximum_length": 1000,
+      "minimum_length": 1,
+      "required_for": "drive",
+      "type": "STRING"
+    },
+    "repo_roots_file": {
+      "mode": "READ_REGULAR_FILE",
+      "required": false,
+      "schema": "repository-root-registry",
+      "suffix": ".repositories.json",
+      "trusted_root": "discovery-root",
+      "type": "PATH"
+    },
+    "reusable_behavior_changed": {
+      "required_for": [
+        "correct",
+        "correct-registered"
+      ],
+      "type": "ENUM",
+      "values": [
+        "yes",
+        "no"
+      ]
+    },
+    "root": {
+      "caller_supplied": false,
+      "fixed_root": "memory-knowledge",
+      "type": "PATH"
+    },
+    "sequence_id": {
+      "maximum_length": 96,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "required_for": [
+        "status",
+        "drive",
+        "correct"
+      ],
+      "target_root": "registered-sequence-root",
+      "type": "STRING"
+    },
+    "solution": {
+      "maximum_length": 4000,
+      "minimum_length": 1,
+      "required_for": [
+        "correct",
+        "correct-registered"
+      ],
+      "type": "STRING"
+    },
+    "subject_id": {
+      "maximum_length": 128,
+      "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$",
+      "required_for": "correct-registered",
+      "type": "STRING"
+    },
+    "supersedes_correction_ids": {
+      "required": false,
+      "type": "SET_UUID"
+    },
+    "task_id": {
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "required_when": "a protected correction artifact is present",
+      "type": "STRING"
+    },
+    "use_when": {
+      "maximum_length": 1000,
+      "minimum_length": 1,
+      "required_for": "drive",
+      "type": "STRING"
+    },
+    "validation_boundary": "Materialize the selected command schema, resolve every path without symlinks or traversal, prove containment under its trusted root, validate every repository mapping and artifact before budget reservation, and reject caller overrides of root, budget, or qualification bounds."
+  },
+  "proposal_status": "APPROVED",
+  "schema_version": 1,
+  "source": {
+    "dependencies_sha256": "7071ad598599d98fbf8809fcab1f8ed4b950882932df4b59d832b6e13a5dbc2e",
+    "implementation_approved_post_correction_sha256": "c081fc06fd37389edce2eedd5662b4f33f9a082231f2ddbef6d65f4afd9ba4c9",
+    "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_promotion_lifecycle.py",
+    "implementation_sha256": "312fb94fbf3fd572604166501301aa1755c3c932d49f81f1bc4a8ba7018b8fda",
+    "implementation_source_correction_decision_id": "discovery-promotion-registered-successor-task-20260723",
+    "sequence_approved_post_correction_sha256": "2eba1c190dc4422b16aae2f7f4445f5163c3ccc13f86b59a960723d3b2d8c7c1",
+    "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/discovery-promotion-lifecycle/sequence.md",
+    "sequence_sha256": "b796be13ab97243dcd973640639c549e42a9259604c65dd10b264fb7e408d8f2",
+    "sequence_source_correction_decision_id": "discovery-promotion-lifecycle-head-sequence-doc-adoption-20260724",
+    "source_receipt_helper_path": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_source_receipt.py",
+    "source_receipt_helper_sha256": "e569ee5da7043681d9f432410417a620d4ebadc776cf5f6ed7992ac1aa81e2a8"
+  },
+  "standalone": true,
+  "terminal_contract": {
+    "command_specific": {
+      "correct": "The deterministic correction exists once with the exact changed-artifact hashes; bundle transition and failed-run closure match; the blocker is fixed-awaiting-verification; next_stage is successor-verification. This does not claim the blocker verified or closed.",
+      "correct-registered": "The same correction evidence holds for the registered subject and next_stage is successor-verification. This does not claim the blocker verified or closed.",
+      "drive": "Stage is complete; the target registered sequence and manifest exist at the expected bundle hash; registry and promotion events match; a passed registered same-path child verification and run closure exist for that hash; and no open blocker or pending correction takes precedence.",
+      "status": "Exactly one recognized stage is returned with discovery id, sequence id, source bundle hash, ledger hash, registered-verification state, open blockers, and pending correction identities; success means a complete observation, not lifecycle completion."
+    },
+    "common": [
+      "The process return code is zero.",
+      "The output validates against the command-specific schema and has ok=true.",
+      "The semantic verifier reloads the exact source bundle, registry, ledger, promotion journal, blocker state, and child terminal artifacts required by the command.",
+      "Exactly one owner_terminal event and matching terminal artifact exist for effect_id."
+    ],
+    "source_corrections": [
+      "Replace direct execution of a shlex-parsed Markdown verification command with typed child-owner dispatch and a journaled child receipt.",
+      "Make max_qualification_runs owner-fixed at three and reserve each drive transition progressively instead of accepting a caller-controlled bound.",
+      "Replace arbitrary root/path strings and flat changed-artifact lines with the materialized repository-key/path schema.",
+      "Emit one structured owner terminal artifact after semantic re-observation rather than terminalizing from the controller return code alone.",
+      "Preserve the correction predecessor's task identity for its verification successor and tolerate unrelated legacy run-start records without weakening predecessor ownership checks."
+    ]
+  },
+  "trusted_roots": {
+    "discovery-root": "/Users/kamenkamenov/memory-knowledge/operations/sequences/discovery",
+    "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
+    "registered-sequence-root": "/Users/kamenkamenov/memory-knowledge/operations/sequences",
+    "repository-root-registry": "A content-addressed manifest that maps only configured repository keys to approved canonical roots",
+    "runtime-temp": "/private/tmp"
+  },
+  "unit_budget": {
+    "adjudication_milliseconds": 3600000,
+    "atomic_task_cap_milliseconds": 3600000,
+    "command_profiles": {
+      "correct": {
+        "duration_milliseconds": 28800000,
+        "productive_task_count": 1
+      },
+      "correct-registered": {
+        "duration_milliseconds": 28800000,
+        "productive_task_count": 1
+      },
+      "drive": {
+        "derivation": "The authoritative maximum is three qualification/successor runs plus six additional lifecycle transitions, matching the source transition loop after max_qualification_runs is fixed at three.",
+        "duration_milliseconds": 57600000,
+        "productive_milliseconds": 32400000,
+        "productive_task_count": 9
+      },
+      "status": {
+        "duration_milliseconds": 28800000,
+        "productive_task_count": 1
+      }
+    },
+    "mandatory_role_milliseconds": {
+      "CORE": 3600000,
+      "INTERNAL_READINESS": 3600000,
+      "REQUIREMENTS_COVERAGE": 3600000,
+      "REQUIREMENTS_SATISFACTION": 3600000
+    },
+    "materialization_milliseconds": 3600000,
+    "owner_sequence_id": "discovery-promotion-lifecycle",
+    "reservation_mode": "OWNER_DERIVED_PROGRESSIVE",
+    "reservation_rule": "The owner derives the command profile. For drive, each next lifecycle transition holds its complete 3,600,000ms productive reservation before launch; the parent remains STARTED and may pause at a durable boundary. Caller-supplied budgets and max_qualification_runs are rejected.",
+    "retry_rule": "Retries remain inside the originating atomic task cap.",
+    "schema_version": 1,
+    "terminal_milliseconds": 3600000
+  },
+  "verification_child_contract": {
+    "admission": "The verify-automation row must materialize to one typed executable child owner contract with its own complete UnitBudget, effect identity, STARTED reconciler, semantic terminal verifier, and trusted-root parameter schema.",
+    "receipt": "The child terminal artifact is content-addressed by child effect id, source bundle hash, command hash, and same-path outcome; the lifecycle ledger verification event may be recorded only from that artifact.",
+    "rejection": "An arbitrary Markdown shell command, placeholder, compound shell string, or child without a complete executable owner contract rejects drive before the child is prepared. Availability remains AVAILABLE while executable admission fails closed."
+  }
+}

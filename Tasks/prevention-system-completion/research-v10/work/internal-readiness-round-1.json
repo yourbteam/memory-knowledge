@@ -1,0 +1,150 @@
+{
+  "verdict": "GAPS",
+  "findings": [
+    {
+      "id": "MG-O1",
+      "fingerprint": "mg-o1:owner-derived-complete-budget-not-implemented",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O1-FUTURE-BUDGET"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "Callers can still understate an owner's reservation because execution reads a caller-supplied UnitBudget; the planner must replace that path with complete contract-derived command or mode budgets and pre-effect rejection.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json:21,23-24 declares MG-O1 and distinguishes the current caller-supplied budget from the approved owner-derived target.",
+        "scripts/prevention_controller.py:52,65,242 accepts unit_budgets at construction and selects the budget from that caller-provided mapping.",
+        "Tasks/prevention-system-completion/owner-authority-decisions.json:42-61 approves the atomic-task cap and workflow composition rule; later approved owner decisions ground the per-owner target contracts."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O2",
+      "fingerprint": "mg-o2:started-effects-lack-owner-reconciliation",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O2-CURRENT-RECONCILE",
+        "O2-FUTURE-RECONCILE"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "After a crash, every recovered STARTED effect remains indeterminate even when an authoritative owner observable could prove whether it already ran; the planner must wire typed per-owner reconciliation before any retry decision.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json:21,25-26 declares MG-O2 and the three required reconciliation results.",
+        "scripts/prevention_owner_runtime.py:160-177 maps a recovered STARTED checkpoint directly to INDETERMINATE without dispatching an owner reconciler.",
+        "Tasks/prevention-system-completion/owner-authority-decisions.json:94,140,156,172,188,204,220,236,252,268 names the approved reconciliation surfaces for the ten AVAILABLE owners."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O3",
+      "fingerprint": "mg-o3:exit-zero-bypasses-semantic-terminal-verification",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O3-CURRENT-TERMINAL",
+        "O3-FUTURE-TERMINAL"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "A zero process exit can currently become success without proving the owner's real result, so blocked, detached, malformed, or semantically failed work can be terminalized; the planner must require the selected semantic verifier and one durable event/artifact pair.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json:21,27-28 declares MG-O3 and the ordered future terminal gate.",
+        "scripts/prevention_owner_runtime.py:183-214 persists execution output, rejects only nonzero return codes, and otherwise writes the terminal artifact.",
+        "scripts/work_memory.py:132-200 defines the current prevention event fields and contains no owner_terminal event."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O4",
+      "fingerprint": "mg-o4:child-owner-standalone-dispatch-not-rejected",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O4-CURRENT-PARENT",
+        "O4-FUTURE-PARENT"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "The child-only blocker-reentry owner can reach normal dispatch without an active allowed parent or a single-use delegation record; the planner must reject direct, forged, stale, or already-consumed delegation before budget admission and argv construction.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json:21,29-30 declares MG-O4 and the required same-journal active-parent boundary.",
+        "Tasks/prevention-system-completion/owner-migration-manifest.json:40 marks mawf-playbook-blocker-reentry standalone=false and names exactly mawf-playbook-full-test and mawf-playbook-speed-test as parents.",
+        "scripts/prevention_adapters.py:209-237 builds an invocation after availability and parameter checks but performs no parent or delegation validation."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "MG-O5",
+      "fingerprint": "mg-o5:parameters-not-bound-to-materialized-schema-and-trusted-roots",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O5-CURRENT-PARAMETERS",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "Hard-coded adapter lists can accept values without proving the selected approved schema, provider identity, or trusted-root containment, allowing wrong-mode inputs or escaped paths to reach argv construction; the planner must bind validation and resolution to the materialized contract first.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json:21,31-32 declares MG-O5 and the exact materialized-schema, resolver, normalization, containment, and receipt target.",
+        "scripts/prevention_adapters.py:27-113 defines hard-coded BASE_ARGV, FLAG_ORDER, and PATH_PARAMETERS tables.",
+        "scripts/prevention_adapters.py:116-237 checks tags and hard-coded owner conditions, then constructs argv without resolving proposal schemas, repository roots, providers, or symlink containment."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    {
+      "id": "IR-R1-OWNER-BY-OWNER-CURRENT-MATRICES",
+      "fingerprint": "internal-readiness:missing-owner-command-current-matrices:o1-o2-o3-o5",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-CURRENT-BUDGET",
+        "O2-CURRENT-RECONCILE",
+        "O3-CURRENT-TERMINAL",
+        "O5-CURRENT-PARAMETERS"
+      ],
+      "type": "FACT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "A fresh planner still has to rediscover which exact budget fields, effect identities and observables, terminal markers, and effective parameter rules apply to each owner and command or mode; without those owner-by-owner mappings it can silently omit a surface or invent wiring that the research was required to settle.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v8/requirements.json requires per-owner exact producer/fields/units/coverage for O1, a real same-path observable or explicit unresolved state for O2, exact terminal evidence or fail-closed absence for every owner for O3, and effective schemas/root behavior for all ten owners for O5.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json:23 gives one aggregate current budget record rather than ten owner/command records; line 25 gives an undifferentiated observable list rather than an owner mapping; line 27 gives a generic runtime gate and only a generic outputs summary; line 31 gives aggregate adapter behavior and command/mode labels rather than each effective schema.",
+        "The candidate's current-source evidence is owner-specific only for local-workflow-orch-image, greenfield-full-drive, and mawf-playbook-blocker-reentry (EV-LOCAL-SOURCE, EV-GREENFIELD-SOURCE, EV-REENTRY-SOURCE); it indexes no current implementation source for the other seven owners."
+      ],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    {
+      "id": "IR-R1-PROPOSAL-EVIDENCE-INTEGRITY",
+      "fingerprint": "internal-readiness:ev-proposals-directory-locator-single-file-hash",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "O1-FUTURE-BUDGET",
+        "O2-FUTURE-RECONCILE",
+        "O3-FUTURE-TERMINAL",
+        "O4-FUTURE-PARENT",
+        "O5-FUTURE-PARAMETERS"
+      ],
+      "type": "EVIDENCE_LIMIT",
+      "materiality": "BLOCKER",
+      "practical_consequence": "The planner cannot verify the exact approved target contracts that drive every future requirement and all ten readiness records: one evidence ID claims ten files, but its locator is a directory and its hash authenticates only the local-workflow proposal, so mutations or omissions in the other nine proposals would be invisible to the package.",
+      "evidence": [
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json:15 defines EV-PROPOSALS with the owner-contract-proposals directory as source_locator, hash 40ed6643594bbf830e642f5a9b3edf21020d9fb143b5ff8ff0c641fea3f70f7b, and explicitly states that this is only the local-workflow proposal file hash.",
+        "Local verification confirms 40ed6643594bbf830e642f5a9b3edf21020d9fb143b5ff8ff0c641fea3f70f7b is the file SHA-256 of owner-contract-proposals/local-workflow-orch-image.json, not a content identity for the ten-file directory.",
+        "Tasks/prevention-system-completion/research-v10/work/candidate-round-1.json:24,26,28,30,32 and 35-44 reuse EV-PROPOSALS to support every future requirement and every planner-readiness family."
+      ],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    }
+  ]
+}

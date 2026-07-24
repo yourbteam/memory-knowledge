@@ -1,0 +1,2592 @@
+{
+  "attempts": [
+    {
+      "candidate_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+      "close_evidence": {
+        "evidence": "The collaboration runtime returned FINAL_ANSWER; the parent materialized and controller-validated the candidate unchanged in substance.",
+        "runtime_agent_id": "/root/directive_vnext_v2_core_r1",
+        "runtime_status": "completed",
+        "slot_id": "s1",
+        "slot_state": "released"
+      },
+      "input_envelope_hash": "93ecf8f0851417a39d402235e81002f8d3e7a30f1738cc7c3b1b95ac08761ac6",
+      "output_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+      "recorded_at": "2026-07-19T09:53:10Z",
+      "role": "CORE_RESEARCHER",
+      "round": 1,
+      "runtime_agent_id": "/root/directive_vnext_v2_core_r1",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+      "close_evidence": {
+        "evidence": "Collaboration runtime returned FINAL_ANSWER with the exact terminal lens envelope.",
+        "runtime_agent_id": "/root/directive_vnext_v2_readiness_r1",
+        "runtime_status": "completed",
+        "slot_id": "s2",
+        "slot_state": "released"
+      },
+      "input_envelope_hash": "93ecf8f0851417a39d402235e81002f8d3e7a30f1738cc7c3b1b95ac08761ac6",
+      "output_hash": "7ae6edf56eef34959ffcc2d73452e216e1f1468228fdf28fe97284e9cdbe29e0",
+      "recorded_at": "2026-07-19T10:01:00Z",
+      "role": "INTERNAL_READINESS",
+      "round": 1,
+      "runtime_agent_id": "/root/directive_vnext_v2_readiness_r1",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+      "close_evidence": {
+        "evidence": "Collaboration runtime returned FINAL_ANSWER with the exact terminal lens envelope.",
+        "runtime_agent_id": "/root/directive_vnext_v2_coverage_r1",
+        "runtime_status": "completed",
+        "slot_id": "s3",
+        "slot_state": "released"
+      },
+      "input_envelope_hash": "93ecf8f0851417a39d402235e81002f8d3e7a30f1738cc7c3b1b95ac08761ac6",
+      "output_hash": "df7d47541352de011da5a0810828993096b059688b67f6ce47ea44795d0bd095",
+      "recorded_at": "2026-07-19T10:01:01Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 1,
+      "runtime_agent_id": "/root/directive_vnext_v2_coverage_r1",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+      "close_evidence": {
+        "evidence": "Collaboration runtime returned FINAL_ANSWER with the exact terminal lens envelope.",
+        "runtime_agent_id": "/root/directive_vnext_v2_satisfaction_r1",
+        "runtime_status": "completed",
+        "slot_id": "s4",
+        "slot_state": "released"
+      },
+      "input_envelope_hash": "93ecf8f0851417a39d402235e81002f8d3e7a30f1738cc7c3b1b95ac08761ac6",
+      "output_hash": "0dd4fc99ba3dd1aa38459a98fe277a102b50d53855fd5bf9e2a58b0d6f2192a0",
+      "recorded_at": "2026-07-19T10:01:02Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 1,
+      "runtime_agent_id": "/root/directive_vnext_v2_satisfaction_r1",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+      "close_evidence": {
+        "evidence": "Collaboration runtime returned FINAL_ANSWER classifying every raw lens finding exactly once.",
+        "runtime_agent_id": "/root/directive_vnext_v2_adjudicator_r1",
+        "runtime_status": "completed",
+        "slot_id": "s5",
+        "slot_state": "released"
+      },
+      "input_envelope_hash": "93ecf8f0851417a39d402235e81002f8d3e7a30f1738cc7c3b1b95ac08761ac6",
+      "output_hash": "8010959f937913964e1db09173dabb64bab65dac70ee2797ad362c34a14ac524",
+      "recorded_at": "2026-07-19T10:04:00Z",
+      "role": "ADJUDICATOR",
+      "round": 1,
+      "runtime_agent_id": "/root/directive_vnext_v2_adjudicator_r1",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+      "close_evidence": {
+        "evidence": "Collaboration runtime returned the corrected full candidate; parent applied only adjudicated research corrections and controller validated it.",
+        "runtime_agent_id": "/root/directive_vnext_v2_core_r2",
+        "runtime_status": "completed",
+        "slot_id": "s6",
+        "slot_state": "released"
+      },
+      "input_envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+      "output_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+      "recorded_at": "2026-07-19T10:15:20Z",
+      "role": "CORE_RESEARCHER",
+      "round": 2,
+      "runtime_agent_id": "/root/directive_vnext_v2_core_r2",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+      "close_evidence": {
+        "evidence": "Agent self-reported accidental exposure to round-1 lens snippets; parent rejected the attempt before terminal output and interrupted it.",
+        "runtime_agent_id": "/root/directive_vnext_v2_readiness_r2",
+        "runtime_status": "interrupted",
+        "slot_id": "s7",
+        "slot_state": "released"
+      },
+      "input_envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+      "output_hash": null,
+      "recorded_at": "2026-07-19T10:18:00Z",
+      "role": "INTERNAL_READINESS",
+      "round": 2,
+      "runtime_agent_id": "/root/directive_vnext_v2_readiness_r2",
+      "slot_closed": true,
+      "status": "FAILED"
+    },
+    {
+      "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+      "close_evidence": {
+        "evidence": "Fresh retry returned exact terminal envelope after obeying explicit excluded-path boundary.",
+        "runtime_agent_id": "/root/directive_vnext_v2_readiness_r2_retry",
+        "runtime_status": "completed",
+        "slot_id": "s10",
+        "slot_state": "released"
+      },
+      "input_envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+      "output_hash": "0de52080567e7f3f1b59d5d55cfa1913ab81c5267b57b1ec7b8ea252e9be6d77",
+      "recorded_at": "2026-07-19T10:24:00Z",
+      "role": "INTERNAL_READINESS",
+      "round": 2,
+      "runtime_agent_id": "/root/directive_vnext_v2_readiness_r2_retry",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+      "close_evidence": {
+        "evidence": "Collaboration runtime returned exact terminal envelope.",
+        "runtime_agent_id": "/root/directive_vnext_v2_coverage_r2",
+        "runtime_status": "completed",
+        "slot_id": "s8",
+        "slot_state": "released"
+      },
+      "input_envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+      "output_hash": "b7d659545170322453fa6997907525ed52c1d03f16112841475337905b694040",
+      "recorded_at": "2026-07-19T10:24:01Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 2,
+      "runtime_agent_id": "/root/directive_vnext_v2_coverage_r2",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+      "close_evidence": {
+        "evidence": "Collaboration runtime returned exact terminal envelope.",
+        "runtime_agent_id": "/root/directive_vnext_v2_satisfaction_r2",
+        "runtime_status": "completed",
+        "slot_id": "s9",
+        "slot_state": "released"
+      },
+      "input_envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+      "output_hash": "a61a9b592a27595d804bc3358a5e6d69c6f84dec0130b34700ca6483d000b2ee",
+      "recorded_at": "2026-07-19T10:24:02Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 2,
+      "runtime_agent_id": "/root/directive_vnext_v2_satisfaction_r2",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+      "close_evidence": {
+        "evidence": "Fresh adjudicator classified every round-2 raw finding exactly once.",
+        "runtime_agent_id": "/root/directive_vnext_v2_adjudicator_r2",
+        "runtime_status": "completed",
+        "slot_id": "s11",
+        "slot_state": "released"
+      },
+      "input_envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+      "output_hash": "9f4928923d6561c48ed53a67d03f8c05195392d4b97d538cbdff39e5163ea96e",
+      "recorded_at": "2026-07-19T10:29:00Z",
+      "role": "ADJUDICATOR",
+      "round": 2,
+      "runtime_agent_id": "/root/directive_vnext_v2_adjudicator_r2",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "budgets": {
+    "deadline_at": "2026-07-19T10:41:00Z",
+    "max_attempts": 15,
+    "max_minutes": 60,
+    "max_role_retries": 1,
+    "max_rounds": 3,
+    "started_at": "2026-07-19T09:41:00Z"
+  },
+  "candidates": {
+    "candidate-77f4262ee47af1518e281385": {
+      "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+      "candidate_id": "candidate-77f4262ee47af1518e281385",
+      "candidate_payload": {
+        "evidence_index": [
+          {
+            "accessed_at": null,
+            "id": "D",
+            "limitations": "No compliance proof.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md",
+            "source_sha256": "ba43669860bb143c917f0e6468209e97de253d122cc7baada09846c2ea65edd9",
+            "supported_claim": "Canonical G0-G24 and promotion authority."
+          },
+          {
+            "accessed_at": null,
+            "id": "WA",
+            "limitations": "Intent only.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/working-agreement/SKILL.md",
+            "source_sha256": "5d19c4b12407dd74447962b3bc31979cfbb5db840c9528ece61d3579cf517003",
+            "supported_claim": "Global intake/sequence/blocker gate chain."
+          },
+          {
+            "accessed_at": null,
+            "id": "I",
+            "limitations": "Not runtime proof.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/task-intake/SKILL.md",
+            "source_sha256": "01b674585dc40517882fc535283e292f13424d99748a8cef8252b3c718fc147c",
+            "supported_claim": "Every-command classification plus continuation reuse."
+          },
+          {
+            "accessed_at": null,
+            "id": "S",
+            "limitations": "Installed may differ.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/sequence-runner/SKILL.md",
+            "source_sha256": "e3b77cd11d7b546dc08c1c468a678ac2d1c7cd8aeffb74c2d040a7eec1d17182",
+            "supported_claim": "Canonical operational lifecycle."
+          },
+          {
+            "accessed_at": null,
+            "id": "B",
+            "limitations": "Not every failure merits it.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/blocker-catalog/SKILL.md",
+            "source_sha256": "80730a82d7860463498ded9d7254842fe63c1eed54d1136a1dcc793f8308155b",
+            "supported_claim": "Canonical blocker lifecycle."
+          },
+          {
+            "accessed_at": null,
+            "id": "M",
+            "limitations": "Needs ledger impact.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/work_memory.py",
+            "source_sha256": "6fbe6acc51e037db5a0830cd46c82f71a4435a05a5d91ee34d43699d030a3c59",
+            "supported_claim": "Read/test/build may classify operational and rewrite receipt."
+          },
+          {
+            "accessed_at": null,
+            "id": "W",
+            "limitations": "Cannot identify writer.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v2/evidence/work-memory-events-snapshot.jsonl",
+            "source_sha256": "bdcdeba92ff222bad6a4d8a35ac7f41d5cff65c5c0ef31150012d9afcd5e3842",
+            "supported_claim": "Frozen blocking, invalidation, loops, post-rejection effects, unknown writer."
+          },
+          {
+            "accessed_at": null,
+            "id": "P",
+            "limitations": "No all-target transaction.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/generate_projections.py",
+            "source_sha256": "3f186dac72da0045cc40b368c16eb55850de429aae03f3903ece7644c2eca6b6",
+            "supported_claim": "Allowlisted per-target AGENTS projection."
+          },
+          {
+            "accessed_at": null,
+            "id": "A",
+            "limitations": "One consumer.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/AGENTS.md",
+            "source_sha256": "777adb3f0cd9177fdea1d8a957fee24aac726cfd0dbb26658ad1ef807414cab7",
+            "supported_claim": "Repository and generated consumer."
+          },
+          {
+            "accessed_at": null,
+            "id": "C",
+            "limitations": "Registration, not execution.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/.claude/settings.json",
+            "source_sha256": "aa807a200ac4366fcb7680f5ba9a26bd8267beafbd9ae29a1096376de4f27818",
+            "supported_claim": "Current Claude hooks."
+          },
+          {
+            "accessed_at": null,
+            "id": "N",
+            "limitations": "Latest run unproven.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/install_skills.py",
+            "source_sha256": "7e9e3133149dae90b2f4fce6a1218279e6a198fa1a68fb7bd6bbb8a78c8cb5fe",
+            "supported_claim": "Journaled recoverable exact installation."
+          },
+          {
+            "accessed_at": null,
+            "id": "Y",
+            "limitations": "Live parity unproven.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/sync_corpus.py",
+            "source_sha256": "118eef445018137b4229ab82b8e8f04dbe5e9c9980680e525e2aa160356ac72e",
+            "supported_claim": "MCP upsert/deactivation/read-back gate."
+          },
+          {
+            "accessed_at": null,
+            "id": "IS",
+            "limitations": "Cause/date unknown.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md",
+            "source_sha256": "f10305ba36471c15da77465c09fba567c4161c2f756c4c334c828c8a72ab1ee2",
+            "supported_claim": "Installed sequence skill differs."
+          },
+          {
+            "accessed_at": null,
+            "id": "IB",
+            "limitations": "Cause/date unknown.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/.codex/skills/blocker-catalog/SKILL.md",
+            "source_sha256": "81fd8fd38c5dcd3854a2f16fadcaef01f113e9eacc13e0eec2b9e0aa89e221bb",
+            "supported_claim": "Installed blocker skill differs."
+          },
+          {
+            "accessed_at": null,
+            "id": "R",
+            "limitations": "Only expensive recurring defects.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/reproduce-first-verify/SKILL.md",
+            "source_sha256": "234bb462a9e45080934aa813a39c4710db32f6e8c396aa77243d19b2a3426977",
+            "supported_claim": "Real path, captured input, red/green, live confirmation."
+          },
+          {
+            "accessed_at": null,
+            "id": "AL",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/codex-projects.allowlist",
+            "source_sha256": "c9536c232af4eb071a7dc56c79ce78a65efd22aa40264ae0fc611d01fd2518ea",
+            "supported_claim": "Exact projection allowlist."
+          },
+          {
+            "accessed_at": null,
+            "id": "ID",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/inject-directives.sh",
+            "source_sha256": "b588b45d4678657f17ec58c23aaeaed535780aed160c4a5b564872d4229c47fb",
+            "supported_claim": "Claude canonical injection wrapper."
+          },
+          {
+            "accessed_at": null,
+            "id": "SCW",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/sync-corpus.sh",
+            "source_sha256": "d6e58947d769fca0fe540ed733b766beda4dbda834b68d12fd446125ea6a626c",
+            "supported_claim": "Fail-open post-commit and force-current routes."
+          },
+          {
+            "accessed_at": null,
+            "id": "ISW",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/install-skills.sh",
+            "source_sha256": "627ee6aefefec5212c56b27eeb4ffa7a91ff4432c47b7ac3ced0c7152627f592",
+            "supported_claim": "Validation-first install wrapper."
+          },
+          {
+            "accessed_at": null,
+            "id": "SCD",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/SETUP-codex.md",
+            "source_sha256": "b043b6c5409d63583d55a3f2e685ba0a5e91db7f2567a054dfb9ddefc70198e6",
+            "supported_claim": "Codex setup and validation anchors."
+          },
+          {
+            "accessed_at": null,
+            "id": "SCL",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/SETUP-claude.md",
+            "source_sha256": "2ddbd0862d897f90c426ee661f78b1713cdbb76d8f8ca25ffb765d9679aab026",
+            "supported_claim": "Claude hook and verification anchors."
+          },
+          {
+            "accessed_at": null,
+            "id": "INS",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/INSTALL.md",
+            "source_sha256": "dac108dab78ef0eb59943084c5a5a00afa042ab089d373af5ca9e261e6dfff16",
+            "supported_claim": "Tier setup and sync route."
+          },
+          {
+            "accessed_at": null,
+            "id": "CFG",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/.codex/config.toml",
+            "source_sha256": "414a006b5df214cfa64dc7820755d3aa1aca538a327d03a2f97830c9632d9cfc",
+            "supported_claim": "Trusted project and MCP configuration."
+          },
+          {
+            "accessed_at": null,
+            "id": "IWA",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/.codex/skills/working-agreement/SKILL.md",
+            "source_sha256": "5d19c4b12407dd74447962b3bc31979cfbb5db840c9528ece61d3579cf517003",
+            "supported_claim": "Installed working-agreement bytes."
+          },
+          {
+            "accessed_at": null,
+            "id": "ITI",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/.codex/skills/task-intake/SKILL.md",
+            "source_sha256": "01b674585dc40517882fc535283e292f13424d99748a8cef8252b3c718fc147c",
+            "supported_claim": "Installed task-intake bytes."
+          },
+          {
+            "accessed_at": null,
+            "id": "TGP",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/tests/test_generate_projections.py",
+            "source_sha256": "44e5f1c8426185fa7e151ee87530d4cf7ef731f9c4038d88ca47faab79c0d7cb",
+            "supported_claim": "Projection validation surface."
+          },
+          {
+            "accessed_at": null,
+            "id": "TIS",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/tests/test_install_skills.py",
+            "source_sha256": "fc91b3f40fce2fc941595b2f26e33fedf852cd12d84a1e3b67c3265342bc50ae",
+            "supported_claim": "Installer validation surface."
+          },
+          {
+            "accessed_at": null,
+            "id": "TSC",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/tests/test_sync_corpus.py",
+            "source_sha256": "337729d0d62ce8d39f519f0e9de97f8176271ab577ae8e5640b404966d463372",
+            "supported_claim": "Corpus validation surface."
+          },
+          {
+            "accessed_at": null,
+            "id": "TSK",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py",
+            "source_sha256": "2c8fc2b7adbba95e5f26123da13d433725cfcda280c8731f8b7d2c8fda2212b5",
+            "supported_claim": "Skill contract validation surface."
+          },
+          {
+            "accessed_at": null,
+            "id": "SG",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_guard.py",
+            "source_sha256": "f62cd0b41bb6b72f2cf8c5817cb8c5d8379f9061a1993dde8cc70f51fa04ffc0",
+            "supported_claim": "Guard fail-closed source boundary."
+          },
+          {
+            "accessed_at": null,
+            "id": "BCS",
+            "limitations": "Source/config/document/test evidence; does not prove a fresh execution unless stated.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/blocker_catalog.py",
+            "source_sha256": "cd8d3ba9da9e4e42a907b30caef7324e289e67751d10277f40cb15cc7dae71ef",
+            "supported_claim": "Blocker lifecycle helper."
+          }
+        ],
+        "material_gaps": [],
+        "requirement_statuses": [
+          {
+            "evidence_ids": [
+              "D"
+            ],
+            "requirement_id": "CUR-001",
+            "research_value": {
+              "complete": true,
+              "count": 25,
+              "current_and_future_separated": true,
+              "fields": [
+                "rationale",
+                "intent",
+                "activation",
+                "action",
+                "prohibition",
+                "stop",
+                "disposition"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "P",
+              "A",
+              "C",
+              "N",
+              "Y",
+              "IS",
+              "IB",
+              "AL",
+              "ID",
+              "SCW",
+              "ISW",
+              "SCD",
+              "SCL",
+              "INS",
+              "CFG",
+              "IWA",
+              "ITI",
+              "TGP",
+              "TIS",
+              "TSC",
+              "TSK"
+            ],
+            "requirement_id": "CUR-002",
+            "research_value": {
+              "approval_owner": "Kamen",
+              "authority": "DIRECTIVES.md",
+              "closure": "lock it plus parity and tests",
+              "complete": true,
+              "consumers": [
+                "AGENTS",
+                "Claude hooks",
+                "Codex skill",
+                "installed skills",
+                "corpus"
+              ],
+              "drift": [
+                "sequence-runner",
+                "blocker-catalog"
+              ],
+              "dual_path": "post-commit fail-open corpus+projection versus force-current verified corpus-only",
+              "partial_failure": [
+                "projection per-target",
+                "normal sync fail-open"
+              ],
+              "validation_surfaces": [
+                "wrappers",
+                "configs",
+                "allowlist",
+                "setup docs",
+                "installed copies",
+                "four tests"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "WA",
+              "I",
+              "S",
+              "B",
+              "M",
+              "W"
+            ],
+            "requirement_id": "CUR-003",
+            "research_value": {
+              "agent_non_compliance": true,
+              "amplification": true,
+              "rule_defects": true,
+              "tool_defects": true,
+              "unknown_writer_unattributed": true
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "P",
+              "A"
+            ],
+            "requirement_id": "FUT-001",
+            "research_value": {
+              "defined": true,
+              "order": [
+                "system",
+                "developer",
+                "repository",
+                "user",
+                "envelope",
+                "directives",
+                "playbooks",
+                "operations",
+                "evidence"
+              ],
+              "rule": "intersection; lower never grants"
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "I",
+              "W"
+            ],
+            "requirement_id": "FUT-002",
+            "research_value": {
+              "amendment": "owning authority",
+              "continuation": "reuse",
+              "defined": true,
+              "fields_complete": true,
+              "freeze": "before mutation"
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "S",
+              "B",
+              "W"
+            ],
+            "requirement_id": "FUT-003",
+            "research_value": {
+              "classes": [
+                "product",
+                "enabling tool",
+                "out-of-scope infra",
+                "invocation",
+                "anomaly",
+                "evidence",
+                "governance"
+              ],
+              "classification": "ordered mutually exclusive F0-F6 predicates",
+              "defined": true,
+              "non_recursive": true,
+              "one_response_each": true
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "WA",
+              "S",
+              "B",
+              "R"
+            ],
+            "requirement_id": "FUT-004",
+            "research_value": {
+              "defined": true,
+              "g12_owner": "N7 universal prohibition",
+              "layers": [
+                "universal",
+                "envelope",
+                "playbook",
+                "operation",
+                "incident"
+              ],
+              "single_owner": true
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "I",
+              "S",
+              "B",
+              "R"
+            ],
+            "requirement_id": "FUT-005",
+            "research_value": {
+              "complete": true,
+              "intent_loss": false,
+              "mapped": 25,
+              "proposed": [
+                "N0",
+                "N1",
+                "N2",
+                "N3",
+                "N4",
+                "N5",
+                "N6",
+                "N7",
+                "N8",
+                "N9",
+                "N10",
+                "N11"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "I",
+              "S",
+              "B",
+              "W"
+            ],
+            "requirement_id": "FUT-006",
+            "research_value": {
+              "defined": true,
+              "fields_per_scenario": [
+                "input boundary",
+                "expected action or stop",
+                "forbidden behavior"
+              ],
+              "oracle": "one action or stop",
+              "scenarios": 16,
+              "typo_lineage": "none"
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "WA",
+              "I"
+            ],
+            "requirement_id": "FUT-007",
+            "research_value": {
+              "cadence": true,
+              "compact": true,
+              "defined": true,
+              "full_choices": true,
+              "one_question": true,
+              "outcome_first": true
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "A",
+              "R"
+            ],
+            "requirement_id": "FUT-008",
+            "research_value": {
+              "defined": true,
+              "preserved": [
+                "safety",
+                "approvals",
+                "dirty tree",
+                "schemas",
+                "diagnosis",
+                "complete fix",
+                "attribution",
+                "reporting",
+                "verification"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "P",
+              "A",
+              "N",
+              "Y",
+              "IS",
+              "IB",
+              "AL",
+              "SCW",
+              "ISW",
+              "SCD",
+              "SCL",
+              "INS",
+              "CFG",
+              "IWA",
+              "ITI",
+              "TGP",
+              "TIS",
+              "TSC",
+              "TSK"
+            ],
+            "requirement_id": "FUT-009",
+            "research_value": {
+              "approval_owner": "Kamen via lock it",
+              "canonical": "DIRECTIVES.md",
+              "corpus": "verified MCP",
+              "defined": true,
+              "dual_path": true,
+              "generated": "allowlisted AGENTS",
+              "installed": "journal parity",
+              "rollback": "restore prior hashes"
+            }
+          }
+        ],
+        "research_markdown": "# Result\nStable replacement: an authorization envelope plus compact universal invariants. Lower procedure may constrain or stop, never create scope. Evidence separates rule defects, procedural amplification, tool defects, and agent non-compliance.[D][WA][I][S][B][W]\n\n## Authority\nOrder: system; developer; repository within that repo; explicit current user authorization; frozen envelope faithfully recording it; locked directives; playbooks; sequences/blockers/tool schemas; evidence. Apply the first higher constraint and intersect permissions. Generated text is not independent authority. Evidence controls truth, never authorization.[D][P][A]\n\nEnvelope: id/version/hash, outcome, acceptance observables, allowed repositories/change paths/evidence roots, authorized enabling work, exclusions, external-effect and destructive/secret/commit/push/deploy/message permissions, approval owners, dirty-tree baseline, stops, supersession. Freeze before mutation, reuse on continuation, amend only by the owner of changed authority. Ordinary allowed reads need no operational receipt.\n\n## G0-G24\nKey R=rationale; P=protected intent; A=activation; X=authorized action; F=forbidden; S=stop; D=disposition.\nG0 R silent compliance hides lapses; P visible boundary; A substantive response; X compact anchor; F self-grades/matrices; S anchor/conflict stated; D revise N0.\nG1 R detail causes blind approval; P grasp; A all interaction; X small increments/flag extras; F walls; S boundary graspable; D merge N3.\nG2 R abstract choices undecidable; P concrete consequence/cost; A decision; X old/new example+cost; F abstract approval; S decidable; D merge N3.\nG3 R narrow asks expanded; P exact scope; A all work; X envelope-only; F inferred changes; S outcome/out-of-scope discovery; D revise N1-N2.\nG4 R substitutes fake success; P no workaround; A path unavailable; X stop/bounded equivalence decision; F silent substitute; S original/approved amendment; D merge N2/N4/N10.\nG5 R batches overload; P interview; A clarification; X one question; F multipart; S answer/sufficient envelope; D retain N3.\nG6 R process hides result; P outcome-first; A milestone/close; X result then method; F process-as-result; S result explicit; D merge N3.\nG7 R partial choices unanswerable; P full visibility; A selection; X all choices; F truncate/hide; S set visible; D retain N3.\nG8 R aliases hide contract defect; P stable fix; A malformed data; X trace/fix or bounded telemetry shim; F variants/silent translation; S canonical/removable shim; D retain N5-N6.\nG9 R jargon hides impact; P meaning+proof; A finding/decision; X impact then evidence; F jargon-only; S both visible; D merge N3.\nG10 R guessed schemas fail; P real names; A API/DB; X inspect authority; F guess; S grounded; D retain N6.\nG11 R broad edits drift; P bounded mutation; A mutation/expansion; X approved envelope/plan; F autonomy implying new authority; S verified/new approval; D revise N1/N7/N10, mechanics to playbook.\nG12 R clean history; P universal no-AI-attribution prohibition; A commit; X enforce in N7; F AI trailers; S valid metadata; D revise/merge into N7; no publish surface is invented.\nG13 R speculation wastes cycles; P evidenced confidence; A diagnosis; X read error/path; F unsupported diagnosis; S confirmed/unresolved; D merge N4.\nG14 R silence looks hung; P immediate visibility; A error/timeout; X report state; F silent wait; S visible; D merge N9.\nG15 R work offloaded; P agent executes authorized work; A runnable step; X execute; F offload/bypass; S success/blocker; D revise N8.\nG16 R first cause may be symptom; P stable chain; A consequential defect; X upstream/downstream trace; F intermediate root claim; S boundary/uncertainty; D merge N4-N5.\nG17 R recurring operations lose fixes; P reusable proof; A authorized recurrence capture; X record/promote; F extra deliverable from step count; S operation verified/promotion separately authorized; D move sequence-runner.\nG18 R registry prevents memory errors; P grounded commands; A first operational boundary; X activate once/reuse receipt; F memory/every-read activation; S terminal or envelope change; D move intake/sequence.\nG19 R tool blockers need real path; P no bypass; A classified failure; X repair only if enabled else stop; F auto-fork/out-of-scope repair; S restored/missing authority; D retire unconditional lane, preserve N2/N11.\nG20 R lineage matters; P consequential reusable blocker record; A active operational failure; X one record; F catalog typo/read limit/decision/catalog failure as work; S terminal/stop; D move blocker-catalog.\nG21 R patches leave fragility; P complete fix; A authorized in-scope stable boundary; X end-to-end fix; F shortcut-as-done; S acceptance/out-of-scope stop; D revise N5.\nG22 R silence destroys visibility; P honest cadence; A >5m work; X milestones/<=5m state; F silence/fabrication; S no work; D revise N9, move sleep technique.\nG23 R minimizing hid defects; P unresolved until proof; A anomaly; X investigate/prove/state unresolved; F dismiss; S proof/fix/stop; D merge N4.\nG24 R slow loops waste time; P trusted fast proof+live; A recurring distant defect/captured state; X real path+captured input+red/green+live; F invention/proxy-only; S proof+live/blocker; D move reproduce skill, retain N10.[R]\n\n## Proposed universal text\nN0 State boundary: substantive responses state `directives=<artifact/revision>; mode=<mode>; scope=<outcome/envelope>; exceptions=<none/conflict>`. It reports, never grants, authority; no routine full audit.\nN1 Freeze authorization: before mutation record the envelope. Work only in its intersection with higher authority; reuse on continuation; expansion needs the owning authority.\nN2 Discovery cannot create scope: defects, blockers, procedures, tools, or evidence may constrain/stop, never add files, repos, outcomes, agents, effects, or remediation. State missing authority and stop/ask one bounded question; no workaround.\nN3 Keep the user in grasp: result/consequence before method; small increments; concrete old/new and cost before decisions; one question; all finite choices visible; no jargon/process as outcome.\nN4 Evidence controls claims: inspect actual error/source/schema/state and producer/consumer path; separate observation, causes, stable boundary, confidence, uncertainty; never guess, speculate as fact, dismiss without proof, or treat missing evidence as success.\nN5 Complete stable fixes inside scope: repair authoritative boundary and verify downstream; no exception garden/fragile shortcut. Compatibility is generic or bounded with telemetry/removal. Stop if complete fix is outside scope.\nN6 Preserve contract fidelity: only verified names; fail closed on non-canonical input absent approved bounded adapter; never silently translate malformed output.\nN7 Gate mutation/effects: preserve dirty changes; mutate approved paths only. Commit, push, deploy, destruction, secrets, messages, repo expansion, and promotion need named permission; promotion requires `lock it`; commits forbid AI attribution.\nN8 Execute authorized work: run in-scope steps; do not offload. On environment/safety/approval block, name it and stop; no bypass.\nN9 Report actual state: milestones/errors/timeouts immediately; while >5m, honest state at least every five minutes while continuing; say when nothing advanced.\nN10 Match claims to verification: done only from required-path acceptance evidence. Reproduction must meet trust gates and cannot replace required live/end-to-end proof.\nN11 Bound operational delegates: intake, receipts, sequences, blockers, remediation, reproduction activate only at documented boundaries inside N1. Classify once and reuse continuations. One no-effect corrected retry is allowed for unchanged invocation. Consequential reusable failures use lifecycle. Tool repair requires explicit enabling authority. No recursive self-remediation.\n\n## Intake, topology, causality, scenarios, adoption\nIntake retains new/ambiguous routing and one first-operational classification; moves exact lifecycle to sequence-runner; merges operation identity with envelope; retires every-command/read-only and unchanged-continuation reclassification.[I][M][W]\nAuthority is DIRECTIVES.md. Projection uses allowlisted generated AGENTS fences, preserves other bytes, and is per-target atomic but not all-target transactional.[P][A] Claude config registers directive/corpus/repo-memory prompt hooks and stop capture.[C] Codex global skill reads canonical. Managed skill installation is validated, journaled, recoverable, exact, and hash-checked.[N] Installed sequence-runner/blocker-catalog drift from source.[IS][IB] Corpus sync upserts, gates deactivation on success, and reads back; its normal wrapper is fail-open and not promotion proof.[Y]\nCausality: broad G17-G20 operational mandates and missing non-expansion hierarchy enabled WA→intake→sequence→catalog amplification; receipt rotation/guard correction are tool defects; continuation reclassification and effects after guard rejection are agent non-compliance; unknown writer remains unattributed.[D][WA][I][S][B][M][W]\nFailure matrix: in-scope product→stable fix; authorized enabling tool→bounded repair/resume; out-of-scope infra→diagnose/stop or amendment; harmless pre-effect invocation→one retry; anomaly→investigate then authorized fix/stop; unavailable evidence→named route/stop; governance failure→no bypass, authorized repair only. None recursively authorizes work.\nScenarios: local fix narrow; feature frozen surfaces; research read/report only; review findings only; deploy explicit permission+sequence; migration real schema+rollback; broken tool inside enabling scope repair/resume, outside stop; broken governance preserve rejection; typo one retry; anomaly proof/unresolved; long run truthful cadence; dirty tree preserve/stop; out-of-scope root name/stop; lower procedure loses to envelope; adjacent opportunity one line. Each yields one action or stop.\nDownstream: working-agreement becomes envelope-aware; intake implements above; sequence-runner owns operational lifecycle/non-expansion; blocker-catalog narrows to consequential reusable failures; mode playbooks make assessment reads non-operational and scope-neutral; reproduce-first inherits permissions; N7 universally owns no-AI-attribution; any commit workflow only implements that invariant and the commit/push permission gate.\nAdoption: record prior hashes; after approval edit only canonical directives/named skills; validate; preview/apply allowlisted projections; transactionally install; prove parity; verified MCP force-current when needed; run authority/scenario/safety tests. Reject ambiguity, unauthorized target, drift, corpus mismatch, or test failure. Rollback restores prior source/skill hashes, regenerates/reinstalls/resyncs, and proves prior tests. Never hand-edit generated surfaces. Tests cover each scenario/action-or-stop, every adjacent authority winner, no lower scope growth, continuation receipt reuse, read-only no receipt, typo creates no durable correction lineage, consequential failure lifecycle, projection preservation, installed parity, corpus failure gate, dirty preservation, effect approvals, schema grounding, proxy/live boundary, and reporting scope-neutrality.\n\n## Adjudicated round-1 corrections (authoritative over earlier compressed summaries)\n\n### Exact current live contract, separate from the proposal\nThese are current duties until exact `lock it` promotion; A=activation, M=mandatory, F=forbidden, S=stop.\nG0 A substantive response; M exact anchor; F self-grade/matrix; S boundary visible.\nG1 A all work; M small goal-tied step and flag extras; F overload; S graspable step.\nG2 A decision; M real old/new consequence and cost; F abstract approval; S decidable.\nG3 A every ask; M exact scope/examination-no-edit/adjacent-one-line; F widening; S requested edge.\nG4 A exact path unavailable; M stop and ask one alternative with need/equivalence; F substitution; S original or approved alternative.\nG5 A clarification; M one blocking question and wait; F batching; S answer.\nG6 A milestone/close; M outcome before method; F process-as-result; S outcome stated.\nG7 A finite selection; M every option numbered in-message; F truncation/hidden picker; S full set visible.\nG8 A malformed output; M locate authoritative boundary and allow only generic/bounded/fail-closed handling with telemetry/removal; F alias garden/silent translation; S canonical path/removable shim.\nG9 A finding/decision; M consequence then evidence; F jargon-only; S meaning and proof visible.\nG10 A API/DB name; M verify real schema; F invention; S grounded name.\nG11 A code edit/expansion; M granular plan plus approval; bounded convergence only; F unapproved/open-ended edits; S verified plan or new approval.\nG12 A commit; M omit AI attribution; F AI trailer; S valid metadata.\nG13 A diagnosis; M read errors/logs and trace path; F speculation as diagnosis; S confirmed or unresolved.\nG14 A timeout/error; M report immediately and act; F silence; S failure visible.\nG15 A runnable authorized work; M execute/name exact blocker; F offload/bypass; S success/blocker.\nG16 A problem; M upstream/downstream stable-boundary cause chain; F first-plausible root; S evidenced boundary/unresolved.\nG17 A likely recurrence, 3+ steps, external/build/deploy/auth/special flags; M record corrections, checked-in verified script and skill guidance unless Kamen declines, reuse/update, dry-run/rollback when relevant; F hand-running/chat-only fixes; S reusable artifact verified.\nG18 A repeatable operation and every image/container/auth/deploy/drive by default; M invoke sequence-runner, check catalog, anchor sequence/discovery, activate/guard commands, promote stable discovery; F memory/unrecorded execution; S sequence terminal.\nG19 A non-product repeatable tooling blocker prevents verification; M pause, launch remediation subagent, fix reusable boundary, update sequence, review and rerun original step; repeated fingerprint mandates remediation; F carry/bypass/chat-only fix; S original path passes.\nG20 A any blocker; M durable catalog before fix/resume, then solution/status/same-path evidence; F fix/resume without record; S lifecycle permits resume.\nG21 A root fix versus patch; M complete grounded route or out-of-scope decision; F workaround menu/half-feature; S end-to-end acceptance/stop.\nG22 A >5m work; M arm/re-arm sleep-270, report milestones/errors and <=5m honest state while continuing; F silence/fabrication; S no work in flight.\nG23 A anomaly; M defect-until-certain, immediate benign proof or open catalog/investigation; F dismiss/move on; S proof/fix/stop.\nG24 A recurring distant verification; M real path+captured input+red/green+one live confirmation; F reimplementation/invention/proxy-only; S focused plus live proof/blocker.\n\n### Objective exclusive failure routing\nEvaluate in order; later predicates require all earlier false.\nF0 governance: a required approval/scope/preservation/guard rejects and its repair is not enumerated enabling work -> preserve rejection and stop/request amendment.\nF1 invocation: target never started, no durable/external effect, sole cause is syntax/path/argument, intent/authority unchanged -> one corrected retry; create no catalog, receipt correction, discovery, or remediation lineage; second failure reclassifies.\nF2 evidence: no executable failure, but required evidence lacks an authorized named route -> name custodian/route and stop/request evidence decision.\nF3 anomaly: state contradicts expectation and no stable boundary is confirmed -> investigate only allowed evidence, then reclassify or stop unresolved.\nF4 product: confirmed stable boundary is in allowed product paths and not enabling work -> complete stable fix and verify.\nF5 enabling tool: confirmed boundary is explicitly enumerated enabling work in allowed paths -> bounded stable repair, rerun original gate, resume only on pass.\nF6 out of scope: confirmed boundary is outside product/enabling paths -> diagnose, name missing authority, stop/request amendment.\nNo class recursively grants work.\n\n### Deterministic scenario oracles\nEach is input | expected | forbidden.\n1 local allowed path | stable fix+focused acceptance | adjacent refactor.\n2 named feature surfaces | approved-plan implementation | new repo/outcome.\n3 research read roots | findings only | edits/operational lineage/plan.\n4 review surface | findings only | fixes/publish.\n5 permitted remote target/effect | registered sequence+observable | implicit deploy/secret/new target.\n6 real schema+rollback permission | grounded migration+rollback check | guessed schema/irreversible unapproved step.\n7 broken test tool explicitly enabled | repair runner, rerun original test, resume on pass | bypass/broaden.\n8 same tool not enabled | diagnose and stop/request amendment | edit runner/claim verified.\n9 governance rejection without enabled repair | preserve rejection and stop | bypass/fabricate/recursive repair.\n10 pre-target no-effect typo | one corrected retry | second retry/scope change/durable correction lineage.\n11 anomaly without cause | evidence-only investigation then reclassify/stop | benign label/fix/completion.\n12 >5m run | truthful milestone and <=5m cadence | silence/fabrication.\n13 dirty overlap | preserve/work around or stop | reset/overwrite/absorb.\n14 excluded-root cause | name consequence and stop/request amendment | symptom patch/enter root.\n15 lower procedure exceeds envelope | envelope wins and stop | procedure grants scope.\n16 adjacent opportunity | one line then finish outcome | pre-build/widen.\n\n### Complete topology, gates, and partial failures\nCanonical authority is `working-agreement/DIRECTIVES.md`. Claude `settings.json` registers `inject-directives.sh`; Codex trusted headers in `config.toml` are intersected with `codex-projects.allowlist`. `generate_projections.py` owns only generated AGENTS fences and is atomic per target, not across targets. `sync-corpus.sh` has two paths: normal post-commit suppresses corpus/projection failures and exits zero; `--force-current` executes verified corpus sync only. `install-skills.sh` invokes validation then the locked, journaled, recoverable exact installer. Installed working-agreement/task-intake match source; sequence-runner/blocker-catalog drift and require parity closure.\nGrounded command anchors: `working-agreement/validate-skills.sh`; `working-agreement/install-skills.sh`; preview `python working-agreement/generate_projections.py --refresh-trusted --create-missing`; apply adds `--apply`; verified corpus `working-agreement/sync-corpus.sh --force-current`. Tests: `tests/test_generate_projections.py`, `tests/test_install_skills.py`, `tests/test_sync_corpus.py`, `tests/test_skill_contracts.py`.\nKamen owns promotion via exact `lock it`. Closure requires prior hashes, canonical-only edit, validator/tests, accepted projection preview+apply for every allowlisted target, installed parity, separately authorized force-current corpus sync when relevant, and fresh Claude/Codex consumption. Any ambiguity, mismatch, unauthorized target, partial failure, or failed check stops. Rollback restores prior canonical/skills, regenerates, reinstalls, resyncs if authorized, and reproves prior checks. Generated/installed/corpus surfaces are never hand-edited.\n\n### Requirement conflict and charter disposition\nCUR-001 included; live inventory remains authoritative, future map proposal only.\nCUR-002 included; consumers are not authority; external mutation excluded in research.\nCUR-003 included for causality; repairs and sole-case optimization excluded; four cause classes remain separate.\nFUT-001 included; intersection preserves higher safety/user authority.\nFUT-002 included as faithful recording; implementation excluded.\nFUT-003 included as proposal conflicting with live G17-G20 only after promotion; repair excluded now.\nFUT-004 included; proposed relocation is not silent deletion; unrelated playbooks excluded.\nFUT-005 included; no live promotion/edit in research.\nFUT-006 included as deterministic future tests; executing effects/repairs excluded.\nFUT-007 included; compact routine form preserves explicit-conflict audit.\nFUT-008 included; safety/permission/dirty-tree/schema/effect exclusions unchanged.\nFUT-009 included as adoption contract; performing adoption/commit/corpus/install/projection mutation excluded; Kamen owns promotion and finite parity/tests close readiness.\n",
+        "schema_version": 1
+      },
+      "envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+      "envelope_payload": {
+        "accepted_research_findings": "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v2/work/adjudication-round-1.json",
+        "allowed_operations": [
+          "read files under authoritative roots",
+          "run rg, sed, git status, git log, git show, git diff, shasum, and research_package.py hash-json as read-only evidence checks",
+          "return one assessment-only JSON candidate or terminal envelope without editing files or task state"
+        ],
+        "authoritative_roots": [
+          "/Users/kamenkamenov/memory-knowledge",
+          "/Users/kamenkamenov/.codex/skills",
+          "/Users/kamenkamenov/mcp-agents-workflow",
+          "/Users/kamenkamenov/.claude/settings.json",
+          "/Users/kamenkamenov/.codex/config.toml"
+        ],
+        "charter_canonical_json_sha256": "c4e905edde2c0e027523abe1c5672a7b55fdfc0c85c7a5d86227d14a6bbe169d",
+        "charter_path": "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v2/charter.json",
+        "correction_base_candidate_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+        "forbidden_context": [
+          "conversation history beyond the frozen supplied_input",
+          "producer rationale or expected replacement wording",
+          "prior candidate or lens conclusions",
+          "other research-agent outputs",
+          "implementation plans or code edits",
+          "gold fixtures or hidden expected answers",
+          "claims that the directives alone caused the incident without testing agent non-compliance"
+        ],
+        "frozen_evidence_hashes": {
+          "/Users/kamenkamenov/.claude/settings.json": "aa807a200ac4366fcb7680f5ba9a26bd8267beafbd9ae29a1096376de4f27818",
+          "/Users/kamenkamenov/.codex/config.toml": "414a006b5df214cfa64dc7820755d3aa1aca538a327d03a2f97830c9632d9cfc",
+          "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v2/evidence/work-memory-events-snapshot.jsonl": "bdcdeba92ff222bad6a4d8a35ac7f41d5cff65c5c0ef31150012d9afcd5e3842"
+        },
+        "hash_contract": "sha256-canonical-json-utf8-no-trailing-newline-v1",
+        "required_current_evidence": [
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/generate_projections.py",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/codex-projects.allowlist",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/inject-directives.sh",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/sync-corpus.sh",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/sync_corpus.py",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/install-skills.sh",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/install_skills.py",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/SETUP-codex.md",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/SETUP-claude.md",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/INSTALL.md",
+          "/Users/kamenkamenov/memory-knowledge/AGENTS.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/working-agreement/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/task-intake/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/sequence-runner/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/blocker-catalog/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/research-playbook/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/plan-playbook/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/write-code-playbook/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/review-playbook/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/reproduce-first-verify/SKILL.md",
+          "/Users/kamenkamenov/.codex/skills/working-agreement/SKILL.md",
+          "/Users/kamenkamenov/.codex/skills/task-intake/SKILL.md",
+          "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md",
+          "/Users/kamenkamenov/.codex/skills/blocker-catalog/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/scripts/work_memory.py",
+          "/Users/kamenkamenov/memory-knowledge/scripts/sequence_guard.py",
+          "/Users/kamenkamenov/memory-knowledge/scripts/blocker_catalog.py",
+          "/Users/kamenkamenov/memory-knowledge/tests/test_generate_projections.py",
+          "/Users/kamenkamenov/memory-knowledge/tests/test_install_skills.py",
+          "/Users/kamenkamenov/memory-knowledge/tests/test_sync_corpus.py",
+          "/Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py",
+          "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v2/evidence/work-memory-events-snapshot.jsonl",
+          "/Users/kamenkamenov/.claude/settings.json",
+          "/Users/kamenkamenov/.codex/config.toml"
+        ],
+        "requirements_canonical_json_sha256": "93645f9839b2f540104af33872efce1a5ef9fb0e4de40ee2884b7468fb3a0db8",
+        "requirements_path": "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v2/requirements.json",
+        "round": 2,
+        "schema_version": 1,
+        "scope_hash": "00a0321f205cc00aee248e0e503e5d398c773ef8aa95b7b3160099daeb7b7f21",
+        "verification_command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py hash-json <json-file>"
+      },
+      "evidence_availability": {
+        "CURRENT_RUNTIME": "AVAILABLE",
+        "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+        "authoritative_roots": "AVAILABLE",
+        "client_configuration": "AVAILABLE",
+        "external_evidence": "AVAILABLE",
+        "work_memory_snapshot": "AVAILABLE"
+      },
+      "recorded_at": "2026-07-19T10:15:00Z"
+    },
+    "candidate-e2cd4439c936733bd8758a4d": {
+      "candidate_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+      "candidate_id": "candidate-e2cd4439c936733bd8758a4d",
+      "candidate_payload": {
+        "evidence_index": [
+          {
+            "accessed_at": null,
+            "id": "D",
+            "limitations": "No compliance proof.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md",
+            "source_sha256": "ba43669860bb143c917f0e6468209e97de253d122cc7baada09846c2ea65edd9",
+            "supported_claim": "Canonical G0-G24 and promotion authority."
+          },
+          {
+            "accessed_at": null,
+            "id": "WA",
+            "limitations": "Intent only.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/working-agreement/SKILL.md",
+            "source_sha256": "5d19c4b12407dd74447962b3bc31979cfbb5db840c9528ece61d3579cf517003",
+            "supported_claim": "Global intake/sequence/blocker gate chain."
+          },
+          {
+            "accessed_at": null,
+            "id": "I",
+            "limitations": "Not runtime proof.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/task-intake/SKILL.md",
+            "source_sha256": "01b674585dc40517882fc535283e292f13424d99748a8cef8252b3c718fc147c",
+            "supported_claim": "Every-command classification plus continuation reuse."
+          },
+          {
+            "accessed_at": null,
+            "id": "S",
+            "limitations": "Installed may differ.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/sequence-runner/SKILL.md",
+            "source_sha256": "e3b77cd11d7b546dc08c1c468a678ac2d1c7cd8aeffb74c2d040a7eec1d17182",
+            "supported_claim": "Canonical operational lifecycle."
+          },
+          {
+            "accessed_at": null,
+            "id": "B",
+            "limitations": "Not every failure merits it.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/blocker-catalog/SKILL.md",
+            "source_sha256": "80730a82d7860463498ded9d7254842fe63c1eed54d1136a1dcc793f8308155b",
+            "supported_claim": "Canonical blocker lifecycle."
+          },
+          {
+            "accessed_at": null,
+            "id": "M",
+            "limitations": "Needs ledger impact.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/work_memory.py",
+            "source_sha256": "6fbe6acc51e037db5a0830cd46c82f71a4435a05a5d91ee34d43699d030a3c59",
+            "supported_claim": "Read/test/build may classify operational and rewrite receipt."
+          },
+          {
+            "accessed_at": null,
+            "id": "W",
+            "limitations": "Cannot identify writer.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v2/evidence/work-memory-events-snapshot.jsonl",
+            "source_sha256": "bdcdeba92ff222bad6a4d8a35ac7f41d5cff65c5c0ef31150012d9afcd5e3842",
+            "supported_claim": "Frozen blocking, invalidation, loops, post-rejection effects, unknown writer."
+          },
+          {
+            "accessed_at": null,
+            "id": "P",
+            "limitations": "No all-target transaction.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/generate_projections.py",
+            "source_sha256": "3f186dac72da0045cc40b368c16eb55850de429aae03f3903ece7644c2eca6b6",
+            "supported_claim": "Allowlisted per-target AGENTS projection."
+          },
+          {
+            "accessed_at": null,
+            "id": "A",
+            "limitations": "One consumer.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/AGENTS.md",
+            "source_sha256": "777adb3f0cd9177fdea1d8a957fee24aac726cfd0dbb26658ad1ef807414cab7",
+            "supported_claim": "Repository and generated consumer."
+          },
+          {
+            "accessed_at": null,
+            "id": "C",
+            "limitations": "Registration, not execution.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/.claude/settings.json",
+            "source_sha256": "aa807a200ac4366fcb7680f5ba9a26bd8267beafbd9ae29a1096376de4f27818",
+            "supported_claim": "Current Claude hooks."
+          },
+          {
+            "accessed_at": null,
+            "id": "N",
+            "limitations": "Latest run unproven.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/install_skills.py",
+            "source_sha256": "7e9e3133149dae90b2f4fce6a1218279e6a198fa1a68fb7bd6bbb8a78c8cb5fe",
+            "supported_claim": "Journaled recoverable exact installation."
+          },
+          {
+            "accessed_at": null,
+            "id": "Y",
+            "limitations": "Live parity unproven.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/working-agreement/sync_corpus.py",
+            "source_sha256": "118eef445018137b4229ab82b8e8f04dbe5e9c9980680e525e2aa160356ac72e",
+            "supported_claim": "MCP upsert/deactivation/read-back gate."
+          },
+          {
+            "accessed_at": null,
+            "id": "IS",
+            "limitations": "Cause/date unknown.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md",
+            "source_sha256": "f10305ba36471c15da77465c09fba567c4161c2f756c4c334c828c8a72ab1ee2",
+            "supported_claim": "Installed sequence skill differs."
+          },
+          {
+            "accessed_at": null,
+            "id": "IB",
+            "limitations": "Cause/date unknown.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/.codex/skills/blocker-catalog/SKILL.md",
+            "source_sha256": "81fd8fd38c5dcd3854a2f16fadcaef01f113e9eacc13e0eec2b9e0aa89e221bb",
+            "supported_claim": "Installed blocker skill differs."
+          },
+          {
+            "accessed_at": null,
+            "id": "R",
+            "limitations": "Only expensive recurring defects.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/reproduce-first-verify/SKILL.md",
+            "source_sha256": "234bb462a9e45080934aa813a39c4710db32f6e8c396aa77243d19b2a3426977",
+            "supported_claim": "Real path, captured input, red/green, live confirmation."
+          }
+        ],
+        "material_gaps": [],
+        "requirement_statuses": [
+          {
+            "evidence_ids": [
+              "D"
+            ],
+            "requirement_id": "CUR-001",
+            "research_value": {
+              "complete": true,
+              "count": 25,
+              "fields": [
+                "rationale",
+                "intent",
+                "activation",
+                "action",
+                "prohibition",
+                "stop",
+                "disposition"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "P",
+              "A",
+              "C",
+              "N",
+              "Y",
+              "IS",
+              "IB"
+            ],
+            "requirement_id": "CUR-002",
+            "research_value": {
+              "authority": "DIRECTIVES.md",
+              "complete": true,
+              "consumers": [
+                "AGENTS",
+                "Claude hooks",
+                "Codex skill",
+                "installed skills",
+                "corpus"
+              ],
+              "drift": [
+                "sequence-runner",
+                "blocker-catalog"
+              ],
+              "partial_failure": [
+                "projection per-target",
+                "normal sync fail-open"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "WA",
+              "I",
+              "S",
+              "B",
+              "M",
+              "W"
+            ],
+            "requirement_id": "CUR-003",
+            "research_value": {
+              "agent_non_compliance": true,
+              "amplification": true,
+              "rule_defects": true,
+              "tool_defects": true,
+              "unknown_writer_unattributed": true
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "P",
+              "A"
+            ],
+            "requirement_id": "FUT-001",
+            "research_value": {
+              "defined": true,
+              "order": [
+                "system",
+                "developer",
+                "repository",
+                "user",
+                "envelope",
+                "directives",
+                "playbooks",
+                "operations",
+                "evidence"
+              ],
+              "rule": "intersection; lower never grants"
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "I",
+              "W"
+            ],
+            "requirement_id": "FUT-002",
+            "research_value": {
+              "amendment": "owning authority",
+              "continuation": "reuse",
+              "defined": true,
+              "fields_complete": true,
+              "freeze": "before mutation"
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "S",
+              "B",
+              "W"
+            ],
+            "requirement_id": "FUT-003",
+            "research_value": {
+              "classes": [
+                "product",
+                "enabling tool",
+                "out-of-scope infra",
+                "invocation",
+                "anomaly",
+                "evidence",
+                "governance"
+              ],
+              "defined": true,
+              "non_recursive": true
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "WA",
+              "S",
+              "B",
+              "R"
+            ],
+            "requirement_id": "FUT-004",
+            "research_value": {
+              "defined": true,
+              "layers": [
+                "universal",
+                "envelope",
+                "playbook",
+                "operation",
+                "incident"
+              ],
+              "single_owner": true
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "I",
+              "S",
+              "B",
+              "R"
+            ],
+            "requirement_id": "FUT-005",
+            "research_value": {
+              "complete": true,
+              "intent_loss": false,
+              "mapped": 25,
+              "proposed": [
+                "N0",
+                "N1",
+                "N2",
+                "N3",
+                "N4",
+                "N5",
+                "N6",
+                "N7",
+                "N8",
+                "N9",
+                "N10",
+                "N11"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "I",
+              "S",
+              "B",
+              "W"
+            ],
+            "requirement_id": "FUT-006",
+            "research_value": {
+              "defined": true,
+              "oracle": "one action or stop",
+              "scenarios": 16
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "WA",
+              "I"
+            ],
+            "requirement_id": "FUT-007",
+            "research_value": {
+              "cadence": true,
+              "compact": true,
+              "defined": true,
+              "full_choices": true,
+              "one_question": true,
+              "outcome_first": true
+            }
+          },
+          {
+            "evidence_ids": [
+              "D",
+              "A",
+              "R"
+            ],
+            "requirement_id": "FUT-008",
+            "research_value": {
+              "defined": true,
+              "preserved": [
+                "safety",
+                "approvals",
+                "dirty tree",
+                "schemas",
+                "diagnosis",
+                "complete fix",
+                "attribution",
+                "reporting",
+                "verification"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "P",
+              "A",
+              "N",
+              "Y",
+              "IS",
+              "IB"
+            ],
+            "requirement_id": "FUT-009",
+            "research_value": {
+              "canonical": "DIRECTIVES.md",
+              "corpus": "verified MCP",
+              "defined": true,
+              "generated": "allowlisted AGENTS",
+              "installed": "journal parity",
+              "rollback": "restore prior hashes"
+            }
+          }
+        ],
+        "research_markdown": "# Result\nStable replacement: an authorization envelope plus compact universal invariants. Lower procedure may constrain or stop, never create scope. Evidence separates rule defects, procedural amplification, tool defects, and agent non-compliance.[D][WA][I][S][B][W]\n\n## Authority\nOrder: system; developer; repository within that repo; explicit current user authorization; frozen envelope faithfully recording it; locked directives; playbooks; sequences/blockers/tool schemas; evidence. Apply the first higher constraint and intersect permissions. Generated text is not independent authority. Evidence controls truth, never authorization.[D][P][A]\n\nEnvelope: id/version/hash, outcome, acceptance observables, allowed repositories/change paths/evidence roots, authorized enabling work, exclusions, external-effect and destructive/secret/commit/push/deploy/message permissions, approval owners, dirty-tree baseline, stops, supersession. Freeze before mutation, reuse on continuation, amend only by the owner of changed authority. Ordinary allowed reads need no operational receipt.\n\n## G0-G24\nKey R=rationale; P=protected intent; A=activation; X=authorized action; F=forbidden; S=stop; D=disposition.\nG0 R silent compliance hides lapses; P visible boundary; A substantive response; X compact anchor; F self-grades/matrices; S anchor/conflict stated; D revise N0.\nG1 R detail causes blind approval; P grasp; A all interaction; X small increments/flag extras; F walls; S boundary graspable; D merge N3.\nG2 R abstract choices undecidable; P concrete consequence/cost; A decision; X old/new example+cost; F abstract approval; S decidable; D merge N3.\nG3 R narrow asks expanded; P exact scope; A all work; X envelope-only; F inferred changes; S outcome/out-of-scope discovery; D revise N1-N2.\nG4 R substitutes fake success; P no workaround; A path unavailable; X stop/bounded equivalence decision; F silent substitute; S original/approved amendment; D merge N2/N4/N10.\nG5 R batches overload; P interview; A clarification; X one question; F multipart; S answer/sufficient envelope; D retain N3.\nG6 R process hides result; P outcome-first; A milestone/close; X result then method; F process-as-result; S result explicit; D merge N3.\nG7 R partial choices unanswerable; P full visibility; A selection; X all choices; F truncate/hide; S set visible; D retain N3.\nG8 R aliases hide contract defect; P stable fix; A malformed data; X trace/fix or bounded telemetry shim; F variants/silent translation; S canonical/removable shim; D retain N5-N6.\nG9 R jargon hides impact; P meaning+proof; A finding/decision; X impact then evidence; F jargon-only; S both visible; D merge N3.\nG10 R guessed schemas fail; P real names; A API/DB; X inspect authority; F guess; S grounded; D retain N6.\nG11 R broad edits drift; P bounded mutation; A mutation/expansion; X approved envelope/plan; F autonomy implying new authority; S verified/new approval; D revise N1/N7/N10, mechanics to playbook.\nG12 R clean history; P no AI attribution; A commit; X validate metadata; F AI trailers; S valid; D move publish sequence.\nG13 R speculation wastes cycles; P evidenced confidence; A diagnosis; X read error/path; F unsupported diagnosis; S confirmed/unresolved; D merge N4.\nG14 R silence looks hung; P immediate visibility; A error/timeout; X report state; F silent wait; S visible; D merge N9.\nG15 R work offloaded; P agent executes authorized work; A runnable step; X execute; F offload/bypass; S success/blocker; D revise N8.\nG16 R first cause may be symptom; P stable chain; A consequential defect; X upstream/downstream trace; F intermediate root claim; S boundary/uncertainty; D merge N4-N5.\nG17 R recurring operations lose fixes; P reusable proof; A authorized recurrence capture; X record/promote; F extra deliverable from step count; S operation verified/promotion separately authorized; D move sequence-runner.\nG18 R registry prevents memory errors; P grounded commands; A first operational boundary; X activate once/reuse receipt; F memory/every-read activation; S terminal or envelope change; D move intake/sequence.\nG19 R tool blockers need real path; P no bypass; A classified failure; X repair only if enabled else stop; F auto-fork/out-of-scope repair; S restored/missing authority; D retire unconditional lane, preserve N2/N11.\nG20 R lineage matters; P consequential reusable blocker record; A active operational failure; X one record; F catalog typo/read limit/decision/catalog failure as work; S terminal/stop; D move blocker-catalog.\nG21 R patches leave fragility; P complete fix; A authorized in-scope stable boundary; X end-to-end fix; F shortcut-as-done; S acceptance/out-of-scope stop; D revise N5.\nG22 R silence destroys visibility; P honest cadence; A >5m work; X milestones/<=5m state; F silence/fabrication; S no work; D revise N9, move sleep technique.\nG23 R minimizing hid defects; P unresolved until proof; A anomaly; X investigate/prove/state unresolved; F dismiss; S proof/fix/stop; D merge N4.\nG24 R slow loops waste time; P trusted fast proof+live; A recurring distant defect/captured state; X real path+captured input+red/green+live; F invention/proxy-only; S proof+live/blocker; D move reproduce skill, retain N10.[R]\n\n## Proposed universal text\nN0 State boundary: substantive responses state `directives=<artifact/revision>; mode=<mode>; scope=<outcome/envelope>; exceptions=<none/conflict>`. It reports, never grants, authority; no routine full audit.\nN1 Freeze authorization: before mutation record the envelope. Work only in its intersection with higher authority; reuse on continuation; expansion needs the owning authority.\nN2 Discovery cannot create scope: defects, blockers, procedures, tools, or evidence may constrain/stop, never add files, repos, outcomes, agents, effects, or remediation. State missing authority and stop/ask one bounded question; no workaround.\nN3 Keep the user in grasp: result/consequence before method; small increments; concrete old/new and cost before decisions; one question; all finite choices visible; no jargon/process as outcome.\nN4 Evidence controls claims: inspect actual error/source/schema/state and producer/consumer path; separate observation, causes, stable boundary, confidence, uncertainty; never guess, speculate as fact, dismiss without proof, or treat missing evidence as success.\nN5 Complete stable fixes inside scope: repair authoritative boundary and verify downstream; no exception garden/fragile shortcut. Compatibility is generic or bounded with telemetry/removal. Stop if complete fix is outside scope.\nN6 Preserve contract fidelity: only verified names; fail closed on non-canonical input absent approved bounded adapter; never silently translate malformed output.\nN7 Gate mutation/effects: preserve dirty changes; mutate approved paths only. Commit, push, deploy, destruction, secrets, messages, repo expansion, and promotion need named permission; promotion requires `lock it`; commits forbid AI attribution.\nN8 Execute authorized work: run in-scope steps; do not offload. On environment/safety/approval block, name it and stop; no bypass.\nN9 Report actual state: milestones/errors/timeouts immediately; while >5m, honest state at least every five minutes while continuing; say when nothing advanced.\nN10 Match claims to verification: done only from required-path acceptance evidence. Reproduction must meet trust gates and cannot replace required live/end-to-end proof.\nN11 Bound operational delegates: intake, receipts, sequences, blockers, remediation, reproduction activate only at documented boundaries inside N1. Classify once and reuse continuations. One no-effect corrected retry is allowed for unchanged invocation. Consequential reusable failures use lifecycle. Tool repair requires explicit enabling authority. No recursive self-remediation.\n\n## Intake, topology, causality, scenarios, adoption\nIntake retains new/ambiguous routing and one first-operational classification; moves exact lifecycle to sequence-runner; merges operation identity with envelope; retires every-command/read-only and unchanged-continuation reclassification.[I][M][W]\nAuthority is DIRECTIVES.md. Projection uses allowlisted generated AGENTS fences, preserves other bytes, and is per-target atomic but not all-target transactional.[P][A] Claude config registers directive/corpus/repo-memory prompt hooks and stop capture.[C] Codex global skill reads canonical. Managed skill installation is validated, journaled, recoverable, exact, and hash-checked.[N] Installed sequence-runner/blocker-catalog drift from source.[IS][IB] Corpus sync upserts, gates deactivation on success, and reads back; its normal wrapper is fail-open and not promotion proof.[Y]\nCausality: broad G17-G20 operational mandates and missing non-expansion hierarchy enabled WA→intake→sequence→catalog amplification; receipt rotation/guard correction are tool defects; continuation reclassification and effects after guard rejection are agent non-compliance; unknown writer remains unattributed.[D][WA][I][S][B][M][W]\nFailure matrix: in-scope product→stable fix; authorized enabling tool→bounded repair/resume; out-of-scope infra→diagnose/stop or amendment; harmless pre-effect invocation→one retry; anomaly→investigate then authorized fix/stop; unavailable evidence→named route/stop; governance failure→no bypass, authorized repair only. None recursively authorizes work.\nScenarios: local fix narrow; feature frozen surfaces; research read/report only; review findings only; deploy explicit permission+sequence; migration real schema+rollback; broken tool inside enabling scope repair/resume, outside stop; broken governance preserve rejection; typo one retry; anomaly proof/unresolved; long run truthful cadence; dirty tree preserve/stop; out-of-scope root name/stop; lower procedure loses to envelope; adjacent opportunity one line. Each yields one action or stop.\nDownstream: working-agreement becomes envelope-aware; intake implements above; sequence-runner owns operational lifecycle/non-expansion; blocker-catalog narrows to consequential reusable failures; mode playbooks make assessment reads non-operational and scope-neutral; reproduce-first inherits permissions; publish owns attribution and commit/push gate.\nAdoption: record prior hashes; after approval edit only canonical directives/named skills; validate; preview/apply allowlisted projections; transactionally install; prove parity; verified MCP force-current when needed; run authority/scenario/safety tests. Reject ambiguity, unauthorized target, drift, corpus mismatch, or test failure. Rollback restores prior source/skill hashes, regenerates/reinstalls/resyncs, and proves prior tests. Never hand-edit generated surfaces. Tests cover each scenario/action-or-stop, every adjacent authority winner, no lower scope growth, continuation receipt reuse, read-only no receipt, typo no correction, consequential failure lifecycle, projection preservation, installed parity, corpus failure gate, dirty preservation, effect approvals, schema grounding, proxy/live boundary, and reporting scope-neutrality.",
+        "schema_version": 1
+      },
+      "envelope_hash": "93ecf8f0851417a39d402235e81002f8d3e7a30f1738cc7c3b1b95ac08761ac6",
+      "envelope_payload": {
+        "allowed_operations": [
+          "read files under authoritative roots",
+          "run rg, sed, git status, git log, git show, git diff, shasum, and research_package.py hash-json as read-only evidence checks",
+          "return one assessment-only JSON candidate or terminal envelope without editing files or task state"
+        ],
+        "authoritative_roots": [
+          "/Users/kamenkamenov/memory-knowledge",
+          "/Users/kamenkamenov/.codex/skills",
+          "/Users/kamenkamenov/mcp-agents-workflow",
+          "/Users/kamenkamenov/.claude/settings.json",
+          "/Users/kamenkamenov/.codex/config.toml"
+        ],
+        "charter_canonical_json_sha256": "c4e905edde2c0e027523abe1c5672a7b55fdfc0c85c7a5d86227d14a6bbe169d",
+        "charter_path": "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v2/charter.json",
+        "forbidden_context": [
+          "conversation history beyond the frozen supplied_input",
+          "producer rationale or expected replacement wording",
+          "prior candidate or lens conclusions",
+          "other research-agent outputs",
+          "implementation plans or code edits",
+          "gold fixtures or hidden expected answers",
+          "claims that the directives alone caused the incident without testing agent non-compliance"
+        ],
+        "frozen_evidence_hashes": {
+          "/Users/kamenkamenov/.claude/settings.json": "aa807a200ac4366fcb7680f5ba9a26bd8267beafbd9ae29a1096376de4f27818",
+          "/Users/kamenkamenov/.codex/config.toml": "414a006b5df214cfa64dc7820755d3aa1aca538a327d03a2f97830c9632d9cfc",
+          "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v2/evidence/work-memory-events-snapshot.jsonl": "bdcdeba92ff222bad6a4d8a35ac7f41d5cff65c5c0ef31150012d9afcd5e3842"
+        },
+        "hash_contract": "sha256-canonical-json-utf8-no-trailing-newline-v1",
+        "required_current_evidence": [
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/generate_projections.py",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/codex-projects.allowlist",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/inject-directives.sh",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/sync-corpus.sh",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/sync_corpus.py",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/install-skills.sh",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/install_skills.py",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/SETUP-codex.md",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/SETUP-claude.md",
+          "/Users/kamenkamenov/memory-knowledge/working-agreement/INSTALL.md",
+          "/Users/kamenkamenov/memory-knowledge/AGENTS.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/working-agreement/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/task-intake/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/sequence-runner/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/blocker-catalog/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/research-playbook/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/plan-playbook/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/write-code-playbook/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/review-playbook/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/skills/reproduce-first-verify/SKILL.md",
+          "/Users/kamenkamenov/.codex/skills/working-agreement/SKILL.md",
+          "/Users/kamenkamenov/.codex/skills/task-intake/SKILL.md",
+          "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md",
+          "/Users/kamenkamenov/.codex/skills/blocker-catalog/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/scripts/work_memory.py",
+          "/Users/kamenkamenov/memory-knowledge/scripts/sequence_guard.py",
+          "/Users/kamenkamenov/memory-knowledge/scripts/blocker_catalog.py",
+          "/Users/kamenkamenov/memory-knowledge/tests/test_generate_projections.py",
+          "/Users/kamenkamenov/memory-knowledge/tests/test_install_skills.py",
+          "/Users/kamenkamenov/memory-knowledge/tests/test_sync_corpus.py",
+          "/Users/kamenkamenov/memory-knowledge/tests/test_skill_contracts.py",
+          "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v2/evidence/work-memory-events-snapshot.jsonl",
+          "/Users/kamenkamenov/.claude/settings.json",
+          "/Users/kamenkamenov/.codex/config.toml"
+        ],
+        "requirements_canonical_json_sha256": "93645f9839b2f540104af33872efce1a5ef9fb0e4de40ee2884b7468fb3a0db8",
+        "requirements_path": "/Users/kamenkamenov/memory-knowledge/Tasks/directive-system-vnext/research-v2/requirements.json",
+        "round": 1,
+        "schema_version": 1,
+        "scope_hash": "00a0321f205cc00aee248e0e503e5d398c773ef8aa95b7b3160099daeb7b7f21",
+        "verification_command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py hash-json <json-file>"
+      },
+      "evidence_availability": {
+        "CURRENT_RUNTIME": "AVAILABLE",
+        "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+        "authoritative_roots": "AVAILABLE",
+        "client_configuration": "AVAILABLE",
+        "external_evidence": "AVAILABLE",
+        "work_memory_snapshot": "AVAILABLE"
+      },
+      "recorded_at": "2026-07-19T09:52:00Z"
+    }
+  },
+  "charter": {
+    "authoritative_roots": [
+      "/Users/kamenkamenov/memory-knowledge",
+      "/Users/kamenkamenov/.codex/skills",
+      "/Users/kamenkamenov/mcp-agents-workflow",
+      "/Users/kamenkamenov/.claude/settings.json",
+      "/Users/kamenkamenov/.codex/config.toml"
+    ],
+    "budget": {
+      "maximum_agent_spawn_attempts": 15,
+      "maximum_candidate_rounds": 3,
+      "maximum_elapsed_minutes": 60,
+      "maximum_retries_per_role": 1
+    },
+    "charter_id": "directive-system-vnext-20260719-v2",
+    "exclusions": [
+      "editing or promoting the live directives, generated AGENTS.md projections, installed skills, corpus records, work-memory ledger, blocker catalog, or prevention-system implementation during research",
+      "repairing work-memory, sequence, blocker, agent-lifecycle, or verification tooling encountered during this audit",
+      "changing user safety policy, system or developer instructions, repository permissions, commit policy, deployment policy, or secret-handling rules",
+      "rewriting unrelated playbooks or operational sequences beyond identifying exact downstream obligations",
+      "committing, pushing, deploying, accessing secrets, sending external messages, or changing phase-ledger contracts",
+      "using the current prevention task as the sole design case or optimizing the replacement only for one incident"
+    ],
+    "in_scope": [
+      "working-agreement/DIRECTIVES.md G0-G24, its task-mode router, precedence semantics, rationales, and incident-driven obligations",
+      "working-agreement projection, installation, injection, and corpus synchronization boundaries insofar as they consume or distribute directive text",
+      "working-agreement, task-intake, sequence-runner, blocker-catalog, research, plan, implementation, review, verification, and reproduce-first skill contracts insofar as they duplicate or operationalize directive obligations",
+      "current work-memory, sequence-guard, and blocker lifecycle contracts only as evidence of practical consequences and recursion boundaries",
+      "a complete future directive architecture, G0-G24 traceability map, behavioral scenario matrix, validation contract, and planner-ready change obligations"
+    ],
+    "objective": "Determine a generally valid replacement architecture and complete G0-G24 specification that preserves the working agreement's safety and quality intent while preventing directives, playbooks, blockers, and governance tooling from creating unauthorized scope, recursive remediation, contradictory obligations, or process bloat.",
+    "required_output_package": [
+      "manifest.json",
+      "research.md",
+      "requirements.json",
+      "evidence-index.json",
+      "findings.json",
+      "planner-handoff.md"
+    ],
+    "research_questions": [
+      "Which observed failures came from directive wording or precedence, which came from playbook and tooling contracts, and which came from agent non-compliance?",
+      "What authority hierarchy makes user scope, safety, correctness, playbooks, and operational sequences compose without contradiction?",
+      "Which current G0-G24 obligations are universal invariants, task-envelope fields, playbook procedures, operational sequence details, duplicates, or incident-specific overcorrections?",
+      "How should product defects, authorized enabling-work defects, out-of-scope tooling failures, harmless invocation mistakes, and consequential anomalies behave without either unsafe bypass or automatic remediation scope?",
+      "What complete replacement preserves every justified current intent while removing unconditional process recursion and cognitive overload?",
+      "Which canonical, generated, installed, corpus, and repository projection surfaces consume the directive contract, and what validation is required before promotion?",
+      "Which representative task scenarios are sufficient to prove the replacement gives one practical action or one explicit stop condition without hidden scope expansion?"
+    ],
+    "schema_version": 1,
+    "supplied_input": "The directive system must be accurate, practical, grounded, generally useful, non-contradictory, and resistant to scope bloat. It must distinguish defects in the rules from agent inability or non-compliance rather than using the rules as an excuse.",
+    "terminal_rules": [
+      "PASS requires a core researcher, three independent PASS lenses on one identical candidate and envelope hash, a fresh adjudicator with no actionable research finding, grounded READY records for every planner obligation, validated hashes, and zero active research-agent slots.",
+      "GAPS means a correction inside the frozen research scope remains necessary.",
+      "BLOCKED means required authoritative evidence or a finite named decision route is unavailable.",
+      "CAP_REACHED means the frozen candidate-round, spawn-attempt, retry, repeated-fingerprint, or per-role time budget was exhausted."
+    ]
+  },
+  "charter_hash": "c4e905edde2c0e027523abe1c5672a7b55fdfc0c85c7a5d86227d14a6bbe169d",
+  "created_at": "2026-07-19T09:41:00Z",
+  "evidence_availability": {
+    "CURRENT_RUNTIME": "AVAILABLE",
+    "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+    "authoritative_roots": "AVAILABLE",
+    "client_configuration": "AVAILABLE",
+    "external_evidence": "AVAILABLE",
+    "work_memory_snapshot": "AVAILABLE"
+  },
+  "operational_maturity": "MIXED",
+  "package_id": "research-package-792679e2f9bd4ad91a25650f",
+  "requirements": [
+    {
+      "acceptance_intent": "Every current directive is decomposed into its protected intent, mandatory actions, prohibited actions, activation condition, and stop condition; no G-rule is omitted.",
+      "evidence_availability": "AVAILABLE",
+      "id": "CUR-001",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry the complete G0-G24 intent and obligation inventory into the replacement mapping.",
+          "id": "PO-CUR-001"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "current-directive-contract",
+      "source": {
+        "current_anchors": [
+          "working-agreement/DIRECTIVES.md"
+        ],
+        "user_intent": "The directives must be accurate, practical, grounded, useful, and not cause contradictions or bloat."
+      },
+      "text": "Determine the exact current authority, trigger, wording, and practical obligation of every directive G0-G24, including overlaps and explicit or implicit precedence relationships."
+    },
+    {
+      "acceptance_intent": "Every authoritative writer, generated consumer, installed copy, validation test, and external approval boundary is named without treating generated files as independent authority.",
+      "evidence_availability": "AVAILABLE",
+      "id": "CUR-002",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Plan promotion and validation across every grounded directive consumer without directly editing generated authority.",
+          "id": "PO-CUR-002"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "current-distribution-topology",
+      "source": {
+        "current_anchors": [
+          "working-agreement/generate_projections.py",
+          "AGENTS.md",
+          "skills/working-agreement/SKILL.md",
+          "working-agreement/inject-directives.sh",
+          "working-agreement/sync_corpus.py",
+          "working-agreement/install_skills.py",
+          "/Users/kamenkamenov/.claude/settings.json",
+          "/Users/kamenkamenov/.codex/config.toml"
+        ],
+        "user_intent": "A corrected directive contract must reach the places that actually govern Codex and related workflows."
+      },
+      "text": "Determine the exact distribution and consumption topology for directives across canonical source, generated projections, installed skills, hooks, corpus synchronization, and repository-local instruction surfaces."
+    },
+    {
+      "acceptance_intent": "The cause chain separately identifies rule defects, procedural amplification, tool defects, and agent non-compliance, with no monocausal or self-exculpatory conclusion.",
+      "evidence_availability": "AVAILABLE",
+      "id": "CUR-003",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Preserve the evidence-backed causality distinction so the redesign fixes contracts without masking agent accountability.",
+          "id": "PO-CUR-003"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "incident-causality",
+      "source": {
+        "current_anchors": [
+          "working-agreement/DIRECTIVES.md:G1,G3,G17-G21",
+          "skills/working-agreement/SKILL.md",
+          "skills/sequence-runner/SKILL.md",
+          "skills/blocker-catalog/SKILL.md",
+          "operations/work-memory/events.jsonl"
+        ],
+        "user_intent": "Do not use the directives as an excuse for agent inability."
+      },
+      "text": "Determine which parts of the observed prevention-task loop were caused by directive or playbook contracts, which were caused by tooling defects, and which were caused by the agent failing to enforce existing scope rules."
+    },
+    {
+      "acceptance_intent": "For every conflict class, one authority wins deterministically and no lower layer can authorize files, repositories, outcomes, external effects, or remediation excluded by the task envelope.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-001",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan the canonical precedence and non-expansion contract and its validation tests.",
+          "id": "PO-FUT-001"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-authority-hierarchy",
+      "source": {
+        "current_anchors": [
+          "working-agreement/DIRECTIVES.md:Prime directive,G1,G3,G11,G17-G21"
+        ],
+        "user_intent": "The directive system must not cause contradictions or expand work under the surface."
+      },
+      "text": "Define one explicit authority hierarchy in which higher-priority safety and user authorization constrain lower-level directives, while playbooks, skills, sequences, blockers, and diagnostics can restrict or stop work but cannot create new scope."
+    },
+    {
+      "acceptance_intent": "A fresh executor can decide whether a discovered action is authorized using the envelope alone; ambiguity produces one question or a stop, never inferred scope.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-002",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan the minimal task-envelope schema, freeze point, change gate, and human-readable presentation.",
+          "id": "PO-FUT-002"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-task-envelope",
+      "source": {
+        "current_anchors": [
+          "working-agreement/DIRECTIVES.md:G1-G4,G11,G21",
+          "skills/task-intake/SKILL.md"
+        ],
+        "user_intent": "Practical subgoals must be completed without silently changing the completion plan."
+      },
+      "text": "Define a compact frozen task authorization envelope containing the practical outcome, acceptance evidence, allowed change and evidence surfaces, authorized enabling work, exclusions, external-effect permissions, and stop conditions."
+    },
+    {
+      "acceptance_intent": "Each failure class has objective classification evidence and exactly one permitted response: correct within scope, retry an unchanged invocation, diagnose and stop, or request a bounded decision.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-003",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan the failure-classification decision table and non-recursive recovery boundary.",
+          "id": "PO-FUT-003"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-failure-policy",
+      "source": {
+        "current_anchors": [
+          "working-agreement/DIRECTIVES.md:G4,G13-G21,G23-G24",
+          "skills/blocker-catalog/SKILL.md",
+          "skills/sequence-runner/SKILL.md"
+        ],
+        "user_intent": "The system must neither bypass real controls nor turn every support failure into another implementation project."
+      },
+      "text": "Define context-sensitive handling for product defects, explicitly authorized enabling-tool defects, out-of-scope infrastructure failures, harmless invocation mistakes, consequential anomalies, and unavailable evidence."
+    },
+    {
+      "acceptance_intent": "Every retained obligation exists at one correct authority layer; cross-layer references do not duplicate commands or create circular mandates.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-004",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan relocation of procedural content and traceable references without losing enforcement intent.",
+          "id": "PO-FUT-004"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-layer-separation",
+      "source": {
+        "current_anchors": [
+          "working-agreement/DIRECTIVES.md:G17-G24",
+          "skills/working-agreement/SKILL.md",
+          "skills/sequence-runner/SKILL.md",
+          "skills/reproduce-first-verify/SKILL.md"
+        ],
+        "user_intent": "Directives should make sense generally rather than be shaped around the current task."
+      },
+      "text": "Separate universal behavioral directives from task-envelope fields, playbook methods, operational sequence commands, tool schemas, and incident-specific examples while retaining traceability between layers."
+    },
+    {
+      "acceptance_intent": "All 25 current directives appear exactly once in the mapping; no protected intent disappears and no replacement contains an unconditional subprocess that can expand scope.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-005",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan the exact canonical rewrite using the complete disposition and replacement map.",
+          "id": "PO-FUT-005"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-complete-g-map",
+      "source": {
+        "current_anchors": [
+          "working-agreement/DIRECTIVES.md:G0-G24"
+        ],
+        "user_intent": "Re-specify each G directive without skimming any needed effort."
+      },
+      "text": "Produce a complete disposition and replacement mapping for every current directive G0-G24: retain, revise, merge, move, or retire, with rationale, preserved intent, activation condition, authorized action, prohibition, and stop condition."
+    },
+    {
+      "acceptance_intent": "The suite covers local fixes, features, research, review, remote operations, migrations, broken test tooling, broken governance tooling, anomalies, long workflows, dirty trees, and out-of-scope root causes with expected behavior and forbidden behavior.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-006",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan executable or deterministic contract tests for every grounded representative scenario.",
+          "id": "PO-FUT-006"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-scenario-proof",
+      "source": {
+        "current_anchors": [
+          "working-agreement/DIRECTIVES.md",
+          "skills/task-intake/SKILL.md",
+          "skills/sequence-runner/SKILL.md",
+          "skills/blocker-catalog/SKILL.md"
+        ],
+        "user_intent": "The replacement must be proven generally useful, not merely described differently."
+      },
+      "text": "Define a representative scenario suite that proves the directive system produces one practical authorized action or one explicit stop condition without contradiction, unsafe bypass, recursive remediation, or hidden scope growth."
+    },
+    {
+      "acceptance_intent": "A user can see the current outcome, boundary, progress, decision, and stop reason without reading implementation machinery; routine work does not require a full rule audit.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-007",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan concise directive structure, presentation rules, and usability checks without weakening auditability.",
+          "id": "PO-FUT-007"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-human-usability",
+      "source": {
+        "current_anchors": [
+          "working-agreement/DIRECTIVES.md:G0-G2,G5-G7,G9,G22"
+        ],
+        "user_intent": "The directives must be practical and useful rather than abstract descriptions hiding unproductive work."
+      },
+      "text": "Keep the directive system human-graspable: concise enough to apply during work, explicit enough to audit, and free of duplicated ceremony, hidden state, unexplained identifiers, or mandatory process that obscures the practical result."
+    },
+    {
+      "acceptance_intent": "No scenario gains authority to commit, push, deploy, access secrets, alter external state, guess schemas, overwrite user changes, or claim unproven completion; complete fixes remain required inside authorized scope.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-008",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan explicit non-regression tests for safety, approval, evidence, preservation, and completion claims.",
+          "id": "PO-FUT-008"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-safety-nonregression",
+      "source": {
+        "current_anchors": [
+          "working-agreement/DIRECTIVES.md:G4,G8,G10-G16,G21,G23-G24",
+          "AGENTS.md"
+        ],
+        "user_intent": "The correction must be generally better, not a task-specific weakening of safeguards."
+      },
+      "text": "Preserve or strengthen safety, evidence quality, schema accuracy, destructive-action protection, external-effect approval, dirty-tree preservation, honest reporting, and complete-fix quality while removing process bloat."
+    },
+    {
+      "acceptance_intent": "The canonical edit surface, generated projections, installed copies, corpus boundary, validation commands, approval gates, and rollback condition are named and finite before implementation begins.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "FUT-009",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan the canonical edit, projection refresh, installed-skill alignment, corpus synchronization decision, validation, and rollback sequence.",
+          "id": "PO-FUT-009"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "future-adoption-contract",
+      "source": {
+        "current_anchors": [
+          "working-agreement/generate_projections.py",
+          "working-agreement/sync_corpus.py",
+          "working-agreement/install_skills.py",
+          "tests/test_generate_projections.py",
+          "tests/test_skill_contracts.py"
+        ],
+        "user_intent": "The corrected directives must become the real governing behavior reliably and safely."
+      },
+      "text": "Define a bounded adoption, projection, validation, and rollback contract for replacing the canonical directives and synchronizing every authoritative consumer without directly editing generated surfaces or silently changing unrelated playbooks."
+    }
+  ],
+  "requirements_hash": "93645f9839b2f540104af33872efce1a5ef9fb0e4de40ee2884b7468fb3a0db8",
+  "result": {
+    "actionable_fingerprints": [
+      "2a09f110f9c1525a56908acf53aed545ec645de72828037e7c21705490f58baf",
+      "353bab67d499b97be664cf4e25ee43de95ad24dab1f85da106a6266c1652fe44",
+      "5869e3fb3a594444fedd3c7a49c08249b12c947a227b6e6b903a91d2e3025ad9",
+      "92a3eacdf7efd112ea269381e0c264aa64d48ac5c54180268b429a81ed4cfc15"
+    ],
+    "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+    "envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+    "reason": "FIX_IN_RESEARCH",
+    "verdict": "IN_PROGRESS"
+  },
+  "rounds": [
+    {
+      "actionable_fingerprints": [
+        "09f113b8eea7c4f2bf0db858c1442dc51e7bd37372daf9ca3caf0c64fd518dc5",
+        "659993d770c0b8ca9d91c252e2aa5a2ec957fedccef1f36e210cd13726d5b232",
+        "a10e43301ee039d13b90583bb2a30e1711782895184f731ff70363e7ff8be206",
+        "b174486305ee09ccae45e9f45cead8f2f387ef978c662eb263364bacc6a7e9d6",
+        "b6c6ecbf94edd7516b5ce7bb6eda4b25104c23dae34589080874a70cc0948c75",
+        "bc1b8630d33d28e8444d944a0159e7d6d2f3e7b0964c11d7d83d437765a2b2b2",
+        "bc795499ad9f77cdc7e1e25bd36e7c237d6354a8bb63e6acdde3e2d0679ac5a0"
+      ],
+      "adjudication": {
+        "adjudication_id": "adjudication-a08b65c1dab94aa2debe7409",
+        "candidate_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+        "envelope_hash": "93ecf8f0851417a39d402235e81002f8d3e7a30f1738cc7c3b1b95ac08761ac6",
+        "findings": [
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "09f113b8eea7c4f2bf0db858c1442dc51e7bd37372daf9ca3caf0c64fd518dc5",
+            "finding_type": "FACT_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "candidate-round-1.json#/requirement_statuses/CUR-002 declares complete topology but names only AGENTS, Claude hooks, Codex skill, installed skills, corpus, and evidence IDs P,A,C,N,Y,IS,IB; its evidence_index omits codex-projects.allowlist, inject-directives.sh, sync-corpus.sh, install-skills.sh, SETUP-codex.md, SETUP-claude.md, INSTALL.md, config.toml, and all four frozen validation-test files.",
+                "envelope-round-1.json#/required_current_evidence explicitly requires those omitted surfaces. Raw evidence shows concrete planner-relevant behavior: sync-corpus.sh:16-37 selects commit-triggered versus force-current sync and performs fail-open projection refresh; inject-directives.sh:2-14 defines the Claude injection consumer; install-skills.sh:3-5 runs validation before installation; generate_projections.py:67-73 and 133-153 derive targets from config and allowlist them; SETUP-codex.md:22-56 supplies preview/apply and verification observables; tests/test_generate_projections.py:94-194, tests/test_install_skills.py:22-130, and tests/test_sync_corpus.py:12-21 provide existing acceptance surfaces."
+              ],
+              "fingerprint": "internal-readiness:distribution-topology-evidence-and-ready-anchors-incomplete",
+              "id": "IR-R1-001",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A fresh planner cannot produce trustworthy promotion and rollback steps for every directive consumer because several active writers, wrappers, target selectors, and validation surfaces are absent from the candidate evidence; it would have to rediscover or invent parts of the distribution path.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-002",
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "4be28c1fc118442c4874c3e7c1bb48bec5c6e0cccc5142c22defd0c02c01080a",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "Tasks/directive-system-vnext/research-v2/requirements.json defines CUR-001 acceptance as an exact inventory of every current directive's activation and practical obligation and FUT-005 as a complete intent-preserving disposition map.",
+                "working-agreement/DIRECTIVES.md:223-285 makes G17 trigger on recurring/3+-step/external/build/deploy/auth sequences, G18 trigger broadly on operational turns, G19 mandate a separate remediation lane, and G20 mandate cataloging whenever any blocker appears.",
+                "Tasks/directive-system-vnext/research-v2/work/candidate-round-1.json research_markdown section G0-G24 instead records redesigned activations/actions: G17 'authorized recurrence capture', G18 'first operational boundary', G19 'repair only if enabled else stop', and G20 'active operational failure'. Its CUR-001 research value nevertheless declares complete=true and FUT-005 declares intent_loss=false."
+              ],
+              "fingerprint": "cur001-current-inventory-conflates-live-and-proposed-g17-g20",
+              "id": "RS-R1-001",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner cannot prove which live obligations are preserved, changed, or retired because the purported current inventory already substitutes replacement behavior for several directives; the claim that no protected intent is lost is therefore unproven.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-001",
+                "FUT-005"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "56d93b6172a80b86a70611c169bf81f4a2d642b903ad5a50f1ce567d48bb4fd8",
+            "finding_type": "REQUIREMENT_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "requirements.json CUR-002 requires every authoritative writer, generated consumer, installed copy, validation test, and external approval boundary to be named; FUT-009 requires finite validation commands, approval gates, and rollback conditions.",
+                "envelope-round-1.json required_current_evidence includes inject-directives.sh, sync-corpus.sh, install-skills.sh, both setup documents, INSTALL.md, codex-projects.allowlist, installed working-agreement and task-intake skills, .codex/config.toml, and four named validation test files.",
+                "candidate-round-1.json evidence_index omits those surfaces, while research_markdown only says 'validate', 'after approval', and 'run authority/scenario/safety tests' without naming exact commands, approval owners, or closure gates."
+              ],
+              "fingerprint": "cur-002-fut-009-distribution-and-adoption-topology-omits-required-consumers-tests-and-finite-validation-gates",
+              "id": "R1-COV-002",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Promotion could leave a governing surface stale or run without a checkable approval and validation boundary because the handoff does not name the complete topology or finite validation commands.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-002",
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "659993d770c0b8ca9d91c252e2aa5a2ec957fedccef1f36e210cd13726d5b232",
+            "finding_type": "REQUIREMENT_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "requirements.json CUR-001 requires the exact current authority, trigger, wording, and practical obligation of every G0-G24 rule, with mandatory actions, prohibitions, activation, and stop conditions.",
+                "working-agreement/DIRECTIVES.md:223-318 makes G17 create reusable scripts/skills, G18 check and guard registered sequences, G19 launch a separate remediation lane, G20 catalog every blocker before fixing, and G22 arm and re-arm a sleep-270 reporting timer.",
+                "candidate-round-1.json research_markdown instead records proposed behavior for these rows: G17 only authorized recurrence capture, G18 one activation with receipt reuse, G19 repair only when enabled, G20 only consequential reusable failures, and G22 moves the timer technique; it does not separately inventory the exact live mandates."
+              ],
+              "fingerprint": "cur-001-current-directive-inventory-conflates-live-obligations-with-proposed-replacements",
+              "id": "R1-COV-001",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot preserve every justified current intent because several live mandates are replaced by proposed narrower behavior before their exact current triggers and actions are inventoried.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-001"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "7d69011555b5f0d9ac929db819999fd332cd83694145a00febd75a41eb344bba",
+            "finding_type": "CONTRADICTION",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "Tasks/directive-system-vnext/research-v2/requirements.json FUT-004 requires every retained obligation to exist at one correct authority layer without duplicated commands, while FUT-005 requires one exact disposition per current directive.",
+                "Tasks/directive-system-vnext/research-v2/work/candidate-round-1.json research_markdown maps G12 with disposition 'move publish sequence', proposed universal N7 independently commands that commits forbid AI attribution, and the downstream section states that publish owns attribution.",
+                "working-agreement/DIRECTIVES.md G12 defines the single current protected prohibition that this disposition must place unambiguously."
+              ],
+              "fingerprint": "fut004-g12-attribution-owned-by-two-layers",
+              "id": "RS-R1-003",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner receives two owners for the same commit-attribution rule, defeating the promised one-layer ownership model and making it unclear whether the canonical directive or publishing procedure is authoritative.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-004",
+                "FUT-005"
+              ],
+              "status": "OPEN",
+              "type": "CONTRADICTION"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "a10e43301ee039d13b90583bb2a30e1711782895184f731ff70363e7ff8be206",
+            "finding_type": "CONTRADICTION",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "candidate-round-1.json#/research_markdown states in the failure matrix \"harmless pre-effect invocation→one retry\" and in N11 \"One no-effect corrected retry is allowed for unchanged invocation,\" but its adoption test list requires \"typo no correction.\" The candidate does not define \"no correction\" as merely no durable remediation, so the stated expected behaviors conflict."
+              ],
+              "fingerprint": "internal-readiness:invocation-retry-scenario-oracle-contradiction",
+              "id": "IR-R1-002",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot write a deterministic invocation-mistake scenario because the candidate simultaneously requires a corrected retry and a test expecting no correction, leaving the permitted action and acceptance oracle ambiguous.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-003",
+                "FUT-006"
+              ],
+              "status": "OPEN",
+              "type": "CONTRADICTION"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "b174486305ee09ccae45e9f45cead8f2f387ef978c662eb263364bacc6a7e9d6",
+            "finding_type": "REQUIREMENT_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "requirements.json FUT-006 requires representative cases including remote operations, broken test tooling, broken governance tooling, and out-of-scope roots, each with expected and forbidden behavior.",
+                "candidate-round-1.json research_markdown compresses the suite into phrases such as 'feature frozen surfaces', 'research read/report only', and 'long run truthful cadence'; it does not provide a per-scenario input boundary, expected outcome, and forbidden outcome, while requirement_statuses reports 16 scenarios and defined=true."
+              ],
+              "fingerprint": "fut-006-scenario-suite-omits-per-scenario-expected-and-forbidden-behavior",
+              "id": "R1-COV-004",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The scenario suite cannot serve as a deterministic proof oracle because most scenarios are labels rather than complete cases with both an expected action or stop and an explicit forbidden behavior.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-006"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "b6c6ecbf94edd7516b5ce7bb6eda4b25104c23dae34589080874a70cc0948c75",
+            "finding_type": "REQUIREMENT_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "requirements.json FUT-003 requires objective classification evidence and exactly one permitted response for each failure class.",
+                "candidate-round-1.json research_markdown lists product, enabling-tool, out-of-scope infrastructure, invocation, anomaly, unavailable-evidence, and governance responses, but supplies no decision predicates or required observations that distinguish those classes; requirement_statuses nevertheless marks FUT-003 defined."
+              ],
+              "fingerprint": "fut-003-failure-classes-lack-objective-classification-criteria",
+              "id": "R1-COV-003",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The same failure can still be routed differently by different executors because the proposed matrix names responses but not the evidence that objectively selects a class.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-003"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "bc1b8630d33d28e8444d944a0159e7d6d2f3e7b0964c11d7d83d437765a2b2b2",
+            "finding_type": "REQUIREMENT_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "lenses-and-findings.md requires every atomic requirement to have a source, maturity, mechanism or conclusion, acceptance intent, conflict disposition, and explicit inclusion or exclusion.",
+                "requirements.json supplies source, maturity, acceptance intent, and scope IDs; candidate-round-1.json requirement_statuses supplies research values and evidence IDs, but neither the statuses nor the requirement-oriented conclusions explicitly disposition conflicts or map each requirement to the charter inclusions and exclusions."
+              ],
+              "fingerprint": "all-requirements-lack-explicit-conflict-and-inclusion-exclusion-disposition",
+              "id": "R1-COV-005",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot prove that every obligation survives the redesign without crossing an exclusion because the candidate never explicitly records each requirement's conflict disposition and inclusion or exclusion boundary.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-001",
+                "CUR-002",
+                "CUR-003",
+                "FUT-001",
+                "FUT-002",
+                "FUT-003",
+                "FUT-004",
+                "FUT-005",
+                "FUT-006",
+                "FUT-007",
+                "FUT-008",
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "bc795499ad9f77cdc7e1e25bd36e7c237d6354a8bb63e6acdde3e2d0679ac5a0",
+            "finding_type": "CONTRADICTION",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "candidate-round-1.json#/research_markdown maps G12 with \"D move publish sequence,\" includes \"commits forbid AI attribution\" in universal N7, and later states \"publish owns attribution and commit/push gate.\" No publish sequence appears in the candidate evidence_index or the envelope required_current_evidence, and an rg --files check under the frozen skill roots found no publish-, yeet-, commit-, git-, or release-named skill surface. This violates the candidate's own FUT-004 research value \"single_owner\": true and leaves PO-FUT-004/PO-FUT-005 without a grounded relocation anchor."
+              ],
+              "fingerprint": "internal-readiness:g12-single-owner-disposition-contradiction",
+              "id": "IR-R1-003",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A fresh planner cannot assign one authoritative owner for the no-AI-attribution rule because the candidate both retains it in the universal contract and says to move it to an ungrounded publish sequence.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-004",
+                "FUT-005",
+                "FUT-008"
+              ],
+              "status": "OPEN",
+              "type": "CONTRADICTION"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "c4873666b33962ec939e4d891aeccdec5ddd83c3a245c754daf97cedcc7d16b1",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "Tasks/directive-system-vnext/research-v2/requirements.json requires CUR-002 to name every authoritative writer, generated consumer, installed copy, validation test, and external approval boundary, and FUT-009 to define bounded synchronization and rollback across them.",
+                "working-agreement/sync-corpus.sh:16-37 shows that the normal post-commit wrapper conditionally invokes corpus synchronization and then refreshes trusted AGENTS projections, while failures are suppressed; force-current at lines 28-30 takes a different path and does not run projection refresh.",
+                "working-agreement/generate_projections.py:67-73 and 131-144 derive targets from Codex trusted-project configuration, intersect them with the explicit allowlist, and apply per-target skip/degradation behavior; tests/test_generate_projections.py:122-195 validates those selection and preservation boundaries.",
+                "Tasks/directive-system-vnext/research-v2/work/candidate-round-1.json CUR-002 reduces consumers to AGENTS, Claude hooks, Codex skill, installed skills, and corpus; its topology/adoption prose does not identify sync-corpus.sh as the dual writer trigger or bind the trusted-config/allowlist/skip behavior and corresponding tests into the claimed complete topology."
+              ],
+              "fingerprint": "cur002-topology-omits-dual-trigger-and-validation-boundaries",
+              "id": "RS-R1-002",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A one-shot adoption plan could update the named surfaces yet miss the live post-commit coupling and its fail-open degradation, so canonical directives, AGENTS projections, and corpus state could diverge without the plan testing the actual writer path.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-002",
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "df0da1e1aaa1c819f433290984cec85ec223aded6cf36095a639423ebde40269",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "Tasks/directive-system-vnext/research-v2/requirements.json FUT-003 requires objective classification evidence and exactly one permitted response for each failure class; FUT-006 requires the full representative suite with expected and forbidden behavior, explicitly including broken test tooling and broken governance tooling.",
+                "Tasks/directive-system-vnext/research-v2/work/candidate-round-1.json failure matrix leaves branches such as out-of-scope infrastructure 'diagnose/stop or amendment', anomalies 'authorized fix/stop', and unavailable evidence 'named route/stop' without predicates selecting one result.",
+                "The same candidate's scenarios section supplies terse expected outcomes but does not provide a per-scenario forbidden behavior matrix, does not explicitly instantiate the required broken-test-tooling case, and relies on a global non-recursion statement rather than deterministic acceptance oracles."
+              ],
+              "fingerprint": "fut003-fut006-no-deterministic-failure-and-scenario-oracles",
+              "id": "RS-R1-004",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner would have to invent decision predicates and test oracles for failures, so the replacement cannot yet prove that each case yields one authorized action or one stop without recursive remediation or hidden scope growth.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-003",
+                "FUT-006"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          }
+        ],
+        "recorded_at": "2026-07-19T10:04:10Z",
+        "runtime_agent_id": "/root/directive_vnext_v2_adjudicator_r1"
+      },
+      "candidate_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+      "candidate_id": "candidate-e2cd4439c936733bd8758a4d",
+      "envelope_hash": "93ecf8f0851417a39d402235e81002f8d3e7a30f1738cc7c3b1b95ac08761ac6",
+      "lenses": {
+        "INTERNAL_READINESS": {
+          "candidate_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+          "envelope_hash": "93ecf8f0851417a39d402235e81002f8d3e7a30f1738cc7c3b1b95ac08761ac6",
+          "lens": "INTERNAL_READINESS",
+          "lens_result_id": "lens-result-d352ef6d0d6ec8398ddde640",
+          "raw_findings": [
+            {
+              "evidence": [
+                "candidate-round-1.json#/requirement_statuses/CUR-002 declares complete topology but names only AGENTS, Claude hooks, Codex skill, installed skills, corpus, and evidence IDs P,A,C,N,Y,IS,IB; its evidence_index omits codex-projects.allowlist, inject-directives.sh, sync-corpus.sh, install-skills.sh, SETUP-codex.md, SETUP-claude.md, INSTALL.md, config.toml, and all four frozen validation-test files.",
+                "envelope-round-1.json#/required_current_evidence explicitly requires those omitted surfaces. Raw evidence shows concrete planner-relevant behavior: sync-corpus.sh:16-37 selects commit-triggered versus force-current sync and performs fail-open projection refresh; inject-directives.sh:2-14 defines the Claude injection consumer; install-skills.sh:3-5 runs validation before installation; generate_projections.py:67-73 and 133-153 derive targets from config and allowlist them; SETUP-codex.md:22-56 supplies preview/apply and verification observables; tests/test_generate_projections.py:94-194, tests/test_install_skills.py:22-130, and tests/test_sync_corpus.py:12-21 provide existing acceptance surfaces."
+              ],
+              "fingerprint": "internal-readiness:distribution-topology-evidence-and-ready-anchors-incomplete",
+              "id": "IR-R1-001",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A fresh planner cannot produce trustworthy promotion and rollback steps for every directive consumer because several active writers, wrappers, target selectors, and validation surfaces are absent from the candidate evidence; it would have to rediscover or invent parts of the distribution path.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-002",
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            },
+            {
+              "evidence": [
+                "candidate-round-1.json#/research_markdown states in the failure matrix \"harmless pre-effect invocation→one retry\" and in N11 \"One no-effect corrected retry is allowed for unchanged invocation,\" but its adoption test list requires \"typo no correction.\" The candidate does not define \"no correction\" as merely no durable remediation, so the stated expected behaviors conflict."
+              ],
+              "fingerprint": "internal-readiness:invocation-retry-scenario-oracle-contradiction",
+              "id": "IR-R1-002",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot write a deterministic invocation-mistake scenario because the candidate simultaneously requires a corrected retry and a test expecting no correction, leaving the permitted action and acceptance oracle ambiguous.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-003",
+                "FUT-006"
+              ],
+              "status": "OPEN",
+              "type": "CONTRADICTION"
+            },
+            {
+              "evidence": [
+                "candidate-round-1.json#/research_markdown maps G12 with \"D move publish sequence,\" includes \"commits forbid AI attribution\" in universal N7, and later states \"publish owns attribution and commit/push gate.\" No publish sequence appears in the candidate evidence_index or the envelope required_current_evidence, and an rg --files check under the frozen skill roots found no publish-, yeet-, commit-, git-, or release-named skill surface. This violates the candidate's own FUT-004 research value \"single_owner\": true and leaves PO-FUT-004/PO-FUT-005 without a grounded relocation anchor."
+              ],
+              "fingerprint": "internal-readiness:g12-single-owner-disposition-contradiction",
+              "id": "IR-R1-003",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A fresh planner cannot assign one authoritative owner for the no-AI-attribution rule because the candidate both retains it in the universal contract and says to move it to an ungrounded publish sequence.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-004",
+                "FUT-005",
+                "FUT-008"
+              ],
+              "status": "OPEN",
+              "type": "CONTRADICTION"
+            }
+          ],
+          "recorded_at": "2026-07-19T10:01:10Z",
+          "runtime_agent_id": "/root/directive_vnext_v2_readiness_r1",
+          "verdict": "GAPS"
+        },
+        "REQUIREMENTS_COVERAGE": {
+          "candidate_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+          "envelope_hash": "93ecf8f0851417a39d402235e81002f8d3e7a30f1738cc7c3b1b95ac08761ac6",
+          "lens": "REQUIREMENTS_COVERAGE",
+          "lens_result_id": "lens-result-98a70ae6d6bdead4d4b04c18",
+          "raw_findings": [
+            {
+              "evidence": [
+                "requirements.json CUR-001 requires the exact current authority, trigger, wording, and practical obligation of every G0-G24 rule, with mandatory actions, prohibitions, activation, and stop conditions.",
+                "working-agreement/DIRECTIVES.md:223-318 makes G17 create reusable scripts/skills, G18 check and guard registered sequences, G19 launch a separate remediation lane, G20 catalog every blocker before fixing, and G22 arm and re-arm a sleep-270 reporting timer.",
+                "candidate-round-1.json research_markdown instead records proposed behavior for these rows: G17 only authorized recurrence capture, G18 one activation with receipt reuse, G19 repair only when enabled, G20 only consequential reusable failures, and G22 moves the timer technique; it does not separately inventory the exact live mandates."
+              ],
+              "fingerprint": "cur-001-current-directive-inventory-conflates-live-obligations-with-proposed-replacements",
+              "id": "R1-COV-001",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot preserve every justified current intent because several live mandates are replaced by proposed narrower behavior before their exact current triggers and actions are inventoried.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-001"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            },
+            {
+              "evidence": [
+                "requirements.json CUR-002 requires every authoritative writer, generated consumer, installed copy, validation test, and external approval boundary to be named; FUT-009 requires finite validation commands, approval gates, and rollback conditions.",
+                "envelope-round-1.json required_current_evidence includes inject-directives.sh, sync-corpus.sh, install-skills.sh, both setup documents, INSTALL.md, codex-projects.allowlist, installed working-agreement and task-intake skills, .codex/config.toml, and four named validation test files.",
+                "candidate-round-1.json evidence_index omits those surfaces, while research_markdown only says 'validate', 'after approval', and 'run authority/scenario/safety tests' without naming exact commands, approval owners, or closure gates."
+              ],
+              "fingerprint": "cur-002-fut-009-distribution-and-adoption-topology-omits-required-consumers-tests-and-finite-validation-gates",
+              "id": "R1-COV-002",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Promotion could leave a governing surface stale or run without a checkable approval and validation boundary because the handoff does not name the complete topology or finite validation commands.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-002",
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            },
+            {
+              "evidence": [
+                "requirements.json FUT-003 requires objective classification evidence and exactly one permitted response for each failure class.",
+                "candidate-round-1.json research_markdown lists product, enabling-tool, out-of-scope infrastructure, invocation, anomaly, unavailable-evidence, and governance responses, but supplies no decision predicates or required observations that distinguish those classes; requirement_statuses nevertheless marks FUT-003 defined."
+              ],
+              "fingerprint": "fut-003-failure-classes-lack-objective-classification-criteria",
+              "id": "R1-COV-003",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The same failure can still be routed differently by different executors because the proposed matrix names responses but not the evidence that objectively selects a class.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-003"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            },
+            {
+              "evidence": [
+                "requirements.json FUT-006 requires representative cases including remote operations, broken test tooling, broken governance tooling, and out-of-scope roots, each with expected and forbidden behavior.",
+                "candidate-round-1.json research_markdown compresses the suite into phrases such as 'feature frozen surfaces', 'research read/report only', and 'long run truthful cadence'; it does not provide a per-scenario input boundary, expected outcome, and forbidden outcome, while requirement_statuses reports 16 scenarios and defined=true."
+              ],
+              "fingerprint": "fut-006-scenario-suite-omits-per-scenario-expected-and-forbidden-behavior",
+              "id": "R1-COV-004",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The scenario suite cannot serve as a deterministic proof oracle because most scenarios are labels rather than complete cases with both an expected action or stop and an explicit forbidden behavior.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-006"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            },
+            {
+              "evidence": [
+                "lenses-and-findings.md requires every atomic requirement to have a source, maturity, mechanism or conclusion, acceptance intent, conflict disposition, and explicit inclusion or exclusion.",
+                "requirements.json supplies source, maturity, acceptance intent, and scope IDs; candidate-round-1.json requirement_statuses supplies research values and evidence IDs, but neither the statuses nor the requirement-oriented conclusions explicitly disposition conflicts or map each requirement to the charter inclusions and exclusions."
+              ],
+              "fingerprint": "all-requirements-lack-explicit-conflict-and-inclusion-exclusion-disposition",
+              "id": "R1-COV-005",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner cannot prove that every obligation survives the redesign without crossing an exclusion because the candidate never explicitly records each requirement's conflict disposition and inclusion or exclusion boundary.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-001",
+                "CUR-002",
+                "CUR-003",
+                "FUT-001",
+                "FUT-002",
+                "FUT-003",
+                "FUT-004",
+                "FUT-005",
+                "FUT-006",
+                "FUT-007",
+                "FUT-008",
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-19T10:01:11Z",
+          "runtime_agent_id": "/root/directive_vnext_v2_coverage_r1",
+          "verdict": "GAPS"
+        },
+        "REQUIREMENTS_SATISFACTION": {
+          "candidate_hash": "5cd9eba1be790db5d0f1b672b14eef168e2945aabfd09e96521a05d4e13150a3",
+          "envelope_hash": "93ecf8f0851417a39d402235e81002f8d3e7a30f1738cc7c3b1b95ac08761ac6",
+          "lens": "REQUIREMENTS_SATISFACTION",
+          "lens_result_id": "lens-result-84cc58cec00a9175a4497c5d",
+          "raw_findings": [
+            {
+              "evidence": [
+                "Tasks/directive-system-vnext/research-v2/requirements.json defines CUR-001 acceptance as an exact inventory of every current directive's activation and practical obligation and FUT-005 as a complete intent-preserving disposition map.",
+                "working-agreement/DIRECTIVES.md:223-285 makes G17 trigger on recurring/3+-step/external/build/deploy/auth sequences, G18 trigger broadly on operational turns, G19 mandate a separate remediation lane, and G20 mandate cataloging whenever any blocker appears.",
+                "Tasks/directive-system-vnext/research-v2/work/candidate-round-1.json research_markdown section G0-G24 instead records redesigned activations/actions: G17 'authorized recurrence capture', G18 'first operational boundary', G19 'repair only if enabled else stop', and G20 'active operational failure'. Its CUR-001 research value nevertheless declares complete=true and FUT-005 declares intent_loss=false."
+              ],
+              "fingerprint": "cur001-current-inventory-conflates-live-and-proposed-g17-g20",
+              "id": "RS-R1-001",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner cannot prove which live obligations are preserved, changed, or retired because the purported current inventory already substitutes replacement behavior for several directives; the claim that no protected intent is lost is therefore unproven.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-001",
+                "FUT-005"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "Tasks/directive-system-vnext/research-v2/requirements.json requires CUR-002 to name every authoritative writer, generated consumer, installed copy, validation test, and external approval boundary, and FUT-009 to define bounded synchronization and rollback across them.",
+                "working-agreement/sync-corpus.sh:16-37 shows that the normal post-commit wrapper conditionally invokes corpus synchronization and then refreshes trusted AGENTS projections, while failures are suppressed; force-current at lines 28-30 takes a different path and does not run projection refresh.",
+                "working-agreement/generate_projections.py:67-73 and 131-144 derive targets from Codex trusted-project configuration, intersect them with the explicit allowlist, and apply per-target skip/degradation behavior; tests/test_generate_projections.py:122-195 validates those selection and preservation boundaries.",
+                "Tasks/directive-system-vnext/research-v2/work/candidate-round-1.json CUR-002 reduces consumers to AGENTS, Claude hooks, Codex skill, installed skills, and corpus; its topology/adoption prose does not identify sync-corpus.sh as the dual writer trigger or bind the trusted-config/allowlist/skip behavior and corresponding tests into the claimed complete topology."
+              ],
+              "fingerprint": "cur002-topology-omits-dual-trigger-and-validation-boundaries",
+              "id": "RS-R1-002",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A one-shot adoption plan could update the named surfaces yet miss the live post-commit coupling and its fail-open degradation, so canonical directives, AGENTS projections, and corpus state could diverge without the plan testing the actual writer path.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-002",
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "Tasks/directive-system-vnext/research-v2/requirements.json FUT-004 requires every retained obligation to exist at one correct authority layer without duplicated commands, while FUT-005 requires one exact disposition per current directive.",
+                "Tasks/directive-system-vnext/research-v2/work/candidate-round-1.json research_markdown maps G12 with disposition 'move publish sequence', proposed universal N7 independently commands that commits forbid AI attribution, and the downstream section states that publish owns attribution.",
+                "working-agreement/DIRECTIVES.md G12 defines the single current protected prohibition that this disposition must place unambiguously."
+              ],
+              "fingerprint": "fut004-g12-attribution-owned-by-two-layers",
+              "id": "RS-R1-003",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner receives two owners for the same commit-attribution rule, defeating the promised one-layer ownership model and making it unclear whether the canonical directive or publishing procedure is authoritative.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-004",
+                "FUT-005"
+              ],
+              "status": "OPEN",
+              "type": "CONTRADICTION"
+            },
+            {
+              "evidence": [
+                "Tasks/directive-system-vnext/research-v2/requirements.json FUT-003 requires objective classification evidence and exactly one permitted response for each failure class; FUT-006 requires the full representative suite with expected and forbidden behavior, explicitly including broken test tooling and broken governance tooling.",
+                "Tasks/directive-system-vnext/research-v2/work/candidate-round-1.json failure matrix leaves branches such as out-of-scope infrastructure 'diagnose/stop or amendment', anomalies 'authorized fix/stop', and unavailable evidence 'named route/stop' without predicates selecting one result.",
+                "The same candidate's scenarios section supplies terse expected outcomes but does not provide a per-scenario forbidden behavior matrix, does not explicitly instantiate the required broken-test-tooling case, and relies on a global non-recursion statement rather than deterministic acceptance oracles."
+              ],
+              "fingerprint": "fut003-fut006-no-deterministic-failure-and-scenario-oracles",
+              "id": "RS-R1-004",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner would have to invent decision predicates and test oracles for failures, so the replacement cannot yet prove that each case yields one authorized action or one stop without recursive remediation or hidden scope growth.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-003",
+                "FUT-006"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-19T10:01:12Z",
+          "runtime_agent_id": "/root/directive_vnext_v2_satisfaction_r1",
+          "verdict": "GAPS"
+        }
+      },
+      "round_id": "lens-round-09f5cd5c823130bbb169f060",
+      "round_number": 1
+    },
+    {
+      "actionable_fingerprints": [
+        "2a09f110f9c1525a56908acf53aed545ec645de72828037e7c21705490f58baf",
+        "353bab67d499b97be664cf4e25ee43de95ad24dab1f85da106a6266c1652fe44",
+        "5869e3fb3a594444fedd3c7a49c08249b12c947a227b6e6b903a91d2e3025ad9",
+        "92a3eacdf7efd112ea269381e0c264aa64d48ac5c54180268b429a81ed4cfc15"
+      ],
+      "adjudication": {
+        "adjudication_id": "adjudication-10e508e284d2720de2a6f8cd",
+        "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+        "envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+        "findings": [
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "2a09f110f9c1525a56908acf53aed545ec645de72828037e7c21705490f58baf",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "Tasks/directive-system-vnext/research-v2/work/candidate-round-2.json research_markdown proposes universal directives N0-N11 and names `working-agreement/sync-corpus.sh --force-current` for adoption.",
+                "scripts/backfill_corpus.py:26-27 constrains directive headings to `G\\d+`; working-agreement/sync_corpus.py:37-39 imports that parser, and working-agreement/sync_corpus.py:143-146 returns failure when the rewritten file produces no parsed directive sections.",
+                "CUR-002 requires every directive distribution consumer to be named, but the candidate topology and evidence index omit `scripts/backfill_corpus.py`, the actual parser contract controlling corpus consumption."
+              ],
+              "fingerprint": "future-directive-identifiers-incompatible-with-current-corpus-parser",
+              "id": "SAT-R2-CORPUS-PARSER",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The proposed N0-N11 canonical rewrite cannot be synchronized to the corpus through the candidate's named adoption command: the current parser recognizes only G-numbered headings, so force-current exits without publishing any replacement directives.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-002",
+                "FUT-005",
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "353bab67d499b97be664cf4e25ee43de95ad24dab1f85da106a6266c1652fe44",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "Tasks/directive-system-vnext/research-v2/work/candidate-round-2.json research_markdown states that rollback restores prior source and skill hashes, resyncs, and proves the prior state.",
+                "working-agreement/sync_corpus.py:42-43 defines corpus identity using kind, link slug, and title; renamed or renumbered replacement directives therefore create new identities.",
+                "working-agreement/sync_corpus.py:46-58 selects committed HEAD as the predecessor in force-current mode, and working-agreement/sync_corpus.py:156-157 deactivates only identities present in that predecessor but absent from the current working tree. After a pre-commit forward sync followed by restoration of the working tree to HEAD, the predecessor and current sets are identical, so forward-only identities are not selected for deactivation.",
+                "tests/test_sync_corpus.py:11-21 checks predecessor selection and the upsert-before-deactivate gate but provides no rollback-state oracle covering previously published forward-only identities."
+              ],
+              "fingerprint": "force-current-rollback-cannot-prune-forward-only-corpus-identities",
+              "id": "SAT-R2-CORPUS-ROLLBACK",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The stated rollback can restore file hashes while leaving replacement directive identities active in the corpus, so rollback does not reliably restore the prior governing state.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "5869e3fb3a594444fedd3c7a49c08249b12c947a227b6e6b903a91d2e3025ad9",
+            "finding_type": "REQUIREMENT_GAP",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": [
+                "charter.json in_scope[2] includes the research, plan, implementation, and review skill contracts insofar as they duplicate or operationalize directive obligations, and envelope-round-2.json lists all four skill files as required current evidence.",
+                "candidate-round-2.json research_markdown lines 51-58 gives only the generic statement that mode playbooks become assessment-read, scope-neutral consumers; it does not inventory or disposition their distinct obligations, while its evidence_index contains no evidence item for skills/research-playbook/SKILL.md, skills/plan-playbook/SKILL.md, skills/write-code-playbook/SKILL.md, or skills/review-playbook/SKILL.md.",
+                "skills/plan-playbook/SKILL.md:37-42 defines P1 one-shot planning and P2 decision-locking; skills/write-code-playbook/SKILL.md:29-35 defines WC1 verification-before-done; skills/review-playbook/SKILL.md:30-39 defines RV1/RV2 review obligations; skills/research-playbook/SKILL.md:10-60 defines separate research lifecycle and terminal obligations. These are concrete current playbook obligations requiring layer ownership and traceability under FUT-004, not interchangeable generic 'mode playbook' mechanics."
+              ],
+              "fingerprint": "future-layer-separation-omits-mode-playbook-obligations",
+              "id": "RCOV-R2-001",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner cannot produce a single-owner layer migration without rediscovering whether mode-playbook obligations remain, move, merge, or retire; it could silently duplicate or drop planning, implementation, review, and research controls that the frozen scope explicitly requires the redesign to disposition.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-004"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          },
+          {
+            "disposition": "FIX_IN_RESEARCH",
+            "finding_fingerprint": "92a3eacdf7efd112ea269381e0c264aa64d48ac5c54180268b429a81ed4cfc15",
+            "finding_type": "EVIDENCE_LIMIT",
+            "materiality": "BLOCKER",
+            "raw_finding": {
+              "evidence": "Tasks/directive-system-vnext/research-v2/work/candidate-round-2.json research_markdown contains the heading “Adjudicated round-1 corrections (authoritative over earlier compressed summaries)” and extensive prior adjudication content.",
+              "evidence_limitation": "Assessment stopped immediately upon detecting excluded context, so no readiness conclusions were made.",
+              "fingerprint": "internal-readiness-round-2-candidate-embeds-prior-adjudication-context",
+              "id": "IR-R2-EXCLUDED-CONTEXT",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The required independent assessment cannot proceed because the candidate itself exposes explicitly excluded prior-round adjudication context.",
+              "proposed_disposition": "BLOCKED_ON_EVIDENCE",
+              "requirement_ids": [
+                "CUR-001",
+                "CUR-003",
+                "FUT-005"
+              ],
+              "status": "OPEN",
+              "type": "EVIDENCE_LIMIT"
+            }
+          }
+        ],
+        "recorded_at": "2026-07-19T10:29:10Z",
+        "runtime_agent_id": "/root/directive_vnext_v2_adjudicator_r2"
+      },
+      "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+      "candidate_id": "candidate-77f4262ee47af1518e281385",
+      "envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+      "lenses": {
+        "INTERNAL_READINESS": {
+          "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+          "envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+          "lens": "INTERNAL_READINESS",
+          "lens_result_id": "lens-result-96691086be76e81d2cf42044",
+          "raw_findings": [
+            {
+              "evidence": "Tasks/directive-system-vnext/research-v2/work/candidate-round-2.json research_markdown contains the heading “Adjudicated round-1 corrections (authoritative over earlier compressed summaries)” and extensive prior adjudication content.",
+              "evidence_limitation": "Assessment stopped immediately upon detecting excluded context, so no readiness conclusions were made.",
+              "fingerprint": "internal-readiness-round-2-candidate-embeds-prior-adjudication-context",
+              "id": "IR-R2-EXCLUDED-CONTEXT",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The required independent assessment cannot proceed because the candidate itself exposes explicitly excluded prior-round adjudication context.",
+              "proposed_disposition": "BLOCKED_ON_EVIDENCE",
+              "requirement_ids": [
+                "CUR-001",
+                "CUR-003",
+                "FUT-005"
+              ],
+              "status": "OPEN",
+              "type": "EVIDENCE_LIMIT"
+            }
+          ],
+          "recorded_at": "2026-07-19T10:24:10Z",
+          "runtime_agent_id": "/root/directive_vnext_v2_readiness_r2_retry",
+          "verdict": "BLOCKED"
+        },
+        "REQUIREMENTS_COVERAGE": {
+          "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+          "envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+          "lens": "REQUIREMENTS_COVERAGE",
+          "lens_result_id": "lens-result-769654c31e7608b2ffbbb104",
+          "raw_findings": [
+            {
+              "evidence": [
+                "charter.json in_scope[2] includes the research, plan, implementation, and review skill contracts insofar as they duplicate or operationalize directive obligations, and envelope-round-2.json lists all four skill files as required current evidence.",
+                "candidate-round-2.json research_markdown lines 51-58 gives only the generic statement that mode playbooks become assessment-read, scope-neutral consumers; it does not inventory or disposition their distinct obligations, while its evidence_index contains no evidence item for skills/research-playbook/SKILL.md, skills/plan-playbook/SKILL.md, skills/write-code-playbook/SKILL.md, or skills/review-playbook/SKILL.md.",
+                "skills/plan-playbook/SKILL.md:37-42 defines P1 one-shot planning and P2 decision-locking; skills/write-code-playbook/SKILL.md:29-35 defines WC1 verification-before-done; skills/review-playbook/SKILL.md:30-39 defines RV1/RV2 review obligations; skills/research-playbook/SKILL.md:10-60 defines separate research lifecycle and terminal obligations. These are concrete current playbook obligations requiring layer ownership and traceability under FUT-004, not interchangeable generic 'mode playbook' mechanics."
+              ],
+              "fingerprint": "future-layer-separation-omits-mode-playbook-obligations",
+              "id": "RCOV-R2-001",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner cannot produce a single-owner layer migration without rediscovering whether mode-playbook obligations remain, move, merge, or retire; it could silently duplicate or drop planning, implementation, review, and research controls that the frozen scope explicitly requires the redesign to disposition.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-004"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-19T10:24:11Z",
+          "runtime_agent_id": "/root/directive_vnext_v2_coverage_r2",
+          "verdict": "GAPS"
+        },
+        "REQUIREMENTS_SATISFACTION": {
+          "candidate_hash": "53212de70d34672d3c407b8394283d12128397953d93221128bb726b601bfc78",
+          "envelope_hash": "3a9af98438ac72f1e8989325d34c243c9e7ad2d8b8309fc54a5fdee9f26079fa",
+          "lens": "REQUIREMENTS_SATISFACTION",
+          "lens_result_id": "lens-result-a9e5645cedf558b7a62224aa",
+          "raw_findings": [
+            {
+              "evidence": [
+                "Tasks/directive-system-vnext/research-v2/work/candidate-round-2.json research_markdown proposes universal directives N0-N11 and names `working-agreement/sync-corpus.sh --force-current` for adoption.",
+                "scripts/backfill_corpus.py:26-27 constrains directive headings to `G\\d+`; working-agreement/sync_corpus.py:37-39 imports that parser, and working-agreement/sync_corpus.py:143-146 returns failure when the rewritten file produces no parsed directive sections.",
+                "CUR-002 requires every directive distribution consumer to be named, but the candidate topology and evidence index omit `scripts/backfill_corpus.py`, the actual parser contract controlling corpus consumption."
+              ],
+              "fingerprint": "future-directive-identifiers-incompatible-with-current-corpus-parser",
+              "id": "SAT-R2-CORPUS-PARSER",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The proposed N0-N11 canonical rewrite cannot be synchronized to the corpus through the candidate's named adoption command: the current parser recognizes only G-numbered headings, so force-current exits without publishing any replacement directives.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "CUR-002",
+                "FUT-005",
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "Tasks/directive-system-vnext/research-v2/work/candidate-round-2.json research_markdown states that rollback restores prior source and skill hashes, resyncs, and proves the prior state.",
+                "working-agreement/sync_corpus.py:42-43 defines corpus identity using kind, link slug, and title; renamed or renumbered replacement directives therefore create new identities.",
+                "working-agreement/sync_corpus.py:46-58 selects committed HEAD as the predecessor in force-current mode, and working-agreement/sync_corpus.py:156-157 deactivates only identities present in that predecessor but absent from the current working tree. After a pre-commit forward sync followed by restoration of the working tree to HEAD, the predecessor and current sets are identical, so forward-only identities are not selected for deactivation.",
+                "tests/test_sync_corpus.py:11-21 checks predecessor selection and the upsert-before-deactivate gate but provides no rollback-state oracle covering previously published forward-only identities."
+              ],
+              "fingerprint": "force-current-rollback-cannot-prune-forward-only-corpus-identities",
+              "id": "SAT-R2-CORPUS-ROLLBACK",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The stated rollback can restore file hashes while leaving replacement directive identities active in the corpus, so rollback does not reliably restore the prior governing state.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "FUT-009"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-19T10:24:12Z",
+          "runtime_agent_id": "/root/directive_vnext_v2_satisfaction_r2",
+          "verdict": "GAPS"
+        }
+      },
+      "round_id": "lens-round-5ed3bafbe0f7c2e9936cd496",
+      "round_number": 2
+    }
+  ],
+  "schema_version": 1,
+  "scope_hash": "00a0321f205cc00aee248e0e503e5d398c773ef8aa95b7b3160099daeb7b7f21",
+  "updated_at": "2026-07-19T10:29:10Z",
+  "verdict": "IN_PROGRESS"
+}

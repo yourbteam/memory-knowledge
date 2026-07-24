@@ -1,0 +1,154 @@
+{
+  "max": 4,
+  "slots": [
+    {
+      "acquired_at": 1784296192,
+      "agent_id": "/root/three_defect_core",
+      "bound_at": 1784296242,
+      "closed_at": 1784296414,
+      "completed_at": 1784296380,
+      "evidence": {
+        "close": "errored-model-capacity-interrupt-confirmed"
+      },
+      "id": "s1",
+      "label": "three-defect-core-research",
+      "released_at": 1784296433,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784296472,
+      "agent_id": "/root/three_defect_core_retry",
+      "bound_at": 1784296510,
+      "closed_at": 1784296958,
+      "completed_at": 1784296922,
+      "evidence": {
+        "close": "completed-output-collected"
+      },
+      "id": "s2",
+      "label": "three-defect-core-research",
+      "released_at": 1784296999,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784297288,
+      "agent_id": "/root/three_defect_readiness",
+      "bound_at": 1784297345,
+      "closed_at": 1784297618,
+      "completed_at": 1784297586,
+      "evidence": {
+        "close": "completed-output-collected"
+      },
+      "id": "s3",
+      "label": "three-defect-internal-readiness",
+      "released_at": 1784297636,
+      "state": "released"
+    },
+    {
+      "abandoned_at": 1784297658,
+      "acquired_at": 1784297373,
+      "agent_id": null,
+      "evidence": {
+        "abandon_reason": "spawn-rejected-thread-capacity"
+      },
+      "id": "s4",
+      "label": "three-defect-requirements-coverage",
+      "released_at": 1784297676,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784297708,
+      "agent_id": "/root/three_defect_coverage_retry",
+      "bound_at": 1784297745,
+      "closed_at": 1784297895,
+      "completed_at": 1784297871,
+      "evidence": {
+        "close": "completed-output-collected"
+      },
+      "id": "s5",
+      "label": "three-defect-requirements-coverage-retry",
+      "released_at": 1784297914,
+      "state": "released"
+    },
+    {
+      "abandoned_at": 1784297811,
+      "acquired_at": 1784297769,
+      "agent_id": null,
+      "evidence": {
+        "abandon_reason": "spawn-rejected-thread-capacity"
+      },
+      "id": "s6",
+      "label": "three-defect-requirements-satisfaction",
+      "released_at": 1784297827,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784297946,
+      "agent_id": "/root/three_defect_satisfaction_retry",
+      "bound_at": 1784297997,
+      "closed_at": 1784298218,
+      "completed_at": 1784298170,
+      "evidence": {
+        "close": "completed-output-collected"
+      },
+      "id": "s7",
+      "label": "three-defect-requirements-satisfaction-retry",
+      "released_at": 1784298237,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784298658,
+      "agent_id": "/root/three_defect_adjudicator_r1",
+      "bound_at": 1784298698,
+      "closed_at": 1784299032,
+      "completed_at": 1784299007,
+      "evidence": {
+        "close": "completed-output-collected"
+      },
+      "id": "s8",
+      "label": "three-defect-round-1-adjudicator",
+      "released_at": 1784299055,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784299258,
+      "agent_id": "/root/three_defect_core_r2",
+      "bound_at": 1784299301,
+      "closed_at": 1784299686,
+      "completed_at": 1784299662,
+      "evidence": {
+        "close": "rejected-missing-source-hashes-and-verification-anchors"
+      },
+      "id": "s9",
+      "label": "three-defect-core-round-2",
+      "released_at": 1784299702,
+      "state": "released"
+    },
+    {
+      "abandoned_at": 1784299782,
+      "acquired_at": 1784299723,
+      "agent_id": null,
+      "evidence": {
+        "abandon_reason": "spawn-rejected-thread-capacity"
+      },
+      "id": "s10",
+      "label": "three-defect-core-round-2-retry",
+      "released_at": 1784299802,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784300272,
+      "agent_id": "codex-exec-019f70e1-aa12-7681-8a3e-343b4cc9c0f0",
+      "bound_at": 1784306181,
+      "closed_at": 1784306473,
+      "completed_at": 1784306428,
+      "evidence": {
+        "close": "/private/tmp/three-defect-core-r2-authorized-close.json"
+      },
+      "id": "s11",
+      "label": "three-defect-core-round-2-authorized-extra",
+      "released_at": 1784306537,
+      "state": "released"
+    }
+  ],
+  "version": 2
+}

@@ -1,0 +1,162 @@
+{
+  "artifact_hashes": {
+    "evidence-index.json": "5a527f258f51620363d7f7c1e3db4a607054bfffd7bf0cea360db4937873c67f",
+    "findings.json": "df8d93483095d64b1972efd7e4f41a418f83f315166dcf91a0753bfb1b1e2c19",
+    "planner-handoff.md": "f38bfff6f51577e8da532d2cac825c89f3f307e95e438f67e5a3b40ed78a093f",
+    "requirements.json": "068fbbe9e41b6f8d62350e17708cb8b3dec0864095f30c18da7cbcbbe080c3b3",
+    "research.md": "fa8bb175624e02e2a8782c76bdca69724d6cc29d40665839788350866045fb7a"
+  },
+  "budget_use": {
+    "attempts_max": 15,
+    "attempts_used": 6,
+    "minutes_max": 60,
+    "minutes_used": 33.31651166666667,
+    "rounds_max": 3,
+    "rounds_used": 1
+  },
+  "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+  "emitted_at": "2026-07-17T10:36:48.249263Z",
+  "envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+  "lifecycle_evidence": [
+    {
+      "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+      "close_evidence": {
+        "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+        "completion_evidence": "The fresh successor core returned a controller-valid candidate, list_agents reports terminal completion, and the slot is no longer active.",
+        "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+        "output_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+        "role": "CORE_RESEARCHER",
+        "round": 1,
+        "runtime": "codex-collaboration",
+        "runtime_agent_id": "/root/prevention_successor_core",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+      "output_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+      "recorded_at": "2026-07-17T10:14:25.292652Z",
+      "role": "CORE_RESEARCHER",
+      "round": 1,
+      "runtime_agent_id": "/root/prevention_successor_core",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+      "close_evidence": {
+        "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+        "completion_evidence": "Fresh independent lens returned PASS with nine explicit findings and released its active slot.",
+        "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+        "output_hash": "4923b244b840e8852538cea4bb427392c5d9f88dce8ad4502f2b4be7b4433036",
+        "role": "INTERNAL_READINESS",
+        "round": 1,
+        "runtime": "codex-collaboration",
+        "runtime_agent_id": "/root/prevention_successor_internal",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+      "output_hash": "4923b244b840e8852538cea4bb427392c5d9f88dce8ad4502f2b4be7b4433036",
+      "recorded_at": "2026-07-17T10:27:57.038279Z",
+      "role": "INTERNAL_READINESS",
+      "round": 1,
+      "runtime_agent_id": "/root/prevention_successor_internal",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+      "close_evidence": {
+        "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+        "completion_evidence": "Fresh independent lens returned PASS with nine explicit findings and released its active slot.",
+        "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+        "output_hash": "6f521ad50b75edc1c649e2fd374c711dc5e167a397b996f9826949732efa1ca8",
+        "role": "REQUIREMENTS_COVERAGE",
+        "round": 1,
+        "runtime": "codex-collaboration",
+        "runtime_agent_id": "/root/prevention_successor_coverage",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+      "output_hash": "6f521ad50b75edc1c649e2fd374c711dc5e167a397b996f9826949732efa1ca8",
+      "recorded_at": "2026-07-17T10:28:02.092770Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 1,
+      "runtime_agent_id": "/root/prevention_successor_coverage",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+      "close_evidence": {
+        "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+        "completion_evidence": "The runtime rejected the concurrent spawn before creating an agent; therefore no slot was acquired.",
+        "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+        "role": "REQUIREMENTS_SATISFACTION",
+        "round": 1,
+        "runtime": "codex-collaboration",
+        "runtime_agent_id": "spawn-failed:/root/prevention_successor_satisfaction",
+        "slot_closed": true,
+        "status": "SPAWN_FAILED"
+      },
+      "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+      "output_hash": null,
+      "recorded_at": "2026-07-17T10:28:11.056414Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 1,
+      "runtime_agent_id": "spawn-failed:/root/prevention_successor_satisfaction",
+      "slot_closed": true,
+      "status": "FAILED"
+    },
+    {
+      "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+      "close_evidence": {
+        "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+        "completion_evidence": "The one permitted fresh retry returned PASS with nine explicit findings and released its active slot.",
+        "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+        "output_hash": "e00b7af35ab42d35d8a21b43f172c3ccb98e96a6f9d08eda99d6dbf73f5a9b80",
+        "role": "REQUIREMENTS_SATISFACTION",
+        "round": 1,
+        "runtime": "codex-collaboration",
+        "runtime_agent_id": "/root/prevention_successor_satisfaction_retry",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+      "output_hash": "e00b7af35ab42d35d8a21b43f172c3ccb98e96a6f9d08eda99d6dbf73f5a9b80",
+      "recorded_at": "2026-07-17T10:28:16.316234Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 1,
+      "runtime_agent_id": "/root/prevention_successor_satisfaction_retry",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+      "close_evidence": {
+        "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+        "completion_evidence": "Fresh adjudicator classified all 27 raw findings with no research-actionable disposition and released its active slot.",
+        "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+        "output_hash": "8c983bc6a66f267687d1fb57a475b83e39ea00de6b3f26994e7142d7821b0de7",
+        "role": "ADJUDICATOR",
+        "round": 1,
+        "runtime": "codex-collaboration",
+        "runtime_agent_id": "/root/prevention_successor_adjudicator",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+      "output_hash": "8c983bc6a66f267687d1fb57a475b83e39ea00de6b3f26994e7142d7821b0de7",
+      "recorded_at": "2026-07-17T10:36:44.070825Z",
+      "role": "ADJUDICATOR",
+      "round": 1,
+      "runtime_agent_id": "/root/prevention_successor_adjudicator",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "package_id": "research-package-89c45b2d4c631c4255879c41",
+  "schema_version": 1,
+  "terminal_verdict": "PASS"
+}

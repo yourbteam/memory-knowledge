@@ -1,0 +1,225 @@
+{
+  "authority": "Kamen",
+  "authority_approvals": {
+    "budget_and_roots": {
+      "decision_id": "convergence-state-review-cycle-budget-schema-v1",
+      "status": "APPROVED"
+    },
+    "implementation_claude_parity_20260724": {
+      "decision_id": "convergence-state-review-cycle-claude-parity-source-correction-20260724",
+      "status": "APPROVED"
+    },
+    "runtime_and_terminal": {
+      "decision_id": "convergence-state-review-cycle-runtime-terminal-v1",
+      "status": "APPROVED"
+    },
+    "semantic_intake": {
+      "decision_id": "convergence-state-review-cycle-semantic-intake-v1",
+      "status": "APPROVED"
+    }
+  },
+  "authority_decisions_required": [],
+  "availability_policy": "AVAILABLE",
+  "effect_and_reconciliation_contract": {
+    "dry_run_rule": "Dry-run produces a redacted typed operation plan and predicted status transitions, does not access external approval contents beyond metadata validation, and proves the convergence state hash is unchanged.",
+    "effect_identity": "request id plus canonical request hash plus initial convergence state hash plus fixed helper hash",
+    "operation_reconciliation": {
+      "accept-baseline": "Require exact approval/stage/repository/path scope and baseline event/hash changes; never advance again after a matching receipt.",
+      "common": "The helper atomically writes each mutation and a review_cycle_operation receipt keyed by request_id/operation_id with kind, input hash, prior status/hash identity, result code, and semantic result fields. Exact receipt/result is ALREADY_APPLIED; no receipt with the expected predecessor predicate is NOT_APPLIED; mismatched receipt or state predicate is INDETERMINATE.",
+      "grant-autonomy/grant-scope-change": "Require the exact state approval record and consumed external authority receipt bound to operation id.",
+      "guard-baseline/check/status": "Replay-safe observations; retain structured verdict/status receipts and perform no state mutation beyond the operation receipt.",
+      "record-gap": "Require the exact gap record once with its requirement/stage/evidence hashes.",
+      "record-stage": "Require the exact helper idempotency key, stage result content hash, and resulting state/status fields.",
+      "transition": "Require the exact allowed current-to-target transition and resulting outer-iteration/status effects; same target with matching receipt is already applied."
+    },
+    "prepare": "Persist the complete ordered operation plan, derived M/UnitBudget, expected per-operation state predicates, operation ids, external approval bindings, and final expected status before the first helper call.",
+    "resume_rule": "Resume at the first operation without a matching semantic receipt. Never rerun an applied approval grant, baseline acceptance, stage record, or transition. Any predecessor or receipt disagreement stops the parent INDETERMINATE."
+  },
+  "external_approval_contract": {
+    "admission": "The exact external approval receipt must exist and be unconsumed before an approval grant operation is prepared. Request text or this owner-contract approval is not authority to grant autonomy or expand scope.",
+    "consumption": "Consume the external receipt atomically with the helper state approval record; identical replay by the same operation id is allowed.",
+    "receipt_fields": [
+      "authority_approval_receipt_id",
+      "grant_kind",
+      "grant_id",
+      "repository_keys",
+      "allowed_paths_sha256",
+      "stage",
+      "evidence_sha256",
+      "approved_by",
+      "approved_at_utc"
+    ],
+    "required_for": [
+      "grant-autonomy",
+      "grant-scope-change"
+    ]
+  },
+  "owner_sequence_id": "convergence-state-review-cycle",
+  "parameter_contract": {
+    "command": {
+      "required": true,
+      "type": "ENUM",
+      "values": [
+        "dry-run",
+        "apply"
+      ]
+    },
+    "helper": {
+      "caller_supplied": false,
+      "fixed": "convergence-helper",
+      "required_sha256": "82c11a852ffa373be821106577b2b2c2b62cb6c537a98b829bfe97e16fd0b8ae",
+      "type": "PATH"
+    },
+    "operation_schemas": {
+      "accept-baseline": "Repository key already present in state, nonempty repository-relative changed paths, existing matching approval id, exact stage, and boolean approved-dirty-overlap mode.",
+      "check": "No additional fields.",
+      "grant-autonomy": "Exact grant id, repository keys, repository-relative allowed paths, stage, bounded evidence, and external authority_approval_receipt_id.",
+      "grant-scope-change": "Exact grant id, repository keys, repository-relative allowed paths, stage, bounded evidence, and external authority_approval_receipt_id.",
+      "guard-baseline": "No additional fields.",
+      "record-gap": "Exact id, existing requirement_ids, exact source_stage, bounded impact, and bounded evidence fields.",
+      "record-stage": "A result file under task-artifact-root or runtime-temp validating against the helper stage-result schema.",
+      "status": "No additional fields.",
+      "transition": "A target in convergence_state.STATUSES that is allowed from the prepared current status."
+    },
+    "request": {
+      "required": true,
+      "schema": "review_cycle_request_v2",
+      "type": "EXACT_OBJECT"
+    },
+    "request_file": {
+      "materializes": "request",
+      "mode": "READ_REGULAR_FILE",
+      "required": false,
+      "trusted_roots": [
+        "task-artifact-root",
+        "runtime-temp"
+      ],
+      "type": "PATH"
+    },
+    "review_cycle_request_v2": {
+      "expected_final_status": {
+        "type": "ENUM",
+        "values": [
+          "research",
+          "plan",
+          "implementation",
+          "review",
+          "blocked",
+          "cap_reached",
+          "complete"
+        ]
+      },
+      "initial_state_sha256": {
+        "type": "SHA256"
+      },
+      "operations": {
+        "item_common_fields": {
+          "kind": "ENUM",
+          "operation_id": "UUID"
+        },
+        "kind_values": [
+          "record-gap",
+          "grant-autonomy",
+          "grant-scope-change",
+          "accept-baseline",
+          "guard-baseline",
+          "record-stage",
+          "transition",
+          "check",
+          "status"
+        ],
+        "type": "NONEMPTY_LIST",
+        "unique_by": "operation_id"
+      },
+      "request_id": {
+        "type": "UUID"
+      },
+      "schema_version": {
+        "fixed": 2,
+        "type": "INTEGER"
+      },
+      "state": {
+        "mode": "READ_WRITE_REGULAR_FILE",
+        "schema": "convergence_state.py current schema",
+        "trusted_roots": [
+          "task-artifact-root",
+          "runtime-temp"
+        ],
+        "type": "PATH"
+      }
+    },
+    "validation_boundary": "Before budget reservation, validate the exact v2 request and operation field sets, unique operation ids, initial state hash/schema, fixed helper hash, repository keys/relative paths against state roots, requirement/stage/status references, result-file roots/schema, approval receipts, and the full simulated transition sequence. Reject legacy v1 requests for executable admission and reject caller helper or raw absolute repository/allowed paths."
+  },
+  "proposal_status": "APPROVED",
+  "schema_version": 1,
+  "source": {
+    "dependencies_sha256": "fa2f0ba5862c240e9887b3daa77dbc816e046c041b9a6277ea87ee3dc91185c4",
+    "helper_path": "/Users/kamenkamenov/.codex/skills/_shared/convergence_state.py",
+    "helper_sha256": "82c11a852ffa373be821106577b2b2c2b62cb6c537a98b829bfe97e16fd0b8ae",
+    "implementation_approved_post_correction_sha256": "193cb1bc0026b09c51dde034782112082757656f9778df9a1812609cd96b9ec9",
+    "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_state_review_cycle.py",
+    "implementation_sha256": "4279decd2e34b9c5747271d68b483d131d8823b333bbd30aac40e420aa0c6c3a",
+    "implementation_source_correction_decision_id": "convergence-state-review-cycle-claude-parity-source-correction-20260724",
+    "sequence_approved_post_correction_sha256": "777851e63ab606393f46e27ad666710fda3011b84e829191a79550d2e68f4cc0",
+    "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/convergence-state-review-cycle/sequence.md",
+    "sequence_sha256": "61703cb6b7d67d074f76516b1a60613182ac79c515c6e7dea49b2cae4cf3ce6d",
+    "sequence_source_correction_decision_id": "convergence-state-review-cycle-semantic-intake-v1",
+    "source_receipt_helper_path": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_source_receipt.py",
+    "source_receipt_helper_sha256": "e569ee5da7043681d9f432410417a620d4ebadc776cf5f6ed7992ac1aa81e2a8"
+  },
+  "standalone": true,
+  "terminal_contract": {
+    "apply_success": "cycle_status is APPLIED, not COMPLETE; operation_count equals M; final convergence_status exactly equals expected_final_status; final state request/operation receipt chain is complete; every external approval is correctly consumed; helper check passes; terminal artifact includes request/state/helper/budget/receipt hashes without unredacted evidence text.",
+    "common": [
+      "The owner process return code is zero.",
+      "Every requested operation has exactly one matching semantic operation receipt in order.",
+      "A final structured helper check has verdict PASS and a final structured status object is schema-valid.",
+      "Exactly one owner_terminal event and matching terminal artifact exist for effect_id."
+    ],
+    "dry_run_success": "cycle_status is DRY_RUN; the redacted plan contains every operation plus final check/status; predicted final status equals expected_final_status; the state hash remains initial_state_sha256; no operation or external approval receipt was consumed.",
+    "source_corrections": [
+      "Replace executable request-v1 with request-v2 carrying request/operation ids, initial state hash, and expected final convergence status.",
+      "Fix the helper path/hash and bind all state/request/result/repository paths to trusted roots and repository keys.",
+      "Require separate exact external approval receipts before grant-autonomy or grant-scope-change; request evidence alone cannot create authority.",
+      "Add atomic per-operation semantic receipts so crashes resume the first absent operation without duplicating grants, baseline accepts, stages, or transitions.",
+      "Parse and validate final helper check/status, report cycle_status APPLIED separately from convergence_status, and terminalize exactly once instead of trusting exit zero and a fixed pass string."
+    ]
+  },
+  "trusted_roots": {
+    "authority-approval-store": "The durable external approval store for autonomy and scope-change grants",
+    "convergence-helper": "/Users/kamenkamenov/.codex/skills/_shared/convergence_state.py",
+    "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
+    "repository-root-registry": "The repository identities already materialized and content-addressed in the selected convergence state",
+    "runtime-temp": "/private/tmp",
+    "task-artifact-root": "/Users/kamenkamenov/memory-knowledge/Tasks"
+  },
+  "unit_budget": {
+    "adjudication_milliseconds": 3600000,
+    "atomic_task_cap_milliseconds": 3600000,
+    "command_profiles": {
+      "apply": {
+        "derivation": "Seven required research/terminal tasks, one sixty-minute task per ordered helper mutation/observation, one final check task, and one final status task.",
+        "duration_formula_milliseconds": "(M + 9) * 3600000",
+        "variables": {
+          "M": "The exact nonzero operation count in the fully materialized request."
+        }
+      },
+      "dry-run": {
+        "duration_formula_milliseconds": "8 * 3600000",
+        "productive_task_count": 1
+      }
+    },
+    "mandatory_role_milliseconds": {
+      "CORE": 3600000,
+      "INTERNAL_READINESS": 3600000,
+      "REQUIREMENTS_COVERAGE": 3600000,
+      "REQUIREMENTS_SATISFACTION": 3600000
+    },
+    "materialization_milliseconds": 3600000,
+    "owner_sequence_id": "convergence-state-review-cycle",
+    "reservation_mode": "OWNER_DERIVED_ORDERED_OPERATIONS",
+    "reservation_rule": "Materialize and hash the complete request, compute numeric M, and reserve every ordered operation plus final check/status before the first mutation. Callers cannot supply M or a budget; retries remain within each operation's sixty-minute cap.",
+    "schema_version": 1,
+    "terminal_milliseconds": 3600000
+  }
+}

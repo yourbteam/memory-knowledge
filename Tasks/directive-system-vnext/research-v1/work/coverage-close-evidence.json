@@ -1,0 +1,7 @@
+{
+  "runtime_agent_id": "/root/directive_vnext_coverage_r1",
+  "runtime_status": "completed",
+  "slot_id": "s3",
+  "slot_state": "released",
+  "evidence": "The collaboration runtime returned FINAL_ANSWER with the exact research lens envelope; the slot ledger records completion, closure, and release."
+}

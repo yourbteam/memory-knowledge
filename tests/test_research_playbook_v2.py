@@ -110,6 +110,145 @@ def state() -> dict:
     )
 
 
+def test_charter_budget_is_authoritative_and_persisted() -> None:
+    bounded = charter()
+    bounded["budget"] = {
+        "maximum_candidate_rounds": 2,
+        "maximum_agent_spawn_attempts": 10,
+        "maximum_elapsed_minutes": 45,
+        "maximum_retries_per_role": 1,
+    }
+    package = research_package.create_state(
+        bounded,
+        requirements(),
+        "MIXED",
+        {"source": "AVAILABLE"},
+        started_at=START,
+    )
+    assert package["budgets"] == {
+        "max_rounds": 2,
+        "max_attempts": 10,
+        "max_minutes": 45,
+        "max_role_retries": 1,
+        "started_at": "2026-07-14T12:00:00Z",
+        "deadline_at": "2026-07-14T12:45:00Z",
+    }
+    research_package.validate_state(package)
+
+
+def test_frozen_budget_tampering_is_rejected() -> None:
+    package = state()
+    package["budgets"]["max_attempts"] += 1
+    with pytest.raises(research_package.ResearchPackageError, match="budget max_attempts"):
+        research_package.validate_state(package)
+
+
+def test_frozen_budget_deadline_and_shape_tampering_are_rejected() -> None:
+    package = state()
+    package["budgets"]["deadline_at"] = "2099-01-01T00:00:00Z"
+    with pytest.raises(research_package.ResearchPackageError, match="deadline_at"):
+        research_package.validate_state(package)
+
+
+def test_failed_first_core_attempt_can_be_recorded_before_a_candidate_exists() -> None:
+    package = state()
+    result = research_package.record_attempt(
+        package,
+        runtime_agent_id="first-core-failure",
+        role="CORE_RESEARCHER",
+        round_number=1,
+        candidate_hash=None,
+        input_envelope_hash="a" * 64,
+        status="FAILED",
+        output_hash=None,
+        slot_closed=True,
+        close_evidence={"closed": True},
+        now=START,
+    )
+    assert result["status"] == "FAILED"
+    assert package["attempts"][0]["candidate_hash"] is None
+    research_package.validate_state(package)
+
+    package = state()
+    package["budgets"]["unexpected"] = 1
+    with pytest.raises(research_package.ResearchPackageError, match="budget fields"):
+        research_package.validate_state(package)
+
+
+def test_workflow_age_does_not_cap_an_individual_task_attempt() -> None:
+    package = state()
+    result = research_package.record_attempt(
+        package,
+        runtime_agent_id="late-core-attempt",
+        role="CORE_RESEARCHER",
+        round_number=1,
+        candidate_hash=None,
+        input_envelope_hash="a" * 64,
+        status="FAILED",
+        output_hash=None,
+        slot_closed=True,
+        close_evidence={"closed": True},
+        now=START + timedelta(hours=2),
+    )
+    assert result["reason"] == "ATTEMPT_RECORDED"
+    assert package["verdict"] == "IN_PROGRESS"
+    assert package["attempts"][0]["runtime_agent_id"] == "late-core-attempt"
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("maximum_candidate_rounds", 0),
+        ("maximum_agent_spawn_attempts", True),
+        ("maximum_elapsed_minutes", -1),
+        ("maximum_retries_per_role", -1),
+    ],
+)
+def test_invalid_charter_budget_fails_closed(field: str, value: object) -> None:
+    bounded = charter()
+    bounded["budget"] = {
+        "maximum_candidate_rounds": 2,
+        "maximum_agent_spawn_attempts": 10,
+        "maximum_elapsed_minutes": 45,
+        "maximum_retries_per_role": 1,
+    }
+    bounded["budget"][field] = value
+    with pytest.raises(research_package.ResearchPackageError, match=f"charter budget {field}"):
+        research_package.create_state(
+            bounded,
+            requirements(),
+            "MIXED",
+            {"source": "AVAILABLE"},
+            started_at=START,
+        )
+
+
+@pytest.mark.parametrize(
+    "budget",
+    [
+        {"maximum_candidate_rounds": 2},
+        {
+            "maximum_candidate_rounds": 2,
+            "maximum_agent_spawn_attempts": 10,
+            "maximum_elapsed_minutes": 45,
+            "maximum_retries_per_role": 1,
+            "unsupported": 1,
+        },
+    ],
+)
+def test_present_charter_budget_requires_exact_governed_shape(budget: dict[str, int]) -> None:
+    bounded = charter()
+    bounded["budget"] = budget
+    with pytest.raises(research_package.ResearchPackageError, match="exactly the four governed fields"):
+        research_package.create_state(
+            bounded,
+            requirements(),
+            "MIXED",
+            {"source": "AVAILABLE"},
+            started_at=START,
+        )
+
+
 def candidate_pair(
     package: dict,
     revision: int = 1,
@@ -1160,6 +1299,184 @@ def test_emit_package_writes_and_hashes_exact_contract_files(tmp_path: Path) -> 
     assert package["requirements_hash"] == frozen_requirements_hash
 
 
+def test_emit_package_canonicalizes_requirement_evidence_ids_for_planner(tmp_path: Path) -> None:
+    package = state()
+    statuses = [
+        {
+            "requirement_id": requirement["id"],
+            "research_value": "grounded",
+            "evidence_ids": ["E2", "E1"],
+        }
+        for requirement in package["requirements"]
+    ]
+    hashes = candidate_pair(package, requirement_statuses=statuses)
+    record_required_attempts(package, 1, hashes)
+    record_lenses(package, 1, hashes)
+    record_adjudication(package, 1, hashes, [])
+
+    output = tmp_path / "canonical-evidence-ids"
+    research_package.emit_package(
+        package,
+        output,
+        research_markdown="# Research\nGrounded result.\n",
+        evidence_index=[evidence_item("E1"), evidence_item("E2")],
+        planner_readiness=[],
+        planner_handoff_markdown="# Planner handoff\nUse the package.\n",
+        now=START + timedelta(minutes=10),
+    )
+
+    emitted = json.loads((output / "requirements.json").read_text(encoding="utf-8"))
+    assert [item["evidence_ids"] for item in emitted] == [["E1", "E2"], ["E1", "E2"]]
+    assert [item["evidence_ids"] for item in statuses] == [["E2", "E1"], ["E2", "E1"]]
+
+    emitted[0]["evidence_ids"] = ["E2", "E1"]
+    with pytest.raises(research_package.ResearchPackageError, match="invalid evidence_ids"):
+        research_package._validated_emitted_requirements(emitted, {"E1", "E2"})
+
+
+def emit_validated_fixture(tmp_path: Path) -> Path:
+    package = passing_state([])
+    output = tmp_path / "validated-package"
+    research_package.emit_package(
+        package,
+        output,
+        research_markdown="# Research\nGrounded result.\n",
+        evidence_index=[evidence_item("E1")],
+        planner_readiness=[],
+        planner_handoff_markdown="# Planner handoff\nUse the validated package.\n",
+        now=START + timedelta(minutes=10),
+    )
+    return output
+
+
+def test_validate_package_returns_exact_normalized_read_only_receipt(tmp_path: Path) -> None:
+    output = emit_validated_fixture(tmp_path)
+    before = {path.name: path.read_bytes() for path in output.iterdir()}
+
+    receipt = research_package.validate_package(output)
+
+    assert set(receipt) == {
+        "schema_version",
+        "valid",
+        "package_root",
+        "package_id",
+        "terminal_verdict",
+        "candidate_hash",
+        "envelope_hash",
+        "manifest_sha256",
+        "owned_files",
+        "requirements",
+        "evidence_index",
+    }
+    assert receipt["valid"] is True
+    assert receipt["terminal_verdict"] == "PASS"
+    assert receipt["package_root"] == str(output.resolve())
+    assert [item["path"] for item in receipt["owned_files"]] == sorted(
+        research_package.EMITTED_FILES
+    )
+    assert receipt["requirements"] == json.loads(
+        (output / "requirements.json").read_text(encoding="utf-8")
+    )
+    assert receipt["evidence_index"] == [evidence_item("E1")]
+    assert {path.name: path.read_bytes() for path in output.iterdir()} == before
+
+
+def test_validate_package_accepts_exact_legacy_budget_use_shape(tmp_path: Path) -> None:
+    output = emit_validated_fixture(tmp_path)
+    manifest_path = output / "manifest.json"
+    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    current = manifest["budget_use"]
+    manifest["budget_use"] = {
+        "rounds_used": current["rounds_used"],
+        "rounds_max": current["rounds_max"],
+        "attempts_used": current["attempts_used"],
+        "attempts_max": current["attempts_max"],
+        "minutes_used": current["workflow_minutes_used"],
+        "minutes_max": current["minutes_max_per_task"],
+    }
+    manifest_path.write_text(
+        json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+        encoding="utf-8",
+    )
+
+    assert research_package.validate_package(output)["valid"] is True
+
+
+@pytest.mark.parametrize(
+    ("mutation", "message"),
+    [
+        ("artifact", "artifact hash mismatch"),
+        ("extra-file", "exactly the six owned files"),
+        ("manifest-field", "exact field set"),
+        ("lifecycle", "complete successful role set"),
+        ("package-id", "package_id is invalid"),
+        ("timestamp", "manifest emitted_at is invalid"),
+        ("text-encoding", "text is not UTF-8"),
+    ],
+)
+def test_validate_package_rejects_package_tamper(
+    tmp_path: Path, mutation: str, message: str
+) -> None:
+    output = emit_validated_fixture(tmp_path)
+    manifest_path = output / "manifest.json"
+    if mutation == "artifact":
+        (output / "research.md").write_text("tampered\n", encoding="utf-8")
+    elif mutation == "extra-file":
+        (output / "extra.txt").write_text("unexpected\n", encoding="utf-8")
+    elif mutation == "text-encoding":
+        (output / "research.md").write_bytes(b"\xff")
+    else:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+        if mutation == "manifest-field":
+            manifest["unexpected"] = True
+        elif mutation == "package-id":
+            manifest["package_id"] = "research-package-not-a-hash"
+        elif mutation == "timestamp":
+            manifest["emitted_at"] = "not-a-timestamp"
+        else:
+            final_round = manifest["budget_use"]["rounds_used"]
+            manifest["lifecycle_evidence"] = [
+                item
+                for item in manifest["lifecycle_evidence"]
+                if not (item["round"] == final_round and item["role"] == "ADJUDICATOR")
+            ]
+            manifest["budget_use"]["attempts_used"] -= 1
+        manifest_path.write_text(
+            json.dumps(manifest, ensure_ascii=False, indent=2, sort_keys=True) + "\n",
+            encoding="utf-8",
+        )
+
+    with pytest.raises(research_package.ResearchPackageError, match=message):
+        research_package.validate_package(output)
+
+
+def test_validate_package_rejects_symlink_owned_file(tmp_path: Path) -> None:
+    output = emit_validated_fixture(tmp_path)
+    research_path = output / "research.md"
+    external = tmp_path / "external.md"
+    external.write_bytes(research_path.read_bytes())
+    research_path.unlink()
+    research_path.symlink_to(external)
+
+    with pytest.raises(research_package.ResearchPackageError, match="regular file"):
+        research_package.validate_package(output)
+
+
+def test_validate_package_cli_failure_is_exact_and_nonzero(
+    tmp_path: Path, capsys: pytest.CaptureFixture[str]
+) -> None:
+    output = emit_validated_fixture(tmp_path)
+    (output / "research.md").write_text("tampered\n", encoding="utf-8")
+
+    assert research_package.main(["validate-package", str(output)]) == 2
+    response = json.loads(capsys.readouterr().out)
+    assert set(response) == {"schema_version", "valid", "reason", "error"}
+    assert response["schema_version"] == 1
+    assert response["valid"] is False
+    assert response["reason"] == "INVALID_PACKAGE"
+    assert response["error"]
+
+
 def test_emit_package_rejects_missing_structured_planner_readiness(tmp_path: Path) -> None:
     frozen = requirements()
     frozen[0]["planner_obligations"] = [
@@ -1945,7 +2262,12 @@ def test_evaluator_lifecycle_requires_hashes_close_evidence_and_complete_round()
             }
         )
     output = {
-        "budget": {"rounds": 1, "attempts": 5, "elapsed_minutes": 10},
+        "budget": {
+            "rounds": 1,
+            "attempts": 5,
+            "workflow_elapsed_minutes": 90,
+            "minutes_max_per_task": 60,
+        },
         "lifecycle": lifecycle,
     }
 
@@ -1985,7 +2307,12 @@ def test_evaluator_lifecycle_allows_unhashed_failed_retry_but_does_not_count_it(
             }
         )
     output = {
-        "budget": {"rounds": 1, "attempts": 6, "elapsed_minutes": 10},
+        "budget": {
+            "rounds": 1,
+            "attempts": 6,
+            "workflow_elapsed_minutes": 90,
+            "minutes_max_per_task": 60,
+        },
         "lifecycle": lifecycle,
     }
 

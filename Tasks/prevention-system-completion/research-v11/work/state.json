@@ -1,0 +1,2023 @@
+{
+  "attempts": [
+    {
+      "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "close_evidence": {
+        "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "completion_evidence": "Fresh round-3 core applied only the adjudicated EV-REQ evidence pairing correction and closed.",
+        "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+        "output_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "role": "CORE_RESEARCHER",
+        "round": 3,
+        "runtime_agent_id": "/root/research_v10_round3_core",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+      "output_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "recorded_at": "2026-07-18T07:19:05.816892Z",
+      "role": "CORE_RESEARCHER",
+      "round": 3,
+      "runtime_agent_id": "/root/research_v10_round3_core",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "close_evidence": {
+        "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "completion_evidence": "Fresh round-3 readiness PASS envelope written and validated.",
+        "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+        "output_hash": "b6311bc98c2c9396d3222b25a6063d3bdef07664d1cce668de48b3dd5358ce28",
+        "role": "INTERNAL_READINESS",
+        "round": 3,
+        "runtime_agent_id": "/root/research_v10_round3_ir",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+      "output_hash": "b6311bc98c2c9396d3222b25a6063d3bdef07664d1cce668de48b3dd5358ce28",
+      "recorded_at": "2026-07-18T07:19:05.931148Z",
+      "role": "INTERNAL_READINESS",
+      "round": 3,
+      "runtime_agent_id": "/root/research_v10_round3_ir",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "close_evidence": {
+        "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "completion_evidence": "Fresh round-3 coverage PASS envelope written and validated.",
+        "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+        "output_hash": "91aef6db64b1e72bb03694745580d54d21c8d1849c87c3c1c2e6536ecdca0184",
+        "role": "REQUIREMENTS_COVERAGE",
+        "round": 3,
+        "runtime_agent_id": "/root/research_v10_round3_coverage",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+      "output_hash": "91aef6db64b1e72bb03694745580d54d21c8d1849c87c3c1c2e6536ecdca0184",
+      "recorded_at": "2026-07-18T07:19:06.043469Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 3,
+      "runtime_agent_id": "/root/research_v10_round3_coverage",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "close_evidence": {
+        "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "completion_evidence": "Fresh round-3 satisfaction PASS envelope written and validated.",
+        "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+        "output_hash": "4b613b480e5d09dce426b9081e70af6725ee4e7fd11f640aac97b1a4fe66bad3",
+        "role": "REQUIREMENTS_SATISFACTION",
+        "round": 3,
+        "runtime_agent_id": "/root/research_v10_round3_satisfaction",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+      "output_hash": "4b613b480e5d09dce426b9081e70af6725ee4e7fd11f640aac97b1a4fe66bad3",
+      "recorded_at": "2026-07-18T07:19:06.156819Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 3,
+      "runtime_agent_id": "/root/research_v10_round3_satisfaction",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "close_evidence": {
+        "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "completion_evidence": "Fresh independent adjudicator covered every round-3 raw finding exactly once; all five distinct findings are planner handoffs and all remaining findings are merged duplicates.",
+        "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+        "output_hash": "7de8abff40a4f087799b3f82157f2c8529cd33ab630cac5181173cbd05180c05",
+        "role": "ADJUDICATOR",
+        "round": 3,
+        "runtime_agent_id": "/root/research_v11_final_adjudicator",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+      "output_hash": "7de8abff40a4f087799b3f82157f2c8529cd33ab630cac5181173cbd05180c05",
+      "recorded_at": "2026-07-18T07:23:22.473161Z",
+      "role": "ADJUDICATOR",
+      "round": 3,
+      "runtime_agent_id": "/root/research_v11_final_adjudicator",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "budgets": {
+    "deadline_at": "2026-07-18T08:18:44.473045Z",
+    "max_attempts": 15,
+    "max_minutes": 60,
+    "max_role_retries": 1,
+    "max_rounds": 3,
+    "started_at": "2026-07-18T07:18:44.473045Z"
+  },
+  "candidates": {
+    "candidate-ce226ab3bf51d5ad65c383a1": {
+      "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "candidate_id": "candidate-ce226ab3bf51d5ad65c383a1",
+      "candidate_payload": {
+        "evidence_index": [
+          {
+            "accessed_at": null,
+            "id": "EV-REQ",
+            "limitations": "Defines acceptance intent, not implementation.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v8/requirements.json",
+            "source_sha256": "574c42fcb1755a65b700332d3011f7540b66e73e3ecdc3d939240f4da1bdaae7",
+            "supported_claim": "Ten frozen object-valued requirements and ten planner obligations cover the five current/future boundaries."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-AUTH",
+            "limitations": "Approval is not runtime materialization.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-authority-decisions.json",
+            "source_sha256": "6f1693980e911946a5766a00c9b9153286ab3385ff2fb50ff6d2198a44014306",
+            "supported_claim": "Approves the ten target proposals and the greenfield 3,600,000ms atomic-task cap and progressive reservation rule; execution authorization remains separate."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-CONTRACTS",
+            "limitations": "Contains old current contracts, not materialized proposals.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contracts.json",
+            "source_sha256": "f13602a9094227eb986af83164ab95cfc26d93fa5ec537dc852fbb6ab73d29af",
+            "supported_claim": "Current policy is exactly 10 AVAILABLE, 6 CUSTODIAN_EVIDENCE_REQUIRED, 9 UNAVAILABLE and indexes each AVAILABLE implementation source/current contract."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PARENTS",
+            "limitations": "Current dispatch does not enforce the relation.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-migration-manifest.json",
+            "source_sha256": "0ee6c3be164e4e7d932641b0cba9d0aab8117a3fdd0942fc759d70ccae429bcc",
+            "supported_claim": "Only blocker-reentry is child-only with two named MAWF parents; the other 24 rows are standalone."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-CONTROLLER",
+            "limitations": "Does not define target derivation.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_controller.py",
+            "source_sha256": "78c99d8b9a72863d8d23af0a7523bf7c32e9b77b3b51e9eae33124a328f281b1",
+            "supported_claim": "Execution selects caller-supplied unit_budgets and lacks parent/provider admission."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-BUDGET",
+            "limitations": "Does not derive owner vectors.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_budget.py",
+            "source_sha256": "23fbc50e66326151cca4976eea433d0d54a208d559e816bd5a5765042dcc6429",
+            "supported_claim": "UnitBudget exposes productive, role, adjudication, materialization, terminal, retry and optional dimensions; authority admits a supplied vector."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-RUNTIME",
+            "limitations": "No typed reconciler or semantic verifier.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_owner_runtime.py",
+            "source_sha256": "f5d05096f2fe7ec5a01d57505893a040dd63b7138c7928a4d074f4d7adfeb01e",
+            "supported_claim": "Current STARTED recovery always becomes INDETERMINATE and zero exit creates the terminal artifact."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-EVENTS",
+            "limitations": "New event payloads remain future work.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/work_memory.py",
+            "source_sha256": "98803326b602ffc5d36f2f402c26d25604cef83c6426a38948f332cf40c8307b",
+            "supported_claim": "Current prevention event schemas omit owner_terminal, delegation and typed provider/approval receipts; _repo_roots grounds local repository lookup."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-ADAPTERS",
+            "limitations": "Does not describe post-launch owner internals.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_adapters.py",
+            "source_sha256": "225e3d7b308a828e59ba29993dbfb2b20b092dd17c67609b0db80749f4a1b96a",
+            "supported_claim": "Current validation is hard-coded and does not resolve proposal schemas, trusted roots, providers, or parents."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-REMOTE-REPO",
+            "limitations": "Prevention does not inject it today.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/git_runtime.py",
+            "source_sha256": "781b18181777a30a3023f9a8efaf8a97ef3943bef0b104bd20d064c471cf1f19",
+            "supported_claim": "Configured repo_mapping_path constructs GitRemoteManager and grounds remote repository-key lookup."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-SRC-LOCAL",
+            "limitations": "Does not implement prevention lifecycle.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/local_workflow_orch_image_harness.py",
+            "source_sha256": "3cf45608f60d360e1dd1eaf9ba10fdfd2a9ec3a8c930efa899ffdf118107322b",
+            "supported_claim": "Current local-image command, budget-bound, identity/observable, terminal and parameter/path behavior in the owner matrix."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-SRC-GREENFIELD",
+            "limitations": "Does not define the approved complete progressive UnitBudget.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_full_drive.sh",
+            "source_sha256": "aea47b779974be3011829c09367faf12fc2ae45faa6af0711d432b7f1e915783",
+            "supported_claim": "Current full-drive retries/polls, detached-drive identity, sequence-complete terminal marker and raw flag/path surface."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-SRC-REENTRY",
+            "limitations": "No prevention parent journal.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/mawf_playbook_test_sequence.py",
+            "source_sha256": "037b3e8d81023c885e10dae2965deccaebf335cde3ce64313e96597998b3c223",
+            "supported_claim": "Current reentry modes, operator identity/envelope, zero-exit behavior and raw parameters."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-SRC-AUTH",
+            "limitations": "No typed provider contract.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/claude_auth_refresh.sh",
+            "source_sha256": "bad8f0e2fc9dc15a28a4cc7bead7d7872d9238182188200d656d518e4b6a988c",
+            "supported_claim": "Current auth command bounds, credential observables, pass/die terminal markers and raw credential/resource inputs."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-SRC-PROMOTION",
+            "limitations": "No content-addressed child-owner execution.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_promotion_lifecycle.py",
+            "source_sha256": "49e66d7a0e5944419f7e59902056740e7510302e21ad4e707bd263ced822b731",
+            "supported_claim": "Current lifecycle loop bounds, discovery observables, JSON terminal envelope and file/root/verification surfaces."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-SRC-PUBLISH",
+            "limitations": "No typed authorization-receipt provider.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
+            "source_sha256": "55206e0b25c6eeb7df9d98775ff8d0c1ff69df0565d9add3a0d9487a5d40fe54",
+            "supported_claim": "Current publish mode bounds, Git effect observables, JSON terminal and caller repo/remote/path surfaces."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-SRC-BOOTSTRAP",
+            "limitations": "Caller root is not proposal-bound.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_bootstrap.py",
+            "source_sha256": "a1c16783567bb8bbb84be2e59a636bf6ef73d7ba85fc684c706bcda6590f8d30",
+            "supported_claim": "Current atomic bootstrap bound, deterministic artifacts, JSON terminal and spec/root surface."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-SRC-RECONCILIATION",
+            "limitations": "No selected proposal reconciler.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_candidate_reconciliation.py",
+            "source_sha256": "a846e823d027d229e3a7642776dda4d1bbb2e5cbbe192f38dd115223ac14ae9b",
+            "supported_claim": "Current command/attempt bounds, manifest/checkpoint observables, JSON terminal and raw authority paths."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-SRC-CHECKPOINT",
+            "limitations": "Child semantic terminal is not composed.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_checkpoint_run.py",
+            "source_sha256": "39da9360585a6b08d416a90a320e8a762fff195adde2c5a2c07890b9a81248e7",
+            "supported_claim": "Current lock bound, baseline/child observables, fixed pass marker and arbitrary command_json/path surface."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-SRC-REVIEW",
+            "limitations": "No per-operation durable receipts.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_state_review_cycle.py",
+            "source_sha256": "594a12be5f8c29d17fd69d3e5cbf22e8f099e465e6e2fc8cc244dad1aa0e275e",
+            "supported_claim": "Current request-operation bounds, state/helper observables, COMPLETE/DRY_RUN terminal and request/helper path behavior."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PROP-LOCAL",
+            "limitations": "Future contract, not deployed behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/local-workflow-orch-image.json",
+            "source_sha256": "40ed6643594bbf830e642f5a9b3edf21020d9fb143b5ff8ff0c641fea3f70f7b",
+            "supported_claim": "Approved target contract for local-workflow-orch-image."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PROP-GREENFIELD",
+            "limitations": "No fixed whole-workflow duration is approved.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/greenfield-full-drive.json",
+            "source_sha256": "ccb418ac97c42a14528af87f5b92f3d81ebd52f6a798d41128713d875c4a0661",
+            "supported_claim": "Approved target progressive greenfield budget, schema, identity, reconciliation and terminal contract."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PROP-REENTRY",
+            "limitations": "Future contract, not deployed behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/mawf-playbook-blocker-reentry.json",
+            "source_sha256": "f1d68f707dd470be8f26ce1339b6eedafc6122f55c8c3fa36bead5e515fc2fa1",
+            "supported_claim": "Approved child-only reentry target contract."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PROP-AUTH",
+            "limitations": "Future contract, not deployed behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/claude-auth-token-refresh.json",
+            "source_sha256": "67568d84429bf6e9b786b8462b43554e3d660388e2ec373a1e897f4bc4770e9e",
+            "supported_claim": "Approved typed auth-provider and semantic terminal target contract."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PROP-PROMOTION",
+            "limitations": "Future contract, not deployed behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/discovery-promotion-lifecycle.json",
+            "source_sha256": "b32d8a9f4d84238ade32212852e90512fdd309d36a05dac3ef23425ab3ad5ea1",
+            "supported_claim": "Approved promotion lifecycle target contract."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PROP-PUBLISH",
+            "limitations": "Does not authorize a publication.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/commit-push-main.json",
+            "source_sha256": "1fa2ba7c000788492c6d7f0b9bbbe8bfd0cac6afbcdb8a1ba59901dc54174482",
+            "supported_claim": "Approved publication modes, receipt, effect identity, reconciliation and terminal contract."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PROP-BOOTSTRAP",
+            "limitations": "Future contract, not deployed behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/discovery-bootstrap.json",
+            "source_sha256": "0fea4c0a2142f41ddce8d687eb533e5b9f55b68ca59e01c2a05b58b296c633df",
+            "supported_claim": "Approved bootstrap target contract."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PROP-RECONCILIATION",
+            "limitations": "Future contract, not deployed behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/discovery-candidate-reconciliation.json",
+            "source_sha256": "b7f1e6204578f936677dd13c8123e0b4d66690bca6ec1f9d0f9121aada4c9a82",
+            "supported_claim": "Approved candidate-reconciliation command/formula target contract."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PROP-CHECKPOINT",
+            "limitations": "Future contract, not deployed behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/convergence-checkpoint-run.json",
+            "source_sha256": "f17216aa2b181e4018571311a85dc10d4f0d35475869bf360e06aa181719a29a",
+            "supported_claim": "Approved typed-child checkpoint target contract."
+          },
+          {
+            "accessed_at": null,
+            "id": "EV-PROP-REVIEW",
+            "limitations": "Future contract, not deployed behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/owner-contract-proposals/convergence-state-review-cycle.json",
+            "source_sha256": "1c7edfe4e71c496d0e4c1df11a6e09c3e3c7e8b2722266f7ab9f3e53e861ae1e",
+            "supported_claim": "Approved review-cycle v2 and durable-operation target contract."
+          }
+        ],
+        "material_gaps": [
+          "MG-O1",
+          "MG-O2",
+          "MG-O3",
+          "MG-O4",
+          "MG-O5"
+        ],
+        "planner_readiness_constraints": {
+          "PO-O1-BUDGET": {
+            "closure_condition": "No caller budget remains; every launched unit has a complete owner-derived reservation before effects.",
+            "evidence_ids": [
+              "EV-CONTROLLER",
+              "EV-BUDGET",
+              "EV-AUTH",
+              "EV-PROP-LOCAL",
+              "EV-PROP-GREENFIELD",
+              "EV-PROP-REENTRY",
+              "EV-PROP-AUTH",
+              "EV-PROP-PROMOTION",
+              "EV-PROP-PUBLISH",
+              "EV-PROP-BOOTSTRAP",
+              "EV-PROP-RECONCILIATION",
+              "EV-PROP-CHECKPOINT",
+              "EV-PROP-REVIEW"
+            ],
+            "implementation_anchors": [
+              "scripts/prevention_controller.py PreventionController.execute",
+              "scripts/prevention_budget.py UnitBudget/BudgetAuthority",
+              "ten approved proposal budget contracts"
+            ],
+            "owner": "prevention runtime implementation",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": [
+              "owner/command/mode exact and one-below admission",
+              "greenfield task/frontier component-wise reservation"
+            ]
+          },
+          "PO-O1-BUDGET-ACCEPTANCE": {
+            "closure_condition": "All ten target budget algorithms, including progressive greenfield composition without fixed workflow duration, pass red-before/green-after acceptance.",
+            "evidence_ids": [
+              "EV-REQ",
+              "EV-BUDGET",
+              "EV-AUTH",
+              "EV-PROP-GREENFIELD"
+            ],
+            "implementation_anchors": [
+              "tests/prevention/test_full_unit_admission.py",
+              "tests/prevention/test_typed_dispatch.py"
+            ],
+            "owner": "prevention tests",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": [
+              "missing/incomplete/understated/insufficient pre-effect rejection",
+              "greenfield missing-role/untyped/unresolved-frontier/checkpoint cases"
+            ]
+          },
+          "PO-O2-RECONCILE": {
+            "closure_condition": "Every approved owner/command dispatches its content-addressed reconciler; hard-coded STARTED handling is removed.",
+            "evidence_ids": [
+              "EV-RUNTIME",
+              "EV-PROP-LOCAL",
+              "EV-PROP-GREENFIELD",
+              "EV-PROP-REENTRY",
+              "EV-PROP-AUTH",
+              "EV-PROP-PROMOTION",
+              "EV-PROP-PUBLISH",
+              "EV-PROP-BOOTSTRAP",
+              "EV-PROP-RECONCILIATION",
+              "EV-PROP-CHECKPOINT",
+              "EV-PROP-REVIEW"
+            ],
+            "implementation_anchors": [
+              "scripts/prevention_owner_runtime.py OwnerRuntime.run",
+              "registry effect_reconciler",
+              "ten proposal effect_and_reconciliation_contract objects"
+            ],
+            "owner": "prevention runtime implementation",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": [
+              "ALREADY_APPLIED skips",
+              "NOT_APPLIED executes once",
+              "INDETERMINATE stops"
+            ]
+          },
+          "PO-O2-RECONCILE-ACCEPTANCE": {
+            "closure_condition": "Each owner reconciliation class is red-before/green-after against its current same-path observable.",
+            "evidence_ids": [
+              "EV-RUNTIME",
+              "EV-SRC-LOCAL",
+              "EV-SRC-GREENFIELD",
+              "EV-SRC-REENTRY",
+              "EV-SRC-AUTH",
+              "EV-SRC-PROMOTION",
+              "EV-SRC-PUBLISH",
+              "EV-SRC-BOOTSTRAP",
+              "EV-SRC-RECONCILIATION",
+              "EV-SRC-CHECKPOINT",
+              "EV-SRC-REVIEW"
+            ],
+            "implementation_anchors": [
+              "tests/prevention/test_owner_runtime.py",
+              "ten indexed current owner sources"
+            ],
+            "owner": "prevention tests",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": [
+              "crash after effect before result",
+              "same real code path and captured authority",
+              "no duplicate mutation"
+            ]
+          },
+          "PO-O3-TERMINAL": {
+            "closure_condition": "Exit zero alone never terminalizes and each selected semantic verifier is mandatory.",
+            "evidence_ids": [
+              "EV-RUNTIME",
+              "EV-EVENTS",
+              "EV-PROP-LOCAL",
+              "EV-PROP-GREENFIELD",
+              "EV-PROP-REENTRY",
+              "EV-PROP-AUTH",
+              "EV-PROP-PROMOTION",
+              "EV-PROP-PUBLISH",
+              "EV-PROP-BOOTSTRAP",
+              "EV-PROP-RECONCILIATION",
+              "EV-PROP-CHECKPOINT",
+              "EV-PROP-REVIEW"
+            ],
+            "implementation_anchors": [
+              "scripts/prevention_owner_runtime.py EXECUTED block",
+              "scripts/work_memory.py PREVENTION_EVENT_FIELDS",
+              "ten proposal terminal_contract objects"
+            ],
+            "owner": "prevention runtime/event implementation",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": [
+              "exact schema and semantic re-observation",
+              "one event/artifact pair",
+              "replay conflict"
+            ]
+          },
+          "PO-O3-TERMINAL-ACCEPTANCE": {
+            "closure_condition": "All ten owner surfaces have positive/negative semantic and exactly-once tests.",
+            "evidence_ids": [
+              "EV-RUNTIME",
+              "EV-EVENTS",
+              "EV-SRC-LOCAL",
+              "EV-SRC-GREENFIELD",
+              "EV-SRC-REENTRY",
+              "EV-SRC-AUTH",
+              "EV-SRC-PROMOTION",
+              "EV-SRC-PUBLISH",
+              "EV-SRC-BOOTSTRAP",
+              "EV-SRC-RECONCILIATION",
+              "EV-SRC-CHECKPOINT",
+              "EV-SRC-REVIEW"
+            ],
+            "implementation_anchors": [
+              "tests/prevention/test_owner_runtime.py",
+              "tests/prevention/test_prevention_event_contract.py",
+              "ten indexed current owner sources"
+            ],
+            "owner": "prevention tests",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": [
+              "zero plus malformed/failed owner evidence",
+              "detached remains nonterminal",
+              "identical/conflicting replay"
+            ]
+          },
+          "PO-O4-PARENT": {
+            "closure_condition": "The sole child executes only from a matching active allowed parent while the other 24 rows stay standalone.",
+            "evidence_ids": [
+              "EV-PARENTS",
+              "EV-CONTROLLER",
+              "EV-ADAPTERS",
+              "EV-PROP-REENTRY"
+            ],
+            "implementation_anchors": [
+              "owner-migration-manifest standalone/parents",
+              "controller eligibility/dispatch",
+              "new child_delegation_recorded event",
+              "reentry proposal"
+            ],
+            "owner": "prevention controller/journal implementation",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": [
+              "direct/forged/stale/inactive reject",
+              "valid allowed parent atomically consumes delegation"
+            ]
+          },
+          "PO-O4-PARENT-ACCEPTANCE": {
+            "closure_condition": "Every invalid case fails before budget/argv and both valid parent paths preserve identity.",
+            "evidence_ids": [
+              "EV-PARENTS",
+              "EV-CONTRACTS",
+              "EV-PROP-REENTRY"
+            ],
+            "implementation_anchors": [
+              "tests/prevention/test_typed_dispatch.py",
+              "delegation event tests"
+            ],
+            "owner": "prevention tests",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": [
+              "direct, forged, stale, consumed and foreign ownership",
+              "both allowed parents",
+              "availability/admission separation"
+            ]
+          },
+          "PO-O5-PARAMETERS": {
+            "closure_condition": "Materialized schemas and typed resolvers replace hard-coded validation for every owner.",
+            "evidence_ids": [
+              "EV-ADAPTERS",
+              "EV-EVENTS",
+              "EV-REMOTE-REPO",
+              "EV-PROP-LOCAL",
+              "EV-PROP-GREENFIELD",
+              "EV-PROP-REENTRY",
+              "EV-PROP-AUTH",
+              "EV-PROP-PROMOTION",
+              "EV-PROP-PUBLISH",
+              "EV-PROP-BOOTSTRAP",
+              "EV-PROP-RECONCILIATION",
+              "EV-PROP-CHECKPOINT",
+              "EV-PROP-REVIEW"
+            ],
+            "implementation_anchors": [
+              "scripts/prevention_contract.py ParameterValue",
+              "scripts/prevention_adapters.py build_invocation",
+              "scripts/work_memory.py _repo_roots",
+              "git_runtime.py build_git_manager_from_settings",
+              "ten proposal parameter_contract/trusted_roots"
+            ],
+            "owner": "prevention contract/provider/adapter implementation",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": [
+              "contract hash selected",
+              "all bindings resolve before argv",
+              "non-secret preparation evidence",
+              "unresolved key rejects"
+            ]
+          },
+          "PO-O5-PARAMETERS-ACCEPTANCE": {
+            "closure_condition": "No raw path, resource, secret, approval or arbitrary argv bypass reaches effect preparation.",
+            "evidence_ids": [
+              "EV-ADAPTERS",
+              "EV-EVENTS",
+              "EV-AUTH",
+              "EV-PROP-LOCAL",
+              "EV-PROP-GREENFIELD",
+              "EV-PROP-REENTRY",
+              "EV-PROP-AUTH",
+              "EV-PROP-PROMOTION",
+              "EV-PROP-PUBLISH",
+              "EV-PROP-BOOTSTRAP",
+              "EV-PROP-RECONCILIATION",
+              "EV-PROP-CHECKPOINT",
+              "EV-PROP-REVIEW"
+            ],
+            "implementation_anchors": [
+              "tests/prevention/test_owner_adapters.py",
+              "tests/prevention/test_owner_contract_materialization.py",
+              "provider/receipt tests"
+            ],
+            "owner": "prevention tests",
+            "required_inputs": [],
+            "status": "READY",
+            "verification_anchors": [
+              "wrong/missing/extra/mode-inapplicable",
+              "unknown key",
+              "absolute/traversal/symlink/write-parent escape",
+              "secret non-disclosure",
+              "all ten owner modes"
+            ]
+          }
+        },
+        "requirement_statuses": [
+          {
+            "evidence_ids": [
+              "EV-REQ",
+              "EV-CONTROLLER",
+              "EV-BUDGET",
+              "EV-SRC-LOCAL",
+              "EV-SRC-GREENFIELD",
+              "EV-SRC-REENTRY",
+              "EV-SRC-AUTH",
+              "EV-SRC-PROMOTION",
+              "EV-SRC-PUBLISH",
+              "EV-SRC-BOOTSTRAP",
+              "EV-SRC-RECONCILIATION",
+              "EV-SRC-CHECKPOINT",
+              "EV-SRC-REVIEW"
+            ],
+            "requirement_id": "O1-CURRENT-BUDGET",
+            "research_value": {
+              "owner_matrix": {
+                "claude-auth-token-refresh": "one shell invocation; 60s verifies",
+                "commit-push-main": "one invocation; no retries",
+                "convergence-checkpoint-run": "one invocation; 30s lock default",
+                "convergence-state-review-cycle": "one request; operations then check/status",
+                "discovery-bootstrap": "one locked atomic invocation",
+                "discovery-candidate-reconciliation": "one command; rolling default six",
+                "discovery-promotion-lifecycle": "one command; qualification plus six transitions",
+                "greenfield-full-drive": "one shell sequence; build/port/health/auth/drive bounds",
+                "local-workflow-orch-image": "one invocation; health/port/build bounds",
+                "mawf-playbook-blocker-reentry": "one reentry/operator action"
+              },
+              "producer": "caller-supplied PreventionController.unit_budgets admitted by BudgetAuthority",
+              "understatement_possible": true
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-AUTH",
+              "EV-BUDGET",
+              "EV-PROP-LOCAL",
+              "EV-PROP-GREENFIELD",
+              "EV-PROP-REENTRY",
+              "EV-PROP-AUTH",
+              "EV-PROP-PROMOTION",
+              "EV-PROP-PUBLISH",
+              "EV-PROP-BOOTSTRAP",
+              "EV-PROP-RECONCILIATION",
+              "EV-PROP-CHECKPOINT",
+              "EV-PROP-REVIEW"
+            ],
+            "requirement_id": "O1-FUTURE-BUDGET",
+            "research_value": {
+              "atomic_task_milliseconds": 3600000,
+              "caller_budget_allowed": false,
+              "failure": "missing, incomplete, unresolved or insufficient rejects before effect",
+              "greenfield_algorithm": "classify every durable task into exactly one productive or mandatory role/overhead dimension; include retry in each atomic total; reserve every next task/frontier before launch; aggregate by component-wise sum of materialized task vectors; reject or checkpoint before effects on missing role, untyped task, unresolved frontier, or insufficient reservation; no fixed whole-workflow duration"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQ",
+              "EV-RUNTIME",
+              "EV-SRC-LOCAL",
+              "EV-SRC-GREENFIELD",
+              "EV-SRC-REENTRY",
+              "EV-SRC-AUTH",
+              "EV-SRC-PROMOTION",
+              "EV-SRC-PUBLISH",
+              "EV-SRC-BOOTSTRAP",
+              "EV-SRC-RECONCILIATION",
+              "EV-SRC-CHECKPOINT",
+              "EV-SRC-REVIEW"
+            ],
+            "requirement_id": "O2-CURRENT-RECONCILE",
+            "research_value": {
+              "owner_matrix": {
+                "claude-auth-token-refresh": "container/host/vault/remote credential probes",
+                "commit-push-main": "HEAD/index/worktree/manifest/remote head",
+                "convergence-checkpoint-run": "state/baseline/ledger/view/child result",
+                "convergence-state-review-cycle": "request/state/helper results",
+                "discovery-bootstrap": "deterministic bundle bytes and run id",
+                "discovery-candidate-reconciliation": "repo/candidate/registry hashes, manifests/checkpoints",
+                "discovery-promotion-lifecycle": "discovery/registered lifecycle and blocker artifacts",
+                "greenfield-full-drive": "image/container plus durable drive state",
+                "local-workflow-orch-image": "Docker resources/emitted JSON",
+                "mawf-playbook-blocker-reentry": "operator task/workflow/run envelope"
+              },
+              "owner_reconciler_dispatch": false,
+              "started_behavior": "always INDETERMINATE"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-AUTH",
+              "EV-RUNTIME",
+              "EV-PROP-LOCAL",
+              "EV-PROP-GREENFIELD",
+              "EV-PROP-REENTRY",
+              "EV-PROP-AUTH",
+              "EV-PROP-PROMOTION",
+              "EV-PROP-PUBLISH",
+              "EV-PROP-BOOTSTRAP",
+              "EV-PROP-RECONCILIATION",
+              "EV-PROP-CHECKPOINT",
+              "EV-PROP-REVIEW"
+            ],
+            "requirement_id": "O2-FUTURE-RECONCILE",
+            "research_value": {
+              "boundary": "selected content-addressed owner/command reconciler before repeat execution",
+              "identity": "persist proposal-required identities, pre-state, hashes, deterministic children/stages and non-secret provider versions during prepare",
+              "results": [
+                "ALREADY_APPLIED",
+                "NOT_APPLIED",
+                "INDETERMINATE"
+              ],
+              "resume": "skip applied, execute first not-applied, stop indeterminate"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQ",
+              "EV-RUNTIME",
+              "EV-EVENTS",
+              "EV-SRC-LOCAL",
+              "EV-SRC-GREENFIELD",
+              "EV-SRC-REENTRY",
+              "EV-SRC-AUTH",
+              "EV-SRC-PROMOTION",
+              "EV-SRC-PUBLISH",
+              "EV-SRC-BOOTSTRAP",
+              "EV-SRC-RECONCILIATION",
+              "EV-SRC-CHECKPOINT",
+              "EV-SRC-REVIEW"
+            ],
+            "requirement_id": "O3-CURRENT-TERMINAL",
+            "research_value": {
+              "gate": "returncode zero",
+              "owner_matrix": {
+                "claude-auth-token-refresh": "human pass/status markers",
+                "commit-push-main": "JSON ok=true and remote SHA",
+                "convergence-checkpoint-run": "fixed pass string plus zero",
+                "convergence-state-review-cycle": "COMPLETE or DRY_RUN from helper exits",
+                "discovery-bootstrap": "JSON ok=true and artifact ids",
+                "discovery-candidate-reconciliation": "JSON ok=true and command fields",
+                "discovery-promotion-lifecycle": "JSON ok=true",
+                "greenfield-full-drive": "sequence complete after detached start",
+                "local-workflow-orch-image": "JSON ok=true except logs exit zero",
+                "mawf-playbook-blocker-reentry": "stage/mode/verdict/finalOk/errorCode; process can return zero after blocked/error"
+              },
+              "owner_terminal_event": false,
+              "semantic_validation": false
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-AUTH",
+              "EV-RUNTIME",
+              "EV-EVENTS",
+              "EV-PROP-LOCAL",
+              "EV-PROP-GREENFIELD",
+              "EV-PROP-REENTRY",
+              "EV-PROP-AUTH",
+              "EV-PROP-PROMOTION",
+              "EV-PROP-PUBLISH",
+              "EV-PROP-BOOTSTRAP",
+              "EV-PROP-RECONCILIATION",
+              "EV-PROP-CHECKPOINT",
+              "EV-PROP-REVIEW"
+            ],
+            "requirement_id": "O3-FUTURE-TERMINAL",
+            "research_value": {
+              "duplicate": "identical replay returns existing; conflict fails",
+              "failure": "missing, malformed, failed, skipped, detached or child-conflict cannot succeed",
+              "order": [
+                "zero exit",
+                "parse exact schema",
+                "run approved semantic verifier",
+                "re-observe authority",
+                "append one owner_terminal",
+                "write matching artifact"
+              ]
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQ",
+              "EV-PARENTS",
+              "EV-CONTRACTS",
+              "EV-CONTROLLER",
+              "EV-ADAPTERS",
+              "EV-SRC-REENTRY"
+            ],
+            "requirement_id": "O4-CURRENT-PARENT",
+            "research_value": {
+              "child": "mawf-playbook-blocker-reentry",
+              "dispatch_enforcement": false,
+              "other_rows": "24 standalone",
+              "parent_availability": "both CUSTODIAN_EVIDENCE_REQUIRED",
+              "parents": [
+                "mawf-playbook-full-test",
+                "mawf-playbook-speed-test"
+              ],
+              "standalone": false
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-AUTH",
+              "EV-PARENTS",
+              "EV-PROP-REENTRY"
+            ],
+            "requirement_id": "O4-FUTURE-PARENT",
+            "research_value": {
+              "atomic": "consume delegation with child preparation",
+              "availability": "child remains AVAILABLE but non-admissible standalone",
+              "rejection": "before budget, argv or operator",
+              "required_event": "child_delegation_recorded",
+              "required_parent_state": "same-journal STARTED allowed parent with matching task/run/branch/worktree/child/blocker/verification identity"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-REQ",
+              "EV-ADAPTERS",
+              "EV-SRC-LOCAL",
+              "EV-SRC-GREENFIELD",
+              "EV-SRC-REENTRY",
+              "EV-SRC-AUTH",
+              "EV-SRC-PROMOTION",
+              "EV-SRC-PUBLISH",
+              "EV-SRC-BOOTSTRAP",
+              "EV-SRC-RECONCILIATION",
+              "EV-SRC-CHECKPOINT",
+              "EV-SRC-REVIEW"
+            ],
+            "requirement_id": "O5-CURRENT-PARAMETERS",
+            "research_value": {
+              "owner_matrix": {
+                "claude-auth-token-refresh": "8 commands/raw credential and resource values",
+                "commit-push-main": "flag modes/caller repo,remote,manifest",
+                "convergence-checkpoint-run": "raw command_json plus state,repo,helper,stage,timeout",
+                "convergence-state-review-cycle": "request v1 plus raw state/helper",
+                "discovery-bootstrap": "start/spec plus caller root/repo-roots",
+                "discovery-candidate-reconciliation": "5 commands/caller root,index,policy,attempt paths",
+                "discovery-promotion-lifecycle": "4 commands/raw file/root/repo-roots and verification",
+                "greenfield-full-drive": "raw repo/spec/checkpoint/env/drive flags",
+                "local-workflow-orch-image": "10 argparse commands/caller paths",
+                "mawf-playbook-blocker-reentry": "3 modes/raw repo,prompt,operator values"
+              },
+              "paths": "absolute rejected but relative values not root-resolved or symlink-contained",
+              "providers": false,
+              "schema": "hard-coded adapter lists and conditionals"
+            }
+          },
+          {
+            "evidence_ids": [
+              "EV-AUTH",
+              "EV-ADAPTERS",
+              "EV-EVENTS",
+              "EV-REMOTE-REPO",
+              "EV-PROP-LOCAL",
+              "EV-PROP-GREENFIELD",
+              "EV-PROP-REENTRY",
+              "EV-PROP-AUTH",
+              "EV-PROP-PROMOTION",
+              "EV-PROP-PUBLISH",
+              "EV-PROP-BOOTSTRAP",
+              "EV-PROP-RECONCILIATION",
+              "EV-PROP-CHECKPOINT",
+              "EV-PROP-REVIEW"
+            ],
+            "requirement_id": "O5-FUTURE-PARAMETERS",
+            "research_value": {
+              "failure": "unresolved binding rejects applicable invocation without changing availability",
+              "locators": {
+                "dynamic": "controller-owned typed resolver keyed by approved provider name",
+                "local_repositories": "work_memory._repo_roots",
+                "remote_repositories": "build_git_manager_from_settings repo_mapping",
+                "static_roots": "proposal trusted_roots"
+              },
+              "schema_authority": "selected approved proposal parameter_contract hash",
+              "validation": [
+                "exact fields/type/tag/enum/range/union",
+                "resolve root/repository/resource/provider/approval key",
+                "normalize relative path and resolve symlink",
+                "prove target/write-parent containment",
+                "bind non-secret identity/version",
+                "construct shell-free argv or typed child call"
+              ]
+            }
+          }
+        ],
+        "research_markdown": "# Prevention owner-runtime terminal-closure research v10 round 2\n\nThe round-2 canonical envelope hash is `0ea40d3f4bf80ca4c417f61c0cd7797fecf89df00bd2feac4c95b21dd820505f`; its frozen charter and requirements remain unchanged. The owner policy remains exactly 10 `AVAILABLE`, 6 `CUSTODIAN_EVIDENCE_REQUIRED`, and 9 `UNAVAILABLE`. Availability is not admission: an AVAILABLE owner is executable only after its individually authenticated approved proposal is materialized and all budget, lifecycle, terminal, parent, parameter, root, provider, and receipt gates pass.\n\n## Public material-gap classification\n\n- `MG-O1`: `PLANNER_OWNED_IMPLEMENTATION_GAP`. Current execution accepts caller-supplied UnitBudget values; target execution derives a complete budget from the selected contract and rejects incomplete or insufficient reservation before effects.\n- `MG-O2`: `PLANNER_OWNED_IMPLEMENTATION_GAP`. Current recovered STARTED effects always become INDETERMINATE; target dispatches the selected typed owner reconciler to ALREADY_APPLIED, NOT_APPLIED, or INDETERMINATE.\n- `MG-O3`: `PLANNER_OWNED_IMPLEMENTATION_GAP`. Current exit zero creates the terminal artifact without owner-semantic verification or owner_terminal event; target verifies exact semantic evidence and records exactly one event/artifact pair.\n- `MG-O4`: `PLANNER_OWNED_IMPLEMENTATION_GAP`. `mawf-playbook-blocker-reentry` is the sole child-only owner, but current dispatch does not enforce its parent relation; target requires and atomically consumes a matching active-parent delegation.\n- `MG-O5`: `PLANNER_OWNED_IMPLEMENTATION_GAP`. Current adapters use hard-coded parameter/path rules and do not bind proposal schemas, trusted roots, providers, or symlink containment; target validates the materialized schema and all bindings before argv.\n\n## Owner-by-owner current matrix\n\nEach row is authenticated by its current-source evidence item and remains separate from the approved target proposal.\n\n- `local-workflow-orch-image`: budget producer/fields = one harness invocation with source-declared health timeout, port retries, and build retry; identity/observable = Docker image/container/port/copied path/auth/probe state and emitted JSON; terminal = command JSON `ok=true` except logs streams and exits zero; parameters/paths = ten argparse commands and command-specific fields, with caller paths and no materialized trusted-root resolver.\n- `greenfield-full-drive`: budget producer/fields = one shell sequence with build, three off-port retries, 30 health polls, auth, restore, and one detached drive start; identity/observable = image/container plus repo/branch/port and durable drive state; terminal = nonzero on failed step, but current success is only `sequence complete` after detached launch; parameters/paths = raw repo/spec/checkpoint/env and drive flags, not a proposal-schema/root binding.\n- `mawf-playbook-blocker-reentry`: budget producer/fields = one reentry invocation and one packaged operator action; identity/observable = task/workflow/run request and returned operator envelope; terminal = emitted stage/mode/verdict/finalOk/errorCode, while blocked/error envelopes can still be followed by process zero; parameters/paths = reenter plus three modes and raw repo/prompt/operator fields, with no enforced parent journal.\n- `claude-auth-token-refresh`: budget producer/fields = one shell invocation with fail-closed prerequisites and 60-second verify commands; identity/observable = credential state across container, host, vault, and optional remote endpoint; terminal = command-specific human pass/status markers through pass/die; parameters/paths = eight commands with raw token/config/container/vault inputs, not typed secret/resource providers.\n- `discovery-promotion-lifecycle`: budget producer/fields = one lifecycle command; drive permits max qualification runs plus six transition iterations; identity/observable = discovery/registered subject, lifecycle state, guarded verification and blocker artifacts; terminal = JSON `ok=true`, with errors JSON and exit 3/5; parameters/paths = four commands with raw file/root/repo-roots and Markdown-derived verification command surfaces.\n- `commit-push-main`: budget producer/fields = one publish/resume invocation with no retry; integration runs one fetch/rebase or isolated clone; identity/observable = repo/branch/remote, HEAD/index/worktree/manifest and remote head; terminal = JSON `ok=true` after remote SHA verification, errors exit 2; parameters/paths = flag-composed modes with caller repo/remote/manifest paths and no typed publication receipt binding.\n- `discovery-bootstrap`: budget producer/fields = one locked atomic bootstrap invocation; identity/observable = request hash, deterministic bundle/artifact/run IDs and exact existing bytes; terminal = JSON `ok=true` with artifact and run identities, failures emit JSON error; parameters/paths = start plus spec and optional root/repo-roots, current schema validates content but root remains caller-supplied.\n- `discovery-candidate-reconciliation`: budget producer/fields = one command; rolling defaults to six attempts and drive performs one guarded rolling run; identity/observable = repository/candidate/registry hashes, manifests, active index and checkpoints; terminal = JSON `ok=true` with command-specific fields, failures exit 3; parameters/paths = five commands with caller root/output/manifest/index/policy/attempt surfaces.\n- `convergence-checkpoint-run`: budget producer/fields = one invocation and 30-second default shared-ledger lock acquisition; identity/observable = convergence state, accepted/guarded baseline, ledger/view and child command result; terminal = fixed `CONVERGENCE CHECKPOINT COMMAND OK` plus exit zero; parameters/paths = state/repo/approval/command_json and optional helper/stage/timeout, including arbitrary argv schema v1.\n- `convergence-state-review-cycle`: budget producer/fields = one request application, each requested helper operation once, then check and status once; identity/observable = request/state and helper operation results; terminal = JSON status COMPLETE or DRY_RUN based on helper exits; parameters/paths = request v1, optional helper and apply/dry-run, with raw state/helper paths and no per-operation durable receipt.\n\n## Complete greenfield progressive UnitBudget algorithm\n\nThe approved target has no fixed whole-workflow duration and no invented aggregate value. Every durable task is classified into exactly one productive or mandatory role/overhead dimension. Every atomic task carries a total of 3,600,000 ms including retry. Before launch, the owner materializes the next task or parallel frontier from durable program state and fully reserves every task vector in that next task/frontier. The workflow aggregate is the component-wise sum of all materialized task vectors. A missing required role, an untyped task, an unresolved next frontier, or insufficient reservation rejects admission or persists a checkpoint before effects; continuation occurs only after a fully typed frontier can be fully reserved. This preserves progressive discovery while making every launched unit complete and pre-admitted.\n\n## Current lifecycle, parent, and binding conclusions\n\nCurrent checkpoints are PREPARED, STARTED, EXECUTED, TERMINAL. STARTED recovery does not dispatch owner reconcilers, and exit zero directly creates a terminal JSON artifact. The event schema has `effect_reconciled` but no `owner_terminal`, `child_delegation_recorded`, or typed provider/approval receipt event. Only blocker-reentry is child-only, with parents `mawf-playbook-full-test` and `mawf-playbook-speed-test`; both parents remain CUSTODIAN_EVIDENCE_REQUIRED, so the AVAILABLE child remains non-admissible until a parent is executable and active. The other 24 registry rows remain standalone. Static roots come from proposal trusted_roots; local repository resolution is grounded at `work_memory._repo_roots`; remote repository-key resolution is grounded at `build_git_manager_from_settings`; other approved providers require typed controller-owned resolvers and fail closed when unresolved.\n\nAll current requirements are answered from accessible, individually hashed implementation sources. All future requirements are grounded by ten individually hashed approved proposals and authority decisions; runtime proof remains NOT_YET_APPLICABLE. Planning must close MG-O1 through MG-O5 without changing 10/6/9 or authorizing deployment, commit, push, credential access, phase-ledger work, or external messages.",
+        "schema_version": 1
+      },
+      "envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+      "envelope_payload": {
+        "authoritative_roots": [
+          "/Users/kamenkamenov/memory-knowledge",
+          "/Users/kamenkamenov/mcp-agents-workflow"
+        ],
+        "charter": {
+          "canonical_json_sha256": "2edb9e139aeeb90b14fa60b20b9224ad742e2c82150fcd410b781c86316a39fb",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v8/charter.json"
+        },
+        "hash_contract": "sha256-canonical-json-utf8-no-trailing-newline-v1",
+        "requirements": {
+          "canonical_json_sha256": "ed4126bcaad80caf54dbf9779a4e0d4f17d04782918fce89663992e79a2337de",
+          "path": "/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v8/requirements.json"
+        },
+        "round": 3,
+        "schema_version": 1,
+        "scope_hash": "9b388ca9af4d43de2051fdea5e8b35d60d1788f911bb22bb54befbb7cf00ce2f",
+        "verification_command": "python3 /Users/kamenkamenov/.codex/skills/research-playbook/scripts/research_package.py hash-json <json-file>"
+      },
+      "evidence_availability": {
+        "CURRENT_RUNTIME": "AVAILABLE",
+        "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+        "authoritative_roots": "AVAILABLE",
+        "external_evidence": "NOT_YET_APPLICABLE"
+      },
+      "recorded_at": "2026-07-18T07:18:53.192772Z"
+    }
+  },
+  "charter": {
+    "authoritative_roots": [
+      "/Users/kamenkamenov/memory-knowledge",
+      "/Users/kamenkamenov/mcp-agents-workflow"
+    ],
+    "budget": {
+      "maximum_agent_spawn_attempts": 15,
+      "maximum_candidate_rounds": 3,
+      "maximum_elapsed_minutes": 60,
+      "maximum_retries_per_role": 1
+    },
+    "charter_id": "prevention-owner-runtime-terminal-closure-20260717",
+    "exclusions": [
+      "new owner availability decisions, the six custodian-evidence owners, the nine unavailable owners, unrelated prevention features, deployment, commit, push, secrets, credentials, phase-ledger changes, or external messages",
+      "implementation planning or code edits during research",
+      "inventing numeric budgets, reconciliation outcomes, terminal markers, parent context, parameter fields, paths, or command behavior not established by authoritative evidence"
+    ],
+    "in_scope": [
+      "the five P1 findings from the owner-runtime review and only their existing prevention-system requirements",
+      "memory-knowledge owner contracts, registry, adapters, controller, runtime, budget authority, work-memory ledger, sequence documents, dependency manifests, and tests",
+      "mcp-agents-workflow implementation scripts referenced by the ten AVAILABLE owner contracts when needed to establish their real command, timeout, terminal, or effect behavior"
+    ],
+    "objective": "Ground the exact authoritative contracts required to close the five owner-runtime defects found in review: complete budget admission, crash reconciliation, semantic terminal verification, parent-only child execution, and trusted typed path binding.",
+    "required_output_package": [
+      "manifest.json",
+      "research.md",
+      "requirements.json",
+      "evidence-index.json",
+      "findings.json",
+      "planner-handoff.md"
+    ],
+    "research_questions": [
+      "What complete machine-readable UnitBudget can each of the ten AVAILABLE owners derive from authoritative code and which owners must fail closed until such evidence exists?",
+      "What durable effect identity and owner-specific reconciliation observable can distinguish already-applied, not-applied, and genuinely indeterminate execution after a crash?",
+      "What semantic terminal evidence must each owner validate beyond process exit code before one terminal event is emitted?",
+      "Which owner rows are child-only, what parent context proves valid delegation, and where must standalone dispatch be rejected?",
+      "How must each typed parameter, especially paths, be validated against the materialized parameter schema and trusted repository roots before argv construction?"
+    ],
+    "schema_version": 1,
+    "supplied_input": "The independently reviewed owner-runtime slice is safe but incomplete in five precise ways: STARTED effects stop permanently without reconciliation; exit zero is terminalized without semantic verification; budgets are caller-supplied rather than owner-authoritative; mawf-playbook-blocker-reentry executes without a parent; and parameter/path validation is not bound to the materialized schema and trusted roots.",
+    "terminal_rules": [
+      "PASS requires all three lenses to pass the same candidate and envelope hashes, a fresh adjudicator with no research-actionable finding, every planner obligation READY, exact package validation, and zero active agent slots.",
+      "GAPS means research-stage corrections remain inside this frozen charter.",
+      "BLOCKED means required accessible evidence or a named approval route is unavailable.",
+      "CAP_REACHED means the shared time, round, attempt, retry, or repeated-fingerprint cap fired."
+    ]
+  },
+  "charter_hash": "2edb9e139aeeb90b14fa60b20b9224ad742e2c82150fcd410b781c86316a39fb",
+  "created_at": "2026-07-18T07:18:44.473045Z",
+  "evidence_availability": {
+    "CURRENT_RUNTIME": "AVAILABLE",
+    "FUTURE_SYSTEM": "NOT_YET_APPLICABLE",
+    "authoritative_roots": "AVAILABLE",
+    "external_evidence": "NOT_YET_APPLICABLE"
+  },
+  "operational_maturity": "MIXED",
+  "package_id": "research-package-e5c683067a7d7e35f8b2efd9",
+  "requirements": [
+    {
+      "acceptance_intent": "Return exact producer, fields, units, and coverage; absent values remain explicit and are never inferred from prose.",
+      "evidence_availability": "AVAILABLE",
+      "id": "O1-CURRENT-BUDGET",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry authoritative per-owner complete-unit budget inputs and fail-closed missing-evidence states into planning.",
+          "id": "PO-O1-BUDGET"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "owner-runtime-budget-current",
+      "source": {
+        "finding": "owner-budget-can-be-understated",
+        "requirement_ids": [
+          "FUT-BUDGET",
+          "FUT-ENTRYPOINT"
+        ]
+      },
+      "text": "Determine what authoritative machine-readable complete-unit budget data currently exists for each of the ten AVAILABLE owners and where current code permits caller understatement or lacks evidence."
+    },
+    {
+      "acceptance_intent": "Admission includes core, three gates, adjudication, and materialization overhead and rejects missing, incomplete, or insufficient budgets before side effects.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "O1-FUTURE-BUDGET",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan per-owner derivation, understatement rejection, missing-evidence rejection, and pre-effect admission tests.",
+          "id": "PO-O1-BUDGET-ACCEPTANCE"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "owner-runtime-budget-future",
+      "source": {
+        "finding": "owner-budget-can-be-understated",
+        "requirement_ids": [
+          "FUT-BUDGET",
+          "FUT-ENTRYPOINT"
+        ]
+      },
+      "text": "Every executable owner must derive its complete atomic UnitBudget from its content-addressed owner contract before preparation or launch; callers cannot supply or understate it."
+    },
+    {
+      "acceptance_intent": "Map each owner to a real same-path observable or explicit unresolved state without rerunning a possibly applied effect.",
+      "evidence_availability": "AVAILABLE",
+      "id": "O2-CURRENT-RECONCILE",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry owner-specific effect identity and reconciliation evidence boundaries into planning.",
+          "id": "PO-O2-RECONCILE"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "owner-runtime-reconcile-current",
+      "source": {
+        "finding": "started-effect-permanently-indeterminate",
+        "requirement_ids": [
+          "FUT-RESUME",
+          "FUT-CORRECTION"
+        ]
+      },
+      "text": "Determine the current durable effect identities and authoritative observables available to reconcile STARTED effects for the ten AVAILABLE owners after interruption."
+    },
+    {
+      "acceptance_intent": "A crash after side effect and before result persistence never blindly duplicates the effect and can terminalize when authoritative state proves completion.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "O2-FUTURE-RECONCILE",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan red-before/green-after crash-window and idempotent-resume verification for each supported reconciliation class.",
+          "id": "PO-O2-RECONCILE-ACCEPTANCE"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "owner-runtime-reconcile-future",
+      "source": {
+        "finding": "started-effect-permanently-indeterminate",
+        "requirement_ids": [
+          "FUT-RESUME",
+          "FUT-CORRECTION"
+        ]
+      },
+      "text": "Resume must reconcile a STARTED effect through its owner-specific typed contract into ALREADY_APPLIED, NOT_APPLIED, or genuinely unresolved before deciding whether execution can continue."
+    },
+    {
+      "acceptance_intent": "Return exact semantic terminal evidence or an explicit fail-closed absence for every AVAILABLE owner.",
+      "evidence_availability": "AVAILABLE",
+      "id": "O3-CURRENT-TERMINAL",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry semantic verification and one-terminal-event contracts into planning.",
+          "id": "PO-O3-TERMINAL"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "owner-runtime-terminal-current",
+      "source": {
+        "finding": "exit-zero-terminalized-without-verification",
+        "requirement_ids": [
+          "FUT-RESUME",
+          "FUT-METRICS"
+        ]
+      },
+      "text": "Determine the authoritative terminal schema, pass marker, artifact, or state observable for each of the ten AVAILABLE owners and prove where current runtime equates exit zero with success."
+    },
+    {
+      "acceptance_intent": "Missing or malformed envelope, absent pass signal, failed artifact/state check, and replayed terminalization all fail visibly and deterministically.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "O3-FUTURE-TERMINAL",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan semantic success/failure and exactly-once terminal event tests.",
+          "id": "PO-O3-TERMINAL-ACCEPTANCE"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "owner-runtime-terminal-future",
+      "source": {
+        "finding": "exit-zero-terminalized-without-verification",
+        "requirement_ids": [
+          "FUT-RESUME",
+          "FUT-METRICS"
+        ]
+      },
+      "text": "Process exit zero cannot terminalize an owner; the runtime must validate its content-addressed terminal schema and append exactly one durable terminal event only after semantic verification passes."
+    },
+    {
+      "acceptance_intent": "Name the exact child row, parent owner, required active parent context, and rejection boundary.",
+      "evidence_availability": "AVAILABLE",
+      "id": "O4-CURRENT-PARENT",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry the child-only delegation contract and standalone rejection boundary into planning.",
+          "id": "PO-O4-PARENT"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "owner-runtime-parent-current",
+      "source": {
+        "finding": "blocker-reentry-directly-executable",
+        "requirement_ids": [
+          "FUT-ENTRYPOINT",
+          "FUT-TYPED"
+        ]
+      },
+      "text": "Determine which registered owners are non-standalone children, the authoritative parent relation, and the current dispatch path that permits direct execution."
+    },
+    {
+      "acceptance_intent": "Direct child intent fails before side effects; parent-bound invocation preserves parent run, policy, and lifecycle identity.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "O4-FUTURE-PARENT",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan direct-rejection, forged-parent, stale-parent, and valid-delegation tests.",
+          "id": "PO-O4-PARENT-ACCEPTANCE"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "owner-runtime-parent-future",
+      "source": {
+        "finding": "blocker-reentry-directly-executable",
+        "requirement_ids": [
+          "FUT-ENTRYPOINT",
+          "FUT-TYPED"
+        ]
+      },
+      "text": "A non-standalone child owner must be invokable only through a validated active parent adapter context and must reject direct selection or dispatch."
+    },
+    {
+      "acceptance_intent": "Prove which parameter and path constraints are authoritative versus hardcoded, absent, or only prose.",
+      "evidence_availability": "AVAILABLE",
+      "id": "O5-CURRENT-PARAMETERS",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Carry materialized schema and trusted-root resolution contracts into planning.",
+          "id": "PO-O5-PARAMETERS"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "owner-runtime-parameters-current",
+      "source": {
+        "finding": "parameters-not-schema-or-root-bound",
+        "requirement_ids": [
+          "FUT-TYPED",
+          "ACC-ZERO-RAW"
+        ]
+      },
+      "text": "Determine the current effective parameter schemas, enum/tag rules, repository-root bindings, and path normalization behavior for the ten AVAILABLE owners."
+    },
+    {
+      "acceptance_intent": "Wrong type/tag/enum, extra or missing field, unknown root, absolute path, traversal, and symlink escape fail before command construction or effects.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "O5-FUTURE-PARAMETERS",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan complete schema, trusted-root, and path-escape acceptance tests.",
+          "id": "PO-O5-PARAMETERS-ACCEPTANCE"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "owner-runtime-parameters-future",
+      "source": {
+        "finding": "parameters-not-schema-or-root-bound",
+        "requirement_ids": [
+          "FUT-TYPED",
+          "ACC-ZERO-RAW"
+        ]
+      },
+      "text": "Every owner parameter must validate against the content-addressed materialized schema; paths must be normalized, reject absolute or traversal escapes, and resolve only through named trusted repository-root bindings before argv construction."
+    }
+  ],
+  "requirements_hash": "ed4126bcaad80caf54dbf9779a4e0d4f17d04782918fce89663992e79a2337de",
+  "result": {
+    "actionable_fingerprints": [],
+    "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+    "envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+    "reason": "ROUND_CONTRACT_SATISFIED",
+    "verdict": "PASS"
+  },
+  "rounds": [
+    {
+      "actionable_fingerprints": [],
+      "adjudication": {
+        "adjudication_id": "adjudication-539ed3f1d3a0f93a840c64b6",
+        "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+        "envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+        "findings": [
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "04922a8f08beeb198baf9f4ac8250b99dc193261514f1e3dc51a675417318f92",
+            "finding_type": "PLANNER_DECISION",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: EV-REQ defines O1-FUTURE-BUDGET and EV-AUTH plus EV-PROP-LOCAL, EV-PROP-GREENFIELD, EV-PROP-REENTRY, EV-PROP-AUTH, EV-PROP-PROMOTION, EV-PROP-PUBLISH, EV-PROP-BOOTSTRAP, EV-PROP-RECONCILIATION, EV-PROP-CHECKPOINT, and EV-PROP-REVIEW ground complete owner-derived budgets and pre-effect admission.",
+                "Demonstrated-absence side: EV-CONTROLLER and EV-BUDGET show that current execution selects and admits caller-supplied unit_budgets rather than deriving the complete vector from the selected content-addressed owner contract."
+              ],
+              "fingerprint": "mg-o1-owner-derived-complete-unit-budget",
+              "id": "MG-O1",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner must replace caller-supplied UnitBudget values with complete owner-contract-derived reservations, including progressive greenfield frontier reservation, or execution can still begin with understated work and overhead.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O1-CURRENT-BUDGET",
+                "O1-FUTURE-BUDGET"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "0acfa2492980e98d2c8c16eae26745d2b28563bf79feff886fa45e5f015b2fa1",
+            "finding_type": "PLANNER_DECISION",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "candidate-round-3.json#/requirement_statuses/O1-CURRENT-BUDGET records caller-supplied UnitBudget admission and possible understatement.",
+                "candidate-round-3.json#/requirement_statuses/O1-FUTURE-BUDGET defines owner-derived complete reservation, the 3,600,000 ms atomic-task rule, progressive greenfield frontier composition, and pre-effect rejection or checkpoint behavior.",
+                "candidate-round-3.json#/planner_readiness_constraints/PO-O1-BUDGET and PO-O1-BUDGET-ACCEPTANCE provide implementation anchors, verification anchors, owners, and observable closure conditions."
+              ],
+              "fingerprint": "requirements-coverage:MG-O1:owner-derived-complete-budget",
+              "id": "MG-O1",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Planning must replace caller-supplied budgets with complete owner-derived reservations before effects, including progressive task/frontier reservation for greenfield execution.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O1-CURRENT-BUDGET",
+                "O1-FUTURE-BUDGET"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "0b6fed1bddb4ab4fef397e7dd948ae377e664554302549e05958b967260745d0",
+            "finding_type": "PLANNER_DECISION",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "candidate-round-3.json#/requirement_statuses/O4-CURRENT-PARENT identifies the sole child, both allowed parents, their current availability, the 24 standalone rows, and absent dispatch enforcement.",
+                "candidate-round-3.json#/requirement_statuses/O4-FUTURE-PARENT defines the delegation event, active-parent identity match, atomic consumption, rejection boundary, and availability/admission separation.",
+                "candidate-round-3.json#/planner_readiness_constraints/PO-O4-PARENT and PO-O4-PARENT-ACCEPTANCE provide implementation anchors, invalid and valid verification cases, owners, and closure conditions."
+              ],
+              "fingerprint": "requirements-coverage:MG-O4:parent-delegation-admission",
+              "id": "MG-O4",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Planning must prevent standalone execution of the sole child-only owner by requiring and atomically consuming a matching active-parent delegation before budget admission, argv construction, or operator effects.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O4-CURRENT-PARENT",
+                "O4-FUTURE-PARENT"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "1e1dc667a8bd1ab798a7c557b333b215664572749680fa67b953f64dc20ab16c",
+            "finding_type": "PLANNER_DECISION",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: EV-REQ defines O3-FUTURE-TERMINAL and EV-AUTH plus all ten EV-PROP-* terminal contracts ground exact schema parsing, semantic re-observation, deterministic failure, and exactly-once replay behavior.",
+                "Demonstrated-absence side: EV-RUNTIME shows that current zero exit directly creates the terminal artifact, EV-EVENTS shows owner_terminal is absent from the current event schema, and the ten EV-SRC-* records ground each current owner's weaker terminal observable."
+              ],
+              "fingerprint": "mg-o3-semantic-terminal-verification-and-event",
+              "id": "MG-O3",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner must require exact owner-semantic verification before recording one matching owner_terminal event and artifact, or exit zero can still falsely terminalize detached, malformed, failed, or unverified work.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O3-CURRENT-TERMINAL",
+                "O3-FUTURE-TERMINAL"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          },
+          {
+            "disposition": "HANDOFF_TO_PLANNER",
+            "finding_fingerprint": "1ffd6c1421d686d88673816c59af26bab884041d450121c90b58c9241413b2b0",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: EV-REQ and EV-PARENTS identify mawf-playbook-blocker-reentry as the sole non-standalone owner with parents mawf-playbook-full-test and mawf-playbook-speed-test; EV-PROP-REENTRY (owner-contract-proposals/mawf-playbook-blocker-reentry.json:4-11,51-77) requires a matching same-journal STARTED parent and atomic child_delegation_recorded consumption before budget, argv, or operator work.",
+                "Missing-behavior side: EV-CONTROLLER (scripts/prevention_controller.py:231-255) proceeds from selection to budget/runtime without parent-context admission; EV-ADAPTERS (scripts/prevention_adapters.py:132-167,209-239) validates mode/task fields and availability but does not validate standalone, allowed parents, an active parent state, or a delegation event; EV-EVENTS has no child_delegation_recorded schema."
+              ],
+              "fingerprint": "mg-o4-active-parent-delegation-admission-planner-gap-v1",
+              "id": "MG-O4",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The child-only blocker-reentry owner can currently be selected and dispatched without a live allowed parent, so direct, forged, stale, or already-consumed child invocation is not rejected before budget reservation and operator execution.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O4-CURRENT-PARENT",
+                "O4-FUTURE-PARENT"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "25fd9f160431c4e44bd2131ed67da237aa1c06717e0633c301a379b06234e982",
+            "finding_type": "PLANNER_DECISION",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "candidate-round-3.json#/requirement_statuses/O2-CURRENT-RECONCILE records unconditional INDETERMINATE recovery, no owner reconciler dispatch, and all ten current owner observables.",
+                "candidate-round-3.json#/requirement_statuses/O2-FUTURE-RECONCILE defines the three reconciliation results, selected content-addressed boundary, resume behavior, and persisted identities.",
+                "candidate-round-3.json#/planner_readiness_constraints/PO-O2-RECONCILE and PO-O2-RECONCILE-ACCEPTANCE provide implementation anchors, same-path verification anchors, owners, and closure conditions."
+              ],
+              "fingerprint": "requirements-coverage:MG-O2:typed-owner-reconciliation",
+              "id": "MG-O2",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Planning must replace unconditional INDETERMINATE recovery with the selected owner reconciler so already-applied effects are skipped, not-applied effects execute once, and indeterminate effects stop safely.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O2-CURRENT-RECONCILE",
+                "O2-FUTURE-RECONCILE"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "49651878031b084d53922b4a48ef8d97d01a1ac42a205360dd4dcaa3c774349c",
+            "finding_type": "PLANNER_DECISION",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: EV-REQ defines O2-FUTURE-RECONCILE and EV-AUTH plus all ten EV-PROP-* records ground the ALREADY_APPLIED, NOT_APPLIED, and INDETERMINATE result contract and owner-specific durable identities.",
+                "Demonstrated-absence side: EV-RUNTIME shows that current STARTED recovery always returns INDETERMINATE, while EV-SRC-LOCAL, EV-SRC-GREENFIELD, EV-SRC-REENTRY, EV-SRC-AUTH, EV-SRC-PROMOTION, EV-SRC-PUBLISH, EV-SRC-BOOTSTRAP, EV-SRC-RECONCILIATION, EV-SRC-CHECKPOINT, and EV-SRC-REVIEW ground the current owner observables that are not yet dispatched as typed reconcilers."
+              ],
+              "fingerprint": "mg-o2-owner-specific-started-effect-reconciliation",
+              "id": "MG-O2",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner must dispatch the selected owner's typed reconciler after a STARTED interruption, or already-applied effects cannot be proved safe to skip and not-applied effects cannot resume deterministically.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O2-CURRENT-RECONCILE",
+                "O2-FUTURE-RECONCILE"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          },
+          {
+            "disposition": "HANDOFF_TO_PLANNER",
+            "finding_fingerprint": "5f6dbe3664dc1695511514eccaf3e861acb9d9bdc6b85f62db9f2a3e25c944fd",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: EV-REQ requires owner-specific reconciliation to ALREADY_APPLIED, NOT_APPLIED, or genuinely unresolved; EV-PROP-LOCAL, EV-PROP-GREENFIELD, EV-PROP-REENTRY, EV-PROP-AUTH, EV-PROP-PROMOTION, EV-PROP-PUBLISH, EV-PROP-BOOTSTRAP, EV-PROP-RECONCILIATION, EV-PROP-CHECKPOINT, and EV-PROP-REVIEW define effect identities, authoritative observables, and resume rules for all ten owners.",
+                "Missing-behavior side: EV-RUNTIME (scripts/prevention_owner_runtime.py:89-103,115-158,160-177) persists only the generic argv-derived effect identity and maps every recovered STARTED state directly to INDETERMINATE without selecting or invoking an owner reconciler; the ten EV-SRC-* items ground the current same-path observables that remain unwired."
+              ],
+              "fingerprint": "mg-o2-typed-started-effect-reconciliation-planner-gap-v1",
+              "id": "MG-O2",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A crash after an owner effect but before result persistence cannot currently be proved applied or not applied, so recovery stops permanently instead of safely skipping an applied effect or executing a proved-absent effect once.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O2-CURRENT-RECONCILE",
+                "O2-FUTURE-RECONCILE"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "6422a19c238a907e7157be75c73395b92613b1ebe431776c15fdd0a8e411fee7",
+            "finding_type": "PLANNER_DECISION",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "candidate-round-3.json#/requirement_statuses/O3-CURRENT-TERMINAL records return-code-zero terminalization, absent semantic validation and owner_terminal event, and all ten current terminal surfaces.",
+                "candidate-round-3.json#/requirement_statuses/O3-FUTURE-TERMINAL defines ordered schema parsing, semantic verification, authority re-observation, exactly-once event/artifact recording, replay behavior, and negative cases.",
+                "candidate-round-3.json#/planner_readiness_constraints/PO-O3-TERMINAL and PO-O3-TERMINAL-ACCEPTANCE provide implementation anchors, positive and negative verification anchors, owners, and closure conditions."
+              ],
+              "fingerprint": "requirements-coverage:MG-O3:semantic-terminal-closure",
+              "id": "MG-O3",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Planning must make terminal success depend on exact owner-semantic evidence and an exactly-once event/artifact pair so exit zero, detached launch, malformed evidence, and conflicting replay cannot falsely close work.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O3-CURRENT-TERMINAL",
+                "O3-FUTURE-TERMINAL"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          },
+          {
+            "disposition": "HANDOFF_TO_PLANNER",
+            "finding_fingerprint": "742d065531f5da3312c59cd715d279359a1fbe38b02927d62f6e84c6bfd30d5b",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: EV-REQ requires exact schema validation, semantic verification, visible negative cases, and exactly one durable terminal event; EV-PROP-LOCAL, EV-PROP-GREENFIELD, EV-PROP-REENTRY, EV-PROP-AUTH, EV-PROP-PROMOTION, EV-PROP-PUBLISH, EV-PROP-BOOTSTRAP, EV-PROP-RECONCILIATION, EV-PROP-CHECKPOINT, and EV-PROP-REVIEW define the ten owner-specific terminal schemas, re-observations, and replay rules.",
+                "Missing-behavior side: EV-RUNTIME (scripts/prevention_owner_runtime.py:181-215) hashes stdout/stderr, treats returncode zero as sufficient, and writes a generic terminal artifact without owner-semantic verification; EV-EVENTS (scripts/work_memory.py:132-203) defines effect_reconciled but no owner_terminal event schema."
+              ],
+              "fingerprint": "mg-o3-semantic-exactly-once-terminalization-planner-gap-v1",
+              "id": "MG-O3",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "An owner can currently be recorded terminal after exit zero even when its semantic result is malformed, failed, skipped, detached, or contradicted by authoritative state, and there is no durable owner-terminal event paired with the artifact.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O3-CURRENT-TERMINAL",
+                "O3-FUTURE-TERMINAL"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          },
+          {
+            "disposition": "HANDOFF_TO_PLANNER",
+            "finding_fingerprint": "83cb927e1c833033d977829e09457882434495aaa7b04baa896f21bba2b9baa2",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: EV-REQ requires exact materialized-schema validation and pre-argv rejection of wrong fields, tags, enums, unknown roots, absolute paths, traversal, and symlink escape; EV-AUTH and all ten EV-PROP-* items define the approved parameter contracts, trusted roots, providers, receipt bindings, and fail-closed validation boundaries; EV-REMOTE-REPO grounds the configured remote repository resolver.",
+                "Missing-behavior side: EV-ADAPTERS (scripts/prevention_adapters.py:61-112,115-203,209-239) uses fixed Python field lists and conditionals, converts accepted values directly to argv, and does not load the selected proposal parameter_contract/trusted_roots or perform root/provider/receipt resolution and symlink containment; EV-CONTROLLER passes the registry row directly to this path, and EV-EVENTS lacks typed provider/approval receipt events."
+              ],
+              "fingerprint": "mg-o5-materialized-parameter-root-provider-binding-planner-gap-v1",
+              "id": "MG-O5",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Current hard-coded adapters can construct argv from values that were not validated against the selected proposal schema or bound through trusted root, repository, resource, secret, approval, and provider resolvers, leaving type drift and path or authority bypasses possible before effects.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O5-CURRENT-PARAMETERS",
+                "O5-FUTURE-PARAMETERS"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          },
+          {
+            "disposition": "HANDOFF_TO_PLANNER",
+            "finding_fingerprint": "8face20ce519ad09164a5c97c6f9d6badeeb74f0214fe0f48ec42828bd9e5ebd",
+            "finding_type": "SATISFACTION_GAP",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: EV-REQ defines pre-effect complete-budget derivation and rejection; EV-AUTH plus EV-PROP-LOCAL, EV-PROP-GREENFIELD, EV-PROP-REENTRY, EV-PROP-AUTH, EV-PROP-PROMOTION, EV-PROP-PUBLISH, EV-PROP-BOOTSTRAP, EV-PROP-RECONCILIATION, EV-PROP-CHECKPOINT, and EV-PROP-REVIEW define the ten approved owner-derived fixed, progressive, frontier, or child-composed budget contracts.",
+                "Missing-behavior side: EV-CONTROLLER (scripts/prevention_controller.py:45-65,231-255) accepts a constructor-supplied unit_budgets mapping and admits the selected value; EV-BUDGET (scripts/prevention_budget.py:56-109,177-225) validates and reserves the supplied UnitBudget but does not derive it from the selected owner contract."
+              ],
+              "fingerprint": "mg-o1-owner-derived-complete-unit-budget-planner-gap-v1",
+              "id": "MG-O1",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Until implementation replaces caller-supplied budgets with the selected owner's complete content-addressed budget, a caller can understate required work and obtain admission without reserving the full productive, gate, adjudication, materialization, terminal, and retry cost.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O1-CURRENT-BUDGET",
+                "O1-FUTURE-BUDGET"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "b34206645ef6feea39ad65b4487df18ad9fed4e9c07c81000ddcf42af2d77160",
+            "finding_type": "PLANNER_DECISION",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: EV-REQ defines O4-FUTURE-PARENT, while EV-AUTH, EV-PARENTS, and EV-PROP-REENTRY ground the same-journal STARTED parent identity, allowed-parent set, child_delegation_recorded event, and atomic consumption contract.",
+                "Demonstrated-absence side: EV-PARENTS identifies mawf-playbook-blocker-reentry as the sole non-standalone child, and EV-CONTROLLER plus EV-ADAPTERS show that current eligibility and dispatch do not validate or consume its parent relation."
+              ],
+              "fingerprint": "mg-o4-child-only-active-parent-delegation",
+              "id": "MG-O4",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner must make mawf-playbook-blocker-reentry consume a matching active-parent delegation atomically before budget, argv, or operator work, or the sole child-only owner remains directly executable without its required parent context.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O4-CURRENT-PARENT",
+                "O4-FUTURE-PARENT"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "d53857aac4b5161cd683c6a0a75761453a461ad75bea70f8615cca4c94123278",
+            "finding_type": "PLANNER_DECISION",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "candidate-round-3.json#/requirement_statuses/O5-CURRENT-PARAMETERS records hard-coded validation, incomplete path containment, absent providers, and all ten current owner parameter surfaces.",
+                "candidate-round-3.json#/requirement_statuses/O5-FUTURE-PARAMETERS defines schema authority, exact validation and binding steps, grounded locator classes, shell-free construction, and fail-closed unresolved binding behavior.",
+                "candidate-round-3.json#/planner_readiness_constraints/PO-O5-PARAMETERS and PO-O5-PARAMETERS-ACCEPTANCE provide implementation anchors, boundary and negative verification cases, owners, and closure conditions."
+              ],
+              "fingerprint": "requirements-coverage:MG-O5:typed-parameter-provider-binding",
+              "id": "MG-O5",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Planning must replace hard-coded parameter and path handling with the selected proposal schema plus typed root, repository, resource, provider, and approval bindings so unresolved or escaping inputs fail before effect preparation.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O5-CURRENT-PARAMETERS",
+                "O5-FUTURE-PARAMETERS"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          },
+          {
+            "disposition": "MERGE_DUPLICATE",
+            "finding_fingerprint": "dc950d3af55a721f293a238e192392cebb120317801e11d2fe0bd97dc4174e97",
+            "finding_type": "PLANNER_DECISION",
+            "materiality": "PLANNING",
+            "raw_finding": {
+              "evidence": [
+                "Required-behavior side: EV-REQ defines O5-FUTURE-PARAMETERS; EV-AUTH, EV-REMOTE-REPO, and all ten EV-PROP-* records ground exact schema validation, trusted-root containment, typed provider lookup, non-secret binding evidence, and fail-closed unresolved keys.",
+                "Demonstrated-absence side: EV-ADAPTERS shows current validation is hard-coded and does not resolve proposal schemas, trusted roots, providers, or parents; EV-EVENTS shows typed provider and approval receipts are absent; the ten EV-SRC-* records ground the raw current parameter and path surfaces."
+              ],
+              "fingerprint": "mg-o5-materialized-parameter-schema-and-trusted-bindings",
+              "id": "MG-O5",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner must validate the selected materialized parameter schema and resolve every root, repository, resource, provider, approval, and symlink-contained path before argv construction, or raw and hard-coded inputs can still bypass the approved owner contract.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O5-CURRENT-PARAMETERS",
+                "O5-FUTURE-PARAMETERS"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          }
+        ],
+        "recorded_at": "2026-07-18T07:23:22.512483Z",
+        "runtime_agent_id": "/root/research_v11_final_adjudicator"
+      },
+      "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+      "candidate_id": "candidate-ce226ab3bf51d5ad65c383a1",
+      "envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+      "lenses": {
+        "INTERNAL_READINESS": {
+          "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+          "envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+          "lens": "INTERNAL_READINESS",
+          "lens_result_id": "lens-result-062436690aab98b17dddd4fa",
+          "raw_findings": [
+            {
+              "evidence": [
+                "Required-behavior side: EV-REQ defines O1-FUTURE-BUDGET and EV-AUTH plus EV-PROP-LOCAL, EV-PROP-GREENFIELD, EV-PROP-REENTRY, EV-PROP-AUTH, EV-PROP-PROMOTION, EV-PROP-PUBLISH, EV-PROP-BOOTSTRAP, EV-PROP-RECONCILIATION, EV-PROP-CHECKPOINT, and EV-PROP-REVIEW ground complete owner-derived budgets and pre-effect admission.",
+                "Demonstrated-absence side: EV-CONTROLLER and EV-BUDGET show that current execution selects and admits caller-supplied unit_budgets rather than deriving the complete vector from the selected content-addressed owner contract."
+              ],
+              "fingerprint": "mg-o1-owner-derived-complete-unit-budget",
+              "id": "MG-O1",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner must replace caller-supplied UnitBudget values with complete owner-contract-derived reservations, including progressive greenfield frontier reservation, or execution can still begin with understated work and overhead.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O1-CURRENT-BUDGET",
+                "O1-FUTURE-BUDGET"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "Required-behavior side: EV-REQ defines O2-FUTURE-RECONCILE and EV-AUTH plus all ten EV-PROP-* records ground the ALREADY_APPLIED, NOT_APPLIED, and INDETERMINATE result contract and owner-specific durable identities.",
+                "Demonstrated-absence side: EV-RUNTIME shows that current STARTED recovery always returns INDETERMINATE, while EV-SRC-LOCAL, EV-SRC-GREENFIELD, EV-SRC-REENTRY, EV-SRC-AUTH, EV-SRC-PROMOTION, EV-SRC-PUBLISH, EV-SRC-BOOTSTRAP, EV-SRC-RECONCILIATION, EV-SRC-CHECKPOINT, and EV-SRC-REVIEW ground the current owner observables that are not yet dispatched as typed reconcilers."
+              ],
+              "fingerprint": "mg-o2-owner-specific-started-effect-reconciliation",
+              "id": "MG-O2",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner must dispatch the selected owner's typed reconciler after a STARTED interruption, or already-applied effects cannot be proved safe to skip and not-applied effects cannot resume deterministically.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O2-CURRENT-RECONCILE",
+                "O2-FUTURE-RECONCILE"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "Required-behavior side: EV-REQ defines O3-FUTURE-TERMINAL and EV-AUTH plus all ten EV-PROP-* terminal contracts ground exact schema parsing, semantic re-observation, deterministic failure, and exactly-once replay behavior.",
+                "Demonstrated-absence side: EV-RUNTIME shows that current zero exit directly creates the terminal artifact, EV-EVENTS shows owner_terminal is absent from the current event schema, and the ten EV-SRC-* records ground each current owner's weaker terminal observable."
+              ],
+              "fingerprint": "mg-o3-semantic-terminal-verification-and-event",
+              "id": "MG-O3",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner must require exact owner-semantic verification before recording one matching owner_terminal event and artifact, or exit zero can still falsely terminalize detached, malformed, failed, or unverified work.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O3-CURRENT-TERMINAL",
+                "O3-FUTURE-TERMINAL"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "Required-behavior side: EV-REQ defines O4-FUTURE-PARENT, while EV-AUTH, EV-PARENTS, and EV-PROP-REENTRY ground the same-journal STARTED parent identity, allowed-parent set, child_delegation_recorded event, and atomic consumption contract.",
+                "Demonstrated-absence side: EV-PARENTS identifies mawf-playbook-blocker-reentry as the sole non-standalone child, and EV-CONTROLLER plus EV-ADAPTERS show that current eligibility and dispatch do not validate or consume its parent relation."
+              ],
+              "fingerprint": "mg-o4-child-only-active-parent-delegation",
+              "id": "MG-O4",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner must make mawf-playbook-blocker-reentry consume a matching active-parent delegation atomically before budget, argv, or operator work, or the sole child-only owner remains directly executable without its required parent context.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O4-CURRENT-PARENT",
+                "O4-FUTURE-PARENT"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "Required-behavior side: EV-REQ defines O5-FUTURE-PARAMETERS; EV-AUTH, EV-REMOTE-REPO, and all ten EV-PROP-* records ground exact schema validation, trusted-root containment, typed provider lookup, non-secret binding evidence, and fail-closed unresolved keys.",
+                "Demonstrated-absence side: EV-ADAPTERS shows current validation is hard-coded and does not resolve proposal schemas, trusted roots, providers, or parents; EV-EVENTS shows typed provider and approval receipts are absent; the ten EV-SRC-* records ground the raw current parameter and path surfaces."
+              ],
+              "fingerprint": "mg-o5-materialized-parameter-schema-and-trusted-bindings",
+              "id": "MG-O5",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner must validate the selected materialized parameter schema and resolve every root, repository, resource, provider, approval, and symlink-contained path before argv construction, or raw and hard-coded inputs can still bypass the approved owner contract.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O5-CURRENT-PARAMETERS",
+                "O5-FUTURE-PARAMETERS"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          ],
+          "recorded_at": "2026-07-18T07:19:16.999910Z",
+          "runtime_agent_id": "/root/research_v10_round3_ir",
+          "verdict": "PASS"
+        },
+        "REQUIREMENTS_COVERAGE": {
+          "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+          "envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+          "lens": "REQUIREMENTS_COVERAGE",
+          "lens_result_id": "lens-result-aac97e43fc6f1088303a4afd",
+          "raw_findings": [
+            {
+              "evidence": [
+                "candidate-round-3.json#/requirement_statuses/O1-CURRENT-BUDGET records caller-supplied UnitBudget admission and possible understatement.",
+                "candidate-round-3.json#/requirement_statuses/O1-FUTURE-BUDGET defines owner-derived complete reservation, the 3,600,000 ms atomic-task rule, progressive greenfield frontier composition, and pre-effect rejection or checkpoint behavior.",
+                "candidate-round-3.json#/planner_readiness_constraints/PO-O1-BUDGET and PO-O1-BUDGET-ACCEPTANCE provide implementation anchors, verification anchors, owners, and observable closure conditions."
+              ],
+              "fingerprint": "requirements-coverage:MG-O1:owner-derived-complete-budget",
+              "id": "MG-O1",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Planning must replace caller-supplied budgets with complete owner-derived reservations before effects, including progressive task/frontier reservation for greenfield execution.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O1-CURRENT-BUDGET",
+                "O1-FUTURE-BUDGET"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "candidate-round-3.json#/requirement_statuses/O2-CURRENT-RECONCILE records unconditional INDETERMINATE recovery, no owner reconciler dispatch, and all ten current owner observables.",
+                "candidate-round-3.json#/requirement_statuses/O2-FUTURE-RECONCILE defines the three reconciliation results, selected content-addressed boundary, resume behavior, and persisted identities.",
+                "candidate-round-3.json#/planner_readiness_constraints/PO-O2-RECONCILE and PO-O2-RECONCILE-ACCEPTANCE provide implementation anchors, same-path verification anchors, owners, and closure conditions."
+              ],
+              "fingerprint": "requirements-coverage:MG-O2:typed-owner-reconciliation",
+              "id": "MG-O2",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Planning must replace unconditional INDETERMINATE recovery with the selected owner reconciler so already-applied effects are skipped, not-applied effects execute once, and indeterminate effects stop safely.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O2-CURRENT-RECONCILE",
+                "O2-FUTURE-RECONCILE"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "candidate-round-3.json#/requirement_statuses/O3-CURRENT-TERMINAL records return-code-zero terminalization, absent semantic validation and owner_terminal event, and all ten current terminal surfaces.",
+                "candidate-round-3.json#/requirement_statuses/O3-FUTURE-TERMINAL defines ordered schema parsing, semantic verification, authority re-observation, exactly-once event/artifact recording, replay behavior, and negative cases.",
+                "candidate-round-3.json#/planner_readiness_constraints/PO-O3-TERMINAL and PO-O3-TERMINAL-ACCEPTANCE provide implementation anchors, positive and negative verification anchors, owners, and closure conditions."
+              ],
+              "fingerprint": "requirements-coverage:MG-O3:semantic-terminal-closure",
+              "id": "MG-O3",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Planning must make terminal success depend on exact owner-semantic evidence and an exactly-once event/artifact pair so exit zero, detached launch, malformed evidence, and conflicting replay cannot falsely close work.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O3-CURRENT-TERMINAL",
+                "O3-FUTURE-TERMINAL"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "candidate-round-3.json#/requirement_statuses/O4-CURRENT-PARENT identifies the sole child, both allowed parents, their current availability, the 24 standalone rows, and absent dispatch enforcement.",
+                "candidate-round-3.json#/requirement_statuses/O4-FUTURE-PARENT defines the delegation event, active-parent identity match, atomic consumption, rejection boundary, and availability/admission separation.",
+                "candidate-round-3.json#/planner_readiness_constraints/PO-O4-PARENT and PO-O4-PARENT-ACCEPTANCE provide implementation anchors, invalid and valid verification cases, owners, and closure conditions."
+              ],
+              "fingerprint": "requirements-coverage:MG-O4:parent-delegation-admission",
+              "id": "MG-O4",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Planning must prevent standalone execution of the sole child-only owner by requiring and atomically consuming a matching active-parent delegation before budget admission, argv construction, or operator effects.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O4-CURRENT-PARENT",
+                "O4-FUTURE-PARENT"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            },
+            {
+              "evidence": [
+                "candidate-round-3.json#/requirement_statuses/O5-CURRENT-PARAMETERS records hard-coded validation, incomplete path containment, absent providers, and all ten current owner parameter surfaces.",
+                "candidate-round-3.json#/requirement_statuses/O5-FUTURE-PARAMETERS defines schema authority, exact validation and binding steps, grounded locator classes, shell-free construction, and fail-closed unresolved binding behavior.",
+                "candidate-round-3.json#/planner_readiness_constraints/PO-O5-PARAMETERS and PO-O5-PARAMETERS-ACCEPTANCE provide implementation anchors, boundary and negative verification cases, owners, and closure conditions."
+              ],
+              "fingerprint": "requirements-coverage:MG-O5:typed-parameter-provider-binding",
+              "id": "MG-O5",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Planning must replace hard-coded parameter and path handling with the selected proposal schema plus typed root, repository, resource, provider, and approval bindings so unresolved or escaping inputs fail before effect preparation.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O5-CURRENT-PARAMETERS",
+                "O5-FUTURE-PARAMETERS"
+              ],
+              "status": "OPEN",
+              "type": "PLANNER_DECISION"
+            }
+          ],
+          "recorded_at": "2026-07-18T07:19:17.114125Z",
+          "runtime_agent_id": "/root/research_v10_round3_coverage",
+          "verdict": "PASS"
+        },
+        "REQUIREMENTS_SATISFACTION": {
+          "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+          "envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+          "lens": "REQUIREMENTS_SATISFACTION",
+          "lens_result_id": "lens-result-ef631862a2b562c393bfd027",
+          "raw_findings": [
+            {
+              "evidence": [
+                "Required-behavior side: EV-REQ defines pre-effect complete-budget derivation and rejection; EV-AUTH plus EV-PROP-LOCAL, EV-PROP-GREENFIELD, EV-PROP-REENTRY, EV-PROP-AUTH, EV-PROP-PROMOTION, EV-PROP-PUBLISH, EV-PROP-BOOTSTRAP, EV-PROP-RECONCILIATION, EV-PROP-CHECKPOINT, and EV-PROP-REVIEW define the ten approved owner-derived fixed, progressive, frontier, or child-composed budget contracts.",
+                "Missing-behavior side: EV-CONTROLLER (scripts/prevention_controller.py:45-65,231-255) accepts a constructor-supplied unit_budgets mapping and admits the selected value; EV-BUDGET (scripts/prevention_budget.py:56-109,177-225) validates and reserves the supplied UnitBudget but does not derive it from the selected owner contract."
+              ],
+              "fingerprint": "mg-o1-owner-derived-complete-unit-budget-planner-gap-v1",
+              "id": "MG-O1",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Until implementation replaces caller-supplied budgets with the selected owner's complete content-addressed budget, a caller can understate required work and obtain admission without reserving the full productive, gate, adjudication, materialization, terminal, and retry cost.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O1-CURRENT-BUDGET",
+                "O1-FUTURE-BUDGET"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "Required-behavior side: EV-REQ requires owner-specific reconciliation to ALREADY_APPLIED, NOT_APPLIED, or genuinely unresolved; EV-PROP-LOCAL, EV-PROP-GREENFIELD, EV-PROP-REENTRY, EV-PROP-AUTH, EV-PROP-PROMOTION, EV-PROP-PUBLISH, EV-PROP-BOOTSTRAP, EV-PROP-RECONCILIATION, EV-PROP-CHECKPOINT, and EV-PROP-REVIEW define effect identities, authoritative observables, and resume rules for all ten owners.",
+                "Missing-behavior side: EV-RUNTIME (scripts/prevention_owner_runtime.py:89-103,115-158,160-177) persists only the generic argv-derived effect identity and maps every recovered STARTED state directly to INDETERMINATE without selecting or invoking an owner reconciler; the ten EV-SRC-* items ground the current same-path observables that remain unwired."
+              ],
+              "fingerprint": "mg-o2-typed-started-effect-reconciliation-planner-gap-v1",
+              "id": "MG-O2",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A crash after an owner effect but before result persistence cannot currently be proved applied or not applied, so recovery stops permanently instead of safely skipping an applied effect or executing a proved-absent effect once.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O2-CURRENT-RECONCILE",
+                "O2-FUTURE-RECONCILE"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "Required-behavior side: EV-REQ requires exact schema validation, semantic verification, visible negative cases, and exactly one durable terminal event; EV-PROP-LOCAL, EV-PROP-GREENFIELD, EV-PROP-REENTRY, EV-PROP-AUTH, EV-PROP-PROMOTION, EV-PROP-PUBLISH, EV-PROP-BOOTSTRAP, EV-PROP-RECONCILIATION, EV-PROP-CHECKPOINT, and EV-PROP-REVIEW define the ten owner-specific terminal schemas, re-observations, and replay rules.",
+                "Missing-behavior side: EV-RUNTIME (scripts/prevention_owner_runtime.py:181-215) hashes stdout/stderr, treats returncode zero as sufficient, and writes a generic terminal artifact without owner-semantic verification; EV-EVENTS (scripts/work_memory.py:132-203) defines effect_reconciled but no owner_terminal event schema."
+              ],
+              "fingerprint": "mg-o3-semantic-exactly-once-terminalization-planner-gap-v1",
+              "id": "MG-O3",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "An owner can currently be recorded terminal after exit zero even when its semantic result is malformed, failed, skipped, detached, or contradicted by authoritative state, and there is no durable owner-terminal event paired with the artifact.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O3-CURRENT-TERMINAL",
+                "O3-FUTURE-TERMINAL"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "Required-behavior side: EV-REQ and EV-PARENTS identify mawf-playbook-blocker-reentry as the sole non-standalone owner with parents mawf-playbook-full-test and mawf-playbook-speed-test; EV-PROP-REENTRY (owner-contract-proposals/mawf-playbook-blocker-reentry.json:4-11,51-77) requires a matching same-journal STARTED parent and atomic child_delegation_recorded consumption before budget, argv, or operator work.",
+                "Missing-behavior side: EV-CONTROLLER (scripts/prevention_controller.py:231-255) proceeds from selection to budget/runtime without parent-context admission; EV-ADAPTERS (scripts/prevention_adapters.py:132-167,209-239) validates mode/task fields and availability but does not validate standalone, allowed parents, an active parent state, or a delegation event; EV-EVENTS has no child_delegation_recorded schema."
+              ],
+              "fingerprint": "mg-o4-active-parent-delegation-admission-planner-gap-v1",
+              "id": "MG-O4",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The child-only blocker-reentry owner can currently be selected and dispatched without a live allowed parent, so direct, forged, stale, or already-consumed child invocation is not rejected before budget reservation and operator execution.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O4-CURRENT-PARENT",
+                "O4-FUTURE-PARENT"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "Required-behavior side: EV-REQ requires exact materialized-schema validation and pre-argv rejection of wrong fields, tags, enums, unknown roots, absolute paths, traversal, and symlink escape; EV-AUTH and all ten EV-PROP-* items define the approved parameter contracts, trusted roots, providers, receipt bindings, and fail-closed validation boundaries; EV-REMOTE-REPO grounds the configured remote repository resolver.",
+                "Missing-behavior side: EV-ADAPTERS (scripts/prevention_adapters.py:61-112,115-203,209-239) uses fixed Python field lists and conditionals, converts accepted values directly to argv, and does not load the selected proposal parameter_contract/trusted_roots or perform root/provider/receipt resolution and symlink containment; EV-CONTROLLER passes the registry row directly to this path, and EV-EVENTS lacks typed provider/approval receipt events."
+              ],
+              "fingerprint": "mg-o5-materialized-parameter-root-provider-binding-planner-gap-v1",
+              "id": "MG-O5",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "PLANNING",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Current hard-coded adapters can construct argv from values that were not validated against the selected proposal schema or bound through trusted root, repository, resource, secret, approval, and provider resolvers, leaving type drift and path or authority bypasses possible before effects.",
+              "proposed_disposition": "HANDOFF_TO_PLANNER",
+              "requirement_ids": [
+                "O5-CURRENT-PARAMETERS",
+                "O5-FUTURE-PARAMETERS"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-18T07:19:17.226812Z",
+          "runtime_agent_id": "/root/research_v10_round3_satisfaction",
+          "verdict": "PASS"
+        }
+      },
+      "round_id": "lens-round-a2b1f6aeff35443124cff8c4",
+      "round_number": 3
+    }
+  ],
+  "schema_version": 1,
+  "scope_hash": "9b388ca9af4d43de2051fdea5e8b35d60d1788f911bb22bb54befbb7cf00ce2f",
+  "updated_at": "2026-07-18T07:23:22.512543Z",
+  "verdict": "PASS"
+}

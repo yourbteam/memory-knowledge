@@ -1,0 +1,248 @@
+{
+  "schema_version": 1,
+  "proposal_status": "APPROVED",
+  "owner_sequence_id": "discovery-bootstrap",
+  "availability_policy": "AVAILABLE",
+  "standalone": true,
+  "authority": "Kamen",
+  "authority_approvals": {
+    "budget_and_roots": {
+      "status": "APPROVED",
+      "decision_id": "discovery-bootstrap-budget-schema-v1"
+    },
+    "runtime_and_terminal": {
+      "status": "APPROVED",
+      "decision_id": "discovery-bootstrap-runtime-terminal-v1"
+    },
+    "semantic_intake": {
+      "status": "APPROVED",
+      "decision_id": "discovery-bootstrap-semantic-intake-v1"
+    }
+  },
+  "source": {
+    "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_bootstrap.py",
+    "implementation_sha256": "36290a2f0c42454ae8cf4fc199fc5dd4dd4a057383964f4a200a084c81a78ed1",
+    "implementation_approved_post_correction_sha256": "db7fb226f24b4ef2ba857a6a2c3912688f5a49f73fe084ded04659c43dbdbe90",
+    "implementation_source_correction_decision_id": "discovery-bootstrap-semantic-intake-v1",
+    "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/discovery-bootstrap/sequence.md",
+    "sequence_sha256": "6fb482102d112029ddd0aff704c0b61b9f79586ba68c83b72780185947463dbc",
+    "sequence_approved_post_correction_sha256": "830ecd085a5647be91562ea13a9147aad872c32e1d47cfd49378db34d95ec6cb",
+    "sequence_source_correction_decision_id": "discovery-bootstrap-semantic-intake-v1",
+    "dependencies_sha256": "d12b3e99f4a5aa158e4dab16b6ede03bb191de4ee9fb4374263ebba452dad90a"
+  },
+  "unit_budget": {
+    "schema_version": 1,
+    "owner_sequence_id": "discovery-bootstrap",
+    "productive_milliseconds": 3600000,
+    "mandatory_role_milliseconds": {
+      "CORE": 3600000,
+      "INTERNAL_READINESS": 3600000,
+      "REQUIREMENTS_COVERAGE": 3600000,
+      "REQUIREMENTS_SATISFACTION": 3600000
+    },
+    "adjudication_milliseconds": 3600000,
+    "materialization_milliseconds": 3600000,
+    "terminal_milliseconds": 3600000,
+    "retry_milliseconds": 0,
+    "duration_milliseconds": 28800000,
+    "derivation": "One bounded bootstrap transaction plus the seven required research/terminal tasks under the approved sixty-minute atomic-task cap; any retry remains inside productive execution."
+  },
+  "trusted_roots": {
+    "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
+    "discovery-root": "/Users/kamenkamenov/memory-knowledge/operations/sequences/discovery",
+    "runtime-temp": "/private/tmp",
+    "receipt-root": "/private/tmp/work-memory",
+    "repository-root-registry": "A content-addressed manifest mapping configured repository keys to approved canonical roots"
+  },
+  "parameter_contract": {
+    "command": {
+      "type": "ENUM",
+      "values": [
+        "start"
+      ],
+      "required": true
+    },
+    "spec": {
+      "type": "EXACT_OBJECT",
+      "schema": "bootstrap_spec_v2",
+      "required": true
+    },
+    "spec_file": {
+      "type": "PATH",
+      "trusted_roots": [
+        "discovery-root",
+        "runtime-temp"
+      ],
+      "mode": "READ_REGULAR_FILE",
+      "materializes": "spec",
+      "required": false
+    },
+    "root": {
+      "type": "PATH",
+      "fixed_root": "memory-knowledge",
+      "caller_supplied": false
+    },
+    "repo_roots_file": {
+      "type": "PATH",
+      "trusted_root": "discovery-root",
+      "suffix": ".repositories.json",
+      "mode": "READ_REGULAR_FILE",
+      "schema": "repository-root-registry",
+      "required_when": "a dependency uses a non-default repository key"
+    },
+    "bootstrap_spec_v2": {
+      "schema_version": {
+        "type": "INTEGER",
+        "fixed": 1
+      },
+      "task_id": {
+        "type": "STRING",
+        "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$"
+      },
+      "operation_kind": {
+        "type": "ENUM",
+        "values": [
+          "auth",
+          "cleanup",
+          "container",
+          "database",
+          "deploy",
+          "image",
+          "other",
+          "package",
+          "read-only",
+          "remote-operator",
+          "single-build",
+          "single-test",
+          "workflow-drive"
+        ]
+      },
+      "date": {
+        "type": "ISO_DATE"
+      },
+      "sequence_name": {
+        "type": "STRING",
+        "minimum_length": 1,
+        "maximum_length": 256
+      },
+      "outcome": {
+        "type": "STRING",
+        "minimum_length": 1,
+        "maximum_length": 4000
+      },
+      "why_repeatable": {
+        "type": "STRING",
+        "minimum_length": 1,
+        "maximum_length": 4000
+      },
+      "steps": {
+        "type": "NONEMPTY_LIST",
+        "maximum_items": 100,
+        "item_fields": [
+          "step",
+          "command",
+          "result",
+          "note"
+        ],
+        "cross_check": "Every row maps one-to-one to candidate_identity.steps; command text is a rendering of typed argv, not an independent shell authority."
+      },
+      "inputs": {
+        "type": "UNIQUE_LIST_STRING",
+        "maximum_items": 64,
+        "item_maximum_length": 4000,
+        "required": false
+      },
+      "failure_handling": {
+        "type": "STRING",
+        "minimum_length": 1,
+        "maximum_length": 4000,
+        "forbid_tbd": true,
+        "required": false
+      },
+      "verified_path": {
+        "type": "STRING",
+        "minimum_length": 1,
+        "maximum_length": 4000,
+        "forbid_tbd": true,
+        "required": false
+      },
+      "dependencies": {
+        "type": "LIST",
+        "maximum_items": 100,
+        "item_schema": {
+          "kind": {
+            "type": "ENUM",
+            "values": [
+              "file",
+              "glob",
+              "sequence"
+            ]
+          },
+          "repository_key": {
+            "type": "ENUM_FROM_REGISTRY",
+            "registry": "repo_roots_file or configured default repository-root-registry"
+          },
+          "path_or_sequence_id": {
+            "type": "REPOSITORY_RELATIVE_PATH_OR_SEQUENCE_ID",
+            "trusted_root_from": "repository_key"
+          }
+        }
+      },
+      "candidate_identity": {
+        "type": "EXACT_OBJECT",
+        "schema": "sequence_candidate_contract.IDENTITY_KEYS",
+        "required": true
+      },
+      "candidate_fingerprint": {
+        "type": "SHA256",
+        "must_equal": "canonical SHA-256 of candidate_identity",
+        "required": true
+      },
+      "observer_provenance": {
+        "type": "EXACT_OBJECT",
+        "fields": {
+          "decision_id": "UUID",
+          "observer_version": 1,
+          "rule_version": 1
+        },
+        "required": true
+      }
+    },
+    "validation_boundary": "Materialize inline JSON or a trusted spec file into one exact v2 object; validate all candidate identity, annotation, dependency, repository-root, path/glob, and cross-rendered step constraints before budget reservation. Reject legacy specs missing the complete typed candidate identity and reject caller-supplied root or repository mappings."
+  },
+  "effect_and_reconciliation_contract": {
+    "effect_identity": "bootstrap_request_sha256 plus deterministic run_id and event_id derived from the normalized spec and durable repository-root snapshot",
+    "prepare": "Before creating discovery state, persist the request hash, deterministic ids, resolved discovery/manifest/receipt paths, expected canonical bytes/hashes, repository-root snapshot, and initially observed artifact matrix under the bootstrap lock.",
+    "observable_artifacts": [
+      "discovery document canonical bytes and BootstrapRequestSha256",
+      "dependency manifest canonical JSON and lineage id",
+      "classification receipt and hash",
+      "selection receipt and hash",
+      "active guard state",
+      "source bundle and hash",
+      "run_started event with deterministic event_id and run_id"
+    ],
+    "reconciliation": {
+      "ALREADY_APPLIED": "Every observable artifact exists exactly once and byte/hash/identity matches the prepared request, including the deterministic run_started event.",
+      "NOT_APPLIED": "No observable artifact exists, or an existing exact proper prefix matches preparation and the remaining artifacts are absent; resume only from the first absent artifact under the same lock.",
+      "INDETERMINATE": "Any target, receipt, active state, bundle, ledger event, repository-root snapshot, or pre-existing task/discovery artifact conflicts with the prepared bytes or identity."
+    },
+    "resume_rule": "Never delete or overwrite a pre-existing artifact. Cleanup may remove only artifacts proven created by the current effect before ledger commit; identical retry after ledger commit returns the same recovered receipt."
+  },
+  "terminal_contract": {
+    "common": [
+      "The process return code is zero.",
+      "The output is a schema-valid object with ok=true and the complete deterministic identity/hash fields.",
+      "The semantic verifier reloads every generated artifact and the ledger after the lock-protected transaction.",
+      "Exactly one owner_terminal event and matching terminal artifact exist for effect_id."
+    ],
+    "success": "bootstrap_request_sha256 equals the normalized request; discovery and manifest canonical bytes match; classification, selection, and active receipts bind the same task/discovery/bundle/root snapshot; source_bundle_hash is recomputed; exactly one deterministic run_started event matches run_id/event_id; recovered accurately reflects whether that event pre-existed.",
+    "source_corrections": [
+      "Fix root to the trusted memory-knowledge repository and bind spec/repository-manifest files to approved roots.",
+      "Require the complete typed candidate identity/provenance shape and cap lists using the existing sequence_candidate_contract bounds instead of accepting a partially legacy free-form spec.",
+      "Persist the expected artifact matrix before creation so owner STARTED reconciliation can resume exact proper prefixes and fail closed on conflicts.",
+      "Emit exactly one structured owner terminal artifact only after independent re-observation of all bundle, receipt, guard, root-snapshot, and ledger evidence."
+    ]
+  },
+  "authority_decisions_required": []
+}

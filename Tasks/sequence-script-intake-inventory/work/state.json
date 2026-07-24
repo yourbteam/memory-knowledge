@@ -1,0 +1,2160 @@
+{
+  "attempts": [
+    {
+      "candidate_hash": null,
+      "close_evidence": {
+        "reason": "The first core pass did not return within the bounded parent reporting window and was stopped before producing a candidate.",
+        "runtime_status": "interrupted",
+        "slot_closed": true,
+        "slot_released": true,
+        "terminal_output_received": false
+      },
+      "input_envelope_hash": "b3790dc7539ab3761052b463656e17629c114741d1f5c8f54d9b4b3f7c92311b",
+      "output_hash": null,
+      "recorded_at": "2026-07-23T13:04:58.416377Z",
+      "role": "CORE_RESEARCHER",
+      "round": 1,
+      "runtime_agent_id": "/root/sequence_intake_core",
+      "slot_closed": true,
+      "status": "FAILED"
+    },
+    {
+      "candidate_hash": "bdf136e09f8b1735c46b99c2f8002e00e2d22567d5eda9b3b93902ac143f4961",
+      "close_evidence": {
+        "parent_materialization": "The core retry returned all 27 rows; the parent normalized evidence hashes and preserved the candidate's classifications.",
+        "runtime_status": "completed",
+        "slot_closed": true,
+        "slot_released": true,
+        "terminal_output_received": true
+      },
+      "input_envelope_hash": "b3790dc7539ab3761052b463656e17629c114741d1f5c8f54d9b4b3f7c92311b",
+      "output_hash": "bdf136e09f8b1735c46b99c2f8002e00e2d22567d5eda9b3b93902ac143f4961",
+      "recorded_at": "2026-07-23T13:14:07.231564Z",
+      "role": "CORE_RESEARCHER",
+      "round": 1,
+      "runtime_agent_id": "/root/sequence_intake_core_retry",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "bdf136e09f8b1735c46b99c2f8002e00e2d22567d5eda9b3b93902ac143f4961",
+      "close_evidence": {
+        "runtime_status": "completed",
+        "slot_closed": true,
+        "slot_released": true,
+        "terminal_envelope_valid": true,
+        "terminal_output_received": true
+      },
+      "input_envelope_hash": "b3790dc7539ab3761052b463656e17629c114741d1f5c8f54d9b4b3f7c92311b",
+      "output_hash": "71ad6acc397ccae91e6e6a0722c19fd0d7c7679dd9b5be5bdfbad3a51b57551a",
+      "recorded_at": "2026-07-23T13:16:59.379729Z",
+      "role": "INTERNAL_READINESS",
+      "round": 1,
+      "runtime_agent_id": "/root/sequence_intake_readiness",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "bdf136e09f8b1735c46b99c2f8002e00e2d22567d5eda9b3b93902ac143f4961",
+      "close_evidence": {
+        "runtime_status": "completed",
+        "slot_closed": true,
+        "slot_released": true,
+        "terminal_envelope_valid": true,
+        "terminal_output_received": true
+      },
+      "input_envelope_hash": "b3790dc7539ab3761052b463656e17629c114741d1f5c8f54d9b4b3f7c92311b",
+      "output_hash": "29726b68092248ea039e6840ba80191ff18d9c351758e422c2e228bad3c81e86",
+      "recorded_at": "2026-07-23T13:17:06.068453Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 1,
+      "runtime_agent_id": "/root/sequence_intake_coverage",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "bdf136e09f8b1735c46b99c2f8002e00e2d22567d5eda9b3b93902ac143f4961",
+      "close_evidence": {
+        "runtime_status": "completed",
+        "slot_closed": true,
+        "slot_released": true,
+        "terminal_envelope_valid": true,
+        "terminal_output_received": true
+      },
+      "input_envelope_hash": "b3790dc7539ab3761052b463656e17629c114741d1f5c8f54d9b4b3f7c92311b",
+      "output_hash": "4952bb1bceb522534fa7304d08b73fcb660ff5d563468f0c9be4209b6f03bb89",
+      "recorded_at": "2026-07-23T13:17:12.330144Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 1,
+      "runtime_agent_id": "/root/sequence_intake_satisfaction",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "budgets": {
+    "deadline_at": "2026-07-23T13:53:59.260656Z",
+    "max_attempts": 15,
+    "max_minutes": 60,
+    "max_role_retries": 1,
+    "max_rounds": 3,
+    "started_at": "2026-07-23T12:53:59.260656Z"
+  },
+  "candidates": {
+    "candidate-4c8416e0a9fd4286082fe8c5": {
+      "candidate_hash": "bdf136e09f8b1735c46b99c2f8002e00e2d22567d5eda9b3b93902ac143f4961",
+      "candidate_id": "candidate-4c8416e0a9fd4286082fe8c5",
+      "candidate_payload": {
+        "call_site_inventory": [
+          {
+            "bypass_risk": "model constructs quoted argv",
+            "current_behavior": "direct flag templates",
+            "surface": "operations/sequences/SEQUENCES.md"
+          },
+          {
+            "bypass_risk": "bypasses shared intake",
+            "current_behavior": "direct argv, env, JSON, and multi-command instructions",
+            "surface": "operations/sequences/*/sequence.md"
+          },
+          {
+            "bypass_risk": "teaches the model to construct the envelope",
+            "current_behavior": "checked-exec complete envelope",
+            "surface": "skills/sequence-runner/SKILL.md"
+          },
+          {
+            "bypass_risk": "source-only update leaves installed copy stale",
+            "current_behavior": "same argument-bearing live instructions",
+            "surface": "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md"
+          },
+          {
+            "bypass_risk": "must be contained to grounded machine compatibility",
+            "current_behavior": "direct arguments remain callable",
+            "surface": "legacy script CLIs"
+          }
+        ],
+        "evidence_index": [
+          {
+            "accessed_at": null,
+            "id": "E-REGISTRY",
+            "limitations": "Registry prose does not prove source behavior.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/operations/sequences/SEQUENCES.md",
+            "source_sha256": "8e19f6676f078c52a1fa67cd8af4c89c7f6688fe30d2c697a0937b6958f68ea7",
+            "supported_claim": "Canonical 27-row registry and declared automation."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-SKILL-SOURCE",
+            "limitations": "Instruction evidence only.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/skills/sequence-runner/SKILL.md",
+            "source_sha256": "800f73ea94aa8a9a275e08e1e1851307f913ada70103372a2f7c4049e2b62238",
+            "supported_claim": "Source skill teaches argument-bearing checked execution."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-SKILL-INSTALLED",
+            "limitations": "Instruction evidence only.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md",
+            "source_sha256": "800f73ea94aa8a9a275e08e1e1851307f913ada70103372a2f7c4049e2b62238",
+            "supported_claim": "Installed skill matches the argument-bearing source skill."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-INTAKE",
+            "limitations": "Prototype covers only two callers and still exposes generic argv collection.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/script_intake.py",
+            "source_sha256": "df6616bc1de28bf4f8773cd61dd2081cafe890b9c9bd9e58b7e274793ff5547b",
+            "supported_claim": "Prototype requires format/example/constraints and builds typed answers/argv."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-MAWF-HARNESS",
+            "limitations": "Representative MAWF owner only.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/local_workflow_orch_image_harness.py",
+            "source_sha256": "2ae45612bc4b960b49f55c27a2fc0c194886b9581467708ea1c5c1112bf810ef",
+            "supported_claim": "Container/image owner is a multi-command argparse CLI."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-GREENFIELD-FULL",
+            "limitations": "One controller.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_full_drive.sh",
+            "source_sha256": "6bcb0809cdfe929fa0ff060b294b52d5d9a4141284851e81845d35d33c86ad5c",
+            "supported_claim": "Full-drive owner parses a large flag surface."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-GREENFIELD-RECREATE",
+            "limitations": "Its registered dependency manifest is absent.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_recreate_resume.sh",
+            "source_sha256": "569bb2308136358f8c2d2682b1e8a8c37352b6a4cc6962ef5f33187e742b522e",
+            "supported_claim": "Recreate/resume owner requires three identifiers and effectful flags."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-USER-ADMIN",
+            "limitations": "Live MCP/auth not exercised.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/mcp-agents-workflow/dist/remote-mcp-user-admin/remote_mcp_user_admin_tui.py",
+            "source_sha256": "1f20c0897ac9ac5a7446e6b1bc453ebf64f7eb94b339eb31f9570447aa8cbca8",
+            "supported_claim": "User admin has both no-arg TUI and agent-action flag paths."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-CALLCENTER-STT",
+            "limitations": "Representative callcenter owner.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/callcenter-harness/scripts/setup_airgapped_stt.sh",
+            "source_sha256": "4f4dc5ed446561ec993aecfb0a42f097947040fd0b9bb4f4f08361bf77993221",
+            "supported_claim": "Callcenter setup uses subcommands, positional audio, and environment inputs."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-CALLCENTER-SEED",
+            "limitations": "Retire controller is separately described by its bundle.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/callcenter-harness/scripts/seed_landing.sh",
+            "source_sha256": "f07aec3fe95a68ed1651eb747f3f0747e57278b01d24017e9fbb042ff7b5e1de",
+            "supported_claim": "Landing seed uses subcommands and environment paths."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-GIT-PUBLISH",
+            "limitations": "Authorization remains external.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
+            "source_sha256": "27912869dd33e97847aab13f26e00957888ec58f96832a263987d419bd4b3f45",
+            "supported_claim": "Commit/push owner exposes scoped dry-run, publish, resume, and integration inputs."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-CHECKPOINT",
+            "limitations": "One convergence controller.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_checkpoint_run.py",
+            "source_sha256": "70962f95a2a9df988c6e33bcb599a497f0f8fbf41258d8bf504c8e2559e82a0d",
+            "supported_claim": "Checkpoint owner requires inline caller-authored child-intent JSON."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-STATE-CYCLE",
+            "limitations": "One convergence controller.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_state_review_cycle.py",
+            "source_sha256": "4279decd2e34b9c5747271d68b483d131d8823b333bbd30aac40e420aa0c6c3a",
+            "supported_claim": "Review-cycle owner requires a caller-built request JSON file."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-UP-RESUME",
+            "limitations": "Live path not executed.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/united-partners/scripts/run_client_regeneration.py",
+            "source_sha256": "e8ce47fd554b722c89d88086972574753caf93d19129cf4b8da9c0cd059f848e",
+            "supported_claim": "Live resume driver requires client/run/phase flags and environment-backed agent command."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-MAWF-SEQUENCE-DOC",
+            "limitations": "Instruction evidence; shared source owns the exact CLI.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/operations/sequences/mawf-playbook-full-test/sequence.md",
+            "source_sha256": "1bca61126aa23abe6ef3cfd9112c6d9d958d55919d3603bec9f9d932450b02da",
+            "supported_claim": "MAWF full/speed/reentry invocation shapes are documented in registered bundles."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-TAGGABLE-SEQUENCE-DOC",
+            "limitations": "Admin source is unavailable; API sources are outside the checked-out branch.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/operations/sequences/taggable-api-deploy/sequence.md",
+            "source_sha256": "c2e646b727fc32dd09e05a7e8f6b4b27641bd6afed43a2c0f6e796fdd5c84a7b",
+            "supported_claim": "Taggable deploy and reload interfaces and effect boundaries are documented."
+          },
+          {
+            "accessed_at": null,
+            "id": "E-MK-CONTROLLERS",
+            "limitations": "Representative lifecycle controller.",
+            "source_kind": "LOCAL_FILE",
+            "source_locator": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_promotion_lifecycle.py",
+            "source_sha256": "312fb94fbf3fd572604166501301aa1755c3c932d49f81f1bc4a8ba7018b8fda",
+            "supported_claim": "Representative memory-knowledge lifecycle controller exposes subcommands and file/flag inputs."
+          }
+        ],
+        "material_gaps": [
+          "GAP-GREENFIELD-RECREATE-DEPENDENCIES",
+          "GAP-TAGGABLE-CHECKOUT-SOURCES",
+          "GAP-TAGGABLE-ADMIN-SOURCE"
+        ],
+        "migration_summary": {
+          "compatibility_rule": "Legacy arguments remain only for grounded machine callers; normal skill/sequence use routes through no-argument intake.",
+          "shapes": {
+            "direct_adapter": 20,
+            "inherited_subsequence": 1,
+            "internal_machine_contract": 1,
+            "parameterless_test": 1,
+            "session_or_composed_controller": 4
+          },
+          "stable_contract": {
+            "construction": "intake builds typed JSON, files, environment maps, or argv",
+            "dispatch": "separate authorization executes only the reviewed payload",
+            "launch": "canonical operator entrypoint receives no user-authored arguments",
+            "questions": "one at a time with response format, example, and constraints",
+            "review": "redacted immutable manifest before effects"
+          }
+        },
+        "registry_snapshot": {
+          "count": 27,
+          "evidence_ids": [
+            "E-REGISTRY"
+          ],
+          "registry_parser_hash": "f577f8fe918d10e96e235c81e2f46d549bf34b1b8b8f2d749a53d90fb9c61d0e",
+          "sequence_ids": [
+            "local-workflow-orch-image",
+            "greenfield-full-drive",
+            "remote-mcp-user-onboarding",
+            "taggable-source-reload",
+            "mawf-playbook-full-test",
+            "mawf-playbook-speed-test",
+            "mawf-playbook-blocker-reentry",
+            "github-app-repos-refresh",
+            "claude-auth-token-refresh",
+            "taggable-api-deploy",
+            "taggable-admin-spa-deploy",
+            "taggable-media-worker-deploy",
+            "airgapped-local-bulgarian-stt",
+            "airgapped-redaction-stack",
+            "callcenter-harness-provision-verify",
+            "airgapped-llm-judge",
+            "secure-landing-seed",
+            "callcenter-harness-engine-invariants",
+            "discovery-promotion-lifecycle",
+            "commit-push-main",
+            "discovery-bootstrap",
+            "discovery-candidate-reconciliation",
+            "convergence-checkpoint-run",
+            "scoped-context-edit",
+            "convergence-state-review-cycle",
+            "greenfield-recreate-resume",
+            "workflow-resume-from-phase-live-confirmation"
+          ]
+        },
+        "repository_summary": {
+          "callcenter-harness": {
+            "availability": "available",
+            "sequence_count": 6
+          },
+          "mcp-agents-workflow": {
+            "availability": "available",
+            "sequence_count": 9
+          },
+          "memory-knowledge": {
+            "availability": "available",
+            "sequence_count": 7
+          },
+          "taggable-admin-spa": {
+            "availability": "unavailable locally",
+            "sequence_count": 1
+          },
+          "taggable-api": {
+            "availability": "repository available; three sources only on origin/main",
+            "sequence_count": 3
+          },
+          "united-partners": {
+            "availability": "available",
+            "sequence_count": 1
+          }
+        },
+        "requirement_statuses": [
+          {
+            "evidence_ids": [
+              "E-REGISTRY"
+            ],
+            "requirement_id": "INV-001",
+            "research_value": [
+              "local-workflow-orch-image",
+              "greenfield-full-drive",
+              "remote-mcp-user-onboarding",
+              "taggable-source-reload",
+              "mawf-playbook-full-test",
+              "mawf-playbook-speed-test",
+              "mawf-playbook-blocker-reentry",
+              "github-app-repos-refresh",
+              "claude-auth-token-refresh",
+              "taggable-api-deploy",
+              "taggable-admin-spa-deploy",
+              "taggable-media-worker-deploy",
+              "airgapped-local-bulgarian-stt",
+              "airgapped-redaction-stack",
+              "callcenter-harness-provision-verify",
+              "airgapped-llm-judge",
+              "secure-landing-seed",
+              "callcenter-harness-engine-invariants",
+              "discovery-promotion-lifecycle",
+              "commit-push-main",
+              "discovery-bootstrap",
+              "discovery-candidate-reconciliation",
+              "convergence-checkpoint-run",
+              "scoped-context-edit",
+              "convergence-state-review-cycle",
+              "greenfield-recreate-resume",
+              "workflow-resume-from-phase-live-confirmation"
+            ]
+          },
+          {
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-MAWF-HARNESS",
+              "E-GREENFIELD-RECREATE",
+              "E-USER-ADMIN",
+              "E-CALLCENTER-STT",
+              "E-GIT-PUBLISH",
+              "E-UP-RESUME"
+            ],
+            "requirement_id": "INV-002",
+            "research_value": [
+              "20 direct adapters",
+              "4 session/composed controllers",
+              "1 inherited sub-sequence",
+              "1 internal machine adapter",
+              "1 parameterless test",
+              "3 taggable-api sources only on origin/main",
+              "1 unavailable admin source",
+              "1 missing dependency manifest"
+            ]
+          },
+          {
+            "evidence_ids": [
+              "E-MAWF-HARNESS",
+              "E-GREENFIELD-FULL",
+              "E-USER-ADMIN",
+              "E-CALLCENTER-STT",
+              "E-GIT-PUBLISH",
+              "E-CHECKPOINT",
+              "E-STATE-CYCLE",
+              "E-UP-RESUME"
+            ],
+            "requirement_id": "INV-003",
+            "research_value": [
+              "subcommands",
+              "positional argv",
+              "named/repeated flags",
+              "environment maps",
+              "paths/manifests",
+              "JSON files",
+              "inline JSON",
+              "stdin",
+              "interactive answers",
+              "MCP objects",
+              "implicit checkout/default target"
+            ]
+          },
+          {
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-SKILL-SOURCE",
+              "E-SKILL-INSTALLED"
+            ],
+            "requirement_id": "INV-004",
+            "research_value": [
+              "registry rules",
+              "27 sequence documents",
+              "source skill",
+              "installed skill",
+              "legacy CLIs",
+              "MCP composition",
+              "remote operator packages"
+            ]
+          },
+          {
+            "evidence_ids": [
+              "E-INTAKE",
+              "E-REGISTRY"
+            ],
+            "requirement_id": "INV-005",
+            "research_value": [
+              "no user-authored arguments",
+              "one guided question at a time",
+              "format/example/constraints on every question",
+              "intake-built typed payloads",
+              "top-level controllers for composed sequences",
+              "internal machine adapters/tests not forced into artificial questionnaires",
+              "legacy bypasses explicitly contained"
+            ]
+          },
+          {
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-GIT-PUBLISH",
+              "E-CHECKPOINT",
+              "E-STATE-CYCLE"
+            ],
+            "requirement_id": "INV-006",
+            "research_value": {
+              "authorization": "explicit approval or guard after construction",
+              "dispatch": "execute only reviewed immutable payload",
+              "effect_classes": [
+                "git publication",
+                "deploy",
+                "database/blob",
+                "container/image",
+                "auth/user admin",
+                "package",
+                "cleanup",
+                "remote workflow",
+                "discovery/convergence state"
+              ],
+              "intake": "collect, validate, construct, redact, present manifest"
+            }
+          },
+          {
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-SKILL-SOURCE",
+              "E-SKILL-INSTALLED"
+            ],
+            "requirement_id": "INV-007",
+            "research_value": {
+              "live_gates": [
+                "commit/push",
+                "deploy",
+                "database",
+                "auth",
+                "container",
+                "package",
+                "cleanup",
+                "remote workflow"
+              ],
+              "repositories": {
+                "callcenter-harness": "available",
+                "mcp-agents-workflow": "available",
+                "memory-knowledge": "available",
+                "taggable-admin-spa": "unavailable",
+                "taggable-api": "sources only on origin/main",
+                "united-partners": "available"
+              },
+              "safe_verification": [
+                "schema tests",
+                "question rendering/retry tests",
+                "payload snapshots",
+                "legacy compatibility tests",
+                "no-dispatch dry-runs",
+                "source/installed skill consistency"
+              ]
+            }
+          }
+        ],
+        "sequence_inventory": [
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md",
+              "sequence-runner skill"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "paths",
+              "environment"
+            ],
+            "current_invocation": "subcommand plus command-specific flags",
+            "declared_automation": "mcp-agents-workflow:scripts/local_workflow_orch_image_harness.py",
+            "effect_authorization_boundary": "review before image/container/auth mutation",
+            "entrypoint_kind": "Python multi-command CLI",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-MAWF-HARNESS"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "direct CLI adapter: ask operation-specific semantic questions and build typed argv",
+            "model_authored_structure": "subcommand and flags",
+            "no_argument_behavior": "usage/error",
+            "operation_kinds": [
+              "container",
+              "image"
+            ],
+            "repository_key": "mcp-agents-workflow",
+            "repository_root": "/Users/kamenkamenov/mcp-agents-workflow",
+            "resolved_entrypoints": [
+              "scripts/local_workflow_orch_image_harness.py"
+            ],
+            "sequence_folder": "operations/sequences/local-workflow-orch-image/",
+            "sequence_id": "local-workflow-orch-image"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "spec file",
+              "environment"
+            ],
+            "current_invocation": "required repository/spec/branch plus image, auth, checkpoint, and DAG flags",
+            "declared_automation": "mcp-agents-workflow:scripts/greenfield_full_drive.sh",
+            "effect_authorization_boundary": "review before prune/build/recreate/auth seed/workflow dispatch",
+            "entrypoint_kind": "Shell orchestration controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-GREENFIELD-FULL"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "direct controller intake selecting new drive versus resume and constructing argv",
+            "model_authored_structure": "large argv",
+            "no_argument_behavior": "fails missing required drive inputs",
+            "operation_kinds": [
+              "workflow-drive",
+              "container"
+            ],
+            "repository_key": "mcp-agents-workflow",
+            "repository_root": "/Users/kamenkamenov/mcp-agents-workflow",
+            "resolved_entrypoints": [
+              "scripts/greenfield_full_drive.sh"
+            ],
+            "sequence_folder": "operations/sequences/greenfield-full-drive/",
+            "sequence_id": "greenfield-full-drive"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md",
+              "remote user-admin skill"
+            ],
+            "availability": "source available; MCP runtime-dependent",
+            "current_input_sources": [
+              "prompts",
+              "argv",
+              "state file",
+              "MCP objects",
+              "secret-backed auth"
+            ],
+            "current_invocation": "no-argument menu or extensive action flags plus MCP calls",
+            "declared_automation": "remote user-admin TUI plus memory-knowledge MCP user operations",
+            "effect_authorization_boundary": "review/apply for user, role, status, access, and token changes",
+            "entrypoint_kind": "Interactive TUI plus MCP-backed composition",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-USER-ADMIN"
+            ],
+            "evidence_limitations": [
+              "live MCP/auth state not tested"
+            ],
+            "migration_disposition": "session controller using shared question schema; MCP calls remain internal adapters",
+            "model_authored_structure": "agent action flags and MCP objects remain exposed",
+            "no_argument_behavior": "interactive, but prompts lack the shared format/example/constraints contract",
+            "operation_kinds": [
+              "remote-operator",
+              "auth"
+            ],
+            "repository_key": "mcp-agents-workflow",
+            "repository_root": "/Users/kamenkamenov/mcp-agents-workflow",
+            "resolved_entrypoints": [
+              "dist/remote-mcp-user-admin/remote_mcp_user_admin_tui.py",
+              "mawf_get_user",
+              "mawf_upsert_user"
+            ],
+            "sequence_folder": "operations/sequences/remote-mcp-user-onboarding/",
+            "sequence_id": "remote-mcp-user-onboarding"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "absent from checkout; present on local origin/main ref",
+            "current_input_sources": [
+              "argv",
+              "CSV directory",
+              "metadata",
+              "Azure auth"
+            ],
+            "current_invocation": "required export directory and source-record id; optional redeploy and scale flags",
+            "declared_automation": "taggable-api:tools/Taggable.MigrationRunner/scripts/reload-source.sh",
+            "effect_authorization_boundary": "review before blob replacement, DB scaling, WebJob deploy/trigger, and load",
+            "entrypoint_kind": "Shell database/WebJob controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-TAGGABLE-SEQUENCE-DOC"
+            ],
+            "evidence_limitations": [
+              "implementation file is not in the checked-out branch"
+            ],
+            "migration_disposition": "acquire authoritative source into implementation checkout, then direct intake adapter",
+            "model_authored_structure": "argv and source identity",
+            "no_argument_behavior": "usage/error on origin/main source",
+            "operation_kinds": [
+              "database",
+              "remote-operator"
+            ],
+            "repository_key": "taggable-api",
+            "repository_root": "/Users/kamenkamenov/taggable-api",
+            "resolved_entrypoints": [
+              "tools/Taggable.MigrationRunner/scripts/reload-source.sh"
+            ],
+            "sequence_folder": "operations/sequences/taggable-source-reload/",
+            "sequence_id": "taggable-source-reload"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "files",
+              "environment"
+            ],
+            "current_invocation": "many subcommands, flags, prompt files, operator environment, and response files",
+            "declared_automation": "mawf_playbook_test_sequence.py with full gate policy",
+            "effect_authorization_boundary": "separate approvals for setup, start, gates, continuation, and repair",
+            "entrypoint_kind": "Discrete-action workflow session",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-MAWF-SEQUENCE-DOC"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "top-level session intake/controller owns full policy and action argv",
+            "model_authored_structure": "multi-step argv and gate decisions",
+            "no_argument_behavior": "usage/error",
+            "operation_kinds": [
+              "workflow-drive",
+              "container"
+            ],
+            "repository_key": "mcp-agents-workflow",
+            "repository_root": "/Users/kamenkamenov/mcp-agents-workflow",
+            "resolved_entrypoints": [
+              "scripts/mawf_playbook_test_sequence.py",
+              "dist/remote-mcp-operator/run.sh"
+            ],
+            "sequence_folder": "operations/sequences/mawf-playbook-full-test/",
+            "sequence_id": "mawf-playbook-full-test"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "files",
+              "environment"
+            ],
+            "current_invocation": "same driver with explicit speed policy and gate rejections",
+            "declared_automation": "mawf_playbook_test_sequence.py with speed gate policy",
+            "effect_authorization_boundary": "separate approvals for setup, start, gate rejection, and continuation",
+            "entrypoint_kind": "Discrete-action workflow session",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-MAWF-SEQUENCE-DOC"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "reuse the full-test session intake with speed as a typed choice",
+            "model_authored_structure": "multi-step argv and gate decisions",
+            "no_argument_behavior": "usage/error",
+            "operation_kinds": [
+              "workflow-drive",
+              "container"
+            ],
+            "repository_key": "mcp-agents-workflow",
+            "repository_root": "/Users/kamenkamenov/mcp-agents-workflow",
+            "resolved_entrypoints": [
+              "scripts/mawf_playbook_test_sequence.py",
+              "dist/remote-mcp-operator/run.sh"
+            ],
+            "sequence_folder": "operations/sequences/mawf-playbook-speed-test/",
+            "sequence_id": "mawf-playbook-speed-test"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sub-sequence.md",
+              "full/speed sequence.md"
+            ],
+            "availability": "available through shared driver",
+            "current_input_sources": [
+              "argv",
+              "evidence file"
+            ],
+            "current_invocation": "shared-driver subcommands and evidence flags",
+            "declared_automation": "sub-sequence through mawf_playbook_test_sequence.py",
+            "effect_authorization_boundary": "approval for remediation lane and widened restart",
+            "entrypoint_kind": "Non-standalone sub-sequence",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-MAWF-SEQUENCE-DOC"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "inherit the calling session intake; do not fabricate a script",
+            "model_authored_structure": "reentry mode and argv if directly invoked",
+            "no_argument_behavior": "no standalone entrypoint",
+            "operation_kinds": [
+              "workflow-drive",
+              "container"
+            ],
+            "repository_key": "mcp-agents-workflow",
+            "repository_root": "/Users/kamenkamenov/mcp-agents-workflow",
+            "resolved_entrypoints": [
+              "record-blocker",
+              "reenter"
+            ],
+            "sequence_folder": "operations/sequences/mawf-playbook-blocker-reentry/",
+            "sequence_id": "mawf-playbook-blocker-reentry"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "operator environment",
+              "auth session"
+            ],
+            "current_invocation": "optional server/env/actor flags or defaults",
+            "declared_automation": "mcp-agents-workflow:scripts/github_app_repos_refresh.py",
+            "effect_authorization_boundary": "review target and expected mapping delta",
+            "entrypoint_kind": "Python wrapper plus MCP calls",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-MAWF-SEQUENCE-DOC"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "change no-arg behavior to target/review intake; MCP stays internal",
+            "model_authored_structure": "optional target flags and direct MCP objects",
+            "no_argument_behavior": "can execute refresh immediately with defaults",
+            "operation_kinds": [
+              "remote-operator"
+            ],
+            "repository_key": "mcp-agents-workflow",
+            "repository_root": "/Users/kamenkamenov/mcp-agents-workflow",
+            "resolved_entrypoints": [
+              "scripts/github_app_repos_refresh.py",
+              "workflow.repos.list",
+              "workflow.repos.refresh"
+            ],
+            "sequence_folder": "operations/sequences/github-app-repos-refresh/",
+            "sequence_id": "github-app-repos-refresh"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "credential file references",
+              "environment",
+              "secret stores"
+            ],
+            "current_invocation": "command plus token/config/container/vault/deployment flags",
+            "declared_automation": "claude_auth_refresh.sh plus rotate-credentials.sh",
+            "effect_authorization_boundary": "review before seed, vault write, remote reseed, or rotation",
+            "entrypoint_kind": "Shell credential controllers",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-MAWF-SEQUENCE-DOC"
+            ],
+            "evidence_limitations": [
+              "secret values not inspected"
+            ],
+            "migration_disposition": "non-secret guided target/source intake; never collect secret values",
+            "model_authored_structure": "argv; secrets remain external",
+            "no_argument_behavior": "help/usage",
+            "operation_kinds": [
+              "auth",
+              "container"
+            ],
+            "repository_key": "mcp-agents-workflow",
+            "repository_root": "/Users/kamenkamenov/mcp-agents-workflow",
+            "resolved_entrypoints": [
+              "scripts/claude_auth_refresh.sh",
+              "scripts/rotate-credentials.sh"
+            ],
+            "sequence_folder": "operations/sequences/claude-auth-token-refresh/",
+            "sequence_id": "claude-auth-token-refresh"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "absent from checkout; present on local origin/main ref",
+            "current_input_sources": [
+              "implicit checkout",
+              "PATH",
+              "Azure login",
+              "argv"
+            ],
+            "current_invocation": "no-arg default deploy; optional no-verify",
+            "declared_automation": "taggable-api:scripts/deploy-api.sh",
+            "effect_authorization_boundary": "explicit deploy approval after manifest review",
+            "entrypoint_kind": "Shell deployment controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-TAGGABLE-SEQUENCE-DOC"
+            ],
+            "evidence_limitations": [
+              "implementation file is not in the checked-out branch"
+            ],
+            "migration_disposition": "no-arg intake produces checkout/target/verification manifest before dispatch",
+            "model_authored_structure": "minimal argv; checkout and effect implicit",
+            "no_argument_behavior": "immediate default deployment",
+            "operation_kinds": [
+              "deploy"
+            ],
+            "repository_key": "taggable-api",
+            "repository_root": "/Users/kamenkamenov/taggable-api",
+            "resolved_entrypoints": [
+              "scripts/deploy-api.sh"
+            ],
+            "sequence_folder": "operations/sequences/taggable-api-deploy/",
+            "sequence_id": "taggable-api-deploy"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "repository/script unavailable locally",
+            "current_input_sources": [
+              "implicit checkout",
+              "argv",
+              "build environment",
+              "Azure login"
+            ],
+            "current_invocation": "documented default deploy with optional API base and no-verify",
+            "declared_automation": "taggable-admin-spa:scripts/deploy-admin-spa.sh",
+            "effect_authorization_boundary": "explicit deploy approval after manifest review",
+            "entrypoint_kind": "Shell deployment controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-TAGGABLE-SEQUENCE-DOC"
+            ],
+            "evidence_limitations": [
+              "source cannot be inspected or edited locally"
+            ],
+            "migration_disposition": "acquire authoritative source from owner before implementation, then guided deploy intake",
+            "model_authored_structure": "optional target argv; checkout/effect implicit",
+            "no_argument_behavior": "documented immediate default deployment",
+            "operation_kinds": [
+              "deploy"
+            ],
+            "repository_key": "taggable-admin-spa",
+            "repository_root": null,
+            "resolved_entrypoints": [
+              "scripts/deploy-admin-spa.sh"
+            ],
+            "sequence_folder": "operations/sequences/taggable-admin-spa-deploy/",
+            "sequence_id": "taggable-admin-spa-deploy"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "absent from checkout; present on local origin/main ref",
+            "current_input_sources": [
+              "implicit checkout",
+              "Azure login",
+              "ffmpeg files",
+              "App Settings",
+              "argv"
+            ],
+            "current_invocation": "no-arg default deploy; optional no-verify",
+            "declared_automation": "taggable-api:scripts/deploy-media-worker.sh",
+            "effect_authorization_boundary": "approval before publish/WebJob PUT; DB migration separate",
+            "entrypoint_kind": "Shell WebJob deployment controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-TAGGABLE-SEQUENCE-DOC"
+            ],
+            "evidence_limitations": [
+              "implementation file is not in the checked-out branch"
+            ],
+            "migration_disposition": "no-arg intake produces reviewed WebJob manifest",
+            "model_authored_structure": "minimal argv; target/prerequisites implicit",
+            "no_argument_behavior": "immediate default deployment",
+            "operation_kinds": [
+              "deploy"
+            ],
+            "repository_key": "taggable-api",
+            "repository_root": "/Users/kamenkamenov/taggable-api",
+            "resolved_entrypoints": [
+              "scripts/deploy-media-worker.sh"
+            ],
+            "sequence_folder": "operations/sequences/taggable-media-worker-deploy/",
+            "sequence_id": "taggable-media-worker-deploy"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "environment"
+            ],
+            "current_invocation": "setup subcommand and positional audio; settings in env; worker flags",
+            "declared_automation": "setup_airgapped_stt.sh plus transcribe_airgapped.py",
+            "effect_authorization_boundary": "approval before package/model install; lower-risk offline run gate",
+            "entrypoint_kind": "Shell setup controller plus Python worker",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-CALLCENTER-STT"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "shared intake on operator controller; worker stays internal unless direct use is supported",
+            "model_authored_structure": "argv and environment assignments",
+            "no_argument_behavior": "usage/error",
+            "operation_kinds": [
+              "package"
+            ],
+            "repository_key": "callcenter-harness",
+            "repository_root": "/Users/kamenkamenov/callcenter-harness",
+            "resolved_entrypoints": [
+              "scripts/setup_airgapped_stt.sh",
+              "scripts/transcribe_airgapped.py"
+            ],
+            "sequence_folder": "operations/sequences/airgapped-local-bulgarian-stt/",
+            "sequence_id": "airgapped-local-bulgarian-stt"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "environment"
+            ],
+            "current_invocation": "provision/verify subcommand with environment defaults",
+            "declared_automation": "setup_airgapped_redaction.sh",
+            "effect_authorization_boundary": "approval before install; verify read-only",
+            "entrypoint_kind": "Shell setup controller plus test",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-CALLCENTER-STT"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "guided operation selection; retain parameterless test as verification",
+            "model_authored_structure": "subcommand and environment",
+            "no_argument_behavior": "usage/error",
+            "operation_kinds": [
+              "package"
+            ],
+            "repository_key": "callcenter-harness",
+            "repository_root": "/Users/kamenkamenov/callcenter-harness",
+            "resolved_entrypoints": [
+              "scripts/setup_airgapped_redaction.sh",
+              "scripts/test_ner_chunk.py"
+            ],
+            "sequence_folder": "operations/sequences/airgapped-redaction-stack/",
+            "sequence_id": "airgapped-redaction-stack"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "components available",
+            "current_input_sources": [
+              "sub-sequence inputs",
+              "path",
+              "environment",
+              "generated JSON"
+            ],
+            "current_invocation": "multiple commands, env assignments, audio path, and generated workflow JSON",
+            "declared_automation": "composed STT/redaction setup plus cc smoke scripts",
+            "effect_authorization_boundary": "separate provisioning, file-write, audio-run, and cleanup gates",
+            "entrypoint_kind": "Composed sequence without one controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-CALLCENTER-STT"
+            ],
+            "evidence_limitations": [
+              "requires a new controller, not a wrapper-only edit"
+            ],
+            "migration_disposition": "create one no-arg controller; deterministically generate workflow JSON",
+            "model_authored_structure": "command orchestration and workflow JSON",
+            "no_argument_behavior": "no top-level executable",
+            "operation_kinds": [
+              "package",
+              "workflow-drive"
+            ],
+            "repository_key": "callcenter-harness",
+            "repository_root": "/Users/kamenkamenov/callcenter-harness",
+            "resolved_entrypoints": [
+              "airgapped-local-bulgarian-stt",
+              "airgapped-redaction-stack",
+              "scripts/cc_*smoke*.py",
+              "manual large-v3 workflow variant"
+            ],
+            "sequence_folder": "operations/sequences/callcenter-harness-provision-verify/",
+            "sequence_id": "callcenter-harness-provision-verify"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "environment",
+              "stdin"
+            ],
+            "current_invocation": "setup subcommand; adapter optional model and stdin",
+            "declared_automation": "setup_airgapped_judge.sh plus judge_ollama.py",
+            "effect_authorization_boundary": "approval before install/model pull; offline evaluation separate",
+            "entrypoint_kind": "Setup controller plus stdin-to-JSON machine adapter",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-CALLCENTER-STT"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "migrate operator setup/orchestration; preserve internal machine JSON adapter",
+            "model_authored_structure": "setup argv; adapter owns evaluator JSON",
+            "no_argument_behavior": "setup usage; adapter consumes stdin with defaults",
+            "operation_kinds": [
+              "package"
+            ],
+            "repository_key": "callcenter-harness",
+            "repository_root": "/Users/kamenkamenov/callcenter-harness",
+            "resolved_entrypoints": [
+              "scripts/setup_airgapped_judge.sh",
+              "scripts/judge_ollama.py",
+              "scripts/cc_command_eval_smoke.py"
+            ],
+            "sequence_folder": "operations/sequences/airgapped-llm-judge/",
+            "sequence_id": "airgapped-llm-judge"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "environment"
+            ],
+            "current_invocation": "seed/list/verify with env; retire optional file-or-all positional target",
+            "declared_automation": "seed_landing.sh plus scrub_and_retire.py",
+            "effect_authorization_boundary": "explicit per-file/all retirement review",
+            "entrypoint_kind": "Ingestion controller plus destructive retire controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-CALLCENTER-SEED"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "guided action/paths; no-arg retire cannot silently mean all",
+            "model_authored_structure": "argv and environment; dangerous all target implicit",
+            "no_argument_behavior": "seed usage; retire defaults to all",
+            "operation_kinds": [
+              "cleanup"
+            ],
+            "repository_key": "callcenter-harness",
+            "repository_root": "/Users/kamenkamenov/callcenter-harness",
+            "resolved_entrypoints": [
+              "scripts/seed_landing.sh",
+              "scripts/scrub_and_retire.py"
+            ],
+            "sequence_folder": "operations/sequences/secure-landing-seed/",
+            "sequence_id": "secure-landing-seed"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "environment",
+              "optional audio path"
+            ],
+            "current_invocation": "PYTHONPATH=src python scripts/test_engine_upgrades.py",
+            "declared_automation": "test_engine_upgrades.py",
+            "effect_authorization_boundary": "core test read-only; real audio requires file-processing gate",
+            "entrypoint_kind": "Parameterless deterministic test plus optional real smoke",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-CALLCENTER-STT"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "retain core test; add sequence adapter only for optional real smoke",
+            "model_authored_structure": "none for core test",
+            "no_argument_behavior": "core test runs deterministically and needs no answers",
+            "operation_kinds": [
+              "single-test"
+            ],
+            "repository_key": "callcenter-harness",
+            "repository_root": "/Users/kamenkamenov/callcenter-harness",
+            "resolved_entrypoints": [
+              "scripts/test_engine_upgrades.py",
+              "optional scripts/cc_redact_smoke.py"
+            ],
+            "sequence_folder": "operations/sequences/callcenter-harness-engine-invariants/",
+            "sequence_id": "callcenter-harness-engine-invariants"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "files",
+              "repeated values"
+            ],
+            "current_invocation": "status/drive/correct variants with flags, manifests, and repo-root files",
+            "declared_automation": "memory-knowledge:scripts/discovery_promotion_lifecycle.py",
+            "effect_authorization_boundary": "review before promotion/correction/transition/workflow execution",
+            "entrypoint_kind": "Python lifecycle controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-MK-CONTROLLERS"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "one guided lifecycle intake builds typed request/argv",
+            "model_authored_structure": "large argv and file preparation",
+            "no_argument_behavior": "usage/error",
+            "operation_kinds": [
+              "workflow-drive"
+            ],
+            "repository_key": "memory-knowledge",
+            "repository_root": "/Users/kamenkamenov/memory-knowledge",
+            "resolved_entrypoints": [
+              "scripts/discovery_promotion_lifecycle.py"
+            ],
+            "sequence_folder": "operations/sequences/discovery-promotion-lifecycle/",
+            "sequence_id": "discovery-promotion-lifecycle"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "manifest",
+              "overlay manifest",
+              "message"
+            ],
+            "current_invocation": "repository plus manifest/message/branch/remote and publish/resume/integration flags",
+            "declared_automation": "memory-knowledge:scripts/scoped_git_publish.py",
+            "effect_authorization_boundary": "dry-run review, then distinct commit/push/integration/reconciliation approval",
+            "entrypoint_kind": "Python scoped Git publication controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-GIT-PUBLISH"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "ask semantic questions; intake writes manifest and builds one of six grounded modes",
+            "model_authored_structure": "argv and manifest contents",
+            "no_argument_behavior": "argparse error",
+            "operation_kinds": [
+              "other"
+            ],
+            "repository_key": "memory-knowledge",
+            "repository_root": "/Users/kamenkamenov/memory-knowledge",
+            "resolved_entrypoints": [
+              "scripts/scoped_git_publish.py"
+            ],
+            "sequence_folder": "operations/sequences/commit-push-main/",
+            "sequence_id": "commit-push-main"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md",
+              "registry discovery instructions"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "JSON file"
+            ],
+            "current_invocation": "start with JSON spec file and optional repository/prevention flags",
+            "declared_automation": "memory-knowledge:scripts/discovery_bootstrap.py",
+            "effect_authorization_boundary": "review generated commands before activation/run",
+            "entrypoint_kind": "Python discovery controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-MK-CONTROLLERS"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "intake collects fields and writes the versioned spec",
+            "model_authored_structure": "JSON spec and argv",
+            "no_argument_behavior": "usage/error",
+            "operation_kinds": [
+              "workflow-drive"
+            ],
+            "repository_key": "memory-knowledge",
+            "repository_root": "/Users/kamenkamenov/memory-knowledge",
+            "resolved_entrypoints": [
+              "scripts/discovery_bootstrap.py"
+            ],
+            "sequence_folder": "operations/sequences/discovery-bootstrap/",
+            "sequence_id": "discovery-bootstrap"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "manifest/policy files"
+            ],
+            "current_invocation": "audit/validate/execute/rolling/drive with manifests and paths",
+            "declared_automation": "memory-knowledge:scripts/discovery_candidate_reconciliation.py",
+            "effect_authorization_boundary": "review dispositions before promotion/index mutation",
+            "entrypoint_kind": "Python reconciliation controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-MK-CONTROLLERS"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "guided action plus deterministic manifest/path construction",
+            "model_authored_structure": "argv and disposition manifest",
+            "no_argument_behavior": "usage/error",
+            "operation_kinds": [
+              "other"
+            ],
+            "repository_key": "memory-knowledge",
+            "repository_root": "/Users/kamenkamenov/memory-knowledge",
+            "resolved_entrypoints": [
+              "scripts/discovery_candidate_reconciliation.py"
+            ],
+            "sequence_folder": "operations/sequences/discovery-candidate-reconciliation/",
+            "sequence_id": "discovery-candidate-reconciliation"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "state path",
+              "inline JSON"
+            ],
+            "current_invocation": "state/repo/approval id plus inline child-intent JSON",
+            "declared_automation": "memory-knowledge:scripts/convergence_checkpoint_run.py",
+            "effect_authorization_boundary": "existing approval and guard remain mandatory",
+            "entrypoint_kind": "Python checkpoint controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-CHECKPOINT"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "priority: semantic questions; intake constructs canonical child-intent JSON",
+            "model_authored_structure": "inline JSON and argv",
+            "no_argument_behavior": "argparse error",
+            "operation_kinds": [
+              "other"
+            ],
+            "repository_key": "memory-knowledge",
+            "repository_root": "/Users/kamenkamenov/memory-knowledge",
+            "resolved_entrypoints": [
+              "scripts/convergence_checkpoint_run.py"
+            ],
+            "sequence_folder": "operations/sequences/convergence-checkpoint-run/",
+            "sequence_id": "convergence-checkpoint-run"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "repeated values"
+            ],
+            "current_invocation": "operational prepare needs repository/target/anchor/receipt/allow/postconditions",
+            "declared_automation": "memory-knowledge:scripts/context_edit_guard.py self-check",
+            "effect_authorization_boundary": "prepared receipt review before separate edit",
+            "entrypoint_kind": "Python guarded-edit controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-MK-CONTROLLERS"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "operator intake for prepare; self-check remains verification only",
+            "model_authored_structure": "operational argv",
+            "no_argument_behavior": "usage/error; only self-check is parameterless",
+            "operation_kinds": [
+              "other"
+            ],
+            "repository_key": "memory-knowledge",
+            "repository_root": "/Users/kamenkamenov/memory-knowledge",
+            "resolved_entrypoints": [
+              "prepare",
+              "check",
+              "verify",
+              "cancel",
+              "self-check"
+            ],
+            "sequence_folder": "operations/sequences/scoped-context-edit/",
+            "sequence_id": "scoped-context-edit"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "JSON request file"
+            ],
+            "current_invocation": "apply plus required request JSON file; optional dry-run",
+            "declared_automation": "memory-knowledge:scripts/convergence_state_review_cycle.py apply --request",
+            "effect_authorization_boundary": "dry-run/review before ordered mutation",
+            "entrypoint_kind": "Python request-file controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-STATE-CYCLE"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "priority: intake constructs request JSON; dry-run presents redacted plan",
+            "model_authored_structure": "request JSON and argv",
+            "no_argument_behavior": "argparse error",
+            "operation_kinds": [
+              "workflow-drive"
+            ],
+            "repository_key": "memory-knowledge",
+            "repository_root": "/Users/kamenkamenov/memory-knowledge",
+            "resolved_entrypoints": [
+              "scripts/convergence_state_review_cycle.py"
+            ],
+            "sequence_folder": "operations/sequences/convergence-state-review-cycle/",
+            "sequence_id": "convergence-state-review-cycle"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "source available; dependencies.json missing",
+            "current_input_sources": [
+              "argv",
+              "environment file",
+              "secret store references"
+            ],
+            "current_invocation": "required program-drive id, decomposition-task id, and repository plus recreate controls",
+            "declared_automation": "mcp-agents-workflow:scripts/greenfield_recreate_resume.sh",
+            "effect_authorization_boundary": "review before rebuild/recreate/secret seed/lease release/resume",
+            "entrypoint_kind": "Shell orchestration controller",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-GREENFIELD-RECREATE"
+            ],
+            "evidence_limitations": [
+              "registered bundle lacks dependencies.json"
+            ],
+            "migration_disposition": "direct controller intake plus missing dependency manifest",
+            "model_authored_structure": "argv",
+            "no_argument_behavior": "usage/error",
+            "operation_kinds": [
+              "workflow-drive",
+              "container"
+            ],
+            "repository_key": "mcp-agents-workflow",
+            "repository_root": "/Users/kamenkamenov/mcp-agents-workflow",
+            "resolved_entrypoints": [
+              "scripts/greenfield_recreate_resume.sh"
+            ],
+            "sequence_folder": "operations/sequences/greenfield-recreate-resume/",
+            "sequence_id": "greenfield-recreate-resume"
+          },
+          {
+            "authoritative_call_sites": [
+              "registry",
+              "sequence.md"
+            ],
+            "availability": "available",
+            "current_input_sources": [
+              "argv",
+              "environment",
+              "persisted state",
+              "artifact path"
+            ],
+            "current_invocation": "client, resume-run, from-phase plus environment-built agent command",
+            "declared_automation": "united-partners:scripts/run_client_regeneration.py",
+            "effect_authorization_boundary": "review source run/phase/child/watcher before live model dispatch",
+            "entrypoint_kind": "Python workflow-resume driver plus role adapter/watcher",
+            "evidence_ids": [
+              "E-REGISTRY",
+              "E-UP-RESUME"
+            ],
+            "evidence_limitations": [],
+            "migration_disposition": "resolve client/run/phase and construct environment/argv without free-form shell",
+            "model_authored_structure": "argv and shell environment command envelope",
+            "no_argument_behavior": "argparse error",
+            "operation_kinds": [
+              "workflow-drive"
+            ],
+            "repository_key": "united-partners",
+            "repository_root": "/Users/kamenkamenov/united-partners",
+            "resolved_entrypoints": [
+              "scripts/run_client_regeneration.py",
+              "scripts/codex_role_command.py",
+              "scripts/watch_run.py"
+            ],
+            "sequence_folder": "operations/sequences/workflow-resume-from-phase-live-confirmation/",
+            "sequence_id": "workflow-resume-from-phase-live-confirmation"
+          }
+        ],
+        "summary": "The canonical registry contains 27 sequences, not two wrappers. The migration surface includes commit/push, deployment/database operations, container and workflow drivers, authentication and user administration, package/setup scripts, cleanup, discovery controllers, convergence controllers, and a live workflow-resume driver. A no-argument executable is not automatically compliant: several scripts immediately execute defaults, others print usage, and others still require the model to construct argv, JSON files or strings, environment assignments, stdin, or MCP objects.",
+        "title": "Canonical sequence-to-intake migration inventory"
+      },
+      "envelope_hash": "b3790dc7539ab3761052b463656e17629c114741d1f5c8f54d9b4b3f7c92311b",
+      "envelope_payload": {
+        "authoritative_evidence_roots": [
+          "/Users/kamenkamenov/memory-knowledge/operations/sequences/SEQUENCES.md",
+          "/Users/kamenkamenov/memory-knowledge/operations/sequences/*/sequence.md",
+          "/Users/kamenkamenov/memory-knowledge/operations/sequences/*/dependencies.json",
+          "/Users/kamenkamenov/memory-knowledge/skills/sequence-runner/SKILL.md",
+          "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md",
+          "/Users/kamenkamenov/memory-knowledge/scripts",
+          "/Users/kamenkamenov/mcp-agents-workflow",
+          "/Users/kamenkamenov/taggable-api",
+          "/Users/kamenkamenov/FoodCycleScience-admin",
+          "/Users/kamenkamenov/callcenter-harness",
+          "/Users/kamenkamenov/united-partners"
+        ],
+        "candidate_contract": {
+          "completeness_rule": "The sequence-id set and count must exactly match the canonical registry. Explicitly include commit-push-main, taggable-api-deploy, taggable-admin-spa-deploy, and taggable-media-worker-deploy.",
+          "evidence_rule": "Every material statement and every inventory row must cite stable evidence IDs that resolve to exact file and line or exact file anchors in evidence_index. Do not guess unavailable paths or interfaces.",
+          "material_gaps": "Unique non-empty finding IDs only. Use an empty array if no research-actionable gap remains.",
+          "required_top_level_fields": [
+            "title",
+            "summary",
+            "registry_snapshot",
+            "sequence_inventory",
+            "repository_summary",
+            "call_site_inventory",
+            "migration_summary",
+            "evidence_index",
+            "requirement_statuses",
+            "material_gaps"
+          ],
+          "requirement_status_fields": [
+            "requirement_id",
+            "research_value",
+            "evidence_ids"
+          ]
+        },
+        "candidate_output_path": "Tasks/sequence-script-intake-inventory/work/candidate-round-1.json",
+        "constraints": [
+          "Read-only inspection only; do not edit repositories or execute operational entrypoints.",
+          "Do not expose secrets or inspect credential values.",
+          "Treat sub-sequences, MCP-backed operations, composed automation, and human-only steps as first-class inventory shapes rather than forcing each row into one-script form.",
+          "Separate deterministic intake construction from approval or effect authorization.",
+          "Do not infer that a no-argument help or default path is a compliant guided intake; verify question guidance and deterministic structure construction from code.",
+          "Do not omit a registry row because its repository key or display name differs from the local folder name."
+        ],
+        "frozen_inputs": {
+          "charter": "Tasks/sequence-script-intake-inventory/work/charter.json",
+          "evidence_availability": "Tasks/sequence-script-intake-inventory/work/evidence-availability.json",
+          "requirements": "Tasks/sequence-script-intake-inventory/work/requirements.json"
+        },
+        "objective": "Inventory every canonical registered sequence and every actual automation entrypoint across locally available repositories, classify current input construction, and derive the complete future no-argument shared-intake migration surface without editing or executing those operations.",
+        "required_inventory_fields": [
+          "sequence_id",
+          "operation_kinds",
+          "sequence_folder",
+          "declared_automation",
+          "resolved_entrypoints",
+          "repository_key",
+          "repository_root",
+          "entrypoint_kind",
+          "availability",
+          "current_invocation",
+          "current_input_sources",
+          "no_argument_behavior",
+          "model_authored_structure",
+          "authoritative_call_sites",
+          "migration_disposition",
+          "effect_authorization_boundary",
+          "evidence_ids",
+          "evidence_limitations"
+        ],
+        "round": 1,
+        "schema_version": 1
+      },
+      "evidence_availability": {
+        "callcenter_harness_sources": "AVAILABLE",
+        "live_effect_verification": "NOT_YET_APPLICABLE",
+        "mcp_agents_workflow_sources": "AVAILABLE",
+        "memory_knowledge_sources": "AVAILABLE",
+        "registered_bundles": "AVAILABLE",
+        "registry": "AVAILABLE",
+        "taggable_admin_spa_sources": "AVAILABLE",
+        "taggable_api_sources": "AVAILABLE",
+        "united_partners_sources": "AVAILABLE"
+      },
+      "recorded_at": "2026-07-23T13:13:51.732180Z"
+    }
+  },
+  "charter": {
+    "authoritative_roots": [
+      "/Users/kamenkamenov/memory-knowledge/operations/sequences/SEQUENCES.md",
+      "/Users/kamenkamenov/memory-knowledge/operations/sequences",
+      "/Users/kamenkamenov/memory-knowledge/skills/sequence-runner/SKILL.md",
+      "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md",
+      "/Users/kamenkamenov/memory-knowledge",
+      "/Users/kamenkamenov/mcp-agents-workflow",
+      "/Users/kamenkamenov/taggable-api",
+      "/Users/kamenkamenov/FoodCycleScience-admin",
+      "/Users/kamenkamenov/callcenter-harness",
+      "/Users/kamenkamenov/united-partners"
+    ],
+    "budget": {
+      "maximum_agent_spawn_attempts": 15,
+      "maximum_candidate_rounds": 3,
+      "maximum_elapsed_minutes": 60,
+      "maximum_retries_per_role": 1
+    },
+    "charter_id": "sequence-script-intake-inventory-20260723-v1",
+    "exclusions": [
+      "Editing sequence implementations, sequence documents, skills, or the registry",
+      "Running commit, push, deploy, authentication, database, container, cleanup, package, or workflow-drive operations",
+      "Changing approval boundaries, secrets handling, or operational authority",
+      "Inventing interfaces for unavailable repositories or unresolved entrypoints",
+      "Inventorying unregistered discovery logs except where a registered sequence explicitly depends on their lineage"
+    ],
+    "in_scope": [
+      "Every row in operations/sequences/SEQUENCES.md, including commit-push-main and all deploy sequences",
+      "Every registered sequence.md and dependencies.json bundle",
+      "Every locally available automation source referenced by a registry row or registered bundle",
+      "Source and installed sequence-runner skill instructions that author invocation inputs",
+      "Current-runtime interface classification and future no-argument intake migration obligations"
+    ],
+    "objective": "Produce a complete, planner-ready inventory of every canonical registered sequence, every real automation entrypoint it invokes across repositories, and the exact current input boundary that must migrate to the approved no-argument shared-intake contract.",
+    "required_output_package": [
+      "manifest.json",
+      "research.md",
+      "requirements.json",
+      "evidence-index.json",
+      "findings.json",
+      "planner-handoff.md"
+    ],
+    "research_questions": [
+      "Which sequence rows are currently registered in the canonical cross-project registry?",
+      "For every row, what repository, file, executable type, invocation source, and current input mechanism are authoritative?",
+      "Which registered sequences have multiple entrypoints, composed subsequences, human-only steps, MCP calls, or unresolved automation rather than one script?",
+      "Which entrypoints already launch with no arguments, which require positional arguments, flags, environment variables, files, stdin, or embedded command text, and which do not expose an operator intake boundary?",
+      "Where do sequence documents, skills, or wrappers currently require the model to construct JSON, argv, flags, or command envelopes?",
+      "What no-argument intake migration and compatibility boundary is required for every entrypoint, including commit/push and every deployment sequence?",
+      "Which effectful sequence classes require a separate approval/review gate after intake has constructed deterministic parameters?"
+    ],
+    "schema_version": 1
+  },
+  "charter_hash": "2c6e3e0daf254e2559e88d834c9d9dda21028552658eec7aca2541c992b51127",
+  "created_at": "2026-07-23T12:53:59.260656Z",
+  "evidence_availability": {
+    "callcenter_harness_sources": "AVAILABLE",
+    "live_effect_verification": "NOT_YET_APPLICABLE",
+    "mcp_agents_workflow_sources": "AVAILABLE",
+    "memory_knowledge_sources": "AVAILABLE",
+    "registered_bundles": "AVAILABLE",
+    "registry": "AVAILABLE",
+    "taggable_admin_spa_sources": "AVAILABLE",
+    "taggable_api_sources": "AVAILABLE",
+    "united_partners_sources": "AVAILABLE"
+  },
+  "operational_maturity": "MIXED",
+  "package_id": "research-package-4cf8dbab4d5093911215eac3",
+  "requirements": [
+    {
+      "acceptance_intent": "The inventory row count and sequence-id set exactly match the canonical registry, with no omitted commit, push, deploy, composed, or sub-sequence row.",
+      "evidence_availability": "AVAILABLE",
+      "id": "INV-001",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Use the frozen complete registry inventory as the migration scope; no sequence family may be inferred away.",
+          "id": "PO-INV-001"
+        }
+      ],
+      "research_value_type": "array",
+      "scope_id": "registry-completeness",
+      "source": {
+        "current_anchors": [
+          "operations/sequences/SEQUENCES.md"
+        ],
+        "user_intent": "The intake migration must include commit/push sequences, deploy sequences, and every other registered sequence."
+      },
+      "text": "Enumerate every canonical registered sequence exactly once and preserve its registry identity, sequence folder, declared automation, operation kinds, and lineage."
+    },
+    {
+      "acceptance_intent": "Every registry row has grounded repository/path evidence for all operational entrypoints, or a visible evidence limitation instead of a guessed path.",
+      "evidence_availability": "AVAILABLE",
+      "id": "INV-002",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Plan against actual executable ownership and explicitly handle composed, MCP-backed, human-only, unavailable, and unresolved cases.",
+          "id": "PO-INV-002"
+        }
+      ],
+      "research_value_type": "array",
+      "scope_id": "entrypoint-resolution",
+      "source": {
+        "current_anchors": [
+          "operations/sequences/*/sequence.md",
+          "operations/sequences/*/dependencies.json",
+          "registered cross-repository automation sources"
+        ],
+        "user_intent": "The reusable intake must be called by each real script rather than by a partial list of wrappers."
+      },
+      "text": "Resolve every registered sequence to its actual locally available automation entrypoint or explicitly classify it as composed, human-only, MCP-backed, unavailable, or unresolved."
+    },
+    {
+      "acceptance_intent": "Each resolved entrypoint has a source-grounded input classification and identifies exactly where the model currently authors structured or free-form invocation data.",
+      "evidence_availability": "AVAILABLE",
+      "id": "INV-003",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Preserve every real input source and eliminate model-authored JSON, argv, flag, and command-envelope construction from operator-facing invocation.",
+          "id": "PO-INV-003"
+        }
+      ],
+      "research_value_type": "array",
+      "scope_id": "current-input-boundaries",
+      "source": {
+        "current_anchors": [
+          "registered automation source code",
+          "registered sequence invocation tables"
+        ],
+        "user_intent": "The model must only answer format-guided questions; intake code must build the final JSON or argument structure."
+      },
+      "text": "Classify the complete current input surface of every resolved entrypoint, including positional arguments, flags, environment variables, files, stdin, prompts, embedded command text, defaults, and no-argument behavior."
+    },
+    {
+      "acceptance_intent": "Every authoritative invocation surface is identified, including stale direct-command examples and legacy argument-bearing paths that could bypass intake.",
+      "evidence_availability": "AVAILABLE",
+      "id": "INV-004",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Migrate or deliberately contain every authoritative bypass so normal operator use starts at the no-argument entrypoint.",
+          "id": "PO-INV-004"
+        }
+      ],
+      "research_value_type": "array",
+      "scope_id": "call-site-coverage",
+      "source": {
+        "current_anchors": [
+          "operations/sequences/*/sequence.md",
+          "skills/sequence-runner/SKILL.md",
+          "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md"
+        ],
+        "user_intent": "A reusable intake only works if every actual sequence invocation reaches it."
+      },
+      "text": "Inventory every authoritative call site or operator instruction that invokes a registered entrypoint and determine whether it can bypass the no-argument intake boundary."
+    },
+    {
+      "acceptance_intent": "For each applicable entrypoint, a no-argument invocation can deterministically collect valid answers and produce the exact internal structure without asking the model to author JSON, argv, flags, or shell syntax.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "INV-005",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Plan one shared intake contract and a grounded per-entrypoint schema, adapter, and verification case for every applicable registered automation.",
+          "id": "PO-INV-005"
+        }
+      ],
+      "research_value_type": "array",
+      "scope_id": "future-intake-contract",
+      "source": {
+        "prototype_anchors": [
+          "scripts/script_intake.py",
+          "scripts/directive_guard.py",
+          "scripts/sequence_checked_exec.py"
+        ],
+        "user_intent": "The agent answers questions only; it never constructs the JSON envelope, and every question explains the required response format with an example."
+      },
+      "text": "Define the future operator-facing contract for every migratable entrypoint: launch with no arguments, ask one question at a time, show response format, example, and constraints, and let deterministic intake code construct the final typed JSON or argv payload."
+    },
+    {
+      "acceptance_intent": "Intake may prepare and validate the exact operation manifest, but effectful dispatch still requires the existing explicit approval, review, dry-run, or guard boundary appropriate to that sequence.",
+      "evidence_availability": "NOT_YET_APPLICABLE",
+      "id": "INV-006",
+      "operational_maturity": "FUTURE_SYSTEM",
+      "planner_obligations": [
+        {
+          "description": "Keep deterministic parameter construction and effect authorization as separate, testable states for every high-impact sequence class.",
+          "id": "PO-INV-006"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "effect-authorization",
+      "source": {
+        "directive_anchors": [
+          "working-agreement/DIRECTIVES.md:G11",
+          "working-agreement/DIRECTIVES.md:G18"
+        ],
+        "user_intent": "Input construction should become reliable without silently broadening authority to execute effectful operations."
+      },
+      "text": "Preserve effect authorization separately from deterministic intake construction for commit, push, deploy, authentication, database, container, package, cleanup, remote-operator, and workflow-drive sequences."
+    },
+    {
+      "acceptance_intent": "The planner receives a repository-by-repository implementation surface, known compatibility consumers, safe static/unit verification options, and explicit live-verification approval gates.",
+      "evidence_availability": "AVAILABLE",
+      "id": "INV-007",
+      "operational_maturity": "CURRENT_RUNTIME",
+      "planner_obligations": [
+        {
+          "description": "Sequence the implementation by repository and risk while retaining legacy compatibility only where grounded consumers require it.",
+          "id": "PO-INV-007"
+        }
+      ],
+      "research_value_type": "object",
+      "scope_id": "implementation-handoff",
+      "source": {
+        "current_anchors": [
+          "registered dependency manifests",
+          "local repository roots",
+          "entrypoint tests and help contracts"
+        ],
+        "user_intent": "The next implementation must be complete across repositories and reviewable before commit, push, or deployment."
+      },
+      "text": "Identify repository ownership, local availability, implementation scope, compatibility needs, and verification constraints for migrating all registered automation without executing live effects."
+    }
+  ],
+  "requirements_hash": "b2dd4cbbefdefdbcabb6de43e79806ad0d9cfe23e05e58d9b0ee109be40d9986",
+  "result": {
+    "actionable_fingerprints": [],
+    "candidate_hash": null,
+    "envelope_hash": null,
+    "reason": "AWAITING_ADJUDICATION",
+    "verdict": "IN_PROGRESS"
+  },
+  "rounds": [
+    {
+      "actionable_fingerprints": [],
+      "adjudication": null,
+      "candidate_hash": "bdf136e09f8b1735c46b99c2f8002e00e2d22567d5eda9b3b93902ac143f4961",
+      "candidate_id": "candidate-4c8416e0a9fd4286082fe8c5",
+      "envelope_hash": "b3790dc7539ab3761052b463656e17629c114741d1f5c8f54d9b4b3f7c92311b",
+      "lenses": {
+        "INTERNAL_READINESS": {
+          "candidate_hash": "bdf136e09f8b1735c46b99c2f8002e00e2d22567d5eda9b3b93902ac143f4961",
+          "envelope_hash": "b3790dc7539ab3761052b463656e17629c114741d1f5c8f54d9b4b3f7c92311b",
+          "lens": "INTERNAL_READINESS",
+          "lens_result_id": "lens-result-5f40b5854309f4f95546e68f",
+          "raw_findings": [
+            {
+              "evidence": [
+                "operations/sequences/SEQUENCES.md defines lineage IDs; candidate sequence_inventory rows omit lineage_id although INV-001 requires it."
+              ],
+              "fingerprint": "internal-readiness:registry-lineage-not-preserved",
+              "id": "IR-R1-LINEAGE-OMITTED",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner cannot preserve canonical sequence identity and discovery ancestry because every inventory row drops the registry lineage id.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-001"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            },
+            {
+              "evidence": [
+                "Several callcenter, memory-knowledge, MAWF, and taggable rows cite representative sources rather than their exact executable or bundle."
+              ],
+              "fingerprint": "internal-readiness:representative-evidence-used-for-uninspected-entrypoints",
+              "id": "IR-R1-REPRESENTATIVE-EVIDENCE",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner could implement schemas against asserted interfaces that were never directly inspected.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-002",
+                "INV-003",
+                "INV-007"
+              ],
+              "status": "OPEN",
+              "type": "FACT_GAP"
+            },
+            {
+              "evidence": [
+                "Multi-entrypoint rows have only one current invocation/input/no-arg/migration classification; wildcard and subcommand labels remain unresolved."
+              ],
+              "fingerprint": "internal-readiness:input-contracts-aggregated-above-entrypoint-level",
+              "id": "IR-R1-ENTRYPOINTS-AGGREGATED",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The planner cannot derive one deterministic intake schema per executable because distinct entrypoints are collapsed into one sequence-level input description.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-002",
+                "INV-003",
+                "INV-005"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            },
+            {
+              "evidence": [
+                "The candidate lists generic surfaces rather than exact path/anchor caller mappings and names no concrete machine compatibility consumers."
+              ],
+              "fingerprint": "internal-readiness:authoritative-call-sites-and-compatibility-consumers-unresolved",
+              "id": "IR-R1-CALLERS-UNRESOLVED",
+              "lens": "INTERNAL_READINESS",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Direct argument-bearing paths could remain active and legacy compatibility cannot be distinguished from removable bypasses.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-004",
+                "INV-007"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-23T13:17:21.583092Z",
+          "runtime_agent_id": "/root/sequence_intake_readiness",
+          "verdict": "GAPS"
+        },
+        "REQUIREMENTS_COVERAGE": {
+          "candidate_hash": "bdf136e09f8b1735c46b99c2f8002e00e2d22567d5eda9b3b93902ac143f4961",
+          "envelope_hash": "b3790dc7539ab3761052b463656e17629c114741d1f5c8f54d9b4b3f7c92311b",
+          "lens": "REQUIREMENTS_COVERAGE",
+          "lens_result_id": "lens-result-c40dc29cd18c6fbf0ce8ab11",
+          "raw_findings": [
+            {
+              "evidence": [
+                "INV-001 requires lineage; the registry defines it and candidate rows omit it."
+              ],
+              "fingerprint": "inv001-lineage-absent-from-all-sequence-rows",
+              "id": "RCOV-001",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Canonical sequence identity cannot be preserved because the inventory omits lineage IDs.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-001"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            },
+            {
+              "evidence": [
+                "Wildcard smoke scripts, bare subcommands, and combined multi-program input descriptions remain in the candidate."
+              ],
+              "fingerprint": "inv002-inv003-entrypoints-grouped-wildcard-or-subcommand-only",
+              "id": "RCOV-002",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Real executables could be omitted or assigned the wrong schema because grouped rows do not classify every concrete entrypoint.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-002",
+                "INV-003"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            },
+            {
+              "evidence": [
+                "Call-site inventory contains generic glob surfaces and labels instead of exact files/anchors."
+              ],
+              "fingerprint": "inv004-authoritative-call-sites-not-enumerated",
+              "id": "RCOV-003",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Direct argument-bearing instructions can remain live because exact call sites and generated command paths are not enumerated.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-004"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            },
+            {
+              "evidence": [
+                "Representative MAWF, taggable, callcenter, and memory-knowledge sources are reused for unrelated entrypoints."
+              ],
+              "fingerprint": "cross-requirement-evidence-not-row-exact",
+              "id": "RCOV-004",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Representative evidence cannot independently prove each row's interface classification.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-001",
+                "INV-002",
+                "INV-003",
+                "INV-004",
+                "INV-005",
+                "INV-006",
+                "INV-007"
+              ],
+              "status": "OPEN",
+              "type": "EVIDENCE_LIMIT"
+            },
+            {
+              "evidence": [
+                "The candidate gives a generic stable contract but no per-entrypoint semantic fields and derived output mapping."
+              ],
+              "fingerprint": "inv005-no-per-entrypoint-question-and-payload-contract",
+              "id": "RCOV-005",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "A planner would still need to invent each questionnaire and payload transform.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-005"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            },
+            {
+              "evidence": [
+                "FoodCycleScience-admin exists locally; candidate says the repository is unavailable. The correct state is repository-key mapping/script owner unresolved."
+              ],
+              "fingerprint": "inv007-admin-repository-availability-contradiction",
+              "id": "RCOV-006",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The admin deployment could be wrongly excluded because a local SPA repository exists even though the registered deploy script is absent.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-002",
+                "INV-007"
+              ],
+              "status": "OPEN",
+              "type": "CONTRADICTION"
+            },
+            {
+              "evidence": [
+                "Repository summary provides counts and generic tests, not file-by-file implementation and compatibility mappings."
+              ],
+              "fingerprint": "inv007-handoff-lacks-file-compatibility-and-verification-map",
+              "id": "RCOV-007",
+              "lens": "REQUIREMENTS_COVERAGE",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Implementation cannot be safely sequenced by repository because exact files, consumers, and verification anchors are missing.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-007"
+              ],
+              "status": "OPEN",
+              "type": "REQUIREMENT_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-23T13:17:28.514156Z",
+          "runtime_agent_id": "/root/sequence_intake_coverage",
+          "verdict": "GAPS"
+        },
+        "REQUIREMENTS_SATISFACTION": {
+          "candidate_hash": "bdf136e09f8b1735c46b99c2f8002e00e2d22567d5eda9b3b93902ac143f4961",
+          "envelope_hash": "b3790dc7539ab3761052b463656e17629c114741d1f5c8f54d9b4b3f7c92311b",
+          "lens": "REQUIREMENTS_SATISFACTION",
+          "lens_result_id": "lens-result-c8029aee752f15a80de2f70d",
+          "raw_findings": [
+            {
+              "evidence": [
+                "script_intake.py argv fields ask for an executable and literal tokens; sequence_checked_exec exposes that collector; the candidate does not prohibit such operator schemas."
+              ],
+              "fingerprint": "operator-intake-still-permits-literal-argv-authorship",
+              "id": "RSAT-001",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "The model can still freestyle executable and argv tokens, reproducing the failure the feature is intended to remove.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-003",
+                "INV-005"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "Generic bypass surfaces do not enumerate remote user-admin generated/retry commands or define an enforceable internal-only legacy boundary."
+              ],
+              "fingerprint": "legacy-and-documented-bypasses-not-enumerated-or-enforced",
+              "id": "RSAT-002",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Docs, generated next commands, wrappers, and public legacy CLIs could continue bypassing intake.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-004",
+                "INV-005"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            },
+            {
+              "evidence": [
+                "judge_ollama.py and test_engine_upgrades.py need direct evidence records and explicit caller/contract/verification boundaries."
+              ],
+              "fingerprint": "machine-adapter-and-parameterless-test-exceptions-lack-direct-evidence-bindings",
+              "id": "RSAT-003",
+              "lens": "REQUIREMENTS_SATISFACTION",
+              "materiality": "BLOCKER",
+              "originating_stage": "RESEARCH",
+              "practical_consequence": "Ungrounded exceptions could preserve public bypasses or wrap genuine internal contracts unnecessarily.",
+              "proposed_disposition": "FIX_IN_RESEARCH",
+              "requirement_ids": [
+                "INV-002",
+                "INV-005",
+                "INV-007"
+              ],
+              "status": "OPEN",
+              "type": "SATISFACTION_GAP"
+            }
+          ],
+          "recorded_at": "2026-07-23T13:17:36.518342Z",
+          "runtime_agent_id": "/root/sequence_intake_satisfaction",
+          "verdict": "GAPS"
+        }
+      },
+      "round_id": "lens-round-1dff56e3fda5179d46710599",
+      "round_number": 1
+    }
+  ],
+  "schema_version": 1,
+  "scope_hash": "33febf0f059591ead46c5312acae48542892ec9c63934ce1d1ed75aa53ebb9c6",
+  "updated_at": "2026-07-23T13:17:36.518392Z",
+  "verdict": "IN_PROGRESS"
+}

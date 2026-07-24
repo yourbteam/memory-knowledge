@@ -1,0 +1,159 @@
+[
+  {
+    "id": "INV-001",
+    "text": "Enumerate every canonical registered sequence exactly once and preserve its registry identity, sequence folder, declared automation, operation kinds, and lineage.",
+    "source": {
+      "user_intent": "The intake migration must include commit/push sequences, deploy sequences, and every other registered sequence.",
+      "current_anchors": [
+        "operations/sequences/SEQUENCES.md"
+      ]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "The inventory row count and sequence-id set exactly match the canonical registry, with no omitted commit, push, deploy, composed, or sub-sequence row.",
+    "scope_id": "registry-completeness",
+    "research_value_type": "array",
+    "planner_obligations": [
+      {
+        "id": "PO-INV-001",
+        "description": "Use the frozen complete registry inventory as the migration scope; no sequence family may be inferred away."
+      }
+    ]
+  },
+  {
+    "id": "INV-002",
+    "text": "Resolve every registered sequence to its actual locally available automation entrypoint or explicitly classify it as composed, human-only, MCP-backed, unavailable, or unresolved.",
+    "source": {
+      "user_intent": "The reusable intake must be called by each real script rather than by a partial list of wrappers.",
+      "current_anchors": [
+        "operations/sequences/*/sequence.md",
+        "operations/sequences/*/dependencies.json",
+        "registered cross-repository automation sources"
+      ]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Every registry row has grounded repository/path evidence for all operational entrypoints, or a visible evidence limitation instead of a guessed path.",
+    "scope_id": "entrypoint-resolution",
+    "research_value_type": "array",
+    "planner_obligations": [
+      {
+        "id": "PO-INV-002",
+        "description": "Plan against actual executable ownership and explicitly handle composed, MCP-backed, human-only, unavailable, and unresolved cases."
+      }
+    ]
+  },
+  {
+    "id": "INV-003",
+    "text": "Classify the complete current input surface of every resolved entrypoint, including positional arguments, flags, environment variables, files, stdin, prompts, embedded command text, defaults, and no-argument behavior.",
+    "source": {
+      "user_intent": "The model must only answer format-guided questions; intake code must build the final JSON or argument structure.",
+      "current_anchors": [
+        "registered automation source code",
+        "registered sequence invocation tables"
+      ]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Each resolved entrypoint has a source-grounded input classification and identifies exactly where the model currently authors structured or free-form invocation data.",
+    "scope_id": "current-input-boundaries",
+    "research_value_type": "array",
+    "planner_obligations": [
+      {
+        "id": "PO-INV-003",
+        "description": "Preserve every real input source and eliminate model-authored JSON, argv, flag, and command-envelope construction from operator-facing invocation."
+      }
+    ]
+  },
+  {
+    "id": "INV-004",
+    "text": "Inventory every authoritative call site or operator instruction that invokes a registered entrypoint and determine whether it can bypass the no-argument intake boundary.",
+    "source": {
+      "user_intent": "A reusable intake only works if every actual sequence invocation reaches it.",
+      "current_anchors": [
+        "operations/sequences/*/sequence.md",
+        "skills/sequence-runner/SKILL.md",
+        "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md"
+      ]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Every authoritative invocation surface is identified, including stale direct-command examples and legacy argument-bearing paths that could bypass intake.",
+    "scope_id": "call-site-coverage",
+    "research_value_type": "array",
+    "planner_obligations": [
+      {
+        "id": "PO-INV-004",
+        "description": "Migrate or deliberately contain every authoritative bypass so normal operator use starts at the no-argument entrypoint."
+      }
+    ]
+  },
+  {
+    "id": "INV-005",
+    "text": "Define the future operator-facing contract for every migratable entrypoint: launch with no arguments, ask one question at a time, show response format, example, and constraints, and let deterministic intake code construct the final typed JSON or argv payload.",
+    "source": {
+      "user_intent": "The agent answers questions only; it never constructs the JSON envelope, and every question explains the required response format with an example.",
+      "prototype_anchors": [
+        "scripts/script_intake.py",
+        "scripts/directive_guard.py",
+        "scripts/sequence_checked_exec.py"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "For each applicable entrypoint, a no-argument invocation can deterministically collect valid answers and produce the exact internal structure without asking the model to author JSON, argv, flags, or shell syntax.",
+    "scope_id": "future-intake-contract",
+    "research_value_type": "array",
+    "planner_obligations": [
+      {
+        "id": "PO-INV-005",
+        "description": "Plan one shared intake contract and a grounded per-entrypoint schema, adapter, and verification case for every applicable registered automation."
+      }
+    ]
+  },
+  {
+    "id": "INV-006",
+    "text": "Preserve effect authorization separately from deterministic intake construction for commit, push, deploy, authentication, database, container, package, cleanup, remote-operator, and workflow-drive sequences.",
+    "source": {
+      "user_intent": "Input construction should become reliable without silently broadening authority to execute effectful operations.",
+      "directive_anchors": [
+        "working-agreement/DIRECTIVES.md:G11",
+        "working-agreement/DIRECTIVES.md:G18"
+      ]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Intake may prepare and validate the exact operation manifest, but effectful dispatch still requires the existing explicit approval, review, dry-run, or guard boundary appropriate to that sequence.",
+    "scope_id": "effect-authorization",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-INV-006",
+        "description": "Keep deterministic parameter construction and effect authorization as separate, testable states for every high-impact sequence class."
+      }
+    ]
+  },
+  {
+    "id": "INV-007",
+    "text": "Identify repository ownership, local availability, implementation scope, compatibility needs, and verification constraints for migrating all registered automation without executing live effects.",
+    "source": {
+      "user_intent": "The next implementation must be complete across repositories and reviewable before commit, push, or deployment.",
+      "current_anchors": [
+        "registered dependency manifests",
+        "local repository roots",
+        "entrypoint tests and help contracts"
+      ]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "The planner receives a repository-by-repository implementation surface, known compatibility consumers, safe static/unit verification options, and explicit live-verification approval gates.",
+    "scope_id": "implementation-handoff",
+    "research_value_type": "object",
+    "planner_obligations": [
+      {
+        "id": "PO-INV-007",
+        "description": "Sequence the implementation by repository and risk while retaining legacy compatibility only where grounded consumers require it."
+      }
+    ]
+  }
+]

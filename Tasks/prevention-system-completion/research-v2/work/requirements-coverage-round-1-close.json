@@ -1,0 +1,12 @@
+{
+  "runtime": "codex-collaboration",
+  "runtime_agent_id": "/root/prevention_coverage_v2",
+  "role": "REQUIREMENTS_COVERAGE",
+  "round": 1,
+  "status": "COMPLETED",
+  "candidate_hash": "b15d60f5f2fe04738753aa9c93347532d53320902462cab3536228dbc9b30768",
+  "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+  "output_hash": "5df6715f5e28f0cec3807896ec366fbde7e492aa0ae9314cdbd77a4f6e4a44d5",
+  "slot_closed": true,
+  "completion_evidence": "The independently spawned lens returned a terminal envelope and list_agents reports terminal completion rather than an active slot."
+}

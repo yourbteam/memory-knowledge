@@ -1,0 +1,11 @@
+{
+  "runtime_agent_id": "/root/research_v11_final_adjudicator",
+  "role": "ADJUDICATOR",
+  "round": 3,
+  "status": "COMPLETED",
+  "input_envelope_hash": "4f6b643356c5f686854c5471b4818353daf7d7b8ea815801a35d641fac1547fc",
+  "candidate_hash": "86584ee1d33aecc3d0d3e6882d6db268e1cf98ae881f4f9bc8c8dbae24193e54",
+  "output_hash": "7de8abff40a4f087799b3f82157f2c8529cd33ab630cac5181173cbd05180c05",
+  "completion_evidence": "Fresh independent adjudicator covered every round-3 raw finding exactly once; all five distinct findings are planner handoffs and all remaining findings are merged duplicates.",
+  "slot_closed": true
+}

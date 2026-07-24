@@ -1,0 +1,55 @@
+{
+  "schema_version": 1,
+  "charter_id": "sequence-learning-completeness-20260716-v1",
+  "objective": "Assess the completeness of the currently implemented proactive sequence observer against the envisioned closed sequence-learning system, and produce a planner-ready definition of the complete solution's required outcomes.",
+  "research_questions": [
+    "Which model actions and outcomes are durably observable today, and which remain outside the authoritative evidence boundary?",
+    "Can the current system recognize and invoke an existing sequence before the model improvises, or does it only evaluate evidence after a governed run closes?",
+    "Can a successful unrecorded path become a complete discovery, qualify, promote, and be reused without manual reconstruction?",
+    "When the model identifies that one of its own actions caused an issue, is that causal correction joined to the originating sequence and used to prevent the same wrong step next time?",
+    "Can an existing registered sequence be corrected, versioned, requalified, and safely replace its defective version?",
+    "What exact evidence-based meanings and transitions should silver and gold have, and how will growth, reuse, and recurrence reduction be measured?",
+    "What final end-to-end acceptance behavior proves the system learns both success paths and corrections rather than merely cataloging issues?"
+  ],
+  "in_scope": [
+    "memory-knowledge durable work ledger, sequence observer, candidate identity, checked execution, blocker/correction lifecycle, selector/guard, discovery bootstrap/log, promotion, registration, reconciliation, and sequence-runner contracts",
+    "mcp-agents-workflow model execution and orchestration boundaries only where needed to determine whether model actions are observable or interceptable",
+    "deployed Codex skill entry points only where needed to distinguish advisory instructions from enforced runtime behavior",
+    "present-state completeness findings and complete future-system behavioral, safety, lifecycle, measurement, and acceptance requirements"
+  ],
+  "exclusions": [
+    "implementation planning, file-by-file change design, code edits, prompt rewrites, deployment, migration sequencing, or rollout actions",
+    "promoting or cleaning existing sequence discoveries",
+    "designing a dashboard or user interface",
+    "evaluating the quality of every existing sequence",
+    "capturing conversation transcripts, hidden reasoning, personal data, credentials, or raw terminal output as durable knowledge",
+    "granting the observer authority to execute effectful actions or bypass existing approval and promotion gates"
+  ],
+  "authoritative_roots": [
+    "/Users/kamenkamenov/memory-knowledge",
+    "/Users/kamenkamenov/mcp-agents-workflow",
+    "/Users/kamenkamenov/.codex/skills"
+  ],
+  "supplied_input": "The complete system observes model behavior, triggers a correct existing sequence when one applies, records and promotes new proven success paths, corrects defective existing sequences when the model identifies a causal mistake, prevents the wrong step from recurring, and increases evidence-backed silver sequence capture and gold sequence reuse over time.",
+  "required_output_package": [
+    "manifest.json",
+    "research.md",
+    "requirements.json",
+    "evidence-index.json",
+    "findings.json",
+    "planner-handoff.md"
+  ],
+  "budget": {
+    "maximum_candidate_rounds": 3,
+    "maximum_agent_spawn_attempts": 15,
+    "maximum_elapsed_minutes": 60,
+    "maximum_retries_per_role": 1,
+    "repeated_actionable_fingerprint_cap": 2
+  },
+  "terminal_rules": [
+    "PASS requires one core researcher, three independent PASS lenses on identical candidate/envelope hashes, a fresh adjudicator with no actionable research finding, grounded READY records for every planner obligation, validated hashes, and zero active agent slots.",
+    "GAPS means research-actionable findings remain inside the frozen scope.",
+    "BLOCKED means required accessible evidence or a named approval route is unavailable.",
+    "CAP_REACHED means a shared budget cap or repeated actionable-fingerprint rule fired."
+  ]
+}

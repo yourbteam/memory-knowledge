@@ -1,0 +1,279 @@
+{
+  "schema_version": 1,
+  "proposal_status": "APPROVED",
+  "owner_sequence_id": "discovery-candidate-reconciliation",
+  "availability_policy": "AVAILABLE",
+  "standalone": true,
+  "authority": "Kamen",
+  "authority_approvals": {
+    "budget_and_roots": {
+      "status": "APPROVED",
+      "decision_id": "discovery-candidate-reconciliation-budget-roots-v1"
+    },
+    "runtime_and_terminal": {
+      "status": "APPROVED",
+      "decision_id": "discovery-candidate-reconciliation-runtime-terminal-v1"
+    },
+    "root_configuration_restoration": {
+      "status": "APPROVED",
+      "decision_id": "7f5bc509-f072-4830-a249-3c47079b0351"
+    },
+    "selected_owner_registry_validation": {
+      "status": "APPROVED",
+      "decision_id": "discovery-candidate-reconciliation-selected-owner-validation-v1"
+    },
+    "terminal_quarantine_cleanup": {
+      "status": "APPROVED",
+      "decision_id": "discovery-candidate-reconciliation-terminal-quarantine-v1"
+    },
+    "semantic_intake": {
+      "status": "APPROVED",
+      "decision_id": "discovery-candidate-reconciliation-semantic-intake-v1"
+    }
+  },
+  "source": {
+    "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_candidate_reconciliation.py",
+    "implementation_sha256": "d480c5314b18ff644e6d024ccdff029e7f957abf32bdbd7a86028fc0b384b6c5",
+    "implementation_approved_post_correction_sha256": "1bdfe756ab5951064445474776dbc9e4c86816f73834fd88250edd2998b219d1",
+    "implementation_source_correction_decision_id": "discovery-candidate-reconciliation-terminal-quarantine-v1",
+    "source_receipt_helper_path": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_source_receipt.py",
+    "source_receipt_helper_sha256": "e569ee5da7043681d9f432410417a620d4ebadc776cf5f6ed7992ac1aa81e2a8",
+    "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/discovery-candidate-reconciliation/sequence.md",
+    "sequence_sha256": "31d72891a5659c834546e2165634646d26afaa49593b438fdaa1147f90787b05",
+    "sequence_approved_post_correction_sha256": "4cecf940dec1f78a742e98f3e6c1d73f628c2f1b23cd254b3d52db9de3b46d8a",
+    "sequence_source_correction_decision_id": "discovery-candidate-reconciliation-semantic-intake-v1",
+    "dependencies_sha256": "e87dc158f7ffbf4ae3d2e8fdf0308cc55309618f551f9ab43fe90b23d6709edd"
+  },
+  "unit_budget": {
+    "schema_version": 1,
+    "owner_sequence_id": "discovery-candidate-reconciliation",
+    "atomic_task_cap_milliseconds": 3600000,
+    "mandatory_role_milliseconds": {
+      "CORE": 3600000,
+      "INTERNAL_READINESS": 3600000,
+      "REQUIREMENTS_COVERAGE": 3600000,
+      "REQUIREMENTS_SATISFACTION": 3600000
+    },
+    "adjudication_milliseconds": 3600000,
+    "materialization_milliseconds": 3600000,
+    "terminal_milliseconds": 3600000,
+    "retry_rule": "Retries remain inside the originating atomic task cap.",
+    "command_profiles": {
+      "audit": {
+        "productive_task_count": 1,
+        "duration_formula_milliseconds": "8 * 3600000"
+      },
+      "validate": {
+        "productive_task_count": 1,
+        "duration_formula_milliseconds": "8 * 3600000"
+      },
+      "execute": {
+        "duration_formula_milliseconds": "(9 + N + 15 * P) * 3600000",
+        "variables": {
+          "N": "The exact materialized candidate count in the frozen approved manifest.",
+          "P": "The exact count of promote dispositions; 0 <= P <= N. Each promote child owns its approved maximum sixteen-hour lifecycle UnitBudget instead of a caller estimate."
+        },
+        "derivation": "Seven required parent research/terminal tasks, one preflight task, one active-index publication task, one local task for each non-promote candidate, and one complete sixteen-hour child UnitBudget for each promote candidate."
+      },
+      "execute-rolling": {
+        "duration_formula_milliseconds": "(7 + SUM(i=1..A, 4 + N_i + 15 * P_i)) * 3600000",
+        "variables": {
+          "A": "Actual attempts, owner-capped at 6.",
+          "N_i": "Exact candidate count from attempt i's fresh audit.",
+          "P_i": "Exact promote count for attempt i after applying the approved rolling policy."
+        },
+        "derivation": "Seven required parent research/terminal tasks once; each attempt reserves audit, preflight, active-index/checkpoint, and stable post-audit tasks, local non-promote tasks, and complete promotion child budgets."
+      },
+      "drive": {
+        "duration_formula_milliseconds": "(15 + SUM(i=1..A, 4 + N_i + 15 * P_i)) * 3600000",
+        "derivation": "Seven required parent tasks, one complete eight-hour typed current-bundle verification child, and the live rolling productive attempt sum."
+      }
+    },
+    "reservation_mode": "OWNER_DERIVED_PROGRESSIVE",
+    "reservation_rule": "Before each command or rolling attempt, the owner freezes and hashes the authoritative candidate manifest, computes the numeric UnitBudget from its exact N/P values, and reserves every launchable task/child. Candidate arrival invalidates that attempt; the parent remains STARTED, performs a fresh audit, computes a new complete attempt budget, and may pause before launch. Callers cannot supply counts, budgets, or max_attempts."
+  },
+  "trusted_roots": {
+    "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
+    "discovery-root": "/Users/kamenkamenov/memory-knowledge/operations/sequences/discovery",
+    "task-artifact-root": "/Users/kamenkamenov/memory-knowledge/Tasks",
+    "runtime-temp": "/private/tmp",
+    "reconciliation-policy": "/Users/kamenkamenov/memory-knowledge/operations/sequences/discovery/reconciliation-policy.json",
+    "active-index": "/Users/kamenkamenov/memory-knowledge/operations/sequences/discovery/ACTIVE.md",
+    "disposition-approval-store": "The durable approval store for exact content-addressed reconciliation manifests and rolling policies"
+  },
+  "parameter_contract": {
+    "command": {
+      "type": "ENUM",
+      "values": [
+        "audit",
+        "validate",
+        "execute",
+        "execute-rolling",
+        "drive"
+      ],
+      "required": true
+    },
+    "root": {
+      "type": "PATH",
+      "fixed_root": "memory-knowledge",
+      "caller_supplied": false
+    },
+    "output": {
+      "type": "PATH",
+      "trusted_roots": [
+        "task-artifact-root",
+        "runtime-temp"
+      ],
+      "mode": "CREATE_FILE_EXCLUSIVE_OR_EXACT_REPLAY",
+      "required_for": "audit"
+    },
+    "manifest": {
+      "type": "PATH",
+      "trusted_roots": [
+        "task-artifact-root",
+        "runtime-temp"
+      ],
+      "mode": "READ_REGULAR_FILE",
+      "schema": "reconciliation-manifest-v3",
+      "required_for": [
+        "validate",
+        "execute"
+      ]
+    },
+    "manifest_approval_receipt_id": {
+      "type": "UUID",
+      "provider": "disposition-approval-store",
+      "required_for": "execute"
+    },
+    "baseline": {
+      "type": "PATH",
+      "fixed": "reconciliation-policy",
+      "caller_supplied": false,
+      "required_for": "execute-rolling"
+    },
+    "active_index": {
+      "type": "PATH",
+      "fixed": "active-index",
+      "caller_supplied": false,
+      "required_for": [
+        "execute",
+        "execute-rolling",
+        "drive"
+      ]
+    },
+    "output_dir": {
+      "type": "PATH",
+      "trusted_roots": [
+        "task-artifact-root",
+        "runtime-temp"
+      ],
+      "mode": "CREATE_DIRECTORY_OR_EXACT_EFFECT_REPLAY",
+      "required_for": "execute-rolling"
+    },
+    "output_root": {
+      "type": "PATH",
+      "trusted_roots": [
+        "task-artifact-root",
+        "runtime-temp"
+      ],
+      "mode": "CREATE_DIRECTORY_OR_EXACT_EFFECT_REPLAY",
+      "required_for": "drive"
+    },
+    "task_id": {
+      "type": "STRING",
+      "pattern": "^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$",
+      "required_for": "drive"
+    },
+    "max_attempts": {
+      "type": "INTEGER",
+      "fixed": 6,
+      "caller_supplied": false
+    },
+    "promotion_metadata": {
+      "max_qualification_runs": {
+        "type": "INTEGER",
+        "fixed": 3
+      },
+      "operation_kinds": {
+        "type": "SET_ENUM",
+        "values_from": "work_memory.OPERATION_KINDS",
+        "minimum_items": 1
+      },
+      "sequence_id": {
+        "type": "STRING",
+        "pattern": "^[a-z0-9]+(?:-[a-z0-9]+)*$"
+      }
+    },
+    "validation_boundary": "Resolve and validate all files under trusted roots; require exact manifest-v3 fields, current repository HEAD, candidate set/order/content hashes, registry hash, candidate identities, dispositions, frozen registered target bundle hashes, promotion metadata, and separate approval receipt before budget reservation. Reject caller-controlled root, active index, policy, attempt count, budget variables, or qualification limits."
+  },
+  "disposition_approval_contract": {
+    "receipt_fields": [
+      "manifest_approval_receipt_id",
+      "manifest_sha256",
+      "repository_head",
+      "candidate_set_hash",
+      "candidate_content_hashes_sha256",
+      "registry_hash",
+      "disposition_rows_sha256",
+      "approved_by",
+      "approved_at_utc"
+    ],
+    "admission": "Execute consumes an exact, unconsumed receipt matching the fully normalized manifest. An inline mutable approval object alone is insufficient. Rolling modes use the separately content-addressed checked-in approved policy and may only retain newly arrived remain-discovery candidates.",
+    "consumption": "Bind receipt consumption atomically to execute effect preparation; identical replay by the same effect id is allowed."
+  },
+  "effect_and_reconciliation_contract": {
+    "audit": {
+      "effect_identity": "repository HEAD plus candidate path/set/content hashes plus registry hash plus output path",
+      "reconciliation": "Recompute the complete snapshot. An exact output manifest is ALREADY_APPLIED; no output is NOT_APPLIED; an existing different output or snapshot disagreement is INDETERMINATE."
+    },
+    "validate": {
+      "effect_class": "OBSERVATION",
+      "effect_identity": "manifest canonical hash plus current repository/candidate/registry hashes",
+      "reconciliation": "Replay complete schema, snapshot, disposition, target bundle, and approval checks; return typed validity without mutation."
+    },
+    "execute": {
+      "effect_identity": "approval receipt id plus manifest hash plus repository/candidate/registry snapshot plus fixed active-index target",
+      "prepare": "Persist and consume the approval receipt, numeric N/P UnitBudget, deterministic per-candidate child ids, expected checkpoint path/content progression, original discovery hashes, and expected active-index bytes before the first candidate.",
+      "candidate_reconciliation": {
+        "promote": "Require the approved discovery-promotion-lifecycle child terminal artifact and matching registered target bundle/same-path verification. Exact proof is ALREADY_APPLIED; no child evidence is NOT_APPLIED; partial or conflicting promotion evidence is INDETERMINATE.",
+        "absorb/supersede/already-promoted": "Re-observe the exact frozen target bundle and current same-path registered verification. Matching checkpoint evidence is ALREADY_APPLIED; absent checkpoint with unchanged proof is NOT_APPLIED; proof drift is INDETERMINATE.",
+        "remain-discovery/quarantine": "Require the original discovery bytes and deterministic retained checkpoint row; exact row is ALREADY_APPLIED, absence is NOT_APPLIED, and discovery drift is INDETERMINATE."
+      },
+      "resume_rule": "Resume from the first candidate lacking exact semantic proof/checkpoint. A checkpoint alone cannot override missing child proof, and child proof after a crash prevents duplicate promotion."
+    },
+    "execute-rolling": {
+      "effect_identity": "parent effect id plus approved policy hash plus fixed active-index target plus deterministic attempt ids 1..6",
+      "prepare": "Use effect-derived attempt directories rather than random UUIDs. For each attempt, persist the fresh audit hash, applied policy rows, N/P numeric budget, child ids, checkpoint target, and expected active-index bytes before execution.",
+      "reconciliation": "Reconcile each attempt through its audit, candidate child proofs/checkpoint, active index, and stable post-audit. Candidate-set arrival with no semantic decision change closes that attempt as superseded-by-next-attempt; changed existing disposition, non-retain arrival, target drift, or allowlist drift is INDETERMINATE and stops.",
+      "attempt_rule": "At most six deterministic attempts; never create a new invocation directory or repeat an already proved candidate effect after a crash."
+    },
+    "drive": {
+      "effect_identity": "task id plus current registered bundle hash plus approved policy hash plus fixed output/active-index identities",
+      "prepare": "Persist deterministic current-bundle verification and live-rolling child ids, run ids, source bundle hash, and output paths before either child starts.",
+      "reconciliation": "The current-bundle child is ALREADY_APPLIED only with a passed-and-closed same-path receipt for the exact bundle. The live child is ALREADY_APPLIED only with a successful rolling terminal artifact plus matching live verification event and passed run closure. Resume the first absent child; conflicts or open blockers are INDETERMINATE."
+    }
+  },
+  "terminal_contract": {
+    "common": [
+      "The process return code is zero.",
+      "The output validates against the command-specific non-secret schema and has ok=true.",
+      "The semantic verifier reloads repository, candidate, registry, policy, manifest, checkpoint, child, ledger, and active-index evidence applicable to the command.",
+      "Exactly one owner_terminal event and matching terminal artifact exist for effect_id."
+    ],
+    "command_specific": {
+      "audit": "The written manifest exactly matches a fresh complete audit snapshot; reported head/count/disposition counts match canonical manifest content.",
+      "validate": "The manifest and separate approval receipt match the current exact snapshot and every disposition/target proof; reported manifest_hash is canonical.",
+      "execute": "Every manifest candidate has one semantically proved checkpoint result; every promote child is registered and same-path verified; frozen targets have not drifted; the active index omits only evidence-backed terminal rows; original discovery provenance remains preserved.",
+      "execute-rolling": "One deterministic attempt at or before six has stable equal pre/post snapshots under the approved retain-only policy, complete candidate proofs/checkpoint, exact allowlist, and the canonical active index; earlier arrival-race attempts are durably superseded.",
+      "drive": "The current registered bundle has a passed-and-closed same-path child verification; the separate live rolling run satisfies execute-rolling terminal proof; its verification event and passed closure match the live run; stage is complete."
+    },
+    "source_corrections": [
+      "Replace caller root, active-index, baseline, output, max-attempt, and promotion-limit authority with fixed/trusted materialized fields.",
+      "Compute numeric UnitBudgets from each frozen candidate manifest and compose complete approved lifecycle child budgets; do not treat an arbitrary candidate loop as one invocation budget.",
+      "Replace random rolling invocation directories and fresh retry run ids with deterministic effect/attempt/child identities and journaled checkpoints.",
+      "Dispatch promotions and current-bundle verification through typed child contracts and require semantic child receipts before checkpoint or ledger verification.",
+      "Require a separate content-addressed disposition approval receipt and exactly one terminal artifact after full state re-observation."
+    ]
+  },
+  "authority_decisions_required": []
+}

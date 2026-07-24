@@ -1,0 +1,12 @@
+{
+  "runtime": "codex-collaboration",
+  "runtime_agent_id": "/root/prevention_internal_readiness_v2",
+  "role": "INTERNAL_READINESS",
+  "round": 1,
+  "status": "COMPLETED",
+  "candidate_hash": "b15d60f5f2fe04738753aa9c93347532d53320902462cab3536228dbc9b30768",
+  "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+  "output_hash": "229df6ed7e63c3c314bbbbb428819b832a9b67a2c8c4cf418bffdd35f46955f5",
+  "slot_closed": true,
+  "completion_evidence": "The independently spawned lens returned a terminal envelope and list_agents reports terminal completion rather than an active slot."
+}

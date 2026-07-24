@@ -1,0 +1,173 @@
+[
+  {
+    "accessed_at": null,
+    "id": "E-SCOPE",
+    "limitations": "Normative input, not runtime evidence.",
+    "source_kind": "SUPPLIED_INPUT",
+    "source_locator": "/private/tmp/proactive-sequence-observer-research/agent-input-envelope.json",
+    "source_sha256": "6f11925748a3565e848c12aa95e998c02d9e56538fbc6e10bfee807146853ec5",
+    "supported_claim": "Freezes repository scope and assessment-only constraints."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-CHARTER",
+    "limitations": "Normative input.",
+    "source_kind": "SUPPLIED_INPUT",
+    "source_locator": "/private/tmp/proactive-sequence-observer-research/charter.json",
+    "source_sha256": "42280e07e431dc66ab164eee6a10e129a13945d451e6ba1e640c745088cec552",
+    "supported_claim": "Freezes objective, exclusions, maturity, budget, and terminal rules."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-REQ",
+    "limitations": "Future behavior is not implementation evidence.",
+    "source_kind": "SUPPLIED_INPUT",
+    "source_locator": "/private/tmp/proactive-sequence-observer-research/requirements.json",
+    "source_sha256": "9cd7362519c72ad229e1c5ff0432cd3c82e5189bebabeef427709323fedbecf0",
+    "supported_claim": "Contains OBS-001 through OBS-030 and PO-001 through PO-030."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-DIRECTIVES",
+    "limitations": "Policy does not itself persist observations.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "working-agreement/DIRECTIVES.md",
+    "source_sha256": "ba43669860bb143c917f0e6468209e97de253d122cc7baada09846c2ea65edd9",
+    "supported_claim": "Defines G17/G18 eligibility, registered-first reuse, discovery capture, and provenance constraints."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-RUNNER",
+    "limitations": "Operator workflow, not observer implementation.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "skills/sequence-runner/SKILL.md",
+    "source_sha256": "f10305ba36471c15da77465c09fba567c4161c2f756c4c334c828c8a72ab1ee2",
+    "supported_claim": "Defines canonical selection, discovery, guard, correction, verification, and closeout flow."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-REGISTRY",
+    "limitations": "Rows lack semantic candidate identity.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "operations/sequences/SEQUENCES.md",
+    "source_sha256": "84af795453b456ffacd2b155edb2bf82ed3531e2d8bfc4ba03938f73ceec7b13",
+    "supported_claim": "Canonical registered sequence catalog and bootstrap routing."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-WM",
+    "limitations": "No observer or execution-result observation exists.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "scripts/work_memory.py",
+    "source_sha256": "cc44cf5d58734cb07abd7ba2de481c6002662b9023bc853c4083ac29b1fc2aa4",
+    "supported_claim": "Proves current event, receipt, classification, selection, bundle, repository, verification, and summary behavior."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-GUARD",
+    "limitations": "Cannot prove execution outcome.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "scripts/sequence_guard.py",
+    "source_sha256": "1d1bd5db84f434fd0e0cefa154f1f29c7636d38c3f0491ecb4beae414f20a600",
+    "supported_claim": "Proves finite command provenance and pre-dispatch validation without result persistence."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-BOOT",
+    "limitations": "Request hash is not semantic identity; process-crash atomicity is incomplete.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "scripts/discovery_bootstrap.py",
+    "source_sha256": "a8ef48299184c8fe6c0000000c465547b22d44844243d2410498885ef5ec77be",
+    "supported_claim": "Proves bootstrap schema, deterministic identity, recovery, and sequential cross-store creation."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-DISC",
+    "limitations": "No semantic active-discovery matcher exists.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "scripts/sequence_discovery_log.py",
+    "source_sha256": "716512a0d75d5c15f191d883abed96a55aec7ea68ec75fc2325a264e09f3e2dd",
+    "supported_claim": "Proves discovery structure, readiness, dependencies, and current any-pass verification reduction."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-LIFE",
+    "limitations": "Lifecycle dispatch is outside observer authority.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "scripts/discovery_promotion_lifecycle.py",
+    "source_sha256": "49e66d7a0e5944419f7e59902056740e7510302e21ad4e707bd263ced822b731",
+    "supported_claim": "Proves lifecycle authority, correction/successor routing, and ordered registered verification reduction."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-PROMOTE",
+    "limitations": "No observer provenance exists.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "scripts/sequence_promote.py",
+    "source_sha256": "9b0ff2a0ac216f8c5e6b67d08560aaa5a6154b808b1d1e0fc07550000b0af02e",
+    "supported_claim": "Proves readiness enforcement, lineage, registry integration, and journaled promotion."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-BLOCKER",
+    "limitations": "Failure identity is not full candidate identity.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "scripts/blocker_catalog.py",
+    "source_sha256": "f00c3e30ef4c55349b7529eff7fb784f74fe532bbd3b91e532517e790aad7e28",
+    "supported_claim": "Proves blocker fingerprints, occurrences, statuses, and verification-bound transitions."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-RECON",
+    "limitations": "ACTIVE.md is not an automatically fresh authoritative population.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "scripts/discovery_candidate_reconciliation.py",
+    "source_sha256": "f8c98326dfb3288859bcc3908f0faba30bd48be3c199f6db600c9174a6d379e4",
+    "supported_claim": "Proves discovery disposition vocabulary and generated active-index behavior."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-T-WM",
+    "limitations": "No observer tests exist.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "tests/test_work_memory.py",
+    "source_sha256": "d3fd4d2ab68a6ece2373d405cb1c2adc24284c2815bee3fc189ad0a39d37e064",
+    "supported_claim": "Existing tests cover ledger, correction, selection, validation, and verification behavior."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-T-GUARD",
+    "limitations": "Authorization only.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "tests/test_sequence_guard.py",
+    "source_sha256": "66e853403832f31ee7acdcc27d6b808b59c59788b7f6f2d31541e8351c8efbd6",
+    "supported_claim": "Existing tests cover fail-closed command grounding and provenance."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-T-BOOT",
+    "limitations": "No process-crash transaction proof.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "tests/test_discovery_bootstrap.py",
+    "source_sha256": "08aa98900611b137f23ccedd6ba1767374e67695d2cbb884d48a6afdb56e4eae",
+    "supported_claim": "Existing tests cover bootstrap validation, recovery, and cleanup."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-T-LIFE",
+    "limitations": "No observer integration proof.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "tests/test_discovery_promotion_lifecycle.py",
+    "source_sha256": "502c10bb927b92af5164d0b8215280743fc99ba007da972f0aa57d818ef60267",
+    "supported_claim": "Existing tests cover lifecycle, blockers, successors, promotion, and registered verification."
+  },
+  {
+    "accessed_at": null,
+    "id": "E-FLYWHEEL",
+    "limitations": "Research contract; implementation state must be verified by the planner before binding.",
+    "source_kind": "LOCAL_FILE",
+    "source_locator": "Tasks/sequence-knowledge-flywheel/research.md",
+    "source_sha256": "2bd4d7b2cb14c59620539628a7bc6e5ff26654378597d3265f3af8de1b1475bb",
+    "supported_claim": "Defines the sibling CandidateIdentity, execution claimed/returned ordering, final-effective v2 verification, and legacy compatibility contracts the observer must consume."
+  }
+]

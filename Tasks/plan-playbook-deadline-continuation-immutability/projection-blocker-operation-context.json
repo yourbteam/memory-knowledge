@@ -1,0 +1,13 @@
+{
+  "intended_outcome": "Project the formal Decision 5 iteration-2 verifier/critic result into a valid shared verification ledger without losing fixed-coverage status.",
+  "required_inputs": ["validated assignment ledger", "finalized verifier output", "finalized critic output"],
+  "dependencies": [{"repository_key": "memory-knowledge", "path": "skills/plan-playbook/scripts/plan_package.py"}],
+  "environment_annotations": [],
+  "semantic_flag_annotations": [],
+  "volatility_annotations": [],
+  "repeatability_reason": "Any plan revision that fixes an actionable finding and then re-verifies the same coverage can exercise this projection.",
+  "repeatability_evidence_ids": [],
+  "failure_handling": [{"fingerprint": "1ce2ab9592abef0c497b40d40c8c88d4991886f52e00a3d81b87b44a2c08b198", "symptom": "Projected ledger marks fixed coverage checked and fails validation.", "response": "Preserve the projection evidence, correct the reusable status projection, and verify through the same controller command."}],
+  "effect_class": "idempotent-local",
+  "verification_contract": {"expected_outcome": "passed", "quality": "same-path", "success_evidence": "project-verify-plan-ledger returns VERIFY_PLAN_LEDGER_PROJECTED and the resulting ledger validates."}
+}

@@ -1,0 +1,19 @@
+{
+  "assigned_coverage_ids": ["D5-R01", "D5-R02", "D5-R03", "D5-R04", "D5-R05", "D5-R06", "D5-R07", "D5-R08", "D5-R09", "D5-R10"],
+  "assigned_obligation_ids": ["D5-O01", "D5-O02", "D5-O03", "D5-O04", "D5-O05", "D5-O06", "D5-O07", "D5-O08", "D5-O09", "D5-O10"],
+  "authoritative_roots": [{"manifest_path": "source-snapshots/1851599d91c3246d72da48bd060e807c959fc45e6580c763802ba68ded5bb232/manifest.json", "manifest_sha256": "1851599d91c3246d72da48bd060e807c959fc45e6580c763802ba68ded5bb232", "repository_key": "united-partners", "snapshot_path": "source-snapshots/1851599d91c3246d72da48bd060e807c959fc45e6580c763802ba68ded5bb232/tree", "snapshot_tree_sha256": "b70ec2417ddd451a5ef5d11b9946ead00700981d0ff95b4c49bc240acc9a271c", "source_path": "/Users/kamenkamenov/united-partners", "source_tree_sha256": "b70ec2417ddd451a5ef5d11b9946ead00700981d0ff95b4c49bc240acc9a271c"}],
+  "charter": {"path": "snapshots/charter/59be6bf53115a78d3c0ee8761bead0ffbd04f2fc6effd80d884b2d73f3dd05f9.json", "sha256": "59be6bf53115a78d3c0ee8761bead0ffbd04f2fc6effd80d884b2d73f3dd05f9"},
+  "evidence_index": {"path": "snapshots/evidence-index/787216d10d0dddab4121d95cfec72a276d69fbbd7c2e834a428b8c51c9bea9de.json", "sha256": "787216d10d0dddab4121d95cfec72a276d69fbbd7c2e834a428b8c51c9bea9de"},
+  "lens_contract": null,
+  "objective": "Produce a decision-complete implementation plan that makes the United Partners harness enforce the ten validated Decision 5 operational behaviors through generic governed contracts, durable state, downstream gates, and structured observability.",
+  "plan": {"path": "snapshots/plan/b7a45a0211c5dfc08428c5842bacfb2ec0644800b84cbdd44ea0d3832dc0c8f1.md", "sha256": "b7a45a0211c5dfc08428c5842bacfb2ec0644800b84cbdd44ea0d3832dc0c8f1"},
+  "raw_findings": {"path": "attempts/b3ab532b5b4c2da91f9269d077b46f3c83b57e26a13d5176b30e15e1b1ed6e46/output.json", "sha256": "63e972a230a3f5ec22134f6af9c9c5f013f290a6e186f49a03b87222c0ab817f"},
+  "requirements": {"path": "snapshots/requirements/2e3405924e088b6fe0550a2e256b9c398065ab9e64eeccd57c6090b93f37acf6.json", "sha256": "2e3405924e088b6fe0550a2e256b9c398065ab9e64eeccd57c6090b93f37acf6"},
+  "role": "VERIFY_PLAN_CRITIC",
+  "round": 2,
+  "schema_version": 1,
+  "surface_map": {"path": "snapshots/surface-map/c9605fed2a84c9903c3b6775116fb373124cc91e320057bc31b0e7bec1c1cf0c.json", "sha256": "c9605fed2a84c9903c3b6775116fb373124cc91e320057bc31b0e7bec1c1cf0c"},
+  "verification_iteration": 2,
+  "verification_ledger": {"path": "snapshots/verification-ledger/6e1cd98e03cde9d94cf109189bc105cc64186ab68ea028c15c19e06fbb82ea96/verification-ledger.json", "sha256": "6e1cd98e03cde9d94cf109189bc105cc64186ab68ea028c15c19e06fbb82ea96"},
+  "verifier_obligation_assessments": {"path": "attempts/b3ab532b5b4c2da91f9269d077b46f3c83b57e26a13d5176b30e15e1b1ed6e46/output.json", "sha256": "63e972a230a3f5ec22134f6af9c9c5f013f290a6e186f49a03b87222c0ab817f"}
+}

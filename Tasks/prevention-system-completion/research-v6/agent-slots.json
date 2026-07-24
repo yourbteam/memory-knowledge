@@ -1,0 +1,62 @@
+{
+  "max": 4,
+  "slots": [
+    {
+      "acquired_at": 1784308959,
+      "agent_id": "codex-exec-terminal-53381",
+      "bound_at": 1784309062,
+      "closed_at": 1784309687,
+      "completed_at": 1784309669,
+      "evidence": {
+        "close": "/private/tmp/research-v6-core-close.json"
+      },
+      "id": "s1",
+      "label": "final-core-correction",
+      "released_at": 1784309706,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784309818,
+      "agent_id": "codex-exec-terminal-1031",
+      "bound_at": 1784309979,
+      "closed_at": 1784310266,
+      "completed_at": 1784310243,
+      "evidence": {
+        "close": "/private/tmp/v6-ready-close.json"
+      },
+      "id": "s2",
+      "label": "final-readiness",
+      "released_at": 1784310292,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784309838,
+      "agent_id": "codex-exec-terminal-24237",
+      "bound_at": 1784309997,
+      "closed_at": 1784310342,
+      "completed_at": 1784310314,
+      "evidence": {
+        "close": "/private/tmp/v6-coverage-close.json"
+      },
+      "id": "s3",
+      "label": "final-coverage",
+      "released_at": 1784310363,
+      "state": "released"
+    },
+    {
+      "acquired_at": 1784309856,
+      "agent_id": "codex-exec-terminal-10635",
+      "bound_at": 1784310017,
+      "closed_at": 1784310406,
+      "completed_at": 1784310386,
+      "evidence": {
+        "close": "/private/tmp/v6-satisfaction-close.json"
+      },
+      "id": "s4",
+      "label": "final-satisfaction",
+      "released_at": 1784310430,
+      "state": "released"
+    }
+  ],
+  "version": 2
+}

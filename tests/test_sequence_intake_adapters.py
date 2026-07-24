@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+from pathlib import Path
 
 import pytest
 
@@ -1029,3 +1030,71 @@ def test_every_registered_sequence_has_an_adapter_and_intake_spec():
     assert set(sequence_intake_adapters.INTAKE_SPECS) == set(
         sequence_intake_adapters.ADAPTER_REGISTRY
     )
+
+
+ROOT = Path(__file__).resolve().parent.parent
+
+
+def _copy_contract_fixture(base: Path) -> list[tuple[str, Path]]:
+    (base / "operations/sequences").mkdir(parents=True)
+    (base / "operations/sequences/SEQUENCES.md").write_text(
+        (ROOT / "operations/sequences/SEQUENCES.md").read_text()
+    )
+    local_rows = []
+    stored = json.loads((ROOT / sequence_intake_adapters.INTAKE_CONTRACTS_PATH).read_text())
+    for row in stored["entries"]:
+        if row.get("entrypoint_source_sha256"):
+            rel = row["entrypoint"].split(":", 1)[1].split()[0]
+            target = base / rel
+            target.parent.mkdir(parents=True, exist_ok=True)
+            target.write_bytes((ROOT / rel).read_bytes())
+            local_rows.append((row["sequence_id"], target))
+    return local_rows
+
+
+def test_every_runnable_registered_sequence_has_a_current_contract():
+    stored = json.loads((ROOT / sequence_intake_adapters.INTAKE_CONTRACTS_PATH).read_text())
+    rebuilt = sequence_intake_adapters.build_intake_contracts(ROOT)
+    assert stored == rebuilt
+    assert sequence_intake_adapters.check_intake_contracts(ROOT) == []
+    covered = {row["sequence_id"] for row in stored["entries"]}
+    runnable = {
+        sequence_id
+        for sequence_id, adapter in sequence_intake_adapters.ADAPTER_REGISTRY.items()
+        if adapter is not None
+    }
+    assert covered == runnable
+    for row in stored["non_runnable"]:
+        assert row["reason"].strip()
+    for row in stored["entries"]:
+        assert row.get("entrypoint_source_sha256") or row.get("entrypoint_source_receipt"), (
+            f"{row['sequence_id']} has no source binding"
+        )
+
+
+def test_changed_required_caller_parameter_fails_closed(tmp_path: Path):
+    import copy
+
+    _copy_contract_fixture(tmp_path)
+    stored = sequence_intake_adapters.build_intake_contracts(tmp_path)
+    path = tmp_path / sequence_intake_adapters.INTAKE_CONTRACTS_PATH
+    path.write_text(json.dumps(stored, sort_keys=True))
+    assert sequence_intake_adapters.check_intake_contracts(tmp_path) == []
+    mutated = copy.deepcopy(stored)
+    target_row = next(row for row in mutated["entries"] if row["required_inputs"])
+    target_row["required_inputs"] = target_row["required_inputs"][1:]
+    path.write_text(json.dumps(mutated, sort_keys=True))
+    drift = sequence_intake_adapters.check_intake_contracts(tmp_path)
+    assert any(target_row["sequence_id"] in error for error in drift), drift
+
+
+def test_changed_entrypoint_source_invalidates_contract(tmp_path: Path):
+    local_rows = _copy_contract_fixture(tmp_path)
+    stored = sequence_intake_adapters.build_intake_contracts(tmp_path)
+    path = tmp_path / sequence_intake_adapters.INTAKE_CONTRACTS_PATH
+    path.write_text(json.dumps(stored, sort_keys=True))
+    assert sequence_intake_adapters.check_intake_contracts(tmp_path) == []
+    sequence_id, target = local_rows[0]
+    target.write_bytes(target.read_bytes() + b"\n# drifted\n")
+    drift = sequence_intake_adapters.check_intake_contracts(tmp_path)
+    assert any(sequence_id in error for error in drift), drift

@@ -1,0 +1,170 @@
+[
+  {
+    "id": "CUR-001",
+    "text": "Determine the exact current authority, trigger, wording, and practical obligation of every directive G0-G24, including overlaps and explicit or implicit precedence relationships.",
+    "source": {
+      "user_intent": "The directives must be accurate, practical, grounded, useful, and not cause contradictions or bloat.",
+      "current_anchors": ["working-agreement/DIRECTIVES.md"]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Every current directive is decomposed into its protected intent, mandatory actions, prohibited actions, activation condition, and stop condition; no G-rule is omitted.",
+    "scope_id": "current-directive-contract",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-CUR-001", "description": "Carry the complete G0-G24 intent and obligation inventory into the replacement mapping."}]
+  },
+  {
+    "id": "CUR-002",
+    "text": "Determine the exact distribution and consumption topology for directives across canonical source, generated projections, installed skills, hooks, corpus synchronization, and repository-local instruction surfaces.",
+    "source": {
+      "user_intent": "A corrected directive contract must reach the places that actually govern Codex and related workflows.",
+      "current_anchors": ["working-agreement/generate_projections.py", "AGENTS.md", "skills/working-agreement/SKILL.md", "working-agreement/inject-directives.sh", "working-agreement/sync_corpus.py", "working-agreement/install_skills.py"]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Every authoritative writer, generated consumer, installed copy, validation test, and external approval boundary is named without treating generated files as independent authority.",
+    "scope_id": "current-distribution-topology",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-CUR-002", "description": "Plan promotion and validation across every grounded directive consumer without directly editing generated authority."}]
+  },
+  {
+    "id": "CUR-003",
+    "text": "Determine which parts of the observed prevention-task loop were caused by directive or playbook contracts, which were caused by tooling defects, and which were caused by the agent failing to enforce existing scope rules.",
+    "source": {
+      "user_intent": "Do not use the directives as an excuse for agent inability.",
+      "current_anchors": ["working-agreement/DIRECTIVES.md:G1,G3,G17-G21", "skills/working-agreement/SKILL.md", "skills/sequence-runner/SKILL.md", "skills/blocker-catalog/SKILL.md", "operations/work-memory/events.jsonl"]
+    },
+    "operational_maturity": "CURRENT_RUNTIME",
+    "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "The cause chain separately identifies rule defects, procedural amplification, tool defects, and agent non-compliance, with no monocausal or self-exculpatory conclusion.",
+    "scope_id": "incident-causality",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-CUR-003", "description": "Preserve the evidence-backed causality distinction so the redesign fixes contracts without masking agent accountability."}]
+  },
+  {
+    "id": "FUT-001",
+    "text": "Define one explicit authority hierarchy in which higher-priority safety and user authorization constrain lower-level directives, while playbooks, skills, sequences, blockers, and diagnostics can restrict or stop work but cannot create new scope.",
+    "source": {
+      "user_intent": "The directive system must not cause contradictions or expand work under the surface.",
+      "current_anchors": ["working-agreement/DIRECTIVES.md:Prime directive,G1,G3,G11,G17-G21"]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "For every conflict class, one authority wins deterministically and no lower layer can authorize files, repositories, outcomes, external effects, or remediation excluded by the task envelope.",
+    "scope_id": "future-authority-hierarchy",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-001", "description": "Plan the canonical precedence and non-expansion contract and its validation tests."}]
+  },
+  {
+    "id": "FUT-002",
+    "text": "Define a compact frozen task authorization envelope containing the practical outcome, acceptance evidence, allowed change and evidence surfaces, authorized enabling work, exclusions, external-effect permissions, and stop conditions.",
+    "source": {
+      "user_intent": "Practical subgoals must be completed without silently changing the completion plan.",
+      "current_anchors": ["working-agreement/DIRECTIVES.md:G1-G4,G11,G21", "skills/task-intake/SKILL.md"]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "A fresh executor can decide whether a discovered action is authorized using the envelope alone; ambiguity produces one question or a stop, never inferred scope.",
+    "scope_id": "future-task-envelope",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-002", "description": "Plan the minimal task-envelope schema, freeze point, change gate, and human-readable presentation."}]
+  },
+  {
+    "id": "FUT-003",
+    "text": "Define context-sensitive handling for product defects, explicitly authorized enabling-tool defects, out-of-scope infrastructure failures, harmless invocation mistakes, consequential anomalies, and unavailable evidence.",
+    "source": {
+      "user_intent": "The system must neither bypass real controls nor turn every support failure into another implementation project.",
+      "current_anchors": ["working-agreement/DIRECTIVES.md:G4,G13-G21,G23-G24", "skills/blocker-catalog/SKILL.md", "skills/sequence-runner/SKILL.md"]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Each failure class has objective classification evidence and exactly one permitted response: correct within scope, retry an unchanged invocation, diagnose and stop, or request a bounded decision.",
+    "scope_id": "future-failure-policy",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-003", "description": "Plan the failure-classification decision table and non-recursive recovery boundary."}]
+  },
+  {
+    "id": "FUT-004",
+    "text": "Separate universal behavioral directives from task-envelope fields, playbook methods, operational sequence commands, tool schemas, and incident-specific examples while retaining traceability between layers.",
+    "source": {
+      "user_intent": "Directives should make sense generally rather than be shaped around the current task.",
+      "current_anchors": ["working-agreement/DIRECTIVES.md:G17-G24", "skills/working-agreement/SKILL.md", "skills/sequence-runner/SKILL.md", "skills/reproduce-first-verify/SKILL.md"]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Every retained obligation exists at one correct authority layer; cross-layer references do not duplicate commands or create circular mandates.",
+    "scope_id": "future-layer-separation",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-004", "description": "Plan relocation of procedural content and traceable references without losing enforcement intent."}]
+  },
+  {
+    "id": "FUT-005",
+    "text": "Produce a complete disposition and replacement mapping for every current directive G0-G24: retain, revise, merge, move, or retire, with rationale, preserved intent, activation condition, authorized action, prohibition, and stop condition.",
+    "source": {
+      "user_intent": "Re-specify each G directive without skimming any needed effort.",
+      "current_anchors": ["working-agreement/DIRECTIVES.md:G0-G24"]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "All 25 current directives appear exactly once in the mapping; no protected intent disappears and no replacement contains an unconditional subprocess that can expand scope.",
+    "scope_id": "future-complete-g-map",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-005", "description": "Plan the exact canonical rewrite using the complete disposition and replacement map."}]
+  },
+  {
+    "id": "FUT-006",
+    "text": "Define a representative scenario suite that proves the directive system produces one practical authorized action or one explicit stop condition without contradiction, unsafe bypass, recursive remediation, or hidden scope growth.",
+    "source": {
+      "user_intent": "The replacement must be proven generally useful, not merely described differently.",
+      "current_anchors": ["working-agreement/DIRECTIVES.md", "skills/task-intake/SKILL.md", "skills/sequence-runner/SKILL.md", "skills/blocker-catalog/SKILL.md"]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "The suite covers local fixes, features, research, review, remote operations, migrations, broken test tooling, broken governance tooling, anomalies, long workflows, dirty trees, and out-of-scope root causes with expected behavior and forbidden behavior.",
+    "scope_id": "future-scenario-proof",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-006", "description": "Plan executable or deterministic contract tests for every grounded representative scenario."}]
+  },
+  {
+    "id": "FUT-007",
+    "text": "Keep the directive system human-graspable: concise enough to apply during work, explicit enough to audit, and free of duplicated ceremony, hidden state, unexplained identifiers, or mandatory process that obscures the practical result.",
+    "source": {
+      "user_intent": "The directives must be practical and useful rather than abstract descriptions hiding unproductive work.",
+      "current_anchors": ["working-agreement/DIRECTIVES.md:G0-G2,G5-G7,G9,G22"]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "A user can see the current outcome, boundary, progress, decision, and stop reason without reading implementation machinery; routine work does not require a full rule audit.",
+    "scope_id": "future-human-usability",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-007", "description": "Plan concise directive structure, presentation rules, and usability checks without weakening auditability."}]
+  },
+  {
+    "id": "FUT-008",
+    "text": "Preserve or strengthen safety, evidence quality, schema accuracy, destructive-action protection, external-effect approval, dirty-tree preservation, honest reporting, and complete-fix quality while removing process bloat.",
+    "source": {
+      "user_intent": "The correction must be generally better, not a task-specific weakening of safeguards.",
+      "current_anchors": ["working-agreement/DIRECTIVES.md:G4,G8,G10-G16,G21,G23-G24", "AGENTS.md"]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "No scenario gains authority to commit, push, deploy, access secrets, alter external state, guess schemas, overwrite user changes, or claim unproven completion; complete fixes remain required inside authorized scope.",
+    "scope_id": "future-safety-nonregression",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-008", "description": "Plan explicit non-regression tests for safety, approval, evidence, preservation, and completion claims."}]
+  },
+  {
+    "id": "FUT-009",
+    "text": "Define a bounded adoption, projection, validation, and rollback contract for replacing the canonical directives and synchronizing every authoritative consumer without directly editing generated surfaces or silently changing unrelated playbooks.",
+    "source": {
+      "user_intent": "The corrected directives must become the real governing behavior reliably and safely.",
+      "current_anchors": ["working-agreement/generate_projections.py", "working-agreement/sync_corpus.py", "working-agreement/install_skills.py", "tests/test_generate_projections.py", "tests/test_skill_contracts.py"]
+    },
+    "operational_maturity": "FUTURE_SYSTEM",
+    "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "The canonical edit surface, generated projections, installed copies, corpus boundary, validation commands, approval gates, and rollback condition are named and finite before implementation begins.",
+    "scope_id": "future-adoption-contract",
+    "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-009", "description": "Plan the canonical edit, projection refresh, installed-skill alignment, corpus synchronization decision, validation, and rollback sequence."}]
+  }
+]

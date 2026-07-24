@@ -1,0 +1,140 @@
+{
+  "artifact_hashes": {
+    "evidence-index.json": "c9c01f3d2cbaf21f36530abbe5f263ac69832d94cd900ce08b8e4fdb2de686b7",
+    "findings.json": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+    "planner-handoff.md": "453a7d768177c5a3eacc82d121b08f313681e2808d6970cc976218d4e2423821",
+    "requirements.json": "e82b333e05136aa3d2f43d19a715beed0d4f496ffb32b9f3e714f0695829c668",
+    "research.md": "0b9dfe99d87e8824ff9273b10c00b0b05d8f92a122249918668100aee50cdd19"
+  },
+  "budget_use": {
+    "attempts_max": 15,
+    "attempts_used": 5,
+    "minutes_max": 60,
+    "minutes_used": 58.03333333333333,
+    "rounds_max": 3,
+    "rounds_used": 3
+  },
+  "candidate_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+  "emitted_at": "2026-07-17T18:49:10Z",
+  "envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+  "lifecycle_evidence": [
+    {
+      "candidate_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+      "close_evidence": {
+        "candidate_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+        "completion_evidence": "Fresh final core completed same-scope correction: ten authorized available owner contracts materialized, fifteen owners fail closed, D1 limitation and D2 exact query contract recorded; candidate validation passed.",
+        "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+        "output_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+        "role": "CORE_RESEARCHER",
+        "round": 3,
+        "runtime": "codex-exec-approved-substitution",
+        "runtime_agent_id": "codex-exec-terminal-53381",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+      "output_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+      "recorded_at": "2026-07-17T18:44:16.214288Z",
+      "role": "CORE_RESEARCHER",
+      "round": 3,
+      "runtime_agent_id": "codex-exec-terminal-53381",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+      "close_evidence": {
+        "candidate_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+        "completion_evidence": "Fresh final internal-readiness lens returned PASS with zero findings.",
+        "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+        "output_hash": "5ab5364a38aef57c800815a18883bafcfb82223df9d5066a3895c5e4f2571d63",
+        "role": "INTERNAL_READINESS",
+        "round": 3,
+        "runtime": "codex-exec-approved-substitution",
+        "runtime_agent_id": "codex-exec-terminal-1031",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+      "output_hash": "5ab5364a38aef57c800815a18883bafcfb82223df9d5066a3895c5e4f2571d63",
+      "recorded_at": "2026-07-17T18:44:31.220872Z",
+      "role": "INTERNAL_READINESS",
+      "round": 3,
+      "runtime_agent_id": "codex-exec-terminal-1031",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+      "close_evidence": {
+        "candidate_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+        "completion_evidence": "Fresh final requirements-coverage lens returned PASS with zero findings.",
+        "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+        "output_hash": "5ab5364a38aef57c800815a18883bafcfb82223df9d5066a3895c5e4f2571d63",
+        "role": "REQUIREMENTS_COVERAGE",
+        "round": 3,
+        "runtime": "codex-exec-approved-substitution",
+        "runtime_agent_id": "codex-exec-terminal-24237",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+      "output_hash": "5ab5364a38aef57c800815a18883bafcfb82223df9d5066a3895c5e4f2571d63",
+      "recorded_at": "2026-07-17T18:45:07.120287Z",
+      "role": "REQUIREMENTS_COVERAGE",
+      "round": 3,
+      "runtime_agent_id": "codex-exec-terminal-24237",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+      "close_evidence": {
+        "candidate_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+        "completion_evidence": "Fresh final requirements-satisfaction lens returned PASS with zero findings.",
+        "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+        "output_hash": "5ab5364a38aef57c800815a18883bafcfb82223df9d5066a3895c5e4f2571d63",
+        "role": "REQUIREMENTS_SATISFACTION",
+        "round": 3,
+        "runtime": "codex-exec-approved-substitution",
+        "runtime_agent_id": "codex-exec-terminal-10635",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+      "output_hash": "5ab5364a38aef57c800815a18883bafcfb82223df9d5066a3895c5e4f2571d63",
+      "recorded_at": "2026-07-17T18:45:57.027957Z",
+      "role": "REQUIREMENTS_SATISFACTION",
+      "round": 3,
+      "runtime_agent_id": "codex-exec-terminal-10635",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    },
+    {
+      "candidate_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+      "close_evidence": {
+        "candidate_hash": "b01a93931fc4b67edc97dced6ecbb8d3e86ac08f3df0e9feae41eaf67633f1a6",
+        "completion_evidence": "Fresh final adjudicator verified the three identical PASS lens results and returned an empty adjudication array at 2026-07-17T18:49:10Z, inside the enforced deadline.",
+        "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+        "output_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+        "role": "ADJUDICATOR",
+        "round": 3,
+        "runtime": "codex-exec-approved-substitution",
+        "runtime_agent_id": "codex-exec-terminal-45802",
+        "slot_closed": true,
+        "status": "COMPLETED"
+      },
+      "input_envelope_hash": "df2b1cac593942680e460d33d0daf0cf9b78276c63d5bddce27af612bd94ec2f",
+      "output_hash": "4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945",
+      "recorded_at": "2026-07-17T18:49:10Z",
+      "role": "ADJUDICATOR",
+      "round": 3,
+      "runtime_agent_id": "codex-exec-terminal-45802",
+      "slot_closed": true,
+      "status": "SUCCEEDED"
+    }
+  ],
+  "package_id": "research-package-bf8b1f49ed2a3519dd16ba94",
+  "schema_version": 1,
+  "terminal_verdict": "PASS"
+}

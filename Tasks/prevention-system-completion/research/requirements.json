@@ -1,0 +1,200 @@
+[
+  {
+    "id": "CUR-ENTRYPOINT",
+    "text": "Determine which current operational sequences have one executable entry point owning initialization, agent or worker execution, candidate changes, gates, adjudication, resume, and terminal emission, and identify every sequence still reconstructed across commands or prose.",
+    "source": {"user_requirement": "One executable entry point per operational sequence", "anchors": ["operations/sequences/SEQUENCES.md", "operations/sequences", "scripts", "skills/research-playbook/scripts/research_run.py"]},
+    "operational_maturity": "CURRENT_RUNTIME", "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Produce a complete current entry-point coverage inventory and prove whether the property holds system-wide.",
+    "scope_id": "current-entrypoint-coverage", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-CUR-ENTRYPOINT", "description": "Carry every multi-command or prose-owned operational sequence and its authoritative owner boundary into planning."}]
+  },
+  {
+    "id": "CUR-TYPED",
+    "text": "Determine which current mechanical actions use closed typed operations with exact structured validation and which still depend on shell strings, JSON-file assembly, key-order matching, escaped text patching, or remembered flags.",
+    "source": {"user_requirement": "Typed operations instead of raw shell and JSON manipulation", "anchors": ["scripts/sequence_checked_exec.py", "scripts/work_memory.py", "scripts/sequence_guard.py", "skills/research-playbook/scripts/research_run.py"]},
+    "operational_maturity": "CURRENT_RUNTIME", "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Map every current mechanical operation class to a typed API or a confirmed raw boundary.",
+    "scope_id": "current-typed-operation-coverage", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-CUR-TYPED", "description": "Carry all raw mechanical boundaries and their real schemas into planning."}]
+  },
+  {
+    "id": "CUR-INTERCEPTION",
+    "text": "Determine whether every current mechanical action is intercepted before execution to identify and invoke a compatible registered implementation or fail closed, independent of model memory and voluntary skill compliance.",
+    "source": {"user_requirement": "Pre-action interception", "anchors": ["skills/sequence-runner/SKILL.md", "scripts/work_memory.py", "scripts/sequence_guard.py", "scripts/sequence_checked_exec.py", "scripts/sequence_observer.py"]},
+    "operational_maturity": "CURRENT_RUNTIME", "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Trace intent through dispatch and distinguish automatic enforcement from advisory instructions or opt-in wrappers.",
+    "scope_id": "current-preaction-interception", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-CUR-INTERCEPTION", "description": "Ground the missing automatic interception boundary and every action surface it must control."}]
+  },
+  {
+    "id": "CUR-CORRECTION",
+    "text": "Determine whether a failed mechanical fingerprint with a same-path-verified replacement is durably prohibited and whether every later matching action is mechanically forced onto the corrected successor.",
+    "source": {"user_requirement": "Enforced corrected-path replacement", "anchors": ["scripts/blocker_catalog.py", "scripts/work_memory.py", "scripts/sequence_guard.py", "skills/research-playbook/scripts/research_run.py"]},
+    "operational_maturity": "CURRENT_RUNTIME", "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Trace failure, correction, successor verification, prohibition, selection, and dispatch across current code and data.",
+    "scope_id": "current-correction-enforcement", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-CUR-CORRECTION", "description": "Carry every missing correction-to-mandatory-dispatch transition into planning."}]
+  },
+  {
+    "id": "CUR-LEARNING",
+    "text": "Determine whether current evidence automatically joins intent, attempted action, failure, diagnosed cause, corrected action, same-path verification, discovery, qualification, promotion, registered verification, and later reuse as one causal lifecycle.",
+    "source": {"user_requirement": "Automatic discovery-to-promotion learning", "anchors": ["scripts/sequence_observer.py", "scripts/discovery_bootstrap.py", "scripts/discovery_promotion_lifecycle.py", "scripts/discovery_candidate_reconciliation.py", "tests/test_sequence_observer_end_to_end.py"]},
+    "operational_maturity": "CURRENT_RUNTIME", "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Identify which lifecycle joins are automatic, manual, opt-in, absent, or not causally bound.",
+    "scope_id": "current-causal-learning-loop", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-CUR-LEARNING", "description": "Carry every disconnected or manual causal lifecycle transition into planning."}]
+  },
+  {
+    "id": "CUR-BUDGET",
+    "text": "Determine whether current long-stage admission calculates and reserves the whole atomic unit, including core work, all three gates, adjudication, expected materialization overhead, retries, and terminal emission, before any expensive work starts.",
+    "source": {"user_requirement": "Budget admission before starting work", "anchors": ["skills/research-playbook/scripts/research_run.py", "skills/research-playbook/scripts/research_package.py", "scripts/convergence_checkpoint_run.py"]},
+    "operational_maturity": "CURRENT_RUNTIME", "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Prove which stages have full-unit admission and whether any long stage can start on a partial or elapsed-only check.",
+    "scope_id": "current-budget-admission", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-CUR-BUDGET", "description": "Carry each missing full-unit reservation and authoritative cost input into planning."}]
+  },
+  {
+    "id": "CUR-RESUME",
+    "text": "Determine whether every completed operational transition is durably persisted and resumes idempotently from the next valid transition across interruptions, multiple runs, and branch-safe state.",
+    "source": {"user_requirement": "Idempotent resume from durable state", "anchors": ["scripts/work_memory.py", "scripts/discovery_promotion_lifecycle.py", "skills/research-playbook/scripts/research_run.py", "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch"]},
+    "operational_maturity": "CURRENT_RUNTIME", "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Map each operational lifecycle to its durable transition journal and prove duplicate-effect prevention or its absence.",
+    "scope_id": "current-durable-resume", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-CUR-RESUME", "description": "Carry every non-resumable or reconstruction-dependent lifecycle boundary into planning."}]
+  },
+  {
+    "id": "CUR-METRICS",
+    "text": "Determine which current metrics measure registered implementation use, mechanical-failure time, repeated fingerprints, raw-command rate, promoted-sequence reuse, prevented failures, and total mechanical overhead using authoritative events.",
+    "source": {"user_requirement": "Measurable enforcement", "anchors": ["scripts/work_memory.py", "scripts/sequence_observer.py", "skills/research-playbook/scripts/research_run.py"]},
+    "operational_maturity": "CURRENT_RUNTIME", "evidence_availability": "AVAILABLE",
+    "acceptance_intent": "Produce an exact metric coverage and denominator inventory and distinguish synthetic test evidence from measured governed-run evidence.",
+    "scope_id": "current-enforcement-metrics", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-CUR-METRICS", "description": "Carry missing events, denominators, aggregations, and acceptance evidence into planning."}]
+  },
+  {
+    "id": "FUT-ENTRYPOINT",
+    "text": "Every operational sequence must expose one deterministic executable entry point that owns initialization, agents or workers, candidate updates, gates, adjudication, durable resume, and terminal emission.",
+    "source": {"user_requirement": "One executable entry point per operational sequence"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "A sequence requires exactly one typed invocation; killing and repeating that invocation resumes safely without reconstructing internal commands.",
+    "scope_id": "future-entrypoint", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-ENTRYPOINT", "description": "Plan the executable-owner contract and migration coverage for every registered operational sequence."}]
+  },
+  {
+    "id": "FUT-TYPED",
+    "text": "Every governed mechanical operation must be a closed typed operation accepting validated structured inputs, with no raw JSON/text patching, key-order dependence, escaped-line editing, or remembered flags.",
+    "source": {"user_requirement": "Typed operations instead of raw shell and JSON manipulation"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Unknown operations and malformed or extra fields fail before mutation; canonical typed calls cover all governed mechanical effects.",
+    "scope_id": "future-typed-operations", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-TYPED", "description": "Plan the closed operation registry, schemas, dispatch boundary, and raw-path removal."}]
+  },
+  {
+    "id": "FUT-INTERCEPTION",
+    "text": "Before any mechanical action dispatch, an automatic interceptor must derive the intended operation, invoke the exact compatible registered implementation, or fail closed because none exists; it must not depend on model recall.",
+    "source": {"user_requirement": "Pre-action interception"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Direct raw dispatch cannot bypass interception across shell, MCP/tool, file-edit, browser, subagent, and remote-workflow action classes.",
+    "scope_id": "future-preaction-interception", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-INTERCEPTION", "description": "Plan authoritative action-boundary interception and deterministic applicability selection for every action class."}]
+  },
+  {
+    "id": "FUT-CORRECTION",
+    "text": "A failed fingerprint whose corrected successor passes same-path verification must become prohibited, and the verified corrected implementation must be the mandatory path for every later compatible action.",
+    "source": {"user_requirement": "Enforced corrected-path replacement"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Replaying the failed fingerprint is mechanically rejected before execution; selection returns only the verified successor or a fail-closed hold.",
+    "scope_id": "future-correction-replacement", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-CORRECTION", "description": "Plan failure prohibition, correction supersession, same-path proof, and mandatory successor dispatch."}]
+  },
+  {
+    "id": "FUT-LEARNING",
+    "text": "The system must automatically join intent, attempted action, failure, diagnosed cause, corrected action, verification, discovery, promotion, registered verification, and later reuse into one durable causal learning lifecycle.",
+    "source": {"user_requirement": "Automatic discovery-to-promotion learning"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "One lineage proves every transition and automatically advances only when existing qualification and approval gates pass; missing evidence fails visibly.",
+    "scope_id": "future-causal-learning", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-LEARNING", "description": "Plan the single causal lineage, automatic transition controller, and preserved promotion authorities."}]
+  },
+  {
+    "id": "FUT-BUDGET",
+    "text": "Before starting a long stage or round, the controller must reserve enough remaining budget for the complete atomic unit, including core work, three gates, adjudicator, expected materialization and terminal overhead, and bounded retry allowance.",
+    "source": {"user_requirement": "Budget admission before starting work"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "An insufficient unit is rejected before any role starts, with deterministic cost inputs and an auditable admission decision.",
+    "scope_id": "future-full-unit-budget", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-BUDGET", "description": "Plan full-unit cost contracts, reservation, admission, and rejection evidence for every long-running controller."}]
+  },
+  {
+    "id": "FUT-RESUME",
+    "text": "Every completed transition and effect identity must be atomically durable so a repeated entry-point invocation resumes at the next valid transition without repeating completed work or reconstructing commands.",
+    "source": {"user_requirement": "Idempotent resume from durable state"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Crash tests at every transition prove exact-once reconciliation, multiple-run preservation, and branch-safe state ownership.",
+    "scope_id": "future-durable-resume", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-RESUME", "description": "Plan a common transition journal, effect identities, reconciliation rules, and crash matrix across operational sequences."}]
+  },
+  {
+    "id": "FUT-METRICS",
+    "text": "The system must durably measure registered implementation use, raw/manual dispatch, time lost to mechanical failures, repeated fingerprints, promoted-sequence reuse, failures prevented before execution, and total mechanical overhead.",
+    "source": {"user_requirement": "Measurable enforcement"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Every metric has a canonical event producer, denominator, aggregation window, exclusion policy, and reproducible query tied to governed runs.",
+    "scope_id": "future-enforcement-metrics", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-FUT-METRICS", "description": "Plan canonical metric events, denominators, aggregations, and acceptance reporting."}]
+  },
+  {
+    "id": "ACC-ZERO-RAW",
+    "text": "Governed runs must execute zero raw JSON or text patching operations and zero untyped mechanical dispatches.",
+    "source": {"user_success_condition": "Zero raw JSON/text patching during governed runs"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "An end-to-end governed-run corpus reports raw_dispatch_count=0 and rejects injected raw paths before mutation.",
+    "scope_id": "acceptance-zero-raw", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-ACC-ZERO-RAW", "description": "Plan the negative-path test corpus and authoritative zero-raw metric assertion."}]
+  },
+  {
+    "id": "ACC-ZERO-REPEAT",
+    "text": "A mechanical failure fingerprint must never execute again after its corrected successor has passed same-path verification.",
+    "source": {"user_success_condition": "Zero repeated mechanical failure fingerprints"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Repetition attempts increment prevented_failure_count and do not increment execution_claimed for the prohibited fingerprint.",
+    "scope_id": "acceptance-zero-repeat", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-ACC-ZERO-REPEAT", "description": "Plan exact recurrence-prevention evidence and failure-injection verification."}]
+  },
+  {
+    "id": "ACC-BUDGET-ADMISSION",
+    "text": "No long stage may begin unless the complete atomic unit fits inside the remaining admitted budget.",
+    "source": {"user_success_condition": "No long stage begins without sufficient remaining budget"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "Boundary tests one unit below required budget prove zero role or effect launch and a durable admission rejection.",
+    "scope_id": "acceptance-budget-admission", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-ACC-BUDGET", "description": "Plan under-budget boundary tests covering each long-running atomic unit."}]
+  },
+  {
+    "id": "ACC-MANDATORY-CORRECTION",
+    "text": "A correction verified once through the same path must become the mandatory implementation on the next compatible action.",
+    "source": {"user_success_condition": "A correction verified once becomes the mandatory path next time"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "A fresh task with matching intent deterministically selects and dispatches the corrected successor without operator choice.",
+    "scope_id": "acceptance-mandatory-correction", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-ACC-MANDATORY-CORRECTION", "description": "Plan a fresh-task end-to-end proof of mandatory corrected-path selection and dispatch."}]
+  },
+  {
+    "id": "ACC-REGISTERED-95",
+    "text": "At least 95 percent of recurring mechanical actions must use registered deterministic implementations over a defined representative measurement window.",
+    "source": {"user_success_condition": "At least 95% of recurring mechanical actions use registered deterministic implementations"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "A reproducible query with explicit recurring-action denominator reports registered_dispatches/eligible_recurring_actions >= 0.95.",
+    "scope_id": "acceptance-registered-use", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-ACC-REGISTERED-95", "description": "Plan the recurring-action denominator, representative window, query, and threshold gate."}]
+  },
+  {
+    "id": "ACC-OVERHEAD",
+    "text": "Mechanical overhead must remain below 5 to 10 percent of total governed work rather than the currently observed roughly 60 percent.",
+    "source": {"user_success_condition": "Mechanical overhead falls below 5–10%, rather than the current roughly 60%"},
+    "operational_maturity": "FUTURE_SYSTEM", "evidence_availability": "NOT_YET_APPLICABLE",
+    "acceptance_intent": "A representative real-run corpus, not only a synthetic clock test, reports mechanical_seconds/total_seconds <= 0.10 with the target band and exclusions explicit.",
+    "scope_id": "acceptance-mechanical-overhead", "research_value_type": "object",
+    "planner_obligations": [{"id": "PO-ACC-OVERHEAD", "description": "Plan real-run instrumentation, representative workload evidence, aggregation, and the <=10 percent acceptance gate."}]
+  }
+]

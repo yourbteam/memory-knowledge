@@ -1,0 +1,12 @@
+{
+  "runtime": "codex-collaboration",
+  "runtime_agent_id": "/root/prevention_successor_satisfaction_retry",
+  "role": "REQUIREMENTS_SATISFACTION",
+  "round": 1,
+  "status": "COMPLETED",
+  "candidate_hash": "d9d0431696dee68aeeb3b5f2bf0538ec26005b5e8776387764972f95568dd036",
+  "input_envelope_hash": "56b02c8927c7e628a692470dfb3a2730b7d2c9162e52630fbf142161f7ee0de0",
+  "output_hash": "e00b7af35ab42d35d8a21b43f172c3ccb98e96a6f9d08eda99d6dbf73f5a9b80",
+  "slot_closed": true,
+  "completion_evidence": "The one permitted fresh retry returned PASS with nine explicit findings and released its active slot."
+}

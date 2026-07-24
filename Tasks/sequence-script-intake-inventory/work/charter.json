@@ -1,0 +1,54 @@
+{
+  "schema_version": 1,
+  "charter_id": "sequence-script-intake-inventory-20260723-v1",
+  "objective": "Produce a complete, planner-ready inventory of every canonical registered sequence, every real automation entrypoint it invokes across repositories, and the exact current input boundary that must migrate to the approved no-argument shared-intake contract.",
+  "research_questions": [
+    "Which sequence rows are currently registered in the canonical cross-project registry?",
+    "For every row, what repository, file, executable type, invocation source, and current input mechanism are authoritative?",
+    "Which registered sequences have multiple entrypoints, composed subsequences, human-only steps, MCP calls, or unresolved automation rather than one script?",
+    "Which entrypoints already launch with no arguments, which require positional arguments, flags, environment variables, files, stdin, or embedded command text, and which do not expose an operator intake boundary?",
+    "Where do sequence documents, skills, or wrappers currently require the model to construct JSON, argv, flags, or command envelopes?",
+    "What no-argument intake migration and compatibility boundary is required for every entrypoint, including commit/push and every deployment sequence?",
+    "Which effectful sequence classes require a separate approval/review gate after intake has constructed deterministic parameters?"
+  ],
+  "in_scope": [
+    "Every row in operations/sequences/SEQUENCES.md, including commit-push-main and all deploy sequences",
+    "Every registered sequence.md and dependencies.json bundle",
+    "Every locally available automation source referenced by a registry row or registered bundle",
+    "Source and installed sequence-runner skill instructions that author invocation inputs",
+    "Current-runtime interface classification and future no-argument intake migration obligations"
+  ],
+  "exclusions": [
+    "Editing sequence implementations, sequence documents, skills, or the registry",
+    "Running commit, push, deploy, authentication, database, container, cleanup, package, or workflow-drive operations",
+    "Changing approval boundaries, secrets handling, or operational authority",
+    "Inventing interfaces for unavailable repositories or unresolved entrypoints",
+    "Inventorying unregistered discovery logs except where a registered sequence explicitly depends on their lineage"
+  ],
+  "authoritative_roots": [
+    "/Users/kamenkamenov/memory-knowledge/operations/sequences/SEQUENCES.md",
+    "/Users/kamenkamenov/memory-knowledge/operations/sequences",
+    "/Users/kamenkamenov/memory-knowledge/skills/sequence-runner/SKILL.md",
+    "/Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md",
+    "/Users/kamenkamenov/memory-knowledge",
+    "/Users/kamenkamenov/mcp-agents-workflow",
+    "/Users/kamenkamenov/taggable-api",
+    "/Users/kamenkamenov/FoodCycleScience-admin",
+    "/Users/kamenkamenov/callcenter-harness",
+    "/Users/kamenkamenov/united-partners"
+  ],
+  "required_output_package": [
+    "manifest.json",
+    "research.md",
+    "requirements.json",
+    "evidence-index.json",
+    "findings.json",
+    "planner-handoff.md"
+  ],
+  "budget": {
+    "maximum_candidate_rounds": 3,
+    "maximum_agent_spawn_attempts": 15,
+    "maximum_elapsed_minutes": 60,
+    "maximum_retries_per_role": 1
+  }
+}

@@ -157,17 +157,19 @@ def verify_receipts(task_id: str, state_path: Path | None = None) -> dict[str, A
         row = next((item for item in rows if item["sequence_id"] == selection["subject_id"]), None)
         if row is None or row["lineage_id"] != lineage:
             raise work_memory.WorkMemoryError("registry-lineage-mismatch", 4)
+    ownership_keys = (
+        ("writer_id", "writer_client_kind", "writer_session_id",
+         "ownership_generation", "ownership_event_id", "ownership_sha256")
+        if "writer_id" in selection
+        else ("writer_thread_id", "ownership_generation",
+              "ownership_event_id", "ownership_sha256")
+    )
     if state_path is not None:
         state = _load_state(state_path)
         expected = {
             "task_id": task_id, "classification_receipt_hash": class_hash,
             "selection_receipt_hash": selection_hash, "source_bundle_hash": bundle_hash,
-            **{
-                key: selection[key] for key in (
-                    "writer_thread_id", "ownership_generation",
-                    "ownership_event_id", "ownership_sha256",
-                )
-            },
+            **{key: selection[key] for key in ownership_keys},
         }
         if any(state.get(key) != value for key, value in expected.items()):
             raise work_memory.WorkMemoryError("active-state-receipt-mismatch", 4)
@@ -176,12 +178,7 @@ def verify_receipts(task_id: str, state_path: Path | None = None) -> dict[str, A
         "selection_receipt_hash": selection_hash, "source_bundle_hash": bundle_hash,
         "mode": selection["mode"], "subject_id": selection["subject_id"],
         "lineage_id": lineage, "selection": selection,
-        **{
-            key: selection[key] for key in (
-                "writer_thread_id", "ownership_generation",
-                "ownership_event_id", "ownership_sha256",
-            )
-        },
+        **{key: selection[key] for key in ownership_keys},
     }
 
 

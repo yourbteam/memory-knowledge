@@ -1,0 +1,56 @@
+{
+  "schema_version": 1,
+  "charter_id": "prevention-system-completion-20260717-v2",
+  "objective": "Assess the real current implementation against the complete mechanical-error prevention system and produce a planner-ready package that grounds every missing mechanism and end-to-end acceptance boundary without narrowing the goal.",
+  "research_questions": [
+    "Does every operational sequence have one executable owner for initialization through terminal emission?",
+    "Are mechanical operations typed and schema-validated rather than reconstructed through shell, JSON, or text manipulation?",
+    "Can an authoritative host boundary intercept every mechanical action class before execution, including the action classes that official Codex hooks do and do not support?",
+    "Does a same-path-verified correction prohibit the failed fingerprint and become the mandatory successor?",
+    "Is intent through promoted registered reuse one automatically joined causal learning lifecycle?",
+    "Does admission reserve the entire atomic unit before long work begins?",
+    "Can every completed transition resume idempotently from durable state?",
+    "Do system-wide metrics prove registered reuse, prevented failures, recurrence reduction, and mechanical-overhead targets?"
+  ],
+  "in_scope": [
+    "memory-knowledge operational sequence registry, selector, guard, checked execution, observer, blocker/correction ledger, discovery, promotion, registered verification, budget, resume, and metrics contracts",
+    "research-playbook execution only as one representative sequence and integration surface, not as the whole system",
+    "mcp-agents-workflow and Codex action boundaries only where required to ground automatic pre-action interception",
+    "official OpenAI Codex hook documentation only to establish the supported and unsupported pre-action interception boundary",
+    "all eight user-provided enforcement properties and all six user-provided measurable completion conditions"
+  ],
+  "exclusions": [
+    "implementation planning or code changes during research",
+    "commit, push, deployment, secret access, external messaging, or phase-ledger contract changes",
+    "conversation transcripts, hidden reasoning, personal data, credentials, or raw terminal output as durable learning evidence",
+    "dashboard or user-interface design beyond the metric contracts required for acceptance",
+    "sequence catalog cleanup unrelated to the prevention-system acceptance requirements"
+  ],
+  "authoritative_roots": [
+    "/Users/kamenkamenov/memory-knowledge",
+    "/Users/kamenkamenov/mcp-agents-workflow",
+    "/Users/kamenkamenov/.codex/skills",
+    "https://learn.chatgpt.com/docs/hooks#pretooluse"
+  ],
+  "supplied_input": "The complete prevention system has one executable sequence owner, typed operations, automatic pre-action interception, mandatory verified correction replacement, automatic causal discovery-to-promotion learning, full-unit budget admission, durable idempotent resume, and system-wide enforcement metrics. Completion requires zero raw JSON/text patching in governed runs, zero repeated mechanical fingerprints, no under-budget long-stage start, mandatory reuse of verified corrections, at least 95 percent registered use for recurring actions, and mechanical overhead below 5 to 10 percent.",
+  "required_output_package": [
+    "manifest.json",
+    "research.md",
+    "requirements.json",
+    "evidence-index.json",
+    "findings.json",
+    "planner-handoff.md"
+  ],
+  "budget": {
+    "maximum_candidate_rounds": 3,
+    "maximum_agent_spawn_attempts": 15,
+    "maximum_elapsed_minutes": 60,
+    "maximum_retries_per_role": 1
+  },
+  "terminal_rules": [
+    "PASS requires all three lenses to pass the same candidate and envelope hashes, a fresh adjudicator with no research-actionable finding, every planner obligation READY, exact package validation, and zero active agent slots.",
+    "GAPS means research-stage corrections remain inside this frozen charter.",
+    "BLOCKED means required accessible evidence or a named approval route is unavailable.",
+    "CAP_REACHED means the shared time, round, attempt, retry, or repeated-fingerprint cap fired."
+  ]
+}

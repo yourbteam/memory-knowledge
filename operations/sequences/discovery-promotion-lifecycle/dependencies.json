@@ -1,1 +1,206 @@
-{"dependencies":[{"kind":"file","path_or_sequence_id":"scripts/blocker_catalog.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/directive_guard.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/discovery_promotion_lifecycle.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/prevention_adapters.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/prevention_contract.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/prevention_registry.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/run_pytest.sh","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/script_intake.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_candidate_contract.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_discovery_log.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_guard.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_adapters.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_intake_launch.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/sequence_promote.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/work_memory.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/work_memory_bootstrap.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"scripts/work_memory_bootstrap_launcher.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"tests/fixtures/captured_prevention_v4_trust_anchors.json","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"tests/test_blocker_catalog.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"tests/test_discovery_promotion_lifecycle.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"tests/test_sequence_discovery_log.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"tests/test_sequence_guard.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"tests/test_sequence_promote.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"tests/test_work_memory.py","repository_key":"memory-knowledge"},{"kind":"file","path_or_sequence_id":"tests/test_work_memory_bootstrap.py","repository_key":"memory-knowledge"}],"lineage_id":"discovery-b6658d35-7870-5d15-9f4b-d316138cec83","schema_version":1}
+{
+  "dependencies": [
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/blocker_catalog.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/directive_guard.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/discovery_promotion_lifecycle.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/prevention_adapters.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/prevention_contract.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/prevention_contract_materializer.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/prevention_observable_materializer.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/prevention_owner_acceptance.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/prevention_owner_acceptance_producer.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/prevention_owner_acceptance_fixtures.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/prevention_registry.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/run_pytest.sh",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/script_intake.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/sequence_candidate_contract.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/sequence_discovery_log.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/sequence_guard.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/sequence_intake_adapters.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/sequence_intake_launch.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/sequence_promote.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/work_memory.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/work_memory_bootstrap.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/work_memory_bootstrap_launcher.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "Tasks/prevention-system-completion/owner-contract-proposals/commit-push-main.json",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "Tasks/prevention-system-completion/owner-contract-proposals/greenfield-full-drive.json",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "Tasks/prevention-system-completion/owner-contract-proposals/discovery-promotion-lifecycle.json",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "Tasks/prevention-system-completion/owner-executable-contracts.json",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "Tasks/prevention-system-completion/owner-observable-evidence.json",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "Tasks/prevention-system-completion/owner-source-verification.json",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/fixtures/captured_prevention_v4_trust_anchors.json",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/prevention/test_contracts_and_registry.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/prevention/test_owner_contract_materialization.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/prevention/test_owner_source_acceptance.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_blocker_catalog.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_discovery_promotion_lifecycle.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_sequence_discovery_log.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_sequence_guard.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_sequence_intake_launch.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_sequence_promote.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_work_memory.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_work_memory_bootstrap.py",
+      "repository_key": "memory-knowledge"
+    }
+  ],
+  "lineage_id": "discovery-b6658d35-7870-5d15-9f4b-d316138cec83",
+  "schema_version": 1
+}

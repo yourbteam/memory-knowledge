@@ -1,0 +1,203 @@
+{
+  "kind": "plan",
+  "target": "Tasks/scoped-context-edit/plan.md",
+  "iteration": 2,
+  "created_at": "2026-07-16T06:14:44.683653+00:00",
+  "coverage_queue": [
+    {
+      "id": "COV-01",
+      "summary": "Guard CLI, receipt schema, path confinement, and tamper detection are fully specified",
+      "risk": "high",
+      "status": "fixed",
+      "evidence_to_inspect": [
+        "Tasks/scoped-context-edit/plan.md",
+        "scripts/context_edit_guard.py",
+        "scripts/work_memory.py"
+      ]
+    },
+    {
+      "id": "COV-02",
+      "summary": "Dirty Git baseline and outside-scope change detection cover tracked, staged, unstaged, and untracked paths",
+      "risk": "high",
+      "status": "fixed",
+      "evidence_to_inspect": [
+        "Tasks/scoped-context-edit/plan.md",
+        "tests/test_context_edit_guard.py"
+      ]
+    },
+    {
+      "id": "COV-03",
+      "summary": "Prepare, currentness check, one apply_patch boundary, verification, and invalidation behavior are unambiguous",
+      "risk": "high",
+      "status": "fixed",
+      "evidence_to_inspect": [
+        "Tasks/scoped-context-edit/analysis.md",
+        "Tasks/scoped-context-edit/plan.md"
+      ]
+    },
+    {
+      "id": "COV-04",
+      "summary": "Self-check uses the same guard path and provides a stable exact pass signal",
+      "risk": "medium",
+      "status": "checked",
+      "evidence_to_inspect": [
+        "Tasks/scoped-context-edit/plan.md",
+        "scripts/context_edit_guard.py"
+      ]
+    },
+    {
+      "id": "COV-05",
+      "summary": "Discovery bootstrap specification is complete and uses the current accepted schema and command interface",
+      "risk": "high",
+      "status": "fixed",
+      "evidence_to_inspect": [
+        "scripts/discovery_bootstrap.py",
+        "scripts/sequence_discovery_log.py",
+        "Tasks/scoped-context-edit/plan.md"
+      ]
+    },
+    {
+      "id": "COV-06",
+      "summary": "Canonical lifecycle supplies two same-bundle qualifications, atomic promotion, blocker successors, and registered verification",
+      "risk": "high",
+      "status": "checked",
+      "evidence_to_inspect": [
+        "scripts/discovery_promotion_lifecycle.py",
+        "operations/sequences/discovery-promotion-lifecycle/sequence.md",
+        "Tasks/scoped-context-edit/plan.md"
+      ]
+    },
+    {
+      "id": "COV-07",
+      "summary": "Registered selector discoverability and lifecycle-generated catalog surfaces are explicitly verified",
+      "risk": "medium",
+      "status": "fixed",
+      "evidence_to_inspect": [
+        "scripts/work_memory.py",
+        "operations/sequences/SEQUENCES.md",
+        "Tasks/scoped-context-edit/plan.md"
+      ]
+    },
+    {
+      "id": "COV-08",
+      "summary": "Validation, review, dirty-worktree preservation, and no-commit boundaries are complete",
+      "risk": "medium",
+      "status": "fixed",
+      "evidence_to_inspect": [
+        "scripts/run_pytest.sh",
+        "Tasks/scoped-context-edit/analysis.md",
+        "Tasks/scoped-context-edit/plan.md"
+      ]
+    }
+  ],
+  "findings": [
+    {
+      "id": "VP-001",
+      "iteration_first_seen": 1,
+      "classification": "FIX NOW",
+      "status": "fixed",
+      "coverage_id": "COV-01",
+      "action": "Specified exact subcommands, arguments, receipt schema, transitions, signals, and exit semantics."
+    },
+    {
+      "id": "VP-002",
+      "iteration_first_seen": 1,
+      "classification": "FIX NOW",
+      "status": "fixed",
+      "coverage_id": "COV-02",
+      "action": "Separated HEAD, index, tracked working bytes, missing tracked paths, and untracked identities."
+    },
+    {
+      "id": "VP-003",
+      "iteration_first_seen": 1,
+      "classification": "FIX NOW",
+      "status": "fixed",
+      "coverage_id": "COV-03",
+      "action": "Bound one apply_patch as an operational constraint and added explicit cancellation and fresh preparation."
+    },
+    {
+      "id": "VP-004",
+      "iteration_first_seen": 1,
+      "classification": "FIX NOW",
+      "status": "fixed",
+      "coverage_id": "COV-05",
+      "action": "Added the complete concrete version-1 bootstrap request."
+    },
+    {
+      "id": "VP-005",
+      "iteration_first_seen": 1,
+      "classification": "FIX NOW",
+      "status": "fixed",
+      "coverage_id": "COV-05",
+      "action": "Distinguished bootstrap task, discovery name, generated lineage, and promoted registry identities."
+    },
+    {
+      "id": "VP-006",
+      "iteration_first_seen": 1,
+      "classification": "FIX NOW",
+      "status": "fixed",
+      "coverage_id": "COV-06",
+      "action": "Added exact guard, verification, and closure steps so the bootstrap run becomes qualification one."
+    },
+    {
+      "id": "VP-007",
+      "iteration_first_seen": 1,
+      "classification": "FIX NOW",
+      "status": "fixed",
+      "coverage_id": "COV-07",
+      "action": "Replaced false generic selection with semantic registry lookup plus explicit registered selection proof."
+    },
+    {
+      "id": "VP-008",
+      "iteration_first_seen": 1,
+      "classification": "FIX NOW",
+      "status": "fixed",
+      "coverage_id": "COV-08",
+      "action": "Specified baseline diagnostic fingerprints so verification rejects only new whitespace defects."
+    }
+  ],
+  "iteration_log": [
+    {
+      "iteration": 1,
+      "mode": "inventory+slice",
+      "verifier_findings": 8,
+      "fix_now": 8,
+      "implement_later": 0,
+      "acknowledge": 0,
+      "dismiss": 0,
+      "coverage_checked": [
+        "COV-01",
+        "COV-02",
+        "COV-03",
+        "COV-04",
+        "COV-05",
+        "COV-06",
+        "COV-07",
+        "COV-08"
+      ],
+      "coverage_remaining_high_medium": 0
+    },
+    {
+      "iteration": 2,
+      "mode": "fix-regression",
+      "verifier_findings": 0,
+      "fix_now": 0,
+      "implement_later": 0,
+      "acknowledge": 0,
+      "dismiss": 0,
+      "coverage_checked": [
+        "COV-01",
+        "COV-02",
+        "COV-03",
+        "COV-04",
+        "COV-05",
+        "COV-06",
+        "COV-07",
+        "COV-08"
+      ],
+      "coverage_remaining_high_medium": 0,
+      "verdict": "PASS",
+      "critic_approved": true
+    }
+  ]
+}

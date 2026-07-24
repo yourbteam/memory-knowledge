@@ -1,0 +1,588 @@
+[
+  {
+    "raw_finding": {
+      "id": "IR-001",
+      "fingerprint": "ir-r2-cur002-host-interception-claim-contradiction-v1",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-002"
+      ],
+      "type": "CONTRADICTION",
+      "materiality": "BLOCKER",
+      "practical_consequence": "A fresh planner could treat host-wide pre-dispatch interception as proven absent even though the package establishes only that it is unproven within the accessible roots, producing a plan from a false current-runtime premise.",
+      "evidence": [
+        "candidate-round-2.json requirement_statuses[CUR-002] states runtime_interceptor=false.",
+        "candidate-round-2.json research_markdown CUR-002 states that no accessible Codex-host source proves arbitrary pre-dispatch interception.",
+        "candidate-round-2.json planner_readiness_constraints.codex_host_evidence_gate requires a supported host hook/schema or instrumented fixture from the OpenAI Codex host/runtime integration owner.",
+        "E-SKILL-DEPLOYED explicitly limits its support by stating that it does not expose Codex host internals."
+      ],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    "finding_type": "CONTRADICTION",
+    "materiality": "BLOCKER",
+    "disposition": "FIX_IN_RESEARCH"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-001",
+      "fingerprint": "mg001-action-producer-coverage-planner-handoff-v1",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-001",
+        "CUR-007",
+        "FUT-001",
+        "FUT-011",
+        "FUT-012"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "The current observer cannot learn from MCP, browser, generic file-edit, nested-subagent, or remote internal actions because those classes lack canonical work-memory events and observer consumers; the planner must add safe producers or preserve an explicit unsupported result.",
+      "evidence": [
+        "E-WORKMEM and E-CHECKEXEC ground the existing checked-argv event boundary.",
+        "E-EXECUTOR, E-CLI-BASE, E-CODEX-CLI, and E-MAWF-TOOLS ground aggregate remote dispatch while showing no canonical per-action observer stream.",
+        "candidate-round-2.json planner_readiness_constraints.codex_host_evidence_gate names implementation anchors, verification observables, the finite host-fixture input, its custodian, and closure condition."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-002",
+      "fingerprint": "mg002-predispatch-interception-planner-handoff-v1",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-002",
+        "FUT-002",
+        "FUT-012",
+        "FUT-014"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "A matching registered sequence can still be bypassed before governed-path entry because current selection and guard enforcement begin only after voluntary invocation; the planner must introduce a pre-dispatch applicability gate without bypassing existing approvals.",
+      "evidence": [
+        "E-SKILL-REPO and E-SKILL-DEPLOYED establish advisory skill entry.",
+        "E-WORKMEM cmd_select and E-GUARD cmd_guard establish the existing post-entry enforcement anchors.",
+        "candidate-round-2.json planner_readiness_constraints.codex_host_evidence_gate supplies the finite proprietary-host evidence route and fail-visible fallback."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-003",
+      "fingerprint": "mg003-closed-success-learning-loop-planner-handoff-v1",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-003",
+        "CUR-005",
+        "FUT-003",
+        "FUT-009",
+        "FUT-013",
+        "FUT-014"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "A proven unrecorded success does not autonomously become a qualified, registered, verified, and reusable sequence; the planner must connect the currently separate capture and lifecycle controllers into a closed, deduplicated loop.",
+      "evidence": [
+        "E-OBSERVER and E-BOOTSTRAP ground eligible proposal and discovery creation.",
+        "E-LIFECYCLE, E-PROMOTE, and E-E2E establish that qualification, promotion, registered verification, and later reuse are explicitly controller-driven.",
+        "candidate-round-2.json FUT-003, FUT-009, FUT-013, and FUT-014 define the future trace, identity, feedback, and end-to-end closure observables."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-004",
+      "fingerprint": "mg004-causal-self-diagnosis-repair-join-planner-handoff-v1",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-004",
+        "FUT-004",
+        "FUT-005",
+        "FUT-013",
+        "FUT-014"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "A model statement that its action caused a failure cannot currently update a reusable path because no contract joins that signal to the exact action, failure, blocker, replacement, and same-path proof; the planner must add that evidence-backed causal join.",
+      "evidence": [
+        "E-BLOCKER and E-WORKMEM ground blocker, correction, bundle-transition, and successor-verification records.",
+        "E-OBSERVER shows no self-diagnosis-to-action consumer.",
+        "candidate-round-2.json FUT-004 and FUT-005 enumerate the finite causal inputs and non-repetition closure behavior."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-005",
+      "fingerprint": "mg005-immutable-registered-repair-planner-handoff-v1",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-005",
+        "FUT-005",
+        "FUT-006",
+        "FUT-013",
+        "FUT-014"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "Correcting a registered sequence currently changes its bundle in place, so the old defective version is not preserved as a separately auditable, non-selectable version; the planner must introduce immutable replacement, quarantine, requalification, verification, and atomic selector cutover.",
+      "evidence": [
+        "E-WORKMEM grounds the current correction_recorded plus bundle_transition_recorded path for the registered subject.",
+        "E-PROMOTE, E-LIFECYCLE, E-RECON, and E-GUARD provide grounded promotion, lifecycle, reconciliation, and eligibility anchors.",
+        "candidate-round-2.json FUT-006 states the replacement-version and atomic-cutover closure condition."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-006",
+      "fingerprint": "mg006-silver-gold-transition-policy-incomplete-v1",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-006",
+        "FUT-007",
+        "FUT-008"
+      ],
+      "type": "REQUIREMENT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "A fresh planner would have to invent when silver is entered, promoted, demoted, superseded, or expired and how those transitions relate to current ready, overdue, promoted, quarantine, and registered-verification states, so PO-FUT-007 cannot receive a grounded controller-valid READY record.",
+      "evidence": [
+        "requirements.json FUT-007 requires explicit entry, promotion, demotion, supersession, and expiration rules, and its acceptance intent requires the exact policy to be finalized from evidence.",
+        "candidate-round-2.json FUT-007 defines silver and gold meanings but only says all transitions are machine-readable; it does not enumerate the required transitions or their predicates.",
+        "E-DISCOVERY grounds current two-success readiness and overdue behavior; E-LIFECYCLE grounds current qualification, promotion, correction-required, registered-verification, and complete stages; E-REGISTRY grounds the absence of silver/gold fields. These accessible frozen-root facts are not mapped into the required future transition contract."
+      ],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    "finding_type": "REQUIREMENT_GAP",
+    "materiality": "BLOCKER",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-007",
+      "fingerprint": "mg007-cross-runtime-branch-state-ownership-planner-handoff-v1",
+      "lens": "INTERNAL_READINESS",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "FUT-009",
+        "FUT-010",
+        "FUT-013",
+        "FUT-014"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Sequence learning can duplicate candidates, lose corrections, or select stale versions across runtime and branch boundaries until one canonical owner and explicit resume, merge, conflict, and current-version synchronization rules are implemented.",
+      "evidence": [
+        "E-WORKMEM grounds the atomic ledger and merge boundary.",
+        "E-WORKFLOW-STATE grounds a separate per-run workflow-state store with no sequence-version synchronization contract.",
+        "E-RECON and E-PROMOTE ground current reconciliation and journaled promotion anchors.",
+        "candidate-round-2.json FUT-010 supplies the required ownership, idempotent-resume, event-union, branch-conflict, and synchronization closure semantics."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-001",
+      "fingerprint": "mg-001-action-producer-coverage-current-nonargv-unsupported",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-007",
+        "FUT-001"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "The complete system cannot observe or learn from MCP, browser, generic file-edit, or nested-subagent actions until planning supplies authoritative producers for those classes or preserves an explicit fail-visible unsupported result.",
+      "evidence": [
+        "Required side: Tasks/sequence-learning-completeness-assessment/research-runs/20260716T185000Z/work/requirements.json defines CUR-007's per-action producer/record/consumer matrix and FUT-001's authoritative event boundary.",
+        "Missing-current side: candidate-round-2.json:50 records null or absent observer producers for MCP, browser, file-edit, and subagent classes; E-CHECKEXEC limits current observation to direct argv, while E-MAWF-TOOLS and E-EXECUTOR show those other capabilities can occur without canonical per-action events.",
+        "The candidate names a finite Codex-host acquisition owner, required fixture input, verification boundary, and fail-visible fallback in candidate-round-2.json:32-40, so this is planner-owned rather than blocked research."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-002",
+      "fingerprint": "mg-002-pre-dispatch-interception-advisory-before-governed-entry",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-002",
+        "FUT-002"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "A model can still improvise before entering selection and guard; planning must place exact applicability and governed activation before effect dispatch without bypassing existing approvals.",
+      "evidence": [
+        "Required side: Tasks/sequence-learning-completeness-assessment/research-runs/20260716T185000Z/work/requirements.json defines CUR-002's advisory-versus-enforced trace and FUT-002's pre-dispatch matching requirement.",
+        "Missing-current side: candidate-round-2.json:45 records runtime_interceptor=false and preaction='advisory before governed entry'; E-GUARD begins only after governed-path entry and E-SKILL-DEPLOYED does not establish host interception.",
+        "candidate-round-2.json:52 supplies the future fail-visible exact-match conclusion and candidate-round-2.json:32-40 supplies the finite host evidence gate, leaving implementation placement to planning."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-003",
+      "fingerprint": "mg-003-success-learning-loop-explicit-controller-transitions",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-003",
+        "FUT-003",
+        "FUT-014"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "A proven unrecorded success does not yet autonomously traverse discovery, qualification, promotion, registered verification, and next-use activation; planning must close those transitions while retaining evidence and promotion gates.",
+      "evidence": [
+        "Required side: requirements.json defines CUR-003's full current lifecycle trace, FUT-003's complete proven-path candidate, and FUT-014's success-path acceptance proof.",
+        "Missing-current side: candidate-round-2.json:46 records autonomous_loop=false and qualification_promotion_verification='explicit controller'; E-BOOTSTRAP stops before qualification/promotion and E-E2E explicitly drives the argv-only lifecycle.",
+        "Future coverage side: candidate-round-2.json:53 and :64 define typed holds for incomplete evidence and the unrecorded-to-silver-to-gold-to-pre-dispatch-reuse acceptance chain."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-004",
+      "fingerprint": "mg-004-self-diagnosis-causal-join-to-repair",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-004",
+        "FUT-004",
+        "FUT-005",
+        "FUT-014"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "A model's statement that its action caused a failure cannot currently repair a reusable path; planning must join that non-authoritative signal to the exact action, failure, blocker, replacement, and same-path successor proof before excluding the wrong step.",
+      "evidence": [
+        "Required side: requirements.json defines CUR-004's issue-to-sequence trace, FUT-004's evidence-backed causal join, FUT-005's wrong-step exclusion, and FUT-014's non-repetition proof.",
+        "Missing-current side: candidate-round-2.json:47 records model_diagnosis_join=false and automatic_repair_candidate=false; E-BLOCKER catalogs governed occurrences but does not bind self-diagnosis to authoritative action evidence.",
+        "Future coverage side: candidate-round-2.json:54-55 defines self-report as non-authoritative, enumerates action+failure+blocker+replacement+successor proof, and requires the superseded step to become non-dispatchable."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-005",
+      "fingerprint": "mg-005-registered-repair-immutable-version-cutover",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-005",
+        "FUT-006"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Correcting a registered sequence currently mutates its bundle lineage without an immutable selectable-version cutover, so planning must preserve the old version for audit while quarantining it and admitting the replacement only after requalification and registered verification.",
+      "evidence": [
+        "Required side: requirements.json defines CUR-005's supersession/correction semantics and FUT-006's immutable replacement, provenance, requalification, verification, and atomic cutover obligations.",
+        "Missing-current side: candidate-round-2.json:48 records repair='in-place bundle transition' and immutable_cutover=false; E-PROMOTE does not define replacement versions for an existing registered identity and E-LIFECYCLE has no immutable version cutover.",
+        "Future coverage side: candidate-round-2.json:56 defines immutable replacement, quarantine, requalification, verification, and atomic cutover, leaving exact implementation to planning."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-006",
+      "fingerprint": "mg-006-level-transition-and-growth-outcome-coverage-incomplete",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "FUT-007",
+        "FUT-008",
+        "FUT-014"
+      ],
+      "type": "REQUIREMENT_GAP",
+      "materiality": "BLOCKER",
+      "practical_consequence": "A planner could implement silver/gold labels and counters yet still invent demotion or expiration behavior and declare success without proving that evidence-backed silver capture and gold reuse increase over time.",
+      "evidence": [
+        "Required side: charter.json:11 asks for exact evidence-based silver/gold meanings and transitions plus measurement of growth, reuse, and recurrence reduction; charter.json:33 explicitly requires silver capture and gold reuse to increase over time.",
+        "Required side: requirements.json:310-328 requires explicit entry, promotion, demotion, supersession, and expiration rules, while requirements.json:333-350 requires growth/effectiveness metrics and planner thresholds.",
+        "Missing-coverage side: candidate-round-2.json:57 defines only silver and gold state meanings, without demotion or expiration rules; candidate-round-2.json:58 names measurement families but no improvement-over-time acceptance criterion, baseline, comparison window, or threshold.",
+        "Missing-acceptance side: requirements.json:471-490 and candidate-round-2.json:64 require two single lifecycle scenarios; those scenarios prove path functionality and non-repetition on one next task, but they do not prove the charter's population-level increase-over-time outcome."
+      ],
+      "proposed_disposition": "FIX_IN_RESEARCH",
+      "status": "OPEN"
+    },
+    "finding_type": "REQUIREMENT_GAP",
+    "materiality": "BLOCKER",
+    "disposition": "FIX_IN_RESEARCH"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-007",
+      "fingerprint": "mg-007-cross-runtime-branch-safe-state-ownership",
+      "lens": "REQUIREMENTS_COVERAGE",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "FUT-010",
+        "FUT-013"
+      ],
+      "type": "PLANNER_DECISION",
+      "materiality": "PLANNING",
+      "practical_consequence": "Without one canonical cross-runtime owner and explicit merge, conflict, and current-version rules, separate workflow and sequence stores can lose corrections, duplicate candidates, or select stale versions after resume or branch convergence.",
+      "evidence": [
+        "Required side: requirements.json defines FUT-010's durable, resumable, multi-run, branch-safe state and FUT-013's immutable version-bound feedback consumption.",
+        "Current-boundary side: E-WORKMEM provides an atomic ledger and merge lifecycle, while E-WORKFLOW-STATE is a separate per-run workflow/phase store with no sequence candidate/version merge or branch synchronization contract.",
+        "Future coverage side: candidate-round-2.json:60 and :63 require one canonical owner, idempotent resume, event union, branch conflict/current-version rules, and immutable rule-version consumption; selecting the concrete ownership boundary remains planner-owned."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "PLANNER_DECISION",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-001",
+      "fingerprint": "requirements-satisfaction:MG-001:authoritative-action-producer-coverage",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-001",
+        "CUR-007",
+        "FUT-001"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "Without a planner-defined authoritative producer and correlated safe event for each supported dispatch surface, non-argv model actions remain invisible and cannot participate in matching, learning, correction, or acceptance; unsupported proprietary host classes must instead surface an explicit unsupported result.",
+      "evidence": [
+        "Required side: E-REQ, requirements.json:146-188 requires every action class to have a producer, durable record, observer consumer, enforcement point, or confirmed visible absence.",
+        "Current side: E-WORKMEM at scripts/work_memory.py:49 and scripts/work_memory.py:1615-1669 represents checked execution claims and returns; E-CHECKEXEC at scripts/sequence_checked_exec.py:93-104 produces those records only for direct argv.",
+        "Missing-class side: E-EXECUTOR at mcp-agents-workflow/src/workflow_orch/agents/executor.py:382-549 and E-CLI-BASE at mcp-agents-workflow/src/workflow_orch/cli/base.py:51-78 expose aggregate phase/CLI results rather than canonical per-action events; E-MAWF-TOOLS at tool_translator.py:56-100 confirms file, shell, web, and MCP capabilities can occur behind that aggregate boundary."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN",
+      "evidence_limitation": "The frozen roots expose no supported proprietary Codex desktop hook or schema; the planner must use the named host-owner fixture route and keep unavailable classes fail-visible rather than infer them from transcripts or final responses."
+    },
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "disposition": "HANDOFF_TO_PLANNER"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-002",
+      "fingerprint": "requirements-satisfaction:MG-002:pre-dispatch-sequence-interception",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-002",
+        "FUT-002",
+        "FUT-012"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "A model can currently improvise before entering the governed sequence path; the planner must place deterministic applicability and activation before effect dispatch while preserving existing execution approvals and failing visibly on ambiguity, staleness, or unsupported actions.",
+      "evidence": [
+        "Required side: E-REQ, requirements.json:194-211 requires a compatible gold sequence to be selected before dispatch and improvisation to be rejected or explicitly governed.",
+        "Current consumer side: E-WORKMEM at scripts/work_memory.py:1314 begins selection only after cmd_select is invoked, and E-GUARD at scripts/sequence_guard.py:679 begins enforcement only after cmd_guard is invoked.",
+        "Advisory side: E-SKILL-DEPLOYED at /Users/kamenkamenov/.codex/skills/sequence-runner/SKILL.md:13-18 instructs the model to select, activate, and guard but supplies no host-wide interceptor."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN",
+      "evidence_limitation": "No accessible Codex-host source proves arbitrary desktop pre-dispatch interception; the candidate names a finite host-owner fixture route and a fail-visible unsupported outcome."
+    },
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "disposition": "HANDOFF_TO_PLANNER"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-003",
+      "fingerprint": "requirements-satisfaction:MG-003:closed-success-learning-loop",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-003",
+        "FUT-003",
+        "FUT-009",
+        "FUT-014"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "A successful unrecorded operation does not yet traverse capture, qualification, promotion, registered verification, and later pre-dispatch reuse as one closed system; the planner must connect those existing gates without reconstructing or guessing missing steps.",
+      "evidence": [
+        "Required side: E-REQ, requirements.json:217-234 and requirements.json:471-489 requires one deduplicated, complete proven path to become silver, then gold, then be reused before dispatch.",
+        "Producer side: E-OBSERVER at scripts/sequence_observer.py:130-220 reconstructs only complete checked-exec success evidence and E-BOOTSTRAP at scripts/discovery_bootstrap.py:250 creates a supplied complete discovery.",
+        "Downstream side: E-LIFECYCLE at scripts/discovery_promotion_lifecycle.py:266-345 and E-PROMOTE at scripts/sequence_promote.py:222-319 expose qualification, promotion, and registered verification as explicitly invoked controller stages; E-E2E confirms the lifecycle works when explicitly driven rather than autonomously closed."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "disposition": "HANDOFF_TO_PLANNER"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-004",
+      "fingerprint": "requirements-satisfaction:MG-004:causal-self-diagnosis-repair-join",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-004",
+        "FUT-004",
+        "FUT-005",
+        "FUT-014"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "A model’s statement that its action caused an issue cannot currently prevent recurrence because it is not authoritatively joined to the dispatched action, failure, blocker occurrence, replacement, and same-path successor proof; the planner must define that causal join and produce a corrected or held reusable path.",
+      "evidence": [
+        "Required side: E-REQ, requirements.json:240-280 requires self-diagnosis to remain a signal until action, failure, blocker, replacement, and successor evidence prove the correction and exclude the wrong step.",
+        "Current lifecycle side: E-WORKMEM at scripts/work_memory.py:63-89 and scripts/work_memory.py:1795-1961 durably represents corrections, bundle transitions, and successor verification.",
+        "Missing-join side: E-BLOCKER records governed blocker fingerprints and occurrences but has no model-statement/action correlation contract; E-EXECUTOR at executor.py:491-549 exposes aggregate execution metadata rather than an authoritative internal action/failure stream."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "disposition": "HANDOFF_TO_PLANNER"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-005",
+      "fingerprint": "requirements-satisfaction:MG-005:immutable-registered-repair-cutover",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-005",
+        "FUT-006",
+        "FUT-013",
+        "FUT-014"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "Correcting a registered sequence in place cannot guarantee that the defective version remains auditable yet non-selectable or that readers cut over atomically to a verified replacement; the planner must define immutable version identity, quarantine, requalification, registered verification, and selector cutover.",
+      "evidence": [
+        "Required side: E-REQ, requirements.json:286-304 requires the old version to remain auditable and non-selectable while only a gated replacement becomes selectable.",
+        "Current mutation side: E-WORKMEM correction and bundle-transition events at scripts/work_memory.py:63-76 and scripts/work_memory.py:1795-1961 preserve correction evidence but retain the same subject lineage.",
+        "Registration side: E-PROMOTE at scripts/sequence_promote.py:222-319 creates a registered identity and rejects an already-registered sequence ID; E-LIFECYCLE at scripts/discovery_promotion_lifecycle.py:498-541 corrects an existing registered subject without an immutable replacement-version selector contract; E-RECON explicitly lacks versioned recognition/repair rules."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "disposition": "HANDOFF_TO_PLANNER"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-006",
+      "fingerprint": "requirements-satisfaction:MG-006:silver-gold-effectiveness-contracts",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "CUR-006",
+        "FUT-007",
+        "FUT-008",
+        "FUT-014"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "Without machine-readable silver/gold transitions and stable opportunity-based metric definitions, growth can be reported without proving more complete captures, verified reuse, corrected reuse, or reduced wrong-step recurrence; the planner must encode the lifecycle states, transition evidence, numerators, denominators, and identity joins.",
+      "evidence": [
+        "Required side: E-REQ, requirements.json:310-349 requires canonical silver/gold states plus eligible-observation, transition, reuse, correction, false-match, hold, duplicate, and recurrence metrics.",
+        "Current lifecycle side: E-DISCOVERY at scripts/sequence_discovery_log.py:395-447 exposes discovery, ready, and overdue states, while E-REGISTRY defines registered catalog entries without silver/gold fields.",
+        "Current measurement side: E-WORKMEM at scripts/work_memory.py:2053-2144 computes run and correction-effect metrics but does not provide eligible-opportunity, silver conversion, gold reuse, false-match, evidence-hold, or known-wrong-step-recurrence denominators."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "disposition": "MERGE_DUPLICATE"
+  },
+  {
+    "raw_finding": {
+      "id": "MG-007",
+      "fingerprint": "requirements-satisfaction:MG-007:cross-runtime-branch-safe-state-ownership",
+      "lens": "REQUIREMENTS_SATISFACTION",
+      "originating_stage": "RESEARCH",
+      "requirement_ids": [
+        "FUT-010",
+        "FUT-013"
+      ],
+      "type": "SATISFACTION_GAP",
+      "materiality": "PLANNING",
+      "practical_consequence": "Independent ledger, workflow-state, discovery, and registry writers can otherwise resume or merge with duplicate candidates, lost corrections, stale selection, or branch-local evidence; the planner must choose one canonical owner and define idempotent event union, conflict resolution, current-version synchronization, and feedback rule-version consumption.",
+      "evidence": [
+        "Required side: E-REQ, requirements.json:378-396 and requirements.json:448-465 requires interruption-safe cross-runtime ownership and immutable identity-bound feedback semantics.",
+        "Ledger side: E-WORKMEM at scripts/work_memory.py:831-855 provides event-ID conflict detection and scripts/work_memory.py:2161-2195 merges ledgers atomically, but it does not define cross-store current-version ownership.",
+        "Sibling-store side: E-WORKFLOW-STATE atomically persists separate per-run workflow/phase JSON without sequence candidate/version merge semantics; E-RECON at discovery_candidate_reconciliation.py:431-466 and discovery_candidate_reconciliation.py:671-689 reconciles candidate snapshots but does not synchronize a canonical version across runtimes and branches."
+      ],
+      "proposed_disposition": "HANDOFF_TO_PLANNER",
+      "status": "OPEN"
+    },
+    "finding_type": "SATISFACTION_GAP",
+    "materiality": "PLANNING",
+    "disposition": "HANDOFF_TO_PLANNER"
+  }
+]

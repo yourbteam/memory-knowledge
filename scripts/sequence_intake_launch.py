@@ -488,6 +488,11 @@ def _main(
         }, sort_keys=True), file=sys.stderr)
         return 2
     try:
+        contract_drift = sequence_intake_adapters.check_intake_contracts(work_memory.ROOT)
+        if contract_drift:
+            raise SequenceLaunchError(
+                "intake-contracts-stale:" + ";".join(contract_drift[:5])
+            )
         result = _task_and_preparation(
             expected_sequence_id=expected_sequence_id,
             input_fn=input_fn,
@@ -544,6 +549,11 @@ def _interactive_dispatch(
     output_fn: Callable[[str], None] | None = None,
 ) -> int:
     try:
+        contract_drift = sequence_intake_adapters.check_intake_contracts(work_memory.ROOT)
+        if contract_drift:
+            raise SequenceLaunchError(
+                "intake-contracts-stale:" + ";".join(contract_drift[:5])
+            )
         result = _task_and_preparation(
             expected_sequence_id=expected_sequence_id,
             input_fn=input_fn,

@@ -1,0 +1,52 @@
+{
+  "schema_version": 1,
+  "task_id": "prevention-system-planning-drive-v2-20260717",
+  "operation_kind": "workflow-drive",
+  "date": "2026-07-17",
+  "sequence_name": "prevention-system-implementation-planning",
+  "outcome": "Produce one decision-complete, independently hardened implementation plan for the fixed mechanical-error prevention system requirements without editing runtime code.",
+  "why_repeatable": "Build-critical implementation planning repeatedly requires the same research-package to analysis to plan to four-gate verification lifecycle.",
+  "inputs": [
+    "The controller-validated six-file prevention-system research PASS package.",
+    "The current memory-knowledge runtime, registry, observer, promotion, resume, and telemetry implementation.",
+    "The fixed eight system properties and six measurable acceptance conditions."
+  ],
+  "dependencies": [
+    {"kind": "glob", "repository_key": "memory-knowledge", "path_or_sequence_id": "Tasks/prevention-system-completion/research-v3/package/*"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "operations/sequences/SEQUENCES.md"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/work_memory.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/sequence_guard.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/sequence_checked_exec.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/blocker_catalog.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/sequence_observer.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/discovery_bootstrap.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/discovery_promotion_lifecycle.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/discovery_candidate_reconciliation.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "scripts/sequence_promote.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "skills/research-playbook/scripts/research_run.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "skills/plan-playbook/SKILL.md"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "skills/verify-plan/SKILL.md"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "skills/verify-plan/scripts/verification_ledger.py"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "skills/doc-gap-closure-loop/SKILL.md"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "skills/requirements-coverage-gap-loop/SKILL.md"},
+    {"kind": "file", "repository_key": "memory-knowledge", "path_or_sequence_id": "skills/requirements-satisfaction-gap-loop/SKILL.md"},
+    {"kind": "glob", "repository_key": "memory-knowledge", "path_or_sequence_id": "tests/test_*sequence*.py"},
+    {"kind": "glob", "repository_key": "memory-knowledge", "path_or_sequence_id": "tests/test_*work_memory*.py"},
+    {"kind": "glob", "repository_key": "memory-knowledge", "path_or_sequence_id": "tests/test_research*.py"}
+  ],
+  "steps": [
+    {"step": "inspect-approved-research", "command": "sed -n 1,260p Tasks/prevention-system-completion/research-v3/package/planner-handoff.md", "result": "The eight planner gaps, accepted limitation, constraints, and completion evidence are loaded.", "note": "The emitted package is the immutable scope baseline."},
+    {"step": "author-analysis", "command": "apply_patch <analysis-patch>", "result": "Task-local analysis records confirmed current facts, selected architecture, scope boundary, and risks.", "note": "Parent-owned document edit only."},
+    {"step": "author-plan", "command": "apply_patch <plan-patch>", "result": "A granular plan maps all 22 obligations to exact files, symbols, tests, evidence, sequencing, and rollback boundaries.", "note": "No runtime implementation edit is authorized."},
+    {"step": "run-verify-plan", "command": "multi_agent_v1.spawn_agent <verify-plan-envelope>", "result": "An independent verifier and critic assess reference accuracy and one-shot implementability.", "note": "Assessment-only roles; parent owns fixes."},
+    {"step": "run-internal-readiness", "command": "multi_agent_v1.spawn_agent <internal-readiness-envelope>", "result": "An independent full-document readiness assessment returns a terminal verdict.", "note": "Fresh agent receives no producer rationale."},
+    {"step": "run-requirements-coverage", "command": "multi_agent_v1.spawn_agent <coverage-envelope>", "result": "An independent breadth assessment traces all 22 frozen requirements and obligations.", "note": "Coverage runs only after readiness passes."},
+    {"step": "run-requirements-satisfaction", "command": "multi_agent_v1.spawn_agent <satisfaction-envelope>", "result": "An independent depth assessment proves the planned behavior against producers and consumers.", "note": "Satisfaction runs only after coverage passes."},
+    {"step": "apply-validated-plan-fixes", "command": "apply_patch <gate-fix-patch>", "result": "The parent closes only adjudicated planning gaps without widening scope.", "note": "Any edit invalidates prior gate results and requires a fresh full rerun."},
+    {"step": "verify-final-plan", "command": "python3 skills/verify-plan/scripts/verification_ledger.py check <verification-ledger> --can-stop", "result": "All four gates pass on the same plan hash with zero actionable findings.", "note": "No implementation begins before this terminal check."},
+    {"step": "record-run-verification", "command": "python3 scripts/work_memory.py verify --run-id <run-id> --outcome passed --quality same-path --evidence <evidence>", "result": "The planning drive has durable same-path PASS evidence.", "note": "Use correction-bound verification instead if a blocker/correction occurred."},
+    {"step": "close-run", "command": "python3 scripts/work_memory.py run-close --run-id <run-id> --result passed", "result": "The planning run closes passed and is ready for Kamen's code-change approval.", "note": "No implementation or commit is authorized by closeout."}
+  ],
+  "failure_handling": "Stop on research-package drift, malformed assessment output, scope expansion, unavailable independent assessment, or verification-ledger rejection; catalog any operational blocker before correction and rerun every invalidated gate on the corrected plan hash.",
+  "verified_path": "The analysis and granular plan cover all 22 obligations, all four independent planning gates pass on the same final hash, deterministic references validate, every agent is closed, and the governed planning run records same-path PASS evidence."
+}

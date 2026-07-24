@@ -1,6 +1,6 @@
 ---
 name: playbook-convergence-loop
-description: Use only when Kamen explicitly asks Codex to autonomously run the full research, planning, implementation, and review chain to convergence. Creates a bounded autonomy envelope, independently hardens research and plans, implements without commits by default, reviews every in-scope working-tree surface, and loops from validated review gaps back to research until no requirement gap remains. Do not use for research-only, plan-only, review-only, or assessment requests.
+description: Use only when Kamen explicitly asks for the full research, planning, implementation, and review chain to run autonomously to convergence. Creates a bounded autonomy envelope, independently hardens research and plans, implements without commits by default, reviews every in-scope working-tree surface, and loops from validated review gaps back to research until no requirement gap remains. Do not use for research-only, plan-only, review-only, or assessment requests.
 ---
 
 # Playbook Convergence Loop
@@ -43,10 +43,10 @@ Use `skills/_shared/agent_slot_ledger.py` serially, normally with `--max 1`:
 2. `guard`, then `acquire --label <stage>` and capture the returned slot id. Labels are reusable stage descriptions; they are not unique selectors once released tombstones exist.
 3. Spawn; immediately guard and run `bind-agent --slot-id <returned-slot-id> --agent-id <returned-id>` against the pre-recorded shape.
 4. Wait and collect full output; guard and run `mark-completed --slot-id <returned-slot-id>` against its pre-recorded shape.
-5. Call runtime `close_agent` with that exact returned id.
+5. Reach the host-accurate terminal boundary for that exact returned id: on a host with a runtime `close_agent` operation (Codex), call it; on a host without one (Claude), verify process-terminal completion evidence through `skills/_shared/host_agent_runtime.py` instead of inventing a close call.
 6. Guard and run `mark-closed --slot-id <returned-slot-id> --close-evidence <previous-status>`, then `release --slot-id <returned-slot-id>`, each against its pre-recorded shape.
 
-If spawn fails before an id, abandon the reservation by slot id. If bind fails after spawn, close the runtime agent, abandon by slot id with runtime id and close evidence, then release by slot id. Never use a reusable label for mutation after acquisition. Never use `reap` for a live or unknown agent. At iteration boundaries require zero active slots; compact released tombstones only after status proves zero.
+If spawn fails before an id, abandon the reservation by slot id. If bind fails after spawn, drive the runtime agent to its host-accurate terminal boundary, abandon by slot id with runtime id and close evidence, then release by slot id. Never use a reusable label for mutation after acquisition. Never use `reap` for a live or unknown agent. At iteration boundaries require zero active slots; compact released tombstones only after status proves zero.
 
 ## Stage Order
 

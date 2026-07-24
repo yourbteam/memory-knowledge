@@ -84,6 +84,12 @@ MAX_ROUNDS = 3
 MAX_ATTEMPTS = 15
 MAX_MINUTES = 60
 MAX_ROLE_RETRIES = 1
+CHARTER_BUDGET_FIELDS = {
+    "maximum_candidate_rounds": ("max_rounds", MAX_ROUNDS, False),
+    "maximum_agent_spawn_attempts": ("max_attempts", MAX_ATTEMPTS, False),
+    "maximum_elapsed_minutes": ("max_minutes", MAX_MINUTES, False),
+    "maximum_retries_per_role": ("max_role_retries", MAX_ROLE_RETRIES, True),
+}
 _SHA256_RE = re.compile(r"^[0-9a-f]{64}$")
 REQUIREMENT_FIELDS = {
     "id",
@@ -218,6 +224,36 @@ def _validate_evidence_availability(value: Any) -> None:
     raise ResearchPackageError("evidence_availability must be a status, list, or object")
 
 
+def budget_values(charter: Any) -> dict[str, int]:
+    """Return the immutable controller budget declared by a frozen charter."""
+    if not isinstance(charter, dict):
+        raise ResearchPackageError("charter must be an object")
+    raw_budget = charter.get("budget")
+    if raw_budget is None:
+        raw_budget = {
+            source: default
+            for source, (_target, default, _allow_zero) in CHARTER_BUDGET_FIELDS.items()
+        }
+    if not isinstance(raw_budget, dict):
+        raise ResearchPackageError("charter budget must be an object")
+    expected_fields = set(CHARTER_BUDGET_FIELDS)
+    if set(raw_budget) != expected_fields:
+        missing = sorted(expected_fields - set(raw_budget))
+        unsupported = sorted(set(raw_budget) - expected_fields)
+        raise ResearchPackageError(
+            f"charter budget must contain exactly the four governed fields; "
+            f"missing={missing}, unsupported={unsupported}"
+        )
+    values: dict[str, int] = {}
+    for source, (target, default, allow_zero) in CHARTER_BUDGET_FIELDS.items():
+        value = raw_budget[source]
+        if isinstance(value, bool) or not isinstance(value, int) or value < (0 if allow_zero else 1):
+            qualifier = "a non-negative integer" if allow_zero else "a positive integer"
+            raise ResearchPackageError(f"charter budget {source} must be {qualifier}")
+        values[target] = value
+    return values
+
+
 def _research_value_type(value: Any) -> str:
     if value is None:
         return "null"
@@ -319,6 +355,7 @@ def create_state(
     scope_hash = canonical_hash(scope)
     started = _as_utc(started_at)
     started_text = _timestamp(started)
+    budgets = budget_values(scope["charter"])
     return {
         "schema_version": SCHEMA_VERSION,
         "package_id": stable_id("research-package", scope_hash),
@@ -331,12 +368,9 @@ def create_state(
         "evidence_availability": copy.deepcopy(evidence_availability),
         "scope_hash": scope_hash,
         "budgets": {
-            "max_rounds": MAX_ROUNDS,
-            "max_attempts": MAX_ATTEMPTS,
-            "max_minutes": MAX_MINUTES,
-            "max_role_retries": MAX_ROLE_RETRIES,
+            **budgets,
             "started_at": started_text,
-            "deadline_at": _timestamp(started + timedelta(minutes=MAX_MINUTES)),
+            "deadline_at": _timestamp(started + timedelta(minutes=budgets["max_minutes"])),
         },
         "candidates": {},
         "attempts": [],
@@ -402,15 +436,17 @@ def validate_state(state: dict[str, Any]) -> None:
     if state["package_id"] != expected_id:
         raise ResearchPackageError("package_id does not match frozen scope")
     budgets = state["budgets"]
-    expected_budgets = {
-        "max_rounds": MAX_ROUNDS,
-        "max_attempts": MAX_ATTEMPTS,
-        "max_minutes": MAX_MINUTES,
-        "max_role_retries": MAX_ROLE_RETRIES,
-    }
+    expected_budgets = budget_values(state["charter"])
+    required_budget_fields = {*expected_budgets, "started_at", "deadline_at"}
+    if not isinstance(budgets, dict) or set(budgets) != required_budget_fields:
+        raise ResearchPackageError("persisted budget fields do not match the frozen budget contract")
     for key, value in expected_budgets.items():
         if budgets.get(key) != value:
             raise ResearchPackageError(f"budget {key} must remain {value}")
+    started_at = _as_utc(budgets["started_at"])
+    expected_deadline = _timestamp(started_at + timedelta(minutes=expected_budgets["max_minutes"]))
+    if budgets["deadline_at"] != expected_deadline:
+        raise ResearchPackageError("budget deadline_at does not match frozen started_at plus max_minutes")
     if not isinstance(state["candidates"], dict):
         raise ResearchPackageError("candidates must be an object")
     for candidate_id, candidate_record in state["candidates"].items():
@@ -462,6 +498,17 @@ def validate_state(state: dict[str, Any]) -> None:
             raise ResearchPackageError("attempt has an invalid research-package role")
         if attempt["status"] not in ATTEMPT_STATUSES:
             raise ResearchPackageError("attempt has an invalid status")
+        candidate_hash = attempt["candidate_hash"]
+        pre_candidate_core_failure = (
+            candidate_hash is None
+            and attempt["role"] == CORE_RESEARCHER_ROLE
+            and attempt["status"] == "FAILED"
+            and attempt["round"] == 1
+        )
+        if not pre_candidate_core_failure and (
+            not isinstance(candidate_hash, str) or not _SHA256_RE.fullmatch(candidate_hash)
+        ):
+            raise ResearchPackageError("attempt candidate_hash is invalid")
         if attempt["output_hash"] is not None and (
             not isinstance(attempt["output_hash"], str) or not _SHA256_RE.fullmatch(attempt["output_hash"])
         ):
@@ -469,7 +516,7 @@ def validate_state(state: dict[str, Any]) -> None:
         if not _attempt_lifecycle_complete(attempt):
             raise ResearchPackageError("attempt lifecycle evidence is incomplete")
         round_number = attempt["round"]
-        if not isinstance(round_number, int) or not 1 <= round_number <= MAX_ROUNDS:
+        if not isinstance(round_number, int) or not 1 <= round_number <= budgets["max_rounds"]:
             raise ResearchPackageError("attempt round is outside the round budget")
         envelope_hash = attempt["input_envelope_hash"]
         if not isinstance(envelope_hash, str) or not _SHA256_RE.fullmatch(envelope_hash):
@@ -479,7 +526,7 @@ def validate_state(state: dict[str, Any]) -> None:
             raise ResearchPackageError("attempts in one round must retain an identical input_envelope_hash")
         key = (round_number, attempt["role"])
         per_round_role_counts[key] = per_round_role_counts.get(key, 0) + 1
-        if per_round_role_counts[key] > 1 + MAX_ROLE_RETRIES:
+        if per_round_role_counts[key] > 1 + budgets["max_role_retries"]:
             raise ResearchPackageError("round+role retry budget was exceeded")
     _validate_round_records(state)
 
@@ -575,14 +622,6 @@ def _cap(state: dict[str, Any], reason: str, now: datetime | str | None) -> dict
     _set_result(state, "CAP_REACHED", reason)
     _touch(state, now)
     return copy.deepcopy(state["result"])
-
-
-def _time_cap(state: dict[str, Any], now: datetime | str | None) -> dict[str, Any] | None:
-    current = _as_utc(now)
-    deadline = _as_utc(state["budgets"]["deadline_at"])
-    if current >= deadline:
-        return _cap(state, "TIME_BUDGET", current)
-    return None
 
 
 def _terminal_result(state: dict[str, Any]) -> dict[str, Any] | None:
@@ -714,9 +753,6 @@ def record_candidate(
     terminal = _terminal_result(state)
     if terminal is not None:
         return terminal
-    cap = _time_cap(state, now)
-    if cap is not None:
-        return cap
     record = {
         "candidate_id": candidate_id,
         "candidate_hash": candidate_hash,
@@ -742,7 +778,7 @@ def record_attempt(
     runtime_agent_id: str,
     role: str,
     round_number: int,
-    candidate_hash: str,
+    candidate_hash: str | None,
     input_envelope_hash: str,
     status: str,
     output_hash: str | None,
@@ -768,12 +804,22 @@ def record_attempt(
     if close_evidence in (None, "", [], {}):
         raise ResearchPackageError("every attempt must retain non-empty close_evidence")
     canonical_json(close_evidence)
-    if not 1 <= round_number <= MAX_ROUNDS:
+    if not 1 <= round_number <= state["budgets"]["max_rounds"]:
         terminal = _terminal_result(state)
         if terminal is not None:
             return terminal
         return _cap(state, "ROUND_BUDGET", now)
-    _candidate_by_hashes(state, candidate_hash, input_envelope_hash)
+    pre_candidate_core_failure = (
+        candidate_hash is None
+        and role == CORE_RESEARCHER_ROLE
+        and status == "FAILED"
+        and round_number == 1
+        and not state["candidates"]
+    )
+    if not pre_candidate_core_failure:
+        if not isinstance(candidate_hash, str) or not _SHA256_RE.fullmatch(candidate_hash):
+            raise ResearchPackageError("candidate_hash must be a lowercase SHA-256 hash")
+        _candidate_by_hashes(state, candidate_hash, input_envelope_hash)
     if any(item["runtime_agent_id"] == runtime_agent_id for item in state["attempts"]):
         raise ResearchPackageError("runtime_agent_id cannot be reused")
     round_attempts = [item for item in state["attempts"] if item["round"] == round_number]
@@ -782,13 +828,10 @@ def record_attempt(
     terminal = _terminal_result(state)
     if terminal is not None:
         return terminal
-    cap = _time_cap(state, now)
-    if cap is not None:
-        return cap
-    if len(state["attempts"]) >= MAX_ATTEMPTS:
+    if len(state["attempts"]) >= state["budgets"]["max_attempts"]:
         return _cap(state, "ATTEMPT_BUDGET", now)
     prior_spawns = sum(item["round"] == round_number and item["role"] == role for item in state["attempts"])
-    if prior_spawns >= 1 + MAX_ROLE_RETRIES:
+    if prior_spawns >= 1 + state["budgets"]["max_role_retries"]:
         return _cap(state, "ROLE_RETRY_BUDGET", now)
     record = {
         "runtime_agent_id": runtime_agent_id,
@@ -1060,7 +1103,11 @@ def _validate_round_records(state: dict[str, Any]) -> None:
         if not isinstance(round_record, dict) or set(round_record) != required_round_fields:
             raise ResearchPackageError("round record violates the persisted state contract")
         round_number = round_record["round_number"]
-        if not isinstance(round_number, int) or not 1 <= round_number <= MAX_ROUNDS or round_number in round_numbers:
+        if (
+            not isinstance(round_number, int)
+            or not 1 <= round_number <= state["budgets"]["max_rounds"]
+            or round_number in round_numbers
+        ):
             raise ResearchPackageError("round numbers must be unique and within budget")
         round_numbers.append(round_number)
         candidate = _candidate_by_hashes(state, round_record["candidate_hash"], round_record["envelope_hash"])
@@ -1271,7 +1318,7 @@ def _evaluate(state: dict[str, Any], now: datetime | str | None) -> None:
                 actionable_fingerprints=actionable,
             )
             return
-    if latest["round_number"] >= MAX_ROUNDS:
+    if latest["round_number"] >= state["budgets"]["max_rounds"]:
         _set_result(
             state,
             "CAP_REACHED",
@@ -1308,7 +1355,7 @@ def record_lens_result(
     terminal = validate_lens_terminal_envelope(lens, terminal_envelope)
     verdict = terminal["verdict"]
     validated_findings = terminal["findings"]
-    if not 1 <= round_number <= MAX_ROUNDS:
+    if not 1 <= round_number <= state["budgets"]["max_rounds"]:
         terminal = _terminal_result(state)
         if terminal is not None:
             return terminal
@@ -1356,9 +1403,6 @@ def record_lens_result(
     terminal = _terminal_result(state)
     if terminal is not None:
         return terminal
-    cap = _time_cap(state, now)
-    if cap is not None:
-        return cap
     if round_record is None:
         round_record = {
             "round_id": stable_id(
@@ -1400,7 +1444,7 @@ def record_adjudication(
     now: datetime | str | None = None,
 ) -> dict[str, Any]:
     validate_state(state)
-    if not 1 <= round_number <= MAX_ROUNDS:
+    if not 1 <= round_number <= state["budgets"]["max_rounds"]:
         terminal = _terminal_result(state)
         if terminal is not None:
             return terminal
@@ -1453,9 +1497,6 @@ def record_adjudication(
     terminal = _terminal_result(state)
     if terminal is not None:
         return terminal
-    cap = _time_cap(state, now)
-    if cap is not None:
-        return cap
     record["recorded_at"] = _timestamp(now)
     round_record["adjudication"] = record
     round_record["actionable_fingerprints"] = _round_actionable(round_record)
@@ -1581,7 +1622,7 @@ def _emitted_requirements(
             {
                 **enriched,
                 "research_value": status["research_value"],
-                "evidence_ids": status["evidence_ids"],
+                "evidence_ids": sorted(status["evidence_ids"]),
             }
         )
     return emitted
@@ -1763,8 +1804,8 @@ def emit_package(
             "rounds_max": state["budgets"]["max_rounds"],
             "attempts_used": len(state["attempts"]),
             "attempts_max": state["budgets"]["max_attempts"],
-            "minutes_used": max(0.0, (finished - started).total_seconds() / 60),
-            "minutes_max": state["budgets"]["max_minutes"],
+            "workflow_minutes_used": max(0.0, (finished - started).total_seconds() / 60),
+            "minutes_max_per_task": state["budgets"]["max_minutes"],
         },
         "lifecycle_evidence": lifecycle,
         "emitted_at": _timestamp(finished),
@@ -1839,6 +1880,7 @@ def _validated_emitted_requirements(
         if (
             not isinstance(evidence_ids, list)
             or len(evidence_ids) != len(set(evidence_ids))
+            or evidence_ids != sorted(evidence_ids)
             or any(not isinstance(evidence_id, str) or not evidence_id for evidence_id in evidence_ids)
             or not set(evidence_ids) <= indexed_evidence
         ):

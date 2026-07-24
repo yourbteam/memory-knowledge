@@ -1,0 +1,69 @@
+{
+  "schema_version": 1,
+  "task_id": "plan-playbook-source-snapshot-recursion",
+  "operation_kind": "package",
+  "date": "2026-07-21",
+  "sequence_name": "plan-playbook-source-snapshot-recursion-remediation",
+  "outcome": "Plan Playbook source snapshots exclude nested controller source-snapshot archives while preserving real repository sources, and the grounded Decision 5 revision-4 draft binds successfully.",
+  "why_repeatable": "Every fresh Plan Playbook controller snapshots an entire allowed repository; repositories containing prior controller snapshots can otherwise recurse on every continuation.",
+  "steps": [
+    {
+      "step": "reproduce-recursive-source-snapshot-failure",
+      "command": "python3 skills/plan-playbook/scripts/plan_package.py record-draft /Users/kamenkamenov/united-partners/Tasks/up-decision5-operational-alignment-package-completion/.plan-playbook/state.json --plan /Users/kamenkamenov/united-partners/Tasks/up-decision5-operational-alignment-continuation-final-verification/.plan-playbook/proposed-revisions/4/plan.md --surface-map /Users/kamenkamenov/united-partners/Tasks/up-decision5-operational-alignment-continuation-final-verification/.plan-playbook/proposed-revisions/4/surface-map.json --decisions /Users/kamenkamenov/united-partners/Tasks/up-decision5-operational-alignment-continuation-final-verification/.plan-playbook/proposed-revisions/4/decisions.json --verification-ledger /Users/kamenkamenov/united-partners/Tasks/up-decision5-operational-alignment-continuation-final-verification/.plan-playbook/proposed-revisions/4/verification-ledger.json",
+      "result": "Before correction, record-draft fails in create_source_snapshot with Errno 63 after recursively nesting prior .plan-playbook/source-snapshots.",
+      "note": "Captured traceback is bound to blocker blk-0ed9f07c51859cfe4d69b5fd."
+    },
+    {
+      "step": "apply-and-verify-approved-snapshot-exclusion",
+      "command": "scripts/run_pytest.sh tests/test_plan_playbook_v2.py -k source_snapshot",
+      "result": "Focused source-snapshot regression passes and proves ordinary source files remain captured while nested controller archives are excluded.",
+      "note": "The edit itself uses the approval-gated apply_patch boundary; this repository launcher imports the edited controller and provides its syntax/runtime check."
+    },
+    {
+      "step": "install-canonical-plan-playbook",
+      "command": "python3 working-agreement/install_skills.py --source skills --manifest skills/managed-skills.txt --target codex --only plan-playbook",
+      "result": "Only the validated canonical plan-playbook projection is installed into the Codex skills root.",
+      "note": "The repository source and installed controller must be byte-identical after installation."
+    },
+    {
+      "step": "verify-real-decision5-draft-binding",
+      "command": "python3 /Users/kamenkamenov/.codex/skills/plan-playbook/scripts/plan_package.py record-draft /Users/kamenkamenov/united-partners/Tasks/up-decision5-operational-alignment-package-completion/.plan-playbook/state.json --plan /Users/kamenkamenov/united-partners/Tasks/up-decision5-operational-alignment-continuation-final-verification/.plan-playbook/proposed-revisions/4/plan.md --surface-map /Users/kamenkamenov/united-partners/Tasks/up-decision5-operational-alignment-continuation-final-verification/.plan-playbook/proposed-revisions/4/surface-map.json --decisions /Users/kamenkamenov/united-partners/Tasks/up-decision5-operational-alignment-continuation-final-verification/.plan-playbook/proposed-revisions/4/decisions.json --verification-ledger /Users/kamenkamenov/united-partners/Tasks/up-decision5-operational-alignment-continuation-final-verification/.plan-playbook/proposed-revisions/4/verification-ledger.json",
+      "result": "The exact grounded revision-4 draft records successfully and the continuation controller reaches DRAFTED.",
+      "note": "This is the same path that previously failed, not a proxy fixture."
+    }
+  ],
+  "dependencies": [
+    {
+      "kind": "file",
+      "path_or_sequence_id": "skills/plan-playbook/scripts/plan_package.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/test_plan_playbook_v2.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/run_pytest.sh",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "working-agreement/install_skills.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "skills/managed-skills.txt",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "plan-playbook/scripts/plan_package.py",
+      "repository_key": "codex-skills"
+    }
+  ],
+  "failure_handling": "Any repeated fingerprint stops the sequence and updates blocker blk-0ed9f07c51859cfe4d69b5fd before another retry.",
+  "verified_path": "The exact United Partners Decision 5 record-draft command must return DRAFT_RECORDED."
+}

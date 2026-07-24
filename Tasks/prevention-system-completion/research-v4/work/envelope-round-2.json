@@ -1,0 +1,10 @@
+{
+  "schema_version": 1,
+  "scope_hash": "54f9f1f702c6c73a128b86e6da932b5d5c1993298d5ff497c93ea1645e184917",
+  "charter": {"path":"/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/charter.json","sha256":"809c017559a21368f5cfd32bca0f09407f53e234496833e8094ca252b7dbae7f"},
+  "requirements": {"path":"/Users/kamenkamenov/memory-knowledge/Tasks/prevention-system-completion/research-v4/requirements.json","sha256":"8bbf53bf287c6b1a442e1e584c54908f9730416221a9edae83e83260d40efc17"},
+  "authoritative_roots": ["/Users/kamenkamenov/memory-knowledge","/Users/kamenkamenov/mcp-agents-workflow","/private/tmp/openai-codex-hook-source","https://github.com/openai/codex/issues/27133"],
+  "hash_contract": "sha256-canonical-json-utf8-no-trailing-newline-v1",
+  "verification_command": "python3 /Users/kamenkamenov/memory-knowledge/skills/research-playbook/scripts/research_package.py hash-json <json-file>",
+  "round": 2
+}

@@ -1,0 +1,37 @@
+{
+  "schema_version": 1,
+  "package_id": "research-package-89c45b2d4c631c4255879c41",
+  "scope_hash": "d176322c52c46358431c3a0cd76a97363f70e1dc069323ca8c3ff72df4a0f7e6",
+  "status": "BLOCKED_BEFORE_CORE_RESEARCH",
+  "next_transition": "RUN_FRESH_CORE_RESEARCHER",
+  "completed_transitions": [
+    "FREEZE_V2_CHARTER",
+    "INITIALIZE_V2_RESEARCH_STATE",
+    "VERIFY_OFFICIAL_CODEX_PRETOOLUSE_BOUNDARY"
+  ],
+  "runtime_blocker": {
+    "blocker_id": "blk-a91ead20741a848bdc72e056",
+    "occurrence_id": "83a35328-81dc-461c-8d2b-94a0bf895156",
+    "boundary": "Codex collaboration runtime tool exposure",
+    "confirmed_fact": "The active runtime exposes agent spawn, wait, list, message, follow-up, and interrupt operations but no agent-close operation.",
+    "playbook_consequence": "research-playbook Required Runtime mandates parent-level spawn, wait, and close tools and forbids a merged, serialized, reused-role, or completion-as-close fallback.",
+    "resume_condition": "A parent runtime exposes an agent-close operation capable of producing lifecycle close evidence."
+  },
+  "official_host_evidence": {
+    "source": "https://learn.chatgpt.com/docs/hooks#pretooluse",
+    "supported_interception": [
+      "simple Bash calls",
+      "apply_patch file edits",
+      "MCP tool calls"
+    ],
+    "unsupported_or_incomplete_interception": [
+      "some shell calls through unified_exec",
+      "WebSearch",
+      "other non-shell non-MCP tool calls"
+    ],
+    "research_consequence": "PreToolUse is a useful governed-path guardrail but cannot alone prove the requested complete pre-action enforcement boundary across every mechanical action class."
+  },
+  "agent_attempts_consumed": 0,
+  "candidate_rounds_consumed": 0,
+  "implementation_started": false
+}

@@ -1,0 +1,7 @@
+{
+  "runtime_agent_id": "/root/directive_vnext_v2_core_r1",
+  "runtime_status": "completed",
+  "slot_id": "s1",
+  "slot_state": "released",
+  "evidence": "The collaboration runtime returned FINAL_ANSWER; the parent materialized and controller-validated the candidate unchanged in substance."
+}

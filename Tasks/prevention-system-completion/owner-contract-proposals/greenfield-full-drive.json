@@ -1,0 +1,306 @@
+{
+  "approved_at_utc": "2026-07-17T22:22:36Z",
+  "authority": "Kamen",
+  "authority_approvals": {
+    "effect_reconciliation_terminal": {
+      "approved_at_utc": "2026-07-17T22:22:36Z",
+      "decision_id": "greenfield-full-drive-runtime-contract-v1",
+      "status": "APPROVED"
+    },
+    "external_debt_adoption_20260724": {
+      "decision_id": "greenfield-full-drive-external-uncommitted-fix-adoption-20260724",
+      "status": "APPROVED"
+    },
+    "owner_source_refresh": {
+      "approved_at_utc": "2026-07-23T20:56:49Z",
+      "decision_id": "greenfield-full-drive-owner-source-refresh-20260723",
+      "status": "APPROVED"
+    },
+    "owner_source_refresh_2": {
+      "approved_at_utc": "2026-07-23T21:50:00Z",
+      "decision_id": "greenfield-full-drive-owner-source-refresh-2-20260723",
+      "status": "APPROVED"
+    },
+    "owner_source_refresh_3": {
+      "approved_at_utc": "2026-07-23T21:52:00Z",
+      "decision_id": "greenfield-full-drive-owner-source-refresh-3-20260723",
+      "status": "APPROVED"
+    },
+    "reservation_mode": {
+      "decision_id": "greenfield-full-drive-progressive-reservation-v1",
+      "status": "APPROVED"
+    },
+    "scale_caps": {
+      "decision_ids": [
+        "greenfield-full-drive-scale-caps-part-1-v1",
+        "greenfield-full-drive-defects-per-round-v1"
+      ],
+      "status": "APPROVED"
+    },
+    "semantic_intake": {
+      "decision_id": "greenfield-full-drive-semantic-intake-v1",
+      "status": "APPROVED"
+    },
+    "stage_claim_fence": {
+      "decision_id": "greenfield-full-drive-stage-claim-fence-v1",
+      "status": "APPROVED"
+    },
+    "trusted_roots_and_parameters": {
+      "approved_at_utc": "2026-07-17T22:21:09Z",
+      "decision_id": "greenfield-full-drive-roots-parameters-v1",
+      "status": "APPROVED"
+    },
+    "validate_fresh_mode": {
+      "approved_at_utc": "2026-07-23T14:12:44Z",
+      "decision_id": "greenfield-full-drive-validate-fresh-v1",
+      "status": "APPROVED"
+    }
+  },
+  "authority_decisions_required": [],
+  "availability_policy": "AVAILABLE",
+  "budget_contract": {
+    "atomic_task_cap_milliseconds": 3600000,
+    "derivation": [
+      "The owner materializes each next task or parallel frontier from durable program state.",
+      "The owner derives every UnitBudget; callers provide no budget values.",
+      "Every task in a frontier is fully reserved before any frontier member launches.",
+      "If capacity is insufficient, the parent persists a paused checkpoint before effects and resumes from that checkpoint after capacity is available.",
+      "The parent reservation is released only after semantic terminalization or a durable stopped/failed result."
+    ],
+    "maximum_distinct_fatal_defects_per_round": 4,
+    "maximum_features": 20,
+    "maximum_validation_fix_chains": 20,
+    "maximum_validation_rounds": 5,
+    "reservation_mode": "OWNER_DERIVED_ATOMIC_FRONTIER",
+    "retries_included_in_atomic_task": true
+  },
+  "effect_and_reconciliation_contract": {
+    "effect_identity": [
+      "prevention effect_id",
+      "repository_key and target branch",
+      "spec hash when starting from spec",
+      "decomposition task id and run id once created",
+      "programDriveId once N3 is materialized",
+      "container/image child effect ids",
+      "durable stage-operation ids for every launched child"
+    ],
+    "execution_model": "The prevention adapter orchestrates typed child tasks and durable receipts; it does not execute greenfield_full_drive.sh as one opaque subprocess.",
+    "reconciliation": {
+      "before_workflow_identity": "Reconcile completed infrastructure child receipts through the approved local-workflow-orch-image contract; launch only the first missing child.",
+      "fresh_validation": "The validate-fresh profile reconciles the same durable program identity as resume-program, but success additionally requires a persisted validationResult.fresh=true from a newly executed round-0 smoke.",
+      "n1_or_n2_identity_known": "Query the durable workflow run by task/run identity. Active or terminal matching work is ALREADY_APPLIED; a proved-absent deterministic identity is NOT_APPLIED; conflicts are INDETERMINATE.",
+      "parallel_frontier": "Every child has a deterministic stage operation id and durable start intent. Reconcile each child independently; never relaunch an acknowledged matching child and never launch an unreserved sibling.",
+      "program_identity_known": "Call workflow.greenfield.driveStatus with decompositionTaskId and programDriveId. running, stopped, completed, or failed proves ALREADY_APPLIED and selects monitor/terminal handling without relaunch. PROGRAM_DRIVE_NOT_FOUND is NOT_APPLIED only when no acknowledged program-created receipt exists; otherwise it is INDETERMINATE."
+    }
+  },
+  "execution_admission": "REJECT_UNTIL_APPROVED_AND_MATERIALIZED",
+  "owner_sequence_id": "greenfield-full-drive",
+  "parameter_contract": {
+    "admission_rules": [
+      "Resolve repository_key through the configured remote repository registry; reject raw local paths and unregistered slugs.",
+      "Resolve every host file from an approved root key plus a relative path; reject absolute paths, traversal, and resolved symlink escape.",
+      "skip_build requires a semantic image-label/source-hash verifier to pass before admission.",
+      "skip_auth requires live Codex and GitRemoteManager capability probes to pass before admission.",
+      "Remove the legacy restore_checkpoint host-path mode; current durable program state explicitly rejects legacy /tmp checkpoint authority.",
+      "create-program, resume-program, and validate-fresh pass the durable decomposition/program identities now required by workflow.greenfield.driveDag.",
+      "validate-fresh is a checkpoint-resume profile with a fixed round-0 smoke; callers cannot combine it with create-program or reuse the durable validation ledger."
+    ],
+    "branch": {
+      "default": "main",
+      "minimum_length": 1,
+      "type": "STRING"
+    },
+    "by_mode": {
+      "create-program": {
+        "decomposition_run_id": {
+          "minimum_length": 1,
+          "required": true,
+          "type": "STRING"
+        },
+        "decomposition_task_id": {
+          "minimum_length": 1,
+          "required": true,
+          "type": "STRING"
+        }
+      },
+      "resume-program": {
+        "decomposition_run_id": {
+          "minimum_length": 1,
+          "required": true,
+          "type": "STRING"
+        },
+        "decomposition_task_id": {
+          "minimum_length": 1,
+          "required": true,
+          "type": "STRING"
+        },
+        "expected_spec_hash": {
+          "required": true,
+          "type": "SHA256"
+        },
+        "program_drive_id": {
+          "required": true,
+          "type": "UUID"
+        }
+      },
+      "start-from-spec": {
+        "spec": {
+          "mode": "READ_FILE",
+          "required": true,
+          "trusted_root_from": "spec_root_key",
+          "type": "PATH"
+        },
+        "spec_root_key": {
+          "required": true,
+          "type": "ENUM",
+          "values": [
+            "memory-knowledge",
+            "runtime-temp"
+          ]
+        }
+      },
+      "validate-fresh": {
+        "decomposition_run_id": {
+          "minimum_length": 1,
+          "required": true,
+          "type": "STRING"
+        },
+        "decomposition_task_id": {
+          "minimum_length": 1,
+          "required": true,
+          "type": "STRING"
+        },
+        "expected_spec_hash": {
+          "required": true,
+          "type": "SHA256"
+        },
+        "program_drive_id": {
+          "required": true,
+          "type": "UUID"
+        }
+      }
+    },
+    "container": {
+      "default": "workflow-orch-local-sequence-check",
+      "minimum_length": 1,
+      "type": "STRING"
+    },
+    "env_file": {
+      "mode": "READ_FILE",
+      "required": true,
+      "trusted_root": "runtime-temp",
+      "type": "SECRET_HANDLE"
+    },
+    "fresh": {
+      "default": true,
+      "type": "BOOLEAN"
+    },
+    "keyvault_name": {
+      "minimum_length": 1,
+      "required_unless": "skip_auth",
+      "type": "STRING"
+    },
+    "mode": {
+      "required": true,
+      "type": "ENUM",
+      "values": [
+        "start-from-spec",
+        "create-program",
+        "resume-program",
+        "validate-fresh"
+      ]
+    },
+    "parallel_width": {
+      "default": 1,
+      "maximum": 5,
+      "minimum": 1,
+      "type": "INTEGER"
+    },
+    "port": {
+      "default": 18082,
+      "maximum": 65535,
+      "minimum": 1,
+      "type": "INTEGER"
+    },
+    "repository_key": {
+      "required": true,
+      "resolver": "remote-repository-registry",
+      "type": "REPOSITORY_KEY"
+    },
+    "skip_auth": {
+      "default": false,
+      "type": "BOOLEAN"
+    },
+    "skip_build": {
+      "default": false,
+      "type": "BOOLEAN"
+    },
+    "start_feature_index": {
+      "default": 0,
+      "maximum": 19,
+      "minimum": 0,
+      "type": "INTEGER"
+    },
+    "tag": {
+      "default": "gf-local",
+      "minimum_length": 1,
+      "type": "STRING"
+    }
+  },
+  "proposal_status": "APPROVED",
+  "schema_version": 1,
+  "sources": [
+    {
+      "approved_post_correction_sha256": "05d84b54eaa29288187d157198bd7cf070e0751ef0c3642433a20a1b17ffbb60",
+      "path": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_full_drive.sh",
+      "sha256": "a56838aa6c8bdc40ce541c7cf7b7d48209238cec3c66e6fcb47c0c8df899226d",
+      "source_correction_decision_id": "greenfield-full-drive-semantic-intake-v1"
+    },
+    {
+      "approved_post_correction_sha256": "0ba1e03ffaa6748d9d8d1ffd2003a0d3e4b0f021092a84a333a1dba43261ad8b",
+      "path": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_evaluation_drive.py",
+      "sha256": "1089be046c07556cf41bb8b5e24c822db7adb00d462d4a4f510415748086e020",
+      "source_correction_decision_id": "greenfield-full-drive-runtime-contract-v1"
+    },
+    {
+      "approved_post_correction_sha256": "311194da791ba34ba7a6ccea3e7949611b2f2a3fd1a00ddf39d1e8db70b7a16d",
+      "path": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_drive_dag.py",
+      "sha256": "9c1f7efb03c82f194df3a05272116b4e476e97f4993a00557406da162bc3abba",
+      "source_correction_decision_id": "greenfield-full-drive-validate-fresh-v1"
+    },
+    {
+      "approved_post_correction_sha256": "da466c4b33134957d39914b1b0bc2a460829432c0d5f066cf72e7ba0d4f45229",
+      "path": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/greenfield_program_state.py",
+      "sha256": "1d05b277a32a6f0eefc55fb95136addf6c7d757221245373be0b95ea7612d10c",
+      "source_correction_decision_id": "greenfield-full-drive-validate-fresh-v1"
+    },
+    {
+      "approved_post_correction_sha256": "e3aeef327961db6b446bdcab763dfe564bc1f5e2deb56212e2a5cca4b17765d3",
+      "path": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/mcp_server.py",
+      "sha256": "2aa61e3b7a68280cda53ae193734e0427d9a6072fc45c95470945b07a1132902",
+      "source_correction_decision_id": "greenfield-full-drive-external-uncommitted-fix-adoption-20260724"
+    }
+  ],
+  "terminal_contract": {
+    "failure": "driveStatus status stopped or failed, a conflicting durable identity, a semantic child failure, or a budget/root/schema violation produces one failed terminal event with evidence and never success.",
+    "launch_is_not_terminal": "A zero exit or sequence-complete marker after detached launch leaves the parent STARTED.",
+    "success_requirements": [
+      "driveStatus ok is true.",
+      "status is completed and lastDurableTransition is program_completed.",
+      "checkpoint.terminalVerdict is program_complete.",
+      "programDriveId, decompositionTaskId, decompositionRunId, repositoryKey, targetBranch, specHash, and universeHash match the prepared effect identity.",
+      "executionOrder has at most 20 unique nodes, its set equals mergedNodes, and every featureStates entry has status covered with a nonempty mergeSha.",
+      "validationResult.verdict is validated; validation_skipped is not semantic success for this full-drive owner.",
+      "For validate-fresh, validationResult.fresh is true and the validation terminal transition records fresh=true.",
+      "requirementCoverage.terminalDecision.status is covered, or not_required only when the durable required-acceptance set is empty.",
+      "The authenticated remote target-branch head equals mergedBaseSha.",
+      "Exactly one owner_terminal event and matching terminal artifact exist for effect_id; identical replay returns the existing event and conflicting replay fails closed."
+    ]
+  },
+  "trusted_roots": {
+    "mcp-agents-workflow": "/Users/kamenkamenov/mcp-agents-workflow",
+    "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
+    "remote-repository-registry": "The configured repository mapping consumed by GitRemoteManager",
+    "runtime-temp": "/private/tmp"
+  }
+}
