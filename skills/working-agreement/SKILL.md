@@ -15,7 +15,7 @@ Use this skill to mirror the Claude working-agreement hook behavior in Codex.
 
 Before substantive work, read the complete directives file and follow all current directives unless a higher-priority Codex system/developer instruction conflicts. Never encode a numbered G-rule range here; the canonical artifact may grow. Treat agent-specific wording such as "Claude" as applying to Codex in this environment.
 
-For brief in-progress updates, apply the directives without a compliance header. For substantive responses use the compact canonical anchor: `directives=<artifact/revision>; mode=<mode>; scope=<scope>; exceptions=<none or conflict>`. Expand into a G-by-G audit only when Kamen asks, a conflict occurred, or unresolved compliance remains at closeout.
+For brief in-progress updates, apply the directives without a compliance header. For substantive responses use the compact canonical anchor: `directives=<artifact/revision>; mode=<mode>; controller=<active controller or none>; envelope=<approved|none|n/a>; scope=<scope>; exceptions=<none or conflict>`. The controller field names the playbook actually running (for Write-code, `prototype-driven-implementation`); envelope is `approved` only when its autonomy envelope was approved in-thread — `envelope=none` while editing product code is a self-declared G11 violation. Expand into a G-by-G audit only when Kamen asks, a conflict occurred, or unresolved compliance remains at closeout.
 
 ## Task Router
 

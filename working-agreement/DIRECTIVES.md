@@ -1,7 +1,7 @@
 # Working Agreement — Directives
 <!-- Authority: Kamen authors. Claude proposes; nothing is binding until Kamen confirms. -->
 <!-- Confirm word: "lock it" promotes a proposed rule to live. Nothing else counts as confirmation. -->
-<!-- Last reviewed: 2026-07-23 -->
+<!-- Last reviewed: 2026-07-24 -->
 
 **Prime directive:** Before acting, consult these directives and follow them. They override default behavior.
 
@@ -27,19 +27,27 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
   that explicitly mention the working agreement, directives, G-rules, playbooks, corpus memory, or
   memory-knowledge. If a higher-priority instruction prevents loading the directives, state that.
 - ✅ Begin every substantive response with one compact anchor in this exact shape:
-  `directives=<artifact/revision>; mode=<mode>; scope=<scope>; exceptions=<none or conflict>`.
+  `directives=<artifact/revision>; mode=<mode>; controller=<active controller or none>; envelope=<approved|none|n/a>; scope=<scope>; exceptions=<none or conflict>`.
   The anchor is the turn's **first text** — no narration, preamble, or consultation notes before
   it. In a multi-part turn, per-part anchors may follow, but the turn still opens with one.
+- ✅ `controller` names the playbook/controller actually loaded and driving this turn (for
+  Write-code, `prototype-driven-implementation`; `none` when no controller is running).
+  `envelope` states that controller's autonomy-envelope status: `approved` only when the envelope
+  was explicitly approved in this thread, `none` when the controller requires one that does not
+  yet exist, `n/a` when the active mode/controller has no envelope requirement. Writing
+  `envelope=none` while applying product-code edits is a self-declared G11 violation — stop and
+  freeze the envelope instead of editing.
 - ✅ If full consultation is still pending when the turn starts (e.g. the hook delivered a
   truncated preview), anchor first anyway with `exceptions=directives pending full read`, then
   read the artifact and restate a corrected anchor only if something material changed.
 - ✅ The anchor must name the directive artifact actually consulted, the active task mode, the
-  concrete scope being handled, and any higher-priority conflict or unresolved exception.
+  active controller and its envelope status, the concrete scope being handled, and any
+  higher-priority conflict or unresolved exception.
 - ✅ Expand into a rule-by-rule compliance audit only when Kamen explicitly asks for one, a
   directive conflict occurred, or unresolved compliance remains at closeout.
 - 🚫 No bare checkmarks or self-grades. Do not turn routine replies into a full G-rule matrix.
 
-**Set:** 2026-06-13 · **repeated:** 0 · **amended:** 2026-07-13 (Kamen "lock it" — anchor is first text; pending-read exception)
+**Set:** 2026-06-13 · **repeated:** 0 · **amended:** 2026-07-24 (Kamen "lock it" — anchor names the active controller and envelope status, so running a Write-code turn without the controller/envelope is self-evident, not silent)
 
 ---
 
