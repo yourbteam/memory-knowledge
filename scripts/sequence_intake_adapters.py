@@ -1691,6 +1691,43 @@ WORKFLOW_PHASE_RESUME_SPEC = {
     ],
 }
 
+WORKFLOW_CLIENT_REGENERATION_SPEC = {
+    "schema_version": script_intake.SCHEMA_VERSION,
+    "fields": [
+        _semantic_field(
+            "repository_key", "United Partners repository",
+            "One registered repository name.", "united-partners",
+            "Choose the checkout containing the pinned parent run.", "choice",
+            choices=["united-partners"], required=True,
+        ),
+        _semantic_field(
+            "client", "Client configuration key", "One client slug.",
+            "vivacom", "Use the client whose workflow the parent run belongs to.",
+            "string", required=True,
+        ),
+        _semantic_field(
+            "parent_run_id", "Pinned parent run identity",
+            "One exact run identity.", "up-run-123",
+            "Use the discovery parent whose inputs this regeneration builds on.",
+            "string", required=True,
+        ),
+        _semantic_field(
+            "answers_source_run_id", "Run supplying the client's answers",
+            "One exact run identity.", "up-run-123",
+            "Use the run whose recorded client answers this regeneration reuses.",
+            "string", required=True,
+        ),
+        _semantic_field(
+            "controlled_topic_policies_path",
+            "Owner controlled-topic policy set",
+            "One existing file path.",
+            "Tasks/vivacom-corporate-demo/controlled-topic-policies.json",
+            "Supply the owner ruling covering every flagged interview answer.",
+            "path", required=True,
+        ),
+    ],
+}
+
 CALLCENTER_PROVISION_SPEC = {
     "schema_version": script_intake.SCHEMA_VERSION,
     "fields": [
@@ -3551,6 +3588,56 @@ def _prepare_workflow_phase_resume(
     )
 
 
+def _prepare_workflow_client_regeneration(
+    answers: Mapping[str, Any],
+    _artifact_paths: Mapping[str, str],
+    repository_roots: Mapping[str, str],
+) -> dict[str, Any]:
+    expected = {
+        "repository_key", "client", "parent_run_id",
+        "answers_source_run_id", "controlled_topic_policies_path",
+    }
+    if set(answers) != expected:
+        raise AdapterError(
+            "answer-fields-do-not-match-workflow-client-regeneration"
+        )
+    repository_key, repository = _registered_repository(
+        answers, repository_roots,
+    )
+    python = (
+        "/Users/kamenkamenov/.cache/codex-runtimes/"
+        "codex-primary-runtime/dependencies/python/bin/python3"
+    )
+    argv = [
+        python,
+        str(Path(repository, "scripts/run_client_regeneration.py")),
+        "--client", _required_text(answers, "client"),
+        "--parent-run", _required_text(answers, "parent_run_id"),
+        "--answers-from-run", _required_text(answers, "answers_source_run_id"),
+        "--controlled-topic-policies-file",
+        _required_text(answers, "controlled_topic_policies_path"),
+    ]
+    environment = {
+        "PYTHONPATH": "src",
+        "UP_HARNESS_AGENT_COMMAND": (
+            f"{python} scripts/codex_role_command.py"
+        ),
+        "UP_HARNESS_AGENT_MAX_ATTEMPTS": "3",
+        "UP_HARNESS_AGENT_TIMEOUT_SECONDS": "600",
+        "UP_HARNESS_CODEX_TIMEOUT_SECONDS": "600",
+    }
+    return _script_payload(
+        sequence_id="workflow-client-regeneration-live-confirmation",
+        profile="regeneration",
+        argv=argv,
+        repository_key=repository_key,
+        repository_root=repository,
+        effectful=True,
+        operation="regeneration",
+        environment=environment,
+    )
+
+
 def _prepare_callcenter_provision(
     answers: Mapping[str, Any],
     _artifact_paths: Mapping[str, str],
@@ -3894,6 +3981,9 @@ ADAPTER_REGISTRY[
     "workflow-resume-from-phase-live-confirmation"
 ] = _prepare_workflow_phase_resume
 ADAPTER_REGISTRY[
+    "workflow-client-regeneration-live-confirmation"
+] = _prepare_workflow_client_regeneration
+ADAPTER_REGISTRY[
     "callcenter-harness-provision-verify"
 ] = _prepare_callcenter_provision
 ADAPTER_REGISTRY[
@@ -3920,6 +4010,9 @@ INTAKE_SPECS = {
     "greenfield-recreate-resume": GREENFIELD_RECREATE_SPEC,
     "workflow-resume-from-phase-live-confirmation": (
         WORKFLOW_PHASE_RESUME_SPEC
+    ),
+    "workflow-client-regeneration-live-confirmation": (
+        WORKFLOW_CLIENT_REGENERATION_SPEC
     ),
     "callcenter-harness-provision-verify": CALLCENTER_PROVISION_SPEC,
     "remote-mcp-user-onboarding": REMOTE_ONBOARDING_SPEC,

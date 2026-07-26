@@ -1,0 +1,126 @@
+{
+  "dependencies": [
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/script_intake.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/sequence_intake_adapters.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/sequence_intake_launch.py",
+      "repository_key": "memory-knowledge"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/codex_role_command.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/run_client_regeneration.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "scripts/watch_run.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/engine/runner.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/monitoring.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/phase_ledger/manager.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/phase_ledger/executor.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/phase_ledger/prompts.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/platform_decisions.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/public_claim_inventory.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/state/store.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/strategy_brief.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_client_regeneration_resume.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_monitoring.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_codex_role_command.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_phase_ledger_live_loop.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_platform_decisions.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_role_executor_retry.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_strategy_brief_prompt.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_vivacom_phase20_reproduction.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_workflow_resume.py",
+      "repository_key": "united-partners"
+    }
+  ],
+  "lineage_id": "discovery-9c0393de-2d1b-5744-8e85-2f519d56edea",
+  "schema_version": 1
+}
