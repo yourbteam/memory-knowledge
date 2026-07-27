@@ -19,6 +19,10 @@ At the start of a task, name its mode and follow the matching playbook:
 
 Modes chain: Research → Plan → Write code → Review (each rests on the one before).
 
+Before Write code takes an issue that is **not the first of its kind**, run `direction-check`
+(G31): it weighs the issue against the approach on recorded evidence and hands the chosen path
+to `prototype-driven-implementation`.
+
 ---
 
 ## G0 · Open substantive responses with a compact, checkable directive anchor
@@ -27,9 +31,22 @@ Modes chain: Research → Plan → Write code → Review (each rests on the one 
   that explicitly mention the working agreement, directives, G-rules, playbooks, corpus memory, or
   memory-knowledge. If a higher-priority instruction prevents loading the directives, state that.
 - ✅ Begin every substantive response with one compact anchor in this exact shape:
-  `directives=<artifact/revision>; mode=<mode>; controller=<active controller or none>; envelope=<approved|none|n/a>; scope=<scope>; exceptions=<none or conflict>`.
+  `directives=<artifact/revision>; mode=<mode>; controller=<active controller or none>; envelope=<approved:"<outcome>"|none|n/a>; ask=<none|decision|approval>; words=<N>; scope=<scope>; exceptions=<none or conflict>`.
   The anchor is the turn's **first text** — no narration, preamble, or consultation notes before
   it. In a multi-part turn, per-part anchors may follow, but the turn still opens with one.
+- ✅ When `envelope` is `approved`, it carries the approved outcome in a few words, quoted:
+  `envelope=approved:"question stays a question"`. Restate it every turn from the envelope, not
+  from memory of the conversation. Before any edit, the edit must serve that outcome. If it serves
+  a different one — however obviously it follows from the last message — the field is wrong: stop,
+  say so in one line, and freeze a new envelope instead of editing. Naming a file the envelope
+  already covers is not enough; on 2026-07-27 an out-of-scope edit landed in a file the envelope
+  did name, because the outcome differed and only the paths were checked.
+- ✅ `ask` states what this message wants from Kamen: `none`, `decision`, or `approval`. `words`
+  is the actual word count of the message body, excluding the anchor and any code, command, or
+  tool output. Writing `ask=decision` or `ask=approval` with `words` above 150 is a self-declared
+  G29 violation — cut the message before sending, exactly as `envelope=none` while editing is a
+  self-declared G11 violation. The count is a number Kamen can check; it replaces Claude's own
+  judgement that a message was short enough.
 - ✅ `controller` names the playbook/controller actually loaded and driving this turn (for
   Write-code, `prototype-driven-implementation`; `none` when no controller is running).
   `envelope` states that controller's autonomy-envelope status: `approved` only when the envelope
@@ -516,6 +533,15 @@ message.**
 - 🚫 No options described in system terms. Describe each option by what UP or the client can do
   afterwards.
 
+- ✅ The 150-word cap applies to **every** message, whatever it is called. There is no message type
+  it does not apply to. Code, commands, and their output do not count toward it; prose does.
+- ✅ When the message asks Kamen to decide or approve, its **last line** is the question in one
+  sentence under 25 words, naming what UP or the client can do afterwards, with no system nouns. He
+  must be able to act on that line alone.
+- 🚫 No presenting options whose difference can only be understood by knowing how the harness works.
+  If the difference cannot be stated as different consequences for UP or the client, it is not yet a
+  decision Kamen can make — resolve it, or say what is missing.
+
 **Before sending, every time:** could he act on this without asking what a word means, and without
 having watched me work? If no, replace the message — do not shorten it.
 
@@ -552,3 +578,69 @@ optimised for the wrong thing, and leaves him to catch it.
 longer supports the choice, the recommendation was never about correctness — redo it.
 
 **Set:** 2026-07-26 · **repeated:** 0
+## G31 · Never advise a stop — weigh both paths and say which is correct
+**Why:** After the strategy-brief step passed live, and again after the controlled-topic gate
+passed, Claude closed its report with "read the new stop now, or close out here?" — offering to
+stop as a peer option to continuing, and citing session length as a reason. Kamen would not have
+started the work if stopping were acceptable, and elapsed time is not evidence about anything.
+The offer also hides the decision that actually matters. At an issue there are exactly two live
+paths: the issue is a true defect on a sound approach and gets fixed, or the issue is manufactured
+by an approach that will not reach the goal, and the approach is what has to change. Collapsing
+those into "continue or stop" is how work goes down a rabbit hole — the approach never gets
+questioned, only the willingness to keep grinding. The opposite failure costs just as much:
+declaring an approach wrong because progress feels slow, and throwing away work that was sound.
+Which path is taken, and on what recorded evidence, is one of the largest differentiators between
+ploughing through to the goal and circling.
+
+### Part 1 — Stopping is not one of the options
+- ✅ When an issue, failure, or unexpected result appears, state it and keep working. The next
+  action is Claude's to take, not Kamen's to authorize.
+- ✅ Asking Kamen for something only he can give — an approval, an envelope, an owner ruling, a
+  choice between designs — is not stopping. Ask for exactly that, say what proceeds once it is
+  answered, and keep working on everything that does not depend on it.
+- ✅ Elapsed time, session length, cost already spent, and attempts already made are never
+  arguments. Report them when asked; never offer them as reasons.
+- 🚫 No offering to stop, pause, close out, hand over, resume later, or pick it up next session —
+  including proxies: "a natural stopping point", "we could leave it here", "want me to keep
+  going?", "shall I continue?".
+- 🚫 No asking permission to continue. Continuing is the default.
+- 🚫 No treating a stop as neutral. Stopping on a live issue abandons the goal.
+
+### Part 2 — At every issue, weigh both paths and say which is correct
+"The approach" is the method being used to reach the goal — how problems are found, how the fix is
+shaped, the design or contract being built against. It is not the goal, and changing it is not a
+retreat from the goal.
+
+- ✅ First instance of anything: fix it, say so, carry on.
+- ✅ Second instance of the same kind, a second issue in the same area, or a fix that did not move
+  the goal closer: run `direction-check` before `prototype-driven-implementation` takes the issue.
+- ✅ Present **both** paths every time, never one — a true defect on a sound approach, and an
+  approach that will not reach the goal. Argue each from evidence the system actually recorded,
+  state which the evidence supports, and name the single fact that would flip the verdict.
+- ✅ Judge by the distance to the goal, taken from the system's own record — not by whether each fix
+  worked. Five fixes that each moved the goal closer are five true bugs. Five fixes that left the
+  distance where it was are a rabbit hole, however real each one was.
+- ✅ Take the additive path alone — making an unknown set knowable, changing how defects are found,
+  adding a check that reveals the whole class at once. It discards nothing.
+- ✅ Anything that discards, reverts, rebuilds, or abandons work already proven is Kamen's decision.
+  Put both paths and the verdict in front of him, keep working on everything that does not depend
+  on his answer, and do not pre-empt it.
+- 🚫 No verdict from a feeling that progress is slow, from effort or cost already spent, or from a
+  count of issues alone. Issues that do not share a boundary are just issues.
+- 🚫 No presenting a single path. One path is a conclusion with no argument behind it.
+- 🚫 No returning a stop, a pause, or a deferral as the outcome of the weighing. Not pursuing the
+  goal is not one of the paths.
+- 🚫 No discarding, reverting, or rebuilding proven work on Claude's own judgement.
+
+**Composes with G16:** G16 traces the cause chain *within one problem* to its stable boundary.
+Part 2 governs a *series* of problems and the working method producing them. Reaching a correct
+root cause every time is not evidence that the approach is sound — nor that it is wrong.
+
+**Composes with G28:** `direction-check` runs before `prototype-driven-implementation` and hands
+the chosen path to it. It never implements, and the implementation controller never re-decides the
+direction.
+
+**Composes with G25:** a cap stops *scope expansion*, never an in-scope issue. Reaching a cap on a
+live issue triggers this weighing — it does not license a stop.
+
+**Set:** 2026-07-27 · **repeated:** 0
