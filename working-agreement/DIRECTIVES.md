@@ -1,7 +1,7 @@
 # Working Agreement — Directives
 <!-- Authority: Kamen authors. Claude proposes; nothing is binding until Kamen confirms. -->
 <!-- Confirm word: "lock it" promotes a proposed rule to live. Nothing else counts as confirmation. -->
-<!-- Last reviewed: 2026-07-24 -->
+<!-- Last reviewed: 2026-07-27 -->
 
 **Prime directive:** Before acting, consult these directives and follow them. They override default behavior.
 
