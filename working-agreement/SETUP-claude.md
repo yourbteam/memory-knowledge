@@ -71,6 +71,13 @@ holds fire until the identical call is issued a second time, which is how G19's 
 fingerprint twice" is detected without waiting for the result. Rule text is never copied into
 the table — it is read from `DIRECTIVES.md` at delivery, so it cannot go stale.
 
+A Bash pattern is matched against the commands the line will actually run, not against its text:
+heredoc bodies are dropped, quoting is respected, and each invocation is reduced to its program,
+its flags, and its one real operand. So `grep run_client_regeneration` and a test fixture quoting
+`git commit` do not match, while `cd /x && rm -rf y`, `bash -c "rm -rf y"`, and an env-prefixed
+drive script do. A command that cannot be tokenized falls back to the raw string, so a parsing
+gap under-blocks nothing. Set `"match": "raw"` on a trigger that genuinely wants the whole input.
+
 Verify with crafted payloads rather than by inspection: pipe a `PreToolUse` JSON event into the
 script with `MK_TRIGGER_STATE_DIR` pointed at a scratch directory, and check that a matching
 call exits 2 with the expected rule headings on stderr while an unrelated one exits 0.
