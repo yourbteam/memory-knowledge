@@ -62,6 +62,14 @@ file is absent, unreadable, or not a JSON array. During execution, retain the ch
 at the first persisted deviation; catalog and correct that stable boundary before another live
 successor.
 
+Run the directive read, classification, selection, activation, run-start, and the intake launch as
+one uninterrupted chain immediately before dispatch. Each step carries a freshness or liveness
+requirement that is checked again at dispatch, so any gap between setup and launch invalidates it.
+On 2026-07-27 three consecutive launches were refused for three different reasons from that one
+cause: `directive read state is stale because directives SHA changed`, then `... exceeded max age`,
+then `active-state-not-found`. Nothing was spent — each refusal preceded any model call — but each
+cost a full relaunch. Re-running the whole chain as one command dispatched first time.
+
 A `policy_source_excerpt_not_preserved` block at `join-controlled-topic-policies` means the supplied
 policy set does not bind one-to-one to the flagged answers: a policy quotes text that is not in any
 flagged answer, two policies claim the same answer, or a flagged answer has no policy. Correct the

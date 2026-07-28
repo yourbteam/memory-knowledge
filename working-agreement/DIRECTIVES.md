@@ -604,6 +604,13 @@ ploughing through to the goal and circling.
   including proxies: "a natural stopping point", "we could leave it here", "want me to keep
   going?", "shall I continue?".
 - 🚫 No asking permission to continue. Continuing is the default.
+- ✅ A turn that asks Kamen for nothing must leave work in flight: an edit applied, a run
+  started, a diagnosis under way. Reporting a finding and then waiting is a stop wearing another
+  name — it produces exactly what a stop produces, which is nothing. `ask=none` in the anchor is
+  a claim that work is moving, checkable against the same turn's actions.
+- ✅ When the next step needs Kamen's approval, ask for it in the same turn that reports the
+  finding. Never defer the ask to a later turn ("I'll come back with an envelope once I have
+  confirmed the mechanism"): that turns one exchange into three and idles in between.
 - 🚫 No treating a stop as neutral. Stopping on a live issue abandons the goal.
 
 ### Part 2 — At every issue, weigh both paths and say which is correct
