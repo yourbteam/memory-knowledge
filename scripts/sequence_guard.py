@@ -140,6 +140,25 @@ def _selection_roots(selection: dict[str, Any]) -> dict[str, Path]:
     return work_memory._repo_roots(snapshot=snapshot)
 
 
+def _ownership_keys(selection: dict[str, Any]) -> tuple[str, ...]:
+    """Ownership identity fields a selection receipt actually carries.
+
+    `work_memory._ownership_receipt_fields` emits `writer_id` plus client kind and session for
+    a schema-v2 writer (any non-codex client), and `writer_thread_id` for schema-v1. Reading
+    the v1 field unconditionally locks every non-codex client out of activation.
+    """
+
+    if "writer_id" in selection:
+        return (
+            "writer_id", "writer_client_kind", "writer_session_id",
+            "ownership_generation", "ownership_event_id", "ownership_sha256",
+        )
+    return (
+        "writer_thread_id", "ownership_generation",
+        "ownership_event_id", "ownership_sha256",
+    )
+
+
 def verify_receipts(task_id: str, state_path: Path | None = None) -> dict[str, Any]:
     _, class_hash, selection, selection_hash, rows = _load_receipt_chain(task_id)
     bundle, bundle_hash, lineage = work_memory.resolve_bundle(
@@ -157,13 +176,7 @@ def verify_receipts(task_id: str, state_path: Path | None = None) -> dict[str, A
         row = next((item for item in rows if item["sequence_id"] == selection["subject_id"]), None)
         if row is None or row["lineage_id"] != lineage:
             raise work_memory.WorkMemoryError("registry-lineage-mismatch", 4)
-    ownership_keys = (
-        ("writer_id", "writer_client_kind", "writer_session_id",
-         "ownership_generation", "ownership_event_id", "ownership_sha256")
-        if "writer_id" in selection
-        else ("writer_thread_id", "ownership_generation",
-              "ownership_event_id", "ownership_sha256")
-    )
+    ownership_keys = _ownership_keys(selection)
     if state_path is not None:
         state = _load_state(state_path)
         expected = {
@@ -199,12 +212,24 @@ def _control_plane_tokens(command: str, error_code: str) -> list[str]:
 
 
 def _structured_command_tokens(value: Any, error_code: str) -> list[str]:
+    # NUL is rejected in every token: it terminates a C string, so a token containing one cannot be
+    # passed to exec intact and the guarded command would not be the command that runs.
+    #
+    # \r and \n are NOT rejected here. Structured argv goes straight to exec — each element is one
+    # argument and is never re-parsed by a shell — so a newline inside a single token cannot smuggle
+    # a second command. The newline prohibition belongs to _control_plane_tokens above, which parses
+    # a command STRING, where it is a real injection boundary.
+    #
+    # Rejecting them here made commit-push-main refuse every multi-line commit message (the message
+    # travels as one --message argv token), so governed commits could carry a subject line and
+    # nothing else — no rationale, no decision record, no verification evidence. Blocker
+    # blk-22d6ea4240cb005fae03c3a6, 2026-07-28.
     if (
         not isinstance(value, (list, tuple))
         or not value
         or not all(isinstance(token, str) for token in value)
         or not value[0]
-        or any(any(character in token for character in "\x00\r\n") for token in value)
+        or any("\x00" in token for token in value)
     ):
         raise work_memory.WorkMemoryError(error_code, 4)
     return list(value)
@@ -487,12 +512,7 @@ def _stale_bootstrap_context(
         "subject_id": selection["subject_id"],
         "lineage_id": selection["lineage_id"],
         "document": str(Path(selection["document"]).resolve()),
-        **{
-            key: selection[key] for key in (
-                "writer_thread_id", "ownership_generation",
-                "ownership_event_id", "ownership_sha256",
-            )
-        },
+        **{key: selection[key] for key in _ownership_keys(selection)},
     }
     if any(state.get(key) != value for key, value in old_expected.items()):
         raise work_memory.WorkMemoryError("correction-bootstrap-active-state-mismatch", 4)
@@ -608,7 +628,13 @@ def _verify_correction_bootstrap(args: argparse.Namespace) -> dict[str, Any]:
     current_lineage = context["current_lineage"]
     source_ref = context["source_ref"]
     events = context["events"]
-    old_keys = context["old_keys"]
+    try:
+        effective_bundle, _, _ = work_memory._effective_correction_bundle(
+            context["start"], context["related"],
+        )
+    except work_memory.WorkMemoryError as exc:
+        raise work_memory.WorkMemoryError(exc.code, 4) from exc
+    old_keys = _bundle_keys(effective_bundle)
     current_keys = context["current_keys"]
 
     opened, status, occurrence_id, occurrence_run_id = _current_blocker_state(
@@ -891,12 +917,7 @@ def _verify_stale_source_derived_materializer(args: argparse.Namespace) -> dict[
         "subject_id": selection["subject_id"],
         "lineage_id": selection["lineage_id"],
         "document": str(Path(selection["document"]).resolve()),
-        **{
-            key: selection[key] for key in (
-                "writer_thread_id", "ownership_generation",
-                "ownership_event_id", "ownership_sha256",
-            )
-        },
+        **{key: selection[key] for key in _ownership_keys(selection)},
     }
     if any(state.get(key) != value for key, value in expected_state.items()):
         raise work_memory.WorkMemoryError("source-derived-materializer-active-state-mismatch", 4)
@@ -1035,12 +1056,7 @@ def cmd_activate(args: argparse.Namespace) -> dict[str, Any]:
         "bootstrap_launcher_path": "scripts/work_memory_bootstrap_launcher.py",
         "bootstrap_launcher_sha256": launcher_entry["sha256"],
         "sealed_bootstrap_launcher_b64": base64.b64encode(launcher_bytes).decode("ascii"),
-        **{
-            key: selection[key] for key in (
-                "writer_thread_id", "ownership_generation",
-                "ownership_event_id", "ownership_sha256",
-            )
-        },
+        **{key: selection[key] for key in _ownership_keys(selection)},
     }
     path = _state_path(args.task_id, args.state)
     _atomic_json(args.task_id, path, state)
