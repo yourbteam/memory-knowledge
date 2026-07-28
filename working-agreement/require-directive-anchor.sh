@@ -86,6 +86,7 @@ for raw in lines:
 loaded = {}
 last_reset = -1
 edits_this_turn = []
+actions_this_turn = []
 edits_before = {}
 for index, entry in enumerate(entries):
     if entry.get("isCompactSummary"):
@@ -98,11 +99,16 @@ for index, entry in enumerate(entries):
         for path in edits_this_turn:
             edits_before.setdefault(path, index)
         edits_this_turn = []
+        actions_this_turn = []
     for name, payload in tool_uses(entry):
         if name == "Skill" and isinstance(payload.get("skill"), str):
             loaded[payload["skill"]] = index
         elif name in {"Edit", "Write", "NotebookEdit"}:
             edits_this_turn.append(payload.get("file_path") or "?")
+            actions_this_turn.append("edit")
+        elif name == "Bash" and payload.get("run_in_background") is True:
+            # A launched process is the only other thing that outlives the turn.
+            actions_this_turn.append("background run")
 
 # A file this turn edits that an earlier turn already edited is, on its face, not the
 # first issue of its kind — the router requires direction-check before Write-code takes
@@ -176,6 +182,17 @@ else:
         problem = (
             "the anchor says no controller is running, but this turn edited "
             + ", ".join(sorted(set(edits_this_turn))[:3])
+        )
+    elif re.search(r"ask=none", first) and not actions_this_turn:
+        # G31: a turn that asks for nothing must leave work in flight. The turn ends
+        # where the message ends, so a closing sentence like "starting it now" is a
+        # promise about a turn that has not begun -- and only Kamen can begin it. On
+        # 2026-07-28 that pattern repeated until he named it. Only an applied edit or
+        # a launched background process outlives the turn, so only those count.
+        problem = (
+            "the anchor says ask=none, which claims work is in flight, but this turn "
+            "applied no edit and launched nothing. Do the next thing before sending, "
+            "or ask for what you need"
         )
 
 if problem is None:

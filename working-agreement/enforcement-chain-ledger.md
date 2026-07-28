@@ -15,12 +15,16 @@ it was 0 — every claim was self-graded.
 | 2 | G18 never surfaced on the one turn it governed | `trigger-rules.json` + PreToolUse delivery | fired on four real calls the same day | 3 → 4 (`controller` vs invocation) | one missed commit |
 | 3 | Four recorded false positives: a test fixture quoting `git commit`, a `python -c` string, a heredoc, a `grep` | match the commands a line runs, not its text | red/green on those four real payloads; eight true positives still fire | 4 → 4 (precision, not coverage: 4 false positives → 0) | Kamen refused the shrug "inherent to matching strings" |
 | 4 | `controller=` accepted an invocation 154 entries before the last context reset; `direction-check` skipped on a re-edit | staleness check against the reset; direction-check required on a file an earlier turn edited | seven cases pass, including the real transcript | 4 → 5 (`controller` truthfully, plus the router rule) | self-audit prompted by Kamen asking what is actually enforced |
+| 5 | "starting it now" written as the closing sentence, repeatedly, with nothing started — the turn ends where the message ends, so the promise was about a turn only Kamen could begin | `ask=none` refused unless the turn applied an edit or launched a background process | five cases pass; a read-only turn claiming `ask=none` is refused, an edit or background launch passes | 5 → 6 (`ask`) | Kamen: "you say you are going to do something then stop" |
 
 ## What remains, named
 
 `mode`, `scope`, and `exceptions` are not checkable from the transcript, and neither is the
 truth of the outcome quoted in `envelope=approved:"…"`. Those four stay honest-but-unchecked.
 Naming them is the point: an approach that cannot say what remains is the Path B signal.
+
+Entry 5 was taken after the bound below was set, because Kamen asked for it directly. The
+bound is his to lift, and he lifted it.
 
 ## Standing verdict (2026-07-28)
 
