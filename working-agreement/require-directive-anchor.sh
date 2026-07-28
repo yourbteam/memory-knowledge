@@ -80,18 +80,38 @@ for raw in lines:
     except Exception:
         continue
 
-# Every playbook actually loaded in this session, and the edits made since the last
-# thing Kamen said. The controller field is checked against these rather than trusted.
-loaded = set()
+# Where each playbook was last invoked, where the context was last reset, and which
+# files this turn edited that earlier turns had already edited. The controller and
+# direction claims are checked against these rather than trusted.
+loaded = {}
+last_reset = -1
 edits_this_turn = []
-for entry in entries:
+edits_before = {}
+for index, entry in enumerate(entries):
+    if entry.get("isCompactSummary"):
+        # A reset drops the loaded playbook's instructions. A controller named from
+        # before it is a claim about something no longer in context: on 2026-07-28
+        # every turn after the third reset still named a controller last invoked
+        # 154 entries earlier, and nothing noticed.
+        last_reset = index
     if entry.get("type") == "user":
+        for path in edits_this_turn:
+            edits_before.setdefault(path, index)
         edits_this_turn = []
     for name, payload in tool_uses(entry):
         if name == "Skill" and isinstance(payload.get("skill"), str):
-            loaded.add(payload["skill"])
+            loaded[payload["skill"]] = index
         elif name in {"Edit", "Write", "NotebookEdit"}:
             edits_this_turn.append(payload.get("file_path") or "?")
+
+# A file this turn edits that an earlier turn already edited is, on its face, not the
+# first issue of its kind — the router requires direction-check before Write-code takes
+# one. Nothing enforced that, and on 2026-07-28 it was skipped on exactly such a re-edit.
+repeat_edits = sorted({path for path in edits_this_turn if path in edits_before})
+direction_stale = [
+    path for path in repeat_edits
+    if loaded.get("direction-check", -1) < edits_before[path]
+]
 
 text = None
 for entry in reversed(entries):
@@ -120,6 +140,7 @@ else:
     ]
     named = [name for name in claimed if name not in {"none", "n/a"}]
     unloaded = [name for name in named if name not in loaded]
+    stale = [name for name in named if loaded.get(name, -1) < last_reset]
     if unloaded:
         # The whole point of naming a controller is that it changed what was done. A
         # name that was never invoked is a claim of rigour that was not applied.
@@ -127,6 +148,20 @@ else:
             "the anchor names a playbook that was never invoked in this session: "
             + ", ".join(unloaded)
             + ". Invoke it, or write controller=none"
+        )
+    elif stale:
+        problem = (
+            "the anchor names a controller last invoked before the context was reset: "
+            + ", ".join(stale)
+            + ". Its instructions are no longer loaded — invoke it again, or write "
+            "controller=none"
+        )
+    elif direction_stale:
+        problem = (
+            "this turn edits a file an earlier turn already edited ("
+            + ", ".join(sorted({p.rsplit("/", 1)[-1] for p in direction_stale})[:3])
+            + "), so it is not the first issue of its kind. The router requires "
+            "direction-check before Write-code takes one. Run it, then re-send"
         )
     elif re.search(r"envelope=none", first) and edits_this_turn:
         # G0 calls this out by name: envelope=none while applying product-code edits is
