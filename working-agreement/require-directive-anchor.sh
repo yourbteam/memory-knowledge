@@ -39,6 +39,19 @@ try:
 except OSError:
     raise SystemExit(0)
 
+def tool_uses(entry):
+    """Every tool call in an assistant turn, as (name, input) pairs."""
+    message = entry.get("message") or {}
+    content = message.get("content")
+    if entry.get("type") != "assistant" or not isinstance(content, list):
+        return []
+    return [
+        (block.get("name"), block.get("input") or {})
+        for block in content
+        if isinstance(block, dict) and block.get("type") == "tool_use"
+    ]
+
+
 def reply_text(entry):
     """The visible prose of an assistant turn, ignoring tool calls and thinking."""
     message = entry.get("message") or {}
@@ -57,15 +70,31 @@ def reply_text(entry):
     joined = "".join(parts).strip()
     return joined or None
 
-text = None
-for raw in reversed(lines):
+entries = []
+for raw in lines:
     raw = raw.strip()
     if not raw:
         continue
     try:
-        entry = json.loads(raw)
+        entries.append(json.loads(raw))
     except Exception:
         continue
+
+# Every playbook actually loaded in this session, and the edits made since the last
+# thing Kamen said. The controller field is checked against these rather than trusted.
+loaded = set()
+edits_this_turn = []
+for entry in entries:
+    if entry.get("type") == "user":
+        edits_this_turn = []
+    for name, payload in tool_uses(entry):
+        if name == "Skill" and isinstance(payload.get("skill"), str):
+            loaded.add(payload["skill"])
+        elif name in {"Edit", "Write", "NotebookEdit"}:
+            edits_this_turn.append(payload.get("file_path") or "?")
+
+text = None
+for entry in reversed(entries):
     found = reply_text(entry)
     if found:
         text = found
@@ -76,13 +105,37 @@ if text is None:
 
 first = next((line.strip() for line in text.splitlines() if line.strip()), "")
 missing = [field for field in REQUIRED if field not in first]
-if first.startswith("directives=") and not missing:
-    raise SystemExit(0)
 
+problem = None
 if not first.startswith("directives="):
     problem = "the reply does not open with the directive anchor"
+elif missing:
+    problem = "the anchor is missing: " + ", ".join(f.rstrip("=") for f in missing)
 else:
-    problem = "the anchor is missing: " + ", ".join(field.rstrip("=") for field in missing)
+    match = re.search(r"controller=([^;]+)", first)
+    claimed = [
+        name.strip()
+        for name in re.split(r"->|→|,", match.group(1) if match else "")
+        if name.strip()
+    ]
+    named = [name for name in claimed if name not in {"none", "n/a"}]
+    unloaded = [name for name in named if name not in loaded]
+    if unloaded:
+        # The whole point of naming a controller is that it changed what was done. A
+        # name that was never invoked is a claim of rigour that was not applied.
+        problem = (
+            "the anchor names a playbook that was never invoked in this session: "
+            + ", ".join(unloaded)
+            + ". Invoke it, or write controller=none"
+        )
+    elif not named and edits_this_turn:
+        problem = (
+            "the anchor says no controller is running, but this turn edited "
+            + ", ".join(sorted(set(edits_this_turn))[:3])
+        )
+
+if problem is None:
+    raise SystemExit(0)
 
 sys.stderr.write(
     f"Blocked: {problem}.\n\n"
