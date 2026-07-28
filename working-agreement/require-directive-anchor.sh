@@ -128,10 +128,41 @@ else:
             + ", ".join(unloaded)
             + ". Invoke it, or write controller=none"
         )
+    elif re.search(r"envelope=none", first) and edits_this_turn:
+        # G0 calls this out by name: envelope=none while applying product-code edits is
+        # a self-declared G11 violation. It happened twice on 2026-07-27, both times
+        # because momentum carried past the pre-edit check rather than through it.
+        problem = (
+            "the anchor says no envelope is approved, but this turn edited "
+            + ", ".join(sorted(set(edits_this_turn))[:3])
+            + ". Freeze an envelope before editing"
+        )
     elif not named and edits_this_turn:
         problem = (
             "the anchor says no controller is running, but this turn edited "
             + ", ".join(sorted(set(edits_this_turn))[:3])
+        )
+
+if problem is None:
+    # G29's cap, measured rather than declared. The prose Kamen reads is everything
+    # except the anchor and any fenced code; declaring a number under the cap while the
+    # message runs long makes the field decoration, which is what it replaced.
+    body = "\n".join(text.splitlines()[1:])
+    body = re.sub(r"```.*?```", " ", body, flags=re.S)
+    body = re.sub(r"`[^`]*`", " ", body)
+    real = len(re.findall(r"[^\s]+", body))
+    asking = re.search(r"ask=(decision|approval)", first)
+    declared_match = re.search(r"words=(\d+)", first)
+    declared = int(declared_match.group(1)) if declared_match else None
+    if asking and real > 150:
+        problem = (
+            f"this message asks Kamen to decide and runs to {real} words. "
+            "G29 caps it at 150. Cut it, do not restate it"
+        )
+    elif declared is not None and real > declared * 1.15 + 5:
+        problem = (
+            f"the anchor declares {declared} words; the message is {real}. "
+            "The count is a number Kamen can check, so it has to be true"
         )
 
 if problem is None:
