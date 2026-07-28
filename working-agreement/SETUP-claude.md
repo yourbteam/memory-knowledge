@@ -49,6 +49,32 @@ capture→recall loop). Opt-in: set `MK_REPO_HYDRATE=1` and register the wrapper
 Fail-open (any error/timeout/unknown-repo → injects nothing). Already wired in `~/.claude/settings.json`.
 
 
+## Enforcement gates
+
+Injection puts the rules in context; it cannot tell whether they were read or followed. Three
+hooks close that, each added after a specific lapse on 2026-07-28. All three fail open — any
+internal error lets the call or turn through, so a defect in a gate can never wedge a session.
+
+| Script | Event | Refuses when |
+| --- | --- | --- |
+| `require-directives-read.sh` | `PreToolUse` | Any tool call before `DIRECTIVES.md` has been read at its current content in this session. Re-fires when the file changes or the read ages past 3h. |
+| `deliver-trigger-rules.sh` | `PreToolUse` | A call matches a situation in `trigger-rules.json`. Delivers those rules' text, read live from `DIRECTIVES.md`, once per trigger per session. |
+| `require-directive-anchor.sh` | `Stop` | The reply does not open with a well-formed G0 anchor, names a controller never invoked, declares `envelope=none` on a turn that edited files, or declares a word count below the real one. |
+
+Register them alongside the injectors, in this order (absolute paths, merged into the existing
+`hooks` block — `PreToolUse` runs the read gate then the delivery gate; `Stop` runs
+`auto-capture-stop.sh` then the anchor gate).
+
+`trigger-rules.json` is the delivery table: each entry names the tools it watches, a regex over
+the tool input, the G-ids to deliver, and why that moment needs them. Setting `"on": "repeat"`
+holds fire until the identical call is issued a second time, which is how G19's "same failure
+fingerprint twice" is detected without waiting for the result. Rule text is never copied into
+the table — it is read from `DIRECTIVES.md` at delivery, so it cannot go stale.
+
+Verify with crafted payloads rather than by inspection: pipe a `PreToolUse` JSON event into the
+script with `MK_TRIGGER_STATE_DIR` pointed at a scratch directory, and check that a matching
+call exits 2 with the expected rule headings on stderr while an unrelated one exits 0.
+
 ## Managed skills
 
 Canonical personal skills are declared in `skills/managed-skills.txt` and bound to one parity

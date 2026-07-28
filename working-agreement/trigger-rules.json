@@ -1,13 +1,44 @@
 {
   "_why": "A judgement rule delivered always-on becomes wallpaper, and delivered by word-similarity it fires when the topic sounds related rather than when the situation is real. On 2026-07-28 a commit ran without the registered-sequence rule ever surfacing, on the one turn it governed. These triggers put the governing rule in front of the model at the instant the situation arises, taken live from DIRECTIVES.md so they can never go stale.",
   "_delivery": "Matched once per trigger per session: the first matching call is refused with the rule text, and the same call passes on re-issue. Refusal is used because it is the only PreToolUse channel that reliably reaches the model.",
+  "_fields": "tools = tool names this trigger watches (omit for any). pattern = regex over the tool input JSON. on = 'first' (default) or 'repeat', which holds fire until the identical call is issued a second time. rules = G-ids, read live from DIRECTIVES.md. note = why this moment is the one that needs them.",
+  "_precision": "A pattern must match the action itself, not a shared entry point. `sequence_intake_launch` was briefly in the workflow-drive pattern and fired on a commit, because it is the controller for every registered sequence rather than for live runs. Delivering live-run rules on a commit teaches the model to skim past the refusal, which is exactly the wallpaper failure this mechanism exists to prevent. Over-delivery is not the safe direction.",
   "triggers": [
     {
       "id": "git-commit-push",
-      "tool": "Bash",
+      "tools": ["Bash"],
       "pattern": "\\bgit\\s+(commit|push)\\b|scoped_git_publish",
       "rules": ["G18", "G12"],
-      "note": "Committing and pushing is a registered sequence with its own script. Check the registry before reconstructing the steps, and author the message with no AI attribution."
+      "note": "Committing and pushing is a registered sequence with its own script — `commit-push-main`. Check the registry before reconstructing the steps, and author the message with no AI attribution."
+    },
+    {
+      "id": "destructive-worktree",
+      "tools": ["Bash"],
+      "pattern": "git\\s+(stash|clean\\b|reset\\s+--hard|checkout\\s+--|restore\\b)|\\brm\\s+-[a-zA-Z]*[rf]",
+      "rules": ["G26", "G11"],
+      "note": "This discards work that is not committed anywhere. On 2026-07-27 a red/green check was contaminated by `git stash push` on a whole file that also held unrelated session work; the correct move was removing only the target block. Name exactly what is being discarded and confirm nothing else lives in the same file, and stop for approval if the answer is uncertain."
+    },
+    {
+      "id": "workflow-drive",
+      "tools": ["Bash"],
+      "pattern": "run_client_regeneration|replay_cd_s_002|run_cd_s_002|codex_role_command",
+      "rules": ["G27", "G24", "G18"],
+      "note": "This starts a long live run whose verification point is far away. Registered sequences already exist for it — `workflow-client-regeneration-live-confirmation` and `workflow-resume-from-phase-live-confirmation`. Before launching: confirm the fix was already proven on captured inputs, name the telemetry source, and start the watcher with the run rather than polling for a milestone."
+    },
+    {
+      "id": "first-code-edit",
+      "tools": ["Edit", "Write", "NotebookEdit"],
+      "pattern": ".",
+      "rules": ["G28", "G11"],
+      "note": "This is the first edit of the session. Before it lands: the Write-code controller must actually be loaded, and its autonomy envelope must be frozen and approved with the outcome this edit serves. On 2026-07-27 two edits landed with no envelope, both because momentum carried past the pre-edit check rather than through it."
+    },
+    {
+      "id": "repeated-command",
+      "tools": ["Bash"],
+      "pattern": "python|pytest|unittest|\\.sh\\b|\\bmake\\b|\\bnpm\\b|\\buv\\s+run\\b",
+      "on": "repeat",
+      "rules": ["G19", "G20"],
+      "note": "This exact command has already been run once this session, which normally means the first attempt failed. A second identical attempt is the point where retrying stops and root-cause remediation starts: classify the failure, catalog it if it blocks the deliverable, and fix the reusable boundary rather than re-issuing the call."
     }
   ]
 }

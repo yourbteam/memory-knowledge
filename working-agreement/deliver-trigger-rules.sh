@@ -21,7 +21,7 @@ STATE_DIR="${MK_TRIGGER_STATE_DIR:-/private/tmp/directive-trigger-state}"
 payload="$(cat)" || exit 0
 
 python3 - "$payload" "$DIRECTIVES" "$TRIGGERS" "$STATE_DIR" <<'PY'
-import json, os, re, sys
+import hashlib, json, os, re, sys
 
 try:
     event = json.loads(sys.argv[1])
@@ -34,9 +34,15 @@ tool = event.get("tool_name") or ""
 payload_text = json.dumps(event.get("tool_input") or {})
 session = event.get("session_id") or "-"
 
+def tools_of(trigger):
+    named = trigger.get("tools") or ([trigger["tool"]] if trigger.get("tool") else [])
+    return set(named)
+
+
 match = None
 for trigger in triggers:
-    if trigger.get("tool") not in (None, tool):
+    wanted = tools_of(trigger)
+    if wanted and tool not in wanted:
         continue
     try:
         if re.search(trigger["pattern"], payload_text):
@@ -48,14 +54,29 @@ for trigger in triggers:
 if match is None:
     raise SystemExit(0)
 
-marker = os.path.join(state_dir, f"{session}.{match['id']}")
-if os.path.exists(marker):
+
+def claim(name):
+    """Take a once-only marker. True the first time, False every time after."""
+    path = os.path.join(state_dir, name)
+    if os.path.exists(path):
+        return False
+    try:
+        os.makedirs(state_dir, exist_ok=True)
+        open(path, "w").close()
+    except OSError:
+        return False
+    return True
+
+
+if match.get("on") == "repeat":
+    # G19's "same fingerprint twice": the second identical invocation is the signal,
+    # because an identical command is normally re-issued only after the first failed.
+    digest = hashlib.sha256(payload_text.encode("utf-8")).hexdigest()[:16]
+    if claim(f"{session}.seen.{digest}"):
+        raise SystemExit(0)      # first time: remember it, say nothing
+
+if not claim(f"{session}.{match['id']}"):
     raise SystemExit(0)          # already delivered this session; do not nag
-try:
-    os.makedirs(state_dir, exist_ok=True)
-    open(marker, "w").close()
-except OSError:
-    raise SystemExit(0)
 
 def rule_body(rule_id):
     """The rule as it is written right now, so delivery can never carry a stale copy."""
@@ -70,9 +91,18 @@ def rule_body(rule_id):
     end = re.search(r"^\*\*Set:\*\*.*$", rest, re.M)
     return rest[: end.end()] if end else rest[:2000]
 
-bodies = [body for body in (rule_body(r) for r in match.get("rules", [])) if body]
+wanted_rules = match.get("rules", [])
+bodies = [body for body in (rule_body(r) for r in wanted_rules) if body]
 if not bodies:
-    raise SystemExit(0)
+    # Silence here would consume the trigger's one shot and govern nothing, which looks
+    # exactly like compliance. Report the broken table instead.
+    sys.stderr.write(
+        f"Trigger '{match['id']}' matched this {tool} call, but none of the rules it "
+        f"names ({', '.join(wanted_rules) or 'none'}) could be read from the directives "
+        "file. The delivery table references a rule that no longer exists under that id. "
+        "Repair trigger-rules.json before continuing.\n"
+    )
+    raise SystemExit(2)
 
 sys.stderr.write(
     f"Before this {tool} call — the rules that govern it:\n\n"
