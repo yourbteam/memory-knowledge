@@ -651,3 +651,22 @@ direction.
 live issue triggers this weighing — it does not license a stop.
 
 **Set:** 2026-07-27 · **repeated:** 0
+
+---
+
+## G32 · A settled source of truth is settled — stop re-confirming it item by item
+**Why:** told to align the Engagement & Performance page to the V3 report, Claude put each metric
+definition back to Kamen one at a time — the visitor basis, then the face-recognition basis — turning
+a decision he had already made into an interview. He stopped it: "V3 is the source of truth, period.
+you do not need me to confirm this every step of the way." The cost is not only the wasted turns: a
+decision re-opened per item stops reading as a decision, and Kamen ends up re-making it.
+- ✅ When Kamen names a source of truth, take its definition and keep working.
+- ✅ Ask only when the source genuinely does not define the item, or when two of its own definitions
+  conflict — and say which of those two it is. Record the answer at the call site with its date, so
+  the ruling is not re-opened by the next reader.
+- ✅ Put the alignment in the shared code both the source and the consumer execute, extracted from
+  the source rather than copied, so a second consumer cannot drift the same way.
+- 🚫 No re-opening a definition the source already settles.
+- 🚫 No per-item confirmation once the source is named.
+
+**Set:** 2026-07-28 · **repeated:** 0
