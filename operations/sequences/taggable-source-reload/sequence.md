@@ -25,7 +25,7 @@ via the deployed `db-import` WebJob on `taggable-api-dev` — **no wipe**. New r
 update, rows deleted-in-source stay in place. Proven on app→`system_record_id=1` (2026-06-26 and 2026-06-29).
 
 The executable steps live in the checked-in script (kept as the automation this sequence calls):
-`taggable-api/tools/Taggable.MigrationRunner/scripts/reload-source.sh`.
+`taggable-api:tools/Taggable.MigrationRunner/scripts/reload-source.sh`.
 
 ## Use When
 
@@ -68,7 +68,7 @@ Run the script — it performs the whole flow and **scales the DB back to S1 its
 session-dependent:
 
 ```bash
-taggable-api/tools/Taggable.MigrationRunner/scripts/reload-source.sh \
+bash tools/Taggable.MigrationRunner/scripts/reload-source.sh \
   --export-dir <dir> --srid <n> [--redeploy-webjob]
 ```
 
