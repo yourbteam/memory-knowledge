@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `cb1a7a903fffe31b9709daba1617be0a42f0493727c37db929168cb50a717341`
+Ledger-SHA256: `2f5d8ad91a3a287d8d5276b94dff7b295acf7b85929a208d483b290fd56c9024`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -255,6 +255,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `convergence-checkpoint-run-bootstrap-spec`
 - Symptom: The registered bootstrap rejected the convergence-checkpoint-run spec before creating its discovery bundle because verify-automation invoked an undeclared executable.
 - Evidence: discovery_bootstrap.py returned executable-outside-manifest::scripts/run_pytest.sh.
+
+## blk-06cdcfa8e3a453352ddac550
+
+- Status: `closed`
+- Subject: `vivacom-phase20-controller-live-proof-20260724`
+- Step: `select-correction-successor`
+- Surface: `work-memory-successor-selection`
+- Symptom: The canonical predecessor-derived selector rejected the corrected Phase 20 successor before creating a run.
+- Evidence: select-successor --predecessor-run-id af8195a7-45f2-4596-98b3-f23dad8e4a8a returned successor-correction-bundle-mismatch after correction 02bbe1f9-708b-4269-8266-6d86235fc5ed was atomically recorded.
 
 ## blk-06e34a8a87230bad061a20f6
 
@@ -805,6 +814,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Run summary command rejected the obsolete --task-id argument
 - Evidence: usage requires --subject-id; no Planner code or state was changed
 
+## blk-1386c241afc342c6c34fb2c1
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `resume-from-first-unfinished-phase`
+- Surface: `up_harness.strategy_brief correction chain`
+- Symptom: Phase 20 resume rejects with the retained 4-issue verdict without re-entering correction
+- Evidence: run up-run-550a7b2825fb: checkpoint stage correction_pending, applied_correction_contract_revision phase20-owned-correction-v1, zero correction telemetry; same checkpoint corrects 4->2->1->0 in-process
+
 ## blk-139ea98a01bb530b1824487e
 
 - Status: `closed`
@@ -1039,6 +1057,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The correction-bound verification sequence prescribes direct uv pytest, but the repository contract requires every memory-knowledge pytest run to use scripts/run_pytest.sh.
 - Evidence: Discovery test-focused row calls uv run --extra dev pytest; skills/write-code-playbook/SKILL.md requires scripts/run_pytest.sh and forbids direct uv/pytest invocation.
 
+## blk-1990d860f74070631b83b94f
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `compose-llm-strategy-brief-public-claim-inventory-batch-11`
+- Surface: `vivacom-phase20-live`
+- Symptom: Batch 11 of 17 rejected its first semantic inventory output and entered a second semantic attempt instead of converging on the first generated result.
+- Evidence: Child up-run-588cb35a6ca4 persisted public_claim_inventory_validation_rejected at activity sequence 36: semantic_attempt 1, batch_index 11, span_start 641, span_end 704, span_count 64, issue_code public_claim_inventory_rows_invalid, rejected_output_ref up.cd_s_002.public_claim_inventory_attempts[9]. The controller was interrupted immediately after the next role call began, preserving state.
+
 ## blk-19f5420d72778a0233bd0442
 
 - Status: `closed`
@@ -1074,6 +1101,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `prevention-contract-materializer-bootstrap`
 - Symptom: The selected bundle refuses the changed contract materializer, while registry selection refuses stale generated contracts until that changed materializer runs.
 - Evidence: sequence_guard materialize-owner-contracts returned invalid-source-derived-materializer-source after the classification receipt chain was restored to sealed hash f3170340931ab1450952d883b12d93980b10c7e893181a178036bc06b166bf64.
+
+## blk-1aa20ba9bd4d87b09a98681a
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discovery-8461308e-6b35-5e47-9f5f-41df66fefb8c`
+- Step: `compose-llm-strategy-brief`
+- Surface: `public-claim-inventory-exact-marker-contract`
+- Symptom: The corrected Vivacom Phase 20 draft cleared the prior claim-class mismatches but failed the final independent inventory because nine governed spans did not align to exact manifest markers and two governed claims were unmarked.
+- Evidence: Live successor up-run-12b4671d502a completed one strategy draft and 22 inventory batches, then rejected strategy attempt 4 with marker mismatches at spans 904, 911, 919, 925, 933, 936, 959 plus two unmarked governed claims. Required corrections name claim-first exact text “first” and claim-one-respondent exact text Single respondent - no cross-leader comparison available. No prior superlative/comparative/innovation/market_position class mismatch appears.
 
 ## blk-1ae3cce648ee6c81d6f7510f
 
@@ -1128,6 +1164,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/work_memory_bootstrap_launcher.py`
 - Symptom: The sealed bootstrap refused the generated protected correction command before recording the controller fix.
 - Evidence: discovery_promotion_lifecycle.py emitted a content-bound correction id and exact two-file artifact list; work_memory_bootstrap_launcher.py returned bootstrap-command-not-grounded.
+
+## blk-1c437e7282cb3a2918c202c8
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `dispatch-prepared-resume`
+- Surface: `sequence-intake-controller`
+- Symptom: The semantic controller prepared the Phase 20 resume but bound controller_context.guard_step to verify-automation, so guarded dispatch rejected the resume command.
+- Evidence: Prepared payload showed guard_step verify-automation while argv invoked scripts/run_client_regeneration.py --client vivacom --resume-run up-run-87b03443196f --from-phase compose-llm-strategy-brief; dispatch exited 4 with command-not-grounded-in-selected-document before child creation.
 
 ## blk-1c70096a46ba97c898564c33
 
@@ -1381,6 +1426,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The focused verification command omitted PYTHONPATH=src, so test_strategy_brief_prompt could not import up_harness.
 - Evidence: The guarded unittest run reported ModuleNotFoundError: No module named up_harness while the seven live-strategy fixture tests passed.
 
+## blk-22d6ea4240cb005fae03c3a6
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `publish-scoped-commit`
+- Surface: `scripts/sequence_guard.py::_structured_command_tokens`
+- Symptom: commit-push-main refuses any commit message spanning more than one line; the single-line variant of the same operation dispatches cleanly.
+- Evidence: sequence_guard.py:220 rejects a structured argv token containing \x00, \r or \n. The intake passes the commit message as an argv token (--message), so every multi-line message fails. Proven both ways on the dry-run profile: 42-line message -> invalid-guarded-command (exit 4); one-line message -> ok:true, dry-run passed.
+
 ## blk-234206ee61267b072311eceb
 
 - Status: `closed`
@@ -1579,6 +1633,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Planner initialization rejects the Scenario 1 charter before any plan state is created.
 - Evidence: plan_package.py lines 722-727 accept only NONE, MIGRATION, ROLLOUT, MULTI_REPOSITORY, EXTERNAL_STATE; charter supplied CROSS_MODULE_CONTRACT and PERSISTED_ARTIFACT_COMPATIBILITY.
 
+## blk-2979ff6c38a2dafdf2ae5187
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discovery-8461308e-6b35-5e47-9f5f-41df66fefb8c`
+- Step: `build-process-phase-packet`
+- Surface: `united-partners-phase-ledger-loop`
+- Symptom: Vivacom base regeneration blocked at phase 11 after the producer changed Establishes to Establishs inside a claimed exact source quote; the deterministic manager found it in every loop, while the critic rejected the finding and supplied no patch.
+- Evidence: Workflow run up-run-94bdf50ddf7a: producer item up-phase-003 contains Establishs; ingested source contains Establishes; verifier_history repeats manager-invalid-source-quote-001 for loops 1-4; critic_history rejects it with empty producer_patches for loops 1-3.
+
 ## blk-29e418ee4467ee87b73fdafc
 
 - Status: `non-gap`
@@ -1677,6 +1740,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: The guard rejected the focused captured-state final-strategy command because the discovery row contains an abstract Python-body placeholder
 - Evidence: sequence_guard returned command-not-grounded-in-selected-document before the real-model re-entry ran
+
+## blk-2bd039359e7a4545ae282116
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `phase20-resume-entry-exhaustion`
+- Surface: `src/up_harness/strategy_brief.py`
+- Symptom: A correction_pending Phase 20 checkpoint whose current issue family already has three semantic failures is not rejected at resume entry and can start a fourth attempt.
+- Evidence: Live successor up-run-ae5e50ed5395 terminated with strategy_claim_inventory_invalid semantic_attempt=3 while total_attempts remained below the global limit; build_strategy_brief resume-entry exhaustion currently checks only total_attempts >= attempts.
 
 ## blk-2bfdbd1725654521439e642b
 
@@ -2316,6 +2388,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `/Users/kamenkamenov/united-partners/src/up_harness/touchpoints.py`
 - Symptom: Three guide correction attempts received only platform_lock_guide_grounding_invalid even though the payload has dozens of independently validated quote and structural fields.
 - Evidence: The live up-run-87ba98207ae2 exhausted all three attempts with the same generic reason; an offline exact-substring audit of the later captured payload found no invalid evidence quote, confirming that failures can move between fields while retaining an indistinguishable diagnostic.
+
+## blk-3df88763ca4b4243d105f85d
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `resume-semantic-correction`
+- Surface: `united-partners:strategy-brief-resume-state`
+- Symptom: Resuming a proof_manifest_invalid correction with a generated Phase 20 controlled-topic policy revalidates the unchanged rejected payload instead of calling the semantic correction producer, increasing failure_counts from 1 to 2 to 3 without any corrected model response.
+- Evidence: up-run-7ead13945f1d checkpoint is correction_pending total_attempts=1 failure_counts proof_manifest_invalid=1; up-run-3a099d186063 persists the same checkpoint payload with count 2 before the role command, then infrastructure failure; up-run-fa4453e6a45f revalidates it to count 3 and terminates without starting a role call. strategy_brief.py converts every correction_pending resume to inventory_audit whenever phase20_correction_policy_prepared.status is generated.
 
 ## blk-3e14bd2b2f6f6910231fba26
 
@@ -3082,6 +3163,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Guard rejected the remaining 97 source-proof executions after the MAWF proposal was updated to bind the approved correction hash.
 - Evidence: sequence_guard returned {error: stale-source-bundle, ok: false} before commit-push-main/dry-run/positive; 42 fresh Claude proofs exist and 194 remain.
 
+## blk-510fab248b4bba75564c914a
+
+- Status: `closed`
+- Subject: `vivacom-phase20-controller-live-proof-20260724`
+- Step: `select-cumulative-correction-successor`
+- Surface: `work-memory-successor-selection`
+- Symptom: Selecting a successor of corrected failed run c812fff7-cacd-4c21-af68-e6ffebc12557 carried only correction 0e6ef243-b824-4fbd-a78e-1a3fb314ff90 and dropped inherited Phase 20 corrections 534538bb-a5b3-40df-8047-5f2d8bbb9a83 and bde35d75-4f4e-51e4-abb4-0141ca7df383.
+- Evidence: The predecessor run_started event verifies the two Phase 20 correction ids; its final correction transition contains the new sequence-document correction; select-successor output listed only the final transition correction.
+
 ## blk-5165da9c8ab2d586976f2aa7
 
 - Status: `open`
@@ -3541,6 +3631,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The locked blind evaluation directory and its retained execution records are absent.
 - Evidence: find returned No such file or directory for /private/tmp/research-playbook-v2-eval-20260714-2048.
 
+## blk-5d25861f5a1d20060d1b1b46
+
+- Status: `superseded`
+- Subject: `discovery-8461308e-6b35-5e47-9f5f-41df66fefb8c`
+- Step: `record-phase-ledger-correction`
+- Surface: `work-memory-correction-bundle-transition`
+- Symptom: Both ordinary and protected correction recording reject the approved phase-ledger files because the active discovery run sealed a bundle that did not include them.
+- Evidence: work_memory.py correct returned correction-artifact-drift-mismatch; work_memory_bootstrap_launcher.py correct returned bootstrap-artifact-drift-mismatch for the same three approved artifacts.
+
 ## blk-5d26e4f40373fa8663f519ab
 
 - Status: `non-gap`
@@ -3684,6 +3783,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `/private/tmp/planner-v2-promotion-evaluation-20260720-r15/readiness-output.json`
 - Symptom: The controller rejected the completed INTERNAL_READINESS output and therefore cannot record its actionable finding.
 - Evidence: Checked operation 113 returned code INVALID_ROLE_OUTPUT after a completed, closed, and released s3 lifecycle.
+
+## blk-616cb9d13a3edb9f4ebacb0f
+
+- Status: `closed`
+- Subject: `vivacom-phase20-controller-live-proof-successor-20260724`
+- Step: `select-workflow-resume-sequence`
+- Surface: `memory-knowledge:prevention-registry-selection`
+- Symptom: Selecting the registered Vivacom resume sequence aborts before a run can start because the registry detects stale executable-owner source binding for greenfield-full-drive.
+- Evidence: work_memory.py select for task vivacom-phase20-controller-live-proof-successor-20260724 raised prevention_registry.RegistryError executable-owner-source-hash-drift:greenfield-full-drive in load_executable_owner_contracts; no selection receipt or live child was created.
 
 ## blk-6171f217333d6a161fb7301e
 
@@ -4054,6 +4162,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Strict assessor output and verdict tests plus package/resume lifecycle tests expose controller paths that are not yet authoritative.
 - Evidence: Independent tests added malformed-output, verdict derivation, immutable authority tamper, findings replay, package replay, resume tamper, authorization, and revision invalidation cases.
 
+## blk-691b2a019029e50d7a02a03b
+
+- Status: `superseded`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `live-codex-role-state-init`
+- Surface: `united-partners:codex-role-runtime`
+- Symptom: The registered live continuation child up-run-3a099d186063 failed all three role-command attempts before model work because Codex could not write ~/.codex/state_5.sqlite or initialize its in-process app-server client.
+- Evidence: Child activity sequences 3, 6, and 9 each persisted nonzero_exit; stderr says attempt to write a readonly database and Operation not permitted.
+
 ## blk-6961bf647157f2f07e2470b0
 
 - Status: `fixed-awaiting-verification`
@@ -4216,6 +4333,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Work-memory inspection command rejected the nonexistent status subcommand.
 - Evidence: argparse lists summary, not status, as the supported summary command.
 
+## blk-6e664f458e51c55f01a9b7a6
+
+- Status: `open`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `verify-sequence-controller-tests`
+- Surface: `local-test-runner`
+- Symptom: The sequence-controller regression suite cannot start because both selected Python interpreters lack pytest.
+- Evidence: Managed UP runtime and /opt/homebrew Python 3.14 both returned No module named pytest before test collection.
+- Classification: `incidental-system-defect`
+- Downstream owner: `repository-test-entrypoint-maintenance`
+
 ## blk-6ee002fe32ae5818f516abc5
 
 - Status: `superseded`
@@ -4287,6 +4415,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `skills/plan-playbook-v2/scripts/plan_package.py:emit-package`
 - Symptom: The correction-bound successor dispatched the real r16 emitter, which returned INTERNAL_ERROR and left controller status READY.
 - Evidence: Successor checked operation 0 ran under bundle dfeb2007... after the focused validator regression passed; emit-package returned INTERNAL_ERROR with unchanged state hash e9b93f7....
+
+## blk-71c2ef49d00bda3d3d4eeac3
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `phase20-resumed-inventory-rejection-identity`
+- Surface: `workflow-watcher`
+- Symptom: Phase 20 emitted strategy_validation_rejected at activity seq 52 after locally re-auditing and correcting a retained strategy brief, but the watcher reported strategy_rejection_identity_invalid.
+- Evidence: Workflow child up-run-0c04afc28efb: seq49 binding correction started; seq50 reduced inventory issues 2 to 1; seq51 binding correction failed with 1 issue; seq52 rejected strategy_claim_inventory_invalid at semantic_attempt 2; no same-child strategy_brief model call preceded this retained-payload audit.
 
 ## blk-72443af49c2949ca329c0bfb
 
@@ -5413,6 +5550,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The registered convergence guard command was rejected before the approved Q&A correction.
 - Evidence: sequence_guard returned error=stale-source-bundle before command execution.
 
+## blk-92ce2dd57d3ef97dacccad19
+
+- Status: `closed`
+- Subject: `vivacom-phase20-controller-live-proof-20260724`
+- Step: `select-registered-resume`
+- Surface: `workflow-resume-repository-root-selection`
+- Symptom: The registered resume sequence cannot be selected because the fresh task receipt has no United Partners repository root.
+- Evidence: work_memory.py select returned missing-repository-root before creating a selection receipt.
+
 ## blk-92e68eaa772055447b599ca2
 
 - Status: `closed`
@@ -6178,6 +6324,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Focused suite has 4 failures: two old global/shared-deadline assertions, one admission expectation, and one exhausted retry deadline after TERM-resistant first attempt.
 - Evidence: 177 passed; failures are test_whole_round_admission_is_non_mutating, test_admitted_lens_retry_receives_a_fresh_deadline, test_lens_launches_share_the_first_lens_deadline, and test_term_resistant_worker_and_descendant_are_killed_before_retry.
 
+## blk-a6d5609428c01782ddc1e715
+
+- Status: `closed`
+- Subject: `up-feedback-harness-upgrade`
+- Step: `prototype-0-test-runner`
+- Surface: `local-test-entrypoint`
+- Symptom: Both uv run pytest and python3 -m pytest fail before executing the captured Decision 5 tests.
+- Evidence: uv: Failed to spawn pytest; system Python: No module named pytest.
+
 ## blk-a6e730de2cac3cac1e397d45
 
 - Status: `closed`
@@ -6240,6 +6395,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard-source-validation`
 - Symptom: Sequence guard rejected blocker_catalog.py as a script source
 - Evidence: Active selected bundle omits scripts/blocker_catalog.py although discovery failure handling requires blocker catalog use
+
+## blk-a8a37f8998d1c57dae9448b7
+
+- Status: `open`
+- Subject: `vivacom-phase20-controller-live-proof-successor-20260724`
+- Step: `live-phase20-continuation`
+- Surface: `united-partners:compose-llm-strategy-brief`
+- Symptom: Fresh Phase 20 child up-run-e356335fae08 produced a strategy brief and was rejected after one attempt with seven public-claim inventory issues, including row 147 invalid claim ID and claim classes.
+- Evidence: The governed continuation completed 42 preflight tests, created child up-run-e356335fae08, persisted compose-llm-strategy-brief failed, and emitted strategy_claim_inventory_invalid with seven issues and five required corrections.
 
 ## blk-a8e3d94b7c05544e0cb3b3c2
 
@@ -6448,6 +6612,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Attempted blocker_catalog show command is unsupported.
 - Evidence: argparse returned invalid choice show and listed only open and transition.
 
+## blk-aef8228df4a74617d1688c08
+
+- Status: `closed`
+- Subject: `vivacom-phase20-seven-issue-live-verification-20260725`
+- Step: `canonical-sequence-selection`
+- Surface: `work-memory-sequence-selector`
+- Symptom: The exact post-intake select command returns ten candidate sequence ids instead of workflow-resume-from-phase-live-confirmation.
+- Evidence: python3 scripts/work_memory.py select --task-id vivacom-phase20-seven-issue-live-verification-20260725 exited 3 with ambiguous-sequence and ten candidates after the owner-source drift was corrected.
+
 ## blk-af0d68a73aa21c7828b39ae5
 
 - Status: `non-gap`
@@ -6637,6 +6810,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The convergence baseline guard detected the approved source and test edits, but the focused test command still ran in the same orchestration cell.
 - Evidence: guard-baseline returned BLOCKED with drift in src/up_harness and tests; the subsequent unittest command then ran and reported one fixture-mode failure.
 
+## blk-b2e8336f06bcd51f74268431
+
+- Status: `closed`
+- Subject: `vivacom-phase20-controller-live-proof-successor-20260724`
+- Step: `pre-run-blocker-verification-cross-repo-artifacts`
+- Surface: `memory-knowledge:blocker-catalog-pre-run-verify`
+- Symptom: The canonical blocker verifier crashes after a cross-repository correction instead of recording the already-passing same-command evidence.
+- Evidence: pre-run correction 03ad1d86 stores united-partners artifacts as {repository_key,path}; blocker_catalog.py cmd_pre_run_verify passes those dictionaries directly to work_memory._artifact_hashes, whose first operation is Path(raw), raising TypeError.
+
 ## blk-b2fa6e89ed01c1fce7936ec6
 
 - Status: `superseded`
@@ -6781,6 +6963,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: A critic-added VERIFY_PLAN finding reaches the projected shared ledger but record-findings reads only the verifier finding list and would omit it from controller state.
 - Evidence: project_verify_plan_ledger now projects critic findings successfully; cmd_record_findings loads findings from primary_output before loading the critic and requires disposition count to match that verifier list.
 
+## blk-b612f4ec07f830a188d347a0
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discovery-6aba8a9b-8d8b-57bc-bfb1-f8c0939e80d0`
+- Step: `reach-taggable-dev-for-verification`
+- Surface: `taggable-dev Azure SQL server firewall (resource group DB)`
+- Symptom: Every connection to taggable-dev from this machine is refused at the Azure SQL firewall, so no taggable-api device change can be verified against real schema or real data.
+- Evidence: Taggable.MigrationRunner query returned the firewall rejection for 94.68.48.88; az sql server firewall-rule list -g DB -s taggable-dev shows no rule covering that address. taggable-api has no test project and no local database, so taggable-dev is the only verification seam.
+
 ## blk-b6ae492051e5bbefdedfc855
 
 - Status: `non-gap`
@@ -6862,6 +7053,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: the controlled-topic continuation remained provisional instead of locking
 - Evidence: the test selected technical_artifact while claim-core requires and the fixture reports only internal_demo; the gate fail-closed path therefore rejects public use
 
+## blk-b82fd2e6eb88da99e765095f
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discovery-8461308e-6b35-5e47-9f5f-41df66fefb8c`
+- Step: `activate-correction-successor`
+- Surface: `work-memory-sequence-guard-lifecycle`
+- Symptom: The Vivacom live verification cannot start because sequence_guard status and activate both reject the recorded phase-20 correction bundle as stale.
+- Evidence: Work-memory correction b5ddc89d-0ddc-46c1-b3eb-18d17ad3031f transitioned source bundle e6baaa2c to 6fd55d43. sequence_guard status and activate for task vivacom-decision5-base-regeneration-v2 both returned stale-source-bundle. The corrected predecessor run d199be4d cannot close while incidental telemetry blocker blk-c85e95150851b3c431fc1f04 remains open.
+
 ## blk-b85621e74770aebf365e9883
 
 - Status: `closed`
@@ -6888,6 +7088,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard-receipt`
 - Symptom: Sequence guard rejected the baseline-accept command before it could run.
 - Evidence: sequence_guard.py guard and status both returned active-state-receipt-mismatch; no repository mutation occurred.
+
+## blk-b8c8da1a87c1d0ba41f6b899
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `resume-from-first-unfinished-phase`
+- Surface: `vivacom-phase20-strategy-claim-inventory-correction`
+- Symptom: The resumed Phase 20 generated a brief, completed all 17 inventory batches, then failed because two exact governed assertions remained unbound to valid claim ids after the correction binder ran.
+- Evidence: UP child up-run-87b03443196f persisted strategy_correction_progress started issue_count_before=4, then failed issue_count_after=4, followed by strategy_validation_rejected; rejected attempt is context.up.cd_s_002.strategy_brief_attempts[15].
 
 ## blk-b94da55eefa02f78a7122744
 
@@ -7150,6 +7359,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Verification remediation help commands could not be guard-authorized with scripts/work_memory.py as source-ref.
 - Evidence: sequence_guard returned source-ref-outside-selected-bundle for five command receipts; selected manifest covers only scripts/blocker_catalog.py.
 
+## blk-bda776c0b943ade30f758fbc
+
+- Status: `fixed-awaiting-verification`
+- Subject: `vivacom-phase20-controller-live-proof-20260724`
+- Step: `platform-lock-session-guide-review`
+- Surface: `united-partners:owner-questions-manifest`
+- Symptom: Question 1 names Options 1, 2, and 3, but guide_grounding and the rendered client guide contain only Options 1 and 3.
+- Evidence: Tasks/vivacom-corporate-demo/state/up-run-f843601d1c36.json owner_questions[0]; src/up_harness/platform_decisions.py validate_owner_questions_manifest accepts any two guide_grounding rows and does not reconcile named Option N choices in the question.
+
 ## blk-bdb73fecb9f30ad4c3457a89
 
 - Status: `non-gap`
@@ -7330,6 +7548,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The resumed B Team run reached phase 33 but blocked after all three repair loops because up-runbook-005 used the decoded em dash from upstream up-corp-014 while SOURCE REQUEST contained the full quote only with a literal JSON unicode escape.
 - Evidence: Run up-run-78d991b5036c phase compose-final-runbook ended blocked with exact_source_quote_count 38/39. Upstream rendered output contains the human quote truncated at 260 characters and the full structured quote as \\u2014 because json.dumps defaults to ensure_ascii=True; manager validates exact literal substring membership.
 
+## blk-c47b30d9152d5454e59ccdec
+
+- Status: `non-gap`
+- Subject: `discovery-8461308e-6b35-5e47-9f5f-41df66fefb8c`
+- Step: `dispatch-vivacom-full-regeneration`
+- Surface: `sequence-intake-discovery-dispatch`
+- Symptom: The selected Vivacom regeneration discovery cannot dispatch: the driver redirects to semantic intake, which rejects discovery-mode selections.
+- Evidence: sequence_intake_launch.py exited 2 with active-selection-is-not-registered after the discovery selection, activation, and durable run start; sequence_guard accepted the documented discovery command.
+
 ## blk-c4acbbfc2bf17a40fb9078bc
 
 - Status: `non-gap`
@@ -7473,6 +7700,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory-structural-test`
 - Symptom: structural-test-rejects-owner-acceptance-fixture
 - Evidence: focused-suite-writer-list-includes-prevention_owner_acceptance_fixtures.py
+
+## blk-c85e95150851b3c431fc1f04
+
+- Status: `open`
+- Subject: `discovery-8461308e-6b35-5e47-9f5f-41df66fefb8c`
+- Step: `monitor-strategy-semantic-rejection`
+- Surface: `united-partners-strategy-telemetry-identity`
+- Symptom: The watcher reported strategy_rejection_identity_invalid and strategy_call_without_rejection when the second rejected strategy draft used semantic_attempt 1 for a new failure family.
+- Evidence: Run up-run-04814f76e7ad activity sequence 73 records proof_manifest_invalid with semantic_attempt 1; sequence 160 records strategy_claim_inventory_invalid with semantic_attempt 1 and rejected_output_ref strategy_brief_attempts[1]. strategy_brief.py increments failure_counts by family, while monitoring.py requires semantic_attempt == len(all strategy rejections)+1.
+- Classification: `incidental-system-defect`
+- Downstream owner: `united-partners-monitoring`
 
 ## blk-c94e16da740af387f954abdd
 
@@ -7762,6 +8000,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Focused final-strategy tests failed before packet verification when publication stripped markers from a non-newline-terminated rendered answer.
 - Evidence: tests.unit.test_final_strategy raised ValueError unsupported_markdown_syntax in _published_controlled_qna for both marker-bearing and framing-only answers.
 
+## blk-d003dce598b276a0dc7e8348
+
+- Status: `open`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `record-protected-correction`
+- Surface: `work-memory-bootstrap-launcher`
+- Symptom: Both the direct sealed bootstrap and its registered launcher terminate with PermissionError before returning a correction receipt.
+- Evidence: work_memory_bootstrap.py correct and work_memory_bootstrap_launcher.py correct used the exact active task, run, blocker, occurrence, step, and drifted bundle artifacts; each returned JSON error PermissionError.
+- Classification: `incidental-system-defect`
+- Downstream owner: `codex-sandbox-permission-boundary`
+
 ## blk-d004263ef5a949460423d2f7
 
 - Status: `closed`
@@ -7897,6 +8146,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: exact-correction-produced-bundle-cannot-select-after-excluded-artifact-regeneration
 - Evidence: original-correction-95b2539a-fails-on-generated-BLOCKERS-md-raw-hash-after-exact-transition-bundle-match
 
+## blk-d2cecbc5bab7757ff8a41c16
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `verify-automation`
+- Surface: `workflow-resume-selected-bundle-coverage`
+- Symptom: The registered resume sequence can dispatch Phase 20 but its sealed dependency bundle and automatic preflight omit the strategy correction implementation and captured Phase 20 reproduction.
+- Evidence: Selection receipt 272a298139fc6fdc6737f2c245a6e4c7658ad35f409e448426f24c5b45eccef0 contains runner/monitoring/resume tests but not src/up_harness/strategy_brief.py, src/up_harness/public_claim_inventory.py, or tests/unit/test_vivacom_phase20_reproduction.py.
+
 ## blk-d2f12cbb61b2fee3a107e131
 
 - Status: `superseded`
@@ -7905,6 +8163,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `discovery-candidate-reconciliation/audit/positive`
 - Symptom: the historical source rejects the isolated acceptance mirror because its proposal and generated executable-contract hashes differ
 - Evidence: 10 additional proof commands passed; audit source returned 1 from prevention_registry.load_executable_owner_contracts
+
+## blk-d31f029c6d6ce7b1f4964616
+
+- Status: `open`
+- Subject: `vivacom-phase20-seven-issue-live-verification-20260725`
+- Step: `live-phase20-continuation`
+- Surface: `united-partners-phase20-resume`
+- Symptom: Child run up-run-ed1491597a78 resumed at compose-llm-strategy-brief, regenerated a draft, and failed on the same seven inventory issues after one attempt while reporting zero correction policies.
+- Evidence: Registered sequence preflight passed 42 tests; live child up-run-ed1491597a78 recorded 20 phases and failed compose-llm-strategy-brief with the same seven issue identifiers, including public_claim_inventory_claim_classes_invalid:147; terminal summary reported attempts: 1 and correction policies: 0.
 
 ## blk-d35e3271969ce26b019e946f
 
@@ -7986,6 +8253,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `promotion-controller-fail-closed-boundary`
 - Symptom: Final review found that pre-apply failures can leave staging or partial backup state, and a recomputed plan can redirect tracked path values.
 - Evidence: apply_plan stages before its cleanup try; create_backup failure leaves backup_root when manifest assignment never completes; validate_preconditions compares only tracked key sets rather than each planned path to tracked_paths(repo_root, installed_root).
+
+## blk-d61efd2c8144c731da32ec93
+
+- Status: `closed`
+- Subject: `vivacom-phase20-controller-live-proof-successor-20260724`
+- Step: `verify-successor-selection-correction`
+- Surface: `pre-run-blocker-lifecycle`
+- Symptom: The exact successor selection now passes, but the blocker correction record hashes an earlier work_memory.py version and the catalog has no supported reopen or supersede path before verification.
+- Evidence: pre-run-correct recorded work_memory.py sha256 57361defef0b991750f683b35ebe1747b38057d6fbc1aea384f2a296b58537f6; final tested work_memory.py sha256 f8b4d6a4294e1c8968abd8bd7feaa643e870befc08854f9a481861de5f986951; repeating pre-run-correct returned pre-run-blocker-not-open.
 
 ## blk-d6588c5770330e723c81c152
 
@@ -8311,6 +8587,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Controller refuses to record the corrected revision-5 plan package.
 - Evidence: record-revision returned code UNSAFE_PATH and preserved state sha256 374a32c809428118d62acf8490a56b350b96e460f25c308fc6cff3f356c078fa.
 
+## blk-de03195fb742add04760b80b
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discovery-8461308e-6b35-5e47-9f5f-41df66fefb8c`
+- Step: `compose-llm-strategy-brief`
+- Surface: `public-claim-inventory-class-contract`
+- Symptom: The final Vivacom strategy draft exhausted its claim-inventory retries because six governed spans were classified as sensitive by the independent inventory while their proof-manifest rows declared them ordinary.
+- Evidence: Live harness run up-run-04814f76e7ad failed at phase compose-llm-strategy-brief. Spans 1292/1294 claim-biggest-influencer returned superlative vs manifest ordinary; 1316/1318 claim-first-indexation returned innovation+market_position vs ordinary; 1336/1338 claim-more-colourful returned comparative vs ordinary. Each batch-21 repair repeated the same mismatch three times.
+
 ## blk-de4f7f00239f779a7cc860d5
 
 - Status: `superseded`
@@ -8481,6 +8766,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work_memory`
 - Symptom: The corrected successor run cannot verify the registration correction because its selection receipt contains no verifies_correction_ids.
 - Evidence: work_memory.py verify returned verification-correction-mismatch; the current selection output showed verifies_correction_ids: [] and predecessor_run_id: null.
+
+## blk-e427aab8cd77472cc7499428
+
+- Status: `superseded`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `live-compose-strategy-brief`
+- Surface: `united-partners:proof-claim-manifest`
+- Symptom: Fresh live strategy generation completed, then deterministic validation persisted strategy_validation_rejected with issue_code proof_manifest_invalid on semantic attempt 1.
+- Evidence: Child up-run-7ead13945f1d activity sequence 14 completed role call; sequence 15 persisted rejected_output_ref up.cd_s_002.strategy_brief_attempts[16] with proof_manifest_invalid; retry was stopped immediately at sequence 17.
 
 ## blk-e4617ead52959106e4ea8c6f
 
@@ -8743,6 +9037,24 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The approved baseline advancement could not atomically write the convergence state file.
 - Evidence: PermissionError opening /Users/kamenkamenov/.local/state/kamen-convergence/up-harness-cd-s-002-upgrades-20260714/.convergence-*.tmp.
 
+## blk-eb59ffe83702107044b5d1b4
+
+- Status: `closed`
+- Subject: `vivacom-phase20-controller-live-proof-successor-20260724`
+- Step: `phase20-owned-inventory-correction-binding`
+- Surface: `united-partners:phase20-owned-strategy-correction`
+- Symptom: One claim-classes issue cannot bind to its audited span, so the atomic correction pass abandons all seven captured Phase 20 content findings.
+- Evidence: Captured up-run-ae5e50ed5395 attempt fed8fd74 has seven inventory issues; the real ownership reconstruction binds six and reports only public_claim_inventory_claim_classes_invalid:147 as inventory_issue_row_missing. bind_owned_strategy_inventory_issues handles unmarked and claim-id-invalid families but not claim-classes-invalid emitted by public_claim_inventory.py.
+
+## blk-eb82de7d2bf8d55a62fe8034
+
+- Status: `closed`
+- Subject: `vivacom-phase20-controller-live-proof-successor-20260724`
+- Step: `select-correction-successor`
+- Surface: `workflow-resume-successor-task-identity`
+- Symptom: A fresh task identity was created for the correction-verification successor, but the predecessor correction is owned by the original task; selection rejected the cross-task successor.
+- Evidence: work_memory.py select returned cross-task-successor-selection before writing a selection receipt; no live or model work started.
+
 ## blk-ebae49fdf4487827cee4e78c
 
 - Status: `open`
@@ -8851,6 +9163,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Post-edit command guarding stopped because the cached directive SHA no longer matched the newly edited authority file.
 - Evidence: sequence_guard returned: directive read state is stale because directives SHA changed.
 
+## blk-ef99e223739253175cae764f
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `live-inventory-correction-observation`
+- Surface: `united-partners:strategy-rejection-activity-identity`
+- Symptom: After the corrected Strategy Brief passed numbered-option validation and completed the public-claim inventory batches, one local binding correction failed and watcher activity 72-73 reported strategy_rejection_identity_invalid plus strategy_call_without_rejection before later heartbeats cleared the current issue list.
+- Evidence: Child up-run-5ff28eddc1f7: sequence 70 binding started for strategy_attempt_id 501682c8-6797-4300-8e79-d3dc5ec93c6d; sequence 71 binding failed; sequence 72 strategy_validation_rejected references the same strategy_attempt_id and strategy_brief_attempts[20]; sequence 73 starts role_call_id b6496918-74eb-45b8-8f96-b2af813e451f; watcher persisted both identity issue codes, then sequence 74 heartbeat showed no current issues.
+
 ## blk-efeefb3f6bff668427194950
 
 - Status: `fixed-awaiting-verification`
@@ -8859,6 +9180,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `new verbatim prompt contract test`
 - Symptom: The new test expected the structured-only verbatim claim contract in a helper that calls strategy_brief_prompt with structured=False.
 - Evidence: The 57-test focused run had one failure: VERBATIM CLAIM RULE absent from a LEGACY STRATEGY CONTRACT prompt; production structured prompt assembly was not exercised by that assertion.
+
+## blk-f045e58ebc2e809525e64bac
+
+- Status: `closed`
+- Subject: `vivacom-phase20-seven-issue-live-verification-20260725`
+- Step: `select-workflow-resume-sequence`
+- Surface: `memory-knowledge:prevention-registry`
+- Symptom: Canonical sequence selection stops on greenfield-full-drive owner-source hash drift before it can select the Vivacom resume sequence.
+- Evidence: work_memory.py select for task vivacom-phase20-seven-issue-live-verification-20260725 raised prevention_registry.RegistryError executable-owner-source-hash-drift:greenfield-full-drive before producing a selection receipt.
 
 ## blk-f06fa0cf656b753ff08521fb
 
@@ -9157,6 +9487,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Selection rejected a discovery log rooted in /private/tmp with pathlib.relative_to(ROOT) ValueError
 - Evidence: scripts/work_memory.py resolve_bundle lines 579-585 require discovery documents and manifests below canonical ROOT; canonical-root selection then succeeded
 
+## blk-f83be19cb4e5f62771c448af
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `verify-automation`
+- Surface: `united-partners:vivacom-phase20-captured-regressions`
+- Symptom: Registered live preflight reports five owner_question_numbered_options_mismatch:1 errors and one downstream correction assertion failure before dispatch.
+- Evidence: sequence_intake_launch.py preflight on 2026-07-25: tests.unit.test_vivacom_phase20_reproduction had 5 errors at platform_decisions.py validator and 1 failure because the earlier owner-question rejection replaced the expected class-repair prompt.
+
 ## blk-f8578c8babfe5d7da139f955
 
 - Status: `non-gap`
@@ -9183,6 +9522,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: Sequence guard activation rejected the registered discovery log because this continued task has no persisted classification receipt.
 - Evidence: sequence_guard.py activate returned missing-classification-receipt for task prevention-system-completion after the task was already classified in the continued thread.
+
+## blk-f8d0d5e73aa1e9b4c1921a9d
+
+- Status: `closed`
+- Subject: `vivacom-phase20-controller-live-proof-20260724`
+- Step: `start-correction-successor`
+- Surface: `work-memory-run-start`
+- Symptom: Successor selection passed, but run-start rejected the same selected bundle after the pre-run correction lifecycle moved from fixed-awaiting-verification to closed.
+- Evidence: Selection receipt 892c54f53714a4ebf95c2b17e17c03b572584f3a60cac53a29518ab69c5a54e6 was activated; the immediately following run-start returned successor-correction-bundle-mismatch without creating a run.
 
 ## blk-f8d7d5087b191062372f4ecf
 
@@ -9328,6 +9676,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The protected successor rebind was rejected because the complete drift set changed again between diagnosis and guarded execution.
 - Evidence: sequence_guard correction-bootstrap returned correction-bootstrap-artifact-drift-mismatch after a two-second stable hash sample had identified the discovery document and work_memory.py as the only drifted artifacts.
 
+## blk-fc623eff84fbcd0f724ce940
+
+- Status: `closed`
+- Subject: `vivacom-phase20-seven-issue-live-verification-20260725`
+- Step: `catalog-live-phase20-blocker`
+- Surface: `blocker-catalog-pre-run-open`
+- Symptom: Two catalog attempts were rejected with exactly-one-blocker-authority-required even after removing the harness run id.
+- Evidence: cmd_open defines run_route as run_id OR subject_id; the second attempt still supplied subject_id together with task_id and ownership_event_id, so both authority routes were true.
+
 ## blk-fc936665cd16f103c264cd74
 
 - Status: `non-gap`
@@ -9363,6 +9720,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard-active-state`
 - Symptom: The correction-bound successor selection and run exist, but sequence_guard rejects the first same-path command because active state still references the predecessor receipt.
 - Evidence: sequence_guard returned {error: active-state-receipt-mismatch, ok: false} on run 9125a0fa-623f-45f2-9e44-aaf68f277bec.
+
+## blk-fd138c65aa61a40c43ea78bd
+
+- Status: `closed`
+- Subject: `vivacom-phase20-controller-live-proof-20260724`
+- Step: `focused-contract-tests`
+- Surface: `united-partners:test-runner`
+- Symptom: Both .venv/bin/python -m pytest and uv run --frozen python -m pytest terminate before collection with No module named pytest.
+- Evidence: Focused commands on 2026-07-25 returned /Users/kamenkamenov/united-partners/.venv/bin/python: No module named pytest and the same from .venv/bin/python3 through uv.
 
 ## blk-fd349cfb3f0b5cc9b8c960d6
 
