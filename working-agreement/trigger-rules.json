@@ -1,0 +1,13 @@
+{
+  "_why": "A judgement rule delivered always-on becomes wallpaper, and delivered by word-similarity it fires when the topic sounds related rather than when the situation is real. On 2026-07-28 a commit ran without the registered-sequence rule ever surfacing, on the one turn it governed. These triggers put the governing rule in front of the model at the instant the situation arises, taken live from DIRECTIVES.md so they can never go stale.",
+  "_delivery": "Matched once per trigger per session: the first matching call is refused with the rule text, and the same call passes on re-issue. Refusal is used because it is the only PreToolUse channel that reliably reaches the model.",
+  "triggers": [
+    {
+      "id": "git-commit-push",
+      "tool": "Bash",
+      "pattern": "\\bgit\\s+(commit|push)\\b|scoped_git_publish",
+      "rules": ["G18", "G12"],
+      "note": "Committing and pushing is a registered sequence with its own script. Check the registry before reconstructing the steps, and author the message with no AI attribution."
+    }
+  ]
+}
