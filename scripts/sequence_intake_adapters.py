@@ -134,10 +134,10 @@ COMMIT_PUSH_SPEC = {
         {
             "id": "message",
             "prompt": "Commit message",
-            "response_format": "One plain-text description of the approved change.",
+            "response_format": "A subject line, then any body paragraphs on the lines after it.",
             "example": "Add deterministic sequence intake",
-            "constraints": "Describe the change; do not provide an invocation.",
-            "type": "string",
+            "constraints": "Describe the change and why it was made; do not provide an invocation.",
+            "type": "text",
             "required": True,
             "when": {"field": "operation", "in": sorted(MESSAGE_OPERATIONS)},
         },

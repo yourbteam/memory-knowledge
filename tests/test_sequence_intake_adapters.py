@@ -27,7 +27,11 @@ def test_commit_push_collects_semantic_answers_then_derives_payload():
         "yes",
         "tests/test_script_intake.py",
         "no",
+        # The commit message is multi-line: subject, blank line, body, then the closing marker.
         "Add deterministic sequence intake",
+        "",
+        "It replaces hand-built invocations with derived, authorized input.",
+        ".",
         "",
         "",
     ])
@@ -51,10 +55,17 @@ def test_commit_push_collects_semantic_answers_then_derives_payload():
     assert prepared["artifacts"]["approved_paths"]["content"] == (
         "scripts/script_intake.py\ntests/test_script_intake.py\n"
     )
-    assert all("Question:" in prompt for prompt in prompts)
-    assert all("Response format:" in prompt for prompt in prompts)
-    assert all("Example:" in prompt for prompt in prompts)
-    assert all("Constraints:" in prompt for prompt in prompts)
+    assert prepared["argv"][prepared["argv"].index("--message") + 1] == (
+        "Add deterministic sequence intake\n\n"
+        "It replaces hand-built invocations with derived, authorized input."
+    )
+    # Continuation lines of a multi-line answer are read with an empty prompt; every prompt that
+    # is shown must still be fully specified.
+    shown = [prompt for prompt in prompts if prompt]
+    assert all("Question:" in prompt for prompt in shown)
+    assert all("Response format:" in prompt for prompt in shown)
+    assert all("Example:" in prompt for prompt in shown)
+    assert all("Constraints:" in prompt for prompt in shown)
 
 
 def test_commit_push_dry_run_derives_exact_argv_and_manifest():

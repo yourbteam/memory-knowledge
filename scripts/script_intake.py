@@ -11,8 +11,13 @@ from typing import Any
 SCHEMA_VERSION = 1
 SUPPORTED_TYPES = frozenset({
     "boolean", "choice", "integer", "object_list", "path", "string",
-    "string_list",
+    "string_list", "text",
 })
+# A `text` field is answered over several lines and closed by a line holding only this marker.
+# Every other field type is a single line, so before this existed a multi-paragraph answer -- a
+# commit message body, for example -- could not be given at all: its later lines were consumed as
+# answers to the questions that followed.
+TEXT_TERMINATOR = "."
 FORBIDDEN_INVOCATION_FIELD_IDS = frozenset({
     "argv", "command", "command_argv", "command_line", "executable", "flags",
     "shell_command",
@@ -207,6 +212,11 @@ def _prompt_text(field: Mapping[str, Any]) -> str:
         details.append("Allowed values: " + ", ".join(field["choices"]))
     elif field["type"] == "boolean":
         details.append("Allowed values: yes, no")
+    elif field["type"] == "text":
+        details.append(
+            "Multiple lines are allowed. End the answer with a line containing only "
+            f"{TEXT_TERMINATOR}"
+        )
     if "default" in field:
         details.append(f"Default: {field['default']}")
     details.append("Answer: ")
@@ -278,6 +288,44 @@ def _ask_field(
             return _parse_value(field, raw)
         except ValueError as exc:
             write(f"Invalid answer: {exc}.")
+
+
+def _collect_text(
+    field: Mapping[str, Any],
+    *,
+    read: Callable[[str], str],
+    write: Callable[[str], None],
+) -> str | None:
+    """Read a multi-line answer, closed by a line holding only TEXT_TERMINATOR."""
+
+    while True:
+        prompt = _prompt_text(field)
+        lines: list[str] = []
+        while True:
+            try:
+                line = read(prompt)
+            except (EOFError, KeyboardInterrupt) as exc:
+                raise IntakeCancelled("intake-cancelled") from exc
+            prompt = ""
+            if line.strip() == TEXT_TERMINATOR:
+                break
+            lines.append(line)
+
+        # Trailing blank lines are an artefact of typing, never part of the answer.
+        while lines and not lines[-1].strip():
+            lines.pop()
+        value = "\n".join(lines)
+
+        if value.strip():
+            return value
+        if field.get("allow_empty", False):
+            return ""
+        if "default" in field:
+            return field["default"]
+        if field.get("required", False):
+            write("Invalid answer: a value is required.")
+            continue
+        return None
 
 
 def _collect_string_list(
@@ -374,7 +422,9 @@ def collect(
     for field in fields:
         if not _is_active(field, answers):
             continue
-        if field["type"] == "string_list":
+        if field["type"] == "text":
+            answers[field["id"]] = _collect_text(field, read=read, write=write)
+        elif field["type"] == "string_list":
             answers[field["id"]] = _collect_string_list(
                 field, read=read, write=write,
             )

@@ -198,7 +198,9 @@ def test_prepare_active_sequence_builds_artifacts_in_memory_only(
         "memory-knowledge",
         "scripts/example.py",
         "no",
+        # Commit message: subject line, then the marker that closes a multi-line answer.
         "Prepare semantic intake",
+        ".",
         "",
         "",
     ])
