@@ -399,6 +399,18 @@ def _invoked_script(prepared: Mapping[str, Any]) -> Path:
         raise SequenceLaunchError("prepared-argv-invalid")
     repository_root = Path(repository["root"])
     executable = Path(argv[0]).name if argv and isinstance(argv[0], str) else ""
+    # A registered command may be invoked through a project runner: "uv run python <script> ...".
+    # Strip that prefix first, then resolve exactly as a direct invocation. Live 2026-07-29 the
+    # un-stripped form inspected only argv[:1] -- the runner itself -- so it found ZERO script
+    # candidates and every uv-run sequence was undispatchable (blk-af452065311f7f6c0b7ebc6e).
+    if (
+        executable in {"uv", "poetry", "pipenv", "hatch", "rye", "pdm"}
+        and len(argv) > 2
+        and isinstance(argv[1], str)
+        and argv[1] == "run"
+    ):
+        argv = argv[2:]
+        executable = Path(argv[0]).name if isinstance(argv[0], str) else ""
     script_tokens = (
         argv[1:2]
         if executable in {"python", "python3", "bash", "sh", "zsh"}

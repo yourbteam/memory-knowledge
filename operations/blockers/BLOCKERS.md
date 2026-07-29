@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `44b849a6ece8f8480762f84ecdf3dd075538ab1ad4ccfd68a57850cd703e8750`
+Ledger-SHA256: `30e6ea7069e4ceb265dca490b007e419fce8856c4cdf6e002f7f2a77ac66d7db`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -3966,7 +3966,7 @@ This file is generated from `operations/work-memory/events.jsonl`.
 
 ## blk-647a5dac5a030f6a17c85566
 
-- Status: `open`
+- Status: `closed`
 - Subject: `workflow-resume-from-phase-live-confirmation`
 - Step: `resume-from-first-unfinished-phase`
 - Surface: `up-harness/controlled_qna`
@@ -4739,6 +4739,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `tests/test_skill_contracts.py`
 - Symptom: Three sequential corrections on the same integration test artifact were recorded without explicit correction-to-correction supersession edges.
 - Evidence: blocker_catalog rejected both older closures with blocker-correction-not-superseded despite the latest same-path PASS.
+
+## blk-7903fb7af9a1eb971dc9ad59
+
+- Status: `fixed-awaiting-verification`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `recapture-phase-20-under-ruling`
+- Surface: `up-harness/role-executor`
+- Symptom: the claim-inventory role command exited nonzero twice then timed out, and the run record keeps only the words nonzero_exit -- not the exit code, not one line of what the command said
+- Evidence: run up-run-b1f8c4164b56 phase compose-llm-strategy-brief failed with strategy_claim_inventory_blocked:public_claim_inventory_execution_failed; the three attempt_failed activity events carry error_type only
 
 ## blk-79293d472ae8140f5bb5b595
 
@@ -6665,6 +6674,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory-controller`
 - Symptom: final-same-path-verification-rejected
 - Evidence: controller-returned-clean-verification-after-correction
+
+## blk-af452065311f7f6c0b7ebc6e
+
+- Status: `open`
+- Subject: `local-workflow-orch-image`
+- Step: `build`
+- Surface: `memory-knowledge:scripts/sequence_intake_launch.py`
+- Symptom: An authorized build dispatch aborts with prepared-script-source-ambiguous. The prepared argv is ["uv","run","python",<script>,"build","--tag",...]; the guard at sequence_intake_launch.py:399-418 only strips a leading python/python3/bash/sh/zsh, so for a uv-run command it scans the WHOLE argv, finds the script token plus nothing else it recognises as the executable, and the candidate count is not exactly 1.
+- Evidence: Live 2026-07-29: dispatch_status PREPARED_NOT_AUTHORIZED then {"error":"prepared-script-source-ambiguous"}. sequence_intake_launch.py:401-406 chooses argv[1:2] only when Path(argv[0]).name is in {python,python3,bash,sh,zsh}; argv[0] here is "uv". :409 keeps every .py/.sh token, :417 requires exactly one candidate.
 
 ## blk-af46dc54bc59c281e765b9bf
 
@@ -9441,6 +9459,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/discovery_promotion_lifecycle.py`
 - Symptom: A replacement correction is generated correctly but the wrapper always passes --finalize-failed-run, even when the stale correction already finalized that run.
 - Evidence: Screenshot discovery correction attempt returned run-is-terminal before recording correction 9f1895dc-db28-57fa-a940-15259fa4961e.
+
+## blk-f5f611d0377998ab7256286d
+
+- Status: `fixed-awaiting-verification`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `compose-platform-lock-session-guide`
+- Surface: `up-harness/touchpoints`
+- Symptom: the session guide must return all 47 owner questions in one answer; a single quote that does not match the brief discards the entire response, and the two retries came back empty
+- Evidence: run up-run-6990b40251d3: attempt 1 items=0 question_mismatch, attempt 2 items=47 rejected on items[7].recommendation_basis[1] quote_not_in_draft, attempt 3 items=0 question_mismatch; the same all-or-nothing cost is recorded in touchpoints.py for run up-run-951a4acd400e
 
 ## blk-f65fdb80e74569a77dd38c68
 

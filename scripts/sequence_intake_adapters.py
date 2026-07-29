@@ -2273,11 +2273,17 @@ def _prepare_local_image(
     if operation in {"build", "run"}:
         argv.extend(["--tag", _required_text(answers, "tag")])
     if operation in {
-        "run", "copy-code-project", "logs", "stop", "seed-codex-auth",
+        "copy-code-project", "logs", "stop", "seed-codex-auth",
         "seed-git-auth", "probe-codex",
     }:
         argv.extend(["--container", _required_text(answers, "container")])
     if operation == "run":
+        # `run` names the container with --name, not --container: that is what the harness script
+        # defines (local_workflow_orch_image_harness.py:658), what the registered sequence document
+        # publishes, and what every historical caller uses. Emitting --container aborted the recreate
+        # instantly with "the following arguments are required: --name", so a rebuilt image could
+        # never be put into service (live 2026-07-29, blk-af452065311f7f6c0b7ebc6e).
+        argv.extend(["--name", _required_text(answers, "container")])
         argv.extend(["--port", str(answers["port"])])
         if answers["port_file"] is not None:
             argv.extend(["--port-file", _required_text(answers, "port_file")])

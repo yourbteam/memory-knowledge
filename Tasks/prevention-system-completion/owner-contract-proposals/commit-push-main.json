@@ -35,6 +35,13 @@
       "approved_by": "Kamen",
       "approved_at_utc": "2026-07-28",
       "reason": "adds the yes/no answer that lets a governed resume re-open a phase the source already completed"
+    },
+    "sequence_intake_adapter_run_name_flag_20260729": {
+      "decision_id": "commit-push-main-run-name-flag-source-correction-20260729",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-07-29",
+      "reason": "the local-image run operation emitted --container, but the harness script, the registered sequence document and every historical caller use --name, so an authorized container recreate aborted instantly and a rebuilt image could never be put into service; the correction emits --name for run only and leaves the six --container operations untouched"
     }
   },
   "authority_decisions_required": [],
@@ -207,7 +214,7 @@
     "intake_sha256": "9955319d6c29bdf64025896e2bc9f4e1740866a88c3f0bfd1e0a3a042882b5cc",
     "intake_source_correction_decision_id": "commit-push-main-semantic-intake-v1",
     "sequence_approved_post_correction_sha256": "daa618bf35ba1e74ecebc08df7934a45e5d10a7be1c3ad7d4df434ce0990a69f",
-    "sequence_intake_adapter_approved_post_correction_sha256": "ca0b5c33d050d3229445d1e9f3d7947990e8b74f28fa735a52376bb0ded33090",
+    "sequence_intake_adapter_approved_post_correction_sha256": "a34787dfd83bd952cd12dc2558faf4bac75beb26d5427729d603ac969af50cfb",
     "sequence_intake_adapter_path": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_intake_adapters.py",
     "sequence_intake_adapter_sha256": "96351dc33642b28a6218573123b5623df3e4b9b52f41789714d82c019777cb97",
     "sequence_intake_adapter_source_correction_decision_id": "commit-push-main-reopen-completed-phase-source-correction-20260728",
