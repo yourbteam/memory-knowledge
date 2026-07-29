@@ -1688,6 +1688,15 @@ WORKFLOW_PHASE_RESUME_SPEC = {
             "Use the boundary reported by persisted state.", "string",
             required=True,
         ),
+        _semantic_field(
+            "reopen_completed_phase", "Re-open a phase that already completed",
+            "Answer yes or no.", "no",
+            (
+                "Answer yes only when that phase's own logic changed and must run again; "
+                "it discards that phase and every phase after it."
+            ),
+            "boolean", required=True,
+        ),
     ],
 }
 
@@ -3549,7 +3558,7 @@ def _prepare_workflow_phase_resume(
 ) -> dict[str, Any]:
     expected = {
         "repository_key", "client", "source_run_id",
-        "first_unfinished_phase",
+        "first_unfinished_phase", "reopen_completed_phase",
     }
     if set(answers) != expected:
         raise AdapterError("answer-fields-do-not-match-workflow-phase-resume")
@@ -3567,6 +3576,11 @@ def _prepare_workflow_phase_resume(
         "--resume-run", _required_text(answers, "source_run_id"),
         "--from-phase", _required_text(answers, "first_unfinished_phase"),
     ]
+    if answers["reopen_completed_phase"] is True:
+        # Re-running a phase whose own logic changed is the only way to confirm that
+        # change without regenerating the whole run. Added 2026-07-28 after a corrected
+        # publication check could not be exercised any other way.
+        argv.append("--rerun-completed")
     environment = {
         "PYTHONPATH": "src",
         "UP_HARNESS_AGENT_COMMAND": (

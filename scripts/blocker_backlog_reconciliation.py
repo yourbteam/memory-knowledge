@@ -282,6 +282,15 @@ def validate_manifest(
                     raise ReconciliationError(f"close-status-not-eligible:{blocker_id}")
                 if not row.get("closure_verification_event_id"):
                     raise ReconciliationError(f"close-verification-required:{blocker_id}")
+            elif disposition == "non-gap":
+                if row["status"] != "open":
+                    raise ReconciliationError(
+                        f"non-gap-status-not-eligible:{blocker_id}"
+                    )
+                if not row.get("closure_verification_event_id"):
+                    raise ReconciliationError(
+                        f"non-gap-verification-required:{blocker_id}"
+                    )
             elif row["status"] != "open":
                 raise ReconciliationError(
                     f"{disposition}-status-not-eligible:{blocker_id}"
@@ -381,6 +390,7 @@ def _transition_events(
                 blocker_id=row["blocker_id"],
                 from_status="open",
                 to_status="non-gap",
+                verification_event_id=row["closure_verification_event_id"],
                 non_gap_evidence=row["terminal_evidence"],
             ))
     return transitions

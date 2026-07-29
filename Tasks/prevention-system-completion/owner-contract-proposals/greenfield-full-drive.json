@@ -35,6 +35,13 @@
       "decision_id": "greenfield-full-drive-owner-source-refresh-5-20260726",
       "status": "APPROVED"
     },
+    "owner_source_refresh_6": {
+      "approved_at_utc": "2026-07-28",
+      "approved_by": "Kamen",
+      "decision_id": "greenfield-full-drive-owner-source-refresh-6-20260728",
+      "reason": "adopts the committed greenfield drive-dag and mcp-server changes from commit e4609f84",
+      "status": "APPROVED"
+    },
     "reservation_mode": {
       "decision_id": "greenfield-full-drive-progressive-reservation-v1",
       "status": "APPROVED"
@@ -272,10 +279,10 @@
       "source_correction_decision_id": "greenfield-full-drive-runtime-contract-v1"
     },
     {
-      "approved_post_correction_sha256": "311194da791ba34ba7a6ccea3e7949611b2f2a3fd1a00ddf39d1e8db70b7a16d",
+      "approved_post_correction_sha256": "cfd580f8fabbc20f47e452a3573788be71cfcdb46a76bef725e82e1ad373c79c",
       "path": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_drive_dag.py",
-      "sha256": "9c1f7efb03c82f194df3a05272116b4e476e97f4993a00557406da162bc3abba",
-      "source_correction_decision_id": "greenfield-full-drive-validate-fresh-v1"
+      "sha256": "311194da791ba34ba7a6ccea3e7949611b2f2a3fd1a00ddf39d1e8db70b7a16d",
+      "source_correction_decision_id": "greenfield-full-drive-owner-source-refresh-6-20260728"
     },
     {
       "approved_post_correction_sha256": "7a53a9945a71dd66d4d52877efb00ffd7b800f968e8e8a599128846fdc612188",
@@ -284,10 +291,10 @@
       "source_correction_decision_id": "greenfield-full-drive-owner-source-refresh-4-20260725"
     },
     {
-      "approved_post_correction_sha256": "f1251ed5a9d3aae5bcedcee927052d13e42bd12308dd9d88822593788696610f",
+      "approved_post_correction_sha256": "493e1c65417b26f246f7fdb510cdb5001788976e280a63f32f8a50bb6462f23b",
       "path": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/mcp_server.py",
-      "sha256": "2aa61e3b7a68280cda53ae193734e0427d9a6072fc45c95470945b07a1132902",
-      "source_correction_decision_id": "greenfield-full-drive-owner-source-refresh-5-20260726"
+      "sha256": "f1251ed5a9d3aae5bcedcee927052d13e42bd12308dd9d88822593788696610f",
+      "source_correction_decision_id": "greenfield-full-drive-owner-source-refresh-6-20260728"
     }
   ],
   "terminal_contract": {

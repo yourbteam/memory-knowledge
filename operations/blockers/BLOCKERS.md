@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `2f5d8ad91a3a287d8d5276b94dff7b295acf7b85929a208d483b290fd56c9024`
+Ledger-SHA256: `44b849a6ece8f8480762f84ecdf3dd075538ab1ad4ccfd68a57850cd703e8750`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -1110,6 +1110,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `public-claim-inventory-exact-marker-contract`
 - Symptom: The corrected Vivacom Phase 20 draft cleared the prior claim-class mismatches but failed the final independent inventory because nine governed spans did not align to exact manifest markers and two governed claims were unmarked.
 - Evidence: Live successor up-run-12b4671d502a completed one strategy draft and 22 inventory batches, then rejected strategy attempt 4 with marker mismatches at spans 904, 911, 919, 925, 933, 936, 959 plus two unmarked governed claims. Required corrections name claim-first exact text “first” and claim-one-respondent exact text Single respondent - no cross-leader comparison available. No prior superlative/comparative/innovation/market_position class mismatch appears.
+
+## blk-1ab692114088d3bbc2129027
+
+- Status: `fixed-awaiting-verification`
+- Subject: `commit-push-main`
+- Step: `dry-run`
+- Surface: `memory-knowledge:scripts/sequence_intake_adapters.py`
+- Symptom: The commit-push-main intake refuses the repository: "Invalid answer: choose one of: memory-knowledge, united-partners." mcp-agents-workflow cannot be selected, so no publish of that repo can be dispatched through the registered sequence.
+- Evidence: sequence_intake_adapters.py:105 COMMIT_PUSH_SPEC repository_key hardcodes choices=["memory-knowledge"]; runtime offers only memory-knowledge, united-partners. Contradicted by the sequence own Verification section in operations/sequences/commit-push-main/sequence.md, which records a live run publishing 45 approved files to mcp-agents-workflow origin/main as commit 51b0bee540503b46a757d977ece06b61585a2a72.
 
 ## blk-1ae3cce648ee6c81d6f7510f
 
@@ -3955,6 +3964,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The phase-33 successor achieved 40/40 exact quote coverage but blocked because semantic findings arrived in batches across four verifier passes; the terminal pass first reported an unchanged up-runbook-039 defect after all three critic repair opportunities were consumed.
 - Evidence: Run up-run-dbcacf7d52a4 verifier history returned 2 findings in loop 1, 4 in loop 2, 2 in loop 3, then 1 new finding in terminal verification. Item up-runbook-039 was not modified by any critic patch, and its fuller supporting control quote was already present in publish-final-strategy-brief. verifier_prompt asks to flag concrete defects but has no machine-checkable declaration that every producer item was assessed.
 
+## blk-647a5dac5a030f6a17c85566
+
+- Status: `open`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `resume-from-first-unfinished-phase`
+- Surface: `up-harness/controlled_qna`
+- Symptom: compose-final-strategy-brief blocks because the controlled-Q&A binding rejects a framing segment as unauthorized, and nothing records which text was rejected
+- Evidence: child run up-run-0bbd0e6349e0 status blocked; final_strategy_validation issues ["controlled_qna_binding_invalid:framing_not_authorized:2"]; the rejected controlled_qna payload is absent from run state, rejected_markdown and all 37 activity events
+
 ## blk-64a63471b24499af323d6c00
 
 - Status: `fixed-awaiting-verification`
@@ -3981,6 +3999,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `tests/fixtures/live_role_command.py`
 - Symptom: Five command-workflow integration tests now reach deterministic strategy validation but the fixture output lacks Measurement Framework.
 - Evidence: All five failures report structured_strategy_sections_invalid:missing:Measurement Framework at compose-llm-strategy-brief.
+
+## blk-65261d18371c92c7f7d81842
+
+- Status: `superseded`
+- Subject: `taggable-source-reload`
+- Step: `select-registered-sequence`
+- Surface: `operations/sequences/taggable-source-reload/sequence.md vs its dependencies.json`
+- Symptom: work_memory select refused the taggable-source-reload sequence outright, so the governed entry point could not be used at all and no reload could start.
+- Evidence: The sequence doc referenced its automation as taggable-api/tools/Taggable.MigrationRunner/scripts/reload-source.sh (repository name prefixed onto the path) in two places, while dependencies.json records the same file as repository_key=taggable-api with path=tools/Taggable.MigrationRunner/scripts/reload-source.sh. work_memory.py:2839 compares the doc-referenced path literally against manifest paths, so the two never matched. The taggable-api-deploy doc writes the same automation as a bare path in its command block and selects cleanly, which is the working pattern.
 
 ## blk-6565592a64e76bf840bf4c1f
 
@@ -6134,6 +6161,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `convergence-state-gap-transition`
 - Symptom: The corrected Cycle 7 envelope was rejected when it attempted to reopen terminal GAP-006 and GAP-008.
 - Evidence: record-stage returned: unsupported gap transition for closed-to-open recurrence transitions.
+
+## blk-a1f99ee5e3c5a2591e01b81a
+
+- Status: `verified`
+- Subject: `taggable-source-reload-app-2026-07-28`
+- Step: `select-registered-sequence`
+- Surface: `operations/sequences/taggable-source-reload/sequence.md vs its dependencies.json`
+- Symptom: work_memory select refused the taggable-source-reload sequence outright, so no run could be created and no reload could start.
+- Evidence: The doc referenced its automation as taggable-api/tools/Taggable.MigrationRunner/scripts/reload-source.sh in two places; dependencies.json records the same file as repository_key=taggable-api with path=tools/Taggable.MigrationRunner/scripts/reload-source.sh. work_memory.py:2839 compares the doc-referenced path literally against manifest paths, so they never matched. taggable-api-deploy uses the colon form in prose and a bare path in its command block and selects cleanly.
 
 ## blk-a23af29d674fc74951ae4ecb
 
@@ -9495,6 +9531,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `united-partners:vivacom-phase20-captured-regressions`
 - Symptom: Registered live preflight reports five owner_question_numbered_options_mismatch:1 errors and one downstream correction assertion failure before dispatch.
 - Evidence: sequence_intake_launch.py preflight on 2026-07-25: tests.unit.test_vivacom_phase20_reproduction had 5 errors at platform_decisions.py validator and 1 failure because the earlier owner-question rejection replaced the expected class-repair prompt.
+
+## blk-f8520d1d76ad1373a9718a48
+
+- Status: `open`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `sequence-selection`
+- Surface: `memory-knowledge/prevention_registry`
+- Symptom: sequence selection refused with an owner-contract fingerprint drift for commit-push-main, blocking every governed sequence; the identical selection succeeded on the next attempt with no change to any file
+- Evidence: recorded approved_proposal_sha256 c70ff455ad2603000b9a0e167d429c4f56fe3bdcb7648a5e105fa581592acab4 equals the hash computed from the on-disk proposal; git reports the proposal and executable-contracts files unmodified against HEAD; the failing attempt ran inside a classify+select+activate+run-start chain, the succeeding attempt ran select alone
 
 ## blk-f8578c8babfe5d7da139f955
 

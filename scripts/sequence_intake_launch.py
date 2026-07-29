@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+import hashlib
 import json
 import os
 import shlex
@@ -62,6 +63,8 @@ DISPATCH_SPEC = {
 }
 
 DISPATCH_MARKER = "SEQUENCE_INTAKE_DISPATCHED"
+DISPATCH_RECEIPT = "SEQUENCE_INTAKE_DISPATCH_RECEIPT"
+WORKFLOW_RESUME_SEQUENCE = "workflow-resume-from-phase-live-confirmation"
 
 
 class SequenceLaunchError(ValueError):
@@ -156,6 +159,9 @@ def prepare_active_sequence(
         input_fn=input_fn,
         output_fn=output_fn,
     )
+    prepared = _with_controller_preflight(
+        task_id, sequence_id, prepared, repository_roots,
+    )
     if prepared.get("profile") in {"correct", "correct-registered"}:
         prepared = _prepare_correction_bootstrap(
             task_id, prepared, selection, repository_roots,
@@ -167,6 +173,57 @@ def prepare_active_sequence(
         "dispatch_status": "PREPARED_NOT_AUTHORIZED",
         "prepared": prepared,
     }
+
+
+def _with_controller_preflight(
+    task_id: str,
+    sequence_id: str,
+    prepared: Mapping[str, Any],
+    repository_roots: Mapping[str, str],
+) -> dict[str, Any]:
+    result = dict(prepared)
+    if sequence_id != "workflow-resume-from-phase-live-confirmation":
+        return result
+    repository = prepared.get("repository")
+    if (
+        not isinstance(repository, Mapping)
+        or not isinstance(repository.get("key"), str)
+        or not isinstance(repository.get("root"), str)
+        or repository.get("key") not in repository_roots
+        or repository_roots[repository["key"]] != repository["root"]
+        or not Path(repository["root"]).is_absolute()
+    ):
+        raise SequenceLaunchError("workflow-resume-repository-required")
+    python = (
+        "/Users/kamenkamenov/.cache/codex-runtimes/"
+        "codex-primary-runtime/dependencies/python/bin/python3"
+    )
+    result["preflight"] = {
+        "argv": [
+            "env",
+            "-C",
+            repository["root"],
+            "PYTHONPATH=src",
+            python,
+            "-m",
+            "unittest",
+            "tests.unit.test_workflow_resume",
+            "tests.unit.test_client_regeneration_resume",
+            "tests.unit.test_vivacom_phase20_reproduction",
+            "tests.unit.test_codex_role_command",
+            "tests.unit.test_role_executor_retry",
+            "-v",
+        ],
+        "step": "verify-automation",
+        "proof_kind": "same-public-entrypoint",
+    }
+    result["controller_context"] = {
+        "task_id": task_id,
+        "repository_roots": dict(repository_roots),
+        "guard_source": "sequence_doc",
+        "guard_step": "verify-automation",
+    }
+    return result
 
 
 def _required_argv_value(argv: Sequence[str], option: str) -> str:
@@ -426,6 +483,135 @@ def _guard_prepared(task_id: str, prepared: Mapping[str, Any]) -> None:
     ))
 
 
+def _guard_preflight(task_id: str, prepared: Mapping[str, Any]) -> None:
+    preflight = prepared.get("preflight")
+    repository = prepared.get("repository")
+    context = prepared.get("controller_context")
+    if (
+        prepared.get("sequence_id")
+        != "workflow-resume-from-phase-live-confirmation"
+        or not isinstance(preflight, Mapping)
+        or set(preflight) != {"argv", "step", "proof_kind"}
+        or not isinstance(repository, Mapping)
+        or not isinstance(repository.get("key"), str)
+        or not isinstance(repository.get("root"), str)
+        or not isinstance(context, Mapping)
+        or set(context) != {
+            "task_id", "repository_roots", "guard_source", "guard_step",
+        }
+    ):
+        raise SequenceLaunchError("workflow-resume-preflight-required")
+    roots = context["repository_roots"]
+    if (
+        context["task_id"] != task_id
+        or context["guard_source"] != "sequence_doc"
+        or context["guard_step"] != "verify-automation"
+        or not isinstance(roots, Mapping)
+        or roots.get(repository["key"]) != repository["root"]
+        or not Path(repository["root"]).is_absolute()
+    ):
+        raise SequenceLaunchError("workflow-resume-controller-context-invalid")
+    python = (
+        "/Users/kamenkamenov/.cache/codex-runtimes/"
+        "codex-primary-runtime/dependencies/python/bin/python3"
+    )
+    expected_argv = [
+        "env",
+        "-C",
+        repository["root"],
+        "PYTHONPATH=src",
+        python,
+        "-m",
+        "unittest",
+        "tests.unit.test_workflow_resume",
+        "tests.unit.test_client_regeneration_resume",
+        "tests.unit.test_vivacom_phase20_reproduction",
+        "tests.unit.test_codex_role_command",
+        "tests.unit.test_role_executor_retry",
+        "-v",
+    ]
+    if (
+        preflight.get("argv") != expected_argv
+        or preflight.get("step") != "verify-automation"
+        or preflight.get("proof_kind") != "same-public-entrypoint"
+    ):
+        raise SequenceLaunchError("workflow-resume-preflight-invalid")
+    selection, _, _ = work_memory.load_receipt(task_id, "selection")
+    if (
+        selection.get("subject_id")
+        != "workflow-resume-from-phase-live-confirmation"
+        or dict(roots) != _repository_roots(selection)
+    ):
+        raise SequenceLaunchError(
+            "workflow-resume-selection-context-mismatch",
+        )
+    sequence_guard.cmd_guard(SimpleNamespace(
+        task_id=task_id,
+        root=None,
+        state=None,
+        directives_path=None,
+        directive_state=None,
+        directive_max_age_minutes=sequence_guard.DEFAULT_MAX_AGE_MINUTES,
+        step=preflight["step"],
+        command=shlex.join(expected_argv),
+        command_argv=expected_argv,
+        source="sequence_doc",
+        source_ref=selection["document"],
+        correction_bootstrap=False,
+        post_correction_bootstrap=False,
+        evidence_text=None,
+    ))
+
+
+def _workflow_resume_dispatch_receipt(
+    task_id: str,
+    prepared: Mapping[str, Any],
+) -> tuple[Path, str]:
+    argv = prepared["argv"]
+    repository = prepared["repository"]
+    if len(argv) < 2:
+        raise SequenceLaunchError("workflow-resume-dispatch-receipt-invalid")
+    script = Path(argv[1]).resolve()
+    root = Path(repository["root"]).resolve()
+    if (
+        prepared.get("sequence_id") != WORKFLOW_RESUME_SEQUENCE
+        or script != (root / "scripts/run_client_regeneration.py").resolve()
+    ):
+        raise SequenceLaunchError("workflow-resume-dispatch-receipt-invalid")
+    payload = {
+        "schema_version": 1,
+        "sequence_id": WORKFLOW_RESUME_SEQUENCE,
+        "task_id": task_id,
+        "repository_root": str(root),
+        "script": str(script),
+        "arguments": argv[2:],
+    }
+    content = json.dumps(
+        payload,
+        sort_keys=True,
+        separators=(",", ":"),
+        ensure_ascii=False,
+    ).encode("utf-8")
+    directory = Path("/private/tmp/sequence-intake", task_id)
+    directory.mkdir(parents=True, exist_ok=True)
+    descriptor, raw_path = tempfile.mkstemp(
+        prefix=".workflow-resume-dispatch-",
+        suffix=".json",
+        dir=directory,
+    )
+    path = Path(raw_path)
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            handle.write(content)
+            handle.flush()
+            os.fsync(handle.fileno())
+        os.chmod(path, 0o600)
+    except BaseException:
+        path.unlink(missing_ok=True)
+        raise
+    return path, hashlib.sha256(content).hexdigest()
+
+
 def _dispatch_prepared(task_id: str, prepared: Mapping[str, Any]) -> int:
     argv = prepared.get("argv")
     repository = prepared.get("repository")
@@ -437,6 +623,11 @@ def _dispatch_prepared(task_id: str, prepared: Mapping[str, Any]) -> int:
         or not isinstance(repository.get("root"), str)
     ):
         raise SequenceLaunchError("prepared-dispatch-invalid")
+    if (
+        prepared.get("sequence_id")
+        == WORKFLOW_RESUME_SEQUENCE
+    ):
+        _guard_preflight(task_id, prepared)
     _guard_prepared(task_id, prepared)
     _materialize_artifacts(prepared)
     environment = os.environ.copy()
@@ -448,6 +639,35 @@ def _dispatch_prepared(task_id: str, prepared: Mapping[str, Any]) -> int:
     ):
         raise SequenceLaunchError("prepared-environment-invalid")
     environment.update(additions)
+    if (
+        prepared.get("sequence_id")
+        == WORKFLOW_RESUME_SEQUENCE
+    ):
+        preflight = prepared["preflight"]
+        result = subprocess.run(
+            preflight["argv"],
+            cwd=repository["root"],
+            env=environment,
+            check=False,
+            shell=False,
+        )
+        if result.returncode != 0:
+            return result.returncode
+        receipt_path, receipt_hash = _workflow_resume_dispatch_receipt(
+            task_id, prepared,
+        )
+        environment[DISPATCH_MARKER] = receipt_hash
+        environment[DISPATCH_RECEIPT] = str(receipt_path)
+        try:
+            return subprocess.run(
+                argv,
+                cwd=repository["root"],
+                env=environment,
+                check=False,
+                shell=False,
+            ).returncode
+        finally:
+            receipt_path.unlink(missing_ok=True)
     return subprocess.run(
         argv,
         cwd=repository["root"],

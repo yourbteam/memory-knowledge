@@ -21,6 +21,15 @@ WRITER_B = "019ee569-0b44-7292-b806-a19fc34c09a2"
 def isolated_writer_boundary(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
+    # Clear ambient client identity before setting the test's own. Without this the suite inherits
+    # whatever the host session exports (a Claude Code session exports CLAUDE_CODE_SESSION_ID), so a
+    # test that deletes CODEX_THREAD_ID to assert "no writer identity" would silently resolve a
+    # claude writer instead and stop testing anything.
+    for _ambient in (
+        "MK_CLIENT_KIND", "MK_CLIENT_SESSION_ID",
+        *work_memory.CLAUDE_SESSION_ENVS,
+    ):
+        monkeypatch.delenv(_ambient, raising=False)
     monkeypatch.setenv("CODEX_THREAD_ID", WRITER_A)
     monkeypatch.setattr(
         work_memory, "LEDGER", tmp_path / "work-memory/events.jsonl",
@@ -925,6 +934,460 @@ def test_finalize_correction_omitted_co_blocker_rejects_run_close_atomically(
     assert current == before
 
 
+def test_run_close_allows_open_incidental_blocker_assigned_downstream() -> None:
+    run_id = "d199be4d-a762-4727-a787-c010088151ec"
+    incidental_blocker_id = "blk-c85e95150851b3c431fc1f04"
+    occurrence_id = "f98571ae-b516-4854-a16b-f6bd5e59540c"
+    events = [
+        event(
+            "run_started", run_id=run_id, subject_id="vivacom",
+            lineage_id="vivacom-lineage", mode="discovery",
+            operation_kind="workflow-drive", source_bundle=[],
+            source_bundle_hash="a" * 64, classification_receipt_hash="b" * 64,
+            selection_receipt_hash="c" * 64,
+            started_at_utc="2026-07-24T12:00:00Z",
+        ),
+        event(
+            "blocker_opened", run_id=run_id,
+            blocker_id=incidental_blocker_id, occurrence_id=occurrence_id,
+            fingerprint="d" * 64, subject_id="vivacom",
+            lineage_id="vivacom-lineage",
+            step_id="monitor-strategy-semantic-rejection",
+            surface="united-partners-strategy-telemetry-identity",
+            symptom="The watcher emitted a false deviation.",
+            evidence="The workflow continued while monitor identity validation failed.",
+            impact="Monitoring is unreliable but the strategy deliverable can continue.",
+            boundary="Monitoring attempt identity contract.", status="open",
+        ),
+        event(
+            "blocker_assigned_downstream", run_id=run_id,
+            blocker_id=incidental_blocker_id, occurrence_id=occurrence_id,
+            classification="incidental-system-defect",
+            downstream_owner="united-partners-monitoring",
+            evidence="Assigned outside the Vivacom phase-20 deliverable.",
+        ),
+        event(
+            "run_closed", run_id=run_id, subject_id="vivacom",
+            lineage_id="vivacom-lineage", result="failed",
+            completed_at_utc="2026-07-24T12:30:00Z",
+            correction_count=0, blocker_ids=[incidental_blocker_id],
+            sequence_updated=False, verification_quality="none",
+        ),
+    ]
+
+    _, view_bytes, _ = work_memory.stage_event_batch(
+        b"", {
+            "schema_version": 1,
+            "expected_ledger_hash": work_memory.sha256_bytes(b""),
+            "events": events,
+        },
+    )
+    view = view_bytes.decode()
+    assert f"## {incidental_blocker_id}" in view
+    assert "- Status: `open`" in view
+    assert "- Classification: `incidental-system-defect`" in view
+    assert "- Downstream owner: `united-partners-monitoring`" in view
+
+
+def test_downstream_assignment_cannot_bypass_corrected_open_blocker() -> None:
+    run_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "1" * 24
+    occurrence_id = str(uuid.uuid4())
+    events = [
+        event(
+            "run_started", run_id=run_id, subject_id="example",
+            lineage_id="lineage", mode="discovery",
+            operation_kind="workflow-drive", source_bundle=[],
+            source_bundle_hash="a" * 64, classification_receipt_hash="b" * 64,
+            selection_receipt_hash="c" * 64,
+            started_at_utc="2026-07-24T12:00:00Z",
+        ),
+        event(
+            "blocker_opened", run_id=run_id, blocker_id=blocker_id,
+            occurrence_id=occurrence_id, fingerprint="d" * 64,
+            subject_id="example", lineage_id="lineage", step_id="deliverable",
+            surface="phase-output", symptom="The deliverable failed.",
+            evidence="The production phase rejected its output.",
+            impact="The requested deliverable cannot complete.",
+            boundary="Phase output contract.", status="open",
+        ),
+        event(
+            "correction_recorded", run_id=run_id, blocker_id=blocker_id,
+            occurrence_id=occurrence_id, correction_id=str(uuid.uuid4()),
+            subject_id="example", lineage_id="lineage", step_id="deliverable",
+            changed_artifacts=["scripts/fix.py"],
+            changed_artifact_hashes=["e" * 64],
+            reusable_behavior_changed=True, solution="Fix the output contract.",
+        ),
+        event(
+            "blocker_assigned_downstream", run_id=run_id,
+            blocker_id=blocker_id, occurrence_id=occurrence_id,
+            classification="incidental-system-defect",
+            downstream_owner="another-task",
+            evidence="Attempted reassignment.",
+        ),
+    ]
+
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match="invalid-downstream-blocker-assignment",
+    ):
+        work_memory.stage_event_batch(
+            b"", {
+                "schema_version": 1,
+                "expected_ledger_hash": work_memory.sha256_bytes(b""),
+                "events": events,
+            },
+        )
+
+
+def test_downstream_assigned_blocker_cannot_receive_current_run_correction() -> None:
+    run_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "2" * 24
+    occurrence_id = str(uuid.uuid4())
+    opened = event(
+        "blocker_opened", run_id=run_id, blocker_id=blocker_id,
+        occurrence_id=occurrence_id, fingerprint="d" * 64,
+        subject_id="example", lineage_id="lineage", step_id="monitor",
+        surface="telemetry", symptom="Monitoring identity failed.",
+        evidence="Captured monitor failure.", impact="Monitoring is unreliable.",
+        boundary="Monitoring contract.", status="open",
+    )
+    assignment = event(
+        "blocker_assigned_downstream", run_id=run_id,
+        blocker_id=blocker_id, occurrence_id=occurrence_id,
+        classification="incidental-system-defect",
+        downstream_owner="monitoring-maintenance",
+        evidence="Assigned outside the current deliverable.",
+    )
+    correction = event(
+        "correction_recorded", run_id=run_id, blocker_id=blocker_id,
+        occurrence_id=occurrence_id, correction_id=str(uuid.uuid4()),
+        subject_id="example", lineage_id="lineage", step_id="monitor",
+        changed_artifacts=["scripts/fix.py"],
+        changed_artifact_hashes=["e" * 64],
+        reusable_behavior_changed=True, solution="Attempted current-run fix.",
+    )
+    events = [
+        event(
+            "run_started", run_id=run_id, subject_id="example",
+            lineage_id="lineage", mode="discovery",
+            operation_kind="workflow-drive", source_bundle=[],
+            source_bundle_hash="a" * 64, classification_receipt_hash="b" * 64,
+            selection_receipt_hash="c" * 64,
+            started_at_utc="2026-07-24T12:00:00Z",
+        ),
+        opened, assignment, correction,
+    ]
+
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match="correction-for-downstream-blocker",
+    ):
+        work_memory.stage_event_batch(
+            b"", {
+                "schema_version": 1,
+                "expected_ledger_hash": work_memory.sha256_bytes(b""),
+                "events": events,
+            },
+        )
+
+
+def test_stock_correct_appends_sequential_cumulative_correction_and_closes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sequence = tmp_path / "operations/sequences/example/sequence.md"
+    sequence.parent.mkdir(parents=True)
+    sequence.write_text("# example\n")
+    phase20 = tmp_path / "scripts/phase20.py"
+    lifecycle = tmp_path / "scripts/lifecycle.py"
+    phase20.parent.mkdir()
+    phase20.write_text("phase20 = 'fixed'\n")
+    lifecycle.write_text("lifecycle = 'fixed'\n")
+    run_id = str(uuid.uuid4())
+    prior_blocker_id = "blk-" + "1" * 24
+    incidental_blocker_id = "blk-" + "2" * 24
+    lifecycle_blocker_id = "blk-" + "3" * 24
+    prior_occurrence = str(uuid.uuid4())
+    incidental_occurrence = str(uuid.uuid4())
+    lifecycle_occurrence = str(uuid.uuid4())
+    prior_correction_id = str(uuid.uuid4())
+    lifecycle_correction_id = str(uuid.uuid4())
+    start_hash = "a" * 64
+    prior_bundle_hash = "b" * 64
+    current_bundle_hash = "c" * 64
+    sequence_row = {
+        "repository_key": "memory-knowledge",
+        "path": "operations/sequences/example/sequence.md",
+        "sha256": "d" * 64,
+    }
+    start = event(
+        "run_started", run_id=run_id, subject_id="example", lineage_id="lineage",
+        mode="registered", operation_kind="workflow-drive",
+        source_bundle=[
+            sequence_row,
+            {
+                "repository_key": "memory-knowledge",
+                "path": "scripts/phase20.py", "sha256": "e" * 64,
+            },
+        ],
+        source_bundle_hash=start_hash,
+        classification_receipt_hash="f" * 64,
+        selection_receipt_hash="0" * 64,
+        started_at_utc="2026-07-24T12:00:00Z",
+    )
+    prior_opened = event(
+        "blocker_opened", run_id=run_id, blocker_id=prior_blocker_id,
+        occurrence_id=prior_occurrence, fingerprint="1" * 64,
+        subject_id="example", lineage_id="lineage", step_id="phase-20",
+        surface="strategy", symptom="phase 20 failed", evidence="captured failure",
+        impact="deliverable blocked", boundary="phase-20 contract", status="open",
+    )
+    phase20_hash = work_memory.sha256_bytes(phase20.read_bytes())
+    prior_correction = event(
+        "correction_recorded", run_id=run_id, blocker_id=prior_blocker_id,
+        occurrence_id=prior_occurrence, correction_id=prior_correction_id,
+        subject_id="example", lineage_id="lineage", step_id="phase-20",
+        changed_artifacts=["scripts/phase20.py"],
+        changed_artifact_hashes=[phase20_hash],
+        reusable_behavior_changed=True, solution="repair phase 20",
+    )
+    prior_transition = event(
+        "bundle_transition_recorded", lineage_id="lineage",
+        old_bundle_hash=start_hash, new_bundle_hash=prior_bundle_hash,
+        transition_reason="correction", run_id=run_id,
+        correction_ids=[prior_correction_id],
+        changed_artifacts=["scripts/phase20.py"],
+        changed_artifact_hashes=[phase20_hash],
+    )
+    prior_awaiting = event(
+        "blocker_transitioned", run_id=run_id,
+        blocker_id=prior_blocker_id, from_status="open",
+        to_status="fixed-awaiting-verification",
+    )
+    incidental_opened = event(
+        "blocker_opened", run_id=run_id, blocker_id=incidental_blocker_id,
+        occurrence_id=incidental_occurrence, fingerprint="2" * 64,
+        subject_id="example", lineage_id="lineage", step_id="monitor",
+        surface="telemetry", symptom="monitor identity failed",
+        evidence="captured monitor deviation", impact="monitoring unreliable",
+        boundary="monitoring contract", status="open",
+    )
+    incidental_assignment = event(
+        "blocker_assigned_downstream", run_id=run_id,
+        blocker_id=incidental_blocker_id, occurrence_id=incidental_occurrence,
+        classification="incidental-system-defect",
+        downstream_owner="monitoring-maintenance",
+        evidence="Outside the current deliverable.",
+    )
+    lifecycle_opened = event(
+        "blocker_opened", run_id=run_id, blocker_id=lifecycle_blocker_id,
+        occurrence_id=lifecycle_occurrence, fingerprint="3" * 64,
+        subject_id="example", lineage_id="lineage",
+        step_id="activate-correction-successor", surface="work-memory",
+        symptom="successor activation blocked", evidence="stale source bundle",
+        impact="live verification blocked", boundary="correction lifecycle",
+        status="open",
+    )
+    current = [
+        start, prior_opened, prior_correction, prior_transition, prior_awaiting,
+        incidental_opened, incidental_assignment, lifecycle_opened,
+    ]
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: (current, "4" * 64))
+    current_bundle = [
+        sequence_row,
+        {
+            "repository_key": "memory-knowledge",
+            "path": "scripts/phase20.py", "sha256": phase20_hash,
+        },
+        {
+            "repository_key": "memory-knowledge",
+            "path": "scripts/lifecycle.py",
+            "sha256": work_memory.sha256_bytes(lifecycle.read_bytes()),
+        },
+    ]
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle",
+        lambda **kwargs: (current_bundle, current_bundle_hash, "lineage"),
+    )
+    calls = []
+
+    def transact(request):
+        calls.append(request)
+        raw = b"".join(work_memory.canonical_bytes(item) for item in current)
+        ledger, _, result = work_memory.stage_event_batch(raw, request)
+        current[:] = work_memory.parse_ledger_bytes(ledger)
+        return result
+
+    monkeypatch.setattr(work_memory, "transact", transact)
+    args = SimpleNamespace(
+        run_id=run_id, blocker_id=lifecycle_blocker_id,
+        occurrence_id=lifecycle_occurrence, co_blocker_id=None,
+        step_id="activate-correction-successor",
+        changed_artifact=[str(lifecycle)],
+        solution="support cumulative sequential corrections",
+        reusable_behavior_changed="yes", supersedes_correction_id=None,
+        correction_id=lifecycle_correction_id, event_id=None,
+        transition_event_id=None, repo_roots_file=None,
+        finalize_failed_run=True,
+    )
+
+    first = work_memory.cmd_correct(args)
+    second = work_memory.cmd_correct(args)
+
+    recorded = calls[0]["events"]
+    transition = next(
+        item for item in recorded
+        if item["event_type"] == "bundle_transition_recorded"
+    )
+    assert transition["old_bundle_hash"] == prior_bundle_hash
+    assert transition["new_bundle_hash"] == current_bundle_hash
+    assert transition["correction_ids"] == [
+        prior_correction_id, lifecycle_correction_id,
+    ]
+    assert transition["changed_artifacts"] == ["scripts/lifecycle.py"]
+    assert first["old_bundle_hash"] == prior_bundle_hash
+    assert second["already_recorded"] is True
+    assert len(calls) == 1
+    assert current[-1]["event_type"] == "run_closed"
+    assert current[-1]["correction_count"] == 2
+    assert next(
+        item for item in current
+        if item.get("blocker_id") == prior_blocker_id
+        and item["event_type"] == "blocker_transitioned"
+    )["to_status"] == "fixed-awaiting-verification"
+    view = work_memory.render_blocker_view(current, "5" * 64)
+    incidental_section = view.split(f"## {incidental_blocker_id}", 1)[1]
+    assert "- Status: `open`" in incidental_section
+    assert "- Classification: `incidental-system-defect`" in incidental_section
+    work_memory._validate_successor_corrections(
+        current, lineage_id="lineage", source_bundle=current_bundle,
+        predecessor_run_id=run_id,
+        correction_ids=[prior_correction_id, lifecycle_correction_id],
+        repository_roots={"memory-knowledge": str(tmp_path)},
+        source_bundle_hash=current_bundle_hash,
+    )
+
+
+def test_effective_correction_bundle_rejects_broken_sequential_chain() -> None:
+    run_id = str(uuid.uuid4())
+    first_correction_id = str(uuid.uuid4())
+    second_correction_id = str(uuid.uuid4())
+    start = event(
+        "run_started", run_id=run_id, subject_id="example",
+        lineage_id="lineage", mode="registered",
+        operation_kind="workflow-drive", source_bundle=[],
+        source_bundle_hash="a" * 64,
+        classification_receipt_hash="b" * 64,
+        selection_receipt_hash="c" * 64,
+        started_at_utc="2026-07-24T12:00:00Z",
+    )
+    transitions = [
+        event(
+            "bundle_transition_recorded", lineage_id="lineage",
+            old_bundle_hash="a" * 64, new_bundle_hash="d" * 64,
+            transition_reason="correction", run_id=run_id,
+            correction_ids=[first_correction_id],
+            changed_artifacts=["scripts/first.py"],
+            changed_artifact_hashes=["e" * 64],
+        ),
+        event(
+            "bundle_transition_recorded", lineage_id="lineage",
+            old_bundle_hash="f" * 64, new_bundle_hash="0" * 64,
+            transition_reason="correction", run_id=run_id,
+            correction_ids=[first_correction_id, second_correction_id],
+            changed_artifacts=["scripts/second.py"],
+            changed_artifact_hashes=["1" * 64],
+        ),
+    ]
+
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match="noncumulative-correction-transition",
+    ):
+        work_memory._effective_correction_bundle(start, transitions)
+
+
+def test_non_gap_transition_cannot_dismiss_anomaly_with_free_text_only() -> None:
+    transition = event(
+        "blocker_transitioned",
+        run_id=str(uuid.uuid4()),
+        blocker_id="blk-" + "9" * 24,
+        from_status="open",
+        to_status="non-gap",
+        non_gap_evidence="not a defect",
+    )
+
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match="non-gap-verification-required",
+    ):
+        work_memory.stage_event_batch(b"", {
+            "schema_version": 1,
+            "expected_ledger_hash": None,
+            "events": [transition],
+        })
+
+
+def test_non_gap_transition_requires_bound_same_path_proof() -> None:
+    run_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "8" * 24
+    start = event(
+        "run_started",
+        run_id=run_id,
+        subject_id="phase20-resume",
+        lineage_id="phase20-resume",
+        mode="registered",
+        operation_kind="workflow-drive",
+        source_bundle=[],
+        source_bundle_hash="a" * 64,
+        classification_receipt_hash="b" * 64,
+        selection_receipt_hash="c" * 64,
+        started_at_utc="2026-07-24T12:00:00Z",
+    )
+    opened = event(
+        "blocker_opened",
+        run_id=run_id,
+        blocker_id=blocker_id,
+        occurrence_id=str(uuid.uuid4()),
+        fingerprint="d" * 64,
+        subject_id="phase20-resume",
+        lineage_id="phase20-resume",
+        step_id="captured-anomaly",
+        surface="phase20-live-resume",
+        symptom="unexpected result",
+        evidence="captured live output",
+        impact="success remains unproven",
+        boundary="same-path investigation",
+        status="open",
+    )
+    verification = event(
+        "verification_recorded",
+        run_id=run_id,
+        subject_id="phase20-resume",
+        lineage_id="phase20-resume",
+        source_bundle_hash="a" * 64,
+        outcome="passed",
+        quality="same-path",
+        evidence="same public entry point proves the observation is not a defect",
+        blocker_ids=[blocker_id],
+        correction_ids=[],
+        changed_artifact_hashes=[],
+    )
+    dismissed = event(
+        "blocker_transitioned",
+        run_id=run_id,
+        blocker_id=blocker_id,
+        from_status="open",
+        to_status="non-gap",
+        verification_event_id=verification["event_id"],
+        non_gap_evidence="proved by the bound same-path verification",
+    )
+
+    work_memory.validate_lifecycle([start, opened, verification, dismissed])
+
+
 @pytest.mark.parametrize(
     ("case", "error"),
     [
@@ -1201,6 +1664,27 @@ def test_cross_repository_correction_identity_survives_successor_validation(
     )
 
     assert artifacts == [{"repository_key": "external", "path": "scripts/fix.py"}]
+
+
+def test_artifact_hashes_round_trips_repository_qualified_identity(
+    tmp_path: Path,
+) -> None:
+    external = tmp_path / "external"
+    artifact = external / "scripts/fix.py"
+    artifact.parent.mkdir(parents=True)
+    artifact.write_text("fixed = True\n")
+    roots_file = tmp_path / "roots.json"
+    roots_file.write_text(json.dumps({"external": str(external)}))
+
+    artifacts, hashes = work_memory._artifact_hashes(
+        [str(artifact)], str(roots_file)
+    )
+    replayed_artifacts, replayed_hashes = work_memory._artifact_hashes(
+        artifacts, str(roots_file)
+    )
+
+    assert replayed_artifacts == artifacts
+    assert replayed_hashes == hashes
 
 
 def legacy_stranded_events(*, terminal: bool) -> list[dict]:
@@ -2370,6 +2854,532 @@ def test_successor_selection_must_keep_the_predecessor_task_identity():
         )
 
 
+def test_direct_successor_selection_derives_task_identity_before_core_selection(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    predecessor_run_id = str(uuid.uuid4())
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: ([], "a" * 64))
+    monkeypatch.setattr(
+        work_memory,
+        "_successor_selection_request",
+        lambda _events, run_id: {
+            "task_id": "predecessor-task",
+            "sequence_id": "workflow-resume-from-phase-live-confirmation",
+            "verification_successor_of": run_id,
+            "verifies_correction_ids": [str(uuid.uuid4())],
+            "repository_roots": {
+                "memory-knowledge": "/repos/memory",
+                "united-partners": "/repos/up",
+            },
+        },
+    )
+    observed = {}
+    monkeypatch.setattr(
+        work_memory,
+        "_cmd_select_for_task",
+        lambda args: (
+            observed.update(task_id=args.task_id)
+            or {"ok": True, "task_id": args.task_id}
+        ),
+        raising=False,
+    )
+
+    result = work_memory.cmd_select(
+        SimpleNamespace(
+            task_id="wrong-new-task",
+            verification_successor_of=predecessor_run_id,
+        )
+    )
+
+    assert observed["task_id"] == "predecessor-task"
+    assert result["task_id"] == "predecessor-task"
+    assert result["requested_task_id"] == "wrong-new-task"
+    assert result["task_identity_source"] == "predecessor-run"
+
+
+def test_select_successor_parser_requires_only_predecessor_run_id():
+    args = work_memory.build_parser().parse_args([
+        "select-successor",
+        "--predecessor-run-id", "11111111-1111-4111-8111-111111111111",
+    ])
+
+    assert args.func is work_memory.cmd_select_successor
+    assert args.predecessor_run_id == "11111111-1111-4111-8111-111111111111"
+
+
+def test_successor_request_derives_sequence_roots_and_active_corrections():
+    state = work_memory._claim_task_writer("predecessor-task")
+    start = _owned_run_start("predecessor-task", state)
+    start.update({
+        "mode": "registered",
+        "subject_id": "workflow-resume-from-phase-live-confirmation",
+        "repository_roots": {
+            "memory-knowledge": "/repos/memory",
+            "united-partners": "/repos/up",
+        },
+    })
+    blocker_ids = ["blk-" + "1" * 24, "blk-" + "2" * 24]
+    correction_ids = [str(uuid.uuid4()), str(uuid.uuid4())]
+    occurrence_ids = [str(uuid.uuid4()), str(uuid.uuid4())]
+    events = [start]
+    for blocker_id, occurrence_id, correction_id in zip(
+        blocker_ids, occurrence_ids, correction_ids, strict=True,
+    ):
+        events.extend([
+            event(
+                "blocker_opened", run_id=start["run_id"],
+                blocker_id=blocker_id, occurrence_id=occurrence_id,
+                fingerprint="f" * 64, subject_id=start["subject_id"],
+                lineage_id=start["lineage_id"], step_id="verify",
+                surface="phase20", symptom="blocked", evidence="captured",
+                impact="cannot continue", boundary="correction", status="open",
+            ),
+            event(
+                "correction_recorded", run_id=start["run_id"],
+                blocker_id=blocker_id, occurrence_id=occurrence_id,
+                correction_id=correction_id, subject_id=start["subject_id"],
+                lineage_id=start["lineage_id"], step_id="verify",
+                changed_artifacts=["scripts/work_memory.py"],
+                changed_artifact_hashes=["e" * 64],
+                reusable_behavior_changed=True, solution="stable fix",
+            ),
+            event(
+                "blocker_transitioned", run_id=start["run_id"],
+                blocker_id=blocker_id, from_status="open",
+                to_status="fixed-awaiting-verification",
+            ),
+        ])
+    events.extend([
+        event(
+            "bundle_transition_recorded", run_id=start["run_id"],
+            lineage_id=start["lineage_id"],
+            old_bundle_hash=start["source_bundle_hash"],
+            new_bundle_hash="b" * 64,
+            transition_reason="correction",
+            correction_ids=correction_ids,
+            changed_artifacts=["scripts/work_memory.py"],
+            changed_artifact_hashes=["e" * 64],
+        ),
+        event(
+            "run_closed", run_id=start["run_id"],
+            subject_id=start["subject_id"], lineage_id=start["lineage_id"],
+            result="failed", completed_at_utc="2026-01-01T00:01:00Z",
+            correction_count=2, blocker_ids=blocker_ids,
+            sequence_updated=True, verification_quality="none",
+        ),
+    ])
+
+    request = work_memory._successor_selection_request(
+        events, start["run_id"],
+    )
+
+    assert request == {
+        "task_id": "predecessor-task",
+        "sequence_id": "workflow-resume-from-phase-live-confirmation",
+        "verification_successor_of": start["run_id"],
+        "verifies_correction_ids": correction_ids,
+        "repository_roots": start["repository_roots"],
+    }
+
+
+def test_successor_request_carries_inherited_and_new_corrections_cumulatively():
+    task_id = "predecessor-task"
+    state = work_memory._claim_task_writer(task_id)
+    first_start = _owned_run_start(task_id, state)
+    first_start.update({
+        "mode": "registered",
+        "subject_id": "workflow-resume-from-phase-live-confirmation",
+        "repository_roots": {
+            "memory-knowledge": "/repos/memory",
+            "united-partners": "/repos/up",
+        },
+    })
+    first_blocker_id = "blk-" + "1" * 24
+    first_occurrence_id = str(uuid.uuid4())
+    first_correction_id = str(uuid.uuid4())
+    first_transition_hash = "b" * 64
+    second_run_id = str(uuid.uuid4())
+    second_blocker_id = "blk-" + "2" * 24
+    second_occurrence_id = str(uuid.uuid4())
+    second_correction_id = str(uuid.uuid4())
+    events = [
+        first_start,
+        event(
+            "blocker_opened", run_id=first_start["run_id"],
+            blocker_id=first_blocker_id,
+            occurrence_id=first_occurrence_id, fingerprint="1" * 64,
+            subject_id=first_start["subject_id"],
+            lineage_id=first_start["lineage_id"], step_id="phase-20",
+            surface="strategy", symptom="blocked", evidence="captured",
+            impact="cannot continue", boundary="phase-20", status="open",
+        ),
+        event(
+            "correction_recorded", run_id=first_start["run_id"],
+            blocker_id=first_blocker_id,
+            occurrence_id=first_occurrence_id,
+            correction_id=first_correction_id,
+            subject_id=first_start["subject_id"],
+            lineage_id=first_start["lineage_id"], step_id="phase-20",
+            changed_artifacts=["scripts/phase20.py"],
+            changed_artifact_hashes=["1" * 64],
+            reusable_behavior_changed=True, solution="fix phase 20",
+        ),
+        event(
+            "bundle_transition_recorded", run_id=first_start["run_id"],
+            lineage_id=first_start["lineage_id"],
+            old_bundle_hash=first_start["source_bundle_hash"],
+            new_bundle_hash=first_transition_hash,
+            transition_reason="correction",
+            correction_ids=[first_correction_id],
+            changed_artifacts=["scripts/phase20.py"],
+            changed_artifact_hashes=["1" * 64],
+        ),
+        event(
+            "blocker_transitioned", run_id=first_start["run_id"],
+            blocker_id=first_blocker_id, from_status="open",
+            to_status="fixed-awaiting-verification",
+        ),
+        event(
+            "run_closed", run_id=first_start["run_id"],
+            subject_id=first_start["subject_id"],
+            lineage_id=first_start["lineage_id"], result="failed",
+            completed_at_utc="2026-01-01T00:01:00Z",
+            correction_count=1, blocker_ids=[first_blocker_id],
+            sequence_updated=True, verification_quality="none",
+        ),
+        event(
+            "run_started", run_id=second_run_id,
+            subject_id=first_start["subject_id"],
+            lineage_id=first_start["lineage_id"], mode="registered",
+            operation_kind=first_start["operation_kind"],
+            source_bundle=first_start["source_bundle"],
+            source_bundle_hash=first_transition_hash,
+            classification_receipt_hash="3" * 64,
+            selection_receipt_hash="4" * 64,
+            started_at_utc="2026-01-01T00:02:00Z",
+            predecessor_run_id=first_start["run_id"],
+            verifies_correction_ids=[first_correction_id],
+            repository_roots=first_start["repository_roots"],
+            task_id=task_id,
+            **work_memory._ownership_receipt_fields(task_id, state),
+        ),
+        event(
+            "blocker_opened", run_id=second_run_id,
+            blocker_id=second_blocker_id,
+            occurrence_id=second_occurrence_id, fingerprint="2" * 64,
+            subject_id=first_start["subject_id"],
+            lineage_id=first_start["lineage_id"], step_id="controller",
+            surface="sequence", symptom="blocked", evidence="captured",
+            impact="cannot continue", boundary="sequence contract",
+            status="open",
+        ),
+        event(
+            "correction_recorded", run_id=second_run_id,
+            blocker_id=second_blocker_id,
+            occurrence_id=second_occurrence_id,
+            correction_id=second_correction_id,
+            subject_id=first_start["subject_id"],
+            lineage_id=first_start["lineage_id"], step_id="controller",
+            changed_artifacts=["operations/sequences/resume/sequence.md"],
+            changed_artifact_hashes=["2" * 64],
+            reusable_behavior_changed=True, solution="fix sequence contract",
+        ),
+        event(
+            "bundle_transition_recorded", run_id=second_run_id,
+            lineage_id=first_start["lineage_id"],
+            old_bundle_hash=first_transition_hash,
+            new_bundle_hash="c" * 64,
+            transition_reason="correction",
+            correction_ids=[second_correction_id],
+            changed_artifacts=["operations/sequences/resume/sequence.md"],
+            changed_artifact_hashes=["2" * 64],
+        ),
+        event(
+            "blocker_transitioned", run_id=second_run_id,
+            blocker_id=second_blocker_id, from_status="open",
+            to_status="fixed-awaiting-verification",
+        ),
+        event(
+            "run_closed", run_id=second_run_id,
+            subject_id=first_start["subject_id"],
+            lineage_id=first_start["lineage_id"], result="failed",
+            completed_at_utc="2026-01-01T00:03:00Z",
+            correction_count=1,
+            blocker_ids=[first_blocker_id, second_blocker_id],
+            sequence_updated=True, verification_quality="none",
+        ),
+    ]
+
+    request = work_memory._successor_selection_request(
+        events, second_run_id,
+    )
+
+    assert request["verifies_correction_ids"] == [
+        first_correction_id,
+        second_correction_id,
+    ]
+
+
+def test_effective_correction_bundle_seeds_successor_inherited_corrections():
+    inherited_correction_id = str(uuid.uuid4())
+    start = event(
+        "run_started",
+        source_bundle=[],
+        source_bundle_hash="a" * 64,
+        verifies_correction_ids=[inherited_correction_id],
+    )
+
+    _, bundle_hash, correction_ids = work_memory._effective_correction_bundle(
+        start,
+        [],
+    )
+
+    assert bundle_hash == "a" * 64
+    assert correction_ids == [inherited_correction_id]
+
+
+def test_successor_validation_carries_inherited_correction_across_overlap(
+    tmp_path: Path,
+):
+    artifact = tmp_path / "scripts/phase20.py"
+    artifact.parent.mkdir()
+    artifact.write_text("new combined behavior\n")
+    controller = tmp_path / "scripts/work_memory.py"
+    controller.write_text("corrected selector\n")
+    sequence = tmp_path / "operations/sequences/resume/sequence.md"
+    sequence.parent.mkdir(parents=True)
+    sequence.write_text("unchanged sequence\n")
+    old_correction_id = str(uuid.uuid4())
+    new_correction_id = str(uuid.uuid4())
+    predecessor_run_id = str(uuid.uuid4())
+    ownership_event_id = str(uuid.uuid4())
+    ownership_state = {
+        "writer_thread_id": str(uuid.uuid4()),
+        "ownership_generation": 1,
+        "ownership_event_id": ownership_event_id,
+    }
+    pre_run_blocker_id = "blk-" + "6" * 24
+    pre_run_occurrence_id = str(uuid.uuid4())
+    pre_run_correction_id = str(uuid.uuid4())
+    old_blocker_id = "blk-" + "4" * 24
+    new_blocker_id = "blk-" + "5" * 24
+    old_hash = "1" * 64
+    new_hash = work_memory.sha256_bytes(artifact.read_bytes())
+    controller_hash = work_memory.sha256_bytes(controller.read_bytes())
+    sequence_hash = work_memory.sha256_bytes(sequence.read_bytes())
+    current_bundle = [
+        {
+            "repository_key": "memory-knowledge",
+            "path": "scripts/phase20.py",
+            "sha256": new_hash,
+        },
+        {
+            "repository_key": "memory-knowledge",
+            "path": "scripts/work_memory.py",
+            "sha256": controller_hash,
+        },
+        {
+            "repository_key": "memory-knowledge",
+            "path": "operations/sequences/resume/sequence.md",
+            "sha256": sequence_hash,
+        },
+    ]
+    current_bundle_hash = work_memory.sha256_bytes(
+        work_memory.canonical_bytes(current_bundle)
+    )
+    pre_controller_bundle = [
+        current_bundle[0],
+        {**current_bundle[1], "sha256": "2" * 64},
+    ]
+    pre_controller_bundle_hash = work_memory.sha256_bytes(
+        work_memory.canonical_bytes(pre_controller_bundle)
+    )
+    events = [
+        event(
+            "task_writer_claimed",
+            event_id=ownership_event_id,
+            task_id="task",
+            writer_thread_id=ownership_state["writer_thread_id"],
+            ownership_generation=1,
+        ),
+        event(
+            "run_started",
+            run_id=str(uuid.uuid4()),
+            lineage_id="lineage",
+            source_bundle=[],
+            source_bundle_hash="a" * 64,
+        ),
+        event(
+            "blocker_opened",
+            run_id=str(uuid.uuid4()),
+            blocker_id=old_blocker_id,
+            occurrence_id=str(uuid.uuid4()),
+            lineage_id="lineage",
+        ),
+        event(
+            "correction_recorded",
+            correction_id=old_correction_id,
+            blocker_id=old_blocker_id,
+            occurrence_id=str(uuid.uuid4()),
+            lineage_id="lineage",
+            changed_artifacts=["scripts/phase20.py"],
+            changed_artifact_hashes=[old_hash],
+        ),
+        event(
+            "bundle_transition_recorded",
+            run_id=str(uuid.uuid4()),
+            lineage_id="lineage",
+            transition_reason="correction",
+            correction_ids=[old_correction_id],
+            new_bundle_hash="b" * 64,
+        ),
+        event(
+            "blocker_transitioned",
+            blocker_id=old_blocker_id,
+            to_status="fixed-awaiting-verification",
+        ),
+        event(
+            "run_started",
+            run_id=predecessor_run_id,
+            lineage_id="lineage",
+            source_bundle=[{
+                "repository_key": "memory-knowledge",
+                "path": "scripts/phase20.py",
+                "sha256": old_hash,
+            }, {
+                "repository_key": "memory-knowledge",
+                "path": "scripts/work_memory.py",
+                "sha256": "2" * 64,
+            }, {
+                "repository_key": "memory-knowledge",
+                "path": "operations/sequences/resume/sequence.md",
+                "sha256": sequence_hash,
+            }],
+            source_bundle_hash="b" * 64,
+            verifies_correction_ids=[old_correction_id],
+            task_id="task",
+            **work_memory._ownership_receipt_fields(
+                "task",
+                ownership_state,
+            ),
+        ),
+        event(
+            "blocker_opened",
+            run_id=predecessor_run_id,
+            blocker_id=new_blocker_id,
+            occurrence_id=str(uuid.uuid4()),
+            lineage_id="lineage",
+        ),
+        event(
+            "correction_recorded",
+            correction_id=new_correction_id,
+            blocker_id=new_blocker_id,
+            occurrence_id=str(uuid.uuid4()),
+            lineage_id="lineage",
+            changed_artifacts=["scripts/phase20.py"],
+            changed_artifact_hashes=[new_hash],
+        ),
+        event(
+            "bundle_transition_recorded",
+            run_id=predecessor_run_id,
+            lineage_id="lineage",
+            transition_reason="correction",
+            correction_ids=[new_correction_id],
+            old_bundle_hash="b" * 64,
+            new_bundle_hash=pre_controller_bundle_hash,
+            changed_artifacts=["scripts/phase20.py"],
+            changed_artifact_hashes=[new_hash],
+        ),
+        event(
+            "blocker_transitioned",
+            blocker_id=new_blocker_id,
+            to_status="fixed-awaiting-verification",
+        ),
+        event(
+            "run_closed",
+            run_id=predecessor_run_id,
+        ),
+        event(
+            "pre_run_blocker_opened",
+            task_id="task",
+            ownership_event_id=ownership_event_id,
+            blocker_id=pre_run_blocker_id,
+            occurrence_id=pre_run_occurrence_id,
+            lineage_id="lineage",
+        ),
+        event(
+            "pre_run_correction_recorded",
+            task_id="task",
+            ownership_event_id=ownership_event_id,
+            blocker_id=pre_run_blocker_id,
+            occurrence_id=pre_run_occurrence_id,
+            correction_id=pre_run_correction_id,
+            changed_artifacts=["scripts/work_memory.py"],
+            changed_artifact_hashes=[controller_hash],
+        ),
+        event(
+            "pre_run_blocker_transitioned",
+            blocker_id=pre_run_blocker_id,
+            to_status="closed",
+        ),
+        event(
+            "pre_run_blocker_opened",
+            task_id="task",
+            ownership_event_id=ownership_event_id,
+            blocker_id="blk-" + "7" * 24,
+            occurrence_id=str(uuid.uuid4()),
+            lineage_id="lineage",
+        ),
+        event(
+            "pre_run_correction_recorded",
+            task_id="task",
+            ownership_event_id=ownership_event_id,
+            blocker_id="blk-" + "7" * 24,
+            occurrence_id=str(uuid.uuid4()),
+            correction_id=str(uuid.uuid4()),
+            changed_artifacts=[
+                "operations/sequences/resume/sequence.md",
+            ],
+            changed_artifact_hashes=[sequence_hash],
+        ),
+        event(
+            "pre_run_blocker_transitioned",
+            blocker_id="blk-" + "7" * 24,
+            to_status="closed",
+        ),
+    ]
+    old_correction = next(
+        row for row in events
+        if row.get("correction_id") == old_correction_id
+    )
+    old_opened = next(
+        row for row in events
+        if row.get("blocker_id") == old_blocker_id
+        and row["event_type"] == "blocker_opened"
+    )
+    old_correction["occurrence_id"] = old_opened["occurrence_id"]
+    new_correction = next(
+        row for row in events
+        if row.get("correction_id") == new_correction_id
+    )
+    new_opened = next(
+        row for row in events
+        if row.get("blocker_id") == new_blocker_id
+        and row["event_type"] == "blocker_opened"
+    )
+    new_correction["occurrence_id"] = new_opened["occurrence_id"]
+
+    work_memory._validate_successor_corrections(
+        events,
+        lineage_id="lineage",
+        source_bundle=current_bundle,
+        source_bundle_hash=current_bundle_hash,
+        predecessor_run_id=predecessor_run_id,
+        correction_ids=[old_correction_id, new_correction_id],
+        repository_roots={"memory-knowledge": str(tmp_path)},
+    )
+
+
 def test_different_task_ids_allow_different_writers(
     monkeypatch: pytest.MonkeyPatch,
 ):
@@ -2510,7 +3520,7 @@ def test_missing_host_thread_id_rejects_without_mutation(
 ):
     monkeypatch.delenv("CODEX_THREAD_ID")
     with pytest.raises(
-        work_memory.WorkMemoryError, match="host-codex-thread-id-required",
+        work_memory.WorkMemoryError, match="writer-identity-required",
     ):
         work_memory.transact({
             "schema_version": 1,
@@ -2543,7 +3553,7 @@ def test_prevention_only_transaction_does_not_require_host_thread_id_but_work_do
     })
     before = work_memory.LEDGER.read_bytes()
     with pytest.raises(
-        work_memory.WorkMemoryError, match="host-codex-thread-id-required",
+        work_memory.WorkMemoryError, match="writer-identity-required",
     ):
         work_memory.transact({
             "schema_version": 1, "expected_ledger_hash": None,
@@ -3123,7 +4133,11 @@ def _prepare_successor_selection(
     def owned_fixture_ledger(path=work_memory.LEDGER):
         for item in events:
             if item["event_type"] == "run_started" and "task_id" not in item:
-                item.update(task_id="successor", **ownership)
+                item.update(
+                    task_id="successor",
+                    repository_roots={"memory-knowledge": str(tmp_path)},
+                    **ownership,
+                )
         return [claim, *events], "8" * 64
 
     monkeypatch.setattr(work_memory, "load_ledger", owned_fixture_ledger)
@@ -3638,3 +4652,174 @@ def test_frozen_v1_ledger_and_receipts_replay_unchanged(
     for entry in events:
         assert entry["schema_version"] == 1
     work_memory.validate_ownership_receipt("frozen-v1-task", receipt)
+
+
+# --- writer identity: the env var Claude Code actually exports -----------------------------------
+# Live 2026-07-28: every governed command (classify/select/run-start/correct/blocker_catalog) failed
+# from a Claude Code session with `host-codex-thread-id-required`. The schema-v2 claude writer path
+# existed, but read CLAUDE_SESSION_ID -- a name nothing sets. Claude Code exports
+# CLAUDE_CODE_SESSION_ID. Producer spelled it one way, consumer read another.
+
+CLAUDE_CODE_SESSION = "9e2f4a60-1d3f-4e75-ac32-4b69e6d8fa23"
+
+
+def _no_ambient_identity(monkeypatch: pytest.MonkeyPatch) -> None:
+    for name in (
+        "CODEX_THREAD_ID", "MK_CLIENT_KIND", "MK_CLIENT_SESSION_ID",
+        "CLAUDE_CODE_SESSION_ID", "CLAUDE_SESSION_ID",
+    ):
+        monkeypatch.delenv(name, raising=False)
+
+
+def test_claude_code_session_id_alone_yields_a_claude_writer(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """The live defect: this is the exact environment a Claude Code session presents, and it raised
+    instead of resolving a writer."""
+    _no_ambient_identity(monkeypatch)
+    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", CLAUDE_CODE_SESSION)
+    identity = work_memory.writer_identity()
+    assert identity["schema_version"] == 2
+    assert identity["writer_client_kind"] == "claude"
+    assert identity["writer_session_id"] == CLAUDE_CODE_SESSION
+
+
+def test_legacy_claude_session_id_is_still_accepted(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """NO REGRESSION: anything already exporting the old name keeps working."""
+    _no_ambient_identity(monkeypatch)
+    monkeypatch.setenv("CLAUDE_SESSION_ID", CLAUDE_SESSION_A)
+    identity = work_memory.writer_identity()
+    assert identity["writer_client_kind"] == "claude"
+    assert identity["writer_session_id"] == CLAUDE_SESSION_A
+
+
+def test_claude_code_session_id_wins_over_the_legacy_name(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """Both present -> the name Claude Code actually exports is authoritative, so the writer id is
+    stable across a session rather than depending on which name a caller happened to set."""
+    _no_ambient_identity(monkeypatch)
+    monkeypatch.setenv("CLAUDE_SESSION_ID", CLAUDE_SESSION_A)
+    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", CLAUDE_CODE_SESSION)
+    assert work_memory.writer_identity()["writer_session_id"] == CLAUDE_CODE_SESSION
+
+
+def test_explicit_claude_kind_resolves_the_session_from_either_name(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """MK_CLIENT_KIND=claude with no MK_CLIENT_SESSION_ID must fall back to the real env var."""
+    _no_ambient_identity(monkeypatch)
+    monkeypatch.setenv("MK_CLIENT_KIND", "claude")
+    monkeypatch.setenv("CLAUDE_CODE_SESSION_ID", CLAUDE_CODE_SESSION)
+    assert work_memory.writer_identity()["writer_session_id"] == CLAUDE_CODE_SESSION
+
+
+def test_no_identity_at_all_names_both_writer_paths(
+    monkeypatch: pytest.MonkeyPatch,
+):
+    """The old error said `host-codex-thread-id-required` even when the caller was not Codex at all,
+    which sent every Claude reader looking for a thread id that does not apply to them."""
+    _no_ambient_identity(monkeypatch)
+    with pytest.raises(work_memory.WorkMemoryError, match="writer-identity-required"):
+        work_memory.writer_identity()
+
+
+# --- environment-surface corrections -------------------------------------------------------------
+# Live 2026-07-28: the fix for blk-1ab692114088d3bbc2129027 changed ~/.config/memory-knowledge/
+# repositories.json -- the machine registry that decides which repositories a sequence can even
+# operate on. `correct` rejected it (changed-artifact-outside-repository, then
+# correction-artifact-drift-mismatch) because a correction was defined as "a file in this sequence's
+# dependency bundle drifted". A machine surface is in no bundle, so no flag could ever record it and
+# the blocker could not be closed. Environment surfaces are now a distinct, separately-hashed
+# category; the bundle drift invariant is unchanged.
+
+_ENV_SHA = "a" * 64
+
+
+def _correction_event(**overrides):
+    base = {
+        "schema_version": 1, "event_id": str(uuid.uuid4()),
+        "event_type": "correction_recorded",
+        "run_id": str(uuid.uuid4()), "blocker_id": "blk-" + "1" * 24,
+        "occurrence_id": str(uuid.uuid4()), "correction_id": str(uuid.uuid4()),
+        "subject_id": "commit-push-main", "lineage_id": "lineage-1", "step_id": "dry-run",
+        "changed_artifacts": ["scripts/work_memory.py"],
+        "changed_artifact_hashes": ["b" * 64],
+        "reusable_behavior_changed": True, "solution": "fixed",
+    }
+    base.update(overrides)
+    return base
+
+
+def test_environment_only_correction_validates_without_bundle_artifacts():
+    work_memory._validate_event_values(_correction_event(
+        changed_artifacts=[], changed_artifact_hashes=[],
+        environment_artifacts=[{
+            "repository_key": "machine-config", "path": "repositories.json",
+        }],
+        environment_artifact_hashes=[_ENV_SHA],
+    ))
+
+
+def test_correction_naming_nothing_at_all_is_still_rejected():
+    """The relaxation is scoped: empty bundle artifacts are allowed ONLY alongside an environment
+    surface, never as a way to record a correction that changed nothing."""
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-changed-artifacts"):
+        work_memory._validate_event_values(_correction_event(
+            changed_artifacts=[], changed_artifact_hashes=[],
+        ))
+
+
+def test_historical_correction_without_the_field_still_validates():
+    """NO REGRESSION: every correction recorded before this field existed omits it entirely."""
+    work_memory._validate_event_values(_correction_event())
+
+
+def test_environment_hash_must_be_a_real_digest():
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-environment-artifact-hash"):
+        work_memory._validate_event_values(_correction_event(
+            changed_artifacts=[], changed_artifact_hashes=[],
+            environment_artifacts=[{
+                "repository_key": "machine-config", "path": "repositories.json",
+            }],
+            environment_artifact_hashes=["not-a-hash"],
+        ))
+
+
+def _transition_event(**overrides):
+    base = {
+        "schema_version": 1, "event_id": str(uuid.uuid4()),
+        "event_type": "bundle_transition_recorded",
+        "lineage_id": "lineage-1", "old_bundle_hash": "c" * 64, "new_bundle_hash": "c" * 64,
+        "transition_reason": "correction", "run_id": str(uuid.uuid4()),
+        "correction_ids": [str(uuid.uuid4())],
+        "changed_artifacts": [], "changed_artifact_hashes": [],
+        "environment_artifacts": [{
+            "repository_key": "machine-config", "path": "repositories.json",
+        }],
+        "environment_artifact_hashes": [_ENV_SHA],
+    }
+    base.update(overrides)
+    return base
+
+
+def test_environment_transition_records_an_unmoved_bundle():
+    work_memory._validate_event_values(_transition_event())
+
+
+def test_environment_transition_cannot_hide_a_moved_bundle():
+    """If the bundle hash moved, real bundle files changed and must be named. An environment
+    surface must never become a way to record a bundle change without listing it."""
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="environment-transition-moved-the-bundle",
+    ):
+        work_memory._validate_event_values(_transition_event(new_bundle_hash="d" * 64))
+
+
+def test_bundle_transition_without_environment_still_requires_its_artifacts():
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-changed-artifacts"):
+        work_memory._validate_event_values(_transition_event(
+            environment_artifacts=[], environment_artifact_hashes=[],
+        ))

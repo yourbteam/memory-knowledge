@@ -77,6 +77,20 @@ Use it when a task involves a multi-step command sequence that has been run befo
 | `blocker-backlog-reconciliation` | Audit the canonical blocker backlog and apply only an explicitly approved evidence-bound reconciliation manifest. | `operations/sequences/blocker-backlog-reconciliation/` | blocker backlog reconciliation controller | Controller returns ok true after registered same-path verification completes. | `cleanup` | `discovery-001aefd7-8d3a-55f9-ab45-b5ed2b90c4ee` |
 
 
+## Recorded Corrections
+
+Corrections learned while running a registered sequence live are recorded as discovery logs, not by
+editing the sequence document. A sequence document is a hash-pinned executable-owner source: changing
+its bytes drifts `executable-owner-source-hash-drift:<sequence-id>`, makes the sequence unselectable
+until the contract is re-materialized, and requires an authority-signed approval naming the exact new
+content hash. Read the matching log below before running the sequence.
+
+- `commit-push-main` — see `operations/sequences/discovery/2026-07-28-commit-push-main-corrections.md`:
+  the target repository must be listed in the machine repository-roots registry or the intake refuses
+  it; a roots manifest belongs on `select`, not on `correct`; a machine surface outside every
+  dependency bundle is declared with `--changed-environment-artifact`; and a correction run that a
+  bound successor will verify must be closed `failed`, not `passed`.
+
 ## Missing Sequence Discovery
 
 Use this path when the task is about to run a repeatable sequence but the `Available Sequences` table has no matching row.

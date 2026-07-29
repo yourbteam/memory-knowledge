@@ -831,6 +831,77 @@ def test_launcher_finalizes_exact_existing_correction_without_duplicate_events(
     assert replayed == finalized
 
 
+def test_protected_launcher_uses_latest_sequential_correction_bundle(
+    bootstrap_flow,
+):
+    flow = bootstrap_flow
+    controller = flow["controller"]
+    prior_blocker_id = "blk-" + "3" * 24
+    prior_occurrence_id = str(uuid.uuid4())
+    prior_correction_id = str(uuid.uuid4())
+    events, _ = controller.load_ledger()
+    start = next(
+        event for event in events
+        if event["event_type"] == "run_started"
+        and event["run_id"] == flow["run_id"]
+    )
+    target_hash = controller.sha256_bytes(Path(flow["target"]).read_bytes())
+    prior_events = [
+        controller._event(
+            "blocker_opened", run_id=flow["run_id"],
+            blocker_id=prior_blocker_id,
+            occurrence_id=prior_occurrence_id, fingerprint="3" * 64,
+            subject_id=start["subject_id"], lineage_id=start["lineage_id"],
+            step_id="prior-target-correction", surface="bootstrap",
+            symptom="target changed", evidence="captured prior correction",
+            impact="blocked", boundary="sequential correction", status="open",
+        ),
+        controller._event(
+            "correction_recorded", run_id=flow["run_id"],
+            blocker_id=prior_blocker_id,
+            occurrence_id=prior_occurrence_id,
+            correction_id=prior_correction_id,
+            subject_id=start["subject_id"], lineage_id=start["lineage_id"],
+            step_id="prior-target-correction",
+            changed_artifacts=["scripts/target.py"],
+            changed_artifact_hashes=[target_hash],
+            reusable_behavior_changed=True, solution="record target correction",
+        ),
+        controller._event(
+            "bundle_transition_recorded", lineage_id=start["lineage_id"],
+            old_bundle_hash=start["source_bundle_hash"],
+            new_bundle_hash="d" * 64, transition_reason="correction",
+            run_id=flow["run_id"], correction_ids=[prior_correction_id],
+            changed_artifacts=["scripts/target.py"],
+            changed_artifact_hashes=[target_hash],
+        ),
+        controller._event(
+            "blocker_transitioned", run_id=flow["run_id"],
+            blocker_id=prior_blocker_id, from_status="open",
+            to_status="fixed-awaiting-verification",
+        ),
+    ]
+    controller.transact({
+        "schema_version": 1, "expected_ledger_hash": None,
+        "events": prior_events,
+    })
+    args = _correct_args(flow)
+    target_arg = args.index(str(flow["target"]))
+    del args[target_arg - 1:target_arg + 1]
+
+    assert launcher.main(args) == 0
+
+    recorded, _ = controller.load_ledger()
+    transitions = [
+        event for event in recorded
+        if event["event_type"] == "bundle_transition_recorded"
+        and event["run_id"] == flow["run_id"]
+    ]
+    assert transitions[-1]["old_bundle_hash"] == "d" * 64
+    assert transitions[-1]["correction_ids"][:1] == [prior_correction_id]
+    assert transitions[-1]["changed_artifacts"] == ["scripts/work_memory.py"]
+
+
 def test_protected_launcher_atomically_corrects_explicit_co_blocker(bootstrap_flow):
     flow = bootstrap_flow
     co_blocker_id, co_occurrence_id = _add_co_blocker(flow)

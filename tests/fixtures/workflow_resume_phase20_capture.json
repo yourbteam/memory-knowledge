@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "capture_source": {
+    "repository_key": "united-partners",
+    "path": "Tasks/vivacom-corporate-demo/state/up-run-a1a72a4754e5.json",
+    "sha256": "c19d4511347e38bbe9a3e124b01c46d84ce0ca6e810323c66e3d8d397ae68291"
+  },
+  "run_id": "up-run-a1a72a4754e5",
+  "parent_run_id": "up-run-0ce0a682bd1d",
+  "client": "vivacom",
+  "workflow_name": "cd-s-002-corporate-communications-strategy",
+  "status": "failed",
+  "first_unfinished_phase": "compose-llm-strategy-brief",
+  "checkpoint": {
+    "schema_version": 1,
+    "stage": "correction_pending",
+    "total_attempts": 6,
+    "failure_counts": {
+      "proof_manifest_invalid": 1,
+      "strategy_claim_inventory_invalid": 5
+    },
+    "last_issue_code": "strategy_claim_inventory_invalid",
+    "base_prompt_hash": "fa10333ff8d0e25ef23a82faaa6b507a9040ebb42d537d74a55c12c2785dd864"
+  }
+}

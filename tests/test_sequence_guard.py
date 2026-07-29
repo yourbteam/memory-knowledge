@@ -875,6 +875,97 @@ def test_correction_bootstrap_authorizes_repeated_declared_changed_artifact_shap
     ]) == 0
 
 
+def test_correction_bootstrap_uses_latest_sequential_correction_bundle(
+    stale_correction_flow, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    flow = stale_correction_flow
+    prior_blocker_id = "blk-" + "2" * 24
+    prior_occurrence_id = "66666666-6666-4666-8666-666666666666"
+    prior_correction_id = "77777777-7777-4777-8777-777777777777"
+    flow["events"][1:1] = [
+        {
+            "event_id": "99999999-9999-4999-8999-999999999999",
+            "event_type": "blocker_opened", "run_id": flow["run_id"],
+            "blocker_id": prior_blocker_id,
+            "occurrence_id": prior_occurrence_id,
+            "subject_id": "example", "lineage_id": "example",
+            "step_id": "prior-correction", "status": "open",
+        },
+        {
+            "event_id": "aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa",
+            "event_type": "correction_recorded", "run_id": flow["run_id"],
+            "blocker_id": prior_blocker_id,
+            "occurrence_id": prior_occurrence_id,
+            "correction_id": prior_correction_id,
+            "subject_id": "example", "lineage_id": "example",
+            "step_id": "prior-correction",
+            "changed_artifacts": ["working-agreement/install_skills.py"],
+            "changed_artifact_hashes": ["2" * 64],
+            "reusable_behavior_changed": True,
+            "solution": "record prior correction",
+        },
+        {
+            "event_type": "bundle_transition_recorded",
+            "event_id": "88888888-8888-4888-8888-888888888888",
+            "run_id": flow["run_id"], "lineage_id": "example",
+            "old_bundle_hash": "c" * 64, "new_bundle_hash": "3" * 64,
+            "transition_reason": "correction",
+            "correction_ids": [prior_correction_id],
+            "changed_artifacts": ["working-agreement/install_skills.py"],
+            "changed_artifact_hashes": ["2" * 64],
+        },
+        {
+            "event_id": "bbbbbbbb-bbbb-4bbb-8bbb-bbbbbbbbbbbb",
+            "event_type": "blocker_transitioned", "run_id": flow["run_id"],
+            "blocker_id": prior_blocker_id, "from_status": "open",
+            "to_status": "fixed-awaiting-verification",
+        },
+    ]
+    current_bundle = [
+        {**item, "sha256": "6" * 64}
+        if item["path"] == "scripts/example.py" else item
+        for item in flow["current_bundle"]
+    ]
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: (current_bundle, "7" * 64, "example"),
+    )
+    command = flow["command"].replace(
+        "--changed-artifact working-agreement/install_skills.py",
+        "--changed-artifact scripts/example.py",
+    )
+    start, related = work_memory._run_state(flow["events"], flow["run_id"])
+    effective_bundle, effective_hash, correction_ids = (
+        work_memory._effective_correction_bundle(start, related)
+    )
+    effective_keys = sequence_guard._bundle_keys(effective_bundle)
+    current_keys = sequence_guard._bundle_keys(current_bundle)
+    assert effective_hash == "3" * 64
+    assert correction_ids == [prior_correction_id]
+    assert {
+        key for key in effective_keys.keys() | current_keys.keys()
+        if effective_keys.get(key) != current_keys.get(key)
+    } == {("memory-knowledge", "scripts/example.py")}
+
+    guard_args = [
+        "guard", "--task-id", flow["task_id"], "--step", flow["step_id"],
+        "--command", command, "--source", "script",
+        "--source-ref", str(flow["work_memory_script"]),
+        "--state", str(flow["state"]), "--correction-bootstrap",
+    ]
+    assert sequence_guard.main(guard_args) == 0
+
+    prior_transition = next(
+        item for item in flow["events"]
+        if item["event_type"] == "bundle_transition_recorded"
+    )
+    prior_transition["old_bundle_hash"] = "f" * 64
+    assert sequence_guard.main(guard_args) == 4
+    assert "noncumulative-correction-transition" in capsys.readouterr().err
+
+
 def test_correction_bootstrap_authorizes_authenticated_launcher_rotation(
     stale_correction_flow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:

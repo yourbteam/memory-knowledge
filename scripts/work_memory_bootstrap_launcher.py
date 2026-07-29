@@ -16,8 +16,10 @@ from typing import Any, Sequence
 
 try:
     from scripts import work_memory as current_work_memory
+    from scripts import work_memory_bootstrap as current_bootstrap
 except ModuleNotFoundError:  # direct script execution
     import work_memory as current_work_memory  # type: ignore
+    import work_memory_bootstrap as current_bootstrap  # type: ignore
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -224,6 +226,9 @@ def _validate_legacy_rotation(
 
 def _install_current_correction_contract(controller: types.ModuleType) -> None:
     """Run the current atomic correction reducer inside sealed controller globals."""
+    controller._effective_correction_bundle = (
+        current_work_memory._effective_correction_bundle
+    )
     current = current_work_memory.cmd_correct
     bridged = types.FunctionType(
         current.__code__, controller.__dict__, current.__name__,
@@ -231,6 +236,19 @@ def _install_current_correction_contract(controller: types.ModuleType) -> None:
     )
     bridged.__kwdefaults__ = current.__kwdefaults__
     controller.cmd_correct = bridged
+
+
+def _install_current_bootstrap_correction_contract(
+    bootstrap_module: types.ModuleType,
+) -> None:
+    """Run current correction prevalidation inside sealed bootstrap globals."""
+    current = current_bootstrap.cmd_correct
+    bridged = types.FunctionType(
+        current.__code__, bootstrap_module.__dict__, current.__name__,
+        current.__defaults__, current.__closure__,
+    )
+    bridged.__kwdefaults__ = current.__kwdefaults__
+    bootstrap_module.cmd_correct = bridged
 
 
 def _extend_prior_bootstrap_parser(module: types.ModuleType) -> None:
@@ -303,6 +321,7 @@ def _govern_prior_launcher(
         bootstrap_module.current_work_memory = current_work_memory
         bootstrap_module._load_context = governed_context
         bootstrap_module._run_matches_selection = governed_run_matches
+        _install_current_bootstrap_correction_contract(bootstrap_module)
         return bootstrap_module, sealed_path
 
     module._load_snapshot = governed_snapshot
@@ -431,6 +450,7 @@ def _load_snapshot(argv: Sequence[str]) -> tuple[types.ModuleType, Path]:
 
     module.current_work_memory = current_work_memory
     module._load_context = governed_load_context
+    _install_current_bootstrap_correction_contract(module)
     return module, sealed_path
 
 

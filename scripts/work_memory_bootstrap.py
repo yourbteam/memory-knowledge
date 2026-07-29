@@ -298,11 +298,24 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
             )
     except module.WorkMemoryError as exc:
         raise BootstrapError("bootstrap-artifact-invalid", 2) from exc
-    old_map = _bundle_map(context["selection"]["source_bundle"])
+    try:
+        effective_bundle, _, _ = module._effective_correction_bundle(
+            start, related,
+        )
+    except module.WorkMemoryError as exc:
+        raise BootstrapError(exc.code) from exc
+    old_map = _bundle_map(effective_bundle)
     current_map = _bundle_map(context["current_bundle"])
     drifted = {key for key in old_map.keys() | current_map.keys() if old_map.get(key) != current_map.get(key)}
     artifact_keys = {_artifact_identity(artifact) for artifact in artifacts}
-    if artifact_keys != drifted:
+    replay_matches = (
+        existing is not None
+        and artifacts == existing.get("changed_artifacts")
+        and hashes == existing.get("changed_artifact_hashes")
+    )
+    if existing is not None and not replay_matches:
+        raise BootstrapError("bootstrap-artifact-drift-mismatch")
+    if existing is None and artifact_keys != drifted:
         raise BootstrapError("bootstrap-artifact-drift-mismatch")
     if (
         old_map.get(("memory-knowledge", CONTROLLER_PATH))

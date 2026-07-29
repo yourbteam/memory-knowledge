@@ -52,6 +52,28 @@ def tool_uses(entry):
     ]
 
 
+def is_turn_start(entry):
+    """True only for something Kamen actually typed.
+
+    Tool results are recorded as ``type: "user"`` entries too. Treating them as turn
+    boundaries reset the turn after every tool call, so the edit and action checks only
+    ever saw what happened after the LAST tool result -- which is nothing. On 2026-07-28
+    that silently disabled the envelope-vs-edits check and refused a turn that had
+    launched two background processes.
+    """
+    if entry.get("type") != "user" or entry.get("isCompactSummary"):
+        return False
+    content = ((entry.get("message") or {}).get("content"))
+    if isinstance(content, str):
+        return bool(content.strip())
+    if isinstance(content, list):
+        return not any(
+            isinstance(block, dict) and block.get("type") == "tool_result"
+            for block in content
+        )
+    return False
+
+
 def reply_text(entry):
     """The visible prose of an assistant turn, ignoring tool calls and thinking."""
     message = entry.get("message") or {}
@@ -95,7 +117,7 @@ for index, entry in enumerate(entries):
         # every turn after the third reset still named a controller last invoked
         # 154 entries earlier, and nothing noticed.
         last_reset = index
-    if entry.get("type") == "user":
+    if is_turn_start(entry):
         for path in edits_this_turn:
             edits_before.setdefault(path, index)
         edits_this_turn = []
@@ -119,22 +141,51 @@ direction_stale = [
     if loaded.get("direction-check", -1) < edits_before[path]
 ]
 
-text = None
-for entry in reversed(entries):
-    found = reply_text(entry)
+text, text_index = None, -1
+for index in range(len(entries) - 1, -1, -1):
+    found = reply_text(entries[index])
     if found:
-        text = found
+        text, text_index = found, index
         break
 
 if text is None:
     raise SystemExit(0)
 
+# The transcript can lag the reply this hook is meant to judge. When the newest
+# assistant text predates the newest user entry, the reply is not visible yet and the
+# only text available belongs to an earlier turn -- judging it pairs one turn's words
+# with another turn's actions. On 2026-07-28 that produced three refusals of correct
+# replies, including an ask=none complaint about a message that said ask=approval.
+last_user = max(
+    (index for index, entry in enumerate(entries) if is_turn_start(entry)),
+    default=-1,
+)
+if text_index < last_user:
+    raise SystemExit(0)
+
 first = next((line.strip() for line in text.splitlines() if line.strip()), "")
 missing = [field for field in REQUIRED if field not in first]
 
+# G0 requires the anchor to be the TURN'S first text. A later text block is mid-turn
+# narration, and judging it as though it were the reply refused correct turns twice on
+# 2026-07-28. So: the turn must open with an anchor, and the per-message checks below
+# apply to the newest text only when that text is itself anchored.
+turn_opener = next(
+    (
+        reply_text(entries[index])
+        for index in range(last_user + 1, len(entries))
+        if reply_text(entries[index])
+    ),
+    None,
+)
+opener_line = next(
+    (line.strip() for line in (turn_opener or "").splitlines() if line.strip()), ""
+)
 problem = None
-if not first.startswith("directives="):
-    problem = "the reply does not open with the directive anchor"
+if not opener_line.startswith("directives="):
+    problem = "the turn does not open with the directive anchor"
+elif not first.startswith("directives="):
+    raise SystemExit(0)
 elif missing:
     problem = "the anchor is missing: " + ", ".join(f.rstrip("=") for f in missing)
 else:

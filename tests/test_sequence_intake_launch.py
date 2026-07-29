@@ -174,6 +174,8 @@ def test_correction_intake_prepares_sealed_bootstrap_with_same_run_co_blockers(
     assert argv[2] == "correct"
     assert argv[argv.index("--blocker-id") + 1] == "blk-primary"
     assert argv[argv.index("--co-blocker-id") + 1] == "blk-secondary"
+    assert argv[argv.index("--task-id") + 1] == task_id
+    assert argv[argv.index("--step-id") + 1] == "verify"
     assert argv[argv.index("--correction-id") + 1] == str(uuid5(
         NAMESPACE_URL,
         f"memory-knowledge:{run_id}:blk-primary:{primary_occurrence}",
@@ -409,3 +411,436 @@ def test_dispatch_marks_zero_argument_child_as_prepared(
     assert observed["env"][
         sequence_intake_launch.DISPATCH_MARKER
     ] == "1"
+
+
+def test_workflow_resume_dispatch_requires_controller_owned_preflight() -> None:
+    prepared = {
+        "sequence_id": "workflow-resume-from-phase-live-confirmation",
+        "argv": ["python3", "/repos/up/scripts/run_client_regeneration.py"],
+        "repository": {"root": "/repos/up"},
+        "environment": {},
+        "profile": "resume",
+        "artifacts": {},
+    }
+
+    with pytest.raises(
+        sequence_intake_launch.SequenceLaunchError,
+        match="workflow-resume-preflight-required",
+    ):
+        sequence_intake_launch._dispatch_prepared("task-123", prepared)
+
+
+def test_workflow_resume_controller_derives_identity_roots_and_proof() -> None:
+    prepared = sequence_intake_launch._with_controller_preflight(
+        "task-123",
+        "workflow-resume-from-phase-live-confirmation",
+        {
+            "sequence_id": "workflow-resume-from-phase-live-confirmation",
+            "repository": {
+                "key": "united-partners",
+                "root": "/repos/up",
+            },
+        },
+        {
+            "united-partners": "/repos/up",
+            "memory-knowledge": str(sequence_intake_launch.work_memory.ROOT),
+        },
+    )
+
+    assert prepared["controller_context"] == {
+        "task_id": "task-123",
+        "repository_roots": {
+            "united-partners": "/repos/up",
+            "memory-knowledge": str(sequence_intake_launch.work_memory.ROOT),
+        },
+        "guard_source": "sequence_doc",
+        "guard_step": "verify-automation",
+    }
+    assert prepared["preflight"]["proof_kind"] == "same-public-entrypoint"
+
+
+@pytest.mark.parametrize(
+    ("field", "value"),
+    [
+        ("task_id", "different-successor-task"),
+        ("guard_source", "script"),
+        ("guard_step", "wrong-step"),
+        ("repository_roots", {"united-partners": "relative/repo"}),
+    ],
+)
+def test_workflow_resume_rejects_drifted_controller_context(
+    field,
+    value,
+) -> None:
+    prepared = sequence_intake_launch._with_controller_preflight(
+        "task-123",
+        "workflow-resume-from-phase-live-confirmation",
+        {
+            "sequence_id": "workflow-resume-from-phase-live-confirmation",
+            "repository": {
+                "key": "united-partners",
+                "root": "/repos/up",
+            },
+        },
+        {"united-partners": "/repos/up"},
+    )
+    prepared["controller_context"][field] = value
+
+    with pytest.raises(
+        sequence_intake_launch.SequenceLaunchError,
+        match="workflow-resume-controller-context-invalid",
+    ):
+        sequence_intake_launch._guard_preflight("task-123", prepared)
+
+
+def test_workflow_resume_guard_provenance_is_controller_owned(
+    monkeypatch,
+) -> None:
+    prepared = sequence_intake_launch._with_controller_preflight(
+        "task-123",
+        "workflow-resume-from-phase-live-confirmation",
+        {
+            "sequence_id": "workflow-resume-from-phase-live-confirmation",
+            "repository": {
+                "key": "united-partners",
+                "root": "/repos/up",
+            },
+        },
+        {
+            "united-partners": "/repos/up",
+            "memory-knowledge": str(sequence_intake_launch.work_memory.ROOT),
+        },
+    )
+    observed = {}
+    monkeypatch.setattr(
+        sequence_intake_launch.work_memory,
+        "load_receipt",
+        lambda *_args: (
+            {
+                "subject_id":
+                    "workflow-resume-from-phase-live-confirmation",
+                "document":
+                    "/repos/memory/operations/sequences/resume/sequence.md",
+                    "repository_roots": {
+                        "united-partners": "/repos/up",
+                        "memory-knowledge":
+                            str(sequence_intake_launch.work_memory.ROOT),
+                    },
+            },
+            "a" * 64,
+            Path("/private/tmp/selection.json"),
+        ),
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch.sequence_guard,
+        "cmd_guard",
+        lambda args: observed.update(vars(args)),
+    )
+
+    sequence_intake_launch._guard_preflight("task-123", prepared)
+
+    assert observed["task_id"] == "task-123"
+    assert observed["step"] == "verify-automation"
+    assert observed["source"] == "sequence_doc"
+    assert observed["source_ref"].endswith("/resume/sequence.md")
+
+
+def test_workflow_resume_preflight_is_grounded_in_registered_sequence() -> None:
+    python = (
+        "/Users/kamenkamenov/.cache/codex-runtimes/"
+        "codex-primary-runtime/dependencies/python/bin/python3"
+    )
+    argv = [
+        "env",
+        "-C",
+        "/Users/kamenkamenov/united-partners",
+        "PYTHONPATH=src",
+        python,
+        "-m",
+        "unittest",
+        "tests.unit.test_workflow_resume",
+        "tests.unit.test_client_regeneration_resume",
+        "tests.unit.test_vivacom_phase20_reproduction",
+        "tests.unit.test_codex_role_command",
+        "tests.unit.test_role_executor_retry",
+        "-v",
+    ]
+    document = (
+        sequence_intake_launch.work_memory.ROOT
+        / "operations/sequences/"
+        "workflow-resume-from-phase-live-confirmation/sequence.md"
+    )
+
+    assert sequence_intake_launch.sequence_guard._shape_match(
+        sequence_intake_launch.shlex.join(argv),
+        document.read_text(encoding="utf-8"),
+    )
+
+
+@pytest.mark.parametrize(
+    "invalid_argv",
+    [
+        ["uv", "run", "pytest", "tests/unit/test_workflow_resume.py"],
+        ["python", "-m", "pytest", "tests/unit/test_workflow_resume.py"],
+        ["python3", "-m", "pytest", "tests/unit/test_workflow_resume.py"],
+    ],
+)
+def test_workflow_resume_rejects_observed_invalid_test_launchers(
+    invalid_argv,
+) -> None:
+    prepared = {
+        "sequence_id": "workflow-resume-from-phase-live-confirmation",
+        "argv": ["python3", "/repos/up/scripts/run_client_regeneration.py"],
+        "repository": {"key": "united-partners", "root": "/repos/up"},
+        "profile": "resume",
+        "preflight": {
+            "argv": invalid_argv,
+            "step": "verify-automation",
+            "proof_kind": "same-public-entrypoint",
+        },
+        "controller_context": {
+            "task_id": "task-123",
+            "repository_roots": {"united-partners": "/repos/up"},
+            "guard_source": "sequence_doc",
+            "guard_step": "verify-automation",
+        },
+    }
+
+    with pytest.raises(
+        sequence_intake_launch.SequenceLaunchError,
+        match="workflow-resume-preflight-invalid",
+    ):
+        sequence_intake_launch._guard_preflight("task-123", prepared)
+
+
+def test_workflow_resume_dispatch_runs_same_path_preflight_before_live(
+    monkeypatch,
+) -> None:
+    python = (
+        "/Users/kamenkamenov/.cache/codex-runtimes/"
+        "codex-primary-runtime/dependencies/python/bin/python3"
+    )
+    preflight = [
+        "env", "-C", "/repos/up", "PYTHONPATH=src", python,
+        "-m", "unittest",
+        "tests.unit.test_workflow_resume",
+        "tests.unit.test_client_regeneration_resume",
+        "tests.unit.test_vivacom_phase20_reproduction",
+        "tests.unit.test_codex_role_command",
+        "tests.unit.test_role_executor_retry", "-v",
+    ]
+    live = [
+        python, "/repos/up/scripts/run_client_regeneration.py",
+        "--client", "vivacom", "--resume-run", "up-run-source",
+        "--from-phase", "phase-20",
+    ]
+    prepared = {
+        "sequence_id": "workflow-resume-from-phase-live-confirmation",
+        "argv": live,
+        "repository": {"key": "united-partners", "root": "/repos/up"},
+        "environment": {"PYTHONPATH": "src"},
+        "profile": "resume",
+        "artifacts": {},
+        "preflight": {
+            "argv": preflight,
+            "step": "verify-automation",
+            "proof_kind": "same-public-entrypoint",
+        },
+        "controller_context": {
+            "task_id": "task-123",
+            "repository_roots": {"united-partners": "/repos/up"},
+            "guard_source": "sequence_doc",
+            "guard_step": "verify-automation",
+        },
+    }
+    observed = []
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_guard_prepared",
+        lambda *_args: None,
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_guard_preflight",
+        lambda task_id, payload: observed.append(("guard", task_id, payload)),
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch.subprocess,
+        "run",
+        lambda argv, **_kwargs: (
+            observed.append(("run", argv))
+            or type("Completed", (), {"returncode": 0})()
+        ),
+    )
+
+    assert sequence_intake_launch._dispatch_prepared(
+        "task-123", prepared,
+    ) == 0
+    assert observed == [
+        ("guard", "task-123", prepared),
+        ("run", preflight),
+        ("run", live),
+    ]
+
+
+def test_workflow_resume_stops_before_live_when_preflight_fails(
+    monkeypatch,
+) -> None:
+    python = (
+        "/Users/kamenkamenov/.cache/codex-runtimes/"
+        "codex-primary-runtime/dependencies/python/bin/python3"
+    )
+    preflight = [
+        "env", "-C", "/repos/up", "PYTHONPATH=src", python,
+        "-m", "unittest",
+        "tests.unit.test_workflow_resume",
+        "tests.unit.test_client_regeneration_resume",
+        "tests.unit.test_vivacom_phase20_reproduction",
+        "tests.unit.test_codex_role_command",
+        "tests.unit.test_role_executor_retry", "-v",
+    ]
+    live = [python, "/repos/up/scripts/run_client_regeneration.py"]
+    prepared = {
+        "sequence_id": "workflow-resume-from-phase-live-confirmation",
+        "argv": live,
+        "repository": {"key": "united-partners", "root": "/repos/up"},
+        "environment": {},
+        "profile": "resume",
+        "artifacts": {},
+        "preflight": {
+            "argv": preflight,
+            "step": "verify-automation",
+            "proof_kind": "same-public-entrypoint",
+        },
+        "controller_context": {
+            "task_id": "task-123",
+            "repository_roots": {"united-partners": "/repos/up"},
+            "guard_source": "sequence_doc",
+            "guard_step": "verify-automation",
+        },
+    }
+    observed = []
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_guard_prepared",
+        lambda *_args: None,
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_guard_preflight",
+        lambda *_args: None,
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch.subprocess,
+        "run",
+        lambda argv, **_kwargs: (
+            observed.append(argv)
+            or type(
+                "Completed",
+                (),
+                {"returncode": 9 if argv == preflight else 0},
+            )()
+        ),
+    )
+
+    assert sequence_intake_launch._dispatch_prepared(
+        "task-123", prepared,
+    ) == 9
+    assert observed == [preflight]
+
+
+def test_workflow_resume_correct_path_reaches_live_through_public_entrypoint(
+    monkeypatch,
+) -> None:
+    capture = json.loads(
+        (
+            Path(__file__).parent
+            / "fixtures/workflow_resume_phase20_capture.json"
+        ).read_text(encoding="utf-8")
+    )
+    assert capture["capture_source"]["sha256"] == (
+        "c19d4511347e38bbe9a3e124b01c46d84ce0ca6e810323c66e3d8d397ae68291"
+    )
+    assert capture["checkpoint"]["stage"] == "correction_pending"
+    python = (
+        "/Users/kamenkamenov/.cache/codex-runtimes/"
+        "codex-primary-runtime/dependencies/python/bin/python3"
+    )
+    base = {
+        "sequence_id": "workflow-resume-from-phase-live-confirmation",
+        "profile": "resume",
+        "argv": [
+            python, "/repos/up/scripts/run_client_regeneration.py",
+            "--client", capture["client"],
+            "--resume-run", capture["run_id"],
+            "--from-phase", capture["first_unfinished_phase"],
+        ],
+        "repository": {
+            "key": "united-partners",
+            "root": "/repos/up",
+        },
+        "environment": {"PYTHONPATH": "src"},
+        "artifacts": {},
+    }
+    prepared = sequence_intake_launch._with_controller_preflight(
+        "task-123",
+        "workflow-resume-from-phase-live-confirmation",
+        base,
+        {"united-partners": "/repos/up"},
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_task_and_preparation",
+        lambda **_kwargs: {
+            "task_id": "task-123",
+            "sequence_id": "workflow-resume-from-phase-live-confirmation",
+            "dispatch_status": "PREPARED_NOT_AUTHORIZED",
+            "prepared": prepared,
+        },
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_guard_preflight",
+        lambda *_args: None,
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_guard_prepared",
+        lambda *_args: None,
+    )
+    observed = []
+
+    def run(argv, **kwargs):
+        observed.append(argv)
+        if argv == prepared["argv"]:
+            receipt_path = Path(
+                kwargs["env"][sequence_intake_launch.DISPATCH_RECEIPT]
+            )
+            content = receipt_path.read_bytes()
+            receipt = json.loads(content)
+            assert receipt["task_id"] == "task-123"
+            assert receipt["arguments"] == prepared["argv"][2:]
+            assert kwargs["env"][sequence_intake_launch.DISPATCH_MARKER] == (
+                sequence_intake_launch.hashlib.sha256(content).hexdigest()
+            )
+            observed.append(receipt_path)
+        return type("Completed", (), {"returncode": 0})()
+
+    monkeypatch.setattr(
+        sequence_intake_launch.subprocess,
+        "run",
+        run,
+    )
+
+    assert sequence_intake_launch.main_for_sequence(
+        "workflow-resume-from-phase-live-confirmation",
+        [],
+        input_fn=lambda _prompt: "yes",
+        output_fn=lambda _message: None,
+    ) == 0
+    assert observed[:2] == [
+        prepared["preflight"]["argv"],
+        prepared["argv"],
+    ]
+    assert isinstance(observed[2], Path)
+    assert not observed[2].exists()

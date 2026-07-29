@@ -152,6 +152,174 @@ def test_pre_run_commands_record_correction_verification_and_close(monkeypatch):
     assert events[-1]["remaining_work"] == "none"
 
 
+def test_pre_run_correction_can_supersede_stale_awaiting_artifact_binding(
+    monkeypatch,
+):
+    task_id = "selection-blocked-task"
+    ownership_event_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "5" * 24
+    occurrence_id = str(uuid.uuid4())
+    first_correction_id = str(uuid.uuid4())
+    events = [
+        {
+            "event_type": "task_writer_claimed",
+            "event_id": ownership_event_id,
+            "task_id": task_id,
+            "writer_thread_id": str(uuid.uuid4()),
+            "ownership_generation": 1,
+        },
+        {
+            "event_type": "pre_run_blocker_opened",
+            "event_id": str(uuid.uuid4()),
+            "task_id": task_id,
+            "ownership_event_id": ownership_event_id,
+            "blocker_id": blocker_id,
+            "occurrence_id": occurrence_id,
+            "step_id": "select",
+            "subject_id": task_id,
+            "lineage_id": task_id,
+        },
+        {
+            "event_type": "pre_run_correction_recorded",
+            "event_id": str(uuid.uuid4()),
+            "task_id": task_id,
+            "ownership_event_id": ownership_event_id,
+            "blocker_id": blocker_id,
+            "occurrence_id": occurrence_id,
+            "correction_id": first_correction_id,
+            "step_id": "select",
+            "changed_artifacts": ["scripts/work_memory.py"],
+            "changed_artifact_hashes": ["1" * 64],
+            "solution": "first prototype",
+            "reusable_behavior_changed": True,
+        },
+        {
+            "event_type": "pre_run_blocker_transitioned",
+            "event_id": str(uuid.uuid4()),
+            "task_id": task_id,
+            "ownership_event_id": ownership_event_id,
+            "blocker_id": blocker_id,
+            "occurrence_id": occurrence_id,
+            "from_status": "open",
+            "to_status": "fixed-awaiting-verification",
+        },
+    ]
+    monkeypatch.setattr(
+        blocker_catalog.work_memory, "load_ledger",
+        lambda: (events, "0" * 64),
+    )
+    monkeypatch.setattr(
+        blocker_catalog.work_memory, "_artifact_hashes",
+        lambda _paths: (["scripts/work_memory.py"], ["2" * 64]),
+    )
+    monkeypatch.setattr(
+        blocker_catalog.work_memory, "transact",
+        lambda _request: {"ok": True},
+    )
+    captured = {}
+    monkeypatch.setattr(
+        blocker_catalog.work_memory,
+        "transact",
+        lambda request: captured.setdefault("request", request) or {"ok": True},
+    )
+    args = blocker_catalog.build_parser().parse_args([
+        "pre-run-correct",
+        "--task-id", task_id,
+        "--ownership-event-id", ownership_event_id,
+        "--blocker-id", blocker_id,
+        "--occurrence-id", occurrence_id,
+        "--changed-artifact", "scripts/work_memory.py",
+        "--solution", "final prototype",
+        "--reusable-behavior-changed", "yes",
+    ])
+
+    result = args.func(args)
+
+    correction = captured["request"]["events"][0]
+    assert captured["request"]["events"] == [correction]
+    assert correction["supersedes_correction_id"] == first_correction_id
+    assert correction["changed_artifact_hashes"] == ["2" * 64]
+    assert result["transition_event_id"] is None
+
+
+def test_pre_run_verification_rejects_stale_correction_artifact_hash(
+    monkeypatch,
+):
+    task_id = "selection-blocked-task"
+    ownership_event_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "6" * 24
+    occurrence_id = str(uuid.uuid4())
+    correction_id = str(uuid.uuid4())
+    events = [
+        {
+            "event_type": "task_writer_claimed",
+            "event_id": ownership_event_id,
+            "task_id": task_id,
+            "writer_thread_id": str(uuid.uuid4()),
+            "ownership_generation": 1,
+        },
+        {
+            "event_type": "pre_run_blocker_opened",
+            "event_id": str(uuid.uuid4()),
+            "task_id": task_id,
+            "ownership_event_id": ownership_event_id,
+            "blocker_id": blocker_id,
+            "occurrence_id": occurrence_id,
+            "step_id": "select",
+            "subject_id": task_id,
+            "lineage_id": task_id,
+        },
+        {
+            "event_type": "pre_run_correction_recorded",
+            "event_id": str(uuid.uuid4()),
+            "task_id": task_id,
+            "ownership_event_id": ownership_event_id,
+            "blocker_id": blocker_id,
+            "occurrence_id": occurrence_id,
+            "correction_id": correction_id,
+            "step_id": "select",
+            "changed_artifacts": ["scripts/work_memory.py"],
+            "changed_artifact_hashes": ["1" * 64],
+            "solution": "stale prototype",
+            "reusable_behavior_changed": True,
+        },
+        {
+            "event_type": "pre_run_blocker_transitioned",
+            "event_id": str(uuid.uuid4()),
+            "task_id": task_id,
+            "ownership_event_id": ownership_event_id,
+            "blocker_id": blocker_id,
+            "occurrence_id": occurrence_id,
+            "from_status": "open",
+            "to_status": "fixed-awaiting-verification",
+        },
+    ]
+    monkeypatch.setattr(
+        blocker_catalog.work_memory, "load_ledger",
+        lambda: (events, "0" * 64),
+    )
+    monkeypatch.setattr(
+        blocker_catalog.work_memory, "_artifact_hashes",
+        lambda _paths: (["scripts/work_memory.py"], ["2" * 64]),
+    )
+    args = blocker_catalog.build_parser().parse_args([
+        "pre-run-verify",
+        "--task-id", task_id,
+        "--ownership-event-id", ownership_event_id,
+        "--blocker-id", blocker_id,
+        "--occurrence-id", occurrence_id,
+        "--correction-id", correction_id,
+        "--command", "python3 scripts/work_memory.py select-successor",
+        "--evidence", "command passed",
+    ])
+
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match="pre-run-correction-artifact-hash-mismatch",
+    ):
+        args.func(args)
+
+
 def test_recover_command_emits_canonical_transition(monkeypatch):
     run_id = str(uuid.uuid4())
     blocker_id = "blk-" + "1" * 24
@@ -184,6 +352,74 @@ def test_recover_command_emits_canonical_transition(monkeypatch):
     assert transition["to_status"] == "open"
     assert transition["recovery_evidence"] == "captured event predates correction enforcement"
     assert result["event_id"] == transition["event_id"]
+
+
+def test_non_gap_transition_requires_same_path_verification_reference(
+    monkeypatch,
+) -> None:
+    run_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "3" * 24
+    events = [
+        {"event_type": "run_started", "run_id": run_id},
+        {"event_type": "blocker_opened", "blocker_id": blocker_id},
+    ]
+    monkeypatch.setattr(
+        blocker_catalog.work_memory,
+        "load_ledger",
+        lambda: (events, "0" * 64),
+    )
+    args = blocker_catalog.build_parser().parse_args([
+        "transition",
+        "--run-id", run_id,
+        "--blocker-id", blocker_id,
+        "--to-status", "non-gap",
+        "--non-gap-evidence", "same path proves no defect",
+    ])
+
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match="verification-event-id-required",
+    ):
+        args.func(args)
+
+
+def test_assign_downstream_emits_typed_open_blocker_assignment(monkeypatch):
+    run_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "2" * 24
+    occurrence_id = str(uuid.uuid4())
+    events = [
+        {"event_type": "run_started", "run_id": run_id},
+        {
+            "event_type": "blocker_opened", "run_id": run_id,
+            "blocker_id": blocker_id, "occurrence_id": occurrence_id,
+        },
+    ]
+    captured = {}
+    monkeypatch.setattr(
+        blocker_catalog.work_memory, "load_ledger",
+        lambda: (events, "0" * 64),
+    )
+
+    def capture(request):
+        captured["request"] = request
+        return {"ok": True}
+
+    monkeypatch.setattr(blocker_catalog.work_memory, "transact", capture)
+    args = blocker_catalog.build_parser().parse_args([
+        "assign-downstream", "--run-id", run_id,
+        "--blocker-id", blocker_id,
+        "--downstream-owner", "united-partners-monitoring",
+        "--evidence", "The telemetry defect is outside the Vivacom deliverable.",
+    ])
+
+    result = args.func(args)
+
+    assignment = captured["request"]["events"][0]
+    assert assignment["event_type"] == "blocker_assigned_downstream"
+    assert assignment["occurrence_id"] == occurrence_id
+    assert assignment["classification"] == "incidental-system-defect"
+    assert assignment["downstream_owner"] == "united-partners-monitoring"
+    assert result["classification"] == "incidental-system-defect"
 
 
 def test_recover_command_preserves_open_status_for_successor_rebinding(monkeypatch):

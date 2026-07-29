@@ -150,10 +150,33 @@ def cmd_pre_run_correct(args: argparse.Namespace) -> dict[str, Any]:
         events, args.task_id, args.ownership_event_id,
         args.blocker_id, args.occurrence_id,
     )
-    if status != "open":
+    if status not in {"open", "fixed-awaiting-verification"}:
         raise work_memory.WorkMemoryError("pre-run-blocker-not-open", 3)
     artifacts, hashes = work_memory._artifact_hashes(args.changed_artifact)
     correction_id = args.correction_id or str(uuid.uuid4())
+    superseded_ids = {
+        item["supersedes_correction_id"] for item in events
+        if item["event_type"] == "pre_run_correction_recorded"
+        and "supersedes_correction_id" in item
+    }
+    active = [
+        item for item in events
+        if item["event_type"] == "pre_run_correction_recorded"
+        and item["blocker_id"] == args.blocker_id
+        and item["occurrence_id"] == args.occurrence_id
+        and item["correction_id"] not in superseded_ids
+    ]
+    if status == "fixed-awaiting-verification" and len(active) != 1:
+        raise work_memory.WorkMemoryError(
+            "pre-run-active-correction-ambiguous", 3,
+        )
+    supersedes_id = (
+        active[0]["correction_id"]
+        if status == "fixed-awaiting-verification" else None
+    )
+    correction_fields = {}
+    if supersedes_id is not None:
+        correction_fields["supersedes_correction_id"] = supersedes_id
     correction = work_memory._event(
         "pre_run_correction_recorded", args.event_id,
         task_id=args.task_id, ownership_event_id=args.ownership_event_id,
@@ -162,21 +185,31 @@ def cmd_pre_run_correct(args: argparse.Namespace) -> dict[str, Any]:
         changed_artifacts=artifacts, changed_artifact_hashes=hashes,
         solution=args.solution,
         reusable_behavior_changed=args.reusable_behavior_changed == "yes",
+        **correction_fields,
     )
-    transition = work_memory._event(
-        "pre_run_blocker_transitioned", args.transition_event_id,
-        task_id=args.task_id, ownership_event_id=args.ownership_event_id,
-        blocker_id=args.blocker_id, occurrence_id=args.occurrence_id,
-        from_status="open", to_status="fixed-awaiting-verification",
-    )
+    transition = None
+    requested_events = [correction]
+    if status == "open":
+        transition = work_memory._event(
+            "pre_run_blocker_transitioned", args.transition_event_id,
+            task_id=args.task_id,
+            ownership_event_id=args.ownership_event_id,
+            blocker_id=args.blocker_id,
+            occurrence_id=args.occurrence_id,
+            from_status="open",
+            to_status="fixed-awaiting-verification",
+        )
+        requested_events.append(transition)
     result = work_memory.transact({
         "schema_version": 1, "expected_ledger_hash": None,
-        "events": [correction, transition],
+        "events": requested_events,
     })
     return {
         **result, "blocker_id": args.blocker_id, "occurrence_id": args.occurrence_id,
         "correction_id": correction_id, "event_id": correction["event_id"],
-        "transition_event_id": transition["event_id"],
+        "transition_event_id": (
+            transition["event_id"] if transition is not None else None
+        ),
         "changed_artifact_hashes": hashes,
     }
 
@@ -197,6 +230,25 @@ def cmd_pre_run_verify(args: argparse.Namespace) -> dict[str, Any]:
     ), None)
     if correction is None:
         raise work_memory.WorkMemoryError("pre-run-correction-not-found", 3)
+    superseded_ids = {
+        item["supersedes_correction_id"] for item in events
+        if item["event_type"] == "pre_run_correction_recorded"
+        and "supersedes_correction_id" in item
+    }
+    if correction["correction_id"] in superseded_ids:
+        raise work_memory.WorkMemoryError(
+            "pre-run-correction-superseded", 3,
+        )
+    current_artifacts, current_hashes = work_memory._artifact_hashes(
+        correction["changed_artifacts"],
+    )
+    if (
+        current_artifacts != correction["changed_artifacts"]
+        or current_hashes != correction["changed_artifact_hashes"]
+    ):
+        raise work_memory.WorkMemoryError(
+            "pre-run-correction-artifact-hash-mismatch", 3,
+        )
     verification = work_memory._event(
         "pre_run_verification_recorded", args.event_id,
         task_id=args.task_id, ownership_event_id=args.ownership_event_id,
@@ -249,7 +301,7 @@ def cmd_transition(args: argparse.Namespace) -> dict[str, Any]:
     if status is None:
         raise work_memory.WorkMemoryError("blocker-not-found", 3)
     extra: dict[str, Any] = {}
-    if args.to_status in {"verified", "closed"}:
+    if args.to_status in {"verified", "closed", "non-gap"}:
         if not args.verification_event_id:
             raise work_memory.WorkMemoryError("verification-event-id-required", 2)
         extra["verification_event_id"] = args.verification_event_id
@@ -305,6 +357,37 @@ def cmd_recover(args: argparse.Namespace) -> dict[str, Any]:
     }
 
 
+def cmd_assign_downstream(args: argparse.Namespace) -> dict[str, Any]:
+    events, _ = work_memory.load_ledger()
+    _run(events, args.run_id)
+    occurrence_id = None
+    for item in events:
+        if (
+            item["event_type"] in {"blocker_opened", "blocker_recurred"}
+            and item["blocker_id"] == args.blocker_id
+        ):
+            occurrence_id = item["occurrence_id"]
+    if occurrence_id is None:
+        raise work_memory.WorkMemoryError("blocker-not-found", 3)
+    event = work_memory._event(
+        "blocker_assigned_downstream", args.event_id,
+        run_id=args.run_id, blocker_id=args.blocker_id,
+        occurrence_id=occurrence_id,
+        classification="incidental-system-defect",
+        downstream_owner=args.downstream_owner,
+        evidence=args.evidence,
+    )
+    result = work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": [event],
+    })
+    return {
+        **result, "event_id": event["event_id"],
+        "blocker_id": args.blocker_id,
+        "classification": event["classification"],
+        "downstream_owner": args.downstream_owner,
+    }
+
+
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     sub = parser.add_subparsers(dest="command", required=True)
@@ -351,6 +434,13 @@ def build_parser() -> argparse.ArgumentParser:
     recover.add_argument("--reopen-evidence", required=True)
     recover.add_argument("--event-id")
     recover.set_defaults(func=cmd_recover)
+    assign = sub.add_parser("assign-downstream")
+    assign.add_argument("--run-id", required=True)
+    assign.add_argument("--blocker-id", required=True)
+    assign.add_argument("--downstream-owner", required=True)
+    assign.add_argument("--evidence", required=True)
+    assign.add_argument("--event-id")
+    assign.set_defaults(func=cmd_assign_downstream)
     return parser
 
 

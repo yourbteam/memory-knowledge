@@ -269,6 +269,50 @@ def test_real_topology_preserves_only_original_task_corrections(
         )
 
 
+def test_preservation_uses_originating_transition_when_later_transition_is_cumulative(
+    tmp_path: Path,
+) -> None:
+    flow = _flow(tmp_path)
+    work_memory.cmd_preserve_corrections(flow["args"])
+    events, _ = work_memory.load_ledger()
+    preservation_index = next(
+        index for index, item in enumerate(events)
+        if item["event_type"] == "correction_preservation_recorded"
+    )
+    target_transition = next(
+        item for item in events
+        if item["event_type"] == "bundle_transition_recorded"
+        and item.get("correction_ids") == [flow["target_id"]]
+    )
+    later_correction_id = str(uuid.uuid4())
+    later_correction = _event(
+        "correction_recorded", run_id=target_transition["run_id"],
+        blocker_id="blk-" + "5" * 24, occurrence_id=str(uuid.uuid4()),
+        correction_id=later_correction_id, subject_id=flow["lineage"],
+        lineage_id=flow["lineage"], step_id="later-correction",
+        changed_artifacts=["scripts/later.py"],
+        changed_artifact_hashes=["d" * 64],
+        reusable_behavior_changed=True, solution="later cumulative fix",
+    )
+    cumulative_transition = _event(
+        "bundle_transition_recorded", lineage_id=flow["lineage"],
+        old_bundle_hash=flow["target_hash"], new_bundle_hash="e" * 64,
+        transition_reason="correction", run_id=target_transition["run_id"],
+        correction_ids=[flow["target_id"], later_correction_id],
+        changed_artifacts=["scripts/later.py"],
+        changed_artifact_hashes=["d" * 64],
+    )
+    events[preservation_index:preservation_index] = [
+        later_correction, cumulative_transition,
+    ]
+
+    result = work_memory._validate_correction_preservation_records(events)
+
+    assert result[flow["preserved_ids"][0]]["target_transition_event_id"] == (
+        target_transition["event_id"]
+    )
+
+
 @pytest.mark.parametrize(
     ("file_index", "error"), [
         (0, "preservation-target-artifact-hash-mismatch"),
