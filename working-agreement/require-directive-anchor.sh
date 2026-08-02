@@ -19,7 +19,8 @@ payload="$(cat)" || exit 0
 python3 - "$payload" <<'PY'
 import json, re, sys
 
-REQUIRED = ("mode=", "controller=", "envelope=", "ask=", "words=", "scope=", "exceptions=")
+REQUIRED = ("mode=", "controller=", "envelope=", "ask=", "words=", "scope=", "exceptions=",
+            "proof=")
 
 try:
     event = json.loads(sys.argv[1])
@@ -276,7 +277,16 @@ sys.stderr.write(
     "G0 requires every substantive reply to open with one line:\n"
     "  directives=<artifact>; mode=<mode>; controller=<controller|none>; "
     "envelope=<approved:\"<outcome>\"|none|n/a>; ask=<none|decision|approval>; "
-    "words=<N>; scope=<scope>; exceptions=<none or conflict>\n\n"
+    "words=<N>; scope=<scope>; exceptions=<none or conflict>; "
+    "proof=<real-path evidence|none:<what-is-untested>|n/a>\n\n"
+    "`proof=` answers ONE question: what exercised this through the path it will actually take?\n"
+    "  proof=state.validate+round-trip        the real save accepted it\n"
+    "  proof=live:round-5-opening-count       observed in a live run\n"
+    "  proof=none:unit-only                   the piece passes; the path is untested\n"
+    "  proof=n/a                              this message claims nothing works\n"
+    "`none:` is an honest and frequent answer. On 2026-08-01 three claims — an armed timer\n"
+    "that never fired, a gate whose inputs were never traced, and a durable write the record\n"
+    "rejected — would each have had to carry `proof=none:` in front of Kamen.\n\n"
     "Re-send the same reply with that line first.\n"
 )
 raise SystemExit(2)

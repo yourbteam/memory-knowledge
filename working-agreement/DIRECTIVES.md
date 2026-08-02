@@ -31,7 +31,7 @@ to `prototype-driven-implementation`.
   that explicitly mention the working agreement, directives, G-rules, playbooks, corpus memory, or
   memory-knowledge. If a higher-priority instruction prevents loading the directives, state that.
 - ✅ Begin every substantive response with one compact anchor in this exact shape:
-  `directives=<artifact/revision>; mode=<mode>; controller=<active controller or none>; envelope=<approved:"<outcome>"|none|n/a>; ask=<none|decision|approval>; words=<N>; scope=<scope>; exceptions=<none or conflict>`.
+  `directives=<artifact/revision>; mode=<mode>; controller=<active controller or none>; envelope=<approved:"<outcome>"|none|n/a>; ask=<none|decision|approval>; words=<N>; scope=<scope>; exceptions=<none or conflict>; proof=<real-path evidence|none:<what-is-untested>|n/a>`.
   The anchor is the turn's **first text** — no narration, preamble, or consultation notes before
   it. In a multi-part turn, per-part anchors may follow, but the turn still opens with one.
 - ✅ When `envelope` is `approved`, it carries the approved outcome in a few words, quoted:
@@ -54,6 +54,19 @@ to `prototype-driven-implementation`.
   yet exist, `n/a` when the active mode/controller has no envelope requirement. Writing
   `envelope=none` while applying product-code edits is a self-declared G11 violation — stop and
   freeze the envelope instead of editing.
+- ✅ `proof` answers one question: **what exercised this through the path it will actually take?**
+  It is required on every anchor, and `none:` is an honest and frequent answer:
+  `proof=state.validate+round-trip` (the real save accepted it), `proof=live:round-5-opening-count`
+  (observed in a live run), `proof=none:unit-only` (the piece passes, the path is untested),
+  `proof=n/a` (this message claims nothing works). G24 and G28 already say a passing reproduction
+  is not a working run — but they bind to defect fixes and to *completion*, and on 2026-08-01
+  three claims escaped both because they were neither: a five-minute wake-up timer that never
+  fired across sixteen hours, a coverage gate whose own inputs were never traced, and a durable
+  write whose unit tests proved its content while the record rejected it and killed a four-hour
+  run. Each was true of the piece and untested through the path, and each was reported to Kamen as
+  in place. Writing `proof=none:job-created` beside "the timer is armed" is the whole difference
+  between a mechanism he trusts and one he knows is unverified. Presence is checkable, as with
+  `words=` and `envelope=`; truthfulness is not, and the same bargain applies.
 - ✅ If full consultation is still pending when the turn starts (e.g. the hook delivered a
   truncated preview), anchor first anyway with `exceptions=directives pending full read`, then
   read the artifact and restate a corrected anchor only if something material changed.
@@ -64,7 +77,7 @@ to `prototype-driven-implementation`.
   directive conflict occurred, or unresolved compliance remains at closeout.
 - 🚫 No bare checkmarks or self-grades. Do not turn routine replies into a full G-rule matrix.
 
-**Set:** 2026-06-13 · **repeated:** 0 · **amended:** 2026-07-24 (Kamen "lock it" — anchor names the active controller and envelope status, so running a Write-code turn without the controller/envelope is self-evident, not silent)
+**Set:** 2026-06-13 · **repeated:** 0 · **amended:** 2026-07-24 (Kamen "lock it" — anchor names the active controller and envelope status, so running a Write-code turn without the controller/envelope is self-evident, not silent) · **amended:** 2026-08-02 (Kamen approved — `proof=` names what exercised the claim through its real path, after three claims in one day proved true of the piece and untested through the path; the gate now rejects an anchor without it, checked by running the hook against a transcript with and without the field)
 
 ---
 
