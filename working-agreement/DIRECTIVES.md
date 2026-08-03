@@ -683,3 +683,38 @@ decision re-opened per item stops reading as a decision, and Kamen ends up re-ma
 - 🚫 No per-item confirmation once the source is named.
 
 **Set:** 2026-07-28 · **repeated:** 0
+
+---
+
+## G33 · A refusal names what was wrong, never only which rule fired
+**Why:** Code in this system refuses model output constantly — a schema check, a count, a
+prohibition screen — and the model gets one chance to read that refusal and try again. On
+2026-08-02/03 four separate refusals named the rule and not the thing that broke it, and each cost
+three live attempts: the model was told a rule had been broken, could not tell which of its items
+broke it, returned the same shape again, and the step died. One of them killed the measurement step
+outright and took fifteen requirements and a full rebuild with it. In every case the same step
+passed on the first attempt the moment the refusal named the offending item and what would fix it.
+The rule was never the problem; the message was. A refusal a retry cannot act on is not a check,
+it is a coin toss repeated three times.
+- ✅ A refusal states, in the same string: which item failed (by its own name or index), what came
+  back, and what would satisfy the rule instead. `confirms_is_list_want_one_sentence_string` and
+  `'Proof-page quality' says 'drove' about 'coverage' with no method stated — name the control,
+  model, holdout or matched comparison, or drop the causal wording` are refusals; `hypothesis_test
+  invalid` and `a causal claim rests on coverage with no method stated` are not.
+- ✅ When several things are wrong at once, name them all in one refusal. A refusal that surfaces
+  one of three problems buys one retry per problem and the attempt budget is three.
+- ✅ When the same rejection fingerprint appears twice in one phase's ledger, the defect is the
+  message, not the model. Fix the message before spending the third attempt.
+- ✅ The same standard applies to the instruction that produced the output: a contract that leaves
+  a type or a shape unstated will be broken, and the refusal is then a late correction of a
+  preventable ambiguity. Pin it in the prompt and in the refusal.
+- 🚫 No refusal whose whole content is the rule's name, the field's name, or the error class.
+- 🚫 No spending a second live attempt against a refusal that has already failed once to change
+  what came back.
+
+**Before writing a refusal:** read it as the model will, with no access to the code that raised it.
+If it does not say what to change, it will not be changed.
+
+**Set:** 2026-08-03 · **repeated:** 0 (Kamen "lock it" — four refusals in one night each cost three
+live attempts and one killed a whole step; every one passed first try once the message named the
+item and the fix)
