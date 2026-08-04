@@ -412,8 +412,18 @@ to `prototype-driven-implementation`.
 - ✅ Trustworthiness gate (hard): the reproduction MUST (i) run the same code path (no reimplementation; mocks only at true external edges), (ii) use real captured inputs (never guessed), (iii) be red-before/green-after. If it cannot satisfy all three, it is not a valid proxy — say so; do not claim the fix verified from it.
 - 🚫 No claiming a fix verified from a reproduction that reimplements the logic or feeds invented state (the false-confidence trap, G4).
 - 🚫 No skipping the single live confirmation — a passing reproduction proves the fix, not that the whole run now succeeds (each fix can unmask the next layer).
+- ✅ When a live run is genuinely needed, enter the workflow at the phase where the change is
+  proved, using the run-resume path. A full drive is correct only when the question is about the
+  whole chain — ordering, accumulated state, end-to-end coverage. Name the entry phase and why in
+  the message that launches it.
+- 🚫 No full drive as the default instrument for a one-stage question. A clean run from step one
+  feels like the strongest proof and is the most expensive way to answer what one phase decides.
 
-**Set:** 2026-07-11 · **repeated:** 0
+**Set:** 2026-07-11 · **repeated:** 0 · **amended:** 2026-08-04 (Kamen "lock it" — a change to the
+strategy-brief prompt at phase 56 of 72 was launched as a full run from step one, three and a half
+hours, when the resume path re-enters at that phase in minutes; the resume script's own docstring
+had said so and was read the same day. An anchor launching a run without naming its entry phase is
+now a visible lapse.)
 
 ## G25 · Bounded delivery outranks process expansion
 **Why:** When correctness and workflow rules continually expand the current phase, bounded work
