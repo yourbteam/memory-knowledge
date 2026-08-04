@@ -60,8 +60,15 @@ It is deliberately dumb: it observes and reports, it does not judge.
 2. **Choose the wait.** Default `--seconds 270` (4.5 minutes) sits inside a five-minute reporting
    ceiling and leaves room for the turn itself. Range accepted: 1–3600.
 3. **Give it probes that answer "what is the run DOING".** Each `--probe` is a shell command; they
-   run in order after the wait. At least one must return **state**, not a tally — the script
-   refuses to arm otherwise, naming the offending probes and what would satisfy it.
+   run in order after the wait. At least one must **return** state rather than a tally — judged
+   from what the probes actually returned, not from how they were written. When every probe comes
+   back empty or purely numeric the heartbeat still wakes you (the cadence is never broken) and
+   exits 3 with a refusal naming what to write instead.
+
+   Judging the output rather than the command text is deliberate. The first version pattern-matched
+   `grep -c` and `wc -l`, which is scope chosen by the author — and choosing the scope is the very
+   failure this guard exists to catch. `python3 -c 'print(len(x))'` and `grep -c foo | tr -d " "`
+   both return a bare number while matching no counting pattern; both are now caught.
 
    A count is a fine supplement and a worthless only. On 2026-08-04 three consecutive reports said
    "23 review events, no errors" — true whether the run is reviewing the right feature, re-reviewing
@@ -87,6 +94,10 @@ scripts/agent_heartbeat.sh --seconds 270 --label "feat-11 re-drive" \
 
 - **A probe fails or prints nothing.** Reported, never fatal. A heartbeat that dies on a bad probe
   stops the cadence, which is the failure this sequence exists to prevent.
+- **Every probe returned only a number (exit 3).** The wake-up still happened; the report is the
+  problem. Add a probe that returns state and re-arm. Verified 2026-08-04: a python one-liner
+  printing a length, and a count laundered through `tr`, both exit 3; a probe naming the run and
+  its phase exits 0; a count alongside such a probe exits 0.
 - **Malformed `--seconds`.** Exits 2 with a message naming the bad value; nothing is armed. Fix the
   argument and re-arm.
 - **The heartbeat was armed in the foreground.** No completion notification arrives and the agent

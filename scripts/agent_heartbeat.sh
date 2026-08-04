@@ -61,42 +61,6 @@ case "$seconds" in
                exit 2 ;;
 esac
 
-# Refuse a heartbeat that can only count.
-#
-# 2026-08-04: three consecutive reports said "23 review events, no errors" — a number that is true
-# whether the run is reviewing the right feature, re-reviewing the wrong one, or looping. Kamen:
-# "don't you have a directive to watch what a run is actually doing instead of shallow cursory
-# numbers." He does — observe the work itself: which item, which phase, which transition, which
-# decision, which error. A count is a fine SUPPLEMENT and a worthless ONLY.
-#
-# So: at least one probe must return state rather than a tally. Counting probes stay allowed
-# alongside it.
-counting_re='(^|[|[:space:]])(wc[[:space:]]+-[a-z]*l|grep[[:space:]]+(-[a-zA-Z]*[[:space:]]+)*-[a-zA-Z]*c([[:space:]]|$)|uniq[[:space:]]+-c)'
-if [ "${#probes[@]}" -gt 0 ]; then
-  observing=0
-  for probe in "${probes[@]}"; do
-    if ! printf '%s' "$probe" | grep -Eq "$counting_re"; then observing=1; fi
-  done
-  if [ "$observing" -eq 0 ]; then
-    {
-      echo "agent_heartbeat.sh: every probe only counts, so this heartbeat cannot report what the"
-      echo "run is DOING. The probes given were:"
-      for probe in "${probes[@]}"; do echo "  - ${probe}"; done
-      echo
-      echo "Add at least one probe that returns state, not a tally. Any of these satisfies it:"
-      echo "  - the work item and its phase   e.g. the newest run id and the phases it has produced"
-      echo "  - a produced artifact           e.g. ls -la <run>/phases/<phase>/<output-file>"
-      echo "  - decisions/transitions/errors  e.g. docker logs ... | grep -E 'WARNING|ERROR|decision'"
-      echo "Counting probes may stay alongside it."
-    } >&2
-    exit 2
-  fi
-fi
-if [ "$seconds" -lt 1 ] || [ "$seconds" -gt 3600 ]; then
-  echo "agent_heartbeat.sh: --seconds must be between 1 and 3600, got '$seconds'" >&2
-  exit 2
-fi
-
 sleep "$seconds"
 
 echo "=== heartbeat $(date -u '+%Y-%m-%d %H:%M:%SZ')${label:+ · $label} (waited ${seconds}s) ==="
@@ -105,15 +69,41 @@ if [ "${#probes[@]}" -eq 0 ]; then
   exit 0
 fi
 
+observed=0
 for probe in "${probes[@]}"; do
   echo "--- probe: ${probe}"
   # Advisory by design: report the failure, keep the cadence alive.
   if ! output="$(eval "$probe" 2>&1)"; then
     echo "(probe exited non-zero — reporting what it produced)"
   fi
-  if [ -z "${output//[[:space:]]/}" ]; then
+  stripped="${output//[[:space:]]/}"
+  if [ -z "$stripped" ]; then
     echo "(no output — say so plainly rather than inferring progress)"
   else
     printf '%s\n' "$output"
+    # Did this probe return STATE, or only a tally? Judged from what came back, not from how the
+    # command was written: a pattern over command text is scope I choose, and choosing the scope is
+    # the failure this guard exists to catch (docs/gf-art-chain-ledger.md, 2026-08-04 05:55 —
+    # two of my own checks inspected less than they claimed). `python3 -c 'print(len(x))'` and
+    # `grep -c foo | tr -d " "` both return a bare number while matching no counting pattern.
+    case "$stripped" in
+      *[!0-9]*) observed=1 ;;
+    esac
   fi
 done
+
+if [ "$observed" -eq 0 ]; then
+  {
+    echo
+    echo "!! Every probe returned only a number or nothing, so this heartbeat cannot say what the"
+    echo "   run is DOING — only how much of something there was. A count is true whether the run"
+    echo "   works the right item, repeats the wrong one, or loops."
+    echo
+    echo "   Replace or add a probe that returns state. Any of these satisfies it:"
+    echo "     - the work item and its phase   e.g. the newest run id and the phases it produced"
+    echo "     - a produced artifact           e.g. ls -la <run>/phases/<phase>/<output-file>"
+    echo "     - decisions/transitions/errors  e.g. docker logs ... | grep -E 'WARNING|ERROR|decision'"
+    echo "   Counting probes may stay alongside one that observes."
+  }
+  exit 3
+fi
