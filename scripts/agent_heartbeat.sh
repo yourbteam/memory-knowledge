@@ -60,6 +60,38 @@ case "$seconds" in
   ''|*[!0-9]*) echo "agent_heartbeat.sh: --seconds must be a whole number of seconds, got '$seconds'" >&2
                exit 2 ;;
 esac
+
+# Refuse a heartbeat that can only count.
+#
+# 2026-08-04: three consecutive reports said "23 review events, no errors" — a number that is true
+# whether the run is reviewing the right feature, re-reviewing the wrong one, or looping. Kamen:
+# "don't you have a directive to watch what a run is actually doing instead of shallow cursory
+# numbers." He does — observe the work itself: which item, which phase, which transition, which
+# decision, which error. A count is a fine SUPPLEMENT and a worthless ONLY.
+#
+# So: at least one probe must return state rather than a tally. Counting probes stay allowed
+# alongside it.
+counting_re='(^|[|[:space:]])(wc[[:space:]]+-[a-z]*l|grep[[:space:]]+(-[a-zA-Z]*[[:space:]]+)*-[a-zA-Z]*c([[:space:]]|$)|uniq[[:space:]]+-c)'
+if [ "${#probes[@]}" -gt 0 ]; then
+  observing=0
+  for probe in "${probes[@]}"; do
+    if ! printf '%s' "$probe" | grep -Eq "$counting_re"; then observing=1; fi
+  done
+  if [ "$observing" -eq 0 ]; then
+    {
+      echo "agent_heartbeat.sh: every probe only counts, so this heartbeat cannot report what the"
+      echo "run is DOING. The probes given were:"
+      for probe in "${probes[@]}"; do echo "  - ${probe}"; done
+      echo
+      echo "Add at least one probe that returns state, not a tally. Any of these satisfies it:"
+      echo "  - the work item and its phase   e.g. the newest run id and the phases it has produced"
+      echo "  - a produced artifact           e.g. ls -la <run>/phases/<phase>/<output-file>"
+      echo "  - decisions/transitions/errors  e.g. docker logs ... | grep -E 'WARNING|ERROR|decision'"
+      echo "Counting probes may stay alongside it."
+    } >&2
+    exit 2
+  fi
+fi
 if [ "$seconds" -lt 1 ] || [ "$seconds" -gt 3600 ]; then
   echo "agent_heartbeat.sh: --seconds must be between 1 and 3600, got '$seconds'" >&2
   exit 2

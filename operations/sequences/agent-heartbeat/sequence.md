@@ -59,9 +59,18 @@ It is deliberately dumb: it observes and reports, it does not judge.
    completion notification.
 2. **Choose the wait.** Default `--seconds 270` (4.5 minutes) sits inside a five-minute reporting
    ceiling and leaves room for the turn itself. Range accepted: 1–3600.
-3. **Give it probes that answer "what is true now".** Each `--probe` is a shell command; they run
-   in order after the wait. Prefer probes that read the system's own record (container logs, a
-   process check, a produced artifact) over anything inferred.
+3. **Give it probes that answer "what is the run DOING".** Each `--probe` is a shell command; they
+   run in order after the wait. At least one must return **state**, not a tally — the script
+   refuses to arm otherwise, naming the offending probes and what would satisfy it.
+
+   A count is a fine supplement and a worthless only. On 2026-08-04 three consecutive reports said
+   "23 review events, no errors" — true whether the run is reviewing the right feature, re-reviewing
+   the wrong one, or looping. Kamen: *"don't you have a directive to watch what a run is actually
+   doing instead of shallow cursory numbers."* Probes that satisfy the check:
+
+   - the work item and its phase — the newest run id and the phases it has produced
+   - a produced artifact — `ls -la <run>/phases/<phase>/<output-file>`
+   - decisions, transitions and errors — `docker logs … | grep -E 'WARNING|ERROR|decision'`
 4. **When it completes, report honestly and re-arm.** One heartbeat per turn. If nothing advanced,
    say nothing advanced — the script prints `(no output …)` rather than silence precisely so the
    report cannot round a stall up into progress.
