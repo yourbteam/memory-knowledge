@@ -778,3 +778,34 @@ declared the previous number incomparable on its own line, and kept machine work
 lines; the without-rule report led with narrative, buried the same correction mid-message, mixed the
 machine change into the goal, and rounded the remaining count. Both disclosed the correction — the
 rule changed the shape, not the honesty, and the shape is what Kamen judges from.)
+
+---
+
+## G35 · Fix the class, in the same commit, and say how many
+**Why:** On 2026-08-05 commit `29a0ad6` fixed one refusal in `platform_decisions.py` that said only
+its rule's name. Eighty-five others in that same file said only their rule's name. Eleven lines from
+the one that was fixed sat `owner_question_manifest_invalid`, which two hours later refused a live
+run three times with the string `owner_question_manifest_invalid:4` and killed it at phase 55 of 74.
+G33 had been locked two days earlier and was applied to the instance in front of Claude instead of
+the class it belonged to. That is the shape Kamen named: "you will do the correct chase now and a
+couple of hours later you will do your own shit again." A fix that leaves its siblings in place is
+not a fix, it is a delay, and the next failure is already written.
+- ✅ When a defect is fixed, sweep the same defect class in the same file in the same commit.
+- ✅ The commit message states how many instances of the class were found and how many were fixed.
+  Both numbers, always, including "1 found, 1 fixed".
+- ✅ When the class is too large to sweep in that commit, state the number and stop for Kamen's
+  decision before continuing. Do not fix a subset and carry on.
+- ✅ The class is what the defect *is*, not where it was found: a refusal that names only its rule,
+  a document read from a stale record, a check that returns a constant. Name it in the commit in
+  those terms, so the sweep can be checked against the claim.
+- ✅ This binds even when the instance was found by a live failure and the fix is urgent. The sweep
+  is what stops the same run dying twice.
+- 🚫 No fixing the instance in front of you and leaving the rest of the class in the same file.
+- 🚫 No commit that claims a class fix without the found/fixed count.
+
+**Before committing a defect fix:** search the file for the same shape. If the count is more than
+one and the commit fixes one, the commit is wrong.
+
+**Set:** 2026-08-05 · **repeated:** 0 (Kamen "lock it" — after `owner_question_manifest_invalid:4`
+killed run up-run-02195a274a87, from a class of eighty-five left untouched by a fix to one of its
+members that morning)
