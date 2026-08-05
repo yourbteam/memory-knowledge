@@ -70,3 +70,30 @@ which is NOT wired and must not be wired on this evidence.
 is tuning an instrument until it gives the answer wanted — the same failure this ledger exists to
 catch. The twenty-two judgement rules have no working mechanism. Kamen is the only detector that
 has ever caught them, and that is the true state.
+
+## Entry 4 — PostToolUse carries fact, and reaches one rule, 2026-08-05
+
+**The question.** Kamen asked whether a hook fires at the end of every completed action. If such a
+hook sees only what a tool was asked to do, it adds nothing over the seven PreToolUse gates.
+
+**What was run.** A probe wired into `PostToolUse`, recording its raw payload. It appeared not to
+fire across two calls; the settings watcher had lagged. Twelve payloads were captured shortly after.
+
+**What the real payload carries.** `tool_response` — for Bash, the actual `stdout`, `stderr` and
+`interrupted`; for Edit and Write, the file path and success. Alongside `tool_input`, `duration_ms`,
+`cwd` and `tool_use_id`. It is the result, not the request.
+
+**What that is worth, honestly.** The eleven working hooks all check fact; the one mechanism that
+failed judged prose. PostToolUse is a fact surface, so it belongs to the working approach. But it
+observes *results*, and of the twenty-two remaining rules only G3 has a result to observe: an edit
+landing in a file outside the scope the anchor declared. G1, G6, G13, G16, G21, G25 and G30 are
+about reasoning, and no observation of an outcome reads reasoning.
+
+**Distance before → after.** 14 of 36. Unmoved until something is built.
+
+**Verdict: Path A, with a smaller claim than the one made in conversation.** The vantage point is
+real and worth one rule, possibly two. It is not an answer to the twenty-two, and saying so earlier
+overstated it.
+
+**The fact that would flip it:** if the anchor's declared scope cannot be mechanically compared to
+the path actually written, then even G3 is out of reach and the answer is zero.
