@@ -728,3 +728,53 @@ If it does not say what to change, it will not be changed.
 **Set:** 2026-08-03 · **repeated:** 0 (Kamen "lock it" — four refusals in one night each cost three
 live attempts and one killed a whole step; every one passed first try once the message named the
 item and the fix)
+
+---
+
+## G34 · One frozen measure, and the delta, in every autonomous report
+**Why:** Across one overnight drive Claude reported the same goal four different ways — 29, then 65,
+then 71, then 61 — each a genuine reading of a differently-shaped number: a durable coverage count,
+then a cumulative total across rounds of freshly-written checks, then a single-pass total of the
+whole check set. No two of those reports could be compared, so Kamen could not tell whether the work
+was advancing, and each report also led with Claude's own repairs to the machine rather than with
+the goal. Kamen: "your reporting is so all over the place and chaotic that no one can understand
+what the fuck is happening and are you actually fixing and making progress or not... i am the judge
+to how you are working". A measure that can be reshaped mid-drive is not a measure; it is a way to
+always have a good number to show.
+
+**Every report during an autonomous drive opens with exactly these three lines, in this order:**
+
+```
+GOAL    <frozen measure> · <now> of <total>
+SINCE   <+N | -N | 0> since the last report — <one clause: what caused it>
+NOW     <what is running> · <when the next number is due>
+```
+
+- ✅ The measure is declared **once** per drive, in the drive's own words, and is read from an
+  artifact Kamen can open himself. It is never redefined mid-drive.
+- ✅ It is the **goal's** measure, never a proxy. Checks written, repairs dispatched, tests passing,
+  files changed and rounds completed are all activity, not progress.
+- ✅ `0` is a required answer and is stated plainly. So is a negative — a drive that went backwards
+  says so on the SINCE line before anything else.
+- ✅ When a restart, a change of method, or a change of instrument makes the number incomparable to
+  the last report, SINCE reads `not comparable — <why>`, and the next report carries both numbers
+  once so the seam is visible rather than smoothed over.
+- ✅ Changing the measure requires Kamen's approval **before** the report that uses it.
+- ✅ Machine and harness work is reported **below** those three lines, never inside them. A fix to
+  the machine is not progress toward the goal unless GOAL moved; saying otherwise is how six weeks
+  of real fixes reported as progress while the number stood still.
+- ✅ Everything else in the report is at most three short lines. G29's limits still bind.
+- 🚫 No report whose number cannot be compared against the previous report's number without an
+  explanation of the difference.
+- 🚫 No leading with what was fixed, learnt, or attempted while GOAL is absent or unchanged.
+- 🚫 No new denominator, no re-basing, no "not the same measurement" as an aside after the number.
+
+**Before sending a drive report:** put it beside the previous one. If Kamen cannot subtract one
+number from the other and get a true answer, the report is wrong — fix the report, not the number.
+
+**Set:** 2026-08-05 · **repeated:** 0 (Kamen "lock it" — proven by two subagent runs given the same
+real drive state, one with this rule and one without: the with-rule report opened on the number,
+declared the previous number incomparable on its own line, and kept machine work below the three
+lines; the without-rule report led with narrative, buried the same correction mid-message, mixed the
+machine change into the goal, and rounded the remaining count. Both disclosed the correction — the
+rule changed the shape, not the honesty, and the shape is what Kamen judges from.)
