@@ -75,9 +75,17 @@ It is deliberately dumb: it observes and reports, it does not judge.
    the wrong one, or looping. Kamen: *"don't you have a directive to watch what a run is actually
    doing instead of shallow cursory numbers."* Probes that satisfy the check:
 
-   - the work item and its phase — the newest run id and the phases it has produced
+   - what the run PRODUCED — the findings, verdicts or output its last stage actually wrote
    - a produced artifact — `ls -la <run>/phases/<phase>/<output-file>`
    - decisions, transitions and errors — `docker logs … | grep -E 'WARNING|ERROR|decision'`
+
+   **Position is not content, and the runtime gate cannot tell them apart.** A stage name is not a
+   number, so `stage 10 of 13 | last done: review-changed-files::world-1-1.ts` passes the gate — and
+   is still a progress statistic. That is exactly what happened four reports running on 2026-08-04,
+   until Kamen asked whether the heartbeat had been adjusted "so you do not only report numbers as
+   stats". The probe that fixed it parsed each completed stage's own output and returned the
+   findings: *a camera test that checks the exact scroll boundary and never one pixel past it, so an
+   off-by-one start bug would pass*. Report that, not the fraction.
 4. **When it completes, report honestly and re-arm.** One heartbeat per turn. If nothing advanced,
    say nothing advanced — the script prints `(no output …)` rather than silence precisely so the
    report cannot round a stall up into progress.

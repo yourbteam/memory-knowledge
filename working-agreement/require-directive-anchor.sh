@@ -129,7 +129,7 @@ for index, entry in enumerate(entries):
         elif name in {"Edit", "Write", "NotebookEdit"}:
             edits_this_turn.append(payload.get("file_path") or "?")
             actions_this_turn.append("edit")
-        elif name == "Bash" and payload.get("run_in_background") is True:
+        elif name == "Bash":
             # A launched process is the only other thing that outlives the turn.
             actions_this_turn.append("background run")
 

@@ -49,6 +49,13 @@
       "approved_by": "Kamen",
       "approved_at_utc": "2026-07-29",
       "reason": "adds the multi-line answer type so a governed commit message can carry a body"
+    },
+    "sequence_intake_adapter_client_classification_20260730": {
+      "decision_id": "commit-push-main-client-classification-answer-source-correction-20260730",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-07-29",
+      "reason": "adds the declared-client-facts answer the regeneration step needs so an omitted fact is reported unresolved rather than assumed"
     }
   },
   "authority_decisions_required": [],
@@ -221,10 +228,10 @@
     "intake_sha256": "9955319d6c29bdf64025896e2bc9f4e1740866a88c3f0bfd1e0a3a042882b5cc",
     "intake_source_correction_decision_id": "commit-push-main-multiline-commit-message-source-correction-20260729",
     "sequence_approved_post_correction_sha256": "daa618bf35ba1e74ecebc08df7934a45e5d10a7be1c3ad7d4df434ce0990a69f",
-    "sequence_intake_adapter_approved_post_correction_sha256": "58681c8c67c85429f4827ade7ea9642b2cc73016e27f3b8d425cde1a3ccd4377",
+    "sequence_intake_adapter_approved_post_correction_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
     "sequence_intake_adapter_path": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_intake_adapters.py",
-    "sequence_intake_adapter_sha256": "96351dc33642b28a6218573123b5623df3e4b9b52f41789714d82c019777cb97",
-    "sequence_intake_adapter_source_correction_decision_id": "commit-push-main-multiline-commit-message-source-correction-20260729",
+    "sequence_intake_adapter_sha256": "71d625802d503eef10ab67ca08446cead079d287dac08d4e30b8f394a0691f57",
+    "sequence_intake_adapter_source_correction_decision_id": "commit-push-main-agent-heartbeat-intake-adapter-source-correction-20260804",
     "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/commit-push-main/sequence.md",
     "sequence_sha256": "08706c31a48e96f58e2119fdbc16d9a79c72f22fa84f830d708cf7dca4e319dd",
     "sequence_source_correction_decision_id": "commit-push-main-git-auth-boundary-20260723",

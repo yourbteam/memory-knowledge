@@ -100,10 +100,17 @@ if [ "$observed" -eq 0 ]; then
     echo "   works the right item, repeats the wrong one, or loops."
     echo
     echo "   Replace or add a probe that returns state. Any of these satisfies it:"
-    echo "     - the work item and its phase   e.g. the newest run id and the phases it produced"
+    echo "     - what the run PRODUCED         e.g. the findings/verdicts its last stage wrote"
     echo "     - a produced artifact           e.g. ls -la <run>/phases/<phase>/<output-file>"
     echo "     - decisions/transitions/errors  e.g. docker logs ... | grep -E 'WARNING|ERROR|decision'"
     echo "   Counting probes may stay alongside one that observes."
+    echo
+    echo "   NOTE, and this check CANNOT catch it for you: a stage name is not a number, so"
+    echo "   'stage 10 of 13' passes this gate and is still a progress statistic. On 2026-08-04"
+    echo "   four consecutive reports said which review stage was running; Kamen asked whether the"
+    echo "   heartbeat had been adjusted 'so you do not only report numbers as stats'. Position is"
+    echo "   not content. Probe what the run WROTE — its findings, verdicts, decisions — and report"
+    echo "   those."
   }
   exit 3
 fi

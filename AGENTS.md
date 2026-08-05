@@ -24,7 +24,7 @@ For durable working-agreement knowledge or rationale, use the `memory-knowledge`
 # Working Agreement — Directives
 <!-- Authority: Kamen authors. Claude proposes; nothing is binding until Kamen confirms. -->
 <!-- Confirm word: "lock it" promotes a proposed rule to live. Nothing else counts as confirmation. -->
-<!-- Last reviewed: 2026-07-27 -->
+<!-- Last reviewed: 2026-08-03 -->
 
 **Prime directive:** Before acting, consult these directives and follow them. They override default behavior.
 
@@ -54,7 +54,7 @@ to `prototype-driven-implementation`.
   that explicitly mention the working agreement, directives, G-rules, playbooks, corpus memory, or
   memory-knowledge. If a higher-priority instruction prevents loading the directives, state that.
 - ✅ Begin every substantive response with one compact anchor in this exact shape:
-  `directives=<artifact/revision>; mode=<mode>; controller=<active controller or none>; envelope=<approved:"<outcome>"|none|n/a>; ask=<none|decision|approval>; words=<N>; scope=<scope>; exceptions=<none or conflict>`.
+  `directives=<artifact/revision>; mode=<mode>; controller=<active controller or none>; envelope=<approved:"<outcome>"|none|n/a>; ask=<none|decision|approval>; words=<N>; scope=<scope>; exceptions=<none or conflict>; proof=<real-path evidence|none:<what-is-untested>|n/a>`.
   The anchor is the turn's **first text** — no narration, preamble, or consultation notes before
   it. In a multi-part turn, per-part anchors may follow, but the turn still opens with one.
 - ✅ When `envelope` is `approved`, it carries the approved outcome in a few words, quoted:
@@ -77,6 +77,19 @@ to `prototype-driven-implementation`.
   yet exist, `n/a` when the active mode/controller has no envelope requirement. Writing
   `envelope=none` while applying product-code edits is a self-declared G11 violation — stop and
   freeze the envelope instead of editing.
+- ✅ `proof` answers one question: **what exercised this through the path it will actually take?**
+  It is required on every anchor, and `none:` is an honest and frequent answer:
+  `proof=state.validate+round-trip` (the real save accepted it), `proof=live:round-5-opening-count`
+  (observed in a live run), `proof=none:unit-only` (the piece passes, the path is untested),
+  `proof=n/a` (this message claims nothing works). G24 and G28 already say a passing reproduction
+  is not a working run — but they bind to defect fixes and to *completion*, and on 2026-08-01
+  three claims escaped both because they were neither: a five-minute wake-up timer that never
+  fired across sixteen hours, a coverage gate whose own inputs were never traced, and a durable
+  write whose unit tests proved its content while the record rejected it and killed a four-hour
+  run. Each was true of the piece and untested through the path, and each was reported to Kamen as
+  in place. Writing `proof=none:job-created` beside "the timer is armed" is the whole difference
+  between a mechanism he trusts and one he knows is unverified. Presence is checkable, as with
+  `words=` and `envelope=`; truthfulness is not, and the same bargain applies.
 - ✅ If full consultation is still pending when the turn starts (e.g. the hook delivered a
   truncated preview), anchor first anyway with `exceptions=directives pending full read`, then
   read the artifact and restate a corrected anchor only if something material changed.
@@ -87,7 +100,7 @@ to `prototype-driven-implementation`.
   directive conflict occurred, or unresolved compliance remains at closeout.
 - 🚫 No bare checkmarks or self-grades. Do not turn routine replies into a full G-rule matrix.
 
-**Set:** 2026-06-13 · **repeated:** 0 · **amended:** 2026-07-24 (Kamen "lock it" — anchor names the active controller and envelope status, so running a Write-code turn without the controller/envelope is self-evident, not silent)
+**Set:** 2026-06-13 · **repeated:** 0 · **amended:** 2026-07-24 (Kamen "lock it" — anchor names the active controller and envelope status, so running a Write-code turn without the controller/envelope is self-evident, not silent) · **amended:** 2026-08-02 (Kamen approved — `proof=` names what exercised the claim through its real path, after three claims in one day proved true of the piece and untested through the path; the gate now rejects an anchor without it, checked by running the hook against a transcript with and without the field)
 
 ---
 
@@ -422,8 +435,18 @@ to `prototype-driven-implementation`.
 - ✅ Trustworthiness gate (hard): the reproduction MUST (i) run the same code path (no reimplementation; mocks only at true external edges), (ii) use real captured inputs (never guessed), (iii) be red-before/green-after. If it cannot satisfy all three, it is not a valid proxy — say so; do not claim the fix verified from it.
 - 🚫 No claiming a fix verified from a reproduction that reimplements the logic or feeds invented state (the false-confidence trap, G4).
 - 🚫 No skipping the single live confirmation — a passing reproduction proves the fix, not that the whole run now succeeds (each fix can unmask the next layer).
+- ✅ When a live run is genuinely needed, enter the workflow at the phase where the change is
+  proved, using the run-resume path. A full drive is correct only when the question is about the
+  whole chain — ordering, accumulated state, end-to-end coverage. Name the entry phase and why in
+  the message that launches it.
+- 🚫 No full drive as the default instrument for a one-stage question. A clean run from step one
+  feels like the strongest proof and is the most expensive way to answer what one phase decides.
 
-**Set:** 2026-07-11 · **repeated:** 0
+**Set:** 2026-07-11 · **repeated:** 0 · **amended:** 2026-08-04 (Kamen "lock it" — a change to the
+strategy-brief prompt at phase 56 of 72 was launched as a full run from step one, three and a half
+hours, when the resume path re-enters at that phase in minutes; the resume script's own docstring
+had said so and was read the same day. An anchor launching a run without naming its entry phase is
+now a visible lapse.)
 
 ## G25 · Bounded delivery outranks process expansion
 **Why:** When correctness and workflow rules continually expand the current phase, bounded work
@@ -693,5 +716,121 @@ decision re-opened per item stops reading as a decision, and Kamen ends up re-ma
 - 🚫 No per-item confirmation once the source is named.
 
 **Set:** 2026-07-28 · **repeated:** 0
+
+---
+
+## G33 · A refusal names what was wrong, never only which rule fired
+**Why:** Code in this system refuses model output constantly — a schema check, a count, a
+prohibition screen — and the model gets one chance to read that refusal and try again. On
+2026-08-02/03 four separate refusals named the rule and not the thing that broke it, and each cost
+three live attempts: the model was told a rule had been broken, could not tell which of its items
+broke it, returned the same shape again, and the step died. One of them killed the measurement step
+outright and took fifteen requirements and a full rebuild with it. In every case the same step
+passed on the first attempt the moment the refusal named the offending item and what would fix it.
+The rule was never the problem; the message was. A refusal a retry cannot act on is not a check,
+it is a coin toss repeated three times.
+- ✅ A refusal states, in the same string: which item failed (by its own name or index), what came
+  back, and what would satisfy the rule instead. `confirms_is_list_want_one_sentence_string` and
+  `'Proof-page quality' says 'drove' about 'coverage' with no method stated — name the control,
+  model, holdout or matched comparison, or drop the causal wording` are refusals; `hypothesis_test
+  invalid` and `a causal claim rests on coverage with no method stated` are not.
+- ✅ When several things are wrong at once, name them all in one refusal. A refusal that surfaces
+  one of three problems buys one retry per problem and the attempt budget is three.
+- ✅ When the same rejection fingerprint appears twice in one phase's ledger, the defect is the
+  message, not the model. Fix the message before spending the third attempt.
+- ✅ The same standard applies to the instruction that produced the output: a contract that leaves
+  a type or a shape unstated will be broken, and the refusal is then a late correction of a
+  preventable ambiguity. Pin it in the prompt and in the refusal.
+- 🚫 No refusal whose whole content is the rule's name, the field's name, or the error class.
+- 🚫 No spending a second live attempt against a refusal that has already failed once to change
+  what came back.
+
+**Before writing a refusal:** read it as the model will, with no access to the code that raised it.
+If it does not say what to change, it will not be changed.
+
+**Set:** 2026-08-03 · **repeated:** 0 (Kamen "lock it" — four refusals in one night each cost three
+live attempts and one killed a whole step; every one passed first try once the message named the
+item and the fix)
+
+---
+
+## G34 · One frozen measure, and the delta, in every autonomous report
+**Why:** Across one overnight drive Claude reported the same goal four different ways — 29, then 65,
+then 71, then 61 — each a genuine reading of a differently-shaped number: a durable coverage count,
+then a cumulative total across rounds of freshly-written checks, then a single-pass total of the
+whole check set. No two of those reports could be compared, so Kamen could not tell whether the work
+was advancing, and each report also led with Claude's own repairs to the machine rather than with
+the goal. Kamen: "your reporting is so all over the place and chaotic that no one can understand
+what the fuck is happening and are you actually fixing and making progress or not... i am the judge
+to how you are working". A measure that can be reshaped mid-drive is not a measure; it is a way to
+always have a good number to show.
+
+**Every report during an autonomous drive opens with exactly these three lines, in this order:**
+
+```
+GOAL    <frozen measure> · <now> of <total>
+SINCE   <+N | -N | 0> since the last report — <one clause: what caused it>
+NOW     <what is running> · <when the next number is due>
+```
+
+- ✅ The measure is declared **once** per drive, in the drive's own words, and is read from an
+  artifact Kamen can open himself. It is never redefined mid-drive.
+- ✅ It is the **goal's** measure, never a proxy. Checks written, repairs dispatched, tests passing,
+  files changed and rounds completed are all activity, not progress.
+- ✅ `0` is a required answer and is stated plainly. So is a negative — a drive that went backwards
+  says so on the SINCE line before anything else.
+- ✅ When a restart, a change of method, or a change of instrument makes the number incomparable to
+  the last report, SINCE reads `not comparable — <why>`, and the next report carries both numbers
+  once so the seam is visible rather than smoothed over.
+- ✅ Changing the measure requires Kamen's approval **before** the report that uses it.
+- ✅ Machine and harness work is reported **below** those three lines, never inside them. A fix to
+  the machine is not progress toward the goal unless GOAL moved; saying otherwise is how six weeks
+  of real fixes reported as progress while the number stood still.
+- ✅ Everything else in the report is at most three short lines. G29's limits still bind.
+- 🚫 No report whose number cannot be compared against the previous report's number without an
+  explanation of the difference.
+- 🚫 No leading with what was fixed, learnt, or attempted while GOAL is absent or unchanged.
+- 🚫 No new denominator, no re-basing, no "not the same measurement" as an aside after the number.
+
+**Before sending a drive report:** put it beside the previous one. If Kamen cannot subtract one
+number from the other and get a true answer, the report is wrong — fix the report, not the number.
+
+**Set:** 2026-08-05 · **repeated:** 0 (Kamen "lock it" — proven by two subagent runs given the same
+real drive state, one with this rule and one without: the with-rule report opened on the number,
+declared the previous number incomparable on its own line, and kept machine work below the three
+lines; the without-rule report led with narrative, buried the same correction mid-message, mixed the
+machine change into the goal, and rounded the remaining count. Both disclosed the correction — the
+rule changed the shape, not the honesty, and the shape is what Kamen judges from.)
+
+---
+
+## G35 · Fix the class, in the same commit, and say how many
+**Why:** On 2026-08-05 commit `29a0ad6` fixed one refusal in `platform_decisions.py` that said only
+its rule's name. Eighty-five others in that same file said only their rule's name. Eleven lines from
+the one that was fixed sat `owner_question_manifest_invalid`, which two hours later refused a live
+run three times with the string `owner_question_manifest_invalid:4` and killed it at phase 55 of 74.
+G33 had been locked two days earlier and was applied to the instance in front of Claude instead of
+the class it belonged to. That is the shape Kamen named: "you will do the correct chase now and a
+couple of hours later you will do your own shit again." A fix that leaves its siblings in place is
+not a fix, it is a delay, and the next failure is already written.
+- ✅ When a defect is fixed, sweep the same defect class in the same file in the same commit.
+- ✅ The commit message states how many instances of the class were found and how many were fixed.
+  Both numbers, always, including "1 found, 1 fixed".
+- ✅ When the class is too large to sweep in that commit, state the number and stop for Kamen's
+  decision before continuing. Do not fix a subset and carry on.
+- ✅ The class is what the defect *is*, not where it was found: a refusal that names only its rule,
+  a document read from a stale record, a check that returns a constant. Name it in the commit in
+  those terms, so the sweep can be checked against the claim.
+- ✅ This binds even when the instance was found by a live failure and the fix is urgent. The sweep
+  is what stops the same run dying twice.
+- 🚫 No fixing the instance in front of you and leaving the rest of the class in the same file.
+- 🚫 No commit that claims a class fix without the found/fixed count.
+
+**Before committing a defect fix:** search the file for the same shape. If the count is more than
+one and the commit fixes one, the commit is wrong.
+
+**Set:** 2026-08-05 · **repeated:** 0 (Kamen "lock it" — after `owner_question_manifest_invalid:4`
+killed run up-run-02195a274a87, from a class of eighty-five left untouched by a fix to one of its
+members that morning)
 
 <!-- END GENERATED WORKING-AGREEMENT DIRECTIVES -->

@@ -60,6 +60,13 @@ CANONICAL_SEQUENCE_IDS = (
     "convergence-state-review-cycle",
     "greenfield-recreate-resume",
     "workflow-resume-from-phase-live-confirmation",
+    # Registered in SEQUENCES.md without a canonical entry here, which made
+    # build_intake_contracts fail closed for EVERY sequence, not just this one -- the
+    # launcher refused to build anything at all. It carries no adapter on purpose: the
+    # heartbeat is a background command the agent runs directly, so intake has nothing
+    # to prepare for it, and a None adapter records it as non-runnable rather than
+    # missing.
+    "agent-heartbeat",
 )
 
 COMMIT_PUSH_OPERATIONS = (
@@ -1732,6 +1739,16 @@ WORKFLOW_CLIENT_REGENERATION_SPEC = {
             "One existing file path.",
             "Tasks/vivacom-corporate-demo/controlled-topic-policies.json",
             "Supply the owner ruling covering every flagged interview answer.",
+            "path", required=True,
+        ),
+        _semantic_field(
+            "client_classification_path",
+            "Declared client facts",
+            "One existing file path.",
+            "Tasks/vivacom-corporate-demo/client-classification.json",
+            "Supply the account manager's true/false answers for the facts the "
+            "required-component conditions turn on. A fact left out is reported "
+            "unresolved rather than assumed either way.",
             "path", required=True,
         ),
     ],
@@ -3616,6 +3633,7 @@ def _prepare_workflow_client_regeneration(
     expected = {
         "repository_key", "client", "parent_run_id",
         "answers_source_run_id", "controlled_topic_policies_path",
+        "client_classification_path",
     }
     if set(answers) != expected:
         raise AdapterError(
@@ -3636,6 +3654,8 @@ def _prepare_workflow_client_regeneration(
         "--answers-from-run", _required_text(answers, "answers_source_run_id"),
         "--controlled-topic-policies-file",
         _required_text(answers, "controlled_topic_policies_path"),
+        "--client-classification-file",
+        _required_text(answers, "client_classification_path"),
     ]
     environment = {
         "PYTHONPATH": "src",

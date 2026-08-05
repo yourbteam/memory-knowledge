@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `30e6ea7069e4ceb265dca490b007e419fce8856c4cdf6e002f7f2a77ac66d7db`
+Ledger-SHA256: `eb0fce555070d316f53412caec27bf67ca52979ac87d50d4307117776dc241fb`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -102,6 +102,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `registered discovery-promotion-lifecycle successor suite`
 - Symptom: The corrected-bundle successor suite passed 155 tests and failed the canonical-writer assertion because the lock-only checkpoint script duplicated the ledger filename literal.
 - Evidence: tests/test_work_memory.py::test_only_canonical_scripts_write_event_ledger expected only sequence_promote.py and work_memory.py but also found convergence_checkpoint_run.py.
+
+## blk-01c1bd5bf2ac272c64f9a0db
+
+- Status: `open`
+- Subject: `up-library-overnight-drive`
+- Step: `gate-final-public-claim-inventory`
+- Surface: `up-harness cd-s-002 live drive`
+- Symptom: A validated final strategy brief was refused whole by the claim audit. The message named nothing against a 52,000-character document; the real cause was seven table rows whose clearance and flag cells were left blank, which the auditor rejects.
+- Evidence: up-run-e853bc59cc26: final_strategy_validation valid, gate issues ['unsupported_markdown_syntax']; reproduction against the stored candidate isolated the seven rows
 
 ## blk-01fb8f61bf3ddba46341a3ec
 
@@ -616,6 +625,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Correction recording rejected at least one changed artifact path
 - Evidence: work_memory.py correct returned changed-artifact-outside-repository
 
+## blk-0ccab947dde63addd2afdc49
+
+- Status: `open`
+- Subject: `workflow-client-regeneration-live-confirmation`
+- Step: `compose-final-runbook`
+- Surface: `up-harness/phase-ledger-runbook`
+- Symptom: the final runbook step produced a complete 43k-character runbook and ran its verifier and critic to completion, then recorded status failed with no reason anywhere in the phase record
+- Evidence: cold-start run up-run-e21b2a760e34 blocked at compose-final-runbook after publishing at step 32; phase error is null, the ledger says status failed, and the last three activity events are verifier completed, critic completed, verifier completed
+
 ## blk-0ce64ff33985d5f1913a87c5
 
 - Status: `fixed-awaiting-verification`
@@ -859,6 +877,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The fresh verifier spawn was rejected before an agent was created.
 - Evidence: The API returned: Full-history forked agents inherit the parent agent type; omit agent_type when fork_context is true.
 
+## blk-14c92615b5c0a9435f1eda9f
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `correct-owned-strategy-inventory`
+- Surface: `up-harness/strategy_brief`
+- Symptom: the correction chain resolves an unmarked governed claim by wrapping the text in markers; when that text sits inside a question the resulting span is the question, which is not a governed claim, so the chain reports the issue unresolved and fails
+- Evidence: three captured replays (up-run-a71da3a27ea7 and two others) end status=failed with reason model_strategy_reaudit_not_resolved after the question rule was corrected to read the sentence instead of the reader's label; instrumentation shows the rule firing 15 times on spans the reader itself labelled question
+
 ## blk-14f24f4ba9bb4703ca4406bb
 
 - Status: `superseded`
@@ -975,6 +1002,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `research-package-raw-finding-ingress`
 - Symptom: repeated-lens-agents-emitted-wrong-finding-field-shapes
 - Evidence: research_package-normalize_raw_findings-only-calls-canonical_json-and-conflict-retry-used-finding_type-instead-of-type
+
+## blk-17b3919e331e949676c7bb2a
+
+- Status: `fixed-awaiting-verification`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `gate-final-public-claim-inventory`
+- Surface: `up-harness/public_claim_inventory`
+- Symptom: five of the 49 claims are minted from owner policies, which have no way to state what kind of assertion the wording is; the checker filled in the class ordinary and then refused the brief when the reader read one of them as leadership and market position
+- Evidence: run up-run-f6707926e7e1 blocked at gate-final-public-claim-inventory with public_claim_inventory_claim_classes_invalid at 645 and 646, both bound to qaf-c8428578e667a686, whose manifest row carries no claim_classes key at all; the same is true of qfr-96c2a8433cac4526, qaf-5a835ba63b9b2b55, qfr-645f4ea0867db505 and qfr-d68404f12e35da9a
 
 ## blk-17ca287f5b7e1cf521fbd758
 
@@ -1443,6 +1479,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/sequence_guard.py::_structured_command_tokens`
 - Symptom: commit-push-main refuses any commit message spanning more than one line; the single-line variant of the same operation dispatches cleanly.
 - Evidence: sequence_guard.py:220 rejects a structured argv token containing \x00, \r or \n. The intake passes the commit message as an argv token (--message), so every multi-line message fails. Proven both ways on the dry-run profile: 42-line message -> invalid-guarded-command (exit 4); one-line message -> ok:true, dry-run passed.
+
+## blk-233fb2a88c391e7883f0021f
+
+- Status: `open`
+- Subject: `greenfield-recreate-resume`
+- Step: `feature-child-task-artifact-fetch`
+- Surface: `mcp-agents-workflow:src/workflow_orch/artifact_repository.py`
+- Symptom: Every greenfield feature whose artifact branch carries a full application tree dies about 90s into its drive while creating its child task, and the program stops at feature_not_complete. Observed twice on feat-6 (2026-07-29 11:59:17Z and 12:07:01Z), identical fingerprint.
+- Evidence: Traceback: _greenfield_run_feature_program_drive (mcp_server.py:14538) to _create_greenfield_child_task (mcp_server.py:21414) to create_or_resolve_mawf_task (mawf_task_intake.py:321) to ArtifactWriter.identity_marker (artifact_repository.py:926) to _write_exact_files (:1119) to _prepare (:1213) to prepare_task_worktree (:366) to _fetch_task_branch (:419) to _run (:1730). MEASURED IN-CONTAINER on the real repo, not inferred. The branch is task/mawf-task-82ae1ad2bba4d36c97161da1: 973 commits, 6161 files, a 17128-object pack. Full-history fetch UNCAPPED = 272s, against the hard timeout=180 at artifact_repository.py:426. Ruled out by measurement: ls-remote 283 refs = 1s; an ordinary cold task branch full fetch = 5s; a non-existent branch = 1s (handled). So it is neither remote slowness nor cold start; it is the volume of historical blobs on app-tree branches, and every such branch pays it. Measured alternative on the SAME branch: --filter=blob:none clone keeping ALL 973 commits with no shallow boundary = 1s, plus deferred blob backfill at checkout = 5s. Second defect on the same path: _run (:1717-1731) raises on asyncio.wait_for timeout WITHOUT killing the subprocess, so the abandoned git fetch keeps running and competes with its own retry; the live container carries about 150 defunct git children accumulated since start.
 
 ## blk-234206ee61267b072311eceb
 
@@ -2821,6 +2866,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The canonical sequence guard refused the approved narrow replay because the task has no active writer claim.
 - Evidence: sequence_guard.py guard returned {"error":"task-writer-unclaimed","ok":false} before the replay command was executed.
 
+## blk-464f50abbd5b003980677eef
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `gate-final-public-claim-inventory`
+- Surface: `up-harness/public_claim_inventory`
+- Symptom: a span that is a question carrying one marked claim was labelled governed_claim by the reader, so the claim-class subset check ran on it and refused the document; the harness already has a rule that a question stays a question, but it keys off the reader's own label instead of the span's shape
+- Evidence: run up-run-375404f64237 blocked at gate-final-public-claim-inventory with public_claim_inventory_claim_classes_invalid:257; span 257 is 'Should the controlled Q&A use this evidence-gated fact: ...?' classified governed_claim with classes comparative, leadership, market_position
+
 ## blk-4679d9f4541cc41c8c1f224e
 
 - Status: `closed`
@@ -2883,6 +2937,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: The guard rejected the current controller record-lens command after the first lens attempt was recorded.
 - Evidence: The discovery document specifies --raw-findings; current research_package.py CLI and contract require --terminal-envelope.
+
+## blk-47b64bbdfe374ff1faea4673
+
+- Status: `open`
+- Subject: `login-prefill-removal`
+- Step: `sequence-select`
+- Surface: `memory-knowledge/scripts/work_memory.py select`
+- Symptom: Selecting the commit-push-main sequence fails, so no governed commit can start.
+- Evidence: prevention_registry.load_executable_owner_contracts raises executable-owner-source-hash-drift:commit-push-main; scripts/sequence_intake_adapters.py is pinned at 71d625802d50 and hashes bc7aaaf86dde on disk; git status shows it modified but uncommitted, adding an agent-heartbeat canonical id and a client_classification_path field belonging to other in-flight work.
 
 ## blk-47f757d9427ccf168643a545
 
@@ -3000,6 +3063,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: After the selected bundle changes, sequence_guard rejects the work_memory correct command that must record that exact bundle transition.
 - Evidence: Both discovery_log and script sourced guards returned stale-source-bundle before command-shape evaluation; verify_receipts fails closed before cmd_guard can authorize work_memory.py correct.
+
+## blk-4bcf0d4f779d5443c297e323
+
+- Status: `fixed-awaiting-verification`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `gate-final-public-claim-inventory`
+- Surface: `up-harness/public_claim_inventory`
+- Symptom: the proof ladder's citation label and R-VERIFY status were partitioned into spans of their own, so the reader had to classify text containing no assertion; it called 4 of 98 such fragments governed claims and the final gate refused the document over them
+- Evidence: run up-run-89ff944124de blocked at gate-final-public-claim-inventory with public_claim_inventory_claim_classes_invalid at rows 724, 726, 732, 734; rows 724 and 732 are ' - R-VERIFY' and rows 726 and 734 are '[CLAIM:<id>] ', while the identical fragments at rows 722 and 730 passed
 
 ## blk-4bf9a5e9895b617f2f0c8a66
 
@@ -3162,6 +3234,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `blind-evaluator`
 - Symptom: staged-inputs-omit-required-predicate-scope-and-planner-check-vocabulary
 - Evidence: evaluator_matches_output_predicate_id_scope_id_and_planner_check_names_against_hidden_gold_but_raw_snapshots_expose_only_request_and_evidence_ids
+
+## blk-50aece94a2e605ebecf695ac
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `resume-compose-llm-strategy-brief`
+- Surface: `united-partners:engine/runner.py resume`
+- Symptom: Resume refuses in 0.4s with zero model calls when the total attempt budget is spent but no single issue is exhausted.
+- Evidence: up-run-2dfc39a91bd3 created 18:04:47.92 updated 18:04:48.35; checkpoint total_attempts 6 with counts proof_manifest_invalid 2, strategy_claim_inventory_invalid 1; resume block carried no reset marker.
 
 ## blk-50e5a6825628d50dc6839e0e
 
@@ -4324,6 +4405,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: sequence_guard rejected newly appended research steps because the active bundle predates the updated discovery log
 - Evidence: guard returned stale-source-bundle immediately after append-step changed the discovery document
 
+## blk-6d3da7e6a49c8dac1fb7ea5d
+
+- Status: `open`
+- Subject: `up-library-overnight-drive`
+- Step: `compose-final-strategy-brief`
+- Surface: `codex role adapter`
+- Symptom: Three live runs lost the final composition to a timeout while the harness was configured for 1800 seconds. The adapter that calls the model has its own limit defaulting to 300 seconds and fires first.
+- Evidence: up-run-c33b31a2f47c and up-run-0f7a32e40bf2 activity: timed out after 300 seconds with UP_HARNESS_AGENT_TIMEOUT_SECONDS set to 1800
+
 ## blk-6dcd7e0b50b4ec0e63f558f4
 
 - Status: `fixed-awaiting-verification`
@@ -5406,6 +5496,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: iteration-13 verifier remained active without partial or terminal output across five bounded waits
 - Evidence: agent 019f6f83-11f9-73e3-a2f6-ceb23986ddae returned timed_out with empty status in five consecutive wait windows; no error or result was emitted
 
+## blk-8dba06e8018f9cc1f4d529ec
+
+- Status: `open`
+- Subject: `up-library-overnight-drive`
+- Step: `compose-pre-engagement-briefing-pack`
+- Surface: `up-harness cd-s-002 live drive`
+- Symptom: The desk audit lost all three attempts to the same rejection; the model returned the six audits as an object keyed by audit name and the message only said the count was wrong, so each retry reproduced the same shape.
+- Evidence: up-run-94e3497cd6f3 phase ledger: rejected_attempts all three pre_engagement_audit_count_mismatch; direct role call confirmed audits returned as dict
+
 ## blk-8dcf1c94b73742e9410b5303
 
 - Status: `fixed-awaiting-verification`
@@ -5558,6 +5657,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/work_memory.py`
 - Symptom: The work-memory ledger refused to bind the UP source correction because the selection has no UP repository root.
 - Evidence: work_memory.py correct returned changed-artifact-outside-repository for /Users/kamenkamenov/united-partners/src/up_harness/strategy_brief.py.
+
+## blk-9247a68e7061c77300fa4fe2
+
+- Status: `open`
+- Subject: `workflow-client-regeneration-live-confirmation`
+- Step: `compose-final-runbook`
+- Surface: `up-harness/phase-ledger-loop`
+- Symptom: every review round covered all 43 items and every finding it raised was repaired, but each round surfaced a different item; the fourth and final review raised a new item and the loop cap had been reached, so the challenger never got to apply the rewrite it had already suggested
+- Evidence: cold-start run up-run-e21b2a760e34: loop 1 findings on items 026 and 027 patched, loop 2 on 025 patched, loop 3 on 037, 038 and 041 all patched, then terminal_verifier raised finding-001 on up-runbook-021 with a suggested rewrite and no critic round followed; reviewed_item_ids is 43 of 43 in every round
 
 ## blk-9286cd87c664a067ae8e781c
 
@@ -6081,6 +6189,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Registered successor verification generates a new task identity instead of reusing the correction predecessor task owner.
 - Evidence: _verify_registered constructs registered-verify-{sequence}-{operation}; work_memory successor selection requires the predecessor run task identity, while PendingCorrection already carries that exact task_id.
 
+## blk-9f5944123c564c8fed25e9a3
+
+- Status: `open`
+- Subject: `up-library-fresh-run-reproduce-301`
+- Step: `sequence-select`
+- Surface: `work_memory.py select`
+- Symptom: Sequence selection raises RegistryError before any sequence can be chosen, naming a drifted owner-contract source hash on the unrelated greenfield-full-drive bundle
+- Evidence: prevention_registry.py load_executable_owner_contracts raises RegistryError: executable-owner-source-hash-drift:greenfield-full-drive during select --task-id up-library-fresh-run-reproduce-301
+
 ## blk-9f87807653a04e72cbf2bcc8
 
 - Status: `superseded`
@@ -6603,6 +6720,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: focused-scheduler-test-observes-valid-started-receipt-and-fails-before-worker-finishes
 - Evidence: pytest-assertion-started-not-in-complete-failed-after-waiting-only-for-receipt-existence
 
+## blk-ac5923ffcc2ccff14113c4e3
+
+- Status: `closed`
+- Subject: `history-v3-commit`
+- Step: `publish`
+- Surface: `sequence intake: commit message field`
+- Symptom: The governed commit intake reads the commit message with a single readline, so only a one-line message can be supplied. A prepared multi-paragraph message cannot be entered; its extra lines would be consumed as answers to later questions.
+- Evidence: script_intake._terminal_input reads one line and rstrips the newline; the commit message field in sequence_intake_adapters is type "string". Observed 2026-07-29 publishing three taggable-api files: the intended multi-paragraph body was reduced to a single subject line.
+
 ## blk-ac8e0fb8bf444adb3083e0b5
 
 - Status: `superseded`
@@ -6737,6 +6863,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory-sequence-registry`
 - Symptom: Automatic sequence selection returned five unrelated workflow sequences and no usable match
 - Evidence: work_memory select returned callcenter-harness-provision-verify, greenfield-full-drive, mawf-playbook-blocker-reentry, mawf-playbook-full-test, and mawf-playbook-speed-test
+
+## blk-b0410e4c0134128963f6f520
+
+- Status: `closed`
+- Subject: `workflow-resume-from-phase-live-confirmation`
+- Step: `resume-compose-llm-strategy-brief`
+- Surface: `united-partners:engine/runner.py resume`
+- Symptom: Operator resume of compose-llm-strategy-brief refuses in 0.4s with zero model calls; the budget reset reaches only the resume mirror.
+- Evidence: up-run-689ac44ea547 created 15:57:08.07 updated 15:57:08.48; strategy_brief_attempts identical to the parent (last 15:26:24); the single rejection is the parent's attempt 3/3 total 4/6.
 
 ## blk-b0572edb8a915f630057b718
 
@@ -9462,7 +9597,7 @@ This file is generated from `operations/work-memory/events.jsonl`.
 
 ## blk-f5f611d0377998ab7256286d
 
-- Status: `fixed-awaiting-verification`
+- Status: `closed`
 - Subject: `workflow-resume-from-phase-live-confirmation`
 - Step: `compose-platform-lock-session-guide`
 - Surface: `up-harness/touchpoints`
@@ -9918,6 +10053,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/replay_cd_s_002_strategy_brief.py rejection output`
 - Symptom: The replay received three rejected payloads but --output wrote nothing because rejection returned no record.
 - Evidence: The terminal summary preserved only issue names and /private/tmp/up-run-7bfd33f79776-strategy-replay.json was not produced, so exact generated source_quotes cannot be inspected.
+
+## blk-ffb43ff1249344854a9a90fc
+
+- Status: `verified`
+- Subject: `greenfield-recreate-resume`
+- Step: `resume-drive`
+- Surface: `mcp-agents-workflow:scripts/ensure_local_operator_env.py`
+- Symptom: greenfield-recreate-resume completes every step (recreate on :18083, codex auth, git auth for artifact+feature repos, single-branch warm, lease release) and then its final resume-drive step dies connecting to 127.0.0.1:18090, a port with nothing on it.
+- Evidence: Live 2026-07-29 run e5299f16. Prepared argv carried --port 18083; greenfield_recreate_resume.sh:105 calls ensure_local_operator_env.py --port 18083; the durable env file still reads WORKFLOW_ORCH_WS_URL=ws://127.0.0.1:18090/ws from a previous container. ensure_operator_env (scripts/ensure_local_operator_env.py:122-137) early-returns whenever the file already carries a JWT secret; that branch merges only keys missing from _STATIC_KEYS, and WORKFLOW_ORCH_WS_URL is not a static key -- it is computed at lines 139-142 on the rewrite path only. So an explicit --port is silently discarded whenever the env file already exists, contradicting the function docstring at lines 117-118 (the WS_URL tracks the container ACTUAL published port, explicit port wins).
 
 ## blk-ffc10318728bf2a91bccb2b2
 

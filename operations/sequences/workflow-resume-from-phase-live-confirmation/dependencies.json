@@ -62,7 +62,22 @@
     },
     {
       "kind": "file",
+      "path_or_sequence_id": "src/up_harness/controlled_qna.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/final_strategy.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
       "path_or_sequence_id": "src/up_harness/public_claim_inventory.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "src/up_harness/touchpoints.py",
       "repository_key": "united-partners"
     },
     {
@@ -113,6 +128,16 @@
     {
       "kind": "file",
       "path_or_sequence_id": "tests/unit/test_vivacom_phase20_reproduction.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_public_claim_inventory.py",
+      "repository_key": "united-partners"
+    },
+    {
+      "kind": "file",
+      "path_or_sequence_id": "tests/unit/test_touchpoints.py",
       "repository_key": "united-partners"
     },
     {

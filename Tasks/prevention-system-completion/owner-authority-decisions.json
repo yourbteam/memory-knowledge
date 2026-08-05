@@ -76,11 +76,17 @@
       "approved_at_utc": "2026-07-17T22:06:05Z",
       "required_fields": {
         "copy-code-project.source_repository_key": {
-          "allowed_values": ["mcp-agents-workflow", "memory-knowledge"],
+          "allowed_values": [
+            "mcp-agents-workflow",
+            "memory-knowledge"
+          ],
           "binds_path": "source"
         },
         "seed-git-auth.repository_key": {
-          "allowed_values": ["mcp-agents-workflow", "memory-knowledge"],
+          "allowed_values": [
+            "mcp-agents-workflow",
+            "memory-knowledge"
+          ],
           "verification_role": "Select the configured repository for the non-mutating authenticated URL acquisition probe."
         }
       },
@@ -267,6 +273,14 @@
       "approved_at_utc": "2026-07-17T23:10:01Z",
       "approved_surface": "The effect_and_reconciliation_contract and terminal_contract objects in owner-contract-proposals/convergence-state-review-cycle.json.",
       "stable_behavior": "Atomic semantic receipts keyed by request/operation id allow crash recovery from the first absent operation and stop on predecessor disagreement; final structured check/status distinguishes cycle_status APPLIED from verified convergence_status and emits exactly one owner terminal event."
+    },
+    {
+      "decision_id": "commit-push-main-agent-heartbeat-intake-adapter-source-correction-20260804",
+      "owner_sequence_id": "commit-push-main",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-08-04T10:49:58Z",
+      "approved_surface": "The sequence_intake_adapter source binding in owner-contract-proposals/commit-push-main.json and the matching implementation_sources entry in owner-executable-contracts.json.",
+      "stable_behavior": "The adapter module registers agent-heartbeat as a canonical sequence id carrying no adapter, so contract building no longer fails closed for every sequence when a sequence is registered without one, and workflow client regeneration requires the declared client-classification facts path so an omitted fact is reported unresolved rather than assumed. Owner effects, admission, and terminal semantics are unchanged."
     }
   ]
 }
