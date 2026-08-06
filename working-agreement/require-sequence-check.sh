@@ -65,7 +65,11 @@ esac
 # a workflow. Read-only git, tests, and local edits are the fast path and never gated.
 governed=""
 case "$command_text" in
-  *"git commit"*|*"git push"*|*"git merge"*|*"git rebase"*|*"git reset --hard"*) governed="a git publish" ;;
+  # scoped_git_publish.py is how this machine actually commits -- the registry names it as
+  # the automation for `commit-push-main` -- and it never contains the string "git commit".
+  # On 2026-08-06 every commit of the day went through it, so all three of these gates were
+  # blind to the path the work really took.
+  *"git commit"*|*"git push"*|*"git merge"*|*"git rebase"*|*"git reset --hard"*|*scoped_git_publish.py*) governed="a git publish" ;;
   *"docker build"*|*"docker run"*|*"docker compose"*|*"docker-compose"*) governed="a container operation" ;;
   *"start_strategy_run.py"*|*"resume_workflow_phase.py"*|*"run_client_regeneration.py"*|*"run_cd_s_002_upgrade_canary.py"*) governed="a workflow drive" ;;
   *"pip install"*|*"uv pip install"*|*"npm install"*|*"brew install"*) governed="a package install" ;;

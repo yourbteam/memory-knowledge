@@ -35,7 +35,11 @@ command_text="$(extract | sed -n '2,$p')"
 [ "$tool_name" != "Bash" ] && exit 0
 
 case "$command_text" in
-  *"git commit"*) ;;
+  # scoped_git_publish.py is how this machine actually commits -- the registry names it as
+  # the automation for `commit-push-main` -- and it never contains the string "git commit".
+  # On 2026-08-06 every commit of the day went through it, so all three of these gates were
+  # blind to the path the work really took.
+  *"git commit"*|*scoped_git_publish.py*) ;;
   *) exit 0 ;;
 esac
 
