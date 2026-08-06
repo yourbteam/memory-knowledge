@@ -31,7 +31,7 @@ to `prototype-driven-implementation`.
   that explicitly mention the working agreement, directives, G-rules, playbooks, corpus memory, or
   memory-knowledge. If a higher-priority instruction prevents loading the directives, state that.
 - ✅ Begin every substantive response with one compact anchor in this exact shape:
-  `directives=<artifact/revision>; mode=<mode>; controller=<active controller or none>; envelope=<approved:"<outcome>"|none|n/a>; ask=<none|decision|approval>; words=<N>; scope=<scope>; exceptions=<none or conflict>; proof=<real-path evidence|none:<what-is-untested>|n/a>`.
+  `directives=<artifact/revision>; mode=<mode>; controller=<active controller or none>; envelope=<approved:"<outcome>"|none|n/a>; ask=<none|decision|approval>; words=<N>; scope=<scope>; exceptions=<none or conflict>; proof=<real-path evidence|none:<what-is-untested>|n/a>; why=<why this action>; serves=<what it moves toward the declared goal>`.
   The anchor is the turn's **first text** — no narration, preamble, or consultation notes before
   it. In a multi-part turn, per-part anchors may follow, but the turn still opens with one.
 - ✅ When `envelope` is `approved`, it carries the approved outcome in a few words, quoted:
@@ -857,3 +857,34 @@ mood, so a promise does not hold it.
 the run's record. Proven on three transcripts identical but for one tool call: the one that read the
 feed was allowed, the one that only probed liveness was blocked, and the one with no tool call at
 all was blocked.)
+
+---
+
+## G37 · Say why you chose the action, and what it moves
+**Why:** On 2026-08-06 five real defects were found and fixed in one day — a doubled proof ladder,
+twenty dead gates, twenty blind composers, a refusal that named a hash, a reader that could not read
+eight of its own documents — and the goal's number sat at 26 of 29 sendable documents before the
+first and after the last. Every fix was correct. None of them was ever asked to justify itself
+against the goal, so nothing stopped a day of real work from being spent on the machine talking to
+itself. Kamen: "Before you do something and after you have done it I need you to report to me why do
+you chose to do it and how does it serve the goal. This needs the bulletproof hook you can come up
+with so you always explain yourself to me and hold yourself accountable."
+- ✅ Every anchor carries `why=` — the reason THIS action was chosen over the others available, in
+  a few words, not a restatement of what it is.
+- ✅ Every anchor carries `serves=` — the line of the declared goal the action moves, named from
+  the goal store, not from memory of the conversation.
+- ✅ `serves=nothing` and `serves=nothing yet: <what would>` are legitimate and frequent answers.
+  An action that serves nothing may still be necessary; what is refused is taking it without
+  saying so. Writing `serves=` honestly is how a day of plumbing becomes visible on the day rather
+  than at the end of it.
+- ✅ After the action, the same message says what it actually moved, in the same words. A `serves=`
+  claim that the outcome did not bear out is corrected in the next anchor, not quietly dropped.
+- 🚫 No action whose anchor cannot name what it serves.
+- 🚫 No `serves=` that names an activity — tests passing, files changed, a check added — instead of
+  the goal's own measure.
+
+**Set:** 2026-08-06 · **repeated:** 0 (Kamen "lock it" — proven on two transcripts identical but
+for the two fields: the one without them is blocked with "the anchor is missing: why, serves", the
+one with them passes. An earlier attempt reported the gate unproven because both trial transcripts
+returned exit 0; the cause was the fixture, whose assistant entries lacked the role key the gate
+reads, not the gate.)
