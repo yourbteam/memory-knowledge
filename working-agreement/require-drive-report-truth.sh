@@ -92,6 +92,35 @@ goal_lines = [ln.strip() for ln in text.splitlines() if ln.strip().startswith("G
 if not goal_lines:
     raise SystemExit(0)
 
+# G37's second half: after the action, say what it actually moved. On 2026-08-06, minutes after
+# Kamen locked that rule, a reading was taken and reported as "the strategy brief is off the
+# failing list" while the SINCE line printed directly above it read "not comparable - the set grew
+# from 29 to 28; 26 then, 26 now". The document had not passed; it was missing, because the run
+# stopped before publishing it. The anchor half of the rule had nothing to object to: both fields
+# were present. This is the half that was missing - prose may not claim the measure moved while
+# the line directly above it says it did not. It runs before any branch exits, because the
+# declared-goal branch returns as soon as the GOAL line matches its store.
+CLAIMS_MOVEMENT = (
+    "off the failing list", "no longer fails", "no longer failing", "came off the list",
+    "now passes", "now sendable", "improved", "went up", "moved up", "is up from",
+)
+since_line = next(
+    (ln.strip() for ln in text.splitlines() if ln.strip().startswith("SINCE")), ""
+)
+stalled = "not comparable" in since_line.lower() or since_line.split()[1:2] == ["0"]
+claimed = [phrase for phrase in CLAIMS_MOVEMENT if phrase in text.lower()]
+if stalled and claimed:
+    print(
+        "Blocked: the reply claims the measure moved while its own SINCE line says it did not.\n\n"
+        f"  the line says:  {since_line}\n"
+        f"  the reply says: {claimed[0]!r}\n\n"
+        "G37: after the action, say what it ACTUALLY moved. A number that did not move is the "
+        "answer, and saying so is what makes the next action honest. If something really did "
+        "change, re-measure and let the SINCE line show it - do not narrate over it.",
+        file=sys.stderr,
+    )
+    raise SystemExit(2)
+
 # On 2026-08-05 this gate held one number for the whole machine. A drive in
 # mcp-agents-workflow wrote "requirements proven by playing · 37 of 136", and minutes later it
 # refused a report about the United Partners harness for not carrying that number -- a different
