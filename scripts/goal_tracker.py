@@ -324,6 +324,32 @@ def _run_producer(repo: Path, producer: str) -> tuple[dict[str, Any], str]:
 # --------------------------------------------------------------------------------------
 
 
+def record_decision(
+    repo: Path, *, decided: str, because: str, expected: str, clock: Any = None
+) -> dict[str, Any]:
+    """Record what was decided, why, and what it should do to the number.
+
+    Kept on the goal it belongs to, so replacing the goal does not carry its decisions forward.
+    """
+
+    data = load(repo)
+    goal = current_goal(data)
+    if goal is None:
+        raise SystemExit(
+            f"no goal is in force for {repo}. A decision with no goal cannot say what it moves; "
+            f"run `goal_tracker.py set` first."
+        )
+    decision = {
+        "at": _now(clock),
+        "decided": decided.strip(),
+        "because": because.strip(),
+        "expected": expected.strip(),
+    }
+    goal.setdefault("decisions", []).append(decision)
+    save(repo, data)
+    return decision
+
+
 def readings(goal: dict[str, Any], kpi_id: str) -> list[dict[str, Any]]:
     return [row for row in goal.get("measurements", []) if row.get("kpi") == kpi_id]
 
@@ -352,6 +378,13 @@ def report_lines(repo: Path, *, now_clause: str = "") -> list[str]:
         if index == 0:
             lines.append(f"SINCE   {_since_clause(goal, kpi, taken)}")
     lines.append(f"NOW     {now_clause or 'nothing running · next number when a KPI is measured'}")
+    decisions = goal.get("decisions") or []
+    if decisions:
+        latest = decisions[-1]
+        lines.append(
+            f"WHY     {latest['decided']} — because {latest['because']} — "
+            f"expected: {latest['expected']}"
+        )
     return lines
 
 
@@ -414,6 +447,10 @@ def main(argv: list[str] | None = None) -> int:
     report.add_argument("--now", default="", help="what is running, for the NOW line")
     take = sub.add_parser("measure", help="run a KPI's producer and record what it returned")
     take.add_argument("--kpi", required=True)
+    decide = sub.add_parser("decide", help="record what was decided, why, and its expected effect")
+    decide.add_argument("--decided", required=True)
+    decide.add_argument("--because", required=True)
+    decide.add_argument("--expected", required=True)
     gate = sub.add_parser("check", help="does a GOAL line match the declared goal")
     gate.add_argument("--goal-line", required=True)
     args = parser.parse_args(argv)
@@ -434,6 +471,13 @@ def main(argv: list[str] | None = None) -> int:
     if args.command == "report":
         for line in report_lines(repo, now_clause=args.now):
             print(line)
+        return 0
+
+    if args.command == "decide":
+        decision = record_decision(
+            repo, decided=args.decided, because=args.because, expected=args.expected
+        )
+        print(f"recorded: {decision['decided']}")
         return 0
 
     if args.command == "measure":
