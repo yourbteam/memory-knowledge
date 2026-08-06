@@ -19,8 +19,14 @@ payload="$(cat)" || exit 0
 python3 - "$payload" <<'PY'
 import json, re, sys
 
+# `why=` and `serves=` were added on 2026-08-06. Kamen, after a day in which five real fixes
+# left the goal's number exactly where it started: "Before you do something and after you have
+# done it I need you to report to me why do you chose to do it and how does it serve the goal."
+# `why=` is the reason for THIS action; `serves=` is the line from the declared goal it moves,
+# and "does not serve it" is a legitimate and sometimes necessary answer -- what is refused is
+# acting without saying either.
 REQUIRED = ("mode=", "controller=", "envelope=", "ask=", "words=", "scope=", "exceptions=",
-            "proof=")
+            "proof=", "why=", "serves=")
 
 try:
     event = json.loads(sys.argv[1])
