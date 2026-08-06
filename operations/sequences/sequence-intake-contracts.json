@@ -235,7 +235,7 @@
       },
       "contract_version": 1,
       "entrypoint": "memory-knowledge:scripts/scoped_git_publish.py",
-      "entrypoint_source_sha256": "3a3be60bd395fde15cd2c9919fd93df53568e3fbe622f3d18944137373655478",
+      "entrypoint_source_sha256": "b57f889b55c3ad6321dd8677b36708beed7528d4801039f978b6770d4de667e6",
       "optional_inputs": [
         "approved_paths",
         "branch",

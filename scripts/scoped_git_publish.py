@@ -138,6 +138,61 @@ def _nul_names(result: subprocess.CompletedProcess[str]) -> set[str]:
     return {value for value in result.stdout.split("\0") if value}
 
 
+#: A repository declares its own suite here, one command on the first non-comment line. The
+#: publisher never guesses a command: a guessed one that happens to exit 0 is worse than none,
+#: because it reports a gate that ran nothing.
+TEST_DECLARATION = ".publish-tests"
+
+
+def _repo_test_command(repo: Path) -> list[str] | None:
+    """The command this repository says proves itself, or None if it declares none."""
+
+    declaration = repo / TEST_DECLARATION
+    if not declaration.is_file():
+        return None
+    for line in declaration.read_text(encoding="utf-8").splitlines():
+        stripped = line.strip()
+        if stripped and not stripped.startswith("#"):
+            return ["bash", "-lc", stripped]
+    return None
+
+
+def _run_repo_tests(repo: Path) -> dict[str, object]:
+    """Run the repository's declared suite and refuse the publish if it fails.
+
+    Why this is here rather than in a git hook: on 2026-08-05 a check was added that fails the
+    suite when a refusal carries no detail -- the defect that had killed two live runs that day.
+    It was in the standard discovery path and would run whenever the suite ran, and nothing made
+    the suite run: this repository has no git hooks and no continuous integration. A rule whose
+    enforcement depends on somebody remembering to run it is the rule that was already broken.
+    A local hook was the other candidate; it is skippable with --no-verify and absent from a
+    fresh clone, and this publisher is the path every commit here actually takes.
+
+    A repository with no `.publish-tests` publishes as before, and the result says so, so an
+    ungated repository is visible rather than assumed safe.
+    """
+
+    command = _repo_test_command(repo)
+    if command is None:
+        return {"ran": False, "reason": f"no {TEST_DECLARATION} in {repo}"}
+    completed = subprocess.run(
+        command, cwd=repo, capture_output=True, text=True, check=False
+    )
+    if completed.returncode == 0:
+        return {"ran": True, "command": command[-1], "passed": True}
+    tail = "\n".join(
+        (completed.stdout + completed.stderr).strip().splitlines()[-15:]
+    )
+    raise PublishError(
+        f"the repository's own tests failed, so nothing was committed.\n"
+        f"  command: {command[-1]}\n"
+        f"  exit:    {completed.returncode}\n"
+        f"  last lines:\n{tail}\n"
+        "Fix the failures and publish again, or remove the command from "
+        f"{TEST_DECLARATION} if it is no longer the suite that proves this repository."
+    )
+
+
 def _preflight(repo: Path, branch: str, remote: str, manifest: Path) -> list[str]:
     repo = repo.resolve()
     if not repo.is_dir():
@@ -624,7 +679,13 @@ def publish(
             "branch": branch,
             "remote": remote,
             "paths": paths,
+            "tests": (
+                {"would_run": _repo_test_command(repo)[-1]}
+                if _repo_test_command(repo)
+                else {"would_run": None, "reason": f"no {TEST_DECLARATION}"}
+            ),
         }
+    tests = _run_repo_tests(repo)
 
     committed = False
     commit_sha = ""
@@ -652,6 +713,7 @@ def publish(
             "paths": paths,
             "commit": commit_sha,
             "remote_commit": remote_sha,
+            "tests": tests,
         }
     except Exception:
         if not committed:

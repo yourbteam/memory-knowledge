@@ -13,6 +13,14 @@
       "decision_id": "commit-push-main-uncommitted-publish-fix-adoption-20260724",
       "status": "APPROVED"
     },
+    "implementation_publish_test_gate_20260806": {
+      "decision_id": "commit-push-main-publish-test-gate-adoption-20260806",
+      "status": "APPROVED"
+    },
+    "sequence_intake_adapter_agent_heartbeat_20260804": {
+      "decision_id": "commit-push-main-agent-heartbeat-intake-adapter-source-correction-20260804",
+      "status": "APPROVED"
+    },
     "runtime_and_terminal": {
       "decision_id": "commit-push-main-runtime-terminal-v1",
       "status": "APPROVED"
@@ -219,10 +227,10 @@
   "schema_version": 1,
   "source": {
     "dependencies_sha256": "90f1b468d1fecf61fa0fa4ba0c739102939518d6977763e5bcc51544698ffb63",
-    "implementation_approved_post_correction_sha256": "3a3be60bd395fde15cd2c9919fd93df53568e3fbe622f3d18944137373655478",
+    "implementation_approved_post_correction_sha256": "b57f889b55c3ad6321dd8677b36708beed7528d4801039f978b6770d4de667e6",
     "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
     "implementation_sha256": "27912869dd33e97847aab13f26e00957888ec58f96832a263987d419bd4b3f45",
-    "implementation_source_correction_decision_id": "commit-push-main-uncommitted-publish-fix-adoption-20260724",
+    "implementation_source_correction_decision_id": "commit-push-main-publish-test-gate-adoption-20260806",
     "intake_approved_post_correction_sha256": "8b9efab46c2accbfab6b8a1281df61ef1b7bd22a6bf707fc924e95b1fa8b9bcb",
     "intake_path": "/Users/kamenkamenov/memory-knowledge/scripts/script_intake.py",
     "intake_sha256": "9955319d6c29bdf64025896e2bc9f4e1740866a88c3f0bfd1e0a3a042882b5cc",

@@ -520,11 +520,27 @@ the existing playbooks remain available as bounded sources of rigor.
   selects the next step from the remaining observed gap.
 - ✅ Completion requires accumulated-surface review and one end-to-end confirmation through the
   real path the user will use.
+- ✅ **A prototype's proof is about the OUTCOME the delta feeds, never only the mechanism the
+  delta is.** When a change alters what counts as evidence — removing, adding, reclassifying,
+  dropping or re-scoring a check, a verdict, a count, a gate — the deciding proof is the answer
+  that comes out the other end, exercised both ways: what it was before and what it is after.
+  Proving the mechanism ran is not proving the answer is still right.
 - 🚫 No speculative full implementation roadmap before Prototype 0.
 - 🚫 No letting a supporting playbook turn one observed question into an autonomous phase chain.
 - 🚫 No treating generated projections as hand-maintained forks of their source playbooks.
+- 🚫 No prototype whose every test asserts what the new code does, and none what the system now
+  concludes.
 
-**Set:** 2026-07-23 · **repeated:** 0
+**Before promoting a prototype:** name the answer the system gives because of this delta, and the
+test that pins it. If every test names the mechanism, the prototype is not proven.
+
+**Set:** 2026-07-23 · **repeated:** 0 · **amended:** 2026-08-06 (Kamen "lock it" — a change that
+dropped an unusable check after two failed rewrites was proven by two tests, both asserting the
+mechanism: that the check is rewritten twice and then dropped. Both passed and both were true. The
+question never asked was what the requirement's verdict becomes when a check disappears — and live
+that same hour, a requirement whose fourth check had been dropped read PROVEN on its remaining
+three, with the behaviour that check covered never shown to work. Kamen: "i cannot tolerate more of
+'my change' caused this. if you ran correct prototyping this should have serviced and got fixed.")
 
 ---
 
@@ -809,3 +825,35 @@ one and the commit fixes one, the commit is wrong.
 **Set:** 2026-08-05 · **repeated:** 0 (Kamen "lock it" — after `owner_question_manifest_invalid:4`
 killed run up-run-02195a274a87, from a class of eighty-five left untouched by a fix to one of its
 members that morning)
+
+---
+
+## G36 · While a run is alive, read it before writing anything
+**Why:** Writing a message is the cheapest way to finish a turn; reading the run is not. A report is
+always available, always defensible, and costs nothing. Looking at what the machine actually did
+costs a call and risks finding something that makes the message worse. With nothing forcing the
+second, the drift is always to the first, and Kamen ends up supplying the force: "why do i need to
+always tell you this so you can do something valuable and useful and 5 minutes later you are back at
+being a dumb parrot" (2026-08-06). The same session showed both sides of it. Pushed, one look at the
+run's own record found that four checks had been sent back to be rewritten in round one, nothing
+came back, and the same four were replayed and thrown out again in rounds two and three with no
+second attempt and nothing said — a defect no amount of reasoning about the design would have
+produced. Unpushed, the next turn was prose. This is a property of how turns get finished, not a
+mood, so a promise does not hold it.
+- ✅ While any run is alive, read its own record — its feed, its log, its result file — before
+  writing the reply, and say something that record told you.
+- ✅ A liveness probe is not a look. Knowing the process is breathing says nothing about what it
+  did, and accepting it as evidence is how the gate's own first version passed a turn whose only
+  mention of the run was the command testing the gate.
+- ✅ When the run is genuinely irrelevant to what was asked, read it anyway and say so in one
+  clause. It costs one line and it is the line that catches the run that died an hour ago.
+- ✅ The next defect is found by reading, not by reasoning about the design. Prefer one concrete
+  thing the record says over any amount of explanation about how the machinery ought to behave.
+- 🚫 No reply about a live run composed from what was true at the last look.
+- 🚫 No turn that ends with an explanation where a reading would have produced a finding.
+
+**Set:** 2026-08-06 · **repeated:** 0 (Kamen "lock it" — enforced by
+`require-read-the-run.sh`, which fires only while a prover run is alive and counts only a look at
+the run's record. Proven on three transcripts identical but for one tool call: the one that read the
+feed was allowed, the one that only probed liveness was blocked, and the one with no tool call at
+all was blocked.)
