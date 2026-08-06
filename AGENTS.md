@@ -54,7 +54,7 @@ to `prototype-driven-implementation`.
   that explicitly mention the working agreement, directives, G-rules, playbooks, corpus memory, or
   memory-knowledge. If a higher-priority instruction prevents loading the directives, state that.
 - ✅ Begin every substantive response with one compact anchor in this exact shape:
-  `directives=<artifact/revision>; mode=<mode>; controller=<active controller or none>; envelope=<approved:"<outcome>"|none|n/a>; ask=<none|decision|approval>; words=<N>; scope=<scope>; exceptions=<none or conflict>; proof=<real-path evidence|none:<what-is-untested>|n/a>`.
+  `directives=<artifact/revision>; mode=<mode>; controller=<active controller or none>; envelope=<approved:"<outcome>"|none|n/a>; ask=<none|decision|approval>; words=<N>; scope=<scope>; exceptions=<none or conflict>; proof=<real-path evidence|none:<what-is-untested>|n/a>; why=<why this action>; serves=<what it moves toward the declared goal>`.
   The anchor is the turn's **first text** — no narration, preamble, or consultation notes before
   it. In a multi-part turn, per-part anchors may follow, but the turn still opens with one.
 - ✅ When `envelope` is `approved`, it carries the approved outcome in a few words, quoted:
@@ -543,11 +543,27 @@ the existing playbooks remain available as bounded sources of rigor.
   selects the next step from the remaining observed gap.
 - ✅ Completion requires accumulated-surface review and one end-to-end confirmation through the
   real path the user will use.
+- ✅ **A prototype's proof is about the OUTCOME the delta feeds, never only the mechanism the
+  delta is.** When a change alters what counts as evidence — removing, adding, reclassifying,
+  dropping or re-scoring a check, a verdict, a count, a gate — the deciding proof is the answer
+  that comes out the other end, exercised both ways: what it was before and what it is after.
+  Proving the mechanism ran is not proving the answer is still right.
 - 🚫 No speculative full implementation roadmap before Prototype 0.
 - 🚫 No letting a supporting playbook turn one observed question into an autonomous phase chain.
 - 🚫 No treating generated projections as hand-maintained forks of their source playbooks.
+- 🚫 No prototype whose every test asserts what the new code does, and none what the system now
+  concludes.
 
-**Set:** 2026-07-23 · **repeated:** 0
+**Before promoting a prototype:** name the answer the system gives because of this delta, and the
+test that pins it. If every test names the mechanism, the prototype is not proven.
+
+**Set:** 2026-07-23 · **repeated:** 0 · **amended:** 2026-08-06 (Kamen "lock it" — a change that
+dropped an unusable check after two failed rewrites was proven by two tests, both asserting the
+mechanism: that the check is rewritten twice and then dropped. Both passed and both were true. The
+question never asked was what the requirement's verdict becomes when a check disappears — and live
+that same hour, a requirement whose fourth check had been dropped read PROVEN on its remaining
+three, with the behaviour that check covered never shown to work. Kamen: "i cannot tolerate more of
+'my change' caused this. if you ran correct prototyping this should have serviced and got fixed.")
 
 ---
 
@@ -832,5 +848,68 @@ one and the commit fixes one, the commit is wrong.
 **Set:** 2026-08-05 · **repeated:** 0 (Kamen "lock it" — after `owner_question_manifest_invalid:4`
 killed run up-run-02195a274a87, from a class of eighty-five left untouched by a fix to one of its
 members that morning)
+
+---
+
+## G36 · While a run is alive, read it before writing anything
+**Why:** Writing a message is the cheapest way to finish a turn; reading the run is not. A report is
+always available, always defensible, and costs nothing. Looking at what the machine actually did
+costs a call and risks finding something that makes the message worse. With nothing forcing the
+second, the drift is always to the first, and Kamen ends up supplying the force: "why do i need to
+always tell you this so you can do something valuable and useful and 5 minutes later you are back at
+being a dumb parrot" (2026-08-06). The same session showed both sides of it. Pushed, one look at the
+run's own record found that four checks had been sent back to be rewritten in round one, nothing
+came back, and the same four were replayed and thrown out again in rounds two and three with no
+second attempt and nothing said — a defect no amount of reasoning about the design would have
+produced. Unpushed, the next turn was prose. This is a property of how turns get finished, not a
+mood, so a promise does not hold it.
+- ✅ While any run is alive, read its own record — its feed, its log, its result file — before
+  writing the reply, and say something that record told you.
+- ✅ A liveness probe is not a look. Knowing the process is breathing says nothing about what it
+  did, and accepting it as evidence is how the gate's own first version passed a turn whose only
+  mention of the run was the command testing the gate.
+- ✅ When the run is genuinely irrelevant to what was asked, read it anyway and say so in one
+  clause. It costs one line and it is the line that catches the run that died an hour ago.
+- ✅ The next defect is found by reading, not by reasoning about the design. Prefer one concrete
+  thing the record says over any amount of explanation about how the machinery ought to behave.
+- 🚫 No reply about a live run composed from what was true at the last look.
+- 🚫 No turn that ends with an explanation where a reading would have produced a finding.
+
+**Set:** 2026-08-06 · **repeated:** 0 (Kamen "lock it" — enforced by
+`require-read-the-run.sh`, which fires only while a prover run is alive and counts only a look at
+the run's record. Proven on three transcripts identical but for one tool call: the one that read the
+feed was allowed, the one that only probed liveness was blocked, and the one with no tool call at
+all was blocked.)
+
+---
+
+## G37 · Say why you chose the action, and what it moves
+**Why:** On 2026-08-06 five real defects were found and fixed in one day — a doubled proof ladder,
+twenty dead gates, twenty blind composers, a refusal that named a hash, a reader that could not read
+eight of its own documents — and the goal's number sat at 26 of 29 sendable documents before the
+first and after the last. Every fix was correct. None of them was ever asked to justify itself
+against the goal, so nothing stopped a day of real work from being spent on the machine talking to
+itself. Kamen: "Before you do something and after you have done it I need you to report to me why do
+you chose to do it and how does it serve the goal. This needs the bulletproof hook you can come up
+with so you always explain yourself to me and hold yourself accountable."
+- ✅ Every anchor carries `why=` — the reason THIS action was chosen over the others available, in
+  a few words, not a restatement of what it is.
+- ✅ Every anchor carries `serves=` — the line of the declared goal the action moves, named from
+  the goal store, not from memory of the conversation.
+- ✅ `serves=nothing` and `serves=nothing yet: <what would>` are legitimate and frequent answers.
+  An action that serves nothing may still be necessary; what is refused is taking it without
+  saying so. Writing `serves=` honestly is how a day of plumbing becomes visible on the day rather
+  than at the end of it.
+- ✅ After the action, the same message says what it actually moved, in the same words. A `serves=`
+  claim that the outcome did not bear out is corrected in the next anchor, not quietly dropped.
+- 🚫 No action whose anchor cannot name what it serves.
+- 🚫 No `serves=` that names an activity — tests passing, files changed, a check added — instead of
+  the goal's own measure.
+
+**Set:** 2026-08-06 · **repeated:** 0 (Kamen "lock it" — proven on two transcripts identical but
+for the two fields: the one without them is blocked with "the anchor is missing: why, serves", the
+one with them passes. An earlier attempt reported the gate unproven because both trial transcripts
+returned exit 0; the cause was the fixture, whose assistant entries lacked the role key the gate
+reads, not the gate.)
 
 <!-- END GENERATED WORKING-AGREEMENT DIRECTIVES -->
