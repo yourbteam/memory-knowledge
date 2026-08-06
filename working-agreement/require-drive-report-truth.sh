@@ -101,6 +101,30 @@ if not goal_lines:
 # project that produced it, and a state file from elsewhere governs nothing here.
 mine = project_slug(event.get("cwd") or "")
 
+# A repository that declares its goal is governed by that declaration, not by whatever a
+# reporting script last cached. `goal_tracker.py` owns the goal, its KPIs and every reading, and
+# `check` is the command it exposes for exactly this. Before it existed, the goal lived as a
+# string inside a per-project reporting script: nothing declared it, so this gate could only ask
+# whether the line matched the last render -- never whether it matched a goal anyone had set.
+cwd = event.get("cwd") or ""
+if cwd and os.path.exists(os.path.join(cwd, ".goal", "goal.json")):
+    tracker = os.path.expanduser("~/memory-knowledge/scripts/goal_tracker.py")
+    if os.path.exists(tracker):
+        import subprocess
+
+        checked = subprocess.run(
+            [sys.executable, tracker, "--repo", cwd, "check", "--goal-line", goal_lines[0]],
+            capture_output=True,
+            text=True,
+        )
+        if checked.returncode == 0:
+            raise SystemExit(0)
+        print(
+            "Blocked: " + (checked.stderr or checked.stdout).strip(),
+            file=sys.stderr,
+        )
+        raise SystemExit(2)
+
 state = None
 candidates = list(STATE_CANDIDATES)
 if mine:

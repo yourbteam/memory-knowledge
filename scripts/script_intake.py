@@ -376,7 +376,14 @@ def _collect_object_list(
         for item_field in item_fields:
             if not _is_active(item_field, item):
                 continue
-            if item_field["type"] == "string_list":
+            if item_field["type"] == "text":
+                # A `text` field inside a list is still multi-line, and routing it to
+                # `_ask_field` read one line and left the terminator to be eaten as the next
+                # answer -- so every later field in the item silently shifted by one. On
+                # 2026-08-06 that recorded a KPI whose producing script was "." , and the
+                # store accepted it because "." exists.
+                item[item_field["id"]] = _collect_text(item_field, read=read, write=write)
+            elif item_field["type"] == "string_list":
                 item[item_field["id"]] = _collect_string_list(
                     item_field, read=read, write=write,
                 )
