@@ -255,6 +255,36 @@
         "claude"
       ]
     },
+    "requirements-machine": {
+      "canonical_tree_sha256": null,
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": null,
+      "scenario_groups": [
+        "CAP-PLANNING"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "requirements-playbook": {
+      "canonical_tree_sha256": "1e9206bef12ee15dfa6c764a9858fc44f5f98d89702dd86558b374c17619ac16",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "1e9206bef12ee15dfa6c764a9858fc44f5f98d89702dd86558b374c17619ac16",
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
     "requirements-satisfaction-gap-loop": {
       "canonical_tree_sha256": "6838d24a5b393ba22a1e75a187d17c64fb17c0e0e0895e7e765b01989a8ad1ee",
       "disposition": "SHARED_IDENTICAL",
