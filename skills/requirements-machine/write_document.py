@@ -94,7 +94,11 @@ def _parts_document(report: dict[str, object], requirements: list[dict[str, obje
         for row in grouped[rid]:
             state = _STATE.get(str(row.get("answer")), str(row.get("answer")))
             out.append(f"- **[{state}]** {row['part']}")
-            evidence = row.get("evidence")
+            # Only a part that is actually true gets the line that makes it true. The evidence
+            # travels with every part, because a disputed part has a line behind one of its two
+            # answers — but printing it under a job still to build read as "already done by" beside
+            # "[to build]", which is the opposite of what the run concluded.
+            evidence = row.get("evidence") if str(row.get("answer")) == "yes" else None
             if isinstance(evidence, dict) and evidence.get("where"):
                 where = str(evidence["where"]).split("/")[-1]
                 out.append(f"  - already done by `{where}:{evidence.get('line')}` — "
@@ -102,6 +106,10 @@ def _parts_document(report: dict[str, object], requirements: list[dict[str, obje
             if str(row.get("answer")) == "split":
                 calls = ", ".join(f"{k}: {v}" for k, v in sorted((row.get("calls") or {}).items()))
                 out.append(f"  - the two readers answered {calls}; nobody resolved it for you")
+                seen = row.get("evidence")
+                if isinstance(seen, dict) and seen.get("where"):
+                    where = str(seen["where"]).split("/")[-1]
+                    out.append(f"  - the one that said yes pointed at `{where}:{seen.get('line')}`")
         out.append("")
 
     return out
