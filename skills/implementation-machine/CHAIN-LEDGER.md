@@ -14,6 +14,49 @@ the strategy brief step. Its breakdown holds 183 parts still to build, spread ov
 | 1 | The parts are the right unit to prove and the wrong unit to build: 125 of the 183 sit in 56 requirements where nothing exists at all, and several of those describe one shared structure. "Every block carries exactly one state" cannot be built before the blocks exist | first attempt: group requirements by the distinctive words they share, the way the pairing tool finds duplicate requirements | **It does not work.** At every threshold nearly everything stands alone — 47 jobs of 52, then 64 of 72, then 88 of 90 — while whatever joins chains into one lump of 25 requirements, linked by pairs sharing nothing but "client" and "names" | 0 grouped | 1 tool, discarded |
 | 1a | The relation was wrong, not the threshold. Similar wording is not what makes two things one job | code proposes the pairs worth reading and judges none of them; two readers who cannot see each other say which pairs are a real dependency of existence and which of the two must be built first; a pair joins only when both agree, and both name the same foundation | 549 pairs read from 4,186 possible comparisons, none dropped. The two readers answered **524 of 549 identically (95%)**; 17 pairs both called one job; 16 of those name the same foundation. 92 requirements became **76 jobs** — 14 of them multi-requirement, one pair left for a person | 0 → 183 parts in 76 jobs, 14 of which join work that would otherwise have been done in the wrong order | 2 reading runs |
 
+| 2 | Re-run against the corrected breakdown, the pairing proposed 1,131 pairs from 10,011 comparisons over 142 requirements — double the first subject, and more than one reader finishes in a sitting. Lowering the net to fit the reader would change what gets looked at to suit the tool | the step hands back its own reader instructions instead of the driver writing them, and cuts the pairs into slices small enough to finish: three slices, each read twice, six jobs | the smallest slice is settled: both readers judged all 31 pairs, called the same 4 pairs one job and the same 27 separate, and named the same foundation on all four. The four 550-pair readers are still running | 0 grouped of 142 requirements | 1 emitter, 6 reading runs |
+| 2a | Reading that result found a fault in the emitter before it could do harm: the assembling step intersects one pass against another, so six slice directories would have intersected three disjoint slices, found nothing in common and returned zero joins — an empty answer that looks like a finished one | the slices are collected back into two whole passes before assembling, and the step will not report itself finished until they are | not yet exercised — the collecting runs when the four large readers finish | 0 grouped of 142 requirements | 1 reading of the run |
+
+| 3 | The assembling produced the lump the machinery had already been taught to avoid. Both readers agreed on 123 dependencies out of 1,131 pairs — 96 to 98 per cent identical verdicts, and where both said one job they named the same foundation 111 times of 112 — and the assembler then joined every join: **76 of the 142 requirements collapsed into one job of 137 parts** | it merges nothing. What two readers give when they say one of these must exist first is an order, not a grouping, so every requirement stays itself and carries what it stands on. The order comes out in rounds: everything that needs nothing, then everything the earlier rounds satisfy | re-assembled from the same readings, no re-reading: **142 requirements in 6 rounds of 68, 35, 24, 12, 2 and 1**, all 142 ordered, 123 dependencies kept, no cycle, one pair left for a person where both agreed on the dependency and named different foundations | 0 grouped → **142 of 142 in a build order** | 1 assembler, discarded |
+| 3a | The steps only ran in the right order because the driver typed three commands in the right order, and on this same day the driver got that order wrong | one command owns the order and the gates: it proposes the pairs, hands back only the reading still outstanding, and puts the work in order when nothing is. It refuses to go on from a report that changed under it | run from an empty directory it stops at the reading and hands back six jobs; run against the finished directory it returns the six rounds. Both exercised | 142 of 142 in a build order | 1 driver |
+
+## Verdict, entry 3 — the readers were never the problem; twice now the assembling was
+
+Path A. Two attempts at assembling failed and both failures were cheap, measured, and produced the
+correction rather than a knob: the first said similar wording is not a job, the second said an order
+is not a grouping. The judging has never failed — it improved on doubling, from 95 per cent on the
+first subject to 96 and 98 on this one, with 111 of 112 foundations agreed. The distance moved from
+nothing to a real build order over the whole list, and the order is checkable: six rounds, no cycle,
+one question for a person.
+
+Path B. This is the third assembler for one step. A step whose output shape keeps changing is a
+step whose purpose is not settled, and each attempt has cost a full reading run or a rewrite. If the
+next thing built from the order shows the rounds do not matter — that the work could have been done
+in any order without failing — then the whole step, readers included, was expensive decoration.
+
+**Verdict: Path A, and Path B has the same deciding fact it had last time.** **The deciding fact:**
+build one requirement from a late round and one from the first. If the late one could have been
+built first without failing, the order is decoration and the step goes.
+
+## Verdict, entry 2 — the plumbing failed twice and the judging did not fail at all
+
+Path A. The judgement is holding: on the one slice that is settled, two blind readers agreed on
+every one of 31 pairs and on all four foundations — better than the 95 per cent of the first
+subject. Both faults were in carrying pairs to readers and answers back, not in what a reader is
+asked, and each was independent of the other. The approach can state exactly what remains: four
+readers, then the assembling.
+
+Path B. It is the second edit to the same file in one sitting, and the second was caused by the
+first. A step that needs its own plumbing corrected each time it meets a new size is a step whose
+shape is being discovered rather than known, and the cost is rising: one emitter and six reading
+runs to reach the same place two reading runs reached on the first subject.
+
+**Verdict: Path A, because the second fault was found by reading rather than by a failed run, and
+cost nothing.** **The deciding fact:** what the assembling returns when the four readers land. If
+the two passes agree at anything like 95 per cent and the joins are comparable to the first
+subject's 17, the instrument survived doubling. If agreement collapses, the wide net at this size is
+the thing to change, not the plumbing.
+
 ## Verdict, entry 1 — the first prototype failed and the second is the machinery's own pattern
 
 Path A. The failure was cheap, measured before anything was built on it, and it produced the
