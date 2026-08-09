@@ -20,6 +20,30 @@ the strategy brief step. Its breakdown holds 183 parts still to build, spread ov
 | 3 | The assembling produced the lump the machinery had already been taught to avoid. Both readers agreed on 123 dependencies out of 1,131 pairs — 96 to 98 per cent identical verdicts, and where both said one job they named the same foundation 111 times of 112 — and the assembler then joined every join: **76 of the 142 requirements collapsed into one job of 137 parts** | it merges nothing. What two readers give when they say one of these must exist first is an order, not a grouping, so every requirement stays itself and carries what it stands on. The order comes out in rounds: everything that needs nothing, then everything the earlier rounds satisfy | re-assembled from the same readings, no re-reading: **142 requirements in 6 rounds of 68, 35, 24, 12, 2 and 1**, all 142 ordered, 123 dependencies kept, no cycle, one pair left for a person where both agreed on the dependency and named different foundations | 0 grouped → **142 of 142 in a build order** | 1 assembler, discarded |
 | 3a | The steps only ran in the right order because the driver typed three commands in the right order, and on this same day the driver got that order wrong | one command owns the order and the gates: it proposes the pairs, hands back only the reading still outstanding, and puts the work in order when nothing is. It refuses to go on from a report that changed under it | run from an empty directory it stops at the reading and hands back six jobs; run against the finished directory it returns the six rounds. Both exercised | 142 of 142 in a build order | 1 driver |
 
+| 4 | Nothing in the machinery changed the built system. The order says what to build; no step built anything | a step that takes the next item off the order — earliest round, smallest piece — records which of the built system's tests already fail *before* touching anything, hands the change to a builder given one requirement and nothing else, then has two blind readers answer the same sentences against the changed code | the first item, the controlled-topic register, was changed by the builder in one file. Test failures before: 8. After: the same 8, none new. The builder also named four things it noticed and left alone, including a later gate that still checks the full settled list | 0 of 142 built | 1 step, 1 build run |
+| 4a | The step then declared it done, and the gate that said so was faulty. Both readers said yes — but one answered under the name `r108` and the other under `r108.p1`, and the gate grouped answers by name, so each name held one yes and the result read as unanimous. Every sentence had been read by exactly one reader | the reader is now given the exact name to answer under, and the gate requires one yes per reader per sentence, reports any sentence no reader answered, and reports any answer filed under a name no sentence has | the two readings were thrown away and re-handed on the new basis; the change to the built system was left untouched while they re-ran | 0 of 142 built — the earlier 'built' verdict is withdrawn | 1 reading of the verdict |
+
+| 4b | The corrected gate was untested: the earlier verdict had been withdrawn and nothing had passed on the new basis | nothing — the two readings were re-handed with each sentence named, and the step re-judged | both readers answered under the required name, both yes with lines quoted; no test that passed before was failing. The step wrote its done record and took the next item by itself. The second item — the interview question set becoming a declared output — went through the same path with **no new gate invented**, which was entry 4's deciding fact | 0 → **2 of 142 built** | 2 build runs, 4 readings |
+
+## Verdict, entry 4 — the first change is real and the first verdict was not
+
+Path A. The change itself stands on evidence the machinery collected: one file, no test that passed
+before failing after, and a builder that stayed inside its one requirement and reported what it
+declined to touch. The fault was in counting, not in judging, and it was found by reading the
+verdict rather than by a failure downstream — which is the cheapest place to find it. The approach
+can state exactly what remains: 141 more items, in an order that already exists.
+
+Path B. This is the fourth step in this machinery and the third whose first version passed
+something it should have refused. Every one of those was in the plumbing — how work reaches readers
+and how their answers are counted — and a machinery whose gates keep being wrong in the same
+direction is a machinery that reports success it has not earned. The cost is not falling: each step
+so far has needed a second version before its number could be trusted.
+
+**Verdict: Path A, and Path B names the real risk — the gates fail permissive.** Every one of these
+faults would have let something through, never held something back. **The deciding fact:** whether
+the next item's verdict survives its own reading without a new gate having to be added. If a third
+gate has to be invented for item two, the pattern is the approach, not the instance.
+
 ## Verdict, entry 3 — the readers were never the problem; twice now the assembling was
 
 Path A. Two attempts at assembling failed and both failures were cheap, measured, and produced the
