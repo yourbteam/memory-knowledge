@@ -49,6 +49,7 @@ thing has an answer.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import subprocess
 import sys
@@ -248,6 +249,31 @@ def _packet(name: str, work: Path, twinned: bool = True, **fields: object) -> di
 def drive(subject: str, description: Path, work: Path, built: Path | None) -> dict[str, object]:
     work.mkdir(parents=True, exist_ok=True)
     skill = HERE / "FIRST-HALF-STEP-ONE.md"
+
+    # Everything below is derived from the description and kept, so the run can stop and resume.
+    # That only holds while the description is the one it was derived from. When the gate below
+    # refuses a statement, the description gets corrected — and on the run that made this check
+    # necessary, the corrected file sat on disk while the machinery went on handing readers the
+    # sentences extracted before the correction. Two readers spent a full round proving a statement
+    # wrong that had already been rewritten. Cached work is only a saving when it is still about the
+    # same thing.
+    stamp = work / "description.sha256"
+    now = hashlib.sha256(description.read_bytes()).hexdigest()
+    if stamp.exists():
+        was = stamp.read_text(encoding="utf-8").strip()
+        if was != now:
+            return {
+                "stopped": "the description changed after this run derived its material",
+                "why": "every list here was taken from the earlier text, so the readers would be "
+                       "answering about sentences that no longer exist",
+                "do": f"run again with a fresh --work directory, or delete {work}/split.json, "
+                      f"{work}/claims.json and the verify directories to re-derive from the "
+                      "corrected description",
+                "derived_from": was,
+                "description_is_now": now,
+            }
+    else:
+        stamp.write_text(now, encoding="utf-8")
 
     # 1 · split — code. The gate is arithmetic: nothing may be in neither list.
     split_path = work / "split.json"

@@ -42,6 +42,24 @@ _MARK = re.compile(r"\[([a-z][a-z ,—-]{1,40})\]", re.I)
 _NOT_A_SOURCE = {"decision", "ratified"}
 
 
+def _carried(text: str, match: re.Match[str]) -> bool:
+    """Is this bracket the sentence's own mark, or a bracket the sentence is talking about?
+
+    A mark that is carried is a tag: it sits where the sentence is not — at the start, at the end,
+    or against a dash, colon or semicolon that has already broken the grammar. A mark that is only
+    mentioned sits inside the grammar, with a word each side, and reads as a noun or an adjective:
+    "every statement marked [in code] would be re-checked", "no step re-validates its [in code]
+    statements". Both of those went out as claims to be cited on the run that made this necessary,
+    and a reader was sent looking in the repository for a sentence about the description itself.
+    """
+
+    before = text[: match.start()].rstrip()
+    after = text[match.end():].lstrip()
+    if not before or not after:
+        return True
+    return not ((before[-1].isalnum() or before[-1] in ")\"'") and after[0].isalnum())
+
+
 def extract(description: Path, fact_mark: str) -> dict[str, object]:
     by_mark: dict[str, list[dict[str, object]]] = defaultdict(list)
     units = list(_units(description))
@@ -57,16 +75,24 @@ def extract(description: Path, fact_mark: str) -> dict[str, object]:
         if unit["kind"] == "sentence" and re.match(r"^\s*\[[a-z][a-z ,—-]{1,40}\]\s*[—-]", text, re.I):
             defining.add(str(unit["under"]))
 
+    mentioned: list[dict[str, object]] = []
     for unit in units:
         if unit["kind"] != "sentence":
             continue
         if unit["under"] in defining:
             continue
-        for raw in _MARK.findall(unit["text"]):
-            mark = raw.strip().lower()
+        text = str(unit["text"])
+        for match in _MARK.finditer(text):
+            mark = match.group(1).strip().lower()
             if mark.startswith("ratified"):
                 mark = "ratified"
-            by_mark[mark].append({"text": unit["text"], "under": unit["under"]})
+            row = {"text": text, "under": unit["under"]}
+            if _carried(text, match):
+                by_mark[mark].append(row)
+            else:
+                # Not dropped, listed. The rule is a reading of punctuation and it will sometimes
+                # be wrong; a mark that quietly disappeared would take the misreading with it.
+                mentioned.append(dict(row, mark=mark))
 
     facts = []
     for index, row in enumerate(by_mark.get(fact_mark.lower(), []), start=1):
@@ -82,6 +108,7 @@ def extract(description: Path, fact_mark: str) -> dict[str, object]:
         "marks_found": {mark: len(rows) for mark, rows in sorted(by_mark.items())},
         "fact_mark": fact_mark,
         "claims_to_cite": facts,
+        "marks_mentioned_not_carried": mentioned,
         "decisions_not_facts": sorted(m for m in by_mark if m in _NOT_A_SOURCE),
         "note": (
             "Only marked statements are listed. A description that marks nothing gives this "
