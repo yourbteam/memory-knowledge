@@ -1,6 +1,6 @@
 ---
 name: requirements-machine
-description: Builds the requirements for a change, end to end, from a description of what the thing is for. Produces what must be added, changed or removed — and when nothing is built yet, what must be added. Invoke this and follow it; do not run its tools by hand or in another order.
+description: Builds the requirements for a change, end to end, from a description of what the thing is for. Writes two documents — the requirements sorted into add, change, remove and already met, and a breakdown into parts, each one thing separately true or false of the build, with the line that proves an already-true part. Invoke this and follow it; do not run its tools by hand or in another order.
 ---
 
 # Requirements machine
