@@ -256,14 +256,14 @@
       ]
     },
     "requirements-machine": {
-      "canonical_tree_sha256": null,
+      "canonical_tree_sha256": "46f1f5b6dd392f0a1efbd18294cafdea6bd1920ac0d82c55ff82504c9894b87c",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": null,
+      "projected_tree_sha256": "46f1f5b6dd392f0a1efbd18294cafdea6bd1920ac0d82c55ff82504c9894b87c",
       "scenario_groups": [
-        "CAP-PLANNING"
+        "CAP-PDI"
       ],
       "targets": [
         "codex",
