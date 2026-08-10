@@ -50,29 +50,47 @@ def _resolve(built: Path, citation: dict[str, object]) -> dict[str, object]:
     except OSError as error:
         return {"ok": False, "why": f"{where} could not be read: {error}"}
 
-    if not isinstance(line_no, int) or not 1 <= line_no <= len(lines):
-        return {"ok": False, "why": f"{where} has {len(lines)} lines; {line_no} is not one of them"}
+    on_the_line = 1 <= line_no <= len(lines) if isinstance(line_no, int) else False
+    actual = lines[line_no - 1] if on_the_line else ""
 
-    actual = lines[line_no - 1]
     if not quoted:
-        return {"ok": True, "line": actual.strip(), "matched": "line exists; nothing was quoted"}
-    if _normalise(quoted) in _normalise(actual):
+        if on_the_line:
+            return {"ok": True, "line": actual.strip(), "matched": "line exists; nothing was quoted"}
+        return {"ok": False, "why": f"{where} has {len(lines)} lines; {line_no} is not one of them, "
+                                    f"and nothing was quoted that could be looked for instead"}
+    if on_the_line and _normalise(quoted) in _normalise(actual):
         return {"ok": True, "line": actual.strip(), "matched": "exact"}
 
     # Readers cite a line and quote a nearby one often enough that a window is worth searching —
     # but the refusal must say what was actually there, or a retry cannot act on it.
-    window = range(max(0, line_no - 4), min(len(lines), line_no + 3))
-    for index in window:
-        if _normalise(quoted) in _normalise(lines[index]):
-            return {"ok": True, "line": lines[index].strip(), "matched": f"found at line {index + 1}"}
-    return {
-        "ok": False,
-        "why": (
-            f"{where}:{line_no} does not contain the quoted text. That line reads: "
-            f"{actual.strip()[:160]!r}. Cite the line that actually carries what you are pointing "
-            f"at, or say nothing addresses this requirement."
-        ),
-    }
+    if on_the_line:
+        window = range(max(0, line_no - 4), min(len(lines), line_no + 3))
+        for index in window:
+            if _normalise(quoted) in _normalise(lines[index]):
+                return {"ok": True, "line": lines[index].strip(),
+                        "matched": f"found at line {index + 1}"}
+
+    # A citation is its text in a file, not its line number. Seven true answers were refused on one
+    # run because another machinery was building into the same repository while they were being
+    # read: every quoted line was still there, tens of lines lower than where the reader found it,
+    # and a window of four could not reach it. A quote that occurs exactly once in the file it names
+    # is that line, wherever it has moved to — nothing is being taken on trust, the text is read off
+    # disk the same way. More than one occurrence and none of them near the cited line is genuinely
+    # ambiguous, and stays refused.
+    found = [index + 1 for index, line in enumerate(lines) if _normalise(quoted) in _normalise(line)]
+    if len(found) == 1:
+        return {"ok": True, "line": lines[found[0] - 1].strip(),
+                "matched": f"the line moved; it is now line {found[0]}"}
+
+    if not found:
+        why = (f"{where} does not contain the quoted text anywhere. " + (
+            f"Line {line_no} reads: {actual.strip()[:160]!r}. " if on_the_line else
+            f"The file has {len(lines)} lines; {line_no} is not one of them. "))
+    else:
+        why = (f"{where} carries the quoted text on {len(found)} lines ({found[:8]}), none of them "
+               f"at or near {line_no}, so which one is meant cannot be decided. ")
+    return {"ok": False, "why": why + "Cite the line that actually carries what you are pointing "
+                                      "at, or say nothing addresses this requirement."}
 
 
 def check(records: Path, built: Path) -> dict[str, object]:

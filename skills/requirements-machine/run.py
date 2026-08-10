@@ -246,6 +246,43 @@ def _packet(name: str, work: Path, twinned: bool = True, **fields: object) -> di
     }
 
 
+def _again(packet: dict[str, object], work: Path, index: int) -> dict[str, object]:
+    """Narrow an answering packet to the parts a refusal set aside, and say why each was refused.
+
+    A packet that says "answer every part" is the right thing to hand a reader the first time and
+    the wrong thing to hand one afterwards: it would send them back over forty-three parts to
+    replace one, and the reason the one was refused — the only thing that can make the second
+    attempt differ from the first — would never reach them. Which parts are missing is read off
+    disk rather than remembered, so it survives the run stopping and being started again.
+    """
+
+    kept = work / f"answer-{index}-refused"
+    if not kept.is_dir():
+        return packet
+    if (kept / "why.json").is_file():
+        refused = json.loads((kept / "why.json").read_text(encoding="utf-8")).get("refusals") or []
+    else:
+        # A directory of set-aside answers with no record of why they were set aside is what an
+        # earlier version of this step left behind. The ids are still recoverable from the file
+        # names, and naming them is most of the value: without it the packet asks for all
+        # forty-three parts again to replace the two that were refused.
+        refused = [{"id": path.name.rsplit("-", 1)[0], "unresolved": []}
+                   for path in sorted(kept.glob("*.json"))]
+    answers = work / f"answer-{index}"
+    missing = [row for row in refused if not (answers / f"{row['id']}.json").exists()]
+    if not missing:
+        return packet
+    why = "; ".join(f"{row['id']}: {' '.join(row.get('unresolved') or [])}" for row in missing)
+    packet["instruction"] = (
+        f"Only these parts are being asked again, and only their files are missing from {answers}: "
+        f"{', '.join(row['id'] for row in missing)}. Every other part is already answered and must "
+        f"be left exactly as it is. Each was refused because its evidence did not resolve when it "
+        f"was read back — {why} Answer those parts again against the build as it stands now, "
+        f"under everything below.\n\n"
+    ) + str(packet["instruction"])
+    return packet
+
+
 def drive(subject: str, description: Path, work: Path, built: Path | None) -> dict[str, object]:
     work.mkdir(parents=True, exist_ok=True)
     skill = HERE / "FIRST-HALF-STEP-ONE.md"
@@ -412,7 +449,8 @@ def drive(subject: str, description: Path, work: Path, built: Path | None) -> di
 
     # 8 · answer — model, twice. Yes or no per part, never a degree.
     waiting = [
-        _packet("answer", work, input=parts_path, out=work / f"answer-{index}", built=built)
+        _again(_packet("answer", work, input=parts_path,
+                       out=work / f"answer-{index}", built=built), work, index)
         for index in range(1, PASSES + 1)
         if _records_in(work / f"answer-{index}") < parts["count"]
     ]
@@ -431,8 +469,35 @@ def drive(subject: str, description: Path, work: Path, built: Path | None) -> di
             "--records", str(work / f"answer-{index}"), "--built", str(built),
         ])
         if checked["refused"]:
-            return {"stopped": "answering", "why": "cited evidence that does not resolve",
-                    "pass": f"answer-{index}", "refusals": checked["refusals"]}
+            # A refusal has to lead somewhere. For one run it did not: the step refused seven
+            # answers whose quoted lines had moved under them — the built system was being changed
+            # while they were read — and then handed back no work at all. Nothing advanced until a
+            # person deleted the refused files by hand, which is the one thing nobody should be
+            # doing to a machinery's own output. So the refusal now sets the answer aside itself
+            # and asks for it again, exactly as the build step re-asks a refused change.
+            aside = work / f"answer-{index}-refused"
+            aside.mkdir(parents=True, exist_ok=True)
+            for refusal in checked["refusals"]:
+                stale = work / f"answer-{index}" / f"{refusal['id']}.json"
+                if stale.exists():
+                    kept = aside / f"{refusal['id']}-{len(list(aside.glob(f'{refusal["id"]}-*')))}.json"
+                    kept.write_text(stale.read_text(encoding="utf-8"), encoding="utf-8")
+                    stale.unlink()
+            # Why each was refused is written down beside the answers it was taken from, because
+            # the run stops here and the next invocation reaches the count gate above before it
+            # ever reaches this one. Held only in this return value, the reason — the single thing
+            # that can make a second attempt differ from the first — would be gone by the time a
+            # reader was actually launched.
+            _write(aside / "why.json", {"refusals": checked["refusals"]})
+            again = _again(_packet("answer", work, input=parts_path,
+                                   out=work / f"answer-{index}", built=built), work, index)
+            return {"stopped": "answering again",
+                    "why": "cited evidence that does not resolve, so those parts are being asked "
+                           "again against the built system as it now stands",
+                    "pass": f"answer-{index}", "set_aside": str(aside),
+                    "asking_again": [refusal["id"] for refusal in checked["refusals"]],
+                    "refusals": checked["refusals"],
+                    "work": [again]}
 
     # 9 · report — code. The verdict is arithmetic over the parts, not a judgement anyone made:
     # every part yes is already met, no part yes is add, anything between is change. That is the
