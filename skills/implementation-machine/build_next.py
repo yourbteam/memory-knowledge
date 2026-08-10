@@ -37,6 +37,7 @@ import json
 import re
 import shlex
 import subprocess
+import time
 from pathlib import Path
 
 PASSES = 2
@@ -46,6 +47,9 @@ PASSES = 2
 #: no second attempt would have stalled on it. But an item that cannot be made true in three tries
 #: is telling us something the builder cannot fix by trying again.
 ATTEMPTS = 3
+
+#: How long a reader that has already written its answer is given to close itself.
+GRACE_SECONDS = 20
 
 #: Said when the owner has ruled on something the builder would otherwise be right to refuse.
 #: The first item to need this was one where three committed tests required the very behaviour the
@@ -123,17 +127,29 @@ def _failures(built: Path, tests: str) -> dict[str, object]:
             "tail": output.strip().splitlines()[-1:] or [""]}
 
 
+def _delivered(directory: Path, pattern: str) -> int:
+    """What the packet asked for, not whatever else the directory happens to hold.
+
+    The build packet writes into a directory that already carries the test baseline, so counting
+    every file there made a builder look finished the moment it started. It was killed twenty
+    seconds in, twice, and the run stopped with nothing built.
+    """
+
+    return len(list(directory.glob(pattern))) if directory.is_dir() else 0
+
+
 def _answers_in(directory: Path) -> int:
     return len(list(directory.glob("*.json"))) if directory.is_dir() else 0
 
 
-def _packet(instruction: str, out: Path, scratch: Path, blind: bool) -> dict[str, object]:
+def _packet(instruction: str, out: Path, scratch: Path, blind: bool,
+            expect: int = 1, wants: str = "*.json") -> dict[str, object]:
     out.mkdir(parents=True, exist_ok=True)
     scratch.mkdir(parents=True, exist_ok=True)
     if blind:
         instruction += BLIND
     return {"instruction": instruction + HOW_TO_READ.format(scratch=scratch),
-            "waiting_for": str(out)}
+            "waiting_for": str(out), "expect": expect, "wants": wants}
 
 
 def next_item(order: dict[str, object], work: Path) -> dict[str, object] | None:
@@ -197,6 +213,7 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str) -> dict
             "already_failing_before_the_change": len(before["failed"]),
             "work": [_packet(
                 instruction, out, out.parent / f"build-{rid}-scratch", blind=False,
+                wants="change.json",
             )],
         }
     change = json.loads(change_path.read_text(encoding="utf-8"))
@@ -209,6 +226,7 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str) -> dict
             waiting.append(_packet(
                 VERIFY.format(built=built, named_parts=named_parts, out=checked),
                 checked, work / f"check-{rid}-{index}-scratch", blind=True,
+                expect=len(item["parts"]),
             ))
     if waiting:
         return {"stopped": "checking the change", "item": rid, "changed": change["files"],
@@ -302,15 +320,42 @@ def _launch(jobs: list[dict[str, object]], command: str, built: Path,
     started = []
 
     def run(number: int, job: dict[str, object]) -> dict[str, object]:
+        # Wait for the work, not for the process. On the first long unattended run a builder wrote
+        # its change and its own record and then stayed alive: nineteen minutes later the loop had
+        # not moved, because it was waiting on a process that had already done everything asked of
+        # it. What the next step reads is what is on disk, so that is what waiting means here.
         log = work / f"launch-{tag}-{number}.log"
-        done = subprocess.run(
-            parts, input=str(job["instruction"]), cwd=str(built),
-            capture_output=True, text=True,
+        waiting_for = Path(str(job["waiting_for"]))
+        wanted = int(job.get("expect") or 1)
+        pattern = str(job.get("wants") or "*.json")
+        started = subprocess.Popen(
+            parts, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
+            cwd=str(built), text=True,
         )
-        log.write_text(done.stdout + ("\n--- stderr ---\n" + done.stderr if done.stderr else ""),
-                       encoding="utf-8")
-        return {"exit_code": done.returncode, "log": str(log),
-                "wrote": _answers_in(Path(str(job["waiting_for"])))}
+        started.stdin.write(str(job["instruction"]))
+        started.stdin.close()
+
+        delivered = False
+        while started.poll() is None:
+            if _delivered(waiting_for, pattern) >= wanted:
+                # It has delivered. Give it a short grace to close itself, then stop waiting.
+                for _ in range(GRACE_SECONDS):
+                    if started.poll() is not None:
+                        break
+                    time.sleep(1)
+                if started.poll() is None:
+                    started.terminate()
+                    delivered = True
+                break
+            time.sleep(2)
+
+        out, err = started.communicate()
+        log.write_text((out or "") + ("\n--- stderr ---\n" + err if err else "")
+                       + ("\n--- it had already written its answer and was still running; "
+                          "the step stopped waiting\n" if delivered else ""), encoding="utf-8")
+        return {"exit_code": started.returncode, "log": str(log),
+                "stopped_after_delivering": delivered,
+                "wrote": _delivered(waiting_for, pattern)}
 
     with concurrent.futures.ThreadPoolExecutor(max_workers=len(jobs)) as pool:
         futures = [pool.submit(run, number, job) for number, job in enumerate(jobs, start=1)]

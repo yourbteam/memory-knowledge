@@ -44,8 +44,8 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
-import build_next  # noqa: E402
 import pair_requirements  # noqa: E402
+import readers  # noqa: E402
 
 PASSES = 2
 
@@ -314,6 +314,26 @@ def collect(work: Path, order_file: Path, out: Path) -> dict[str, object]:
     rows = [row for row in rows if joined.get(row["requirement_id"], row["requirement_id"])
             == row["requirement_id"]]
 
+    # What comes out here is not yet requirements. The sentence carried forward is the builder's
+    # own words, and a builder's note is often a statement — "eight tests already fail" — which
+    # nobody can make true. Measured: the first item this produced was refused by its builder for
+    # exactly that reason, and it was right to refuse. So the list is also written as a description,
+    # which is what the requirements machinery consumes, and that machinery is what turns an
+    # observation into something with a check somebody else can run.
+    description = out / "noticed-description.md"
+    lines = ["# What the builders noticed and left alone", "",
+             "Each entry below is quoted from the note a builder wrote while making one requirement",
+             "true. They are observations, not requirements: some are faults, some are questions,",
+             "some are statements of fact about the built system. Nothing here has a check yet.", ""]
+    for row in rows:
+        seen_by = [row["noticed_while_building"], *(row.get("also_noticed_while_building") or [])]
+        lines.append(f"## {row['requirement_id']} — noticed while building "
+                     f"{', '.join(sorted(set(seen_by)))}")
+        lines.append("")
+        lines.append(row["requirement"].strip())
+        lines.append("")
+    description.write_text("\n".join(lines), encoding="utf-8")
+
     report = out / "noticed-report.json"
     report.write_text(json.dumps({
         "subject": "what the builders noticed and left alone",
@@ -330,6 +350,12 @@ def collect(work: Path, order_file: Path, out: Path) -> dict[str, object]:
         "candidates": len(rows),
         "joined_as_one_thing": agreed,
         "report": str(report),
+        "description": str(description),
+        "then_first": (
+            "these are observations, not requirements. Put the description through the "
+            "requirements machinery, which is what gives each one a check somebody else can run, "
+            "and build from what it produces"
+        ),
         "then": ("run run.py with --report this file and a fresh --work directory: the same "
                  "pairing, dependency reading, ordering and building runs over these"),
     }
@@ -367,7 +393,7 @@ def main(argv: list[str] | None = None) -> int:
             result["stopped_again"] = "a round of reading changed nothing twice over"
             print(json.dumps(result, indent=2, default=str))
             return 0
-        build_next._launch(jobs, args.reader_command, out, out, "read")
+        readers._launch(jobs, args.reader_command, out, out, "read")
 
 
 if __name__ == "__main__":

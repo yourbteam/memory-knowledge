@@ -39,15 +39,10 @@ machine's, and a gate that refuses means run that reading again, never fix its o
 
 ## What the builders noticed
 
-Each build reports what else it saw and deliberately did not touch. Turn those into work:
-
-```
-python3 collect_noticed.py --work <build-work-dir> --order <order.json> --out <dir> \
-    --reader-command '<command>'
-```
-
-It writes a report in the same shape the requirements machine produces, so `run.py` takes it
-directly and the same path runs over it.
+Each build reports what else it saw and deliberately did not touch. Those notes are not this
+machinery's to turn into work: the `description-machinery` skill takes them, has them read, and
+produces the description the requirements machinery consumes. What that chain returns comes back
+here as an ordinary build list.
 
 `CHAIN-LEDGER.md` records every failure this machinery has had and what each cost. Read it before
 changing anything here.
