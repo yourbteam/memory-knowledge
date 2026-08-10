@@ -29,6 +29,7 @@ from pathlib import Path
 HERE = Path(__file__).resolve().parent
 sys.path.insert(0, str(HERE))
 
+import build_next  # noqa: E402
 import order_work  # noqa: E402
 import pair_requirements  # noqa: E402
 import read_dependencies  # noqa: E402
@@ -104,12 +105,38 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--work", type=Path, required=True)
     parser.add_argument("--per-reader", type=int, default=550)
     parser.add_argument("--floor", type=float, default=0.15)
+    parser.add_argument("--reader-command", default=None,
+                        help="a command that takes an instruction on standard input and carries "
+                             "it out. Given one, this runs its own readers instead of handing the "
+                             "jobs back. It never picks the reader: whoever runs this supplies the "
+                             "command, and every reader records what it is.")
     args = parser.parse_args(argv)
 
-    print(json.dumps(
-        drive(args.report.resolve(), args.work.resolve(), args.per_reader, args.floor), indent=2,
-    ))
-    return 0
+    report, work = args.report.resolve(), args.work.resolve()
+
+    # Handing the jobs back was the last thing in this machinery that needed somebody else to
+    # obey an instruction — launch two readers, never one, never tell either what the other
+    # found. An instruction a person can misread is not a gate. Given a reader command, the
+    # step starts them itself and the rule is kept by the code that wrote the packets.
+    if not args.reader_command:
+        print(json.dumps(drive(report, work, args.per_reader, args.floor), indent=2))
+        return 0
+
+    stuck, seen = 0, None
+    while True:
+        result = drive(report, work, args.per_reader, args.floor)
+        jobs = result.get("work")
+        if not jobs:
+            print(json.dumps(result, indent=2, default=str))
+            return 0
+        here = (result.get("stopped"), len(jobs))
+        stuck = stuck + 1 if here == seen else 0
+        seen = here
+        if stuck >= 2:
+            result["stopped_again"] = "a round of reading changed nothing twice over"
+            print(json.dumps(result, indent=2, default=str))
+            return 0
+        build_next._launch(jobs, args.reader_command, work, work, "read")
 
 
 if __name__ == "__main__":

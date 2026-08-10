@@ -32,8 +32,10 @@ do what it hands back, run it again.
 from __future__ import annotations
 
 import argparse
+import concurrent.futures
 import json
 import re
+import shlex
 import subprocess
 from pathlib import Path
 
@@ -44,6 +46,19 @@ PASSES = 2
 #: no second attempt would have stalled on it. But an item that cannot be made true in three tries
 #: is telling us something the builder cannot fix by trying again.
 ATTEMPTS = 3
+
+#: Said when the owner has ruled on something the builder would otherwise be right to refuse.
+#: The first item to need this was one where three committed tests required the very behaviour the
+#: requirement forbade. The builder was correct to stop — a test is somebody's recorded intent, and
+#: a builder that rewrites tests to agree with itself proves nothing. But when the owner has since
+#: ruled which side is wrong, that ruling has to reach the builder through the machinery, or it
+#: travels in whatever the driver happens to type, which is the seam this machinery exists to close.
+RULED = (
+    "\n\nThe owner has ruled on this item, in these words:\n\n{ruling}\n\nThat ruling settles "
+    "what the system should do. Where an existing test requires the behaviour the ruling forbids, "
+    "that test is now wrong and you may change it — say exactly which tests you changed and why in "
+    "'what_changed'. Nothing else about the rules above changes."
+)
 
 #: Said when a previous attempt was refused. The objection is quoted rather than summarised: on the
 #: refusal that made this necessary, the readers' own words — that the change marks the sentence and
@@ -137,6 +152,13 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str) -> dict
     if item is None:
         return {"finished": "every item in the order has been built and verified"}
 
+    # A ruling is the owner's answer to something only they can settle. It is optional, it is
+    # quoted to the builder rather than summarised, and it lives on disk so the next run says the
+    # same thing this one did.
+    rulings_path = work / "rulings.json"
+    rulings = (json.loads(rulings_path.read_text(encoding="utf-8"))
+               if rulings_path.exists() else {})
+
     rid = str(item["requirement_id"])
     out = work / f"build-{rid}"
     out.mkdir(parents=True, exist_ok=True)
@@ -158,6 +180,9 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str) -> dict
         instruction = BUILD.format(
             built=built, requirement=item["requirement"], parts=parts, out=out,
         )
+        ruling = rulings.get(rid)
+        if ruling:
+            instruction += RULED.format(ruling=ruling)
         if refused:
             last = json.loads(refused[-1].read_text(encoding="utf-8"))
             instruction += AGAIN.format(
@@ -258,19 +283,123 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str) -> dict
     return verdict
 
 
+
+def _launch(jobs: list[dict[str, object]], command: str, built: Path,
+            work: Path, tag: str) -> list[dict[str, object]]:
+    """Run the packets this step just wrote, instead of handing them to whoever is driving.
+
+    Until now the step wrote the instruction and a person passed it to a reader. Nothing about
+    that hand improved the answer — the gates decide the verdict and they do not know whose hand
+    pressed start — but it set the pace: the loop moved as fast as somebody was watching it, and
+    stopped when they stopped.
+
+    What does not change is who reads. The command is supplied from outside, exactly as the reader
+    was before; this machinery still never chooses one, and every reader still writes down what it
+    is. The instruction goes in on standard input so nothing about it can be reshaped by a shell.
+    """
+
+    parts = shlex.split(command)
+    started = []
+
+    def run(number: int, job: dict[str, object]) -> dict[str, object]:
+        log = work / f"launch-{tag}-{number}.log"
+        done = subprocess.run(
+            parts, input=str(job["instruction"]), cwd=str(built),
+            capture_output=True, text=True,
+        )
+        log.write_text(done.stdout + ("\n--- stderr ---\n" + done.stderr if done.stderr else ""),
+                       encoding="utf-8")
+        return {"exit_code": done.returncode, "log": str(log),
+                "wrote": _answers_in(Path(str(job["waiting_for"])))}
+
+    with concurrent.futures.ThreadPoolExecutor(max_workers=len(jobs)) as pool:
+        futures = [pool.submit(run, number, job) for number, job in enumerate(jobs, start=1)]
+        for future in futures:
+            started.append(future.result())
+    return started
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--order", type=Path, required=True)
+    parser.add_argument("--order", type=Path, default=None,
+                        help="the build order. Omit it and give --report instead: the ordering is "
+                             "then done here, once, and the order written into --work.")
+    parser.add_argument("--report", type=Path, default=None,
+                        help="the requirements machine's report. Given this, the order is derived "
+                             "before building, so starting the whole thing is one command.")
     parser.add_argument("--work", type=Path, required=True)
     parser.add_argument("--built", type=Path, required=True)
     parser.add_argument("--tests", required=True,
                         help="the built system's own test command, run from its root")
+    parser.add_argument("--reader-command", default=None,
+                        help="a command that takes an instruction on standard input and carries "
+                             "it out. Given one, the step runs its own builders and readers "
+                             "instead of handing the packets back. It never picks the reader: "
+                             "whoever runs this supplies the command, and the reader still says "
+                             "in its own record what it is.")
+    parser.add_argument("--items", type=int, default=1,
+                        help="how many items may be taken without a person looking. The loop stops "
+                             "at this many, or sooner on anything a person has to answer.")
     args = parser.parse_args(argv)
+    work, built = args.work.resolve(), args.built.resolve()
+
+    # Ordering and building were two commands because they were built as two. Nothing needs them
+    # to be: the ordering is done once per list and skips itself afterwards, so it can simply
+    # happen first. Kept as a separate step only for the case where somebody already has an order.
+    if args.order is None:
+        if args.report is None:
+            parser.error("give either --order or --report")
+        import run  # noqa: PLC0415 — imported here because run.py imports this module
+        ordering = run.drive(args.report.resolve(), work, 550, 0.15)
+        while ordering.get("work"):
+            if not args.reader_command:
+                return _say({"stopped": "reading the pairs, and no reader command was given",
+                             "work": ordering["work"]})
+            _launch(ordering["work"], args.reader_command, built, work, "order")
+            ordering = run.drive(args.report.resolve(), work, 550, 0.15)
+        if not ordering.get("order"):
+            return _say(ordering)
+        args.order = Path(ordering["order"])
 
     order = json.loads(args.order.read_text(encoding="utf-8"))
-    print(json.dumps(
-        drive(order, args.work.resolve(), args.built.resolve(), args.tests), indent=2,
-    ))
+
+    if not args.reader_command:
+        print(json.dumps(drive(order, work, built, args.tests), indent=2))
+        return 0
+
+    # The brake. An unattended loop with no cap is the one way this can do harm at a speed nobody
+    # sees, so it stops at --items, and it stops the moment a round of reading leaves the step
+    # exactly where it was — a reader that wrote nothing would otherwise be asked forever.
+    settled, rounds, stuck, seen = [], 0, 0, None
+    while True:
+        result = drive(order, work, built, args.tests)
+        if "built" in result:
+            settled.append({"item": result.get("item"), "built": result.get("built")})
+            # The cap counts items finished, not verdicts reached. On the first unattended run
+            # --items 10 stopped after six items, because four of the ten verdicts were refusals
+            # of one item that then passed on its fourth attempt. A refusal is the retry path
+            # working, not work delivered, and a cap that counts it stops the loop early and
+            # reports a number nobody can compare with the order.
+            if sum(1 for row in settled if row["built"]) >= args.items:
+                return _say({"items": settled, "stopped_at": "the number of items asked for",
+                             "last": result})
+            continue
+        jobs = result.get("work")
+        if not jobs:
+            return _say({"items": settled, "stopped_at": "the step handed back no work",
+                         "last": result})
+        here = (result.get("item"), result.get("stopped"), len(jobs))
+        stuck = stuck + 1 if here == seen else 0
+        seen = here
+        if stuck >= 2:
+            return _say({"items": settled, "stopped_at": "the reading changed nothing twice over",
+                         "last": result})
+        rounds += 1
+        result["readers"] = _launch(jobs, args.reader_command, built, work, f"{rounds}")
+
+
+def _say(result: dict[str, object]) -> int:
+    print(json.dumps(result, indent=2, default=str))
     return 0
 
 

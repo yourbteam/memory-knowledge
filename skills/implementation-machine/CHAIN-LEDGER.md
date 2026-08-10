@@ -25,6 +25,50 @@ the strategy brief step. Its breakdown holds 183 parts still to build, spread ov
 
 | 4b | The corrected gate was untested: the earlier verdict had been withdrawn and nothing had passed on the new basis | nothing — the two readings were re-handed with each sentence named, and the step re-judged | both readers answered under the required name, both yes with lines quoted; no test that passed before was failing. The step wrote its done record and took the next item by itself. The second item — the interview question set becoming a declared output — went through the same path with **no new gate invented**, which was entry 4's deciding fact | 0 → **2 of 142 built** | 2 build runs, 4 readings |
 
+| 5 | The twenty-third item was refused and the machinery had no way to unblock it. The requirement forbade handing over a "not generated" notice in place of a brief; four committed tests required exactly that notice, and the build instruction forbids editing a test to agree with the change. The builder was right to stop — but the only channel for the owner's answer was the driver's message to the next builder, which is the seam this machinery exists to close | the step reads an optional `rulings.json` in the work directory, keyed by item, and appends the owner's words **verbatim** to that item's build instruction, telling the builder the ruling settles the question and that a test requiring the forbidden behaviour is now wrong and may be changed, named and explained | the ruling was written to disk and the step's handback confirmed it reached the instruction; the builder then changed the no-executor path to return an empty document under a blocked status, rewrote **four** tests (it found one the refusal had not named) and said which and why; no test that passed before was failing after; both blind readers answered yes under the exact part id, one of them running the changed code with no executor and getting `status='blocked'`, `markdown=''` | 22 → **23 of 142 built** | 1 refusal, 1 owner decision, 1 build run, 2 readings |
+
+| 6 | The machinery was written down for someone else to run, and the writing had to carry rules the code did not hold: launch two readers and never one, never paraphrase the owner's ruling, never repair a stage's output by hand. Eleven hundred words of instruction, most of it asking a person to be careful. Kamen read it and asked why a self-contained machinery needs any of that | only the build step could start its own readers. The two others handed their reading back, so the blind-pair rule lived in prose. Both now take the same reader command and run their own readers, and the instruction shrank to the two commands plus the three things that are genuinely a person's: the reader, a ruling in the owner's words, and restarting it | the ordering step was run against the noticed report with a reader command and nothing else: it started its own readers, collected their answers and returned the finished order — 23 requirements in one round, nobody launching anything. The written instruction went from 1,133 words to 460 | 37 of 142 built, unchanged by this | 1 question from the owner |
+
+## Verdict, entry 6 — a written rule is where a missing gate hides
+
+Path A. The fault was found by a question, not a failure, and the fix removed prose rather than
+adding it: the same rule is now kept by the code that writes the packets, which cannot forget. The
+distance did not move and was not supposed to — the loop kept building throughout — and nothing was
+discarded. The approach can say exactly what remains: 105 items and the 23 noticed ones.
+
+Path B. Six entries, and this is the second time this machinery's own plumbing needed a second
+version after the judging was already sound. A machinery that keeps discovering it left a rule in a
+person's hands is a machinery being discovered, not known, and every such discovery has come from
+outside — a reading of the verdict, a reading of the emitter, now a question from the owner. If the
+next one also comes from outside, nothing in the machinery finds its own gaps.
+
+**Verdict: Path A, and Path B names the pattern to watch.** The rule was replaced by the mechanism
+that enforces it, which is the only kind of fix that survives being written down. **The deciding
+fact:** whether the next gap is found by the machinery's own record rather than by somebody
+noticing. The collector exists precisely to do that for the built system; nothing yet does it for
+the machinery itself.
+
+## Verdict, entry 5 — the first thing the machinery could not decide, and it still did not decide it
+
+Path A. The refusal was correct and the machinery kept it correct: a builder that rewrites a test to
+agree with itself proves nothing, so the block held until a person answered. What was missing was
+not judgement but a channel, and the channel carries the owner's words rather than a summary of
+them — the step quotes, it does not paraphrase. The builder then found a fourth test the refusal had
+missed, which is what a builder given the real question does and a builder given a nudge does not.
+The distance moved, and the same path took the next item without a new gate.
+
+Path B. Four edits to this one step in a day, and this one adds a human in the loop to a machinery
+whose whole claim is that it runs without one. If items keep needing rulings, the rulings file is
+where the real work happens and the machinery is a queue with extra steps. Nothing yet says how
+often this will be needed — one item in twenty-three is a number from a single day.
+
+**Verdict: Path A, and Path B names the number to watch.** A ruling is not a fallback: it is the one
+thing a machine must not invent, and putting it on disk in the owner's words makes the next run say
+what this one said. **The deciding fact:** how many of the remaining 119 items need a ruling. If it
+stays near one in twenty, the channel is a rare escape hatch working as intended. If it approaches
+one in five, the requirements themselves are in conflict with the built system's tests, and that
+conflict — not the build step — is the thing to fix.
+
 ## Verdict, entry 4 — the first change is real and the first verdict was not
 
 Path A. The change itself stands on evidence the machinery collected: one file, no test that passed
