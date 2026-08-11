@@ -108,9 +108,10 @@ def check(records: Path, built: Path) -> dict[str, object]:
         results = [_resolve(built, c) for c in citations if isinstance(c, dict)]
         bad = [r for r in results if not r["ok"]]
 
+        verdict = str(record.get("verdict") or record.get("answer") or "").strip().lower()
         row = {
-            "id": str(record.get("candidate_id") or path.stem),
-            "verdict": str(record.get("verdict") or ""),
+            "id": str(record.get("candidate_id") or record.get("part_id") or path.stem),
+            "verdict": verdict,
             "citations": len(citations),
             "resolved": len(results) - len(bad),
             "unresolved": [r["why"] for r in bad],
@@ -119,7 +120,9 @@ def check(records: Path, built: Path) -> dict[str, object]:
                                       "something addresses it",
         }
         # A record claiming something is done while citing nothing is unfalsifiable; refuse it.
-        if citations == [] and row["verdict"] in {"already met", "change", "remove"}:
+        if citations == [] and row["verdict"] in {
+            "already met", "change", "remove", "holds", "wrong", "yes",
+        }:
             row["unresolved"] = row["unresolved"] + [
                 f"the verdict is {row['verdict']!r} but nothing is cited. Cite the file, line and "
                 f"text that carries the behaviour, or the verdict is that nothing addresses this."

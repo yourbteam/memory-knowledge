@@ -30,15 +30,21 @@ gate, and every gate here exists because something was silently dropped without 
   below).
 - **work directory** — a fresh directory. State lives there and the run is resumable.
 - **built** — the repository to measure against. Omit it when nothing is built yet.
+- **reader command** — optional. It receives each instruction on standard input. When supplied,
+  the controller launches every blind reader itself and runs until a terminal status. Installed
+  client projections validate this command before launching anything.
 
 ## The loop
 
 ```
-python3 run.py --subject "<subject>" --description <file.md> --work <dir> [--built <repo>]
+python3 run.py --subject "<subject>" --description <file.md> --work <dir> \
+  [--built <repo>] [--reader-command '<command>']
 ```
 
-1. Run it.
-2. If it returns `stopped`, it hands back a list under `work`. Each entry is one reading job: an
+1. Run it. A result has exactly one status: `complete`, `waiting_for_readers`, `blocked`, or
+   `needs_owner`.
+2. Without `--reader-command`, exit 2 and `waiting_for_readers` are the normal handback contract.
+   The result carries a list under `work`. Each entry is one reading job: an
    instruction, the file to read, and the directory the answers go in.
 3. **Launch one agent per job, all of them, in parallel.** Give each agent its `instruction`
    verbatim and nothing else. Two jobs of the same stage are two independent readers — never let
@@ -46,6 +52,10 @@ python3 run.py --subject "<subject>" --description <file.md> --work <dir> [--bui
    only evidence this machinery accepts.
 4. When they return, run the command again. It will either hand back the next jobs or finish.
 5. Repeat until it stops handing back jobs.
+
+With `--reader-command`, steps 2–5 are owned by the controller. It validates the installed client
+runtime before launch, starts every job in the round in parallel, and stops on a terminal status.
+Two rounds with no gate-visible progress return `blocked`; they never loop indefinitely.
 
 Nothing else is yours to decide. Do not re-order stages, do not skip a second pass because the
 first looked good, and do not fix a stage's output by hand — if a gate refuses, the reading was
@@ -62,7 +72,8 @@ it true. That is what somebody picks up and implements.
 Neither replaces the other. A requirement with no breakdown cannot be handed to anyone; a breakdown
 with no requirements is a list of jobs with no reason behind them.
 
-Without a repository to measure against: the requirements themselves, which are the things to add.
+Without a repository to measure against, the split still runs and both documents are written; every
+requirement and every part is classified as work to add.
 
 Either way, a `for_a_person` list. It holds the only two questions this machinery refuses to
 answer for anyone:

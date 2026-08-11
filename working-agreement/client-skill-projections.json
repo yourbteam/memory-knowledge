@@ -294,15 +294,15 @@
       ]
     },
     "requirements-machine": {
-      "canonical_tree_sha256": "e8c0f907eef2c074c28b5ee5739a30a247e560edc34a5f1a48fc5883f78a6b45",
+      "canonical_tree_sha256": "fc4289c39430969581137bfe96042e8172b99721dc1b1c7ace3d60acc5f8f9d8",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
       "generator": "machinery-client-model-v1",
       "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "cb23983d6903390a3ef7a41433219b3979cab7754a8ca90e87d36966e90ca952",
-        "codex": "6671507dc7ef119d311294a36610040d396589c8f850be32122f4fe65893333d"
+        "claude": "5cee00de9b540f2b25b05feb3297e894d378da505f3fe77d606c3cb756f44126",
+        "codex": "a42af73e56393e0074ea23a5a359af5aab0c67f774d47e21abf9bcf15d4a6a93"
       },
       "scenario_groups": [
         "CAP-PDI"

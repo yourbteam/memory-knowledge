@@ -121,13 +121,25 @@ def compose(report: dict[str, object], requirements: list[dict[str, object]]) ->
     # produce that today, but a document that quietly duplicates is worse than one that refuses.
     seen: set[str] = set()
 
+    if report.get("measured_against_build", True):
+        provenance = (
+            "Produced by the requirements machinery from the subject's description, measured "
+            "against the build. Every requirement below was read out of the description by two "
+            "readers who could not see each other, and given its verdict by two more. Nothing "
+            "here was written by hand."
+        )
+    else:
+        provenance = (
+            "Produced by the requirements machinery from the subject's description. Nothing is "
+            "built yet, so every requirement and every separately testable part is work to add. "
+            "The reading still ran twice and the shared parts split still ran; measuring readers "
+            "were not invented for a build that does not exist."
+        )
+
     out = [
         f"# Requirements — {report['subject']}",
         "",
-        "Produced by the requirements machinery from the subject's description, measured against "
-        "the build. Every requirement below was read out of the description by two readers who "
-        "could not see each other, and given its verdict by two more. Nothing here was written by "
-        "hand.",
+        provenance,
         "",
     ]
 

@@ -8,7 +8,8 @@ or a change'. Sharper wording had already been tried on exactly that and moved i
 
 So the question is taken away from the reader. A requirement is broken into parts — each one thing
 that is plainly true or false — every part is answered yes or no with a cited line, and the verdict
-is arithmetic: all yes is already met, no yes is add, anything between is change. Measured on the
+is arithmetic: all yes is already met; all-no work of one kind is add or remove; partial or mixed
+work is change. Measured on the
 twenty-four that had defeated the whole-requirement method, this produced agreement on fourteen.
 
 The split itself is produced once, not twice, and that is deliberate. Two splitters given the same

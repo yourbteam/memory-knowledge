@@ -50,8 +50,12 @@ def gather(answer_dirs: list[Path], parts: list[dict[str, object]]) -> dict[str,
         if any(call is None for call in calls):
             missing.append(part_id)
             continue
-        answers = {str(call.get("answer") or "").strip().lower() for call in calls}
-        if len(answers) == 1:
+        answers = [str(call.get("answer") or "").strip().lower() for call in calls]
+        decisions = {
+            (answer, str(call.get("needed") or "").strip().lower() if answer == "no" else "")
+            for answer, call in zip(answers, calls)
+        }
+        if len(decisions) == 1:
             agreed += 1
             continue
         disputed.append({
@@ -62,7 +66,8 @@ def gather(answer_dirs: list[Path], parts: list[dict[str, object]]) -> dict[str,
             "sides": [
                 {
                     "read_by": answer_dirs[index].name,
-                    "answer": str(call.get("answer") or "").strip().lower(),
+                    "answer": answers[index],
+                    "needed": str(call.get("needed") or "").strip().lower(),
                     "citations": call.get("citations") or [],
                     "looked_at": call.get("looked_at"),
                     "note": call.get("note"),
@@ -78,7 +83,8 @@ def gather(answer_dirs: list[Path], parts: list[dict[str, object]]) -> dict[str,
         "parts": len(by_id),
         "parts_with_no_answer": missing,
         "note": (
-            "Both sides are carried whole, including what each says it looked at. A settling pass "
+            "Both sides are carried whole, including the work a no answer says is needed and what "
+            "each says it looked at. A settling pass "
             "that cannot decide from these must say so; it is never required to pick one."
         ),
     }

@@ -28,6 +28,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import re
 from pathlib import Path
 
 #: What a list of structural inconsistencies cannot contain, printed with every count so the
@@ -53,12 +54,26 @@ def _load_records(directory: Path) -> list[dict[str, object]]:
     return records
 
 
+def _identifier_key(identifier: str) -> tuple[tuple[int, object], ...]:
+    """Sort any candidate id without assuming one particular enumerator's prefix.
+
+    The first-half enumerator emits ``o1`` while the older second-half enumerator emits ``c1``.
+    Coverage is deliberately shared by both, so its failure path cannot parse only one family.
+    """
+
+    return tuple(
+        (0, int(part)) if part.isdigit() else (1, part.lower())
+        for part in re.split(r"(\d+)", identifier)
+        if part
+    )
+
+
 def check(candidates_path: Path, records_dir: Path) -> dict[str, object]:
     listing = json.loads(candidates_path.read_text(encoding="utf-8"))
     # The second half enumerates candidate faults, the first half enumerates the obligations a
     # description states. Completeness is the same arithmetic over either, so the checker takes
     # whichever list it is given rather than one being reshaped to look like the other.
-    rows = listing.get("candidates") or listing.get("obligations") or []
+    rows = listing.get("candidates") or listing.get("obligations") or listing.get("leftover") or []
     candidates = {str(row["id"]): row for row in rows}
     records = _load_records(records_dir)
 
@@ -88,7 +103,7 @@ def check(candidates_path: Path, records_dir: Path) -> dict[str, object]:
         "candidates": len(candidates),
         "required": len(required),
         "dismissed": len(dismissed),
-        "unaccounted": sorted(unaccounted, key=lambda cid: int(cid.lstrip("c") or 0)),
+        "unaccounted": sorted(unaccounted, key=_identifier_key),
         "contradicted": contradicted,
         "records_about_unknown_candidates": unknown,
         "complete": not unaccounted and not contradicted and not unknown,

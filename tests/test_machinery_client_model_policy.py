@@ -19,7 +19,9 @@ def load_policy_module(name: str, path: Path):
     return module
 
 
-@pytest.mark.parametrize("machinery", ["implementation-machine", "description-machinery"])
+@pytest.mark.parametrize(
+    "machinery", ["implementation-machine", "description-machinery", "requirements-machine"],
+)
 @pytest.mark.parametrize(
     ("client", "required", "forbidden"),
     [("codex", "codex exec", "claude"), ("claude", "claude -p", "codex exec")],
@@ -43,7 +45,9 @@ def test_reader_launch_accepts_only_the_installed_client(
         module.validate_reader_command(forbidden + " --model selected", policy)
 
 
-@pytest.mark.parametrize("machinery", ["implementation-machine", "description-machinery"])
+@pytest.mark.parametrize(
+    "machinery", ["implementation-machine", "description-machinery", "requirements-machine"],
+)
 def test_reader_launch_fails_closed_on_invalid_installed_policy(tmp_path: Path, machinery: str):
     module = load_policy_module(
         machinery.replace("-", "_"), ROOT / "skills" / machinery / "client_model_policy.py")
