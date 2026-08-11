@@ -38,10 +38,14 @@ import hashlib
 import json
 import os
 import re
+import shlex
 import subprocess
+import sys
 import threading
 import time
 from pathlib import Path
+
+sys.dont_write_bytecode = True
 
 from client_model_policy import validate_reader_command
 
@@ -177,12 +181,14 @@ VERIFY = (
 #: python3`, `ls .venv`, `which uv`, a pytest that fails on the wrong interpreter, then a second
 #: one that works. Across three agents an item — a builder and two checkers — that is half a minute
 #: an item spent rediscovering a fact the machinery already had in a variable.
-HOW_TO_RUN = (
-    "\n\nThis system's tests are run with exactly this command, from {built}:\n\n    {tests}\n\n"
-    "Use it. To run less than all of it, keep the command and put the paths or names on the end. "
-    "Do not go looking for an interpreter, a virtual environment or a test runner — this is the "
-    "one that works here, and anything you find by searching is a guess about a fact you have "
-    "already been given."
+REPOSITORY_CONTEXT = (
+    "Repository root: {built}\n"
+    "Full test command: {tests}\n"
+    "Output directory: {out}\n"
+    "Scratch directory: {scratch}\n\n"
+    "Run commands from the repository root. To run less than the full suite, keep the supplied "
+    "test command and append paths or names. Do not search for another interpreter, environment, "
+    "or test runner: this is the prepared repository context."
 )
 
 BLIND = (
@@ -292,15 +298,25 @@ def _answers_in(directory: Path) -> int:
 
 
 def _packet(instruction: str, out: Path, scratch: Path, blind: bool,
+            built: Path, tests: str,
             expect: int = 1, wants: str = "*.json",
             owner_approved: bool = False) -> dict[str, object]:
     out.mkdir(parents=True, exist_ok=True)
     scratch.mkdir(parents=True, exist_ok=True)
+    stable = HOW_TO_READ.format(scratch=scratch)
     if blind:
-        instruction += BLIND
-    if owner_approved:
-        instruction += OWNER_APPROVED
-    return {"instruction": instruction + HOW_TO_READ.format(scratch=scratch),
+        stable += BLIND
+    authority = OWNER_APPROVED if owner_approved else ""
+    assembled = (
+        "## Stable worker directives\n\n" + stable.strip()
+        + "\n\n## Repository context\n\n"
+        + REPOSITORY_CONTEXT.format(
+            built=built, tests=tests, out=out, scratch=scratch,
+        )
+        + ("\n\n## Authority\n\n" + authority.strip() if authority else "")
+        + "\n\n## Item task\n\n" + instruction.strip()
+    )
+    return {"instruction": assembled,
             "waiting_for": str(out), "scratch": str(scratch),
             "expect": expect, "wants": wants}
 
@@ -830,9 +846,35 @@ def _navigation_map(
     return _bounded_navigation(lines)
 
 
+def _reproduction_handoff(tests: str, navigation: str) -> str:
+    """Turn mechanically found direct tests into a runnable, non-verdict handoff."""
+
+    focused: list[str] = []
+    for row in navigation.splitlines():
+        match = re.match(r"^- (.+?):\d+ inside .+ calls .+$", row)
+        if not match or not _is_test_path(match.group(1)):
+            continue
+        path = match.group(1)
+        if path not in focused:
+            focused.append(path)
+    command = tests
+    if focused:
+        command += " " + " ".join(shlex.quote(path) for path in focused)
+        scope = "direct focused tests found in the producer-to-consumer path manifest"
+    else:
+        scope = "the full supplied test command because no direct focused test was found"
+    return (
+        "\n\nRunnable real-path reproduction (mechanically derived):\n\n"
+        f"    {command}\n\n"
+        f"This runs {scope} through the repository's test entry point and real production path. "
+        "It is a navigation aid, not acceptance evidence: inspect the behavior independently, "
+        "and the machinery still decides only from verified citations and its final test gate."
+    )
+
+
 def _reader_context(
     built: Path, item: dict[str, object], changed_files: list[str],
-    before: dict[str, object] | None = None,
+    before: dict[str, object] | None = None, tests: str | None = None,
 ) -> str:
     """Neutral navigation for a blind reader: current locations and definitions, never a verdict."""
 
@@ -842,7 +884,10 @@ def _reader_context(
     ]
     drawn = _navigation_map(built, item, changed_files, before)
     mapped = f"\n\nStructural navigation map:\n{drawn}" if drawn else ""
-    return READER_START.format(places="\n".join(places) or "- none", map=mapped)
+    reproduction = _reproduction_handoff(tests, drawn) if tests else ""
+    return READER_START.format(
+        places="\n".join(places) or "- none", map=mapped + reproduction,
+    )
 
 
 def _records_in(directory: Path) -> list[tuple[Path, object]]:
@@ -852,7 +897,61 @@ def _records_in(directory: Path) -> list[tuple[Path, object]]:
     return records
 
 
-def _reader_record_errors(directory: Path, wanted: set[str]) -> list[str]:
+def _reader_citation_errors(built: Path, directory: Path) -> list[str]:
+    """Resolve every citation supporting a yes against the repository being accepted."""
+
+    errors: list[str] = []
+    root = built.resolve()
+    for record_path, record in _records_in(directory):
+        if not isinstance(record, dict) or record.get("answer") != "yes":
+            continue
+        citations = record.get("citations")
+        if not isinstance(citations, list):
+            continue
+        for index, citation in enumerate(citations, start=1):
+            label = f"{record_path.name}: citation {index}"
+            if not isinstance(citation, dict):
+                errors.append(f"{label} must be an object")
+                continue
+            where = citation.get("where")
+            line = citation.get("line")
+            text = citation.get("text")
+            if not isinstance(where, str) or not where.strip():
+                errors.append(f"{label} where must name a file inside built repository")
+                continue
+            source = Path(where)
+            source = (source if source.is_absolute() else root / source).resolve()
+            try:
+                source.relative_to(root)
+            except ValueError:
+                errors.append(f"{label} points outside built repository: {where}")
+                continue
+            if not source.is_file():
+                errors.append(f"{label} file does not exist: {where}")
+                continue
+            if not isinstance(line, int) or isinstance(line, bool) or line < 1:
+                errors.append(f"{label} line must be a positive integer, got {line!r}")
+                continue
+            if not isinstance(text, str):
+                errors.append(f"{label} text must be a string, got {type(text).__name__}")
+                continue
+            rows = source.read_text(encoding="utf-8").splitlines()
+            if line > len(rows):
+                errors.append(
+                    f"{label} line {line} does not exist in {where}; file has {len(rows)} lines"
+                )
+                continue
+            if rows[line - 1] != text:
+                errors.append(
+                    f"{label} text does not exactly match {where}:{line}; "
+                    f"repository has {rows[line - 1]!r}, citation has {text!r}"
+                )
+    return errors
+
+
+def _reader_record_errors(
+    directory: Path, wanted: set[str], built: Path | None = None,
+) -> list[str]:
     """Structural delivery errors only; substantive yes/no remains the blind reader's judgement."""
 
     errors: list[str] = []
@@ -888,7 +987,53 @@ def _reader_record_errors(directory: Path, wanted: set[str]) -> list[str]:
     missing = sorted(wanted - set(names))
     if missing:
         errors.append(f"missing part ids: {missing!r}")
+    if built is not None:
+        errors.extend(_reader_citation_errors(built, directory))
     return errors
+
+
+def _test_removal_decision(
+    ruling: object, disappeared: list[str],
+) -> tuple[list[str], list[str]]:
+    """Separate exact, owner-documented test removals from removals still needing a ruling."""
+
+    removals = ruling.get("test_removals") if isinstance(ruling, dict) else None
+    removals = removals if isinstance(removals, dict) else {}
+    approved: list[str] = []
+    for test in disappeared:
+        row = removals.get(test)
+        if not isinstance(row, dict) or row.get("authorized") is not True:
+            continue
+        owner_ruling = row.get("owner_ruling")
+        coverage = row.get("replacement_or_remaining_coverage")
+        if (isinstance(owner_ruling, str) and owner_ruling.strip()
+                and isinstance(coverage, str) and coverage.strip()):
+            approved.append(test)
+    return approved, sorted(set(disappeared) - set(approved))
+
+
+def _ruling_text(ruling: object) -> str:
+    """Keep legacy string rulings and render structured owner decisions without inventing prose."""
+
+    if isinstance(ruling, str):
+        return ruling.strip()
+    if not isinstance(ruling, dict):
+        return ""
+    lines = []
+    general = ruling.get("owner_ruling")
+    if isinstance(general, str) and general.strip():
+        lines.append(general.strip())
+    removals = ruling.get("test_removals")
+    if isinstance(removals, dict):
+        for test, row in removals.items():
+            if not isinstance(row, dict) or row.get("authorized") is not True:
+                continue
+            owner = row.get("owner_ruling")
+            coverage = row.get("replacement_or_remaining_coverage")
+            if (isinstance(owner, str) and owner.strip()
+                    and isinstance(coverage, str) and coverage.strip()):
+                lines.append(f"Remove {test}: {owner.strip()} Coverage: {coverage.strip()}")
+    return "\n".join(lines)
 
 
 def _touched(built: Path) -> set[str]:
@@ -1016,13 +1161,13 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
     navigation_before_path = out / "navigation-before.json"
     refused = sorted(out.glob("refused-*.json"))
     if not change_path.exists():
-        if reader_map and not navigation_before_path.exists():
+        if not navigation_before_path.exists():
             navigation_before_path.write_text(
                 json.dumps(_symbol_snapshot(built), indent=2), encoding="utf-8"
             )
         instruction = BUILD.format(
             built=built, requirement=item["requirement"], parts=parts, out=out,
-        ) + HOW_TO_RUN.format(built=built, tests=tests)
+        )
         # Where the readers who put this item on the list said they looked. They cited a file and
         # a line for every part; the order carried none of it, so each builder searched a
         # five-thousand-line file again for a place already written down.
@@ -1035,6 +1180,7 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
         drawn = _navigation_map(built, item)
         if drawn:
             instruction += MAP.format(map=drawn)
+            instruction += _reproduction_handoff(tests, drawn)
         if with_body:
             bodies = "\n\n".join(dict.fromkeys(
                 found for p in item["parts"] if p.get("seen_at")
@@ -1045,8 +1191,8 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
         if prepare_universal_paths:
             instruction += _universal_preparation(str(item["requirement"]))
         ruling = rulings.get(rid)
-        if ruling:
-            instruction += RULED.format(ruling=ruling)
+        if ruling_text := _ruling_text(ruling):
+            instruction += RULED.format(ruling=ruling_text)
         if refused:
             last = json.loads(refused[-1].read_text(encoding="utf-8"))
             instruction += AGAIN.format(
@@ -1064,6 +1210,7 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
             "already_failing_before_the_change": len(before["failed"]),
             "work": [_packet(
                 instruction, out, out.parent / f"build-{rid}-scratch", blind=False,
+                built=built, tests=tests,
                 wants="change.json", owner_approved=owner_approved,
             )],
         }
@@ -1118,11 +1265,8 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
             )
         except (json.JSONDecodeError, OSError, ValueError):
             before_navigation = None
-    reader_context = (
-        _reader_context(
-            built, item, [str(path) for path in change["files"]], before_navigation,
-        )
-        if reader_map else ""
+    reader_context = _reader_context(
+        built, item, [str(path) for path in change["files"]], before_navigation, tests,
     )
     waiting = []
     for index in range(1, PASSES + 1):
@@ -1131,9 +1275,9 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
         if answers == 0 or (not repair_reader_records and answers < len(item["parts"])):
             waiting.append(_packet(
                 VERIFY.format(built=built, named_parts=named_parts, out=checked)
-                + reader_context
-                + HOW_TO_RUN.format(built=built, tests=tests),
+                + reader_context,
                 checked, work / f"check-{rid}-{index}-scratch", blind=True,
+                built=built, tests=tests,
                 expect=len(item["parts"]), owner_approved=owner_approved,
             ))
     if waiting:
@@ -1150,7 +1294,7 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
         repairs = []
         for index in range(1, PASSES + 1):
             checked = work / f"check-{rid}-{index}"
-            errors = _reader_record_errors(checked, wanted)
+            errors = _reader_record_errors(checked, wanted, built)
             if not errors:
                 continue
             earlier = sorted(work.glob(f"check-{rid}-{index}-invalid-*"))
@@ -1168,11 +1312,11 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
                 VERIFY.format(built=built, named_parts=named_parts, out=checked)
                 + reader_context
                 + RECORD_REPAIR.format(errors="\n".join(f"- {error}" for error in errors))
-                + HOW_TO_RUN.format(built=built, tests=tests)
             )
             repairs.append(_packet(
                 instruction, checked,
                 work / f"check-{rid}-{index}-repair-{repair_number}-scratch", blind=True,
+                built=built, tests=tests,
                 expect=len(item["parts"]), owner_approved=owner_approved,
             ))
         if repairs:
@@ -1190,6 +1334,9 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
     # A test that no longer exists cannot fail, so the gate above cannot see it go. This is not a
     # judgement about whether the removal was right — it is the removal being written down.
     gone = sorted(set(before.get("names") or []) - set(after.get("names") or []))
+    approved_removals, removals_needing_owner = _test_removal_decision(
+        rulings.get(rid), gone,
+    )
 
     # One answer per part per pass, and every one of them yes. Counting distinct answers instead
     # of answers-per-pass is how the first run of this step passed a part that only one reader had
@@ -1206,6 +1353,11 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
                       if said.get(pid, []).count("yes") < PASSES)
     missing = sorted(pid for pid in wanted if pid not in said)
     unnamed = sorted(set(said) - wanted)
+    citation_errors = [
+        error
+        for index in range(1, PASSES + 1)
+        for error in _reader_citation_errors(built, work / f"check-{rid}-{index}")
+    ]
 
     verdict = {
         "item": rid,
@@ -1213,8 +1365,11 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
         "changed": change["files"],
         "what_changed": change.get("what_changed"),
         "left_alone": change.get("left_alone"),
+        "test_command_exit_code": after["exit_code"],
         "tests_that_broke": broke,
         "tests_that_stopped_existing": gone,
+        "approved_test_removals": approved_removals,
+        "test_removals_needing_owner": removals_needing_owner,
         "removals_the_builder_declared": [
             str(row.get("test")) for row in (change.get("tests_changed") or [])
             if isinstance(row, dict)
@@ -1223,7 +1378,10 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
         "parts_not_agreed": unproven,
         "parts_no_reader_answered": missing,
         "answers_under_a_name_no_part_has": unnamed,
-        "built": not broke and not unproven and not missing and not unnamed,
+        "reader_citation_errors": citation_errors,
+        "built": (after["exit_code"] == 0 and not broke and not unproven
+                  and not missing and not unnamed and not citation_errors
+                  and not removals_needing_owner),
     }
     if verdict["built"]:
         (out / "done.json").write_text(json.dumps(verdict, indent=2), encoding="utf-8")
@@ -1243,6 +1401,14 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
     if broke:
         objections.append("these tests passed before the change and fail after it: "
                           + ", ".join(broke))
+    if after["exit_code"] != 0:
+        objections.append(f"test command exited {after['exit_code']}")
+    objections.extend(citation_errors)
+    objections.extend(
+        f"{test} disappeared; authorize this exact removal in rulings.json with "
+        "owner_ruling and replacement_or_remaining_coverage"
+        for test in removals_needing_owner
+    )
 
     attempt = len(refused) + 1
     verdict["attempt"] = attempt
@@ -1385,8 +1551,8 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--reader-map", action="store_true",
-        help="give blind readers a bounded structural map derived independently from current "
-             "source and the machinery's pre-build symbol snapshot",
+        help="retained compatibility flag; the bounded producer-to-consumer path manifest is "
+             "now always supplied to builders and blind readers",
     )
     parser.add_argument(
         "--repair-reader-records", action="store_true",

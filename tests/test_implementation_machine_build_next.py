@@ -3,7 +3,10 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import os
 import shlex
+import shutil
+import subprocess
 import sys
 from pathlib import Path
 from types import SimpleNamespace
@@ -20,6 +23,37 @@ spec = importlib.util.spec_from_file_location(
 )
 machine = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(machine)
+
+
+def test_cli_never_writes_bytecode_into_its_managed_skill_tree(tmp_path: Path):
+    source = (SKILL / "build_next.py").read_text()
+    assert source.index("sys.dont_write_bytecode = True") < source.index(
+        "from client_model_policy import validate_reader_command"
+    )
+    staged = tmp_path / "implementation-machine"
+    shutil.copytree(SKILL, staged, ignore=shutil.ignore_patterns("__pycache__"))
+    environment = os.environ.copy()
+    environment.pop("PYTHONDONTWRITEBYTECODE", None)
+
+    script = staged / "build_next.py"
+    probe = (
+        "import runpy,sys; "
+        "sys.dont_write_bytecode=False; "
+        f"sys.path.insert(0, {str(staged)!r}); "
+        f"sys.argv=[{str(script)!r}, '--help']; "
+        f"runpy.run_path({str(script)!r}, run_name='__main__')"
+    )
+    completed = subprocess.run(
+        [sys.executable, "-c", probe],
+        cwd=tmp_path,
+        env=environment,
+        capture_output=True,
+        text=True,
+        check=False,
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert not (staged / "__pycache__").exists()
 
 
 def _order(path: Path, requirement: str = "Restricted material must never escape.") -> dict:
@@ -46,7 +80,9 @@ def _record(part_id: str = "r1.p1", answer: str = "yes") -> dict:
     return {
         "part_id": part_id,
         "answer": answer,
-        "citations": [{"where": "/tmp/target.py", "line": 1, "text": "needle"}],
+        "citations": [
+            {"where": "target.py", "line": 2, "text": "    return 'needle'"}
+        ],
         "looked_at": "target.py and its callers",
     }
 
@@ -162,6 +198,44 @@ def test_reader_map_records_neutral_before_image_before_the_builder_runs(
     assert "Citation matches and their enclosing symbols" in result["work"][0]["instruction"]
 
 
+def test_path_manifest_is_automatic_for_builder_and_blind_readers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    monkeypatch.setattr(
+        machine,
+        "_failures",
+        lambda *_: {"command": "tests", "exit_code": 0, "failed": [], "names": []},
+    )
+
+    builder = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert "Mechanical structural starting points" in builder["work"][0]["instruction"]
+    before = work / "build-r1" / "navigation-before.json"
+    assert before.is_file()
+    (work / "build-r1" / "change.json").write_text(
+        json.dumps(
+            {
+                "files": ["target.py"],
+                "what_changed": "PRIVATE BUILDER CONCLUSION",
+                "tests_changed": [],
+                "left_alone": "nothing",
+            }
+        )
+    )
+    readers = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert len(readers["work"]) == machine.PASSES
+    for job in readers["work"]:
+        assert "Structural navigation map" in job["instruction"]
+        assert "Changed symbols, derived from the machinery's before-image" in job["instruction"]
+        assert "Runnable real-path reproduction" in job["instruction"]
+        assert "navigation aid, not acceptance evidence" in job["instruction"]
+        assert "PRIVATE BUILDER CONCLUSION" not in job["instruction"]
+
+
 def test_navigation_map_resolves_ambiguous_citations_and_maps_their_consumers(
     tmp_path: Path,
 ):
@@ -201,6 +275,11 @@ def test_navigation_map_resolves_ambiguous_citations_and_maps_their_consumers(
     assert "finalize@16" in navigation
     assert "tests/test_subject.py:4 inside test_first calls first" in navigation
     assert len(navigation) <= machine.NAVIGATION_CHAR_LIMIT
+
+    reproduction = machine._reproduction_handoff("uv run pytest", navigation)
+    assert "uv run pytest tests/test_subject.py" in reproduction
+    assert "real production path" in reproduction
+    assert "navigation aid, not acceptance evidence" in reproduction
 
 
 def test_reader_navigation_derives_changed_symbols_from_neutral_before_image(
@@ -400,15 +479,203 @@ def test_test_regression_still_blocks_two_reader_yes(
     assert (out / "refused-1.json").is_file()
 
 
-def test_default_drive_keeps_acceleration_out_of_existing_packets(tmp_path: Path):
+def test_nonzero_test_command_blocks_acceptance_without_parsed_failures(tmp_path: Path):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    out = _seed_change(work, tmp_path)
+    for index in (1, 2):
+        checked = work / f"check-r1-{index}"
+        checked.mkdir()
+        (checked / "r1.p1.json").write_text(json.dumps(_record()))
+
+    command = f"{shlex.quote(sys.executable)} -c 'import sys; sys.exit(7)'"
+    result = machine.drive(_order(source), work, tmp_path, command)
+
+    assert result["built"] is False
+    assert result["test_command_exit_code"] == 7
+    assert result["tests_that_broke"] == []
+    assert "test command exited 7" in result["objections"]
+    assert (out / "refused-1.json").is_file()
+
+
+@pytest.mark.parametrize(
+    ("citation", "message"),
+    [
+        ({"where": "../outside.py", "line": 1, "text": "outside"}, "outside built repository"),
+        ({"where": "target.py", "line": 99, "text": "needle"}, "line 99 does not exist"),
+        ({"where": "target.py", "line": 2, "text": "needle"}, "does not exactly match"),
+    ],
+)
+def test_reader_yes_requires_repository_resolved_citations(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, citation: dict, message: str,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    (tmp_path.parent / "outside.py").write_text("outside\n")
+    work = tmp_path / "work"
+    out = _seed_change(work, tmp_path)
+    for index in (1, 2):
+        checked = work / f"check-r1-{index}"
+        checked.mkdir()
+        record = _record()
+        record["citations"] = [citation]
+        (checked / "r1.p1.json").write_text(json.dumps(record))
+    monkeypatch.setattr(
+        machine,
+        "_failures",
+        lambda *_: {"command": "tests", "exit_code": 0, "failed": [], "names": []},
+    )
+
+    result = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert result["built"] is False
+    assert any(message in error for error in result["reader_citation_errors"])
+    assert any(message in objection for objection in result["objections"])
+    assert (out / "refused-1.json").is_file()
+
+
+def _seed_disappeared_test_case(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    out = _seed_change(work, tmp_path)
+    (out / "tests-before.json").write_text(
+        json.dumps(
+            {
+                "command": "tests",
+                "exit_code": 0,
+                "failed": [],
+                "names": ["tests/test_target.py::test_existing"],
+            }
+        )
+    )
+    for index in (1, 2):
+        checked = work / f"check-r1-{index}"
+        checked.mkdir()
+        (checked / "r1.p1.json").write_text(json.dumps(_record()))
+    monkeypatch.setattr(
+        machine,
+        "_failures",
+        lambda *_: {"command": "tests", "exit_code": 0, "failed": [], "names": []},
+    )
+    return source, work, out
+
+
+def test_disappeared_test_blocks_acceptance_without_exact_owner_ruling(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source, work, out = _seed_disappeared_test_case(tmp_path, monkeypatch)
+
+    result = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert result["built"] is False
+    assert result["test_removals_needing_owner"] == [
+        "tests/test_target.py::test_existing"
+    ]
+    assert any(
+        "tests/test_target.py::test_existing disappeared" in objection
+        for objection in result["objections"]
+    )
+    assert (out / "refused-1.json").is_file()
+
+
+@pytest.mark.parametrize(
+    "authorization",
+    [
+        {
+            "tests/test_other.py::test_other": {
+                "authorized": True,
+                "owner_ruling": "Remove the obsolete other test.",
+                "replacement_or_remaining_coverage": "Covered by test_replacement.",
+            }
+        },
+        {
+            "tests/test_target.py::test_existing": {
+                "authorized": True,
+                "owner_ruling": "Remove this obsolete test.",
+                "replacement_or_remaining_coverage": "",
+            }
+        },
+    ],
+)
+def test_disappeared_test_requires_exact_identity_and_coverage_record(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, authorization: dict,
+):
+    source, work, _ = _seed_disappeared_test_case(tmp_path, monkeypatch)
+    (work / "rulings.json").write_text(
+        json.dumps({"r1": {"test_removals": authorization}})
+    )
+
+    result = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert result["built"] is False
+    assert result["test_removals_needing_owner"] == [
+        "tests/test_target.py::test_existing"
+    ]
+
+
+def test_exact_owner_ruling_can_authorize_disappeared_test_with_coverage(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source, work, out = _seed_disappeared_test_case(tmp_path, monkeypatch)
+    (work / "rulings.json").write_text(
+        json.dumps(
+            {
+                "r1": {
+                    "test_removals": {
+                        "tests/test_target.py::test_existing": {
+                            "authorized": True,
+                            "owner_ruling": "The old entry-point test may be removed.",
+                            "replacement_or_remaining_coverage": (
+                                "tests/test_target.py::test_replacement covers the same path."
+                            ),
+                        }
+                    }
+                }
+            }
+        )
+    )
+
+    result = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert result["built"] is True
+    assert result["test_removals_needing_owner"] == []
+    assert result["approved_test_removals"] == [
+        "tests/test_target.py::test_existing"
+    ]
+    assert (out / "done.json").is_file()
+
+
+def test_default_drive_keeps_opt_in_experiments_and_unapproved_authority_out(
+    tmp_path: Path,
+):
     source = tmp_path / "target.py"
     source.write_text("def target():\n    return 'needle'\n")
     result = machine.drive(_order(source), tmp_path / "work", tmp_path, "tests")
 
     instruction = result["work"][0]["instruction"]
     assert "normal return" not in instruction
-    assert "Mechanical starting points" not in instruction
+    assert "Mechanical structural starting points" in instruction
     assert "The owner explicitly approved this Implementation Machinery run" not in instruction
+
+
+def test_worker_packet_prechunks_stable_directives_and_repository_context(tmp_path: Path):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+
+    result = machine.drive(_order(source), tmp_path / "work", tmp_path, "uv run pytest")
+
+    instruction = result["work"][0]["instruction"]
+    stable = instruction.index("## Stable worker directives")
+    repository = instruction.index("## Repository context")
+    item = instruction.index("## Item task")
+    assert stable < repository < item
+    assert f"Repository root: {tmp_path}" in instruction
+    assert "Full test command: uv run pytest" in instruction
+    assert "Do not go and read a working agreement" in instruction
+    assert "Output directory:" in instruction
+    assert "Scratch directory:" in instruction
 
 
 def test_owner_approval_is_relayed_as_a_bounded_worker_envelope(tmp_path: Path):
@@ -439,7 +706,10 @@ def test_launch_routes_uv_cache_to_the_workers_own_scratch(tmp_path: Path):
         "json.dumps({'uv_cache': os.environ['UV_CACHE_DIR'], "
         "'uv_no_sync': os.environ['UV_NO_SYNC']}))\n"
     )
-    job = machine._packet("read", out, scratch, blind=False, wants="change.json")
+    job = machine._packet(
+        "read", out, scratch, blind=False, built=built, tests="tests",
+        wants="change.json",
+    )
 
     result = machine._launch(
         [job], f"{shlex.quote(sys.executable)} {shlex.quote(str(reader))} "

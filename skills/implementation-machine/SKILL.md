@@ -18,14 +18,16 @@ cleanup.
 ```
 python3 build_next.py --report <requirements-report.json> --work <dir> --built <repo> \
     --tests '<the repo's own test command>' --reader-command '<command>' --items <N> \
-    --with-body --prepare-universal-paths --reader-map --repair-reader-records \
+    --with-body --prepare-universal-paths --repair-reader-records \
     --owner-approved
 ```
 
 It works out what has to exist before what, writes that order once, then builds: earliest round first, one requirement to
 one builder, the tests recorded before anything is touched, then the same sentences checked by two
-readers who cannot see each other. An item counts only when nothing that passed before fails and
-both readers say yes, citing the code. `--items` is how many items may finish unattended.
+readers who cannot see each other. An item counts only when the final test command exits zero,
+nothing that passed before fails, no test disappears without an exact owner ruling, and both
+readers say yes with repository-resolved citations. Parsed pytest failure names are diagnostics,
+never a substitute for the command exit code. `--items` is how many items may finish unattended.
 
 Give `--order <order.json>` instead of `--report` when the order already exists; `run.py` produces one on its own if you ever want it separately.
 
@@ -38,15 +40,28 @@ repository's prepared environment is used without package mutation, so the presc
 remains unchanged and works inside a sandboxed client; the machinery's own before/after gates still
 run that same command normally.
 
-The builder receives a bounded mechanical navigation map instead of a dump of every definition:
+The builder and both blind readers automatically receive a bounded mechanical path manifest
+instead of a dump of every definition:
 all current matches for each cited line up to the explicit cap, their enclosing symbols, direct
 source consumers, calls made later in those consumers, and tests that call the same symbols.
-`--reader-map` records a neutral symbol before-image before the builder starts, then gives each
-blind reader an independently generated map of the symbols that actually changed and the same
-current call/test structure. It includes no builder explanation or sibling answer, never limits
-what a reader may inspect, ignores task snapshots and generated environments, and says plainly
-when a fixed cap requires opening the source. The two-reader gate and the final test gate are
-unchanged.
+The machinery records a neutral symbol before-image before the builder starts, then independently
+derives the changed-symbol, consumer, transformation, and focused-test paths for each reader. The
+manifest includes no builder explanation or sibling answer, never limits what a reader may inspect,
+never contributes to the verdict, ignores task snapshots and generated environments, and says
+plainly when a fixed cap requires opening the source. `--reader-map` remains accepted only for
+command compatibility. The two-reader gate and the final test gate are unchanged.
+
+The manifest also produces a runnable focused-test handoff from its direct test callers. Builders
+and readers can exercise the changed behavior through the repository's real test entry point
+without rediscovering setup. When no focused caller exists, it supplies the full test command and
+says why. This handoff is navigation only and never contributes to acceptance. Every worker packet
+pre-chunks stable worker directives, repository root, test command, output and scratch locations,
+then the item task; workers do not need to reread broad standing-instruction files.
+
+Every reader `yes` is resolved before acceptance: its path must remain inside the built repository,
+its line must exist, and its quoted text must equal that repository line character for character.
+Any non-zero final test exit, unresolved citation, or unapproved disappeared test refuses the item
+with the exact failing identity and correction needed.
 
 Without `--reader-command` it hands the reading back instead of running it. Then, and only then,
 launch **one agent per job, all of them, in parallel**, each given its `instruction` verbatim and
@@ -60,7 +75,24 @@ could not see each other is the only evidence this machinery accepts.
 - **A ruling.** When a builder refuses because the requirement and the system's own tests disagree,
   only the owner can say which is wrong. Put their answer **in their words** in `rulings.json` in
   the work directory, keyed by item id. It is quoted verbatim into the build instruction. Never
-  write one yourself and never paraphrase one.
+  write one yourself and never paraphrase one. A disappeared test requires a structured ruling
+  under that item, keyed by the exact collected test identity, with `authorized: true`, the
+  `owner_ruling`, and non-empty `replacement_or_remaining_coverage`. A ruling for another test or
+  one without its coverage record does not authorize the disappearance:
+
+  ```json
+  {
+    "r1": {
+      "test_removals": {
+        "tests/test_subject.py::test_old_path": {
+          "authorized": true,
+          "owner_ruling": "The obsolete path may be removed.",
+          "replacement_or_remaining_coverage": "test_new_path covers the replacement."
+        }
+      }
+    }
+  }
+  ```
 - **Starting it again.** It stops at `--items`, or when a round of reading changes nothing.
 
 Everything else — which item is next, what the builder is told, whether an item counts — is the
