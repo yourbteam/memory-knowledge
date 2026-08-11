@@ -32,8 +32,11 @@ do what it hands back, run it again.
 from __future__ import annotations
 
 import argparse
+import ast
 import concurrent.futures
+import hashlib
 import json
+import os
 import re
 import subprocess
 import threading
@@ -58,9 +61,37 @@ GRACE_SECONDS = 20
 #: 41,567 characters, turning navigation help into another document to read.
 BODY_CHAR_LIMIT = 8_000
 
+#: Navigation must be smaller than the source it replaces and must never silently imply that a
+#: clipped search was complete.  The captured r214 reader packet carried 15,274 characters of
+#: definition names while still omitting the three places its stale citation matched.
+NAVIGATION_CHAR_LIMIT = 12_000
+NAVIGATION_MATCH_LIMIT = 12
+NAVIGATION_REFERENCE_LIMIT = 24
+
+_NAVIGATION_SKIP_DIRS = {
+    ".git", ".mypy_cache", ".plan-playbook", ".pytest_cache", ".ruff_cache", ".tox",
+    ".venv", "Tasks", "__pycache__", "build", "continuation-input", "dist",
+    "node_modules", "operations", "proposed-revisions", "site-packages", "snapshots",
+    "source-snapshots",
+}
+
 #: A malformed reader record is a delivery problem, not a product verdict. Give that seat one
 #: clean correction before handing it to a person; never turn it into another build attempt.
 RECORD_REPAIR_ATTEMPTS = 1
+
+#: An unattended builder cannot stop to ask the person who already approved the machinery run.
+#: This text is added only when the launcher makes that approval explicit on the command line;
+#: without the flag, the packet makes no authority claim.  It relays the bounded authority rather
+#: than widening it, and keeps commit/deploy/destructive boundaries with the person driving.
+OWNER_APPROVED = (
+    "\n\nAuthority for this item. The owner explicitly approved this Implementation Machinery "
+    "run to make only the product and test edits required to make the requirement above true, "
+    "to run the prescribed verification, and to write the named machinery records. Treat that "
+    "as the approved bounded code-change envelope; do not stop to ask again for those in-scope "
+    "actions. It does not authorize unrelated edits, commits, pushes, deployments, destructive "
+    "actions, credentials, external messages, or work outside the system and machinery paths "
+    "named in this instruction."
+)
 
 #: Said when the owner has ruled on something the builder would otherwise be right to refuse.
 #: The first item to need this was one where three committed tests required the very behaviour the
@@ -122,8 +153,9 @@ SEEN_AT = (
 #: What is in the files this job touches. Handed over so the builder can go to a place instead of
 #: searching for it.
 MAP = (
-    "\n\nWhat is in the files this touches, so you can go straight to a place rather than reading "
-    "the whole file:\n\n{map}\n"
+    "\n\nMechanical structural starting points, so you can go straight to the cited candidates, "
+    "their consumers and focused tests rather than reading whole files:\n\n{map}\n\nThe map "
+    "contains no verdict. Expand beyond it wherever the requirement is actually decided.\n"
 )
 
 #: The reading that decides it. Deliberately the same question the requirements machinery asked, so
@@ -260,13 +292,17 @@ def _answers_in(directory: Path) -> int:
 
 
 def _packet(instruction: str, out: Path, scratch: Path, blind: bool,
-            expect: int = 1, wants: str = "*.json") -> dict[str, object]:
+            expect: int = 1, wants: str = "*.json",
+            owner_approved: bool = False) -> dict[str, object]:
     out.mkdir(parents=True, exist_ok=True)
     scratch.mkdir(parents=True, exist_ok=True)
     if blind:
         instruction += BLIND
+    if owner_approved:
+        instruction += OWNER_APPROVED
     return {"instruction": instruction + HOW_TO_READ.format(scratch=scratch),
-            "waiting_for": str(out), "expect": expect, "wants": wants}
+            "waiting_for": str(out), "scratch": str(scratch),
+            "expect": expect, "wants": wants}
 
 
 def next_item(order: dict[str, object], work: Path) -> dict[str, object] | None:
@@ -485,36 +521,318 @@ RECORD_REPAIR = (
 )
 
 
-def _map_of(built: Path, files: set[str]) -> str:
-    """Every function in the files this job touches, with the line it starts on.
+def _source_label(built: Path, path: Path) -> str:
+    try:
+        return path.resolve().relative_to(built.resolve()).as_posix()
+    except ValueError:
+        return str(path.resolve())
 
-    A builder given one sentence and a five-thousand-line file reads that file over and over
-    looking for the place — six times on the job that made this necessary, the same file each
-    time, because nothing carries between reads. The file is a quarter of a million characters;
-    the list of what is in it and where is four thousand. Handing over the map costs nothing and
-    replaces the search.
 
-    It is a map, not an answer: it says where things are, never which one is wrong.
-    """
+def _python_files(built: Path) -> list[Path]:
+    """Version-controlled Python sources; generated work must never steer a worker."""
 
-    maps = []
-    for name in sorted(files):
-        path = built / name
-        if not path.is_file() or path.suffix != ".py":
+    tracked = subprocess.run(
+        ["git", "ls-files", "-z", "--cached", "--others", "--exclude-standard", "--", "*.py"],
+        cwd=str(built),
+        capture_output=True, text=True, check=False,
+    )
+    if tracked.returncode == 0:
+        return sorted(
+            built / name for name in tracked.stdout.split("\0")
+            if name and (built / name).is_file()
+            and not any(part in _NAVIGATION_SKIP_DIRS for part in Path(name).parts)
+        )
+    return sorted(
+        path for path in built.rglob("*.py")
+        if not any(
+            part in _NAVIGATION_SKIP_DIRS or part in {"Tasks", "operations"}
+            for part in path.relative_to(built).parts
+        )
+    )
+
+
+def _call_name(node: ast.expr) -> str | None:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        return node.attr
+    return None
+
+
+class _SymbolVisitor(ast.NodeVisitor):
+    """Collect source definitions and the calls made directly inside each definition."""
+
+    def __init__(self, lines: list[str]) -> None:
+        self.lines = lines
+        self.symbols: list[dict[str, object]] = []
+        self.stack: list[dict[str, object]] = []
+
+    def _definition(self, node: ast.AST, name: str, kind: str) -> None:
+        prefix = str(self.stack[-1]["qualname"]) + "." if self.stack else ""
+        start = int(getattr(node, "lineno", 1))
+        end = int(getattr(node, "end_lineno", start) or start)
+        source = "\n".join(self.lines[start - 1:end])
+        symbol: dict[str, object] = {
+            "name": name,
+            "qualname": prefix + name,
+            "kind": kind,
+            "line": start,
+            "end_line": end,
+            "hash": hashlib.sha256(source.encode("utf-8")).hexdigest(),
+            "calls": [],
+        }
+        self.symbols.append(symbol)
+        self.stack.append(symbol)
+        self.generic_visit(node)
+        self.stack.pop()
+
+    def visit_FunctionDef(self, node: ast.FunctionDef) -> None:  # noqa: N802
+        self._definition(node, node.name, "function")
+
+    def visit_AsyncFunctionDef(self, node: ast.AsyncFunctionDef) -> None:  # noqa: N802
+        self._definition(node, node.name, "async function")
+
+    def visit_ClassDef(self, node: ast.ClassDef) -> None:  # noqa: N802
+        self._definition(node, node.name, "class")
+
+    def visit_Call(self, node: ast.Call) -> None:  # noqa: N802
+        name = _call_name(node.func)
+        if self.stack and name:
+            calls = self.stack[-1]["calls"]
+            assert isinstance(calls, list)
+            calls.append({"name": name, "line": int(node.lineno)})
+        self.generic_visit(node)
+
+
+def _symbols_in(path: Path) -> list[dict[str, object]]:
+    try:
+        source = path.read_text(encoding="utf-8", errors="replace")
+        tree = ast.parse(source, filename=str(path))
+    except (OSError, SyntaxError, ValueError):
+        return []
+    visitor = _SymbolVisitor(source.splitlines())
+    visitor.visit(tree)
+    return visitor.symbols
+
+
+def _symbol_index(built: Path) -> dict[str, list[dict[str, object]]]:
+    return {
+        _source_label(built, path): symbols
+        for path in _python_files(built)
+        if (symbols := _symbols_in(path))
+    }
+
+
+def _symbol_snapshot(built: Path) -> dict[str, dict[str, dict[str, object]]]:
+    """A neutral before-image small enough to identify symbols changed by one builder."""
+
+    return {
+        path: {
+            str(symbol["qualname"]): {
+                "name": symbol["name"], "line": symbol["line"],
+                "end_line": symbol["end_line"], "hash": symbol["hash"],
+            }
+            for symbol in symbols
+        }
+        for path, symbols in _symbol_index(built).items()
+    }
+
+
+def _citation(built: Path, seen_at: str) -> tuple[Path, int, str] | None:
+    match = re.match(r"^(.*?):(\d+) — (.*)$", seen_at, re.S)
+    if not match:
+        return None
+    where, line, raw = match.group(1), int(match.group(2)), match.group(3).strip()
+    if raw.endswith(","):
+        raw = raw[:-1].rstrip()
+    if raw.startswith('"') and raw.endswith('"'):
+        try:
+            raw = str(json.loads(raw))
+        except (json.JSONDecodeError, ValueError):
+            raw = raw.strip('"')
+    path = Path(where) if Path(where).is_absolute() else built / where
+    return path, line, raw
+
+
+def _enclosing_symbol(
+    symbols: list[dict[str, object]], line: int
+) -> dict[str, object] | None:
+    enclosing = [
+        symbol for symbol in symbols
+        if int(symbol["line"]) <= line <= int(symbol["end_line"])
+    ]
+    return min(enclosing, key=lambda row: int(row["end_line"]) - int(row["line"])) \
+        if enclosing else None
+
+
+def _is_test_path(path: str) -> bool:
+    parts = Path(path).parts
+    return "tests" in parts or Path(path).name.startswith("test_")
+
+
+def _changed_symbols(
+    built: Path,
+    index: dict[str, list[dict[str, object]]],
+    before: dict[str, object] | None,
+    changed_files: list[str],
+) -> list[tuple[str, str, dict[str, object]]]:
+    if not isinstance(before, dict):
+        return []
+    changed: list[tuple[str, str, dict[str, object]]] = []
+    for named in changed_files:
+        source = Path(named) if Path(named).is_absolute() else built / named
+        label = _source_label(built, source)
+        current = {str(row["qualname"]): row for row in index.get(label, [])}
+        earlier = before.get(label)
+        if not isinstance(earlier, dict):
+            earlier = {}
+        for qualname, row in current.items():
+            old = earlier.get(qualname)
+            if not isinstance(old, dict) or old.get("hash") != row.get("hash"):
+                changed.append(("changed" if old else "added", label, row))
+        for qualname, old in earlier.items():
+            if qualname not in current and isinstance(old, dict):
+                changed.append(("removed", label, {
+                    "name": old.get("name") or qualname.rsplit(".", 1)[-1],
+                    "qualname": qualname, "line": old.get("line") or 1,
+                    "end_line": old.get("end_line") or old.get("line") or 1,
+                    "calls": [], "hash": old.get("hash") or "",
+                }))
+    return changed
+
+
+def _bounded_navigation(lines: list[str]) -> str:
+    rendered: list[str] = []
+    notice = "[navigation map clipped at its fixed character limit; inspect the source beyond it]"
+    for line in lines:
+        candidate = "\n".join(rendered + [line])
+        if len(candidate) + len(notice) + 1 > NAVIGATION_CHAR_LIMIT:
+            rendered.append(notice)
+            break
+        rendered.append(line)
+    return "\n".join(rendered)
+
+
+def _navigation_map(
+    built: Path,
+    item: dict[str, object],
+    changed_files: list[str] | None = None,
+    before: dict[str, object] | None = None,
+) -> str:
+    """Bounded structural starting points, generated without a builder or reader verdict."""
+
+    index = _symbol_index(built)
+    lines = [
+        "Citation matches and their enclosing symbols (all matches up to the stated cap):"
+    ]
+    targets: set[str] = set()
+    for part in item["parts"]:
+        seen_at = part.get("seen_at")
+        if not seen_at or not (citation := _citation(built, str(seen_at))):
             continue
-        found = [
-            f"  {number}: {match.group(1)}"
-            for number, line in enumerate(
-                path.read_text(encoding="utf-8", errors="replace").splitlines(), start=1)
-            if (match := _DEFINED.match(line))
+        path, _old_line, text = citation
+        label = _source_label(built, path)
+        if not path.is_file():
+            lines.append(f"- {part['part_id']}: {label} is no longer a file")
+            continue
+        wanted = " ".join(text.split()).lower()
+        matches = [
+            number for number, row in enumerate(
+                path.read_text(encoding="utf-8", errors="replace").splitlines(), start=1
+            )
+            if wanted and wanted in " ".join(row.split()).lower()
         ]
-        if found:
-            maps.append(f"{name} ({len(found)} definitions):\n" + "\n".join(found))
-    return "\n\n".join(maps)
+        shown = matches[:NAVIGATION_MATCH_LIMIT]
+        if not shown:
+            lines.append(f"- {part['part_id']}: no current match for {text!r} in {label}")
+        for number in shown:
+            enclosing = _enclosing_symbol(index.get(label, []), number)
+            if enclosing:
+                targets.add(str(enclosing["name"]))
+                lines.append(
+                    f"- {part['part_id']}: {label}:{number} inside "
+                    f"{enclosing['qualname']} (lines {enclosing['line']}-{enclosing['end_line']})"
+                )
+            else:
+                lines.append(f"- {part['part_id']}: {label}:{number} at module level")
+        if len(matches) > len(shown):
+            lines.append(
+                f"- {part['part_id']}: {len(matches) - len(shown)} further matches exceed the "
+                f"{NAVIGATION_MATCH_LIMIT}-match cap; search {label} before deciding"
+            )
+
+    if changed_files is not None:
+        changed = _changed_symbols(built, index, before, changed_files)
+        lines.append("Changed symbols, derived from the machinery's before-image:")
+        if changed:
+            for state, path, symbol in changed[:NAVIGATION_REFERENCE_LIMIT]:
+                targets.add(str(symbol["name"]))
+                lines.append(
+                    f"- {state}: {path}:{symbol['line']} {symbol['qualname']}"
+                )
+            if len(changed) > NAVIGATION_REFERENCE_LIMIT:
+                lines.append(
+                    f"- {len(changed) - NAVIGATION_REFERENCE_LIMIT} further changed symbols "
+                    "exceed the fixed reference cap; inspect the changed files"
+                )
+        else:
+            lines.append("- none detected, or no before-image exists for this resumed item")
+
+    references: list[tuple[str, int, str, str, dict[str, object]]] = []
+    reference_keys: set[tuple[str, int, str, str]] = set()
+    for path, symbols in index.items():
+        for caller in symbols:
+            for call in caller["calls"]:
+                if str(call["name"]) in targets:
+                    key = (
+                        path, int(call["line"]), str(caller["qualname"]),
+                        str(call["name"]),
+                    )
+                    if key not in reference_keys:
+                        reference_keys.add(key)
+                        references.append((*key, caller))
+    source_refs = [row for row in references if not _is_test_path(row[0])]
+    test_refs = [row for row in references if _is_test_path(row[0])]
+
+    lines.append("Direct source consumers:")
+    for path, number, caller, target, symbol in source_refs[:NAVIGATION_REFERENCE_LIMIT]:
+        lines.append(f"- {path}:{number} inside {caller} calls {target}")
+        later: list[tuple[str, int]] = []
+        seen: set[str] = set()
+        for call in reversed(symbol["calls"]):
+            name, call_line = str(call["name"]), int(call["line"])
+            if call_line > number and name not in seen and name != target:
+                later.append((name, call_line))
+                seen.add(name)
+            if len(later) == 8:
+                break
+        if later:
+            lines.append(
+                "  later calls in this same consumer (mechanical order, not a finality claim): "
+                + ", ".join(f"{name}@{call_line}" for name, call_line in reversed(later))
+            )
+    if len(source_refs) > NAVIGATION_REFERENCE_LIMIT:
+        lines.append(
+            f"- {len(source_refs) - NAVIGATION_REFERENCE_LIMIT} further source references "
+            "exceed the fixed cap"
+        )
+
+    lines.append("Focused tests that call those symbols:")
+    for path, number, caller, target, _symbol in test_refs[:NAVIGATION_REFERENCE_LIMIT]:
+        lines.append(f"- {path}:{number} inside {caller} calls {target}")
+    if not test_refs:
+        lines.append("- none found by direct call name")
+    if len(test_refs) > NAVIGATION_REFERENCE_LIMIT:
+        lines.append(
+            f"- {len(test_refs) - NAVIGATION_REFERENCE_LIMIT} further test references exceed "
+            "the fixed cap"
+        )
+    return _bounded_navigation(lines)
 
 
 def _reader_context(
-    built: Path, item: dict[str, object], changed_files: list[str]
+    built: Path, item: dict[str, object], changed_files: list[str],
+    before: dict[str, object] | None = None,
 ) -> str:
     """Neutral navigation for a blind reader: current locations and definitions, never a verdict."""
 
@@ -522,12 +840,8 @@ def _reader_context(
         f"- {part['part_id']}: {_still_at(built, str(part['seen_at']))}"
         for part in item["parts"] if part.get("seen_at")
     ]
-    cited_files = {
-        str(part["seen_at"]).split(":")[0]
-        for part in item["parts"] if part.get("seen_at")
-    }
-    drawn = _map_of(built, cited_files | {str(path) for path in changed_files})
-    mapped = f"\n\nWhat is in those files:\n{drawn}" if drawn else ""
+    drawn = _navigation_map(built, item, changed_files, before)
+    mapped = f"\n\nStructural navigation map:\n{drawn}" if drawn else ""
     return READER_START.format(places="\n".join(places) or "- none", map=mapped)
 
 
@@ -663,7 +977,8 @@ def _timed(work: Path, what: str, **facts: object):
 
 def drive(order: dict[str, object], work: Path, built: Path, tests: str,
           *, with_body: bool = False, prepare_universal_paths: bool = False,
-          reader_map: bool = False, repair_reader_records: bool = False) -> dict[str, object]:
+          reader_map: bool = False, repair_reader_records: bool = False,
+          owner_approved: bool = False) -> dict[str, object]:
     work.mkdir(parents=True, exist_ok=True)
     item = next_item(order, work)
     if item is None:
@@ -698,8 +1013,13 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
     # the readers objected to. Without this the step returned 'not built' and handed back nothing,
     # and the whole order stalled on the first honest refusal.
     change_path = out / "change.json"
+    navigation_before_path = out / "navigation-before.json"
     refused = sorted(out.glob("refused-*.json"))
     if not change_path.exists():
+        if reader_map and not navigation_before_path.exists():
+            navigation_before_path.write_text(
+                json.dumps(_symbol_snapshot(built), indent=2), encoding="utf-8"
+            )
         instruction = BUILD.format(
             built=built, requirement=item["requirement"], parts=parts, out=out,
         ) + HOW_TO_RUN.format(built=built, tests=tests)
@@ -712,9 +1032,7 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
         )
         if seen_at:
             instruction += SEEN_AT.format(seen_at=seen_at)
-        drawn = _map_of(built, {
-            str(p["seen_at"]).split(":")[0] for p in item["parts"] if p.get("seen_at")
-        })
+        drawn = _navigation_map(built, item)
         if drawn:
             instruction += MAP.format(map=drawn)
         if with_body:
@@ -746,7 +1064,7 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
             "already_failing_before_the_change": len(before["failed"]),
             "work": [_packet(
                 instruction, out, out.parent / f"build-{rid}-scratch", blind=False,
-                wants="change.json",
+                wants="change.json", owner_approved=owner_approved,
             )],
         }
     change = json.loads(change_path.read_text(encoding="utf-8"))
@@ -788,12 +1106,22 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
         return drive(
             order, work, built, tests, with_body=with_body,
             prepare_universal_paths=prepare_universal_paths, reader_map=reader_map,
-            repair_reader_records=repair_reader_records,
+            repair_reader_records=repair_reader_records, owner_approved=owner_approved,
         )
 
     # 3 · the same question, asked again, by two readers who cannot see each other.
+    before_navigation = None
+    if reader_map and navigation_before_path.is_file():
+        try:
+            before_navigation = json.loads(
+                navigation_before_path.read_text(encoding="utf-8")
+            )
+        except (json.JSONDecodeError, OSError, ValueError):
+            before_navigation = None
     reader_context = (
-        _reader_context(built, item, [str(path) for path in change["files"]])
+        _reader_context(
+            built, item, [str(path) for path in change["files"]], before_navigation,
+        )
         if reader_map else ""
     )
     waiting = []
@@ -806,7 +1134,7 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
                 + reader_context
                 + HOW_TO_RUN.format(built=built, tests=tests),
                 checked, work / f"check-{rid}-{index}-scratch", blind=True,
-                expect=len(item["parts"]),
+                expect=len(item["parts"]), owner_approved=owner_approved,
             ))
     if waiting:
         say(work, "change in hand, handing it to the checkers", item=rid,
@@ -845,7 +1173,7 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
             repairs.append(_packet(
                 instruction, checked,
                 work / f"check-{rid}-{index}-repair-{repair_number}-scratch", blind=True,
-                expect=len(item["parts"]),
+                expect=len(item["parts"]), owner_approved=owner_approved,
             ))
         if repairs:
             say(work, "repairing reader records", item=rid, checkers=len(repairs))
@@ -959,11 +1287,22 @@ def _launch(jobs: list[dict[str, object]], command: str, built: Path,
         # it. What the next step reads is what is on disk, so that is what waiting means here.
         log = work / f"launch-{tag}-{number}.log"
         waiting_for = Path(str(job["waiting_for"]))
+        scratch = Path(str(job.get("scratch") or work / f"launch-{tag}-{number}-scratch"))
+        uv_cache = scratch / "uv-cache"
+        uv_cache.mkdir(parents=True, exist_ok=True)
+        environment = os.environ.copy()
+        environment["UV_CACHE_DIR"] = str(uv_cache)
+        # `uv run --with ...` initializes its dependency-sync HTTP client even with a warm cache.
+        # In a managed macOS worker that calls SCDynamicStore, which is unavailable and makes uv
+        # panic before pytest starts.  The built repository already owns the prepared environment;
+        # no-sync keeps the prescribed command intact and uses that environment without network or
+        # package mutation.  The outer machinery still runs the same test command before and after.
+        environment["UV_NO_SYNC"] = "1"
         wanted = int(job.get("expect") or 1)
         pattern = str(job.get("wants") or "*.json")
         started = subprocess.Popen(
             parts, stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.PIPE,
-            cwd=str(built), text=True,
+            cwd=str(built), text=True, env=environment,
         )
         started.stdin.write(str(job["instruction"]))
         started.stdin.close()
@@ -1046,11 +1385,17 @@ def main(argv: list[str] | None = None) -> int:
     )
     parser.add_argument(
         "--reader-map", action="store_true",
-        help="an experiment: give blind readers neutral current locations and definition maps",
+        help="give blind readers a bounded structural map derived independently from current "
+             "source and the machinery's pre-build symbol snapshot",
     )
     parser.add_argument(
         "--repair-reader-records", action="store_true",
         help="repair one malformed reader delivery in place instead of rebuilding the item",
+    )
+    parser.add_argument(
+        "--owner-approved", action="store_true",
+        help="relay that the owner approved the bounded item edits and verification; never set "
+             "this flag without their explicit approval",
     )
     parser.add_argument("--items", type=int, default=1,
                         help="how many items may be taken without a person looking. The loop stops "
@@ -1083,6 +1428,7 @@ def main(argv: list[str] | None = None) -> int:
             order, work, built, args.tests, with_body=args.with_body,
             prepare_universal_paths=args.prepare_universal_paths,
             reader_map=args.reader_map, repair_reader_records=args.repair_reader_records,
+            owner_approved=args.owner_approved,
         ), indent=2))
         return 0
 
@@ -1095,6 +1441,7 @@ def main(argv: list[str] | None = None) -> int:
             order, work, built, args.tests, with_body=args.with_body,
             prepare_universal_paths=args.prepare_universal_paths,
             reader_map=args.reader_map, repair_reader_records=args.repair_reader_records,
+            owner_approved=args.owner_approved,
         )
         if "built" in result:
             settled.append({"item": result.get("item"), "built": result.get("built")})

@@ -29,6 +29,50 @@ the strategy brief step. Its breakdown holds 183 parts still to build, spread ov
 
 | 6 | The machinery was written down for someone else to run, and the writing had to carry rules the code did not hold: launch two readers and never one, never paraphrase the owner's ruling, never repair a stage's output by hand. Eleven hundred words of instruction, most of it asking a person to be careful. Kamen read it and asked why a self-contained machinery needs any of that | only the build step could start its own readers. The two others handed their reading back, so the blind-pair rule lived in prose. Both now take the same reader command and run their own readers, and the instruction shrank to the two commands plus the three things that are genuinely a person's: the reader, a ruling in the owner's words, and restarting it | the ordering step was run against the noticed report with a reader command and nothing else: it started its own readers, collected their answers and returned the finished order — 23 requirements in one round, nobody launching anything. The written instruction went from 1,133 words to 460 | 37 of 142 built, unchanged by this | 1 question from the owner |
 
+| 7 | A Codex worker is one-shot, but the item brief did not carry the owner's already-given edit authority. Two r214 builders therefore spent 4.2 and 3.5 minutes loading the repository agreement, hit the sandboxed `uv` path, asked a question nobody could answer, and delivered nothing. A writable cache removed the first denial but exposed `uv` 0.9.28 panicking in macOS `SCDynamicStore` before pytest collection | add an explicit `--owner-approved` launch flag that relays only the bounded item authority and exclusions; give every worker a cache in its own scratch; set `UV_NO_SYNC=1` so the unchanged prescribed command uses the repository's prepared environment without dependency sync, network, or package mutation | the next builder recognized `envelope=approved` and did not ask again; the exact focused command reached pytest (`1 passed`), the repaired reader ran the prescribed command twice (`6 passed`, then `8 passed`), 52 machinery/client-projection checks passed, each installed client still requires its own runtime and forbids the other, and r214 passed both blind readers plus the final 1,161-test/572-subtest gate | 71 → **72 of 142 built** | 2 non-deliveries (7.7 minutes), one sandbox diagnosis, one missing reader seat restarted without rerunning the completed seat |
+
+| 8 | r214's citation text had moved and appeared three times. The body shortcut correctly refused to guess, while the reader packet spent 15,274 characters listing definitions without naming those three matches, the caller that consumes them, or the transformations after that call. The first structural prototype also admitted 807 version-controlled task snapshots, filling its cap with historical copies | replace the broad definition dump with a bounded map built only from current source: every citation match up to the explicit cap and its enclosing symbol, deduplicated direct consumers, later calls in the same consumer, and direct test callers. Before the builder starts, record hashes of current symbols; blind readers receive the symbols mechanically changed since that before-image, never the builder's explanation or another reader's answer | on the captured r214 input the production helper generated the map in 0.48 seconds and 4,677 characters, named all three current matches inside `strategy_brief_prompt`, reached `_build_strategy_brief_body`, exposed the final `prepend_reading_legend` and validation calls, and listed 23 direct test callers. Seventeen focused machinery tests pass, including ambiguous matches, changed/added symbol detection, cap disclosure, blind-reader privacy, and exclusion of task snapshots | **72 of 142 built**, unchanged by machinery optimization | 1 rejected structural prototype; 807 historical copies excluded; no reader, test, or acceptance gate removed |
+
+## Verdict, entry 8 — remove navigation repetition without sharing judgement
+
+The direct r214 proof also repeated an operator error from the preceding optimization: importing
+the skill with the system Python wrote two bytecode files into the canonical skill tree. The
+installer correctly refused generated artifacts; removing them then made the manifest that had
+hashed them correctly refuse as stale. Direct probes of a managed skill must therefore set
+`PYTHONDONTWRITEBYTECODE=1` before import, and projection generation must run only from the clean,
+validated tree. This changes no worker path; it prevents proof tooling from changing what it proves.
+
+Path A. The map performs only work whose answer is mechanical: where quoted text occurs now, which
+definition encloses it, which functions call that definition, what is called later in the same
+consumer, and which symbols differ from a before-image. It starts both readers sooner while leaving
+them blind, free to read elsewhere, and subject to the same independent verdict and regression gate.
+
+Path B. A semantic shortlist would be faster still, but it would make the machinery decide which
+path matters and hand the same conclusion to builder and readers. That trades away the independence
+that caught earlier universal-path failures and is not an optimization of this machinery.
+
+**Verdict: Path A.** The generated r214 packet proves the right evidence is present and bounded;
+it does not yet prove the expected three-to-five-minute live saving. **The next deciding fact:**
+the next item must preserve two independent complete readings while reducing time from worker start
+to the first relevant source or focused test compared with r214's recorded navigation intervals.
+
+## Verdict, entry 7 — authority and execution environment belong at the launcher boundary
+
+Path A. The workers were not refusing the requirement; they were correctly obeying a repository
+contract that the machinery had failed to satisfy. Relaying the owner's existing bounded approval
+removed no gate, and `UV_NO_SYNC=1` changed no test command or product environment: it prevented a
+sandboxed reader from trying to synchronize dependencies the repository had already prepared.
+The same item then crossed the real builder, two-reader, and regression path.
+
+Path B. The successful builder still spent fifteen minutes, and the source-path reads remain the
+largest repeatable cost after the launcher faults are removed. Preloading more code can save time
+only when the citation resolves unambiguously; otherwise it risks steering all three readers to the
+same incomplete boundary.
+
+**Verdict: Path A.** The repair is mechanical and client-safe. **The next deciding fact:** whether
+the next item reaches its first focused test without authority or `uv` remediation, while blind
+readers still find any materially different path the builder missed.
+
 ## Verdict, entry 6 — a written rule is where a missing gate hides
 
 Path A. The fault was found by a question, not a failure, and the fix removed prose rather than

@@ -3,8 +3,10 @@ from __future__ import annotations
 
 import importlib.util
 import json
+import shlex
 import sys
 from pathlib import Path
+from types import SimpleNamespace
 
 import pytest
 
@@ -139,6 +141,126 @@ def test_reader_map_is_mechanical_and_keeps_builder_conclusions_private(tmp_path
         assert "target" in instruction
         assert "PRIVATE BUILDER CONCLUSION" not in instruction
         assert "starting points, not a boundary" in instruction
+
+
+def test_reader_map_records_neutral_before_image_before_the_builder_runs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    monkeypatch.setattr(
+        machine,
+        "_failures",
+        lambda *_: {"command": "tests", "exit_code": 0, "failed": [], "names": []},
+    )
+
+    result = machine.drive(_order(source), work, tmp_path, "tests", reader_map=True)
+
+    before = json.loads((work / "build-r1" / "navigation-before.json").read_text())
+    assert before["target.py"]["target"]["hash"]
+    assert "Citation matches and their enclosing symbols" in result["work"][0]["instruction"]
+
+
+def test_navigation_map_resolves_ambiguous_citations_and_maps_their_consumers(
+    tmp_path: Path,
+):
+    source = tmp_path / "subject.py"
+    source.write_text(
+        "def first():\n"
+        "    marker = [\n"
+        "        'one',\n"
+        "    ]\n"
+        "    return marker\n\n"
+        "def second():\n"
+        "    marker = [\n"
+        "        'two',\n"
+        "    ]\n"
+        "    return marker\n\n"
+        "def consumer():\n"
+        "    value = first()\n"
+        "    value = normalize(value)\n"
+        "    return finalize(value)\n"
+    )
+    tests = tmp_path / "tests"
+    tests.mkdir()
+    (tests / "test_subject.py").write_text(
+        "from subject import first\n\n"
+        "def test_first():\n"
+        "    assert first()\n"
+    )
+    item = _order(source)["work"][0]
+    item["parts"][0]["seen_at"] = f"{source}:99 — marker = ["
+
+    navigation = machine._navigation_map(tmp_path, item)
+
+    assert navigation.count("inside first") == 1
+    assert navigation.count("inside second") == 1
+    assert "inside consumer calls first" in navigation
+    assert "normalize@15" in navigation
+    assert "finalize@16" in navigation
+    assert "tests/test_subject.py:4 inside test_first calls first" in navigation
+    assert len(navigation) <= machine.NAVIGATION_CHAR_LIMIT
+
+
+def test_reader_navigation_derives_changed_symbols_from_neutral_before_image(
+    tmp_path: Path,
+):
+    source = tmp_path / "target.py"
+    source.write_text(
+        "def target():\n    return 'needle'\n\n"
+        "def unchanged():\n    return 'same'\n"
+    )
+    before = machine._symbol_snapshot(tmp_path)
+    source.write_text(
+        "def target():\n    return 'changed needle'\n\n"
+        "def added():\n    return target()\n\n"
+        "def unchanged():\n    return 'same'\n"
+    )
+    item = _order(source)["work"][0]
+
+    context = machine._reader_context(
+        tmp_path, item, ["target.py"], before,
+    )
+
+    assert "changed: target.py:1 target" in context
+    assert "added: target.py:4 added" in context
+    assert "changed: target.py:7 unchanged" not in context
+    assert "inside added calls target" in context
+    assert "PRIVATE BUILDER CONCLUSION" not in context
+
+
+def test_navigation_map_clips_at_a_line_boundary_and_says_so():
+    lines = ["heading"] + ["x" * 500 for _ in range(100)]
+
+    navigation = machine._bounded_navigation(lines)
+
+    assert len(navigation) <= machine.NAVIGATION_CHAR_LIMIT
+    assert navigation.endswith("inspect the source beyond it]")
+
+
+def test_navigation_index_excludes_tracked_task_snapshots(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    live = tmp_path / "src" / "live.py"
+    snapshot = tmp_path / "Tasks" / "old" / "source-snapshots" / "tree" / "live.py"
+    live.parent.mkdir(parents=True)
+    snapshot.parent.mkdir(parents=True)
+    live.write_text("def live():\n    return True\n")
+    snapshot.write_text("def stale():\n    return False\n")
+    monkeypatch.setattr(
+        machine.subprocess,
+        "run",
+        lambda *args, **kwargs: SimpleNamespace(
+            returncode=0,
+            stdout=(
+                "src/live.py\0"
+                "Tasks/old/source-snapshots/tree/live.py\0"
+            ),
+        ),
+    )
+
+    assert machine._python_files(tmp_path) == [live]
 
 
 def test_invalid_reader_record_repairs_only_that_seat_without_rebuilding(
@@ -286,3 +408,45 @@ def test_default_drive_keeps_acceleration_out_of_existing_packets(tmp_path: Path
     instruction = result["work"][0]["instruction"]
     assert "normal return" not in instruction
     assert "Mechanical starting points" not in instruction
+    assert "The owner explicitly approved this Implementation Machinery run" not in instruction
+
+
+def test_owner_approval_is_relayed_as_a_bounded_worker_envelope(tmp_path: Path):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+
+    result = machine.drive(
+        _order(source), tmp_path / "work", tmp_path, "tests", owner_approved=True,
+    )
+
+    instruction = result["work"][0]["instruction"]
+    assert "The owner explicitly approved this Implementation Machinery run" in instruction
+    assert "do not stop to ask again" in instruction
+    assert "It does not authorize unrelated edits, commits, pushes, deployments" in instruction
+
+
+def test_launch_routes_uv_cache_to_the_workers_own_scratch(tmp_path: Path):
+    built = tmp_path / "built"
+    work = tmp_path / "work"
+    out = work / "answer"
+    scratch = work / "answer-scratch"
+    built.mkdir()
+    reader = tmp_path / "reader.py"
+    reader.write_text(
+        "import json, os, pathlib, sys\n"
+        "pathlib.Path(sys.argv[1]).mkdir(parents=True, exist_ok=True)\n"
+        "pathlib.Path(sys.argv[1], 'change.json').write_text("
+        "json.dumps({'uv_cache': os.environ['UV_CACHE_DIR'], "
+        "'uv_no_sync': os.environ['UV_NO_SYNC']}))\n"
+    )
+    job = machine._packet("read", out, scratch, blind=False, wants="change.json")
+
+    result = machine._launch(
+        [job], f"{shlex.quote(sys.executable)} {shlex.quote(str(reader))} "
+        f"{shlex.quote(str(out))}", built, work, "cache",
+    )
+
+    delivered = json.loads((out / "change.json").read_text())
+    assert result[0]["wrote"] == 1
+    assert Path(delivered["uv_cache"]) == scratch / "uv-cache"
+    assert delivered["uv_no_sync"] == "1"

@@ -17,7 +17,9 @@ cleanup.
 
 ```
 python3 build_next.py --report <requirements-report.json> --work <dir> --built <repo> \
-    --tests '<the repo's own test command>' --reader-command '<command>' --items <N>
+    --tests '<the repo's own test command>' --reader-command '<command>' --items <N> \
+    --with-body --prepare-universal-paths --reader-map --repair-reader-records \
+    --owner-approved
 ```
 
 It works out what has to exist before what, writes that order once, then builds: earliest round first, one requirement to
@@ -26,6 +28,25 @@ readers who cannot see each other. An item counts only when nothing that passed 
 both readers say yes, citing the code. `--items` is how many items may finish unattended.
 
 Give `--order <order.json>` instead of `--report` when the order already exists; `run.py` produces one on its own if you ever want it separately.
+
+Use `--owner-approved` only after the owner explicitly approves the bounded machinery run. It
+relays that existing authority to one-shot workers so they do not stop to ask again; it never
+authorizes unrelated edits, commits, pushes, deployments, destructive actions, credentials,
+external messages, or paths outside the item brief. The launcher also gives each worker a uv cache
+inside that worker's own scratch directory and disables dependency synchronization there. The
+repository's prepared environment is used without package mutation, so the prescribed test command
+remains unchanged and works inside a sandboxed client; the machinery's own before/after gates still
+run that same command normally.
+
+The builder receives a bounded mechanical navigation map instead of a dump of every definition:
+all current matches for each cited line up to the explicit cap, their enclosing symbols, direct
+source consumers, calls made later in those consumers, and tests that call the same symbols.
+`--reader-map` records a neutral symbol before-image before the builder starts, then gives each
+blind reader an independently generated map of the symbols that actually changed and the same
+current call/test structure. It includes no builder explanation or sibling answer, never limits
+what a reader may inspect, ignores task snapshots and generated environments, and says plainly
+when a fixed cap requires opening the source. The two-reader gate and the final test gate are
+unchanged.
 
 Without `--reader-command` it hands the reading back instead of running it. Then, and only then,
 launch **one agent per job, all of them, in parallel**, each given its `instruction` verbatim and
