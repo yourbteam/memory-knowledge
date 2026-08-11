@@ -24,6 +24,16 @@ TESTS="tests/test_greenfield_requirement_prover.py"
 
 [ -d "$REPO/.git" ] || exit 0
 
+# Only fire inside the repository this rule is about. The gate is installed globally, so without
+# this it ends every session on the machine whenever that one file is dirty — and on 2026-08-11 it
+# did: a session working on united-partners was blocked four times running by uncommitted greenfield
+# work it had never touched, with no way to reach anybody, which is the one thing the header above
+# says must never happen. The rule itself is unchanged; it now applies where its subject lives.
+case "$PWD/" in
+  "$REPO"/*) : ;;
+  *) exit 0 ;;
+esac
+
 # Only fire when the verdict-bearing module is actually dirty. A clean tree has nothing to prove.
 changed="$(cd "$REPO" && git diff --name-only -- "$MODULE" 2>/dev/null)" || exit 0
 [ -n "$changed" ] || exit 0
