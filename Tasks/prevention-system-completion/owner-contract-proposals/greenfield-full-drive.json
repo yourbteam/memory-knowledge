@@ -42,6 +42,27 @@
       "reason": "adopts the committed greenfield drive-dag and mcp-server changes from commit e4609f84",
       "status": "APPROVED"
     },
+    "drive_dag_source_correction_20260811": {
+      "approved_at_utc": "2026-08-11T08:07:19Z",
+      "approved_by": "Kamen",
+      "decision_id": "greenfield-full-drive-drive-dag-source-correction-20260811",
+      "reason": "adopts the already-approved drive-DAG client corrections that omit an unset parallel width and carry an explicitly named requirement scope without changing unscoped drives",
+      "status": "APPROVED"
+    },
+    "program_state_source_correction_20260811": {
+      "approved_at_utc": "2026-08-11T09:48:14Z",
+      "approved_by": "Kamen",
+      "decision_id": "greenfield-full-drive-program-state-source-correction-20260811",
+      "reason": "adopts the approved durable requirement-proof, scenario, living-coverage, and verdict-restatement state contract through Kamen-authored commit f6116068",
+      "status": "APPROVED"
+    },
+    "mcp_server_source_correction_20260811": {
+      "approved_at_utc": "2026-08-11T09:48:14Z",
+      "approved_by": "Kamen",
+      "decision_id": "greenfield-full-drive-mcp-server-source-correction-20260811",
+      "reason": "adopts the approved greenfield proof/fix orchestration and the live-proven shared-clone engine-verdict lookup without authorizing a commit or deployment",
+      "status": "APPROVED"
+    },
     "reservation_mode": {
       "decision_id": "greenfield-full-drive-progressive-reservation-v1",
       "status": "APPROVED"
@@ -279,22 +300,22 @@
       "source_correction_decision_id": "greenfield-full-drive-runtime-contract-v1"
     },
     {
-      "approved_post_correction_sha256": "cfd580f8fabbc20f47e452a3573788be71cfcdb46a76bef725e82e1ad373c79c",
+      "approved_post_correction_sha256": "ab4b1eab53eb558369fdeaf8538ba585d8902e08edf792cafc28d69a0c6d3d62",
       "path": "/Users/kamenkamenov/mcp-agents-workflow/scripts/greenfield_drive_dag.py",
       "sha256": "311194da791ba34ba7a6ccea3e7949611b2f2a3fd1a00ddf39d1e8db70b7a16d",
-      "source_correction_decision_id": "greenfield-full-drive-owner-source-refresh-6-20260728"
+      "source_correction_decision_id": "greenfield-full-drive-drive-dag-source-correction-20260811"
     },
     {
-      "approved_post_correction_sha256": "7a53a9945a71dd66d4d52877efb00ffd7b800f968e8e8a599128846fdc612188",
+      "approved_post_correction_sha256": "052b8388506b196bd6b82404d3f4a278e272535639a5f7b41718af0f44ca43fa",
       "path": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/greenfield_program_state.py",
       "sha256": "1d05b277a32a6f0eefc55fb95136addf6c7d757221245373be0b95ea7612d10c",
-      "source_correction_decision_id": "greenfield-full-drive-owner-source-refresh-4-20260725"
+      "source_correction_decision_id": "greenfield-full-drive-program-state-source-correction-20260811"
     },
     {
-      "approved_post_correction_sha256": "493e1c65417b26f246f7fdb510cdb5001788976e280a63f32f8a50bb6462f23b",
+      "approved_post_correction_sha256": "37431665b6e41177b60916910f4382c01ea308b2b5db7f94b0727508069536f5",
       "path": "/Users/kamenkamenov/mcp-agents-workflow/src/workflow_orch/mcp_server.py",
       "sha256": "f1251ed5a9d3aae5bcedcee927052d13e42bd12308dd9d88822593788696610f",
-      "source_correction_decision_id": "greenfield-full-drive-owner-source-refresh-6-20260728"
+      "source_correction_decision_id": "greenfield-full-drive-mcp-server-source-correction-20260811"
     }
   ],
   "terminal_contract": {

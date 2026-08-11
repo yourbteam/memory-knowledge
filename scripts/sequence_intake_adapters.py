@@ -67,6 +67,13 @@ CANONICAL_SEQUENCE_IDS = (
     # to prepare for it, and a None adapter records it as non-runnable rather than
     # missing.
     "agent-heartbeat",
+    # Same shape as `agent-heartbeat` above, and the same failure: registered in
+    # SEQUENCES.md on 2026-08-06 without a canonical entry here, so build_intake_contracts
+    # failed closed for EVERY sequence and the launcher would build nothing at all --
+    # which is how a goal-store commit stopped `commit-push-main` from publishing. It
+    # carries no adapter on purpose: a goal is declared and measured by running
+    # `goal_tracker.py` directly, so zero-input intake has nothing to prepare for it.
+    "goal-declaration",
 )
 
 COMMIT_PUSH_OPERATIONS = (

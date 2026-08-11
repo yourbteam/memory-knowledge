@@ -281,6 +281,46 @@
       "approved_at_utc": "2026-08-04T10:49:58Z",
       "approved_surface": "The sequence_intake_adapter source binding in owner-contract-proposals/commit-push-main.json and the matching implementation_sources entry in owner-executable-contracts.json.",
       "stable_behavior": "The adapter module registers agent-heartbeat as a canonical sequence id carrying no adapter, so contract building no longer fails closed for every sequence when a sequence is registered without one, and workflow client regeneration requires the declared client-classification facts path so an omitted fact is reported unresolved rather than assumed. Owner effects, admission, and terminal semantics are unchanged."
+    },
+    {
+      "decision_id": "commit-push-main-source-branch-landing-source-correction-20260810",
+      "owner_sequence_id": "commit-push-main",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-08-10T17:11:51Z",
+      "approved_surface": "The scoped_git_publish.py implementation source binding in owner-contract-proposals/commit-push-main.json and the matching implementation_sources entry in owner-executable-contracts.json.",
+      "stable_behavior": "After either isolated publish profile pushes from its temporary clone, the source branch lands on the published commit only when the index is clean and no committed path outside the approved publish scope would be stranded. Otherwise the successful push remains reported with an explicit landing refusal. This source correction authorizes no commit or push."
+    },
+    {
+      "decision_id": "greenfield-full-drive-drive-dag-source-correction-20260811",
+      "owner_sequence_id": "greenfield-full-drive",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-08-11T08:07:19Z",
+      "approved_surface": "The greenfield_drive_dag.py implementation source binding in owner-contract-proposals/greenfield-full-drive.json and the matching implementation_sources entry in owner-executable-contracts.json.",
+      "stable_behavior": "The drive-DAG client omits parallelWidth when the operator did not supply it, preserving the server's serial default instead of sending schema-invalid null, and may carry an explicitly named comma-separated requirement scope so one approved requirement is driven end to end without changing unscoped drives. The null-width correction was proven by the live feat-5 launch on 2026-07-31; Kamen explicitly approved the named-requirement switch on 2026-08-07 and this bounded projection repair on 2026-08-11. Owner effects, admission, and terminal semantics are unchanged."
+    },
+    {
+      "decision_id": "greenfield-full-drive-program-state-source-correction-20260811",
+      "owner_sequence_id": "greenfield-full-drive",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-08-11T09:48:14Z",
+      "approved_surface": "The greenfield_program_state.py implementation source binding in owner-contract-proposals/greenfield-full-drive.json and the matching implementation_sources entry in owner-executable-contracts.json.",
+      "stable_behavior": "The durable program-state contract records requirement verdict restatements and acceptance scenarios, preserves REMEASURE as measured but not proven, converts only grounded uncovered or played failures into fix work, carries scenario-backed proof through the merge gate, and applies one shared living-coverage/restatement rule across durable writers. These changes were implemented and published in Kamen-authored commits through f6116068 under the approved requirement-validation envelopes; this source correction changes no owner effect, admission, or terminal semantics."
+    },
+    {
+      "decision_id": "greenfield-full-drive-mcp-server-source-correction-20260811",
+      "owner_sequence_id": "greenfield-full-drive",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-08-11T09:48:14Z",
+      "approved_surface": "The mcp_server.py implementation source binding in owner-contract-proposals/greenfield-full-drive.json and the matching implementation_sources entry in owner-executable-contracts.json.",
+      "stable_behavior": "The greenfield controller drives requirement proof and fix work through durable coverage, restatement, replay, resume, and PROVEN_BY_PLAYING boundaries; when a fresh session workspace has no engine verdict folder, it reads the engine-owned verdicts from the matching shared clone so a played witness reaches the fixer instead of degrading to vague coverage text. Kamen explicitly approved the mcp_server.py envelope and the shared-clone lookup, which was proven live on REQ-4. This source correction authorizes neither a commit nor deployment and changes no unrelated owner semantics."
+    },
+    {
+      "decision_id": "local-workflow-orch-image-build-path-source-correction-20260811",
+      "owner_sequence_id": "local-workflow-orch-image",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-08-11T09:56:18Z",
+      "approved_surface": "The local_workflow_orch_image_harness.py implementation source binding in owner-contract-proposals/local-workflow-orch-image.json and the matching implementation_sources entry in owner-executable-contracts.json.",
+      "stable_behavior": "Before a local image build, the harness runs its two build-path test files with no bypass and reclaims stopped containers, build cache, and every unused image in the order required to free pinned space. After a zero-exit build it verifies that the requested tag resolves to an image created after the build started and reports that image identity. Kamen explicitly required the recurring disk failures to be prevented and the tests to become a build-sequence preflight; the gated path then completed live with 22 tests and a newly produced image. This source correction authorizes no Docker action, build, run, commit, deployment, or unrelated owner change."
     }
   ]
 }

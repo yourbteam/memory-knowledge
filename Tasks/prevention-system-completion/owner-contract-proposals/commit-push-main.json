@@ -17,6 +17,17 @@
       "decision_id": "commit-push-main-publish-test-gate-adoption-20260806",
       "status": "APPROVED"
     },
+    "implementation_source_branch_landing_20260810": {
+      "decision_id": "commit-push-main-source-branch-landing-source-correction-20260810",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-08-10T17:11:51Z",
+      "reason": "after an isolated publish, land the source branch on the published commit when doing so cannot strand staged or out-of-scope committed work, so the next publish does not repeat the same non-fast-forward divergence"
+    },
+    "intake_goal_store_20260806": {
+      "decision_id": "commit-push-main-goal-store-intake-source-correction-20260806",
+      "status": "APPROVED"
+    },
     "sequence_intake_adapter_agent_heartbeat_20260804": {
       "decision_id": "commit-push-main-agent-heartbeat-intake-adapter-source-correction-20260804",
       "status": "APPROVED"
@@ -227,16 +238,16 @@
   "schema_version": 1,
   "source": {
     "dependencies_sha256": "90f1b468d1fecf61fa0fa4ba0c739102939518d6977763e5bcc51544698ffb63",
-    "implementation_approved_post_correction_sha256": "b57f889b55c3ad6321dd8677b36708beed7528d4801039f978b6770d4de667e6",
+    "implementation_approved_post_correction_sha256": "0ab022696f75fe774f6929dab54c771a40269bdcd7cf05e8fa1ecf04709c0f46",
     "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
     "implementation_sha256": "27912869dd33e97847aab13f26e00957888ec58f96832a263987d419bd4b3f45",
-    "implementation_source_correction_decision_id": "commit-push-main-publish-test-gate-adoption-20260806",
-    "intake_approved_post_correction_sha256": "8b9efab46c2accbfab6b8a1281df61ef1b7bd22a6bf707fc924e95b1fa8b9bcb",
+    "implementation_source_correction_decision_id": "commit-push-main-source-branch-landing-source-correction-20260810",
+    "intake_approved_post_correction_sha256": "f4b599bedaede439d125de464374763d0346caed6328ccc06f0552b66b7639fd",
     "intake_path": "/Users/kamenkamenov/memory-knowledge/scripts/script_intake.py",
     "intake_sha256": "9955319d6c29bdf64025896e2bc9f4e1740866a88c3f0bfd1e0a3a042882b5cc",
-    "intake_source_correction_decision_id": "commit-push-main-multiline-commit-message-source-correction-20260729",
+    "intake_source_correction_decision_id": "commit-push-main-goal-store-intake-source-correction-20260806",
     "sequence_approved_post_correction_sha256": "daa618bf35ba1e74ecebc08df7934a45e5d10a7be1c3ad7d4df434ce0990a69f",
-    "sequence_intake_adapter_approved_post_correction_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+    "sequence_intake_adapter_approved_post_correction_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
     "sequence_intake_adapter_path": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_intake_adapters.py",
     "sequence_intake_adapter_sha256": "71d625802d503eef10ab67ca08446cead079d287dac08d4e30b8f394a0691f57",
     "sequence_intake_adapter_source_correction_decision_id": "commit-push-main-agent-heartbeat-intake-adapter-source-correction-20260804",

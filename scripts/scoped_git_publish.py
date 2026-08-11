@@ -11,7 +11,7 @@ import subprocess
 import sys
 import tempfile
 from pathlib import Path
-from typing import Sequence
+from typing import Iterable, Sequence
 
 try:
     from scripts import (
@@ -327,6 +327,49 @@ def _source_state(repo: Path, paths: Sequence[str]) -> tuple[str, str, dict[str,
     return head, status, hashes
 
 
+def _land_in_source(
+    *,
+    repo: Path,
+    branch: str,
+    remote: str,
+    published: str,
+    commit_sha: str,
+    scope: Iterable[str],
+) -> dict[str, object]:
+    """Leave the source repository pointing at what was actually published.
+
+    Both isolated profiles commit and push from a temporary clone, so the branch the operator is
+    standing on keeps a commit that exists nowhere else — same content as the published one, a
+    different identity. On 2026-08-10 that duplicate is what made the next publish fail: a push
+    rejected as non-fast-forward by a remote only this repository had ever written to, in a
+    repository whose owner is its only human author. Two publishes, two duplicates, and the
+    divergence grows by one every time.
+
+    Landing is refused, never forced, when anything committed could be lost by it: work staged in
+    the index, or commits carrying paths the published commit does not. The refusal is returned
+    rather than raised — the push succeeded, and a publish that reports a stale local branch is
+    honest, while one that silently leaves it is how this started.
+    """
+
+    _git(repo, "fetch", remote, branch)
+    if _git(repo, "diff", "--cached", "--quiet", check=False).returncode:
+        return {"landed": False, "head": commit_sha,
+                "why": "the source index holds staged work, which resetting would unstage"}
+    base = _git(repo, "merge-base", commit_sha, published, check=False).stdout.strip()
+    if not base:
+        return {"landed": False, "head": commit_sha,
+                "why": "the source commit and the published commit share no history"}
+    beyond = sorted(_changed_paths(repo, base, commit_sha) - set(scope))
+    if beyond:
+        return {"landed": False, "head": commit_sha, "unpublished_paths": beyond,
+                "why": "the branch carries committed changes outside the published scope, so "
+                       "moving it would strand them"}
+    _git(repo, "reset", "--mixed", published)
+    return {"landed": True, "head": published, "was": commit_sha,
+            "why": "the branch now names the commit that was published, so the next push is a "
+                   "fast-forward"}
+
+
 def integrate_remote_and_resume(
     *, repo: Path, manifest: Path, branch: str, remote: str, commit_sha: str,
 ) -> dict[str, object]:
@@ -478,13 +521,22 @@ def isolated_integrate_and_resume(
             remote=remote,
             commit_sha=overlay_commit,
         )
-        return {
-            **result,
-            "mode": "isolated-integrate-remote-and-resume",
-            "source_repo": str(repo),
-            "source_commit": commit_sha,
-            "overlay_commit": overlay_commit,
-        }
+        published = str(result["remote_commit"])
+
+    # Outside the temporary directory: the clone is gone, the push stood, and the branch this was
+    # invoked on is the last thing still naming a commit nobody else has.
+    landing = _land_in_source(
+        repo=repo, branch=branch, remote=remote,
+        published=published, commit_sha=commit_sha, scope=scope_paths,
+    )
+    return {
+        **result,
+        "mode": "isolated-integrate-remote-and-resume",
+        "source_repo": str(repo),
+        "source_commit": commit_sha,
+        "overlay_commit": overlay_commit,
+        "source_branch": landing,
+    }
 
 
 def isolated_reconcile_and_resume(
@@ -622,8 +674,13 @@ def isolated_reconcile_and_resume(
     after_state = _source_state(repo, sorted(scope | overlay))
     if after_state != before_state:
         raise PublishError("source worktree changed during isolated reconciliation")
+    landing = _land_in_source(
+        repo=repo, branch=branch, remote=remote,
+        published=verified_remote, commit_sha=commit_sha, scope=scope,
+    )
     return {
         "ok": True,
+        "source_branch": landing,
         "mode": "isolated-reconcile-remote-and-resume",
         "source_repo": str(repo),
         "source_commit": commit_sha,

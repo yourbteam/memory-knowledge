@@ -598,6 +598,9 @@ if args == ["--version"]:
     print("Docker acceptance")
 elif args[:2] == ["system", "df"]:
     print("TYPE TOTAL ACTIVE SIZE RECLAIMABLE")
+elif args[:2] == ["image", "inspect"]:
+    if "--format" in args:
+        print("sha256:" + "b" * 64 + " 2999-01-01T00:00:00Z")
 elif args and args[0] == "inspect":
     raise SystemExit(1)
 elif args and args[0] == "run":
@@ -630,7 +633,24 @@ elif args and args[0] == "exec":
                 encoding="utf-8",
             )
             az.chmod(0o700)
+            uv = fake_bin / "uv"
+            uv.write_text("""#!/usr/bin/env python3
+import json, os, sys
+
+args = sys.argv[1:]
+if args[:2] != ["run", "pytest"]:
+    print("acceptance uv permits only: uv run pytest <tests>", file=sys.stderr)
+    raise SystemExit(64)
+with open(os.environ["LOCAL_IMAGE_UV_AUDIT"], "a", encoding="utf-8") as handle:
+    handle.write(json.dumps({"pytest": args[2:]}, sort_keys=True) + "\\n")
+python = "/Users/kamenkamenov/mcp-agents-workflow/.venv/bin/python"
+os.execv(python, [python, "-m", "pytest", *args[2:]])
+""", encoding="utf-8")
+            uv.chmod(0o700)
             environment["PATH"] = str(fake_bin) + os.pathsep + environment["PATH"]
+            environment["LOCAL_IMAGE_UV_AUDIT"] = str(
+                self.root / "local-image-uv-audit.jsonl"
+            )
             python_edge = self.root / "local-image-python-edge"
             python_edge.mkdir(parents=True, exist_ok=True)
             (python_edge / "sitecustomize.py").write_text("""import io
@@ -667,6 +687,8 @@ if args == ["--version"]:
 if args and args[0] == "info":
     raise SystemExit(0)
 if args[:2] == ["image", "inspect"]:
+    if "--format" in args:
+        print("sha256:" + "b" * 64 + " 2999-01-01T00:00:00Z")
     raise SystemExit(0)
 if args and args[0] == "inspect":
     if "NetworkSettings.Ports" in joined or "8080/tcp" in joined:
@@ -730,8 +752,17 @@ exit 64
 import json, os, sys
 
 args = sys.argv[1:]
+python = "/Users/kamenkamenov/mcp-agents-workflow/.venv/bin/python"
+if args[:2] == ["run", "pytest"]:
+    with open(os.environ["GREENFIELD_UV_AUDIT"], "a", encoding="utf-8") as handle:
+        handle.write(json.dumps({"pytest": args[2:]}, sort_keys=True) + "\\n")
+    os.execv(python, [python, "-m", "pytest", *args[2:]])
 if args[:2] != ["run", "python"] or len(args) < 3:
-    print("acceptance uv permits only: uv run python <checked-in-script>", file=sys.stderr)
+    print(
+        "acceptance uv permits only: uv run pytest <tests> or "
+        "uv run python <checked-in-script>",
+        file=sys.stderr,
+    )
     raise SystemExit(64)
 script = os.path.realpath(args[2])
 root = "/Users/kamenkamenov/mcp-agents-workflow/scripts/"
@@ -740,7 +771,6 @@ if not script.startswith(root):
     raise SystemExit(64)
 with open(os.environ["GREENFIELD_UV_AUDIT"], "a", encoding="utf-8") as handle:
     handle.write(json.dumps({"script": script}, sort_keys=True) + "\\n")
-python = "/Users/kamenkamenov/mcp-agents-workflow/.venv/bin/python"
 os.execv(python, [python, script, *args[3:]])
 """,
                 "lsof": "#!/bin/sh\nexit 1\n",
@@ -860,10 +890,13 @@ print(json.dumps({
             docker.chmod(0o700)
             environment["PATH"] = str(fake_bin) + os.pathsep + environment["PATH"]
             environment["MAWF_OPERATOR_AUDIT"] = str(audit_path)
+        execution_cwd = None
+        if source_path.endswith("/local_workflow_orch_image_harness.py"):
+            execution_cwd = str(Path(source_path).resolve().parents[1])
         try:
             completed = subprocess.run(
                 list(executed_command), shell=False, check=False, text=True,
-                capture_output=True, env=environment, timeout=60,
+                capture_output=True, env=environment, cwd=execution_cwd, timeout=60,
             )
         except subprocess.TimeoutExpired as exc:
             completed = subprocess.CompletedProcess(
@@ -1213,13 +1246,24 @@ def execute_case(
                     "payload": dict(envelope),
                 }
         delegated_python_paths: list[str] = []
-        greenfield_audit = root / "greenfield-python-audit.jsonl"
-        if greenfield_audit.exists():
-            delegated_python_paths = [
-                json.loads(line)["script"]
-                for line in greenfield_audit.read_text(encoding="utf-8").splitlines()
-                if line.strip()
-            ]
+        delegated_pytest_commands: list[list[str]] = []
+        delegation_audit_rows: list[dict[str, Any]] = []
+        for audit_path in (
+            root / "greenfield-python-audit.jsonl",
+            root / "local-image-uv-audit.jsonl",
+        ):
+            if audit_path.exists():
+                delegation_audit_rows.extend(
+                    json.loads(line)
+                    for line in audit_path.read_text(encoding="utf-8").splitlines()
+                    if line.strip()
+                )
+        delegated_python_paths = [
+            row["script"] for row in delegation_audit_rows if "script" in row
+        ]
+        delegated_pytest_commands = [
+            row["pytest"] for row in delegation_audit_rows if "pytest" in row
+        ]
         operator_commands: list[list[str]] = []
         mawf_operator_audit = root / "mawf-operator-audit.jsonl"
         if mawf_operator_audit.exists():
@@ -1247,6 +1291,7 @@ def execute_case(
             ],
             "capture_count": len(edge.captures or []),
             "delegated_python_paths": delegated_python_paths,
+            "delegated_pytest_commands": delegated_pytest_commands,
             "operator_commands": operator_commands,
             "credential_os_operations": credential_os_operations,
             "artifacts": persisted, "failure": failure,

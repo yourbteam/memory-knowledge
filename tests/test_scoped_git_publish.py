@@ -430,8 +430,17 @@ def test_isolated_integration_preserves_dirty_source_and_pushes_overlay(
 
     assert result["mode"] == "isolated-integrate-remote-and-resume"
     assert result["source_commit"] == source_commit
-    assert git(repo, "rev-parse", "HEAD") == source_commit
-    assert git(repo, "status", "--short") == "M excluded.txt\n?? overlay.txt"
+    # The branch lands on what was published. It used to keep source_commit — a commit existing
+    # only here — and the next publish was rejected as non-fast-forward by a remote this
+    # repository is the only writer of. The dirty worktree is still untouched, which is the whole
+    # reason this profile exists.
+    assert result["source_branch"]["landed"] is True
+    assert git(repo, "rev-parse", "HEAD") == result["commit"]
+    # The worktree files themselves are what must survive, and they do. Their *status* changes,
+    # because the branch now describes what was published rather than a commit nobody else has —
+    # a difference the operator can see is a difference that is real.
+    assert (repo / "excluded.txt").read_text() == "unrelated dirty change\n"
+    assert (repo / "overlay.txt").read_text() == "overlay change\n"
     assert git(repo, "ls-remote", "--heads", "origin", "main").split()[0] == result["commit"]
 
 
@@ -467,8 +476,8 @@ def test_isolated_reconcile_uses_verified_overlay_for_approved_conflict(
 
     assert result["mode"] == "isolated-reconcile-remote-and-resume"
     assert result["conflict_paths"] == ["included.txt"]
-    assert git(repo, "rev-parse", "HEAD") == source_commit
-    assert git(repo, "status", "--short") == source_status
+    assert result["source_branch"]["landed"] is True
+    assert git(repo, "rev-parse", "HEAD") == result["commit"]
     assert (repo / "included.txt").read_text() == "remote change\nlocal committed change\n"
     published = git(repo, "ls-remote", "--heads", "origin", "main").split()[0]
     assert published == result["commit"]
@@ -507,8 +516,13 @@ def test_isolated_reconcile_ignores_older_local_commits_outside_overlay_scope(
         commit_sha=source_commit,
     )
 
+    # The branch stays where it is here, and that is correct: it carries an older commit touching
+    # excluded.txt, which was never published, so moving it would strand that work.
+    assert result["source_branch"]["landed"] is False
+    assert result["source_branch"]["unpublished_paths"] == ["excluded.txt"]
     assert git(repo, "rev-parse", "HEAD") == source_commit
     assert git(repo, "status", "--short") == source_status
+    assert (repo / "included.txt").read_text() == "approved overlay version\n"
     published = remote_writer(repo, tmp_path / "published")
     assert (published / "included.txt").read_text() == "approved overlay version\n"
     assert (published / "excluded.txt").read_text() == "before\n"
@@ -553,8 +567,10 @@ def test_isolated_reconcile_auto_merges_clean_same_path_edits(
 
     assert result["auto_merged_paths"] == ["included.txt"]
     assert result["conflict_paths"] == []
-    assert git(repo, "rev-parse", "HEAD") == source_commit
-    assert git(repo, "status", "--short") == source_status
+    assert result["source_branch"]["landed"] is True
+    assert git(repo, "rev-parse", "HEAD") == result["commit"]
+    assert (repo / "included.txt").read_text() == "LOCAL\ntwo\nthree\n"
+    assert (repo / "overlay.txt").read_text() == "reviewed overlay\n"
 
 
 def test_merge_commit_path_treats_multiple_conflicts_as_content_conflict(
@@ -585,3 +601,47 @@ def test_merge_commit_path_treats_multiple_conflicts_as_content_conflict(
     assert not scoped_git_publish._merge_commit_path(
         repo, merge_base, local_commit, "included.txt", destination,
     )
+
+
+def test_isolated_reconcile_refuses_to_land_when_the_branch_carries_unpublished_work(
+    publish_repo: tuple[Path, Path], tmp_path: Path,
+) -> None:
+    """Landing the branch must never strand a commit that was not published.
+
+    The publish moves the source branch onto the commit it actually pushed, so the next publish is
+    a fast-forward instead of a rejection. When the branch also carries a commit touching a path
+    outside the approved scope, that commit exists nowhere else and moving the branch would lose
+    it. The push still stands; the refusal is reported rather than raised.
+    """
+
+    repo, manifest = publish_repo
+    (repo / "included.txt").write_text("local committed change\n")
+    (repo / "excluded.txt").write_text("committed but never published\n")
+    git(repo, "add", "included.txt", "excluded.txt")
+    git(repo, "commit", "-m", "test: local commit, one file of it out of scope")
+    source_commit = git(repo, "rev-parse", "HEAD")
+
+    writer = remote_writer(repo, tmp_path)
+    (writer / "remote.txt").write_text("remote change\n")
+    git(writer, "add", "remote.txt")
+    git(writer, "commit", "-m", "test: remote moves ahead")
+    git(writer, "push", "origin", "main")
+
+    (repo / "included.txt").write_text("the version reviewed for publishing\n")
+    overlay_manifest = tmp_path / "overlay-scope.txt"
+    overlay_manifest.write_text("included.txt\n")
+
+    result = scoped_git_publish.isolated_reconcile_and_resume(
+        repo=repo,
+        manifest=manifest,
+        overlay_manifest=overlay_manifest,
+        message="test: publish only the approved scope",
+        branch="main",
+        remote="origin",
+        commit_sha=source_commit,
+    )
+
+    assert git(repo, "ls-remote", "--heads", "origin", "main").split()[0] == result["commit"]
+    assert result["source_branch"]["landed"] is False
+    assert result["source_branch"]["unpublished_paths"] == ["excluded.txt"]
+    assert git(repo, "rev-parse", "HEAD") == source_commit

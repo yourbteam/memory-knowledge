@@ -553,6 +553,24 @@ def test_greenfield_acceptance_executes_historical_shell_and_checked_in_python(
         "/Users/kamenkamenov/mcp-agents-workflow/scripts/ensure_local_operator_env.py",
         f"/Users/kamenkamenov/mcp-agents-workflow/scripts/{driver}",
     ]
+    assert result["delegated_pytest_commands"] == [[
+        "tests/test_local_workflow_orch_image_harness.py",
+        "tests/test_local_image_harness_build_gate.py",
+        "-q",
+    ]]
+
+
+def test_local_image_build_acceptance_runs_mandatory_real_test_preflight():
+    result = prevention_owner_acceptance_producer.execute_case(
+        "local-workflow-orch-image", "build", scenario="positive",
+    )
+
+    assert result["result"]["status"] == "TERMINAL"
+    assert result["delegated_pytest_commands"] == [[
+        "tests/test_local_workflow_orch_image_harness.py",
+        "tests/test_local_image_harness_build_gate.py",
+        "-q",
+    ]]
 
 
 @pytest.mark.parametrize(
