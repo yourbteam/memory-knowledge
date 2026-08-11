@@ -1,0 +1,16 @@
+{
+  "clients": {
+    "claude": {
+      "display_name": "Claude Code",
+      "forbidden_runtime": "codex exec",
+      "required_runtime": "claude -p"
+    },
+    "codex": {
+      "display_name": "Codex",
+      "forbidden_runtime": "claude",
+      "required_runtime": "codex exec"
+    }
+  },
+  "generator": "machinery-client-model-v1",
+  "schema_version": 1
+}

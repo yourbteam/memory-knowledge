@@ -54,7 +54,16 @@ def order(report: dict[str, object], depends: list[Path]) -> dict[str, object]:
     for row in rows:
         entry = by_requirement.setdefault(str(row["requirement_id"]),
                                           {"requirement": row["requirement"], "parts": []})
-        entry["parts"].append({"part_id": row["part_id"], "part": row["part"]})
+        # The readers who answered 'no' said where they looked, with a file, a line and that
+        # line's text. Dropping it here is why every builder searched a five-thousand-line file
+        # for a place that was already written down one step earlier.
+        seen = row.get("evidence") or {}
+        where = str(seen.get("where") or "").strip()
+        entry["parts"].append({
+            "part_id": row["part_id"], "part": row["part"],
+            **({"seen_at": f"{where}:{seen.get('line')} — {str(seen.get('text') or '').strip()}"}
+               if where else {}),
+        })
 
     passes = [_verdicts(d) for d in depends]
     shared = set.intersection(*[set(p) for p in passes]) if passes else set()

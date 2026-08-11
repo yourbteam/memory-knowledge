@@ -139,6 +139,44 @@ class InstallerTests(unittest.TestCase):
             self.assertNotEqual(drifted.returncode, 0)
             self.assertIn("canonical tree changed after projection", drifted.stderr)
 
+    def test_generated_projection_install_keeps_each_client_provider_bound(self):
+        with tempfile.TemporaryDirectory() as raw:
+            root = Path(raw); source = root/"source"; state = root/"state"
+            name = "implementation-machine"
+            (source/name).mkdir(parents=True)
+            (source/name/"SKILL.md").write_text(
+                f"---\nname: {name}\ndescription: test\n---\nbody\n")
+            manifest = source/"managed-skills.txt"; manifest.write_text(name + "\n")
+            reconciliation = root/"projections.json"
+            reconciliation.write_text(json.dumps({"schema_version": 1, "entries": {
+                name: {
+                    "disposition": "GENERATED_CLIENT_PROJECTION",
+                    "targets": ["codex", "claude"],
+                    "scenario_groups": ["CAP-SHARED"],
+                    "canonical_tree_sha256": None,
+                    "projected_tree_sha256": None,
+                    "projected_tree_sha256_by_client": None,
+                    "generator": "machinery-client-model-v1",
+                    "generator_sha256": None,
+                    "divergence_reason": "The invoking client owns model selection.",
+                }
+            }}) + "\n")
+            pcs = installer._projection_module()
+            self.assertEqual(pcs.generate(source, manifest, reconciliation), 0)
+            codex = root/"codex"; claude = root/"claude"
+            command = [sys.executable, str(ROOT/"working-agreement/install_skills.py"),
+                       "--source", str(source), "--manifest", str(manifest),
+                       "--target", "both", "--accept-cross-client",
+                       "--codex-root", str(codex), "--claude-root", str(claude),
+                       "--state-dir", str(state), "--reconciliation", str(reconciliation)]
+            result = subprocess.run(command, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr)
+            codex_policy = json.loads((codex/name/"client-model-policy.json").read_text())
+            claude_policy = json.loads((claude/name/"client-model-policy.json").read_text())
+            self.assertEqual(codex_policy["required_runtime"], "codex exec")
+            self.assertEqual(claude_policy["required_runtime"], "claude -p")
+            self.assertNotEqual(installer.tree_hash(codex/name), installer.tree_hash(claude/name))
+
     def test_unmanaged_installed_skills_are_preserved_and_reported(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw); source, manifest, claude, state = self._gate_fixture(root)

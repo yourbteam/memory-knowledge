@@ -10,6 +10,7 @@ import json
 import re
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parent.parent
@@ -100,6 +101,33 @@ def test_self_contained_machinery_is_managed_and_bypasses_sequence_discovery():
     description = (SKILLS / "description-machinery" / "SKILL.md").read_text()
     assert "complete local controller" in description
     assert "do not\nput `task-intake`, `sequence-runner`, registry selection, or sequence discovery around it" in description
+
+
+def test_all_machinery_projects_fail_closed_to_the_invoking_client_model():
+    machinery = {"description-machinery", "implementation-machine", "requirements-machine"}
+    rows = json.loads(PROJECTIONS.read_text())["entries"]
+    assert all(rows[name]["disposition"] == "GENERATED_CLIENT_PROJECTION" for name in machinery)
+    for client, required, forbidden in (
+        ("codex", "codex exec", "claude"),
+        ("claude", "claude -p", "codex exec"),
+    ):
+        with tempfile.TemporaryDirectory() as raw:
+            staged = Path(raw)
+            completed = subprocess.run(
+                [sys.executable, str(ROOT / "working-agreement" / "project_client_skills.py"),
+                 "build", "--client", client, "--staging-root", str(staged)],
+                capture_output=True, text=True,
+            )
+            assert completed.returncode == 0, completed.stderr
+            for name in machinery:
+                policy = json.loads((staged / name / "client-model-policy.json").read_text())
+                assert policy == {
+                    "schema_version": 1,
+                    "client": client,
+                    "required_runtime": required,
+                    "forbidden_runtime": forbidden,
+                    "fail_closed": True,
+                }
 
 
 def test_pdi_skill_is_managed_and_discoverable_from_skill_md():

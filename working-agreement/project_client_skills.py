@@ -12,6 +12,7 @@ import hashlib
 import json
 import shutil
 import sys
+import tempfile
 from pathlib import Path
 
 DISPOSITIONS = {"SHARED_IDENTICAL", "GENERATED_CLIENT_PROJECTION", "CLIENT_NOT_APPLICABLE", "BLOCKED"}
@@ -21,6 +22,9 @@ SCENARIO_GROUPS = {
     "CAP-GOVERNANCE", "CAP-PDI", "CAP-VERIFY", "CAP-PERSONAS",
     "CAP-OPERATIONS", "CAP-REMOTE", "CAP-MEMORY", "CAP-SHARED",
 }
+GENERATOR_FILES = {
+    "machinery-client-model-v1": Path(__file__).resolve().with_name("machinery-client-model-v1.json"),
+}
 
 
 def tree_hash(path: Path) -> str | None:
@@ -29,6 +33,66 @@ def tree_hash(path: Path) -> str | None:
     for item in sorted(p for p in path.rglob("*") if p.is_file()):
         h.update(item.relative_to(path).as_posix().encode() + b"\0"); h.update(item.read_bytes())
     return h.hexdigest()
+
+
+def file_hash(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def generator_hash(generator: str) -> str | None:
+    path = GENERATOR_FILES.get(generator)
+    return file_hash(path) if path and path.is_file() else None
+
+
+def expected_projection_hash(row: dict, client: str) -> str | None:
+    if row.get("disposition") == "GENERATED_CLIENT_PROJECTION":
+        return (row.get("projected_tree_sha256_by_client") or {}).get(client)
+    return row.get("projected_tree_sha256")
+
+
+def project_skill(source: Path, destination: Path, client: str, row: dict) -> None:
+    """Create one deterministic client projection from a provider-neutral skill."""
+    if destination.exists():
+        raise RuntimeError(f"projection destination already exists: {destination}")
+    shutil.copytree(source, destination)
+    if row.get("disposition") != "GENERATED_CLIENT_PROJECTION":
+        return
+    generator = row.get("generator")
+    spec_path = GENERATOR_FILES.get(generator)
+    if spec_path is None or not spec_path.is_file():
+        raise RuntimeError(f"no generator is registered for {generator}")
+    actual_generator_hash = file_hash(spec_path)
+    recorded_generator_hash = row.get("generator_sha256")
+    if recorded_generator_hash != actual_generator_hash:
+        raise RuntimeError(
+            f"generator changed after projection (manifest {recorded_generator_hash}, "
+            f"live {actual_generator_hash})")
+    spec = json.loads(spec_path.read_text())
+    policy = spec["clients"].get(client)
+    if policy is None:
+        raise RuntimeError(f"generator {generator} has no {client} policy")
+    installed_policy = {
+        "schema_version": 1,
+        "client": client,
+        "required_runtime": policy["required_runtime"],
+        "forbidden_runtime": policy["forbidden_runtime"],
+        "fail_closed": True,
+    }
+    (destination / "client-model-policy.json").write_text(
+        json.dumps(installed_policy, indent=2, sort_keys=True) + "\n")
+    instructions = destination / "SKILL.md"
+    body = instructions.read_text().rstrip()
+    body += (
+        "\n\n## Installed client model boundary\n\n"
+        f"This is the **{policy['display_name']}** projection. Every model-backed builder, "
+        "reader, checker, and requirements-enumeration agent started or handed back by this "
+        f"machinery must use this client. Reader commands must resolve to "
+        f"`{policy['required_runtime']}`; reject `{policy['forbidden_runtime']}` before launch. "
+        "If the invoking client or reader runtime cannot be verified, stop without starting the "
+        "worker. This boundary controls model selection only; all machinery behavior and outputs "
+        "remain governed by the shared skill.\n"
+    )
+    instructions.write_text(body)
 
 
 def manifest_names(manifest: Path) -> list[str]:
@@ -62,6 +126,14 @@ def structural_errors(entries: dict, names: list[str]) -> list[str]:
         if disposition == "GENERATED_CLIENT_PROJECTION":
             if not row.get("generator") or not row.get("generator_sha256") or not row.get("divergence_reason"):
                 errors.append(f"{name}: generated projection requires generator, generator_sha256, divergence_reason")
+            hashes = row.get("projected_tree_sha256_by_client")
+            if not isinstance(hashes, dict) or not set(targets or []) <= set(hashes):
+                errors.append(f"{name}: generated projection requires one projected hash per target client")
+            live_generator_hash = generator_hash(row.get("generator"))
+            if live_generator_hash is None:
+                errors.append(f"{name}: no generator is registered for {row.get('generator')}")
+            elif row.get("generator_sha256") != live_generator_hash:
+                errors.append(f"{name}: generator changed after projection")
         if disposition == "CLIENT_NOT_APPLICABLE" and not row.get("divergence_reason"):
             errors.append(f"{name}: client-not-applicable requires an evidence-backed divergence_reason")
         if disposition in INSTALLABLE and not row.get("canonical_tree_sha256"):
@@ -99,7 +171,20 @@ def generate(skills_root: Path, manifest: Path, projections_path: Path) -> int:
         row["canonical_tree_sha256"] = live
         if row["disposition"] == "SHARED_IDENTICAL":
             row["projected_tree_sha256"] = live
-        # GENERATED_CLIENT_PROJECTION recomputes projected_tree_sha256 during build.
+        else:
+            generator = row.get("generator")
+            live_generator_hash = generator_hash(generator)
+            if live_generator_hash is None:
+                print(f"{name}: no generator is registered for {generator}", file=sys.stderr); return 1
+            row["generator_sha256"] = live_generator_hash
+            row["projected_tree_sha256"] = None
+            projected = {}
+            with tempfile.TemporaryDirectory() as raw:
+                for client in row["targets"]:
+                    destination = Path(raw) / client / name
+                    project_skill(skills_root / name, destination, client, row)
+                    projected[client] = tree_hash(destination)
+            row["projected_tree_sha256_by_client"] = projected
     errors = structural_errors(entries, names)
     if errors:
         print("\n".join(errors), file=sys.stderr); return 1
@@ -124,12 +209,14 @@ def build(skills_root: Path, manifest: Path, projections_path: Path, client: str
             skipped.append(name); continue
         if row["disposition"] == "BLOCKED":
             blocked.append(name); continue
-        if row["disposition"] == "GENERATED_CLIENT_PROJECTION":
-            print(f"{name}: no generator is registered for {row.get('generator')}", file=sys.stderr); return 1
-        shutil.copytree(skills_root / name, staging_root / name)
+        try:
+            project_skill(skills_root / name, staging_root / name, client, row)
+        except RuntimeError as exc:
+            print(f"{name}: {exc}", file=sys.stderr); return 1
         produced = tree_hash(staging_root / name)
-        if produced != row["projected_tree_sha256"]:
-            print(f"{name}: staged tree {produced} does not match projected {row['projected_tree_sha256']}",
+        expected = expected_projection_hash(row, client)
+        if produced != expected:
+            print(f"{name}: staged tree {produced} does not match projected {expected}",
                   file=sys.stderr); return 1
         staged.append({"name": name, "projected_tree_sha256": produced})
     if blocked:
@@ -149,7 +236,7 @@ def check(skills_root: Path, manifest: Path, projections_path: Path, client: str
     if installed_root is not None:
         for name in names:
             row = data["entries"].get(name) or {}
-            expected = row.get("projected_tree_sha256")
+            expected = expected_projection_hash(row, client)
             applicable = row.get("disposition") in INSTALLABLE and client in (row.get("targets") or [])
             installed = tree_hash(installed_root / name)
             if not applicable:

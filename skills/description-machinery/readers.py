@@ -12,9 +12,10 @@ gives the command, and every reader writes down what it is.
 from __future__ import annotations
 
 import concurrent.futures
-import shlex
 import subprocess
 from pathlib import Path
+
+from client_model_policy import validate_reader_command
 
 
 def _answers_in(directory: Path) -> int:
@@ -35,7 +36,7 @@ def _launch(jobs: list[dict[str, object]], command: str, built: Path,
     is. The instruction goes in on standard input so nothing about it can be reshaped by a shell.
     """
 
-    parts = shlex.split(command)
+    parts = validate_reader_command(command)
     started = []
 
     def run(number: int, job: dict[str, object]) -> dict[str, object]:

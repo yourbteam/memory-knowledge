@@ -35,11 +35,12 @@ import argparse
 import concurrent.futures
 import json
 import re
-import shlex
 import subprocess
 import threading
 import time
 from pathlib import Path
+
+from client_model_policy import validate_reader_command
 
 PASSES = 2
 
@@ -51,6 +52,15 @@ ATTEMPTS = 3
 
 #: How long a reader that has already written its answer is given to close itself.
 GRACE_SECONDS = 20
+
+#: A copied source head-start must stay smaller than the work instruction around it. The first
+#: experiment copied an entire enclosing function; on the captured r211 item that would have added
+#: 41,567 characters, turning navigation help into another document to read.
+BODY_CHAR_LIMIT = 8_000
+
+#: A malformed reader record is a delivery problem, not a product verdict. Give that seat one
+#: clean correction before handing it to a person; never turn it into another build attempt.
+RECORD_REPAIR_ATTEMPTS = 1
 
 #: Said when the owner has ruled on something the builder would otherwise be right to refuse.
 #: The first item to need this was one where three committed tests required the very behaviour the
@@ -324,6 +334,157 @@ def _watch(stream, work: Path, job: str) -> None:
 _DEFINED = re.compile(r"^(?: {4})?(?:async def |def |class )(\w+)")
 
 
+def _body_at(built: Path, seen_at: str) -> str:
+    """The definition that encloses a cited line, copied out whole.
+
+    An experiment, not a settled part of the machinery, and it is here because the cheaper version
+    of the same idea did not work. Builders are already handed a map of every definition in the
+    cited file with its line number, added after one of them read the same five-thousand-line file
+    six times. With that map in place they still spend seventy-two per cent of their minutes
+    reading and searching, measured across thirty builders on 2026-08-11. So the question this
+    answers is whether the map is too little — whether a builder handed the actual lines it has to
+    change goes faster — and the only way to know is to run one item both ways.
+
+    The block returned starts at the enclosing `def` or `class` above the cited line and ends where
+    the indentation returns to that level. Nothing is judged: if the line cannot be found, or sits
+    outside any definition, this returns nothing rather than guessing at a boundary.
+    """
+
+    match = re.match(r"^(.*?):(\d+) — (.*)$", seen_at, re.S)
+    if not match:
+        return ""
+    where, line = match.group(1), int(match.group(2))
+    path = Path(where) if Path(where).is_absolute() else built / where
+    if not path.is_file() or path.suffix != ".py":
+        return ""
+    lines = path.read_text(encoding="utf-8", errors="replace").splitlines()
+    if not 1 <= line <= len(lines):
+        return ""
+    raw_text = match.group(3).strip()
+    if raw_text.endswith(","):
+        raw_text = raw_text[:-1].rstrip()
+    if raw_text.startswith('"') and raw_text.endswith('"'):
+        try:
+            cited_text = str(json.loads(raw_text))
+        except (json.JSONDecodeError, ValueError):
+            return ""
+    else:
+        cited_text = raw_text.strip('"')
+    wanted = " ".join(cited_text.split()).lower()
+    if not wanted:
+        return ""
+    if wanted not in " ".join(lines[line - 1].split()).lower():
+        found = [
+            number for number, row in enumerate(lines, start=1)
+            if wanted in " ".join(row.split()).lower()
+        ]
+        if len(found) != 1:
+            return ""
+        line = found[0]
+    start = next((n for n in range(line - 1, -1, -1) if _DEFINED.match(lines[n])), None)
+    if start is None:
+        return ""
+    # The block ends where the next definition at this level begins, not where the indentation
+    # first returns to it: a signature spread over several lines closes with `) -> X:` in column
+    # zero, and the first version of this ended there, handing over five lines of arguments and
+    # calling it the function.
+    indent = len(lines[start]) - len(lines[start].lstrip())
+    end = len(lines)
+    for n in range(start + 1, len(lines)):
+        row = lines[n]
+        if _DEFINED.match(row) and (len(row) - len(row.lstrip())) <= indent:
+            end = n
+            break
+    full_label = f"{Path(where).name} lines {start + 1}-{end}:\n"
+    complete = full_label + "\n".join(lines[start:end])
+    if len(complete) <= BODY_CHAR_LIMIT:
+        return complete
+
+    # Keep the definition signature and a symmetric window around the cited line. Shrink one line
+    # at a time until the rendered excerpt fits; if one source line alone is huge, clip only that
+    # displayed excerpt. The original file remains the authority and the prompt says to re-open it.
+    focus = line - 1
+    low, high = max(start, focus - 32), min(end, focus + 33)
+    label = (
+        f"{Path(where).name} definition lines {start + 1}-{end}, "
+        f"bounded excerpt around cited line {line}:\n"
+    )
+
+    def render() -> str:
+        rows = [lines[start]]
+        if low > start + 1:
+            rows.append("    ...")
+        rows.extend(lines[max(low, start + 1):high])
+        if high < end:
+            rows.append("    ...")
+        return label + "\n".join(rows)
+
+    excerpt = render()
+    while len(excerpt) > BODY_CHAR_LIMIT and high - low > 1:
+        if focus - low >= high - focus:
+            low += 1
+        else:
+            high -= 1
+        excerpt = render()
+    if len(excerpt) > BODY_CHAR_LIMIT:
+        # One source line can itself exceed the whole prompt budget. Keep the definition name and
+        # a window around the cited text, rather than clipping from column zero and potentially
+        # dropping the only reason this excerpt was included.
+        prefix = label + lines[start] + "\n    …\n"
+        focus_row = lines[focus]
+        at = focus_row.lower().find(cited_text.lower())
+        if at < 0:
+            at = len(focus_row) // 2
+        room = max(1, BODY_CHAR_LIMIT - len(prefix) - 3)
+        left = max(0, at - room // 2)
+        right = min(len(focus_row), left + room)
+        left = max(0, right - room)
+        excerpt = prefix + ("…" if left else "") + focus_row[left:right]
+        if right < len(focus_row):
+            excerpt += "…"
+    return excerpt
+
+
+#: The lines a cited place actually sits in. Only sent when the experiment flag is on, so a run
+#: with it and a run without it differ in exactly this and nothing else.
+BODY = (
+    "\n\nThe lines each cited place sits in, copied out so you do not have to go and find "
+    "them:\n\n{bodies}\n\nThis is what was there when this job started. Check it still says that "
+    "before you rely on it, and read whatever else you need — it is a head start, not a boundary.\n"
+)
+
+
+UNIVERSAL_PREPARATION = (
+    "\n\nThis requirement makes a universal claim. Before handing the change to the readers, "
+    "trace the normal return, every retry or fallback/error return, and every post-validation "
+    "transformation that runs after the enforcing check. Add a focused test for each materially different path the "
+    "requirement reaches. Record those paths and tests in change.json under 'paths_checked'. This "
+    "preparation is not acceptance evidence: the two blind readers and the machinery's test gate "
+    "still decide whether the item is built.\n"
+)
+
+_UNIVERSAL = re.compile(r"\b(?:never|every|all|always)\b|\bmust\s+not\b", re.I)
+
+
+def _universal_preparation(requirement: str) -> str:
+    return UNIVERSAL_PREPARATION if _UNIVERSAL.search(requirement) else ""
+
+
+READER_START = (
+    "\n\nMechanical starting points, copied from the current source without a verdict:\n{places}"
+    "{map}\nThese are starting points, not a boundary. Independently inspect the actual system, "
+    "follow every path the sentence reaches, and expand beyond this map wherever the answer is "
+    "decided. No builder conclusion or other reader output is included.\n"
+)
+
+
+RECORD_REPAIR = (
+    "\n\nYour previous delivery could not be counted because its record contract was invalid:\n"
+    "{errors}\nWrite the answer again under the exact part id and schema above. This is the same "
+    "reader seat; do not open any sibling reader directory.\n"
+)
+
+
 def _map_of(built: Path, files: set[str]) -> str:
     """Every function in the files this job touches, with the line it starts on.
 
@@ -350,6 +511,70 @@ def _map_of(built: Path, files: set[str]) -> str:
         if found:
             maps.append(f"{name} ({len(found)} definitions):\n" + "\n".join(found))
     return "\n\n".join(maps)
+
+
+def _reader_context(
+    built: Path, item: dict[str, object], changed_files: list[str]
+) -> str:
+    """Neutral navigation for a blind reader: current locations and definitions, never a verdict."""
+
+    places = [
+        f"- {part['part_id']}: {_still_at(built, str(part['seen_at']))}"
+        for part in item["parts"] if part.get("seen_at")
+    ]
+    cited_files = {
+        str(part["seen_at"]).split(":")[0]
+        for part in item["parts"] if part.get("seen_at")
+    }
+    drawn = _map_of(built, cited_files | {str(path) for path in changed_files})
+    mapped = f"\n\nWhat is in those files:\n{drawn}" if drawn else ""
+    return READER_START.format(places="\n".join(places) or "- none", map=mapped)
+
+
+def _records_in(directory: Path) -> list[tuple[Path, object]]:
+    records = []
+    for path in _readable(directory):
+        records.append((path, json.loads(path.read_text(encoding="utf-8"))))
+    return records
+
+
+def _reader_record_errors(directory: Path, wanted: set[str]) -> list[str]:
+    """Structural delivery errors only; substantive yes/no remains the blind reader's judgement."""
+
+    errors: list[str] = []
+    records = _records_in(directory)
+    if len(records) != len(wanted):
+        errors.append(f"expected {len(wanted)} record(s), found {len(records)}")
+    names: list[str] = []
+    for path, record in records:
+        if not isinstance(record, dict):
+            errors.append(f"{path.name}: record must be an object")
+            continue
+        part_id = record.get("part_id")
+        if not isinstance(part_id, str):
+            errors.append(f"{path.name}: part_id must be a string")
+        else:
+            names.append(part_id)
+            if part_id not in wanted:
+                errors.append(
+                    f"{path.name}: part_id {part_id!r} is not one of {sorted(wanted)!r}"
+                )
+        if record.get("answer") not in {"yes", "no"}:
+            errors.append(f"{path.name}: answer must be exactly 'yes' or 'no'")
+        citations = record.get("citations")
+        if not isinstance(citations, list):
+            errors.append(f"{path.name}: citations must be a list")
+        elif record.get("answer") == "yes" and not citations:
+            errors.append(f"{path.name}: a yes answer needs at least one citation")
+        if not isinstance(record.get("looked_at"), str) or not record.get("looked_at", "").strip():
+            errors.append(f"{path.name}: looked_at must be a non-empty string")
+    duplicates = sorted({name for name in names if names.count(name) > 1})
+    if duplicates:
+        errors.append(f"duplicate part ids: {duplicates!r}")
+    missing = sorted(wanted - set(names))
+    if missing:
+        errors.append(f"missing part ids: {missing!r}")
+    return errors
 
 
 def _touched(built: Path) -> set[str]:
@@ -436,7 +661,9 @@ def _timed(work: Path, what: str, **facts: object):
     return Span()
 
 
-def drive(order: dict[str, object], work: Path, built: Path, tests: str) -> dict[str, object]:
+def drive(order: dict[str, object], work: Path, built: Path, tests: str,
+          *, with_body: bool = False, prepare_universal_paths: bool = False,
+          reader_map: bool = False, repair_reader_records: bool = False) -> dict[str, object]:
     work.mkdir(parents=True, exist_ok=True)
     item = next_item(order, work)
     if item is None:
@@ -490,6 +717,15 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str) -> dict
         })
         if drawn:
             instruction += MAP.format(map=drawn)
+        if with_body:
+            bodies = "\n\n".join(dict.fromkeys(
+                found for p in item["parts"] if p.get("seen_at")
+                for found in [_body_at(built, str(p["seen_at"]))] if found
+            ))
+            if bodies:
+                instruction += BODY.format(bodies=bodies)
+        if prepare_universal_paths:
+            instruction += _universal_preparation(str(item["requirement"]))
         ruling = rulings.get(rid)
         if ruling:
             instruction += RULED.format(ruling=ruling)
@@ -549,15 +785,25 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str) -> dict
                                 "rulings.json under this item.",
                 "work": [],
             }
-        return drive(order, work, built, tests)
+        return drive(
+            order, work, built, tests, with_body=with_body,
+            prepare_universal_paths=prepare_universal_paths, reader_map=reader_map,
+            repair_reader_records=repair_reader_records,
+        )
 
     # 3 · the same question, asked again, by two readers who cannot see each other.
+    reader_context = (
+        _reader_context(built, item, [str(path) for path in change["files"]])
+        if reader_map else ""
+    )
     waiting = []
     for index in range(1, PASSES + 1):
         checked = work / f"check-{rid}-{index}"
-        if _answers_in(checked) < len(item["parts"]):
+        answers = _answers_in(checked)
+        if answers == 0 or (not repair_reader_records and answers < len(item["parts"])):
             waiting.append(_packet(
                 VERIFY.format(built=built, named_parts=named_parts, out=checked)
+                + reader_context
                 + HOW_TO_RUN.format(built=built, tests=tests),
                 checked, work / f"check-{rid}-{index}-scratch", blind=True,
                 expect=len(item["parts"]),
@@ -567,6 +813,46 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str) -> dict
             changed=change["files"], checkers=len(waiting))
         return {"stopped": "checking the change", "item": rid, "changed": change["files"],
                 "work": waiting}
+
+    # A malformed delivery says nothing about whether the change is right. Repair only the seat
+    # that broke the record contract, preserving the build and the other blind reader's answer.
+    # A second malformed delivery stops for a person instead of silently consuming a build attempt.
+    if repair_reader_records:
+        wanted = {str(part["part_id"]) for part in item["parts"]}
+        repairs = []
+        for index in range(1, PASSES + 1):
+            checked = work / f"check-{rid}-{index}"
+            errors = _reader_record_errors(checked, wanted)
+            if not errors:
+                continue
+            earlier = sorted(work.glob(f"check-{rid}-{index}-invalid-*"))
+            if len(earlier) >= RECORD_REPAIR_ATTEMPTS:
+                say(work, "reader record repair exhausted", item=rid, checker=index,
+                    errors=errors)
+                return {
+                    "stopped": "reader record repair needs a person", "item": rid,
+                    "changed": change["files"], "checker": index, "errors": errors,
+                    "work": [],
+                }
+            repair_number = len(earlier) + 1
+            checked.rename(work / f"check-{rid}-{index}-invalid-{repair_number}")
+            instruction = (
+                VERIFY.format(built=built, named_parts=named_parts, out=checked)
+                + reader_context
+                + RECORD_REPAIR.format(errors="\n".join(f"- {error}" for error in errors))
+                + HOW_TO_RUN.format(built=built, tests=tests)
+            )
+            repairs.append(_packet(
+                instruction, checked,
+                work / f"check-{rid}-{index}-repair-{repair_number}-scratch", blind=True,
+                expect=len(item["parts"]),
+            ))
+        if repairs:
+            say(work, "repairing reader records", item=rid, checkers=len(repairs))
+            return {
+                "stopped": "repairing reader records", "item": rid,
+                "changed": change["files"], "work": repairs,
+            }
 
     # 4 · the verdict. Nothing that passed before may fail now, and both readers must say yes.
     with _timed(work, "tests after the change", item=rid):
@@ -583,8 +869,9 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str) -> dict
     # single 'yes' and the set of answers looked unanimous.
     said: dict[str, list[str]] = {}
     for index in range(1, PASSES + 1):
-        for path in sorted((work / f"check-{rid}-{index}").glob("*.json")):
-            record = json.loads(path.read_text(encoding="utf-8"))
+        for _, record in _records_in(work / f"check-{rid}-{index}"):
+            if not isinstance(record, dict):
+                continue
             said.setdefault(str(record.get("part_id")), []).append(str(record.get("answer")))
     wanted = {str(p["part_id"]) for p in item["parts"]}
     unproven = sorted(pid for pid in wanted
@@ -618,8 +905,9 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str) -> dict
     # record why, set this attempt aside, and let the next run hand it back to a builder.
     objections = []
     for index in range(1, PASSES + 1):
-        for path in sorted((work / f"check-{rid}-{index}").glob("*.json")):
-            record = json.loads(path.read_text(encoding="utf-8"))
+        for _, record in _records_in(work / f"check-{rid}-{index}"):
+            if not isinstance(record, dict):
+                continue
             if str(record.get("answer")) != "yes":
                 objections.append(
                     f"{record.get('part_id')}: {record.get('looked_at') or 'no reason given'}"
@@ -661,7 +949,7 @@ def _launch(jobs: list[dict[str, object]], command: str, built: Path,
     is. The instruction goes in on standard input so nothing about it can be reshaped by a shell.
     """
 
-    parts = shlex.split(command)
+    parts = validate_reader_command(command)
     started = []
 
     def run(number: int, job: dict[str, object]) -> dict[str, object]:
@@ -750,6 +1038,20 @@ def main(argv: list[str] | None = None) -> int:
                              "loading an operator's whole working agreement and read it four times "
                              "over one job. Have it stream what it does, or this step's feed can "
                              "only say that it is breathing.")
+    parser.add_argument("--with-body", action="store_true",
+                        help="an experiment: hand the builder the lines each cited place sits in")
+    parser.add_argument(
+        "--prepare-universal-paths", action="store_true",
+        help="an experiment: ask builders of universal claims to prepare every reached path",
+    )
+    parser.add_argument(
+        "--reader-map", action="store_true",
+        help="an experiment: give blind readers neutral current locations and definition maps",
+    )
+    parser.add_argument(
+        "--repair-reader-records", action="store_true",
+        help="repair one malformed reader delivery in place instead of rebuilding the item",
+    )
     parser.add_argument("--items", type=int, default=1,
                         help="how many items may be taken without a person looking. The loop stops "
                              "at this many, or sooner on anything a person has to answer.")
@@ -777,7 +1079,11 @@ def main(argv: list[str] | None = None) -> int:
     order = json.loads(args.order.read_text(encoding="utf-8"))
 
     if not args.reader_command:
-        print(json.dumps(drive(order, work, built, args.tests), indent=2))
+        print(json.dumps(drive(
+            order, work, built, args.tests, with_body=args.with_body,
+            prepare_universal_paths=args.prepare_universal_paths,
+            reader_map=args.reader_map, repair_reader_records=args.repair_reader_records,
+        ), indent=2))
         return 0
 
     # The brake. An unattended loop with no cap is the one way this can do harm at a speed nobody
@@ -785,7 +1091,11 @@ def main(argv: list[str] | None = None) -> int:
     # exactly where it was — a reader that wrote nothing would otherwise be asked forever.
     settled, rounds, stuck, seen = [], 0, 0, None
     while True:
-        result = drive(order, work, built, args.tests)
+        result = drive(
+            order, work, built, args.tests, with_body=args.with_body,
+            prepare_universal_paths=args.prepare_universal_paths,
+            reader_map=args.reader_map, repair_reader_records=args.repair_reader_records,
+        )
         if "built" in result:
             settled.append({"item": result.get("item"), "built": result.get("built")})
             say(work, "verdict", item=result.get("item"), built=result.get("built"),

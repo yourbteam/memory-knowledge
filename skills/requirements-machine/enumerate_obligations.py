@@ -94,13 +94,15 @@ def _units(description: Path) -> list[dict[str, str]]:
 
     units: list[dict[str, str]] = []
     heading = ""
+    depth = 0
     paragraph: list[str] = []
 
     def flush() -> None:
         joined = " ".join(paragraph).strip()
         paragraph.clear()
         for sentence in _sentences(joined):
-            units.append({"text": sentence, "under": heading, "kind": "sentence"})
+            units.append({"text": sentence, "under": heading, "under_depth": depth,
+                          "kind": "sentence"})
 
     for line in [*description.read_text(encoding="utf-8", errors="replace").splitlines(), ""]:
         match = _HEADING.match(line)
@@ -114,12 +116,18 @@ def _units(description: Path) -> list[dict[str, str]]:
             # The heading is itself a unit — it can carry an obligation, and excluding it would
             # put part of the description in neither list.
             heading = _clean(match.group(2))
-            units.append({"text": heading, "under": heading, "kind": "heading"})
+            # How deep the heading sits is kept because it is the only thing separating a
+            # document's title from the sections it contains, and anything counting sections —
+            # how many of them produced a requirement, say — otherwise counts the title as one.
+            depth = len(match.group(1))
+            units.append({"text": heading, "under": heading, "under_depth": depth,
+                          "kind": "heading"})
             continue
         if is_table:
             # A table row records something rather than obliging anyone, but it is still part of
             # the description, so it goes to the leftover reader rather than being discarded.
-            units.append({"text": _clean(line), "under": heading, "kind": "table-row"})
+            units.append({"text": _clean(line), "under": heading, "under_depth": depth,
+                          "kind": "table-row"})
             continue
         if blank:
             continue

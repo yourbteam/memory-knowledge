@@ -126,8 +126,17 @@ def recover(journal_path: Path) -> None:
 
 
 def install(source: Path, manifest: Path, destinations: list[Path], state_dir: Path,
-            hold: float = 0, only: list[str] | None = None) -> None:
+            hold: float = 0, only: list[str] | None = None,
+            projection_clients: list[str] | None = None,
+            projections_path: Path | None = None) -> None:
     install_names = selected_names(manifest, only)
+    if projection_clients is not None and len(projection_clients) != len(destinations):
+        raise ValueError("projection_clients must align with destinations")
+    projection_rows = None
+    pcs = None
+    if projections_path is not None:
+        pcs = _projection_module()
+        projection_rows = pcs.load_projections(projections_path)["entries"]
     validator = Path(__file__).with_name("validate_skills.py")
     checked = subprocess.run(
         [sys.executable, str(validator), "--skills-root", str(source), "--manifest", str(manifest)],
@@ -154,9 +163,17 @@ def install(source: Path, manifest: Path, destinations: list[Path], state_dir: P
                 src, dest = source / name, destination_root / name
                 staged = txn / "staged" / str(destination_index) / name
                 backup = txn / "backup" / str(destination_index) / name
-                staged.parent.mkdir(parents=True, exist_ok=True); shutil.copytree(src, staged)
+                staged.parent.mkdir(parents=True, exist_ok=True)
+                if projection_rows is None:
+                    shutil.copytree(src, staged)
+                else:
+                    client = projection_clients[destination_index]
+                    pcs.project_skill(src, staged, client, projection_rows[name])
+                    expected = pcs.expected_projection_hash(projection_rows[name], client)
+                    if tree_hash(staged) != expected:
+                        raise RuntimeError(f"staged projection hash mismatch: {name} ({client})")
                 fsync_tree(staged); fsync_dir(staged.parent)
-                entries.append({"name": name, "source_hash": tree_hash(src), "destination": str(dest),
+                entries.append({"name": name, "source_hash": tree_hash(staged), "destination": str(dest),
                                 "staged": str(staged), "backup": str(backup),
                                 "original_exists": dest.exists(), "mutation_started": False, "installed": False})
         journal = {"transaction_id": str(uuid.uuid4()), "phase": "PREPARED", "entries": entries}; write_json(journal_path, journal)
@@ -194,14 +211,25 @@ def main() -> int:
     ap.add_argument("--hold-lock", type=float, default=0, help=argparse.SUPPRESS); args = ap.parse_args()
     if args.target == "both" and not args.accept_cross_client:
         raise SystemExit("--target both requires --accept-cross-client")
+    source = args.source.resolve()
+    manifest = args.manifest.resolve()
+    canonical_source = Path(__file__).resolve().parent.parent / "skills"
+    projection_path = args.reconciliation.resolve() if args.reconciliation else None
+    if projection_path is None and source == canonical_source:
+        projection_path = Path(__file__).resolve().with_name("client-skill-projections.json")
     if args.target in ("claude", "both"):
         if not args.reconciliation:
             raise SystemExit(f"--target {args.target} mutates the Claude root and requires --reconciliation")
-        selected = selected_names(args.manifest.resolve(), args.only)
-        errors = reconciliation_errors(args.reconciliation, args.source.resolve(), args.manifest.resolve(), selected)
+    selected = selected_names(manifest, args.only)
+    if projection_path is not None:
+        errors = reconciliation_errors(projection_path, source, manifest, selected)
         if errors: raise SystemExit("reconciliation refused:\n" + "\n".join(errors))
     destinations = [args.codex_root] if args.target == "codex" else [args.claude_root] if args.target == "claude" else [args.codex_root, args.claude_root]
-    install(args.source.resolve(), args.manifest.resolve(), destinations, args.state_dir.resolve(), args.hold_lock, args.only); return 0
+    clients = ["codex"] if args.target == "codex" else ["claude"] if args.target == "claude" else ["codex", "claude"]
+    projections_path = projection_path if projection_path and isinstance(
+        json.loads(projection_path.read_text()).get("entries"), dict) else None
+    install(source, manifest, destinations, args.state_dir.resolve(), args.hold_lock, args.only,
+            clients if projections_path else None, projections_path); return 0
 
 
 if __name__ == "__main__": raise SystemExit(main())

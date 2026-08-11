@@ -1,6 +1,6 @@
 ---
 name: description-machinery
-description: Turns what a system's own work left behind — the notes builders wrote about what they saw and deliberately did not touch — into one description of the subject, quoted from those notes, that the requirements machinery can consume. It judges nothing itself: readers who cannot see each other decide what is a distinct thing, what is still work, what is already required, and when different people saw one fault; code only assembles and quotes.
+description: "Turns what a system's own work left behind — the notes builders wrote about what they saw and deliberately did not touch — into one description of the subject, quoted from those notes, that the requirements machinery can consume. It judges nothing itself: readers who cannot see each other decide what is a distinct thing, what is still work, what is already required, and when different people saw one fault; code only assembles and quotes."
 ---
 
 # Description machinery
