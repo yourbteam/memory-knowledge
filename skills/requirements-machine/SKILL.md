@@ -8,6 +8,14 @@ description: Builds the requirements for a change, end to end, from a descriptio
 One command owns the order and the gates. This skill owns the one thing a command cannot do:
 starting the readers it asks for, and starting them again until it asks for none.
 
+This skill is the complete local controller for its requirements loop. Invoke it directly: do not
+put `task-intake`, `sequence-runner`, registry selection, or sequence discovery around it solely
+because it launches readers, resumes from its work directory, retries refused readings, or runs
+for a long time. Its work directory is its state and telemetry. Use an operational sequence only
+when the concrete run independently crosses an external boundary such as a remote system,
+database, container/image, authentication, package/environment mutation, deployment, or
+destructive cleanup.
+
 **Do not run the tools in this folder by hand.** They were built in an order, each proved before
 the next was designed, and the runner is where that order lives. Running one directly skips its
 gate, and every gate here exists because something was silently dropped without it.

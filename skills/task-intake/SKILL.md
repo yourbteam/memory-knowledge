@@ -45,6 +45,13 @@ Use the actual command flow, not the requested deliverable label. If the receipt
 `operational`, hand off to `sequence-runner` before commands. Do not self-declare an
 exception or recreate the classifier logic in prose.
 
+`workflow-drive` means an external or independently stateful workflow/harness whose operational
+steps need registry selection and durable run memory. It does not mean a self-contained local
+controller skill's own bounded worker loop. Invoke `requirements-machine`,
+`implementation-machine`, and `description-machinery` directly when they operate only on local
+repositories and own their launch, monitoring, retry, verification, and stop conditions. Do not
+classify or sequence-wrap them solely because they drive agents or run for a long time.
+
 Do not invoke classification for the local-development fast path: repository reads/searches,
 approved file edits, repository-local formatting or generation limited to approved files, diffs,
 linters, type checks, bounded unit tests, or local installation of an approved managed artifact.

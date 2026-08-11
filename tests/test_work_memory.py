@@ -214,6 +214,66 @@ def test_resolve_bundle_collapses_identical_parent_child_dependency(
     assert len(matches) == 1
 
 
+def _intake_control_bundle_fixture(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    document = tmp_path / "operations/sequences/example/sequence.md"
+    document.parent.mkdir(parents=True)
+    document.write_text("# example\n", encoding="utf-8")
+    launcher = tmp_path / "scripts/sequence_intake_launch.py"
+    launcher.parent.mkdir(parents=True)
+    launcher.write_text("print('launch')\n", encoding="utf-8")
+    contract = tmp_path / "operations/sequences/sequence-intake-contracts.json"
+    contract.parent.mkdir(parents=True, exist_ok=True)
+    contract.write_text("{}\n", encoding="utf-8")
+    regenerator = tmp_path / "scripts/regenerate_intake_contracts.py"
+    regenerator.write_text("print('regenerate')\n", encoding="utf-8")
+    manifest = document.with_name("dependencies.json")
+    manifest.write_text(json.dumps({
+        "schema_version": 1,
+        "lineage_id": "example",
+        "dependencies": [{
+            "kind": "file",
+            "repository_key": "memory-knowledge",
+            "path_or_sequence_id": "scripts/sequence_intake_launch.py",
+        }],
+    }), encoding="utf-8")
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    return document, manifest, contract
+
+
+def test_resolve_bundle_seals_intake_contract_and_regenerator_centrally(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    document, manifest, _ = _intake_control_bundle_fixture(tmp_path, monkeypatch)
+
+    bundle, _, _ = work_memory.resolve_bundle(
+        mode="registered",
+        subject_id="example",
+        document=document,
+        manifest=manifest,
+        repository_roots={"memory-knowledge": str(tmp_path)},
+    )
+
+    paths = {item["path"] for item in bundle}
+    assert "operations/sequences/sequence-intake-contracts.json" in paths
+    assert "scripts/regenerate_intake_contracts.py" in paths
+
+
+def test_resolve_bundle_fails_closed_when_intake_contract_is_missing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    document, manifest, contract = _intake_control_bundle_fixture(tmp_path, monkeypatch)
+    contract.unlink()
+
+    with pytest.raises(work_memory.WorkMemoryError, match="missing-dependency"):
+        work_memory.resolve_bundle(
+            mode="registered",
+            subject_id="example",
+            document=document,
+            manifest=manifest,
+            repository_roots={"memory-knowledge": str(tmp_path)},
+        )
+
+
 def _observer_context_payload():
     return {
         "intended_outcome": "Run a repeatable deployment.",

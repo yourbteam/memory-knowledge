@@ -13,6 +13,12 @@ Invoke this skill only after `task-intake` returns an operational receipt. Do no
 local-development fast path merely because work uses a shell command or has three or more local
 steps. Fast-path work consists of G26 preflight, the approved action, and direct verification.
 
+Do not wrap a self-contained local controller skill that already owns launch, ordering,
+monitoring, retries, verification, and stopping. In particular, invoke `requirements-machine`,
+`implementation-machine`, and `description-machinery` directly; their internal worker/reader loop
+does not require sequence selection or discovery. This skill applies only if that controller's
+concrete operation independently crosses the governed operational boundary.
+
 ## Live Work Observation
 
 For a long-running stateful harness or workflow sequence, identify the real telemetry feed and the

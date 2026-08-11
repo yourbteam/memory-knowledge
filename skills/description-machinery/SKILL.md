@@ -9,6 +9,14 @@ This is the first machinery in the chain. It produces the document the requireme
 consumes, and nothing else. It never writes requirements, never says what should be done, and never
 puts a sentence of its own into what it hands on.
 
+This skill is the complete local controller for its description loop. Invoke it directly: do not
+put `task-intake`, `sequence-runner`, registry selection, or sequence discovery around it solely
+because it launches readers, resumes from its output directory, retries refused readings, or runs
+for a long time. Its output directory is its state and telemetry. Use an operational sequence only
+when the concrete run independently crosses an external boundary such as a remote system,
+database, container/image, authentication, package/environment mutation, deployment, or
+destructive cleanup.
+
 ```
 python3 collect_noticed.py --work <build-work-dir> --order <order.json> --out <dir> \
     --reader-command '<command>'

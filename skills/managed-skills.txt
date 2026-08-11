@@ -3,7 +3,9 @@ auto-capture
 blocker-catalog
 corpus-add
 critic-foundry
+description-machinery
 doc-gap-closure-loop
+implementation-machine
 phase-categorization-foundry
 phase-ledger-category-contract-foundry
 phase-ledger-contract-hardener

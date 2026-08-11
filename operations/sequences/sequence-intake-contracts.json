@@ -1,10 +1,10 @@
 {
-  "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+  "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
   "contract_version": 1,
   "entries": [
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -35,7 +35,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -65,7 +65,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -91,7 +91,7 @@
     },
     {
       "adapter_id": "_prepare_blocker_backlog_reconciliation",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -123,7 +123,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -151,7 +151,7 @@
     },
     {
       "adapter_id": "_prepare_callcenter_provision",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -179,7 +179,7 @@
     },
     {
       "adapter_id": "_prepare_claude_auth",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -224,7 +224,7 @@
     },
     {
       "adapter_id": "_prepare_commit_push",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [
           "approved_paths",
@@ -235,7 +235,7 @@
       },
       "contract_version": 1,
       "entrypoint": "memory-knowledge:scripts/scoped_git_publish.py",
-      "entrypoint_source_sha256": "b57f889b55c3ad6321dd8677b36708beed7528d4801039f978b6770d4de667e6",
+      "entrypoint_source_sha256": "0ab022696f75fe774f6929dab54c771a40269bdcd7cf05e8fa1ecf04709c0f46",
       "optional_inputs": [
         "approved_paths",
         "branch",
@@ -270,7 +270,7 @@
     },
     {
       "adapter_id": "_prepare_convergence_checkpoint",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -303,7 +303,7 @@
     },
     {
       "adapter_id": "_prepare_convergence_review",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [
           "request"
@@ -338,7 +338,7 @@
     },
     {
       "adapter_id": "_prepare_discovery_bootstrap",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [
           "spec"
@@ -387,7 +387,7 @@
     },
     {
       "adapter_id": "_prepare_discovery_reconciliation",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -423,7 +423,7 @@
     },
     {
       "adapter_id": "_prepare_discovery_promotion",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [
           "changed_artifacts"
@@ -480,7 +480,7 @@
     },
     {
       "adapter_id": "_prepare_github_refresh",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -514,7 +514,7 @@
     },
     {
       "adapter_id": "_prepare_greenfield",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -577,7 +577,7 @@
     },
     {
       "adapter_id": "_prepare_greenfield_recreate",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -624,7 +624,7 @@
     },
     {
       "adapter_id": "_prepare_local_image",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -685,7 +685,7 @@
     },
     {
       "adapter_id": "_prepare_mawf_blocker",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -732,7 +732,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -781,7 +781,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -830,7 +830,7 @@
     },
     {
       "adapter_id": "_prepare_remote_onboarding",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -880,7 +880,7 @@
     },
     {
       "adapter_id": "_prepare_scoped_context",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -921,7 +921,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -956,7 +956,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -985,7 +985,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1012,7 +1012,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1039,7 +1039,7 @@
     },
     {
       "adapter_id": "_prepare_taggable_reload",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1072,7 +1072,7 @@
     },
     {
       "adapter_id": "_prepare_workflow_client_regeneration",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1106,7 +1106,7 @@
     },
     {
       "adapter_id": "_prepare_workflow_phase_resume",
-      "adapter_source_sha256": "bc7aaaf86dded4f15d31158b0e4f92bb813ccec0902bcbbd1aef7dd451f1daf9",
+      "adapter_source_sha256": "eb213712f35d965982a1deada94ff17988f909a1d32ea66afd5e03ddf4071b1a",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1141,6 +1141,10 @@
     {
       "reason": "no intake adapter is registered; the sequence is not dispatchable through zero-input intake and must not be improvised",
       "sequence_id": "agent-heartbeat"
+    },
+    {
+      "reason": "no intake adapter is registered; the sequence is not dispatchable through zero-input intake and must not be improvised",
+      "sequence_id": "goal-declaration"
     }
   ],
   "schema_version": 1

@@ -73,6 +73,35 @@ def test_sequence_runner_instructs_zero_argument_intake():
     assert "no arguments" in text
 
 
+def test_self_contained_machinery_is_managed_and_bypasses_sequence_discovery():
+    names = manifest_names()
+    for name in ("description-machinery", "implementation-machine", "requirements-machine"):
+        assert name in names
+
+    routing_docs = {
+        name: " ".join((SKILLS / name / "SKILL.md").read_text().split())
+        for name in ("working-agreement", "task-intake", "sequence-runner")
+    }
+    assert "self-contained local controller skill is also fast-path machinery" in routing_docs["working-agreement"]
+    assert "do not put `task-intake`, `sequence-runner`, registry selection, or sequence discovery around it" in routing_docs["working-agreement"]
+    assert "It does not mean a self-contained local controller skill's own bounded worker loop" in routing_docs["task-intake"]
+    assert "Do not classify or sequence-wrap them" in routing_docs["task-intake"]
+    assert "Do not wrap a self-contained local controller skill" in routing_docs["sequence-runner"]
+    assert "does not require sequence selection or discovery" in routing_docs["sequence-runner"]
+
+    machine = (SKILLS / "implementation-machine" / "SKILL.md").read_text()
+    assert "complete local controller" in machine
+    assert "do not put\n`task-intake`, `sequence-runner`, registry selection, or sequence discovery around it" in machine
+
+    requirements = (SKILLS / "requirements-machine" / "SKILL.md").read_text()
+    assert "complete local controller" in requirements
+    assert "do not\nput `task-intake`, `sequence-runner`, registry selection, or sequence discovery around it" in requirements
+
+    description = (SKILLS / "description-machinery" / "SKILL.md").read_text()
+    assert "complete local controller" in description
+    assert "do not\nput `task-intake`, `sequence-runner`, registry selection, or sequence discovery around it" in description
+
+
 def test_pdi_skill_is_managed_and_discoverable_from_skill_md():
     assert "prototype-driven-implementation" in manifest_names()
     doc = SKILLS / "prototype-driven-implementation" / "SKILL.md"

@@ -93,6 +93,10 @@ BOOTSTRAP_TRUST_ANCHORS = (
     "scripts/work_memory_bootstrap.py",
     "scripts/work_memory_bootstrap_launcher.py",
 )
+SEQUENCE_INTAKE_CONTROL_DEPENDENCIES = (
+    "operations/sequences/sequence-intake-contracts.json",
+    "scripts/regenerate_intake_contracts.py",
+)
 ACTIVE_TRUST_SNAPSHOT_FIELDS = (
     ("scripts/work_memory.py", "sealed_controller_sha256", "sealed_controller_b64"),
     ("scripts/work_memory_bootstrap.py", "bootstrap_sha256", "sealed_bootstrap_b64"),
@@ -2867,6 +2871,9 @@ def resolve_bundle(
         return lineage
 
     lineage_id = visit(subject_id, document.resolve(), manifest.resolve(), mode == "discovery")
+    if ("memory-knowledge", "scripts/sequence_intake_launch.py") in seen:
+        for relative in SEQUENCE_INTAKE_CONTROL_DEPENDENCIES:
+            add("memory-knowledge", relative, _safe_file(roots["memory-knowledge"], relative))
     if include_bootstrap_trust_anchors:
         for relative in BOOTSTRAP_TRUST_ANCHORS:
             if ("memory-knowledge", relative) not in seen:

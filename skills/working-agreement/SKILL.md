@@ -37,6 +37,14 @@ approved file edits, repository-local formatting or generation limited to approv
 diffs, linters, type checks, bounded unit tests, and local installation of an approved managed
 artifact. The fast path is G26 preflight, the approved action, and direct verification only.
 
+A self-contained local controller skill is also fast-path machinery when it owns its own launch,
+ordering, monitoring, retry, verification, and stop conditions. Invoke `requirements-machine`,
+`implementation-machine`, and `description-machinery` directly. Their internal worker/reader loop
+is not a `workflow-drive`, so do not put `task-intake`, `sequence-runner`, registry selection, or
+sequence discovery around it solely because the skill drives agents or runs for a long time. Cross
+the governed boundary only when the controller's concrete operation independently touches one of
+the external or stateful surfaces below.
+
 Invoke `task-intake` before crossing the governed operational boundary: deployments, remote
 systems, databases or migrations, containers or images, authentication or secrets,
 package/environment mutation, destructive cleanup, workflow drives, long live tests, a proven

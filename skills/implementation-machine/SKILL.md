@@ -7,6 +7,14 @@ description: Builds what a requirements breakdown says is still to build, into a
 
 Give it the requirements machine's report and a command that runs a reader. It does the rest.
 
+This skill is the complete local controller for its build loop. Invoke it directly: do not put
+`task-intake`, `sequence-runner`, registry selection, or sequence discovery around it solely
+because it launches builders/readers, monitors a feed, retries refused work, or runs for a long
+time. Its work directory and feed are its state and telemetry. Use an operational sequence only
+when the concrete build independently crosses an external boundary such as a deployment, remote
+system, database, container/image, authentication, package/environment mutation, or destructive
+cleanup.
+
 ```
 python3 build_next.py --report <requirements-report.json> --work <dir> --built <repo> \
     --tests '<the repo's own test command>' --reader-command '<command>' --items <N>
