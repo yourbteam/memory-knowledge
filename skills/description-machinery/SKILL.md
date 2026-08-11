@@ -1,63 +1,93 @@
 ---
 name: description-machinery
-description: "Turns what a system's own work left behind — the notes builders wrote about what they saw and deliberately did not touch — into one description of the subject, quoted from those notes, that the requirements machinery can consume. It judges nothing itself: readers who cannot see each other decide what is a distinct thing, what is still work, what is already required, and when different people saw one fault; code only assembles and quotes."
+description: "Turns an owner's intent and available context, or the notes builders left behind, into one source-quoted description that Requirements Machinery can consume. Readers judge meaning; deterministic code fixes the questions, source boundary, pair identities, input state, agreement gates, and final assembly."
 ---
 
 # Description machinery
 
-This is the first machinery in the chain. It produces the document the requirements machinery
-consumes, and nothing else. It never writes requirements, never says what should be done, and never
-puts a sentence of its own into what it hands on.
+This is the first machinery in the chain. It produces the description Requirements Machinery
+consumes. It never writes requirements or decides what should be built. Every subject statement it
+hands on is an exact quotation from the owner's intent, supplied context, owner answers, or a
+builder note.
 
-This skill is the complete local controller for its description loop. Invoke it directly: do not
+This skill is the complete local controller for its description loops. Invoke the applicable front
+door directly: do not
 put `task-intake`, `sequence-runner`, registry selection, or sequence discovery around it solely
-because it launches readers, resumes from its output directory, retries refused readings, or runs
-for a long time. Its output directory is its state and telemetry. Use an operational sequence only
-when the concrete run independently crosses an external boundary such as a remote system,
-database, container/image, authentication, package/environment mutation, deployment, or
-destructive cleanup.
+because it launches readers or resumes. Its work/output directory is its state and telemetry.
 
-```
-python3 collect_noticed.py --work <build-work-dir> --order <order.json> --out <dir> \
+## Front door 1 — intent and context
+
+Use this for ordinary or greenfield work:
+
+```text
+python3 from_intent.py --intent <file> --context <path> --work <fresh-dir> \
     --reader-command '<command>'
 ```
 
-- **work** — the implementation machine's work directory, where every build left a record of what
-  its builder noticed and deliberately did not change.
-- **order** — the build list those builds came from, so a reader can say a thing is already
-  required and drop it.
-- **out** — a fresh directory. State lives there and the run is resumable.
-- **reader-command** — a command that takes an instruction on standard input and carries it out.
-  Given one, the step runs its own readers. This machinery never chooses a reader; you supply the
-  command and every reader records what it is.
+The intent is always required. Context is optional and repeatable. Code fixes eight questions a
+usable description must answer. Two blind readers independently answer each question only by
+quoting the supplied files.
 
-## What comes out
+If context cannot answer everything, the result has `status: needs_owner` and `to-ask.md` contains
+only the unresolved questions. Put the owner's answers in a separate file, then start a **fresh**
+work directory:
 
-`noticed-description.md` — the thing to use. One entry per distinct observation, quoted exactly as
-the builder wrote it, with every build that met it listed. **These are observations, not
-requirements.** A builder's note is often a statement of fact — "eight tests already fail" — and
-nobody can make a statement true. Put this through the requirements machinery, which is what turns
-an observation into something with a check somebody else can run, and build from what that
-produces.
+```text
+python3 from_intent.py --intent <file> --context <path> --owner-answers <file> \
+    --work <new-fresh-dir> --reader-command '<command>'
+```
 
-`noticed-report.json` — the same list in build shape, for the rare case where the observations are
-already requirements. Reaching for it first is how a builder gets handed a sentence it must refuse.
+The owner-answer file is an authorized source, not an instruction to improvise. A question enters
+the final `description.md` only when both readers cite the same exact passage from the same
+authorized file. Code writes the fixed question heading, exact quotation, and source path. It
+carries no reader paraphrase into the description.
 
-## How it decides, and what it refuses to decide
+## Front door 2 — what builders left alone
 
-Six readers, in three pairs, and agreement or nothing:
+Use this after Implementation Machinery has accumulated `left_alone` notes:
 
-1. Two read the same records and cut the prose into distinct things, each carrying words copied
-   from the record. Code cannot do this: two-thirds of the notes number nothing, measured.
-2. Code pairs each reader's things against the other's, within one note only. It proposes; it
-   judges nothing.
-3. Two judge every pair — same thing, still work in the built system, already covered by a
-   requirement on the list.
-4. Two more judge whether things different builders noticed separately are one thing. Without this
-   step, one fault met by seventeen builders arrives as seventeen pieces of work; measured on the
-   first real run, which produced forty-five candidates and twenty-three after joining.
+```text
+python3 collect_noticed.py --work <build-work-dir> --order <order.json> --out <fresh-dir> \
+    --reader-command '<command>'
+```
 
-Then code assembles and quotes. A thing enters only where both readers of a pair agreed.
+- `work` is the Implementation Machinery work directory.
+- `order` is its build list, used to recognize observations already required.
+- `out` is a fresh resumable state directory.
+- `reader-command` receives an instruction on standard input. The machinery never chooses it.
 
-Nothing here is yours except supplying the reader and starting it. If a stage's answer looks wrong,
-run that reading again — never edit its output.
+Six readers work in three blind pairs:
+
+1. Two split builder notes into distinct observations, quoting the note exactly.
+2. Code pairs the two readings within each note.
+3. Two judge every expected pair: same thing, still work, already required.
+4. Two judge whether observations from different builders are one piece of work.
+
+Code verifies every quote against its builder note and verifies that every expected pair identity
+has exactly one judgement from each reader. Count alone never completes a stage. The primary output
+is `noticed-description.md`; `noticed-report.json` is the same observations in build-shaped JSON.
+
+## State and changed inputs
+
+Both front doors write `input-state.json` before accepting reader output. It binds the state
+directory to the exact contents and identities of its inputs. Reusing the directory with changed
+intent, context, owner answers, builder notes, fixed questions, or order returns `status: blocked`.
+Start a fresh directory; the machinery never deletes or silently reinterprets old reader state.
+A populated legacy directory without a binding is also refused.
+
+## Status and exit contract
+
+| `status` | Exit | Meaning | Next action |
+|---|---:|---|---|
+| `complete` | 0 | The description exists, or no builder note contained an observation. | Consume the returned description path, if present. |
+| `waiting_for_readers` | 2 | One or more jobs are under `work`. | Run every job independently, then invoke the same command again. |
+| `blocked` | 3 | Input changed, a source/citation is invalid, a pair is duplicated, or reading stalled. | Follow `why`; use a fresh state directory where instructed. |
+| `needs_owner` | 4 | Supplied sources cannot settle every description question. | Answer `to-ask.md`, then use `--owner-answers` with a fresh work directory. |
+
+Without `reader-command`, exit 2 is the normal handback contract. Launch one independent agent per
+job, all jobs of the stage in parallel, with each `instruction` verbatim. Never let one reader see
+another's output. With `reader-command`, the controller continues until a terminal status and
+blocks after two unchanged reading rounds.
+
+Never hand-edit a reader result to cross a gate. A refusal is evidence: rerun the reader where the
+result says to, or start fresh when the input binding or source contract requires it.

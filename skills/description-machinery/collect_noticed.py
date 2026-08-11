@@ -37,6 +37,7 @@ Run it, do whatever it hands back, run it again.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import sys
 from pathlib import Path
@@ -137,6 +138,72 @@ def _load(directory: Path) -> list[dict[str, object]]:
     return out
 
 
+def _identity_coverage(
+    directory: Path, expected: set[str], key: str = "pair_id",
+) -> dict[str, list[str]]:
+    counts: dict[str, int] = {}
+    for record in _load(directory):
+        identity = str(record.get(key) or "")
+        counts[identity] = counts.get(identity, 0) + 1
+    found = set(counts)
+    return {
+        "missing": sorted(expected - found),
+        "unexpected": sorted(found - expected),
+        "duplicated": sorted(identity for identity in expected if counts.get(identity, 0) > 1),
+    }
+
+
+def _digest(value: object) -> str:
+    return hashlib.sha256(
+        json.dumps(value, sort_keys=True, separators=(",", ":")).encode("utf-8")
+    ).hexdigest()
+
+
+def _input_state(work: Path, order_file: Path, records: list[dict[str, str]]) -> dict[str, object]:
+    resolved_order = order_file.resolve()
+    return {
+        "contract": 1,
+        "build_work": str(work.resolve()),
+        "records": records,
+        "order": {
+            "path": str(resolved_order),
+            "sha256": hashlib.sha256(resolved_order.read_bytes()).hexdigest(),
+        },
+    }
+
+
+def _bind_input_state(out: Path, current: dict[str, object]) -> dict[str, object] | None:
+    state_path = out / "input-state.json"
+    if not state_path.exists():
+        if any(out.iterdir()):
+            return {
+                "status": "blocked",
+                "stopped": "unbound existing state",
+                "why": "this populated output directory predates input binding",
+                "use_fresh_output_directory": True,
+            }
+        state_path.write_text(json.dumps(current, indent=2), encoding="utf-8")
+        return None
+    try:
+        saved = json.loads(state_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {
+            "status": "blocked",
+            "stopped": "invalid input state",
+            "use_fresh_output_directory": True,
+        }
+    if saved != current:
+        return {
+            "status": "blocked",
+            "stopped": "input changed",
+            "why": "builder notes or the order differ from this output state",
+            "saved_binding": _digest(saved),
+            "current_binding": _digest(current),
+            "use_fresh_output_directory": True,
+        }
+    return None
+
+
 def _job(instruction: str, out: Path, scratch: Path, stage: str, count: int) -> dict[str, object]:
     scratch.mkdir(parents=True, exist_ok=True)
     out.mkdir(parents=True, exist_ok=True)
@@ -152,9 +219,17 @@ def collect(work: Path, order_file: Path, out: Path) -> dict[str, object]:
     out.mkdir(parents=True, exist_ok=True)
     records = _gather(work)
     if not records:
-        return {"stopped": "nothing was noticed",
+        return {"status": "complete", "outcome": "nothing_was_noticed",
                 "why": "no build record in this work directory carries a note of what its builder "
                        "left alone"}
+
+    try:
+        current_state = _input_state(work, order_file, records)
+    except OSError as error:
+        return {"status": "blocked", "stopped": "source unavailable", "why": str(error)}
+    state_result = _bind_input_state(out, current_state)
+    if state_result:
+        return state_result
 
     records_file = out / "noticed-records.json"
     if not records_file.exists():
@@ -169,20 +244,43 @@ def collect(work: Path, order_file: Path, out: Path) -> dict[str, object]:
         jobs.append(_job(NOTICE.format(records=records_file, out=found), found,
                          out / f"noticed-{number}-scratch", "notice", len(records)))
     if jobs:
-        return {"stopped": "reading what the builders noticed", "records": len(records),
+        return {"status": "waiting_for_readers",
+                "stopped": "reading what the builders noticed", "records": len(records),
                 "outstanding": len(jobs), "work": jobs}
 
     # 2 · pair — code. Within one source record only: two readers describing the same note are
     # comparable; two readers describing different notes are not, and pairing them would only
     # invite a reader to invent a connection.
     passes = [_load(out / f"noticed-{number}") for number in range(1, PASSES + 1)]
+    notes = {record["item"]: record["note"] for record in records}
+    invalid = [
+        {
+            "pass": pass_number,
+            "source_item": str(thing.get("source_item") or ""),
+            "quote": str(thing.get("quote") or ""),
+        }
+        for pass_number, found in enumerate(passes, start=1)
+        for thing in found
+        if (
+            str(thing.get("source_item") or "") not in notes
+            or not str(thing.get("quote") or "").strip()
+            or str(thing.get("quote") or "")
+            not in notes.get(str(thing.get("source_item") or ""), "")
+        )
+    ]
+    if invalid:
+        return {
+            "status": "blocked",
+            "stopped": "invalid source quotation",
+            "why": "a noticed thing did not quote its named builder note exactly",
+            "invalid_records": invalid,
+        }
     by_item: dict[str, list[list[dict[str, object]]]] = {}
     for index, found in enumerate(passes):
         for thing in found:
             item = str(thing.get("source_item"))
             by_item.setdefault(item, [[] for _ in range(PASSES)])[index].append(thing)
 
-    notes = {record["item"]: record["note"] for record in records}
     pairs = []
     for item in sorted(by_item):
         first, second = by_item[item][0], by_item[item][1]
@@ -203,16 +301,34 @@ def collect(work: Path, order_file: Path, out: Path) -> dict[str, object]:
 
     # 3 · judge — model, twice over the proposed pairs.
     jobs = []
+    expected_pair_ids = {str(pair["pair_id"]) for pair in pairs}
+    missing_pair_ids: dict[str, list[str]] = {}
+    unexpected_pair_ids: dict[str, list[str]] = {}
     for number in range(1, PASSES + 1):
         judged = out / f"judged-{number}"
-        if len(_load(judged)) >= len(pairs):
+        coverage = _identity_coverage(judged, expected_pair_ids)
+        if coverage["duplicated"]:
+            return {
+                "status": "blocked",
+                "stopped": "duplicate pair judgement",
+                "why": "one reader returned more than one judgement for an expected pair",
+                "pass": number,
+                "duplicated_pair_ids": coverage["duplicated"],
+            }
+        if not coverage["missing"]:
             continue
+        missing_pair_ids[str(number)] = coverage["missing"]
+        if coverage["unexpected"]:
+            unexpected_pair_ids[str(number)] = coverage["unexpected"]
         jobs.append(_job(
             JUDGE.format(pairs_file=pairs_file, order_file=order_file, out=judged),
             judged, out / f"judged-{number}-scratch", "judge", len(pairs)))
     if jobs:
-        return {"stopped": "judging what was noticed", "records": len(records),
-                "pairs": len(pairs), "outstanding": len(jobs), "work": jobs}
+        return {"status": "waiting_for_readers",
+                "stopped": "judging what was noticed", "records": len(records),
+                "pairs": len(pairs), "outstanding": len(jobs), "work": jobs,
+                "missing_pair_ids": missing_pair_ids,
+                "unexpected_pair_ids": unexpected_pair_ids}
 
     # 4 · report — code. Both passes must call a pair the same thing, still work, and not already
     # required. The sentence carried forward is the builder's own quoted words: a reader decided
@@ -224,9 +340,15 @@ def collect(work: Path, order_file: Path, out: Path) -> dict[str, object]:
 
     by_pair = {pair["pair_id"]: pair for pair in pairs}
     kept, already, split, not_work = [], [], [], []
-    for pair_id, verdicts in sorted(said.items()):
-        if len(verdicts) < PASSES or pair_id not in by_pair:
-            continue
+    for pair_id, pair in sorted(by_pair.items()):
+        verdicts = said.get(pair_id, [])
+        if len(verdicts) != PASSES:
+            return {
+                "status": "blocked",
+                "stopped": "incomplete pair judgement",
+                "pair_id": pair_id,
+                "answers": len(verdicts),
+            }
         if {str(v.get("same_thing")) for v in verdicts} != {"yes"}:
             split.append(pair_id)
             continue
@@ -237,7 +359,7 @@ def collect(work: Path, order_file: Path, out: Path) -> dict[str, object]:
         if {str(v.get("is_work")) for v in verdicts} != {"yes"}:
             not_work.append(pair_id)
             continue
-        kept.append(by_pair[pair_id])
+        kept.append(pair)
 
     # One source item can yield the same thing through several pairs — the same note read into two
     # things by one reader and three by the other makes six pairs. Keep one per quoted passage.
@@ -276,16 +398,34 @@ def collect(work: Path, order_file: Path, out: Path) -> dict[str, object]:
     same_pairs = json.loads(same_pairs_file.read_text(encoding="utf-8"))["pairs"]
 
     jobs = []
+    expected_same_ids = {str(pair["pair_id"]) for pair in same_pairs}
+    missing_same_ids: dict[str, list[str]] = {}
+    unexpected_same_ids: dict[str, list[str]] = {}
     for number in range(1, PASSES + 1):
         same = out / f"same-{number}"
-        if len(_load(same)) >= len(same_pairs):
+        coverage = _identity_coverage(same, expected_same_ids)
+        if coverage["duplicated"]:
+            return {
+                "status": "blocked",
+                "stopped": "duplicate cross-builder judgement",
+                "why": "one reader returned more than one judgement for an expected pair",
+                "pass": number,
+                "duplicated_pair_ids": coverage["duplicated"],
+            }
+        if not coverage["missing"]:
             continue
+        missing_same_ids[str(number)] = coverage["missing"]
+        if coverage["unexpected"]:
+            unexpected_same_ids[str(number)] = coverage["unexpected"]
         jobs.append(_job(SAME.format(pairs_file=same_pairs_file, out=same),
                          same, out / f"same-{number}-scratch", "same", len(same_pairs)))
     if jobs and same_pairs:
-        return {"stopped": "deciding which of these are one thing", "records": len(records),
+        return {"status": "waiting_for_readers",
+                "stopped": "deciding which of these are one thing", "records": len(records),
                 "candidates_before_joining": len(rows), "pairs": len(same_pairs),
-                "outstanding": len(jobs), "work": jobs}
+                "outstanding": len(jobs), "work": jobs,
+                "missing_pair_ids": missing_same_ids,
+                "unexpected_pair_ids": unexpected_same_ids}
 
     joined: dict[str, str] = {}
     agreed = 0
@@ -341,6 +481,7 @@ def collect(work: Path, order_file: Path, out: Path) -> dict[str, object]:
     }, indent=2), encoding="utf-8")
 
     return {
+        "status": "complete",
         "records": len(records),
         "pairs": len(pairs),
         "same_thing_both_passes": len(kept),
@@ -361,6 +502,24 @@ def collect(work: Path, order_file: Path, out: Path) -> dict[str, object]:
     }
 
 
+def _exit_code(result: dict[str, object]) -> int:
+    return {
+        "complete": 0,
+        "waiting_for_readers": 2,
+        "blocked": 3,
+        "needs_owner": 4,
+    }.get(str(result.get("status") or ""), 3)
+
+
+def _progress_key(result: dict[str, object]) -> str:
+    return _digest({
+        "status": result.get("status"),
+        "stopped": result.get("stopped"),
+        "missing_pair_ids": result.get("missing_pair_ids"),
+        "work": [job.get("waiting_for") for job in result.get("work") or []],
+    })
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--work", type=Path, required=True,
@@ -376,8 +535,9 @@ def main(argv: list[str] | None = None) -> int:
 
     work, order, out = args.work.resolve(), args.order.resolve(), args.out.resolve()
     if not args.reader_command:
-        print(json.dumps(collect(work, order, out), indent=2))
-        return 0
+        result = collect(work, order, out)
+        print(json.dumps(result, indent=2))
+        return _exit_code(result)
 
     stuck, seen = 0, None
     while True:
@@ -385,14 +545,16 @@ def main(argv: list[str] | None = None) -> int:
         jobs = result.get("work")
         if not jobs:
             print(json.dumps(result, indent=2, default=str))
-            return 0
-        here = (result.get("stopped"), len(jobs))
+            return _exit_code(result)
+        here = _progress_key(result)
         stuck = stuck + 1 if here == seen else 0
         seen = here
         if stuck >= 2:
-            result["stopped_again"] = "a round of reading changed nothing twice over"
+            result["status"] = "blocked"
+            result["stopped"] = "reading stalled"
+            result["why"] = "a round of reading changed nothing twice over"
             print(json.dumps(result, indent=2, default=str))
-            return 0
+            return _exit_code(result)
         readers._launch(jobs, args.reader_command, out, out, "read")
 
 

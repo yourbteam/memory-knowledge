@@ -67,3 +67,28 @@ What went in was true: every line quoted from somebody who saw the thing. What w
 This does not move the boundary between the machineries. Deciding whether something is a real requirement, and what its check is, stayed with the requirements machinery and worked — it took the three and made requirements of them, with checks. The gap is upstream of that: nothing turned "here is what I saw" into "here is what is wanted".
 
 **The deciding fact for step one:** whether an observation can be turned into a statement of what is wanted using only the words of the observation and the owner's intent — with no invention. If two blind readers, given one observation each, cannot agree on what is wanted without adding anything, then the material genuinely does not carry it and the operator has to be asked.
+
+## 11 August 2026 — the general front door and deterministic gates became executable
+
+Five captured cases were run through the real Python functions before changes: invented quotations
+were accepted by both routes, wrong pair identities satisfied file counts and dropped an expected
+observation, changed context reused an old answer, and eight accepted questions produced no
+description. The fixes were retained only after each case turned green:
+
+1. A claimed quotation now names an authorized source and occurs there exactly. Builder-note quotes
+   are checked against the named note before pairing.
+2. Within-note, cross-builder, and fixed-question stages complete by their exact expected identity
+   sets rather than by file count.
+3. `input-state.json` binds resumable state to intent, context, owner answers, fixed questions,
+   builder notes, and order content. Changed or unbound legacy state fails closed and requires a
+   fresh directory; nothing is deleted.
+4. `from_intent.py` accepts a dedicated owner-answer file. Two readers must cite the same exact
+   passage for every fixed question before code emits `description.md`; missing or differing
+   answers remain in `to-ask.md`.
+5. Both CLIs expose `complete`, `waiting_for_readers`, `blocked`, and `needs_owner`, mapped to exit
+   codes 0, 2, 3, and 4. Stall detection follows the remaining identity set rather than job count.
+
+Proof through the documented entry points: eighteen Description behavioral tests include
+subprocess completion of both CLIs. The accumulated Description, Implementation, client-policy,
+projection, parity, and installation surface passes **75 tests**. This proves the deterministic
+contracts and fixture-backed real paths; it does not claim a live supplied model's semantic quality.
