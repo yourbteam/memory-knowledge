@@ -1843,7 +1843,7 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
             receipt["for_a_person"] = (
                 "Only the owner can settle this. Put their answer in rulings.json under this item."
             )
-        kept.write_text(json.dumps(receipt, indent=2), encoding="utf-8")
+        _write_controller_record(work, rid, kept, receipt)
         change_path.unlink()
         say(work, "builder changed nothing", item=rid, attempt=attempt,
             because=str(change.get("what_changed"))[:200])

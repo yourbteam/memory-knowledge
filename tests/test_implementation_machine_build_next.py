@@ -742,33 +742,69 @@ def test_third_semantic_refusal_persists_the_terminal_owner_handoff(
     assert result["for_a_person"] == persisted["for_a_person"]
 
 
-def test_third_changed_nothing_refusal_persists_the_terminal_owner_handoff(
-    tmp_path: Path,
+def test_successive_changed_nothing_deliveries_use_protected_attempts_and_stop_at_three(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
     source = tmp_path / "target.py"
     source.write_text("def target():\n    return 'needle'\n")
+    order = {
+        "work": [{
+            "round": 2,
+            "requirement_id": "r158",
+            "requirement": (
+                "A missing prohibition must cause a refusal, and a missing attribution "
+                "debt must degrade the output rather than stop the run."
+            ),
+            "parts": [
+                {"part_id": "r158.p1", "part": "A missing prohibition causes a refusal."},
+                {
+                    "part_id": "r158.p2",
+                    "part": (
+                        "A missing attribution debt degrades the output rather than "
+                        "stopping the run."
+                    ),
+                },
+            ],
+            "part_count": 2,
+        }]
+    }
     work = tmp_path / "work"
-    out = work / "build-r1"
-    out.mkdir(parents=True)
-    (out / "tests-before.json").write_text(
-        json.dumps({"command": "tests", "exit_code": 0, "failed": [], "names": []})
-    )
-    for attempt in (1, 2):
-        (out / f"refused-{attempt}.json").write_text(json.dumps({
-            "item": "r1", "built": False, "attempt": attempt,
-            "what_changed": "the builder stopped", "objections": ["changed nothing"],
+    baseline = {"command": "tests", "exit_code": 0, "failed": [], "names": []}
+    monkeypatch.setattr(machine, "_failures", lambda *_: baseline)
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_: "")
+
+    first = machine.drive(order, work, tmp_path, "tests")
+    out = work / "build-r158"
+    assert first["attempt"] == 1
+
+    results = []
+    for expected_attempt in range(1, machine.ATTEMPTS + 1):
+        (out / "change.json").write_text(json.dumps({
+            "files": [],
+            "what_changed": (
+                "Nothing was changed. Both parts of the requirement are already true "
+                "of the code as it stands."
+            ),
+            "left_alone": "nothing",
         }))
-    (out / "change.json").write_text(json.dumps({
-        "files": [], "what_changed": "the tests contradict the requirement",
-        "left_alone": "the contradictory test",
-    }))
+        result = machine.drive(order, work, tmp_path, "tests")
+        results.append(result)
+        receipt = json.loads(
+            (out / f"refused-{expected_attempt}.json").read_text()
+        )
+        assert receipt["attempt"] == expected_attempt
+        assert machine._control_record_path(
+            work, "r158", f"refused-{expected_attempt}.json"
+        ).is_file()
 
-    result = machine.drive(_order(source), work, tmp_path, "tests")
-    persisted = json.loads((out / "refused-3.json").read_text())
-
-    assert result["built"] is False
-    assert result["for_a_person"] == persisted["for_a_person"]
-    assert result["attempts"] == machine.ATTEMPTS
+    assert results[0]["attempt"] == 2
+    assert results[1]["attempt"] == 3
+    assert results[2]["attempts"] == machine.ATTEMPTS
+    assert results[2]["work"] == []
+    assert results[2]["for_a_person"] == (
+        "Only the owner can settle this. Put their answer in rulings.json under this item."
+    )
 
 
 def test_terminal_semantic_refusal_does_not_open_a_fourth_builder(
