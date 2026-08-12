@@ -25,6 +25,13 @@ machine = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(machine)
 
 
+@pytest.fixture(autouse=True)
+def _isolated_controller_state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    monkeypatch.setenv(
+        "IMPLEMENTATION_MACHINE_CONTROL_ROOT", str(tmp_path / "controller-state")
+    )
+
+
 def test_cli_never_writes_bytecode_into_its_managed_skill_tree(tmp_path: Path):
     source = (SKILL / "build_next.py").read_text()
     assert source.index("sys.dont_write_bytecode = True") < source.index(
@@ -234,6 +241,253 @@ def test_path_manifest_is_automatic_for_builder_and_blind_readers(
         assert "Runnable real-path reproduction" in job["instruction"]
         assert "navigation aid, not acceptance evidence" in job["instruction"]
         assert "PRIVATE BUILDER CONCLUSION" not in job["instruction"]
+
+
+def test_worker_cannot_replace_the_controller_owned_baseline(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    built = tmp_path / "built"
+    built.mkdir()
+    source = built / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = built / "Tasks" / "build"
+    control = tmp_path / "controller-only"
+    monkeypatch.setenv("IMPLEMENTATION_MACHINE_CONTROL_ROOT", str(control))
+    baseline = {
+        "command": "tests",
+        "exit_code": 0,
+        "failed": [],
+        "names": ["tests/test_target.py::test_existing"],
+    }
+    monkeypatch.setattr(machine, "_failures", lambda *_: baseline)
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_: "")
+
+    building = machine.drive(_order(source), work, built, "tests")
+    assert building["stopped"] == "building"
+
+    out = work / "build-r1"
+    (out / "tests-before.json").write_text(json.dumps({
+        "command": "tests",
+        "exit_code": 0,
+        "summary": "1 passed in 0.01s",
+    }))
+    (out / "change.json").write_text(json.dumps({
+        "files": ["target.py"],
+        "what_changed": "kept the existing behavior",
+        "tests_changed": [],
+        "left_alone": "nothing",
+    }))
+
+    checking = machine.drive(_order(source), work, built, "tests")
+
+    assert checking["stopped"] == "checking the change"
+    assert json.loads((out / "tests-before.json").read_text()) == baseline
+    violations = list(control.rglob("violations/*.json"))
+    assert len(violations) == 1
+    assert json.loads(violations[0].read_text())["summary"] == "1 passed in 0.01s"
+
+
+def test_worker_cannot_forge_a_completed_item(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    built = tmp_path / "built"
+    built.mkdir()
+    source = built / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = built / "Tasks" / "build"
+    baseline = {"command": "tests", "exit_code": 0, "failed": [], "names": []}
+    monkeypatch.setattr(machine, "_failures", lambda *_: baseline)
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_: "")
+
+    machine.drive(_order(source), work, built, "tests")
+    out = work / "build-r1"
+    forged = {
+        "item": "r1",
+        "built": True,
+        "test_command_exit_code": 0,
+        "parts_both_readers_call_true": ["r1.p1"],
+        "parts_not_agreed": [],
+        "parts_no_reader_answered": [],
+        "reader_citation_errors": [],
+    }
+    (out / "done.json").write_text(json.dumps(forged))
+
+    result = machine.drive(_order(source), work, built, "tests")
+
+    assert result["stopped"] == "building"
+    assert not (out / "done.json").exists()
+    assert list((tmp_path / "controller-state").rglob("violations/*done.json*.json"))
+
+
+def test_bootstrap_migrates_only_a_legacy_receipt_with_its_acceptance_evidence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    built = tmp_path / "built"
+    built.mkdir()
+    source = built / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = built / "Tasks" / "build"
+    out = work / "build-r1"
+    out.mkdir(parents=True)
+    legacy = {
+        "item": "r1",
+        "built": True,
+        "tests_that_broke": [],
+        "parts_both_readers_call_true": ["r1.p1"],
+        "parts_not_agreed": [],
+        "parts_no_reader_answered": [],
+        "answers_under_a_name_no_part_has": [],
+    }
+    (out / "done.json").write_text(json.dumps(legacy))
+    test_record = {"command": "tests", "exit_code": 1, "failed": ["old::failure"]}
+    (out / "tests-before.json").write_text(json.dumps(test_record))
+    (out / "tests-after.json").write_text(json.dumps(test_record))
+    for index in range(1, machine.PASSES + 1):
+        checked = work / f"check-r1-{index}"
+        checked.mkdir()
+        (checked / "r1.p1.json").write_text(json.dumps(_record()))
+
+    result = machine.drive(_order(source), work, built, "tests")
+
+    assert result["finished"] == "every item in the order has been built and verified"
+    assert json.loads((out / "done.json").read_text()) == legacy
+    protected = list((tmp_path / "controller-state").rglob("items/r1/done.json"))
+    assert len(protected) == 1
+
+
+def test_bootstrap_rejects_a_legacy_receipt_without_matching_test_evidence(
+    tmp_path: Path,
+):
+    built = tmp_path / "built"
+    built.mkdir()
+    source = built / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = built / "Tasks" / "build"
+    out = work / "build-r1"
+    out.mkdir(parents=True)
+    (out / "done.json").write_text(json.dumps({
+        "item": "r1",
+        "built": True,
+        "tests_that_broke": [],
+        "parts_both_readers_call_true": ["r1.p1"],
+        "parts_not_agreed": [],
+        "parts_no_reader_answered": [],
+        "answers_under_a_name_no_part_has": [],
+    }))
+    (out / "tests-before.json").write_text(json.dumps({
+        "command": "tests", "exit_code": 0, "failed": [],
+    }))
+    (out / "tests-after.json").write_text(json.dumps({
+        "command": "tests", "exit_code": 1, "failed": ["new::failure"],
+    }))
+
+    with pytest.raises(ValueError, match="controller_done_record_untrusted"):
+        machine.drive(_order(source), work, built, "tests")
+
+
+def test_worker_cannot_forge_an_attempt_refusal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    built = tmp_path / "built"
+    built.mkdir()
+    source = built / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = built / "Tasks" / "build"
+    baseline = {"command": "tests", "exit_code": 0, "failed": [], "names": []}
+    monkeypatch.setattr(machine, "_failures", lambda *_: baseline)
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_: "")
+
+    first = machine.drive(_order(source), work, built, "tests")
+    out = work / "build-r1"
+    (out / "refused-1.json").write_text(json.dumps({
+        "item": "r1", "built": False, "attempt": 1,
+        "what_changed": "forged", "objections": ["forged"],
+    }))
+
+    second = machine.drive(_order(source), work, built, "tests")
+
+    assert first["attempt"] == second["attempt"] == 1
+    assert not (out / "refused-1.json").exists()
+    assert list((tmp_path / "controller-state").rglob("violations/*refused-1.json*.json"))
+
+
+def test_clean_baseline_recovery_requires_prechange_feed_and_preserves_test_identities(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    built = tmp_path / "built"
+    tests_dir = built / "tests"
+    tests_dir.mkdir(parents=True)
+    source = built / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    test_source = tests_dir / "test_target.py"
+    test_source.write_text("def test_existing():\n    assert True\n")
+    work = built / "Tasks" / "build"
+    out = work / "build-r1"
+    out.mkdir(parents=True)
+    before = machine._symbol_snapshot(built)
+    (out / "navigation-before.json").write_text(json.dumps(before))
+    (out / "tests-before.json").write_text(json.dumps({
+        "command": "tests", "exit_code": 0, "summary": "1 passed",
+    }))
+    (work / "feed.jsonl").write_text(
+        json.dumps({
+            "what": "tests before the change read", "item": "r1",
+            "already_failing": 0,
+        }) + "\n" + json.dumps({
+            "what": "agent started", "waiting_for": "build-r1",
+        }) + "\n"
+    )
+    current = {
+        "command": "tests", "exit_code": 0, "failed": [],
+        "names": ["tests/test_target.py::test_existing"],
+    }
+    monkeypatch.setattr(machine, "_failures", lambda *_: current)
+
+    recovered = machine.recover_clean_baseline(
+        _order(source), work, built, "tests", "r1",
+    )
+
+    assert recovered["recovery"]["prechange_failures"] == 0
+    assert recovered["recovery"]["disappeared_test_identities"] == []
+    assert json.loads((out / "tests-before.json").read_text())["failed"] == []
+    assert list((tmp_path / "controller-state").rglob("baseline-recovery.json"))
+
+
+def test_clean_baseline_recovery_refuses_a_disappeared_preexisting_test(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    built = tmp_path / "built"
+    tests_dir = built / "tests"
+    tests_dir.mkdir(parents=True)
+    source = built / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    test_source = tests_dir / "test_target.py"
+    test_source.write_text("def test_existing():\n    assert True\n")
+    work = built / "Tasks" / "build"
+    out = work / "build-r1"
+    out.mkdir(parents=True)
+    (out / "navigation-before.json").write_text(
+        json.dumps(machine._symbol_snapshot(built))
+    )
+    test_source.write_text("def helper():\n    return True\n")
+    (out / "tests-before.json").write_text(json.dumps({
+        "command": "tests", "exit_code": 0, "summary": "1 passed",
+    }))
+    (work / "feed.jsonl").write_text(
+        json.dumps({
+            "what": "tests before the change read", "item": "r1",
+            "already_failing": 0,
+        }) + "\n" + json.dumps({
+            "what": "agent started", "waiting_for": "build-r1",
+        }) + "\n"
+    )
+    monkeypatch.setattr(machine, "_failures", lambda *_: pytest.fail("must fail first"))
+
+    with pytest.raises(ValueError, match="test_identity_disappeared"):
+        machine.recover_clean_baseline(_order(source), work, built, "tests", "r1")
 
 
 def test_navigation_map_resolves_ambiguous_citations_and_maps_their_consumers(
@@ -448,6 +702,412 @@ def test_captured_universal_counterexample_still_refuses_the_build(
     assert not list(work.glob("check-r1-*-invalid-*"))
 
 
+def test_third_semantic_refusal_persists_the_terminal_owner_handoff(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    out = _seed_change(work, tmp_path)
+    for attempt in (1, 2):
+        (out / f"refused-{attempt}.json").write_text(
+            json.dumps(
+                {
+                    "item": "r1",
+                    "built": False,
+                    "attempt": attempt,
+                    "what_changed": "prior attempt",
+                    "objections": ["r1.p1: still false"],
+                }
+            )
+        )
+    for index in (1, 2):
+        checked = work / f"check-r1-{index}"
+        checked.mkdir()
+        record = _record(answer="no")
+        record["citations"] = []
+        record["looked_at"] = "the requirement is still false"
+        (checked / "r1.p1.json").write_text(json.dumps(record))
+    monkeypatch.setattr(
+        machine,
+        "_failures",
+        lambda *_: {"command": "tests", "exit_code": 0, "failed": [], "names": []},
+    )
+
+    result = machine.drive(_order(source), work, tmp_path, "tests")
+    persisted = json.loads((out / "refused-3.json").read_text())
+
+    assert result["built"] is False
+    assert result["attempt"] == machine.ATTEMPTS
+    assert result["for_a_person"] == persisted["for_a_person"]
+
+
+def test_third_changed_nothing_refusal_persists_the_terminal_owner_handoff(
+    tmp_path: Path,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    out = work / "build-r1"
+    out.mkdir(parents=True)
+    (out / "tests-before.json").write_text(
+        json.dumps({"command": "tests", "exit_code": 0, "failed": [], "names": []})
+    )
+    for attempt in (1, 2):
+        (out / f"refused-{attempt}.json").write_text(json.dumps({
+            "item": "r1", "built": False, "attempt": attempt,
+            "what_changed": "the builder stopped", "objections": ["changed nothing"],
+        }))
+    (out / "change.json").write_text(json.dumps({
+        "files": [], "what_changed": "the tests contradict the requirement",
+        "left_alone": "the contradictory test",
+    }))
+
+    result = machine.drive(_order(source), work, tmp_path, "tests")
+    persisted = json.loads((out / "refused-3.json").read_text())
+
+    assert result["built"] is False
+    assert result["for_a_person"] == persisted["for_a_person"]
+    assert result["attempts"] == machine.ATTEMPTS
+
+
+def test_terminal_semantic_refusal_does_not_open_a_fourth_builder(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    out = work / "build-r1"
+    out.mkdir(parents=True)
+    (out / "tests-before.json").write_text(
+        json.dumps({"command": "tests", "exit_code": 0, "failed": [], "names": []})
+    )
+    for attempt in range(1, machine.ATTEMPTS + 1):
+        receipt = {
+            "item": "r1",
+            "built": False,
+            "attempt": attempt,
+            "what_changed": "prior attempt",
+            "objections": ["r1.p1: still false"],
+        }
+        if attempt == machine.ATTEMPTS:
+            receipt["for_a_person"] = "The configured attempt limit was reached."
+        (out / f"refused-{attempt}.json").write_text(json.dumps(receipt))
+    monkeypatch.setattr(
+        machine,
+        "_failures",
+        lambda *_: pytest.fail("terminal resume must not rerun tests"),
+    )
+
+    result = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert result["built"] is False
+    assert result["attempt"] == machine.ATTEMPTS
+    assert result["for_a_person"] == "The configured attempt limit was reached."
+    assert "work" not in result
+    assert not (out / "change.json").exists()
+
+
+def test_authorized_new_ruling_reopens_terminal_and_preserves_stale_work(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    out = work / "build-r1"
+    out.mkdir(parents=True)
+    (out / "tests-before.json").write_text(
+        json.dumps({"command": "tests", "exit_code": 0, "failed": [], "names": []})
+    )
+    for refusal_number in range(1, machine.ATTEMPTS + 1):
+        receipt = {
+            "item": "r1", "built": False, "attempt": refusal_number,
+            "what_changed": "old ruling work", "objections": ["r1.p1: still false"],
+        }
+        if refusal_number == machine.ATTEMPTS:
+            receipt["for_a_person"] = "The configured attempt limit was reached."
+        machine._write_controller_record(
+            work, "r1", out / f"refused-{refusal_number}.json", receipt,
+        )
+    (out / "change.json").write_text(json.dumps({"files": ["target.py"]}))
+    (out / "navigation-before.json").write_text("{}")
+    (out / "tests-after.json").write_text("{}")
+    (work / "build-r1-scratch").mkdir()
+    (work / "build-r1-scratch" / "old.txt").write_text("old builder")
+    for index in (1, 2):
+        (work / f"check-r1-{index}").mkdir()
+        (work / f"check-r1-{index}" / "old.txt").write_text("old reader")
+        (work / f"check-r1-{index}-scratch").mkdir()
+    ruling = "Keep the review requirement, but never invent the review outcome."
+    (work / "rulings.json").write_text(json.dumps({
+        "r1": {"owner_ruling": ruling, "resume_after_terminal": True}
+    }))
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_: "")
+
+    result = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert result["stopped"] == "building"
+    assert result["attempt"] == 1
+    assert result["refusal_number"] == 4
+    assert ruling in result["work"][0]["instruction"]
+    assert sorted(path.name for path in out.glob("refused-*.json")) == [
+        "refused-1.json", "refused-2.json", "refused-3.json",
+    ]
+    history = out / "ruling-history-1"
+    assert (history / "change.json").is_file()
+    assert (history / "navigation-before.json").is_file()
+    assert (history / "tests-before.json").is_file()
+    assert (history / "tests-after.json").is_file()
+    assert (out / "tests-before.json").is_file()
+    assert (history / "build-r1-scratch" / "old.txt").is_file()
+    assert (history / "check-r1-1" / "old.txt").is_file()
+    assert (history / "check-r1-2" / "old.txt").is_file()
+    state = json.loads((out / "ruling-state.json").read_text())
+    assert state["refusal_start"] == 3
+    assert state["ruling_sha256"] == machine._ruling_sha256({
+        "owner_ruling": ruling, "resume_after_terminal": True,
+    })
+
+
+def test_same_ruling_cannot_reopen_a_second_terminal_window(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    out = work / "build-r1"
+    out.mkdir(parents=True)
+    (out / "tests-before.json").write_text(
+        json.dumps({"command": "tests", "exit_code": 0, "failed": [], "names": []})
+    )
+    for refusal_number in range(1, machine.ATTEMPTS + 1):
+        (out / f"refused-{refusal_number}.json").write_text(json.dumps({
+            "item": "r1", "built": False, "attempt": refusal_number,
+            "what_changed": "old ruling work", "objections": ["r1.p1: still false"],
+        }))
+    ruling = {"owner_ruling": "The new ruling.", "resume_after_terminal": True}
+    (work / "rulings.json").write_text(json.dumps({"r1": ruling}))
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_: "")
+
+    reopened = machine.drive(_order(source), work, tmp_path, "tests")
+    assert reopened["attempt"] == 1
+    for offset in range(1, machine.ATTEMPTS + 1):
+        refusal_number = machine.ATTEMPTS + offset
+        receipt = {
+            "item": "r1", "built": False, "attempt": offset,
+            "refusal_number": refusal_number,
+            "ruling_sha256": machine._ruling_sha256(ruling),
+            "what_changed": "new ruling work", "objections": ["r1.p1: still false"],
+        }
+        if offset == machine.ATTEMPTS:
+            receipt["for_a_person"] = "Three attempts under this ruling were refused."
+        machine._write_controller_record(
+            work, "r1", out / f"refused-{refusal_number}.json", receipt,
+        )
+    monkeypatch.setattr(
+        machine, "_failures", lambda *_: pytest.fail("same ruling must stay terminal"),
+    )
+
+    result = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert result["for_a_person"] == "Three attempts under this ruling were refused."
+    assert "work" not in result
+    assert not (out / "ruling-history-2").exists()
+
+
+def test_existing_ruling_epoch_refreshes_a_baseline_created_before_the_repair(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    out = work / "build-r1"
+    out.mkdir(parents=True)
+    stale = {"command": "tests", "exit_code": 1, "failed": ["old"], "names": ["old"]}
+    (out / "tests-before.json").write_text(json.dumps(stale))
+    ruling = {"owner_ruling": "The owner settled it.", "resume_after_terminal": True}
+    (work / "rulings.json").write_text(json.dumps({"r1": ruling}))
+    (out / "ruling-state.json").write_text(json.dumps({
+        "ruling_sha256": machine._ruling_sha256(ruling),
+        "refusal_start": 3,
+        "history": "ruling-history-1",
+    }))
+    fresh = {"command": "tests", "exit_code": 0, "failed": [], "names": ["fresh"]}
+    monkeypatch.setattr(machine, "_failures", lambda *_: fresh)
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_: "")
+
+    result = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert result["attempt"] == 1
+    assert json.loads((out / "tests-before.json").read_text()) == fresh
+    assert json.loads((out / "ruling-history-1" / "tests-before.json").read_text()) == stale
+    assert json.loads((out / "ruling-state.json").read_text())["baseline_refreshed"] is True
+
+
+def test_owner_ruling_reaches_both_blind_reader_packets(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    ruling = "Require review, and leave its outcome unchanged until recorded."
+    (work / "rulings.json").parent.mkdir()
+    (work / "rulings.json").write_text(json.dumps({"r1": ruling}))
+    monkeypatch.setattr(
+        machine, "_failures",
+        lambda *_: {"command": "tests", "exit_code": 0, "failed": [], "names": []},
+    )
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_: "")
+
+    build = machine.drive(_order(source), work, tmp_path, "tests")
+    assert ruling in build["work"][0]["instruction"]
+    (work / "build-r1" / "change.json").write_text(json.dumps({
+        "files": ["target.py"], "what_changed": "PRIVATE BUILDER CONCLUSION",
+        "tests_changed": [], "left_alone": "nothing",
+    }))
+
+    checking = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert len(checking["work"]) == machine.PASSES
+    for packet in checking["work"]:
+        assert ruling in packet["instruction"]
+        assert "authoritative meaning of the requirement" in packet["instruction"]
+        assert "PRIVATE BUILDER CONCLUSION" not in packet["instruction"]
+        assert "one of two independent readers" in packet["instruction"]
+
+
+def test_test_removal_authorization_does_not_steer_blind_readers(tmp_path: Path):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    _seed_change(work, tmp_path)
+    owner_words = "The obsolete test may be removed."
+    (work / "rulings.json").write_text(json.dumps({
+        "r1": {
+            "test_removals": {
+                "tests/test_target.py::test_old": {
+                    "authorized": True,
+                    "owner_ruling": owner_words,
+                    "replacement_or_remaining_coverage": "test_new covers the same path.",
+                }
+            }
+        }
+    }))
+
+    checking = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert len(checking["work"]) == machine.PASSES
+    assert all(owner_words not in packet["instruction"] for packet in checking["work"])
+    assert not (work / "build-r1" / "ruling-state.json").exists()
+
+
+def test_unattended_loop_stops_on_the_terminal_refusal(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    order_path = tmp_path / "order.json"
+    order_path.write_text(json.dumps({"work": []}))
+    (tmp_path / "work").mkdir()
+    calls = 0
+
+    def terminal_drive(*_args, **_kwargs):
+        nonlocal calls
+        calls += 1
+        if calls > 1:
+            pytest.fail("the unattended loop asked for work after the terminal refusal")
+        return {
+            "item": "r1",
+            "built": False,
+            "attempt": machine.ATTEMPTS,
+            "for_a_person": "The configured attempt limit was reached.",
+        }
+
+    reported = []
+    monkeypatch.setattr(machine, "drive", terminal_drive)
+    monkeypatch.setattr(machine, "_say", lambda result: reported.append(result) or 0)
+
+    exit_code = machine.main(
+        [
+            "--order", str(order_path),
+            "--work", str(tmp_path / "work"),
+            "--built", str(tmp_path),
+            "--tests", "tests",
+            "--reader-command", "codex exec",
+            "--items", "30",
+        ]
+    )
+
+    assert exit_code == 0
+    assert calls == 1
+    assert reported[0]["stopped_at"] == "the configured attempt limit"
+    assert reported[0]["last"]["for_a_person"]
+
+
+def test_empty_builder_delivery_relaunches_without_consuming_an_attempt(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    monkeypatch.setattr(
+        machine,
+        "_failures",
+        lambda *_: {"command": "tests", "exit_code": 0, "failed": [], "names": []},
+    )
+
+    first = machine.drive(_order(source), work, tmp_path, "tests")
+    second = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert first["attempt"] == second["attempt"] == 1
+    assert first["stopped"] == second["stopped"] == "building"
+    assert not list((work / "build-r1").glob("refused-*.json"))
+
+
+def test_launch_preserves_codex_failure_stream_and_uses_collision_proof_logs(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    worker = tmp_path / "fake_codex.py"
+    worker.write_text(
+        "import json,sys\n"
+        "print(json.dumps({'type':'item.started','item':"
+        "{'type':'command_execution','command':'pytest focused.py'}}), flush=True)\n"
+        "print(json.dumps({'type':'turn.failed','error':"
+        "{'message':'model is temporarily at capacity'}}), flush=True)\n"
+        "print('diagnostic on stderr', file=sys.stderr, flush=True)\n"
+        "raise SystemExit(1)\n"
+    )
+    work = tmp_path / "work"
+    work.mkdir()
+    delivery = tmp_path / "build-r210"
+    scratch = tmp_path / "scratch"
+    job = machine._packet(
+        "make the requirement true", delivery, scratch, False, tmp_path, "tests",
+        wants="change.json", owner_approved=True,
+    )
+    monkeypatch.setattr(
+        machine, "validate_reader_command", lambda _command: [sys.executable, str(worker)]
+    )
+
+    first = machine._launch([job], "codex exec --json -", tmp_path, work, "1")[0]
+    second = machine._launch([job], "codex exec --json -", tmp_path, work, "1")[0]
+
+    assert first["exit_code"] == second["exit_code"] == 1
+    assert first["wrote"] == second["wrote"] == 0
+    assert first["failure"] == second["failure"] == "model is temporarily at capacity"
+    assert first["log"] != second["log"]
+    for result in (first, second):
+        log = Path(result["log"]).read_text()
+        assert '"type": "item.started"' in log
+        assert '"type": "turn.failed"' in log
+        assert "diagnostic on stderr" in log
+    feed = (work / "feed.jsonl").read_text()
+    assert "command_execution pytest focused.py" in feed
+    assert "model is temporarily at capacity" in feed
+
+
 def test_test_regression_still_blocks_two_reader_yes(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ):
@@ -490,6 +1150,9 @@ def test_nonzero_test_command_blocks_acceptance_without_parsed_failures(tmp_path
         (checked / "r1.p1.json").write_text(json.dumps(_record()))
 
     command = f"{shlex.quote(sys.executable)} -c 'import sys; sys.exit(7)'"
+    (out / "tests-before.json").write_text(json.dumps({
+        "command": command, "exit_code": 0, "failed": [], "names": [],
+    }))
     result = machine.drive(_order(source), work, tmp_path, command)
 
     assert result["built"] is False
