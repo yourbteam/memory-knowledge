@@ -1,0 +1,4 @@
+interface:
+  display_name: "Info Intake Machinery"
+  short_description: "Create auditable AI-readable source intakes"
+  default_prompt: "Use $info-intake-machinery to start a new auditable information intake."
