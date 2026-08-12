@@ -723,13 +723,14 @@ def test_remote_onboarding_serializes_confirmation_file(tmp_path):
     assert "--token-output-file" in prepared["argv"]
 
 
-def test_discovery_bootstrap_builds_zero_input_script_spec():
+@pytest.mark.parametrize("operation_kind", ["deploy", "workflow-drive"])
+def test_discovery_bootstrap_builds_zero_input_script_spec(operation_kind):
     prepared = sequence_intake_adapters.prepare(
         "discovery-bootstrap",
         {
             "source_repository_key": "memory-knowledge",
             "task_id": "discover-example",
-            "operation_kind": "workflow-drive",
+            "operation_kind": operation_kind,
             "date": "2026-07-23",
             "sequence_name": "Example sequence",
             "outcome": "Complete the governed operation.",
@@ -751,6 +752,7 @@ def test_discovery_bootstrap_builds_zero_input_script_spec():
     )
     spec = json.loads(prepared["artifacts"]["spec"]["content"])
 
+    assert spec["operation_kind"] == operation_kind
     assert spec["steps"] == [{
         "step": "run-example",
         "command": "python3 scripts/example.py",

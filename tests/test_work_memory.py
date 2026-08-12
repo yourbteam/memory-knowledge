@@ -4555,6 +4555,39 @@ def test_registry_and_manifest_coverage():
         assert data["lineage_id"] == row["lineage_id"]
 
 
+def test_discovery_bootstrap_is_selectable_for_missing_deploy_sequence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    from argparse import Namespace
+
+    rows, _ = work_memory.registry_rows()
+    bootstrap = next(
+        row for row in rows if row["sequence_id"] == "discovery-bootstrap"
+    )
+    assert "deploy" in bootstrap["operation_kinds"].split(",")
+
+    monkeypatch.setattr(work_memory, "RECEIPT_ROOT", tmp_path / "receipts")
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: ([], "8" * 64))
+    monkeypatch.setattr(
+        work_memory,
+        "resolve_bundle",
+        lambda **kwargs: ([], "b" * 64, bootstrap["lineage_id"]),
+    )
+    work_memory.cmd_classify(Namespace(
+        task_id="missing-deploy", operation_kind="deploy",
+        repeatable="yes", meaningful_steps=3,
+    ))
+
+    selected = work_memory.cmd_select(Namespace(
+        task_id="missing-deploy", sequence_id="discovery-bootstrap",
+        discovery_log=None, fingerprint=None, verification_successor_of=None,
+        verifies_correction_id=None, repo_roots_file=None,
+    ))
+
+    assert selected["subject_id"] == "discovery-bootstrap"
+    assert selected["selection_reason"] == "explicit-override"
+
+
 def test_no_retired_run_ledger_or_stale_activation_examples():
     assert not (work_memory.ROOT / "scripts/sequence_run_ledger.py").exists()
     tracked = [path for path in (work_memory.ROOT / "operations/sequences").rglob("*.md")]
