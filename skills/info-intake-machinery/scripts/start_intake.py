@@ -43,6 +43,53 @@ if _PURPOSE_SPEC is None or _PURPOSE_SPEC.loader is None:
     raise RuntimeError("purpose interview engine is unavailable")
 purpose_interview = importlib.util.module_from_spec(_PURPOSE_SPEC)
 _PURPOSE_SPEC.loader.exec_module(purpose_interview)
+_VERIFICATION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_relationship_verification",
+    Path(__file__).resolve().with_name("relationship_verification.py"),
+)
+if _VERIFICATION_SPEC is None or _VERIFICATION_SPEC.loader is None:
+    raise RuntimeError("relationship verification engine is unavailable")
+relationship_verification = importlib.util.module_from_spec(_VERIFICATION_SPEC)
+_VERIFICATION_SPEC.loader.exec_module(relationship_verification)
+_CORRECTION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_relationship_correction",
+    Path(__file__).resolve().with_name("relationship_correction.py"),
+)
+if _CORRECTION_SPEC is None or _CORRECTION_SPEC.loader is None:
+    raise RuntimeError("relationship correction engine is unavailable")
+relationship_correction = importlib.util.module_from_spec(_CORRECTION_SPEC)
+_CORRECTION_SPEC.loader.exec_module(relationship_correction)
+_GAP_CLARIFICATION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_gap_clarification",
+    Path(__file__).resolve().with_name("gap_clarification.py"),
+)
+if _GAP_CLARIFICATION_SPEC is None or _GAP_CLARIFICATION_SPEC.loader is None:
+    raise RuntimeError("gap clarification engine is unavailable")
+gap_clarification = importlib.util.module_from_spec(_GAP_CLARIFICATION_SPEC)
+_GAP_CLARIFICATION_SPEC.loader.exec_module(gap_clarification)
+_GAP_RESOLUTION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_gap_resolution",
+    Path(__file__).resolve().with_name("gap_resolution.py"),
+)
+if _GAP_RESOLUTION_SPEC is None or _GAP_RESOLUTION_SPEC.loader is None:
+    raise RuntimeError("gap resolution engine is unavailable")
+gap_resolution = importlib.util.module_from_spec(_GAP_RESOLUTION_SPEC)
+_GAP_RESOLUTION_SPEC.loader.exec_module(gap_resolution)
+_GAP_RESOLUTION_VERIFICATION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_gap_resolution_verification",
+    Path(__file__).resolve().with_name("gap_resolution_verification.py"),
+)
+if (
+    _GAP_RESOLUTION_VERIFICATION_SPEC is None
+    or _GAP_RESOLUTION_VERIFICATION_SPEC.loader is None
+):
+    raise RuntimeError("gap resolution verification engine is unavailable")
+gap_resolution_verification = importlib.util.module_from_spec(
+    _GAP_RESOLUTION_VERIFICATION_SPEC
+)
+_GAP_RESOLUTION_VERIFICATION_SPEC.loader.exec_module(
+    gap_resolution_verification
+)
 
 
 def _canonical(value: object) -> bytes:
@@ -144,24 +191,65 @@ def _source_ready_result(state: dict[str, object], work: Path) -> dict[str, obje
     }
 
 
-def _projection_waiting_result(state: dict[str, object], work: Path) -> dict[str, object]:
+def _projection_waiting_result(
+    state: dict[str, object], work: Path, stage: str | None = None,
+) -> dict[str, object]:
+    if stage is None:
+        candidate_path = work / "projection-interviews" / "attempt-000001" / "projection.json"
+        stage = (
+            "verify_first_projection"
+            if candidate_path.exists() and int(state.get("projection_interview_contract", 0)) >= 7
+            else "project_first_source"
+        )
+    stages = {
+        "project_first_source": {
+            "flag": "--run-projection-interview",
+            "stopped": "interviewing_first_projection",
+            "instruction": (
+                "Inspect the attached frozen source, run the command, and answer only the "
+                "typed question currently displayed. Code controls allowed choices and assembly."
+            ),
+        },
+        "verify_first_projection": {
+            "flag": "--run-projection-verification",
+            "stopped": "verifying_first_projection",
+            "instruction": (
+                "Independently inspect the attached frozen source, run the command, and answer "
+                "only the typed question currently displayed. Code controls allowed choices and assembly."
+            ),
+        },
+        "correct_rejected_relationships": {
+            "flag": "--run-relationship-correction",
+            "stopped": "correcting_rejected_relationships",
+            "instruction": (
+                "Inspect the attached frozen source, run the command, and address only the independently "
+                "rejected relationships. Code controls replacement choices, coordinate binding, and gaps."
+            ),
+        },
+        "verify_relationship_corrections": {
+            "flag": "--run-correction-verification",
+            "stopped": "verifying_relationship_corrections",
+            "instruction": (
+                "Independently inspect the attached frozen source, run the command, and verify only the "
+                "proposed corrected relationships. Code controls allowed verdicts and final assembly."
+            ),
+        },
+    }
+    selected = stages[stage]
     command = [
         sys.executable,
         str(Path(__file__).resolve()),
         "--work",
         str(work.resolve()),
-        "--run-projection-interview",
+        selected["flag"],
     ]
     return {
         "status": "waiting_for_model",
-        "stopped": "interviewing_first_projection",
+        "stopped": selected["stopped"],
         "intake_id": state["intake_id"],
         "work": [{
-            "stage": "project_first_source",
-            "instruction": (
-                "Inspect the attached frozen source, run the command, and answer only the "
-                "typed question currently displayed. Code controls allowed choices and assembly."
-            ),
+            "stage": stage,
+            "instruction": selected["instruction"],
             "attachments": [str((work / "sources" / "source-000003").resolve())],
             "command": command,
         }],
@@ -175,6 +263,98 @@ def _projection_ready_result(state: dict[str, object], work: Path) -> dict[str, 
         "stopped": "first_projection_recorded",
         "intake_id": state["intake_id"],
         "projection": state["first_projection"],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _gap_clarification_model_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    command = [
+        sys.executable,
+        str(Path(__file__).resolve()),
+        "--work",
+        str(work.resolve()),
+        "--run-gap-clarification",
+    ]
+    return {
+        "status": "waiting_for_model",
+        "stopped": "formulating_gap_question",
+        "intake_id": state["intake_id"],
+        "work": [{
+            "stage": "formulate_gap_question",
+            "instruction": (
+                "Inspect the frozen source and the code-bound gap, then answer only the typed "
+                "question. Code controls the gap identity and assembles the operator question."
+            ),
+            "attachments": [str((work / "sources" / "source-000003").resolve())],
+            "command": command,
+        }],
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _gap_source_ready_result(state: dict[str, object], work: Path) -> dict[str, object]:
+    return {
+        "status": "ready_for_projection_assessment",
+        "stopped": "gap_operator_source_recorded",
+        "intake_id": state["intake_id"],
+        "projection": state["first_projection"],
+        "operator_source": state["gap_operator_source"],
+        "operator_projection": state["gap_operator_projection"],
+        "answers_gap": state["gap_clarification"]["gap"],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _gap_resolution_model_result(
+    state: dict[str, object], work: Path, *, verification: bool = False
+) -> dict[str, object]:
+    flag = (
+        "--run-gap-resolution-verification"
+        if verification
+        else "--run-gap-resolution"
+    )
+    return {
+        "status": "waiting_for_model",
+        "stopped": (
+            "verifying_gap_resolution" if verification else "resolving_gap_answer"
+        ),
+        "intake_id": state["intake_id"],
+        "work": [{
+            "stage": (
+                "verify_gap_resolution" if verification else "resolve_gap_answer"
+            ),
+            "instruction": (
+                "Independently inspect the frozen source and verify the code-bound proposed relationship."
+                if verification
+                else "Inspect the frozen source and assess whether the preserved operator answer resolves the code-bound gap."
+            ),
+            "attachments": [str((work / "sources" / "source-000003").resolve())],
+            "command": [
+                sys.executable,
+                str(Path(__file__).resolve()),
+                "--work",
+                str(work.resolve()),
+                flag,
+            ],
+        }],
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _gap_resolution_ready_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    return {
+        "status": "ready_for_projection_assessment",
+        "stopped": str(state["phase"]),
+        "intake_id": state["intake_id"],
+        "projection": state.get("current_projection", state["first_projection"]),
+        "original_projection": state["first_projection"],
+        "gap_resolution": state["gap_resolution"],
         "work": str(work.resolve()),
         "ledger": str((work / "ledger.jsonl").resolve()),
     }
@@ -207,6 +387,39 @@ def _projection_record(number: int, sha256: str) -> dict[str, object]:
         "version": 1,
         "path": f"projections/projection-{number:06d}.txt",
         "sha256": sha256,
+        "coverage": {
+            "status": "complete",
+            "source_units": 1,
+            "represented_units": 1,
+            "gaps": [],
+        },
+    }
+
+
+def _gap_answer_source_record(
+    sha256: str, question_id: str, gap: dict[str, object]
+) -> dict[str, object]:
+    return {
+        "id": "source-000004",
+        "kind": "human_operator_answer",
+        "path": "sources/source-000004.txt",
+        "sha256": sha256,
+        "answers_question": question_id,
+        "answers_gap": {
+            key: gap[key]
+            for key in ("projection_sha256", "collection", "kind", "id", "record_sha256")
+        },
+    }
+
+
+def _gap_answer_projection_record(sha256: str) -> dict[str, object]:
+    return {
+        "id": "projection-source-000004-v1",
+        "source_id": "source-000004",
+        "version": 1,
+        "path": "projections/source-000004-v1.txt",
+        "sha256": sha256,
+        "method": "verbatim_utf8",
         "coverage": {
             "status": "complete",
             "source_units": 1,
@@ -699,11 +912,135 @@ def _request_first_projection(
         "status": "waiting_for_model",
         "phase": "interviewing_first_projection",
         "waiting_for": "projection-interviews/attempt-000001/interview.jsonl",
+        "projection_interview_contract": PROJECTION_INTERVIEW_CONTRACT,
         "ledger_entries": 8,
         "ledger_tail_sha256": eighth["entry_sha256"],
     })
     _write_state(work / "intake-state.json", state)
     return _projection_waiting_result(state, work)
+
+
+def _apply_independent_verification(
+    projection: dict[str, object],
+    verification: dict[str, object],
+    corrections: dict[str, object] | None = None,
+    correction_verification: dict[str, object] | None = None,
+) -> dict[str, object] | None:
+    relationships = projection["relationships"]
+    verdicts = verification["verdicts"]
+    assert isinstance(relationships, list) and isinstance(verdicts, list)
+    readable_relationship_count = sum(
+        relationship["status"] == "readable" for relationship in relationships
+    )
+    if len(verdicts) != readable_relationship_count:
+        return _blocked(
+            "invalid relationship verification",
+            "every readable proposed relationship requires one verdict",
+        )
+    correction_items = corrections["corrections"] if corrections is not None else []
+    assert isinstance(correction_items, list)
+    correction_by_original = {
+        item["original_relationship_id"]: item for item in correction_items
+    }
+    corrected_verdicts = (
+        correction_verification["verdicts"] if correction_verification is not None else []
+    )
+    assert isinstance(corrected_verdicts, list)
+    corrected_verdict_by_id = {
+        item["relationship_id"]: item for item in corrected_verdicts
+    }
+    final_relationships: list[dict[str, object]] = []
+    verdict_index = 0
+    for relationship in relationships:
+        if relationship["status"] == "gap":
+            relationship["verification_eligibility"] = {
+                "status": "not_applicable_existing_gap",
+                "reason": relationship["gap_reason"],
+            }
+            final_relationships.append(relationship)
+            continue
+        verdict = verdicts[verdict_index]
+        verdict_index += 1
+        if verdict["relationship_id"] != relationship["id"]:
+            return _blocked("invalid relationship verification", "relationship verdict order changed")
+        original_verification = {
+            "verdict": verdict["verdict"],
+            "reason": verdict["reason"],
+            "reader": verification["reader"],
+        }
+        relationship["independent_visual_verification"] = original_verification
+        if verdict["verdict"] == "supported":
+            final_relationships.append(relationship)
+            continue
+        correction = correction_by_original.get(relationship["id"])
+        if correction is None:
+            return _blocked(
+                "invalid relationship correction",
+                f"rejected relationship {relationship['id']} has no correction outcome",
+            )
+        if correction["action"] == "preserve_gap":
+            relationship.update({
+                "status": "gap",
+                "description": "",
+                "gap_reason": correction["gap_reason"],
+                "correction_outcome": {
+                    "action": "preserve_gap",
+                    "reason": correction["gap_reason"],
+                },
+            })
+            final_relationships.append(relationship)
+            continue
+        corrected = dict(correction["corrected_relationship"])
+        corrected_verdict = corrected_verdict_by_id.get(corrected["id"])
+        if corrected_verdict is None:
+            return _blocked(
+                "invalid relationship correction verification",
+                f"corrected relationship {corrected['id']} has no independent verdict",
+            )
+        correction_evidence = {
+            "action": "propose_replacement_endpoint",
+            "candidate_relationship_id": corrected["id"],
+            "replacement_role": correction["replacement_role"],
+            "replacement_source": correction["replacement_source"],
+            "replacement_element": correction["replacement_element"],
+            "independent_visual_verification": {
+                "verdict": corrected_verdict["verdict"],
+                "reason": corrected_verdict["reason"],
+                "reader": correction_verification["reader"],
+            },
+        }
+        if corrected_verdict["verdict"] == "supported":
+            if correction["replacement_element"].get("created_by_correction") is True:
+                replacement = {
+                    key: value for key, value in correction["replacement_element"].items()
+                    if key != "created_by_correction"
+                }
+                projection["elements"].append(replacement)
+            corrected["id"] = relationship["id"]
+            corrected["independent_visual_verification"] = original_verification
+            corrected["correction_outcome"] = correction_evidence
+            final_relationships.append(corrected)
+        else:
+            relationship.update({
+                "status": "gap",
+                "description": "",
+                "gap_reason": corrected_verdict["reason"],
+                "correction_outcome": correction_evidence,
+            })
+            final_relationships.append(relationship)
+    if len(correction_by_original) != sum(
+        verdict["verdict"] != "supported" for verdict in verdicts
+    ):
+        return _blocked("invalid relationship correction", "correction outcome coverage changed")
+    if len(corrected_verdict_by_id) != sum(
+        item["action"] == "propose_replacement_endpoint" for item in correction_items
+    ):
+        return _blocked(
+            "invalid relationship correction verification",
+            "corrected relationship verdict coverage changed",
+        )
+    projection["relationships"] = final_relationships
+    return None
 
 
 def _consume_first_projection(
@@ -725,10 +1062,92 @@ def _consume_first_projection(
         journal_entries = projection_interview._read_journal(attempt_dir / "interview.jsonl")
     except projection_interview.InterviewError as error:
         return _blocked("invalid projection interview", str(error))
+    verification: dict[str, object] | None = None
+    verification_journal_sha256: str | None = None
+    verification_result_sha256: str | None = None
+    corrections: dict[str, object] | None = None
+    correction_journal_sha256: str | None = None
+    correction_result_sha256: str | None = None
+    correction_candidate_sha256: str | None = None
+    correction_verification: dict[str, object] | None = None
+    correction_verification_journal_sha256: str | None = None
+    correction_verification_result_sha256: str | None = None
+    if int(entries[7]["interview_contract"]) >= 7:
+        verification_dir = work / "projection-verifications" / "attempt-000001"
+        if not (verification_dir / "verification.json").exists():
+            return _projection_waiting_result(state, work, "verify_first_projection")
+        try:
+            verification, verification_journal_sha256, verification_result_sha256 = (
+                relationship_verification.validate(
+                    verification_dir,
+                    candidate_path=attempt_dir / "projection.json",
+                    candidate_sha256=attempt_projection_sha256,
+                    purpose=purpose,
+                )
+            )
+        except relationship_verification.VerificationError as error:
+            return _blocked("invalid relationship verification", str(error))
+        rejected_count = sum(
+            verdict["verdict"] != "supported" for verdict in verification["verdicts"]
+        )
+        if rejected_count:
+            correction_dir = work / "relationship-corrections" / "attempt-000001"
+            if not (correction_dir / "corrections.json").exists():
+                return _projection_waiting_result(
+                    state, work, "correct_rejected_relationships"
+                )
+            try:
+                (
+                    corrections,
+                    correction_journal_sha256,
+                    correction_result_sha256,
+                    correction_candidate_sha256,
+                ) = relationship_correction.validate(
+                    correction_dir,
+                    candidate_path=attempt_dir / "projection.json",
+                    candidate_sha256=attempt_projection_sha256,
+                    verification_path=verification_dir / "verification.json",
+                    verification_sha256=str(verification_result_sha256),
+                    purpose=purpose,
+                )
+            except relationship_correction.CorrectionError as error:
+                return _blocked("invalid relationship correction", str(error))
+            proposed_count = sum(
+                item["action"] == "propose_replacement_endpoint"
+                for item in corrections["corrections"]
+            )
+            if proposed_count:
+                correction_verification_dir = (
+                    work / "relationship-correction-verifications" / "attempt-000001"
+                )
+                if not (correction_verification_dir / "verification.json").exists():
+                    return _projection_waiting_result(
+                        state, work, "verify_relationship_corrections"
+                    )
+                try:
+                    (
+                        correction_verification,
+                        correction_verification_journal_sha256,
+                        correction_verification_result_sha256,
+                    ) = relationship_verification.validate(
+                        correction_verification_dir,
+                        candidate_path=correction_dir / "verification-candidate.json",
+                        candidate_sha256=str(correction_candidate_sha256),
+                        purpose=purpose,
+                    )
+                except relationship_verification.VerificationError as error:
+                    return _blocked(
+                        "invalid relationship correction verification", str(error)
+                    )
+        verification_error = _apply_independent_verification(
+            projection, verification, corrections, correction_verification
+        )
+        if verification_error:
+            return verification_error
     projection_path = work / "projections" / "source-000003-v1.json"
     if projection_path.exists():
         return _blocked("unbound projection artifact", "projection version 1 already exists outside the ledger")
-    projection_bytes = (attempt_dir / "projection.json").read_bytes()
+    projection_bytes = json.dumps(projection, indent=2, sort_keys=True).encode("utf-8") + b"\n"
     projection_path.write_bytes(projection_bytes)
     gap_count = sum(item["status"] == "gap" for item in projection["elements"])
     gap_count += sum(item["status"] == "gap" for item in projection["relationships"])
@@ -761,6 +1180,29 @@ def _consume_first_projection(
                 entry["event"] == "answer_recorded" and entry["accepted"] is False
                 for entry in journal_entries
             ),
+            "verification_path": (
+                "projection-verifications/attempt-000001/interview.jsonl"
+                if verification is not None else None
+            ),
+            "verification_journal_sha256": verification_journal_sha256,
+            "verification_result_sha256": verification_result_sha256,
+            "correction_path": (
+                "relationship-corrections/attempt-000001/interview.jsonl"
+                if corrections is not None else None
+            ),
+            "correction_journal_sha256": correction_journal_sha256,
+            "correction_result_sha256": correction_result_sha256,
+            "correction_candidate_sha256": correction_candidate_sha256,
+            "correction_verification_path": (
+                "relationship-correction-verifications/attempt-000001/interview.jsonl"
+                if correction_verification is not None else None
+            ),
+            "correction_verification_journal_sha256": (
+                correction_verification_journal_sha256
+            ),
+            "correction_verification_result_sha256": (
+                correction_verification_result_sha256
+            ),
         },
         str(entries[-1]["entry_sha256"]),
     )
@@ -782,6 +1224,17 @@ def _consume_first_projection(
         "waiting_for": None,
         "projection_interview_sha256": journal_sha256,
         "projection_attempt_sha256": attempt_projection_sha256,
+        "relationship_verification_journal_sha256": verification_journal_sha256,
+        "relationship_verification_result_sha256": verification_result_sha256,
+        "relationship_correction_journal_sha256": correction_journal_sha256,
+        "relationship_correction_result_sha256": correction_result_sha256,
+        "relationship_correction_candidate_sha256": correction_candidate_sha256,
+        "relationship_correction_verification_journal_sha256": (
+            correction_verification_journal_sha256
+        ),
+        "relationship_correction_verification_result_sha256": (
+            correction_verification_result_sha256
+        ),
         "first_projection": projection_record,
         "ledger_entries": 10,
         "ledger_tail_sha256": tenth["entry_sha256"],
@@ -820,8 +1273,14 @@ def _validate_recorded_projection(
     state: dict[str, object],
     entries: list[dict[str, object]],
     purpose: str,
+    *,
+    allow_later_phase: bool = False,
 ) -> dict[str, object] | None:
-    if len(entries) != 10 or entries[8].get("event") != "model_projection_interview_completed":
+    if (
+        len(entries) < 10
+        or (not allow_later_phase and len(entries) != 10)
+        or entries[8].get("event") != "model_projection_interview_completed"
+    ):
         return _blocked("invalid ledger", "the completed first projection interview is missing")
     source = state["first_source"]
     assert isinstance(source, dict)
@@ -837,6 +1296,75 @@ def _validate_recorded_projection(
         )
     except projection_interview.InterviewError as error:
         return _blocked("invalid projection interview", str(error))
+    verification: dict[str, object] | None = None
+    verification_journal_sha256: str | None = None
+    verification_result_sha256: str | None = None
+    corrections: dict[str, object] | None = None
+    correction_journal_sha256: str | None = None
+    correction_result_sha256: str | None = None
+    correction_candidate_sha256: str | None = None
+    correction_verification: dict[str, object] | None = None
+    correction_verification_journal_sha256: str | None = None
+    correction_verification_result_sha256: str | None = None
+    if int(entries[7]["interview_contract"]) >= 7:
+        verification_dir = work / "projection-verifications" / "attempt-000001"
+        try:
+            verification, verification_journal_sha256, verification_result_sha256 = (
+                relationship_verification.validate(
+                    verification_dir,
+                    candidate_path=work / "projection-interviews" / "attempt-000001" / "projection.json",
+                    candidate_sha256=attempt_projection_sha256,
+                    purpose=purpose,
+                )
+            )
+        except relationship_verification.VerificationError as error:
+            return _blocked("invalid relationship verification", str(error))
+        rejected_count = sum(
+            verdict["verdict"] != "supported" for verdict in verification["verdicts"]
+        )
+        if rejected_count:
+            correction_dir = work / "relationship-corrections" / "attempt-000001"
+            try:
+                (
+                    corrections,
+                    correction_journal_sha256,
+                    correction_result_sha256,
+                    correction_candidate_sha256,
+                ) = relationship_correction.validate(
+                    correction_dir,
+                    candidate_path=work / "projection-interviews" / "attempt-000001" / "projection.json",
+                    candidate_sha256=attempt_projection_sha256,
+                    verification_path=verification_dir / "verification.json",
+                    verification_sha256=str(verification_result_sha256),
+                    purpose=purpose,
+                )
+            except relationship_correction.CorrectionError as error:
+                return _blocked("invalid relationship correction", str(error))
+            proposed_count = sum(
+                item["action"] == "propose_replacement_endpoint"
+                for item in corrections["corrections"]
+            )
+            if proposed_count:
+                try:
+                    (
+                        correction_verification,
+                        correction_verification_journal_sha256,
+                        correction_verification_result_sha256,
+                    ) = relationship_verification.validate(
+                        work / "relationship-correction-verifications" / "attempt-000001",
+                        candidate_path=correction_dir / "verification-candidate.json",
+                        candidate_sha256=str(correction_candidate_sha256),
+                        purpose=purpose,
+                    )
+                except relationship_verification.VerificationError as error:
+                    return _blocked(
+                        "invalid relationship correction verification", str(error)
+                    )
+        verification_error = _apply_independent_verification(
+            projection, verification, corrections, correction_verification
+        )
+        if verification_error:
+            return verification_error
     if (
         state.get("projection_interview_sha256") != journal_sha256
         or state.get("projection_attempt_sha256") != attempt_projection_sha256
@@ -855,13 +1383,44 @@ def _validate_recorded_projection(
             entry["event"] == "answer_recorded" and entry["accepted"] is False
             for entry in journal_entries
         )
+        or state.get("relationship_verification_journal_sha256") != verification_journal_sha256
+        or state.get("relationship_verification_result_sha256") != verification_result_sha256
+        or entries[8].get("verification_path") != (
+            "projection-verifications/attempt-000001/interview.jsonl"
+            if verification is not None else None
+        )
+        or entries[8].get("verification_journal_sha256") != verification_journal_sha256
+        or entries[8].get("verification_result_sha256") != verification_result_sha256
+        or state.get("relationship_correction_journal_sha256") != correction_journal_sha256
+        or state.get("relationship_correction_result_sha256") != correction_result_sha256
+        or state.get("relationship_correction_candidate_sha256") != correction_candidate_sha256
+        or state.get("relationship_correction_verification_journal_sha256")
+        != correction_verification_journal_sha256
+        or state.get("relationship_correction_verification_result_sha256")
+        != correction_verification_result_sha256
+        or entries[8].get("correction_path") != (
+            "relationship-corrections/attempt-000001/interview.jsonl"
+            if corrections is not None else None
+        )
+        or entries[8].get("correction_journal_sha256") != correction_journal_sha256
+        or entries[8].get("correction_result_sha256") != correction_result_sha256
+        or entries[8].get("correction_candidate_sha256") != correction_candidate_sha256
+        or entries[8].get("correction_verification_path") != (
+            "relationship-correction-verifications/attempt-000001/interview.jsonl"
+            if correction_verification is not None else None
+        )
+        or entries[8].get("correction_verification_journal_sha256")
+        != correction_verification_journal_sha256
+        or entries[8].get("correction_verification_result_sha256")
+        != correction_verification_result_sha256
     ):
         return _blocked("invalid ledger", "the completed projection interview does not match its artifacts")
-    if (
+    if entries[9].get("event") != "projection_version_created":
+        return _blocked("invalid ledger", "the projection interview has an invalid terminal state")
+    if not allow_later_phase and (
         state.get("phase") != "first_projection_recorded"
         or state.get("status") != "ready_for_projection_assessment"
         or state.get("waiting_for") is not None
-        or entries[9].get("event") != "projection_version_created"
     ):
         return _blocked("invalid ledger", "the projection interview has an invalid terminal state")
     projection_path = work / "projections" / "source-000003-v1.json"
@@ -869,7 +1428,11 @@ def _validate_recorded_projection(
         projection_bytes = projection_path.read_bytes()
     except OSError:
         return _blocked("immutable projection unavailable", str(projection_path))
-    canonical = (work / "projection-interviews" / "attempt-000001" / "projection.json").read_bytes()
+    canonical = (
+        json.dumps(projection, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+        if verification is not None else
+        (work / "projection-interviews" / "attempt-000001" / "projection.json").read_bytes()
+    )
     if projection_bytes != canonical:
         return _blocked("immutable projection changed", "projection version 1 no longer matches its accepted model result")
     gap_count = sum(item["status"] == "gap" for item in projection["elements"])
@@ -957,18 +1520,1176 @@ def run_first_projection_interview(
     return drive(work, opening, purpose)
 
 
+def run_first_projection_verification(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources" / "source-000001.txt").read_text(encoding="utf-8")
+        purpose = (work / "sources" / "source-000002.txt").read_text(encoding="utf-8")
+        candidate_path = work / "projection-interviews" / "attempt-000001" / "projection.json"
+        candidate_bytes = candidate_path.read_bytes()
+    except OSError as error:
+        return _blocked("verification context unavailable", str(error))
+    current = drive(work, opening, purpose)
+    if current.get("status") == "ready_for_projection_assessment":
+        return current
+    if current.get("status") != "waiting_for_model" or current.get("stopped") != "verifying_first_projection":
+        return _blocked("relationship verification unavailable", json.dumps(current, sort_keys=True))
+    try:
+        relationship_verification.run(
+            work / "projection-verifications" / "attempt-000001",
+            candidate_path=candidate_path,
+            candidate_sha256=_digest_bytes(candidate_bytes),
+            purpose=purpose,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+    except relationship_verification.VerificationError as error:
+        return _blocked("relationship verification failed", str(error))
+    return drive(work, opening, purpose)
+
+
+def run_relationship_correction(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources" / "source-000001.txt").read_text(encoding="utf-8")
+        purpose = (work / "sources" / "source-000002.txt").read_text(encoding="utf-8")
+        candidate_path = work / "projection-interviews" / "attempt-000001" / "projection.json"
+        candidate_bytes = candidate_path.read_bytes()
+        verification_path = work / "projection-verifications" / "attempt-000001" / "verification.json"
+        verification_bytes = verification_path.read_bytes()
+    except OSError as error:
+        return _blocked("correction context unavailable", str(error))
+    current = drive(work, opening, purpose)
+    if current.get("status") == "ready_for_projection_assessment":
+        return current
+    if current.get("status") != "waiting_for_model" or current.get("stopped") != "correcting_rejected_relationships":
+        return _blocked("relationship correction unavailable", json.dumps(current, sort_keys=True))
+    try:
+        relationship_correction.run(
+            work / "relationship-corrections" / "attempt-000001",
+            candidate_path=candidate_path,
+            candidate_sha256=_digest_bytes(candidate_bytes),
+            verification_path=verification_path,
+            verification_sha256=_digest_bytes(verification_bytes),
+            purpose=purpose,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+    except relationship_correction.CorrectionError as error:
+        return _blocked("relationship correction failed", str(error))
+    return drive(work, opening, purpose)
+
+
+def run_relationship_correction_verification(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources" / "source-000001.txt").read_text(encoding="utf-8")
+        purpose = (work / "sources" / "source-000002.txt").read_text(encoding="utf-8")
+        candidate_path = work / "relationship-corrections" / "attempt-000001" / "verification-candidate.json"
+        candidate_bytes = candidate_path.read_bytes()
+    except OSError as error:
+        return _blocked("correction verification context unavailable", str(error))
+    current = drive(work, opening, purpose)
+    if current.get("status") == "ready_for_projection_assessment":
+        return current
+    if current.get("status") != "waiting_for_model" or current.get("stopped") != "verifying_relationship_corrections":
+        return _blocked(
+            "relationship correction verification unavailable",
+            json.dumps(current, sort_keys=True),
+        )
+    try:
+        relationship_verification.run(
+            work / "relationship-correction-verifications" / "attempt-000001",
+            candidate_path=candidate_path,
+            candidate_sha256=_digest_bytes(candidate_bytes),
+            purpose=purpose,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+    except relationship_verification.VerificationError as error:
+        return _blocked("relationship correction verification failed", str(error))
+    return drive(work, opening, purpose)
+
+
+def _projection_for_gap(
+    work: Path, state: dict[str, object]
+) -> tuple[Path | None, str | None, dict[str, object] | None]:
+    record = state.get("first_projection")
+    if not isinstance(record, dict):
+        return None, None, _blocked("gap clarification unavailable", "the first projection record is missing")
+    path_value = record.get("path")
+    expected_sha256 = record.get("sha256")
+    if not isinstance(path_value, str) or not isinstance(expected_sha256, str):
+        return None, None, _blocked("gap clarification unavailable", "the first projection identity is incomplete")
+    path = work / path_value
+    try:
+        content = path.read_bytes()
+    except OSError:
+        return None, None, _blocked("gap clarification unavailable", "the first projection is unavailable")
+    if _digest_bytes(content) != expected_sha256:
+        return None, None, _blocked("immutable projection changed", "the first projection no longer matches its record")
+    return path, expected_sha256, None
+
+
+def _request_gap_clarification(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object]:
+    projection_path, projection_sha256, projection_error = _projection_for_gap(work, state)
+    if projection_error:
+        return projection_error
+    assert projection_path is not None and projection_sha256 is not None
+    try:
+        projection = json.loads(projection_path.read_text(encoding="utf-8"))
+        gap = gap_clarification.select_gap(projection, projection_sha256)
+    except (OSError, json.JSONDecodeError, gap_clarification.ClarificationError) as error:
+        return _blocked("gap clarification unavailable", str(error))
+    attempt_dir = work / "gap-clarifications" / "attempt-000001"
+    if attempt_dir.exists():
+        return _blocked("unbound gap clarification", "gap clarification artifacts already exist")
+    eleventh = _ledger_entry(
+        11,
+        "model_gap_clarification_requested",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "attempt": 1,
+            "contract": gap_clarification.CONTRACT,
+            "projection_path": str(state["first_projection"]["path"]),
+            "projection_sha256": projection_sha256,
+            "interview_path": "gap-clarifications/attempt-000001/interview.jsonl",
+            "result_path": "gap-clarifications/attempt-000001/clarification.json",
+            "gap": gap,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [eleventh])
+    state.update({
+        "status": "waiting_for_model",
+        "phase": "formulating_gap_question",
+        "waiting_for": "gap-clarifications/attempt-000001/interview.jsonl",
+        "question": None,
+        "gap_clarification": {
+            "attempt": 1,
+            "projection_sha256": projection_sha256,
+            "gap": gap,
+        },
+        "ledger_entries": 11,
+        "ledger_tail_sha256": eleventh["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _gap_clarification_model_result(state, work)
+
+
+def _validate_gap_request(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> tuple[Path | None, str | None, dict[str, object] | None]:
+    if len(entries) < 11 or entries[10].get("event") != "model_gap_clarification_requested":
+        return None, None, _blocked("invalid ledger", "the gap clarification request is missing")
+    projection_path, projection_sha256, projection_error = _projection_for_gap(work, state)
+    if projection_error:
+        return None, None, projection_error
+    assert projection_path is not None and projection_sha256 is not None
+    try:
+        projection = json.loads(projection_path.read_text(encoding="utf-8"))
+        gap = gap_clarification.select_gap(projection, projection_sha256)
+    except (OSError, json.JSONDecodeError, gap_clarification.ClarificationError) as error:
+        return None, None, _blocked("invalid gap clarification", str(error))
+    expected = {
+        "attempt": 1,
+        "contract": gap_clarification.CONTRACT,
+        "projection_path": str(state["first_projection"]["path"]),
+        "projection_sha256": projection_sha256,
+        "interview_path": "gap-clarifications/attempt-000001/interview.jsonl",
+        "result_path": "gap-clarifications/attempt-000001/clarification.json",
+        "gap": gap,
+    }
+    saved = state.get("gap_clarification")
+    if (
+        any(entries[10].get(key) != value for key, value in expected.items())
+        or not isinstance(saved, dict)
+        or saved.get("attempt") != 1
+        or saved.get("projection_sha256") != projection_sha256
+        or saved.get("gap") != gap
+    ):
+        return None, None, _blocked("invalid ledger", "the gap clarification request changed")
+    return projection_path, projection_sha256, None
+
+
+def _consume_gap_clarification(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object]:
+    projection_path, projection_sha256, request_error = _validate_gap_request(work, state, entries)
+    if request_error:
+        return request_error
+    assert projection_path is not None and projection_sha256 is not None
+    attempt_dir = work / "gap-clarifications" / "attempt-000001"
+    try:
+        result, journal_sha256, result_sha256 = gap_clarification.validate(
+            attempt_dir,
+            projection_path=projection_path,
+            projection_sha256=projection_sha256,
+            purpose=purpose,
+        )
+        journal_entries = gap_clarification._read_journal(attempt_dir / "interview.jsonl")
+    except gap_clarification.ClarificationError as error:
+        return _blocked("invalid gap clarification", str(error))
+    question = result["question"]
+    timestamp = datetime.now(timezone.utc).isoformat()
+    twelfth = _ledger_entry(
+        12,
+        "model_gap_clarification_completed",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "attempt": 1,
+            "interview_path": "gap-clarifications/attempt-000001/interview.jsonl",
+            "interview_sha256": journal_sha256,
+            "result_path": "gap-clarifications/attempt-000001/clarification.json",
+            "result_sha256": result_sha256,
+            "question_count": sum(item["event"] == "question_asked" for item in journal_entries),
+            "answer_count": sum(item["event"] == "answer_recorded" for item in journal_entries),
+            "rejected_answer_count": sum(
+                item["event"] == "answer_recorded" and item["accepted"] is False
+                for item in journal_entries
+            ),
+            "questioner": result["questioner"],
+            "gap": result["gap"],
+            "question": question,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    thirteenth = _ledger_entry(
+        13,
+        "operator_question_asked",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "question": question,
+        },
+        str(twelfth["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [twelfth, thirteenth])
+    state["gap_clarification"].update({
+        "interview_sha256": journal_sha256,
+        "result_sha256": result_sha256,
+        "questioner": result["questioner"],
+    })
+    state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_gap_answer",
+        "waiting_for": question["id"],
+        "question": question,
+        "ledger_entries": 13,
+        "ledger_tail_sha256": thirteenth["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _operator_result(state, work)
+
+
+def _validate_gap_question(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    if len(entries) < 13:
+        return None, _blocked("invalid ledger", "the operator gap question is incomplete")
+    projection_path, projection_sha256, request_error = _validate_gap_request(work, state, entries)
+    if request_error:
+        return None, request_error
+    assert projection_path is not None and projection_sha256 is not None
+    attempt_dir = work / "gap-clarifications" / "attempt-000001"
+    try:
+        result, journal_sha256, result_sha256 = gap_clarification.validate(
+            attempt_dir,
+            projection_path=projection_path,
+            projection_sha256=projection_sha256,
+            purpose=purpose,
+        )
+        journal_entries = gap_clarification._read_journal(attempt_dir / "interview.jsonl")
+    except gap_clarification.ClarificationError as error:
+        return None, _blocked("invalid gap clarification", str(error))
+    expected_completed = {
+        "attempt": 1,
+        "interview_path": "gap-clarifications/attempt-000001/interview.jsonl",
+        "interview_sha256": journal_sha256,
+        "result_path": "gap-clarifications/attempt-000001/clarification.json",
+        "result_sha256": result_sha256,
+        "question_count": sum(item["event"] == "question_asked" for item in journal_entries),
+        "answer_count": sum(item["event"] == "answer_recorded" for item in journal_entries),
+        "rejected_answer_count": sum(
+            item["event"] == "answer_recorded" and item["accepted"] is False
+            for item in journal_entries
+        ),
+        "questioner": result["questioner"],
+        "gap": result["gap"],
+        "question": result["question"],
+    }
+    saved = state.get("gap_clarification")
+    if (
+        entries[11].get("event") != "model_gap_clarification_completed"
+        or any(entries[11].get(key) != value for key, value in expected_completed.items())
+        or entries[12].get("event") != "operator_question_asked"
+        or entries[12].get("question") != result["question"]
+        or not isinstance(saved, dict)
+        or saved.get("interview_sha256") != journal_sha256
+        or saved.get("result_sha256") != result_sha256
+        or saved.get("questioner") != result["questioner"]
+    ):
+        return None, _blocked("invalid ledger", "the operator gap question changed")
+    if state.get("phase") == "awaiting_gap_answer" and (
+        state.get("status") != "needs_operator"
+        or state.get("waiting_for") != result["question"]["id"]
+        or state.get("question") != result["question"]
+    ):
+        return None, _blocked("invalid intake state", "the machinery is not waiting on its preserved gap question")
+    if state.get("phase") not in {
+        "awaiting_gap_answer",
+        "gap_operator_source_recorded",
+        "resolving_gap_answer",
+        "verifying_gap_resolution",
+        "gap_resolution_not_applied",
+        "gap_resolution_applied",
+        "gap_resolution_rejected",
+    }:
+        return None, _blocked("invalid intake state", "the preserved gap question has an unsupported phase")
+    return result, None
+
+
+def _accept_gap_answer(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    result: dict[str, object],
+    answer: str,
+) -> dict[str, object]:
+    if not answer.strip():
+        return _blocked("gap answer required", "answer the operator clarification with non-whitespace text")
+    source_path = work / "sources" / "source-000004.txt"
+    projection_path = work / "projections" / "source-000004-v1.txt"
+    if source_path.exists() or projection_path.exists():
+        return _blocked("unbound gap answer artifacts", "gap answer artifacts already exist outside the ledger")
+    answer_bytes = answer.encode("utf-8")
+    answer_sha256 = _digest_bytes(answer_bytes)
+    question = result["question"]
+    gap = result["gap"]
+    source_record = _gap_answer_source_record(answer_sha256, question["id"], gap)
+    projection_record = _gap_answer_projection_record(answer_sha256)
+    source_path.write_bytes(answer_bytes)
+    projection_path.write_bytes(answer_bytes)
+    fourteenth = _ledger_entry(
+        14,
+        "source_projected",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "answers_question": question["id"],
+            "answers_gap": source_record["answers_gap"],
+            "source": source_record,
+            "projection": projection_record,
+            "lineage": {
+                "question_ledger_sequence": 13,
+                "original_source_id": "source-000003",
+                "original_projection_id": state["first_projection"]["id"],
+            },
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [fourteenth])
+    state.update({
+        "status": "ready_for_projection_assessment",
+        "phase": "gap_operator_source_recorded",
+        "waiting_for": None,
+        "question": None,
+        "gap_operator_source": source_record,
+        "gap_operator_projection": projection_record,
+        "ledger_entries": 14,
+        "ledger_tail_sha256": fourteenth["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _gap_source_ready_result(state, work)
+
+
+def _validate_gap_source(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    result: dict[str, object],
+) -> dict[str, object] | None:
+    if len(entries) < 14 or entries[13].get("event") != "source_projected":
+        return _blocked("invalid ledger", "the operator gap answer source is missing")
+    source = state.get("gap_operator_source")
+    projection = state.get("gap_operator_projection")
+    if not isinstance(source, dict) or not isinstance(projection, dict):
+        return _blocked("invalid intake state", "the operator gap source records are missing")
+    try:
+        source_bytes = (work / "sources" / "source-000004.txt").read_bytes()
+        projection_bytes = (work / "projections" / "source-000004-v1.txt").read_bytes()
+    except OSError:
+        return _blocked("immutable gap answer unavailable", "the operator gap answer artifacts are missing")
+    sha256 = _digest_bytes(source_bytes)
+    expected_source = _gap_answer_source_record(sha256, result["question"]["id"], result["gap"])
+    expected_projection = _gap_answer_projection_record(sha256)
+    expected_lineage = {
+        "question_ledger_sequence": 13,
+        "original_source_id": "source-000003",
+        "original_projection_id": state["first_projection"]["id"],
+    }
+    if (
+        not source_bytes
+        or not source_bytes.strip()
+        or projection_bytes != source_bytes
+        or source != expected_source
+        or projection != expected_projection
+        or entries[13].get("answers_question") != result["question"]["id"]
+        or entries[13].get("answers_gap") != expected_source["answers_gap"]
+        or entries[13].get("source") != expected_source
+        or entries[13].get("projection") != expected_projection
+        or entries[13].get("lineage") != expected_lineage
+    ):
+        return _blocked("immutable gap answer changed", "the operator gap answer no longer matches its ledger")
+    if state.get("question") is not None:
+        return _blocked("immutable gap answer changed", "the operator gap answer no longer matches its ledger")
+    if state.get("phase") == "gap_operator_source_recorded" and state.get(
+        "status"
+    ) != "ready_for_projection_assessment":
+        return _blocked("invalid intake state", "the recorded gap answer has an invalid status")
+    return None
+
+
+def _gap_resolution_inputs(
+    work: Path, state: dict[str, object]
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    projection_path, projection_sha256, projection_error = _projection_for_gap(
+        work, state
+    )
+    if projection_error:
+        return None, projection_error
+    clarification = state.get("gap_clarification")
+    source = state.get("gap_operator_source")
+    projection = state.get("gap_operator_projection")
+    if not all(isinstance(item, dict) for item in (clarification, source, projection)):
+        return None, _blocked(
+            "gap resolution unavailable", "the bound clarification answer is incomplete"
+        )
+    assert projection_path is not None and projection_sha256 is not None
+    values = {
+        "projection_path": projection_path,
+        "projection_sha256": projection_sha256,
+        "clarification_path": work
+        / "gap-clarifications"
+        / "attempt-000001"
+        / "clarification.json",
+        "clarification_sha256": clarification.get("result_sha256"),
+        "answer_source_path": work / str(source.get("path")),
+        "answer_source_sha256": source.get("sha256"),
+        "answer_projection_path": work / str(projection.get("path")),
+        "answer_projection_sha256": projection.get("sha256"),
+    }
+    if not all(
+        isinstance(values[key], str)
+        for key in (
+            "clarification_sha256",
+            "answer_source_sha256",
+            "answer_projection_sha256",
+        )
+    ):
+        return None, _blocked(
+            "gap resolution unavailable", "the bound clarification hashes are incomplete"
+        )
+    return values, None
+
+
+def _request_gap_resolution(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object]:
+    inputs, error = _gap_resolution_inputs(work, state)
+    if error:
+        return error
+    assert inputs is not None
+    attempt_dir = work / "gap-resolutions" / "attempt-000001"
+    verification_dir = work / "gap-resolution-verifications" / "attempt-000001"
+    if attempt_dir.exists() or verification_dir.exists():
+        return _blocked(
+            "unbound gap resolution", "gap resolution artifacts already exist"
+        )
+    fifteenth = _ledger_entry(
+        15,
+        "model_gap_resolution_requested",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "attempt": 1,
+            "contract": gap_resolution.CONTRACT,
+            "projection_sha256": inputs["projection_sha256"],
+            "clarification_sha256": inputs["clarification_sha256"],
+            "operator_answer_source_sha256": inputs["answer_source_sha256"],
+            "operator_answer_projection_sha256": inputs[
+                "answer_projection_sha256"
+            ],
+            "interview_path": "gap-resolutions/attempt-000001/interview.jsonl",
+            "result_path": "gap-resolutions/attempt-000001/resolution.json",
+            "candidate_path": "gap-resolutions/attempt-000001/verification-candidate.json",
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [fifteenth])
+    state.update({
+        "status": "waiting_for_model",
+        "phase": "resolving_gap_answer",
+        "waiting_for": "gap-resolutions/attempt-000001/interview.jsonl",
+        "question": None,
+        "gap_resolution": {
+            "attempt": 1,
+            "contract": gap_resolution.CONTRACT,
+            "projection_sha256": inputs["projection_sha256"],
+            "clarification_sha256": inputs["clarification_sha256"],
+            "operator_answer_source_sha256": inputs["answer_source_sha256"],
+            "operator_answer_projection_sha256": inputs[
+                "answer_projection_sha256"
+            ],
+        },
+        "ledger_entries": 15,
+        "ledger_tail_sha256": fifteenth["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _gap_resolution_model_result(state, work)
+
+
+def _validated_gap_resolution(
+    work: Path, state: dict[str, object], purpose: str
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    inputs, error = _gap_resolution_inputs(work, state)
+    if error:
+        return None, error
+    assert inputs is not None
+    try:
+        result, journal_sha256, result_sha256, candidate_sha256 = (
+            gap_resolution.validate(
+                work / "gap-resolutions" / "attempt-000001",
+                **inputs,
+                purpose=purpose,
+            )
+        )
+    except gap_resolution.ResolutionError as resolution_error:
+        return None, _blocked("invalid gap resolution", str(resolution_error))
+    return {
+        "result": result,
+        "journal_sha256": journal_sha256,
+        "result_sha256": result_sha256,
+        "candidate_sha256": candidate_sha256,
+    }, None
+
+
+def _consume_gap_resolution(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object]:
+    validated, error = _validated_gap_resolution(work, state, purpose)
+    if error:
+        return error
+    assert validated is not None
+    result = validated["result"]
+    assert isinstance(result, dict)
+    journal_entries = gap_resolution._read_journal(
+        work / "gap-resolutions" / "attempt-000001" / "interview.jsonl"
+    )
+    timestamp = datetime.now(timezone.utc).isoformat()
+    sixteenth = _ledger_entry(
+        16,
+        "model_gap_resolution_completed",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "attempt": 1,
+            "interview_sha256": validated["journal_sha256"],
+            "result_sha256": validated["result_sha256"],
+            "candidate_sha256": validated["candidate_sha256"],
+            "question_count": sum(
+                item["event"] == "question_asked" for item in journal_entries
+            ),
+            "answer_count": sum(
+                item["event"] == "answer_recorded" for item in journal_entries
+            ),
+            "rejected_answer_count": sum(
+                item["event"] == "answer_recorded" and item["accepted"] is False
+                for item in journal_entries
+            ),
+            "result": result,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    state["gap_resolution"].update({
+        "interview_sha256": validated["journal_sha256"],
+        "result_sha256": validated["result_sha256"],
+        "candidate_sha256": validated["candidate_sha256"],
+        "gap_id": result["gap_id"],
+        "verdict": result["verdict"],
+        "reason": result["reason"],
+    })
+    if result["verdict"] == "does_not_resolve_gap":
+        seventeenth = _ledger_entry(
+            17,
+            "gap_resolution_not_applied",
+            {
+                "recorded_at": timestamp,
+                "intake_id": state["intake_id"],
+                "gap_id": result["gap_id"],
+                "reason": result["reason"],
+                "preserved_projection": state["first_projection"],
+            },
+            str(sixteenth["entry_sha256"]),
+        )
+        _append_ledger(work / "ledger.jsonl", [sixteenth, seventeenth])
+        state.update({
+            "status": "ready_for_projection_assessment",
+            "phase": "gap_resolution_not_applied",
+            "waiting_for": None,
+            "current_projection": state["first_projection"],
+            "ledger_entries": 17,
+            "ledger_tail_sha256": seventeenth["entry_sha256"],
+        })
+        _write_state(work / "intake-state.json", state)
+        return _gap_resolution_ready_result(state, work)
+    seventeenth = _ledger_entry(
+        17,
+        "model_gap_resolution_verification_requested",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "attempt": 1,
+            "contract": gap_resolution_verification.CONTRACT,
+            "candidate_sha256": validated["candidate_sha256"],
+            "resolution_sha256": validated["result_sha256"],
+            "interview_path": "gap-resolution-verifications/attempt-000001/interview.jsonl",
+            "result_path": "gap-resolution-verifications/attempt-000001/verification.json",
+        },
+        str(sixteenth["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [sixteenth, seventeenth])
+    state.update({
+        "status": "waiting_for_model",
+        "phase": "verifying_gap_resolution",
+        "waiting_for": "gap-resolution-verifications/attempt-000001/interview.jsonl",
+        "ledger_entries": 17,
+        "ledger_tail_sha256": seventeenth["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _gap_resolution_model_result(state, work, verification=True)
+
+
+def _validated_gap_resolution_verification(
+    work: Path, state: dict[str, object], purpose: str
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    resolution = state.get("gap_resolution")
+    clarification = state.get("gap_clarification")
+    answer_source = state.get("gap_operator_source")
+    if not all(
+        isinstance(item, dict)
+        for item in (resolution, clarification, answer_source)
+    ):
+        return None, _blocked(
+            "gap resolution verification unavailable",
+            "the proposed resolution inputs are incomplete",
+        )
+    assert isinstance(resolution, dict)
+    assert isinstance(clarification, dict)
+    assert isinstance(answer_source, dict)
+    try:
+        result, journal_sha256, result_sha256 = (
+            gap_resolution_verification.validate(
+                work / "gap-resolution-verifications" / "attempt-000001",
+                candidate_path=work
+                / "gap-resolutions"
+                / "attempt-000001"
+                / "verification-candidate.json",
+                candidate_sha256=str(resolution["candidate_sha256"]),
+                resolution_path=work
+                / "gap-resolutions"
+                / "attempt-000001"
+                / "resolution.json",
+                resolution_sha256=str(resolution["result_sha256"]),
+                clarification_path=work
+                / "gap-clarifications"
+                / "attempt-000001"
+                / "clarification.json",
+                clarification_sha256=str(clarification["result_sha256"]),
+                answer_path=work / str(answer_source["path"]),
+                answer_sha256=str(answer_source["sha256"]),
+                purpose=purpose,
+            )
+        )
+    except gap_resolution_verification.ResolutionVerificationError as verification_error:
+        return None, _blocked(
+            "invalid gap resolution verification", str(verification_error)
+        )
+    return {
+        "result": result,
+        "journal_sha256": journal_sha256,
+        "result_sha256": result_sha256,
+    }, None
+
+
+def _build_resolved_projection(
+    work: Path,
+    state: dict[str, object],
+    verification: dict[str, object],
+) -> tuple[bytes, dict[str, object]]:
+    first = state["first_projection"]
+    resolution = state["gap_resolution"]
+    assert isinstance(first, dict)
+    assert isinstance(resolution, dict)
+    original = json.loads((work / str(first["path"])).read_text(encoding="utf-8"))
+    candidate = json.loads(
+        (
+            work
+            / "gap-resolutions"
+            / "attempt-000001"
+            / "verification-candidate.json"
+        ).read_text(encoding="utf-8")
+    )
+    proposed = dict(candidate["relationships"][0])
+    gap_id = str(proposed["resolution_of"])
+    proposed["id"] = gap_id
+    proposed["resolution_audit"] = {
+        "parent_projection_sha256": first["sha256"],
+        "operator_answer_source_sha256": resolution[
+            "operator_answer_source_sha256"
+        ],
+        "resolution_result_sha256": resolution["result_sha256"],
+        "independent_verification_sha256": verification["result_sha256"],
+    }
+    replaced = False
+    relationships: list[object] = []
+    for relationship in original["relationships"]:
+        if relationship.get("id") == gap_id:
+            relationships.append(proposed)
+            replaced = True
+        else:
+            relationships.append(relationship)
+    if not replaced:
+        raise ValueError("the resolved relationship gap is not present in projection version 1")
+    original["relationships"] = relationships
+    existing_ids = {item["id"] for item in original["elements"]}
+    original["elements"].extend(
+        item for item in candidate["elements"] if item["id"] not in existing_ids
+    )
+    original["projection_lineage"] = {
+        "parent_projection_id": first["id"],
+        "parent_projection_sha256": first["sha256"],
+        "resolved_gap_id": gap_id,
+    }
+    content = json.dumps(original, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    gap_count = sum(item["status"] == "gap" for item in original["elements"])
+    gap_count += sum(
+        item["status"] == "gap" for item in original["relationships"]
+    )
+    gap_count += sum(
+        item["status"] == "gap" for item in original.get("scan_regions", [])
+    )
+    record = {
+        "id": "projection-source-000003-v2",
+        "source_id": "source-000003",
+        "version": 2,
+        "parent_projection_id": first["id"],
+        "path": "projections/source-000003-v2.json",
+        "sha256": _digest_bytes(content),
+        "element_count": len(original["elements"]),
+        "relationship_count": len(original["relationships"]),
+        "gap_count": gap_count,
+        "coverage": "unassessed",
+    }
+    return content, record
+
+
+def _consume_gap_resolution_verification(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object]:
+    verification, error = _validated_gap_resolution_verification(
+        work, state, purpose
+    )
+    if error:
+        return error
+    assert verification is not None
+    result = verification["result"]
+    assert isinstance(result, dict)
+    journal_entries = gap_resolution_verification._read_journal(
+        work
+        / "gap-resolution-verifications"
+        / "attempt-000001"
+        / "interview.jsonl"
+    )
+    timestamp = datetime.now(timezone.utc).isoformat()
+    eighteenth = _ledger_entry(
+        18,
+        "model_gap_resolution_verification_completed",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "attempt": 1,
+            "interview_sha256": verification["journal_sha256"],
+            "result_sha256": verification["result_sha256"],
+            "question_count": sum(
+                item["event"] == "question_asked" for item in journal_entries
+            ),
+            "answer_count": sum(
+                item["event"] == "answer_recorded" for item in journal_entries
+            ),
+            "rejected_answer_count": sum(
+                item["event"] == "answer_recorded" and item["accepted"] is False
+                for item in journal_entries
+            ),
+            "result": result,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    state["gap_resolution"].update({
+        "verification_interview_sha256": verification["journal_sha256"],
+        "verification_result_sha256": verification["result_sha256"],
+        "verification_verdict": result["verdict"],
+        "verification_reason": result["reason"],
+    })
+    if result["verdict"] == "supported":
+        try:
+            projection_bytes, projection_record = _build_resolved_projection(
+                work, state, verification
+            )
+        except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as build_error:
+            return _blocked("gap resolution projection invalid", str(build_error))
+        projection_path = work / str(projection_record["path"])
+        if projection_path.exists():
+            return _blocked(
+                "unbound projection version", "projection version 2 already exists"
+            )
+        projection_path.write_bytes(projection_bytes)
+        nineteenth = _ledger_entry(
+            19,
+            "projection_version_created",
+            {
+                "recorded_at": timestamp,
+                "intake_id": state["intake_id"],
+                "resolution_of_gap": state["gap_resolution"]["gap_id"],
+                "verification_result_sha256": verification["result_sha256"],
+                "projection": projection_record,
+            },
+            str(eighteenth["entry_sha256"]),
+        )
+        phase = "gap_resolution_applied"
+        current_projection = projection_record
+    else:
+        nineteenth = _ledger_entry(
+            19,
+            "gap_resolution_not_applied",
+            {
+                "recorded_at": timestamp,
+                "intake_id": state["intake_id"],
+                "gap_id": state["gap_clarification"]["gap"]["record_id"],
+                "reason": result["reason"],
+                "verification_verdict": result["verdict"],
+                "preserved_projection": state["first_projection"],
+            },
+            str(eighteenth["entry_sha256"]),
+        )
+        phase = "gap_resolution_rejected"
+        current_projection = state["first_projection"]
+    _append_ledger(work / "ledger.jsonl", [eighteenth, nineteenth])
+    state.update({
+        "status": "ready_for_projection_assessment",
+        "phase": phase,
+        "waiting_for": None,
+        "current_projection": current_projection,
+        "ledger_entries": 19,
+        "ledger_tail_sha256": nineteenth["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _gap_resolution_ready_result(state, work)
+
+
+def run_gap_resolution(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources" / "source-000001.txt").read_text(
+            encoding="utf-8"
+        )
+        purpose = (work / "sources" / "source-000002.txt").read_text(
+            encoding="utf-8"
+        )
+        state = json.loads(
+            (work / "intake-state.json").read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError) as context_error:
+        return _blocked("gap resolution context unavailable", str(context_error))
+    current = drive(work, opening, purpose)
+    if current.get("status") != "waiting_for_model" or current.get(
+        "stopped"
+    ) != "resolving_gap_answer":
+        return _blocked("gap resolution unavailable", json.dumps(current, sort_keys=True))
+    inputs, error = _gap_resolution_inputs(work, state)
+    if error:
+        return error
+    assert inputs is not None
+    try:
+        gap_resolution.run(
+            work / "gap-resolutions" / "attempt-000001",
+            **inputs,
+            purpose=purpose,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+    except gap_resolution.ResolutionError as resolution_error:
+        return _blocked("gap resolution failed", str(resolution_error))
+    return drive(work, opening, purpose)
+
+
+def run_gap_resolution_verification(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources" / "source-000001.txt").read_text(
+            encoding="utf-8"
+        )
+        purpose = (work / "sources" / "source-000002.txt").read_text(
+            encoding="utf-8"
+        )
+        state = json.loads(
+            (work / "intake-state.json").read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError) as context_error:
+        return _blocked(
+            "gap resolution verification context unavailable", str(context_error)
+        )
+    current = drive(work, opening, purpose)
+    if current.get("status") != "waiting_for_model" or current.get(
+        "stopped"
+    ) != "verifying_gap_resolution":
+        return _blocked(
+            "gap resolution verification unavailable",
+            json.dumps(current, sort_keys=True),
+        )
+    resolution = state["gap_resolution"]
+    clarification = state["gap_clarification"]
+    answer_source = state["gap_operator_source"]
+    try:
+        gap_resolution_verification.run(
+            work / "gap-resolution-verifications" / "attempt-000001",
+            candidate_path=work
+            / "gap-resolutions"
+            / "attempt-000001"
+            / "verification-candidate.json",
+            candidate_sha256=str(resolution["candidate_sha256"]),
+            resolution_path=work
+            / "gap-resolutions"
+            / "attempt-000001"
+            / "resolution.json",
+            resolution_sha256=str(resolution["result_sha256"]),
+            clarification_path=work
+            / "gap-clarifications"
+            / "attempt-000001"
+            / "clarification.json",
+            clarification_sha256=str(clarification["result_sha256"]),
+            answer_path=work / str(answer_source["path"]),
+            answer_sha256=str(answer_source["sha256"]),
+            purpose=purpose,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+    except gap_resolution_verification.ResolutionVerificationError as verification_error:
+        return _blocked("gap resolution verification failed", str(verification_error))
+    return drive(work, opening, purpose)
+
+
+def _validate_gap_resolution_terminal(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    resolution, error = _validated_gap_resolution(work, state, purpose)
+    if error:
+        return error
+    assert resolution is not None
+    result = resolution["result"]
+    saved = state.get("gap_resolution")
+    if (
+        not isinstance(result, dict)
+        or not isinstance(saved, dict)
+        or len(entries) < 17
+        or entries[14].get("event") != "model_gap_resolution_requested"
+        or entries[15].get("event") != "model_gap_resolution_completed"
+        or entries[15].get("interview_sha256") != resolution["journal_sha256"]
+        or entries[15].get("result_sha256") != resolution["result_sha256"]
+        or entries[15].get("candidate_sha256") != resolution["candidate_sha256"]
+        or saved.get("result_sha256") != resolution["result_sha256"]
+        or saved.get("candidate_sha256") != resolution["candidate_sha256"]
+        or saved.get("verdict") != result.get("verdict")
+    ):
+        return _blocked(
+            "invalid gap resolution ledger", "the preserved resolution result changed"
+        )
+    if result["verdict"] == "does_not_resolve_gap":
+        if (
+            len(entries) != 17
+            or entries[16].get("event") != "gap_resolution_not_applied"
+            or state.get("phase") != "gap_resolution_not_applied"
+            or state.get("current_projection") != state.get("first_projection")
+        ):
+            return _blocked(
+                "invalid gap resolution ledger",
+                "the non-resolving answer outcome changed",
+            )
+        return None
+    verification, verification_error = _validated_gap_resolution_verification(
+        work, state, purpose
+    )
+    if verification_error:
+        return verification_error
+    assert verification is not None
+    verification_result = verification["result"]
+    if (
+        not isinstance(verification_result, dict)
+        or len(entries) != 19
+        or entries[16].get("event")
+        != "model_gap_resolution_verification_requested"
+        or entries[17].get("event")
+        != "model_gap_resolution_verification_completed"
+        or entries[17].get("interview_sha256")
+        != verification["journal_sha256"]
+        or entries[17].get("result_sha256") != verification["result_sha256"]
+        or saved.get("verification_result_sha256")
+        != verification["result_sha256"]
+        or saved.get("verification_verdict")
+        != verification_result.get("verdict")
+    ):
+        return _blocked(
+            "invalid gap resolution ledger",
+            "the independent resolution verdict changed",
+        )
+    if verification_result["verdict"] == "supported":
+        if entries[18].get("event") != "projection_version_created":
+            return _blocked(
+                "invalid gap resolution ledger", "projection version 2 is not recorded"
+            )
+        try:
+            expected_bytes, expected_record = _build_resolved_projection(
+                work, state, verification
+            )
+            actual_bytes = (work / str(expected_record["path"])).read_bytes()
+        except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError) as build_error:
+            return _blocked("invalid projection version 2", str(build_error))
+        if (
+            actual_bytes != expected_bytes
+            or entries[18].get("projection") != expected_record
+            or state.get("phase") != "gap_resolution_applied"
+            or state.get("current_projection") != expected_record
+        ):
+            return _blocked(
+                "immutable projection changed",
+                "projection version 2 no longer matches its verified resolution",
+            )
+    elif (
+        entries[18].get("event") != "gap_resolution_not_applied"
+        or state.get("phase") != "gap_resolution_rejected"
+        or state.get("current_projection") != state.get("first_projection")
+    ):
+        return _blocked(
+            "invalid gap resolution ledger", "the rejected resolution outcome changed"
+        )
+    return None
+
+
+def run_gap_clarification(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources" / "source-000001.txt").read_text(encoding="utf-8")
+        purpose = (work / "sources" / "source-000002.txt").read_text(encoding="utf-8")
+        state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return _blocked("gap clarification context unavailable", str(error))
+    current = drive(work, opening, purpose)
+    if current.get("status") != "waiting_for_model" or current.get("stopped") != "formulating_gap_question":
+        return _blocked("gap clarification unavailable", json.dumps(current, sort_keys=True))
+    projection_path, projection_sha256, projection_error = _projection_for_gap(work, state)
+    if projection_error:
+        return projection_error
+    assert projection_path is not None and projection_sha256 is not None
+    try:
+        gap_clarification.run(
+            work / "gap-clarifications" / "attempt-000001",
+            projection_path=projection_path,
+            projection_sha256=projection_sha256,
+            purpose=purpose,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+    except gap_clarification.ClarificationError as error:
+        return _blocked("gap clarification failed", str(error))
+    return drive(work, opening, purpose)
+
+
 def _resume(
     work: Path,
     opening_bytes: bytes,
     purpose: str | None,
     source: Path | None,
     project_source: bool,
+    clarify_gap: bool,
+    gap_answer: str | None,
+    resolve_gap: bool,
 ) -> dict[str, object]:
     state, entries, error = _load_bound(work, opening_bytes)
     if error:
         return error
     assert state is not None
     phase = state.get("phase")
+    if (clarify_gap or gap_answer is not None) and phase not in {
+        "first_projection_recorded", "awaiting_gap_answer",
+    }:
+        return _blocked(
+            "gap clarification unavailable",
+            "gap clarification input is only accepted after the first projection or at its operator question",
+        )
+    if resolve_gap and phase != "gap_operator_source_recorded":
+        return _blocked(
+            "gap resolution unavailable",
+            "resolve the preserved answer only after it has been recorded as a source",
+        )
     if phase == "awaiting_intake_purpose":
         if (
             len(entries) != 2
@@ -1007,7 +2728,11 @@ def _resume(
     if phase not in {
         "awaiting_first_source", "clarifying_intake_purpose", "first_source_frozen",
         "interviewing_first_projection", "first_projection_recorded",
-    } or len(entries) not in {6, 7, 8, 10}:
+        "formulating_gap_question", "awaiting_gap_answer", "gap_operator_source_recorded",
+        "resolving_gap_answer", "verifying_gap_resolution",
+        "gap_resolution_not_applied", "gap_resolution_applied",
+        "gap_resolution_rejected",
+    } or len(entries) not in {6, 7, 8, 10, 11, 13, 14, 15, 17, 19}:
         return _blocked("invalid intake state", "the saved purpose stage is unsupported")
     result_path = work / "purpose-interview" / "assessment.json"
     try:
@@ -1128,12 +2853,80 @@ def _resume(
             return _projection_waiting_result(state, work)
         return _consume_first_projection(work, state, entries, purpose_bytes.decode("utf-8"))
 
+    later_phase = phase in {
+        "formulating_gap_question", "awaiting_gap_answer", "gap_operator_source_recorded",
+        "resolving_gap_answer", "verifying_gap_resolution",
+        "gap_resolution_not_applied", "gap_resolution_applied",
+        "gap_resolution_rejected",
+    }
     recorded_error = _validate_recorded_projection(
-        work, state, entries, purpose_bytes.decode("utf-8")
+        work,
+        state,
+        entries,
+        purpose_bytes.decode("utf-8"),
+        allow_later_phase=later_phase,
     )
     if recorded_error:
         return recorded_error
-    return _projection_ready_result(state, work)
+    if phase == "first_projection_recorded":
+        if gap_answer is not None:
+            return _blocked("gap answer not requested", "start one gap clarification before answering it")
+        if clarify_gap:
+            return _request_gap_clarification(work, state, entries)
+        return _projection_ready_result(state, work)
+    if phase == "formulating_gap_question":
+        result_path = work / "gap-clarifications" / "attempt-000001" / "clarification.json"
+        if not result_path.exists():
+            return _gap_clarification_model_result(state, work)
+        return _consume_gap_clarification(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+    clarification_result, clarification_error = _validate_gap_question(
+        work, state, entries, purpose_bytes.decode("utf-8")
+    )
+    if clarification_error:
+        return clarification_error
+    assert clarification_result is not None
+    if phase == "awaiting_gap_answer":
+        if gap_answer is None:
+            return _operator_result(state, work)
+        return _accept_gap_answer(
+            work, state, entries, clarification_result, gap_answer
+        )
+    source_error = _validate_gap_source(
+        work, state, entries, clarification_result
+    )
+    if source_error:
+        return source_error
+    if phase == "gap_operator_source_recorded":
+        if resolve_gap:
+            return _request_gap_resolution(work, state, entries)
+        return _gap_source_ready_result(state, work)
+    if phase == "resolving_gap_answer":
+        result_path = work / "gap-resolutions" / "attempt-000001" / "resolution.json"
+        if not result_path.exists():
+            return _gap_resolution_model_result(state, work)
+        return _consume_gap_resolution(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+    if phase == "verifying_gap_resolution":
+        result_path = (
+            work
+            / "gap-resolution-verifications"
+            / "attempt-000001"
+            / "verification.json"
+        )
+        if not result_path.exists():
+            return _gap_resolution_model_result(state, work, verification=True)
+        return _consume_gap_resolution_verification(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+    terminal_error = _validate_gap_resolution_terminal(
+        work, state, entries, purpose_bytes.decode("utf-8")
+    )
+    if terminal_error:
+        return terminal_error
+    return _gap_resolution_ready_result(state, work)
 
 
 def drive(
@@ -1142,14 +2935,33 @@ def drive(
     purpose: str | None = None,
     source: Path | None = None,
     project_source: bool = False,
+    clarify_gap: bool = False,
+    gap_answer: str | None = None,
+    resolve_gap: bool = False,
 ) -> dict[str, object]:
     opening_bytes = opening.encode("utf-8")
     if not opening.strip():
         return _blocked("opening required", "preserve the operator's opening words before starting")
     state_path = work / "intake-state.json"
     if state_path.exists():
-        return _resume(work, opening_bytes, purpose, source, project_source)
-    if purpose is not None or source is not None or project_source:
+        return _resume(
+            work,
+            opening_bytes,
+            purpose,
+            source,
+            project_source,
+            clarify_gap,
+            gap_answer,
+            resolve_gap,
+        )
+    if (
+        purpose is not None
+        or source is not None
+        or project_source
+        or clarify_gap
+        or gap_answer is not None
+        or resolve_gap
+    ):
         return _blocked("intake not started", "start the intake before supplying its purpose or source")
     if work.exists() and not work.is_dir():
         return _blocked("invalid work path", "the work path exists and is not a directory")
@@ -1228,15 +3040,77 @@ def main() -> int:
         help="answer the code-controlled projection questions for the frozen image",
     )
     parser.add_argument(
+        "--run-projection-verification",
+        action="store_true",
+        help="independently verify proposed visual relationships for the frozen image",
+    )
+    parser.add_argument(
+        "--run-relationship-correction",
+        action="store_true",
+        help="propose bounded corrections for independently rejected relationships",
+    )
+    parser.add_argument(
+        "--run-correction-verification",
+        action="store_true",
+        help="independently verify proposed relationship corrections",
+    )
+    parser.add_argument(
+        "--clarify-gap",
+        action="store_true",
+        help="request one operator clarification for the first unresolved projection gap",
+    )
+    parser.add_argument(
+        "--gap-answer",
+        help="the operator's exact answer to the current gap clarification",
+    )
+    parser.add_argument(
+        "--run-gap-clarification",
+        action="store_true",
+        help="formulate the code-bound operator question for one unresolved gap",
+    )
+    parser.add_argument(
+        "--resolve-gap",
+        action="store_true",
+        help="request assessment of the preserved answer against its exact gap",
+    )
+    parser.add_argument(
+        "--run-gap-resolution",
+        action="store_true",
+        help="run the code-controlled assessment of one preserved gap answer",
+    )
+    parser.add_argument(
+        "--run-gap-resolution-verification",
+        action="store_true",
+        help="independently verify one proposed gap resolution",
+    )
+    parser.add_argument(
         "--run-purpose-interview",
         action="store_true",
         help="answer the code-controlled purpose-assessment questions",
     )
     args = parser.parse_args()
-    if args.run_projection_interview and args.run_purpose_interview:
+    interview_flags = sum((
+        args.run_projection_interview,
+        args.run_projection_verification,
+        args.run_relationship_correction,
+        args.run_correction_verification,
+        args.run_gap_clarification,
+        args.run_gap_resolution,
+        args.run_gap_resolution_verification,
+        args.run_purpose_interview,
+    ))
+    if interview_flags and args.resolve_gap:
+        result = _blocked(
+            "interview invocation invalid",
+            "request or run one gap-resolution stage at a time",
+        )
+    elif interview_flags > 1:
         result = _blocked("interview invocation invalid", "run exactly one interview at a time")
     elif args.run_purpose_interview:
-        if any(value is not None for value in (args.opening, args.purpose, args.source)) or args.project_source:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            or args.project_source or args.clarify_gap
+        ):
             result = _blocked(
                 "interview invocation invalid",
                 "run the purpose interview with only --work and --run-purpose-interview",
@@ -1244,17 +3118,95 @@ def main() -> int:
         else:
             result = run_purpose_interview(args.work)
     elif args.run_projection_interview:
-        if any(value is not None for value in (args.opening, args.purpose, args.source)) or args.project_source:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            or args.project_source or args.clarify_gap
+        ):
             result = _blocked(
                 "interview invocation invalid",
                 "run the projection interview with only --work and --run-projection-interview",
             )
         else:
             result = run_first_projection_interview(args.work)
+    elif args.run_projection_verification:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            or args.project_source or args.clarify_gap
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run relationship verification with only --work and --run-projection-verification",
+            )
+        else:
+            result = run_first_projection_verification(args.work)
+    elif args.run_relationship_correction:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            or args.project_source or args.clarify_gap
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run relationship correction with only --work and --run-relationship-correction",
+            )
+        else:
+            result = run_relationship_correction(args.work)
+    elif args.run_correction_verification:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            or args.project_source or args.clarify_gap
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run correction verification with only --work and --run-correction-verification",
+            )
+        else:
+            result = run_relationship_correction_verification(args.work)
+    elif args.run_gap_clarification:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            or args.project_source or args.clarify_gap
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run gap clarification with only --work and --run-gap-clarification",
+            )
+        else:
+            result = run_gap_clarification(args.work)
+    elif args.run_gap_resolution:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            or args.project_source or args.clarify_gap or args.resolve_gap
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run gap resolution with only --work and --run-gap-resolution",
+            )
+        else:
+            result = run_gap_resolution(args.work)
+    elif args.run_gap_resolution_verification:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            or args.project_source or args.clarify_gap or args.resolve_gap
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run gap resolution verification with only --work and --run-gap-resolution-verification",
+            )
+        else:
+            result = run_gap_resolution_verification(args.work)
     elif args.opening is None:
         result = _blocked("opening required", "preserve the operator's opening words before starting")
     else:
-        result = drive(args.work, args.opening, args.purpose, args.source, args.project_source)
+        result = drive(
+            args.work,
+            args.opening,
+            args.purpose,
+            args.source,
+            args.project_source,
+            args.clarify_gap,
+            args.gap_answer,
+            args.resolve_gap,
+        )
     print(json.dumps(result, indent=2, sort_keys=True))
     return {
         "ready_for_projection": 0,

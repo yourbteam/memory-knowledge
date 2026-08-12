@@ -26,6 +26,15 @@ CODEX_RUNNER_SPEC = importlib.util.spec_from_file_location("run_projection_with_
 assert CODEX_RUNNER_SPEC and CODEX_RUNNER_SPEC.loader
 CODEX_RUNNER = importlib.util.module_from_spec(CODEX_RUNNER_SPEC)
 CODEX_RUNNER_SPEC.loader.exec_module(CODEX_RUNNER)
+CORRECTION_SCRIPT = (
+    ROOT / "skills" / "info-intake-machinery" / "scripts" / "relationship_correction.py"
+)
+CORRECTION_SPEC = importlib.util.spec_from_file_location(
+    "relationship_correction", CORRECTION_SCRIPT
+)
+assert CORRECTION_SPEC and CORRECTION_SPEC.loader
+RELATIONSHIP_CORRECTION = importlib.util.module_from_spec(CORRECTION_SPEC)
+CORRECTION_SPEC.loader.exec_module(RELATIONSHIP_CORRECTION)
 
 
 def test_empty_start_creates_one_resumable_intake_and_question(tmp_path: Path) -> None:
@@ -189,13 +198,15 @@ def _advance_to_frozen_image(work: Path, supplied: Path) -> dict[str, object]:
 
 
 def _projection_answers(
-    *, invalid_status_first: bool = False, contract: int = 4,
+    *, invalid_status_first: bool = False, contract: int = 6,
 ) -> list[str]:
     element_status = ["ok", "readable"] if invalid_status_first else ["readable"]
     relationship_status = ["ok", "readable"] if invalid_status_first else ["readable"]
     first_obligation = ["yes"] if contract >= 3 else []
-    second_obligation = ["yes"] if contract >= 3 else []
+    second_obligation = ["no"] if contract >= 6 else ["yes"] if contract >= 3 else []
     required_relationship = (
+        ["use_recorded_endpoint", "visually-connected-to", "10", "20", "120", "20"]
+        if contract >= 5 else
         ["use_recorded_endpoint", "visually-connected-to", "origin", "element-000002"]
         if contract >= 3 else
         ["yes", "visually-connected-to", "element-000001", "element-000002"]
@@ -211,9 +222,172 @@ def _projection_answers(
         "The target is obscured.", *second_obligation,
         *completed_element_scan,
         *required_relationship,
+        *(["supported"] if contract >= 6 else []),
         *relationship_status, "The first element connects to the second.",
         "no",
     ]
+
+
+def _verification_answers(
+    relationship_count: int, *, verdict: str = "supported",
+) -> list[str]:
+    return [
+        "independent-test-model", "pytest-fresh-reader",
+        *[
+            value
+            for _ in range(relationship_count)
+            for value in (verdict, "The frozen source visibly establishes this exact pair.")
+        ],
+    ]
+
+
+def _gap_correction_answers() -> list[str]:
+    return [
+        "fresh-corrector", "pytest-correction", "preserve_gap",
+        "No faithful visible endpoint can be recorded from this source.",
+    ]
+
+
+def _new_endpoint_correction_answers() -> list[str]:
+    return [
+        "fresh-corrector", "pytest-correction", "propose_replacement_endpoint", "target",
+        "record_visible_element", "correct visible metric", "300", "0", "400", "100",
+        "Correct metric", "350", "50", "The formula defines the correct visible metric.",
+    ]
+
+
+def _correction_fixture(tmp_path: Path) -> tuple[Path, str, Path, str, bytes, bytes]:
+    candidate = {
+        "schema_version": 7,
+        "source_sha256": "a" * 64,
+        "elements": [
+            {"id": "element-000001", "kind": "annotation", "region": [0, 0, 100, 100], "status": "readable", "content": "Formula", "gap_reason": ""},
+            {"id": "element-000002", "kind": "wrong metric", "region": [120, 0, 220, 100], "status": "readable", "content": "Wrong", "gap_reason": ""},
+            {"id": "element-000003", "kind": "correct metric", "region": [240, 0, 340, 100], "status": "readable", "content": "Correct", "gap_reason": ""},
+        ],
+        "relationships": [{
+            "id": "relationship-000001", "kind": "visible arrow", "from_id": "element-000001",
+            "to_id": "element-000002", "origin_point": [50, 50], "target_point": [150, 50],
+            "status": "readable", "description": "Formula defines wrong metric.", "gap_reason": "",
+        }],
+    }
+    candidate_path = tmp_path / "projection.json"
+    candidate_path.write_text(json.dumps(candidate, indent=2, sort_keys=True) + "\n")
+    candidate_before = candidate_path.read_bytes()
+    candidate_sha = RELATIONSHIP_CORRECTION._digest(candidate_before)
+    verification = {
+        "schema_version": 1,
+        "candidate_sha256": candidate_sha,
+        "reader": {"model": "fresh-verifier", "harness": "pytest"},
+        "verdicts": [{
+            "relationship_id": "relationship-000001", "verdict": "not_supported",
+            "reason": "The arrow terminates at the correct metric instead.",
+        }],
+    }
+    verification_path = tmp_path / "verification.json"
+    verification_path.write_text(json.dumps(verification, indent=2, sort_keys=True) + "\n")
+    verification_before = verification_path.read_bytes()
+    verification_sha = RELATIONSHIP_CORRECTION._digest(verification_before)
+    return (
+        candidate_path, candidate_sha, verification_path, verification_sha,
+        candidate_before, verification_before,
+    )
+
+
+def test_rejected_relationship_can_propose_a_bound_replacement_without_overwriting(
+    tmp_path: Path,
+) -> None:
+    candidate_path, candidate_sha, verification_path, verification_sha, candidate_before, verification_before = _correction_fixture(tmp_path)
+    answers = iter([
+        "fresh-corrector", "pytest-correction", "propose_replacement_endpoint", "target",
+        "use_recorded_element", "element-000003", "250", "50",
+        "Formula defines the correct metric.",
+    ])
+
+    result = RELATIONSHIP_CORRECTION.run(
+        tmp_path / "correction", candidate_path=candidate_path,
+        candidate_sha256=candidate_sha, verification_path=verification_path,
+        verification_sha256=verification_sha, purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers), output_fn=lambda _message: None,
+    )
+
+    assert candidate_path.read_bytes() == candidate_before
+    assert verification_path.read_bytes() == verification_before
+    correction = result["corrections"][0]
+    assert correction["original_relationship_id"] == "relationship-000001"
+    assert correction["corrected_relationship"]["to_id"] == "element-000003"
+    assert correction["corrected_relationship"]["binding_method"] == (
+        "correction_selected_identity_and_containment"
+    )
+    assert correction["replacement_element"] == {
+        "id": "element-000003", "created_by_correction": False,
+    }
+    verification_candidate = json.loads(
+        (tmp_path / "correction" / "verification-candidate.json").read_text()
+    )
+    assert [item["id"] for item in verification_candidate["relationships"]] == [
+        "relationship-000001-correction-000001"
+    ]
+    assert result["candidate_sha256"] == candidate_sha
+    assert result["verification_sha256"] == verification_sha
+
+
+def test_rejected_relationship_can_preserve_gap_and_rejected_choices_are_audited(
+    tmp_path: Path,
+) -> None:
+    candidate_path, candidate_sha, verification_path, verification_sha, _, _ = _correction_fixture(tmp_path)
+    answers = iter([
+        "fresh-corrector", "pytest-correction", "invent_endpoint", "preserve_gap",
+        "The source does not expose a faithful readable endpoint.",
+    ])
+    messages: list[str] = []
+
+    result = RELATIONSHIP_CORRECTION.run(
+        tmp_path / "correction", candidate_path=candidate_path,
+        candidate_sha256=candidate_sha, verification_path=verification_path,
+        verification_sha256=verification_sha, purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers), output_fn=messages.append,
+    )
+
+    assert result["corrections"] == [{
+        "original_relationship_id": "relationship-000001",
+        "action": "preserve_gap",
+        "gap_reason": "The source does not expose a faithful readable endpoint.",
+    }]
+    assert messages == [
+        "Invalid answer: correction_action: choose one of: propose_replacement_endpoint, preserve_gap."
+    ]
+    journal = [
+        json.loads(line)
+        for line in (tmp_path / "correction" / "interview.jsonl").read_text().splitlines()
+    ]
+    rejected = [entry for entry in journal if entry["event"] == "answer_recorded" and not entry["accepted"]]
+    assert [entry["raw"] for entry in rejected] == ["invent_endpoint"]
+
+
+def test_independent_verifier_skips_existing_relationship_gaps_without_losing_them(
+    tmp_path: Path,
+) -> None:
+    candidate = {
+        "elements": [],
+        "relationships": [{
+            "id": "relationship-gap", "status": "gap", "from_id": None, "to_id": None,
+            "gap_reason": "The visible endpoint cannot be bound uniquely.",
+        }],
+    }
+    candidate_path = tmp_path / "projection.json"
+    candidate_path.write_text(json.dumps(candidate, indent=2, sort_keys=True) + "\n")
+    candidate_sha = RELATIONSHIP_CORRECTION._digest(candidate_path.read_bytes())
+    answers = iter(["fresh-reader", "pytest"])
+    result = START_INTAKE.relationship_verification.run(
+        tmp_path / "verification", candidate_path=candidate_path,
+        candidate_sha256=candidate_sha, purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    assert result["verdicts"] == []
+    assert candidate_path.read_text().count("relationship-gap") == 1
 
 
 def test_codex_projection_runner_derives_immutable_attachment_and_delimits_prompt(
@@ -232,6 +406,8 @@ def test_codex_projection_runner_derives_immutable_attachment_and_delimits_promp
     assert argv[argv.index("--image") + 1] == str(attachment)
     assert argv[-2] == "--"
     assert command[0] in argv[-1]
+    assert "self-contained local controller" in argv[-1]
+    assert "do not invoke task intake" in argv[-1]
     assert "red rectangle" not in argv[-1]
     assert "arrow" not in argv[-1]
 
@@ -280,18 +456,16 @@ def test_projection_interview_enforces_choices_and_code_assembles_result(tmp_pat
     assert result["relationships"][0]["status"] == "readable"
     assert result["relationships"][0]["from_id"] == "element-000001"
     assert result["relationships"][0]["to_id"] == "element-000002"
-    assert result["relationship_obligations"] == [
-        {
-            "id": "obligation-000001", "element_id": "element-000001",
-            "status": "resolved", "resolution": "relationship",
-            "relationship_id": "relationship-000001",
-        },
-        {
-            "id": "obligation-000002", "element_id": "element-000002",
-            "status": "resolved", "resolution": "relationship",
-            "relationship_id": "relationship-000001",
-        },
-    ]
+    assert result["relationships"][0]["binding_method"] == "coordinate_unique_containment"
+    assert result["relationships"][0]["origin_point"] == [10, 20]
+    assert result["relationships"][0]["target_point"] == [120, 20]
+    assert result["relationships"][0]["visual_verification"] == "supported"
+    assert result["relationships"][0]["verified_obligation_id"] == "obligation-000001"
+    assert result["relationship_obligations"] == [{
+        "id": "obligation-000001", "element_id": "element-000001",
+        "status": "resolved", "resolution": "relationship",
+        "relationship_id": "relationship-000001",
+    }]
     assert len(result["scan_regions"]) == 16
     assert all(region["status"] == "scanned" for region in result["scan_regions"])
     assert result["scan_regions"][0]["element_ids"] == [
@@ -321,6 +495,14 @@ def test_projection_interview_enforces_choices_and_code_assembles_result(tmp_pat
         for prompt in prompts[2:]
     )
     assert journal[-1]["event"] == "interview_completed"
+    question_ids = {
+        entry["question"]["id"]
+        for entry in journal
+        if entry["event"] == "question_asked"
+    }
+    assert "obligation_other_element" not in question_ids
+    assert "relationship_from" not in question_ids
+    assert "relationship_to" not in question_ids
 
 
 def test_spatial_traversal_rejects_element_anchor_outside_active_region(
@@ -370,6 +552,281 @@ def test_spatial_traversal_preserves_explicit_region_gap(tmp_path: Path) -> None
         region["status"] == "scanned"
         for region in projection["scan_regions"][1:]
     )
+
+
+def test_coordinate_binding_preserves_unmatched_endpoint_as_relationship_gap(
+    tmp_path: Path,
+) -> None:
+    answers = iter([
+        "test-model", "pytest",
+        "yes", "annotation", "10", "10", "100", "100", "readable",
+        "Formula description", "yes",
+        "yes", "dashboard field", "120", "10", "220", "100", "readable",
+        "Conversion rate", "no",
+        "no", *(["no"] * 15),
+        "use_recorded_endpoint", "visible connector",
+        "10", "10", "500", "500",
+        "record_endpoint_gap", "No recorded element uniquely contains the visible target point.",
+        "no",
+    ])
+
+    projection = PROJECTION_INTERVIEW.run(
+        tmp_path / "attempt",
+        source_sha256="2" * 64,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    relationship = projection["relationships"][0]
+    assert relationship["status"] == "gap"
+    assert relationship["from_id"] == "element-000001"
+    assert relationship["to_id"] is None
+    assert relationship["origin_point"] == [10, 10]
+    assert relationship["target_point"] == [500, 500]
+    assert relationship["binding_issue"] == {
+        "participant": "target",
+        "point": [500, 500],
+        "matching_element_ids": [],
+        "reason": "no_unique_recorded_element",
+    }
+    assert projection["relationship_obligations"][0]["resolution"] == "gap"
+
+
+def test_coordinate_binding_preserves_ambiguous_endpoint_as_relationship_gap(
+    tmp_path: Path,
+) -> None:
+    answers = iter([
+        "test-model", "pytest",
+        "yes", "annotation", "10", "10", "150", "150", "readable",
+        "Formula description", "yes",
+        "yes", "dashboard field", "50", "50", "200", "200", "readable",
+        "Conversion rate", "no",
+        "no", *(["no"] * 15),
+        "use_recorded_endpoint", "visible connector",
+        "75", "75",
+        "record_endpoint_gap", "Two recorded elements overlap at the visible origin point.",
+        "no",
+    ])
+
+    projection = PROJECTION_INTERVIEW.run(
+        tmp_path / "attempt",
+        source_sha256="3" * 64,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    relationship = projection["relationships"][0]
+    assert relationship["status"] == "gap"
+    assert relationship["from_id"] is None
+    assert relationship["binding_issue"]["matching_element_ids"] == [
+        "element-000001", "element-000002",
+    ]
+    assert projection["relationship_obligations"][0]["resolution"] == "gap"
+
+
+def test_coordinate_binding_can_capture_a_missing_visible_endpoint(
+    tmp_path: Path,
+) -> None:
+    answers = iter([
+        "test-model", "pytest",
+        "yes", "annotation", "10", "10", "100", "100", "readable",
+        "Formula description", "yes",
+        "yes", "unrelated field", "120", "10", "220", "100", "readable",
+        "Unrelated value", "no",
+        "no", *(["no"] * 15),
+        "use_recorded_endpoint", "visible connector",
+        "10", "10", "500", "500",
+        "record_visible_endpoint",
+        "dashboard field", "500", "500", "600", "600", "readable",
+        "Conversion rate", "no",
+        "500", "500", "supported", "readable",
+        "The formula description applies to Conversion rate.",
+        "no",
+    ])
+
+    projection = PROJECTION_INTERVIEW.run(
+        tmp_path / "attempt",
+        source_sha256="4" * 64,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    assert len(projection["elements"]) == 3
+    assert projection["elements"][2]["capture_scope"] == "relationship_endpoint"
+    relationship = projection["relationships"][0]
+    assert relationship["from_id"] == "element-000001"
+    assert relationship["to_id"] == "element-000003"
+    assert relationship["origin_point"] == [10, 10]
+    assert relationship["target_point"] == [500, 500]
+    assert all(
+        obligation["status"] == "resolved"
+        for obligation in projection["relationship_obligations"]
+    )
+
+
+def test_visual_verdict_blocks_unsupported_pair_from_readable_projection(
+    tmp_path: Path,
+) -> None:
+    answers = iter([
+        "test-model", "pytest",
+        "yes", "annotation", "10", "10", "100", "100", "readable",
+        "Formula description", "yes",
+        "yes", "dashboard field", "120", "10", "220", "100", "readable",
+        "Unrelated value", "no",
+        "no", *(["no"] * 15),
+        "use_recorded_endpoint", "visible connector",
+        "10", "10", "120", "10",
+        "not_supported", "record_endpoint_gap",
+        "The visible connector does not join the proposed participants.",
+        "no",
+    ])
+
+    projection = PROJECTION_INTERVIEW.run(
+        tmp_path / "attempt",
+        source_sha256="7" * 64,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    relationship = projection["relationships"][0]
+    assert relationship["status"] == "gap"
+    assert relationship["description"] == ""
+    assert relationship["visual_verification"] == "not_supported"
+    assert relationship["verification_issue"]["reason"] == (
+        "visible_connection_not_supported"
+    )
+    assert projection["relationship_obligations"][0]["resolution"] == "gap"
+
+
+def test_visual_verdict_preserves_unreadable_connection_as_gap(
+    tmp_path: Path,
+) -> None:
+    answers = iter([
+        "test-model", "pytest",
+        "yes", "annotation", "10", "10", "100", "100", "readable",
+        "Formula description", "yes",
+        "yes", "dashboard field", "120", "10", "220", "100", "readable",
+        "Conversion rate", "no",
+        "no", *(["no"] * 15),
+        "use_recorded_endpoint", "visible connector",
+        "10", "10", "120", "10",
+        "unreadable", "The connector passes behind an opaque overlay.",
+        "no",
+    ])
+
+    projection = PROJECTION_INTERVIEW.run(
+        tmp_path / "attempt",
+        source_sha256="8" * 64,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    relationship = projection["relationships"][0]
+    assert relationship["status"] == "gap"
+    assert relationship["visual_verification"] == "unreadable"
+    assert relationship["gap_reason"] == (
+        "The connector passes behind an opaque overlay."
+    )
+
+
+def test_supported_pair_resolves_only_the_current_relationship_obligation(
+    tmp_path: Path,
+) -> None:
+    answers = iter([
+        "test-model", "pytest",
+        "yes", "annotation", "10", "10", "100", "100", "readable",
+        "Formula description", "yes",
+        "yes", "dashboard field", "120", "10", "220", "100", "readable",
+        "Conversion rate", "yes",
+        "no", *(["no"] * 15),
+        "use_recorded_endpoint", "visible connector",
+        "10", "10", "120", "10", "supported", "readable",
+        "The annotation applies to the field.",
+        "use_recorded_endpoint", "visible connector",
+        "120", "10", "10", "10", "supported", "readable",
+        "The field is explained by the annotation.",
+        "no",
+    ])
+
+    projection = PROJECTION_INTERVIEW.run(
+        tmp_path / "attempt",
+        source_sha256="9" * 64,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    assert [item["relationship_id"] for item in projection["relationship_obligations"]] == [
+        "relationship-000001", "relationship-000002",
+    ]
+    assert [item["verified_obligation_id"] for item in projection["relationships"]] == [
+        "obligation-000001", "obligation-000002",
+    ]
+
+
+def test_visual_verdict_is_code_constrained_to_three_values(tmp_path: Path) -> None:
+    answers = _projection_answers()
+    verdict_index = answers.index("supported")
+    answers.insert(verdict_index, "maybe")
+    messages: list[str] = []
+
+    PROJECTION_INTERVIEW.run(
+        tmp_path / "attempt",
+        source_sha256="a" * 64,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: answers.pop(0),
+        output_fn=messages.append,
+    )
+
+    assert messages == [
+        (
+            "Invalid answer: relationship_visual_verdict: choose one of: "
+            "supported, not_supported, unreadable."
+        )
+    ]
+
+
+def test_coordinate_binding_refuses_participants_that_omit_the_required_element(
+    tmp_path: Path,
+) -> None:
+    answers = iter([
+        "test-model", "pytest",
+        "yes", "annotation", "10", "10", "70", "70", "readable",
+        "Formula description", "yes",
+        "yes", "dashboard field", "80", "10", "140", "70", "readable",
+        "Correct target", "no",
+        "yes", "unrelated field", "150", "10", "220", "70", "readable",
+        "Unrelated value", "no",
+        "no", *(["no"] * 15),
+        "use_recorded_endpoint", "visible connector",
+        "80", "10", "150", "10",
+        "record_endpoint_gap", "The submitted pair omits the element whose relationship is required.",
+        "no",
+    ])
+
+    projection = PROJECTION_INTERVIEW.run(
+        tmp_path / "attempt",
+        source_sha256="6" * 64,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    relationship = projection["relationships"][0]
+    assert relationship["status"] == "gap"
+    assert relationship["binding_issue"] == {
+        "participant": "relationship",
+        "origin_id": "element-000002",
+        "target_id": "element-000003",
+        "required_element_id": "element-000001",
+        "reason": "required_element_not_bound",
+    }
+    assert projection["relationship_obligations"][0]["resolution"] == "gap"
 
 
 def test_relationship_obligation_routes_back_to_capture_visible_endpoint(
@@ -524,6 +981,83 @@ def test_projection_interview_contract_three_remains_replayable(tmp_path: Path) 
     assert created["schema_version"] == 3
     assert "relationship_obligations" in created
     assert "scan_regions" not in created
+
+
+def test_projection_interview_contract_four_remains_replayable(tmp_path: Path) -> None:
+    attempt = tmp_path / "contract-four-attempt"
+    answers = iter(_projection_answers(contract=4))
+
+    created = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256="5" * 64,
+        purpose=REAL_PURPOSE,
+        contract=4,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    replayed, _, _ = PROJECTION_INTERVIEW.validate(
+        attempt,
+        source_sha256="5" * 64,
+        purpose=REAL_PURPOSE,
+        contract=4,
+    )
+
+    assert replayed == created
+    assert created["schema_version"] == 4
+    assert "scan_regions" in created
+    assert "binding_method" not in created["relationships"][0]
+
+
+def test_projection_interview_contract_five_remains_replayable(tmp_path: Path) -> None:
+    attempt = tmp_path / "contract-five-attempt"
+    answers = iter(_projection_answers(contract=5))
+
+    created = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256="6" * 64,
+        purpose=REAL_PURPOSE,
+        contract=5,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    replayed, _, _ = PROJECTION_INTERVIEW.validate(
+        attempt,
+        source_sha256="6" * 64,
+        purpose=REAL_PURPOSE,
+        contract=5,
+    )
+
+    assert replayed == created
+    assert created["schema_version"] == 5
+    assert created["relationships"][0]["binding_method"] == (
+        "coordinate_unique_containment"
+    )
+    assert "visual_verification" not in created["relationships"][0]
+
+
+def test_projection_interview_contract_six_remains_replayable(tmp_path: Path) -> None:
+    attempt = tmp_path / "contract-six-attempt"
+    answers = iter(_projection_answers(contract=6))
+
+    created = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256="7" * 64,
+        purpose=REAL_PURPOSE,
+        contract=6,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    replayed, _, _ = PROJECTION_INTERVIEW.validate(
+        attempt,
+        source_sha256="7" * 64,
+        purpose=REAL_PURPOSE,
+        contract=6,
+    )
+
+    assert replayed == created
+    assert created["schema_version"] == 6
+    assert created["relationships"][0]["visual_verification"] == "supported"
+    assert "independent_visual_verification" not in created["relationships"][0]
 
 
 def test_real_purpose_advances_to_first_source_and_resumes_without_duplication(
@@ -855,9 +1389,16 @@ def test_valid_projection_attempt_creates_immutable_unassessed_version(tmp_path:
     START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
     answers = iter(_projection_answers())
 
-    accepted = START_INTAKE.run_first_projection_interview(
+    waiting = START_INTAKE.run_first_projection_interview(
         work,
         input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    assert waiting["stopped"] == "verifying_first_projection"
+    verification_answers = iter(_verification_answers(1))
+    accepted = START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verification_answers),
         output_fn=lambda _message: None,
     )
     before = {path.relative_to(work): path.read_bytes() for path in work.rglob("*") if path.is_file()}
@@ -896,9 +1437,16 @@ def test_projection_ledger_counts_spatial_traversal_gaps(tmp_path: Path) -> None
         "no",
     ])
 
-    accepted = START_INTAKE.run_first_projection_interview(
+    waiting = START_INTAKE.run_first_projection_interview(
         work,
         input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    assert waiting["stopped"] == "verifying_first_projection"
+    verification_answers = iter(_verification_answers(0))
+    accepted = START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verification_answers),
         output_fn=lambda _message: None,
     )
 
@@ -909,6 +1457,108 @@ def test_projection_ledger_counts_spatial_traversal_gaps(tmp_path: Path) -> None
     assert resumed == accepted
 
 
+def test_independent_reader_turns_unsupported_proposal_into_a_gap(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
+    producer_answers = iter(_projection_answers())
+    waiting = START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(producer_answers),
+        output_fn=lambda _message: None,
+    )
+    candidate_path = work / "projection-interviews" / "attempt-000001" / "projection.json"
+    candidate_before = candidate_path.read_bytes()
+
+    verifier_answers = iter(_verification_answers(1, verdict="not_supported"))
+    correcting = START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verifier_answers),
+        output_fn=lambda _message: None,
+    )
+    correction_answers = iter(_gap_correction_answers())
+    accepted = START_INTAKE.run_relationship_correction(
+        work,
+        input_fn=lambda _prompt: next(correction_answers),
+        output_fn=lambda _message: None,
+    )
+
+    assert waiting["stopped"] == "verifying_first_projection"
+    assert correcting["stopped"] == "correcting_rejected_relationships"
+    assert candidate_path.read_bytes() == candidate_before
+    candidate = json.loads(candidate_before)
+    projection = json.loads((work / accepted["projection"]["path"]).read_text())
+    assert candidate["relationships"][0]["status"] == "readable"
+    assert projection["relationships"][0]["status"] == "gap"
+    assert projection["relationships"][0]["description"] == ""
+    assert projection["relationships"][0]["independent_visual_verification"]["verdict"] == (
+        "not_supported"
+    )
+    assert projection["relationships"][0]["correction_outcome"]["action"] == "preserve_gap"
+    assert accepted["projection"]["gap_count"] == 2
+
+
+def test_supported_correction_replaces_final_endpoint_and_preserves_all_prior_artifacts(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
+    producer_answers = iter(_projection_answers())
+    START_INTAKE.run_first_projection_interview(
+        work, input_fn=lambda _prompt: next(producer_answers), output_fn=lambda _message: None,
+    )
+    candidate_path = work / "projection-interviews" / "attempt-000001" / "projection.json"
+    candidate_before = candidate_path.read_bytes()
+    verifier_answers = iter(_verification_answers(1, verdict="not_supported"))
+    correcting = START_INTAKE.run_first_projection_verification(
+        work, input_fn=lambda _prompt: next(verifier_answers), output_fn=lambda _message: None,
+    )
+    _, correction_command = CODEX_RUNNER.load_request(work)
+    original_verification_path = (
+        work / "projection-verifications" / "attempt-000001" / "verification.json"
+    )
+    original_verification_before = original_verification_path.read_bytes()
+    correction_answers = iter(_new_endpoint_correction_answers())
+
+    verifying = START_INTAKE.run_relationship_correction(
+        work, input_fn=lambda _prompt: next(correction_answers), output_fn=lambda _message: None,
+    )
+    _, correction_verification_command = CODEX_RUNNER.load_request(work)
+    correction_path = work / "relationship-corrections" / "attempt-000001" / "corrections.json"
+    correction_before = correction_path.read_bytes()
+    correction_verifier_answers = iter(_verification_answers(1))
+    accepted = START_INTAKE.run_relationship_correction_verification(
+        work,
+        input_fn=lambda _prompt: next(correction_verifier_answers),
+        output_fn=lambda _message: None,
+    )
+
+    assert correcting["stopped"] == "correcting_rejected_relationships"
+    assert correction_command[-1] == "--run-relationship-correction"
+    assert verifying["stopped"] == "verifying_relationship_corrections"
+    assert correction_verification_command[-1] == "--run-correction-verification"
+    assert candidate_path.read_bytes() == candidate_before
+    assert original_verification_path.read_bytes() == original_verification_before
+    assert correction_path.read_bytes() == correction_before
+    projection = json.loads((work / accepted["projection"]["path"]).read_text())
+    relationship = projection["relationships"][0]
+    assert relationship["id"] == "relationship-000001"
+    assert relationship["to_id"] == "correction-element-000001"
+    assert relationship["status"] == "readable"
+    assert relationship["independent_visual_verification"]["verdict"] == "not_supported"
+    assert relationship["correction_outcome"]["independent_visual_verification"]["verdict"] == (
+        "supported"
+    )
+    assert accepted["projection"]["element_count"] == 3
+    assert accepted["projection"]["gap_count"] == 1
+    ledger = [json.loads(line) for line in (work / "ledger.jsonl").read_text().splitlines()]
+    assert ledger[-2]["correction_result_sha256"]
+    assert ledger[-2]["correction_verification_result_sha256"]
+
+
 def test_invalid_enum_answers_are_preserved_without_entering_projection(tmp_path: Path) -> None:
     work = tmp_path / "intake"
     _advance_to_frozen_image(work, tmp_path / "first.png")
@@ -916,9 +1566,16 @@ def test_invalid_enum_answers_are_preserved_without_entering_projection(tmp_path
     answers = iter(_projection_answers(invalid_status_first=True))
     messages: list[str] = []
 
-    accepted = START_INTAKE.run_first_projection_interview(
+    waiting = START_INTAKE.run_first_projection_interview(
         work,
         input_fn=lambda _prompt: next(answers),
+        output_fn=messages.append,
+    )
+    assert waiting["stopped"] == "verifying_first_projection"
+    verification_answers = iter(_verification_answers(1))
+    accepted = START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verification_answers),
         output_fn=messages.append,
     )
 
@@ -955,11 +1612,28 @@ def test_cli_runs_the_same_typed_projection_interview(tmp_path: Path) -> None:
         check=False,
     )
 
-    assert completed.returncode == 0
+    assert completed.returncode == 2
     result = json.loads(completed.stdout)
-    assert result["status"] == "ready_for_projection_assessment"
+    assert result["stopped"] == "verifying_first_projection"
+    verification_command = [
+        sys.executable,
+        str(SCRIPT),
+        "--work",
+        str(work),
+        "--run-projection-verification",
+    ]
+    verified = subprocess.run(
+        verification_command,
+        input="\n".join(_verification_answers(1)) + "\n",
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert verified.returncode == 0
+    verified_result = json.loads(verified.stdout)
+    assert verified_result["status"] == "ready_for_projection_assessment"
     assert "Allowed values: readable, gap" in completed.stderr
-    assert result["projection"]["coverage"] == "unassessed"
+    assert verified_result["projection"]["coverage"] == "unassessed"
 
 
 def test_changed_projection_version_fails_closed(tmp_path: Path) -> None:
@@ -967,9 +1641,16 @@ def test_changed_projection_version_fails_closed(tmp_path: Path) -> None:
     _advance_to_frozen_image(work, tmp_path / "first.png")
     START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
     answers = iter(_projection_answers())
-    accepted = START_INTAKE.run_first_projection_interview(
+    waiting = START_INTAKE.run_first_projection_interview(
         work,
         input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    assert waiting["stopped"] == "verifying_first_projection"
+    verification_answers = iter(_verification_answers(1))
+    accepted = START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verification_answers),
         output_fn=lambda _message: None,
     )
     (work / accepted["projection"]["path"]).write_text("{}")
@@ -995,3 +1676,326 @@ def test_visual_projection_adapter_fails_closed_for_other_media(tmp_path: Path) 
     assert result["status"] == "blocked"
     assert result["stopped"] == "projection adapter unavailable"
     assert (work / "ledger.jsonl").read_bytes() == before
+
+
+def test_one_gap_becomes_one_operator_answer_source_without_overwriting(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
+    producer_answers = iter(_projection_answers())
+    START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(producer_answers),
+        output_fn=lambda _message: None,
+    )
+    verification_answers = iter(_verification_answers(1))
+    recorded = START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verification_answers),
+        output_fn=lambda _message: None,
+    )
+    original_projection = work / recorded["projection"]["path"]
+    original_projection_before = original_projection.read_bytes()
+
+    requested = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, clarify_gap=True,
+    )
+    attachment, command = CODEX_RUNNER.load_request(work)
+    argv = CODEX_RUNNER.build_codex_argv(
+        "/usr/local/bin/codex", work, attachment, command,
+    )
+    messages: list[str] = []
+    question_answers = iter([
+        "fresh-questioner",
+        "pytest-gap-question",
+        "What is hidden? And where?",
+        "What exact information is hidden by the obscured target?",
+    ])
+    waiting = START_INTAKE.run_gap_clarification(
+        work,
+        input_fn=lambda _prompt: next(question_answers),
+        output_fn=messages.append,
+    )
+
+    assert requested["stopped"] == "formulating_gap_question"
+    assert command[-1] == "--run-gap-clarification"
+    assert argv[argv.index("--image") + 1] == str(work / "sources" / "source-000003")
+    assert "code-bound gap" in argv[-1]
+    assert waiting["status"] == "needs_operator"
+    assert waiting["question"]["answers_gap"]["collection"] == "elements"
+    assert waiting["question"]["answers_gap"]["id"] == "element-000002"
+    assert waiting["question"]["asks"] == (
+        "What exact information is hidden by the obscured target?"
+    )
+    assert messages == [
+        "Invalid answer: operator_question: provide exactly one focused question ending in ?."
+    ]
+
+    ledger_before_blank = (work / "ledger.jsonl").read_bytes()
+    blank = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, gap_answer="   ",
+    )
+    assert blank["status"] == "blocked"
+    assert blank["stopped"] == "gap answer required"
+    assert (work / "ledger.jsonl").read_bytes() == ledger_before_blank
+    assert not (work / "sources" / "source-000004.txt").exists()
+
+    exact_answer = "  The obscured target says 250 non-package.  "
+    accepted = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, gap_answer=exact_answer,
+    )
+    resumed = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+
+    assert accepted == resumed
+    assert accepted["stopped"] == "gap_operator_source_recorded"
+    assert original_projection.read_bytes() == original_projection_before
+    assert (work / accepted["operator_source"]["path"]).read_text() == exact_answer
+    assert (work / accepted["operator_projection"]["path"]).read_text() == exact_answer
+    assert accepted["operator_projection"]["coverage"]["status"] == "complete"
+    ledger = [json.loads(line) for line in (work / "ledger.jsonl").read_text().splitlines()]
+    assert [item["event"] for item in ledger[-4:]] == [
+        "model_gap_clarification_requested",
+        "model_gap_clarification_completed",
+        "operator_question_asked",
+        "source_projected",
+    ]
+    assert ledger[-1]["source"]["sha256"] == ledger[-1]["projection"]["sha256"]
+    assert ledger[-1]["lineage"]["original_projection_id"] == recorded["projection"]["id"]
+
+
+def test_changed_gap_answer_source_fails_closed_on_replay(tmp_path: Path) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
+    producer_answers = iter(_projection_answers())
+    START_INTAKE.run_first_projection_interview(
+        work, input_fn=lambda _prompt: next(producer_answers), output_fn=lambda _message: None,
+    )
+    verification_answers = iter(_verification_answers(1))
+    START_INTAKE.run_first_projection_verification(
+        work, input_fn=lambda _prompt: next(verification_answers), output_fn=lambda _message: None,
+    )
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, clarify_gap=True)
+    question_answers = iter([
+        "fresh-questioner", "pytest-gap-question", "What exact information is obscured?",
+    ])
+    START_INTAKE.run_gap_clarification(
+        work, input_fn=lambda _prompt: next(question_answers), output_fn=lambda _message: None,
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, gap_answer="The target says 250.",
+    )
+    (work / "sources" / "source-000004.txt").write_text("changed")
+
+    result = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+
+    assert result["status"] == "blocked"
+    assert result["stopped"] == "immutable gap answer changed"
+
+
+def _gap_resolution_fixture(tmp_path: Path) -> dict[str, object]:
+    relationship = {
+        "id": "relationship-000001",
+        "kind": "annotation_arrow",
+        "from_id": None,
+        "to_id": None,
+        "origin_point": [100, 100],
+        "target_point": [700, 100],
+        "status": "gap",
+        "description": "",
+        "gap_reason": "origin point matches more than one readable element",
+        "binding_issue": {
+            "participant": "origin",
+            "matching_element_ids": ["element-000001", "element-000002"],
+        },
+    }
+    projection = {
+        "schema_version": 1,
+        "source_sha256": "frozen-image",
+        "elements": [
+            {"id": "element-000001", "kind": "callout", "region": [0, 0, 300, 300], "status": "readable", "content": "specific callout"},
+            {"id": "element-000002", "kind": "section", "region": [0, 0, 500, 500], "status": "readable", "content": "whole section"},
+            {"id": "element-000003", "kind": "field", "region": [600, 0, 800, 200], "status": "readable", "content": "May 16 · ACH"},
+        ],
+        "relationships": [relationship],
+    }
+    projection_path = tmp_path / "projection.json"
+    projection_path.write_text(json.dumps(projection, indent=2, sort_keys=True) + "\n")
+    projection_sha256 = START_INTAKE._digest_bytes(projection_path.read_bytes())
+    record_sha256 = START_INTAKE._digest_bytes(
+        json.dumps(relationship, sort_keys=True, separators=(",", ":")).encode()
+    )
+    gap = {
+        "projection_sha256": projection_sha256,
+        "collection": "relationships",
+        "kind": "relationship_binding_gap",
+        "id": relationship["id"],
+        "record_id": relationship["id"],
+        "record_sha256": record_sha256,
+        "record": relationship,
+    }
+    clarification = {
+        "schema_version": 1,
+        "gap": gap,
+        "question": {
+            "id": "gap-question-000001",
+            "asks": "Does the answer point to the callout or the whole section?",
+            "answers_gap": {
+                key: gap[key]
+                for key in ("projection_sha256", "collection", "kind", "id", "record_sha256")
+            },
+        },
+    }
+    clarification_path = tmp_path / "clarification.json"
+    clarification_path.write_text(json.dumps(clarification, indent=2, sort_keys=True) + "\n")
+    answer_path = tmp_path / "answer.txt"
+    answer_path.write_text("the answer points to the specific element, not the whole section")
+    answer_projection_path = tmp_path / "answer-projection.txt"
+    answer_projection_path.write_bytes(answer_path.read_bytes())
+    return {
+        "projection_path": projection_path,
+        "projection_sha256": projection_sha256,
+        "clarification_path": clarification_path,
+        "clarification_sha256": START_INTAKE._digest_bytes(clarification_path.read_bytes()),
+        "answer_source_path": answer_path,
+        "answer_source_sha256": START_INTAKE._digest_bytes(answer_path.read_bytes()),
+        "answer_projection_path": answer_projection_path,
+        "answer_projection_sha256": START_INTAKE._digest_bytes(answer_projection_path.read_bytes()),
+    }
+
+
+def test_gap_resolution_enforces_choices_and_endpoint_containment(tmp_path: Path) -> None:
+    inputs = _gap_resolution_fixture(tmp_path)
+    attempt = tmp_path / "resolution"
+    answers = iter([
+        "fresh-resolver", "pytest-resolution", "maybe", "resolves_gap",
+        "The answer selects the specific callout.", "element-000001",
+        "use_recorded_element", "element-000003", "700", "300", "100",
+        "The callout arrow identifies May 16 · ACH.",
+    ])
+    messages: list[str] = []
+
+    result = START_INTAKE.gap_resolution.run(
+        attempt,
+        **inputs,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=messages.append,
+    )
+    candidate = json.loads((attempt / "verification-candidate.json").read_text())
+    journal = [json.loads(line) for line in (attempt / "interview.jsonl").read_text().splitlines()]
+
+    assert result["verdict"] == "resolves_gap"
+    assert candidate["relationships"][0]["from_id"] == "element-000001"
+    assert candidate["relationships"][0]["to_id"] == "element-000003"
+    assert candidate["relationships"][0]["target_point"] == [700, 100]
+    assert sum(item["event"] == "answer_recorded" and not item["accepted"] for item in journal) == 2
+    assert "choose one of" in messages[0]
+    assert "falls outside selected bounds" in messages[1]
+
+
+def test_non_resolving_answer_produces_no_admissible_relationship(
+    tmp_path: Path,
+) -> None:
+    inputs = _gap_resolution_fixture(tmp_path)
+    attempt = tmp_path / "resolution"
+    answers = iter([
+        "fresh-resolver",
+        "pytest-resolution",
+        "does_not_resolve_gap",
+        "The answer does not select either recorded candidate.",
+    ])
+
+    result = START_INTAKE.gap_resolution.run(
+        attempt,
+        **inputs,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    candidate = json.loads((attempt / "verification-candidate.json").read_text())
+
+    assert result["verdict"] == "does_not_resolve_gap"
+    assert candidate["relationships"] == []
+    assert candidate["elements"] == json.loads(inputs["projection_path"].read_text())["elements"]
+
+
+def test_independent_gap_resolution_verdict_controls_admission(tmp_path: Path) -> None:
+    inputs = _gap_resolution_fixture(tmp_path)
+    attempt = tmp_path / "resolution"
+    answers = iter([
+        "fresh-resolver", "pytest-resolution", "resolves_gap",
+        "The answer selects the specific callout.", "element-000001",
+        "use_recorded_element", "element-000003", "700", "100",
+        "The callout arrow identifies May 16 · ACH.",
+    ])
+    START_INTAKE.gap_resolution.run(
+        attempt,
+        **inputs,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    verification_answers = iter([
+        "fresh-verifier", "pytest-verification", "supported",
+        "The answer selects the nested callout and both arrow endpoints are visible.",
+    ])
+    verification = START_INTAKE.gap_resolution_verification.run(
+        tmp_path / "verification",
+        candidate_path=attempt / "verification-candidate.json",
+        candidate_sha256=START_INTAKE._digest_bytes((attempt / "verification-candidate.json").read_bytes()),
+        resolution_path=attempt / "resolution.json",
+        resolution_sha256=START_INTAKE._digest_bytes((attempt / "resolution.json").read_bytes()),
+        clarification_path=inputs["clarification_path"],
+        clarification_sha256=inputs["clarification_sha256"],
+        answer_path=inputs["answer_source_path"],
+        answer_sha256=inputs["answer_source_sha256"],
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(verification_answers),
+        output_fn=lambda _message: None,
+    )
+
+    assert verification["verdict"] == "supported"
+    assert verification["reader"] == {
+        "model": "fresh-verifier",
+        "harness": "pytest-verification",
+    }
+
+
+def test_gap_resolution_reuses_spatially_matching_record_instead_of_duplicating(
+    tmp_path: Path,
+) -> None:
+    inputs = _gap_resolution_fixture(tmp_path)
+    attempt = tmp_path / "resolution"
+    answers = iter([
+        "fresh-resolver", "pytest-resolution", "resolves_gap",
+        "The answer selects the specific callout.", "element-000001",
+        "record_visible_element", "field", "600", "0", "800", "200",
+        "May 16 · ACH", "reuse_recorded_overlap", "element-000003",
+        "700", "100", "The callout explains the next-payout field.",
+    ])
+    prompts: list[str] = []
+
+    def answer(prompt: str) -> str:
+        prompts.append(prompt)
+        return next(answers)
+
+    START_INTAKE.gap_resolution.run(
+        attempt,
+        **inputs,
+        purpose=REAL_PURPOSE,
+        input_fn=answer,
+        output_fn=lambda _message: None,
+    )
+    candidate = json.loads((attempt / "verification-candidate.json").read_text())
+
+    assert candidate["relationships"][0]["to_id"] == "element-000003"
+    assert len(candidate["elements"]) == 3
+    assert not any(item["id"].startswith("resolution-element-") for item in candidate["elements"])
+    overlap_prompt = next(
+        prompt for prompt in prompts if "spatially overlapping recorded element" in prompt
+    )
+    assert "element-000003" in overlap_prompt
+    assert "May 16 · ACH" in overlap_prompt

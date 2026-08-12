@@ -11,8 +11,8 @@ import sys
 from typing import Any
 
 
-CONTRACT = 4
-SUPPORTED_CONTRACTS = {1, 2, 3, CONTRACT}
+CONTRACT = 7
+SUPPORTED_CONTRACTS = {1, 2, 3, 4, 5, 6, CONTRACT}
 SCAN_GRID_SIZE = 4
 
 
@@ -110,6 +110,7 @@ def _initial_state(*, contract: int) -> dict[str, Any]:
         "relationship_obligations": [],
         "scan_regions": _scan_regions() if contract >= 4 else [],
         "scan_region_index": 0,
+        "relationship_draft": None,
         "current": {},
     }
 
@@ -125,6 +126,18 @@ def _active_scan_region(state: dict[str, Any]) -> dict[str, Any] | None:
     index = int(state["scan_region_index"])
     regions = state["scan_regions"]
     return regions[index] if index < len(regions) else None
+
+
+def _elements_at_point(
+    state: dict[str, Any], x: int, y: int,
+) -> list[dict[str, Any]]:
+    return [
+        item for item in state["elements"]
+        if (
+            int(item["region"][0]) <= x < int(item["region"][2])
+            and int(item["region"][1]) <= y < int(item["region"][3])
+        )
+    ]
 
 
 def _advance_scan_region(state: dict[str, Any]) -> None:
@@ -303,6 +316,75 @@ def _question(
         )
     elif stage == "relationship_kind":
         question = _field("relationship_kind", "What source-neutral kind best identifies this visible relationship?", "string")
+    elif stage in {"relationship_origin_x", "relationship_origin_y", "relationship_target_x", "relationship_target_y"}:
+        role = "origin" if "origin" in stage else "target"
+        axis = "x" if stage.endswith("_x") else "y"
+        question = _field(
+            stage,
+            f"What normalized {axis} coordinate lies inside the visible relationship {role}'s recorded element?",
+            "integer",
+            minimum=0,
+            maximum=999,
+        )
+    elif stage == "relationship_binding_resolution":
+        issue = current.get("binding_issue")
+        if not isinstance(issue, dict):
+            raise InterviewError("relationship-binding-issue-missing")
+        choices = ["retry_coordinates", "record_endpoint_gap"]
+        if issue.get("participant") != "relationship":
+            choices.insert(1, "record_visible_endpoint")
+        question = _field(
+            "relationship_binding_resolution",
+            "Code could not bind the submitted participant coordinates to exactly one valid recorded element. What is the faithful next step?",
+            "choice",
+            choices=choices,
+        )
+        question["binding_issue"] = issue
+    elif stage == "relationship_binding_gap_reason":
+        question = _field(
+            "relationship_binding_gap_reason",
+            "What visible condition prevents binding this relationship to two recorded elements faithfully?",
+            "string",
+        )
+    elif stage == "relationship_visual_verdict":
+        obligation = _pending_obligation(state)
+        if obligation is None:
+            raise InterviewError("relationship-obligation-missing")
+        question = _field(
+            "relationship_visual_verdict",
+            "Based only on visible source evidence, are these proposed participants visibly connected for the currently required relationship?",
+            "choice",
+            choices=["supported", "not_supported", "unreadable"],
+        )
+        question["proposed_relationship"] = _proposed_relationship(state)
+    elif stage == "relationship_visual_resolution":
+        issue = current.get("verification_issue")
+        if not isinstance(issue, dict):
+            raise InterviewError("relationship-verification-issue-missing")
+        question = _field(
+            "relationship_visual_resolution",
+            "Visible source evidence does not support the proposed pair. What is the faithful next step?",
+            "choice",
+            choices=[
+                "retry_coordinates",
+                "record_visible_endpoint",
+                "record_endpoint_gap",
+            ],
+        )
+        question["verification_issue"] = issue
+    elif stage == "relationship_visual_endpoint_role":
+        question = _field(
+            "relationship_visual_endpoint_role",
+            "Which proposed participant must be replaced by a newly recorded visible endpoint?",
+            "choice",
+            choices=["origin", "target"],
+        )
+    elif stage == "relationship_visual_gap_reason":
+        question = _field(
+            "relationship_visual_gap_reason",
+            "What visible condition prevents confirming a supported relationship between these participants?",
+            "string",
+        )
     elif stage == "relationship_from":
         question = _field(
             "relationship_from",
@@ -456,30 +538,208 @@ def _resolve_obligations(
             })
 
 
+def _resolve_current_obligation(
+    state: dict[str, Any], relationship_id: str, resolution: str,
+) -> None:
+    obligation = _pending_obligation(state)
+    if obligation is None:
+        raise InterviewError("relationship-obligation-missing")
+    obligation.update({
+        "status": "resolved",
+        "resolution": resolution,
+        "relationship_id": relationship_id,
+    })
+
+
 def _next_relationship_stage(state: dict[str, Any]) -> str:
     return "obligation_resolution" if _pending_obligation(state) else "relationship_more"
 
 
-def _finish_relationship(state: dict[str, Any], field: str, value: str) -> None:
+def _finish_relationship(
+    state: dict[str, Any], field: str, value: str, *, contract: int,
+) -> None:
     current = state["current"]
     current[field] = value
     status = str(current["status"])
     relationship_id = f"relationship-{len(state['relationships']) + 1:06d}"
-    state["relationships"].append({
+    relationship = {
         "id": relationship_id,
         "kind": current["kind"],
-        "from_id": current["from_id"],
-        "to_id": current["to_id"],
+        "from_id": current.get("origin_id", current.get("from_id")),
+        "to_id": current.get("target_id", current.get("to_id")),
         "status": status,
         "description": current.get("description", "") if status == "readable" else "",
         "gap_reason": current.get("gap_reason", "") if status == "gap" else "",
-    })
-    _resolve_obligations(
-        state, relationship_id,
-        {str(current["from_id"]), str(current["to_id"])},
-    )
+    }
+    if "origin_point" in current and "target_point" in current:
+        relationship.update({
+            "binding_method": "coordinate_unique_containment",
+            "origin_point": current["origin_point"],
+            "target_point": current["target_point"],
+        })
+    if contract >= 6:
+        if current.get("visual_verification") != "supported":
+            raise InterviewError("relationship-visual-verification-missing")
+        obligation = _pending_obligation(state)
+        if obligation is None:
+            raise InterviewError("relationship-obligation-missing")
+        relationship.update({
+            "visual_verification": "supported",
+            "verified_obligation_id": obligation["id"],
+            "verified_element_id": obligation["element_id"],
+        })
+    state["relationships"].append(relationship)
+    if contract >= 6:
+        _resolve_current_obligation(state, relationship_id, "relationship")
+    else:
+        _resolve_obligations(
+            state, relationship_id,
+            {str(relationship["from_id"]), str(relationship["to_id"])},
+        )
     state["current"] = {}
     state["stage"] = _next_relationship_stage(state)
+
+
+def _finish_binding_gap(state: dict[str, Any], reason: str) -> None:
+    current = state["current"]
+    relationship_id = f"relationship-{len(state['relationships']) + 1:06d}"
+    relationship = {
+        "id": relationship_id,
+        "kind": current["kind"],
+        "from_id": current.get("origin_id"),
+        "to_id": current.get("target_id"),
+        "status": "gap",
+        "description": "",
+        "gap_reason": reason,
+        "binding_method": "coordinate_unique_containment",
+        "binding_issue": current["binding_issue"],
+    }
+    if "origin_point" in current:
+        relationship["origin_point"] = current["origin_point"]
+    if "target_point" in current:
+        relationship["target_point"] = current["target_point"]
+    state["relationships"].append(relationship)
+    obligation = _pending_obligation(state)
+    if obligation is not None:
+        obligation.update({
+            "status": "resolved",
+            "resolution": "gap",
+            "relationship_id": relationship_id,
+        })
+    state["current"] = {}
+    state["stage"] = _next_relationship_stage(state)
+
+
+def _finish_visual_gap(state: dict[str, Any], reason: str) -> None:
+    current = state["current"]
+    verdict = str(current.get("visual_verification"))
+    if verdict not in {"not_supported", "unreadable"}:
+        raise InterviewError("relationship-visual-gap-verdict-invalid")
+    relationship_id = f"relationship-{len(state['relationships']) + 1:06d}"
+    relationship: dict[str, Any] = {
+        "id": relationship_id,
+        "kind": current["kind"],
+        "from_id": current["origin_id"],
+        "to_id": current["target_id"],
+        "status": "gap",
+        "description": "",
+        "gap_reason": reason,
+        "binding_method": "coordinate_unique_containment",
+        "origin_point": current["origin_point"],
+        "target_point": current["target_point"],
+        "visual_verification": verdict,
+    }
+    if "verification_issue" in current:
+        relationship["verification_issue"] = current["verification_issue"]
+    obligation = _pending_obligation(state)
+    if obligation is None:
+        raise InterviewError("relationship-obligation-missing")
+    relationship.update({
+        "verified_obligation_id": obligation["id"],
+        "verified_element_id": obligation["element_id"],
+    })
+    state["relationships"].append(relationship)
+    _resolve_current_obligation(state, relationship_id, "gap")
+    state["current"] = {}
+    state["stage"] = _next_relationship_stage(state)
+
+
+def _proposed_relationship(state: dict[str, Any]) -> dict[str, Any]:
+    current = state["current"]
+    obligation = _pending_obligation(state)
+    if obligation is None:
+        raise InterviewError("relationship-obligation-missing")
+    participants: dict[str, Any] = {}
+    for role in ("origin", "target"):
+        element_id = str(current[f"{role}_id"])
+        element = next((
+            item for item in state["elements"] if item["id"] == element_id
+        ), None)
+        if element is None:
+            raise InterviewError(f"relationship-{role}-missing")
+        participants[role] = {
+            "element_id": element_id,
+            "point": current[f"{role}_point"],
+            "bounds": element["region"],
+            "kind": element["kind"],
+            "status": element["status"],
+            "content": element["content"],
+            "gap_reason": element["gap_reason"],
+        }
+    return {
+        "kind": current["kind"],
+        "required_obligation_id": obligation["id"],
+        "required_element_id": obligation["element_id"],
+        **participants,
+    }
+
+
+def _bind_relationship_point(
+    state: dict[str, Any], role: str, y: int, *, contract: int,
+) -> None:
+    current = state["current"]
+    x = int(current[f"{role}_x"])
+    matches = _elements_at_point(state, x, y)
+    current[f"{role}_point"] = [x, y]
+    if len(matches) != 1:
+        current["binding_issue"] = {
+            "participant": role,
+            "point": [x, y],
+            "matching_element_ids": [str(item["id"]) for item in matches],
+            "reason": "no_unique_recorded_element",
+        }
+        state["stage"] = "relationship_binding_resolution"
+        return
+    element_id = str(matches[0]["id"])
+    if role == "target" and element_id == current.get("origin_id"):
+        current["binding_issue"] = {
+            "participant": role,
+            "point": [x, y],
+            "matching_element_ids": [element_id],
+            "reason": "same_element_as_origin",
+        }
+        state["stage"] = "relationship_binding_resolution"
+        return
+    current[f"{role}_id"] = element_id
+    if role == "origin":
+        state["stage"] = "relationship_target_x"
+        return
+    obligation = _pending_obligation(state)
+    participants = {str(current["origin_id"]), str(current["target_id"])}
+    if obligation is not None and str(obligation["element_id"]) not in participants:
+        current["binding_issue"] = {
+            "participant": "relationship",
+            "origin_id": current["origin_id"],
+            "target_id": current["target_id"],
+            "required_element_id": obligation["element_id"],
+            "reason": "required_element_not_bound",
+        }
+        state["stage"] = "relationship_binding_resolution"
+        return
+    state["stage"] = (
+        "relationship_visual_verdict" if contract >= 6
+        else "relationship_status"
+    )
 
 
 def _finish_obligation_gap(state: dict[str, Any], reason: str) -> None:
@@ -576,12 +836,18 @@ def _advance(
                 "resolution": None,
                 "relationship_id": None,
             })
-        state["current"] = {}
-        state["stage"] = (
-            _next_relationship_stage(state)
-            if return_stage == "obligation_resolution"
-            else return_stage
-        )
+        relationship_draft = state.get("relationship_draft")
+        if return_stage.startswith("relationship_") and isinstance(relationship_draft, dict):
+            state["current"] = relationship_draft
+            state["relationship_draft"] = None
+            state["stage"] = return_stage
+        else:
+            state["current"] = {}
+            state["stage"] = (
+                _next_relationship_stage(state)
+                if return_stage == "obligation_resolution"
+                else return_stage
+            )
     elif field_id == "obligation_resolution":
         state["current"] = {}
         if value == "use_recorded_endpoint":
@@ -618,9 +884,91 @@ def _advance(
     elif field_id == "relationship_kind":
         current["kind"] = value
         state["stage"] = (
-            "obligation_role" if _pending_obligation(state)
+            "relationship_origin_x" if contract >= 5
+            else "obligation_role" if _pending_obligation(state)
             else "relationship_from"
         )
+    elif field_id in {"relationship_origin_x", "relationship_target_x"}:
+        current[field_id.removeprefix("relationship_")] = value
+        state["stage"] = field_id.removesuffix("_x") + "_y"
+    elif field_id == "relationship_origin_y":
+        current["origin_y"] = value
+        _bind_relationship_point(state, "origin", int(value), contract=contract)
+    elif field_id == "relationship_target_y":
+        current["target_y"] = value
+        _bind_relationship_point(state, "target", int(value), contract=contract)
+    elif field_id == "relationship_binding_resolution":
+        issue = current.pop("binding_issue")
+        role = str(issue["participant"])
+        if value == "retry_coordinates":
+            if role == "relationship":
+                for key in (
+                    "origin_x", "origin_y", "origin_id", "origin_point",
+                    "target_x", "target_y", "target_id", "target_point",
+                ):
+                    current.pop(key, None)
+                state["stage"] = "relationship_origin_x"
+            else:
+                for key in (f"{role}_x", f"{role}_y", f"{role}_id", f"{role}_point"):
+                    current.pop(key, None)
+                state["stage"] = f"relationship_{role}_x"
+        elif value == "record_visible_endpoint":
+            if role == "relationship":
+                raise InterviewError("relationship-binding-capture-invalid")
+            for key in (f"{role}_x", f"{role}_y", f"{role}_id", f"{role}_point"):
+                current.pop(key, None)
+            state["relationship_draft"] = current
+            state["current"] = {
+                "return_stage": f"relationship_{role}_x",
+                "capture_scope": "relationship_endpoint",
+            }
+            state["stage"] = "element_kind"
+        else:
+            current["binding_issue"] = issue
+            state["stage"] = "relationship_binding_gap_reason"
+    elif field_id == "relationship_binding_gap_reason":
+        _finish_binding_gap(state, str(value))
+    elif field_id == "relationship_visual_verdict":
+        current["visual_verification"] = value
+        if value == "supported":
+            state["stage"] = "relationship_status"
+        elif value == "not_supported":
+            current["verification_issue"] = {
+                "origin_id": current["origin_id"],
+                "target_id": current["target_id"],
+                "required_element_id": _pending_obligation(state)["element_id"],
+                "reason": "visible_connection_not_supported",
+            }
+            state["stage"] = "relationship_visual_resolution"
+        else:
+            state["stage"] = "relationship_visual_gap_reason"
+    elif field_id == "relationship_visual_resolution":
+        if value == "retry_coordinates":
+            for key in (
+                "origin_x", "origin_y", "origin_id", "origin_point",
+                "target_x", "target_y", "target_id", "target_point",
+                "visual_verification", "verification_issue",
+            ):
+                current.pop(key, None)
+            state["stage"] = "relationship_origin_x"
+        elif value == "record_visible_endpoint":
+            state["stage"] = "relationship_visual_endpoint_role"
+        else:
+            state["stage"] = "relationship_visual_gap_reason"
+    elif field_id == "relationship_visual_endpoint_role":
+        role = str(value)
+        for key in (f"{role}_x", f"{role}_y", f"{role}_id", f"{role}_point"):
+            current.pop(key, None)
+        current.pop("visual_verification", None)
+        current.pop("verification_issue", None)
+        state["relationship_draft"] = current
+        state["current"] = {
+            "return_stage": f"relationship_{role}_x",
+            "capture_scope": "relationship_endpoint",
+        }
+        state["stage"] = "element_kind"
+    elif field_id == "relationship_visual_gap_reason":
+        _finish_visual_gap(state, str(value))
     elif field_id == "relationship_from":
         current["from_id"] = value
         state["stage"] = "relationship_to"
@@ -631,9 +979,9 @@ def _advance(
         current["status"] = value
         state["stage"] = "relationship_description" if value == "readable" else "relationship_gap_reason"
     elif field_id == "relationship_description":
-        _finish_relationship(state, "description", str(value))
+        _finish_relationship(state, "description", str(value), contract=contract)
     elif field_id == "relationship_gap_reason":
-        _finish_relationship(state, "gap_reason", str(value))
+        _finish_relationship(state, "gap_reason", str(value), contract=contract)
     else:
         raise InterviewError(f"interview-field-unsupported:{field_id}")
 
@@ -704,15 +1052,32 @@ def _prompt(question: dict[str, object], state: dict[str, Any]) -> str:
             f"{coordinate_region['id']} normalized bounds "
             f"{coordinate_region['bounds']}"
         )
+    binding_issue = question.get("binding_issue")
+    if isinstance(binding_issue, dict):
+        lines.append(
+            "Coordinate binding issue: "
+            + json.dumps(binding_issue, sort_keys=True)
+        )
+    verification_issue = question.get("verification_issue")
+    if isinstance(verification_issue, dict):
+        lines.append(
+            "Visual verification issue: "
+            + json.dumps(verification_issue, sort_keys=True)
+        )
+    proposed_relationship = question.get("proposed_relationship")
+    if isinstance(proposed_relationship, dict):
+        lines.append(
+            "Proposed relationship participants: "
+            + json.dumps(proposed_relationship, sort_keys=True)
+        )
     lines.extend([f"Question: {question['prompt']}", f"Answer type: {question['type']}"])
     if question["type"] == "choice":
         lines.append("Allowed values: " + ", ".join(question["choices"]))
     if question["type"] == "integer":
         lines.append(f"Allowed range: {question['minimum']} through {question['maximum']}")
-    if (
-        str(question["id"]).startswith(("relationship_", "obligation_"))
-        and state["elements"]
-    ):
+    if str(question["id"]) in {
+        "relationship_from", "relationship_to", "obligation_other_element",
+    } and state["elements"]:
         lines.append("Recorded elements: " + "; ".join(
             f"{item['id']}={item['kind']}:{item['content'] or item['gap_reason']}"
             for item in state["elements"]
