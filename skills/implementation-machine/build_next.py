@@ -503,6 +503,15 @@ BUILD = (
     "'left_alone': '<anything you noticed and did not touch>'}}."
 )
 
+PROTECTED_TEST_IDENTITIES = (
+    "\n\nProtected test identities. The controller recorded {count} pre-existing collected test "
+    "names in {path}. Before renaming or removing a test, read that file. You may change what an "
+    "existing test asserts when the requirement makes its old assertion wrong, but keep its exact "
+    "collected identity and make that same entry point exercise the required behavior. Only an "
+    "exact owner ruling can authorize removing one. The controller checks this before either blind "
+    "reader starts and returns every missing identity to you for correction."
+)
+
 #: Where the readers looked when they said this was not true yet. It is a starting point and not an
 #: instruction: a reader can cite the right file and still have missed the place that decides it,
 #: so the builder is told to check rather than trust, and told plainly that it may end up elsewhere.
@@ -583,6 +592,21 @@ HOW_TO_READ = (
 )
 
 
+def _test_inventory(built: Path, tests: str) -> dict[str, object]:
+    """Collect test identities with the command status needed for a safe early comparison."""
+
+    done = subprocess.run(f"{tests} --collect-only", shell=True, cwd=str(built),
+                          capture_output=True, text=True, check=False)
+    output = done.stdout + done.stderr
+    return {
+        "exit_code": done.returncode,
+        "names": sorted({
+            line.strip() for line in done.stdout.splitlines() if "::" in line
+        }),
+        "tail": output.strip().splitlines()[-1:] or [""],
+    }
+
+
 def _test_names(built: Path, tests: str) -> list[str]:
     """Which tests exist right now, by name, asked of the same runner that runs them.
 
@@ -595,9 +619,7 @@ def _test_names(built: Path, tests: str) -> list[str]:
     one, and often should be — it only refuses to let the removal be silent.
     """
 
-    done = subprocess.run(f"{tests} --collect-only", shell=True, cwd=str(built),
-                          capture_output=True, text=True, check=False)
-    return sorted({line.strip() for line in done.stdout.splitlines() if "::" in line})
+    return list(_test_inventory(built, tests)["names"])
 
 
 def _failures(built: Path, tests: str) -> dict[str, object]:
@@ -1713,6 +1735,21 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
         _write_controller_record(work, rid, before_path, before)
     say(work, "tests before the change read", item=rid, already_failing=len(before["failed"]))
 
+    approved_baseline_removals, _ = _test_removal_decision(
+        rulings.get(rid), list(before.get("names") or []),
+    )
+    protected_identities = sorted(
+        set(before.get("names") or []) - set(approved_baseline_removals)
+    )
+    protected_path = out / "protected-test-identities.json"
+    protected_path.write_text(
+        json.dumps(
+            {"count": len(protected_identities), "identities": protected_identities},
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
     # 2 · the change. A refused attempt is moved aside so the builder is asked again, carrying what
     # the readers objected to. Without this the step returned 'not built' and handed back nothing,
     # and the whole order stalled on the first honest refusal.
@@ -1725,6 +1762,9 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
             )
         instruction = BUILD.format(
             built=built, requirement=item["requirement"], parts=parts, out=out,
+        )
+        instruction += PROTECTED_TEST_IDENTITIES.format(
+            count=len(protected_identities), path=protected_path,
         )
         # Where the readers who put this item on the list said they looked. They cited a file and
         # a line for every part; the order carried none of it, so each builder searched a
@@ -1819,6 +1859,77 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
             prepare_universal_paths=prepare_universal_paths, reader_map=reader_map,
             repair_reader_records=repair_reader_records, owner_approved=owner_approved,
         )
+
+    # A missing pre-existing test identity is a mechanical fact, not a question for two semantic
+    # readers.  Catch it before buying their work and return every exact identity to the builder.
+    # The final gate remains authoritative and repeats the comparison after the readers finish.
+    readers_have_started = any(
+        (work / f"check-{rid}-{index}").is_dir()
+        for index in range(1, PASSES + 1)
+    )
+    collection = (
+        _test_inventory(built, tests)
+        if not readers_have_started else {"exit_code": None, "names": []}
+    )
+    if collection["exit_code"] == 0:
+        gone_before_reading = sorted(
+            set(before.get("names") or []) - set(collection.get("names") or [])
+        )
+        approved_removals, removals_needing_owner = _test_removal_decision(
+            rulings.get(rid), gone_before_reading,
+        )
+        if removals_needing_owner:
+            objections = [
+                f"{test} disappeared before either blind reader; restore that exact collected "
+                "identity and make it exercise the required behavior, or obtain an exact owner "
+                "ruling authorizing its removal"
+                for test in removals_needing_owner
+            ]
+            attempt = len(refused) + 1
+            refusal_number = len(all_refused) + 1
+            verdict = {
+                "item": rid,
+                "requirement": item["requirement"],
+                "changed": change["files"],
+                "what_changed": change.get("what_changed"),
+                "left_alone": change.get("left_alone"),
+                "test_command_exit_code": None,
+                "tests_that_broke": [],
+                "tests_that_stopped_existing": gone_before_reading,
+                "approved_test_removals": approved_removals,
+                "test_removals_needing_owner": removals_needing_owner,
+                "removals_the_builder_declared": [
+                    str(row.get("test")) for row in (change.get("tests_changed") or [])
+                    if isinstance(row, dict)
+                ],
+                "parts_both_readers_call_true": [],
+                "parts_not_agreed": [],
+                "parts_no_reader_answered": [
+                    str(part["part_id"]) for part in item["parts"]
+                ],
+                "answers_under_a_name_no_part_has": [],
+                "reader_citation_errors": [],
+                "built": False,
+                "attempt": attempt,
+                "refusal_number": refusal_number,
+                "ruling_sha256": ruling_sha256,
+                "objections": objections,
+            }
+            if attempt >= ATTEMPTS:
+                verdict["for_a_person"] = (
+                    f"{attempt} attempts removed a protected test identity before reading. "
+                    "Only the owner can authorize its removal."
+                )
+            _write_controller_record(
+                work, rid, out / f"refused-{refusal_number}.json", verdict,
+            )
+            change_path.rename(out / f"change-{refusal_number}.json")
+            say(work, "test identities missing before readers", item=rid,
+                identities=removals_needing_owner, attempt=attempt)
+            return {
+                **verdict,
+                "stopped": "correcting protected test identities before reading",
+            }
 
     # 3 · the same question, asked again, by two readers who cannot see each other.
     before_navigation = None

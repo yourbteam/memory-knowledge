@@ -63,6 +63,13 @@ its line must exist, and its quoted text must equal that repository line charact
 Any non-zero final test exit, unresolved citation, or unapproved disappeared test refuses the item
 with the exact failing identity and correction needed.
 
+Before a builder starts, it receives a projection of every protected pre-existing collected test
+identity. After the builder delivers, the controller collects those identities again before either
+blind reader starts. An identity that disappeared without its exact owner ruling refuses the build
+immediately and returns every missing name to the next builder request; the readers spend no time
+judging a mechanically invalid surface. An unchanged identity and an owner-authorized removal pass
+through normally. The final post-reader collection and disappearance gate still run unchanged.
+
 Controller-authored test and acceptance records have protected authority outside the built
 repository. The JSON files beside an item are inspectable projections, never the source the
 controller trusts. If a worker replaces one, the machinery preserves that write as a control

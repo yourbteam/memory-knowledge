@@ -1225,6 +1225,214 @@ def _seed_disappeared_test_case(tmp_path: Path, monkeypatch: pytest.MonkeyPatch)
     return source, work, out
 
 
+@pytest.mark.parametrize(
+    "identity",
+    [
+        (
+            "tests/unit/test_strategy_brief_prompt.py::StrategyBriefPromptHardeningTests::"
+            "test_respondent_quote_check_accepts_whole_sentence_and_ignores_nonrespondent_excerpt"
+        ),
+        (
+            "tests/unit/test_platform_decisions.py::ProofClaimClearanceStateTests::"
+            "test_explicit_empty_state_survives_recorded_decision_id"
+        ),
+        (
+            "tests/unit/test_strategy_brief_prompt.py::StrategyBriefInputPassthroughTests::"
+            "test_gap_return_settlement_receives_policy_candidate_as_supplied"
+        ),
+    ],
+)
+def test_disappeared_test_is_returned_to_builder_before_blind_readers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch, identity: str,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    (tests_dir / "test_target.py").write_text(
+        "def test_replacement():\n    assert True\n"
+    )
+    work = tmp_path / "work"
+    out = _seed_change(work, tmp_path)
+    tests = f"{shlex.quote(sys.executable)} -m pytest -q"
+    (out / "tests-before.json").write_text(
+        json.dumps(
+            {
+                "command": tests,
+                "exit_code": 0,
+                "failed": [],
+                "names": [identity],
+            }
+        )
+    )
+
+    result = machine.drive(_order(source), work, tmp_path, tests)
+
+    assert result["built"] is False
+    assert result["stopped"] == "correcting protected test identities before reading"
+    assert result["test_removals_needing_owner"] == [identity]
+    assert not (work / "check-r1-1").exists()
+    assert not (work / "check-r1-2").exists()
+
+    correction = machine.drive(_order(source), work, tmp_path, tests)
+
+    assert correction["stopped"] == "building again"
+    assert len(correction["work"]) == 1
+    instruction = correction["work"][0]["instruction"]
+    assert f"{identity} disappeared before either blind reader" in instruction
+    assert "restore that exact collected identity" in instruction
+
+
+def test_builder_receives_the_exact_protected_test_identity_projection(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    identity = "tests/test_target.py::TargetTests::test_existing"
+    monkeypatch.setattr(
+        machine,
+        "_failures",
+        lambda *_: {
+            "command": "tests", "exit_code": 0, "failed": [], "names": [identity],
+        },
+    )
+
+    result = machine.drive(_order(source), work, tmp_path, "tests")
+
+    protected = work / "build-r1" / "protected-test-identities.json"
+    assert json.loads(protected.read_text()) == {
+        "count": 1,
+        "identities": [identity],
+    }
+    instruction = result["work"][0]["instruction"]
+    assert str(protected) in instruction
+    assert "recorded 1 pre-existing collected test names" in instruction
+    assert "checks this before either blind reader starts" in instruction
+
+
+def test_unchanged_protected_test_identity_proceeds_to_blind_readers(tmp_path: Path):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    (tests_dir / "test_target.py").write_text(
+        "def test_existing():\n    assert True\n"
+    )
+    work = tmp_path / "work"
+    out = _seed_change(work, tmp_path)
+    tests = f"{shlex.quote(sys.executable)} -m pytest -q"
+    (out / "tests-before.json").write_text(
+        json.dumps(
+            {
+                "command": tests,
+                "exit_code": 0,
+                "failed": [],
+                "names": ["tests/test_target.py::test_existing"],
+            }
+        )
+    )
+
+    result = machine.drive(_order(source), work, tmp_path, tests)
+
+    assert result["stopped"] == "checking the change"
+    assert len(result["work"]) == machine.PASSES
+    assert not (out / "refused-1.json").exists()
+
+
+def test_owner_authorized_test_removal_proceeds_through_the_pre_reader_gate(
+    tmp_path: Path,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    tests_dir = tmp_path / "tests"
+    tests_dir.mkdir()
+    (tests_dir / "test_target.py").write_text(
+        "def test_replacement():\n    assert True\n"
+    )
+    work = tmp_path / "work"
+    out = _seed_change(work, tmp_path)
+    tests = f"{shlex.quote(sys.executable)} -m pytest -q"
+    identity = "tests/test_target.py::test_existing"
+    (out / "tests-before.json").write_text(
+        json.dumps(
+            {
+                "command": tests,
+                "exit_code": 0,
+                "failed": [],
+                "names": [identity],
+            }
+        )
+    )
+    (work / "rulings.json").write_text(
+        json.dumps(
+            {
+                "r1": {
+                    "test_removals": {
+                        identity: {
+                            "authorized": True,
+                            "owner_ruling": "The obsolete entry point may be removed.",
+                            "replacement_or_remaining_coverage": (
+                                "test_replacement exercises the replacement path."
+                            ),
+                        }
+                    }
+                }
+            }
+        )
+    )
+    for index in (1, 2):
+        checked = work / f"check-r1-{index}"
+        checked.mkdir()
+        (checked / "r1.p1.json").write_text(json.dumps(_record()))
+
+    result = machine.drive(_order(source), work, tmp_path, tests)
+
+    assert result["built"] is True
+    assert result["approved_test_removals"] == [identity]
+    assert result["test_removals_needing_owner"] == []
+
+
+def test_pre_reader_identity_collection_is_not_repeated_after_readers_return(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    out = _seed_change(work, tmp_path)
+    identity = "tests/test_target.py::test_existing"
+    (out / "tests-before.json").write_text(
+        json.dumps(
+            {
+                "command": "tests",
+                "exit_code": 0,
+                "failed": [],
+                "names": [identity],
+            }
+        )
+    )
+    for index in (1, 2):
+        checked = work / f"check-r1-{index}"
+        checked.mkdir()
+        (checked / "r1.p1.json").write_text(json.dumps(_record()))
+    monkeypatch.setattr(
+        machine,
+        "_test_inventory",
+        lambda *_: pytest.fail("pre-reader inventory must not repeat after readers start"),
+    )
+    monkeypatch.setattr(
+        machine,
+        "_failures",
+        lambda *_: {
+            "command": "tests", "exit_code": 0, "failed": [], "names": [identity],
+        },
+    )
+
+    result = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert result["built"] is True
+
+
 def test_disappeared_test_blocks_acceptance_without_exact_owner_ruling(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
