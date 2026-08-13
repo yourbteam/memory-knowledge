@@ -1,6 +1,6 @@
 ---
 name: info-intake-machinery
-description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers and files as immutable sources, records readable projections, verifies visual relationships, turns one gap into a code-bound operator clarification, and can admit one independently verified clarification as an immutable next projection version.
+description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers and files as immutable sources, records readable projections, verifies visual relationships, turns every currently known gap into one code-bound question round, conducts operator answers one at a time, and assesses whether each preserved answer resolves its exact gap without losing legacy single-gap replay.
 ---
 
 # Info Intake Machinery
@@ -122,7 +122,7 @@ verifier, correction interview when any readable pair is rejected, and independe
 verifier when a replacement is proposed. It stops when the intake reaches its terminal result or a
 managed stage fails.
 
-## Turn one unresolved gap into operator input
+## Turn all current gaps into one operator question round
 
 After projection version 1 is recorded with an explicit gap, run:
 
@@ -131,28 +131,55 @@ python3 scripts/start_intake.py --work <same-directory> \
     --opening '<exact opening>' --purpose '<exact purpose answer>' --clarify-gap
 ```
 
-Code selects the first gap in canonical projection order and binds its collection, identity, exact
-record, record hash, and projection hash. The returned model command asks a fresh model to
-formulate exactly one focused operator question from that bound gap, the frozen source, and the
-intake purpose. The model cannot select a different gap or alter the ledger. The generated question
-and every rejected question attempt remain in the hash-chained interview journal.
+Code enumerates every explicit gap in canonical projection order and binds each collection,
+identity, exact record, record hash, and projection hash before the model runs. One fresh model
+process receives those bound gaps one at a time and formulates exactly one focused question for
+each. Code keeps the complete round internally; the model cannot omit, duplicate, reorder, or
+invent a gap. Every question keeps its own identity and exact gap binding, while the operator sees
+only the first unanswered question.
 
-After the machinery returns `needs_operator`, preserve the operator's exact answer with:
+The round request, complete gap list, interview journal, rejected attempts, final question list,
+and each operator presentation are appended to the ledger. Answer the displayed question with:
 
 ```text
 python3 scripts/start_intake.py --work <same-directory> \
     --opening '<exact opening>' --purpose '<exact purpose answer>' \
-    --gap-answer '<exact operator answer>'
+    --gap-answer '<exact answer>'
 ```
 
-Code rejects an empty answer without advancing. A non-empty answer becomes immutable
-`source-000004`; its first projection is the exact same UTF-8 bytes with complete one-unit
-coverage. The ledger links the original projection gap to the generated question, answer source,
-and verbatim projection. Replay checks every hash and byte.
+Code first freezes that answer as a new immutable human source and creates its complete verbatim
+readable projection. The same ledger entry binds both artifacts to the exact question and gap.
+Only then does code record and display the next question. Resume revalidates every question,
+answer, source, projection, and ledger link, then returns only the first unanswered question.
+Empty answers fail without changing the ledger. After the last answer, the machinery records the
+completed round and stops ready for later projection assessment. Existing saved single-gap intakes
+remain replayable through their already recorded answer and resolution stages below.
+
+## Assess every preserved question-round answer
+
+After the complete question round is answered, run:
+
+```text
+python3 scripts/start_intake.py --work <same-directory> \
+    --opening '<exact opening>' --purpose '<exact purpose answer>' \
+    --assess-gap-answers
+```
+
+The command freezes the complete ordered set of answer-to-gap bindings and returns an exact
+code-controlled model command. Run it and answer only the displayed fields. Code presents each
+exact gap, question, immutable answer source, readable answer projection, and relevant original
+source context in fixed order. It offers only `resolves_gap` or `does_not_resolve_gap`; the model
+supplies that judgement and its reason but cannot select, omit, duplicate, reorder, or invent a
+binding.
+
+The request, interview journal, rejected attempts, ordered outcomes, and final result are appended
+to the intake ledger. Resume reconstructs every binding and returns the identical outcome set.
+Changed answers, projections, journals, results, order, or verdict values fail closed. This stage
+does not change the original readable projection or ask follow-up questions.
 
 ## Resolve one answered relationship gap
 
-For a preserved answer to a relationship-binding ambiguity, run:
+For an existing saved single-gap intake with a preserved relationship-binding answer, run:
 
 ```text
 python3 scripts/start_intake.py --work <same-directory> \
@@ -177,18 +204,18 @@ the expected version and rejects changed artifacts.
 
 ## Current boundary
 
-This machinery does not yet accept URLs or assess whether a projection completely covers its
-source. Gap resolution currently applies only to a preserved answer bound to a relationship
-identity ambiguity. Its projection adapter currently accepts images only and fails closed for
-other media types. Do not simulate those later units in prose or extend the script while running
-these proven stages.
+This machinery does not yet apply question-round assessment outcomes to a new projection, ask a
+follow-up round, accept URLs, or assess whether a projection completely covers its source. Gap resolution currently applies only to an existing
+preserved single-gap answer bound to a relationship identity ambiguity. Its projection adapter
+currently accepts images only and fails closed for other media types. Do not simulate those later
+units in prose or extend the script while running these proven stages.
 
 ## Status contract
 
 | `status` | Exit | Meaning |
 | --- | ---: | --- |
-| `needs_operator` | 4 | The intake exists and is waiting for its current operator answer or source. |
-| `waiting_for_model` | 2 | One bounded purpose assessment or source projection must be completed. |
+| `needs_operator` | 4 | The intake is waiting for a source, one legacy answer, or one current question-round answer. |
+| `waiting_for_model` | 2 | One bounded purpose, projection, question, or answer assessment must be completed. |
 | `blocked` | 3 | Input or durable state is missing, changed, or invalid. |
 | `ready_for_projection` | 0 | The first local file is frozen and its projection is pending. |
 | `ready_for_projection_assessment` | 0 | The current immutable projection version is ready; completeness remains unassessed. |

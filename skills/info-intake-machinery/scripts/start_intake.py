@@ -67,6 +67,19 @@ if _GAP_CLARIFICATION_SPEC is None or _GAP_CLARIFICATION_SPEC.loader is None:
     raise RuntimeError("gap clarification engine is unavailable")
 gap_clarification = importlib.util.module_from_spec(_GAP_CLARIFICATION_SPEC)
 _GAP_CLARIFICATION_SPEC.loader.exec_module(gap_clarification)
+_GAP_ANSWER_ASSESSMENT_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_gap_answer_assessment",
+    Path(__file__).resolve().with_name("gap_answer_assessment.py"),
+)
+if (
+    _GAP_ANSWER_ASSESSMENT_SPEC is None
+    or _GAP_ANSWER_ASSESSMENT_SPEC.loader is None
+):
+    raise RuntimeError("gap answer assessment engine is unavailable")
+gap_answer_assessment = importlib.util.module_from_spec(
+    _GAP_ANSWER_ASSESSMENT_SPEC
+)
+_GAP_ANSWER_ASSESSMENT_SPEC.loader.exec_module(gap_answer_assessment)
 _GAP_RESOLUTION_SPEC = importlib.util.spec_from_file_location(
     "info_intake_gap_resolution",
     Path(__file__).resolve().with_name("gap_resolution.py"),
@@ -295,6 +308,109 @@ def _gap_clarification_model_result(
     }
 
 
+def _gap_question_round_model_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    return {
+        "status": "waiting_for_model",
+        "stopped": "formulating_gap_question_round",
+        "intake_id": state["intake_id"],
+        "work": [{
+            "stage": "formulate_gap_question_round",
+            "instruction": (
+                "Inspect the frozen source and answer only each typed question displayed. "
+                "Code fixes every current gap, their order, and the final question round."
+            ),
+            "attachments": [str((work / "sources" / "source-000003").resolve())],
+            "command": [
+                sys.executable,
+                str(Path(__file__).resolve()),
+                "--work",
+                str(work.resolve()),
+                "--run-gap-clarification",
+            ],
+        }],
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _gap_question_round_operator_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    answers = state.get("gap_question_answers", [])
+    questions = state.get("questions", [])
+    return {
+        "status": "needs_operator",
+        "stopped": "awaiting_gap_answers",
+        "intake_id": state["intake_id"],
+        "question": state["question"],
+        "answered_question_count": len(answers) if isinstance(answers, list) else 0,
+        "question_count": len(questions) if isinstance(questions, list) else 0,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _gap_question_round_answered_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    answers = state.get("gap_question_answers", [])
+    questions = state.get("questions", [])
+    return {
+        "status": "ready_for_projection_assessment",
+        "stopped": "gap_question_round_answered",
+        "intake_id": state["intake_id"],
+        "projection": state["first_projection"],
+        "answered_question_count": len(answers) if isinstance(answers, list) else 0,
+        "question_count": len(questions) if isinstance(questions, list) else 0,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _gap_answer_assessment_model_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    return {
+        "status": "waiting_for_model",
+        "stopped": "assessing_gap_answers",
+        "intake_id": state["intake_id"],
+        "work": [{
+            "stage": "assess_gap_answers",
+            "instruction": (
+                "Inspect each code-bound preserved answer and judge only whether it "
+                "resolves its exact gap. Code fixes every pair, order, and verdict choice."
+            ),
+            "attachments": [str((work / "sources" / "source-000003").resolve())],
+            "command": [
+                sys.executable,
+                str(Path(__file__).resolve()),
+                "--work",
+                str(work.resolve()),
+                "--run-gap-answer-assessment",
+            ],
+        }],
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _gap_answer_assessment_ready_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    assessment = state["gap_answer_assessment"]
+    assert isinstance(assessment, dict)
+    return {
+        "status": "ready_for_projection_assessment",
+        "stopped": "gap_answer_assessment_recorded",
+        "intake_id": state["intake_id"],
+        "projection": state["first_projection"],
+        "assessment_count": assessment["assessment_count"],
+        "assessments": assessment["assessments"],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
 def _gap_source_ready_result(state: dict[str, object], work: Path) -> dict[str, object]:
     return {
         "status": "ready_for_projection_assessment",
@@ -418,6 +534,36 @@ def _gap_answer_projection_record(sha256: str) -> dict[str, object]:
         "source_id": "source-000004",
         "version": 1,
         "path": "projections/source-000004-v1.txt",
+        "sha256": sha256,
+        "method": "verbatim_utf8",
+        "coverage": {
+            "status": "complete",
+            "source_units": 1,
+            "represented_units": 1,
+            "gaps": [],
+        },
+    }
+
+
+def _round_answer_source_record(
+    number: int, sha256: str, question: dict[str, object]
+) -> dict[str, object]:
+    return {
+        "id": f"source-{number:06d}",
+        "kind": "human_operator_answer",
+        "path": f"sources/source-{number:06d}.txt",
+        "sha256": sha256,
+        "answers_question": question["id"],
+        "answers_gap": question["answers_gap"],
+    }
+
+
+def _round_answer_projection_record(number: int, sha256: str) -> dict[str, object]:
+    return {
+        "id": f"projection-source-{number:06d}-v1",
+        "source_id": f"source-{number:06d}",
+        "version": 1,
+        "path": f"projections/source-{number:06d}-v1.txt",
         "sha256": sha256,
         "method": "verbatim_utf8",
         "coverage": {
@@ -1643,6 +1789,883 @@ def _projection_for_gap(
     return path, expected_sha256, None
 
 
+def _request_gap_question_round(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object]:
+    projection_path, projection_sha256, projection_error = _projection_for_gap(
+        work, state
+    )
+    if projection_error:
+        return projection_error
+    assert projection_path is not None and projection_sha256 is not None
+    try:
+        projection = json.loads(projection_path.read_text(encoding="utf-8"))
+        gaps = gap_clarification.select_gaps(projection, projection_sha256)
+    except (OSError, json.JSONDecodeError, gap_clarification.ClarificationError) as error:
+        return _blocked("gap question round unavailable", str(error))
+    round_dir = work / "gap-question-rounds" / "round-000001"
+    if round_dir.exists():
+        return _blocked(
+            "unbound gap question round",
+            "gap question round artifacts already exist outside the ledger",
+        )
+    request = _ledger_entry(
+        11,
+        "model_gap_question_round_requested",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "round": 1,
+            "contract": gap_clarification.ROUND_CONTRACT,
+            "projection_path": str(state["first_projection"]["path"]),
+            "projection_sha256": projection_sha256,
+            "gap_count": len(gaps),
+            "gaps": gaps,
+            "interview_path": "gap-question-rounds/round-000001/interview.jsonl",
+            "result_path": "gap-question-rounds/round-000001/clarification-round.json",
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [request])
+    state.update({
+        "status": "waiting_for_model",
+        "phase": "formulating_gap_question_round",
+        "waiting_for": "gap-question-rounds/round-000001/interview.jsonl",
+        "question": None,
+        "questions": [],
+        "gap_question_round": {
+            "round": 1,
+            "projection_sha256": projection_sha256,
+            "gap_count": len(gaps),
+            "gaps": gaps,
+        },
+        "ledger_entries": 11,
+        "ledger_tail_sha256": request["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _gap_question_round_model_result(state, work)
+
+
+def _validate_gap_question_round_request(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> tuple[Path | None, str | None, dict[str, object] | None]:
+    if len(entries) < 11 or entries[10].get("event") != "model_gap_question_round_requested":
+        return None, None, _blocked(
+            "invalid ledger", "the gap question round request is missing"
+        )
+    projection_path, projection_sha256, projection_error = _projection_for_gap(
+        work, state
+    )
+    if projection_error:
+        return None, None, projection_error
+    assert projection_path is not None and projection_sha256 is not None
+    try:
+        projection = json.loads(projection_path.read_text(encoding="utf-8"))
+        gaps = gap_clarification.select_gaps(projection, projection_sha256)
+    except (OSError, json.JSONDecodeError, gap_clarification.ClarificationError) as error:
+        return None, None, _blocked("invalid gap question round", str(error))
+    expected = {
+        "round": 1,
+        "contract": gap_clarification.ROUND_CONTRACT,
+        "projection_path": str(state["first_projection"]["path"]),
+        "projection_sha256": projection_sha256,
+        "gap_count": len(gaps),
+        "gaps": gaps,
+        "interview_path": "gap-question-rounds/round-000001/interview.jsonl",
+        "result_path": "gap-question-rounds/round-000001/clarification-round.json",
+    }
+    saved = state.get("gap_question_round")
+    if (
+        any(entries[10].get(key) != value for key, value in expected.items())
+        or not isinstance(saved, dict)
+        or any(saved.get(key) != value for key, value in {
+            "round": 1,
+            "projection_sha256": projection_sha256,
+            "gap_count": len(gaps),
+            "gaps": gaps,
+        }.items())
+    ):
+        return None, None, _blocked(
+            "invalid ledger", "the gap question round request changed"
+        )
+    return projection_path, projection_sha256, None
+
+
+def _validate_question_round_shape(
+    result: dict[str, object], gaps: list[dict[str, object]]
+) -> str | None:
+    questions = result.get("questions")
+    if not isinstance(questions, list) or len(questions) != len(gaps):
+        return "the question round does not contain exactly one question per known gap"
+    expected_ids = [f"gap-clarification-answer-{index:06d}" for index in range(1, len(gaps) + 1)]
+    actual_ids = [item.get("id") if isinstance(item, dict) else None for item in questions]
+    if actual_ids != expected_ids or len(set(actual_ids)) != len(actual_ids):
+        return "the question round identities are missing, duplicated, or reordered"
+    for question, gap in zip(questions, gaps, strict=True):
+        expected_gap = {
+            key: gap[key]
+            for key in (
+                "projection_sha256", "collection", "kind", "id", "record_sha256"
+            )
+        }
+        if not isinstance(question, dict) or question.get("answers_gap") != expected_gap:
+            return "a question is not bound to its code-selected gap"
+    return None
+
+
+def _consume_gap_question_round(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object]:
+    projection_path, projection_sha256, request_error = (
+        _validate_gap_question_round_request(work, state, entries)
+    )
+    if request_error:
+        return request_error
+    assert projection_path is not None and projection_sha256 is not None
+    round_dir = work / "gap-question-rounds" / "round-000001"
+    try:
+        result, journal_sha256, result_sha256 = gap_clarification.validate_round(
+            round_dir,
+            projection_path=projection_path,
+            projection_sha256=projection_sha256,
+            purpose=purpose,
+        )
+        journal_entries = gap_clarification._read_journal(
+            round_dir / "interview.jsonl"
+        )
+    except gap_clarification.ClarificationError as error:
+        return _blocked("invalid gap question round", str(error))
+    saved = state["gap_question_round"]
+    assert isinstance(saved, dict)
+    gaps = saved["gaps"]
+    assert isinstance(gaps, list)
+    shape_error = _validate_question_round_shape(result, gaps)
+    if shape_error:
+        return _blocked("invalid gap question round", shape_error)
+    timestamp = datetime.now(timezone.utc).isoformat()
+    completed = _ledger_entry(
+        12,
+        "model_gap_question_round_completed",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "round": 1,
+            "interview_path": "gap-question-rounds/round-000001/interview.jsonl",
+            "interview_sha256": journal_sha256,
+            "result_path": "gap-question-rounds/round-000001/clarification-round.json",
+            "result_sha256": result_sha256,
+            "question_count": len(result["questions"]),
+            "interview_question_count": sum(
+                item["event"] == "question_asked" for item in journal_entries
+            ),
+            "answer_count": sum(
+                item["event"] == "answer_recorded" for item in journal_entries
+            ),
+            "rejected_answer_count": sum(
+                item["event"] == "answer_recorded" and item["accepted"] is False
+                for item in journal_entries
+            ),
+            "questioner": result["questioner"],
+            "gaps": result["gaps"],
+            "questions": result["questions"],
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    prepared = _ledger_entry(
+        13,
+        "operator_question_round_prepared",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "round": 1,
+            "question_count": len(result["questions"]),
+            "questions": result["questions"],
+        },
+        str(completed["entry_sha256"]),
+    )
+    first_question = result["questions"][0]
+    first_asked = _ledger_entry(
+        14,
+        "operator_question_asked",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "round": 1,
+            "question_position": 1,
+            "question": first_question,
+        },
+        str(prepared["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [completed, prepared, first_asked])
+    state["gap_question_round"].update({
+        "interview_sha256": journal_sha256,
+        "result_sha256": result_sha256,
+        "questioner": result["questioner"],
+    })
+    state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_gap_answers",
+        "waiting_for": first_question["id"],
+        "question": first_question,
+        "questions": result["questions"],
+        "gap_question_answers": [],
+        "ledger_entries": 14,
+        "ledger_tail_sha256": first_asked["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _gap_question_round_operator_result(state, work)
+
+
+def _validate_gap_question_answer_records(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    questions: list[dict[str, object]],
+    *,
+    allow_later_phase: bool = False,
+) -> str | None:
+    answers = state.get("gap_question_answers")
+    if not isinstance(answers, list) or len(answers) > len(questions):
+        return "the preserved answer sequence is invalid"
+    answer_ledger_length = 14 + (2 * len(answers))
+    if (
+        len(entries) < answer_ledger_length
+        or (not allow_later_phase and len(entries) != answer_ledger_length)
+    ):
+        return "the answer ledger length does not match the preserved answers"
+    if (
+        entries[13].get("event") != "operator_question_asked"
+        or entries[13].get("round") != 1
+        or entries[13].get("question_position") != 1
+        or entries[13].get("question") != questions[0]
+    ):
+        return "question 1 was not presented from the prepared round"
+    for index, saved in enumerate(answers):
+        question = questions[index]
+        number = 4 + index
+        source_path = work / f"sources/source-{number:06d}.txt"
+        projection_path = work / f"projections/source-{number:06d}-v1.txt"
+        try:
+            source_bytes = source_path.read_bytes()
+            projection_bytes = projection_path.read_bytes()
+        except OSError:
+            return f"answer {index + 1} source or projection is unavailable"
+        sha256 = _digest_bytes(source_bytes)
+        source = _round_answer_source_record(number, sha256, question)
+        projection = _round_answer_projection_record(number, sha256)
+        question_sequence = 14 + (2 * index)
+        lineage = {
+            "question_ledger_sequence": question_sequence,
+            "question_round": 1,
+            "question_position": index + 1,
+            "original_source_id": "source-000003",
+            "original_projection_id": state["first_projection"]["id"],
+        }
+        answer_entry = entries[14 + (2 * index)]
+        following_entry = entries[15 + (2 * index)]
+        if (
+            not source_bytes.strip()
+            or projection_bytes != source_bytes
+            or saved != {"question": question, "source": source, "projection": projection}
+            or answer_entry.get("event") != "source_projected"
+            or answer_entry.get("round") != 1
+            or answer_entry.get("question_position") != index + 1
+            or answer_entry.get("answers_question") != question["id"]
+            or answer_entry.get("answers_gap") != question["answers_gap"]
+            or answer_entry.get("source") != source
+            or answer_entry.get("projection") != projection
+            or answer_entry.get("lineage") != lineage
+        ):
+            return f"answer {index + 1} no longer matches its immutable lineage"
+        if index + 1 < len(questions):
+            next_question = questions[index + 1]
+            if (
+                following_entry.get("event") != "operator_question_asked"
+                or following_entry.get("round") != 1
+                or following_entry.get("question_position") != index + 2
+                or following_entry.get("question") != next_question
+            ):
+                return f"question {index + 2} was not presented after answer {index + 1}"
+        elif (
+            following_entry.get("event") != "operator_question_round_answered"
+            or following_entry.get("round") != 1
+            or following_entry.get("question_count") != len(questions)
+            or following_entry.get("answered_question_count") != len(answers)
+            or following_entry.get("answer_source_ids")
+            != [f"source-{4 + answer_index:06d}" for answer_index in range(len(answers))]
+        ):
+            return "the completed answer round does not match its preserved sources"
+    if len(answers) < len(questions):
+        active = questions[len(answers)]
+        if (
+            state.get("status") != "needs_operator"
+            or state.get("phase") != "awaiting_gap_answers"
+            or state.get("waiting_for") != active["id"]
+            or state.get("question") != active
+        ):
+            return f"question {len(answers) + 1} is not the only active operator question"
+    else:
+        expected_states = {
+            (
+                "ready_for_projection_assessment",
+                "gap_question_round_answered",
+                None,
+            )
+        }
+        if allow_later_phase:
+            expected_states.update({
+                (
+                    "waiting_for_model",
+                    "assessing_gap_answers",
+                    "gap-answer-assessments/round-000001/interview.jsonl",
+                ),
+                (
+                    "ready_for_projection_assessment",
+                    "gap_answer_assessment_recorded",
+                    None,
+                ),
+            })
+        if (
+            (state.get("status"), state.get("phase"), state.get("waiting_for"))
+            not in expected_states
+            or state.get("question") is not None
+        ):
+            return "the completed answer round has an invalid terminal state"
+    return None
+
+
+def _validate_gap_question_round(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+    *,
+    allow_later_phase: bool = False,
+) -> dict[str, object] | None:
+    projection_path, projection_sha256, request_error = (
+        _validate_gap_question_round_request(work, state, entries)
+    )
+    if request_error:
+        return request_error
+    assert projection_path is not None and projection_sha256 is not None
+    round_dir = work / "gap-question-rounds" / "round-000001"
+    try:
+        result, journal_sha256, result_sha256 = gap_clarification.validate_round(
+            round_dir,
+            projection_path=projection_path,
+            projection_sha256=projection_sha256,
+            purpose=purpose,
+        )
+        journal_entries = gap_clarification._read_journal(
+            round_dir / "interview.jsonl"
+        )
+    except gap_clarification.ClarificationError as error:
+        return _blocked("invalid gap question round", str(error))
+    saved = state.get("gap_question_round")
+    if not isinstance(saved, dict) or not isinstance(saved.get("gaps"), list):
+        return _blocked("invalid intake state", "the gap question round is missing")
+    shape_error = _validate_question_round_shape(result, saved["gaps"])
+    expected_completed = {
+        "round": 1,
+        "interview_path": "gap-question-rounds/round-000001/interview.jsonl",
+        "interview_sha256": journal_sha256,
+        "result_path": "gap-question-rounds/round-000001/clarification-round.json",
+        "result_sha256": result_sha256,
+        "question_count": len(result["questions"]),
+        "interview_question_count": sum(
+            item["event"] == "question_asked" for item in journal_entries
+        ),
+        "answer_count": sum(
+            item["event"] == "answer_recorded" for item in journal_entries
+        ),
+        "rejected_answer_count": sum(
+            item["event"] == "answer_recorded" and item["accepted"] is False
+            for item in journal_entries
+        ),
+        "questioner": result["questioner"],
+        "gaps": result["gaps"],
+        "questions": result["questions"],
+    }
+    questions = result["questions"]
+    assert isinstance(questions, list)
+    answer_error = _validate_gap_question_answer_records(
+        work,
+        state,
+        entries,
+        questions,
+        allow_later_phase=allow_later_phase,
+    )
+    if (
+        shape_error
+        or entries[11].get("event") != "model_gap_question_round_completed"
+        or any(entries[11].get(key) != value for key, value in expected_completed.items())
+        or entries[12].get("event") != "operator_question_round_prepared"
+        or entries[12].get("questions") != result["questions"]
+        or entries[12].get("question_count") != len(result["questions"])
+        or saved.get("interview_sha256") != journal_sha256
+        or saved.get("result_sha256") != result_sha256
+        or saved.get("questioner") != result["questioner"]
+        or state.get("questions") != result["questions"]
+        or answer_error
+    ):
+        return _blocked(
+            "invalid ledger",
+            shape_error or answer_error or "the preserved gap question round changed",
+        )
+    return None
+
+
+def _accept_gap_question_round_answer(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    answer: str,
+) -> dict[str, object]:
+    if not answer.strip():
+        return _blocked(
+            "gap answer required",
+            "answer the current operator question with non-whitespace text",
+        )
+    questions = state["questions"]
+    answers = state["gap_question_answers"]
+    assert isinstance(questions, list) and isinstance(answers, list)
+    index = len(answers)
+    if index >= len(questions):
+        return _blocked("gap answer not requested", "the question round is already answered")
+    question = questions[index]
+    assert isinstance(question, dict)
+    number = 4 + index
+    source_path = work / f"sources/source-{number:06d}.txt"
+    projection_path = work / f"projections/source-{number:06d}-v1.txt"
+    if source_path.exists() or projection_path.exists():
+        return _blocked(
+            "unbound gap answer artifacts",
+            f"answer {index + 1} artifacts already exist outside the ledger",
+        )
+    answer_bytes = answer.encode("utf-8")
+    answer_sha256 = _digest_bytes(answer_bytes)
+    source = _round_answer_source_record(number, answer_sha256, question)
+    projection = _round_answer_projection_record(number, answer_sha256)
+    source_path.write_bytes(answer_bytes)
+    projection_path.write_bytes(answer_bytes)
+    timestamp = datetime.now(timezone.utc).isoformat()
+    answer_entry = _ledger_entry(
+        len(entries) + 1,
+        "source_projected",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "round": 1,
+            "question_position": index + 1,
+            "answers_question": question["id"],
+            "answers_gap": question["answers_gap"],
+            "source": source,
+            "projection": projection,
+            "lineage": {
+                "question_ledger_sequence": 14 + (2 * index),
+                "question_round": 1,
+                "question_position": index + 1,
+                "original_source_id": "source-000003",
+                "original_projection_id": state["first_projection"]["id"],
+            },
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    saved_answer = {"question": question, "source": source, "projection": projection}
+    answers.append(saved_answer)
+    if len(answers) < len(questions):
+        next_question = questions[len(answers)]
+        assert isinstance(next_question, dict)
+        following_entry = _ledger_entry(
+            len(entries) + 2,
+            "operator_question_asked",
+            {
+                "recorded_at": timestamp,
+                "intake_id": state["intake_id"],
+                "round": 1,
+                "question_position": len(answers) + 1,
+                "question": next_question,
+            },
+            str(answer_entry["entry_sha256"]),
+        )
+        state.update({
+            "status": "needs_operator",
+            "phase": "awaiting_gap_answers",
+            "waiting_for": next_question["id"],
+            "question": next_question,
+        })
+    else:
+        following_entry = _ledger_entry(
+            len(entries) + 2,
+            "operator_question_round_answered",
+            {
+                "recorded_at": timestamp,
+                "intake_id": state["intake_id"],
+                "round": 1,
+                "question_count": len(questions),
+                "answered_question_count": len(answers),
+                "answer_source_ids": [item["source"]["id"] for item in answers],
+            },
+            str(answer_entry["entry_sha256"]),
+        )
+        state.update({
+            "status": "ready_for_projection_assessment",
+            "phase": "gap_question_round_answered",
+            "waiting_for": None,
+            "question": None,
+        })
+    _append_ledger(work / "ledger.jsonl", [answer_entry, following_entry])
+    state.update({
+        "gap_question_answers": answers,
+        "ledger_entries": len(entries) + 2,
+        "ledger_tail_sha256": following_entry["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    if state["phase"] == "gap_question_round_answered":
+        return _gap_question_round_answered_result(state, work)
+    return _gap_question_round_operator_result(state, work)
+
+
+def _gap_answer_assessment_bindings(
+    work: Path, state: dict[str, object]
+) -> tuple[list[dict[str, object]] | None, dict[str, object] | None]:
+    questions = state.get("questions")
+    answers = state.get("gap_question_answers")
+    round_record = state.get("gap_question_round")
+    gaps = round_record.get("gaps") if isinstance(round_record, dict) else None
+    if (
+        not isinstance(questions, list)
+        or not isinstance(answers, list)
+        or not isinstance(gaps, list)
+        or not questions
+        or len(questions) != len(answers)
+        or len(questions) != len(gaps)
+    ):
+        return None, _blocked(
+            "gap answer assessment unavailable",
+            "the complete question, answer, and gap sets are not aligned",
+        )
+    bindings: list[dict[str, object]] = []
+    for index, (question, answer_record, gap) in enumerate(
+        zip(questions, answers, gaps, strict=True), 1
+    ):
+        if (
+            not isinstance(question, dict)
+            or not isinstance(answer_record, dict)
+            or not isinstance(gap, dict)
+            or not isinstance(answer_record.get("source"), dict)
+            or not isinstance(answer_record.get("projection"), dict)
+        ):
+            return None, _blocked(
+                "gap answer assessment unavailable",
+                f"answer {index} is missing its bound source, projection, question, or gap",
+            )
+        source = answer_record["source"]
+        projection = answer_record["projection"]
+        assert isinstance(source, dict) and isinstance(projection, dict)
+        try:
+            source_bytes = (work / str(source["path"])).read_bytes()
+            projection_bytes = (work / str(projection["path"])).read_bytes()
+            answer = source_bytes.decode("utf-8")
+        except (OSError, UnicodeDecodeError, KeyError) as error:
+            return None, _blocked(
+                "gap answer assessment unavailable",
+                f"answer {index} source or projection cannot be read: {error}",
+            )
+        if (
+            projection_bytes != source_bytes
+            or _digest_bytes(source_bytes) != source.get("sha256")
+            or projection.get("sha256") != source.get("sha256")
+        ):
+            return None, _blocked(
+                "gap answer assessment unavailable",
+                f"answer {index} no longer matches its immutable source and projection",
+            )
+        bindings.append({
+            "position": index,
+            "question": question,
+            "gap": gap,
+            "answer_source": source,
+            "answer_projection": projection,
+            "answer": answer,
+        })
+    try:
+        gap_answer_assessment.identities(bindings)
+    except gap_answer_assessment.AssessmentError as error:
+        return None, _blocked("gap answer assessment unavailable", str(error))
+    return bindings, None
+
+
+def _request_gap_answer_assessment(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object]:
+    bindings, binding_error = _gap_answer_assessment_bindings(work, state)
+    if binding_error:
+        return binding_error
+    assert bindings is not None
+    assessment_dir = work / "gap-answer-assessments" / "round-000001"
+    if assessment_dir.exists():
+        return _blocked(
+            "unbound gap answer assessment",
+            "assessment artifacts already exist outside the ledger",
+        )
+    identities = gap_answer_assessment.identities(bindings)
+    request_sequence = len(entries) + 1
+    request = _ledger_entry(
+        request_sequence,
+        "model_gap_answer_assessment_requested",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "round": 1,
+            "contract": gap_answer_assessment.CONTRACT,
+            "assessment_count": len(bindings),
+            "bindings": identities,
+            "interview_path": "gap-answer-assessments/round-000001/interview.jsonl",
+            "result_path": "gap-answer-assessments/round-000001/assessment.json",
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [request])
+    state.update({
+        "status": "waiting_for_model",
+        "phase": "assessing_gap_answers",
+        "waiting_for": "gap-answer-assessments/round-000001/interview.jsonl",
+        "question": None,
+        "gap_answer_assessment": {
+            "round": 1,
+            "contract": gap_answer_assessment.CONTRACT,
+            "request_ledger_sequence": request_sequence,
+            "assessment_count": len(bindings),
+            "bindings": identities,
+        },
+        "ledger_entries": request_sequence,
+        "ledger_tail_sha256": request["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _gap_answer_assessment_model_result(state, work)
+
+
+def _validate_gap_answer_assessment_request(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> tuple[list[dict[str, object]] | None, dict[str, object] | None]:
+    bindings, binding_error = _gap_answer_assessment_bindings(work, state)
+    if binding_error:
+        return None, binding_error
+    assert bindings is not None
+    identities = gap_answer_assessment.identities(bindings)
+    saved = state.get("gap_answer_assessment")
+    if not isinstance(saved, dict):
+        return None, _blocked(
+            "invalid intake state", "the gap answer assessment request is missing"
+        )
+    request_sequence = saved.get("request_ledger_sequence")
+    if not isinstance(request_sequence, int) or not 1 <= request_sequence <= len(entries):
+        return None, _blocked(
+            "invalid ledger", "the gap answer assessment request sequence is invalid"
+        )
+    request = entries[request_sequence - 1]
+    expected = {
+        "round": 1,
+        "contract": gap_answer_assessment.CONTRACT,
+        "assessment_count": len(bindings),
+        "bindings": identities,
+        "interview_path": "gap-answer-assessments/round-000001/interview.jsonl",
+        "result_path": "gap-answer-assessments/round-000001/assessment.json",
+    }
+    expected_saved = {
+        "round": 1,
+        "contract": gap_answer_assessment.CONTRACT,
+        "request_ledger_sequence": request_sequence,
+        "assessment_count": len(bindings),
+        "bindings": identities,
+    }
+    if (
+        request.get("event") != "model_gap_answer_assessment_requested"
+        or any(request.get(key) != value for key, value in expected.items())
+        or any(saved.get(key) != value for key, value in expected_saved.items())
+    ):
+        return None, _blocked(
+            "invalid ledger", "the gap answer assessment request changed"
+        )
+    return bindings, None
+
+
+def _validate_gap_answer_assessment_shape(
+    result: dict[str, object], bindings: list[dict[str, object]]
+) -> str | None:
+    assessments = result.get("assessments")
+    if not isinstance(assessments, list) or len(assessments) != len(bindings):
+        return "the assessment does not contain exactly one outcome per preserved answer"
+    for index, (assessment, binding) in enumerate(
+        zip(assessments, bindings, strict=True), 1
+    ):
+        identity = gap_answer_assessment._assessment_identity(binding)
+        if not isinstance(assessment, dict):
+            return f"assessment {index} is not a record"
+        actual_identity = {
+            key: assessment.get(key)
+            for key in (
+                "position", "question_id", "gap", "answer_source", "answer_projection"
+            )
+        }
+        if actual_identity != identity:
+            return f"assessment {index} is not bound to answer {index} and its exact gap"
+        if assessment.get("verdict") not in gap_answer_assessment.VERDICTS:
+            return f"assessment {index} has unsupported verdict {assessment.get('verdict')!r}"
+        if not isinstance(assessment.get("reason"), str) or not assessment["reason"].strip():
+            return f"assessment {index} has no reason for its verdict"
+    return None
+
+
+def _consume_gap_answer_assessment(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object]:
+    bindings, request_error = _validate_gap_answer_assessment_request(
+        work, state, entries
+    )
+    if request_error:
+        return request_error
+    assert bindings is not None
+    assessment_dir = work / "gap-answer-assessments" / "round-000001"
+    try:
+        result, journal_sha256, result_sha256 = gap_answer_assessment.validate(
+            assessment_dir, bindings=bindings, purpose=purpose
+        )
+        journal_entries = gap_answer_assessment._read_journal(
+            assessment_dir / "interview.jsonl"
+        )
+    except gap_answer_assessment.AssessmentError as error:
+        return _blocked("invalid gap answer assessment", str(error))
+    shape_error = _validate_gap_answer_assessment_shape(result, bindings)
+    if shape_error:
+        return _blocked("invalid gap answer assessment", shape_error)
+    completed = _ledger_entry(
+        len(entries) + 1,
+        "model_gap_answer_assessment_completed",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "round": 1,
+            "interview_path": "gap-answer-assessments/round-000001/interview.jsonl",
+            "interview_sha256": journal_sha256,
+            "result_path": "gap-answer-assessments/round-000001/assessment.json",
+            "result_sha256": result_sha256,
+            "assessment_count": len(result["assessments"]),
+            "question_count": sum(
+                item["event"] == "question_asked" for item in journal_entries
+            ),
+            "answer_count": sum(
+                item["event"] == "answer_recorded" for item in journal_entries
+            ),
+            "rejected_answer_count": sum(
+                item["event"] == "answer_recorded" and item["accepted"] is False
+                for item in journal_entries
+            ),
+            "assessor": result["assessor"],
+            "assessments": result["assessments"],
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [completed])
+    state["gap_answer_assessment"].update({
+        "interview_sha256": journal_sha256,
+        "result_sha256": result_sha256,
+        "assessor": result["assessor"],
+        "assessments": result["assessments"],
+    })
+    state.update({
+        "status": "ready_for_projection_assessment",
+        "phase": "gap_answer_assessment_recorded",
+        "waiting_for": None,
+        "question": None,
+        "ledger_entries": len(entries) + 1,
+        "ledger_tail_sha256": completed["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _gap_answer_assessment_ready_result(state, work)
+
+
+def _validate_gap_answer_assessment(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    bindings, request_error = _validate_gap_answer_assessment_request(
+        work, state, entries
+    )
+    if request_error:
+        return request_error
+    assert bindings is not None
+    assessment_dir = work / "gap-answer-assessments" / "round-000001"
+    try:
+        result, journal_sha256, result_sha256 = gap_answer_assessment.validate(
+            assessment_dir, bindings=bindings, purpose=purpose
+        )
+        journal_entries = gap_answer_assessment._read_journal(
+            assessment_dir / "interview.jsonl"
+        )
+    except gap_answer_assessment.AssessmentError as error:
+        return _blocked("invalid gap answer assessment", str(error))
+    shape_error = _validate_gap_answer_assessment_shape(result, bindings)
+    expected = {
+        "round": 1,
+        "interview_path": "gap-answer-assessments/round-000001/interview.jsonl",
+        "interview_sha256": journal_sha256,
+        "result_path": "gap-answer-assessments/round-000001/assessment.json",
+        "result_sha256": result_sha256,
+        "assessment_count": len(result["assessments"]),
+        "question_count": sum(
+            item["event"] == "question_asked" for item in journal_entries
+        ),
+        "answer_count": sum(
+            item["event"] == "answer_recorded" for item in journal_entries
+        ),
+        "rejected_answer_count": sum(
+            item["event"] == "answer_recorded" and item["accepted"] is False
+            for item in journal_entries
+        ),
+        "assessor": result["assessor"],
+        "assessments": result["assessments"],
+    }
+    saved = state.get("gap_answer_assessment")
+    if (
+        shape_error
+        or len(entries) < 2
+        or entries[-1].get("event") != "model_gap_answer_assessment_completed"
+        or any(entries[-1].get(key) != value for key, value in expected.items())
+        or not isinstance(saved, dict)
+        or saved.get("interview_sha256") != journal_sha256
+        or saved.get("result_sha256") != result_sha256
+        or saved.get("assessor") != result["assessor"]
+        or saved.get("assessments") != result["assessments"]
+        or state.get("status") != "ready_for_projection_assessment"
+        or state.get("phase") != "gap_answer_assessment_recorded"
+        or state.get("waiting_for") is not None
+        or state.get("question") is not None
+    ):
+        return _blocked(
+            "invalid ledger",
+            shape_error or "the preserved gap answer assessment changed",
+        )
+    return None
+
+
 def _request_gap_clarification(
     work: Path,
     state: dict[str, object],
@@ -2643,23 +3666,77 @@ def run_gap_clarification(
     except (OSError, json.JSONDecodeError) as error:
         return _blocked("gap clarification context unavailable", str(error))
     current = drive(work, opening, purpose)
-    if current.get("status") != "waiting_for_model" or current.get("stopped") != "formulating_gap_question":
+    stopped = current.get("stopped")
+    if current.get("status") != "waiting_for_model" or stopped not in {
+        "formulating_gap_question", "formulating_gap_question_round",
+    }:
         return _blocked("gap clarification unavailable", json.dumps(current, sort_keys=True))
     projection_path, projection_sha256, projection_error = _projection_for_gap(work, state)
     if projection_error:
         return projection_error
     assert projection_path is not None and projection_sha256 is not None
     try:
-        gap_clarification.run(
-            work / "gap-clarifications" / "attempt-000001",
-            projection_path=projection_path,
-            projection_sha256=projection_sha256,
+        if stopped == "formulating_gap_question_round":
+            gap_clarification.run_round(
+                work / "gap-question-rounds" / "round-000001",
+                projection_path=projection_path,
+                projection_sha256=projection_sha256,
+                purpose=purpose,
+                input_fn=input_fn,
+                output_fn=output_fn,
+            )
+        else:
+            gap_clarification.run(
+                work / "gap-clarifications" / "attempt-000001",
+                projection_path=projection_path,
+                projection_sha256=projection_sha256,
+                purpose=purpose,
+                input_fn=input_fn,
+                output_fn=output_fn,
+            )
+    except gap_clarification.ClarificationError as error:
+        return _blocked("gap clarification failed", str(error))
+    return drive(work, opening, purpose)
+
+
+def run_gap_answer_assessment(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources" / "source-000001.txt").read_text(
+            encoding="utf-8"
+        )
+        purpose = (work / "sources" / "source-000002.txt").read_text(
+            encoding="utf-8"
+        )
+        state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return _blocked("gap answer assessment context unavailable", str(error))
+    current = drive(work, opening, purpose)
+    if (
+        current.get("status") != "waiting_for_model"
+        or current.get("stopped") != "assessing_gap_answers"
+    ):
+        return _blocked(
+            "gap answer assessment unavailable", json.dumps(current, sort_keys=True)
+        )
+    bindings, binding_error = _gap_answer_assessment_bindings(work, state)
+    if binding_error:
+        return binding_error
+    assert bindings is not None
+    try:
+        gap_answer_assessment.run(
+            work / "gap-answer-assessments" / "round-000001",
+            bindings=bindings,
             purpose=purpose,
             input_fn=input_fn,
             output_fn=output_fn,
         )
-    except gap_clarification.ClarificationError as error:
-        return _blocked("gap clarification failed", str(error))
+    except gap_answer_assessment.AssessmentError as error:
+        return _blocked("gap answer assessment failed", str(error))
     return drive(work, opening, purpose)
 
 
@@ -2672,6 +3749,7 @@ def _resume(
     clarify_gap: bool,
     gap_answer: str | None,
     resolve_gap: bool,
+    assess_gap_answers: bool,
 ) -> dict[str, object]:
     state, entries, error = _load_bound(work, opening_bytes)
     if error:
@@ -2680,6 +3758,8 @@ def _resume(
     phase = state.get("phase")
     if (clarify_gap or gap_answer is not None) and phase not in {
         "first_projection_recorded", "awaiting_gap_answer",
+        "formulating_gap_question_round", "awaiting_gap_answers",
+        "gap_question_round_answered",
     }:
         return _blocked(
             "gap clarification unavailable",
@@ -2689,6 +3769,11 @@ def _resume(
         return _blocked(
             "gap resolution unavailable",
             "resolve the preserved answer only after it has been recorded as a source",
+        )
+    if assess_gap_answers and phase != "gap_question_round_answered":
+        return _blocked(
+            "gap answer assessment unavailable",
+            "complete the current question round before assessing its preserved answers",
         )
     if phase == "awaiting_intake_purpose":
         if (
@@ -2725,14 +3810,25 @@ def _resume(
             return _model_result(state, work)
         return _consume_assessment(work, state, entries, purpose_bytes)
 
+    supported_ledger_length = len(entries) in {6, 7, 8, 10, 11, 13, 14, 15, 17, 19}
+    if phase in {
+        "awaiting_gap_answers",
+        "gap_question_round_answered",
+        "assessing_gap_answers",
+        "gap_answer_assessment_recorded",
+    }:
+        supported_ledger_length = len(entries) >= 14
     if phase not in {
         "awaiting_first_source", "clarifying_intake_purpose", "first_source_frozen",
         "interviewing_first_projection", "first_projection_recorded",
         "formulating_gap_question", "awaiting_gap_answer", "gap_operator_source_recorded",
+        "formulating_gap_question_round", "awaiting_gap_answers",
+        "gap_question_round_answered",
+        "assessing_gap_answers", "gap_answer_assessment_recorded",
         "resolving_gap_answer", "verifying_gap_resolution",
         "gap_resolution_not_applied", "gap_resolution_applied",
         "gap_resolution_rejected",
-    } or len(entries) not in {6, 7, 8, 10, 11, 13, 14, 15, 17, 19}:
+    } or not supported_ledger_length:
         return _blocked("invalid intake state", "the saved purpose stage is unsupported")
     result_path = work / "purpose-interview" / "assessment.json"
     try:
@@ -2855,6 +3951,9 @@ def _resume(
 
     later_phase = phase in {
         "formulating_gap_question", "awaiting_gap_answer", "gap_operator_source_recorded",
+        "formulating_gap_question_round", "awaiting_gap_answers",
+        "gap_question_round_answered",
+        "assessing_gap_answers", "gap_answer_assessment_recorded",
         "resolving_gap_answer", "verifying_gap_resolution",
         "gap_resolution_not_applied", "gap_resolution_applied",
         "gap_resolution_rejected",
@@ -2870,10 +3969,71 @@ def _resume(
         return recorded_error
     if phase == "first_projection_recorded":
         if gap_answer is not None:
-            return _blocked("gap answer not requested", "start one gap clarification before answering it")
+            return _blocked("gap answer not requested", "start a gap question round before answering it")
         if clarify_gap:
-            return _request_gap_clarification(work, state, entries)
+            return _request_gap_question_round(work, state, entries)
         return _projection_ready_result(state, work)
+    if phase == "formulating_gap_question_round":
+        result_path = (
+            work
+            / "gap-question-rounds"
+            / "round-000001"
+            / "clarification-round.json"
+        )
+        if not result_path.exists():
+            return _gap_question_round_model_result(state, work)
+        return _consume_gap_question_round(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+    if phase in {
+        "awaiting_gap_answers",
+        "gap_question_round_answered",
+        "assessing_gap_answers",
+        "gap_answer_assessment_recorded",
+    }:
+        round_error = _validate_gap_question_round(
+            work,
+            state,
+            entries,
+            purpose_bytes.decode("utf-8"),
+            allow_later_phase=phase in {
+                "assessing_gap_answers", "gap_answer_assessment_recorded"
+            },
+        )
+        if round_error:
+            return round_error
+        if phase == "gap_question_round_answered":
+            if gap_answer is not None:
+                return _blocked(
+                    "gap answer not requested", "the question round is already answered"
+                )
+            if assess_gap_answers:
+                return _request_gap_answer_assessment(work, state, entries)
+            return _gap_question_round_answered_result(state, work)
+        if phase == "assessing_gap_answers":
+            result_path = (
+                work
+                / "gap-answer-assessments"
+                / "round-000001"
+                / "assessment.json"
+            )
+            if not result_path.exists():
+                return _gap_answer_assessment_model_result(state, work)
+            return _consume_gap_answer_assessment(
+                work, state, entries, purpose_bytes.decode("utf-8")
+            )
+        if phase == "gap_answer_assessment_recorded":
+            assessment_error = _validate_gap_answer_assessment(
+                work, state, entries, purpose_bytes.decode("utf-8")
+            )
+            if assessment_error:
+                return assessment_error
+            return _gap_answer_assessment_ready_result(state, work)
+        if gap_answer is None:
+            return _gap_question_round_operator_result(state, work)
+        return _accept_gap_question_round_answer(
+            work, state, entries, gap_answer
+        )
     if phase == "formulating_gap_question":
         result_path = work / "gap-clarifications" / "attempt-000001" / "clarification.json"
         if not result_path.exists():
@@ -2938,6 +4098,7 @@ def drive(
     clarify_gap: bool = False,
     gap_answer: str | None = None,
     resolve_gap: bool = False,
+    assess_gap_answers: bool = False,
 ) -> dict[str, object]:
     opening_bytes = opening.encode("utf-8")
     if not opening.strip():
@@ -2953,6 +4114,7 @@ def drive(
             clarify_gap,
             gap_answer,
             resolve_gap,
+            assess_gap_answers,
         )
     if (
         purpose is not None
@@ -2961,6 +4123,7 @@ def drive(
         or clarify_gap
         or gap_answer is not None
         or resolve_gap
+        or assess_gap_answers
     ):
         return _blocked("intake not started", "start the intake before supplying its purpose or source")
     if work.exists() and not work.is_dir():
@@ -3057,7 +4220,7 @@ def main() -> int:
     parser.add_argument(
         "--clarify-gap",
         action="store_true",
-        help="request one operator clarification for the first unresolved projection gap",
+        help="prepare one operator question for every current projection gap",
     )
     parser.add_argument(
         "--gap-answer",
@@ -3066,7 +4229,17 @@ def main() -> int:
     parser.add_argument(
         "--run-gap-clarification",
         action="store_true",
-        help="formulate the code-bound operator question for one unresolved gap",
+        help="formulate the code-bound operator question round for current gaps",
+    )
+    parser.add_argument(
+        "--assess-gap-answers",
+        action="store_true",
+        help="request assessment of every preserved question-round answer",
+    )
+    parser.add_argument(
+        "--run-gap-answer-assessment",
+        action="store_true",
+        help="run the code-controlled assessment of all preserved round answers",
     )
     parser.add_argument(
         "--resolve-gap",
@@ -3095,11 +4268,12 @@ def main() -> int:
         args.run_relationship_correction,
         args.run_correction_verification,
         args.run_gap_clarification,
+        args.run_gap_answer_assessment,
         args.run_gap_resolution,
         args.run_gap_resolution_verification,
         args.run_purpose_interview,
     ))
-    if interview_flags and args.resolve_gap:
+    if interview_flags and (args.resolve_gap or args.assess_gap_answers):
         result = _blocked(
             "interview invocation invalid",
             "request or run one gap-resolution stage at a time",
@@ -3109,7 +4283,7 @@ def main() -> int:
     elif args.run_purpose_interview:
         if (
             any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
-            or args.project_source or args.clarify_gap
+            or args.project_source or args.clarify_gap or args.assess_gap_answers
         ):
             result = _blocked(
                 "interview invocation invalid",
@@ -3120,7 +4294,7 @@ def main() -> int:
     elif args.run_projection_interview:
         if (
             any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
-            or args.project_source or args.clarify_gap
+            or args.project_source or args.clarify_gap or args.assess_gap_answers
         ):
             result = _blocked(
                 "interview invocation invalid",
@@ -3131,7 +4305,7 @@ def main() -> int:
     elif args.run_projection_verification:
         if (
             any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
-            or args.project_source or args.clarify_gap
+            or args.project_source or args.clarify_gap or args.assess_gap_answers
         ):
             result = _blocked(
                 "interview invocation invalid",
@@ -3142,7 +4316,7 @@ def main() -> int:
     elif args.run_relationship_correction:
         if (
             any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
-            or args.project_source or args.clarify_gap
+            or args.project_source or args.clarify_gap or args.assess_gap_answers
         ):
             result = _blocked(
                 "interview invocation invalid",
@@ -3153,7 +4327,7 @@ def main() -> int:
     elif args.run_correction_verification:
         if (
             any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
-            or args.project_source or args.clarify_gap
+            or args.project_source or args.clarify_gap or args.assess_gap_answers
         ):
             result = _blocked(
                 "interview invocation invalid",
@@ -3164,7 +4338,7 @@ def main() -> int:
     elif args.run_gap_clarification:
         if (
             any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
-            or args.project_source or args.clarify_gap
+            or args.project_source or args.clarify_gap or args.assess_gap_answers
         ):
             result = _blocked(
                 "interview invocation invalid",
@@ -3172,10 +4346,23 @@ def main() -> int:
             )
         else:
             result = run_gap_clarification(args.work)
+    elif args.run_gap_answer_assessment:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            or args.project_source or args.clarify_gap or args.resolve_gap
+            or args.assess_gap_answers
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run gap answer assessment with only --work and --run-gap-answer-assessment",
+            )
+        else:
+            result = run_gap_answer_assessment(args.work)
     elif args.run_gap_resolution:
         if (
             any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
             or args.project_source or args.clarify_gap or args.resolve_gap
+            or args.assess_gap_answers
         ):
             result = _blocked(
                 "interview invocation invalid",
@@ -3187,6 +4374,7 @@ def main() -> int:
         if (
             any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
             or args.project_source or args.clarify_gap or args.resolve_gap
+            or args.assess_gap_answers
         ):
             result = _blocked(
                 "interview invocation invalid",
@@ -3206,6 +4394,7 @@ def main() -> int:
             args.clarify_gap,
             args.gap_answer,
             args.resolve_gap,
+            args.assess_gap_answers,
         )
     print(json.dumps(result, indent=2, sort_keys=True))
     return {

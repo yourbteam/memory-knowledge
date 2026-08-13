@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Drive one pending image projection interview through Codex."""
+"""Drive one pending image-intake model stage through Codex."""
 
 from __future__ import annotations
 
@@ -44,6 +44,18 @@ def load_request(work: Path) -> tuple[Path, list[str]]:
         and state.get("phase") == "formulating_gap_question"
         and state.get("waiting_for") == "gap-clarifications/attempt-000001/interview.jsonl"
     )
+    gap_round_phase = (
+        state.get("status") == "waiting_for_model"
+        and state.get("phase") == "formulating_gap_question_round"
+        and state.get("waiting_for")
+        == "gap-question-rounds/round-000001/interview.jsonl"
+    )
+    gap_answer_assessment_phase = (
+        state.get("status") == "waiting_for_model"
+        and state.get("phase") == "assessing_gap_answers"
+        and state.get("waiting_for")
+        == "gap-answer-assessments/round-000001/interview.jsonl"
+    )
     resolution_phase = (
         state.get("status") == "waiting_for_model"
         and state.get("phase") == "resolving_gap_answer"
@@ -59,6 +71,8 @@ def load_request(work: Path) -> tuple[Path, list[str]]:
         (
             projection_phase,
             gap_phase,
+            gap_round_phase,
+            gap_answer_assessment_phase,
             resolution_phase,
             resolution_verification_phase,
         )
@@ -81,13 +95,21 @@ def load_request(work: Path) -> tuple[Path, list[str]]:
         raise LaunchError("the frozen first source escapes the intake directory") from error
     if not attachment.is_file() or _sha256(attachment) != expected_sha256:
         raise LaunchError("the frozen first source is unavailable or has changed")
-    if gap_phase:
+    if gap_phase or gap_round_phase:
         return attachment, [
             sys.executable,
             str(START_INTAKE),
             "--work",
             str(work),
             "--run-gap-clarification",
+        ]
+    if gap_answer_assessment_phase:
+        return attachment, [
+            sys.executable,
+            str(START_INTAKE),
+            "--work",
+            str(work),
+            "--run-gap-answer-assessment",
         ]
     if resolution_phase or resolution_verification_phase:
         return attachment, [
@@ -157,11 +179,19 @@ def build_codex_argv(
     }
     correction = flag == "--run-relationship-correction"
     gap_clarification = flag == "--run-gap-clarification"
+    gap_answer_assessment = flag == "--run-gap-answer-assessment"
     gap_resolution = flag == "--run-gap-resolution"
+    evidence_instruction = (
+        "the code-bound preserved answer and visible source context"
+        if gap_answer_assessment or gap_resolution
+        else "visible source evidence"
+    )
     prompt = (
         (
-            "Inspect the attached frozen source and formulate only the operator question for the code-bound gap. "
+            "Inspect the attached frozen source and formulate one focused operator question for each code-bound gap presented. "
             if gap_clarification else
+            "Inspect the attached frozen source and judge each code-bound preserved answer only against its exact gap. "
+            if gap_answer_assessment else
             "Inspect the attached frozen source and assess only whether the preserved operator answer resolves its code-bound gap. "
             if gap_resolution else
             "Independently inspect the attached frozen source without relying on the producer's "
@@ -175,8 +205,8 @@ def build_codex_argv(
         + "validation, and stopping. Run it immediately; do not invoke task intake, sequence "
         + "selection, discovery, repository workflows, or repository instruction reads. "
         + "Run this exact interactive command in a PTY: "
-        + f"{command_text}. Answer every displayed question one at a time using only visible "
-        + "source evidence. Do not create or edit the projection, interview journal, ledger, or "
+        + f"{command_text}. Answer every displayed question one at a time using {evidence_instruction}. "
+        + "Do not create or edit the projection, interview journal, ledger, or "
         + "state directly. Do not assess projection completeness. Continue until the command "
         + "prints its terminal JSON result, then report that result."
     )
@@ -204,7 +234,7 @@ def main() -> int:
     print("Question: Intake work directory")
     print("Response format: One absolute directory path.")
     print("Example: /private/tmp/example-intake")
-    print("Constraints: Use an intake currently waiting for its first projection interview.")
+    print("Constraints: Use an intake currently waiting for a supported image-intake model stage.")
     try:
         work = Path(input("Answer: ").strip()).expanduser().resolve()
         attachment, interview_command = load_request(work)

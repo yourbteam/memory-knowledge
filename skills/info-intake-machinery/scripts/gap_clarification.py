@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Formulate one auditable operator question for one frozen projection gap."""
+"""Formulate one auditable operator question round for frozen projection gaps."""
 
 from __future__ import annotations
 
@@ -13,6 +13,7 @@ from typing import Any
 
 
 CONTRACT = 1
+ROUND_CONTRACT = 1
 
 
 class ClarificationError(ValueError):
@@ -38,8 +39,11 @@ def _load_projection(path: Path, expected_sha256: str) -> dict[str, Any]:
     return projection
 
 
-def select_gap(projection: dict[str, Any], projection_sha256: str) -> dict[str, object]:
-    """Select the first explicit gap in canonical projection order."""
+def select_gaps(
+    projection: dict[str, Any], projection_sha256: str
+) -> list[dict[str, object]]:
+    """Return every explicit gap in canonical projection order."""
+    gaps: list[dict[str, object]] = []
     for collection, kind in (
         ("scan_regions", "scan_region"),
         ("elements", "element"),
@@ -64,7 +68,7 @@ def select_gap(projection: dict[str, Any], projection_sha256: str) -> dict[str, 
                     element for element in projection.get("elements", [])
                     if isinstance(element, dict) and element.get("id") in participant_ids
                 ]
-            return {
+            gaps.append({
                 "projection_sha256": projection_sha256,
                 "collection": collection,
                 "kind": kind,
@@ -72,8 +76,15 @@ def select_gap(projection: dict[str, Any], projection_sha256: str) -> dict[str, 
                 "record_sha256": _digest(_canonical(item)),
                 "record": item,
                 "recorded_context": context,
-            }
-    raise ClarificationError("clarification-no-gap")
+            })
+    if not gaps:
+        raise ClarificationError("clarification-no-gap")
+    return gaps
+
+
+def select_gap(projection: dict[str, Any], projection_sha256: str) -> dict[str, object]:
+    """Select the first explicit gap for legacy single-gap intakes."""
+    return select_gaps(projection, projection_sha256)[0]
 
 
 def _entry(sequence: int, event: str, payload: dict[str, object], previous: str | None) -> dict[str, object]:
@@ -151,7 +162,7 @@ def _parse(question: dict[str, object], raw: str) -> tuple[str | None, str | Non
     value = raw.strip()
     if not value or "\n" in value or "\r" in value:
         return None, f"{question['id']}: answer one non-empty field at a time"
-    if question["id"] == "operator_question" and (
+    if str(question["id"]).startswith("operator_question") and (
         len(value) > 300 or value.count("?") != 1 or not value.endswith("?")
     ):
         return None, "operator_question: provide exactly one focused question ending in ?"
@@ -288,6 +299,191 @@ def validate(
         result,
         _digest((attempt_dir / "interview.jsonl").read_bytes()),
         _digest((attempt_dir / "clarification.json").read_bytes()),
+    )
+
+
+def _round_question(
+    state: dict[str, Any], gaps: list[dict[str, object]]
+) -> dict[str, object] | None:
+    if not state["model"]:
+        return {
+            "id": "questioner_model",
+            "prompt": "Which fresh model is formulating this operator question round?",
+            "type": "string",
+            "required": True,
+        }
+    if not state["harness"]:
+        return {
+            "id": "questioner_harness",
+            "prompt": "Which harness is running this clarification round?",
+            "type": "string",
+            "required": True,
+        }
+    index = len(state["questions"])
+    if index >= len(gaps):
+        return None
+    return {
+        "id": f"operator_question_{index + 1:06d}",
+        "prompt": (
+            "What one focused question should the operator answer to supply the "
+            "information missing from this exact gap?"
+        ),
+        "type": "string",
+        "required": True,
+        "gap_index": index,
+        "bound_gap": gaps[index],
+    }
+
+
+def _round_replay(
+    entries: list[dict[str, object]], gaps: list[dict[str, object]]
+) -> tuple[dict[str, Any], dict[str, object] | None, bool]:
+    state: dict[str, Any] = {"model": "", "harness": "", "questions": []}
+    pending: dict[str, object] | None = None
+    completed = False
+    for entry in entries:
+        if entry["event"] == "question_asked":
+            expected = _round_question(state, gaps)
+            if pending is not None or expected != entry.get("question"):
+                raise ClarificationError(
+                    f"clarification-round-question-invalid:{entry['sequence']}"
+                )
+            pending = expected
+        elif entry["event"] == "answer_recorded":
+            if pending is None or entry.get("question_id") != pending["id"]:
+                raise ClarificationError(
+                    f"clarification-round-answer-unbound:{entry['sequence']}"
+                )
+            if entry.get("accepted"):
+                question_id = str(pending["id"])
+                if question_id == "questioner_model":
+                    state["model"] = str(entry["parsed"])
+                elif question_id == "questioner_harness":
+                    state["harness"] = str(entry["parsed"])
+                else:
+                    expected_id = f"operator_question_{len(state['questions']) + 1:06d}"
+                    if question_id != expected_id:
+                        raise ClarificationError(
+                            f"clarification-round-order-invalid:{entry['sequence']}"
+                        )
+                    state["questions"].append(str(entry["parsed"]))
+            pending = None
+        elif entry["event"] == "clarification_round_completed":
+            if pending is not None or _round_question(state, gaps) is not None:
+                raise ClarificationError(
+                    f"clarification-round-completion-invalid:{entry['sequence']}"
+                )
+            completed = True
+        else:
+            raise ClarificationError(
+                f"clarification-round-event-unsupported:{entry['sequence']}"
+            )
+    return state, pending, completed
+
+
+def _round_result(
+    projection_sha256: str,
+    gaps: list[dict[str, object]],
+    state: dict[str, Any],
+) -> dict[str, object]:
+    questions = []
+    for index, gap in enumerate(gaps):
+        asks = state["questions"][index] if index < len(state["questions"]) else ""
+        questions.append({
+            "id": f"gap-clarification-answer-{index + 1:06d}",
+            "asks": asks,
+            "answers_gap": {
+                key: gap[key]
+                for key in (
+                    "projection_sha256", "collection", "kind", "id", "record_sha256"
+                )
+            },
+        })
+    return {
+        "schema_version": ROUND_CONTRACT,
+        "projection_sha256": projection_sha256,
+        "gaps": gaps,
+        "questioner": {"model": state["model"], "harness": state["harness"]},
+        "questions": questions,
+    }
+
+
+def run_round(
+    round_dir: Path,
+    *,
+    projection_path: Path,
+    projection_sha256: str,
+    purpose: str,
+    input_fn: Callable[[str], str] | None = None,
+    output_fn: Callable[[str], None] | None = None,
+) -> dict[str, object]:
+    projection = _load_projection(projection_path, projection_sha256)
+    gaps = select_gaps(projection, projection_sha256)
+    round_dir.mkdir(parents=True, exist_ok=True)
+    journal_path = round_dir / "interview.jsonl"
+    result_path = round_dir / "clarification-round.json"
+    read = input_fn or _terminal_input
+    write = output_fn or (lambda message: print(message, file=sys.stderr))
+    while True:
+        state, pending, completed = _round_replay(_read_journal(journal_path), gaps)
+        result = _round_result(projection_sha256, gaps, state)
+        result_bytes = json.dumps(result, indent=2, sort_keys=True).encode() + b"\n"
+        if completed:
+            if not result_path.exists():
+                result_path.write_bytes(result_bytes)
+            if result_path.read_bytes() != result_bytes:
+                raise ClarificationError("clarification-round-result-changed")
+            return result
+        question = pending or _round_question(state, gaps)
+        if question is None:
+            _append(
+                journal_path,
+                "clarification_round_completed",
+                {"result_sha256": _digest(result_bytes), "gap_count": len(gaps)},
+            )
+            result_path.write_bytes(result_bytes)
+            continue
+        if pending is None:
+            _append(journal_path, "question_asked", {"question": question})
+        gap = (
+            gaps[int(question["gap_index"])]
+            if "gap_index" in question
+            else {"round_gap_count": len(gaps)}
+        )
+        raw = read(_prompt(question, purpose, gap))
+        parsed, error = _parse(question, raw)
+        _append(journal_path, "answer_recorded", {
+            "question_id": question["id"],
+            "raw": raw,
+            "accepted": error is None,
+            "parsed": parsed,
+            "error": error,
+        })
+        if error:
+            write(f"Invalid answer: {error}.")
+
+
+def validate_round(
+    round_dir: Path,
+    *,
+    projection_path: Path,
+    projection_sha256: str,
+    purpose: str,
+) -> tuple[dict[str, object], str, str]:
+    result = run_round(
+        round_dir,
+        projection_path=projection_path,
+        projection_sha256=projection_sha256,
+        purpose=purpose,
+        input_fn=lambda _prompt: (_ for _ in ()).throw(
+            ClarificationError("clarification-round-not-complete")
+        ),
+        output_fn=lambda _message: None,
+    )
+    return (
+        result,
+        _digest((round_dir / "interview.jsonl").read_bytes()),
+        _digest((round_dir / "clarification-round.json").read_bytes()),
     )
 
 

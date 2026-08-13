@@ -4,6 +4,7 @@ import base64
 import importlib.util
 import json
 from pathlib import Path
+import shutil
 import subprocess
 import sys
 
@@ -1678,13 +1679,24 @@ def test_visual_projection_adapter_fails_closed_for_other_media(tmp_path: Path) 
     assert (work / "ledger.jsonl").read_bytes() == before
 
 
-def test_one_gap_becomes_one_operator_answer_source_without_overwriting(
+def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     tmp_path: Path,
 ) -> None:
     work = tmp_path / "intake"
     _advance_to_frozen_image(work, tmp_path / "first.png")
     START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
-    producer_answers = iter(_projection_answers())
+    producer_answers = iter([
+        "test-model", "pytest",
+        "yes", "visible-text", "10", "20", "100", "120", "readable",
+        "A readable description", "yes",
+        "yes", "visible-target", "120", "20", "220", "120", "gap",
+        "The first target is obscured.", "no",
+        "yes", "another-visible-target", "10", "130", "100", "220", "gap",
+        "The second target is obscured.", "no",
+        "no", *(["no"] * 15),
+        "use_recorded_endpoint", "visually-connected-to", "10", "20", "120", "20",
+        "supported", "readable", "The description connects to the first target.", "no",
+    ])
     START_INTAKE.run_first_projection_interview(
         work,
         input_fn=lambda _prompt: next(producer_answers),
@@ -1706,93 +1718,243 @@ def test_one_gap_becomes_one_operator_answer_source_without_overwriting(
     argv = CODEX_RUNNER.build_codex_argv(
         "/usr/local/bin/codex", work, attachment, command,
     )
-    messages: list[str] = []
     question_answers = iter([
         "fresh-questioner",
         "pytest-gap-question",
-        "What is hidden? And where?",
-        "What exact information is hidden by the obscured target?",
+        "What exact information is hidden by the first obscured target?",
+        "What exact information is hidden by the second obscured target?",
     ])
     waiting = START_INTAKE.run_gap_clarification(
         work,
         input_fn=lambda _prompt: next(question_answers),
-        output_fn=messages.append,
+        output_fn=lambda _message: None,
     )
 
-    assert requested["stopped"] == "formulating_gap_question"
+    assert requested["stopped"] == "formulating_gap_question_round"
     assert command[-1] == "--run-gap-clarification"
     assert argv[argv.index("--image") + 1] == str(work / "sources" / "source-000003")
-    assert "code-bound gap" in argv[-1]
+    assert "each code-bound gap" in argv[-1]
     assert waiting["status"] == "needs_operator"
-    assert waiting["question"]["answers_gap"]["collection"] == "elements"
+    assert waiting["stopped"] == "awaiting_gap_answers"
+    assert waiting["answered_question_count"] == 0
+    assert waiting["question_count"] == 2
     assert waiting["question"]["answers_gap"]["id"] == "element-000002"
-    assert waiting["question"]["asks"] == (
-        "What exact information is hidden by the obscured target?"
-    )
-    assert messages == [
-        "Invalid answer: operator_question: provide exactly one focused question ending in ?."
+    assert "questions" not in waiting
+    state = json.loads((work / "intake-state.json").read_text())
+    assert [item["answers_gap"]["id"] for item in state["questions"]] == [
+        "element-000002", "element-000003",
     ]
-
-    ledger_before_blank = (work / "ledger.jsonl").read_bytes()
-    blank = START_INTAKE.drive(
+    assert [item["id"] for item in state["questions"]] == [
+        "gap-clarification-answer-000001",
+        "gap-clarification-answer-000002",
+    ]
+    ledger_before_empty = (work / "ledger.jsonl").read_bytes()
+    empty_answer = START_INTAKE.drive(
         work, "There is a new intake", REAL_PURPOSE, gap_answer="   ",
     )
-    assert blank["status"] == "blocked"
-    assert blank["stopped"] == "gap answer required"
-    assert (work / "ledger.jsonl").read_bytes() == ledger_before_blank
-    assert not (work / "sources" / "source-000004.txt").exists()
+    assert empty_answer["status"] == "blocked"
+    assert empty_answer["stopped"] == "gap answer required"
+    assert (work / "ledger.jsonl").read_bytes() == ledger_before_empty
 
-    exact_answer = "  The obscured target says 250 non-package.  "
-    accepted = START_INTAKE.drive(
-        work, "There is a new intake", REAL_PURPOSE, gap_answer=exact_answer,
+    first_answer_text = "The first target contains $100."
+    second_question = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, gap_answer=first_answer_text,
     )
-    resumed = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+    resumed_second = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+    assert second_question == resumed_second
+    assert second_question["status"] == "needs_operator"
+    assert second_question["answered_question_count"] == 1
+    assert second_question["question_count"] == 2
+    assert second_question["question"]["answers_gap"]["id"] == "element-000003"
+    assert "questions" not in second_question
+    assert (work / "sources" / "source-000004.txt").read_text() == first_answer_text
+    assert (work / "projections" / "source-000004-v1.txt").read_text() == first_answer_text
 
-    assert accepted == resumed
-    assert accepted["stopped"] == "gap_operator_source_recorded"
+    second_answer_text = "The second target contains $200."
+    completed = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, gap_answer=second_answer_text,
+    )
+    resumed_completed = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE,
+    )
+    assert completed == resumed_completed
+    assert completed["status"] == "ready_for_projection_assessment"
+    assert completed["stopped"] == "gap_question_round_answered"
+    assert completed["answered_question_count"] == 2
+    assert completed["question_count"] == 2
+    assert (work / "sources" / "source-000005.txt").read_text() == second_answer_text
+    assert (work / "projections" / "source-000005-v1.txt").read_text() == second_answer_text
     assert original_projection.read_bytes() == original_projection_before
-    assert (work / accepted["operator_source"]["path"]).read_text() == exact_answer
-    assert (work / accepted["operator_projection"]["path"]).read_text() == exact_answer
-    assert accepted["operator_projection"]["coverage"]["status"] == "complete"
+
     ledger = [json.loads(line) for line in (work / "ledger.jsonl").read_text().splitlines()]
-    assert [item["event"] for item in ledger[-4:]] == [
-        "model_gap_clarification_requested",
-        "model_gap_clarification_completed",
+    assert [item["event"] for item in ledger[-8:]] == [
+        "model_gap_question_round_requested",
+        "model_gap_question_round_completed",
+        "operator_question_round_prepared",
         "operator_question_asked",
         "source_projected",
+        "operator_question_asked",
+        "source_projected",
+        "operator_question_round_answered",
     ]
-    assert ledger[-1]["source"]["sha256"] == ledger[-1]["projection"]["sha256"]
-    assert ledger[-1]["lineage"]["original_projection_id"] == recorded["projection"]["id"]
+    assert ledger[-4]["source"]["answers_question"] == "gap-clarification-answer-000001"
+    assert ledger[-4]["source"]["answers_gap"]["id"] == "element-000002"
+    assert ledger[-2]["source"]["answers_question"] == "gap-clarification-answer-000002"
+    assert ledger[-2]["source"]["answers_gap"]["id"] == "element-000003"
 
-
-def test_changed_gap_answer_source_fails_closed_on_replay(tmp_path: Path) -> None:
-    work = tmp_path / "intake"
-    _advance_to_frozen_image(work, tmp_path / "first.png")
-    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
-    producer_answers = iter(_projection_answers())
-    START_INTAKE.run_first_projection_interview(
-        work, input_fn=lambda _prompt: next(producer_answers), output_fn=lambda _message: None,
+    assessment_requested = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        assess_gap_answers=True,
     )
-    verification_answers = iter(_verification_answers(1))
-    START_INTAKE.run_first_projection_verification(
-        work, input_fn=lambda _prompt: next(verification_answers), output_fn=lambda _message: None,
+    assessment_attachment, assessment_command = CODEX_RUNNER.load_request(work)
+    assessment_argv = CODEX_RUNNER.build_codex_argv(
+        "/usr/local/bin/codex", work, assessment_attachment, assessment_command,
     )
-    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, clarify_gap=True)
-    question_answers = iter([
-        "fresh-questioner", "pytest-gap-question", "What exact information is obscured?",
+    assessment_answers = iter([
+        "fresh-assessor",
+        "pytest-gap-answer-assessment",
+        "maybe",
+        "resolves_gap",
+        "The first answer supplies the exact hidden value requested by its question.",
+        "does_not_resolve_gap",
+        "The second answer repeats a value but does not identify the obscured target.",
     ])
-    START_INTAKE.run_gap_clarification(
-        work, input_fn=lambda _prompt: next(question_answers), output_fn=lambda _message: None,
+    assessed = START_INTAKE.run_gap_answer_assessment(
+        work,
+        input_fn=lambda _prompt: next(assessment_answers),
+        output_fn=lambda _message: None,
     )
-    START_INTAKE.drive(
-        work, "There is a new intake", REAL_PURPOSE, gap_answer="The target says 250.",
+    resumed_assessment = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE,
     )
-    (work / "sources" / "source-000004.txt").write_text("changed")
 
-    result = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+    assert assessment_requested["status"] == "waiting_for_model"
+    assert assessment_requested["stopped"] == "assessing_gap_answers"
+    assert assessment_command[-1] == "--run-gap-answer-assessment"
+    assert assessment_argv[assessment_argv.index("--image") + 1] == str(
+        work / "sources" / "source-000003"
+    )
+    assert "each code-bound preserved answer" in assessment_argv[-1]
+    assert assessed == resumed_assessment
+    assert assessed["status"] == "ready_for_projection_assessment"
+    assert assessed["stopped"] == "gap_answer_assessment_recorded"
+    assert [item["verdict"] for item in assessed["assessments"]] == [
+        "resolves_gap", "does_not_resolve_gap",
+    ]
+    assert [item["gap"]["id"] for item in assessed["assessments"]] == [
+        "element-000002", "element-000003",
+    ]
+    assert original_projection.read_bytes() == original_projection_before
+    assessment_state = json.loads((work / "intake-state.json").read_text())
+    bindings, binding_error = START_INTAKE._gap_answer_assessment_bindings(
+        work, assessment_state,
+    )
+    assert binding_error is None and bindings is not None
+    valid_result = {
+        "assessments": assessed["assessments"],
+    }
+    missing = json.loads(json.dumps(valid_result))
+    missing["assessments"].pop()
+    reordered = json.loads(json.dumps(valid_result))
+    reordered["assessments"].reverse()
+    invented = json.loads(json.dumps(valid_result))
+    invented["assessments"][0]["question_id"] = "invented-question"
+    unsupported = json.loads(json.dumps(valid_result))
+    unsupported["assessments"][0]["verdict"] = "maybe"
+    for changed in (missing, reordered, invented, unsupported):
+        assert START_INTAKE._validate_gap_answer_assessment_shape(
+            changed, bindings,
+        ) is not None
 
-    assert result["status"] == "blocked"
-    assert result["stopped"] == "immutable gap answer changed"
+    answer_tamper = tmp_path / "answer-tamper"
+    shutil.copytree(work, answer_tamper)
+    answer_tamper_ledger = (answer_tamper / "ledger.jsonl").read_bytes()
+    (answer_tamper / "projections" / "source-000004-v1.txt").write_text("changed")
+    tampered_answer = START_INTAKE.drive(
+        answer_tamper, "There is a new intake", REAL_PURPOSE,
+    )
+    assert tampered_answer["status"] == "blocked"
+    assert "answer 1" in tampered_answer["why"]
+    assert (answer_tamper / "ledger.jsonl").read_bytes() == answer_tamper_ledger
+
+    assessment_path = (
+        work / "gap-answer-assessments" / "round-000001" / "assessment.json"
+    )
+    persisted_result = json.loads(assessment_path.read_text())
+    persisted_variants = {}
+    for name in ("missing", "reordered", "invented", "altered", "unsupported"):
+        persisted_variants[name] = json.loads(json.dumps(persisted_result))
+    persisted_variants["missing"]["assessments"].pop()
+    persisted_variants["reordered"]["assessments"].reverse()
+    persisted_variants["invented"]["assessments"][0][
+        "question_id"
+    ] = "invented-question"
+    persisted_variants["altered"]["assessments"][0][
+        "reason"
+    ] = "changed reason"
+    persisted_variants["unsupported"]["assessments"][0]["verdict"] = "maybe"
+    for name, changed in persisted_variants.items():
+        result_tamper = tmp_path / f"result-{name}-tamper"
+        shutil.copytree(work, result_tamper)
+        ledger_before_result_tamper = (result_tamper / "ledger.jsonl").read_bytes()
+        tampered_assessment_path = (
+            result_tamper
+            / "gap-answer-assessments"
+            / "round-000001"
+            / "assessment.json"
+        )
+        tampered_assessment_path.write_text(json.dumps(changed, indent=2, sort_keys=True) + "\n")
+        tampered_result = START_INTAKE.drive(
+            result_tamper, "There is a new intake", REAL_PURPOSE,
+        )
+        assert tampered_result["status"] == "blocked"
+        assert tampered_result["stopped"] == "invalid gap answer assessment"
+        assert (
+            result_tamper / "ledger.jsonl"
+        ).read_bytes() == ledger_before_result_tamper
+
+
+def test_question_round_shape_rejects_missing_duplicate_reordered_or_invented_questions() -> None:
+    gaps = [
+        {
+            "projection_sha256": "a" * 64,
+            "collection": "elements",
+            "kind": "element",
+            "id": f"element-{index:06d}",
+            "record_sha256": str(index) * 64,
+        }
+        for index in (1, 2)
+    ]
+    questions = [
+        {
+            "id": f"gap-clarification-answer-{index:06d}",
+            "asks": f"Question {index}?",
+            "answers_gap": {
+                key: gaps[index - 1][key]
+                for key in ("projection_sha256", "collection", "kind", "id", "record_sha256")
+            },
+        }
+        for index in (1, 2)
+    ]
+
+    assert START_INTAKE._validate_question_round_shape(
+        {"questions": questions[:1]}, gaps
+    ) is not None
+    duplicate = json.loads(json.dumps(questions))
+    duplicate[1]["id"] = duplicate[0]["id"]
+    assert START_INTAKE._validate_question_round_shape(
+        {"questions": duplicate}, gaps
+    ) is not None
+    assert START_INTAKE._validate_question_round_shape(
+        {"questions": list(reversed(questions))}, gaps
+    ) is not None
+    invented = json.loads(json.dumps(questions))
+    invented[1]["answers_gap"]["id"] = "element-invented"
+    assert START_INTAKE._validate_question_round_shape(
+        {"questions": invented}, gaps
+    ) is not None
 
 
 def _gap_resolution_fixture(tmp_path: Path) -> dict[str, object]:
