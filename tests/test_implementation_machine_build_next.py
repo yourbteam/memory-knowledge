@@ -24,6 +24,9 @@ spec = importlib.util.spec_from_file_location(
 machine = importlib.util.module_from_spec(spec)
 spec.loader.exec_module(machine)
 
+import read_dependencies  # noqa: E402
+import run as implementation_run  # noqa: E402
+
 
 @pytest.fixture(autouse=True)
 def _isolated_controller_state(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
@@ -1142,6 +1145,76 @@ def test_launch_preserves_codex_failure_stream_and_uses_collision_proof_logs(
     feed = (work / "feed.jsonl").read_text()
     assert "command_execution pytest focused.py" in feed
     assert "model is temporarily at capacity" in feed
+
+
+def test_ordering_job_waits_for_every_pair_before_stopping_reader(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    pairs = {
+        "pairs": [
+            {"left": f"r{number}", "right": f"r{number + 1}"}
+            for number in range(55)
+        ]
+    }
+    work = tmp_path / "work"
+    job = read_dependencies.hand_back(pairs, work, 550)["work"][0]
+    worker = tmp_path / "slow_reader.py"
+    worker.write_text(
+        "import json,pathlib,sys,time\n"
+        "out=pathlib.Path(sys.argv[1])\n"
+        "(out/'answer-0.json').write_text(json.dumps({'left':'r0','right':'r1'}))\n"
+        "time.sleep(2.5)\n"
+        "for number in range(1,55):\n"
+        " (out/f'answer-{number}.json').write_text(json.dumps("
+        "{'left':f'r{number}','right':f'r{number + 1}'}))\n"
+    )
+    monkeypatch.setattr(
+        machine, "validate_reader_command",
+        lambda _command: [sys.executable, str(worker), str(job["waiting_for"])],
+    )
+    monkeypatch.setattr(machine, "GRACE_SECONDS", 0)
+
+    result = machine._launch([job], "reader", tmp_path, work, "order")[0]
+
+    assert job["expect"] == 55
+    assert result["wrote"] == 55
+    assert result["exit_code"] == 0
+    assert not result["stopped_after_delivering"]
+
+
+def test_ordering_launches_are_bounded_when_readers_keep_delivering_nothing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    calls = 0
+
+    def never_advances(*_args, **_kwargs):
+        return {
+            "stopped": "reading the pairs",
+            "work": [{
+                "waiting_for": str(tmp_path / "depends-1-1"),
+                "pairs": 55,
+                "expect": 55,
+                "delivered": 0,
+            }],
+        }
+
+    def launch(*_args, **_kwargs):
+        nonlocal calls
+        calls += 1
+        return []
+
+    monkeypatch.setattr(implementation_run, "drive", never_advances)
+    monkeypatch.setattr(implementation_run.build_next, "_launch", launch)
+
+    result = implementation_run.complete_ordering(
+        tmp_path / "report.json", tmp_path / "work", 550, 0.15,
+        "reader", tmp_path,
+    )
+
+    assert calls == implementation_run.ORDERING_LAUNCH_ATTEMPTS
+    assert result["stopped_again"] == (
+        "the ordering readers are still incomplete after 3 launch rounds"
+    )
 
 
 def test_test_regression_still_blocks_two_reader_yes(

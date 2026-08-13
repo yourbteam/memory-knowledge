@@ -29,6 +29,12 @@ nothing that passed before fails, no test disappears without an exact owner ruli
 readers say yes with repository-resolved citations. Parsed pytest failure names are diagnostics,
 never a substitute for the command exit code. `--items` is how many items may finish unattended.
 
+Each ordering-reader job carries the exact number of pair records its slice requires. Partial
+delivery remains durable but never counts as completion and never causes the launcher to terminate
+the reader. One machinery invocation permits at most three incomplete ordering-reader launch
+rounds; if the slice is still incomplete, it hands back the exact remaining work instead of
+relaunching forever.
+
 Give `--order <order.json>` instead of `--report` when the order already exists; `run.py` produces one on its own if you ever want it separately.
 
 Use `--owner-approved` only after the owner explicitly approves the bounded machinery run. It

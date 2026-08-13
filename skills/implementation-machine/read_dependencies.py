@@ -87,7 +87,8 @@ def hand_back(pairs: dict, work: Path, per_reader: int) -> dict:
     for pass_number in range(1, PASSES + 1):
         for number, chunk in enumerate(slices, start=1):
             out = work / f"depends-{pass_number}-{number}"
-            if _answers_in(out) >= len(chunk):
+            delivered = _answers_in(out)
+            if delivered >= len(chunk):
                 continue
             scratch = work / f"depends-{pass_number}-{number}-scratch"
             scratch.mkdir(parents=True, exist_ok=True)
@@ -100,6 +101,9 @@ def hand_back(pairs: dict, work: Path, per_reader: int) -> dict:
                 "instruction": instruction,
                 "waiting_for": str(out),
                 "pairs": len(chunk),
+                "expect": len(chunk),
+                "wants": "*.json",
+                "delivered": delivered,
             })
 
     if jobs:

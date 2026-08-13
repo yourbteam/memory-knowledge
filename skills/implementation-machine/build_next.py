@@ -2291,13 +2291,15 @@ def main(argv: list[str] | None = None) -> int:
         if args.report is None:
             parser.error("give either --order or --report")
         import run  # noqa: PLC0415 — imported here because run.py imports this module
-        ordering = run.drive(args.report.resolve(), work, 550, 0.15)
-        while ordering.get("work"):
-            if not args.reader_command:
+        if args.reader_command:
+            ordering = run.complete_ordering(
+                args.report.resolve(), work, 550, 0.15, args.reader_command, built,
+            )
+        else:
+            ordering = run.drive(args.report.resolve(), work, 550, 0.15)
+            if ordering.get("work"):
                 return _say({"stopped": "reading the pairs, and no reader command was given",
                              "work": ordering["work"]})
-            _launch(ordering["work"], args.reader_command, built, work, "order")
-            ordering = run.drive(args.report.resolve(), work, 550, 0.15)
         if not ordering.get("order"):
             return _say(ordering)
         args.order = Path(ordering["order"])
