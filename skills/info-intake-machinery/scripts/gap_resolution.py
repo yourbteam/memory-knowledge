@@ -75,6 +75,87 @@ def _contains(region: object, point: object) -> bool:
     )
 
 
+def _participant_contract(
+    projection: dict[str, Any], relationship: dict[str, Any]
+) -> dict[str, Any]:
+    elements = projection.get("elements")
+    if not isinstance(elements, list):
+        raise ResolutionError("resolution-projection-shape-invalid")
+    element_by_id = {
+        item.get("id"): item for item in elements if isinstance(item, dict)
+    }
+    binding = relationship.get("binding_issue")
+    if isinstance(binding, dict):
+        participant = binding.get("participant")
+        choices = binding.get("matching_element_ids")
+        if (
+            participant not in {"origin", "target"}
+            or not isinstance(choices, list)
+            or not choices
+        ):
+            raise ResolutionError("resolution-bound-gap-not-eligible")
+        point = relationship.get(
+            "origin_point" if participant == "origin" else "target_point"
+        )
+        for element_id in choices:
+            element = element_by_id.get(element_id)
+            if (
+                not isinstance(element, dict)
+                or element.get("status") != "readable"
+                or not _contains(element.get("region"), point)
+            ):
+                raise ResolutionError(
+                    f"resolution-gap-choice-{element_id}-does-not-contain-bound-point"
+                )
+        known_role = "target" if participant == "origin" else "origin"
+        return {
+            "mode": "ambiguous_identity",
+            "unresolved_role": participant,
+            "known_role": known_role,
+            "known_id": relationship.get(
+                "to_id" if known_role == "target" else "from_id"
+            ),
+            "choices": choices,
+        }
+    if binding is not None:
+        raise ResolutionError("resolution-bound-gap-not-eligible")
+    ids = {
+        "origin": relationship.get("from_id"),
+        "target": relationship.get("to_id"),
+    }
+    missing_roles = [role for role, element_id in ids.items() if element_id is None]
+    if len(missing_roles) != 1:
+        raise ResolutionError("resolution-bound-gap-not-eligible")
+    unresolved_role = missing_roles[0]
+    known_role = "target" if unresolved_role == "origin" else "origin"
+    known_id = ids[known_role]
+    known_element = element_by_id.get(known_id)
+    if (
+        not isinstance(known_id, str)
+        or not isinstance(known_element, dict)
+        or known_element.get("status") != "readable"
+        or (
+            relationship.get("participant_id") is not None
+            and relationship.get("participant_id") != known_id
+        )
+    ):
+        raise ResolutionError(f"resolution-known-{known_role}-binding-invalid")
+    known_point = relationship.get(
+        "target_point" if known_role == "target" else "origin_point"
+    )
+    if known_point is not None and not _contains(
+        known_element.get("region"), known_point
+    ):
+        raise ResolutionError(f"resolution-known-{known_role}-binding-invalid")
+    return {
+        "mode": "missing_participant",
+        "unresolved_role": unresolved_role,
+        "known_role": known_role,
+        "known_id": known_id,
+        "known_point": known_point,
+    }
+
+
 def _inputs(
     projection_path: Path,
     projection_sha256: str,
@@ -84,7 +165,13 @@ def _inputs(
     answer_source_sha256: str,
     answer_projection_path: Path,
     answer_projection_sha256: str,
-) -> tuple[dict[str, Any], dict[str, Any], dict[str, Any], str]:
+) -> tuple[
+    dict[str, Any],
+    dict[str, Any],
+    dict[str, Any],
+    str,
+    dict[str, Any] | None,
+]:
     projection = _load_json(projection_path, projection_sha256, "projection")
     clarification = _load_json(
         clarification_path, clarification_sha256, "clarification"
@@ -99,7 +186,6 @@ def _inputs(
     gap = clarification.get("gap")
     if not isinstance(question, dict) or not isinstance(gap, dict):
         raise ResolutionError("resolution-clarification-shape-invalid")
-    binding = gap.get("record", {}).get("binding_issue")
     if (
         gap.get("projection_sha256") != projection_sha256
         or question.get("answers_gap")
@@ -108,10 +194,6 @@ def _inputs(
             for key in ("projection_sha256", "collection", "kind", "id", "record_sha256")
         }
         or gap.get("collection") != "relationships"
-        or not isinstance(binding, dict)
-        or binding.get("participant") not in {"origin", "target"}
-        or not isinstance(binding.get("matching_element_ids"), list)
-        or not binding["matching_element_ids"]
     ):
         raise ResolutionError("resolution-bound-gap-not-eligible")
     relationships = projection.get("relationships")
@@ -126,23 +208,79 @@ def _inputs(
         "record_sha256"
     ):
         raise ResolutionError("resolution-bound-gap-record-changed")
-    element_by_id = {
-        item.get("id"): item for item in elements if isinstance(item, dict)
-    }
-    ambiguous_point = relationship.get(
-        "origin_point" if binding["participant"] == "origin" else "target_point"
-    )
-    for element_id in binding["matching_element_ids"]:
-        element = element_by_id.get(element_id)
-        if (
-            not isinstance(element, dict)
-            or element.get("status") != "readable"
-            or not _contains(element.get("region"), ambiguous_point)
+    contract = _participant_contract(projection, relationship)
+    accepted_assessment = clarification.get("accepted_assessment")
+    if contract["mode"] == "missing_participant" and accepted_assessment is None:
+        raise ResolutionError(
+            "resolution-missing-participant-requires-accepted-assessment"
+        )
+    if accepted_assessment is not None:
+        known_role = contract["known_role"]
+        known_id = contract["known_id"]
+        known_point = relationship.get(
+            "target_point" if known_role == "target" else "origin_point"
+        )
+        known_element = next(
+            (
+                item
+                for item in elements
+                if isinstance(item, dict) and item.get("id") == known_id
+            ),
+            None,
+        )
+        if known_id is not None and (
+            not isinstance(known_element, dict)
+            or known_element.get("status") != "readable"
+            or (
+                contract["mode"] == "ambiguous_identity"
+                and not _contains(known_element.get("region"), known_point)
+            )
+            or (
+                contract["mode"] == "missing_participant"
+                and known_point is not None
+                and not _contains(known_element.get("region"), known_point)
+            )
         ):
             raise ResolutionError(
-                f"resolution-gap-choice-{element_id}-does-not-contain-bound-point"
+                f"resolution-known-{known_role}-binding-invalid"
             )
-    return projection, clarification, relationship, answer
+        active_identity = {
+            key: gap.get(key)
+            for key in (
+                "projection_sha256", "collection", "kind", "id", "record_sha256"
+            )
+        }
+        assessment_gap = clarification.get("assessment_gap", gap)
+        if not isinstance(assessment_gap, dict):
+            raise ResolutionError("resolution-assessment-gap-binding-invalid")
+        assessment_identity = {
+            key: assessment_gap.get(key)
+            for key in (
+                "projection_sha256", "collection", "kind", "id", "record_sha256"
+            )
+        }
+        stable_identity_keys = ("collection", "kind", "id", "record_sha256")
+        if (
+            not isinstance(accepted_assessment, dict)
+            or not isinstance(accepted_assessment.get("position"), int)
+            or accepted_assessment["position"] < 1
+            or accepted_assessment.get("question_id") != question.get("id")
+            or accepted_assessment.get("gap") != assessment_identity
+            or any(
+                active_identity[key] != assessment_identity[key]
+                for key in stable_identity_keys
+            )
+            or assessment_gap.get("record") != gap.get("record")
+            or accepted_assessment.get("answer_source", {}).get("sha256")
+            != answer_source_sha256
+            or accepted_assessment.get("answer_projection", {}).get("sha256")
+            != answer_projection_sha256
+            or accepted_assessment.get("verdict") != "resolves_gap"
+            or not isinstance(accepted_assessment.get("reason"), str)
+            or not accepted_assessment["reason"].strip()
+        ):
+            raise ResolutionError("resolution-accepted-assessment-binding-invalid")
+    return projection, clarification, relationship, answer, accepted_assessment
 
 
 def _entry(
@@ -253,6 +391,166 @@ def _recorded_overlap_choices(
     )
 
 
+def _missing_participant_question(
+    projection: dict[str, Any],
+    clarification: dict[str, Any],
+    relationship: dict[str, Any],
+    context: dict[str, object],
+    draft: dict[str, Any],
+) -> dict[str, object] | None:
+    contract = _participant_contract(projection, relationship)
+    known_id = str(contract["known_id"])
+    if "missing_participant_source" not in draft:
+        return {
+            "id": "missing_participant_source",
+            "prompt": "Is the missing visible participant already recorded or must it be recorded now?",
+            "type": "choice",
+            "required": True,
+            "choices": ["use_recorded_element", "record_visible_element"],
+            "context": context,
+        }
+    if (
+        draft["missing_participant_source"] == "use_recorded_element"
+        and "missing_participant_element_id" not in draft
+    ):
+        choices, evidence = _element_choices(projection, {known_id})
+        return {
+            "id": "missing_participant_element_id",
+            "prompt": "Which recorded readable element is the exact missing visible participant?",
+            "type": "choice",
+            "required": True,
+            "choices": choices,
+            "choice_evidence": evidence,
+            "context": context,
+        }
+    if draft["missing_participant_source"] == "record_visible_element":
+        fields = [
+            ("missing_participant_kind", "What kind of visible element is the missing participant?", "string"),
+            ("missing_participant_left", "Missing participant left bound (0-1000)?", "integer"),
+            ("missing_participant_top", "Missing participant top bound (0-1000)?", "integer"),
+            ("missing_participant_right", "Missing participant right bound (0-1000)?", "integer"),
+            ("missing_participant_bottom", "Missing participant bottom bound (0-1000)?", "integer"),
+            ("missing_participant_content", "What readable content is visible in the missing participant?", "string"),
+        ]
+        for field, prompt, answer_type in fields:
+            if field not in draft:
+                return {
+                    "id": field,
+                    "prompt": prompt,
+                    "type": answer_type,
+                    "required": True,
+                    "context": context,
+                }
+        overlap_choices, overlap_evidence = _recorded_overlap_choices(
+            projection,
+            {
+                "counterpart_left": draft["missing_participant_left"],
+                "counterpart_top": draft["missing_participant_top"],
+                "counterpart_right": draft["missing_participant_right"],
+                "counterpart_bottom": draft["missing_participant_bottom"],
+            },
+            set(),
+        )
+        reusable_overlap_choices = [
+            element_id for element_id in overlap_choices if element_id != known_id
+        ]
+        if overlap_choices and "missing_participant_overlap_disposition" not in draft:
+            return {
+                "id": "missing_participant_overlap_disposition",
+                "prompt": "Does this proposed participant reuse a spatially overlapping recorded element, or is it visibly distinct?",
+                "type": "choice",
+                "required": True,
+                "choices": [
+                    *(
+                        ["reuse_recorded_overlap"]
+                        if reusable_overlap_choices
+                        else []
+                    ),
+                    "confirm_distinct_element",
+                ],
+                "overlap_evidence": overlap_evidence,
+                "context": context,
+            }
+        if (
+            overlap_choices
+            and draft.get("missing_participant_overlap_disposition")
+            == "reuse_recorded_overlap"
+            and "missing_participant_overlap_element_id" not in draft
+        ):
+            return {
+                "id": "missing_participant_overlap_element_id",
+                "prompt": "Which overlapping recorded element is this same missing participant?",
+                "type": "choice",
+                "required": True,
+                "choices": reusable_overlap_choices,
+                "choice_evidence": {
+                    element_id: overlap_evidence[element_id]
+                    for element_id in reusable_overlap_choices
+                },
+                "context": context,
+            }
+    if draft.get("missing_participant_source") == "use_recorded_element":
+        selected_id = draft.get("missing_participant_element_id")
+        missing_bounds = next(
+            item["region"]
+            for item in projection["elements"]
+            if item.get("id") == selected_id
+        )
+    elif draft.get("missing_participant_overlap_disposition") == "reuse_recorded_overlap":
+        selected_id = draft.get("missing_participant_overlap_element_id")
+        missing_bounds = next(
+            item["region"]
+            for item in projection["elements"]
+            if item.get("id") == selected_id
+        )
+    else:
+        missing_bounds = [
+            draft["missing_participant_left"],
+            draft["missing_participant_top"],
+            draft["missing_participant_right"],
+            draft["missing_participant_bottom"],
+        ]
+    for axis in ("x", "y"):
+        field = f"missing_participant_{axis}"
+        if field not in draft:
+            return {
+                "id": field,
+                "prompt": f"What normalized {axis} coordinate lies inside the exact missing participant?",
+                "type": "integer",
+                "required": True,
+                "point_role": contract["unresolved_role"],
+                "point_bounds": missing_bounds,
+                "context": context,
+            }
+    if contract.get("known_point") is None:
+        known_bounds = next(
+            item["region"]
+            for item in projection["elements"]
+            if item.get("id") == known_id
+        )
+        for axis in ("x", "y"):
+            field = f"known_participant_{axis}"
+            if field not in draft:
+                return {
+                    "id": field,
+                    "prompt": f"What normalized {axis} coordinate lies inside the locked known participant {known_id}?",
+                    "type": "integer",
+                    "required": True,
+                    "point_role": contract["known_role"],
+                    "point_bounds": known_bounds,
+                    "context": context,
+                }
+    if "description" not in draft:
+        return {
+            "id": "resolved_relationship_description",
+            "prompt": "What does the now-complete visible relationship establish?",
+            "type": "string",
+            "required": True,
+            "context": context,
+        }
+    return None
+
+
 def _question(
     projection: dict[str, Any],
     clarification: dict[str, Any],
@@ -265,6 +563,8 @@ def _question(
         "operator_question": clarification["question"]["asks"],
         "operator_answer": answer,
     }
+    if clarification.get("accepted_assessment") is not None:
+        context["accepted_assessment"] = clarification["accepted_assessment"]
     if not state["model"]:
         return {
             "id": "resolver_model",
@@ -299,7 +599,11 @@ def _question(
         }
     if draft["verdict"] == "does_not_resolve_gap":
         return None
-    binding = relationship["binding_issue"]
+    binding = relationship.get("binding_issue")
+    if not isinstance(binding, dict):
+        return _missing_participant_question(
+            projection, clarification, relationship, context, draft
+        )
     if "ambiguous_element_id" not in draft:
         choices = list(binding["matching_element_ids"])
         evidence = {
@@ -396,6 +700,16 @@ def _question(
                 "context": context,
             }
     point_key = "target" if counterpart_role == "target" else "origin"
+    if clarification.get("accepted_assessment") is not None and counterpart_id is not None:
+        if "description" not in draft:
+            return {
+                "id": "resolved_relationship_description",
+                "prompt": "What does the now-complete visible relationship establish?",
+                "type": "string",
+                "required": True,
+                "context": context,
+            }
+        return None
     point_bounds: list[int] | None = None
     if counterpart_id is not None:
         point_bounds = next(
@@ -472,24 +786,42 @@ def _parse(
     if not 0 <= parsed <= 1000:
         return None, f"{question['id']}: received {parsed}; enter one integer from 0 through 1000"
     draft = state["draft"]
-    if question["id"] == "counterpart_right" and parsed <= draft["counterpart_left"]:
-        return None, (
-            f"counterpart_right: received {parsed}; enter a value greater than "
-            f"counterpart_left {draft['counterpart_left']}"
+    if question["id"] in {"counterpart_right", "missing_participant_right"}:
+        left_key = (
+            "counterpart_left"
+            if question["id"] == "counterpart_right"
+            else "missing_participant_left"
         )
-    if question["id"] == "counterpart_bottom" and parsed <= draft["counterpart_top"]:
-        return None, (
-            f"counterpart_bottom: received {parsed}; enter a value greater than "
-            f"counterpart_top {draft['counterpart_top']}"
+        if parsed <= draft[left_key]:
+            return None, (
+                f"{question['id']}: received {parsed}; enter a value greater than "
+                f"{left_key} {draft[left_key]}"
+            )
+    if question["id"] in {"counterpart_bottom", "missing_participant_bottom"}:
+        top_key = (
+            "counterpart_top"
+            if question["id"] == "counterpart_bottom"
+            else "missing_participant_top"
         )
-    if question["id"] == "counterpart_y":
-        point = [draft["counterpart_x"], parsed]
+        if parsed <= draft[top_key]:
+            return None, (
+                f"{question['id']}: received {parsed}; enter a value greater than "
+                f"{top_key} {draft[top_key]}"
+            )
+    point_x_keys = {
+        "counterpart_y": "counterpart_x",
+        "missing_participant_y": "missing_participant_x",
+        "known_participant_y": "known_participant_x",
+    }
+    if question["id"] in point_x_keys:
+        x_key = point_x_keys[str(question["id"])]
+        point = [draft[x_key], parsed]
         region = question.get("point_bounds")
         if not isinstance(region, list) or len(region) != 4:
-            return None, "counterpart_y: code could not bind the selected participant bounds"
+            return None, f"{question['id']}: code could not bind the selected participant bounds"
         if not _contains(region, point):
             return None, (
-                f"counterpart_y: point {point} falls outside selected bounds {region}; "
+                f"{question['id']}: point {point} falls outside selected bounds {region}; "
                 "enter coordinates inside that participant"
             )
     return parsed, None
@@ -516,8 +848,17 @@ def _replay(
     clarification: dict[str, Any],
     relationship: dict[str, Any],
     answer: str,
+    accepted_assessment: dict[str, Any] | None,
 ) -> tuple[dict[str, Any], dict[str, object] | None, bool]:
-    state: dict[str, Any] = {"model": "", "harness": "", "draft": {}}
+    draft = (
+        {
+            "verdict": "resolves_gap",
+            "reason": accepted_assessment["reason"],
+        }
+        if accepted_assessment is not None
+        else {}
+    )
+    state: dict[str, Any] = {"model": "", "harness": "", "draft": draft}
     pending: dict[str, object] | None = None
     completed = False
     for entry in entries:
@@ -543,6 +884,94 @@ def _replay(
     return state, pending, completed
 
 
+def _missing_participant_candidate(
+    projection: dict[str, Any],
+    clarification: dict[str, Any],
+    relationship: dict[str, Any],
+    answer_source_sha256: str,
+    draft: dict[str, Any],
+) -> dict[str, object]:
+    contract = _participant_contract(projection, relationship)
+    unresolved_role = str(contract["unresolved_role"])
+    known_role = str(contract["known_role"])
+    known_id = str(contract["known_id"])
+    new_elements: list[dict[str, object]] = []
+    if draft["missing_participant_source"] == "use_recorded_element":
+        missing_id = str(draft["missing_participant_element_id"])
+    elif draft.get("missing_participant_overlap_disposition") == "reuse_recorded_overlap":
+        missing_id = str(draft["missing_participant_overlap_element_id"])
+    else:
+        existing_ids = {
+            str(item.get("id"))
+            for item in projection["elements"]
+            if isinstance(item, dict)
+        }
+        sequence = 1
+        missing_id = f"resolution-element-{sequence:06d}"
+        while missing_id in existing_ids:
+            sequence += 1
+            missing_id = f"resolution-element-{sequence:06d}"
+        new_elements.append({
+            "id": missing_id,
+            "kind": draft["missing_participant_kind"],
+            "region": [
+                draft["missing_participant_left"],
+                draft["missing_participant_top"],
+                draft["missing_participant_right"],
+                draft["missing_participant_bottom"],
+            ],
+            "status": "readable",
+            "content": draft["missing_participant_content"],
+            "gap_reason": "",
+            "capture_scope": "gap_resolution_endpoint",
+        })
+    participant_ids = {
+        unresolved_role: missing_id,
+        known_role: known_id,
+    }
+    points = {
+        unresolved_role: [
+            draft["missing_participant_x"],
+            draft["missing_participant_y"],
+        ],
+        known_role: (
+            contract["known_point"]
+            if contract.get("known_point") is not None
+            else [draft["known_participant_x"], draft["known_participant_y"]]
+        ),
+    }
+    resolved = {
+        "id": f"{relationship['id']}-resolution-000001",
+        "resolution_of": relationship["id"],
+        "kind": relationship["kind"],
+        "from_id": participant_ids["origin"],
+        "to_id": participant_ids["target"],
+        "origin_point": points["origin"],
+        "target_point": points["target"],
+        "status": "readable",
+        "description": draft["description"],
+        "gap_reason": "",
+        "binding_method": "accepted_assessment_locked_known_endpoint_and_containment",
+        "resolution_evidence": {
+            "question_id": clarification["question"]["id"],
+            "operator_answer_source_sha256": answer_source_sha256,
+            "bound_gap_record_sha256": clarification["gap"]["record_sha256"],
+            "accepted_assessment_sha256": _digest(
+                _canonical(clarification["accepted_assessment"])
+            ),
+            "locked_known_role": known_role,
+            "locked_known_element_id": known_id,
+        },
+    }
+    return {
+        "schema_version": CONTRACT,
+        "source_sha256": projection.get("source_sha256"),
+        "operator_answer_source_sha256": answer_source_sha256,
+        "elements": [*projection["elements"], *new_elements],
+        "relationships": [resolved],
+    }
+
+
 def _candidate(
     projection: dict[str, Any],
     clarification: dict[str, Any],
@@ -559,7 +988,15 @@ def _candidate(
             "elements": projection["elements"],
             "relationships": [],
         }
-    binding = relationship["binding_issue"]
+    binding = relationship.get("binding_issue")
+    if not isinstance(binding, dict):
+        return _missing_participant_candidate(
+            projection,
+            clarification,
+            relationship,
+            answer_source_sha256,
+            draft,
+        )
     ambiguous_role = binding["participant"]
     counterpart_role = "target" if ambiguous_role == "origin" else "origin"
     counterpart_id = relationship.get(
@@ -597,6 +1034,12 @@ def _candidate(
     counterpart_point_key = (
         "target_point" if counterpart_role == "target" else "origin_point"
     )
+    counterpart_point = (
+        relationship[counterpart_point_key]
+        if clarification.get("accepted_assessment") is not None
+        and relationship.get(counterpart_point_key) is not None
+        else [draft["counterpart_x"], draft["counterpart_y"]]
+    )
     resolved = {
         "id": f"{relationship['id']}-resolution-000001",
         "resolution_of": relationship["id"],
@@ -604,7 +1047,7 @@ def _candidate(
         "from_id": participant_ids["origin"],
         "to_id": participant_ids["target"],
         ambiguous_point_key: relationship[ambiguous_point_key],
-        counterpart_point_key: [draft["counterpart_x"], draft["counterpart_y"]],
+        counterpart_point_key: counterpart_point,
         "status": "readable",
         "description": draft["description"],
         "gap_reason": "",
@@ -613,6 +1056,11 @@ def _candidate(
             "question_id": clarification["question"]["id"],
             "operator_answer_source_sha256": answer_source_sha256,
             "bound_gap_record_sha256": clarification["gap"]["record_sha256"],
+            "accepted_assessment_sha256": (
+                _digest(_canonical(clarification["accepted_assessment"]))
+                if clarification.get("accepted_assessment") is not None
+                else None
+            ),
         },
     }
     return {
@@ -668,7 +1116,7 @@ def run(
     input_fn: Callable[[str], str] | None = None,
     output_fn: Callable[[str], None] | None = None,
 ) -> dict[str, object]:
-    projection, clarification, relationship, answer = _inputs(
+    projection, clarification, relationship, answer, accepted_assessment = _inputs(
         projection_path,
         projection_sha256,
         clarification_path,
@@ -691,6 +1139,7 @@ def run(
             clarification,
             relationship,
             answer,
+            accepted_assessment,
         )
         candidate = _candidate(
             projection,
@@ -710,6 +1159,11 @@ def run(
             "reader": {"model": state["model"], "harness": state["harness"]},
             "verdict": state["draft"].get("verdict", ""),
             "reason": state["draft"].get("reason", ""),
+            "accepted_assessment_sha256": (
+                _digest(_canonical(accepted_assessment))
+                if accepted_assessment is not None
+                else None
+            ),
             "verification_candidate_sha256": _digest(candidate_bytes),
         }
         result_bytes = json.dumps(result, indent=2, sort_keys=True).encode() + b"\n"

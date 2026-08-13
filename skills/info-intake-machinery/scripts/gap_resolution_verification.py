@@ -212,9 +212,16 @@ def _question(
         },
     }
     if not state["verdict"]:
+        gap_record = clarification.get("gap", {}).get("record", {})
+        verdict_prompt = (
+            "Does the preserved operator answer select the proposed ambiguous participant, and does the frozen image visibly support the complete proposed relationship?"
+            if isinstance(gap_record, dict)
+            and isinstance(gap_record.get("binding_issue"), dict)
+            else "Does the preserved operator answer support the locked known participant, and does the frozen image visibly support the exact missing participant and complete proposed relationship?"
+        )
         return {
             "id": "resolution_verification_verdict",
-            "prompt": "Does the preserved operator answer select the proposed ambiguous participant, and does the frozen image visibly support the complete proposed relationship?",
+            "prompt": verdict_prompt,
             "type": "choice",
             "required": True,
             "choices": ["supported", "not_supported", "unreadable"],

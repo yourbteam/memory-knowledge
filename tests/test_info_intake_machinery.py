@@ -428,6 +428,28 @@ def test_codex_projection_runner_rejects_changed_frozen_source(tmp_path: Path) -
         raise AssertionError("changed source was accepted")
 
 
+def test_codex_projection_runner_accepts_follow_up_question_round(tmp_path: Path) -> None:
+    work = tmp_path / "intake"
+    source = work / "sources" / "source-000003"
+    source.parent.mkdir(parents=True)
+    source.write_bytes(b"image")
+    (work / "intake-state.json").write_text(json.dumps({
+        "status": "waiting_for_model",
+        "phase": "formulating_follow_up_gap_question_round",
+        "waiting_for": "gap-question-rounds/round-000002/interview.jsonl",
+        "first_source": {
+            "stored_path": "sources/source-000003",
+            "media_type": "image/png",
+            "sha256": START_INTAKE._digest_bytes(source.read_bytes()),
+        },
+    }))
+
+    attachment, command = CODEX_RUNNER.load_request(work)
+
+    assert attachment == source
+    assert command[-1] == "--run-gap-clarification"
+
+
 def test_projection_interview_enforces_choices_and_code_assembles_result(tmp_path: Path) -> None:
     answers = iter(_projection_answers(invalid_status_first=True))
     messages: list[str] = []
@@ -1847,6 +1869,19 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
         "element-000002", "element-000003",
     ]
     assert original_projection.read_bytes() == original_projection_before
+    ledger_before_reassessment = (work / "ledger.jsonl").read_bytes()
+    reassessment = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        assess_gap_answers=True,
+    )
+    assert reassessment == {
+        "status": "blocked",
+        "stopped": "gap answer assessment already recorded",
+        "why": "this completed question round already has its immutable assessment",
+    }
+    assert (work / "ledger.jsonl").read_bytes() == ledger_before_reassessment
     assessment_state = json.loads((work / "intake-state.json").read_text())
     bindings, binding_error = START_INTAKE._gap_answer_assessment_bindings(
         work, assessment_state,
@@ -1957,6 +1992,500 @@ def test_question_round_shape_rejects_missing_duplicate_reordered_or_invented_qu
     ) is not None
 
 
+def test_follow_up_question_round_shape_is_complete_unique_bound_and_new() -> None:
+    gaps = []
+    for index in (1, 2):
+        gaps.append({
+            "projection_sha256": "a" * 64,
+            "collection": "elements",
+            "kind": "element",
+            "id": f"element-{index:06d}",
+            "record_sha256": str(index) * 64,
+            "follow_up_of": {
+                "question": {
+                    "id": f"gap-clarification-answer-{index:06d}",
+                    "asks": f"What was hidden in area {index}?",
+                },
+                "assessment": {
+                    "verdict": "does_not_resolve_gap",
+                    "reason": "The answer did not identify the hidden value.",
+                },
+            },
+        })
+    questions = [
+        {
+            "id": f"gap-clarification-round-000002-question-{index:06d}",
+            "asks": f"What exact value appears in area {index}?",
+            "answers_gap": {
+                key: gaps[index - 1][key]
+                for key in (
+                    "projection_sha256", "collection", "kind", "id", "record_sha256"
+                )
+            },
+        }
+        for index in (1, 2)
+    ]
+    valid = {"round": 2, "gaps": gaps, "questions": questions}
+
+    assert START_INTAKE._validate_follow_up_question_round_shape(
+        valid, gaps, 2
+    ) is None
+    missing = json.loads(json.dumps(valid))
+    missing["questions"].pop()
+    reordered = json.loads(json.dumps(valid))
+    reordered["questions"].reverse()
+    invented = json.loads(json.dumps(valid))
+    invented["questions"][0]["answers_gap"]["id"] = "element-invented"
+    repeated = json.loads(json.dumps(valid))
+    repeated["questions"][0]["asks"] = gaps[0]["follow_up_of"]["question"]["asks"]
+    for changed in (missing, reordered, invented, repeated):
+        assert START_INTAKE._validate_follow_up_question_round_shape(
+            changed, gaps, 2
+        ) is not None
+
+
+def test_follow_up_round_engine_replays_bound_prior_context(tmp_path: Path) -> None:
+    projection = {
+        "scan_regions": [],
+        "elements": [{
+            "id": "element-000001",
+            "kind": "dashboard metric",
+            "region": [10, 10, 50, 50],
+            "status": "gap",
+            "content": "",
+            "gap_reason": "The exact value is unreadable.",
+        }],
+        "relationships": [],
+    }
+    projection_path = tmp_path / "projection.json"
+    projection_path.write_text(json.dumps(projection, indent=2, sort_keys=True) + "\n")
+    projection_sha256 = START_INTAKE._digest_bytes(projection_path.read_bytes())
+    gaps = START_INTAKE.gap_clarification.select_gaps(
+        projection, projection_sha256
+    )
+    gaps[0]["follow_up_of"] = {
+        "question_round": 1,
+        "question": {
+            "id": "gap-clarification-answer-000001",
+            "asks": "Is the value $100?",
+        },
+        "answer": "Yes.",
+        "assessment": {
+            "verdict": "does_not_resolve_gap",
+            "reason": "The answer assumes a value that is not readable.",
+        },
+    }
+    answers = iter([
+        "fresh-follow-up-questioner",
+        "pytest-follow-up",
+        "What exact value should replace the unreadable metric?",
+    ])
+    result = START_INTAKE.gap_clarification.run_round(
+        tmp_path / "round-000002",
+        projection_path=projection_path,
+        projection_sha256=projection_sha256,
+        purpose=REAL_PURPOSE,
+        gaps=gaps,
+        round_number=2,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    validated, _, _ = START_INTAKE.gap_clarification.validate_round(
+        tmp_path / "round-000002",
+        projection_path=projection_path,
+        projection_sha256=projection_sha256,
+        purpose=REAL_PURPOSE,
+        gaps=gaps,
+        round_number=2,
+    )
+
+    assert validated == result
+    assert result["round"] == 2
+    assert result["gaps"][0]["follow_up_of"]["answer"] == "Yes."
+    assert result["questions"] == [{
+        "id": "gap-clarification-round-000002-question-000001",
+        "asks": "What exact value should replace the unreadable metric?",
+        "answers_gap": {
+            "projection_sha256": projection_sha256,
+            "collection": "elements",
+            "kind": "element",
+            "id": "element-000001",
+            "record_sha256": gaps[0]["record_sha256"],
+        },
+    }]
+    operator_ready = START_INTAKE._follow_up_gap_question_round_ready_result(
+        {
+            "intake_id": "intake-test",
+            "follow_up_gap_question_round": {
+                "round": 2,
+                "question_count": 1,
+                "questions": result["questions"],
+            },
+        },
+        tmp_path,
+    )
+    assert operator_ready["question_count"] == 1
+    assert "questions" not in operator_ready
+
+
+def test_prepared_round_n_interview_persists_answers_and_rejects_changed_result(
+    tmp_path: Path,
+) -> None:
+    projection = {
+        "scan_regions": [],
+        "elements": [
+            {
+                "id": f"element-{index:06d}",
+                "kind": "metric",
+                "region": [index * 20, 0, (index + 1) * 20, 20],
+                "status": "gap",
+                "content": "",
+                "gap_reason": "The value is unreadable.",
+            }
+            for index in (1, 2)
+        ],
+        "relationships": [],
+    }
+    projection_path = tmp_path / "projection.json"
+    projection_path.write_text(json.dumps(projection, indent=2, sort_keys=True) + "\n")
+    projection_sha256 = START_INTAKE._digest_bytes(projection_path.read_bytes())
+    gaps = START_INTAKE.gap_clarification.select_gaps(
+        projection, projection_sha256
+    )
+    for index, gap in enumerate(gaps, 1):
+        gap["follow_up_of"] = {
+            "question_round": 1,
+            "question": {"id": f"question-{index}", "asks": f"Is value {index} $100?"},
+            "answer": "Yes.",
+            "assessment": {
+                "verdict": "does_not_resolve_gap",
+                "reason": "The answer does not identify visible evidence.",
+            },
+        }
+    round_number = 7
+    round_dir = tmp_path / "gap-question-rounds" / "round-000007"
+    answers = iter([
+        "fresh-reader", "pytest",
+        "What exact value should replace the first unreadable metric?",
+        "What exact value should replace the second unreadable metric?",
+    ])
+    result = START_INTAKE.gap_clarification.run_round(
+        round_dir,
+        projection_path=projection_path,
+        projection_sha256=projection_sha256,
+        purpose=REAL_PURPOSE,
+        gaps=gaps,
+        round_number=round_number,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    journal = START_INTAKE.gap_clarification._read_journal(
+        round_dir / "interview.jsonl"
+    )
+    journal_sha256 = START_INTAKE._digest_bytes(
+        (round_dir / "interview.jsonl").read_bytes()
+    )
+    result_sha256 = START_INTAKE._digest_bytes(
+        (round_dir / "clarification-round.json").read_bytes()
+    )
+    prior_assessment_sha256 = "b" * 64
+    current_projection = {
+        "id": "projection-source-000003-v1",
+        "source_id": "source-000003",
+        "version": 1,
+        "path": "projection.json",
+        "sha256": projection_sha256,
+    }
+    source = {
+        "id": "source-000003",
+        "kind": "image",
+        "path": "sources/source-000003.png",
+        "sha256": "c" * 64,
+    }
+    seed = START_INTAKE._ledger_entry(1, "source_projected", {
+        "intake_id": "intake-test",
+        "source": source,
+        "projection": current_projection,
+    }, None)
+    request = START_INTAKE._ledger_entry(2, "model_follow_up_gap_question_round_requested", {
+        "round": round_number,
+        "contract": START_INTAKE.gap_clarification.ROUND_CONTRACT,
+        "projection_path": "projection.json",
+        "projection_sha256": projection_sha256,
+        "gap_count": len(gaps),
+        "gaps": gaps,
+        "prior_assessment_sha256": prior_assessment_sha256,
+        "interview_path": "gap-question-rounds/round-000007/interview.jsonl",
+        "result_path": "gap-question-rounds/round-000007/clarification-round.json",
+    }, seed["entry_sha256"])
+    completed = START_INTAKE._ledger_entry(3, "model_follow_up_gap_question_round_completed", {
+        "round": round_number,
+        "interview_path": "gap-question-rounds/round-000007/interview.jsonl",
+        "interview_sha256": journal_sha256,
+        "result_path": "gap-question-rounds/round-000007/clarification-round.json",
+        "result_sha256": result_sha256,
+        "question_count": len(result["questions"]),
+        "interview_question_count": sum(item["event"] == "question_asked" for item in journal),
+        "answer_count": sum(item["event"] == "answer_recorded" for item in journal),
+        "rejected_answer_count": 0,
+        "questioner": result["questioner"],
+        "gaps": result["gaps"],
+        "questions": result["questions"],
+    }, request["entry_sha256"])
+    prepared = START_INTAKE._ledger_entry(4, "operator_follow_up_question_round_prepared", {
+        "round": round_number,
+        "question_count": len(result["questions"]),
+        "questions": result["questions"],
+    }, completed["entry_sha256"])
+    state = {
+        "intake_id": "intake-test",
+        "status": "ready_for_operator_interview",
+        "phase": "follow_up_gap_question_round_recorded",
+        "waiting_for": None,
+        "question": None,
+        "ledger_entries": 4,
+        "ledger_tail_sha256": prepared["entry_sha256"],
+        "first_projection": current_projection,
+        "current_projection": current_projection,
+        "gap_answer_assessment": {"result_sha256": prior_assessment_sha256},
+        "follow_up_gap_question_round": {
+            "round": round_number,
+            "contract": START_INTAKE.gap_clarification.ROUND_CONTRACT,
+            "request_ledger_sequence": 2,
+            "projection_path": "projection.json",
+            "projection_sha256": projection_sha256,
+            "gap_count": len(gaps),
+            "gaps": gaps,
+            "prior_assessment_sha256": prior_assessment_sha256,
+            "interview_sha256": journal_sha256,
+            "result_sha256": result_sha256,
+            "questioner": result["questioner"],
+            "question_count": len(result["questions"]),
+            "questions": result["questions"],
+        },
+    }
+    (tmp_path / "sources").mkdir()
+    (tmp_path / "projections").mkdir()
+    (tmp_path / "sources" / "source-000003.png").write_bytes(b"source image")
+    START_INTAKE._write_state(tmp_path / "intake-state.json", state)
+    (tmp_path / "ledger.jsonl").write_text(
+        "".join(
+            json.dumps(entry, sort_keys=True) + "\n"
+            for entry in (seed, request, completed, prepared)
+        )
+    )
+
+    assert START_INTAKE._validate_follow_up_gap_question_round(
+        tmp_path, state, [seed, request, completed, prepared], REAL_PURPOSE
+    ) is None
+    waiting = START_INTAKE._start_prepared_question_round_interview(
+        tmp_path, state, [seed, request, completed, prepared], REAL_PURPOSE
+    )
+    assert waiting["status"] == "needs_operator"
+    assert waiting["round"] == round_number
+    assert waiting["question"] == result["questions"][0]
+    assert waiting["question_count"] == 2
+    assert "questions" not in waiting
+
+    entries, ledger_error = START_INTAKE._validate_ledger(tmp_path / "ledger.jsonl")
+    assert ledger_error is None
+    ledger_before_empty = (tmp_path / "ledger.jsonl").read_bytes()
+    empty = START_INTAKE._accept_prepared_question_round_answer(
+        tmp_path, state, entries, REAL_PURPOSE, "   "
+    )
+    assert empty["status"] == "blocked"
+    assert (tmp_path / "ledger.jsonl").read_bytes() == ledger_before_empty
+
+    first_answer = START_INTAKE._accept_prepared_question_round_answer(
+        tmp_path,
+        state,
+        entries,
+        REAL_PURPOSE,
+        "It is $48,000.",
+    )
+    assert first_answer["status"] == "needs_operator"
+    assert first_answer["question"] == result["questions"][1]
+    assert first_answer["answered_question_count"] == 1
+    assert (tmp_path / "sources" / "source-000004.txt").read_text() == "It is $48,000."
+    assert (tmp_path / "projections" / "source-000004-v1.txt").read_text() == "It is $48,000."
+
+    entries, ledger_error = START_INTAKE._validate_ledger(tmp_path / "ledger.jsonl")
+    assert ledger_error is None
+    answered = START_INTAKE._accept_prepared_question_round_answer(
+        tmp_path,
+        state,
+        entries,
+        REAL_PURPOSE,
+        "It is $12,000.",
+    )
+    assert answered["status"] == "ready_for_projection_assessment"
+    assert answered["round"] == round_number
+    assert answered["answered_question_count"] == 2
+    assert (tmp_path / "sources" / "source-000005.txt").read_text() == "It is $12,000."
+    assert (tmp_path / "projections" / "source-000005-v1.txt").read_text() == "It is $12,000."
+    assert START_INTAKE._digest_bytes(projection_path.read_bytes()) == projection_sha256
+
+    entries, ledger_error = START_INTAKE._validate_ledger(tmp_path / "ledger.jsonl")
+    assert ledger_error is None
+    assert entries[-4]["lineage"]["question_ledger_sequence"] == 5
+    assert entries[-2]["lineage"] == {
+        "question_ledger_sequence": 7,
+        "question_round": round_number,
+        "question_position": 2,
+        "original_source_id": "source-000003",
+        "original_projection_id": "projection-source-000003-v1",
+        "prepared_round_result_sha256": result_sha256,
+    }
+    assert START_INTAKE._validate_prepared_question_round_interview(
+        tmp_path, state, entries, REAL_PURPOSE
+    ) is None
+    changed_state = json.loads(json.dumps(state))
+    changed_state["prepared_question_round_interview"]["original_source_id"] = (
+        "source-999999"
+    )
+    wrong_identity = START_INTAKE._validate_prepared_question_round_interview(
+        tmp_path, changed_state, entries, REAL_PURPOSE
+    )
+    assert wrong_identity["status"] == "blocked"
+
+    first_answer_path = tmp_path / "sources" / "source-000004.txt"
+    first_answer_bytes = first_answer_path.read_bytes()
+    first_answer_path.write_text("changed answer")
+    changed_answer = START_INTAKE._validate_prepared_question_round_interview(
+        tmp_path, state, entries, REAL_PURPOSE
+    )
+    assert changed_answer["status"] == "blocked"
+    first_answer_path.write_bytes(first_answer_bytes)
+    assert START_INTAKE._validate_prepared_question_round_interview(
+        tmp_path, state, entries, REAL_PURPOSE
+    ) is None
+    ledger_before_duplicate = (tmp_path / "ledger.jsonl").read_bytes()
+    duplicate = START_INTAKE._accept_prepared_question_round_answer(
+        tmp_path, state, entries, REAL_PURPOSE, "Duplicate answer"
+    )
+    assert duplicate["status"] == "blocked"
+    assert (tmp_path / "ledger.jsonl").read_bytes() == ledger_before_duplicate
+
+    requested_assessment = START_INTAKE._request_prepared_question_round_assessment(
+        tmp_path, state, entries
+    )
+    assert requested_assessment["status"] == "waiting_for_model"
+    assert requested_assessment["stopped"] == (
+        "assessing_prepared_question_round_answers"
+    )
+    assert requested_assessment["round"] == round_number
+    request_entries, ledger_error = START_INTAKE._validate_ledger(
+        tmp_path / "ledger.jsonl"
+    )
+    assert ledger_error is None
+    extra = START_INTAKE._ledger_entry(
+        len(request_entries) + 1,
+        "unexpected_event",
+        {"round": round_number},
+        request_entries[-1]["entry_sha256"],
+    )
+    extra_state = json.loads(json.dumps(state))
+    extra_state["ledger_entries"] = len(request_entries) + 1
+    extra_state["ledger_tail_sha256"] = extra["entry_sha256"]
+    _, _, extra_error = (
+        START_INTAKE._validate_prepared_question_round_assessment_request(
+            tmp_path, extra_state, [*request_entries, extra]
+        )
+    )
+    assert extra_error == {
+        "status": "blocked",
+        "stopped": "invalid intake state",
+        "why": (
+            "the prepared-round assessment request is not the only active ledger event"
+        ),
+    }
+    assessment_answers = iter([
+        "fresh-assessor",
+        "pytest-round-n",
+        "maybe",
+        "resolves_gap",
+        "The first answer supplies the exact requested value.",
+        "does_not_resolve_gap",
+        "The second answer gives a value without enough identifying context.",
+    ])
+    START_INTAKE.gap_answer_assessment.run(
+        tmp_path / "gap-answer-assessments" / "round-000007",
+        bindings=START_INTAKE._prepared_question_round_assessment_bindings(
+            tmp_path, state
+        )[0],
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(assessment_answers),
+        output_fn=lambda _message: None,
+    )
+    entries, ledger_error = START_INTAKE._validate_ledger(tmp_path / "ledger.jsonl")
+    assert ledger_error is None
+    assessed = START_INTAKE._consume_prepared_question_round_assessment(
+        tmp_path, state, entries, REAL_PURPOSE
+    )
+    assert assessed["status"] == "ready_for_projection_assessment"
+    assert assessed["stopped"] == "prepared_question_round_assessment_recorded"
+    assert assessed["round"] == round_number
+    assert [item["verdict"] for item in assessed["assessments"]] == [
+        "resolves_gap",
+        "does_not_resolve_gap",
+    ]
+    assert [item["gap"]["id"] for item in assessed["assessments"]] == [
+        "element-000001",
+        "element-000002",
+    ]
+    assert START_INTAKE._digest_bytes(projection_path.read_bytes()) == projection_sha256
+    entries, ledger_error = START_INTAKE._validate_ledger(tmp_path / "ledger.jsonl")
+    assert ledger_error is None
+    assert entries[-2]["event"] == "model_gap_answer_assessment_requested"
+    assert entries[-1]["event"] == "model_gap_answer_assessment_completed"
+    assert entries[-1]["round"] == round_number
+    assert entries[-1]["rejected_answer_count"] == 1
+    assert START_INTAKE._validate_prepared_question_round_assessment(
+        tmp_path, state, entries, REAL_PURPOSE
+    ) is None
+
+    assessment_path = (
+        tmp_path
+        / "gap-answer-assessments"
+        / "round-000007"
+        / "assessment.json"
+    )
+    assessment_bytes = assessment_path.read_bytes()
+    changed_assessment = json.loads(assessment_bytes)
+    changed_assessment["assessments"][0]["verdict"] = "maybe"
+    assessment_path.write_text(
+        json.dumps(changed_assessment, indent=2, sort_keys=True) + "\n"
+    )
+    assessment_tamper = START_INTAKE._validate_prepared_question_round_assessment(
+        tmp_path, state, entries, REAL_PURPOSE
+    )
+    assert assessment_tamper["status"] == "blocked"
+    assessment_path.write_bytes(assessment_bytes)
+    assert START_INTAKE._validate_prepared_question_round_assessment(
+        tmp_path, state, entries, REAL_PURPOSE
+    ) is None
+    ledger_before_reassessment = (tmp_path / "ledger.jsonl").read_bytes()
+    reassessment = START_INTAKE._request_prepared_question_round_assessment(
+        tmp_path, state, entries
+    )
+    assert reassessment["status"] == "blocked"
+    assert (tmp_path / "ledger.jsonl").read_bytes() == ledger_before_reassessment
+
+    changed = json.loads((round_dir / "clarification-round.json").read_text())
+    changed["questions"][0]["id"] = "invented-question"
+    (round_dir / "clarification-round.json").write_text(
+        json.dumps(changed, indent=2, sort_keys=True) + "\n"
+    )
+    blocked = START_INTAKE._validate_follow_up_gap_question_round(
+        tmp_path, state, entries, REAL_PURPOSE, allow_interview=True
+    )
+    assert blocked == {
+        "status": "blocked",
+        "stopped": "invalid follow-up gap question round",
+        "why": "clarification-round-result-changed",
+    }
+
+
 def _gap_resolution_fixture(tmp_path: Path) -> dict[str, object]:
     relationship = {
         "id": "relationship-000001",
@@ -2028,6 +2557,60 @@ def _gap_resolution_fixture(tmp_path: Path) -> dict[str, object]:
     }
 
 
+def _missing_endpoint_resolution_fixture(tmp_path: Path) -> dict[str, object]:
+    inputs = _gap_resolution_fixture(tmp_path)
+    projection = json.loads(inputs["projection_path"].read_text())
+    relationship = projection["relationships"][0]
+    relationship.pop("binding_issue")
+    relationship.pop("origin_point")
+    relationship.pop("target_point")
+    relationship["from_id"] = None
+    relationship["to_id"] = "element-000003"
+    relationship["participant_id"] = "element-000003"
+    inputs["projection_path"].write_text(
+        json.dumps(projection, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["projection_sha256"] = START_INTAKE._digest_bytes(
+        inputs["projection_path"].read_bytes()
+    )
+    clarification = json.loads(inputs["clarification_path"].read_text())
+    clarification["gap"]["projection_sha256"] = inputs["projection_sha256"]
+    clarification["gap"]["record"] = relationship
+    clarification["gap"]["record_sha256"] = START_INTAKE._digest_bytes(
+        json.dumps(relationship, sort_keys=True, separators=(",", ":")).encode()
+    )
+    identity = {
+        key: clarification["gap"][key]
+        for key in (
+            "projection_sha256", "collection", "kind", "id", "record_sha256"
+        )
+    }
+    clarification["question"]["answers_gap"] = identity
+    clarification["assessment_gap"] = json.loads(json.dumps(clarification["gap"]))
+    clarification["accepted_assessment"] = {
+        "position": 1,
+        "question_id": clarification["question"]["id"],
+        "gap": identity,
+        "answer_source": {
+            "id": "source-answer",
+            "sha256": inputs["answer_source_sha256"],
+        },
+        "answer_projection": {
+            "id": "projection-answer-v1",
+            "sha256": inputs["answer_projection_sha256"],
+        },
+        "verdict": "resolves_gap",
+        "reason": "The answer confirms the locked known target.",
+    }
+    inputs["clarification_path"].write_text(
+        json.dumps(clarification, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["clarification_sha256"] = START_INTAKE._digest_bytes(
+        inputs["clarification_path"].read_bytes()
+    )
+    return inputs
+
+
 def test_gap_resolution_enforces_choices_and_endpoint_containment(tmp_path: Path) -> None:
     inputs = _gap_resolution_fixture(tmp_path)
     attempt = tmp_path / "resolution"
@@ -2055,7 +2638,561 @@ def test_gap_resolution_enforces_choices_and_endpoint_containment(tmp_path: Path
     assert candidate["relationships"][0]["target_point"] == [700, 100]
     assert sum(item["event"] == "answer_recorded" and not item["accepted"] for item in journal) == 2
     assert "choose one of" in messages[0]
+
     assert "falls outside selected bounds" in messages[1]
+
+
+def test_assessed_answer_resolution_cannot_reassess_or_change_known_endpoint(
+    tmp_path: Path,
+) -> None:
+    inputs = _gap_resolution_fixture(tmp_path)
+    projection = json.loads(inputs["projection_path"].read_text())
+    relationship = projection["relationships"][0]
+    relationship["to_id"] = "element-000003"
+    inputs["projection_path"].write_text(
+        json.dumps(projection, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["projection_sha256"] = START_INTAKE._digest_bytes(
+        inputs["projection_path"].read_bytes()
+    )
+    clarification = json.loads(inputs["clarification_path"].read_text())
+    clarification["gap"]["projection_sha256"] = inputs["projection_sha256"]
+    clarification["gap"]["record"] = relationship
+    clarification["gap"]["record_sha256"] = START_INTAKE._digest_bytes(
+        json.dumps(relationship, sort_keys=True, separators=(",", ":")).encode()
+    )
+    gap_identity = {
+        key: clarification["gap"][key]
+        for key in (
+            "projection_sha256", "collection", "kind", "id", "record_sha256"
+        )
+    }
+    clarification["question"]["answers_gap"] = gap_identity
+    clarification["accepted_assessment"] = {
+        "position": 1,
+        "question_id": clarification["question"]["id"],
+        "gap": gap_identity,
+        "answer_source": {
+            "id": "source-answer",
+            "sha256": inputs["answer_source_sha256"],
+        },
+        "answer_projection": {
+            "id": "projection-answer-v1",
+            "sha256": inputs["answer_projection_sha256"],
+        },
+        "verdict": "resolves_gap",
+        "reason": "The preserved answer selects the specific nested element.",
+    }
+    inputs["clarification_path"].write_text(
+        json.dumps(clarification, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["clarification_sha256"] = START_INTAKE._digest_bytes(
+        inputs["clarification_path"].read_bytes()
+    )
+    answers = iter([
+        "fresh-resolver",
+        "pytest-assessed-resolution",
+        "unbound-element",
+        "element-000001",
+        "The specific callout points to the May 16 · ACH field.",
+    ])
+    messages: list[str] = []
+
+    result = START_INTAKE.gap_resolution.run(
+        tmp_path / "assessed-resolution",
+        **inputs,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=messages.append,
+    )
+    candidate = json.loads(
+        (tmp_path / "assessed-resolution" / "verification-candidate.json").read_text()
+    )
+    journal = [
+        json.loads(line)
+        for line in (
+            tmp_path / "assessed-resolution" / "interview.jsonl"
+        ).read_text().splitlines()
+    ]
+
+    assert result["verdict"] == "resolves_gap"
+    assert result["reason"] == clarification["accepted_assessment"]["reason"]
+    assert candidate["elements"] == projection["elements"]
+    assert candidate["relationships"][0]["from_id"] == "element-000001"
+    assert candidate["relationships"][0]["to_id"] == "element-000003"
+    assert candidate["relationships"][0]["target_point"] == [700, 100]
+    asked_ids = [
+        item["question"]["id"]
+        for item in journal
+        if item["event"] == "question_asked"
+    ]
+    assert "resolution_verdict" not in asked_ids
+    assert "resolution_reason" not in asked_ids
+    assert sum(
+        item["event"] == "answer_recorded" and not item["accepted"]
+        for item in journal
+    ) == 1
+    assert "choose one of" in messages[0]
+
+    changed_projection = json.loads(inputs["projection_path"].read_text())
+    changed_projection["relationships"][0]["target_point"] = [999, 999]
+    inputs["projection_path"].write_text(
+        json.dumps(changed_projection, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["projection_sha256"] = START_INTAKE._digest_bytes(
+        inputs["projection_path"].read_bytes()
+    )
+    changed_clarification = json.loads(inputs["clarification_path"].read_text())
+    changed_relationship = changed_projection["relationships"][0]
+    changed_clarification["gap"]["projection_sha256"] = inputs[
+        "projection_sha256"
+    ]
+    changed_clarification["gap"]["record"] = changed_relationship
+    changed_clarification["gap"]["record_sha256"] = START_INTAKE._digest_bytes(
+        json.dumps(
+            changed_relationship, sort_keys=True, separators=(",", ":")
+        ).encode()
+    )
+    changed_identity = {
+        key: changed_clarification["gap"][key]
+        for key in (
+            "projection_sha256", "collection", "kind", "id", "record_sha256"
+        )
+    }
+    changed_clarification["question"]["answers_gap"] = changed_identity
+    changed_clarification["accepted_assessment"]["gap"] = changed_identity
+    inputs["clarification_path"].write_text(
+        json.dumps(changed_clarification, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["clarification_sha256"] = START_INTAKE._digest_bytes(
+        inputs["clarification_path"].read_bytes()
+    )
+    try:
+        START_INTAKE.gap_resolution.run(
+            tmp_path / "invalid-known-endpoint",
+            **inputs,
+            purpose=REAL_PURPOSE,
+            input_fn=lambda _prompt: "unused",
+            output_fn=lambda _message: None,
+        )
+    except START_INTAKE.gap_resolution.ResolutionError as error:
+        assert str(error) == "resolution-known-target-binding-invalid"
+    else:
+        raise AssertionError("invalid known endpoint was accepted")
+
+
+def test_assessed_answer_resolution_rebinds_unchanged_gap_to_new_projection(
+    tmp_path: Path,
+) -> None:
+    inputs = _gap_resolution_fixture(tmp_path)
+    projection = json.loads(inputs["projection_path"].read_text())
+    relationship = projection["relationships"][0]
+    relationship["to_id"] = "element-000003"
+    inputs["projection_path"].write_text(
+        json.dumps(projection, indent=4, sort_keys=True) + "\n"
+    )
+    inputs["projection_sha256"] = START_INTAKE._digest_bytes(
+        inputs["projection_path"].read_bytes()
+    )
+    clarification = json.loads(inputs["clarification_path"].read_text())
+    original_gap = json.loads(json.dumps(clarification["gap"]))
+    original_gap["record"] = relationship
+    original_gap["record_sha256"] = START_INTAKE._digest_bytes(
+        json.dumps(relationship, sort_keys=True, separators=(",", ":")).encode()
+    )
+    active_gap = json.loads(json.dumps(original_gap))
+    active_gap["projection_sha256"] = inputs["projection_sha256"]
+    clarification["gap"] = active_gap
+    clarification["assessment_gap"] = original_gap
+    clarification["question"]["answers_gap"] = {
+        key: active_gap[key]
+        for key in (
+            "projection_sha256", "collection", "kind", "id", "record_sha256"
+        )
+    }
+    clarification["accepted_assessment"] = {
+        "position": 2,
+        "question_id": clarification["question"]["id"],
+        "gap": {
+            key: original_gap[key]
+            for key in (
+                "projection_sha256", "collection", "kind", "id", "record_sha256"
+            )
+        },
+        "answer_source": {
+            "id": "source-answer",
+            "sha256": inputs["answer_source_sha256"],
+        },
+        "answer_projection": {
+            "id": "projection-answer-v1",
+            "sha256": inputs["answer_projection_sha256"],
+        },
+        "verdict": "resolves_gap",
+        "reason": "The preserved answer selects the specific nested element.",
+    }
+    inputs["clarification_path"].write_text(
+        json.dumps(clarification, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["clarification_sha256"] = START_INTAKE._digest_bytes(
+        inputs["clarification_path"].read_bytes()
+    )
+
+    answers = iter([
+        "fresh-resolver",
+        "pytest-retargeted-assessment",
+        "element-000001",
+        "The specific callout identifies the May 16 payout field.",
+    ])
+    result = START_INTAKE.gap_resolution.run(
+        tmp_path / "retargeted-assessed-resolution",
+        **inputs,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    assert result["verdict"] == "resolves_gap"
+
+
+def test_next_resolution_archives_prior_terminal_before_state_transition(
+    tmp_path: Path, monkeypatch: object
+) -> None:
+    source_path = tmp_path / "sources" / "source-000003"
+    source_path.parent.mkdir()
+    source_path.write_bytes(b"image")
+    parent = {
+        "id": "projection-source-000003-v2",
+        "path": "projections/source-000003-v2.json",
+        "sha256": "b" * 64,
+        "version": 2,
+    }
+    previous = {
+        "attempt": 1,
+        "mode": "assessed_answer",
+        "result_sha256": "c" * 64,
+        "selected_assessment_position": 1,
+    }
+    state = {
+        "intake_id": "intake-test",
+        "phase": "gap_resolution_applied",
+        "current_projection": parent,
+        "first_projection": {
+            "id": "projection-source-000003-v1",
+            "path": "projections/source-000003-v1.json",
+            "sha256": "a" * 64,
+            "version": 1,
+        },
+        "gap_resolution": previous,
+        "gap_resolution_history": [],
+        "first_source": {
+            "stored_path": "sources/source-000003",
+            "media_type": "image/png",
+            "sha256": START_INTAKE._digest_bytes(source_path.read_bytes()),
+        },
+    }
+    binding = {
+        "gap": {
+            "projection_sha256": parent["sha256"],
+            "collection": "relationships",
+            "kind": "relationship",
+            "id": "relationship-000002",
+            "record_sha256": "d" * 64,
+            "record": {"id": "relationship-000002"},
+        },
+        "question": {
+            "id": "question-2",
+            "answers_gap": {
+                "projection_sha256": parent["sha256"],
+                "collection": "relationships",
+                "kind": "relationship",
+                "id": "relationship-000002",
+                "record_sha256": "d" * 64,
+            },
+        },
+        "answer_source": {"path": "sources/source-2.txt", "sha256": "e" * 64},
+        "answer_projection": {
+            "path": "projections/source-2-v1.txt",
+            "sha256": "e" * 64,
+        },
+    }
+    assessment = {
+        "position": 2,
+        "gap": dict(binding["question"]["answers_gap"]),
+    }
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_next_resolving_assessed_binding",
+        lambda *_args: (binding, assessment, None),
+    )
+    entries = [{"entry_sha256": "f" * 64} for _ in range(29)]
+
+    result = START_INTAKE._request_gap_resolution(tmp_path, state, entries)
+
+    assert result["stopped"] == "resolving_gap_answer"
+    assert state["gap_resolution_history"] == [{
+        **previous,
+        "terminal_phase": "gap_resolution_applied",
+        "output_projection": parent,
+    }]
+    assert state["gap_resolution"]["attempt"] == 2
+    assert state["gap_resolution"]["parent_projection"] == parent
+    assert state["waiting_for"] == "gap-resolutions/attempt-000002/interview.jsonl"
+    attachment, command = CODEX_RUNNER.load_request(tmp_path)
+    assert attachment == source_path
+    assert command[-1] == "--run-gap-resolution"
+
+
+def test_attempt_two_cannot_replay_without_attempt_one_history(
+    tmp_path: Path, monkeypatch: object
+) -> None:
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_validate_gap_resolution_terminal",
+        lambda *_args, **_kwargs: None,
+    )
+    state = {
+        "gap_resolution_history": [],
+        "gap_resolution": {"attempt": 2, "mode": "assessed_answer"},
+    }
+
+    result = START_INTAKE._validate_gap_resolution_history(
+        tmp_path, state, [], REAL_PURPOSE
+    )
+
+    assert result == {
+        "status": "blocked",
+        "stopped": "invalid gap resolution ledger",
+        "why": "active attempt received 2; expected 1",
+    }
+
+
+def test_missing_endpoint_resolution_locks_known_identity_and_enforces_bounds(
+    tmp_path: Path,
+) -> None:
+    inputs = _missing_endpoint_resolution_fixture(tmp_path)
+    answers = iter([
+        "fresh-resolver",
+        "pytest-missing-endpoint",
+        "invent_participant",
+        "use_recorded_element",
+        "element-000001",
+        "100",
+        "400",
+        "100",
+        "700",
+        "300",
+        "100",
+        "The recorded callout points to the locked field.",
+    ])
+    messages: list[str] = []
+
+    result = START_INTAKE.gap_resolution.run(
+        tmp_path / "missing-endpoint-resolution",
+        **inputs,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=messages.append,
+    )
+    candidate = json.loads(
+        (
+            tmp_path
+            / "missing-endpoint-resolution"
+            / "verification-candidate.json"
+        ).read_text()
+    )
+
+    assert result["verdict"] == "resolves_gap"
+    assert candidate["relationships"][0]["from_id"] == "element-000001"
+    assert candidate["relationships"][0]["to_id"] == "element-000003"
+    assert candidate["relationships"][0]["origin_point"] == [100, 100]
+    assert candidate["relationships"][0]["target_point"] == [700, 100]
+    assert candidate["relationships"][0]["resolution_evidence"] == {
+        "question_id": "gap-question-000001",
+        "operator_answer_source_sha256": inputs["answer_source_sha256"],
+        "bound_gap_record_sha256": json.loads(
+            inputs["clarification_path"].read_text()
+        )["gap"]["record_sha256"],
+        "accepted_assessment_sha256": START_INTAKE._digest_bytes(
+            json.dumps(
+                json.loads(inputs["clarification_path"].read_text())[
+                    "accepted_assessment"
+                ],
+                sort_keys=True,
+                separators=(",", ":"),
+            ).encode()
+        ),
+        "locked_known_role": "target",
+        "locked_known_element_id": "element-000003",
+    }
+    assert len(messages) == 3
+    assert "choose one of" in messages[0]
+    assert "point [100, 400] falls outside" in messages[1]
+    assert "point [700, 300] falls outside" in messages[2]
+
+
+def test_missing_endpoint_resolution_can_capture_one_visible_participant(
+    tmp_path: Path,
+) -> None:
+    inputs = _missing_endpoint_resolution_fixture(tmp_path)
+    answers = iter([
+        "fresh-resolver",
+        "pytest-missing-endpoint-capture",
+        "record_visible_element",
+        "callout",
+        "850",
+        "800",
+        "950",
+        "900",
+        "Visible unrecorded callout",
+        "900",
+        "850",
+        "700",
+        "100",
+        "The captured callout points to the locked field.",
+    ])
+
+    START_INTAKE.gap_resolution.run(
+        tmp_path / "captured-missing-endpoint",
+        **inputs,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    candidate = json.loads(
+        (
+            tmp_path
+            / "captured-missing-endpoint"
+            / "verification-candidate.json"
+        ).read_text()
+    )
+
+    assert candidate["relationships"][0]["from_id"] == "resolution-element-000001"
+    assert candidate["relationships"][0]["to_id"] == "element-000003"
+    assert candidate["elements"][-1]["content"] == "Visible unrecorded callout"
+
+
+def test_missing_endpoint_capture_cannot_reuse_locked_known_participant(
+    tmp_path: Path,
+) -> None:
+    inputs = _missing_endpoint_resolution_fixture(tmp_path)
+    answers = iter([
+        "fresh-resolver",
+        "pytest-locked-overlap",
+        "record_visible_element",
+        "nested callout",
+        "600",
+        "0",
+        "800",
+        "200",
+        "Visibly distinct nested callout",
+        "reuse_recorded_overlap",
+        "confirm_distinct_element",
+        "650",
+        "100",
+        "700",
+        "100",
+        "The distinct nested callout points to the locked field.",
+    ])
+    messages: list[str] = []
+
+    START_INTAKE.gap_resolution.run(
+        tmp_path / "locked-known-overlap",
+        **inputs,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=messages.append,
+    )
+    candidate = json.loads(
+        (
+            tmp_path
+            / "locked-known-overlap"
+            / "verification-candidate.json"
+        ).read_text()
+    )
+
+    assert len(messages) == 1
+    assert "choose one of: confirm_distinct_element" in messages[0]
+    assert candidate["relationships"][0]["from_id"] == "resolution-element-000001"
+    assert candidate["relationships"][0]["to_id"] == "element-000003"
+
+
+def test_missing_endpoint_shape_requires_preserved_accepted_assessment(
+    tmp_path: Path,
+) -> None:
+    inputs = _missing_endpoint_resolution_fixture(tmp_path)
+    clarification = json.loads(inputs["clarification_path"].read_text())
+    clarification.pop("accepted_assessment")
+    clarification.pop("assessment_gap")
+    inputs["clarification_path"].write_text(
+        json.dumps(clarification, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["clarification_sha256"] = START_INTAKE._digest_bytes(
+        inputs["clarification_path"].read_bytes()
+    )
+
+    try:
+        START_INTAKE.gap_resolution.run(
+            tmp_path / "unassessed-missing-endpoint",
+            **inputs,
+            purpose=REAL_PURPOSE,
+            input_fn=lambda _prompt: "unused",
+            output_fn=lambda _message: None,
+        )
+    except START_INTAKE.gap_resolution.ResolutionError as error:
+        assert str(error) == (
+            "resolution-missing-participant-requires-accepted-assessment"
+        )
+    else:
+        raise AssertionError("unassessed missing endpoint was accepted")
+
+
+def test_missing_endpoint_resolution_rejects_changed_locked_known_identity(
+    tmp_path: Path,
+) -> None:
+    inputs = _missing_endpoint_resolution_fixture(tmp_path)
+    projection = json.loads(inputs["projection_path"].read_text())
+    relationship = projection["relationships"][0]
+    relationship["participant_id"] = "element-000002"
+    inputs["projection_path"].write_text(
+        json.dumps(projection, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["projection_sha256"] = START_INTAKE._digest_bytes(
+        inputs["projection_path"].read_bytes()
+    )
+    clarification = json.loads(inputs["clarification_path"].read_text())
+    clarification["gap"]["projection_sha256"] = inputs["projection_sha256"]
+    clarification["gap"]["record"] = relationship
+    clarification["gap"]["record_sha256"] = START_INTAKE._digest_bytes(
+        json.dumps(relationship, sort_keys=True, separators=(",", ":")).encode()
+    )
+    clarification["assessment_gap"] = json.loads(json.dumps(clarification["gap"]))
+    identity = {
+        key: clarification["gap"][key]
+        for key in (
+            "projection_sha256", "collection", "kind", "id", "record_sha256"
+        )
+    }
+    clarification["question"]["answers_gap"] = identity
+    clarification["accepted_assessment"]["gap"] = identity
+    inputs["clarification_path"].write_text(
+        json.dumps(clarification, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["clarification_sha256"] = START_INTAKE._digest_bytes(
+        inputs["clarification_path"].read_bytes()
+    )
+
+    try:
+        START_INTAKE.gap_resolution.run(
+            tmp_path / "changed-locked-known-identity",
+            **inputs,
+            purpose=REAL_PURPOSE,
+            input_fn=lambda _prompt: "unused",
+            output_fn=lambda _message: None,
+        )
+    except START_INTAKE.gap_resolution.ResolutionError as error:
+        assert str(error) == "resolution-known-target-binding-invalid"
+    else:
+        raise AssertionError("changed locked known identity was accepted")
 
 
 def test_non_resolving_answer_produces_no_admissible_relationship(

@@ -1,6 +1,6 @@
 ---
 name: info-intake-machinery
-description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers and files as immutable sources, records readable projections, verifies visual relationships, turns every currently known gap into one code-bound question round, conducts operator answers one at a time, and assesses whether each preserved answer resolves its exact gap without losing legacy single-gap replay.
+description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers and files as immutable sources, records readable projections, verifies visual relationships, turns every currently known gap into one code-bound question round, conducts any prepared operator round one question at a time, assesses every completed round against its exact gaps, and prepares immutable follow-up questions for failed clarifications without losing legacy single-gap replay.
 ---
 
 # Info Intake Machinery
@@ -157,7 +157,7 @@ remain replayable through their already recorded answer and resolution stages be
 
 ## Assess every preserved question-round answer
 
-After the complete question round is answered, run:
+After any prepared question round is completely answered, run:
 
 ```text
 python3 scripts/start_intake.py --work <same-directory> \
@@ -173,42 +173,117 @@ supplies that judgement and its reason but cannot select, omit, duplicate, reord
 binding.
 
 The request, interview journal, rejected attempts, ordered outcomes, and final result are appended
-to the intake ledger. Resume reconstructs every binding and returns the identical outcome set.
-Changed answers, projections, journals, results, order, or verdict values fail closed. This stage
-does not change the original readable projection or ask follow-up questions.
+to the intake ledger under the preserved round number. Later rounds do not overwrite earlier
+assessment records or artifacts. Resume reconstructs every binding and returns the identical
+outcome set. Changed answers, projections, questions, gaps, journals, results, order, identities,
+or verdict values fail closed. A second assessment request for the same round is rejected without
+changing the ledger. This stage does not change the readable projection, admit an answer, or ask
+follow-up questions.
 
-## Resolve one answered relationship gap
+## Admit the next resolving assessed answer
 
-For an existing saved single-gap intake with a preserved relationship-binding answer, run:
+After the complete answer round has been assessed, or for an existing saved single-gap intake with
+a preserved relationship-binding answer, run:
 
 ```text
 python3 scripts/start_intake.py --work <same-directory> \
     --opening '<exact opening>' --purpose '<exact purpose answer>' --resolve-gap
 ```
 
-The returned interview lets a fresh model judge only whether the preserved answer resolves that
-exact bound ambiguity. Code constrains the verdict to `resolves_gap` or
-`does_not_resolve_gap`, constrains the selected ambiguous participant to the recorded candidates,
-and requires the other endpoint to use a recorded readable element or capture one visible missing
-element. Coordinates must fall inside the selected endpoint. When proposed bounds materially
-overlap a recorded element, code presents those exact identities and evidence before allowing the
-model to choose reuse or a distinct visible element; reuse cannot create a duplicate identity.
+For an assessed question round, code selects the next canonical `resolves_gap` outcome that no
+earlier admission attempt consumed. On the first invocation this is the first resolving outcome;
+after a terminal admission it is the next unused one. Code binds its exact question, immutable
+answer source and projection, original assessed gap identity, unchanged gap record and hash,
+current parent projection, and accepted assessment into a derived immutable resolution input. If
+the gap record changed between projection versions, code refuses the admission. The resolver
+cannot reassess the accepted verdict. It receives only the code-listed ambiguous element
+identities and the missing relationship facts; an endpoint already recorded in the gap retains its
+identity and existing point. The same admission path also accepts a relationship gap with exactly
+one recorded endpoint and one missing endpoint. Code locks the recorded identity, offers only
+recorded readable identities or one controlled visible-element capture for the missing participant,
+and requires points inside both participants when either point is absent. The model supplies the
+visible missing participant, coordinates, and relationship meaning; it cannot change the locked
+identity.
+
+For a legacy single-gap intake, the returned interview still lets a fresh model judge only whether
+the preserved answer resolves that exact bound ambiguity. Code constrains the verdict to
+`resolves_gap` or `does_not_resolve_gap`, constrains the selected ambiguous participant to the
+recorded candidates, and requires the other endpoint to use a recorded readable element or capture
+one visible missing element. Coordinates must fall inside the selected endpoint. When proposed
+bounds materially overlap a recorded element, code presents those exact identities and evidence
+before allowing the model to choose reuse or a distinct visible element; reuse cannot create a
+duplicate identity.
 
 A resolving proposal is not admitted directly. The launcher starts a new model context that checks
-the preserved operator answer and both exact visual participants. Only `supported` creates
-projection version 2. Code replaces only the bound relationship gap, preserves version 1 and every
+the preserved operator answer and both exact visual participants. Only `supported` creates exactly
+one new immutable projection version from the current parent. Code replaces only the bound
+relationship gap, preserves every earlier version, every other element and relationship, and every
 assessment artifact, records parentage and evidence hashes, and appends the request, result,
-verification, and version events to the ledger. `does_not_resolve_gap`, `not_supported`, or
-`unreadable` leaves version 1 and its gap unchanged with the reason recorded. Replay reconstructs
-the expected version and rejects changed artifacts.
+verification, and version events to the ledger. Before another attempt starts, code archives the
+prior terminal attempt and its output projection in append-only state history. `does_not_resolve_gap`,
+`not_supported`, or `unreadable` leaves the current parent and its gap unchanged with the reason
+recorded. Replay reconstructs every archived attempt and version and rejects changed artifacts.
+
+## Prepare the follow-up question round for failed clarifications
+
+After every already-resolving assessment has been admitted, run the existing clarification request
+again:
+
+```text
+python3 scripts/start_intake.py --work <same-directory> \
+    --opening '<exact opening>' --purpose '<exact purpose answer>' --clarify-gap
+```
+
+Code selects the complete ordered set of `does_not_resolve_gap` assessments whose exact gap record
+still exists in the current projection. It binds each current gap to its prior question, immutable
+answer source and projection, and assessment reason, then returns one code-controlled model command.
+The model reasons only about the still-missing information and writes one new focused operator
+question per bound gap. Code enforces complete coverage, current gap identities, unique round-2
+question identities, order, and rejection of an exact repeat of the failed question.
+
+The model request, interview journal, rejected entries, completed round, and operator-ready round
+are appended without changing the first question round, its answers, assessments, projection
+versions, or resolution history. Resume returns the same prepared round without another ledger
+entry. This atomic stage stops with `ready_for_operator_interview`; it does not display a question,
+accept an operator answer, or change the readable projection.
+
+## Conduct any prepared operator question round
+
+Once a round is preserved with `ready_for_operator_interview`, start its operator interview with:
+
+```text
+python3 scripts/start_intake.py --work <same-directory> \
+    --opening '<exact opening>' --purpose '<exact purpose answer>' \
+    --conduct-question-round
+```
+
+Code reads the preserved round number and complete ordered question set; it does not assume round
+2. It appends only the first question presentation and returns only that question. Repeating the
+command while the round is active returns the same current question without another ledger entry.
+Supply each answer separately with the existing `--gap-answer '<exact answer>'` command. Code
+rejects an answer before the interview starts, rejects empty or duplicate answers, and cannot skip
+or reorder the prepared questions.
+
+Before the next question is shown, each exact answer becomes a new immutable human source and a
+complete verbatim readable projection. Its ledger lineage names the prepared-round result, round,
+question position, question presentation, active original source, active projection version, and
+exact gap binding. After the final answer, code records one round-completion event and stops with
+`ready_for_projection_assessment`. It does not assess the answers, create more questions, or alter
+the current readable projection.
 
 ## Current boundary
 
-This machinery does not yet apply question-round assessment outcomes to a new projection, ask a
-follow-up round, accept URLs, or assess whether a projection completely covers its source. Gap resolution currently applies only to an existing
-preserved single-gap answer bound to a relationship identity ambiguity. Its projection adapter
-currently accepts images only and fails closed for other media types. Do not simulate those later
-units in prose or extend the script while running these proven stages.
+Each `--resolve-gap` invocation applies at most the next unused canonical resolving assessment to
+one unchanged relationship gap and then stops. Eligible assessed gaps have either a code-listed
+identity ambiguity or exactly one known and one missing endpoint. It does not automatically loop
+through the remaining assessments. It can prepare one immutable follow-up round from the first
+assessment round and conduct any prepared round one question at a time, but it does not yet
+admit a later-round resolving answer, decide whether another round is needed, run a question loop
+to a grounded terminal condition, accept URLs, or assess whether a projection completely covers its source. Legacy
+gap resolution remains limited to an existing preserved single-gap answer bound to a relationship
+identity ambiguity. The projection adapter currently accepts images only and fails closed for
+other media types. Do not simulate those later units in prose or extend the script while running
+these proven stages.
 
 ## Status contract
 
@@ -219,3 +294,4 @@ units in prose or extend the script while running these proven stages.
 | `blocked` | 3 | Input or durable state is missing, changed, or invalid. |
 | `ready_for_projection` | 0 | The first local file is frozen and its projection is pending. |
 | `ready_for_projection_assessment` | 0 | The current immutable projection version is ready; completeness remains unassessed. |
+| `ready_for_operator_interview` | 0 | A complete follow-up question round is preserved but no operator question has been presented. |

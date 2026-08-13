@@ -46,9 +46,18 @@ def load_request(work: Path) -> tuple[Path, list[str]]:
     )
     gap_round_phase = (
         state.get("status") == "waiting_for_model"
-        and state.get("phase") == "formulating_gap_question_round"
-        and state.get("waiting_for")
-        == "gap-question-rounds/round-000001/interview.jsonl"
+        and (
+            (
+                state.get("phase") == "formulating_gap_question_round"
+                and state.get("waiting_for")
+                == "gap-question-rounds/round-000001/interview.jsonl"
+            )
+            or (
+                state.get("phase") == "formulating_follow_up_gap_question_round"
+                and state.get("waiting_for")
+                == "gap-question-rounds/round-000002/interview.jsonl"
+            )
+        )
     )
     gap_answer_assessment_phase = (
         state.get("status") == "waiting_for_model"
@@ -59,13 +68,18 @@ def load_request(work: Path) -> tuple[Path, list[str]]:
     resolution_phase = (
         state.get("status") == "waiting_for_model"
         and state.get("phase") == "resolving_gap_answer"
-        and state.get("waiting_for") == "gap-resolutions/attempt-000001/interview.jsonl"
+        and isinstance(state.get("gap_resolution"), dict)
+        and isinstance(state["gap_resolution"].get("attempt"), int)
+        and state.get("waiting_for")
+        == f"gap-resolutions/attempt-{state['gap_resolution']['attempt']:06d}/interview.jsonl"
     )
     resolution_verification_phase = (
         state.get("status") == "waiting_for_model"
         and state.get("phase") == "verifying_gap_resolution"
+        and isinstance(state.get("gap_resolution"), dict)
+        and isinstance(state["gap_resolution"].get("attempt"), int)
         and state.get("waiting_for")
-        == "gap-resolution-verifications/attempt-000001/interview.jsonl"
+        == f"gap-resolution-verifications/attempt-{state['gap_resolution']['attempt']:06d}/interview.jsonl"
     )
     if not any(
         (
@@ -192,7 +206,7 @@ def build_codex_argv(
             if gap_clarification else
             "Inspect the attached frozen source and judge each code-bound preserved answer only against its exact gap. "
             if gap_answer_assessment else
-            "Inspect the attached frozen source and assess only whether the preserved operator answer resolves its code-bound gap. "
+            "Inspect the attached frozen source and complete only the code-controlled gap-resolution interview. When an accepted assessment is bound, do not reassess it; supply only the requested relationship facts. "
             if gap_resolution else
             "Independently inspect the attached frozen source without relying on the producer's "
             "relationship conclusions. "

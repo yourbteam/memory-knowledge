@@ -303,7 +303,7 @@ def validate(
 
 
 def _round_question(
-    state: dict[str, Any], gaps: list[dict[str, object]]
+    state: dict[str, Any], gaps: list[dict[str, object]], *, round_number: int = 1
 ) -> dict[str, object] | None:
     if not state["model"]:
         return {
@@ -325,8 +325,12 @@ def _round_question(
     return {
         "id": f"operator_question_{index + 1:06d}",
         "prompt": (
-            "What one focused question should the operator answer to supply the "
-            "information missing from this exact gap?"
+            "What one new focused question should the operator answer to supply "
+            "the still-missing information identified by the prior failed "
+            "clarification?"
+            if round_number > 1
+            else "What one focused question should the operator answer to supply "
+            "the information missing from this exact gap?"
         ),
         "type": "string",
         "required": True,
@@ -336,14 +340,14 @@ def _round_question(
 
 
 def _round_replay(
-    entries: list[dict[str, object]], gaps: list[dict[str, object]]
+    entries: list[dict[str, object]], gaps: list[dict[str, object]], *, round_number: int = 1
 ) -> tuple[dict[str, Any], dict[str, object] | None, bool]:
     state: dict[str, Any] = {"model": "", "harness": "", "questions": []}
     pending: dict[str, object] | None = None
     completed = False
     for entry in entries:
         if entry["event"] == "question_asked":
-            expected = _round_question(state, gaps)
+            expected = _round_question(state, gaps, round_number=round_number)
             if pending is not None or expected != entry.get("question"):
                 raise ClarificationError(
                     f"clarification-round-question-invalid:{entry['sequence']}"
@@ -369,7 +373,10 @@ def _round_replay(
                     state["questions"].append(str(entry["parsed"]))
             pending = None
         elif entry["event"] == "clarification_round_completed":
-            if pending is not None or _round_question(state, gaps) is not None:
+            if (
+                pending is not None
+                or _round_question(state, gaps, round_number=round_number) is not None
+            ):
                 raise ClarificationError(
                     f"clarification-round-completion-invalid:{entry['sequence']}"
                 )
@@ -385,12 +392,18 @@ def _round_result(
     projection_sha256: str,
     gaps: list[dict[str, object]],
     state: dict[str, Any],
+    *,
+    round_number: int = 1,
 ) -> dict[str, object]:
     questions = []
     for index, gap in enumerate(gaps):
         asks = state["questions"][index] if index < len(state["questions"]) else ""
         questions.append({
-            "id": f"gap-clarification-answer-{index + 1:06d}",
+            "id": (
+                f"gap-clarification-answer-{index + 1:06d}"
+                if round_number == 1
+                else f"gap-clarification-round-{round_number:06d}-question-{index + 1:06d}"
+            ),
             "asks": asks,
             "answers_gap": {
                 key: gap[key]
@@ -399,13 +412,45 @@ def _round_result(
                 )
             },
         })
-    return {
+    result: dict[str, object] = {
         "schema_version": ROUND_CONTRACT,
         "projection_sha256": projection_sha256,
         "gaps": gaps,
         "questioner": {"model": state["model"], "harness": state["harness"]},
         "questions": questions,
     }
+    if round_number > 1:
+        result["round"] = round_number
+    return result
+
+
+def _validate_bound_gaps(
+    projection: dict[str, Any],
+    projection_sha256: str,
+    gaps: list[dict[str, object]],
+) -> None:
+    current = {
+        (item["collection"], item["id"]): item
+        for item in select_gaps(projection, projection_sha256)
+    }
+    if not gaps:
+        raise ClarificationError("clarification-follow-up-no-gap")
+    for gap in gaps:
+        if not isinstance(gap, dict):
+            raise ClarificationError("clarification-follow-up-gap-invalid")
+        key = (gap.get("collection"), gap.get("id"))
+        selected = current.get(key)
+        if selected is None:
+            raise ClarificationError("clarification-follow-up-gap-not-current")
+        for field in (
+            "projection_sha256", "collection", "kind", "id", "record_sha256",
+            "record", "recorded_context",
+        ):
+            if gap.get(field) != selected.get(field):
+                raise ClarificationError("clarification-follow-up-gap-changed")
+        follow_up = gap.get("follow_up_of")
+        if not isinstance(follow_up, dict):
+            raise ClarificationError("clarification-follow-up-context-missing")
 
 
 def run_round(
@@ -414,19 +459,28 @@ def run_round(
     projection_path: Path,
     projection_sha256: str,
     purpose: str,
+    gaps: list[dict[str, object]] | None = None,
+    round_number: int = 1,
     input_fn: Callable[[str], str] | None = None,
     output_fn: Callable[[str], None] | None = None,
 ) -> dict[str, object]:
     projection = _load_projection(projection_path, projection_sha256)
-    gaps = select_gaps(projection, projection_sha256)
+    if gaps is None:
+        gaps = select_gaps(projection, projection_sha256)
+    else:
+        _validate_bound_gaps(projection, projection_sha256, gaps)
     round_dir.mkdir(parents=True, exist_ok=True)
     journal_path = round_dir / "interview.jsonl"
     result_path = round_dir / "clarification-round.json"
     read = input_fn or _terminal_input
     write = output_fn or (lambda message: print(message, file=sys.stderr))
     while True:
-        state, pending, completed = _round_replay(_read_journal(journal_path), gaps)
-        result = _round_result(projection_sha256, gaps, state)
+        state, pending, completed = _round_replay(
+            _read_journal(journal_path), gaps, round_number=round_number
+        )
+        result = _round_result(
+            projection_sha256, gaps, state, round_number=round_number
+        )
         result_bytes = json.dumps(result, indent=2, sort_keys=True).encode() + b"\n"
         if completed:
             if not result_path.exists():
@@ -434,7 +488,9 @@ def run_round(
             if result_path.read_bytes() != result_bytes:
                 raise ClarificationError("clarification-round-result-changed")
             return result
-        question = pending or _round_question(state, gaps)
+        question = pending or _round_question(
+            state, gaps, round_number=round_number
+        )
         if question is None:
             _append(
                 journal_path,
@@ -469,12 +525,16 @@ def validate_round(
     projection_path: Path,
     projection_sha256: str,
     purpose: str,
+    gaps: list[dict[str, object]] | None = None,
+    round_number: int = 1,
 ) -> tuple[dict[str, object], str, str]:
     result = run_round(
         round_dir,
         projection_path=projection_path,
         projection_sha256=projection_sha256,
         purpose=purpose,
+        gaps=gaps,
+        round_number=round_number,
         input_fn=lambda _prompt: (_ for _ in ()).throw(
             ClarificationError("clarification-round-not-complete")
         ),
