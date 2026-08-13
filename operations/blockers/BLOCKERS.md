@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `7d6e1cbaee5e18d2f74002355a12a03f4155a5a38ac289fda20055ae68666a65`
+Ledger-SHA256: `06573a889ab3c905785a41bce8d91ec033de87bd99f38e513ff025e7af4f2cce`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -797,6 +797,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `github-cli-authentication`
 - Symptom: GitHub CLI reports the active yourbteam token is invalid.
 - Evidence: gh auth status exited nonzero before sequence dispatch; no credential value was printed.
+
+## blk-122c2c74fabaa41dc65ae994
+
+- Status: `open`
+- Subject: `discovery-748c90b8-778b-5b80-968e-4f274ed8f46e`
+- Step: `post-resolution-continuation`
+- Surface: `clarification-continuation`
+- Symptom: After an answer was assessed as resolving but its proposed relationship was independently rejected, the boundary blocked because no still-current gap has a non-resolving preserved answer
+- Evidence: Real dashboard run recorded verification_verdict not_supported and gap_resolution_rejected, then clarification boundary returned follow-up gap clarification unavailable
+- Classification: `incidental-system-defect`
+- Downstream owner: `next-info-intake-atomic-step`
 
 ## blk-1241a1690c619f5d4664e80f
 
@@ -3447,6 +3458,8 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `tests/test_sequence_intake_adapters.py::registered-sequence-coverage`
 - Symptom: Two focused tests require adapters and intake specs for agent-heartbeat and goal-declaration even though baseline code intentionally registers both as non-runnable.
 - Evidence: HEAD contains None adapters and explanatory comments for agent-heartbeat and goal-declaration while HEAD tests still require every registry value and spec to be runnable.
+- Classification: `incidental-system-defect`
+- Downstream owner: `memory-knowledge-maintenance`
 
 ## blk-548a240cffecf90f067995ef
 
@@ -3555,6 +3568,8 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `git-worktree-index`
 - Symptom: The scoped publisher could not stage the approved files because the worktree Git index lives outside the writable sandbox.
 - Evidence: git add failed creating /Users/kamenkamenov/memory-knowledge/.git/worktrees/memory-knowledge/index.lock with Operation not permitted.
+- Classification: `incidental-system-defect`
+- Downstream owner: `codex-sandbox-runtime`
 
 ## blk-57fb6beb5742ee7e24b4c353
 
@@ -3747,6 +3762,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The isolated reconciliation canonical writer rejected remote-order plus local-unseen event union with blocker-correction-required.
 - Evidence: isolated-reconcile-remote stopped before commit or push with merged ledger failed canonical validation: blocker-correction-required.
 
+## blk-5bd1afdd6acc77384846e3ea
+
+- Status: `closed`
+- Subject: `discovery-748c90b8-778b-5b80-968e-4f274ed8f46e`
+- Step: `complete-first-layer`
+- Surface: `info-intake-clarification-continuation`
+- Symptom: The real zero-gap intake cannot record first-layer completion.
+- Evidence: The guarded clarification boundary returned blocked with clarification-no-gap; the current immutable projection has zero explicit gaps and no terminal event was written.
+
 ## blk-5bdd8951968543c4ca2f0dec
 
 - Status: `closed`
@@ -3899,6 +3923,8 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `tests/test_sequence_intake_adapters.py::test_workflow_phase_resume_owns_live_runtime_environment`
 - Symptom: The focused suite stops because the baseline test omits the required reopen_completed_phase answer.
 - Evidence: HEAD already requires reopen_completed_phase in scripts/sequence_intake_adapters.py while the HEAD test fixture omits it.
+- Classification: `incidental-system-defect`
+- Downstream owner: `memory-knowledge-maintenance`
 
 ## blk-5e5921daa66d3f06148dbcf5
 
@@ -4594,6 +4620,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `tests/integration/test_command_workflow.py`
 - Symptom: The changed-policy integration case raised KeyError because controlled_topic_policy_candidate was absent from the continuation context.
 - Evidence: test_changed_policy_cannot_replace_platform_source_policy failed at line 371 with KeyError controlled_topic_policy_candidate.
+
+## blk-6f45f1c265af20e7b40e5748
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discovery-748c90b8-778b-5b80-968e-4f274ed8f46e`
+- Step: `consume-supported-resolution-retry`
+- Surface: `clarification-continuation-history`
+- Symptom: Real retry attempt 5 selected element-000016 to element-000043 and independent verification returned supported, but boundary replay blocked before projection admission with an assessed answer was consumed more than once.
+- Evidence: Attempt 4 and retry attempt 5 intentionally share assessment round 2 position 1; the generic history invariant treats that deliberate retry identity as duplicate consumption.
 
 ## blk-6fa099caffec6ef5ff232c72
 
@@ -5693,6 +5728,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Two attempt lifecycle tests fail before exercising lifecycle behavior because their helper constructs the obsolete one-row prepared-run shape.
 - Evidence: Focused pytest: load_prepared_run rejects attempt_run state with one r1 row instead of the exact 13-row prepared-run contract.
 
+## blk-8fc877f67a2676b4b30a7d49
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `dry-run`
+- Surface: `directive-read-gate`
+- Symptom: The registered publisher refused the prepared dry-run because the recorded directive read path differed from the current worktree path.
+- Evidence: Two identical dispatch attempts ended before Git staging with the directive read path mismatch refusal.
+- Classification: `incidental-system-defect`
+- Downstream owner: `memory-knowledge-maintenance`
+
 ## blk-904959edb04746bea7cbe1e3
 
 - Status: `open`
@@ -6037,6 +6083,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: exact-restored-snapshot-reported-failing
 - Evidence: compare-returned-unallowed-pre-missing-for-identical-before-and-after
 
+## blk-972a4eabf05770d89a471a65
+
+- Status: `closed`
+- Subject: `discovery-748c90b8-778b-5b80-968e-4f274ed8f46e`
+- Step: `operator-boundary-reentry`
+- Surface: `info-intake-launcher`
+- Symptom: The launcher rejects a valid saved dashboard intake paused at needs_operator_answer before presenting its question
+- Evidence: Real launcher exited 3 with the intake is not waiting for a supported visual model stage while clarification-boundary returns the preserved relationship-000029 question
+
 ## blk-9798c774d7e27c0b0a787feb
 
 - Status: `non-gap`
@@ -6243,6 +6298,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard-orchestration`
 - Symptom: read-only-comparison-executed-after-guard-rejected-stale-bundle
 - Evidence: guard-returned-stale-source-bundle-but-combined-tool-script-continued-to-sqlite-query
+
+## blk-9ceaf6f3cca461d39297a573
+
+- Status: `superseded`
+- Subject: `discovery-748c90b8-778b-5b80-968e-4f274ed8f46e`
+- Step: `run-projection-interview`
+- Surface: `real-image-model-retry`
+- Symptom: The registered launcher was denied before starting Codex because the captured dashboard image would be supplied to additional model interviews.
+- Evidence: Escalated launch rejected: prior approval was judged insufficiently explicit for exporting the captured dashboard source to a resolution retry and independent verifier.
 
 ## blk-9d066ad64f69a4b253a939fb
 
@@ -7877,6 +7941,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Bootstrap could not write its discovery bundle under the default workspace sandbox.
 - Evidence: Corrected bootstrap exited 5 with PermissionError; the same command crossed the boundary and progressed under bounded write escalation.
 
+## blk-c2dcfda3012abfe4f27b9bd0
+
+- Status: `closed`
+- Subject: `discovery-748c90b8-778b-5b80-968e-4f274ed8f46e`
+- Step: `auto-next-question-round`
+- Surface: `clarification-boundary-controller`
+- Symptom: A clarification-complete decision with deterministic remaining gaps is returned as an internal stop instead of preparing the next question round.
+- Evidence: The pre-change boundary test asserted clarification_required, and the controller returned that state directly.
+
 ## blk-c33bd54e65ec37a33d3a89e2
 
 - Status: `open`
@@ -8873,6 +8946,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The repaired manifest blocker cannot advance to verified through the successor protocol
 - Evidence: blk-8e transitioned open to fixed-awaiting-verification before work_memory correct succeeded; lifecycle forbids correction_recorded unless blocker status is open
 
+## blk-dc5158c5ff4508c7aaefef6e
+
+- Status: `closed`
+- Subject: `discovery-748c90b8-778b-5b80-968e-4f274ed8f46e`
+- Step: `resume-after-operator-answer`
+- Surface: `info-intake-launcher-model-request-validator`
+- Symptom: The dashboard answer was preserved as source-000008 and projection-source-000008-v1, then the launcher rejected the code-requested round-2 answer assessment
+- Evidence: State is waiting_for_model at assessing_prepared_question_round_answers with waiting_for gap-answer-assessments/round-000002/interview.jsonl; load_request returned unsupported visual model stage
+
 ## blk-dc6270ae89be958e0b2ea0f6
 
 - Status: `non-gap`
@@ -9052,6 +9134,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `independent-plan-verifier-runtime`
 - Symptom: The third independent remediation-plan verifier remained running for five minutes with no verdict.
 - Evidence: agent 019f745e-303f-7f50-835b-4ff916416d7c returned empty nonterminal status through ten consecutive 30-second waits.
+
+## blk-e0f33c0a1505d1e5c23b448c
+
+- Status: `closed`
+- Subject: `discovery-748c90b8-778b-5b80-968e-4f274ed8f46e`
+- Step: `reproduce-pre-change`
+- Surface: `codex-local-state`
+- Symptom: run_projection_with_codex exits before launching the intake interview because Codex cannot write state_5.sqlite
+- Evidence: Codex reported attempt to write a readonly database and failed to initialize the in-process app-server client
 
 ## blk-e10fb7734e48f031e02bd999
 
@@ -9637,6 +9728,8 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `tests/test_work_memory.py::test_registry_and_manifest_coverage`
 - Symptom: Registry coverage fails because operations/sequences/goal-declaration/dependencies.json does not exist.
 - Evidence: HEAD registers goal-declaration in SEQUENCES.md and contains its sequence.md, but no dependencies.json exists in HEAD or the worktree.
+- Classification: `incidental-system-defect`
+- Downstream owner: `memory-knowledge-maintenance`
 
 ## blk-f239f184dbe0cf9c9a8f4f36
 
@@ -10088,6 +10181,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Two catalog attempts were rejected with exactly-one-blocker-authority-required even after removing the harness run id.
 - Evidence: cmd_open defines run_route as run_id OR subject_id; the second attempt still supplied subject_id together with task_id and ownership_event_id, so both authority routes were true.
 
+## blk-fc6dcf1cc27c518c2a383de9
+
+- Status: `closed`
+- Subject: `discovery-748c90b8-778b-5b80-968e-4f274ed8f46e`
+- Step: `model-completion-reentry`
+- Surface: `info-intake-launcher`
+- Symptom: The saved dashboard model records its follow-up question and the launcher exits before code presents that question to the operator
+- Evidence: Real run ended status ready_for_operator_interview with one recorded round-2 question; no needs_operator_answer boundary was returned
+
 ## blk-fc936665cd16f103c264cd74
 
 - Status: `non-gap`
@@ -10168,6 +10270,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: The inherited parent task writer belongs to a prior thread, so this thread could not guard Step 4 commands.
 - Evidence: planner-v2-implementation guard returned task-writer-not-owner; fresh task planner-v2-step4-lifecycle-tests activated under thread 019f7937-0abb-7880-a235-381e94bbeac3.
+
+## blk-fd785185a02fb6fca06b42ba
+
+- Status: `open`
+- Subject: `discovery-748c90b8-778b-5b80-968e-4f274ed8f46e`
+- Step: `continuation-after-supported-retry`
+- Surface: `clarification-follow-up-selection`
+- Symptom: After retry attempt 5 was independently supported and projection v4 was admitted, clarification boundary stopped because the one remaining gap has no preserved non-resolving answer.
+- Evidence: Current projection v4 has gap_count 1 and relationship-000029 is readable; duplicate-consumption validation passes, then follow-up selection reports no still-current gap has a non-resolving preserved answer.
+- Classification: `incidental-system-defect`
+- Downstream owner: `next-info-intake-atomic-step`
 
 ## blk-fd86d6eb585eb417e72fd9ab
 

@@ -210,6 +210,20 @@ def _inputs(
         raise ResolutionError("resolution-bound-gap-record-changed")
     contract = _participant_contract(projection, relationship)
     accepted_assessment = clarification.get("accepted_assessment")
+    prior_rejection = clarification.get("prior_rejection")
+    if prior_rejection is not None and (
+        not isinstance(prior_rejection, dict)
+        or not isinstance(prior_rejection.get("attempt"), int)
+        or prior_rejection["attempt"] < 1
+        or prior_rejection.get("verification_verdict")
+        not in {"not_supported", "unreadable"}
+        or not isinstance(prior_rejection.get("verification_reason"), str)
+        or not prior_rejection["verification_reason"].strip()
+        or not isinstance(prior_rejection.get("rejected_relationship"), dict)
+        or prior_rejection["rejected_relationship"].get("resolution_of")
+        != gap.get("id")
+    ):
+        raise ResolutionError("resolution-prior-rejection-binding-invalid")
     if contract["mode"] == "missing_participant" and accepted_assessment is None:
         raise ResolutionError(
             "resolution-missing-participant-requires-accepted-assessment"
@@ -565,6 +579,8 @@ def _question(
     }
     if clarification.get("accepted_assessment") is not None:
         context["accepted_assessment"] = clarification["accepted_assessment"]
+    if clarification.get("prior_rejection") is not None:
+        context["prior_rejection"] = clarification["prior_rejection"]
     if not state["model"]:
         return {
             "id": "resolver_model",
@@ -598,6 +614,59 @@ def _question(
             "context": context,
         }
     if draft["verdict"] == "does_not_resolve_gap":
+        return None
+    if clarification.get("prior_rejection") is not None:
+        if "retry_from_element_id" not in draft:
+            choices, evidence = _element_choices(projection, set())
+            return {
+                "id": "retry_from_element_id",
+                "prompt": "Which code-listed recorded element is the corrected relationship origin?",
+                "type": "choice",
+                "required": True,
+                "choices": choices,
+                "choice_evidence": evidence,
+                "context": context,
+            }
+        if "retry_to_element_id" not in draft:
+            choices, evidence = _element_choices(
+                projection, {str(draft["retry_from_element_id"])}
+            )
+            return {
+                "id": "retry_to_element_id",
+                "prompt": "Which code-listed recorded element is the corrected relationship target?",
+                "type": "choice",
+                "required": True,
+                "choices": choices,
+                "choice_evidence": evidence,
+                "context": context,
+            }
+        for role in ("from", "to"):
+            element_id = str(draft[f"retry_{role}_element_id"])
+            bounds = next(
+                item["region"]
+                for item in projection["elements"]
+                if item.get("id") == element_id
+            )
+            for axis in ("x", "y"):
+                field = f"retry_{role}_{axis}"
+                if field not in draft:
+                    return {
+                        "id": field,
+                        "prompt": f"What normalized {axis} coordinate lies inside the corrected {role} element?",
+                        "type": "integer",
+                        "required": True,
+                        "point_role": role,
+                        "point_bounds": bounds,
+                        "context": context,
+                    }
+        if "description" not in draft:
+            return {
+                "id": "resolved_relationship_description",
+                "prompt": "What does the corrected complete visible relationship establish?",
+                "type": "string",
+                "required": True,
+                "context": context,
+            }
         return None
     binding = relationship.get("binding_issue")
     if not isinstance(binding, dict):
@@ -812,6 +881,8 @@ def _parse(
         "counterpart_y": "counterpart_x",
         "missing_participant_y": "missing_participant_x",
         "known_participant_y": "known_participant_x",
+        "retry_from_y": "retry_from_x",
+        "retry_to_y": "retry_to_x",
     }
     if question["id"] in point_x_keys:
         x_key = point_x_keys[str(question["id"])]
@@ -987,6 +1058,41 @@ def _candidate(
             "operator_answer_source_sha256": answer_source_sha256,
             "elements": projection["elements"],
             "relationships": [],
+        }
+    if clarification.get("prior_rejection") is not None:
+        resolved = {
+            "id": f"{relationship['id']}-resolution-000001",
+            "resolution_of": relationship["id"],
+            "kind": relationship["kind"],
+            "from_id": draft["retry_from_element_id"],
+            "to_id": draft["retry_to_element_id"],
+            "origin_point": [draft["retry_from_x"], draft["retry_from_y"]],
+            "target_point": [draft["retry_to_x"], draft["retry_to_y"]],
+            "status": "readable",
+            "description": draft["description"],
+            "gap_reason": "",
+            "binding_method": "verifier_rejection_corrected_with_recorded_endpoints",
+            "resolution_evidence": {
+                "question_id": clarification["question"]["id"],
+                "operator_answer_source_sha256": answer_source_sha256,
+                "bound_gap_record_sha256": clarification["gap"]["record_sha256"],
+                "accepted_assessment_sha256": _digest(
+                    _canonical(clarification["accepted_assessment"])
+                ),
+                "rejected_candidate_sha256": clarification["prior_rejection"][
+                    "candidate_sha256"
+                ],
+                "rejected_verification_sha256": clarification[
+                    "prior_rejection"
+                ]["verification_result_sha256"],
+            },
+        }
+        return {
+            "schema_version": CONTRACT,
+            "source_sha256": projection.get("source_sha256"),
+            "operator_answer_source_sha256": answer_source_sha256,
+            "elements": projection["elements"],
+            "relationships": [resolved],
         }
     binding = relationship.get("binding_issue")
     if not isinstance(binding, dict):

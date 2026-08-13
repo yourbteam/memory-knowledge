@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import argparse
+from collections.abc import Callable
 from datetime import datetime, timezone
 import hashlib
 import importlib.util
@@ -1904,7 +1905,7 @@ def _request_gap_question_round(
     assert projection_path is not None and projection_sha256 is not None
     try:
         projection = json.loads(projection_path.read_text(encoding="utf-8"))
-        gaps = gap_clarification.select_gaps(projection, projection_sha256)
+        gaps = gap_clarification.require_gaps(projection, projection_sha256)
     except (OSError, json.JSONDecodeError, gap_clarification.ClarificationError) as error:
         return _blocked("gap question round unavailable", str(error))
     round_dir = work / "gap-question-rounds" / "round-000001"
@@ -1967,7 +1968,7 @@ def _validate_gap_question_round_request(
     assert projection_path is not None and projection_sha256 is not None
     try:
         projection = json.loads(projection_path.read_text(encoding="utf-8"))
-        gaps = gap_clarification.select_gaps(projection, projection_sha256)
+        gaps = gap_clarification.require_gaps(projection, projection_sha256)
     except (OSError, json.JSONDecodeError, gap_clarification.ClarificationError) as error:
         return None, None, _blocked("invalid gap question round", str(error))
     expected = {
@@ -2286,6 +2287,144 @@ def _latest_assessed_round(
     return 1, bindings, saved, None
 
 
+def _consumed_assessment_identities(
+    resolutions: list[dict[str, object]],
+) -> tuple[set[tuple[int, int]] | None, str | None]:
+    consumed: dict[tuple[int, int], dict[str, object]] = {}
+    for resolution in resolutions:
+        if resolution.get("mode") != "assessed_answer":
+            continue
+        round_number = resolution.get("selected_assessment_round", 1)
+        position = resolution.get("selected_assessment_position")
+        if not isinstance(round_number, int) or not isinstance(position, int):
+            return None, "an assessed-answer resolution lost its round and position"
+        identity = (round_number, position)
+        previous = consumed.get(identity)
+        if previous is None:
+            consumed[identity] = resolution
+            continue
+        retry_of = resolution.get("retry_of")
+        if (
+            not isinstance(retry_of, dict)
+            or retry_of.get("attempt") != previous.get("attempt")
+            or retry_of.get("candidate_sha256")
+            != previous.get("candidate_sha256")
+            or retry_of.get("resolution_result_sha256")
+            != previous.get("result_sha256")
+            or retry_of.get("verification_result_sha256")
+            != previous.get("verification_result_sha256")
+            or retry_of.get("verification_verdict")
+            != previous.get("verification_verdict")
+            or retry_of.get("verification_reason")
+            != previous.get("verification_reason")
+            or previous.get("verification_verdict")
+            not in {"not_supported", "unreadable"}
+            or resolution.get("accepted_assessment_sha256")
+            != previous.get("accepted_assessment_sha256")
+            or resolution.get("operator_answer_source_sha256")
+            != previous.get("operator_answer_source_sha256")
+            or resolution.get("operator_answer_projection_sha256")
+            != previous.get("operator_answer_projection_sha256")
+        ):
+            return None, "an assessed answer was consumed more than once"
+        consumed[identity] = resolution
+    return set(consumed), None
+
+
+def _retryable_rejected_resolution(
+    work: Path,
+    state: dict[str, object],
+    parent: dict[str, object],
+    current_by_identity: dict[tuple[object, object], dict[str, object]],
+) -> tuple[
+    dict[str, object] | None,
+    dict[str, object] | None,
+    dict[str, object] | None,
+]:
+    history = state.get("gap_resolution_history", [])
+    if not isinstance(history, list) or not all(
+        isinstance(item, dict) for item in history
+    ):
+        return None, None, _blocked(
+            "clarification continuation unavailable",
+            "gap resolution history must remain an ordered list",
+        )
+    resolutions = list(history)
+    current = state.get("gap_resolution")
+    if isinstance(current, dict):
+        resolutions.append(current)
+    retried_attempts = {
+        retry_of["attempt"]
+        for item in resolutions
+        if isinstance((retry_of := item.get("retry_of")), dict)
+        and isinstance(retry_of.get("attempt"), int)
+    }
+    for rejected in resolutions:
+        attempt = rejected.get("attempt")
+        terminal_phase = (
+            rejected.get("terminal_phase")
+            if rejected is not current
+            else state.get("phase")
+        )
+        if (
+            rejected.get("mode") != "assessed_answer"
+            or terminal_phase != "gap_resolution_rejected"
+            or rejected.get("verification_verdict")
+            not in {"not_supported", "unreadable"}
+            or not isinstance(attempt, int)
+            or attempt in retried_attempts
+            or isinstance(rejected.get("retry_of"), dict)
+        ):
+            continue
+        gap_id = rejected.get("gap_id")
+        current_gap = current_by_identity.get(("relationships", gap_id))
+        if current_gap is None:
+            continue
+        round_number = rejected.get("selected_assessment_round", 1)
+        position = rejected.get("selected_assessment_position")
+        if (
+            not isinstance(round_number, int)
+            or round_number < 1
+            or not isinstance(position, int)
+        ):
+            return None, None, _blocked(
+                "clarification continuation unavailable",
+                f"rejected attempt {attempt} lost its assessed-answer identity",
+            )
+        _, assessment, binding_error = _assessed_binding_at_position(
+            work, state, round_number, position, parent
+        )
+        if binding_error:
+            return None, None, binding_error
+        assert assessment is not None
+        expected_assessment_sha256 = _digest_bytes(
+            json.dumps(assessment, sort_keys=True, separators=(",", ":")).encode()
+        )
+        if rejected.get("accepted_assessment_sha256") != expected_assessment_sha256:
+            return None, None, _blocked(
+                "clarification continuation unavailable",
+                f"rejected attempt {attempt} no longer matches its accepted assessment",
+            )
+        decision = {
+            "decision": "retry_rejected_resolution",
+            "rejected_attempt": attempt,
+            "assessment_round": round_number,
+            "assessment_position": position,
+            "gap": {
+                key: current_gap[key]
+                for key in (
+                    "projection_sha256",
+                    "collection",
+                    "kind",
+                    "id",
+                    "record_sha256",
+                )
+            },
+        }
+        return rejected, decision, None
+    return None, None, None
+
+
 def _clarification_continuation(
     work: Path, state: dict[str, object]
 ) -> tuple[dict[str, object] | None, dict[str, object] | None]:
@@ -2305,12 +2444,23 @@ def _clarification_continuation(
     assert projection_path is not None and projection_sha256 is not None
     try:
         projection = json.loads(projection_path.read_text(encoding="utf-8"))
-        current_gaps = gap_clarification.select_gaps(projection, projection_sha256)
+        current_gaps = gap_clarification.select_gaps(
+            projection, projection_sha256
+        )
     except (OSError, json.JSONDecodeError, gap_clarification.ClarificationError) as error:
         return None, _blocked("clarification continuation unavailable", str(error))
     current_by_identity = {
         (item["collection"], item["id"]): item for item in current_gaps
     }
+
+    retryable, retry_decision, retry_error = _retryable_rejected_resolution(
+        work, state, parent, current_by_identity
+    )
+    if retry_error:
+        return None, retry_error
+    if retryable is not None:
+        assert retry_decision is not None
+        return retry_decision, None
 
     history = state.get("gap_resolution_history", [])
     if not isinstance(history, list) or not all(
@@ -2324,24 +2474,13 @@ def _clarification_continuation(
     current_resolution = state.get("gap_resolution")
     if isinstance(current_resolution, dict) and current_resolution.get("result_sha256"):
         completed_resolutions.append(current_resolution)
-    used_identities: list[tuple[int, int]] = []
-    for resolution in completed_resolutions:
-        if resolution.get("mode") != "assessed_answer":
-            continue
-        round_number = resolution.get("selected_assessment_round", 1)
-        position = resolution.get("selected_assessment_position")
-        if not isinstance(round_number, int) or not isinstance(position, int):
-            return None, _blocked(
-                "clarification continuation unavailable",
-                "an assessed-answer resolution lost its round and position",
-            )
-        used_identities.append((round_number, position))
-    if len(set(used_identities)) != len(used_identities):
+    used, used_error = _consumed_assessment_identities(completed_resolutions)
+    if used_error:
         return None, _blocked(
             "clarification continuation unavailable",
-            "an assessed answer was consumed more than once",
+            used_error,
         )
-    used = set(used_identities)
+    assert used is not None
 
     first_assessment = state.get("gap_answer_assessment")
     round_numbers = (
@@ -2960,6 +3099,24 @@ def _execute_clarification_continuation(
             "clarification continuation unavailable",
             "the prior continuation transition has not reached a terminal state",
         )
+    if state.get("phase") == "gap_resolution_rejected":
+        rejected = state.get("gap_resolution")
+        if not isinstance(rejected, dict):
+            return _blocked(
+                "gap resolution retry unavailable",
+                "the rejected resolution record is missing",
+            )
+        if isinstance(rejected.get("retry_of"), dict):
+            return _blocked(
+                "gap resolution retry exhausted",
+                "the code-controlled correction attempt was independently rejected; the preserved human answer was not asked again",
+            )
+        return _request_gap_resolution(
+            work,
+            state,
+            entries,
+            retry_rejected_resolution=rejected,
+        )
     decision, decision_error = _clarification_continuation(work, state)
     if decision_error:
         return decision_error
@@ -2970,6 +3127,29 @@ def _execute_clarification_continuation(
             state,
             entries,
             expected_continuation=decision,
+        )
+    if decision["decision"] == "retry_rejected_resolution":
+        rejected_attempt = decision.get("rejected_attempt")
+        candidates = [
+            item
+            for item in [
+                *state.get("gap_resolution_history", []),
+                state.get("gap_resolution"),
+            ]
+            if isinstance(item, dict)
+            and item.get("attempt") == rejected_attempt
+        ]
+        if len(candidates) != 1:
+            return _blocked(
+                "gap resolution retry unavailable",
+                "the selected rejected attempt is missing or duplicated",
+            )
+        return _request_gap_resolution(
+            work,
+            state,
+            entries,
+            expected_continuation=decision,
+            retry_rejected_resolution=candidates[0],
         )
     if decision["decision"] == "prepare_next_round":
         return _request_follow_up_gap_question_round(
@@ -3109,7 +3289,9 @@ def _follow_up_gap_bindings(
     assert projection_path is not None and projection_sha256 is not None
     try:
         projection = json.loads(projection_path.read_text(encoding="utf-8"))
-        current_gaps = gap_clarification.select_gaps(projection, projection_sha256)
+        current_gaps = gap_clarification.require_gaps(
+            projection, projection_sha256
+        )
     except (OSError, json.JSONDecodeError, gap_clarification.ClarificationError) as error:
         return None, None, None, None, _blocked(
             "follow-up gap clarification unavailable", str(error)
@@ -6178,6 +6360,7 @@ def _gap_resolution_inputs(
             "operator_answer_projection_sha256": answer_projection["sha256"],
             "selected_assessment_position": position,
             "accepted_assessment_sha256": expected_assessment_sha256,
+            "retry_of": clarification.get("prior_rejection"),
         }
         if round_number != 1 or "selected_assessment_round" in saved_resolution:
             expected["selected_assessment_round"] = round_number
@@ -6191,6 +6374,8 @@ def _gap_resolution_inputs(
             or clarification.get("gap") != binding["gap"]
             or clarification.get("question") != binding["question"]
             or clarification.get("accepted_assessment") != assessment
+            or clarification.get("prior_rejection")
+            != saved_resolution.get("retry_of")
             or (
                 "assessment_gap" in clarification
                 and clarification.get("assessment_gap") != assessment_gap
@@ -6283,6 +6468,7 @@ def _request_gap_resolution(
     entries: list[dict[str, object]],
     *,
     expected_continuation: dict[str, object] | None = None,
+    retry_rejected_resolution: dict[str, object] | None = None,
 ) -> dict[str, object]:
     prior_phase = state.get("phase")
     prior_projection = state.get("current_projection")
@@ -6315,22 +6501,71 @@ def _request_gap_resolution(
     selected_position: int | None = None
     selected_round: int | None = None
     accepted_assessment_sha256: str | None = None
+    retry_of: dict[str, object] | None = None
     if mode == "assessed_answer":
         parent = state.get("current_projection", state.get("first_projection"))
         if not isinstance(parent, dict):
             return _blocked(
                 "gap resolution unavailable", "the current projection record is missing"
             )
-        binding, assessment, selected_round, selection_error = _next_resolving_assessed_binding(
-            work, state, parent
-        )
+        if retry_rejected_resolution is None:
+            binding, assessment, selected_round, selection_error = _next_resolving_assessed_binding(
+                work, state, parent
+            )
+        else:
+            retry_is_current = retry_rejected_resolution is current
+            retry_is_archived = any(
+                retry_rejected_resolution is item
+                for item in history
+                if isinstance(item, dict)
+            )
+            retry_terminal_phase = (
+                prior_phase
+                if retry_is_current
+                else retry_rejected_resolution.get("terminal_phase")
+            )
+            if not retry_is_current and not retry_is_archived:
+                return _blocked(
+                    "gap resolution retry unavailable",
+                    "the retry is not bound to a preserved rejected resolution",
+                )
+            selected_round = retry_rejected_resolution.get(
+                "selected_assessment_round", 1
+            )
+            selected_position_value = retry_rejected_resolution.get(
+                "selected_assessment_position"
+            )
+            if (
+                retry_terminal_phase != "gap_resolution_rejected"
+                or retry_rejected_resolution.get("mode") != "assessed_answer"
+                or retry_rejected_resolution.get("verification_verdict")
+                not in {"not_supported", "unreadable"}
+                or not isinstance(selected_round, int)
+                or selected_round < 1
+                or not isinstance(selected_position_value, int)
+            ):
+                return _blocked(
+                    "gap resolution retry unavailable",
+                    "the current rejection is not a complete independently verified assessed-answer resolution",
+                )
+            binding, assessment, selection_error = _assessed_binding_at_position(
+                work,
+                state,
+                selected_round,
+                selected_position_value,
+                parent,
+            )
         if selection_error:
             return selection_error
         assert binding is not None and assessment is not None
         selected_position = int(assessment["position"])
         current_gap = binding["gap"]
         actual_continuation = {
-            "decision": "apply_resolving_answer",
+            "decision": (
+                "retry_rejected_resolution"
+                if retry_rejected_resolution is not None
+                else "apply_resolving_answer"
+            ),
             "assessment_round": selected_round,
             "assessment_position": selected_position,
             "gap": {
@@ -6344,6 +6579,10 @@ def _request_gap_resolution(
                 )
             },
         }
+        if retry_rejected_resolution is not None:
+            actual_continuation["rejected_attempt"] = retry_rejected_resolution[
+                "attempt"
+            ]
         if (
             expected_continuation is not None
             and expected_continuation != actual_continuation
@@ -6363,6 +6602,60 @@ def _request_gap_resolution(
             "question": binding["question"],
             "accepted_assessment": assessment,
         }
+        if retry_rejected_resolution is not None:
+            rejected_attempt = retry_rejected_resolution.get("attempt")
+            if not isinstance(rejected_attempt, int):
+                return _blocked(
+                    "gap resolution retry unavailable",
+                    "the rejected attempt identity is missing",
+                )
+            rejected_paths = _resolution_paths(rejected_attempt)
+            try:
+                rejected_candidate_bytes = (
+                    work / rejected_paths["candidate_path"]
+                ).read_bytes()
+                rejected_candidate = json.loads(rejected_candidate_bytes)
+                rejected_verification_bytes = (
+                    work / rejected_paths["verification_result_path"]
+                ).read_bytes()
+                rejected_verification = json.loads(rejected_verification_bytes)
+            except (OSError, json.JSONDecodeError):
+                return _blocked(
+                    "gap resolution retry unavailable",
+                    "the immutable rejected proposal or verifier result is unavailable",
+                )
+            relationships = rejected_candidate.get("relationships")
+            if (
+                _digest_bytes(rejected_candidate_bytes)
+                != retry_rejected_resolution.get("candidate_sha256")
+                or _digest_bytes(rejected_verification_bytes)
+                != retry_rejected_resolution.get("verification_result_sha256")
+                or not isinstance(relationships, list)
+                or len(relationships) != 1
+                or not isinstance(relationships[0], dict)
+                or rejected_verification.get("verdict")
+                != retry_rejected_resolution.get("verification_verdict")
+                or rejected_verification.get("reason")
+                != retry_rejected_resolution.get("verification_reason")
+            ):
+                return _blocked(
+                    "gap resolution retry unavailable",
+                    "the rejected proposal or verifier reason changed",
+                )
+            retry_of = {
+                "attempt": rejected_attempt,
+                "candidate_sha256": retry_rejected_resolution["candidate_sha256"],
+                "resolution_result_sha256": retry_rejected_resolution.get(
+                    "result_sha256"
+                ),
+                "verification_result_sha256": retry_rejected_resolution[
+                    "verification_result_sha256"
+                ],
+                "verification_verdict": rejected_verification["verdict"],
+                "verification_reason": rejected_verification["reason"],
+                "rejected_relationship": relationships[0],
+            }
+            clarification["prior_rejection"] = retry_of
         clarification_bytes = (
             json.dumps(clarification, indent=2, sort_keys=True).encode("utf-8") + b"\n"
         )
@@ -6412,6 +6705,7 @@ def _request_gap_resolution(
             "selected_assessment_round": selected_round,
             "selected_assessment_position": selected_position,
             "accepted_assessment_sha256": accepted_assessment_sha256,
+            "retry_of": retry_of,
             "interview_path": paths["interview_path"],
             "result_path": paths["result_path"],
             "candidate_path": paths["candidate_path"],
@@ -6452,6 +6746,7 @@ def _request_gap_resolution(
             "selected_assessment_round": selected_round,
             "selected_assessment_position": selected_position,
             "accepted_assessment_sha256": accepted_assessment_sha256,
+            "retry_of": retry_of,
             "parent_projection": (
                 parent if mode == "assessed_answer" else state["first_projection"]
             ),
@@ -6996,6 +7291,7 @@ def _validate_gap_resolution_terminal(
         != saved.get("selected_assessment_position")
         or entries[request_index].get("accepted_assessment_sha256")
         != saved.get("accepted_assessment_sha256")
+        or entries[request_index].get("retry_of") != saved.get("retry_of")
         or entries[request_index].get("contract") != saved.get("contract")
         or entries[request_index].get("projection_sha256")
         != saved.get("projection_sha256")
@@ -7445,8 +7741,8 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
         )
     except OSError as error:
         return _blocked("clarification boundary unavailable", str(error))
+    result = drive(work, opening, purpose)
     for _ in range(8):
-        result = drive(work, opening, purpose)
         if result.get("status") == "blocked":
             return result
         if result.get("status") == "waiting_for_model":
@@ -7458,15 +7754,13 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
                 result, "needs_operator_answer"
             )
         stopped = result.get("stopped")
-        if stopped == "clarification_required":
-            return _clarification_boundary_result(
-                result, "clarification_required"
-            )
         if stopped == "clarification_continuation_complete":
             return _clarification_boundary_result(
                 result, "clarification_complete"
             )
         if stopped == "first_projection_recorded":
+            result = drive(work, opening, purpose, clarify_gap=True)
+        elif stopped == "clarification_required":
             result = drive(work, opening, purpose, clarify_gap=True)
         elif stopped == "follow_up_gap_question_round_recorded":
             result = drive(
@@ -7493,28 +7787,57 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
                 "clarification boundary unavailable",
                 f"phase {stopped!r} is not a clarification-loop boundary",
             )
-        if result.get("status") == "blocked":
-            return result
-        if result.get("status") == "waiting_for_model":
-            return _clarification_boundary_result(
-                result, "needs_model_interview"
-            )
-        if result.get("status") == "needs_operator":
-            return _clarification_boundary_result(
-                result, "needs_operator_answer"
-            )
-        if result.get("stopped") == "clarification_continuation_complete":
-            return _clarification_boundary_result(
-                result, "clarification_complete"
-            )
-        if result.get("stopped") == "clarification_required":
-            return _clarification_boundary_result(
-                result, "clarification_required"
-            )
     return _blocked(
         "clarification boundary unavailable",
         "code-owned transitions did not reach an external boundary within 8 steps",
     )
+
+
+def run_operator_turn(
+    work: Path,
+    input_fn: Callable[[str], str] = input,
+    output_fn: Callable[[str], None] = print,
+) -> dict[str, object]:
+    boundary = run_clarification_boundary(work)
+    question = boundary.get("question")
+    if (
+        boundary.get("boundary") != "needs_operator_answer"
+        or not isinstance(question, dict)
+        or not isinstance(question.get("id"), str)
+        or not isinstance(question.get("asks"), str)
+    ):
+        return _blocked(
+            "operator turn unavailable",
+            "the intake does not have one code-controlled current operator question",
+        )
+    output_fn(f"Question: {question['asks']}")
+    output_fn("Answer type: non-empty text")
+    try:
+        answer = input_fn("Answer: ")
+    except EOFError:
+        return _blocked("operator answer unavailable", "no operator answer was supplied")
+    confirmed = run_clarification_boundary(work)
+    if (
+        confirmed.get("boundary") != "needs_operator_answer"
+        or confirmed.get("question") != question
+        or confirmed.get("round") != boundary.get("round")
+        or confirmed.get("answered_question_count")
+        != boundary.get("answered_question_count")
+    ):
+        return _blocked(
+            "operator question changed",
+            "the active question changed before its answer could be preserved",
+        )
+    try:
+        opening = (work / "sources" / "source-000001.txt").read_text(
+            encoding="utf-8"
+        )
+        purpose = (work / "sources" / "source-000002.txt").read_text(
+            encoding="utf-8"
+        )
+    except OSError as error:
+        return _blocked("operator turn unavailable", str(error))
+    return drive(work, opening, purpose, gap_answer=answer)
 
 
 def _resume(
@@ -8409,6 +8732,11 @@ def main() -> int:
         action="store_true",
         help="answer the code-controlled purpose-assessment questions",
     )
+    parser.add_argument(
+        "--run-operator-turn",
+        action="store_true",
+        help="present and preserve exactly one current operator answer",
+    )
     args = parser.parse_args()
     interview_flags = sum((
         args.run_projection_interview,
@@ -8421,7 +8749,32 @@ def main() -> int:
         args.run_gap_resolution_verification,
         args.run_purpose_interview,
     ))
-    if args.conduct_question_round and interview_flags:
+    if args.run_operator_turn and (
+        interview_flags
+        or args.clarification_boundary
+        or any(
+            value is not None
+            for value in (
+                args.opening,
+                args.purpose,
+                args.source,
+                args.gap_answer,
+            )
+        )
+        or args.project_source
+        or args.clarify_gap
+        or args.resolve_gap
+        or args.assess_gap_answers
+        or args.conduct_question_round
+        or args.continue_clarification
+    ):
+        result = _blocked(
+            "operator turn invocation invalid",
+            "run one operator turn with only --work and --run-operator-turn",
+        )
+    elif args.run_operator_turn:
+        result = run_operator_turn(args.work)
+    elif args.conduct_question_round and interview_flags:
         result = _blocked(
             "interview invocation invalid",
             "conduct the prepared operator round separately from model interviews",

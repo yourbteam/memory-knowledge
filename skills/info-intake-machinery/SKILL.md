@@ -119,8 +119,12 @@ python3 scripts/run_projection_with_codex.py
 
 Provide the waiting intake directory when prompted. The launcher runs the producer, independent
 verifier, correction interview when any readable pair is rejected, and independent correction
-verifier when a replacement is proposed. It stops when the intake reaches its terminal result or a
-managed stage fails.
+verifier when a replacement is proposed. After each successful model interview it re-enters the
+deterministic clarification boundary. It launches only the exact next model command returned by
+that boundary. When the boundary returns one current operator question, code presents only that
+question, preserves the exact non-empty answer as an immutable source and readable projection,
+then re-enters the boundary. It stops only at grounded first-layer completion or a managed failure.
+A changed question, mismatched command, attachment, boundary, or exit status fails closed.
 
 ## Turn all current gaps into one operator question round
 
@@ -248,17 +252,20 @@ code-owned transitions until it reaches exactly one typed boundary:
 
 - `needs_model_interview` returns exactly one existing code-controlled interview command and stops.
 - `needs_operator_answer` returns exactly one current prepared question and stops.
-- `clarification_required` returns the incomplete qualification and its exact ordered remaining
-  gaps without presenting or generating a question.
 - `clarification_complete` returns the preserved grounded terminal result plus its exact complete
   projection qualification and `first_layer_complete` disposition, then stops.
+
+`clarification_required` is an internal continuation, not an external boundary. The controller
+uses its exact ordered remaining gaps to request the next complete follow-up question round, then
+returns that round as `needs_model_interview`. It never invents, presents, or answers a question.
 
 The controller never executes a model interview and never supplies or accepts an operator answer.
 After that external response has entered through its existing code-controlled interview or
 immutable human-source path, run the same boundary command again. Repeating it before a response
 returns the identical boundary without another request, artifact, question presentation, or ledger
-event. Invalid or stale state fails closed. This is a resumable boundary controller, not yet an
-automatic external-work loop.
+event. Invalid or stale state fails closed. This is a resumable external-boundary controller: all
+internal code-owned transitions are automatic, while model interviews and operator answers remain
+external work.
 
 ## Admit the next resolving assessed answer
 
@@ -304,7 +311,18 @@ assessment artifact, records parentage and evidence hashes, and appends the requ
 verification, and version events to the ledger. Before another attempt starts, code archives the
 prior terminal attempt and its output projection in append-only state history. `does_not_resolve_gap`,
 `not_supported`, or `unreadable` leaves the current parent and its gap unchanged with the reason
-recorded. Replay reconstructs every archived attempt and version and rejects changed artifacts.
+recorded. A first independently rejected assessed-answer proposal starts one bounded correction
+attempt instead of asking the operator the same question again. Code freezes the rejected proposal,
+verifier verdict, and exact verifier reason into the next attempt; the retry model must reselect both
+relationship endpoints from complete code-listed readable-element choices and provide coordinates
+inside those selected bounds. The same independent verifier then decides whether the correction is
+admissible. A second rejection stops as `gap resolution retry exhausted`, preserving the human
+answer and both model attempts for later machinery policy; it does not silently loop or create a
+human question. If a rejected assessed-answer attempt was archived before this retry path existed,
+code recovers the oldest such attempt whenever its exact unchanged gap still exists and no later
+attempt already names it as `retry_of`. The current projection becomes the retry parent while the
+original answer, failed proposal, verifier verdict, and verifier reason remain the immutable retry
+evidence. Replay reconstructs every archived attempt and version and rejects changed artifacts.
 
 ## Prepare the follow-up question round for failed clarifications
 
@@ -369,8 +387,9 @@ its boundary controller still stops for every model interview and operator answe
 external work or a fully automatic question loop
 to a grounded terminal condition or accept URLs. Its terminal qualification verifies the recorded
 coverage contract and explicit gaps, and its disposition gate prevents an incomplete projection
-from ending the first layer; it does not yet turn `clarification_required` into a new question
-round or perform the later semantic projection assessment against the source. Legacy
+from ending the first layer. Its boundary controller turns `clarification_required` into the next
+complete follow-up question-round request, but does not perform the later semantic projection
+assessment against the source. Legacy
 gap resolution remains limited to an existing preserved single-gap answer bound to a relationship
 identity ambiguity. The projection adapter currently accepts images only and fails closed for
 other media types. Do not simulate those later units in prose or extend the script while running

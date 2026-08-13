@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Drive one pending image-intake model stage through Codex."""
+"""Drive pending image-intake model stages to the next external boundary."""
 
 from __future__ import annotations
 
@@ -16,6 +16,13 @@ START_INTAKE = Path(__file__).resolve().with_name("start_intake.py")
 
 class LaunchError(ValueError):
     """The saved intake cannot be launched through this adapter."""
+
+
+BOUNDARY_EXIT_CODES = {
+    "needs_model_interview": 2,
+    "needs_operator_answer": 4,
+    "clarification_complete": 0,
+}
 
 
 def _sha256(path: Path) -> str:
@@ -69,9 +76,26 @@ def load_request(work: Path) -> tuple[Path, list[str]]:
     )
     gap_answer_assessment_phase = (
         state.get("status") == "waiting_for_model"
-        and state.get("phase") == "assessing_gap_answers"
-        and state.get("waiting_for")
-        == "gap-answer-assessments/round-000001/interview.jsonl"
+        and (
+            (
+                state.get("phase") == "assessing_gap_answers"
+                and state.get("waiting_for")
+                == "gap-answer-assessments/round-000001/interview.jsonl"
+            )
+            or (
+                state.get("phase") == "assessing_prepared_question_round_answers"
+                and isinstance(state.get("prepared_question_round_interview"), dict)
+                and isinstance(
+                    state["prepared_question_round_interview"].get("round"), int
+                )
+                and state.get("waiting_for")
+                == (
+                    "gap-answer-assessments/"
+                    f"round-{state['prepared_question_round_interview']['round']:06d}/"
+                    "interview.jsonl"
+                )
+            )
+        )
     )
     resolution_phase = (
         state.get("status") == "waiting_for_model"
@@ -249,6 +273,73 @@ def build_codex_argv(
     ]
 
 
+def run_clarification_boundary(work: Path) -> dict[str, object]:
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(START_INTAKE),
+            "--work",
+            str(work),
+            "--clarification-boundary",
+        ],
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+    try:
+        result = json.loads(completed.stdout)
+    except json.JSONDecodeError as error:
+        raise LaunchError("the clarification boundary did not return valid JSON") from error
+    if not isinstance(result, dict):
+        raise LaunchError("the clarification boundary must return an object")
+    if result.get("status") == "blocked":
+        return result
+    boundary = result.get("boundary")
+    if boundary not in BOUNDARY_EXIT_CODES:
+        raise LaunchError("the clarification boundary returned an unsupported outcome")
+    if completed.returncode != BOUNDARY_EXIT_CODES[boundary]:
+        raise LaunchError("the clarification boundary exit code does not match its outcome")
+    return result
+
+
+def next_model_request(
+    work: Path,
+    boundary_result: dict[str, object],
+) -> tuple[Path, list[str]] | None:
+    boundary = boundary_result.get("boundary")
+    if boundary != "needs_model_interview":
+        return None
+    work_items = boundary_result.get("work")
+    if (
+        not isinstance(work_items, list)
+        or len(work_items) != 1
+        or not isinstance(work_items[0], dict)
+    ):
+        raise LaunchError("the model boundary lost its single work item")
+    boundary_command = work_items[0].get("command")
+    boundary_attachments = work_items[0].get("attachments")
+    attachment, interview_command = load_request(work)
+    if boundary_command != interview_command:
+        raise LaunchError("the model boundary command does not match the saved intake")
+    if boundary_attachments != [str(attachment)]:
+        raise LaunchError("the model boundary attachment does not match the frozen source")
+    return attachment, interview_command
+
+
+def conduct_operator_turn(work: Path) -> int:
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(START_INTAKE),
+            "--work",
+            str(work),
+            "--run-operator-turn",
+        ],
+        check=False,
+    )
+    return completed.returncode
+
+
 def main() -> int:
     if len(sys.argv) != 1:
         print(json.dumps({"ok": False, "error": "this launcher accepts no arguments"}))
@@ -256,32 +347,74 @@ def main() -> int:
     print("Question: Intake work directory")
     print("Response format: One absolute directory path.")
     print("Example: /private/tmp/example-intake")
-    print("Constraints: Use an intake currently waiting for a supported image-intake model stage.")
+    print("Constraints: Use an image intake waiting for model work or one operator answer.")
     try:
         work = Path(input("Answer: ").strip()).expanduser().resolve()
-        attachment, interview_command = load_request(work)
-    except (EOFError, LaunchError) as error:
+    except EOFError as error:
         print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
         return 3
-    executable = shutil.which("codex")
-    if executable is None:
-        print(json.dumps({"ok": False, "error": "codex executable is unavailable"}, sort_keys=True))
-        return 3
-    seen: set[tuple[str, ...]] = set()
-    while True:
-        command_key = tuple(interview_command)
-        if command_key in seen:
-            print(json.dumps({"ok": False, "error": "the intake did not advance after a model stage"}, sort_keys=True))
-            return 3
-        seen.add(command_key)
-        argv = build_codex_argv(executable, work, attachment, interview_command)
-        completed = subprocess.run(argv, check=False)
-        if completed.returncode != 0:
-            return completed.returncode
+    boundary_result: dict[str, object] | None = None
+    request: tuple[Path, list[str]] | None
+    try:
+        request = load_request(work)
+    except LaunchError:
         try:
-            attachment, interview_command = load_request(work)
-        except LaunchError:
-            return 0
+            boundary_result = run_clarification_boundary(work)
+        except LaunchError as error:
+            print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
+            return 3
+        request = None
+    executable: str | None = None
+    seen_states: set[str] = set()
+    while True:
+        if request is not None:
+            attachment, interview_command = request
+            if executable is None:
+                executable = shutil.which("codex")
+                if executable is None:
+                    print(json.dumps({"ok": False, "error": "codex executable is unavailable"}, sort_keys=True))
+                    return 3
+            try:
+                state_key = _sha256(work / "intake-state.json")
+            except OSError as error:
+                print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
+                return 3
+            if state_key in seen_states:
+                print(json.dumps({"ok": False, "error": "the intake did not advance after a model stage"}, sort_keys=True))
+                return 3
+            seen_states.add(state_key)
+            argv = build_codex_argv(executable, work, attachment, interview_command)
+            completed = subprocess.run(argv, check=False)
+            if completed.returncode != 0:
+                return completed.returncode
+            try:
+                boundary_result = run_clarification_boundary(work)
+            except LaunchError as error:
+                print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
+                return 3
+            request = None
+        assert boundary_result is not None
+        try:
+            request = next_model_request(work, boundary_result)
+        except LaunchError as error:
+            print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
+            return 3
+        if request is not None:
+            continue
+        if boundary_result.get("boundary") == "needs_operator_answer":
+            operator_returncode = conduct_operator_turn(work)
+            if operator_returncode not in {0, 4}:
+                return operator_returncode
+            try:
+                boundary_result = run_clarification_boundary(work)
+            except LaunchError as error:
+                print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
+                return 3
+            continue
+        print(json.dumps(boundary_result, indent=2, sort_keys=True))
+        if boundary_result.get("status") == "blocked":
+            return 3
+        return 0
 
 
 if __name__ == "__main__":

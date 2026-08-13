@@ -77,6 +77,14 @@ def select_gaps(
                 "record": item,
                 "recorded_context": context,
             })
+    return gaps
+
+
+def require_gaps(
+    projection: dict[str, Any], projection_sha256: str
+) -> list[dict[str, object]]:
+    """Return current gaps for a question-producing path, refusing an empty set."""
+    gaps = select_gaps(projection, projection_sha256)
     if not gaps:
         raise ClarificationError("clarification-no-gap")
     return gaps
@@ -84,7 +92,7 @@ def select_gaps(
 
 def select_gap(projection: dict[str, Any], projection_sha256: str) -> dict[str, object]:
     """Select the first explicit gap for legacy single-gap intakes."""
-    return select_gaps(projection, projection_sha256)[0]
+    return require_gaps(projection, projection_sha256)[0]
 
 
 def _entry(sequence: int, event: str, payload: dict[str, object], previous: str | None) -> dict[str, object]:
@@ -466,7 +474,7 @@ def run_round(
 ) -> dict[str, object]:
     projection = _load_projection(projection_path, projection_sha256)
     if gaps is None:
-        gaps = select_gaps(projection, projection_sha256)
+        gaps = require_gaps(projection, projection_sha256)
     else:
         _validate_bound_gaps(projection, projection_sha256, gaps)
     round_dir.mkdir(parents=True, exist_ok=True)

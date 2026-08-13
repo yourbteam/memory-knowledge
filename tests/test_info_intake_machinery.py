@@ -451,6 +451,169 @@ def test_codex_projection_runner_accepts_follow_up_question_round(tmp_path: Path
     assert command[-1] == "--run-gap-clarification"
 
 
+def test_codex_runner_accepts_prepared_answer_assessment_round(tmp_path: Path) -> None:
+    source = tmp_path / "sources" / "source-000003"
+    source.parent.mkdir(parents=True)
+    source.write_bytes(b"image")
+    (tmp_path / "intake-state.json").write_text(json.dumps({
+        "status": "waiting_for_model",
+        "phase": "assessing_prepared_question_round_answers",
+        "waiting_for": "gap-answer-assessments/round-000004/interview.jsonl",
+        "prepared_question_round_interview": {"round": 4},
+        "first_source": {
+            "stored_path": "sources/source-000003",
+            "media_type": "image/png",
+            "sha256": START_INTAKE._digest_bytes(source.read_bytes()),
+        },
+    }))
+
+    attachment, command = CODEX_RUNNER.load_request(tmp_path)
+
+    assert attachment == source
+    assert command[-1] == "--run-gap-answer-assessment"
+
+
+def test_codex_runner_crosses_human_boundary_and_continues_to_completion(
+    tmp_path: Path, monkeypatch: object, capsys: object,
+) -> None:
+    work = tmp_path / "intake"
+    attachment = work / "sources" / "source-000003"
+    first_command = ["python", "start_intake.py", "--run-gap-clarification"]
+    second_command = ["python", "start_intake.py", "--run-gap-answer-assessment"]
+    requests = iter([
+        (attachment, first_command),
+        (attachment, second_command),
+    ])
+    boundaries = iter([
+        {
+            "boundary": "needs_operator_answer",
+            "status": "needs_operator",
+            "question": {"id": "question-1", "asks": "Which element?"},
+        },
+        {
+            "boundary": "needs_model_interview",
+            "status": "waiting_for_model",
+            "work": [{
+                "attachments": [str(attachment)],
+                "command": second_command,
+            }],
+        },
+        {
+            "boundary": "clarification_complete",
+            "status": "ready_for_projection_assessment",
+            "stopped": "clarification_continuation_complete",
+        },
+    ])
+    model_calls: list[list[str]] = []
+    operator_calls: list[Path] = []
+    state_hashes = iter(["a" * 64, "b" * 64])
+
+    monkeypatch.setattr("builtins.input", lambda _prompt: str(work))
+    monkeypatch.setattr(CODEX_RUNNER.shutil, "which", lambda _name: "/usr/bin/codex")
+    monkeypatch.setattr(CODEX_RUNNER, "load_request", lambda _work: next(requests))
+    monkeypatch.setattr(CODEX_RUNNER, "_sha256", lambda _path: next(state_hashes))
+    monkeypatch.setattr(
+        CODEX_RUNNER,
+        "build_codex_argv",
+        lambda _executable, _work, _attachment, command: command,
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER,
+        "run_clarification_boundary",
+        lambda _work: next(boundaries),
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER,
+        "conduct_operator_turn",
+        lambda selected_work: operator_calls.append(selected_work) or 0,
+    )
+
+    def run_model(argv: list[str], **_kwargs: object) -> object:
+        model_calls.append(argv)
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(CODEX_RUNNER.subprocess, "run", run_model)
+    monkeypatch.setattr(CODEX_RUNNER.sys, "argv", [str(CODEX_RUNNER_SCRIPT)])
+
+    assert CODEX_RUNNER.main() == 0
+    output = capsys.readouterr().out
+    assert model_calls == [first_command, second_command]
+    assert operator_calls == [work]
+    assert '"boundary": "clarification_complete"' in output
+
+
+def test_operator_turn_presents_revalidates_and_submits_exact_answer(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    work = tmp_path / "intake"
+    (work / "sources").mkdir(parents=True)
+    (work / "sources" / "source-000001.txt").write_text("There is a new intake")
+    (work / "sources" / "source-000002.txt").write_text(REAL_PURPOSE)
+    boundary = {
+        "boundary": "needs_operator_answer",
+        "status": "needs_operator",
+        "round": 2,
+        "answered_question_count": 0,
+        "question": {"id": "question-1", "asks": "Which exact element?"},
+    }
+    drive_calls: list[tuple[tuple[object, ...], dict[str, object]]] = []
+    messages: list[str] = []
+    accepted = {"status": "ready_for_projection_assessment"}
+
+    monkeypatch.setattr(
+        START_INTAKE,
+        "run_clarification_boundary",
+        lambda _work: boundary,
+    )
+
+    def drive_answer(*args: object, **kwargs: object) -> dict[str, object]:
+        drive_calls.append((args, kwargs))
+        return accepted
+
+    monkeypatch.setattr(START_INTAKE, "drive", drive_answer)
+    result = START_INTAKE.run_operator_turn(
+        work,
+        input_fn=lambda prompt: "The $48,000 Projected Close value",
+        output_fn=messages.append,
+    )
+
+    assert result == accepted
+    assert messages == [
+        "Question: Which exact element?",
+        "Answer type: non-empty text",
+    ]
+    assert drive_calls == [((work, "There is a new intake", REAL_PURPOSE), {
+        "gap_answer": "The $48,000 Projected Close value",
+    })]
+
+
+def test_codex_runner_rejects_model_boundary_command_drift(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    attachment = tmp_path / "source.png"
+    command = ["python", "start_intake.py", "--run-gap-clarification"]
+    monkeypatch.setattr(
+        CODEX_RUNNER,
+        "load_request",
+        lambda _work: (attachment, command),
+    )
+    result = {
+        "boundary": "needs_model_interview",
+        "status": "waiting_for_model",
+        "work": [{
+            "attachments": [str(attachment)],
+            "command": ["python", "uncontrolled.py"],
+        }],
+    }
+
+    try:
+        CODEX_RUNNER.next_model_request(tmp_path, result)
+    except CODEX_RUNNER.LaunchError as error:
+        assert str(error) == "the model boundary command does not match the saved intake"
+    else:
+        raise AssertionError("a drifted model command was accepted")
+
+
 def test_projection_interview_enforces_choices_and_code_assembles_result(tmp_path: Path) -> None:
     answers = iter(_projection_answers(invalid_status_first=True))
     messages: list[str] = []
@@ -2983,6 +3146,25 @@ def test_terminal_projection_qualification_proves_complete_or_exact_incomplete(
     ]
 
 
+def test_zero_gap_selection_is_terminal_evidence_but_cannot_start_questions(
+    tmp_path: Path,
+) -> None:
+    projection, state = _terminal_projection_fixture(tmp_path)
+    projection_sha256 = state["current_projection"]["sha256"]
+
+    assert START_INTAKE.gap_clarification.select_gaps(
+        projection, projection_sha256
+    ) == []
+    try:
+        START_INTAKE.gap_clarification.require_gaps(
+            projection, projection_sha256
+        )
+    except START_INTAKE.gap_clarification.ClarificationError as error:
+        assert str(error) == "clarification-no-gap"
+    else:
+        raise AssertionError("question creation accepted a zero-gap projection")
+
+
 def test_terminal_projection_qualification_fails_closed_on_coverage_conflicts(
     tmp_path: Path,
 ) -> None:
@@ -3251,8 +3433,9 @@ def test_clarification_continuation_returns_apply_then_complete_without_mutation
     invalid_terminal = START_INTAKE._execute_clarification_continuation(
         complete_work, consumed, [seed]
     )
-    assert invalid_terminal["stopped"] == "terminal_invalid"
+    assert invalid_terminal["stopped"] == "gap resolution retry unavailable"
     assert (complete_work / "ledger.jsonl").read_bytes() == ledger_before_invalid_terminal
+    consumed["phase"] = "gap_resolution_applied"
     incomplete_qualification = {
         "qualification": "readable_projection_incomplete",
         "projection": {
@@ -3284,12 +3467,29 @@ def test_clarification_continuation_returns_apply_then_complete_without_mutation
         "There is a new intake"
     )
     (complete_work / "sources" / "source-000002.txt").write_text(REAL_PURPOSE)
-    monkeypatch.setattr(
-        START_INTAKE, "drive", lambda *_args, **_kwargs: required_result
-    )
+    next_round_request = {
+        "status": "waiting_for_model",
+        "stopped": "formulating_follow_up_gap_question_round",
+        "work": [{
+            "stage": "formulate_follow_up_gap_question_round",
+            "command": ["python3", "start_intake.py"],
+        }],
+    }
+    drive_calls = []
+
+    def drive_required_then_questions(*_args: object, **kwargs: object) -> dict:
+        drive_calls.append(kwargs)
+        if kwargs.get("clarify_gap") is True:
+            return next_round_request
+        return required_result
+
+    monkeypatch.setattr(START_INTAKE, "drive", drive_required_then_questions)
     required_boundary = START_INTAKE.run_clarification_boundary(complete_work)
-    assert required_boundary["boundary"] == "clarification_required"
-    assert required_boundary["gaps"] == [clarification["gap"]]
+    assert required_boundary == {
+        **next_round_request,
+        "boundary": "needs_model_interview",
+    }
+    assert drive_calls == [{}, {"clarify_gap": True}]
 
     complete_decision = {
         "decision": "clarification_complete",
@@ -3765,6 +3965,337 @@ def test_next_resolution_archives_prior_terminal_before_state_transition(
     assert attachment == source_path
     assert command[-1] == "--run-gap-resolution"
 
+
+def test_rejected_resolution_retries_same_assessment_with_preserved_verifier_evidence(
+    tmp_path: Path, monkeypatch: object
+) -> None:
+    parent = {
+        "id": "projection-source-000003-v3",
+        "path": "projections/source-000003-v3.json",
+        "sha256": "a" * 64,
+        "version": 3,
+    }
+    rejected_candidate = {
+        "relationships": [{
+            "id": "relationship-000001-resolution-000001",
+            "resolution_of": "relationship-000001",
+            "from_id": "element-000002",
+            "to_id": "element-000003",
+        }]
+    }
+    rejected_verification = {
+        "verdict": "not_supported",
+        "reason": "The proposed origin is the section, but the answer selects the callout.",
+    }
+    paths = START_INTAKE._resolution_paths(1)
+    candidate_path = tmp_path / paths["candidate_path"]
+    verification_path = tmp_path / paths["verification_result_path"]
+    candidate_path.parent.mkdir(parents=True)
+    verification_path.parent.mkdir(parents=True)
+    candidate_path.write_text(
+        json.dumps(rejected_candidate, indent=2, sort_keys=True) + "\n"
+    )
+    verification_path.write_text(
+        json.dumps(rejected_verification, indent=2, sort_keys=True) + "\n"
+    )
+    rejected = {
+        "attempt": 1,
+        "mode": "assessed_answer",
+        "result_sha256": "b" * 64,
+        "candidate_sha256": START_INTAKE._digest_bytes(candidate_path.read_bytes()),
+        "verification_result_sha256": START_INTAKE._digest_bytes(
+            verification_path.read_bytes()
+        ),
+        "verification_verdict": rejected_verification["verdict"],
+        "verification_reason": rejected_verification["reason"],
+        "selected_assessment_round": 2,
+        "selected_assessment_position": 1,
+        "parent_projection": parent,
+    }
+    binding = {
+        "gap": {
+            "projection_sha256": parent["sha256"],
+            "collection": "relationships",
+            "kind": "relationship",
+            "id": "relationship-000001",
+            "record_sha256": "c" * 64,
+            "record": {"id": "relationship-000001"},
+        },
+        "question": {
+            "id": "question-1",
+            "answers_gap": {
+                "projection_sha256": parent["sha256"],
+                "collection": "relationships",
+                "kind": "relationship",
+                "id": "relationship-000001",
+                "record_sha256": "c" * 64,
+            },
+        },
+        "answer_source": {"path": "sources/source-1.txt", "sha256": "d" * 64},
+        "answer_projection": {
+            "path": "projections/source-1-v1.txt",
+            "sha256": "d" * 64,
+        },
+    }
+    assessment = {
+        "position": 1,
+        "gap": dict(binding["question"]["answers_gap"]),
+        "verdict": "resolves_gap",
+    }
+    state = {
+        "intake_id": "intake-test",
+        "phase": "gap_resolution_rejected",
+        "current_projection": parent,
+        "first_projection": parent,
+        "gap_resolution": rejected,
+        "gap_resolution_history": [],
+    }
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_assessed_binding_at_position",
+        lambda *_args: (binding, assessment, None),
+    )
+    seed = START_INTAKE._ledger_entry(
+        1, "test_seed", {"intake_id": "intake-test"}, None
+    )
+    (tmp_path / "ledger.jsonl").write_text(json.dumps(seed) + "\n")
+
+    result = START_INTAKE._execute_clarification_continuation(
+        tmp_path, state, [seed]
+    )
+
+    assert result["stopped"] == "resolving_gap_answer"
+    assert state["gap_resolution_history"] == [{
+        **rejected,
+        "terminal_phase": "gap_resolution_rejected",
+        "output_projection": parent,
+    }]
+    assert state["gap_resolution"]["attempt"] == 2
+    assert state["gap_resolution"]["selected_assessment_round"] == 2
+    assert state["gap_resolution"]["selected_assessment_position"] == 1
+    assert state["gap_resolution"]["retry_of"]["verification_reason"] == (
+        rejected_verification["reason"]
+    )
+    clarification = json.loads(
+        (tmp_path / START_INTAKE._resolution_paths(2)["clarification_path"]).read_text()
+    )
+    assert clarification["prior_rejection"] == state["gap_resolution"]["retry_of"]
+    assert candidate_path.read_bytes() == (
+        json.dumps(rejected_candidate, indent=2, sort_keys=True) + "\n"
+    ).encode()
+    assert verification_path.read_bytes() == (
+        json.dumps(rejected_verification, indent=2, sort_keys=True) + "\n"
+    ).encode()
+
+
+def test_retry_resolution_reselects_both_endpoints_through_code_choices(
+    tmp_path: Path,
+) -> None:
+    inputs = _missing_endpoint_resolution_fixture(tmp_path)
+    clarification = json.loads(inputs["clarification_path"].read_text())
+    clarification["prior_rejection"] = {
+        "attempt": 1,
+        "candidate_sha256": "a" * 64,
+        "resolution_result_sha256": "b" * 64,
+        "verification_result_sha256": "c" * 64,
+        "verification_verdict": "not_supported",
+        "verification_reason": "The rejected proposal kept the wrong locked target.",
+        "rejected_relationship": {
+            "resolution_of": "relationship-000001",
+            "from_id": "element-000001",
+            "to_id": "element-000003",
+        },
+    }
+    inputs["clarification_path"].write_text(
+        json.dumps(clarification, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["clarification_sha256"] = START_INTAKE._digest_bytes(
+        inputs["clarification_path"].read_bytes()
+    )
+    answers = iter([
+        "fresh-retry-resolver",
+        "pytest-retry",
+        "element-000001",
+        "element-000003",
+        "100",
+        "100",
+        "700",
+        "100",
+        "The callout points to the exact field.",
+    ])
+
+    result = START_INTAKE.gap_resolution.run(
+        tmp_path / "retry-resolution",
+        **inputs,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    candidate = json.loads(
+        (tmp_path / "retry-resolution" / "verification-candidate.json").read_text()
+    )
+    questions = [
+        entry["question"]
+        for entry in START_INTAKE.gap_resolution._read_journal(
+            tmp_path / "retry-resolution" / "interview.jsonl"
+        )
+        if entry["event"] == "question_asked"
+    ]
+
+    assert result["verdict"] == "resolves_gap"
+    assert candidate["relationships"][0]["from_id"] == "element-000001"
+    assert candidate["relationships"][0]["to_id"] == "element-000003"
+    assert candidate["relationships"][0]["binding_method"] == (
+        "verifier_rejection_corrected_with_recorded_endpoints"
+    )
+    assert questions[2]["choices"] == [
+        "element-000001", "element-000002", "element-000003"
+    ]
+    assert questions[2]["context"]["prior_rejection"]["verification_reason"] == (
+        "The rejected proposal kept the wrong locked target."
+    )
+
+
+def test_linked_rejected_resolution_retry_is_one_logical_assessment_consumption() -> None:
+    rejected = {
+        "attempt": 4,
+        "mode": "assessed_answer",
+        "selected_assessment_round": 2,
+        "selected_assessment_position": 1,
+        "candidate_sha256": "a" * 64,
+        "result_sha256": "b" * 64,
+        "verification_result_sha256": "c" * 64,
+        "verification_verdict": "not_supported",
+        "verification_reason": "The proposed endpoint is wrong.",
+        "accepted_assessment_sha256": "d" * 64,
+        "operator_answer_source_sha256": "e" * 64,
+        "operator_answer_projection_sha256": "e" * 64,
+    }
+    retry = {
+        **rejected,
+        "attempt": 5,
+        "candidate_sha256": "f" * 64,
+        "result_sha256": "1" * 64,
+        "verification_result_sha256": "2" * 64,
+        "verification_verdict": "supported",
+        "verification_reason": "The corrected endpoints are visible.",
+        "retry_of": {
+            "attempt": 4,
+            "candidate_sha256": rejected["candidate_sha256"],
+            "resolution_result_sha256": rejected["result_sha256"],
+            "verification_result_sha256": rejected[
+                "verification_result_sha256"
+            ],
+            "verification_verdict": rejected["verification_verdict"],
+            "verification_reason": rejected["verification_reason"],
+        },
+    }
+
+    identities, error = START_INTAKE._consumed_assessment_identities(
+        [rejected, retry]
+    )
+
+    assert error is None
+    assert identities == {(2, 1)}
+
+    unlinked = dict(retry)
+    unlinked.pop("retry_of")
+    identities, error = START_INTAKE._consumed_assessment_identities(
+        [rejected, unlinked]
+    )
+    assert identities is None
+    assert error == "an assessed answer was consumed more than once"
+
+    changed_reason = json.loads(json.dumps(retry))
+    changed_reason["retry_of"]["verification_reason"] = "changed"
+    identities, error = START_INTAKE._consumed_assessment_identities(
+        [rejected, changed_reason]
+    )
+    assert identities is None
+    assert error == "an assessed answer was consumed more than once"
+
+
+def test_archived_rejected_resolution_is_selected_when_its_gap_remains_current(
+    tmp_path: Path, monkeypatch: object
+) -> None:
+    current_gap = {
+        "projection_sha256": "f" * 64,
+        "collection": "relationships",
+        "kind": "relationship",
+        "id": "relationship-000030",
+        "record_sha256": "a" * 64,
+    }
+    assessment = {
+        "position": 4,
+        "question_id": "question-4",
+        "gap": dict(current_gap),
+        "verdict": "resolves_gap",
+    }
+    assessment_sha256 = START_INTAKE._digest_bytes(
+        json.dumps(assessment, sort_keys=True, separators=(",", ":")).encode()
+    )
+    rejected = {
+        "attempt": 3,
+        "mode": "assessed_answer",
+        "terminal_phase": "gap_resolution_rejected",
+        "selected_assessment_position": 4,
+        "accepted_assessment_sha256": assessment_sha256,
+        "gap_id": "relationship-000030",
+        "verification_verdict": "not_supported",
+    }
+    state = {
+        "phase": "gap_resolution_applied",
+        "gap_resolution_history": [rejected],
+        "gap_resolution": {
+            "attempt": 5,
+            "mode": "assessed_answer",
+            "selected_assessment_round": 2,
+            "selected_assessment_position": 1,
+            "retry_of": {"attempt": 4},
+        },
+    }
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_assessed_binding_at_position",
+        lambda *_args: ({"gap": current_gap}, assessment, None),
+    )
+
+    selected, decision, error = START_INTAKE._retryable_rejected_resolution(
+        tmp_path,
+        state,
+        {"id": "projection-source-000003-v4"},
+        {("relationships", "relationship-000030"): current_gap},
+    )
+
+    assert error is None
+    assert selected is rejected
+    assert decision == {
+        "decision": "retry_rejected_resolution",
+        "rejected_attempt": 3,
+        "assessment_round": 1,
+        "assessment_position": 4,
+        "gap": current_gap,
+    }
+
+    state["gap_resolution"]["retry_of"] = {"attempt": 3}
+    selected, decision, error = START_INTAKE._retryable_rejected_resolution(
+        tmp_path,
+        state,
+        {"id": "projection-source-000003-v4"},
+        {("relationships", "relationship-000030"): current_gap},
+    )
+    assert error is None
+    assert selected is None and decision is None
+
+    state["gap_resolution"]["retry_of"] = {"attempt": 4}
+    selected, decision, error = START_INTAKE._retryable_rejected_resolution(
+        tmp_path,
+        state,
+        {"id": "projection-source-000003-v4"},
+        {},
+    )
+    assert error is None
+    assert selected is None and decision is None
 
 def test_next_resolution_distinguishes_same_position_in_later_round(
     tmp_path: Path, monkeypatch: object
