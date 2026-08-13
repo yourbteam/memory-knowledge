@@ -61,6 +61,7 @@ sys.dont_write_bytecode = True
 sys.path.insert(0, str(HERE))
 
 import stage_gate  # noqa: E402
+import owner_decisions  # noqa: E402
 
 
 class StageCommandError(RuntimeError):
@@ -135,6 +136,8 @@ PACKETS = {
         "legitimate answer: a part "
         "nobody can decide from the repository belongs in front of the person who owns the goal, "
         "and guessing to make the number look better is the one thing this machinery must not do. "
+        "Start with the neutral evidence map in {evidence_map}; it contains candidate files and "
+        "exact excerpts but no verdict. Search beyond it whenever it does not decide the part. "
         "Go and read the code and the real output yourself — do not decide by weighing which side "
         "sounds more confident, and do not treat a longer citation as a stronger one. Three "
         "rewordings of the answering instruction failed to reduce these disagreements and one made "
@@ -154,17 +157,29 @@ PACKETS = {
         "named <id>.json holding {{'id','parts':[{{'part_id','part'}}]}} with part_id as <id>.p1, "
         "<id>.p2 and so on. Read only the input file: not the code, not the description."
     ),
+    "resplit": (
+        "Read every unresolved part in {input}. Decide only whether the part itself contains more "
+        "than one independently verifiable fact. Write one file per part into {out}, named "
+        "<part_id>.json. For an atomic part write {{'part_id','verdict':'atomic','parts':[],"
+        "'why'}}. When it contains multiple facts write {{'part_id','verdict':'split','parts':"
+        "[{{'part':'one separately true-or-false fact'}}],'why'}} with at least two non-overlapping "
+        "parts that together say exactly what the original says. Do not judge whether anything is "
+        "built and do not add detail from the repository; read only the unresolved material."
+    ),
     "answer": (
-        "Answer every part in {input} against what is actually built in {built}. Each part is one "
+        "Answer every part in {input} against what is actually built in {built}. Start with the "
+        "neutral evidence map in {evidence_map}; it contains candidate files, symbols and exact "
+        "excerpts but no verdict. Search beyond it whenever it does not decide a part. Each part is one "
         "thing that is either true or false of the built system today: give it exactly one answer, "
         "'yes' or 'no'. There is no partial answer, and that is the entire point — a set of "
         "requirements judged whole rather than in parts sent twenty-four decisions to a person "
         "because two readers could agree on what the code does and still split on how much of it "
         "counted. Write one file per part into {out} named <part_id>.json holding "
-        "{{'part_id','answer','needed','citations':[{{'where','line','text'}}],'looked_at'}}. A "
-        "'yes' MUST "
-        "cite at least one line carrying the behaviour — the path, the line number, and that line's "
-        "exact text. A 'no' MUST fill 'looked_at': name the nearest thing in the build that "
+        "{{'part_id','answer','needed','citations':[{{'where','line','text'}}],'looked_at'}}. "
+        "Every answer MUST fill 'looked_at' with one sentence connecting the cited behavior to "
+        "the exact part. A 'yes' MUST cite at least one line carrying the behaviour — the path, "
+        "the line number, and that line's exact text. A 'no' MUST use 'looked_at' to name the "
+        "nearest thing in the build that "
         "addresses this part and say in one sentence why it does not satisfy it, citing its line "
         "the same way; and when nothing in the build is even near it, say what you searched for and "
         "where. A bare 'no' is refused. This is not bureaucracy: on the run that made this rule, 45 "
@@ -172,10 +187,9 @@ PACKETS = {
         "offering nothing at all for 'no', so there was no way to tell which had looked in the "
         "right place — and a disagreement nobody can settle is worse than a wrong answer, because "
         "it goes to a person with nothing to decide on. For every 'no', set 'needed' to exactly "
-        "one of 'add', 'change', or 'remove'. Add means nothing in the build addresses the part; "
-        "change means something must be altered or replaced; remove means the existing behavior "
-        "itself must cease and no replacement is needed. This is classified per part so a pure "
-        "removal can reach the remove section without turning a mixed requirement into one. "
+        "one of 'add', 'change', or 'remove'. The machine derives add versus change from whether "
+        "you cite a nearest implementation; use remove only when the existing behavior itself "
+        "must cease and no replacement is needed. "
         "Citations are checked by a program and a record whose evidence does "
         "not resolve is refused. Read the code and the real output; an answer from reasoning about "
         "what the code probably does is worthless. Do not rewrite or reinterpret a part; answer the "
@@ -261,8 +275,8 @@ def _answer_record(row: dict[str, object]) -> list[str]:
     )(row)
     if answer == "yes":
         reasons.extend(stage_gate.citation_reasons(row))
-    if answer == "no" and not row.get("looked_at"):
-        reasons.append("a no answer must say what was looked at")
+    if answer in {"yes", "no"} and not str(row.get("looked_at") or "").strip():
+        reasons.append("an answer must explain how the cited behavior resolves the exact part")
     return reasons
 
 
@@ -277,8 +291,28 @@ def _settle_record(row: dict[str, object]) -> list[str]:
         reasons.append("a no answer needs add, change, or remove")
     if answer in {"yes", "no"}:
         reasons.extend(stage_gate.citation_reasons(row))
+        if not str(row.get("why_the_other_side_is_wrong") or "").strip():
+            reasons.append("a settlement must explain what the other side missed or misread")
     if answer == "cannot settle" and row.get("citations"):
         reasons.append("cannot settle must cite nothing")
+    return reasons
+
+
+def _resplit_record(row: dict[str, object]) -> list[str]:
+    verdict = str(row.get("verdict") or "").strip().lower()
+    reasons = [] if verdict in {"atomic", "split"} else ["verdict must be atomic or split"]
+    parts = row.get("parts")
+    if verdict == "atomic" and parts not in ([], None):
+        reasons.append("an atomic part must return an empty parts list")
+    if verdict == "split":
+        if not isinstance(parts, list) or len(parts) < 2:
+            reasons.append("a split must return at least two parts")
+        else:
+            for index, part in enumerate(parts, start=1):
+                if not isinstance(part, dict) or not str(part.get("part") or "").strip():
+                    reasons.append(f"split part {index} must state one testable fact")
+    if not str(row.get("why") or "").strip():
+        reasons.append("the atomic-or-split decision must say why")
     return reasons
 
 
@@ -342,6 +376,34 @@ def _retry_packet(packet: dict[str, object], gate: dict[str, object]) -> dict[st
     return packet
 
 
+def _gate_after_quarantine(
+    directory: Path,
+    work: Path,
+    expected_ids: list[str] | set[str],
+    identity: stage_gate.Identity,
+    validate: stage_gate.Validator | None = None,
+    *,
+    require_filename: bool = False,
+) -> tuple[dict[str, object], dict[str, object]]:
+    """Remove rejected records, then decide whether legitimate work is still missing.
+
+    The first gate is retained for an actionable retry message. The second gate is the actual
+    post-quarantine state: an unknown extra must not become a new record the next reader is told
+    to create.
+    """
+
+    refused = stage_gate.inspect(
+        directory, expected_ids, identity, validate, require_filename=require_filename,
+    )
+    if refused["complete"] or not refused["reject_files"]:
+        return refused, refused
+    _quarantine(directory, work, list(refused["reject_files"]), refused)
+    remaining = stage_gate.inspect(
+        directory, expected_ids, identity, validate, require_filename=require_filename,
+    )
+    return remaining, refused
+
+
 def _finish(report: dict[str, object], work: Path) -> dict[str, object]:
     """Write both promised artifacts and return their paths with the machine-readable report."""
 
@@ -371,6 +433,16 @@ def _requirement_verdict(calls: list[dict[str, str]]) -> str:
     return "change"
 
 
+def _needed_from_evidence(row: dict[str, object]) -> str:
+    """Make add/change mechanical; only a pure removal remains a reader classification."""
+
+    if str(row.get("answer") or "").strip().lower() != "no":
+        return ""
+    if str(row.get("needed") or "").strip().lower() == "remove":
+        return "remove"
+    return "change" if row.get("citations") else "add"
+
+
 #: Appended to every packet. Two of these sentences are about *how* a reader works rather than what
 #: it judges, and both were learned the hard way. A reader that reads everything before writing
 #: anything is indistinguishable from a stalled one, and on that mistaken reading a live reader was
@@ -392,7 +464,9 @@ HOW_TO_READ = (
     "Put every working, scratch or intermediate file in {scratch} and nowhere else — that "
     "directory is yours alone. Writing scratch beside another reader's is how two readers "
     "overwrote each other's inputs on the run that made this sentence necessary. "
-    "Before you finish, write {scratch}/reader.json holding "
+    "This is a bounded machinery reader: do not load unrelated skills, run session-close work, "
+    "call MCP tools, or write memory. End immediately after the required records and reader.json "
+    "pass their stated shape. Before you finish, write {scratch}/reader.json holding "
     "{{'model': '<the model you are, as you are identified>', 'harness': '<the tool you are "
     "running inside>'}}. This machinery never chooses a reader — whoever runs it supplies one, so "
     "the same command run elsewhere is read by whatever that place runs. That is deliberate, and "
@@ -425,7 +499,59 @@ def _packet(name: str, work: Path, twinned: bool = True, **fields: object) -> di
         "instruction": instruction + HOW_TO_READ.format(scratch=scratch),
         "waiting_for": str(out),
         "scratch": str(scratch),
+        "expected_count": int(fields.get("expected_count") or 0),
     }
+
+
+def _attach_requirement_sources(final: dict[str, object], split: dict[str, object]) -> bool:
+    """Carry Description Machinery source paths through deterministic requirement identities."""
+
+    source_by_id = {
+        str(row["id"]): [str(source) for source in row.get("sources") or []]
+        for row in [*(split.get("obligations") or []), *(split.get("leftover") or [])]
+    }
+    changed = False
+    for requirement in final.get("requirements") or []:
+        sources = sorted({source for origin in requirement.get("from") or []
+                          for source in source_by_id.get(str(origin).split(":")[-1], [])})
+        if requirement.get("sources") != sources:
+            requirement["sources"] = sources
+            changed = True
+    return changed
+
+
+def _apply_resplits(parts: dict[str, object], work: Path) -> dict[str, object]:
+    candidates_path = work / "resplit-candidates.json"
+    decisions_dir = work / "resplit-1"
+    if not candidates_path.is_file() or not decisions_dir.is_dir():
+        return parts
+    candidates = json.loads(candidates_path.read_text(encoding="utf-8"))
+    expected = {str(row["part_id"]) for row in candidates.get("parts") or []}
+    gate = stage_gate.inspect(
+        decisions_dir, expected, stage_gate.field_identity("part_id"), _resplit_record,
+        require_filename=True,
+    )
+    if not gate["complete"]:
+        return parts
+    decisions = {
+        str(row["part_id"]): row
+        for path in sorted(decisions_dir.glob("*.json"))
+        if path.name != "summary.json"
+        for row in [json.loads(path.read_text(encoding="utf-8"))]
+    }
+    expanded = []
+    for part in parts.get("parts") or []:
+        part_id = str(part["part_id"])
+        decision = decisions.get(part_id)
+        if not decision or str(decision.get("verdict")).lower() != "split":
+            expanded.append(part)
+            continue
+        expanded.extend({
+            **part, "part_id": f"{part_id}.s{index}", "part": str(row["part"]).strip(),
+            "resplit_from": part_id,
+        } for index, row in enumerate(decision["parts"], start=1))
+    return {**parts, "parts": expanded, "count": len(expanded),
+            "resplit_decisions": len(decisions)}
 
 
 def _again(packet: dict[str, object], work: Path, index: int) -> dict[str, object]:
@@ -498,11 +624,23 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
 
     # 1 · split — code. The gate is arithmetic: nothing may be in neither list.
     split_path = work / "split.json"
+    enumerated = _run([
+        sys.executable, str(HERE / "enumerate_obligations.py"),
+        "--description", str(description),
+    ])
     if not split_path.exists():
-        _write(split_path, _run([
-            sys.executable, str(HERE / "enumerate_obligations.py"),
-            "--description", str(description),
-        ]))
+        _write(split_path, enumerated)
+    else:
+        # Source annotations are deterministic metadata. Refresh them without invalidating the
+        # completed readers or changing the stable obligation/leftover identities.
+        existing_split = json.loads(split_path.read_text(encoding="utf-8"))
+        current_by_id = {
+            str(row["id"]): row
+            for row in [*(enumerated["obligations"]), *(enumerated["leftover"])]
+        }
+        for row in [*(existing_split["obligations"]), *(existing_split["leftover"])]:
+            row["sources"] = current_by_id.get(str(row["id"]), {}).get("sources") or []
+        _write(split_path, existing_split)
     split = json.loads(split_path.read_text(encoding="utf-8"))
     if not split["partition"]["balances"]:
         return {"stopped": "split", "why": "the description did not partition", "split": split["partition"]}
@@ -524,14 +662,13 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
         waiting = []
         for index in range(1, PASSES + 1):
             out = work / f"verify-{index}"
-            gate = stage_gate.inspect(
-                out, claim_ids, stage_gate.field_identity("candidate_id"),
+            gate, refusal_gate = _gate_after_quarantine(
+                out, work, claim_ids, stage_gate.field_identity("candidate_id"),
                 _verify_record, require_filename=True,
             )
             if not gate["complete"]:
-                _quarantine(out, work, list(gate["reject_files"]), gate)
                 waiting.append(_retry_packet(
-                    _packet("verify", work, input=claims_path, out=out, count=wanted), gate,
+                    _packet("verify", work, input=claims_path, out=out, count=wanted), refusal_gate,
                 ))
                 continue
             checked = _run([
@@ -579,14 +716,13 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
         expected = {str(row["id"]) for row in rows}
         for index in range(1, PASSES + 1):
             out = work / f"{stage}-{index}"
-            gate = stage_gate.inspect(
-                out, expected, stage_gate.field_identity("candidate_id"), _requirement_record,
+            gate, refusal_gate = _gate_after_quarantine(
+                out, work, expected, stage_gate.field_identity("candidate_id"), _requirement_record,
                 require_filename=True,
             )
             if not gate["complete"]:
-                _quarantine(out, work, list(gate["reject_files"]), gate)
                 waiting.append(_retry_packet(
-                    _packet(stage, work, skill=skill, input=source, out=out), gate,
+                    _packet(stage, work, skill=skill, input=source, out=out), refusal_gate,
                 ))
     if waiting:
         return {"stopped": "reading", "why": "a reading stage has not finished", "work": waiting}
@@ -604,13 +740,12 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
 
     # 4 · pair — code. It proposes; it never merges.
     pairs_path = work / "pairs.json"
-    if not pairs_path.exists():
-        _write(pairs_path, _run([
-            sys.executable, str(HERE / "pair_candidates.py"),
-            *sum((["--records", str(work / f"{stage}-{index}")]
-                  for stage in ("oblige", "leftover")
-                  for index in range(1, PASSES + 1)), []),
-        ]))
+    _write(pairs_path, _run([
+        sys.executable, str(HERE / "pair_candidates.py"),
+        *sum((["--records", str(work / f"{stage}-{index}")]
+              for stage in ("oblige", "leftover")
+              for index in range(1, PASSES + 1)), []),
+    ]))
     pairs = json.loads(pairs_path.read_text(encoding="utf-8"))
 
     # 5 · merge — model, twice.
@@ -619,28 +754,34 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
     waiting = []
     for index in range(1, PASSES + 1):
         out = work / f"merge-{index}"
-        gate = stage_gate.inspect(
-            out, expected_pairs, stage_gate.pair_identity,
+        gate, refusal_gate = _gate_after_quarantine(
+            out, work, expected_pairs, stage_gate.pair_identity,
             _merge_record,
         )
         if not gate["complete"]:
-            _quarantine(out, work, list(gate["reject_files"]), gate)
-            waiting.append(_retry_packet(_packet("merge", work, input=pairs_path, out=out), gate))
+            waiting.append(_retry_packet(
+                _packet("merge", work, input=pairs_path, out=out), refusal_gate,
+            ))
     if waiting:
         return {"stopped": "merging", "why": "a merge pass has not judged every pair",
                 "pairs": pairs["pairs_to_read"], "work": waiting}
 
     # 6 · consolidate — code. Only merges every pass agreed on.
     final_path = work / "requirements.json"
-    if not final_path.exists():
-        _write(final_path, _run([
-            sys.executable, str(HERE / "consolidate.py"),
-            *sum((["--records", str(work / f"{stage}-{index}")]
-                  for stage in ("oblige", "leftover")
-                  for index in range(1, PASSES + 1)), []),
-            *sum((["--merges", str(work / f"merge-{i}")] for i in range(1, PASSES + 1)), []),
-        ]))
+    consolidate_command = [
+        sys.executable, str(HERE / "consolidate.py"),
+        *sum((["--records", str(work / f"{stage}-{index}")]
+              for stage in ("oblige", "leftover")
+              for index in range(1, PASSES + 1)), []),
+        *sum((["--merges", str(work / f"merge-{i}")] for i in range(1, PASSES + 1)), []),
+    ]
+    owner_decisions_path = work / "owner-decisions.json"
+    if owner_decisions_path.is_file():
+        consolidate_command.extend(["--owner-decisions", str(owner_decisions_path)])
+    _write(final_path, _run(consolidate_command))
     final = json.loads(final_path.read_text(encoding="utf-8"))
+    if _attach_requirement_sources(final, split):
+        _write(final_path, final)
 
     # 7 · split — model, once. The split is material, not judgement: both judges read the same
     # parts, exactly as both merge judges read the same pairs. Two splitters on the same twenty-four
@@ -648,24 +789,24 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
     # none about substance — so a second split buys a reconciliation problem and no evidence.
     split_dir = work / "split-1"
     requirement_ids = {str(row["id"]) for row in final["requirements"]}
-    split_gate = stage_gate.inspect(
-        split_dir, requirement_ids, stage_gate.field_identity("id"), _split_record,
+    split_gate, split_refusal_gate = _gate_after_quarantine(
+        split_dir, work, requirement_ids, stage_gate.field_identity("id"), _split_record,
         require_filename=True,
     )
     if not split_gate["complete"]:
-        _quarantine(split_dir, work, list(split_gate["reject_files"]), split_gate)
         return {"stopped": "splitting", "why": "not every requirement is broken into parts",
                 "requirements": final["count"],
                 "work": [_retry_packet(_packet("split", work, twinned=False,
-                                                input=final_path, out=split_dir), split_gate)]}
+                                                input=final_path, out=split_dir),
+                                       split_refusal_gate)]}
 
     parts_path = work / "parts.json"
-    if not parts_path.exists():
-        _write(parts_path, _run([
-            sys.executable, str(HERE / "gather_parts.py"),
-            "--parts", str(split_dir), "--requirements", str(final_path),
-        ]))
-    parts = json.loads(parts_path.read_text(encoding="utf-8"))
+    _write(parts_path, _run([
+        sys.executable, str(HERE / "gather_parts.py"),
+        "--parts", str(split_dir), "--requirements", str(final_path),
+    ]))
+    parts = _apply_resplits(json.loads(parts_path.read_text(encoding="utf-8")), work)
+    _write(parts_path, parts)
     if not parts["balances"]:
         return {"stopped": "splitting", "why": "the split does not cover every requirement",
                 "requirements_with_no_parts": parts["requirements_with_no_parts"],
@@ -674,6 +815,7 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
     # With no build, every part is false by definition and no measuring reader is needed. The
     # split is still required because the breakdown is one of the two promised deliverables.
     if built is None:
+        decisions_for_owner = _decisions(final)
         report = {
             "subject": subject,
             "requirements": final["count"],
@@ -687,27 +829,41 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
                  "needed": "add", "evidence": None}
                 for part in parts["parts"]
             ],
-            "for_a_person": _decisions(final),
+            "for_a_person": decisions_for_owner,
             "read_by": _readers(work),
             "measured_against_build": False,
             "note": "Nothing is built, so every requirement and every part is work to add.",
         }
-        return _finish(report, work)
+        finished = _finish(report, work)
+        if decisions_for_owner:
+            return {
+                "status": "needs_owner", "stopped": "unresolved requirement judgements",
+                "why": "every unresolved merge is preserved for the person who owns the goal",
+                "unresolved_parts": 0, "unresolved_decisions": len(decisions_for_owner), **finished,
+            }
+        return finished
 
     # 8 · answer — model, twice. Yes or no per part, never a degree.
     part_ids = {str(row["part_id"]) for row in parts["parts"]}
+    evidence_map = work / "evidence-map.json"
+    _write(evidence_map, _run([
+        sys.executable, str(HERE / "evidence_map.py"), "--parts", str(parts_path),
+        "--built", str(built),
+    ]))
     waiting = []
     for index in range(1, PASSES + 1):
         out = work / f"answer-{index}"
-        gate = stage_gate.inspect(
-            out, part_ids, stage_gate.field_identity("part_id"), _answer_record,
+        gate, refusal_gate = _gate_after_quarantine(
+            out, work, part_ids, stage_gate.field_identity("part_id"), _answer_record,
             require_filename=True,
         )
         if not gate["complete"]:
-            _quarantine(out, work, list(gate["reject_files"]), gate)
-            packet = _again(_packet("answer", work, input=parts_path, out=out, built=built),
+            packet = _again(_packet(
+                "answer", work, input=parts_path, out=out, built=built,
+                evidence_map=evidence_map, expected_count=len(part_ids),
+            ),
                             work, index)
-            waiting.append(_retry_packet(packet, gate))
+            waiting.append(_retry_packet(packet, refusal_gate))
     if waiting:
         return {"stopped": "answering", "why": "a pass has not answered every part",
                 "parts": parts["count"], "work": waiting}
@@ -743,8 +899,10 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
             # that can make a second attempt differ from the first — would be gone by the time a
             # reader was actually launched.
             _write(aside / "why.json", {"refusals": checked["refusals"]})
-            again = _again(_packet("answer", work, input=parts_path,
-                                   out=work / f"answer-{index}", built=built), work, index)
+            again = _again(_packet(
+                "answer", work, input=parts_path, out=work / f"answer-{index}", built=built,
+                evidence_map=evidence_map, expected_count=len(part_ids),
+            ), work, index)
             return {"stopped": "answering again",
                     "why": "cited evidence that does not resolve, so those parts are being asked "
                            "again against the built system as it now stands",
@@ -765,7 +923,7 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
             answer = str(row.get("answer") or "").strip().lower()
             answers.setdefault(str(row.get("part_id")), {})[f"pass-{index}"] = {
                 "answer": answer,
-                "needed": str(row.get("needed") or "").strip().lower() if answer == "no" else "",
+                "needed": _needed_from_evidence(row),
             }
 
     unanswered = [p["part_id"] for p in parts["parts"] if p["part_id"] not in answers]
@@ -777,28 +935,30 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
     # been built to look it up. Two settling passes, as everywhere: a dispute counts as settled only
     # when both agree, so this can shrink what a person is handed and can never invent agreement.
     disputes_path = work / "disputes.json"
-    if not disputes_path.exists():
-        _write(disputes_path, _run([
-            sys.executable, str(HERE / "gather_disputes.py"),
-            *sum((["--answers", str(work / f"answer-{i}")] for i in range(1, PASSES + 1)), []),
-            "--parts", str(parts_path),
-        ]))
+    _write(disputes_path, _run([
+        sys.executable, str(HERE / "gather_disputes.py"),
+        *sum((["--answers", str(work / f"answer-{i}")] for i in range(1, PASSES + 1)), []),
+        "--parts", str(parts_path),
+    ]))
     disputes = json.loads(disputes_path.read_text(encoding="utf-8"))
 
-    settled: dict[str, dict[str, dict[str, str]]] = {}
+    settled: dict[str, dict[str, dict[str, object]]] = {}
+    accepted_settlements: set[str] = set()
     if disputes["count"]:
         dispute_ids = {str(row["part_id"]) for row in disputes["disputed"]}
         waiting = []
         for index in range(1, PASSES + 1):
             out = work / f"settle-{index}"
-            gate = stage_gate.inspect(
-                out, dispute_ids, stage_gate.field_identity("part_id"), _settle_record,
+            gate, refusal_gate = _gate_after_quarantine(
+                out, work, dispute_ids, stage_gate.field_identity("part_id"), _settle_record,
                 require_filename=True,
             )
             if not gate["complete"]:
-                _quarantine(out, work, list(gate["reject_files"]), gate)
                 waiting.append(_retry_packet(
-                    _packet("settle", work, input=disputes_path, out=out, built=built), gate,
+                    _packet(
+                        "settle", work, input=disputes_path, out=out, built=built,
+                        evidence_map=evidence_map, expected_count=len(dispute_ids),
+                    ), refusal_gate,
                 ))
                 continue
             checked = _run([
@@ -810,7 +970,10 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
                 files = _files_for_ids(out, refused_ids, "part_id")
                 _quarantine(out, work, files, checked["refusals"])
                 waiting.append(_retry_packet(
-                    _packet("settle", work, input=disputes_path, out=out, built=built),
+                    _packet(
+                        "settle", work, input=disputes_path, out=out, built=built,
+                        evidence_map=evidence_map, expected_count=len(dispute_ids),
+                    ),
                     {"missing": sorted(refused_ids), "invalid": checked["refusals"]},
                 ))
         if waiting:
@@ -825,8 +988,8 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
                 answer = str(row.get("answer") or "").strip().lower()
                 settled.setdefault(str(row.get("part_id")), {})[f"pass-{index}"] = {
                     "answer": answer,
-                    "needed": str(row.get("needed") or "").strip().lower()
-                    if answer == "no" else "",
+                    "needed": _needed_from_evidence(row),
+                    "citations": row.get("citations") or [],
                 }
 
         # Only a dispute both settlers called the same way, and neither refused, is settled.
@@ -834,10 +997,34 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
             values = {(call["answer"], call["needed"]) for call in calls.values()}
             if len(values) == 1 and next(iter(values))[0] != "cannot settle":
                 answer, needed = next(iter(values))
+                accepted_settlements.add(part_id)
                 answers[part_id] = {
                     f"pass-{i}": {"answer": answer, "needed": needed}
                     for i in range(1, PASSES + 1)
                 }
+
+    recorded_owner_choices = owner_decisions.load(owner_decisions_path)
+    owner_resolved_parts: set[str] = set()
+    for part in parts["parts"]:
+        part_id = str(part["part_id"])
+        calls = answers[part_id]
+        values = {(call["answer"], call["needed"]) for call in calls.values()}
+        choice = recorded_owner_choices.get(owner_decisions.part_decision_id(part_id))
+        if len(values) <= 1 or choice not in {"yes", "no"}:
+            continue
+        matching = next(
+            (call for call in calls.values() if call.get("answer") == choice), None,
+        )
+        if matching is None:
+            matching = next(
+                (call for call in settled.get(part_id, {}).values()
+                 if call.get("answer") == choice), None,
+            )
+        if matching is None:
+            raise ValueError(f"owner choice has no grounded reader side: {part_id}={choice}")
+        resolved = {"answer": choice, "needed": matching.get("needed") or ""}
+        answers[part_id] = {f"pass-{index}": resolved.copy() for index in range(1, PASSES + 1)}
+        owner_resolved_parts.add(part_id)
 
     verdicts: dict[str, dict[str, str]] = {}
     part_splits: list[dict[str, object]] = []
@@ -869,6 +1056,106 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
               if len(set(calls.values())) == 1}
     split_calls = {rid: calls for rid, calls in verdicts.items() if len(set(calls.values())) > 1}
 
+    unresolved_by_requirement = sorted({
+        str(row["part_id"]).split(".")[0] for row in part_splits
+    }, key=lambda value: (len(value), value))
+    part_decisions = _decorate_part_decisions([
+        {"kind": "unresolved parts", "requirement": rid, "calls": verdicts[rid],
+         "because_these_parts_were_answered_differently": [
+             row for row in part_splits
+             if str(row["part_id"]).split(".")[0] == rid
+        ]}
+        for rid in unresolved_by_requirement
+    ])
+    decisions_for_owner = _decisions(final) + part_decisions
+
+    # A persistent disagreement can reveal that the material itself bundled several facts. Give
+    # those parts one bounded material resplit, then re-answer only the replacement parts. Atomic
+    # or already-resplit disagreements remain visible to the owner; they are never tie-broken.
+    resplittable = [row for row in part_splits if ".s" not in str(row["part_id"])]
+    candidates_path = work / "resplit-candidates.json"
+    if resplittable or candidates_path.is_file():
+        if not candidates_path.is_file():
+            _write(candidates_path, {"parts": resplittable, "count": len(resplittable)})
+        frozen_candidates = json.loads(candidates_path.read_text(encoding="utf-8"))
+        expected = {str(row["part_id"]) for row in frozen_candidates.get("parts") or []}
+        out = work / "resplit-1"
+        gate, refusal_gate = _gate_after_quarantine(
+            out, work, expected, stage_gate.field_identity("part_id"), _resplit_record,
+            require_filename=True,
+        )
+        if not gate["complete"]:
+            return {
+                "stopped": "resplitting unresolved material",
+                "why": "only disputed parts that contain several facts are split and remeasured",
+                "work": [_retry_packet(_packet(
+                    "resplit", work, twinned=False, input=candidates_path, out=out,
+                    expected_count=len(expected),
+                ), refusal_gate)],
+            }
+        expanded = _apply_resplits(parts, work)
+        if expanded["count"] != parts["count"]:
+            _write(parts_path, expanded)
+            return {
+                "stopped": "answering resplit parts",
+                "why": "the disputed material contained multiple facts; only its replacement "
+                       "parts now need independent answers",
+                "work": [_packet(
+                    "answer", work, input=parts_path, out=work / "answer-1", built=built,
+                    evidence_map=evidence_map, expected_count=expanded["count"],
+                ), _packet(
+                    "answer", work, input=parts_path, out=work / "answer-2", built=built,
+                    evidence_map=evidence_map, expected_count=expanded["count"],
+                )],
+            }
+
+    part_answers: list[dict[str, object]] = []
+    for part in parts["parts"]:
+        part_id = str(part["part_id"])
+        calls = answers[part_id]
+        values = {(call["answer"], call["needed"]) for call in calls.values()}
+        answer = next(iter(calls.values()))["answer"] if len(values) == 1 else "split"
+        needed = next(iter(calls.values()))["needed"] or None if len(values) == 1 else None
+        if answer == "yes":
+            evidence_stages = ("answer", "settle") if part_id in owner_resolved_parts else (
+                ("settle",) if part_id in accepted_settlements else ("answer",)
+            )
+            evidence = _first_citation(
+                work, part_id,
+                stages=evidence_stages,
+                require_answer="yes",
+            )
+            evidence_by_reader = _evidence_by_reader(
+                work, part_id, stages=evidence_stages, require_answer="yes",
+            )
+        elif answer == "split":
+            evidence = _first_citation(
+                work, part_id, stages=("answer", "settle"), require_answer="yes",
+            )
+            evidence_by_reader = _evidence_by_reader(
+                work, part_id, stages=("answer", "settle"), require_answer="yes",
+            )
+        else:
+            evidence = None
+            evidence_by_reader = {}
+        part_answers.append({
+            **part,
+            "calls": {name: call["answer"] for name, call in calls.items()},
+            "needed_by_pass": {
+                name: call["needed"] for name, call in calls.items()
+                if call["answer"] == "no"
+            },
+            "answer": answer,
+            "needed": needed,
+            "evidence": evidence,
+            "evidence_by_reader": evidence_by_reader,
+            "settled_by": {
+                name: {"answer": call["answer"], "needed": call["needed"]}
+                for name, call in settled.get(part_id, {}).items()
+            } if part_id in accepted_settlements else None,
+            "decided_by_owner": part_id in owner_resolved_parts,
+        })
+
     report = {
         "subject": subject,
         "requirements": final["count"],
@@ -882,46 +1169,34 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
         # requirement above it is context. Everything a reader answered travels with it — the
         # answer, both calls when they differ, and the line behind a yes — so the document can be
         # read without opening the records beside it.
-        "part_answers": [
-            {
-                **part,
-                "calls": {name: call["answer"]
-                          for name, call in answers[str(part["part_id"])].items()},
-                "needed_by_pass": {name: call["needed"]
-                                   for name, call in answers[str(part["part_id"])].items()
-                                   if call["answer"] == "no"},
-                "answer": (
-                    next(iter(answers[str(part["part_id"])].values()))["answer"]
-                    if len({(call["answer"], call["needed"])
-                            for call in answers[str(part["part_id"])].values()}) == 1 else "split"
-                ),
-                "needed": (
-                    next(iter(answers[str(part["part_id"])].values()))["needed"] or None
-                    if len({(call["answer"], call["needed"])
-                            for call in answers[str(part["part_id"])].values()}) == 1 else None
-                ),
-                "evidence": _first_citation(work, str(part["part_id"])),
-            }
-            for part in parts["parts"]
-        ],
-        "for_a_person": _decisions(final) + [
-            {"kind": "verdicts disagree", "requirement": rid, "calls": calls,
-             "because_these_parts_were_answered_differently": [
-                 row for row in part_splits
-                 if str(row["part_id"]).split(".")[0] == rid
-             ]}
-            for rid, calls in sorted(split_calls.items())
-        ],
+        "part_answers": part_answers,
+        "for_a_person": decisions_for_owner,
         "read_by": _readers(work),
         "measured_against_build": True,
     }
 
     # Both, always. The breakdown is what gets implemented and the requirements are what the
     # breakdown is made from — losing either leaves the other unusable.
-    return _finish(report, work)
+    finished = _finish(report, work)
+    if decisions_for_owner:
+        return {
+            "status": "needs_owner",
+            "stopped": "unresolved requirement judgements",
+            "why": "every unresolved merge and part is preserved for the person who owns the goal",
+            "unresolved_parts": len(part_splits),
+            "unresolved_decisions": len(decisions_for_owner),
+            **finished,
+        }
+    return finished
 
 
-def _first_citation(work: Path, part_id: str) -> dict[str, object] | None:
+def _first_citation(
+    work: Path,
+    part_id: str,
+    *,
+    stages: tuple[str, ...] = ("answer",),
+    require_answer: str | None = None,
+) -> dict[str, object] | None:
     """The line a reader pointed at when it answered yes.
 
     A part that is done is worth nothing to whoever picks this up unless they can see what does it,
@@ -930,18 +1205,49 @@ def _first_citation(work: Path, part_id: str) -> dict[str, object] | None:
     that does not exist.
     """
 
-    for index in range(1, PASSES + 1):
-        path = work / f"answer-{index}" / f"{part_id}.json"
-        if not path.is_file():
-            continue
-        try:
-            record = json.loads(path.read_text(encoding="utf-8"))
-        except (OSError, json.JSONDecodeError, ValueError):
-            continue
-        for citation in record.get("citations") or []:
-            if isinstance(citation, dict) and citation.get("where"):
-                return citation
+    for stage in stages:
+        for index in range(1, PASSES + 1):
+            path = work / f"{stage}-{index}" / f"{part_id}.json"
+            if not path.is_file():
+                continue
+            try:
+                record = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError, ValueError):
+                continue
+            if require_answer is not None and str(record.get("answer") or "").strip().lower() \
+                    != require_answer:
+                continue
+            for citation in record.get("citations") or []:
+                if isinstance(citation, dict) and citation.get("where"):
+                    return citation
     return None
+
+
+def _evidence_by_reader(
+    work: Path, part_id: str, *, stages: tuple[str, ...], require_answer: str,
+) -> dict[str, dict[str, object]]:
+    """Preserve both independent semantic judgements behind a final positive answer."""
+
+    found: dict[str, dict[str, object]] = {}
+    for stage in stages:
+        for index in range(1, PASSES + 1):
+            path = work / f"{stage}-{index}" / f"{part_id}.json"
+            if not path.is_file():
+                continue
+            try:
+                row = json.loads(path.read_text(encoding="utf-8"))
+            except (OSError, json.JSONDecodeError, ValueError):
+                continue
+            if str(row.get("answer") or "").strip().lower() != require_answer:
+                continue
+            citations = [citation for citation in row.get("citations") or []
+                         if isinstance(citation, dict) and citation.get("where")]
+            found[f"{stage}-{index}"] = {
+                "citations": citations,
+                "reason": str(row.get("why_the_other_side_is_wrong")
+                              or row.get("looked_at") or "").strip() or None,
+            }
+    return found
 
 
 def _readers(work: Path) -> dict[str, object]:
@@ -972,9 +1278,32 @@ def _decisions(final: dict[str, object]) -> list[dict[str, object]]:
     """The places this machinery will not decide for anyone."""
 
     return [
-        {"kind": "merge split between judgements", **row}
+        {"kind": "merge split between judgements", **row,
+         "decision_id": owner_decisions.merge_decision_id(str(row["left"]), str(row["right"])),
+         "choices": ["keep both", "merge"]}
         for row in final.get("merges_refused_for_disagreement", [])
     ]
+
+
+def _decorate_part_decisions(rows: list[dict[str, object]]) -> list[dict[str, object]]:
+    for row in rows:
+        for part in row.get("because_these_parts_were_answered_differently") or []:
+            part["decision_id"] = owner_decisions.part_decision_id(str(part["part_id"]))
+            part["choices"] = ["yes", "no"]
+    return rows
+
+
+def _available_owner_decisions(state: dict[str, object]) -> dict[str, set[str]]:
+    available: dict[str, set[str]] = {}
+    for row in state.get("for_a_person") or []:
+        if row.get("decision_id"):
+            available[str(row["decision_id"])] = {str(v).lower() for v in row.get("choices") or []}
+        for part in row.get("because_these_parts_were_answered_differently") or []:
+            if part.get("decision_id"):
+                available[str(part["decision_id"])] = {
+                    str(v).lower() for v in part.get("choices") or []
+                }
+    return available
 
 
 def drive(subject: str, description: Path, work: Path, built: Path | None) -> dict[str, object]:
@@ -1029,21 +1358,52 @@ def main(argv: list[str] | None = None) -> int:
                         help="a command that takes an instruction on standard input. Given one, "
                              "the controller launches every blind reader itself and runs until a "
                              "terminal status; an installed client policy is enforced before launch")
+    parser.add_argument("--owner-decision-id", default=None,
+                        help="the exact decision_id from a needs_owner result")
+    parser.add_argument("--owner-choice", default=None,
+                        help="one of the choices offered beside --owner-decision-id")
     args = parser.parse_args(argv)
+    if bool(args.owner_decision_id) != bool(args.owner_choice):
+        parser.error("--owner-decision-id and --owner-choice must be supplied together")
 
     description = args.description.resolve()
     work = args.work.resolve()
     built = args.built.resolve() if args.built else None
     if not args.reader_command:
         state = drive(args.subject, description, work, built)
+        if args.owner_decision_id:
+            try:
+                owner_decisions.record(
+                    work / "owner-decisions.json", _available_owner_decisions(state),
+                    args.owner_decision_id, args.owner_choice,
+                )
+            except ValueError as error:
+                state = {"status": "blocked", "stopped": "owner decision refused", "why": str(error)}
+            else:
+                state = drive(args.subject, description, work, built)
         print(json.dumps(state, indent=2))
         return _exit_code(state)
 
     import readers  # noqa: WPS433  # loaded only when the controller owns reader launches
 
     stuck, seen = 0, None
+    pending_owner_decision = bool(args.owner_decision_id)
     while True:
         state = drive(args.subject, description, work, built)
+        if pending_owner_decision:
+            try:
+                owner_decisions.record(
+                    work / "owner-decisions.json", _available_owner_decisions(state),
+                    args.owner_decision_id, args.owner_choice,
+                )
+            except ValueError as error:
+                blocked = {
+                    "status": "blocked", "stopped": "owner decision refused", "why": str(error),
+                }
+                print(json.dumps(blocked, indent=2))
+                return _exit_code(blocked)
+            pending_owner_decision = False
+            continue
         jobs = state.get("work") or []
         if state.get("status") != "waiting_for_readers" or not jobs:
             print(json.dumps(state, indent=2))

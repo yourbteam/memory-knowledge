@@ -43,6 +43,9 @@ def _requirement_block(row: dict[str, object]) -> list[str]:
     came_from = row.get("from") or []
     if came_from:
         lines += [f"*From the description: {', '.join(str(x) for x in came_from)}.*", ""]
+    sources = row.get("sources") or []
+    if sources:
+        lines += ["**Source of truth.** " + ", ".join(f"`{source}`" for source in sources), ""]
     return lines
 
 
@@ -103,6 +106,9 @@ def _parts_document(report: dict[str, object], requirements: list[dict[str, obje
                 where = str(evidence["where"]).split("/")[-1]
                 out.append(f"  - already done by `{where}:{evidence.get('line')}` — "
                            f"`{str(evidence.get('text') or '').strip()[:120]}`")
+            if str(row.get("answer")) == "yes" and row.get("evidence_by_reader"):
+                readers = ", ".join(sorted((row.get("evidence_by_reader") or {}).keys()))
+                out.append(f"  - independently supported by {readers}")
             if str(row.get("answer")) == "split":
                 calls = ", ".join(f"{k}: {v}" for k, v in sorted((row.get("calls") or {}).items()))
                 out.append(f"  - the two readers answered {calls}; nobody resolved it for you")
@@ -184,11 +190,16 @@ def compose(report: dict[str, object], requirements: list[dict[str, object]]) ->
             seen.add(str(rid))
             out += _requirement_block(row)
 
+    unresolved_parts = sum(
+        len(item.get("because_these_parts_were_answered_differently") or [])
+        for item in report.get("for_a_person") or []
+    )
     out += [
         "## For the person who owns the goal",
         "",
-        "The machinery refuses to settle these. They are not oversights; they are the two places "
-        "where agreement was not reached and guessing would hide it.",
+        f"The machinery refuses to settle these. They are not oversights; they are the "
+        f"{len(report.get('for_a_person') or [])} decision groups containing {unresolved_parts} "
+        "unresolved parts where agreement was not reached and guessing would hide it.",
         "",
     ]
     people = report.get("for_a_person") or []
@@ -196,7 +207,7 @@ def compose(report: dict[str, object], requirements: list[dict[str, object]]) ->
         out += ["None.", ""]
     for item in people:
         kind = str(item.get("kind"))
-        if kind == "verdicts disagree":
+        if kind in {"verdicts disagree", "unresolved parts"}:
             rid = str(item.get("requirement"))
             row = by_id.get(rid)
             calls = ", ".join(f"{k}: {v}" for k, v in sorted((item.get("calls") or {}).items()))
@@ -209,6 +220,21 @@ def compose(report: dict[str, object], requirements: list[dict[str, object]]) ->
             ]
             if row and row.get("check"):
                 out += [f"**How to tell it is met.** {row['check']}", ""]
+            for part in item.get("because_these_parts_were_answered_differently") or []:
+                part_calls = ", ".join(
+                    f"{name}: {value}" for name, value in sorted((part.get("calls") or {}).items())
+                )
+                needed = ", ".join(
+                    f"{name}: {value}" for name, value
+                    in sorted((part.get("needed_by_pass") or {}).items())
+                )
+                out += [
+                    f"- `{part.get('part_id')}` — {part.get('part')}",
+                    f"  - answers: {part_calls or 'not recorded'}",
+                    f"  - work classification: {needed or 'not applicable'}",
+                ]
+            if item.get("because_these_parts_were_answered_differently"):
+                out.append("")
         else:
             out += [
                 f"### Two requirements, one judgement merged and the other kept apart",

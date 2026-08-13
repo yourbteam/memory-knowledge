@@ -53,6 +53,19 @@ python3 run.py --subject "<subject>" --description <file.md> --work <dir> \
 4. When they return, run the command again. It will either hand back the next jobs or finish.
 5. Repeat until it stops handing back jobs.
 
+When the terminal status is `needs_owner`, every unresolved item carries a stable `decision_id`
+and its complete `choices`. Record one answer through the same controller—never by editing a
+reader record or either generated document—and rerun is automatic:
+
+```text
+python3 run.py <the same run arguments> \
+  --owner-decision-id '<decision_id>' --owner-choice '<offered choice>'
+```
+
+The controller refuses an id it did not ask for and a choice it did not offer. It stores accepted
+answers in the work directory, applies them at the original merge or part boundary, and asks only
+for what remains.
+
 With `--reader-command`, steps 2–5 are owned by the controller. It validates the installed client
 runtime before launch, starts every job in the round in parallel, and stops on a terminal status.
 Two rounds with no gate-visible progress return `blocked`; they never loop indefinitely.

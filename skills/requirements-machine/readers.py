@@ -81,6 +81,7 @@ def _watch(stream, work: Path, facts: dict[str, object], captured: list[str],
            failures: list[str]) -> None:
     """Losslessly retain stdout while projecting only safe structured activity to the feed."""
 
+    seen_activity: set[tuple[str, str]] = set()
     for raw_line in stream:
         captured.append(raw_line)
         line = raw_line.strip()
@@ -94,7 +95,12 @@ def _watch(stream, work: Path, facts: dict[str, object], captured: list[str],
             continue
         activity = _safe_activity(event)
         if activity:
-            _say(work, "agent", **facts, doing=activity)
+            item = event.get("item") if isinstance(event.get("item"), dict) else {}
+            identity = str(item.get("id") or activity)
+            key = (identity, activity)
+            if key not in seen_activity:
+                seen_activity.add(key)
+                _say(work, "agent", **facts, doing=activity)
         failure = _failure_kind(event)
         if failure:
             failures.append(failure)
@@ -104,6 +110,25 @@ def _watch(stream, work: Path, facts: dict[str, object], captured: list[str],
 def _drain(stream, captured: list[str]) -> None:
     for raw_line in stream:
         captured.append(raw_line)
+
+
+def _watch_progress(directory: Path, work: Path, facts: dict[str, object], total: int,
+                    stopped: threading.Event) -> None:
+    """Report delivered record identities while the reader is alive."""
+
+    seen = {path.stem for path in directory.glob("*.json")} if directory.is_dir() else set()
+    if seen:
+        _say(work, "progress snapshot", **facts, completed=len(seen), total=total)
+    while not stopped.is_set():
+        current = {path.stem for path in directory.glob("*.json")} if directory.is_dir() else set()
+        for identity in sorted(current - seen):
+            seen.add(identity)
+            _say(work, "progress", **facts, current=identity, completed=len(seen), total=total)
+        stopped.wait(0.1)
+    current = {path.stem for path in directory.glob("*.json")} if directory.is_dir() else set()
+    for identity in sorted(current - seen):
+        seen.add(identity)
+        _say(work, "progress", **facts, current=identity, completed=len(seen), total=total)
 
 
 def _reader_identity(scratch: Path) -> tuple[str | None, str | None]:
@@ -156,11 +181,20 @@ def launch(jobs: list[dict[str, object]], command: str, cwd: Path,
             target=_watch, args=(process.stdout, work, facts, stdout_lines, failures), daemon=True,
         )
         draining = threading.Thread(target=_drain, args=(process.stderr, stderr_lines), daemon=True)
+        progress_stopped = threading.Event()
+        progress = threading.Thread(
+            target=_watch_progress,
+            args=(waiting_for, work, facts, int(job.get("expected_count") or 0), progress_stopped),
+            daemon=True,
+        )
         watching.start()
         draining.start()
+        progress.start()
         process.wait()
         watching.join()
         draining.join()
+        progress_stopped.set()
+        progress.join()
         stdout = "".join(stdout_lines)
         stderr = "".join(stderr_lines)
         log.write_text(

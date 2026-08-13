@@ -61,6 +61,7 @@ _SENTENCE_END = re.compile(r"(?<=[.!?])\s+")
 _DECORATION = re.compile(r"[*_`]+")
 
 _LIST_ITEM = re.compile(r"^\s*([-*+]|\d+\.)\s+")
+_SOURCE = re.compile(r"^\s*_?Source:\s*`?([^`]+?)`?_?\s*$", re.IGNORECASE)
 
 
 def _clean(text: str) -> str:
@@ -84,7 +85,7 @@ def _marker_in(sentence: str) -> str | None:
     return None
 
 
-def _units(description: Path) -> list[dict[str, str]]:
+def _units(description: Path) -> list[dict[str, object]]:
     """Every unit of the description, in order, each tagged with the heading it sits under.
 
     A description written for a person is wrapped at some column, so a sentence rarely occupies
@@ -92,26 +93,43 @@ def _units(description: Path) -> list[dict[str, str]]:
     pieces separately; sentences are therefore assembled from whole paragraphs.
     """
 
-    units: list[dict[str, str]] = []
+    units: list[dict[str, object]] = []
     heading = ""
     depth = 0
     paragraph: list[str] = []
+    awaiting_source: list[int] = []
+
+    def add(row: dict[str, object]) -> None:
+        units.append(row)
+        awaiting_source.append(len(units) - 1)
 
     def flush() -> None:
         joined = " ".join(paragraph).strip()
         paragraph.clear()
         for sentence in _sentences(joined):
-            units.append({"text": sentence, "under": heading, "under_depth": depth,
-                          "kind": "sentence"})
+            add({"text": sentence, "under": heading, "under_depth": depth,
+                 "kind": "sentence", "sources": []})
 
     for line in [*description.read_text(encoding="utf-8", errors="replace").splitlines(), ""]:
         match = _HEADING.match(line)
+        source_match = _SOURCE.match(line)
         is_table = line.lstrip().startswith("|")
         starts_item = _LIST_ITEM.match(line) is not None
         blank = not line.strip()
 
-        if match or is_table or blank or starts_item:
+        if match or source_match or is_table or blank or starts_item:
             flush()
+        if source_match:
+            source = source_match.group(1).strip()
+            for index in awaiting_source:
+                sources = units[index].setdefault("sources", [])
+                if source not in sources:
+                    sources.append(source)
+            awaiting_source.clear()
+            # The marker remains a unit so the partition arithmetic and stable ids do not change.
+            units.append({"text": f"Source: {source}", "under": heading,
+                          "under_depth": depth, "kind": "source", "sources": [source]})
+            continue
         if match:
             # The heading is itself a unit — it can carry an obligation, and excluding it would
             # put part of the description in neither list.
@@ -120,14 +138,14 @@ def _units(description: Path) -> list[dict[str, str]]:
             # document's title from the sections it contains, and anything counting sections —
             # how many of them produced a requirement, say — otherwise counts the title as one.
             depth = len(match.group(1))
-            units.append({"text": heading, "under": heading, "under_depth": depth,
-                          "kind": "heading"})
+            add({"text": heading, "under": heading, "under_depth": depth,
+                 "kind": "heading", "sources": []})
             continue
         if is_table:
             # A table row records something rather than obliging anyone, but it is still part of
             # the description, so it goes to the leftover reader rather than being discarded.
-            units.append({"text": _clean(line), "under": heading, "under_depth": depth,
-                          "kind": "table-row"})
+            add({"text": _clean(line), "under": heading, "under_depth": depth,
+                 "kind": "table-row", "sources": []})
             continue
         if blank:
             continue
@@ -144,7 +162,7 @@ def enumerate_obligations(description: Path, min_words: int) -> dict[str, object
     repeated = 0
 
     for unit in _units(description):
-        key = unit["text"].lower()
+        key = str(unit["text"]).lower()
         if key in seen:
             # The same sentence twice is one obligation. It is counted so the partition still
             # balances against the number of units read.
@@ -152,8 +170,8 @@ def enumerate_obligations(description: Path, min_words: int) -> dict[str, object
             continue
         seen.add(key)
 
-        marker = _marker_in(unit["text"]) if unit["kind"] == "sentence" else None
-        long_enough = len(unit["text"].split()) >= min_words
+        marker = _marker_in(str(unit["text"])) if unit["kind"] == "sentence" else None
+        long_enough = len(str(unit["text"]).split()) >= min_words
         if marker and long_enough:
             obligations.append({**unit, "marker": marker})
         else:

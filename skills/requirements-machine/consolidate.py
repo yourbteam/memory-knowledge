@@ -26,6 +26,7 @@ import json
 from pathlib import Path
 
 from pair_candidates import _load
+from owner_decisions import load as load_owner_decisions, merge_decision_id
 
 
 def _verdicts(directories: list[Path]) -> dict[str, list[dict[str, object]]]:
@@ -66,16 +67,21 @@ class _Groups:
             self._parent[b] = a
 
 
-def consolidate(record_dirs: list[Path], merge_dirs: list[Path]) -> dict[str, object]:
+def consolidate(record_dirs: list[Path], merge_dirs: list[Path],
+                owner_decisions: Path | None = None) -> dict[str, object]:
     records = {row["id"]: row for row in _load(record_dirs)}
     verdicts = _verdicts(merge_dirs)
 
+    choices = load_owner_decisions(owner_decisions) if owner_decisions else {}
     groups = _Groups()
-    applied, refused = [], []
+    applied, refused, owner_resolved = [], [], []
     for key, judgements in sorted(verdicts.items()):
         left, right = key.split("|")
         calls = {str(row.get("verdict", "")).strip().lower() for row in judgements}
-        if calls == {"merge"} and len(judgements) == len(merge_dirs):
+        owner_choice = choices.get(merge_decision_id(left, right))
+        if owner_choice == "merge" or (
+            calls == {"merge"} and len(judgements) == len(merge_dirs)
+        ):
             groups.join(left, right)
             applied.append({
                 "left": left, "right": right,
@@ -84,6 +90,10 @@ def consolidate(record_dirs: list[Path], merge_dirs: list[Path]) -> dict[str, ob
                      if row.get("surviving_requirement")), "",
                 ),
             })
+            if owner_choice:
+                owner_resolved.append({"left": left, "right": right, "choice": owner_choice})
+        elif owner_choice == "keep both":
+            owner_resolved.append({"left": left, "right": right, "choice": owner_choice})
         elif "merge" in calls:
             # One pass merged and another did not. The pair stays two requirements and the
             # disagreement is printed, because a split verdict is a question for a person.
@@ -119,6 +129,7 @@ def consolidate(record_dirs: list[Path], merge_dirs: list[Path]) -> dict[str, ob
         "read": len(records),
         "merges_applied": applied,
         "merges_refused_for_disagreement": refused,
+        "merges_resolved_by_owner": owner_resolved,
         "note": (
             "A merge was applied only where every judging pass agreed. A pair one pass merged and "
             "another kept apart is listed under the refusals and remains two requirements."
@@ -130,10 +141,12 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--records", type=Path, action="append", required=True)
     parser.add_argument("--merges", type=Path, action="append", required=True)
+    parser.add_argument("--owner-decisions", type=Path, default=None)
     args = parser.parse_args(argv)
 
     print(json.dumps(consolidate(
         [d.resolve() for d in args.records], [d.resolve() for d in args.merges],
+        args.owner_decisions.resolve() if args.owner_decisions else None,
     ), indent=2))
     return 0
 
