@@ -436,7 +436,8 @@ def test_codex_projection_runner_accepts_follow_up_question_round(tmp_path: Path
     (work / "intake-state.json").write_text(json.dumps({
         "status": "waiting_for_model",
         "phase": "formulating_follow_up_gap_question_round",
-        "waiting_for": "gap-question-rounds/round-000002/interview.jsonl",
+        "waiting_for": "gap-question-rounds/round-000003/interview.jsonl",
+        "follow_up_gap_question_round": {"round": 3},
         "first_source": {
             "stored_path": "sources/source-000003",
             "media_type": "image/png",
@@ -1733,9 +1734,11 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     original_projection = work / recorded["projection"]["path"]
     original_projection_before = original_projection.read_bytes()
 
-    requested = START_INTAKE.drive(
-        work, "There is a new intake", REAL_PURPOSE, clarify_gap=True,
-    )
+    requested = START_INTAKE.run_clarification_boundary(work)
+    ledger_at_model_boundary = (work / "ledger.jsonl").read_bytes()
+    repeated_model_boundary = START_INTAKE.run_clarification_boundary(work)
+    assert repeated_model_boundary == requested
+    assert (work / "ledger.jsonl").read_bytes() == ledger_at_model_boundary
     attachment, command = CODEX_RUNNER.load_request(work)
     argv = CODEX_RUNNER.build_codex_argv(
         "/usr/local/bin/codex", work, attachment, command,
@@ -1753,6 +1756,7 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     )
 
     assert requested["stopped"] == "formulating_gap_question_round"
+    assert requested["boundary"] == "needs_model_interview"
     assert command[-1] == "--run-gap-clarification"
     assert argv[argv.index("--image") + 1] == str(work / "sources" / "source-000003")
     assert "each code-bound gap" in argv[-1]
@@ -1762,6 +1766,11 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     assert waiting["question_count"] == 2
     assert waiting["question"]["answers_gap"]["id"] == "element-000002"
     assert "questions" not in waiting
+    ledger_before_operator_boundary = (work / "ledger.jsonl").read_bytes()
+    operator_boundary = START_INTAKE.run_clarification_boundary(work)
+    assert operator_boundary["boundary"] == "needs_operator_answer"
+    assert operator_boundary["question"] == waiting["question"]
+    assert (work / "ledger.jsonl").read_bytes() == ledger_before_operator_boundary
     state = json.loads((work / "intake-state.json").read_text())
     assert [item["answers_gap"]["id"] for item in state["questions"]] == [
         "element-000002", "element-000003",
@@ -1824,12 +1833,7 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     assert ledger[-2]["source"]["answers_question"] == "gap-clarification-answer-000002"
     assert ledger[-2]["source"]["answers_gap"]["id"] == "element-000003"
 
-    assessment_requested = START_INTAKE.drive(
-        work,
-        "There is a new intake",
-        REAL_PURPOSE,
-        assess_gap_answers=True,
-    )
+    assessment_requested = START_INTAKE.run_clarification_boundary(work)
     assessment_attachment, assessment_command = CODEX_RUNNER.load_request(work)
     assessment_argv = CODEX_RUNNER.build_codex_argv(
         "/usr/local/bin/codex", work, assessment_attachment, assessment_command,
@@ -1838,8 +1842,8 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
         "fresh-assessor",
         "pytest-gap-answer-assessment",
         "maybe",
-        "resolves_gap",
-        "The first answer supplies the exact hidden value requested by its question.",
+        "does_not_resolve_gap",
+        "The first answer gives a value without identifying visible evidence.",
         "does_not_resolve_gap",
         "The second answer repeats a value but does not identify the obscured target.",
     ])
@@ -1848,12 +1852,15 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
         input_fn=lambda _prompt: next(assessment_answers),
         output_fn=lambda _message: None,
     )
+    ledger_after_assessment = (work / "ledger.jsonl").read_bytes()
+    state_after_assessment = (work / "intake-state.json").read_bytes()
     resumed_assessment = START_INTAKE.drive(
         work, "There is a new intake", REAL_PURPOSE,
     )
 
     assert assessment_requested["status"] == "waiting_for_model"
     assert assessment_requested["stopped"] == "assessing_gap_answers"
+    assert assessment_requested["boundary"] == "needs_model_interview"
     assert assessment_command[-1] == "--run-gap-answer-assessment"
     assert assessment_argv[assessment_argv.index("--image") + 1] == str(
         work / "sources" / "source-000003"
@@ -1862,8 +1869,16 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     assert assessed == resumed_assessment
     assert assessed["status"] == "ready_for_projection_assessment"
     assert assessed["stopped"] == "gap_answer_assessment_recorded"
+    assert assessed["continuation"]["decision"] == "prepare_next_round"
+    assert assessed["continuation"]["assessment_round"] == 1
+    assert assessed["continuation"]["next_round"] == 2
+    assert [item["id"] for item in assessed["continuation"]["gaps"]] == [
+        "element-000002", "element-000003",
+    ]
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after_assessment
+    assert (work / "intake-state.json").read_bytes() == state_after_assessment
     assert [item["verdict"] for item in assessed["assessments"]] == [
-        "resolves_gap", "does_not_resolve_gap",
+        "does_not_resolve_gap", "does_not_resolve_gap",
     ]
     assert [item["gap"]["id"] for item in assessed["assessments"]] == [
         "element-000002", "element-000003",
@@ -1949,6 +1964,91 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
         assert (
             result_tamper / "ledger.jsonl"
         ).read_bytes() == ledger_before_result_tamper
+
+    round_two_requested = START_INTAKE.run_clarification_boundary(work)
+    assert round_two_requested["status"] == "waiting_for_model"
+    assert round_two_requested["boundary"] == "needs_model_interview"
+    assert round_two_requested["round"] == 2
+    round_two_questions = iter([
+        "fresh-round-two-questioner",
+        "pytest-round-two",
+        "Which visible label identifies the first hidden value?",
+        "Which visible label identifies the second hidden value?",
+    ])
+    round_two_ready = START_INTAKE.run_gap_clarification(
+        work,
+        input_fn=lambda _prompt: next(round_two_questions),
+        output_fn=lambda _message: None,
+    )
+    assert round_two_ready["status"] == "ready_for_operator_interview"
+    assert round_two_ready["round"] == 2
+    round_two_interview = START_INTAKE.run_clarification_boundary(work)
+    assert round_two_interview["status"] == "needs_operator"
+    assert round_two_interview["boundary"] == "needs_operator_answer"
+    round_two_ledger_at_operator = (work / "ledger.jsonl").read_bytes()
+    repeated_round_two_operator = START_INTAKE.run_clarification_boundary(work)
+    assert repeated_round_two_operator == round_two_interview
+    assert (work / "ledger.jsonl").read_bytes() == round_two_ledger_at_operator
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_answer="The first value appears below the orange label.",
+    )
+    round_two_answered = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_answer="The second value appears beside the green label.",
+    )
+    assert round_two_answered["stopped"] == "prepared_question_round_answered"
+    round_two_assessment_requested = START_INTAKE.run_clarification_boundary(work)
+    assert round_two_assessment_requested["boundary"] == "needs_model_interview"
+    assert round_two_assessment_requested["round"] == 2
+    round_two_assessment_answers = iter([
+        "fresh-round-two-assessor",
+        "pytest-round-two-assessment",
+        "does_not_resolve_gap",
+        "The label description still does not identify the exact value.",
+        "does_not_resolve_gap",
+        "The label description still does not identify the exact value.",
+    ])
+    round_two_assessed = START_INTAKE.run_gap_answer_assessment(
+        work,
+        input_fn=lambda _prompt: next(round_two_assessment_answers),
+        output_fn=lambda _message: None,
+    )
+    assert round_two_assessed["stopped"] == (
+        "prepared_question_round_assessment_recorded"
+    )
+    assert round_two_assessed["round"] == 2
+    assert round_two_assessed["continuation"]["decision"] == "prepare_next_round"
+    assert round_two_assessed["continuation"]["next_round"] == 3
+
+    round_three_requested = START_INTAKE.run_clarification_boundary(work)
+    assert round_three_requested["status"] == "waiting_for_model"
+    assert round_three_requested["boundary"] == "needs_model_interview"
+    assert round_three_requested["round"] == 3
+    state = json.loads((work / "intake-state.json").read_text())
+    assert state["follow_up_gap_question_round"]["prior_assessment_round"] == 2
+    assert [item["round"] for item in state["prepared_question_round_history"]] == [2]
+    round_three_questions = iter([
+        "fresh-round-three-questioner",
+        "pytest-round-three",
+        "What exact value is paired with the first visible label?",
+        "What exact value is paired with the second visible label?",
+    ])
+    round_three_ready = START_INTAKE.run_gap_clarification(
+        work,
+        input_fn=lambda _prompt: next(round_three_questions),
+        output_fn=lambda _message: None,
+    )
+    assert round_three_ready["status"] == "ready_for_operator_interview"
+    assert round_three_ready["round"] == 3
+    round_three_operator = START_INTAKE.run_clarification_boundary(work)
+    assert round_three_operator["boundary"] == "needs_operator_answer"
+    assert round_three_operator["round"] == 3
+    assert original_projection.read_bytes() == original_projection_before
 
 
 def test_question_round_shape_rejects_missing_duplicate_reordered_or_invented_questions() -> None:
@@ -2162,8 +2262,8 @@ def test_prepared_round_n_interview_persists_answers_and_rejects_changed_result(
                 "reason": "The answer does not identify visible evidence.",
             },
         }
-    round_number = 7
-    round_dir = tmp_path / "gap-question-rounds" / "round-000007"
+    round_number = 2
+    round_dir = tmp_path / "gap-question-rounds" / "round-000002"
     answers = iter([
         "fresh-reader", "pytest",
         "What exact value should replace the first unreadable metric?",
@@ -2215,14 +2315,14 @@ def test_prepared_round_n_interview_persists_answers_and_rejects_changed_result(
         "gap_count": len(gaps),
         "gaps": gaps,
         "prior_assessment_sha256": prior_assessment_sha256,
-        "interview_path": "gap-question-rounds/round-000007/interview.jsonl",
-        "result_path": "gap-question-rounds/round-000007/clarification-round.json",
+        "interview_path": "gap-question-rounds/round-000002/interview.jsonl",
+        "result_path": "gap-question-rounds/round-000002/clarification-round.json",
     }, seed["entry_sha256"])
     completed = START_INTAKE._ledger_entry(3, "model_follow_up_gap_question_round_completed", {
         "round": round_number,
-        "interview_path": "gap-question-rounds/round-000007/interview.jsonl",
+        "interview_path": "gap-question-rounds/round-000002/interview.jsonl",
         "interview_sha256": journal_sha256,
-        "result_path": "gap-question-rounds/round-000007/clarification-round.json",
+        "result_path": "gap-question-rounds/round-000002/clarification-round.json",
         "result_sha256": result_sha256,
         "question_count": len(result["questions"]),
         "interview_question_count": sum(item["event"] == "question_asked" for item in journal),
@@ -2403,13 +2503,13 @@ def test_prepared_round_n_interview_persists_answers_and_rejects_changed_result(
         "fresh-assessor",
         "pytest-round-n",
         "maybe",
-        "resolves_gap",
-        "The first answer supplies the exact requested value.",
+        "does_not_resolve_gap",
+        "The first answer still does not identify readable evidence.",
         "does_not_resolve_gap",
         "The second answer gives a value without enough identifying context.",
     ])
     START_INTAKE.gap_answer_assessment.run(
-        tmp_path / "gap-answer-assessments" / "round-000007",
+        tmp_path / "gap-answer-assessments" / "round-000002",
         bindings=START_INTAKE._prepared_question_round_assessment_bindings(
             tmp_path, state
         )[0],
@@ -2426,7 +2526,7 @@ def test_prepared_round_n_interview_persists_answers_and_rejects_changed_result(
     assert assessed["stopped"] == "prepared_question_round_assessment_recorded"
     assert assessed["round"] == round_number
     assert [item["verdict"] for item in assessed["assessments"]] == [
-        "resolves_gap",
+        "does_not_resolve_gap",
         "does_not_resolve_gap",
     ]
     assert [item["gap"]["id"] for item in assessed["assessments"]] == [
@@ -2443,11 +2543,38 @@ def test_prepared_round_n_interview_persists_answers_and_rejects_changed_result(
     assert START_INTAKE._validate_prepared_question_round_assessment(
         tmp_path, state, entries, REAL_PURPOSE
     ) is None
+    parent_projection = json.loads(json.dumps(state["current_projection"]))
+    child_projection = {
+        **parent_projection,
+        "id": "projection-source-000003-v2",
+        "version": 2,
+        "path": "projection-v2.json",
+        "sha256": "d" * 64,
+        "parent_projection_id": parent_projection["id"],
+    }
+    later_state = json.loads(json.dumps(state))
+    later_state.update({
+        "status": "ready_for_projection_assessment",
+        "phase": "gap_resolution_applied",
+        "current_projection": child_projection,
+        "gap_resolution": {
+            "attempt": 1,
+            "mode": "assessed_answer",
+            "parent_projection": parent_projection,
+        },
+    })
+    assert START_INTAKE._validate_prepared_question_round_interview(
+        tmp_path,
+        later_state,
+        entries,
+        REAL_PURPOSE,
+        allow_later_phase=True,
+    ) is None
 
     assessment_path = (
         tmp_path
         / "gap-answer-assessments"
-        / "round-000007"
+        / "round-000002"
         / "assessment.json"
     )
     assessment_bytes = assessment_path.read_bytes()
@@ -2470,6 +2597,118 @@ def test_prepared_round_n_interview_persists_answers_and_rejects_changed_result(
     )
     assert reassessment["status"] == "blocked"
     assert (tmp_path / "ledger.jsonl").read_bytes() == ledger_before_reassessment
+
+    next_work = tmp_path.parent / f"{tmp_path.name}-next-round"
+    shutil.copytree(tmp_path, next_work)
+    next_state = json.loads((next_work / "intake-state.json").read_text())
+    next_entries, ledger_error = START_INTAKE._validate_ledger(
+        next_work / "ledger.jsonl"
+    )
+    assert ledger_error is None
+    requested_next = START_INTAKE._request_follow_up_gap_question_round(
+        next_work, next_state, next_entries
+    )
+    assert requested_next["status"] == "waiting_for_model"
+    assert next_state["follow_up_gap_question_round"]["round"] == 3
+    assert next_state["follow_up_gap_question_round"]["prior_assessment_round"] == 2
+    assert [item["round"] for item in next_state["prepared_question_round_history"]] == [2]
+    assert next_state["prepared_question_round_history"][0]["question_round"][
+        "result_sha256"
+    ] == result_sha256
+    next_request_entries, ledger_error = START_INTAKE._validate_ledger(
+        next_work / "ledger.jsonl"
+    )
+    assert ledger_error is None
+    assert next_request_entries[-1]["round"] == 3
+    assert next_request_entries[-1]["prior_assessment_round"] == 2
+    next_ledger_before_repeat = (next_work / "ledger.jsonl").read_bytes()
+    repeated_request = START_INTAKE._request_follow_up_gap_question_round(
+        next_work, next_state, next_request_entries
+    )
+    assert repeated_request["status"] == "blocked"
+    assert (next_work / "ledger.jsonl").read_bytes() == next_ledger_before_repeat
+    round_three_answers = iter([
+        "fresh-round-three-questioner",
+        "pytest-round-three",
+        "Which visible evidence identifies the exact first metric value?",
+        "Which visible evidence identifies the exact second metric value?",
+    ])
+    round_three_dir = next_work / "gap-question-rounds" / "round-000003"
+    next_gaps = next_state["follow_up_gap_question_round"]["gaps"]
+    START_INTAKE.gap_clarification.run_round(
+        round_three_dir,
+        projection_path=next_work / "projection.json",
+        projection_sha256=projection_sha256,
+        purpose=REAL_PURPOSE,
+        gaps=next_gaps,
+        round_number=3,
+        input_fn=lambda _prompt: next(round_three_answers),
+        output_fn=lambda _message: None,
+    )
+    next_request_entries, ledger_error = START_INTAKE._validate_ledger(
+        next_work / "ledger.jsonl"
+    )
+    assert ledger_error is None
+    prepared_next = START_INTAKE._consume_follow_up_gap_question_round(
+        next_work, next_state, next_request_entries, REAL_PURPOSE
+    )
+    assert prepared_next["status"] == "ready_for_operator_interview"
+    assert prepared_next["round"] == 3
+    next_entries, ledger_error = START_INTAKE._validate_ledger(
+        next_work / "ledger.jsonl"
+    )
+    assert ledger_error is None
+    assert START_INTAKE._validate_prepared_question_round_history(
+        next_work, next_state, next_entries, REAL_PURPOSE
+    ) is None
+    archived_result = (
+        next_work
+        / "gap-question-rounds"
+        / "round-000002"
+        / "clarification-round.json"
+    )
+    archived_value = json.loads(archived_result.read_text())
+    archived_value["questions"][0]["id"] = "invented-archived-question"
+    archived_result.write_text(
+        json.dumps(archived_value, indent=2, sort_keys=True) + "\n"
+    )
+    archived_tamper = START_INTAKE._validate_prepared_question_round_history(
+        next_work, next_state, next_entries, REAL_PURPOSE
+    )
+    assert archived_tamper["status"] == "blocked"
+
+    changed_work = tmp_path.parent / f"{tmp_path.name}-changed-gap"
+    shutil.copytree(tmp_path, changed_work)
+    changed_state = json.loads((changed_work / "intake-state.json").read_text())
+    changed_projection = json.loads(
+        (changed_work / "projection.json").read_text()
+    )
+    changed_projection["elements"][0]["gap_reason"] = (
+        "The gap record changed after its assessed answer."
+    )
+    changed_projection_path = changed_work / "projection-v2.json"
+    changed_projection_path.write_text(
+        json.dumps(changed_projection, indent=2, sort_keys=True) + "\n"
+    )
+    changed_state["current_projection"] = {
+        **changed_state["current_projection"],
+        "id": "projection-source-000003-v2",
+        "version": 2,
+        "path": "projection-v2.json",
+        "sha256": START_INTAKE._digest_bytes(changed_projection_path.read_bytes()),
+        "parent_projection_id": changed_state["current_projection"]["id"],
+    }
+    changed_entries, ledger_error = START_INTAKE._validate_ledger(
+        changed_work / "ledger.jsonl"
+    )
+    assert ledger_error is None
+    changed_ledger_before = (changed_work / "ledger.jsonl").read_bytes()
+    changed_gap = START_INTAKE._request_follow_up_gap_question_round(
+        changed_work, changed_state, changed_entries
+    )
+    assert changed_gap["status"] == "blocked"
+    assert "changed after its failed clarification" in changed_gap["why"]
+    assert (changed_work / "ledger.jsonl").read_bytes() == changed_ledger_before
 
     changed = json.loads((round_dir / "clarification-round.json").read_text())
     changed["questions"][0]["id"] = "invented-question"
@@ -2574,11 +2813,9 @@ def _missing_endpoint_resolution_fixture(tmp_path: Path) -> dict[str, object]:
         inputs["projection_path"].read_bytes()
     )
     clarification = json.loads(inputs["clarification_path"].read_text())
-    clarification["gap"]["projection_sha256"] = inputs["projection_sha256"]
-    clarification["gap"]["record"] = relationship
-    clarification["gap"]["record_sha256"] = START_INTAKE._digest_bytes(
-        json.dumps(relationship, sort_keys=True, separators=(",", ":")).encode()
-    )
+    clarification["gap"] = START_INTAKE.gap_clarification.select_gaps(
+        projection, inputs["projection_sha256"]
+    )[0]
     identity = {
         key: clarification["gap"][key]
         for key in (
@@ -2609,6 +2846,587 @@ def _missing_endpoint_resolution_fixture(tmp_path: Path) -> dict[str, object]:
         inputs["clarification_path"].read_bytes()
     )
     return inputs
+
+
+def _terminal_projection_fixture(
+    tmp_path: Path, *, incomplete: bool = False
+) -> tuple[dict[str, object], dict[str, object]]:
+    regions = START_INTAKE.projection_interview._scan_regions()
+    for region in regions:
+        region["status"] = "scanned"
+    regions[0]["element_ids"] = ["element-000001", "element-000002"]
+    elements = [
+        {
+            "id": "element-000001",
+            "kind": "annotation",
+            "region": [10, 10, 100, 100],
+            "status": "readable",
+            "content": "Column AF",
+            "gap_reason": "",
+            "capture_scope": regions[0]["id"],
+            "scan_region_id": regions[0]["id"],
+        },
+        {
+            "id": "element-000002",
+            "kind": "field",
+            "region": [110, 10, 200, 100],
+            "status": "gap" if incomplete else "readable",
+            "content": "" if incomplete else "$8,100",
+            "gap_reason": "field is obscured" if incomplete else "",
+            "capture_scope": regions[0]["id"],
+            "scan_region_id": regions[0]["id"],
+        },
+    ]
+    relationships = [{
+        "id": "relationship-000001",
+        "kind": "annotation_arrow",
+        "from_id": "element-000001",
+        "to_id": "element-000002",
+        "status": "gap" if incomplete else "readable",
+        "description": "" if incomplete else "the annotation identifies the field",
+        "gap_reason": "arrow endpoint is obscured" if incomplete else "",
+        "verified_obligation_id": "obligation-000001",
+        "verified_element_id": "element-000001",
+    }]
+    obligations = [{
+        "id": "obligation-000001",
+        "element_id": "element-000001",
+        "status": "resolved",
+        "resolution": "gap" if incomplete else "relationship",
+        "relationship_id": "relationship-000001",
+    }]
+    if incomplete:
+        regions[1].update({
+            "status": "gap",
+            "gap_reason": "source pixels are unreadable",
+        })
+    projection = {
+        "schema_version": START_INTAKE.PROJECTION_INTERVIEW_CONTRACT,
+        "source_sha256": "a" * 64,
+        "purpose_quote": REAL_PURPOSE,
+        "elements": elements,
+        "relationships": relationships,
+        "relationship_obligations": obligations,
+        "scan_regions": regions,
+    }
+    projection_path = tmp_path / "projection.json"
+    projection_path.write_text(
+        json.dumps(projection, indent=2, sort_keys=True) + "\n"
+    )
+    projection_sha256 = START_INTAKE._digest_bytes(projection_path.read_bytes())
+    gap_count = sum(
+        item["status"] == "gap"
+        for collection in (regions, elements, relationships)
+        for item in collection
+    )
+    record = {
+        "id": "projection-source-000003-v1",
+        "source_id": "source-000003",
+        "version": 1,
+        "path": "projection.json",
+        "sha256": projection_sha256,
+        "element_count": len(elements),
+        "relationship_count": len(relationships),
+        "gap_count": gap_count,
+        "coverage": "unassessed",
+    }
+    return projection, {"first_projection": record, "current_projection": record}
+
+
+def test_terminal_projection_qualification_proves_complete_or_exact_incomplete(
+    tmp_path: Path,
+) -> None:
+    _, complete_state = _terminal_projection_fixture(tmp_path)
+    complete, complete_error = START_INTAKE._terminal_projection_qualification(
+        tmp_path, complete_state
+    )
+
+    assert complete_error is None
+    assert complete["qualification"] == "readable_projection_complete"
+    assert complete["coverage"] == {
+        "region_count": 16,
+        "region_outcome_count": 16,
+        "element_count": 2,
+        "relationship_count": 1,
+        "relationship_obligation_count": 1,
+        "closed_relationship_obligation_count": 1,
+        "remaining_gap_count": 0,
+    }
+    assert complete["remaining_gaps"] == []
+
+    incomplete_work = tmp_path / "incomplete"
+    incomplete_work.mkdir()
+    projection, incomplete_state = _terminal_projection_fixture(
+        incomplete_work, incomplete=True
+    )
+    incomplete, incomplete_error = (
+        START_INTAKE._terminal_projection_qualification(
+            incomplete_work, incomplete_state
+        )
+    )
+
+    assert incomplete_error is None
+    assert incomplete["qualification"] == "readable_projection_incomplete"
+    assert incomplete["coverage"]["remaining_gap_count"] == 3
+    assert [
+        (gap["collection"], gap["id"])
+        for gap in incomplete["remaining_gaps"]
+    ] == [
+        ("scan_regions", "region-r01-c02"),
+        ("elements", "element-000002"),
+        ("relationships", "relationship-000001"),
+    ]
+    assert [gap["record"] for gap in incomplete["remaining_gaps"]] == [
+        projection["scan_regions"][1],
+        projection["elements"][1],
+        projection["relationships"][0],
+    ]
+
+
+def test_terminal_projection_qualification_fails_closed_on_coverage_conflicts(
+    tmp_path: Path,
+) -> None:
+    projection, state = _terminal_projection_fixture(tmp_path)
+    projection["scan_regions"] = projection["scan_regions"][1:]
+    path = tmp_path / "projection.json"
+    path.write_text(json.dumps(projection, indent=2, sort_keys=True) + "\n")
+    state["current_projection"]["sha256"] = START_INTAKE._digest_bytes(
+        path.read_bytes()
+    )
+
+    qualification, error = START_INTAKE._terminal_projection_qualification(
+        tmp_path, state
+    )
+
+    assert qualification is None
+    assert error["stopped"] == "terminal_invalid"
+    assert error["why"] == "scan-region coverage has 15 outcomes; expected 16"
+
+    _, pending_state = _terminal_projection_fixture(tmp_path)
+    pending = json.loads(path.read_text())
+    pending["relationship_obligations"][0]["status"] = "pending"
+    path.write_text(json.dumps(pending, indent=2, sort_keys=True) + "\n")
+    pending_state["current_projection"]["sha256"] = START_INTAKE._digest_bytes(
+        path.read_bytes()
+    )
+    qualification, error = START_INTAKE._terminal_projection_qualification(
+        tmp_path, pending_state
+    )
+    assert qualification is None
+    assert error["stopped"] == "terminal_invalid"
+    assert "is not closed" in error["why"]
+
+    for case in (
+        "duplicated_region",
+        "reordered_regions",
+        "contradictory_region_element",
+        "duplicated_element",
+        "changed_projection",
+    ):
+        case_work = tmp_path / case
+        case_work.mkdir()
+        candidate, candidate_state = _terminal_projection_fixture(case_work)
+        candidate_path = case_work / "projection.json"
+        update_identity = True
+        if case == "duplicated_region":
+            candidate["scan_regions"][1] = json.loads(
+                json.dumps(candidate["scan_regions"][0])
+            )
+        elif case == "reordered_regions":
+            candidate["scan_regions"][0], candidate["scan_regions"][1] = (
+                candidate["scan_regions"][1],
+                candidate["scan_regions"][0],
+            )
+        elif case == "contradictory_region_element":
+            candidate["scan_regions"][0]["element_ids"] = []
+        elif case == "duplicated_element":
+            candidate["elements"].append(
+                json.loads(json.dumps(candidate["elements"][0]))
+            )
+            candidate_state["current_projection"]["element_count"] = 3
+        else:
+            update_identity = False
+        candidate_path.write_text(
+            json.dumps(candidate, indent=2, sort_keys=True) + "\n"
+        )
+        if not update_identity:
+            candidate_path.write_text(candidate_path.read_text() + " ")
+        else:
+            candidate_state["current_projection"]["sha256"] = (
+                START_INTAKE._digest_bytes(candidate_path.read_bytes())
+            )
+
+        qualification, error = START_INTAKE._terminal_projection_qualification(
+            case_work, candidate_state
+        )
+
+        assert qualification is None, case
+        assert error["stopped"] == "terminal_invalid", case
+
+
+def test_clarification_terminal_disposition_is_code_constrained() -> None:
+    gap = {"id": "element-000001", "record": {"status": "gap"}}
+    incomplete = {
+        "qualification": "readable_projection_incomplete",
+        "projection": {"sha256": "a" * 64},
+        "coverage": {"remaining_gap_count": 1},
+        "remaining_gaps": [gap],
+    }
+    required, required_error = START_INTAKE._clarification_terminal_disposition(
+        {
+            "decision": "clarification_complete",
+            "remaining_current_gap_count": 1,
+        },
+        incomplete,
+    )
+
+    assert required_error is None
+    assert required == {
+        "disposition": "clarification_required",
+        "projection_sha256": "a" * 64,
+        "remaining_gap_count": 1,
+        "remaining_gaps": [gap],
+    }
+
+    complete = {
+        "qualification": "readable_projection_complete",
+        "projection": {"sha256": "b" * 64},
+        "coverage": {"remaining_gap_count": 0},
+        "remaining_gaps": [],
+    }
+    finished, finished_error = START_INTAKE._clarification_terminal_disposition(
+        {
+            "decision": "clarification_complete",
+            "remaining_current_gap_count": 0,
+        },
+        complete,
+    )
+    assert finished_error is None
+    assert finished == {
+        "disposition": "first_layer_complete",
+        "projection_sha256": "b" * 64,
+        "remaining_gap_count": 0,
+    }
+
+    invalid, invalid_error = START_INTAKE._clarification_terminal_disposition(
+        {
+            "decision": "clarification_complete",
+            "remaining_current_gap_count": 1,
+        },
+        complete,
+    )
+    assert invalid is None
+    assert invalid_error["stopped"] == "terminal_invalid"
+
+
+def test_clarification_continuation_returns_apply_then_complete_without_mutation(
+    tmp_path: Path, monkeypatch: object
+) -> None:
+    original_clarification_continuation = START_INTAKE._clarification_continuation
+    inputs = _missing_endpoint_resolution_fixture(tmp_path)
+    clarification = json.loads(inputs["clarification_path"].read_text())
+    binding = {
+        "position": 1,
+        "question": clarification["question"],
+        "gap": clarification["gap"],
+        "answer_source": {
+            "id": "source-answer",
+            "path": str(inputs["answer_source_path"].relative_to(tmp_path)),
+            "sha256": inputs["answer_source_sha256"],
+        },
+        "answer_projection": {
+            "id": "projection-answer-v1",
+            "path": str(inputs["answer_projection_path"].relative_to(tmp_path)),
+            "sha256": inputs["answer_projection_sha256"],
+        },
+        "answer": inputs["answer_source_path"].read_text(),
+    }
+    assessment = {
+        **START_INTAKE.gap_answer_assessment._assessment_identity(binding),
+        "verdict": "resolves_gap",
+        "reason": "The answer identifies the missing endpoint.",
+    }
+    saved = {
+        "result_sha256": "a" * 64,
+        "assessments": [assessment],
+    }
+    state = {
+        "first_projection": {
+            "id": "projection-source-000003-v1",
+            "path": str(inputs["projection_path"].relative_to(tmp_path)),
+            "sha256": inputs["projection_sha256"],
+        },
+        "current_projection": {
+            "id": "projection-source-000003-v1",
+            "path": str(inputs["projection_path"].relative_to(tmp_path)),
+            "sha256": inputs["projection_sha256"],
+        },
+        "gap_answer_assessment": saved,
+        "gap_resolution_history": [],
+    }
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_latest_assessed_round",
+        lambda *_args: (1, [binding], saved, None),
+    )
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_assessment_round_data",
+        lambda *_args: ([binding], saved, None),
+    )
+    state_before = json.loads(json.dumps(state))
+    projection_before = inputs["projection_path"].read_bytes()
+
+    apply, error = START_INTAKE._clarification_continuation(tmp_path, state)
+
+    assert error is None
+    assert apply["decision"] == "apply_resolving_answer"
+    assert apply["assessment_round"] == 1
+    assert apply["assessment_position"] == 1
+    assert apply["gap"]["id"] == "relationship-000001"
+    assert state == state_before
+    assert inputs["projection_path"].read_bytes() == projection_before
+
+    seed = START_INTAKE._ledger_entry(
+        1, "test_seed", {"intake_id": "intake-test"}, None
+    )
+    (tmp_path / "ledger.jsonl").write_text(json.dumps(seed, sort_keys=True) + "\n")
+    state.update({
+        "intake_id": "intake-test",
+        "status": "ready_for_projection_assessment",
+        "phase": "gap_answer_assessment_recorded",
+        "ledger_entries": 1,
+        "ledger_tail_sha256": seed["entry_sha256"],
+    })
+    apply_result = START_INTAKE._execute_clarification_continuation(
+        tmp_path, state, [seed]
+    )
+    assert apply_result["status"] == "waiting_for_model", apply_result
+    assert apply_result["stopped"] == "resolving_gap_answer"
+    assert state["gap_resolution"]["selected_assessment_round"] == 1
+    assert state["gap_resolution"]["selected_assessment_position"] == 1
+    ledger_after_apply = (tmp_path / "ledger.jsonl").read_bytes()
+    repeated_apply = START_INTAKE._execute_clarification_continuation(
+        tmp_path,
+        state,
+        [seed, json.loads(ledger_after_apply.decode().splitlines()[-1])],
+    )
+    assert repeated_apply["status"] == "blocked"
+    assert (tmp_path / "ledger.jsonl").read_bytes() == ledger_after_apply
+
+    complete_work = tmp_path.parent / f"{tmp_path.name}-complete"
+    shutil.copytree(tmp_path, complete_work)
+    shutil.rmtree(complete_work / "gap-resolutions")
+    consumed = json.loads(json.dumps(state_before))
+    consumed.update({
+        "intake_id": "intake-test",
+        "status": "ready_for_projection_assessment",
+        "phase": "gap_resolution_rejected",
+        "ledger_entries": 1,
+        "ledger_tail_sha256": seed["entry_sha256"],
+    })
+    consumed["gap_resolution"] = {
+        "mode": "assessed_answer",
+        "result_sha256": "b" * 64,
+        "selected_assessment_round": 1,
+        "selected_assessment_position": 1,
+    }
+    (complete_work / "ledger.jsonl").write_text(
+        json.dumps(seed, sort_keys=True) + "\n"
+    )
+    complete, error = START_INTAKE._clarification_continuation(
+        complete_work, consumed
+    )
+    replay, replay_error = START_INTAKE._clarification_continuation(
+        complete_work, consumed
+    )
+
+    assert error is None and replay_error is None
+    assert complete == replay == {
+        "decision": "clarification_complete",
+        "assessment_round": 1,
+        "remaining_current_gap_count": 1,
+    }
+    ledger_before_invalid_terminal = (complete_work / "ledger.jsonl").read_bytes()
+    invalid_terminal = START_INTAKE._execute_clarification_continuation(
+        complete_work, consumed, [seed]
+    )
+    assert invalid_terminal["stopped"] == "terminal_invalid"
+    assert (complete_work / "ledger.jsonl").read_bytes() == ledger_before_invalid_terminal
+    incomplete_qualification = {
+        "qualification": "readable_projection_incomplete",
+        "projection": {
+            "id": "projection-source-000003-v1",
+            "path": str(inputs["projection_path"].relative_to(tmp_path)),
+            "sha256": inputs["projection_sha256"],
+        },
+        "coverage": {"remaining_gap_count": 1},
+        "remaining_gaps": [clarification["gap"]],
+    }
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_terminal_projection_qualification",
+        lambda *_args: (incomplete_qualification, None),
+    )
+    ledger_before_required = (complete_work / "ledger.jsonl").read_bytes()
+    required_result = START_INTAKE._execute_clarification_continuation(
+        complete_work, consumed, [seed]
+    )
+    assert required_result["stopped"] == "clarification_required"
+    assert required_result["projection_qualification"] == incomplete_qualification
+    assert required_result["terminal_disposition"]["disposition"] == (
+        "clarification_required"
+    )
+    assert required_result["gaps"] == [clarification["gap"]]
+    assert (complete_work / "ledger.jsonl").read_bytes() == ledger_before_required
+    (complete_work / "sources").mkdir(exist_ok=True)
+    (complete_work / "sources" / "source-000001.txt").write_text(
+        "There is a new intake"
+    )
+    (complete_work / "sources" / "source-000002.txt").write_text(REAL_PURPOSE)
+    monkeypatch.setattr(
+        START_INTAKE, "drive", lambda *_args, **_kwargs: required_result
+    )
+    required_boundary = START_INTAKE.run_clarification_boundary(complete_work)
+    assert required_boundary["boundary"] == "clarification_required"
+    assert required_boundary["gaps"] == [clarification["gap"]]
+
+    complete_decision = {
+        "decision": "clarification_complete",
+        "assessment_round": 1,
+        "remaining_current_gap_count": 0,
+    }
+    complete_qualification = {
+        "qualification": "readable_projection_complete",
+        "projection": {
+            "id": "projection-source-000003-v1",
+            "path": str(inputs["projection_path"].relative_to(tmp_path)),
+            "sha256": inputs["projection_sha256"],
+        },
+        "coverage": {"remaining_gap_count": 0},
+        "remaining_gaps": [],
+    }
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_clarification_continuation",
+        lambda *_args: (complete_decision, None),
+    )
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_terminal_projection_qualification",
+        lambda *_args: (complete_qualification, None),
+    )
+    complete_result = START_INTAKE._execute_clarification_continuation(
+        complete_work, consumed, [seed]
+    )
+    assert complete_result["stopped"] == "clarification_continuation_complete"
+    assert complete_result["continuation"] == complete_decision
+    assert complete_result["projection_qualification"] == complete_qualification
+    assert complete_result["terminal_disposition"] == {
+        "disposition": "first_layer_complete",
+        "projection_sha256": inputs["projection_sha256"],
+        "remaining_gap_count": 0,
+    }
+    completion_ledger = (complete_work / "ledger.jsonl").read_bytes()
+    completion_entries, ledger_error = START_INTAKE._validate_ledger(
+        complete_work / "ledger.jsonl"
+    )
+    assert ledger_error is None
+    completion_replay = START_INTAKE._execute_clarification_continuation(
+        complete_work, consumed, completion_entries
+    )
+    assert completion_replay == complete_result
+    assert (complete_work / "ledger.jsonl").read_bytes() == completion_ledger
+    changed_completion = json.loads(json.dumps(consumed))
+    changed_completion["clarification_completion"]["terminal_disposition"][
+        "remaining_gap_count"
+    ] = 1
+    changed_completion_error = START_INTAKE._validate_clarification_completion(
+        complete_work, changed_completion, completion_entries
+    )
+    assert changed_completion_error["status"] == "blocked"
+    monkeypatch.setattr(
+        START_INTAKE, "drive", lambda *_args, **_kwargs: complete_result
+    )
+    terminal_boundary = START_INTAKE.run_clarification_boundary(complete_work)
+    assert terminal_boundary["boundary"] == "clarification_complete"
+    assert terminal_boundary["continuation"] == complete_decision
+    assert terminal_boundary["projection_qualification"] == complete_qualification
+    assert terminal_boundary["terminal_disposition"]["disposition"] == (
+        "first_layer_complete"
+    )
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_clarification_continuation",
+        original_clarification_continuation,
+    )
+
+    changed_binding = json.loads(json.dumps(binding))
+    changed_binding["gap"]["record_sha256"] = "0" * 64
+    changed_assessment = {
+        **START_INTAKE.gap_answer_assessment._assessment_identity(changed_binding),
+        "verdict": "resolves_gap",
+        "reason": "The answer identifies the missing endpoint.",
+    }
+    changed_saved = {
+        "result_sha256": "c" * 64,
+        "assessments": [changed_assessment],
+    }
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_latest_assessed_round",
+        lambda *_args: (1, [changed_binding], changed_saved, None),
+    )
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_assessment_round_data",
+        lambda *_args: ([changed_binding], changed_saved, None),
+    )
+    _, changed_error = START_INTAKE._clarification_continuation(tmp_path, state)
+    assert changed_error["status"] == "blocked"
+    assert "changed after round 1 assessment 1" in changed_error["why"]
+
+
+def test_latest_assessment_round_rejects_incomplete_duplicate_or_reordered_history(
+    tmp_path: Path,
+) -> None:
+    complete = {
+        "round": 2,
+        "result_sha256": "a" * 64,
+        "assessments": [],
+    }
+    variants = [
+        [{**complete, "result_sha256": None}],
+        [complete, {**complete}],
+        [{**complete, "round": 2}, {**complete, "round": 4}],
+        [{**complete, "round": 3}, {**complete, "round": 2}],
+    ]
+    for records in variants:
+        _, _, _, error = START_INTAKE._latest_assessed_round(
+            tmp_path, {"prepared_question_round_assessments": records}
+        )
+        assert error["status"] == "blocked"
+
+
+def test_clarification_boundary_rejects_non_clarification_external_work() -> None:
+    model = START_INTAKE._clarification_boundary_result(
+        {
+            "status": "waiting_for_model",
+            "stopped": "interviewing_first_projection",
+            "work": [{"command": ["python", "projection.py"]}],
+        },
+        "needs_model_interview",
+    )
+    operator = START_INTAKE._clarification_boundary_result(
+        {
+            "status": "needs_operator",
+            "stopped": "awaiting_first_source",
+            "question": {"id": "first-source", "asks": "Provide a source."},
+        },
+        "needs_operator_answer",
+    )
+    assert model["status"] == "blocked"
+    assert operator["status"] == "blocked"
 
 
 def test_gap_resolution_enforces_choices_and_endpoint_containment(tmp_path: Path) -> None:
@@ -2922,7 +3740,7 @@ def test_next_resolution_archives_prior_terminal_before_state_transition(
     monkeypatch.setattr(
         START_INTAKE,
         "_next_resolving_assessed_binding",
-        lambda *_args: (binding, assessment, None),
+        lambda *_args: (binding, assessment, 1, None),
     )
     entries = [{"entry_sha256": "f" * 64} for _ in range(29)]
 
@@ -2935,11 +3753,126 @@ def test_next_resolution_archives_prior_terminal_before_state_transition(
         "output_projection": parent,
     }]
     assert state["gap_resolution"]["attempt"] == 2
+    assert state["gap_resolution"]["selected_assessment_round"] == 1
     assert state["gap_resolution"]["parent_projection"] == parent
     assert state["waiting_for"] == "gap-resolutions/attempt-000002/interview.jsonl"
+    ledger = [
+        json.loads(line)
+        for line in (tmp_path / "ledger.jsonl").read_text().splitlines()
+    ]
+    assert ledger[-1]["selected_assessment_round"] == 1
     attachment, command = CODEX_RUNNER.load_request(tmp_path)
     assert attachment == source_path
     assert command[-1] == "--run-gap-resolution"
+
+
+def test_next_resolution_distinguishes_same_position_in_later_round(
+    tmp_path: Path, monkeypatch: object
+) -> None:
+    round_one = {"position": 1, "verdict": "resolves_gap"}
+    round_two = {"position": 1, "verdict": "resolves_gap"}
+    state = {
+        "gap_resolution_history": [{
+            "selected_assessment_position": 1,
+            "result_sha256": "a" * 64,
+        }],
+        "gap_answer_assessment": {"assessments": [round_one]},
+        "prepared_question_round_assessments": [{
+            "round": 2,
+            "assessments": [round_two],
+        }],
+    }
+
+    def assessment_round_data(
+        _work: Path, _state: dict[str, object], round_number: int
+    ) -> tuple[list[dict[str, object]], dict[str, object], None]:
+        assessment = round_one if round_number == 1 else round_two
+        return [], {"assessments": [assessment]}, None
+
+    selected: list[tuple[int, int]] = []
+
+    def assessed_binding(
+        _work: Path,
+        _state: dict[str, object],
+        round_number: int,
+        position: int,
+        _parent: dict[str, object],
+    ) -> tuple[dict[str, object], dict[str, object], None]:
+        selected.append((round_number, position))
+        return {"round": round_number}, round_two, None
+
+    monkeypatch.setattr(
+        START_INTAKE, "_assessment_round_data", assessment_round_data
+    )
+    monkeypatch.setattr(
+        START_INTAKE, "_assessed_binding_at_position", assessed_binding
+    )
+
+    binding, assessment, round_number, error = (
+        START_INTAKE._next_resolving_assessed_binding(
+            tmp_path, state, {"id": "parent"}
+        )
+    )
+
+    assert error is None
+    assert binding == {"round": 2}
+    assert assessment == round_two
+    assert round_number == 2
+    assert selected == [(2, 1)]
+
+
+def test_later_round_selection_rejects_changed_bound_gap(
+    tmp_path: Path, monkeypatch: object
+) -> None:
+    inputs = _missing_endpoint_resolution_fixture(tmp_path)
+    clarification = json.loads(inputs["clarification_path"].read_text())
+    assessment = clarification["accepted_assessment"]
+    binding = {
+        "position": 1,
+        "gap": clarification["gap"],
+        "question": clarification["question"],
+        "answer_source": {
+            "id": assessment["answer_source"]["id"],
+            "path": str(inputs["answer_source_path"].relative_to(tmp_path)),
+            "sha256": inputs["answer_source_sha256"],
+        },
+        "answer_projection": {
+            "id": assessment["answer_projection"]["id"],
+            "path": str(inputs["answer_projection_path"].relative_to(tmp_path)),
+            "sha256": inputs["answer_projection_sha256"],
+        },
+    }
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_assessment_round_data",
+        lambda *_args: ([binding], {"assessments": [assessment]}, None),
+    )
+    parent = {
+        "id": "projection-source-000003-v4",
+        "path": str(inputs["projection_path"].relative_to(tmp_path)),
+        "sha256": inputs["projection_sha256"],
+    }
+    selected, _, error = START_INTAKE._assessed_binding_at_position(
+        tmp_path, {}, 2, 1, parent
+    )
+    assert error is None
+    assert selected["gap"]["projection_sha256"] == parent["sha256"]
+
+    projection = json.loads(inputs["projection_path"].read_text())
+    projection["relationships"][0]["description"] = "changed after assessment"
+    inputs["projection_path"].write_text(
+        json.dumps(projection, indent=2, sort_keys=True) + "\n"
+    )
+    parent["sha256"] = START_INTAKE._digest_bytes(
+        inputs["projection_path"].read_bytes()
+    )
+
+    _, _, error = START_INTAKE._assessed_binding_at_position(
+        tmp_path, {}, 2, 1, parent
+    )
+
+    assert error["status"] == "blocked"
+    assert "gap relationship-000001 changed in parent projection" in error["why"]
 
 
 def test_attempt_two_cannot_replay_without_attempt_one_history(

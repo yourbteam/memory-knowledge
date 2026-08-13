@@ -337,10 +337,13 @@ def _gap_question_round_model_result(
 def _follow_up_gap_question_round_model_result(
     state: dict[str, object], work: Path
 ) -> dict[str, object]:
+    prepared = state["follow_up_gap_question_round"]
+    assert isinstance(prepared, dict) and isinstance(prepared.get("round"), int)
     return {
         "status": "waiting_for_model",
         "stopped": "formulating_follow_up_gap_question_round",
         "intake_id": state["intake_id"],
+        "round": prepared["round"],
         "work": [{
             "stage": "formulate_follow_up_gap_question_round",
             "instruction": (
@@ -486,7 +489,7 @@ def _gap_answer_assessment_ready_result(
 ) -> dict[str, object]:
     assessment = state["gap_answer_assessment"]
     assert isinstance(assessment, dict)
-    return {
+    result = {
         "status": "ready_for_projection_assessment",
         "stopped": "gap_answer_assessment_recorded",
         "intake_id": state["intake_id"],
@@ -496,6 +499,7 @@ def _gap_answer_assessment_ready_result(
         "work": str(work.resolve()),
         "ledger": str((work / "ledger.jsonl").resolve()),
     }
+    return _with_clarification_continuation(work, state, result)
 
 
 def _gap_source_ready_result(state: dict[str, object], work: Path) -> dict[str, object]:
@@ -558,7 +562,7 @@ def _gap_resolution_model_result(
 def _gap_resolution_ready_result(
     state: dict[str, object], work: Path
 ) -> dict[str, object]:
-    return {
+    result = {
         "status": "ready_for_projection_assessment",
         "stopped": str(state["phase"]),
         "intake_id": state["intake_id"],
@@ -568,6 +572,10 @@ def _gap_resolution_ready_result(
         "work": str(work.resolve()),
         "ledger": str((work / "ledger.jsonl").resolve()),
     }
+    resolution = state.get("gap_resolution")
+    if isinstance(resolution, dict) and resolution.get("mode") == "assessed_answer":
+        return _with_clarification_continuation(work, state, result)
+    return result
 
 
 def _write_state(path: Path, state: dict[str, object]) -> None:
@@ -2127,8 +2135,8 @@ def _consume_gap_question_round(
     return _gap_question_round_operator_result(state, work)
 
 
-def _used_assessment_positions(state: dict[str, object]) -> set[int]:
-    used: set[int] = set()
+def _used_assessment_identities(state: dict[str, object]) -> set[tuple[int, int]]:
+    used: set[tuple[int, int]] = set()
     history = state.get("gap_resolution_history", [])
     candidates = history if isinstance(history, list) else []
     current = state.get("gap_resolution")
@@ -2138,8 +2146,914 @@ def _used_assessment_positions(state: dict[str, object]) -> set[int]:
         if isinstance(item, dict) and isinstance(
             item.get("selected_assessment_position"), int
         ):
-            used.add(item["selected_assessment_position"])
+            round_number = item.get("selected_assessment_round", 1)
+            if isinstance(round_number, int):
+                used.add((round_number, item["selected_assessment_position"]))
     return used
+
+
+def _prepared_round_snapshot(
+    state: dict[str, object], round_number: int
+) -> tuple[
+    dict[str, object] | None,
+    dict[str, object] | None,
+    dict[str, object] | None,
+]:
+    history = state.get("prepared_question_round_history", [])
+    if not isinstance(history, list) or not all(
+        isinstance(item, dict) for item in history
+    ):
+        return None, None, _blocked(
+            "invalid intake state",
+            "the prepared question round history must remain an ordered list",
+        )
+    candidates: list[tuple[dict[str, object], dict[str, object]]] = []
+    current_round = state.get("follow_up_gap_question_round")
+    current_interview = state.get("prepared_question_round_interview")
+    if isinstance(current_round, dict) and current_round.get("round") == round_number:
+        if not isinstance(current_interview, dict):
+            return None, None, _blocked(
+                "invalid intake state",
+                f"prepared round {round_number} lost its operator interview",
+            )
+        candidates.append((current_round, current_interview))
+    previous_archived_round: int | None = None
+    for item in history:
+        prepared = item.get("question_round")
+        interview = item.get("interview")
+        archived_round = item.get("round")
+        if (
+            not isinstance(archived_round, int)
+            or archived_round < 2
+            or (
+                previous_archived_round is not None
+                and archived_round != previous_archived_round + 1
+            )
+            or not isinstance(prepared, dict)
+            or not isinstance(interview, dict)
+            or prepared.get("round") != archived_round
+            or interview.get("round") != archived_round
+            or set(item) != {"round", "question_round", "interview"}
+        ):
+            return None, None, _blocked(
+                "invalid intake state",
+                "the prepared question round history changed or lost canonical order",
+            )
+        previous_archived_round = archived_round
+        if archived_round == round_number:
+            candidates.append((prepared, interview))
+    if len(candidates) != 1:
+        return None, None, _blocked(
+            "invalid intake state",
+            f"prepared round {round_number} must have exactly one preserved snapshot",
+        )
+    return candidates[0][0], candidates[0][1], None
+
+
+def _prepared_question_round_assessment_bindings_for_round(
+    work: Path, state: dict[str, object], round_number: int
+) -> tuple[list[dict[str, object]] | None, dict[str, object] | None]:
+    prepared, interview, snapshot_error = _prepared_round_snapshot(
+        state, round_number
+    )
+    if snapshot_error:
+        return None, snapshot_error
+    assert prepared is not None and interview is not None
+    shadow = dict(state)
+    shadow["follow_up_gap_question_round"] = prepared
+    shadow["prepared_question_round_interview"] = interview
+    return _prepared_question_round_assessment_bindings(work, shadow)
+
+
+def _latest_assessed_round(
+    work: Path, state: dict[str, object]
+) -> tuple[
+    int | None,
+    list[dict[str, object]] | None,
+    dict[str, object] | None,
+    dict[str, object] | None,
+]:
+    records = state.get("prepared_question_round_assessments", [])
+    if not isinstance(records, list) or not all(
+        isinstance(item, dict) for item in records
+    ):
+        return None, None, None, _blocked(
+            "follow-up gap clarification unavailable",
+            "the prepared-round assessment history must remain an ordered list",
+        )
+    previous_round: int | None = None
+    for item in records:
+        round_number = item.get("round")
+        if (
+            not isinstance(round_number, int)
+            or round_number < 2
+            or (
+                previous_round is not None
+                and round_number != previous_round + 1
+            )
+        ):
+            return None, None, None, _blocked(
+                "follow-up gap clarification unavailable",
+                "the prepared-round assessment history changed or lost canonical order",
+            )
+        previous_round = round_number
+    if records:
+        latest = records[-1]
+        round_number = latest["round"]
+        if (
+            not isinstance(latest.get("result_sha256"), str)
+            or not isinstance(latest.get("assessments"), list)
+        ):
+            return None, None, None, _blocked(
+                "follow-up gap clarification unavailable",
+                f"round {round_number} does not have one completed assessment",
+            )
+        bindings, binding_error = (
+            _prepared_question_round_assessment_bindings_for_round(
+                work, state, round_number
+            )
+        )
+        return round_number, bindings, latest, binding_error
+    bindings, binding_error = _gap_answer_assessment_bindings(work, state)
+    saved = state.get("gap_answer_assessment")
+    if binding_error:
+        return None, None, None, binding_error
+    if not isinstance(saved, dict) or not isinstance(saved.get("result_sha256"), str):
+        return None, None, None, _blocked(
+            "follow-up gap clarification unavailable",
+            "the first completed assessment is missing",
+        )
+    return 1, bindings, saved, None
+
+
+def _clarification_continuation(
+    work: Path, state: dict[str, object]
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    latest_round, latest_bindings, latest_assessment, latest_error = (
+        _latest_assessed_round(work, state)
+    )
+    if latest_error:
+        return None, latest_error
+    assert latest_round is not None and latest_bindings is not None
+    assert latest_assessment is not None
+    parent = state.get("current_projection", state.get("first_projection"))
+    projection_path, projection_sha256, projection_error = (
+        _validated_projection_record(work, parent if isinstance(parent, dict) else None)
+    )
+    if projection_error:
+        return None, projection_error
+    assert projection_path is not None and projection_sha256 is not None
+    try:
+        projection = json.loads(projection_path.read_text(encoding="utf-8"))
+        current_gaps = gap_clarification.select_gaps(projection, projection_sha256)
+    except (OSError, json.JSONDecodeError, gap_clarification.ClarificationError) as error:
+        return None, _blocked("clarification continuation unavailable", str(error))
+    current_by_identity = {
+        (item["collection"], item["id"]): item for item in current_gaps
+    }
+
+    history = state.get("gap_resolution_history", [])
+    if not isinstance(history, list) or not all(
+        isinstance(item, dict) for item in history
+    ):
+        return None, _blocked(
+            "clarification continuation unavailable",
+            "gap resolution history must remain an ordered list",
+        )
+    completed_resolutions = list(history)
+    current_resolution = state.get("gap_resolution")
+    if isinstance(current_resolution, dict) and current_resolution.get("result_sha256"):
+        completed_resolutions.append(current_resolution)
+    used_identities: list[tuple[int, int]] = []
+    for resolution in completed_resolutions:
+        if resolution.get("mode") != "assessed_answer":
+            continue
+        round_number = resolution.get("selected_assessment_round", 1)
+        position = resolution.get("selected_assessment_position")
+        if not isinstance(round_number, int) or not isinstance(position, int):
+            return None, _blocked(
+                "clarification continuation unavailable",
+                "an assessed-answer resolution lost its round and position",
+            )
+        used_identities.append((round_number, position))
+    if len(set(used_identities)) != len(used_identities):
+        return None, _blocked(
+            "clarification continuation unavailable",
+            "an assessed answer was consumed more than once",
+        )
+    used = set(used_identities)
+
+    first_assessment = state.get("gap_answer_assessment")
+    round_numbers = (
+        [1]
+        if isinstance(first_assessment, dict)
+        and isinstance(first_assessment.get("assessments"), list)
+        else []
+    )
+    records = state.get("prepared_question_round_assessments", [])
+    assert isinstance(records, list)
+    round_numbers.extend(int(item["round"]) for item in records)
+    latest_pairs: list[tuple[dict[str, object], dict[str, object]]] = []
+    for round_number in round_numbers:
+        bindings, saved, round_error = _assessment_round_data(
+            work, state, round_number
+        )
+        if round_error:
+            return None, round_error
+        assert bindings is not None and saved is not None
+        assessments = saved.get("assessments")
+        if not isinstance(assessments, list):
+            return None, _blocked(
+                "clarification continuation unavailable",
+                f"round {round_number} assessment is incomplete",
+            )
+        shape_error = _validate_gap_answer_assessment_shape(
+            {"assessments": assessments}, bindings
+        )
+        if shape_error:
+            return None, _blocked(
+                "clarification continuation unavailable", shape_error
+            )
+        pairs = list(zip(bindings, assessments, strict=True))
+        if round_number == latest_round:
+            latest_pairs = pairs
+        for binding, assessment in pairs:
+            if assessment.get("verdict") != "resolves_gap":
+                continue
+            position = assessment.get("position")
+            if not isinstance(position, int) or (round_number, position) in used:
+                continue
+            gap = binding.get("gap")
+            if not isinstance(gap, dict):
+                return None, _blocked(
+                    "clarification continuation unavailable",
+                    f"round {round_number} assessment {position} lost its gap binding",
+                )
+            current_gap = current_by_identity.get(
+                (gap.get("collection"), gap.get("id"))
+            )
+            if current_gap is None:
+                continue
+            if current_gap.get("record_sha256") != gap.get("record_sha256"):
+                return None, _blocked(
+                    "clarification continuation unavailable",
+                    f"gap {gap.get('id')} changed after round {round_number} assessment {position}",
+                )
+            selected_binding, _, selection_error = _assessed_binding_at_position(
+                work,
+                state,
+                round_number,
+                position,
+                parent,
+            )
+            if selection_error:
+                return None, selection_error
+            assert selected_binding is not None
+            selected_gap = selected_binding["gap"]
+            assert isinstance(selected_gap, dict)
+            return {
+                "decision": "apply_resolving_answer",
+                "assessment_round": round_number,
+                "assessment_position": position,
+                "gap": {
+                    key: selected_gap[key]
+                    for key in (
+                        "projection_sha256",
+                        "collection",
+                        "kind",
+                        "id",
+                        "record_sha256",
+                    )
+                },
+            }, None
+
+    next_round_gaps: list[dict[str, object]] = []
+    for binding, assessment in latest_pairs:
+        if assessment.get("verdict") != "does_not_resolve_gap":
+            continue
+        gap = binding.get("gap")
+        if not isinstance(gap, dict):
+            return None, _blocked(
+                "clarification continuation unavailable",
+                "a non-resolving assessment lost its gap binding",
+            )
+        current_gap = current_by_identity.get((gap.get("collection"), gap.get("id")))
+        if current_gap is None:
+            continue
+        if current_gap.get("record_sha256") != gap.get("record_sha256"):
+            return None, _blocked(
+                "clarification continuation unavailable",
+                f"gap {gap.get('id')} changed after round {latest_round} assessment",
+            )
+        next_round_gaps.append({
+            key: current_gap[key]
+            for key in (
+                "projection_sha256",
+                "collection",
+                "kind",
+                "id",
+                "record_sha256",
+            )
+        })
+    if next_round_gaps:
+        return {
+            "decision": "prepare_next_round",
+            "assessment_round": latest_round,
+            "next_round": latest_round + 1,
+            "gaps": next_round_gaps,
+        }, None
+    return {
+        "decision": "clarification_complete",
+        "assessment_round": latest_round,
+        "remaining_current_gap_count": len(current_gaps),
+    }, None
+
+
+def _with_clarification_continuation(
+    work: Path, state: dict[str, object], result: dict[str, object]
+) -> dict[str, object]:
+    continuation, continuation_error = _clarification_continuation(work, state)
+    if continuation_error:
+        return continuation_error
+    assert continuation is not None
+    return {**result, "continuation": continuation}
+
+
+def _terminal_projection_qualification(
+    work: Path, state: dict[str, object]
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    """Qualify the clarification terminal from canonical projection evidence."""
+    record = state.get("current_projection", state.get("first_projection"))
+    path, projection_sha256, record_error = _validated_projection_record(
+        work, record if isinstance(record, dict) else None
+    )
+    if record_error:
+        return None, _blocked("terminal_invalid", str(record_error["why"]))
+    assert path is not None and projection_sha256 is not None
+    assert isinstance(record, dict)
+    if (
+        not isinstance(record.get("id"), str)
+        or not record["id"]
+        or record.get("coverage") != "unassessed"
+    ):
+        return None, _blocked(
+            "terminal_invalid", "projection record identity or coverage state is invalid"
+        )
+    try:
+        projection = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return None, _blocked("terminal_invalid", f"projection is unreadable: {error}")
+    if not isinstance(projection, dict):
+        return None, _blocked("terminal_invalid", "projection must be one JSON object")
+
+    elements = projection.get("elements")
+    relationships = projection.get("relationships")
+    obligations = projection.get("relationship_obligations")
+    regions = projection.get("scan_regions")
+    if not isinstance(elements, list):
+        return None, _blocked("terminal_invalid", "projection elements are missing or invalid")
+    if not isinstance(relationships, list):
+        return None, _blocked(
+            "terminal_invalid", "projection relationships are missing or invalid"
+        )
+    if not isinstance(obligations, list):
+        return None, _blocked(
+            "terminal_invalid", "relationship obligations are missing or invalid"
+        )
+    if not isinstance(regions, list):
+        return None, _blocked(
+            "terminal_invalid", "deterministic scan-region evidence is missing or invalid"
+        )
+
+    expected_regions = projection_interview._scan_regions()
+    if len(regions) != len(expected_regions):
+        return None, _blocked(
+            "terminal_invalid",
+            f"scan-region coverage has {len(regions)} outcomes; expected {len(expected_regions)}",
+        )
+
+    element_by_id: dict[str, dict[str, object]] = {}
+    for position, element in enumerate(elements, 1):
+        if not isinstance(element, dict):
+            return None, _blocked(
+                "terminal_invalid", f"element {position} is not one record"
+            )
+        element_id = element.get("id")
+        if not isinstance(element_id, str) or not element_id:
+            return None, _blocked(
+                "terminal_invalid", f"element {position} has no stable identity"
+            )
+        if element_id in element_by_id:
+            return None, _blocked(
+                "terminal_invalid", f"element identity {element_id} is duplicated"
+            )
+        status = element.get("status")
+        content = element.get("content")
+        gap_reason = element.get("gap_reason")
+        if status not in {"readable", "gap"}:
+            return None, _blocked(
+                "terminal_invalid", f"element {element_id} has invalid status {status!r}"
+            )
+        if (
+            status == "readable"
+            and (not isinstance(content, str) or not content.strip())
+        ) or (
+            status == "gap"
+            and (not isinstance(gap_reason, str) or not gap_reason.strip())
+        ):
+            return None, _blocked(
+                "terminal_invalid", f"element {element_id} has no {status} outcome evidence"
+            )
+        if (status == "readable" and gap_reason not in {None, ""}) or (
+            status == "gap" and content not in {None, ""}
+        ):
+            return None, _blocked(
+                "terminal_invalid", f"element {element_id} has contradictory outcome evidence"
+            )
+        element_by_id[element_id] = element
+
+    recorded_region_elements: set[str] = set()
+    for position, (region, expected) in enumerate(
+        zip(regions, expected_regions, strict=True), 1
+    ):
+        if not isinstance(region, dict):
+            return None, _blocked(
+                "terminal_invalid", f"scan region {position} is not one record"
+            )
+        if region.get("id") != expected["id"] or region.get("bounds") != expected["bounds"]:
+            return None, _blocked(
+                "terminal_invalid",
+                f"scan region {position} is missing, reordered, or has changed bounds",
+            )
+        status = region.get("status")
+        gap_reason = region.get("gap_reason")
+        if status not in {"scanned", "gap"}:
+            return None, _blocked(
+                "terminal_invalid",
+                f"scan region {expected['id']} has no terminal coverage outcome",
+            )
+        if status == "gap" and (
+            not isinstance(gap_reason, str) or not gap_reason.strip()
+        ):
+            return None, _blocked(
+                "terminal_invalid", f"scan region {expected['id']} has no gap evidence"
+            )
+        if status == "scanned" and gap_reason not in {None, ""}:
+            return None, _blocked(
+                "terminal_invalid",
+                f"scan region {expected['id']} has contradictory outcome evidence",
+            )
+        element_ids = region.get("element_ids")
+        if not isinstance(element_ids, list) or any(
+            not isinstance(item, str) or not item for item in element_ids
+        ):
+            return None, _blocked(
+                "terminal_invalid", f"scan region {expected['id']} element ledger is invalid"
+            )
+        if len(element_ids) != len(set(element_ids)):
+            return None, _blocked(
+                "terminal_invalid", f"scan region {expected['id']} repeats an element identity"
+            )
+        for element_id in element_ids:
+            if element_id not in element_by_id:
+                return None, _blocked(
+                    "terminal_invalid",
+                    f"scan region {expected['id']} references missing element {element_id}",
+                )
+            if element_id in recorded_region_elements:
+                return None, _blocked(
+                    "terminal_invalid", f"element {element_id} is recorded in multiple regions"
+                )
+            if element_by_id[element_id].get("scan_region_id") != expected["id"]:
+                return None, _blocked(
+                    "terminal_invalid",
+                    f"element {element_id} contradicts scan region {expected['id']}",
+                )
+            recorded_region_elements.add(element_id)
+    for element_id, element in element_by_id.items():
+        scan_region_id = element.get("scan_region_id")
+        if scan_region_id is not None and element_id not in recorded_region_elements:
+            return None, _blocked(
+                "terminal_invalid",
+                f"element {element_id} is missing from its scan-region ledger",
+            )
+
+    relationship_by_id: dict[str, dict[str, object]] = {}
+    for position, relationship in enumerate(relationships, 1):
+        if not isinstance(relationship, dict):
+            return None, _blocked(
+                "terminal_invalid", f"relationship {position} is not one record"
+            )
+        relationship_id = relationship.get("id")
+        if not isinstance(relationship_id, str) or not relationship_id:
+            return None, _blocked(
+                "terminal_invalid", f"relationship {position} has no stable identity"
+            )
+        if relationship_id in relationship_by_id:
+            return None, _blocked(
+                "terminal_invalid", f"relationship identity {relationship_id} is duplicated"
+            )
+        status = relationship.get("status")
+        description = relationship.get("description")
+        gap_reason = relationship.get("gap_reason")
+        if status not in {"readable", "gap"}:
+            return None, _blocked(
+                "terminal_invalid",
+                f"relationship {relationship_id} has invalid status {status!r}",
+            )
+        if status == "readable":
+            if not isinstance(description, str) or not description.strip():
+                return None, _blocked(
+                    "terminal_invalid",
+                    f"relationship {relationship_id} has no readable outcome evidence",
+                )
+            for role in ("from_id", "to_id"):
+                if relationship.get(role) not in element_by_id:
+                    return None, _blocked(
+                        "terminal_invalid",
+                        f"relationship {relationship_id} references missing {role}",
+                    )
+            if (
+                relationship.get("from_id") == relationship.get("to_id")
+                or gap_reason not in {None, ""}
+            ):
+                return None, _blocked(
+                    "terminal_invalid",
+                    f"relationship {relationship_id} has contradictory outcome evidence",
+                )
+        elif not isinstance(gap_reason, str) or not gap_reason.strip():
+            return None, _blocked(
+                "terminal_invalid", f"relationship {relationship_id} has no gap evidence"
+            )
+        elif description not in {None, ""}:
+            return None, _blocked(
+                "terminal_invalid",
+                f"relationship {relationship_id} has contradictory outcome evidence",
+            )
+        relationship_by_id[relationship_id] = relationship
+
+    obligation_ids: set[str] = set()
+    for position, obligation in enumerate(obligations, 1):
+        if not isinstance(obligation, dict):
+            return None, _blocked(
+                "terminal_invalid", f"relationship obligation {position} is not one record"
+            )
+        obligation_id = obligation.get("id")
+        if not isinstance(obligation_id, str) or not obligation_id:
+            return None, _blocked(
+                "terminal_invalid", f"relationship obligation {position} has no stable identity"
+            )
+        if obligation_id in obligation_ids:
+            return None, _blocked(
+                "terminal_invalid", f"relationship obligation {obligation_id} is duplicated"
+            )
+        relationship_id = obligation.get("relationship_id")
+        if (
+            obligation.get("element_id") not in element_by_id
+            or obligation.get("status") != "resolved"
+            or obligation.get("resolution") not in {"relationship", "gap"}
+            or relationship_id not in relationship_by_id
+        ):
+            return None, _blocked(
+                "terminal_invalid",
+                f"relationship obligation {obligation_id} is not closed against recorded evidence",
+            )
+        obligation_ids.add(obligation_id)
+
+    verified_obligation_ids: set[str] = set()
+    for relationship_id, relationship in relationship_by_id.items():
+        obligation_id = relationship.get("verified_obligation_id")
+        if obligation_id is None:
+            continue
+        if obligation_id not in obligation_ids or obligation_id in verified_obligation_ids:
+            return None, _blocked(
+                "terminal_invalid",
+                f"relationship {relationship_id} has invalid obligation {obligation_id}",
+            )
+        obligation = next(
+            item for item in obligations if item.get("id") == obligation_id
+        )
+        if (
+            obligation.get("relationship_id") != relationship_id
+            or obligation.get("element_id") != relationship.get("verified_element_id")
+        ):
+            return None, _blocked(
+                "terminal_invalid",
+                f"relationship {relationship_id} contradicts obligation {obligation_id}",
+            )
+        verified_obligation_ids.add(obligation_id)
+
+    explicit_gaps = [
+        item
+        for collection in (regions, elements, relationships)
+        for item in collection
+        if item.get("status") == "gap"
+    ]
+    if (
+        record.get("element_count") != len(elements)
+        or record.get("relationship_count") != len(relationships)
+        or record.get("gap_count") != len(explicit_gaps)
+    ):
+        return None, _blocked(
+            "terminal_invalid", "projection record counts contradict the immutable projection"
+        )
+    remaining_gaps: list[dict[str, object]] = []
+    if explicit_gaps:
+        try:
+            remaining_gaps = gap_clarification.select_gaps(
+                projection, projection_sha256
+            )
+        except gap_clarification.ClarificationError as error:
+            return None, _blocked("terminal_invalid", str(error))
+    qualification = {
+        "qualification": (
+            "readable_projection_incomplete"
+            if remaining_gaps
+            else "readable_projection_complete"
+        ),
+        "projection": {
+            "id": record.get("id"),
+            "path": record.get("path"),
+            "sha256": projection_sha256,
+        },
+        "coverage": {
+            "region_count": len(expected_regions),
+            "region_outcome_count": len(regions),
+            "element_count": len(elements),
+            "relationship_count": len(relationships),
+            "relationship_obligation_count": len(obligations),
+            "closed_relationship_obligation_count": len(obligations),
+            "remaining_gap_count": len(remaining_gaps),
+        },
+        "remaining_gaps": remaining_gaps,
+    }
+    return qualification, None
+
+
+def _clarification_terminal_disposition(
+    decision: dict[str, object], qualification: dict[str, object]
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    """Decide whether projection evidence permits the intake layer to finish."""
+    coverage = qualification.get("coverage")
+    gaps = qualification.get("remaining_gaps")
+    qualified_as = qualification.get("qualification")
+    projection = qualification.get("projection")
+    if (
+        decision.get("decision") != "clarification_complete"
+        or not isinstance(decision.get("remaining_current_gap_count"), int)
+        or not isinstance(coverage, dict)
+        or not isinstance(coverage.get("remaining_gap_count"), int)
+        or not isinstance(gaps, list)
+        or not isinstance(projection, dict)
+        or not isinstance(projection.get("sha256"), str)
+        or coverage["remaining_gap_count"] != len(gaps)
+        or decision["remaining_current_gap_count"] != len(gaps)
+    ):
+        return None, _blocked(
+            "terminal_invalid",
+            "clarification decision and projection gap evidence contradict each other",
+        )
+    if qualified_as == "readable_projection_complete" and not gaps:
+        return {
+            "disposition": "first_layer_complete",
+            "projection_sha256": projection["sha256"],
+            "remaining_gap_count": 0,
+        }, None
+    if qualified_as == "readable_projection_incomplete" and gaps:
+        return {
+            "disposition": "clarification_required",
+            "projection_sha256": projection["sha256"],
+            "remaining_gap_count": len(gaps),
+            "remaining_gaps": gaps,
+        }, None
+    return None, _blocked(
+        "terminal_invalid",
+        "projection qualification and its remaining gaps contradict each other",
+    )
+
+
+def _clarification_required_result(
+    state: dict[str, object],
+    work: Path,
+    decision: dict[str, object],
+    qualification: dict[str, object],
+    disposition: dict[str, object],
+) -> dict[str, object]:
+    return {
+        "status": "ready_for_projection_assessment",
+        "stopped": "clarification_required",
+        "intake_id": state["intake_id"],
+        "projection": state.get("current_projection", state["first_projection"]),
+        "continuation": decision,
+        "projection_qualification": qualification,
+        "terminal_disposition": disposition,
+        "gaps": disposition["remaining_gaps"],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _clarification_completion_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    saved = state["clarification_completion"]
+    assert isinstance(saved, dict) and isinstance(saved.get("decision"), dict)
+    assert isinstance(saved.get("projection_qualification"), dict)
+    assert isinstance(saved.get("terminal_disposition"), dict)
+    return {
+        "status": "ready_for_projection_assessment",
+        "stopped": "clarification_continuation_complete",
+        "intake_id": state["intake_id"],
+        "projection": state.get("current_projection", state["first_projection"]),
+        "continuation": saved["decision"],
+        "projection_qualification": saved["projection_qualification"],
+        "terminal_disposition": saved["terminal_disposition"],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _validate_clarification_completion(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object] | None:
+    saved = state.get("clarification_completion")
+    if not isinstance(saved, dict):
+        return _blocked(
+            "invalid clarification completion",
+            "the clarification completion record is missing",
+        )
+    sequence = saved.get("ledger_sequence")
+    decision = saved.get("decision")
+    projection_sha256 = saved.get("projection_sha256")
+    projection_qualification = saved.get("projection_qualification")
+    terminal_disposition = saved.get("terminal_disposition")
+    recomputed, decision_error = _clarification_continuation(work, state)
+    if decision_error:
+        return decision_error
+    recomputed_qualification, qualification_error = _terminal_projection_qualification(
+        work, state
+    )
+    if qualification_error:
+        return qualification_error
+    assert recomputed is not None and recomputed_qualification is not None
+    recomputed_disposition, disposition_error = _clarification_terminal_disposition(
+        recomputed, recomputed_qualification
+    )
+    if disposition_error:
+        return disposition_error
+    if (
+        not isinstance(sequence, int)
+        or not isinstance(decision, dict)
+        or decision.get("decision") != "clarification_complete"
+        or recomputed != decision
+        or not isinstance(projection_qualification, dict)
+        or recomputed_qualification != projection_qualification
+        or not isinstance(terminal_disposition, dict)
+        or recomputed_disposition != terminal_disposition
+        or terminal_disposition.get("disposition") != "first_layer_complete"
+        or not isinstance(projection_sha256, str)
+        or sequence != len(entries)
+        or entries[-1].get("event") != "clarification_continuation_completed"
+        or entries[-1].get("decision") != decision
+        or entries[-1].get("projection_sha256") != projection_sha256
+        or entries[-1].get("projection_qualification") != projection_qualification
+        or entries[-1].get("terminal_disposition") != terminal_disposition
+        or state.get("status") != "ready_for_projection_assessment"
+        or state.get("phase") != "clarification_continuation_complete"
+        or state.get("waiting_for") is not None
+        or state.get("question") is not None
+        or state.get("ledger_entries") != len(entries)
+        or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+    ):
+        return _blocked(
+            "invalid clarification completion",
+            "the preserved clarification terminal decision changed",
+        )
+    parent = state.get("current_projection", state.get("first_projection"))
+    if not isinstance(parent, dict) or parent.get("sha256") != projection_sha256:
+        return _blocked(
+            "invalid clarification completion",
+            "the terminal projection identity changed",
+        )
+    return None
+
+
+def _execute_clarification_continuation(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object]:
+    if state.get("phase") == "clarification_continuation_complete":
+        completion_error = _validate_clarification_completion(work, state, entries)
+        if completion_error:
+            return completion_error
+        return _clarification_completion_result(state, work)
+    if state.get("phase") not in {
+        "gap_answer_assessment_recorded",
+        "prepared_question_round_assessment_recorded",
+        "gap_resolution_applied",
+        "gap_resolution_rejected",
+    }:
+        return _blocked(
+            "clarification continuation unavailable",
+            "the prior continuation transition has not reached a terminal state",
+        )
+    decision, decision_error = _clarification_continuation(work, state)
+    if decision_error:
+        return decision_error
+    assert decision is not None
+    if decision["decision"] == "apply_resolving_answer":
+        return _request_gap_resolution(
+            work,
+            state,
+            entries,
+            expected_continuation=decision,
+        )
+    if decision["decision"] == "prepare_next_round":
+        return _request_follow_up_gap_question_round(
+            work,
+            state,
+            entries,
+            expected_continuation=decision,
+        )
+    if decision["decision"] != "clarification_complete":
+        return _blocked(
+            "invalid clarification continuation",
+            f"unsupported continuation decision {decision.get('decision')!r}",
+        )
+    parent = state.get("current_projection", state.get("first_projection"))
+    if not isinstance(parent, dict) or not isinstance(parent.get("sha256"), str):
+        return _blocked(
+            "clarification continuation unavailable",
+            "the terminal projection identity is missing",
+        )
+    projection_qualification, qualification_error = _terminal_projection_qualification(
+        work, state
+    )
+    if qualification_error:
+        return qualification_error
+    assert projection_qualification is not None
+    terminal_disposition, disposition_error = _clarification_terminal_disposition(
+        decision, projection_qualification
+    )
+    if disposition_error:
+        return disposition_error
+    assert terminal_disposition is not None
+    if terminal_disposition["disposition"] == "clarification_required":
+        return _clarification_required_result(
+            state,
+            work,
+            decision,
+            projection_qualification,
+            terminal_disposition,
+        )
+    history = state.get("gap_resolution_history", [])
+    current_resolution = state.get("gap_resolution")
+    if not isinstance(history, list):
+        return _blocked(
+            "clarification continuation unavailable",
+            "gap resolution history must remain an ordered list",
+        )
+    sequence = len(entries) + 1
+    completed = _ledger_entry(
+        sequence,
+        "clarification_continuation_completed",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "decision": decision,
+            "projection_sha256": parent["sha256"],
+            "projection_qualification": projection_qualification,
+            "terminal_disposition": terminal_disposition,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [completed])
+    if isinstance(current_resolution, dict):
+        archived = json.loads(json.dumps(current_resolution))
+        archived["terminal_phase"] = state.get("phase")
+        archived["output_projection"] = state.get("current_projection")
+        state["gap_resolution_history"] = [*history, archived]
+        state.pop("gap_resolution", None)
+    state.update({
+        "status": "ready_for_projection_assessment",
+        "phase": "clarification_continuation_complete",
+        "waiting_for": None,
+        "question": None,
+        "clarification_completion": {
+            "ledger_sequence": sequence,
+            "decision": decision,
+            "projection_sha256": parent["sha256"],
+            "projection_qualification": projection_qualification,
+            "terminal_disposition": terminal_disposition,
+        },
+        "ledger_entries": sequence,
+        "ledger_tail_sha256": completed["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _clarification_completion_result(state, work)
 
 
 def _follow_up_gap_bindings(
@@ -2149,38 +3063,41 @@ def _follow_up_gap_bindings(
     Path | None,
     str | None,
     dict[str, object] | None,
+    dict[str, object] | None,
 ]:
-    bindings, binding_error = _gap_answer_assessment_bindings(work, state)
+    round_number, bindings, saved_assessment, binding_error = (
+        _latest_assessed_round(work, state)
+    )
     if binding_error:
-        return None, None, None, binding_error
-    assert bindings is not None
-    saved_assessment = state.get("gap_answer_assessment")
+        return None, None, None, None, binding_error
+    assert round_number is not None and bindings is not None
+    assert saved_assessment is not None
     assessments = (
         saved_assessment.get("assessments")
         if isinstance(saved_assessment, dict)
         else None
     )
     if not isinstance(assessments, list) or len(assessments) != len(bindings):
-        return None, None, None, _blocked(
+        return None, None, None, None, _blocked(
             "follow-up gap clarification unavailable",
             "the preserved assessment set is incomplete",
         )
-    used = _used_assessment_positions(state)
+    used = _used_assessment_identities(state)
     unused_resolving = [
         item.get("position")
         for item in assessments
         if isinstance(item, dict)
         and item.get("verdict") == "resolves_gap"
-        and item.get("position") not in used
+        and (round_number, item.get("position")) not in used
     ]
     if unused_resolving:
-        return None, None, None, _blocked(
+        return None, None, None, None, _blocked(
             "follow-up gap clarification unavailable",
             "apply every already-resolving assessment before asking follow-up questions",
         )
     parent = state.get("current_projection", state.get("first_projection"))
     if not isinstance(parent, dict):
-        return None, None, None, _blocked(
+        return None, None, None, None, _blocked(
             "follow-up gap clarification unavailable",
             "the current projection record is missing",
         )
@@ -2188,13 +3105,13 @@ def _follow_up_gap_bindings(
         _validated_projection_record(work, parent)
     )
     if projection_error:
-        return None, None, None, projection_error
+        return None, None, None, None, projection_error
     assert projection_path is not None and projection_sha256 is not None
     try:
         projection = json.loads(projection_path.read_text(encoding="utf-8"))
         current_gaps = gap_clarification.select_gaps(projection, projection_sha256)
     except (OSError, json.JSONDecodeError, gap_clarification.ClarificationError) as error:
-        return None, None, None, _blocked(
+        return None, None, None, None, _blocked(
             "follow-up gap clarification unavailable", str(error)
         )
     current_by_identity = {
@@ -2209,7 +3126,7 @@ def _follow_up_gap_bindings(
             continue
         original_gap = binding.get("gap")
         if not isinstance(original_gap, dict):
-            return None, None, None, _blocked(
+            return None, None, None, None, _blocked(
                 "follow-up gap clarification unavailable",
                 "a non-resolving assessment lost its bound gap",
             )
@@ -2218,13 +3135,13 @@ def _follow_up_gap_bindings(
         if current_gap is None:
             continue
         if current_gap.get("record_sha256") != original_gap.get("record_sha256"):
-            return None, None, None, _blocked(
+            return None, None, None, None, _blocked(
                 "follow-up gap clarification unavailable",
                 f"gap {original_gap.get('id')} changed after its failed clarification",
             )
         follow_up = json.loads(json.dumps(current_gap))
         follow_up["follow_up_of"] = {
-            "question_round": 1,
+            "question_round": round_number,
             "assessment_position": assessment.get("position"),
             "question": binding.get("question"),
             "answer": binding.get("answer"),
@@ -2238,30 +3155,83 @@ def _follow_up_gap_bindings(
         }
         follow_ups.append(follow_up)
     if not follow_ups:
-        return None, None, None, _blocked(
+        return None, None, None, None, _blocked(
             "follow-up gap clarification unavailable",
             "no still-current gap has a non-resolving preserved answer",
         )
-    return follow_ups, projection_path, projection_sha256, None
+    context = {
+        "assessment_round": round_number,
+        "assessment_result_sha256": saved_assessment["result_sha256"],
+    }
+    return follow_ups, projection_path, projection_sha256, context, None
 
 
 def _request_follow_up_gap_question_round(
     work: Path,
     state: dict[str, object],
     entries: list[dict[str, object]],
+    *,
+    expected_continuation: dict[str, object] | None = None,
 ) -> dict[str, object]:
-    if isinstance(state.get("follow_up_gap_question_round"), dict):
-        return _blocked(
-            "follow-up gap clarification unavailable",
-            "the follow-up question round is already recorded or in progress",
-        )
-    gaps, projection_path, projection_sha256, binding_error = (
+    gaps, projection_path, projection_sha256, context, binding_error = (
         _follow_up_gap_bindings(work, state)
     )
     if binding_error:
         return binding_error
-    assert gaps is not None and projection_path is not None and projection_sha256 is not None
-    round_number = 2
+    assert gaps is not None and projection_path is not None
+    assert projection_sha256 is not None and context is not None
+    assessment_round = context["assessment_round"]
+    prior_assessment_sha256 = context["assessment_result_sha256"]
+    assert isinstance(assessment_round, int)
+    assert isinstance(prior_assessment_sha256, str)
+    round_number = assessment_round + 1
+    actual_continuation = {
+        "decision": "prepare_next_round",
+        "assessment_round": assessment_round,
+        "next_round": round_number,
+        "gaps": [
+            {
+                key: gap[key]
+                for key in (
+                    "projection_sha256",
+                    "collection",
+                    "kind",
+                    "id",
+                    "record_sha256",
+                )
+            }
+            for gap in gaps
+        ],
+    }
+    if (
+        expected_continuation is not None
+        and expected_continuation != actual_continuation
+    ):
+        return _blocked(
+            "stale clarification continuation",
+            "the prepare-next-round decision changed before execution",
+        )
+    prepared_history = state.get("prepared_question_round_history", [])
+    if not isinstance(prepared_history, list) or not all(
+        isinstance(item, dict) for item in prepared_history
+    ):
+        return _blocked(
+            "follow-up gap clarification unavailable",
+            "the prepared question round history must remain an ordered list",
+        )
+    archived_prepared: dict[str, object] | None = None
+    archived_interview: dict[str, object] | None = None
+    if assessment_round >= 2:
+        archived_prepared, archived_interview, snapshot_error = (
+            _prepared_round_snapshot(state, assessment_round)
+        )
+        if snapshot_error:
+            return snapshot_error
+        if any(item.get("round") == assessment_round for item in prepared_history):
+            return _blocked(
+                "follow-up gap clarification unavailable",
+                f"prepared round {assessment_round} is already archived",
+            )
     relative_dir = f"gap-question-rounds/round-{round_number:06d}"
     round_dir = work / relative_dir
     if round_dir.exists():
@@ -2295,7 +3265,8 @@ def _request_follow_up_gap_question_round(
             "projection_sha256": projection_sha256,
             "gap_count": len(gaps),
             "gaps": gaps,
-            "prior_assessment_sha256": state["gap_answer_assessment"]["result_sha256"],
+            "prior_assessment_round": assessment_round,
+            "prior_assessment_sha256": prior_assessment_sha256,
             "interview_path": f"{relative_dir}/interview.jsonl",
             "result_path": f"{relative_dir}/clarification-round.json",
         },
@@ -2305,6 +3276,16 @@ def _request_follow_up_gap_question_round(
     if archived_resolution is not None:
         state["gap_resolution_history"] = [*history, archived_resolution]
         state.pop("gap_resolution", None)
+    if archived_prepared is not None and archived_interview is not None:
+        state["prepared_question_round_history"] = [
+            *prepared_history,
+            {
+                "round": assessment_round,
+                "question_round": json.loads(json.dumps(archived_prepared)),
+                "interview": json.loads(json.dumps(archived_interview)),
+            },
+        ]
+        state.pop("prepared_question_round_interview", None)
     state.update({
         "status": "waiting_for_model",
         "phase": "formulating_follow_up_gap_question_round",
@@ -2318,7 +3299,8 @@ def _request_follow_up_gap_question_round(
             "projection_sha256": projection_sha256,
             "gap_count": len(gaps),
             "gaps": gaps,
-            "prior_assessment_sha256": state["gap_answer_assessment"]["result_sha256"],
+            "prior_assessment_round": assessment_round,
+            "prior_assessment_sha256": prior_assessment_sha256,
         },
         "ledger_entries": request_sequence,
         "ledger_tail_sha256": request["entry_sha256"],
@@ -2364,24 +3346,40 @@ def _consume_follow_up_gap_question_round(
     saved = state.get("follow_up_gap_question_round")
     if not isinstance(saved, dict):
         return _blocked("invalid intake state", "the follow-up question round is missing")
-    gaps, projection_path, projection_sha256, binding_error = (
+    gaps, projection_path, projection_sha256, context, binding_error = (
         _follow_up_gap_bindings(work, state)
     )
     if binding_error:
         return binding_error
-    assert gaps is not None and projection_path is not None and projection_sha256 is not None
+    assert gaps is not None and projection_path is not None
+    assert projection_sha256 is not None and context is not None
+    round_number = saved.get("round")
+    assessment_round = context.get("assessment_round")
+    prior_assessment_sha256 = context.get("assessment_result_sha256")
+    if (
+        not isinstance(round_number, int)
+        or round_number < 2
+        or not isinstance(assessment_round, int)
+        or round_number != assessment_round + 1
+        or not isinstance(prior_assessment_sha256, str)
+    ):
+        return _blocked(
+            "invalid intake state", "the follow-up round predecessor changed"
+        )
+    relative_dir = f"gap-question-rounds/round-{round_number:06d}"
     request_sequence = saved.get("request_ledger_sequence")
     request_index = request_sequence - 1 if isinstance(request_sequence, int) else -1
     expected_request = {
-        "round": 2,
+        "round": round_number,
         "contract": gap_clarification.ROUND_CONTRACT,
         "projection_path": str(projection_path.relative_to(work)),
         "projection_sha256": projection_sha256,
         "gap_count": len(gaps),
         "gaps": gaps,
-        "prior_assessment_sha256": state["gap_answer_assessment"]["result_sha256"],
-        "interview_path": "gap-question-rounds/round-000002/interview.jsonl",
-        "result_path": "gap-question-rounds/round-000002/clarification-round.json",
+        "prior_assessment_round": assessment_round,
+        "prior_assessment_sha256": prior_assessment_sha256,
+        "interview_path": f"{relative_dir}/interview.jsonl",
+        "result_path": f"{relative_dir}/clarification-round.json",
     }
     if (
         request_index < 0
@@ -2395,7 +3393,7 @@ def _consume_follow_up_gap_question_round(
         }.items())
     ):
         return _blocked("invalid ledger", "the follow-up question request changed")
-    round_dir = work / "gap-question-rounds" / "round-000002"
+    round_dir = work / relative_dir
     try:
         result, journal_sha256, result_sha256 = gap_clarification.validate_round(
             round_dir,
@@ -2403,14 +3401,16 @@ def _consume_follow_up_gap_question_round(
             projection_sha256=projection_sha256,
             purpose=purpose,
             gaps=gaps,
-            round_number=2,
+            round_number=round_number,
         )
         journal_entries = gap_clarification._read_journal(
             round_dir / "interview.jsonl"
         )
     except gap_clarification.ClarificationError as error:
         return _blocked("invalid follow-up gap question round", str(error))
-    shape_error = _validate_follow_up_question_round_shape(result, gaps, 2)
+    shape_error = _validate_follow_up_question_round_shape(
+        result, gaps, round_number
+    )
     if shape_error:
         return _blocked("invalid follow-up gap question round", shape_error)
     timestamp = datetime.now(timezone.utc).isoformat()
@@ -2421,10 +3421,10 @@ def _consume_follow_up_gap_question_round(
         {
             "recorded_at": timestamp,
             "intake_id": state["intake_id"],
-            "round": 2,
-            "interview_path": "gap-question-rounds/round-000002/interview.jsonl",
+            "round": round_number,
+            "interview_path": f"{relative_dir}/interview.jsonl",
             "interview_sha256": journal_sha256,
-            "result_path": "gap-question-rounds/round-000002/clarification-round.json",
+            "result_path": f"{relative_dir}/clarification-round.json",
             "result_sha256": result_sha256,
             "question_count": len(result["questions"]),
             "interview_question_count": sum(
@@ -2449,7 +3449,7 @@ def _consume_follow_up_gap_question_round(
         {
             "recorded_at": timestamp,
             "intake_id": state["intake_id"],
-            "round": 2,
+            "round": round_number,
             "question_count": len(result["questions"]),
             "questions": result["questions"],
         },
@@ -2492,6 +3492,7 @@ def _validate_follow_up_gap_question_round(
     projection_value = saved.get("projection_path")
     projection_sha256 = saved.get("projection_sha256")
     gaps = saved.get("gaps")
+    prior_assessment_round = saved.get("prior_assessment_round", round_number - 1)
     prior_assessment_sha256 = saved.get("prior_assessment_sha256")
     if (
         not isinstance(round_number, int)
@@ -2500,6 +3501,8 @@ def _validate_follow_up_gap_question_round(
         or not isinstance(projection_sha256, str)
         or not isinstance(gaps, list)
         or not gaps
+        or not isinstance(prior_assessment_round, int)
+        or prior_assessment_round != round_number - 1
         or not isinstance(prior_assessment_sha256, str)
     ):
         return _blocked(
@@ -2532,6 +3535,8 @@ def _validate_follow_up_gap_question_round(
         "interview_path": f"{round_dir_value}/interview.jsonl",
         "result_path": f"{round_dir_value}/clarification-round.json",
     }
+    if "prior_assessment_round" in saved:
+        expected_request["prior_assessment_round"] = prior_assessment_round
     if (
         request_index < 0
         or request_index + 2 >= len(entries)
@@ -2735,6 +3740,7 @@ def _validate_prepared_question_round_interview(
     purpose: str,
     *,
     allow_later_phase: bool = False,
+    allow_archived: bool = False,
 ) -> dict[str, object] | None:
     round_error = _validate_follow_up_gap_question_round(
         work, state, entries, purpose, allow_interview=True
@@ -2766,12 +3772,40 @@ def _validate_prepared_question_round_interview(
         return _blocked(
             "invalid intake state", "the prepared-round interview identity changed"
         )
-    current_projection = state.get("current_projection", state.get("first_projection"))
+    original_projection_id = interview.get("original_projection_id")
+    original_source_id = interview.get("original_source_id")
+    projection_sha256 = saved.get("projection_sha256")
+    projection_path = saved.get("projection_path")
+    matching_projections: dict[str, dict[str, object]] = {}
+
+    def collect_projection(value: object) -> None:
+        if isinstance(value, dict):
+            if (
+                value.get("id") == original_projection_id
+                and value.get("source_id") == original_source_id
+                and value.get("sha256") == projection_sha256
+                and value.get("path") == projection_path
+            ):
+                identity = json.dumps(value, sort_keys=True, separators=(",", ":"))
+                matching_projections[identity] = value
+            for nested in value.values():
+                collect_projection(nested)
+        elif isinstance(value, list):
+            for nested in value:
+                collect_projection(nested)
+
+    collect_projection({
+        "first_projection": state.get("first_projection"),
+        "current_projection": state.get("current_projection"),
+        "gap_resolution_history": state.get("gap_resolution_history"),
+        "gap_resolution": state.get("gap_resolution"),
+    })
     if (
-        not isinstance(current_projection, dict)
-        or interview.get("original_source_id") != current_projection.get("source_id")
-        or interview.get("original_projection_id") != current_projection.get("id")
-        or current_projection.get("sha256") != saved.get("projection_sha256")
+        not isinstance(original_projection_id, str)
+        or not isinstance(original_source_id, str)
+        or not isinstance(projection_sha256, str)
+        or not isinstance(projection_path, str)
+        or len(matching_projections) != 1
     ):
         return _blocked(
             "invalid intake state", "the prepared-round source lineage changed"
@@ -2894,6 +3928,13 @@ def _validate_prepared_question_round_interview(
             return _blocked(
                 "invalid ledger", "the prepared question round completion changed"
             )
+    if allow_archived:
+        if len(answers) != len(questions):
+            return _blocked(
+                "invalid intake state",
+                "an archived prepared-round interview is incomplete",
+            )
+        return None
     if len(answers) < len(questions):
         active = questions[len(answers)]
         expected_state = (
@@ -2913,6 +3954,15 @@ def _validate_prepared_question_round_interview(
         }
         if allow_later_phase:
             paths = _answer_assessment_paths(round_number)
+            active_resolution = state.get("gap_resolution")
+            active_attempt = (
+                active_resolution.get("attempt")
+                if isinstance(active_resolution, dict)
+                else 1
+            )
+            active_paths = _resolution_paths(
+                active_attempt if isinstance(active_attempt, int) else 1
+            )
             expected_states.update({
                 (
                     "waiting_for_model",
@@ -2923,6 +3973,36 @@ def _validate_prepared_question_round_interview(
                 (
                     "ready_for_projection_assessment",
                     "prepared_question_round_assessment_recorded",
+                    None,
+                    None,
+                ),
+                (
+                    "waiting_for_model",
+                    "resolving_gap_answer",
+                    active_paths["interview_path"],
+                    None,
+                ),
+                (
+                    "waiting_for_model",
+                    "verifying_gap_resolution",
+                    active_paths["verification_interview_path"],
+                    None,
+                ),
+                (
+                    "ready_for_projection_assessment",
+                    "gap_resolution_applied",
+                    None,
+                    None,
+                ),
+                (
+                    "ready_for_projection_assessment",
+                    "gap_resolution_rejected",
+                    None,
+                    None,
+                ),
+                (
+                    "ready_for_projection_assessment",
+                    "clarification_continuation_complete",
                     None,
                     None,
                 ),
@@ -3187,6 +4267,17 @@ def _validate_gap_question_answer_records(
             active_paths = _resolution_paths(
                 active_attempt if isinstance(active_attempt, int) else 1
             )
+            active_prepared = state.get("follow_up_gap_question_round")
+            active_prepared_round = (
+                active_prepared.get("round")
+                if isinstance(active_prepared, dict)
+                else 2
+            )
+            active_prepared_path = (
+                f"gap-question-rounds/round-{active_prepared_round:06d}/interview.jsonl"
+                if isinstance(active_prepared_round, int)
+                else state.get("waiting_for")
+            )
             expected_states.update({
                 (
                     "waiting_for_model",
@@ -3221,7 +4312,7 @@ def _validate_gap_question_answer_records(
                 (
                     "waiting_for_model",
                     "formulating_follow_up_gap_question_round",
-                    "gap-question-rounds/round-000002/interview.jsonl",
+                    active_prepared_path,
                 ),
                 (
                     "ready_for_operator_interview",
@@ -3246,6 +4337,11 @@ def _validate_gap_question_answer_records(
                 (
                     "ready_for_projection_assessment",
                     "prepared_question_round_assessment_recorded",
+                    None,
+                ),
+                (
+                    "ready_for_projection_assessment",
+                    "clarification_continuation_complete",
                     None,
                 ),
             })
@@ -3828,6 +4924,17 @@ def _validate_gap_answer_assessment(
         active_paths = _resolution_paths(
             active_attempt if isinstance(active_attempt, int) else 1
         )
+        active_prepared = state.get("follow_up_gap_question_round")
+        active_prepared_round = (
+            active_prepared.get("round")
+            if isinstance(active_prepared, dict)
+            else 2
+        )
+        active_prepared_path = (
+            f"gap-question-rounds/round-{active_prepared_round:06d}/interview.jsonl"
+            if isinstance(active_prepared_round, int)
+            else state.get("waiting_for")
+        )
         expected_states.update({
             (
                 "waiting_for_model",
@@ -3842,9 +4949,14 @@ def _validate_gap_answer_assessment(
             ("ready_for_projection_assessment", "gap_resolution_applied", None),
             ("ready_for_projection_assessment", "gap_resolution_rejected", None),
             (
+                "ready_for_projection_assessment",
+                "clarification_continuation_complete",
+                None,
+            ),
+            (
                 "waiting_for_model",
                 "formulating_follow_up_gap_question_round",
-                "gap-question-rounds/round-000002/interview.jsonl",
+                active_prepared_path,
             ),
             (
                 "ready_for_operator_interview",
@@ -3962,7 +5074,7 @@ def _prepared_question_round_assessment_ready_result(
 ) -> dict[str, object]:
     record, record_error = _prepared_question_round_assessment_record(state)
     assert record_error is None and record is not None
-    return {
+    result = {
         "status": "ready_for_projection_assessment",
         "stopped": "prepared_question_round_assessment_recorded",
         "intake_id": state["intake_id"],
@@ -3973,6 +5085,7 @@ def _prepared_question_round_assessment_ready_result(
         "work": str(work.resolve()),
         "ledger": str((work / "ledger.jsonl").resolve()),
     }
+    return _with_clarification_continuation(work, state, result)
 
 
 def _request_prepared_question_round_assessment(
@@ -4222,6 +5335,9 @@ def _validate_prepared_question_round_assessment(
     state: dict[str, object],
     entries: list[dict[str, object]],
     purpose: str,
+    *,
+    allow_later_phase: bool = False,
+    allow_archived: bool = False,
 ) -> dict[str, object] | None:
     bindings, saved, request_error = (
         _validate_prepared_question_round_assessment_request(work, state, entries)
@@ -4265,9 +5381,44 @@ def _validate_prepared_question_round_assessment(
         "assessments": result["assessments"],
     }
     completed_index = request_sequence
+    active_resolution = state.get("gap_resolution")
+    active_attempt = (
+        active_resolution.get("attempt")
+        if isinstance(active_resolution, dict)
+        else 1
+    )
+    active_paths = _resolution_paths(
+        active_attempt if isinstance(active_attempt, int) else 1
+    )
+    expected_states = {
+        (
+            "ready_for_projection_assessment",
+            "prepared_question_round_assessment_recorded",
+            None,
+        )
+    }
+    if allow_later_phase:
+        expected_states.update({
+            (
+                "waiting_for_model",
+                "resolving_gap_answer",
+                active_paths["interview_path"],
+            ),
+            (
+                "waiting_for_model",
+                "verifying_gap_resolution",
+                active_paths["verification_interview_path"],
+            ),
+            ("ready_for_projection_assessment", "gap_resolution_applied", None),
+            ("ready_for_projection_assessment", "gap_resolution_rejected", None),
+            (
+                "ready_for_projection_assessment",
+                "clarification_continuation_complete",
+                None,
+            ),
+        })
     if (
         shape_error
-        or len(entries) != request_sequence + 1
         or completed_index >= len(entries)
         or entries[completed_index].get("event")
         != "model_gap_answer_assessment_completed"
@@ -4284,17 +5435,86 @@ def _validate_prepared_question_round_assessment(
                 "assessments": result["assessments"],
             }.items()
         )
-        or state.get("status") != "ready_for_projection_assessment"
-        or state.get("phase") != "prepared_question_round_assessment_recorded"
-        or state.get("waiting_for") is not None
-        or state.get("question") is not None
-        or state.get("ledger_entries") != len(entries)
-        or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+        or (
+            not allow_archived
+            and (
+            state.get("status"), state.get("phase"), state.get("waiting_for")
+            ) not in expected_states
+        )
+        or (not allow_archived and state.get("question") is not None)
+        or (
+            not allow_archived
+            and
+            not allow_later_phase
+            and (
+                len(entries) != request_sequence + 1
+                or state.get("ledger_entries") != len(entries)
+                or state.get("ledger_tail_sha256")
+                != entries[-1].get("entry_sha256")
+            )
+        )
     ):
         return _blocked(
             "invalid ledger",
             shape_error or "the preserved prepared-round assessment changed",
         )
+    return None
+
+
+def _validate_prepared_question_round_history(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    history = state.get("prepared_question_round_history", [])
+    if not isinstance(history, list) or not all(
+        isinstance(item, dict) for item in history
+    ):
+        return _blocked(
+            "invalid intake state",
+            "the prepared question round history must remain an ordered list",
+        )
+    for item in history:
+        round_number = item.get("round")
+        if not isinstance(round_number, int):
+            return _blocked(
+                "invalid intake state", "an archived prepared round lost its identity"
+            )
+        prepared, interview, snapshot_error = _prepared_round_snapshot(
+            state, round_number
+        )
+        if snapshot_error:
+            return snapshot_error
+        assert prepared is not None and interview is not None
+        shadow = dict(state)
+        shadow["follow_up_gap_question_round"] = prepared
+        shadow["prepared_question_round_interview"] = interview
+        round_error = _validate_follow_up_gap_question_round(
+            work, shadow, entries, purpose, allow_interview=True
+        )
+        if round_error:
+            return round_error
+        interview_error = _validate_prepared_question_round_interview(
+            work,
+            shadow,
+            entries,
+            purpose,
+            allow_later_phase=True,
+            allow_archived=True,
+        )
+        if interview_error:
+            return interview_error
+        assessment_error = _validate_prepared_question_round_assessment(
+            work,
+            shadow,
+            entries,
+            purpose,
+            allow_later_phase=True,
+            allow_archived=True,
+        )
+        if assessment_error:
+            return assessment_error
     return None
 
 
@@ -4684,9 +5904,54 @@ def _validated_projection_record(
     return path, expected_sha256, None
 
 
+def _assessment_round_data(
+    work: Path,
+    state: dict[str, object],
+    round_number: int,
+) -> tuple[
+    list[dict[str, object]] | None,
+    dict[str, object] | None,
+    dict[str, object] | None,
+]:
+    if round_number == 1:
+        bindings, binding_error = _gap_answer_assessment_bindings(work, state)
+        saved = state.get("gap_answer_assessment")
+        if binding_error:
+            return None, None, binding_error
+        if not isinstance(saved, dict):
+            return None, None, _blocked(
+                "gap resolution unavailable",
+                "round 1 assessed answer outcomes are missing",
+            )
+        return bindings, saved, None
+    records = state.get("prepared_question_round_assessments", [])
+    if not isinstance(records, list) or not all(
+        isinstance(item, dict) for item in records
+    ):
+        return None, None, _blocked(
+            "gap resolution unavailable",
+            "later-round assessment history must be an ordered list",
+        )
+    matching = [item for item in records if item.get("round") == round_number]
+    if len(matching) != 1:
+        return None, None, _blocked(
+            "gap resolution unavailable",
+            f"round {round_number} must have exactly one preserved assessment",
+        )
+    bindings, binding_error = (
+        _prepared_question_round_assessment_bindings_for_round(
+            work, state, round_number
+        )
+    )
+    if binding_error:
+        return None, None, binding_error
+    return bindings, matching[0], None
+
+
 def _assessed_binding_at_position(
     work: Path,
     state: dict[str, object],
+    round_number: int,
     position: int,
     parent: dict[str, object],
 ) -> tuple[
@@ -4694,12 +5959,13 @@ def _assessed_binding_at_position(
     dict[str, object] | None,
     dict[str, object] | None,
 ]:
-    bindings, binding_error = _gap_answer_assessment_bindings(work, state)
+    bindings, saved, binding_error = _assessment_round_data(
+        work, state, round_number
+    )
     if binding_error:
         return None, None, binding_error
-    assert bindings is not None
-    saved = state.get("gap_answer_assessment")
-    assessments = saved.get("assessments") if isinstance(saved, dict) else None
+    assert bindings is not None and saved is not None
+    assessments = saved.get("assessments")
     if not isinstance(assessments, list):
         return None, None, _blocked(
             "gap resolution unavailable", "the assessed answer outcomes are missing"
@@ -4712,7 +5978,7 @@ def _assessed_binding_at_position(
     if not 1 <= position <= len(bindings):
         return None, None, _blocked(
             "gap resolution unavailable",
-            f"assessment position {position} is outside 1..{len(bindings)}",
+            f"round {round_number} assessment position {position} is outside 1..{len(bindings)}",
         )
     assessment = assessments[position - 1]
     binding = bindings[position - 1]
@@ -4740,7 +6006,7 @@ def _assessed_binding_at_position(
     ):
         return None, None, _blocked(
             "gap resolution unavailable",
-            f"assessment position {position} is not a resolving relationship gap with either an identity ambiguity or exactly one missing endpoint",
+            f"round {round_number} assessment position {position} is not a resolving relationship gap with either an identity ambiguity or exactly one missing endpoint",
         )
     projection_path, projection_sha256, projection_error = (
         _validated_projection_record(work, parent)
@@ -4793,12 +6059,13 @@ def _next_resolving_assessed_binding(
 ) -> tuple[
     dict[str, object] | None,
     dict[str, object] | None,
+    int | None,
     dict[str, object] | None,
 ]:
-    used: set[int] = set()
+    used: set[tuple[int, int]] = set()
     history = state.get("gap_resolution_history", [])
     if not isinstance(history, list) or not all(isinstance(item, dict) for item in history):
-        return None, None, _blocked(
+        return None, None, None, _blocked(
             "gap resolution unavailable", "gap resolution history must be a list of records"
         )
     candidates = list(history)
@@ -4808,20 +6075,48 @@ def _next_resolving_assessed_binding(
     for item in candidates:
         position = item.get("selected_assessment_position")
         if isinstance(position, int):
-            used.add(position)
+            selected_round = item.get("selected_assessment_round", 1)
+            if isinstance(selected_round, int):
+                used.add((selected_round, position))
+    round_numbers: list[int] = []
     saved = state.get("gap_answer_assessment")
-    assessments = saved.get("assessments") if isinstance(saved, dict) else None
-    if not isinstance(assessments, list):
-        return None, None, _blocked(
-            "gap resolution unavailable", "the assessed answer outcomes are missing"
+    if isinstance(saved, dict) and isinstance(saved.get("assessments"), list):
+        round_numbers.append(1)
+    records = state.get("prepared_question_round_assessments", [])
+    if isinstance(records, list):
+        round_numbers.extend(
+            item["round"]
+            for item in records
+            if isinstance(item, dict)
+            and isinstance(item.get("round"), int)
+            and item["round"] >= 2
         )
-    for assessment in assessments:
-        if not isinstance(assessment, dict) or assessment.get("verdict") != "resolves_gap":
-            continue
-        position = assessment.get("position")
-        if isinstance(position, int) and position not in used:
-            return _assessed_binding_at_position(work, state, position, parent)
-    return None, None, _blocked(
+    for round_number in sorted(set(round_numbers)):
+        _, round_record, round_error = _assessment_round_data(
+            work, state, round_number
+        )
+        if round_error:
+            return None, None, None, round_error
+        assert round_record is not None
+        assessments = round_record.get("assessments")
+        if not isinstance(assessments, list):
+            return None, None, None, _blocked(
+                "gap resolution unavailable",
+                f"round {round_number} assessed answer outcomes are missing",
+            )
+        for assessment in assessments:
+            if (
+                not isinstance(assessment, dict)
+                or assessment.get("verdict") != "resolves_gap"
+            ):
+                continue
+            position = assessment.get("position")
+            if isinstance(position, int) and (round_number, position) not in used:
+                binding, selected, selection_error = _assessed_binding_at_position(
+                    work, state, round_number, position, parent
+                )
+                return binding, selected, round_number, selection_error
+    return None, None, None, _blocked(
         "gap resolution unavailable", "no unused assessed answer resolves an exact remaining gap"
     )
 
@@ -4834,15 +6129,22 @@ def _gap_resolution_inputs(
     saved_resolution = saved_resolution or state.get("gap_resolution")
     if isinstance(saved_resolution, dict) and saved_resolution.get("mode") == "assessed_answer":
         attempt = saved_resolution.get("attempt")
+        round_number = saved_resolution.get("selected_assessment_round", 1)
         position = saved_resolution.get("selected_assessment_position")
         parent = _resolution_parent_record(state, saved_resolution)
-        if not isinstance(attempt, int) or not isinstance(position, int) or not isinstance(parent, dict):
+        if (
+            not isinstance(attempt, int)
+            or not isinstance(round_number, int)
+            or round_number < 1
+            or not isinstance(position, int)
+            or not isinstance(parent, dict)
+        ):
             return None, _blocked(
                 "gap resolution unavailable", "the assessed answer resolution identity is incomplete"
             )
         paths = _resolution_paths(attempt)
         binding, assessment, selection_error = _assessed_binding_at_position(
-            work, state, position, parent
+            work, state, round_number, position, parent
         )
         if selection_error:
             return None, selection_error
@@ -4856,12 +6158,10 @@ def _gap_resolution_inputs(
                 "gap resolution unavailable",
                 f"clarification is unavailable or invalid: {paths['clarification_path']}",
             )
-        original_binding, _, original_error = _assessed_binding_at_position(
-            work, state, position, state["first_projection"]
-        )
-        if original_error:
-            return None, original_error
-        assert original_binding is not None
+        assessment_gap = json.loads(json.dumps(binding["gap"]))
+        assessment_gap["projection_sha256"] = assessment["gap"][
+            "projection_sha256"
+        ]
         expected_assessment_sha256 = _digest_bytes(
             json.dumps(assessment, sort_keys=True, separators=(",", ":")).encode()
         )
@@ -4879,6 +6179,8 @@ def _gap_resolution_inputs(
             "selected_assessment_position": position,
             "accepted_assessment_sha256": expected_assessment_sha256,
         }
+        if round_number != 1 or "selected_assessment_round" in saved_resolution:
+            expected["selected_assessment_round"] = round_number
         if any(saved_resolution.get(key) != value for key, value in expected.items()):
             return None, _blocked(
                 "gap resolution unavailable",
@@ -4891,7 +6193,7 @@ def _gap_resolution_inputs(
             or clarification.get("accepted_assessment") != assessment
             or (
                 "assessment_gap" in clarification
-                and clarification.get("assessment_gap") != original_binding["gap"]
+                and clarification.get("assessment_gap") != assessment_gap
             )
         ):
             return None, _blocked(
@@ -4969,13 +6271,18 @@ def _first_resolving_assessed_binding(
     shadow = dict(state)
     shadow["gap_resolution_history"] = []
     shadow.pop("gap_resolution", None)
-    return _next_resolving_assessed_binding(work, shadow, first)
+    binding, assessment, _, error = _next_resolving_assessed_binding(
+        work, shadow, first
+    )
+    return binding, assessment, error
 
 
 def _request_gap_resolution(
     work: Path,
     state: dict[str, object],
     entries: list[dict[str, object]],
+    *,
+    expected_continuation: dict[str, object] | None = None,
 ) -> dict[str, object]:
     prior_phase = state.get("phase")
     prior_projection = state.get("current_projection")
@@ -5006,6 +6313,7 @@ def _request_gap_resolution(
             "unbound gap resolution", "gap resolution artifacts already exist"
         )
     selected_position: int | None = None
+    selected_round: int | None = None
     accepted_assessment_sha256: str | None = None
     if mode == "assessed_answer":
         parent = state.get("current_projection", state.get("first_projection"))
@@ -5013,12 +6321,37 @@ def _request_gap_resolution(
             return _blocked(
                 "gap resolution unavailable", "the current projection record is missing"
             )
-        binding, assessment, selection_error = _next_resolving_assessed_binding(
+        binding, assessment, selected_round, selection_error = _next_resolving_assessed_binding(
             work, state, parent
         )
         if selection_error:
             return selection_error
         assert binding is not None and assessment is not None
+        selected_position = int(assessment["position"])
+        current_gap = binding["gap"]
+        actual_continuation = {
+            "decision": "apply_resolving_answer",
+            "assessment_round": selected_round,
+            "assessment_position": selected_position,
+            "gap": {
+                key: current_gap[key]
+                for key in (
+                    "projection_sha256",
+                    "collection",
+                    "kind",
+                    "id",
+                    "record_sha256",
+                )
+            },
+        }
+        if (
+            expected_continuation is not None
+            and expected_continuation != actual_continuation
+        ):
+            return _blocked(
+                "stale clarification continuation",
+                "the apply-resolving-answer decision changed before execution",
+            )
         assessment_gap = json.loads(json.dumps(binding["gap"]))
         assessment_gap["projection_sha256"] = assessment["gap"][
             "projection_sha256"
@@ -5039,7 +6372,6 @@ def _request_gap_resolution(
         source = binding["answer_source"]
         projection = binding["answer_projection"]
         assert isinstance(source, dict) and isinstance(projection, dict)
-        selected_position = int(assessment["position"])
         accepted_assessment_sha256 = _digest_bytes(
             json.dumps(assessment, sort_keys=True, separators=(",", ":")).encode()
         )
@@ -5077,6 +6409,7 @@ def _request_gap_resolution(
             "operator_answer_projection_sha256": inputs[
                 "answer_projection_sha256"
             ],
+            "selected_assessment_round": selected_round,
             "selected_assessment_position": selected_position,
             "accepted_assessment_sha256": accepted_assessment_sha256,
             "interview_path": paths["interview_path"],
@@ -5116,6 +6449,7 @@ def _request_gap_resolution(
             "operator_answer_projection_sha256": inputs[
                 "answer_projection_sha256"
             ],
+            "selected_assessment_round": selected_round,
             "selected_assessment_position": selected_position,
             "accepted_assessment_sha256": accepted_assessment_sha256,
             "parent_projection": (
@@ -5348,6 +6682,10 @@ def _build_resolved_projection(
         "resolution_result_sha256": resolution["result_sha256"],
         "independent_verification_sha256": verification["result_sha256"],
     }
+    if isinstance(resolution.get("selected_assessment_round"), int):
+        proposed["resolution_audit"]["accepted_assessment_round"] = resolution[
+            "selected_assessment_round"
+        ]
     replaced = False
     relationships: list[object] = []
     for relationship in original["relationships"]:
@@ -5373,6 +6711,10 @@ def _build_resolved_projection(
             "selected_assessment_position"
         ),
     }
+    if isinstance(resolution.get("selected_assessment_round"), int):
+        original["projection_lineage"]["accepted_assessment_round"] = resolution[
+            "selected_assessment_round"
+        ]
     content = json.dumps(original, indent=2, sort_keys=True).encode("utf-8") + b"\n"
     gap_count = sum(item["status"] == "gap" for item in original["elements"])
     gap_count += sum(
@@ -5648,6 +6990,8 @@ def _validate_gap_resolution_terminal(
         != saved.get("clarification_path")
         or entries[request_index].get("clarification_sha256")
         != saved.get("clarification_sha256")
+        or entries[request_index].get("selected_assessment_round")
+        != saved.get("selected_assessment_round")
         or entries[request_index].get("selected_assessment_position")
         != saved.get("selected_assessment_position")
         or entries[request_index].get("accepted_assessment_sha256")
@@ -5823,6 +7167,55 @@ def _validate_gap_resolution_history(
     return None
 
 
+def _validate_clarification_completion_predecessors(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    round_error = _validate_gap_question_round(
+        work, state, entries, purpose, allow_later_phase=True
+    )
+    if round_error:
+        return round_error
+    assessment_error = _validate_gap_answer_assessment(
+        work, state, entries, purpose, allow_later_phase=True
+    )
+    if assessment_error:
+        return assessment_error
+    records = state.get("prepared_question_round_assessments", [])
+    if not isinstance(records, list):
+        return _blocked(
+            "invalid clarification completion",
+            "the prepared-round assessment history is missing",
+        )
+    if records:
+        follow_up_error = _validate_follow_up_gap_question_round(
+            work, state, entries, purpose, allow_interview=True
+        )
+        if follow_up_error:
+            return follow_up_error
+        interview_error = _validate_prepared_question_round_interview(
+            work,
+            state,
+            entries,
+            purpose,
+            allow_later_phase=True,
+        )
+        if interview_error:
+            return interview_error
+        prepared_assessment_error = _validate_prepared_question_round_assessment(
+            work,
+            state,
+            entries,
+            purpose,
+            allow_later_phase=True,
+        )
+        if prepared_assessment_error:
+            return prepared_assessment_error
+    return _validate_gap_resolution_history(work, state, entries, purpose)
+
+
 def run_gap_clarification(
     work: Path,
     *,
@@ -5844,19 +7237,29 @@ def run_gap_clarification(
         return _blocked("gap clarification unavailable", json.dumps(current, sort_keys=True))
     try:
         if stopped == "formulating_follow_up_gap_question_round":
-            gaps, projection_path, projection_sha256, binding_error = (
+            gaps, projection_path, projection_sha256, context, binding_error = (
                 _follow_up_gap_bindings(work, state)
             )
             if binding_error:
                 return binding_error
-            assert gaps is not None and projection_path is not None and projection_sha256 is not None
+            assert gaps is not None and projection_path is not None
+            assert projection_sha256 is not None and context is not None
+            assessment_round = context.get("assessment_round")
+            if not isinstance(assessment_round, int):
+                return _blocked(
+                    "gap clarification unavailable",
+                    "the assessed predecessor round is missing",
+                )
+            round_number = assessment_round + 1
             gap_clarification.run_round(
-                work / "gap-question-rounds" / "round-000002",
+                work
+                / "gap-question-rounds"
+                / f"round-{round_number:06d}",
                 projection_path=projection_path,
                 projection_sha256=projection_sha256,
                 purpose=purpose,
                 gaps=gaps,
-                round_number=2,
+                round_number=round_number,
                 input_fn=input_fn,
                 output_fn=output_fn,
             )
@@ -5948,6 +7351,172 @@ def run_gap_answer_assessment(
     return drive(work, opening, purpose)
 
 
+def _clarification_boundary_result(
+    result: dict[str, object], boundary: str
+) -> dict[str, object]:
+    if boundary == "needs_model_interview":
+        work_items = result.get("work")
+        if (
+            result.get("status") != "waiting_for_model"
+            or result.get("stopped") not in {
+                "formulating_gap_question",
+                "formulating_gap_question_round",
+                "formulating_follow_up_gap_question_round",
+                "assessing_gap_answers",
+                "assessing_prepared_question_round_answers",
+                "resolving_gap_answer",
+                "verifying_gap_resolution",
+            }
+            or not isinstance(work_items, list)
+            or len(work_items) != 1
+            or not isinstance(work_items[0], dict)
+            or not isinstance(work_items[0].get("command"), list)
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the model boundary lost its single code-controlled interview command",
+            )
+    elif boundary == "needs_operator_answer":
+        if (
+            result.get("status") != "needs_operator"
+            or result.get("stopped") not in {
+                "awaiting_gap_answer",
+                "awaiting_gap_answers",
+                "awaiting_prepared_question_round_answer",
+            }
+            or not isinstance(result.get("question"), dict)
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the operator boundary lost its single current question",
+            )
+    elif boundary == "clarification_complete":
+        continuation = result.get("continuation")
+        qualification = result.get("projection_qualification")
+        disposition = result.get("terminal_disposition")
+        if (
+            result.get("stopped") != "clarification_continuation_complete"
+            or not isinstance(continuation, dict)
+            or continuation.get("decision") != "clarification_complete"
+            or not isinstance(qualification, dict)
+            or qualification.get("qualification") != "readable_projection_complete"
+            or not isinstance(disposition, dict)
+            or disposition.get("disposition") != "first_layer_complete"
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the terminal boundary lost its grounded decision or projection qualification",
+            )
+    elif boundary == "clarification_required":
+        continuation = result.get("continuation")
+        qualification = result.get("projection_qualification")
+        disposition = result.get("terminal_disposition")
+        gaps = result.get("gaps")
+        if (
+            result.get("status") != "ready_for_projection_assessment"
+            or result.get("stopped") != "clarification_required"
+            or not isinstance(continuation, dict)
+            or continuation.get("decision") != "clarification_complete"
+            or not isinstance(qualification, dict)
+            or qualification.get("qualification") != "readable_projection_incomplete"
+            or not isinstance(disposition, dict)
+            or disposition.get("disposition") != "clarification_required"
+            or gaps != qualification.get("remaining_gaps")
+            or gaps != disposition.get("remaining_gaps")
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the clarification-required boundary lost its exact remaining gaps",
+            )
+    else:
+        return _blocked(
+            "invalid clarification boundary", f"unsupported boundary {boundary!r}"
+        )
+    return {**result, "boundary": boundary}
+
+
+def run_clarification_boundary(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources" / "source-000001.txt").read_text(
+            encoding="utf-8"
+        )
+        purpose = (work / "sources" / "source-000002.txt").read_text(
+            encoding="utf-8"
+        )
+    except OSError as error:
+        return _blocked("clarification boundary unavailable", str(error))
+    for _ in range(8):
+        result = drive(work, opening, purpose)
+        if result.get("status") == "blocked":
+            return result
+        if result.get("status") == "waiting_for_model":
+            return _clarification_boundary_result(
+                result, "needs_model_interview"
+            )
+        if result.get("status") == "needs_operator":
+            return _clarification_boundary_result(
+                result, "needs_operator_answer"
+            )
+        stopped = result.get("stopped")
+        if stopped == "clarification_required":
+            return _clarification_boundary_result(
+                result, "clarification_required"
+            )
+        if stopped == "clarification_continuation_complete":
+            return _clarification_boundary_result(
+                result, "clarification_complete"
+            )
+        if stopped == "first_projection_recorded":
+            result = drive(work, opening, purpose, clarify_gap=True)
+        elif stopped == "follow_up_gap_question_round_recorded":
+            result = drive(
+                work, opening, purpose, conduct_question_round=True
+            )
+        elif stopped in {
+            "gap_question_round_answered",
+            "prepared_question_round_answered",
+        }:
+            result = drive(
+                work, opening, purpose, assess_gap_answers=True
+            )
+        elif stopped in {
+            "gap_answer_assessment_recorded",
+            "prepared_question_round_assessment_recorded",
+            "gap_resolution_applied",
+            "gap_resolution_rejected",
+        }:
+            result = drive(
+                work, opening, purpose, continue_clarification=True
+            )
+        else:
+            return _blocked(
+                "clarification boundary unavailable",
+                f"phase {stopped!r} is not a clarification-loop boundary",
+            )
+        if result.get("status") == "blocked":
+            return result
+        if result.get("status") == "waiting_for_model":
+            return _clarification_boundary_result(
+                result, "needs_model_interview"
+            )
+        if result.get("status") == "needs_operator":
+            return _clarification_boundary_result(
+                result, "needs_operator_answer"
+            )
+        if result.get("stopped") == "clarification_continuation_complete":
+            return _clarification_boundary_result(
+                result, "clarification_complete"
+            )
+        if result.get("stopped") == "clarification_required":
+            return _clarification_boundary_result(
+                result, "clarification_required"
+            )
+    return _blocked(
+        "clarification boundary unavailable",
+        "code-owned transitions did not reach an external boundary within 8 steps",
+    )
+
+
 def _resume(
     work: Path,
     opening_bytes: bytes,
@@ -5959,12 +7528,37 @@ def _resume(
     resolve_gap: bool,
     assess_gap_answers: bool,
     conduct_question_round: bool,
+    continue_clarification: bool,
 ) -> dict[str, object]:
     state, entries, error = _load_bound(work, opening_bytes)
     if error:
         return error
     assert state is not None
     phase = state.get("phase")
+    if continue_clarification and (
+        source is not None
+        or project_source
+        or clarify_gap
+        or gap_answer is not None
+        or resolve_gap
+        or assess_gap_answers
+        or conduct_question_round
+    ):
+        return _blocked(
+            "clarification continuation invocation invalid",
+            "execute one clarification continuation without another intake action",
+        )
+    if continue_clarification and phase not in {
+        "gap_answer_assessment_recorded",
+        "prepared_question_round_assessment_recorded",
+        "gap_resolution_applied",
+        "gap_resolution_rejected",
+        "clarification_continuation_complete",
+    }:
+        return _blocked(
+            "clarification continuation unavailable",
+            "continue only after an assessment, terminal admission, or prior clarification completion",
+        )
     if conduct_question_round and (
         source is not None
         or project_source
@@ -5984,6 +7578,7 @@ def _resume(
         "gap_answer_assessment_recorded", "gap_resolution_applied",
         "gap_resolution_rejected", "formulating_follow_up_gap_question_round",
         "follow_up_gap_question_round_recorded",
+        "prepared_question_round_assessment_recorded",
     }
     if clarify_gap and phase not in gap_input_phases:
         return _blocked(
@@ -6011,6 +7606,7 @@ def _resume(
     if resolve_gap and phase not in {
         "gap_operator_source_recorded", "gap_answer_assessment_recorded",
         "gap_resolution_applied", "gap_resolution_rejected",
+        "prepared_question_round_assessment_recorded",
     }:
         return _blocked(
             "gap resolution unavailable",
@@ -6089,6 +7685,7 @@ def _resume(
         "prepared_question_round_answered",
         "assessing_prepared_question_round_answers",
         "prepared_question_round_assessment_recorded",
+        "clarification_continuation_complete",
     } or assessed_resolution_phase:
         supported_ledger_length = len(entries) >= 14
     if phase not in {
@@ -6107,6 +7704,7 @@ def _resume(
         "prepared_question_round_answered",
         "assessing_prepared_question_round_answers",
         "prepared_question_round_assessment_recorded",
+        "clarification_continuation_complete",
     } or not supported_ledger_length:
         return _blocked("invalid intake state", "the saved purpose stage is unsupported")
     result_path = work / "purpose-interview" / "assessment.json"
@@ -6242,6 +7840,7 @@ def _resume(
         "prepared_question_round_answered",
         "assessing_prepared_question_round_answers",
         "prepared_question_round_assessment_recorded",
+        "clarification_continuation_complete",
     }
     recorded_error = _validate_recorded_projection(
         work,
@@ -6252,6 +7851,24 @@ def _resume(
     )
     if recorded_error:
         return recorded_error
+    prepared_history_error = _validate_prepared_question_round_history(
+        work, state, entries, purpose_bytes.decode("utf-8")
+    )
+    if prepared_history_error:
+        return prepared_history_error
+    if phase == "clarification_continuation_complete":
+        predecessor_error = _validate_clarification_completion_predecessors(
+            work,
+            state,
+            entries,
+            purpose_bytes.decode("utf-8"),
+        )
+        if predecessor_error:
+            return predecessor_error
+        completion_error = _validate_clarification_completion(work, state, entries)
+        if completion_error:
+            return completion_error
+        return _clarification_completion_result(state, work)
     if phase == "first_projection_recorded":
         if gap_answer is not None:
             return _blocked("gap answer not requested", "start a gap question round before answering it")
@@ -6313,6 +7930,8 @@ def _resume(
             )
             if assessment_error:
                 return assessment_error
+            if continue_clarification:
+                return _execute_clarification_continuation(work, state, entries)
             if clarify_gap:
                 return _request_follow_up_gap_question_round(work, state, entries)
             if resolve_gap:
@@ -6359,9 +7978,13 @@ def _resume(
         if history_error:
             return history_error
         if phase == "formulating_follow_up_gap_question_round":
-            result_path = (
-                work / "gap-question-rounds" / "round-000002" / "clarification-round.json"
-            )
+            prepared = state.get("follow_up_gap_question_round")
+            round_number = prepared.get("round") if isinstance(prepared, dict) else None
+            if not isinstance(round_number, int):
+                return _blocked(
+                    "invalid intake state", "the active follow-up round is missing"
+                )
+            result_path = work / "gap-question-rounds" / f"round-{round_number:06d}" / "clarification-round.json"
             if not result_path.exists():
                 return _follow_up_gap_question_round_model_result(state, work)
             return _consume_follow_up_gap_question_round(
@@ -6444,6 +8067,12 @@ def _resume(
         )
         if assessment_error:
             return assessment_error
+        if continue_clarification:
+            return _execute_clarification_continuation(work, state, entries)
+        if resolve_gap:
+            return _request_gap_resolution(work, state, entries)
+        if clarify_gap:
+            return _request_follow_up_gap_question_round(work, state, entries)
         return _prepared_question_round_assessment_ready_result(state, work)
     if assessed_resolution:
         round_error = _validate_gap_question_round(
@@ -6464,6 +8093,37 @@ def _resume(
         )
         if assessment_error:
             return assessment_error
+        selected_round = resolution_state.get("selected_assessment_round", 1)
+        if isinstance(selected_round, int) and selected_round >= 2:
+            follow_up_error = _validate_follow_up_gap_question_round(
+                work,
+                state,
+                entries,
+                purpose_bytes.decode("utf-8"),
+                allow_interview=True,
+            )
+            if follow_up_error:
+                return follow_up_error
+            interview_error = _validate_prepared_question_round_interview(
+                work,
+                state,
+                entries,
+                purpose_bytes.decode("utf-8"),
+                allow_later_phase=True,
+            )
+            if interview_error:
+                return interview_error
+            prepared_assessment_error = (
+                _validate_prepared_question_round_assessment(
+                    work,
+                    state,
+                    entries,
+                    purpose_bytes.decode("utf-8"),
+                    allow_later_phase=True,
+                )
+            )
+            if prepared_assessment_error:
+                return prepared_assessment_error
         history_error = _validate_gap_resolution_history(
             work, state, entries, purpose_bytes.decode("utf-8")
         )
@@ -6494,6 +8154,8 @@ def _resume(
         )
         if terminal_error:
             return terminal_error
+        if continue_clarification:
+            return _execute_clarification_continuation(work, state, entries)
         if clarify_gap:
             return _request_follow_up_gap_question_round(work, state, entries)
         if resolve_gap:
@@ -6565,6 +8227,7 @@ def drive(
     resolve_gap: bool = False,
     assess_gap_answers: bool = False,
     conduct_question_round: bool = False,
+    continue_clarification: bool = False,
 ) -> dict[str, object]:
     opening_bytes = opening.encode("utf-8")
     if not opening.strip():
@@ -6582,6 +8245,7 @@ def drive(
             resolve_gap,
             assess_gap_answers,
             conduct_question_round,
+            continue_clarification,
         )
     if (
         purpose is not None
@@ -6592,6 +8256,7 @@ def drive(
         or resolve_gap
         or assess_gap_answers
         or conduct_question_round
+        or continue_clarification
     ):
         return _blocked("intake not started", "start the intake before supplying its purpose or source")
     if work.exists() and not work.is_dir():
@@ -6700,6 +8365,16 @@ def main() -> int:
         help="present the next question from a prepared operator round",
     )
     parser.add_argument(
+        "--continue-clarification",
+        action="store_true",
+        help="execute exactly one code-selected clarification continuation",
+    )
+    parser.add_argument(
+        "--clarification-boundary",
+        action="store_true",
+        help="advance code-only clarification transitions to one external boundary",
+    )
+    parser.add_argument(
         "--run-gap-clarification",
         action="store_true",
         help="formulate the code-bound operator question round for current gaps",
@@ -6751,13 +8426,42 @@ def main() -> int:
             "interview invocation invalid",
             "conduct the prepared operator round separately from model interviews",
         )
-    elif interview_flags and (args.resolve_gap or args.assess_gap_answers):
+    elif interview_flags and (
+        args.resolve_gap
+        or args.assess_gap_answers
+        or args.continue_clarification
+    ):
         result = _blocked(
             "interview invocation invalid",
             "request or run one gap-resolution stage at a time",
         )
     elif interview_flags > 1:
         result = _blocked("interview invocation invalid", "run exactly one interview at a time")
+    elif args.clarification_boundary:
+        if (
+            interview_flags
+            or any(
+                value is not None
+                for value in (
+                    args.opening,
+                    args.purpose,
+                    args.source,
+                    args.gap_answer,
+                )
+            )
+            or args.project_source
+            or args.clarify_gap
+            or args.resolve_gap
+            or args.assess_gap_answers
+            or args.conduct_question_round
+            or args.continue_clarification
+        ):
+            result = _blocked(
+                "clarification boundary invocation invalid",
+                "run the clarification boundary controller with only --work and --clarification-boundary",
+            )
+        else:
+            result = run_clarification_boundary(args.work)
     elif args.run_purpose_interview:
         if (
             any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
@@ -6874,6 +8578,7 @@ def main() -> int:
             args.resolve_gap,
             args.assess_gap_answers,
             args.conduct_question_round,
+            args.continue_clarification,
         )
     print(json.dumps(result, indent=2, sort_keys=True))
     return {

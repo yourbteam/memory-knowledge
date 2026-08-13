@@ -742,6 +742,7 @@ def test_discovery_bootstrap_builds_zero_input_script_spec(operation_kind):
                 "result": "passed",
                 "note": "Stops on validation failure.",
             }],
+            "has_runtime_dependencies": False,
             "inputs": ["An approved repository checkout."],
             "failure_handling": "Stop and retain failure evidence.",
             "verified_path": "The script passes focused tests.",
@@ -764,6 +765,92 @@ def test_discovery_bootstrap_builds_zero_input_script_spec(operation_kind):
         "repository_key": "memory-knowledge",
         "path_or_sequence_id": "scripts/example.py",
     }]
+
+
+def test_discovery_bootstrap_preserves_non_step_runtime_dependencies():
+    prepared = sequence_intake_adapters.prepare(
+        "discovery-bootstrap",
+        {
+            "source_repository_key": "memory-knowledge",
+            "task_id": "discover-example",
+            "operation_kind": "workflow-drive",
+            "date": "2026-08-12",
+            "sequence_name": "Example sequence",
+            "outcome": "Complete the governed operation.",
+            "why_repeatable": "The same operation recurs.",
+            "steps": [{
+                "step": "run-example",
+                "repository_key": "memory-knowledge",
+                "script_path": "scripts/example.py",
+                "result": "passed",
+                "note": "Stops on validation failure.",
+            }],
+            "has_runtime_dependencies": True,
+            "runtime_dependencies": [
+                {"repository_key": "memory-knowledge", "path": "scripts/helper.py"},
+                {"repository_key": "memory-knowledge", "path": "scripts/example.py"},
+            ],
+            "inputs": ["An approved repository checkout."],
+            "failure_handling": "Stop and retain failure evidence.",
+            "verified_path": "The script passes focused tests.",
+            "repo_roots_file": None,
+        },
+        artifact_paths={"spec": "/private/tmp/bootstrap-spec.json"},
+        repository_roots={"memory-knowledge": "/repos/memory"},
+    )
+    spec = json.loads(prepared["artifacts"]["spec"]["content"])
+
+    assert spec["dependencies"] == [
+        {
+            "kind": "file",
+            "repository_key": "memory-knowledge",
+            "path_or_sequence_id": "scripts/example.py",
+        },
+        {
+            "kind": "file",
+            "repository_key": "memory-knowledge",
+            "path_or_sequence_id": "scripts/helper.py",
+        },
+    ]
+
+
+def test_discovery_bootstrap_rejects_runtime_dependency_parent_traversal():
+    answers = {
+        "source_repository_key": "memory-knowledge",
+        "task_id": "discover-example",
+        "operation_kind": "workflow-drive",
+        "date": "2026-08-12",
+        "sequence_name": "Example sequence",
+        "outcome": "Complete the governed operation.",
+        "why_repeatable": "The same operation recurs.",
+        "steps": [{
+            "step": "run-example",
+            "repository_key": "memory-knowledge",
+            "script_path": "scripts/example.py",
+            "result": "passed",
+            "note": "Stops on validation failure.",
+        }],
+        "has_runtime_dependencies": True,
+        "runtime_dependencies": [{
+            "repository_key": "memory-knowledge",
+            "path": "../outside.py",
+        }],
+        "inputs": ["An approved repository checkout."],
+        "failure_handling": "Stop and retain failure evidence.",
+        "verified_path": "The script passes focused tests.",
+        "repo_roots_file": None,
+    }
+
+    with pytest.raises(
+        sequence_intake_adapters.AdapterError,
+        match="invalid-bootstrap-runtime-dependency-path",
+    ):
+        sequence_intake_adapters.prepare(
+            "discovery-bootstrap",
+            answers,
+            artifact_paths={"spec": "/private/tmp/bootstrap-spec.json"},
+            repository_roots={"memory-knowledge": "/repos/memory"},
+        )
 
 
 def test_all_27_intake_specs_validate_with_complete_question_contracts():

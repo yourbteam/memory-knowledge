@@ -2925,6 +2925,7 @@ def test_direct_successor_selection_derives_task_identity_before_core_selection(
         lambda _events, run_id: {
             "task_id": "predecessor-task",
             "sequence_id": "workflow-resume-from-phase-live-confirmation",
+            "discovery_log": None,
             "verification_successor_of": run_id,
             "verifies_correction_ids": [str(uuid.uuid4())],
             "repository_roots": {
@@ -2955,6 +2956,61 @@ def test_direct_successor_selection_derives_task_identity_before_core_selection(
     assert result["task_id"] == "predecessor-task"
     assert result["requested_task_id"] == "wrong-new-task"
     assert result["task_identity_source"] == "predecessor-run"
+
+
+def test_direct_successor_selection_preserves_discovery_document(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    discovery = (
+        tmp_path / "operations/sequences/discovery/corrected-case.md"
+    )
+    discovery.parent.mkdir(parents=True)
+    discovery.write_text(
+        "# corrected case\n\nDiscoveryId: discovery-corrected-case\n"
+    )
+    events = corrected_successor_events()[:6]
+    predecessor = events[0]
+    predecessor.update({
+        "mode": "discovery",
+        "subject_id": "discovery-corrected-case",
+        "lineage_id": "discovery-corrected-case",
+        "task_id": "predecessor-task",
+        "repository_roots": {"memory-knowledge": str(tmp_path)},
+        "source_bundle": [{
+            "repository_key": "memory-knowledge",
+            "path": str(discovery.relative_to(tmp_path)),
+            "sha256": work_memory.sha256_bytes(discovery.read_bytes()),
+        }],
+    })
+    for row in events[1:]:
+        if "subject_id" in row:
+            row["subject_id"] = predecessor["subject_id"]
+        if "lineage_id" in row:
+            row["lineage_id"] = predecessor["lineage_id"]
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: (events, "a" * 64))
+    observed = {}
+    monkeypatch.setattr(
+        work_memory,
+        "_cmd_select_for_task",
+        lambda args: (
+            observed.update(vars(args))
+            or {"task_id": args.task_id, "mode": "discovery"}
+        ),
+    )
+
+    result = work_memory.cmd_select(SimpleNamespace(
+        task_id="predecessor-task",
+        sequence_id=None,
+        discovery_log=str(discovery),
+        fingerprint=None,
+        verification_successor_of=predecessor["run_id"],
+        verifies_correction_id=[events[2]["correction_id"]],
+        repo_roots_file=None,
+    ))
+
+    assert observed["sequence_id"] is None
+    assert observed["discovery_log"] == str(discovery.resolve())
+    assert result["mode"] == "discovery"
 
 
 def test_select_successor_parser_requires_only_predecessor_run_id():
@@ -3036,6 +3092,7 @@ def test_successor_request_derives_sequence_roots_and_active_corrections():
     assert request == {
         "task_id": "predecessor-task",
         "sequence_id": "workflow-resume-from-phase-live-confirmation",
+        "discovery_log": None,
         "verification_successor_of": start["run_id"],
         "verifies_correction_ids": correction_ids,
         "repository_roots": start["repository_roots"],

@@ -180,6 +180,86 @@ or verdict values fail closed. A second assessment request for the same round is
 changing the ledger. This stage does not change the readable projection, admit an answer, or ask
 follow-up questions.
 
+## Read and execute one deterministic clarification continuation
+
+Every completed answer assessment and every terminal assessed-answer admission returns one
+code-computed `continuation` record. It contains exactly one decision:
+
+- `apply_resolving_answer` identifies the canonical unused assessment round, position, and
+  unchanged current gap.
+- `prepare_next_round` identifies the latest assessed round, its successor round number, and the
+  complete ordered set of unchanged gaps whose answers did not resolve them.
+- `clarification_complete` means no preserved assessed answer is currently applicable. Its
+  remaining current-gap count is evidence, not by itself a claim that projection coverage is
+  complete. At this terminal only, code separately qualifies the current projection from its
+  canonical coverage evidence.
+
+The classifier takes no model input and changes neither state nor ledger. It reconstructs every
+assessment binding from immutable answer sources, projections, question artifacts, and round
+history; replay returns the same decision. Incomplete, duplicated, reordered, changed, or unbound
+records fail closed.
+
+To execute exactly that decision, run:
+
+```text
+python3 scripts/start_intake.py --work <same-directory> \
+    --opening '<exact opening>' --purpose '<exact purpose answer>' \
+    --continue-clarification
+```
+
+Code recomputes the decision against current immutable evidence immediately before dispatch. It
+then performs exactly one existing transition: start the bound admission request, start preparation
+of the bound successor round, or append the grounded clarification-terminal event. It stops before
+any model or operator answer. Repeating the command while work is active cannot create another
+request, artifact, or ledger event; replaying the terminal decision returns its preserved result.
+A stale round, position, gap set, or projection fails closed.
+
+The terminal event and result contain exactly one `projection_qualification`. Code first verifies
+the immutable projection identity, all sixteen ordered scan-region outcomes, unique element and
+relationship identities, consistent region-to-element membership, closed relationship
+obligations, and projection-record counts. With no explicit gaps the value is
+`readable_projection_complete`. With gaps it is `readable_projection_incomplete` and carries every
+exact gap record in canonical region, element, then relationship order. Missing, duplicated,
+reordered, contradictory, or changed coverage evidence returns `terminal_invalid` without writing
+the terminal event. The qualification takes no model answer and does not mutate the projection.
+
+A deterministic disposition gate then decides what that qualification permits. Only
+`readable_projection_complete` with zero exact gaps becomes `first_layer_complete` and may append
+the clarification-terminal event. `readable_projection_incomplete` becomes
+`clarification_required` with the same exact ordered gaps and writes no completion event.
+Contradictory decision counts, qualification counts, or gap lists become `terminal_invalid`.
+This gate does not formulate questions, run interviews, or alter the projection.
+
+Any model work started by this dispatcher remains accepted only through its code-controlled,
+one-question-at-a-time interview with enforced choices and persisted rejected and accepted attempts.
+The executor does not run an interview or loop.
+
+## Resume to the next clarification boundary
+
+Use one entry point instead of choosing the next machinery command yourself:
+
+```text
+python3 scripts/start_intake.py --work <same-directory> \
+    --clarification-boundary
+```
+
+The controller validates and consumes any already-persisted interview result, then performs only
+code-owned transitions until it reaches exactly one typed boundary:
+
+- `needs_model_interview` returns exactly one existing code-controlled interview command and stops.
+- `needs_operator_answer` returns exactly one current prepared question and stops.
+- `clarification_required` returns the incomplete qualification and its exact ordered remaining
+  gaps without presenting or generating a question.
+- `clarification_complete` returns the preserved grounded terminal result plus its exact complete
+  projection qualification and `first_layer_complete` disposition, then stops.
+
+The controller never executes a model interview and never supplies or accepts an operator answer.
+After that external response has entered through its existing code-controlled interview or
+immutable human-source path, run the same boundary command again. Repeating it before a response
+returns the identical boundary without another request, artifact, question presentation, or ledger
+event. Invalid or stale state fails closed. This is a resumable boundary controller, not yet an
+automatic external-work loop.
+
 ## Admit the next resolving assessed answer
 
 After the complete answer round has been assessed, or for an existing saved single-gap intake with
@@ -190,9 +270,11 @@ python3 scripts/start_intake.py --work <same-directory> \
     --opening '<exact opening>' --purpose '<exact purpose answer>' --resolve-gap
 ```
 
-For an assessed question round, code selects the next canonical `resolves_gap` outcome that no
-earlier admission attempt consumed. On the first invocation this is the first resolving outcome;
-after a terminal admission it is the next unused one. Code binds its exact question, immutable
+For any assessed question round, code selects the next canonical `resolves_gap` outcome that no
+earlier admission attempt consumed. The immutable selection identity is the round plus its answer
+position, so position 1 in a later round cannot collide with position 1 in round 1. On the first
+invocation this is the first resolving outcome; after a terminal admission it is the next unused
+one. Code binds its exact question, immutable
 answer source and projection, original assessed gap identity, unchanged gap record and hash,
 current parent projection, and accepted assessment into a derived immutable resolution input. If
 the gap record changed between projection versions, code refuses the admission. The resolver
@@ -234,18 +316,22 @@ python3 scripts/start_intake.py --work <same-directory> \
     --opening '<exact opening>' --purpose '<exact purpose answer>' --clarify-gap
 ```
 
-Code selects the complete ordered set of `does_not_resolve_gap` assessments whose exact gap record
-still exists in the current projection. It binds each current gap to its prior question, immutable
-answer source and projection, and assessment reason, then returns one code-controlled model command.
-The model reasons only about the still-missing information and writes one new focused operator
-question per bound gap. Code enforces complete coverage, current gap identities, unique round-2
-question identities, order, and rejection of an exact repeat of the failed question.
+Code starts from the latest completed assessed round. It selects that round's complete ordered set
+of `does_not_resolve_gap` assessments whose exact gap record still exists unchanged in the current
+projection. It binds each current gap to its prior question, immutable answer source and projection,
+and assessment reason, then returns one code-controlled model command. The model reasons only about
+the still-missing information and writes one new focused operator question per bound gap. Code owns
+the successor round number, complete coverage, current gap identities, unique question identities,
+order, and rejection of an exact repeat of the failed question.
 
-The model request, interview journal, rejected entries, completed round, and operator-ready round
-are appended without changing the first question round, its answers, assessments, projection
-versions, or resolution history. Resume returns the same prepared round without another ledger
-entry. This atomic stage stops with `ready_for_operator_interview`; it does not display a question,
-accept an operator answer, or change the readable projection.
+Before preparing round N+1, code archives round N's prepared question record and operator interview
+as an ordered replay-validated snapshot. The model request, interview journal, rejected entries,
+completed round, and operator-ready round are appended without changing any earlier question round,
+answer source, assessment, projection version, or resolution history. Resume reconstructs archived
+rounds from their immutable artifacts and ledger identities; changed gaps, omissions, duplicates,
+reordered bindings, repeated questions, or altered archived artifacts fail closed. This atomic stage
+stops with `ready_for_operator_interview`; it does not display a question, accept an operator answer,
+assess the new round, decide whether another round is needed, or change the readable projection.
 
 ## Conduct any prepared operator question round
 
@@ -273,13 +359,18 @@ the current readable projection.
 
 ## Current boundary
 
-Each `--resolve-gap` invocation applies at most the next unused canonical resolving assessment to
-one unchanged relationship gap and then stops. Eligible assessed gaps have either a code-listed
+Each `--resolve-gap` invocation applies at most the next unused canonical resolving assessment from
+any completed round to one unchanged relationship gap and then stops. Eligible assessed gaps have either a code-listed
 identity ambiguity or exactly one known and one missing endpoint. It does not automatically loop
-through the remaining assessments. It can prepare one immutable follow-up round from the first
-assessment round and conduct any prepared round one question at a time, but it does not yet
-admit a later-round resolving answer, decide whether another round is needed, run a question loop
-to a grounded terminal condition, accept URLs, or assess whether a projection completely covers its source. Legacy
+through the remaining assessments. It can prepare exactly one immutable successor round from the
+latest completed assessed round and conduct any prepared round one question at a time. It returns
+one deterministic continuation decision and can execute exactly one corresponding transition, but
+its boundary controller still stops for every model interview and operator answer; it does not run
+external work or a fully automatic question loop
+to a grounded terminal condition or accept URLs. Its terminal qualification verifies the recorded
+coverage contract and explicit gaps, and its disposition gate prevents an incomplete projection
+from ending the first layer; it does not yet turn `clarification_required` into a new question
+round or perform the later semantic projection assessment against the source. Legacy
 gap resolution remains limited to an existing preserved single-gap answer bound to a relationship
 identity ambiguity. The projection adapter currently accepts images only and fails closed for
 other media types. Do not simulate those later units in prose or extend the script while running
@@ -293,5 +384,5 @@ these proven stages.
 | `waiting_for_model` | 2 | One bounded purpose, projection, question, or answer assessment must be completed. |
 | `blocked` | 3 | Input or durable state is missing, changed, or invalid. |
 | `ready_for_projection` | 0 | The first local file is frozen and its projection is pending. |
-| `ready_for_projection_assessment` | 0 | The current immutable projection version is ready; completeness remains unassessed. |
+| `ready_for_projection_assessment` | 0 | The current immutable projection version is ready. Before clarification terminal, completeness remains unassessed; the terminal result includes the code-derived projection qualification. |
 | `ready_for_operator_interview` | 0 | A complete follow-up question round is preserved but no operator question has been presented. |

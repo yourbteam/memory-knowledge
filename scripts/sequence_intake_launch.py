@@ -65,6 +65,7 @@ DISPATCH_SPEC = {
 DISPATCH_MARKER = "SEQUENCE_INTAKE_DISPATCHED"
 DISPATCH_RECEIPT = "SEQUENCE_INTAKE_DISPATCH_RECEIPT"
 WORKFLOW_RESUME_SEQUENCE = "workflow-resume-from-phase-live-confirmation"
+DIRECTIVES_PATH = Path(__file__).resolve().parents[1] / "working-agreement/DIRECTIVES.md"
 
 
 class SequenceLaunchError(ValueError):
@@ -481,7 +482,7 @@ def _guard_prepared(task_id: str, prepared: Mapping[str, Any]) -> None:
         task_id=task_id,
         root=None,
         state=None,
-        directives_path=None,
+        directives_path=str(DIRECTIVES_PATH),
         directive_state=None,
         directive_max_age_minutes=sequence_guard.DEFAULT_MAX_AGE_MINUTES,
         step=f"semantic-intake:{profile}",
@@ -561,7 +562,7 @@ def _guard_preflight(task_id: str, prepared: Mapping[str, Any]) -> None:
         task_id=task_id,
         root=None,
         state=None,
-        directives_path=None,
+        directives_path=str(DIRECTIVES_PATH),
         directive_state=None,
         directive_max_age_minutes=sequence_guard.DEFAULT_MAX_AGE_MINUTES,
         step=preflight["step"],

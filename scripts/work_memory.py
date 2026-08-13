@@ -3475,8 +3475,9 @@ def _successor_selection_request(
     if len(starts) != 1:
         raise WorkMemoryError("successor-predecessor-not-found", 3)
     start = starts[0]
-    if start.get("mode") != "registered":
-        raise WorkMemoryError("registered-successor-required", 3)
+    mode = start.get("mode")
+    if mode not in {"registered", "discovery"}:
+        raise WorkMemoryError("successor-predecessor-mode-invalid", 3)
     terminal = [
         event for event in events
         if event.get("run_id") == predecessor_run_id
@@ -3596,9 +3597,40 @@ def _successor_selection_request(
         or not isinstance(repository_roots, dict)
     ):
         raise WorkMemoryError("successor-predecessor-identity-invalid", 3)
+    discovery_log: str | None = None
+    sequence_id: str | None = subject_id
+    if mode == "discovery":
+        sequence_id = None
+        candidates: list[Path] = []
+        for artifact in start.get("source_bundle", []):
+            if not isinstance(artifact, dict):
+                continue
+            repository_key = artifact.get("repository_key")
+            relative = artifact.get("path")
+            if (
+                not isinstance(repository_key, str)
+                or repository_key not in repository_roots
+                or not isinstance(relative, str)
+                or not relative.endswith(".md")
+            ):
+                continue
+            document = _safe_file(
+                Path(repository_roots[repository_key]), relative,
+            )
+            match = re.search(
+                r"^DiscoveryId:\s*(\S+)\s*$", document.read_text(), re.M,
+            )
+            if match and match.group(1) == subject_id:
+                candidates.append(document.resolve())
+        if len(candidates) != 1:
+            raise WorkMemoryError(
+                "successor-discovery-document-invalid", 3,
+            )
+        discovery_log = str(candidates[0])
     return {
         "task_id": task_id,
-        "sequence_id": subject_id,
+        "sequence_id": sequence_id,
+        "discovery_log": discovery_log,
         "verification_successor_of": predecessor_run_id,
         "verifies_correction_ids": active_ids,
         "repository_roots": repository_roots,
@@ -3613,6 +3645,7 @@ def cmd_select(args: argparse.Namespace) -> dict[str, Any]:
     request = _successor_selection_request(events, predecessor_run_id)
     requested_task_id = getattr(args, "task_id", None)
     requested_sequence_id = getattr(args, "sequence_id", None)
+    requested_discovery_log = getattr(args, "discovery_log", None)
     requested_corrections = list(
         getattr(args, "verifies_correction_id", None) or []
     )
@@ -3622,6 +3655,12 @@ def cmd_select(args: argparse.Namespace) -> dict[str, Any]:
     ):
         raise WorkMemoryError("successor-sequence-input-mismatch", 3)
     if (
+        requested_discovery_log is not None
+        and str(Path(requested_discovery_log).resolve())
+        != request["discovery_log"]
+    ):
+        raise WorkMemoryError("successor-discovery-input-mismatch", 3)
+    if (
         requested_corrections
         and requested_corrections != request["verifies_correction_ids"]
     ):
@@ -3629,7 +3668,7 @@ def cmd_select(args: argparse.Namespace) -> dict[str, Any]:
     forwarded = argparse.Namespace(**vars(args))
     forwarded.task_id = request["task_id"]
     forwarded.sequence_id = request["sequence_id"]
-    forwarded.discovery_log = None
+    forwarded.discovery_log = request["discovery_log"]
     forwarded.fingerprint = None
     forwarded.verification_successor_of = predecessor_run_id
     forwarded.verifies_correction_id = request["verifies_correction_ids"]
@@ -3651,7 +3690,7 @@ def cmd_select_successor(args: argparse.Namespace) -> dict[str, Any]:
     result = _cmd_select_for_task(argparse.Namespace(
         task_id=request["task_id"],
         sequence_id=request["sequence_id"],
-        discovery_log=None,
+        discovery_log=request["discovery_log"],
         fingerprint=None,
         verification_successor_of=args.predecessor_run_id,
         verifies_correction_id=request["verifies_correction_ids"],

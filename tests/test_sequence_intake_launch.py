@@ -253,6 +253,26 @@ def test_invoked_script_ignores_script_shaped_argument_values():
     )
 
 
+def test_prepared_guard_uses_the_controller_checkout_directives(monkeypatch):
+    observed = {}
+    prepared = {
+        "argv": ["python3", "scripts/example.py"],
+        "repository": {"root": "/repos/memory"},
+        "profile": "run",
+    }
+    monkeypatch.setattr(
+        sequence_intake_launch.sequence_guard,
+        "cmd_guard",
+        lambda args: observed.update(vars(args)),
+    )
+
+    sequence_intake_launch._guard_prepared("task-123", prepared)
+
+    assert observed["directives_path"] == str(
+        sequence_intake_launch.DIRECTIVES_PATH
+    )
+
+
 def test_main_asks_for_task_reviews_payload_then_requires_authorization(
     monkeypatch, capsys,
 ):
@@ -545,6 +565,9 @@ def test_workflow_resume_guard_provenance_is_controller_owned(
     assert observed["step"] == "verify-automation"
     assert observed["source"] == "sequence_doc"
     assert observed["source_ref"].endswith("/resume/sequence.md")
+    assert observed["directives_path"] == str(
+        sequence_intake_launch.DIRECTIVES_PATH
+    )
 
 
 def test_workflow_resume_preflight_is_grounded_in_registered_sequence() -> None:

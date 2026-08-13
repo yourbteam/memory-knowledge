@@ -54,8 +54,16 @@ def load_request(work: Path) -> tuple[Path, list[str]]:
             )
             or (
                 state.get("phase") == "formulating_follow_up_gap_question_round"
+                and isinstance(state.get("follow_up_gap_question_round"), dict)
+                and isinstance(
+                    state["follow_up_gap_question_round"].get("round"), int
+                )
                 and state.get("waiting_for")
-                == "gap-question-rounds/round-000002/interview.jsonl"
+                == (
+                    "gap-question-rounds/"
+                    f"round-{state['follow_up_gap_question_round']['round']:06d}/"
+                    "interview.jsonl"
+                )
             )
         )
     )

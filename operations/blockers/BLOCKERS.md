@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `51e1a49e8cd1073ee5ebaff243c3e7d7f88246c4c3d186cef2647ee389ad02e2`
+Ledger-SHA256: `7d6e1cbaee5e18d2f74002355a12a03f4155a5a38ac289fda20055ae68666a65`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -183,6 +183,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `main-sequence-guard`
 - Symptom: the main 101-file sequence rejects the exact four-correction preservation command
 - Evidence: sequence guard exit 4 because the selected row contains only one preserved-correction placeholder
+
+## blk-04b109d3a75029e1af3419d8
+
+- Status: `open`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `focused-boundary-suite`
+- Surface: `registry-manifest-coverage`
+- Symptom: The work-memory coverage suite cannot validate every registered sequence because goal-declaration has no dependencies.json.
+- Evidence: test_registry_and_manifest_coverage failed with FileNotFoundError for operations/sequences/goal-declaration/dependencies.json after 177 other tests passed.
+- Classification: `incidental-system-defect`
+- Downstream owner: `goal-declaration-sequence-owner`
 
 ## blk-0568df56767e88f23053a71a
 
@@ -787,6 +798,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: GitHub CLI reports the active yourbteam token is invalid.
 - Evidence: gh auth status exited nonzero before sequence dispatch; no credential value was printed.
 
+## blk-1241a1690c619f5d4664e80f
+
+- Status: `open`
+- Subject: `discovery-748c90b8-778b-5b80-968e-4f274ed8f46e`
+- Step: `run-projection-interview`
+- Surface: `host-runtime`
+- Symptom: Registered launcher reached Codex but Codex could not open its state database or initialize the in-process app-server client.
+- Evidence: Live guarded command exited 1 with attempt to write a readonly database at /Users/kamenkamenov/.codex/state_5.sqlite and Operation not permitted.
+- Classification: `incidental-system-defect`
+- Downstream owner: `codex-host-runtime-permission-boundary`
+
 ## blk-124fafbc192a404db1b39268
 
 - Status: `closed`
@@ -948,6 +970,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/sequence_guard.py`
 - Symptom: The sequence guard rejected the blocker-catalog validation because the invocation omitted --step and --source-ref.
 - Evidence: Argparse reported: the following arguments are required: --step, --source-ref.
+
+## blk-1652372100c2b23d61872c42
+
+- Status: `open`
+- Subject: `info-intake-real-projection-operation`
+- Step: `skill-package-validation`
+- Surface: `skill-creator-quick-validate`
+- Symptom: The canonical skill validator cannot start because both available Python runtimes lack PyYAML.
+- Evidence: quick_validate.py failed at import yaml under system python3 and the bundled workspace Python.
 
 ## blk-16e68976da8dc52189f5f104
 
@@ -1227,6 +1258,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `planner-v2-critic-ledger-projector`
 - Symptom: The accepted critic output cannot be projected through checked execution because the only projector exists under /private/tmp and is not an authorized selected source.
 - Evidence: Repository search found no critic-output projection command in evaluate_plan_playbook_v2.py, plan_package.py, or selected scripts; the working projector is /private/tmp/project_plan_v2_critic_ledger.py.
+
+## blk-1ce55cc8131bce052eb2c7b0
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discovery-748c90b8-778b-5b80-968e-4f274ed8f46e`
+- Step: `run-projection-interview`
+- Surface: `info-intake-projection-contract`
+- Symptom: The real projection recorded one location selector and zero relationships although the preserved purpose asks for red-rectangle descriptions and their arrow-linked page elements.
+- Evidence: The live journal shows purpose-relevant enumeration questions but the rendered prompts never include the immutable purpose; the model answered no after one element and could not record a relationship.
 
 ## blk-1d2c2cb4197252fa72c8e102
 
@@ -2110,6 +2150,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Fresh verifier rejected O-C04-02 because its launch prompt supplied d0c85b0f... while the active ledger binds d0c85cffa239....
 - Evidence: Ledger contains d0c85cffa239a1369f13c75fcb709b0e655bf0532e27d5d34ebd0a82185b9a14 twice; verifier reported the supplied d0c85b0f... value is absent and unresolvable.
 
+## blk-355efcd50c2e0f3e79a4e455
+
+- Status: `closed`
+- Subject: `info-intake-real-projection-operation`
+- Step: `admit-later-round-answer`
+- Surface: `info-intake-terminal-replay`
+- Symptom: The real round-2 admission creates projection v5, but the next resume rejects the preserved round because it compares its v4 lineage to current v5.
+- Evidence: start_intake.py terminal resume returned blocked after v5 existed; v4 hash still matched the active resolution parent.
+
 ## blk-3565d2fc254f73e4e6e981e1
 
 - Status: `open`
@@ -2244,6 +2293,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/prevention_adapters.py:_resolved_predicate`
 - Symptom: Full memory regression reports prevention_adapters.py as a noncanonical event-ledger writer
 - Evidence: test_only_canonical_scripts_write_event_ledger failed after 1191 passes because _resolved_predicate embeds the literal operations/work-memory/events.jsonl even though the adapter performs no ledger write
+
+## blk-38acbbccc7429d67a2fd917a
+
+- Status: `closed`
+- Subject: `discovery-bootstrap`
+- Step: `prepare-real-image-projection-discovery`
+- Surface: `sequence-intake-discovery-bootstrap-contract`
+- Symptom: The prepared discovery bundle hashes the zero-input launcher but has no interview field for the machinery files that launcher executes
+- Evidence: Prepared spec dependencies contains only run_projection_with_codex.py; _bootstrap_steps derives dependencies exclusively from executable step scripts
 
 ## blk-39494a0191d7b83317b5aaff
 
@@ -2731,6 +2789,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The repaired guard rejected the exact two-file correction because the selected discovery document has no matching direct-correction shape.
 - Evidence: sequence_guard.py returned command-not-grounded-in-selected-document before correction recording.
 
+## blk-44b893b0efcbe6cff8ef64dc
+
+- Status: `open`
+- Subject: `discovery-bootstrap`
+- Step: `verify-codex-projection-launcher`
+- Surface: `scripts-run-pytest`
+- Symptom: The required pytest wrapper exits 101 before test collection because uv panics in system-configuration dynamic_store
+- Evidence: scripts/run_pytest.sh tests/test_info_intake_machinery.py produced Attempted to create a NULL object and Tokio executor failed
+- Classification: `incidental-system-defect`
+- Downstream owner: `memory-knowledge-test-wrapper-maintenance`
+
 ## blk-44e4502d76d5117e29345689
 
 - Status: `closed`
@@ -2910,6 +2979,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/evaluate_plan_playbook_v2.py`
 - Symptom: The evaluator CLI exposes only four fixture-authority lifecycle commands; no prepare, row lifecycle, routing, score, or validate-score commands exist.
 - Evidence: build_parser at scripts/evaluate_plan_playbook_v2.py defines only validate-fixture-authority, prepare/finalize/record-fixture-authority-review; rg finds no matrix preparation or scoring handlers.
+
+## blk-47968d293f4e8d15efd37e1b
+
+- Status: `closed`
+- Subject: `info-intake-real-projection-operation`
+- Step: `persist-follow-up-question-round`
+- Surface: `info-intake-cli-exit-status`
+- Symptom: The follow-up round is persisted, then the CLI exits with an unhandled KeyError instead of reporting successful completion.
+- Evidence: Captured intake copy reached follow_up_gap_question_round_recorded and printed terminal JSON before main raised KeyError for ready_for_operator_interview.
 
 ## blk-47abf4a40520e2c209188b7e
 
@@ -3361,6 +3439,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Two focused evaluator tests fail before exercising their intended assertions.
 - Evidence: The tests supplied output_hash=None and lifecycle agent_id, while the evaluator requires a lowercase SHA-256 output_hash and runtime_agent_id.
 
+## blk-53bd6dd39d13f323f7d34542
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `pre-publish-verification`
+- Surface: `tests/test_sequence_intake_adapters.py::registered-sequence-coverage`
+- Symptom: Two focused tests require adapters and intake specs for agent-heartbeat and goal-declaration even though baseline code intentionally registers both as non-runnable.
+- Evidence: HEAD contains None adapters and explanatory comments for agent-heartbeat and goal-declaration while HEAD tests still require every registry value and spec to be runnable.
+
 ## blk-548a240cffecf90f067995ef
 
 - Status: `closed`
@@ -3460,6 +3547,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Full pytest suite reports one failure because the test expects a leading porcelain-status space after its helper strips leading whitespace.
 - Evidence: uv run pytest -q: 1 failed, 869 passed, 1 skipped; tests/test_scoped_git_publish.py git() returns stdout.strip() at line 12 while line 212 expects a string beginning with a space.
 
+## blk-57f325c79011470ca0cac428
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `publish`
+- Surface: `git-worktree-index`
+- Symptom: The scoped publisher could not stage the approved files because the worktree Git index lives outside the writable sandbox.
+- Evidence: git add failed creating /Users/kamenkamenov/memory-knowledge/.git/worktrees/memory-knowledge/index.lock with Operation not permitted.
+
 ## blk-57fb6beb5742ee7e24b4c353
 
 - Status: `superseded`
@@ -3504,6 +3600,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `prevention-materialization-pipeline`
 - Symptom: A changed owner proposal cannot be regenerated because contract materialization requires the old source-verification report while the source-verification producer calls observable materialization which calls contract materialization.
 - Evidence: prevention_contract_materializer._source_verification_admission rejects policy drift; prevention_observable_materializer.materialize calls prevention_contract_materializer.materialize; prevention_owner_acceptance._source_rows calls prevention_observable_materializer.materialize.
+
+## blk-58de25ce9ffe1f102d85b9e8
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `correction-recording`
+- Surface: `work-memory-environment-artifact`
+- Symptom: The correction recorder rejects the temporary directive-read state even when it is supplied as an environment artifact.
+- Evidence: work_memory.py correct returned changed-artifact-outside-repository for /private/tmp/workflow-orch-directive-guard.json.
+- Classification: `incidental-system-defect`
+- Downstream owner: `memory-knowledge-maintenance`
 
 ## blk-58df6c0d333377be1f8293ff
 
@@ -3784,6 +3891,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The guard rejected the exact authorized read command because it was not yet present in the discovery document
 - Evidence: sequence_guard.py returned command-not-grounded-in-selected-document for the explicit rg command despite source=tool_help
 
+## blk-5da5979f4950e29f57aba3ce
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `pre-publish-verification`
+- Surface: `tests/test_sequence_intake_adapters.py::test_workflow_phase_resume_owns_live_runtime_environment`
+- Symptom: The focused suite stops because the baseline test omits the required reopen_completed_phase answer.
+- Evidence: HEAD already requires reopen_completed_phase in scripts/sequence_intake_adapters.py while the HEAD test fixture omits it.
+
 ## blk-5e5921daa66d3f06148dbcf5
 
 - Status: `fixed-awaiting-verification`
@@ -3828,6 +3944,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work_memory verification`
 - Symptom: The ledger rejected same-path verification after workflow blocker activity in this run
 - Evidence: work_memory.py verify returned clean-verification-after-correction and did not record an event
+
+## blk-6005015dbb5590ee9e78d80c
+
+- Status: `closed`
+- Subject: `info-intake-real-projection-operation`
+- Step: `replay-follow-up-question-round`
+- Surface: `info-intake-follow-up-round-replay`
+- Symptom: Changing the persisted follow-up question identity still returns follow_up_gap_question_round_recorded.
+- Evidence: A copy of the completed real dashboard intake had clarification-round.json question id replaced with an invented id; resume exited 0 and returned ready_for_operator_interview while ledger hash remained unchanged.
 
 ## blk-6013cd4dbfed4543e3921246
 
@@ -5649,6 +5774,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The registered reconciliation sequence still requires separate manual classification, selection, verification, live execution, evidence recording, and run closure commands.
 - Evidence: The reconciliation parser exposes only audit, validate, execute, and execute-rolling; the sequence document lists the governed lifecycle as separate operator steps.
 
+## blk-91bdc415dcf200d5cdb7c730
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `publish`
+- Surface: `git-worktree-index`
+- Symptom: The scoped publisher could not stage the approved files because the worktree Git index lives outside the writable sandbox.
+- Evidence: git add failed creating /Users/kamenkamenov/memory-knowledge/.git/worktrees/memory-knowledge/index.lock with Operation not permitted.
+- Classification: `incidental-system-defect`
+- Downstream owner: `codex-sandbox-runtime`
+
 ## blk-923e1cf6d66a4b9f87287f12
 
 - Status: `fixed-awaiting-verification`
@@ -7179,6 +7315,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: the updated discovery bundle cannot activate
 - Evidence: sequence_guard.py activate returned bootstrap-sources-not-selected after control dependencies were removed from the manifest
 
+## blk-b6cc9d07ec7f640b70665a25
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `intake-dispatch`
+- Surface: `directive-read-preflight`
+- Symptom: The guarded publish stopped before staging because the recorded directive path referenced the primary checkout instead of this worktree.
+- Evidence: Recorded /Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md; expected /Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/working-agreement/DIRECTIVES.md.
+- Classification: `incidental-system-defect`
+- Downstream owner: `memory-knowledge-maintenance`
+
 ## blk-b722a6699c4385c3252b251e
 
 - Status: `closed`
@@ -7583,6 +7730,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: Guard activation rejects the refreshed discovery bundle because the task selection receipt still seals the pre-refresh bundle.
 - Evidence: set-dependencies produced source_bundle_hash 0a034ab142e1b1d12c91a399516cf0cf31649b60153efca1d685599fa608b30d; subsequent sequence_guard.py activate returned stale-source-bundle.
+
+## blk-be940d901c6d97e7ed72e1b5
+
+- Status: `open`
+- Subject: `discovery-bootstrap`
+- Step: `launch-real-image-projection-interview`
+- Surface: `codex-exec-cli`
+- Symptom: Codex exited before model execution and reported No prompt provided via stdin
+- Evidence: Two identical exit-1 results; codex exec help defines --image as FILE... and prompt as a following positional argument
+- Classification: `incidental-system-defect`
+- Downstream owner: `real-image-projection-interview-validation`
 
 ## blk-bebe8d88bcca4c00c18aca09
 
@@ -8515,6 +8673,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The active sequence receipt is stale and the attempted hash-diff probe cannot run because shasum and awk are unavailable.
 - Evidence: sequence_guard status returned stale-source-bundle; the comparison command emitted command not found for shasum and awk on every row.
 
+## blk-d7edbe9a9e2b18ed16f7188e
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `verification-recording`
+- Surface: `work-memory-verification`
+- Symptom: The ledger rejects same-path success evidence after an incidental blocker is assigned downstream, even though no correction exists.
+- Evidence: work_memory.py verify returned clean-verification-after-correction after commit 65d992d was verified on origin.
+- Classification: `incidental-system-defect`
+- Downstream owner: `memory-knowledge-maintenance`
+
 ## blk-d82b3f505167055e2e838202
 
 - Status: `non-gap`
@@ -8668,6 +8837,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The required authority-review preparation changed the fixture bundle before runtime identity binding
 - Evidence: sequence_guard rejected authority-review-slot-bind with stale-source-bundle after input.json and attempt-token.json were published
 
+## blk-dbbfac9169367e3a4d77d090
+
+- Status: `open`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `successor-verification`
+- Surface: `discovery-promotion-lifecycle`
+- Symptom: The public typed promotion drive computed successor-verification then generated a discovery-mode successor selection, which work_memory.py rejected with registered-successor-required.
+- Evidence: sequence_intake_launch.py prepared the registered lifecycle drive; discovery_promotion_lifecycle.py invoked work_memory.py select --discovery-log --verification-successor-of d56b... --verifies-correction-id e141... and exited 3.
+
 ## blk-dbeb6ea6e72249df151bcb7f
 
 - Status: `open`
@@ -8802,6 +8980,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-runner`
 - Symptom: The mandatory source-review discovery sequence initially could not be created
 - Evidence: sequence_discovery_log.py start returned PermissionError under workspace sandbox
+
+## blk-df273ae31bc177824439a38c
+
+- Status: `closed`
+- Subject: `discovery-bootstrap`
+- Step: `dispatch-real-image-projection-discovery`
+- Surface: `directive-read-state`
+- Symptom: The prepared bootstrap stopped because the directive read state names the main checkout instead of this worktree
+- Evidence: Controller expected /Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/working-agreement/DIRECTIVES.md but found /Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md
 
 ## blk-df9ecc20de8e883a358c1edf
 
@@ -9441,6 +9628,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `discovery-dependency-manifest`
 - Symptom: The active successor still needs a correction that binds the shared helper, focused tests, verified remediation artifacts, Plan V2 plan/ledger, skill, and dependency manifest together.
 - Evidence: The predecessor occurrence blk-2a3b0008d9d7d1fc3528bc21 belongs to closed run 9125a0fa-623f-45f2-9e44-aaf68f277bec; the current run has now completed the exact manifest and implementation edits.
+
+## blk-f2360552ff4ecf0506584cdc
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `pre-publish-verification`
+- Surface: `tests/test_work_memory.py::test_registry_and_manifest_coverage`
+- Symptom: Registry coverage fails because operations/sequences/goal-declaration/dependencies.json does not exist.
+- Evidence: HEAD registers goal-declaration in SEQUENCES.md and contains its sequence.md, but no dependencies.json exists in HEAD or the worktree.
 
 ## blk-f239f184dbe0cf9c9a8f4f36
 

@@ -1986,6 +1986,41 @@ DISCOVERY_BOOTSTRAP_SPEC = {
             ],
         ),
         _semantic_field(
+            "has_runtime_dependencies",
+            "Do any steps use additional checked-in runtime files?",
+            "One yes or no answer.",
+            "yes",
+            (
+                "Answer yes for imported modules, called scripts, schemas, templates, or other "
+                "files whose contents can change the operation."
+            ),
+            "boolean",
+            required=True,
+        ),
+        _semantic_field(
+            "runtime_dependencies",
+            "Additional runtime dependency",
+            "Answer one dependency's semantic subquestions at a time.",
+            "a checked-in module used by the step script",
+            "Record files used at runtime that are not themselves executable steps.",
+            "object_list",
+            when={"field": "has_runtime_dependencies", "equals": True},
+            item_fields=[
+                _semantic_field(
+                    "repository_key", "Dependency repository",
+                    "One registered repository name.", "memory-knowledge",
+                    "Use the repository containing the runtime file.", "string",
+                    required=True,
+                ),
+                _semantic_field(
+                    "path", "Checked-in runtime file",
+                    "One repository-relative path.", "scripts/helper.py",
+                    "Provide a file path without shell syntax or parent traversal.",
+                    "path", required=True,
+                ),
+            ],
+        ),
+        _semantic_field(
             "inputs", "Required semantic input",
             "One or more plain-language input descriptions.",
             "An approved repository checkout.",
@@ -3898,6 +3933,45 @@ def _bootstrap_steps(
     return steps, dependencies
 
 
+def _bootstrap_runtime_dependencies(
+    answers: Mapping[str, Any],
+    repository_roots: Mapping[str, str],
+    dependencies: list[dict[str, str]],
+) -> None:
+    present = answers.get("has_runtime_dependencies")
+    if not isinstance(present, bool):
+        raise AdapterError("invalid-bootstrap-runtime-dependency-choice")
+    raw = answers.get("runtime_dependencies")
+    if not present:
+        if raw is not None:
+            raise AdapterError("unexpected-bootstrap-runtime-dependencies")
+        return
+    if not isinstance(raw, list) or not raw:
+        raise AdapterError("answer-required:runtime_dependencies")
+    seen = {
+        (item["repository_key"], item["path_or_sequence_id"])
+        for item in dependencies
+    }
+    for item in raw:
+        if not isinstance(item, Mapping) or set(item) != {"repository_key", "path"}:
+            raise AdapterError("invalid-bootstrap-runtime-dependency")
+        repository_key = _required_text(item, "repository_key")
+        if repository_key not in repository_roots:
+            raise AdapterError(f"repository-key-unregistered:{repository_key}")
+        path = _required_text(item, "path")
+        relative = PurePosixPath(path)
+        if relative.is_absolute() or ".." in relative.parts:
+            raise AdapterError("invalid-bootstrap-runtime-dependency-path")
+        identity = (repository_key, path)
+        if identity not in seen:
+            dependencies.append({
+                "kind": "file",
+                "repository_key": repository_key,
+                "path_or_sequence_id": path,
+            })
+            seen.add(identity)
+
+
 def _prepare_discovery_bootstrap(
     answers: Mapping[str, Any],
     artifact_paths: Mapping[str, str],
@@ -3906,8 +3980,11 @@ def _prepare_discovery_bootstrap(
     expected = {
         "source_repository_key", "task_id", "operation_kind", "date",
         "sequence_name", "outcome", "why_repeatable", "steps", "inputs",
-        "failure_handling", "verified_path", "repo_roots_file",
+        "has_runtime_dependencies", "failure_handling", "verified_path",
+        "repo_roots_file",
     }
+    if answers.get("has_runtime_dependencies") is True:
+        expected.add("runtime_dependencies")
     if set(answers) != expected:
         raise AdapterError("answer-fields-do-not-match-discovery-bootstrap")
     repository_key, repository = _registered_repository(
@@ -3925,6 +4002,7 @@ def _prepare_discovery_bootstrap(
     if operation_kind not in OPERATION_KINDS:
         raise AdapterError("invalid-bootstrap-operation-kind")
     steps, dependencies = _bootstrap_steps(answers, repository_roots)
+    _bootstrap_runtime_dependencies(answers, repository_roots, dependencies)
     repo_roots_file = answers["repo_roots_file"]
     if (
         any(
