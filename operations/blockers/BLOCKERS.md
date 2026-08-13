@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `06573a889ab3c905785a41bce8d91ec033de87bd99f38e513ff025e7af4f2cce`
+Ledger-SHA256: `3ea576f798f10d22d9d96d0508b4cde23d70a4a0aaa7ec013572b67ff98bc704`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -5377,6 +5377,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Task-only sequence selection returned eight candidates instead of the existing prevention discovery sequence.
 - Evidence: work_memory.py select output listed eight candidate sequence ids.
 
+## blk-859dcfcb9f6bc987b61812d5
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `publish`
+- Surface: `git-worktree-index`
+- Symptom: The registered publisher could not stage the approved files because Git could not create the shared worktree index lock.
+- Evidence: fatal: Unable to create /Users/kamenkamenov/memory-knowledge/.git/worktrees/memory-knowledge/index.lock: Operation not permitted
+
 ## blk-85f4b845329a1390c55d08cb
 
 - Status: `non-gap`
@@ -6703,6 +6712,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory-correction`
 - Symptom: Correction recording rejected the discovery bundle because an explicitly read Python contract path is not declared in the dependency manifest
 - Evidence: work_memory.py correct returned executable-outside-manifest::scripts/research_package.py after the read command named the locked script
+
+## blk-a6f92a07a3544c110b7600ba
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `intake-dispatch`
+- Surface: `directive-read-preflight`
+- Symptom: The guarded publish stopped before staging because the recorded directive path referenced the primary checkout instead of this worktree.
+- Evidence: Recorded /Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md; expected /Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/working-agreement/DIRECTIVES.md.
 
 ## blk-a71bc46b5139c32d98ebf7f0
 

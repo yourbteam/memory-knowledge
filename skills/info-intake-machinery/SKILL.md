@@ -1,6 +1,6 @@
 ---
 name: info-intake-machinery
-description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers and files as immutable sources, records readable projections, verifies visual relationships, turns every currently known gap into one code-bound question round, conducts any prepared operator round one question at a time, assesses every completed round against its exact gaps, and prepares immutable follow-up questions for failed clarifications without losing legacy single-gap replay.
+description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers, files, and public URLs as immutable sources, records readable projections, verifies visual relationships, reconstructs one source-to-projection outcome for every intake source, turns every currently known gap into one code-bound question round, conducts any prepared operator round one question at a time, assesses every completed round against its exact gaps, and prepares immutable follow-up questions for failed clarifications without losing legacy single-gap replay.
 ---
 
 # Info Intake Machinery
@@ -47,7 +47,7 @@ Code assembles the fixed assessment schema and asks for the first source only af
 sufficient interview. Every rejected and accepted model answer remains in the hash-chained
 interview journal, whose final hash and assembled assessment are appended to the intake ledger.
 
-## Freeze the first local file
+## Freeze the first file or public URL
 
 When the machinery asks for the first source, run:
 
@@ -57,6 +57,8 @@ python3 scripts/start_intake.py --work <same-directory> \
     --source '<operator-supplied local file>'
 ```
 
+Use `--source-url '<public HTTP(S) URL>'` instead of `--source` for a web source.
+
 Code copies the exact bytes into the intake and records the provided path, resolved origin,
 filename, byte count, content hash, detected media type, detection basis, and local-file adapter
 version. It records that the readable projection is still pending. This adapter has no rules for
@@ -64,15 +66,27 @@ images or any other particular file type. Reusing the same command resumes witho
 occurrence; changed content or origin fails closed. Once frozen, resuming without the original path
 remains valid because the intake owns its immutable copy.
 
-## Create the first visual projection attempt
+For a URL, code permits no credentials, resolves and connects only to public addresses, rechecks
+every redirect, follows at most five, accepts only a successful response, and reads at most 20 MiB.
+It preserves the supplied and final URLs, complete redirect trail, response status and headers,
+address evidence, retrieval time, and exact response bytes. Resume never fetches it again.
 
-For a frozen image source, run:
+## Create the first readable projection
+
+For the frozen first file or URL, run:
 
 ```text
 python3 scripts/start_intake.py --work <same-directory> \
     --opening '<exact opening>' --purpose '<exact purpose answer>' \
     --project-source
 ```
+
+Code selects the adapter from the frozen source. If every byte is valid UTF-8, it writes those
+exact bytes as projection version 1, records complete one-to-one coverage, and stops at
+`first_source_projection_complete` without a model call. Decoding must round-trip to the frozen
+bytes, so the adapter performs no Unicode normalization or other rewriting. Invalid UTF-8 fails
+closed: the pending acquisition reservation remains visible and no projection ledger entry is
+written. For an image, code instead starts the visual projection path below.
 
 The command returns the frozen attachment and an exact command for the code-controlled interview.
 Inspect the frozen image, run that command, and answer only its currently displayed question. Code
@@ -122,8 +136,14 @@ verifier, correction interview when any readable pair is rejected, and independe
 verifier when a replacement is proposed. After each successful model interview it re-enters the
 deterministic clarification boundary. It launches only the exact next model command returned by
 that boundary. When the boundary returns one current operator question, code presents only that
-question, preserves the exact non-empty answer as an immutable source and readable projection,
-then re-enters the boundary. It stops only at grounded first-layer completion or a managed failure.
+question and its code-controlled answer type. Text becomes an immutable source and verbatim
+projection. A requested local file first becomes a new immutable source with a reserved projection.
+The boundary then selects that exact pending source and validates its question and gap lineage.
+Valid UTF-8 is copied verbatim without a model; images run the same code-controlled visual
+producer, independent verifier, and correction stages under a source-specific artifact namespace.
+It stops after the reserved immutable projection is filled;
+it does not decide whether that projection resolves the original gap or combine projections. The
+launcher otherwise stops only at grounded first-layer completion or a managed failure.
 A changed question, mismatched command, attachment, boundary, or exit status fails closed.
 
 ## Turn all current gaps into one operator question round
@@ -137,10 +157,11 @@ python3 scripts/start_intake.py --work <same-directory> \
 
 Code enumerates every explicit gap in canonical projection order and binds each collection,
 identity, exact record, record hash, and projection hash before the model runs. One fresh model
-process receives those bound gaps one at a time and formulates exactly one focused question for
-each. Code keeps the complete round internally; the model cannot omit, duplicate, reorder, or
-invent a gap. Every question keeps its own identity and exact gap binding, while the operator sees
-only the first unanswered question.
+process receives those bound gaps one at a time. For each, code offers only `operator_text`,
+`local_file`, or `url`; the model chooses which evidence the operator must supply, then formulates exactly
+one focused question. Code keeps the complete round internally; the model cannot omit, duplicate,
+reorder, or invent a gap or response type. Every question keeps its own identity, required response
+type, and exact gap binding, while the operator sees only the first unanswered question.
 
 The round request, complete gap list, interview journal, rejected attempts, final question list,
 and each operator presentation are appended to the ledger. Answer the displayed question with:
@@ -158,6 +179,59 @@ answer, source, projection, and ledger link, then returns only the first unanswe
 Empty answers fail without changing the ledger. After the last answer, the machinery records the
 completed round and stops ready for later projection assessment. Existing saved single-gap intakes
 remain replayable through their already recorded answer and resolution stages below.
+
+For `local_file`, supply one existing file through the one-question operator command, or directly
+with `--gap-file '<path>'`. Text, a missing path, or a directory is rejected without advancing.
+Code freezes the exact bytes under the next source identity and records origin, hash, media type,
+exact question and gap lineage, and a reserved projection identity with `pending` coverage. It then
+stops at `additional_source_frozen`; acquisition itself does not project or combine the file or
+present the next question. Re-enter the clarification boundary to dispatch the applicable adapter.
+Valid UTF-8 fills that exact reserved identity verbatim without a model. An image fills it using
+complete spatial traversal. Both stop at `additional_source_projection_complete`. A non-image
+whose complete bytes are not valid UTF-8 fails closed without changing the source, reservation,
+or ledger.
+
+For `url`, supply one public address through the one-question operator command or directly with
+`--gap-url '<URL>'`. Code applies the same retrieval controls and freezes one new URL source with
+the exact question, gap lineage, and pending projection identity before conversion.
+
+For a flat, unencrypted PDF, code inspects attachments, forms, JavaScript, encryption, and page
+count, then renders at most 100 visible pages to bounded PNGs. It hashes every rendering and sends
+one page at a time, in fixed page order, through the same code-controlled spatial interview and
+independent relationship verification used for images. Only after every page has an accepted
+outcome does code create one ordered PDF manifest and fill the reserved projection identity. The
+manifest freezes every explicit gap with its page, exact item identity and record, page projection, and rendered-page hashes. Code sends all affected pages to one model question-formulation pass in
+page order, then the existing interview presents the resulting questions to the operator one at a
+time. A PDF with explicit gaps cannot stop as projection-complete. Malformed or unsupported PDFs
+preserve one immutable failed projection outcome with the exact reason. Missing, changed,
+incomplete, reordered, or unbound page artifacts and gap identities fail closed.
+
+## Close the source-to-projection inventory
+
+Run the deterministic closure gate with:
+
+```text
+python3 scripts/start_intake.py --work <same-directory> \
+    --source-projection-closure
+```
+
+Code reconstructs every `source_projected` and `source_acquired` entry and every later
+`projection_version_created` entry from the immutable hash-chained ledger. It validates each
+source and projection artifact against its path and SHA-256, preserves the acquisition-time
+reservation, orders projection versions, and returns exactly one outcome per source. `projected`
+names the latest immutable projection; `pending` retains a supported source still awaiting
+conversion; `failed` retains the exact recorded or deterministic conversion failure reason.
+All outcomes projected gives `all_projected`; any pending or failed outcome
+gives `conversion_incomplete`.
+
+The gate is a replayable read-only view. It does not append a ledger event, alter a reservation,
+judge projection coverage, decide whether one source resolves another source's gap, or combine
+projections. The first-layer terminal gate recomputes this view and permits completion only when
+its verdict is `all_projected`. `conversion_incomplete` returns every exact pending or failed
+source outcome as `source_conversion_required` without writing a completion event. A changed or
+missing artifact, duplicate source or projection identity, broken projection version order,
+unknown source binding, or failure to fill an explicit reservation returns `terminal_invalid` at
+that completion seam.
 
 ## Assess every preserved question-round answer
 
@@ -228,8 +302,10 @@ reordered, contradictory, or changed coverage evidence returns `terminal_invalid
 the terminal event. The qualification takes no model answer and does not mutate the projection.
 
 A deterministic disposition gate then decides what that qualification permits. Only
-`readable_projection_complete` with zero exact gaps becomes `first_layer_complete` and may append
-the clarification-terminal event. `readable_projection_incomplete` becomes
+`readable_projection_complete` with zero exact gaps and an intake-wide `all_projected` closure
+becomes `first_layer_complete` and may append the clarification-terminal event.
+`conversion_incomplete` becomes `source_conversion_required` with its exact pending and failed
+outcomes and writes no completion event. `readable_projection_incomplete` becomes
 `clarification_required` with the same exact ordered gaps and writes no completion event.
 Contradictory decision counts, qualification counts, or gap lists become `terminal_invalid`.
 This gate does not formulate questions, run interviews, or alter the projection.
@@ -252,8 +328,16 @@ code-owned transitions until it reaches exactly one typed boundary:
 
 - `needs_model_interview` returns exactly one existing code-controlled interview command and stops.
 - `needs_operator_answer` returns exactly one current prepared question and stops.
+- `first_source_projection_complete` returns a frozen valid UTF-8 first source and its exact
+  complete verbatim projection, then stops before later projection assessment.
+- `additional_source_projection_complete` returns the newly projected source, its unchanged
+  reservation, exact question and gap lineage, and its immutable readable projection, then stops
+  before any resolution assessment.
+- `source_conversion_required` returns the exact pending or failed source outcomes and stops
+  without a first-layer completion event.
 - `clarification_complete` returns the preserved grounded terminal result plus its exact complete
-  projection qualification and `first_layer_complete` disposition, then stops.
+  projection qualification, `all_projected` closure, and `first_layer_complete` disposition, then
+  stops.
 
 `clarification_required` is an internal continuation, not an external boundary. The controller
 uses its exact ordered remaining gaps to request the next complete follow-up question round, then
@@ -364,9 +448,10 @@ python3 scripts/start_intake.py --work <same-directory> \
 Code reads the preserved round number and complete ordered question set; it does not assume round
 2. It appends only the first question presentation and returns only that question. Repeating the
 command while the round is active returns the same current question without another ledger entry.
-Supply each answer separately with the existing `--gap-answer '<exact answer>'` command. Code
-rejects an answer before the interview starts, rejects empty or duplicate answers, and cannot skip
-or reorder the prepared questions.
+Supply each response separately. Use `--gap-answer '<exact answer>'` only for `operator_text`, or
+the one-question operator command/`--gap-file '<path>'` for `local_file`. Code rejects a response
+before the interview starts, rejects empty, missing, wrong-type, or duplicate responses, and cannot
+skip or reorder the prepared questions.
 
 Before the next question is shown, each exact answer becomes a new immutable human source and a
 complete verbatim readable projection. Its ledger lineage names the prepared-round result, round,
@@ -385,15 +470,22 @@ latest completed assessed round and conduct any prepared round one question at a
 one deterministic continuation decision and can execute exactly one corresponding transition, but
 its boundary controller still stops for every model interview and operator answer; it does not run
 external work or a fully automatic question loop
-to a grounded terminal condition or accept URLs. Its terminal qualification verifies the recorded
+to a grounded terminal condition. Its terminal qualification verifies the recorded
 coverage contract and explicit gaps, and its disposition gate prevents an incomplete projection
 from ending the first layer. Its boundary controller turns `clarification_required` into the next
 complete follow-up question-round request, but does not perform the later semantic projection
-assessment against the source. Legacy
+assessment against the source. It can freeze one additional local file or public URL selected by
+a code-typed gap question, copy any completely valid UTF-8 source verbatim, route any pending image source
+through the source-neutral visual projection contract, and fill its reserved immutable projection
+without changing the original projection. It stops
+before assessing whether that new projection resolves the originating gap or combining the two
+projections. Legacy
 gap resolution remains limited to an existing preserved single-gap answer bound to a relationship
-identity ambiguity. The projection adapter currently accepts images only and fails closed for
-other media types. Do not simulate those later units in prose or extend the script while running
-these proven stages.
+identity ambiguity. The projection layer currently accepts images, flat visible-page PDFs, and
+complete valid UTF-8 files; other non-image bytes fail closed. Its source-projection closure gate can prove whether every immutable source has
+a readable-projection outcome, but that gate remains separate from semantic gap assessment and
+projection combination. Do not simulate those later units in prose or extend the script while
+running these proven stages.
 
 ## Status contract
 
@@ -402,6 +494,7 @@ these proven stages.
 | `needs_operator` | 4 | The intake is waiting for a source, one legacy answer, or one current question-round answer. |
 | `waiting_for_model` | 2 | One bounded purpose, projection, question, or answer assessment must be completed. |
 | `blocked` | 3 | Input or durable state is missing, changed, or invalid. |
-| `ready_for_projection` | 0 | The first local file is frozen and its projection is pending. |
+| `ready_for_projection` | 0 | A requested file or URL is frozen and its projection is pending. |
 | `ready_for_projection_assessment` | 0 | The current immutable projection version is ready. Before clarification terminal, completeness remains unassessed; the terminal result includes the code-derived projection qualification. |
 | `ready_for_operator_interview` | 0 | A complete follow-up question round is preserved but no operator question has been presented. |
+| `source_projection_closure` | 0 | The read-only gate returned one validated projected, pending, or failed conversion outcome per immutable source. |

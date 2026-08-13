@@ -7,11 +7,16 @@ import argparse
 from collections.abc import Callable
 from datetime import datetime, timezone
 import hashlib
+import http.client
 import importlib.util
+import ipaddress
 import json
 from pathlib import Path
+import socket
+import ssl
 import subprocess
 import sys
+from urllib.parse import unquote, urljoin, urlsplit, urlunsplit
 import uuid
 
 
@@ -26,6 +31,11 @@ FIRST_SOURCE_QUESTION = {
 }
 ASSESSMENT_SCHEMA = 1
 LOCAL_FILE_ADAPTER_VERSION = 1
+URL_ADAPTER_VERSION = 1
+URL_MAX_BYTES = 20 * 1024 * 1024
+URL_MAX_REDIRECTS = 5
+URL_TIMEOUT_SECONDS = 20
+URL_REDIRECT_STATUSES = {301, 302, 303, 307, 308}
 
 _INTERVIEW_SPEC = importlib.util.spec_from_file_location(
     "info_intake_projection_interview",
@@ -104,6 +114,14 @@ gap_resolution_verification = importlib.util.module_from_spec(
 _GAP_RESOLUTION_VERIFICATION_SPEC.loader.exec_module(
     gap_resolution_verification
 )
+_PDF_PROJECTION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_pdf_projection",
+    Path(__file__).resolve().with_name("pdf_projection.py"),
+)
+if _PDF_PROJECTION_SPEC is None or _PDF_PROJECTION_SPEC.loader is None:
+    raise RuntimeError("PDF projection adapter is unavailable")
+pdf_projection = importlib.util.module_from_spec(_PDF_PROJECTION_SPEC)
+_PDF_PROJECTION_SPEC.loader.exec_module(pdf_projection)
 
 
 def _canonical(value: object) -> bytes:
@@ -282,6 +300,159 @@ def _projection_ready_result(state: dict[str, object], work: Path) -> dict[str, 
     }
 
 
+def _pdf_projection_ready_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    return {
+        "status": "ready_for_projection_assessment",
+        "stopped": "first_pdf_projection_recorded",
+        "intake_id": state["intake_id"],
+        "source": state["first_source"],
+        "projection": state["first_projection"],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _pdf_projection_failed_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    return {
+        "status": "ready_for_projection",
+        "stopped": "first_pdf_projection_failed",
+        "intake_id": state["intake_id"],
+        "source": state["first_source"],
+        "projection": state["first_projection"],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _pdf_page_paths(source_id: str, page: int) -> dict[str, str]:
+    root = f"pdf-projections/{source_id}-v1/page-projections/page-{page:06d}"
+    return {
+        "root": root,
+        "interview_dir": f"{root}/projection-interview",
+        "interview_path": f"{root}/projection-interview/interview.jsonl",
+        "candidate_path": f"{root}/projection-interview/projection.json",
+        "verification_dir": f"{root}/relationship-verification",
+        "verification_path": f"{root}/relationship-verification/verification.json",
+        "correction_dir": f"{root}/relationship-correction",
+        "correction_path": f"{root}/relationship-correction/corrections.json",
+        "correction_candidate_path": f"{root}/relationship-correction/verification-candidate.json",
+        "correction_verification_dir": f"{root}/relationship-correction-verification",
+        "correction_verification_path": f"{root}/relationship-correction-verification/verification.json",
+        "projection_path": f"{root}/projection.json",
+    }
+
+
+def _active_pdf_page(state: dict[str, object]) -> dict[str, object] | None:
+    saved = state.get("pdf_projection")
+    if not isinstance(saved, dict):
+        return None
+    prepared = saved.get("prepared")
+    page = saved.get("active_page")
+    pages = prepared.get("pages") if isinstance(prepared, dict) else None
+    if (
+        not isinstance(page, int)
+        or not isinstance(pages, list)
+        or page < 1
+        or page > len(pages)
+        or not isinstance(pages[page - 1], dict)
+    ):
+        return None
+    return pages[page - 1]
+
+
+def _pdf_page_gap_inventory(
+    projection: dict[str, object],
+    *,
+    page: int,
+    page_projection_path: str,
+    page_projection_sha256: str,
+    render_path: str,
+    render_sha256: str,
+) -> list[dict[str, object]]:
+    """Freeze every page gap with a globally unique, source-unit identity."""
+    inventory: list[dict[str, object]] = []
+    elements = projection.get("elements", [])
+    for collection, kind in (
+        ("scan_regions", "scan_region"),
+        ("elements", "element"),
+        ("relationships", "relationship"),
+    ):
+        items = projection.get(collection, [])
+        assert isinstance(items, list)
+        for item in items:
+            assert isinstance(item, dict)
+            if item.get("status") != "gap":
+                continue
+            item_id = str(item["id"])
+            context: list[dict[str, object]] = []
+            if collection == "relationships":
+                participant_ids = {item.get("from_id"), item.get("to_id")}
+                context = [
+                    element
+                    for element in elements
+                    if isinstance(element, dict)
+                    and element.get("id") in participant_ids
+                ]
+            inventory.append({
+                "page": page,
+                "collection": collection,
+                "kind": kind,
+                "id": f"pdf-page-{page:06d}:{collection}:{item_id}",
+                "item_id": item_id,
+                "page_projection_path": page_projection_path,
+                "page_projection_sha256": page_projection_sha256,
+                "render_path": render_path,
+                "render_sha256": render_sha256,
+                "record_sha256": _digest_bytes(_canonical(item)),
+                "record": item,
+                "recorded_context": context,
+            })
+    return inventory
+
+
+def _pdf_projection_waiting_result(
+    state: dict[str, object], work: Path, stage: str
+) -> dict[str, object]:
+    page = _active_pdf_page(state)
+    if page is None:
+        return _blocked("invalid PDF projection state", "the active PDF page is missing")
+    stages = {
+        "project": ("--run-projection-interview", "interviewing_first_projection"),
+        "verify": ("--run-projection-verification", "verifying_first_projection"),
+        "correct": ("--run-relationship-correction", "correcting_rejected_relationships"),
+        "verify_correction": ("--run-correction-verification", "verifying_relationship_corrections"),
+    }
+    flag, stopped = stages[stage]
+    return {
+        "status": "waiting_for_model",
+        "stopped": stopped,
+        "intake_id": state["intake_id"],
+        "pdf_page": page["page"],
+        "pdf_page_count": state["pdf_projection"]["prepared"]["page_count"],
+        "work": [{
+            "stage": f"{stage}_pdf_page",
+            "instruction": (
+                "Inspect the attached rendered PDF page, run the command, and answer only "
+                "the typed question currently displayed. Code controls page order, allowed "
+                "choices, spatial coverage, and assembly."
+            ),
+            "attachments": [str((work / str(page["render_path"])).resolve())],
+            "command": [
+                sys.executable,
+                str(Path(__file__).resolve()),
+                "--work",
+                str(work.resolve()),
+                flag,
+            ],
+        }],
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
 def _gap_clarification_model_result(
     state: dict[str, object], work: Path
 ) -> dict[str, object]:
@@ -312,6 +483,26 @@ def _gap_clarification_model_result(
 def _gap_question_round_model_result(
     state: dict[str, object], work: Path
 ) -> dict[str, object]:
+    saved_round = state.get("gap_question_round")
+    gaps = saved_round.get("gaps") if isinstance(saved_round, dict) else None
+    attachments: list[str]
+    if (
+        isinstance(state.get("first_projection"), dict)
+        and state["first_projection"].get("method") == "pdf_visible_pages"
+        and isinstance(gaps, list)
+    ):
+        ordered_paths: list[str] = []
+        for gap in gaps:
+            if not isinstance(gap, dict) or not isinstance(gap.get("render_path"), str):
+                return _blocked(
+                    "invalid PDF gap inventory",
+                    "a PDF gap lost its exact rendered-page identity",
+                )
+            if gap["render_path"] not in ordered_paths:
+                ordered_paths.append(str(gap["render_path"]))
+        attachments = [str((work / path).resolve()) for path in ordered_paths]
+    else:
+        attachments = [str((work / "sources" / "source-000003").resolve())]
     return {
         "status": "waiting_for_model",
         "stopped": "formulating_gap_question_round",
@@ -322,7 +513,7 @@ def _gap_question_round_model_result(
                 "Inspect the frozen source and answer only each typed question displayed. "
                 "Code fixes every current gap, their order, and the final question round."
             ),
-            "attachments": [str((work / "sources" / "source-000003").resolve())],
+            "attachments": attachments,
             "command": [
                 sys.executable,
                 str(Path(__file__).resolve()),
@@ -678,6 +869,71 @@ def _round_answer_projection_record(number: int, sha256: str) -> dict[str, objec
     }
 
 
+def _verbatim_utf8_projection_record(
+    source_id: str, source_sha256: str
+) -> dict[str, object]:
+    return {
+        "id": f"projection-{source_id}-v1",
+        "source_id": source_id,
+        "version": 1,
+        "path": f"projections/{source_id}-v1.txt",
+        "sha256": source_sha256,
+        "method": "verbatim_utf8",
+        "coverage": {
+            "status": "complete",
+            "source_units": 1,
+            "represented_units": 1,
+            "gaps": [],
+        },
+    }
+
+
+def _verbatim_utf8_bytes(
+    frozen: bytes,
+) -> tuple[bytes | None, dict[str, object] | None]:
+    try:
+        text = frozen.decode("utf-8")
+    except UnicodeDecodeError as error:
+        return None, _blocked(
+            "projection adapter unavailable",
+            f"the complete frozen source is not valid UTF-8: {error}",
+        )
+    if text.encode("utf-8") != frozen:
+        return None, _blocked(
+            "invalid UTF-8 projection",
+            "the decoded source does not round-trip to its exact frozen bytes",
+        )
+    return frozen, None
+
+
+def _pending_additional_projection_record(number: int) -> dict[str, object]:
+    return {
+        "id": f"projection-source-{number:06d}-v1",
+        "source_id": f"source-{number:06d}",
+        "version": 1,
+        "status": "pending",
+        "path": None,
+        "sha256": None,
+        "method": None,
+        "coverage": {
+            "status": "pending",
+            "source_units": 1,
+            "represented_units": 0,
+            "gaps": ["the frozen source has not yet been converted"],
+        },
+    }
+
+
+def _bind_local_file_to_question(
+    source: dict[str, object], question: dict[str, object]
+) -> dict[str, object]:
+    return {
+        **source,
+        "answers_question": question["id"],
+        "answers_gap": question["answers_gap"],
+    }
+
+
 def _detect_media_type(path: Path) -> tuple[str, str]:
     try:
         completed = subprocess.run(
@@ -696,6 +952,7 @@ def _detect_media_type(path: Path) -> tuple[str, str]:
 
 
 def _local_file_record(
+    number: int,
     supplied: Path,
     resolved: Path,
     stored_path: str,
@@ -704,12 +961,328 @@ def _local_file_record(
     media_type_basis: str,
 ) -> dict[str, object]:
     return {
-        "id": "source-000003",
+        "id": f"source-{number:06d}",
         "kind": "local_file",
         "adapter": {"name": "local_file", "version": LOCAL_FILE_ADAPTER_VERSION},
         "provided_path": str(supplied),
         "resolved_path": str(resolved),
         "filename": supplied.name,
+        "stored_path": stored_path,
+        "size_bytes": len(content),
+        "sha256": _digest_bytes(content),
+        "media_type": media_type,
+        "media_type_basis": media_type_basis,
+    }
+
+
+class _PinnedHTTPSConnection(http.client.HTTPSConnection):
+    def __init__(self, server_hostname: str, address: str, port: int) -> None:
+        self._server_hostname = server_hostname
+        super().__init__(
+            address,
+            port=port,
+            timeout=URL_TIMEOUT_SECONDS,
+            context=ssl.create_default_context(),
+        )
+
+    def connect(self) -> None:
+        http.client.HTTPConnection.connect(self)
+        assert self.sock is not None
+        self.sock = self._context.wrap_socket(
+            self.sock, server_hostname=self._server_hostname
+        )
+
+
+def _url_connection(
+    scheme: str, hostname: str, address: str, port: int
+) -> http.client.HTTPConnection:
+    if scheme == "https":
+        return _PinnedHTTPSConnection(hostname, address, port)
+    return http.client.HTTPConnection(
+        address, port=port, timeout=URL_TIMEOUT_SECONDS
+    )
+
+
+def _without_url_fragment(value: str) -> str:
+    parsed = urlsplit(value)
+    return urlunsplit(
+        (parsed.scheme, parsed.netloc, parsed.path, parsed.query, "")
+    )
+
+
+def _requestable_public_url(
+    supplied: str,
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    if not supplied or any(ord(character) < 32 for character in supplied):
+        return None, _blocked(
+            "URL unavailable", "supply one non-empty HTTP(S) URL without control characters"
+        )
+    try:
+        parsed = urlsplit(supplied)
+        port = parsed.port
+        hostname = parsed.hostname
+    except ValueError as error:
+        return None, _blocked("URL unavailable", f"the URL authority is invalid: {error}")
+    scheme = parsed.scheme.lower()
+    if scheme not in {"http", "https"}:
+        return None, _blocked(
+            "URL scheme unsupported",
+            f"the supplied URL uses {parsed.scheme or 'no scheme'}; use http or https",
+        )
+    if parsed.username is not None or parsed.password is not None:
+        return None, _blocked(
+            "URL credentials prohibited",
+            "remove the username and password from the URL before intake",
+        )
+    if not hostname:
+        return None, _blocked(
+            "URL unavailable", "the supplied HTTP(S) URL has no hostname"
+        )
+    try:
+        ascii_hostname = hostname.encode("idna").decode("ascii")
+    except UnicodeError as error:
+        return None, _blocked("URL unavailable", f"the hostname is invalid: {error}")
+    port = port or (443 if scheme == "https" else 80)
+    try:
+        resolved = socket.getaddrinfo(
+            ascii_hostname, port, type=socket.SOCK_STREAM
+        )
+    except OSError as error:
+        return None, _blocked(
+            "URL resolution failed",
+            f"the hostname {ascii_hostname!r} could not be resolved: {error}",
+        )
+    addresses = sorted({str(item[4][0]) for item in resolved})
+    unsafe = []
+    for address in addresses:
+        try:
+            candidate = ipaddress.ip_address(address.split("%", 1)[0])
+        except ValueError:
+            unsafe.append(address)
+            continue
+        if not candidate.is_global:
+            unsafe.append(address)
+    if not addresses or unsafe:
+        return None, _blocked(
+            "unsafe URL destination",
+            "the hostname must resolve only to public internet addresses; "
+            f"rejected: {', '.join(unsafe) if unsafe else 'no addresses'}",
+        )
+    request_url = _without_url_fragment(supplied)
+    target = parsed.path or "/"
+    if parsed.query:
+        target = f"{target}?{parsed.query}"
+    default_port = 443 if scheme == "https" else 80
+    display_hostname = (
+        f"[{ascii_hostname}]" if ":" in ascii_hostname else ascii_hostname
+    )
+    host_header = (
+        display_hostname if port == default_port else f"{display_hostname}:{port}"
+    )
+    return {
+        "scheme": scheme,
+        "hostname": ascii_hostname,
+        "port": port,
+        "request_url": request_url,
+        "target": target,
+        "host_header": host_header,
+        "resolved_addresses": addresses,
+    }, None
+
+
+def _response_headers(response: http.client.HTTPResponse) -> list[dict[str, str]]:
+    return [
+        {"name": str(name), "value": str(value)}
+        for name, value in response.getheaders()
+    ]
+
+
+def _fetch_public_url(
+    supplied: str,
+) -> tuple[dict[str, object] | None, bytes | None, dict[str, object] | None]:
+    current = supplied
+    initial_request_url: str | None = None
+    redirects: list[dict[str, object]] = []
+    for redirect_count in range(URL_MAX_REDIRECTS + 1):
+        request, request_error = _requestable_public_url(current)
+        if request_error:
+            return None, None, request_error
+        assert request is not None
+        request_url = str(request["request_url"])
+        if initial_request_url is None:
+            initial_request_url = request_url
+        response: http.client.HTTPResponse | None = None
+        connection: http.client.HTTPConnection | None = None
+        connected_address: str | None = None
+        connection_errors: list[str] = []
+        for address in request["resolved_addresses"]:
+            assert isinstance(address, str)
+            try:
+                connection = _url_connection(
+                    str(request["scheme"]),
+                    str(request["hostname"]),
+                    address,
+                    int(request["port"]),
+                )
+                connection.request(
+                    "GET",
+                    str(request["target"]),
+                    headers={
+                        "Host": str(request["host_header"]),
+                        "User-Agent": "info-intake-machinery/1",
+                        "Accept": "*/*",
+                        "Connection": "close",
+                    },
+                )
+                response = connection.getresponse()
+                connected_address = address
+                break
+            except (OSError, ssl.SSLError, http.client.HTTPException) as error:
+                connection_errors.append(f"{address}: {error}")
+                if connection is not None:
+                    connection.close()
+                connection = None
+        if response is None or connection is None or connected_address is None:
+            return None, None, _blocked(
+                "URL retrieval failed",
+                f"the public URL {request_url!r} could not be retrieved: "
+                + "; ".join(connection_errors),
+            )
+        try:
+            headers = _response_headers(response)
+            status = int(response.status)
+            reason = str(response.reason or "")
+            if status in URL_REDIRECT_STATUSES:
+                locations = [
+                    item["value"]
+                    for item in headers
+                    if item["name"].lower() == "location"
+                ]
+                if len(locations) != 1 or not locations[0]:
+                    return None, None, _blocked(
+                        "URL redirect invalid",
+                        f"redirect response {status} from {request_url!r} must contain exactly one Location header",
+                    )
+                if redirect_count >= URL_MAX_REDIRECTS:
+                    return None, None, _blocked(
+                        "URL redirect limit exceeded",
+                        f"the retrieval exceeded {URL_MAX_REDIRECTS} redirects",
+                    )
+                next_url = _without_url_fragment(
+                    urljoin(request_url, locations[0])
+                )
+                redirects.append({
+                    "request_url": request_url,
+                    "status": status,
+                    "reason": reason,
+                    "location": locations[0],
+                    "next_url": next_url,
+                    "headers": headers,
+                    "resolved_addresses": request["resolved_addresses"],
+                    "connected_address": connected_address,
+                })
+                current = next_url
+                continue
+            if status < 200 or status >= 300:
+                return None, None, _blocked(
+                    "URL response unsuccessful",
+                    f"the final response from {request_url!r} was {status} {reason}".strip(),
+                )
+            lengths = [
+                item["value"]
+                for item in headers
+                if item["name"].lower() == "content-length"
+            ]
+            if lengths:
+                try:
+                    declared_length = int(lengths[-1])
+                except ValueError:
+                    declared_length = -1
+                if declared_length > URL_MAX_BYTES:
+                    return None, None, _blocked(
+                        "URL response too large",
+                        f"the response declares {declared_length} bytes; the limit is {URL_MAX_BYTES}",
+                    )
+            chunks: list[bytes] = []
+            received = 0
+            while True:
+                chunk = response.read(min(65536, URL_MAX_BYTES + 1 - received))
+                if not chunk:
+                    break
+                chunks.append(chunk)
+                received += len(chunk)
+                if received > URL_MAX_BYTES:
+                    return None, None, _blocked(
+                        "URL response too large",
+                        f"the response exceeded the {URL_MAX_BYTES}-byte limit",
+                    )
+            content = b"".join(chunks)
+            return {
+                "provided_url": supplied,
+                "request_url": initial_request_url,
+                "final_url": request_url,
+                "retrieved_at": datetime.now(timezone.utc).isoformat(),
+                "redirect_chain": redirects,
+                "response": {
+                    "status": status,
+                    "reason": reason,
+                    "headers": headers,
+                    "resolved_addresses": request["resolved_addresses"],
+                    "connected_address": connected_address,
+                },
+            }, content, None
+        except (OSError, ssl.SSLError, http.client.HTTPException) as error:
+            return None, None, _blocked(
+                "URL retrieval failed",
+                f"the response from {request_url!r} could not be read: {error}",
+            )
+        finally:
+            connection.close()
+    return None, None, _blocked(
+        "URL redirect limit exceeded",
+        f"the retrieval exceeded {URL_MAX_REDIRECTS} redirects",
+    )
+
+
+def _url_media_type(
+    retrieval: dict[str, object], stored_path: Path
+) -> tuple[str, str]:
+    response = retrieval.get("response")
+    headers = response.get("headers") if isinstance(response, dict) else None
+    if isinstance(headers, list):
+        for item in reversed(headers):
+            if (
+                isinstance(item, dict)
+                and str(item.get("name", "")).lower() == "content-type"
+            ):
+                media_type = str(item.get("value", "")).split(";", 1)[0].strip().lower()
+                if "/" in media_type and "\n" not in media_type:
+                    return media_type, "HTTP Content-Type"
+    return _detect_media_type(stored_path)
+
+
+def _url_source_record(
+    number: int,
+    stored_path: str,
+    content: bytes,
+    retrieval: dict[str, object],
+    media_type: str,
+    media_type_basis: str,
+) -> dict[str, object]:
+    final = urlsplit(str(retrieval["final_url"]))
+    final_segment = unquote(final.path.rsplit("/", 1)[-1])
+    filename = final_segment.replace("/", "_") or str(final.hostname or "download")
+    return {
+        "id": f"source-{number:06d}",
+        "kind": "url",
+        "adapter": {"name": "url", "version": URL_ADAPTER_VERSION},
+        "provided_url": retrieval["provided_url"],
+        "request_url": retrieval["request_url"],
+        "final_url": retrieval["final_url"],
+        "retrieved_at": retrieval["retrieved_at"],
+        "redirect_chain": retrieval["redirect_chain"],
+        "response": retrieval["response"],
+        "filename": filename,
         "stored_path": stored_path,
         "size_bytes": len(content),
         "sha256": _digest_bytes(content),
@@ -741,6 +1314,411 @@ def _validate_source_projection(
     if projection_bytes != source_bytes:
         return f"immutable projection {number} has changed"
     return None
+
+
+def _closure_artifact(
+    work: Path,
+    relative: object,
+    expected_sha256: object,
+    label: str,
+) -> tuple[bytes | None, dict[str, object] | None]:
+    if (
+        not isinstance(relative, str)
+        or not relative
+        or not isinstance(expected_sha256, str)
+        or len(expected_sha256) != 64
+    ):
+        return None, _blocked(
+            "invalid source projection ledger",
+            f"{label} lost its immutable path or SHA-256",
+        )
+    artifact = (work / relative).resolve()
+    try:
+        artifact.relative_to(work.resolve())
+        content = artifact.read_bytes()
+    except ValueError:
+        return None, _blocked(
+            "invalid source projection ledger", f"{label} escapes the intake directory"
+        )
+    except OSError:
+        return None, _blocked(
+            "immutable source projection unavailable", f"{label}: {relative}"
+        )
+    if _digest_bytes(content) != expected_sha256:
+        return None, _blocked(
+            "immutable source projection changed", f"{label}: {relative}"
+        )
+    return content, None
+
+
+def _source_projection_closure_inventory(
+    work: Path, entries: list[dict[str, object]]
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    sources: dict[str, dict[str, object]] = {}
+    projections: dict[str, list[dict[str, object]]] = {}
+    failures: dict[str, dict[str, object]] = {}
+    pdf_progress: dict[str, dict[str, int]] = {}
+    projection_ids: set[str] = set()
+    source_paths: set[str] = set()
+    projection_paths: set[str] = set()
+
+    def register_source(
+        entry: dict[str, object], *, directly_projected: bool
+    ) -> dict[str, object] | None:
+        source = entry.get("source")
+        if not isinstance(source, dict):
+            return _blocked(
+                "invalid source projection ledger",
+                f"ledger entry {entry.get('sequence')} lost its source record",
+            )
+        source_id = source.get("id")
+        if (
+            not isinstance(source_id, str)
+            or not source_id.startswith("source-")
+            or source_id in sources
+        ):
+            return _blocked(
+                "invalid source projection ledger",
+                f"ledger entry {entry.get('sequence')} has a missing or duplicate source identity",
+            )
+        relative = source.get("path", source.get("stored_path"))
+        if (
+            not isinstance(relative, str)
+            or relative in source_paths
+            or relative in projection_paths
+        ):
+            return _blocked(
+                "invalid source projection ledger",
+                f"source {source_id} has a missing or duplicate artifact path",
+            )
+        source_bytes, artifact_error = _closure_artifact(
+            work, relative, source.get("sha256"), f"source {source_id}"
+        )
+        if artifact_error:
+            return artifact_error
+        reservation = None if directly_projected else entry.get("projection")
+        if not directly_projected:
+            if not isinstance(reservation, dict) or reservation.get("status") != "pending":
+                return _blocked(
+                    "invalid source projection ledger",
+                    f"source {source_id} lost its pending projection reservation",
+                )
+            reservation_id = reservation.get("id")
+            if reservation_id is not None and (
+                reservation_id != f"projection-{source_id}-v1"
+                or reservation.get("source_id") != source_id
+                or reservation.get("version") != 1
+                or reservation.get("path") is not None
+                or reservation.get("sha256") is not None
+            ):
+                return _blocked(
+                    "invalid source projection ledger",
+                    f"source {source_id} has a malformed projection reservation",
+                )
+        source_paths.add(relative)
+        sources[source_id] = {
+            "source": source,
+            "source_ledger_sequence": entry["sequence"],
+            "reservation": reservation,
+            "source_bytes": source_bytes,
+            "directly_projected": directly_projected,
+        }
+        projections[source_id] = []
+        return None
+
+    def register_projection(
+        source_id: object,
+        projection: object,
+        entry: dict[str, object],
+        *,
+        direct_source_bytes: bytes | None = None,
+    ) -> dict[str, object] | None:
+        if not isinstance(source_id, str) or source_id not in sources:
+            return _blocked(
+                "invalid source projection ledger",
+                f"ledger entry {entry.get('sequence')} projects an unknown source",
+            )
+        if not isinstance(projection, dict):
+            return _blocked(
+                "invalid source projection ledger",
+                f"ledger entry {entry.get('sequence')} lost its projection record",
+            )
+        projection_id = projection.get("id")
+        version = projection.get("version")
+        path = projection.get("path")
+        if (
+            not isinstance(projection_id, str)
+            or not projection_id
+            or projection_id in projection_ids
+            or not isinstance(version, int)
+            or version < 1
+            or not isinstance(path, str)
+            or path in projection_paths
+            or path in source_paths
+            or any(item["version"] == version for item in projections[source_id])
+        ):
+            return _blocked(
+                "invalid source projection ledger",
+                f"ledger entry {entry.get('sequence')} has a duplicate or malformed projection identity",
+            )
+        projection_bytes, artifact_error = _closure_artifact(
+            work, path, projection.get("sha256"), f"projection {projection_id}"
+        )
+        if artifact_error:
+            return artifact_error
+        if direct_source_bytes is not None and projection_bytes != direct_source_bytes:
+            return _blocked(
+                "immutable source projection changed",
+                f"projection {projection_id} is not the complete verbatim source representation",
+            )
+        declared_source_id = projection.get("source_id")
+        if declared_source_id is not None and declared_source_id != source_id:
+            return _blocked(
+                "invalid source projection ledger",
+                f"projection {projection_id} is bound to a different source",
+            )
+        projection_ids.add(projection_id)
+        projection_paths.add(path)
+        projections[source_id].append(
+            {
+                "ledger_sequence": entry["sequence"],
+                "id": projection_id,
+                "version": version,
+                "path": path,
+                "sha256": projection["sha256"],
+            }
+        )
+        return None
+
+    for entry in entries:
+        event = entry.get("event")
+        if event == "source_projected":
+            source_error = register_source(entry, directly_projected=True)
+            if source_error:
+                return None, source_error
+            source = entry["source"]
+            assert isinstance(source, dict)
+            source_id = source["id"]
+            source_bytes = sources[str(source_id)]["source_bytes"]
+            assert isinstance(source_bytes, bytes)
+            projection_error = register_projection(
+                source_id,
+                entry.get("projection"),
+                entry,
+                direct_source_bytes=source_bytes,
+            )
+            if projection_error:
+                return None, projection_error
+        elif event == "source_acquired":
+            source_error = register_source(entry, directly_projected=False)
+            if source_error:
+                return None, source_error
+        elif event == "projection_version_created":
+            projection = entry.get("projection")
+            source_id = projection.get("source_id") if isinstance(projection, dict) else None
+            projection_error = register_projection(source_id, projection, entry)
+            if projection_error:
+                return None, projection_error
+        elif event == "projection_conversion_failed":
+            source_id = entry.get("source_id")
+            failure = entry.get("failure")
+            if (
+                not isinstance(source_id, str)
+                or source_id not in sources
+                or source_id in failures
+                or not isinstance(failure, dict)
+                or failure.get("id") != f"projection-{source_id}-v1"
+                or failure.get("source_id") != source_id
+                or failure.get("version") != 1
+                or failure.get("status") != "failed"
+                or failure.get("path") is not None
+                or failure.get("sha256") is not None
+                or not isinstance(failure.get("coverage"), dict)
+                or failure["coverage"].get("status") != "failed"
+            ):
+                return None, _blocked(
+                    "invalid source projection ledger",
+                    f"ledger entry {entry.get('sequence')} has an invalid conversion failure",
+                )
+            failures[source_id] = {
+                "ledger_sequence": entry["sequence"],
+                "failure": failure,
+            }
+        elif event == "pdf_projection_started":
+            source_id = entry.get("source_id")
+            prepared = entry.get("prepared")
+            page_count = prepared.get("page_count") if isinstance(prepared, dict) else None
+            if (
+                not isinstance(source_id, str)
+                or source_id not in sources
+                or source_id in pdf_progress
+                or not isinstance(page_count, int)
+                or page_count < 1
+            ):
+                return None, _blocked(
+                    "invalid source projection ledger",
+                    f"ledger entry {entry.get('sequence')} has invalid PDF progress",
+                )
+            pdf_progress[source_id] = {"page_count": page_count, "completed": 0}
+        elif event == "pdf_page_projection_completed":
+            source_id = entry.get("source_id")
+            progress = pdf_progress.get(str(source_id))
+            if (
+                progress is None
+                or entry.get("page") != progress["completed"] + 1
+                or progress["completed"] >= progress["page_count"]
+            ):
+                return None, _blocked(
+                    "invalid source projection ledger",
+                    f"ledger entry {entry.get('sequence')} reordered PDF pages",
+                )
+            progress["completed"] += 1
+
+    if not sources:
+        return None, _blocked(
+            "source projection closure unavailable", "the intake has no immutable sources"
+        )
+
+    outcomes: list[dict[str, object]] = []
+    for source_id, saved in sources.items():
+        source = saved["source"]
+        reservation = saved["reservation"]
+        versions = sorted(projections[source_id], key=lambda item: int(item["version"]))
+        if versions:
+            if source_id in failures:
+                return None, _blocked(
+                    "invalid source projection ledger",
+                    f"source {source_id} has both failed and completed projection outcomes",
+                )
+            progress = pdf_progress.get(source_id)
+            if progress is not None and progress["completed"] != progress["page_count"]:
+                return None, _blocked(
+                    "invalid source projection ledger",
+                    f"source {source_id} completed before every PDF page was projected",
+                )
+            expected_versions = list(range(1, len(versions) + 1))
+            actual_versions = [item["version"] for item in versions]
+            if actual_versions != expected_versions:
+                return None, _blocked(
+                    "invalid source projection ledger",
+                    f"source {source_id} has a missing or reordered projection version",
+                )
+            if isinstance(reservation, dict) and isinstance(reservation.get("id"), str):
+                if reservation["id"] != versions[0]["id"]:
+                    return None, _blocked(
+                        "invalid source projection ledger",
+                        f"source {source_id} did not fill its reserved projection identity",
+                    )
+            outcome = "projected"
+            reason = None
+            current_projection = versions[-1]
+        else:
+            if saved["directly_projected"]:
+                return None, _blocked(
+                    "invalid source projection ledger",
+                    f"source {source_id} lost its atomic readable projection",
+                )
+            recorded_failure = failures.get(source_id)
+            progress = pdf_progress.get(source_id)
+            media_type = source.get("media_type") if isinstance(source, dict) else None
+            source_bytes = saved.get("source_bytes")
+            assert isinstance(source_bytes, bytes)
+            _, utf8_error = _verbatim_utf8_bytes(source_bytes)
+            if recorded_failure is not None:
+                failure = recorded_failure["failure"]
+                assert isinstance(failure, dict)
+                coverage = failure.get("coverage")
+                gaps = coverage.get("gaps") if isinstance(coverage, dict) else None
+                outcome = "failed"
+                reason = gaps[0] if isinstance(gaps, list) and gaps else "source conversion failed"
+                current_projection = {
+                    "ledger_sequence": recorded_failure["ledger_sequence"],
+                    **failure,
+                }
+            elif progress is not None:
+                outcome = "pending"
+                reason = (
+                    f"PDF visible-page projection completed {progress['completed']} "
+                    f"of {progress['page_count']} pages"
+                )
+                current_projection = None
+            elif (
+                isinstance(media_type, str)
+                and not media_type.startswith("image/")
+                and utf8_error is not None
+            ):
+                outcome = "failed"
+                reason = str(utf8_error["why"])
+                current_projection = None
+            else:
+                outcome = "pending"
+                if isinstance(reservation, dict):
+                    reason = reservation.get("why")
+                    coverage = reservation.get("coverage")
+                    if reason is None and isinstance(coverage, dict):
+                        gaps = coverage.get("gaps")
+                        if isinstance(gaps, list) and gaps and isinstance(gaps[0], str):
+                            reason = gaps[0]
+                if not isinstance(reason, str) or not reason:
+                    reason = "the frozen source has not yet been converted"
+                current_projection = None
+        outcomes.append(
+            {
+                "source_id": source_id,
+                "source_kind": source.get("kind") if isinstance(source, dict) else None,
+                "source_sha256": source.get("sha256") if isinstance(source, dict) else None,
+                "source_ledger_sequence": saved["source_ledger_sequence"],
+                "outcome": outcome,
+                "reason": reason,
+                "reserved_projection": reservation,
+                "projection": current_projection,
+                "projection_version_count": len(versions),
+            }
+        )
+
+    outcome_counts = {
+        name: sum(item["outcome"] == name for item in outcomes)
+        for name in ("projected", "pending", "failed")
+    }
+    return {
+        "verdict": (
+            "all_projected"
+            if outcome_counts == {
+                "projected": len(outcomes),
+                "pending": 0,
+                "failed": 0,
+            }
+            else "conversion_incomplete"
+        ),
+        "source_count": len(outcomes),
+        "outcome_counts": outcome_counts,
+        "outcomes": outcomes,
+    }, None
+
+
+def run_source_projection_closure(work: Path) -> dict[str, object]:
+    try:
+        opening_bytes = (work / "sources" / "source-000001.txt").read_bytes()
+    except OSError as error:
+        return _blocked("source projection closure unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening_bytes)
+    if load_error:
+        return load_error
+    assert state is not None
+    inventory, inventory_error = _source_projection_closure_inventory(work, entries)
+    if inventory_error:
+        return inventory_error
+    assert inventory is not None
+    return {
+        "status": "source_projection_closure",
+        "stopped": "source_projection_closure",
+        "intake_id": state["intake_id"],
+        **inventory,
+        "ledger_entries": len(entries),
+        "ledger_tail_sha256": entries[-1]["entry_sha256"],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
 
 
 def _load_bound(
@@ -1033,7 +2011,7 @@ def _acquire_first_source(
     stored_path.write_bytes(content)
     media_type, media_type_basis = _detect_media_type(stored_path)
     source = _local_file_record(
-        supplied, resolved, stored_relative, content, media_type, media_type_basis
+        3, supplied, resolved, stored_relative, content, media_type, media_type_basis
     )
     seventh = _ledger_entry(
         7,
@@ -1065,11 +2043,204 @@ def _acquire_first_source(
     return _source_ready_result(state, work)
 
 
+def _acquire_first_url(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    supplied_url: str,
+) -> dict[str, object]:
+    stored_relative = "sources/source-000003"
+    stored_path = work / stored_relative
+    if stored_path.exists():
+        return _blocked(
+            "unbound source artifact", "the first URL artifact already exists"
+        )
+    retrieval, content, retrieval_error = _fetch_public_url(supplied_url)
+    if retrieval_error:
+        return retrieval_error
+    assert retrieval is not None and content is not None
+    stored_path.write_bytes(content)
+    media_type, media_type_basis = _url_media_type(retrieval, stored_path)
+    source = _url_source_record(
+        3,
+        stored_relative,
+        content,
+        retrieval,
+        media_type,
+        media_type_basis,
+    )
+    seventh = _ledger_entry(
+        7,
+        "source_acquired",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "answers_question": FIRST_SOURCE_QUESTION["id"],
+            "source": source,
+            "projection": {
+                "status": "pending",
+                "why": "the source has been frozen but not yet converted",
+            },
+            "next_phase": "first_source_frozen",
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [seventh])
+    state.update({
+        "status": "ready_for_projection",
+        "phase": "first_source_frozen",
+        "waiting_for": None,
+        "question": None,
+        "first_source": source,
+        "ledger_entries": 7,
+        "ledger_tail_sha256": seventh["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _source_ready_result(state, work)
+
+
+def _headers_have_valid_shape(value: object) -> bool:
+    return isinstance(value, list) and all(
+        isinstance(item, dict)
+        and set(item) == {"name", "value"}
+        and isinstance(item["name"], str)
+        and isinstance(item["value"], str)
+        for item in value
+    )
+
+
+def _public_address_evidence(value: object, connected: object) -> bool:
+    if (
+        not isinstance(value, list)
+        or not value
+        or not all(isinstance(item, str) for item in value)
+        or not isinstance(connected, str)
+        or connected not in value
+    ):
+        return False
+    try:
+        return all(
+            ipaddress.ip_address(item.split("%", 1)[0]).is_global for item in value
+        )
+    except ValueError:
+        return False
+
+
+def _validate_url_source_record(
+    source: dict[str, object],
+    number: int,
+    frozen: bytes,
+    supplied_url: str | None,
+) -> dict[str, object] | None:
+    expected_keys = {
+        "id", "kind", "adapter", "provided_url", "request_url", "final_url",
+        "retrieved_at", "redirect_chain", "response", "filename", "stored_path",
+        "size_bytes", "sha256", "media_type", "media_type_basis",
+    }
+    if (
+        set(source) != expected_keys
+        or source.get("id") != f"source-{number:06d}"
+        or source.get("kind") != "url"
+        or source.get("adapter") != {"name": "url", "version": URL_ADAPTER_VERSION}
+        or source.get("stored_path") != f"sources/source-{number:06d}"
+        or not all(
+            isinstance(source.get(key), str) and bool(str(source[key]).strip())
+            for key in (
+                "provided_url", "request_url", "final_url", "retrieved_at",
+                "filename", "sha256", "media_type", "media_type_basis",
+            )
+        )
+        or source.get("size_bytes") != len(frozen)
+        or source.get("sha256") != _digest_bytes(frozen)
+        or len(str(source.get("sha256"))) != 64
+        or "/" not in str(source.get("media_type"))
+    ):
+        return _blocked("invalid ledger", "the URL source record has an invalid shape")
+    if supplied_url is not None and supplied_url != source.get("provided_url"):
+        return _blocked(
+            "source origin changed", "this intake is bound to a different supplied URL"
+        )
+    try:
+        provided = urlsplit(str(source["provided_url"]))
+        request = urlsplit(str(source["request_url"]))
+        final = urlsplit(str(source["final_url"]))
+        retrieved_at = datetime.fromisoformat(str(source["retrieved_at"]))
+    except (ValueError, TypeError) as error:
+        return _blocked("invalid ledger", f"the URL retrieval identity is invalid: {error}")
+    if (
+        provided.scheme.lower() not in {"http", "https"}
+        or request.scheme.lower() not in {"http", "https"}
+        or final.scheme.lower() not in {"http", "https"}
+        or provided.hostname is None
+        or request.hostname is None
+        or final.hostname is None
+        or provided.username is not None
+        or provided.password is not None
+        or request.username is not None
+        or request.password is not None
+        or final.username is not None
+        or final.password is not None
+        or request.fragment
+        or final.fragment
+        or str(source["request_url"])
+        != _without_url_fragment(str(source["provided_url"]))
+        or retrieved_at.tzinfo is None
+    ):
+        return _blocked("invalid ledger", "the URL retrieval identity changed")
+    redirects = source.get("redirect_chain")
+    if not isinstance(redirects, list) or len(redirects) > URL_MAX_REDIRECTS:
+        return _blocked("invalid ledger", "the URL redirect trail changed")
+    expected_request = str(source["request_url"])
+    for redirect in redirects:
+        if (
+            not isinstance(redirect, dict)
+            or set(redirect) != {
+                "request_url", "status", "reason", "location", "next_url",
+                "headers", "resolved_addresses", "connected_address",
+            }
+            or redirect.get("request_url") != expected_request
+            or redirect.get("status") not in URL_REDIRECT_STATUSES
+            or not isinstance(redirect.get("reason"), str)
+            or not isinstance(redirect.get("location"), str)
+            or not redirect.get("location")
+            or redirect.get("next_url")
+            != _without_url_fragment(
+                urljoin(expected_request, str(redirect["location"]))
+            )
+            or not _headers_have_valid_shape(redirect.get("headers"))
+            or not _public_address_evidence(
+                redirect.get("resolved_addresses"),
+                redirect.get("connected_address"),
+            )
+        ):
+            return _blocked("invalid ledger", "the URL redirect trail changed")
+        expected_request = str(redirect["next_url"])
+    response = source.get("response")
+    if (
+        expected_request != source.get("final_url")
+        or not isinstance(response, dict)
+        or set(response) != {
+            "status", "reason", "headers", "resolved_addresses",
+            "connected_address",
+        }
+        or not isinstance(response.get("status"), int)
+        or not 200 <= int(response["status"]) < 300
+        or not isinstance(response.get("reason"), str)
+        or not _headers_have_valid_shape(response.get("headers"))
+        or not _public_address_evidence(
+            response.get("resolved_addresses"), response.get("connected_address")
+        )
+    ):
+        return _blocked("invalid ledger", "the final URL response evidence changed")
+    return None
+
+
 def _validate_frozen_first_source(
     work: Path,
     state: dict[str, object],
     entries: list[dict[str, object]],
     supplied: Path | None,
+    supplied_url: str | None = None,
 ) -> dict[str, object] | None:
     if len(entries) < 7 or entries[6].get("event") != "source_acquired":
         return _blocked("invalid ledger", "the first local-file acquisition is missing")
@@ -1081,6 +2252,26 @@ def _validate_frozen_first_source(
         "why": "the source has been frozen but not yet converted",
     } or entries[6].get("next_phase") != "first_source_frozen":
         return _blocked("invalid ledger", "the acquisition entry does not preserve the pending projection state")
+    if source.get("adapter") == {"name": "url", "version": URL_ADAPTER_VERSION}:
+        if supplied is not None:
+            return _blocked(
+                "source origin changed", "this intake is bound to a URL, not a local file"
+            )
+        if entries[6].get("answers_question") != FIRST_SOURCE_QUESTION["id"]:
+            return _blocked(
+                "invalid ledger", "the acquisition is not linked to the first-source question"
+            )
+        try:
+            frozen = (work / str(source.get("stored_path"))).read_bytes()
+        except OSError:
+            return _blocked(
+                "immutable source unavailable", "the frozen first URL source cannot be read"
+            )
+        return _validate_url_source_record(source, 3, frozen, supplied_url)
+    if supplied_url is not None:
+        return _blocked(
+            "source origin changed", "this intake is bound to a local file, not a URL"
+        )
     expected_keys = {
         "id", "kind", "adapter", "provided_path", "resolved_path", "filename",
         "stored_path", "size_bytes", "sha256", "media_type", "media_type_basis",
@@ -1132,10 +2323,11 @@ def _request_first_projection(
 ) -> dict[str, object]:
     source = state["first_source"]
     assert isinstance(source, dict)
+    if source.get("media_type") == "application/pdf":
+        return _request_first_pdf_projection(work, state, entries, source)
     if not str(source["media_type"]).startswith("image/"):
-        return _blocked(
-            "projection adapter unavailable",
-            f"visual projection requires image/*; source-000003 is {source['media_type']}",
+        return _create_first_verbatim_utf8_projection(
+            work, state, entries, source
         )
     attempt_dir = work / "projection-interviews" / "attempt-000001"
     if attempt_dir.exists():
@@ -1167,6 +2359,228 @@ def _request_first_projection(
     })
     _write_state(work / "intake-state.json", state)
     return _projection_waiting_result(state, work)
+
+
+def _request_first_pdf_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    source: dict[str, object],
+) -> dict[str, object]:
+    source_id = str(source["id"])
+    output_root = work / "pdf-projections" / f"{source_id}-v1"
+    try:
+        prepared = pdf_projection.prepare(
+            work / str(source["stored_path"]),
+            output_root,
+            source_id=source_id,
+            source_sha256=str(source["sha256"]),
+        )
+    except pdf_projection.PDFProjectionError as error:
+        if output_root.exists():
+            return _blocked("unbound PDF projection artifacts", str(error))
+        failure = {
+            "id": f"projection-{source_id}-v1",
+            "source_id": source_id,
+            "version": 1,
+            "status": "failed",
+            "path": None,
+            "sha256": None,
+            "method": "pdf_visible_pages",
+            "coverage": {
+                "status": "failed",
+                "source_units": None,
+                "represented_units": 0,
+                "gaps": [str(error)],
+            },
+        }
+        failed = _ledger_entry(
+            len(entries) + 1,
+            "projection_conversion_failed",
+            {
+                "recorded_at": datetime.now(timezone.utc).isoformat(),
+                "intake_id": state["intake_id"],
+                "source_id": source_id,
+                "source_sha256": source["sha256"],
+                "adapter": {
+                    "name": "pdf_visible_pages",
+                    "version": pdf_projection.ADAPTER_VERSION,
+                },
+                "reserved_projection": entries[6]["projection"],
+                "failure": failure,
+            },
+            str(entries[-1]["entry_sha256"]),
+        )
+        _append_ledger(work / "ledger.jsonl", [failed])
+        state.update({
+            "status": "ready_for_projection",
+            "phase": "first_pdf_projection_failed",
+            "waiting_for": None,
+            "question": None,
+            "first_projection": failure,
+            "ledger_entries": failed["sequence"],
+            "ledger_tail_sha256": failed["entry_sha256"],
+        })
+        _write_state(work / "intake-state.json", state)
+        return _pdf_projection_failed_result(state, work)
+    eighth = _ledger_entry(
+        len(entries) + 1,
+        "pdf_projection_started",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "source_id": source_id,
+            "source_sha256": source["sha256"],
+            "reserved_projection": entries[6]["projection"],
+            "interview_contract": PROJECTION_INTERVIEW_CONTRACT,
+            "prepared": prepared,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [eighth])
+    state.update({
+        "status": "waiting_for_model",
+        "phase": "interviewing_pdf_page_projection",
+        "waiting_for": _pdf_page_paths(source_id, 1)["interview_path"],
+        "question": None,
+        "projection_interview_contract": PROJECTION_INTERVIEW_CONTRACT,
+        "pdf_projection": {
+            "prepared": prepared,
+            "active_page": 1,
+            "completed_pages": [],
+            "start_ledger_sequence": eighth["sequence"],
+        },
+        "ledger_entries": eighth["sequence"],
+        "ledger_tail_sha256": eighth["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _pdf_projection_waiting_result(state, work, "project")
+
+
+def _first_verbatim_projection_ready_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    return {
+        "status": "ready_for_projection_assessment",
+        "stopped": "first_verbatim_projection_recorded",
+        "intake_id": state["intake_id"],
+        "source": state["first_source"],
+        "projection": state["first_projection"],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _create_first_verbatim_utf8_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    source: dict[str, object],
+) -> dict[str, object]:
+    source_id = str(source["id"])
+    source_path = work / str(source["stored_path"])
+    projection = _verbatim_utf8_projection_record(source_id, str(source["sha256"]))
+    projection_path = work / str(projection["path"])
+    if projection_path.exists():
+        return _blocked(
+            "unbound projection artifact",
+            f"the verbatim projection already exists outside the ledger: {projection['path']}",
+        )
+    try:
+        frozen = source_path.read_bytes()
+    except OSError:
+        return _blocked("immutable source unavailable", str(source_path))
+    projection_bytes, projection_error = _verbatim_utf8_bytes(frozen)
+    if projection_error:
+        return projection_error
+    assert projection_bytes is not None
+    if _digest_bytes(projection_bytes) != source["sha256"]:
+        return _blocked(
+            "immutable source changed",
+            "the frozen first source changed before verbatim projection",
+        )
+    projection_path.write_bytes(projection_bytes)
+    projection_sha256 = _digest_bytes(projection_bytes)
+    created = _ledger_entry(
+        len(entries) + 1,
+        "projection_version_created",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "attempt": 1,
+            "role": "verbatim_utf8_projection",
+            "source_id": source_id,
+            "source_sha256": source["sha256"],
+            "reserved_projection": entries[6]["projection"],
+            "projection": projection,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [created])
+    state.update({
+        "status": "ready_for_projection_assessment",
+        "phase": "first_verbatim_projection_recorded",
+        "waiting_for": None,
+        "question": None,
+        "first_projection": projection,
+        "ledger_entries": len(entries) + 1,
+        "ledger_tail_sha256": created["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _first_verbatim_projection_ready_result(state, work)
+
+
+def _validate_first_verbatim_utf8_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object] | None:
+    if len(entries) != 8:
+        return _blocked(
+            "invalid ledger", "the first verbatim projection ledger length changed"
+        )
+    source = state.get("first_source")
+    projection = state.get("first_projection")
+    created = entries[7]
+    if not isinstance(source, dict) or not isinstance(projection, dict):
+        return _blocked(
+            "invalid intake state", "the first verbatim projection identity is missing"
+        )
+    expected_projection = _verbatim_utf8_projection_record(
+        str(source.get("id")), str(source.get("sha256"))
+    )
+    try:
+        source_bytes = (work / str(source["stored_path"])).read_bytes()
+        projection_bytes = (work / str(expected_projection["path"])).read_bytes()
+    except OSError:
+        return _blocked(
+            "immutable projection unavailable", str(expected_projection["path"])
+        )
+    _, utf8_error = _verbatim_utf8_bytes(source_bytes)
+    if utf8_error:
+        return _blocked("invalid ledger", str(utf8_error["why"]))
+    if (
+        projection != expected_projection
+        or source_bytes != projection_bytes
+        or _digest_bytes(source_bytes) != source.get("sha256")
+        or created.get("event") != "projection_version_created"
+        or created.get("attempt") != 1
+        or created.get("role") != "verbatim_utf8_projection"
+        or created.get("source_id") != source.get("id")
+        or created.get("source_sha256") != source.get("sha256")
+        or created.get("reserved_projection") != entries[6].get("projection")
+        or created.get("projection") != projection
+        or state.get("status") != "ready_for_projection_assessment"
+        or state.get("phase") != "first_verbatim_projection_recorded"
+        or state.get("waiting_for") is not None
+        or state.get("question") is not None
+        or state.get("ledger_entries") != len(entries)
+        or state.get("ledger_tail_sha256") != created.get("entry_sha256")
+    ):
+        return _blocked(
+            "invalid ledger", "the first verbatim UTF-8 projection changed"
+        )
+    return None
 
 
 def _apply_independent_verification(
@@ -1492,6 +2906,282 @@ def _consume_first_projection(
     return _projection_ready_result(state, work)
 
 
+def _consume_pdf_page_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object]:
+    page = _active_pdf_page(state)
+    saved = state.get("pdf_projection")
+    if page is None or not isinstance(saved, dict):
+        return _blocked("invalid PDF projection state", "the active PDF page is missing")
+    page_number = int(page["page"])
+    paths = _pdf_page_paths(str(saved["prepared"]["source_id"]), page_number)
+    attempt_dir = work / paths["interview_dir"]
+    try:
+        projection, interview_sha256, candidate_sha256 = projection_interview.validate(
+            attempt_dir,
+            source_sha256=str(page["render_sha256"]),
+            purpose=purpose,
+            contract=PROJECTION_INTERVIEW_CONTRACT,
+        )
+        interview_entries = projection_interview._read_journal(
+            attempt_dir / "interview.jsonl"
+        )
+    except projection_interview.InterviewError as error:
+        return _blocked("invalid PDF page projection interview", str(error))
+    verification_dir = work / paths["verification_dir"]
+    if not (verification_dir / "verification.json").exists():
+        return _pdf_projection_waiting_result(state, work, "verify")
+    try:
+        verification, verification_journal_sha256, verification_result_sha256 = (
+            relationship_verification.validate(
+                verification_dir,
+                candidate_path=work / paths["candidate_path"],
+                candidate_sha256=candidate_sha256,
+                purpose=purpose,
+            )
+        )
+    except relationship_verification.VerificationError as error:
+        return _blocked("invalid PDF page relationship verification", str(error))
+    corrections: dict[str, object] | None = None
+    correction_journal_sha256: str | None = None
+    correction_result_sha256: str | None = None
+    correction_candidate_sha256: str | None = None
+    correction_verification: dict[str, object] | None = None
+    correction_verification_journal_sha256: str | None = None
+    correction_verification_result_sha256: str | None = None
+    rejected_count = sum(
+        verdict["verdict"] != "supported" for verdict in verification["verdicts"]
+    )
+    if rejected_count:
+        correction_dir = work / paths["correction_dir"]
+        if not (correction_dir / "corrections.json").exists():
+            return _pdf_projection_waiting_result(state, work, "correct")
+        try:
+            (
+                corrections,
+                correction_journal_sha256,
+                correction_result_sha256,
+                correction_candidate_sha256,
+            ) = relationship_correction.validate(
+                correction_dir,
+                candidate_path=work / paths["candidate_path"],
+                candidate_sha256=candidate_sha256,
+                verification_path=work / paths["verification_path"],
+                verification_sha256=verification_result_sha256,
+                purpose=purpose,
+            )
+        except relationship_correction.CorrectionError as error:
+            return _blocked("invalid PDF page relationship correction", str(error))
+        proposed_count = sum(
+            item["action"] == "propose_replacement_endpoint"
+            for item in corrections["corrections"]
+        )
+        if proposed_count:
+            correction_verification_dir = work / paths["correction_verification_dir"]
+            if not (correction_verification_dir / "verification.json").exists():
+                return _pdf_projection_waiting_result(state, work, "verify_correction")
+            try:
+                (
+                    correction_verification,
+                    correction_verification_journal_sha256,
+                    correction_verification_result_sha256,
+                ) = relationship_verification.validate(
+                    correction_verification_dir,
+                    candidate_path=work / paths["correction_candidate_path"],
+                    candidate_sha256=str(correction_candidate_sha256),
+                    purpose=purpose,
+                )
+            except relationship_verification.VerificationError as error:
+                return _blocked(
+                    "invalid PDF page relationship correction verification", str(error)
+                )
+    verification_error = _apply_independent_verification(
+        projection, verification, corrections, correction_verification
+    )
+    if verification_error:
+        return verification_error
+    projection_path = work / paths["projection_path"]
+    if projection_path.exists():
+        return _blocked(
+            "unbound PDF page projection artifact", paths["projection_path"]
+        )
+    projection_bytes = (
+        json.dumps(projection, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    )
+    projection_path.write_bytes(projection_bytes)
+    projection_sha256 = _digest_bytes(projection_bytes)
+    gap_count = sum(item["status"] == "gap" for item in projection["elements"])
+    gap_count += sum(item["status"] == "gap" for item in projection["relationships"])
+    gap_count += sum(
+        item["status"] == "gap" for item in projection.get("scan_regions", [])
+    )
+    page_projection = {
+        "id": f"projection-{saved['prepared']['source_id']}-v1-page-{page_number:06d}",
+        "page": page_number,
+        "path": paths["projection_path"],
+        "sha256": projection_sha256,
+        "element_count": len(projection["elements"]),
+        "relationship_count": len(projection["relationships"]),
+        "gap_count": gap_count,
+        "gap_inventory": _pdf_page_gap_inventory(
+            projection,
+            page=page_number,
+            page_projection_path=paths["projection_path"],
+            page_projection_sha256=projection_sha256,
+            render_path=str(page["render_path"]),
+            render_sha256=str(page["render_sha256"]),
+        ),
+        "coverage": "unassessed",
+    }
+    completed = _ledger_entry(
+        len(entries) + 1,
+        "pdf_page_projection_completed",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "source_id": saved["prepared"]["source_id"],
+            "source_sha256": saved["prepared"]["source_sha256"],
+            "page": page_number,
+            "render": page,
+            "interview_contract": PROJECTION_INTERVIEW_CONTRACT,
+            "interview_path": paths["interview_path"],
+            "interview_sha256": interview_sha256,
+            "candidate_path": paths["candidate_path"],
+            "candidate_sha256": candidate_sha256,
+            "question_count": sum(
+                entry["event"] == "question_asked" for entry in interview_entries
+            ),
+            "answer_count": sum(
+                entry["event"] == "answer_recorded" for entry in interview_entries
+            ),
+            "rejected_answer_count": sum(
+                entry["event"] == "answer_recorded" and entry["accepted"] is False
+                for entry in interview_entries
+            ),
+            "verification_path": paths["verification_path"],
+            "verification_journal_sha256": verification_journal_sha256,
+            "verification_result_sha256": verification_result_sha256,
+            "correction_path": paths["correction_path"] if corrections is not None else None,
+            "correction_journal_sha256": correction_journal_sha256,
+            "correction_result_sha256": correction_result_sha256,
+            "correction_candidate_sha256": correction_candidate_sha256,
+            "correction_verification_path": (
+                paths["correction_verification_path"]
+                if correction_verification is not None else None
+            ),
+            "correction_verification_journal_sha256": (
+                correction_verification_journal_sha256
+            ),
+            "correction_verification_result_sha256": (
+                correction_verification_result_sha256
+            ),
+            "projection": page_projection,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    completed_pages = [*saved["completed_pages"], page_projection]
+    page_count = int(saved["prepared"]["page_count"])
+    if page_number < page_count:
+        _append_ledger(work / "ledger.jsonl", [completed])
+        saved.update({
+            "active_page": page_number + 1,
+            "completed_pages": completed_pages,
+        })
+        state.update({
+            "waiting_for": _pdf_page_paths(
+                str(saved["prepared"]["source_id"]), page_number + 1
+            )["interview_path"],
+            "ledger_entries": completed["sequence"],
+            "ledger_tail_sha256": completed["entry_sha256"],
+        })
+        _write_state(work / "intake-state.json", state)
+        return _pdf_projection_waiting_result(state, work, "project")
+    manifest = {
+        "schema_version": 1,
+        "method": "pdf_visible_pages",
+        "source_id": saved["prepared"]["source_id"],
+        "source_sha256": saved["prepared"]["source_sha256"],
+        "page_count": page_count,
+        "renderer": saved["prepared"]["renderer"],
+        "gap_inventory": [
+            gap
+            for completed_page in completed_pages
+            for gap in completed_page["gap_inventory"]
+        ],
+        "pages": [
+            {
+                "page": prepared_page["page"],
+                "render": prepared_page,
+                "readable_projection": completed_pages[index],
+            }
+            for index, prepared_page in enumerate(saved["prepared"]["pages"])
+        ],
+    }
+    manifest_path = work / "projections" / "source-000003-v1.json"
+    if manifest_path.exists():
+        return _blocked("unbound projection artifact", str(manifest_path))
+    manifest_bytes = json.dumps(manifest, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    manifest_path.write_bytes(manifest_bytes)
+    projection_record = {
+        "id": "projection-source-000003-v1",
+        "source_id": "source-000003",
+        "version": 1,
+        "path": "projections/source-000003-v1.json",
+        "sha256": _digest_bytes(manifest_bytes),
+        "method": "pdf_visible_pages",
+        "page_count": page_count,
+        "element_count": sum(int(item["element_count"]) for item in completed_pages),
+        "relationship_count": sum(
+            int(item["relationship_count"]) for item in completed_pages
+        ),
+        "gap_count": sum(int(item["gap_count"]) for item in completed_pages),
+        "coverage": {
+            "status": "complete",
+            "source_units": page_count,
+            "represented_units": page_count,
+            "gaps": [
+                f"page {item['page']}: {item['gap_count']} explicit projection gaps"
+                for item in completed_pages
+                if int(item["gap_count"]) > 0
+            ],
+        },
+    }
+    created = _ledger_entry(
+        completed["sequence"] + 1,
+        "projection_version_created",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "attempt": 1,
+            "role": "pdf_visible_pages_projection",
+            "source_id": "source-000003",
+            "source_sha256": saved["prepared"]["source_sha256"],
+            "reserved_projection": entries[6]["projection"],
+            "projection": projection_record,
+        },
+        str(completed["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [completed, created])
+    saved.update({
+        "active_page": None,
+        "completed_pages": completed_pages,
+        "manifest_sha256": projection_record["sha256"],
+    })
+    state.update({
+        "status": "ready_for_projection_assessment",
+        "phase": "first_pdf_projection_recorded",
+        "waiting_for": None,
+        "first_projection": projection_record,
+        "ledger_entries": created["sequence"],
+        "ledger_tail_sha256": created["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _pdf_projection_ready_result(state, work)
+
+
 def _validate_projection_request(
     work: Path,
     state: dict[str, object],
@@ -1705,6 +3395,338 @@ def _validate_recorded_projection(
     return None
 
 
+def _validate_pdf_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+    *,
+    allow_later_phase: bool = False,
+) -> dict[str, object] | None:
+    source = state.get("first_source")
+    saved = state.get("pdf_projection")
+    if (
+        not isinstance(source, dict)
+        or source.get("media_type") != "application/pdf"
+        or not isinstance(saved, dict)
+        or len(entries) < 8
+    ):
+        return _blocked("invalid PDF projection state", "the PDF projection identity is missing")
+    prepared = saved.get("prepared")
+    start = entries[7]
+    if (
+        start.get("event") != "pdf_projection_started"
+        or start.get("source_id") != source.get("id")
+        or start.get("source_sha256") != source.get("sha256")
+        or start.get("reserved_projection") != entries[6].get("projection")
+        or start.get("interview_contract") != PROJECTION_INTERVIEW_CONTRACT
+        or start.get("prepared") != prepared
+        or saved.get("start_ledger_sequence") != 8
+    ):
+        return _blocked("invalid PDF projection ledger", "the PDF preparation record changed")
+    try:
+        pdf_projection.validate_prepared(work, prepared)
+    except pdf_projection.PDFProjectionError as error:
+        return _blocked("immutable PDF rendering changed", str(error))
+    assert isinstance(prepared, dict)
+    prepared_pages = prepared["pages"]
+    completed_pages = saved.get("completed_pages")
+    if not isinstance(prepared_pages, list) or not isinstance(completed_pages, list):
+        return _blocked("invalid PDF projection state", "the PDF page inventory changed")
+    if len(completed_pages) > len(prepared_pages):
+        return _blocked("invalid PDF projection state", "too many PDF pages were recorded")
+    expected_completed: list[dict[str, object]] = []
+    for index, page in enumerate(prepared_pages[: len(completed_pages)], start=1):
+        if not isinstance(page, dict):
+            return _blocked("invalid PDF projection state", f"PDF page {index} changed")
+        ledger_index = 7 + index
+        if ledger_index >= len(entries):
+            return _blocked("invalid PDF projection ledger", f"PDF page {index} is missing")
+        entry = entries[ledger_index]
+        paths = _pdf_page_paths(str(source["id"]), index)
+        try:
+            projection, interview_sha256, candidate_sha256 = projection_interview.validate(
+                work / paths["interview_dir"],
+                source_sha256=str(page["render_sha256"]),
+                purpose=purpose,
+                contract=PROJECTION_INTERVIEW_CONTRACT,
+            )
+            interview_entries = projection_interview._read_journal(
+                work / paths["interview_path"]
+            )
+            verification, verification_journal_sha256, verification_result_sha256 = (
+                relationship_verification.validate(
+                    work / paths["verification_dir"],
+                    candidate_path=work / paths["candidate_path"],
+                    candidate_sha256=candidate_sha256,
+                    purpose=purpose,
+                )
+            )
+        except (
+            projection_interview.InterviewError,
+            relationship_verification.VerificationError,
+        ) as error:
+            return _blocked("invalid PDF page projection", f"page {index}: {error}")
+        corrections: dict[str, object] | None = None
+        correction_journal_sha256: str | None = None
+        correction_result_sha256: str | None = None
+        correction_candidate_sha256: str | None = None
+        correction_verification: dict[str, object] | None = None
+        correction_verification_journal_sha256: str | None = None
+        correction_verification_result_sha256: str | None = None
+        if any(
+            verdict["verdict"] != "supported" for verdict in verification["verdicts"]
+        ):
+            try:
+                (
+                    corrections,
+                    correction_journal_sha256,
+                    correction_result_sha256,
+                    correction_candidate_sha256,
+                ) = relationship_correction.validate(
+                    work / paths["correction_dir"],
+                    candidate_path=work / paths["candidate_path"],
+                    candidate_sha256=candidate_sha256,
+                    verification_path=work / paths["verification_path"],
+                    verification_sha256=verification_result_sha256,
+                    purpose=purpose,
+                )
+            except relationship_correction.CorrectionError as error:
+                return _blocked("invalid PDF page correction", f"page {index}: {error}")
+            if any(
+                item["action"] == "propose_replacement_endpoint"
+                for item in corrections["corrections"]
+            ):
+                try:
+                    (
+                        correction_verification,
+                        correction_verification_journal_sha256,
+                        correction_verification_result_sha256,
+                    ) = relationship_verification.validate(
+                        work / paths["correction_verification_dir"],
+                        candidate_path=work / paths["correction_candidate_path"],
+                        candidate_sha256=str(correction_candidate_sha256),
+                        purpose=purpose,
+                    )
+                except relationship_verification.VerificationError as error:
+                    return _blocked(
+                        "invalid PDF page correction verification",
+                        f"page {index}: {error}",
+                    )
+        verification_error = _apply_independent_verification(
+            projection, verification, corrections, correction_verification
+        )
+        if verification_error:
+            return verification_error
+        canonical = json.dumps(projection, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+        try:
+            accepted_bytes = (work / paths["projection_path"]).read_bytes()
+        except OSError:
+            return _blocked("immutable PDF page projection unavailable", paths["projection_path"])
+        gap_count = sum(item["status"] == "gap" for item in projection["elements"])
+        gap_count += sum(item["status"] == "gap" for item in projection["relationships"])
+        gap_count += sum(
+            item["status"] == "gap" for item in projection.get("scan_regions", [])
+        )
+        expected_projection = {
+            "id": f"projection-{source['id']}-v1-page-{index:06d}",
+            "page": index,
+            "path": paths["projection_path"],
+            "sha256": _digest_bytes(canonical),
+            "element_count": len(projection["elements"]),
+            "relationship_count": len(projection["relationships"]),
+            "gap_count": gap_count,
+            "gap_inventory": _pdf_page_gap_inventory(
+                projection,
+                page=index,
+                page_projection_path=paths["projection_path"],
+                page_projection_sha256=_digest_bytes(canonical),
+                render_path=str(page["render_path"]),
+                render_sha256=str(page["render_sha256"]),
+            ),
+            "coverage": "unassessed",
+        }
+        expected_audit = {
+            "event": "pdf_page_projection_completed",
+            "source_id": source["id"],
+            "source_sha256": source["sha256"],
+            "page": index,
+            "render": page,
+            "interview_contract": PROJECTION_INTERVIEW_CONTRACT,
+            "interview_path": paths["interview_path"],
+            "interview_sha256": interview_sha256,
+            "candidate_path": paths["candidate_path"],
+            "candidate_sha256": candidate_sha256,
+            "question_count": sum(
+                item["event"] == "question_asked" for item in interview_entries
+            ),
+            "answer_count": sum(
+                item["event"] == "answer_recorded" for item in interview_entries
+            ),
+            "rejected_answer_count": sum(
+                item["event"] == "answer_recorded" and item["accepted"] is False
+                for item in interview_entries
+            ),
+            "verification_path": paths["verification_path"],
+            "verification_journal_sha256": verification_journal_sha256,
+            "verification_result_sha256": verification_result_sha256,
+            "correction_path": paths["correction_path"] if corrections is not None else None,
+            "correction_journal_sha256": correction_journal_sha256,
+            "correction_result_sha256": correction_result_sha256,
+            "correction_candidate_sha256": correction_candidate_sha256,
+            "correction_verification_path": (
+                paths["correction_verification_path"]
+                if correction_verification is not None else None
+            ),
+            "correction_verification_journal_sha256": (
+                correction_verification_journal_sha256
+            ),
+            "correction_verification_result_sha256": (
+                correction_verification_result_sha256
+            ),
+            "projection": expected_projection,
+        }
+        if (
+            accepted_bytes != canonical
+            or completed_pages[index - 1] != expected_projection
+            or any(entry.get(key) != value for key, value in expected_audit.items())
+        ):
+            return _blocked(
+                "immutable PDF page projection changed", f"PDF page {index} changed"
+            )
+        expected_completed.append(expected_projection)
+    terminal = (
+        len(expected_completed) == len(prepared_pages)
+        and saved.get("active_page") is None
+    )
+    expected_ledger_length = 8 + len(expected_completed) + (1 if terminal else 0)
+    if len(entries) < expected_ledger_length or (
+        not allow_later_phase and len(entries) != expected_ledger_length
+    ):
+        return _blocked("invalid PDF projection ledger", "the PDF ledger length changed")
+    if not terminal:
+        active_page = len(expected_completed) + 1
+        if (
+            active_page > len(prepared_pages)
+            or saved.get("active_page") != active_page
+            or state.get("status") != "waiting_for_model"
+            or state.get("waiting_for")
+            != _pdf_page_paths(str(source["id"]), active_page)["interview_path"]
+            or state.get("first_projection") is not None
+        ):
+            return _blocked("invalid PDF projection state", "the active PDF page changed")
+        return None
+    if len(expected_completed) != len(prepared_pages) or saved.get("active_page") is not None:
+        return _blocked("invalid PDF projection state", "PDF completion lost a page")
+    manifest = {
+        "schema_version": 1,
+        "method": "pdf_visible_pages",
+        "source_id": source["id"],
+        "source_sha256": source["sha256"],
+        "page_count": len(prepared_pages),
+        "renderer": prepared["renderer"],
+        "gap_inventory": [
+            gap
+            for completed_page in expected_completed
+            for gap in completed_page["gap_inventory"]
+        ],
+        "pages": [
+            {
+                "page": page["page"],
+                "render": page,
+                "readable_projection": expected_completed[index],
+            }
+            for index, page in enumerate(prepared_pages)
+        ],
+    }
+    manifest_bytes = json.dumps(manifest, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    try:
+        actual_manifest = (work / "projections/source-000003-v1.json").read_bytes()
+    except OSError:
+        return _blocked("immutable PDF projection unavailable", "the PDF manifest is missing")
+    projection_record = {
+        "id": "projection-source-000003-v1",
+        "source_id": "source-000003",
+        "version": 1,
+        "path": "projections/source-000003-v1.json",
+        "sha256": _digest_bytes(manifest_bytes),
+        "method": "pdf_visible_pages",
+        "page_count": len(prepared_pages),
+        "element_count": sum(int(item["element_count"]) for item in expected_completed),
+        "relationship_count": sum(
+            int(item["relationship_count"]) for item in expected_completed
+        ),
+        "gap_count": sum(int(item["gap_count"]) for item in expected_completed),
+        "coverage": {
+            "status": "complete",
+            "source_units": len(prepared_pages),
+            "represented_units": len(prepared_pages),
+            "gaps": [
+                f"page {item['page']}: {item['gap_count']} explicit projection gaps"
+                for item in expected_completed
+                if int(item["gap_count"]) > 0
+            ],
+        },
+    }
+    created = entries[expected_ledger_length - 1]
+    if (
+        actual_manifest != manifest_bytes
+        or saved.get("manifest_sha256") != projection_record["sha256"]
+        or state.get("first_projection") != projection_record
+        or (
+            not allow_later_phase
+            and state.get("status") != "ready_for_projection_assessment"
+        )
+        or (not allow_later_phase and state.get("waiting_for") is not None)
+        or created.get("event") != "projection_version_created"
+        or created.get("role") != "pdf_visible_pages_projection"
+        or created.get("source_id") != source["id"]
+        or created.get("source_sha256") != source["sha256"]
+        or created.get("reserved_projection") != entries[6].get("projection")
+        or created.get("projection") != projection_record
+    ):
+        return _blocked("immutable PDF projection changed", "the PDF manifest changed")
+    return None
+
+
+def _validate_pdf_projection_failure(
+    state: dict[str, object], entries: list[dict[str, object]]
+) -> dict[str, object] | None:
+    source = state.get("first_source")
+    failure = state.get("first_projection")
+    if (
+        len(entries) != 8
+        or not isinstance(source, dict)
+        or source.get("media_type") != "application/pdf"
+        or not isinstance(failure, dict)
+        or entries[7].get("event") != "projection_conversion_failed"
+        or entries[7].get("source_id") != source.get("id")
+        or entries[7].get("source_sha256") != source.get("sha256")
+        or entries[7].get("adapter")
+        != {"name": "pdf_visible_pages", "version": pdf_projection.ADAPTER_VERSION}
+        or entries[7].get("reserved_projection") != entries[6].get("projection")
+        or entries[7].get("failure") != failure
+        or failure.get("id") != "projection-source-000003-v1"
+        or failure.get("source_id") != "source-000003"
+        or failure.get("version") != 1
+        or failure.get("status") != "failed"
+        or failure.get("path") is not None
+        or failure.get("sha256") is not None
+        or failure.get("method") != "pdf_visible_pages"
+        or not isinstance(failure.get("coverage"), dict)
+        or failure["coverage"].get("status") != "failed"
+        or failure["coverage"].get("represented_units") != 0
+        or not isinstance(failure["coverage"].get("gaps"), list)
+        or len(failure["coverage"]["gaps"]) != 1
+        or not isinstance(failure["coverage"]["gaps"][0], str)
+        or not failure["coverage"]["gaps"][0]
+        or state.get("status") != "ready_for_projection"
+        or state.get("waiting_for") is not None
+    ):
+        return _blocked("invalid PDF projection failure", "the recorded failure changed")
+    return None
+
+
 def run_purpose_interview(
     work: Path,
     *,
@@ -1747,20 +3769,53 @@ def run_first_projection_interview(
     current = drive(work, opening, purpose)
     if current.get("status") == "ready_for_projection_assessment":
         return current
-    if current.get("status") != "waiting_for_model" or current.get("stopped") != "interviewing_first_projection":
+    if current.get("status") != "waiting_for_model" or current.get("stopped") not in {
+        "interviewing_first_projection",
+        "interviewing_additional_source_projection",
+    }:
         return _blocked("projection interview unavailable", json.dumps(current, sort_keys=True))
     state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
     entries, ledger_error = _validate_ledger(work / "ledger.jsonl")
     if ledger_error:
         return _blocked("invalid ledger", ledger_error)
-    source = state["first_source"]
-    assert isinstance(source, dict)
+    pdf_page = state.get("phase") == "interviewing_pdf_page_projection"
+    additional = state.get("phase") == "interviewing_additional_source_projection"
+    if pdf_page:
+        page = _active_pdf_page(state)
+        saved = state.get("pdf_projection")
+        if page is None or not isinstance(saved, dict):
+            return _blocked("projection interview unavailable", "the PDF page context is missing")
+        paths = _pdf_page_paths(str(saved["prepared"]["source_id"]), int(page["page"]))
+        source = {"sha256": page["render_sha256"]}
+        attempt_dir = work / paths["interview_dir"]
+        contract = PROJECTION_INTERVIEW_CONTRACT
+    elif additional:
+        pending = state.get("pending_additional_source")
+        active = state.get("active_additional_projection")
+        if not isinstance(pending, dict) or not isinstance(active, dict):
+            return _blocked("projection interview unavailable", "the additional projection context is missing")
+        source = pending.get("source")
+        paths = active.get("paths")
+        request_sequence = active.get("request_ledger_sequence")
+        if (
+            not isinstance(source, dict)
+            or not isinstance(paths, dict)
+            or not isinstance(request_sequence, int)
+        ):
+            return _blocked("projection interview unavailable", "the additional projection context changed")
+        attempt_dir = work / str(paths["interview_dir"])
+        contract = int(entries[request_sequence - 1]["interview_contract"])
+    else:
+        source = state["first_source"]
+        assert isinstance(source, dict)
+        attempt_dir = work / "projection-interviews" / "attempt-000001"
+        contract = int(entries[7]["interview_contract"])
     try:
         projection_interview.run(
-            work / "projection-interviews" / "attempt-000001",
+            attempt_dir,
             source_sha256=str(source["sha256"]),
             purpose=purpose,
-            contract=int(entries[7]["interview_contract"]),
+            contract=contract,
             input_fn=input_fn,
             output_fn=output_fn,
         )
@@ -1778,18 +3833,44 @@ def run_first_projection_verification(
     try:
         opening = (work / "sources" / "source-000001.txt").read_text(encoding="utf-8")
         purpose = (work / "sources" / "source-000002.txt").read_text(encoding="utf-8")
+        state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return _blocked("verification context unavailable", str(error))
+    active = state.get("active_additional_projection")
+    pdf_page = state.get("phase") == "interviewing_pdf_page_projection"
+    additional = state.get("phase") == "interviewing_additional_source_projection"
+    if pdf_page:
+        page = _active_pdf_page(state)
+        saved = state.get("pdf_projection")
+        if page is None or not isinstance(saved, dict):
+            return _blocked("verification context unavailable", "the PDF page context is missing")
+        paths = _pdf_page_paths(str(saved["prepared"]["source_id"]), int(page["page"]))
+        candidate_path = work / paths["candidate_path"]
+        verification_dir = work / paths["verification_dir"]
+    elif additional:
+        if not isinstance(active, dict) or not isinstance(active.get("paths"), dict):
+            return _blocked("verification context unavailable", "the additional projection context is missing")
+        paths = active["paths"]
+        candidate_path = work / str(paths["candidate_path"])
+        verification_dir = work / str(paths["verification_dir"])
+    else:
         candidate_path = work / "projection-interviews" / "attempt-000001" / "projection.json"
+        verification_dir = work / "projection-verifications" / "attempt-000001"
+    try:
         candidate_bytes = candidate_path.read_bytes()
     except OSError as error:
         return _blocked("verification context unavailable", str(error))
     current = drive(work, opening, purpose)
     if current.get("status") == "ready_for_projection_assessment":
         return current
-    if current.get("status") != "waiting_for_model" or current.get("stopped") != "verifying_first_projection":
+    if current.get("status") != "waiting_for_model" or current.get("stopped") not in {
+        "verifying_first_projection",
+        "verifying_additional_source_projection",
+    }:
         return _blocked("relationship verification unavailable", json.dumps(current, sort_keys=True))
     try:
         relationship_verification.run(
-            work / "projection-verifications" / "attempt-000001",
+            verification_dir,
             candidate_path=candidate_path,
             candidate_sha256=_digest_bytes(candidate_bytes),
             purpose=purpose,
@@ -1810,20 +3891,48 @@ def run_relationship_correction(
     try:
         opening = (work / "sources" / "source-000001.txt").read_text(encoding="utf-8")
         purpose = (work / "sources" / "source-000002.txt").read_text(encoding="utf-8")
+        state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return _blocked("correction context unavailable", str(error))
+    active = state.get("active_additional_projection")
+    pdf_page = state.get("phase") == "interviewing_pdf_page_projection"
+    additional = state.get("phase") == "interviewing_additional_source_projection"
+    if pdf_page:
+        page = _active_pdf_page(state)
+        saved = state.get("pdf_projection")
+        if page is None or not isinstance(saved, dict):
+            return _blocked("correction context unavailable", "the PDF page context is missing")
+        paths = _pdf_page_paths(str(saved["prepared"]["source_id"]), int(page["page"]))
+        candidate_path = work / paths["candidate_path"]
+        verification_path = work / paths["verification_path"]
+        correction_dir = work / paths["correction_dir"]
+    elif additional:
+        if not isinstance(active, dict) or not isinstance(active.get("paths"), dict):
+            return _blocked("correction context unavailable", "the additional projection context is missing")
+        paths = active["paths"]
+        candidate_path = work / str(paths["candidate_path"])
+        verification_path = work / str(paths["verification_path"])
+        correction_dir = work / str(paths["correction_dir"])
+    else:
         candidate_path = work / "projection-interviews" / "attempt-000001" / "projection.json"
-        candidate_bytes = candidate_path.read_bytes()
         verification_path = work / "projection-verifications" / "attempt-000001" / "verification.json"
+        correction_dir = work / "relationship-corrections" / "attempt-000001"
+    try:
+        candidate_bytes = candidate_path.read_bytes()
         verification_bytes = verification_path.read_bytes()
     except OSError as error:
         return _blocked("correction context unavailable", str(error))
     current = drive(work, opening, purpose)
     if current.get("status") == "ready_for_projection_assessment":
         return current
-    if current.get("status") != "waiting_for_model" or current.get("stopped") != "correcting_rejected_relationships":
+    if current.get("status") != "waiting_for_model" or current.get("stopped") not in {
+        "correcting_rejected_relationships",
+        "correcting_additional_source_relationships",
+    }:
         return _blocked("relationship correction unavailable", json.dumps(current, sort_keys=True))
     try:
         relationship_correction.run(
-            work / "relationship-corrections" / "attempt-000001",
+            correction_dir,
             candidate_path=candidate_path,
             candidate_sha256=_digest_bytes(candidate_bytes),
             verification_path=verification_path,
@@ -1846,21 +3955,50 @@ def run_relationship_correction_verification(
     try:
         opening = (work / "sources" / "source-000001.txt").read_text(encoding="utf-8")
         purpose = (work / "sources" / "source-000002.txt").read_text(encoding="utf-8")
+        state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        return _blocked("correction verification context unavailable", str(error))
+    active = state.get("active_additional_projection")
+    pdf_page = state.get("phase") == "interviewing_pdf_page_projection"
+    additional = state.get("phase") == "interviewing_additional_source_projection"
+    if pdf_page:
+        page = _active_pdf_page(state)
+        saved = state.get("pdf_projection")
+        if page is None or not isinstance(saved, dict):
+            return _blocked(
+                "correction verification context unavailable",
+                "the PDF page context is missing",
+            )
+        paths = _pdf_page_paths(str(saved["prepared"]["source_id"]), int(page["page"]))
+        candidate_path = work / paths["correction_candidate_path"]
+        correction_verification_dir = work / paths["correction_verification_dir"]
+    elif additional:
+        if not isinstance(active, dict) or not isinstance(active.get("paths"), dict):
+            return _blocked("correction verification context unavailable", "the additional projection context is missing")
+        paths = active["paths"]
+        candidate_path = work / str(paths["correction_candidate_path"])
+        correction_verification_dir = work / str(paths["correction_verification_dir"])
+    else:
         candidate_path = work / "relationship-corrections" / "attempt-000001" / "verification-candidate.json"
+        correction_verification_dir = work / "relationship-correction-verifications" / "attempt-000001"
+    try:
         candidate_bytes = candidate_path.read_bytes()
     except OSError as error:
         return _blocked("correction verification context unavailable", str(error))
     current = drive(work, opening, purpose)
     if current.get("status") == "ready_for_projection_assessment":
         return current
-    if current.get("status") != "waiting_for_model" or current.get("stopped") != "verifying_relationship_corrections":
+    if current.get("status") != "waiting_for_model" or current.get("stopped") not in {
+        "verifying_relationship_corrections",
+        "verifying_additional_source_relationship_corrections",
+    }:
         return _blocked(
             "relationship correction verification unavailable",
             json.dumps(current, sort_keys=True),
         )
     try:
         relationship_verification.run(
-            work / "relationship-correction-verifications" / "attempt-000001",
+            correction_verification_dir,
             candidate_path=candidate_path,
             candidate_sha256=_digest_bytes(candidate_bytes),
             purpose=purpose,
@@ -1914,8 +4052,9 @@ def _request_gap_question_round(
             "unbound gap question round",
             "gap question round artifacts already exist outside the ledger",
         )
+    request_sequence = len(entries) + 1
     request = _ledger_entry(
-        11,
+        request_sequence,
         "model_gap_question_round_requested",
         {
             "recorded_at": datetime.now(timezone.utc).isoformat(),
@@ -1940,11 +4079,13 @@ def _request_gap_question_round(
         "questions": [],
         "gap_question_round": {
             "round": 1,
+            "contract": gap_clarification.ROUND_CONTRACT,
             "projection_sha256": projection_sha256,
             "gap_count": len(gaps),
             "gaps": gaps,
+            "request_ledger_sequence": request_sequence,
         },
-        "ledger_entries": 11,
+        "ledger_entries": request_sequence,
         "ledger_tail_sha256": request["entry_sha256"],
     })
     _write_state(work / "intake-state.json", state)
@@ -1956,10 +4097,21 @@ def _validate_gap_question_round_request(
     state: dict[str, object],
     entries: list[dict[str, object]],
 ) -> tuple[Path | None, str | None, dict[str, object] | None]:
-    if len(entries) < 11 or entries[10].get("event") != "model_gap_question_round_requested":
+    saved = state.get("gap_question_round")
+    request_sequence = (
+        saved.get("request_ledger_sequence") if isinstance(saved, dict) else None
+    )
+    if (
+        not isinstance(request_sequence, int)
+        or request_sequence < 1
+        or len(entries) < request_sequence
+        or entries[request_sequence - 1].get("event")
+        != "model_gap_question_round_requested"
+    ):
         return None, None, _blocked(
             "invalid ledger", "the gap question round request is missing"
         )
+    request = entries[request_sequence - 1]
     projection_path, projection_sha256, projection_error = _projection_for_gap(
         work, state
     )
@@ -1971,9 +4123,14 @@ def _validate_gap_question_round_request(
         gaps = gap_clarification.require_gaps(projection, projection_sha256)
     except (OSError, json.JSONDecodeError, gap_clarification.ClarificationError) as error:
         return None, None, _blocked("invalid gap question round", str(error))
+    contract = request.get("contract")
+    if contract not in gap_clarification.SUPPORTED_ROUND_CONTRACTS:
+        return None, None, _blocked(
+            "invalid gap question round", "the question-round contract is unsupported"
+        )
     expected = {
         "round": 1,
-        "contract": gap_clarification.ROUND_CONTRACT,
+        "contract": contract,
         "projection_path": str(state["first_projection"]["path"]),
         "projection_sha256": projection_sha256,
         "gap_count": len(gaps),
@@ -1981,15 +4138,16 @@ def _validate_gap_question_round_request(
         "interview_path": "gap-question-rounds/round-000001/interview.jsonl",
         "result_path": "gap-question-rounds/round-000001/clarification-round.json",
     }
-    saved = state.get("gap_question_round")
     if (
-        any(entries[10].get(key) != value for key, value in expected.items())
+        any(request.get(key) != value for key, value in expected.items())
         or not isinstance(saved, dict)
+        or saved.get("contract", 1) != contract
         or any(saved.get(key) != value for key, value in {
             "round": 1,
             "projection_sha256": projection_sha256,
             "gap_count": len(gaps),
             "gaps": gaps,
+            "request_ledger_sequence": request_sequence,
         }.items())
     ):
         return None, None, _blocked(
@@ -2003,7 +4161,10 @@ def _validate_question_round_shape(
     gaps: list[dict[str, object]],
     *,
     round_number: int = 1,
+    contract: int = gap_clarification.ROUND_CONTRACT,
 ) -> str | None:
+    if contract not in gap_clarification.SUPPORTED_ROUND_CONTRACTS:
+        return "the question-round contract is unsupported"
     questions = result.get("questions")
     if not isinstance(questions, list) or len(questions) != len(gaps):
         return "the question round does not contain exactly one question per known gap"
@@ -2019,14 +4180,18 @@ def _validate_question_round_shape(
     if actual_ids != expected_ids or len(set(actual_ids)) != len(actual_ids):
         return "the question round identities are missing, duplicated, or reordered"
     for question, gap in zip(questions, gaps, strict=True):
-        expected_gap = {
-            key: gap[key]
-            for key in (
-                "projection_sha256", "collection", "kind", "id", "record_sha256"
-            )
-        }
+        expected_gap = gap_clarification.gap_binding(gap)
         if not isinstance(question, dict) or question.get("answers_gap") != expected_gap:
             return "a question is not bound to its code-selected gap"
+        allowed_answer_types = (
+            {"operator_text", "local_file", "url"}
+            if contract >= 3
+            else {"operator_text", "local_file"}
+        )
+        if contract >= 2 and question.get("answer_type") not in allowed_answer_types:
+            return "a question does not have one code-controlled answer type"
+        if contract == 1 and "answer_type" in question:
+            return "a legacy question gained an unsupported answer type"
     return None
 
 
@@ -2042,6 +4207,14 @@ def _consume_gap_question_round(
     if request_error:
         return request_error
     assert projection_path is not None and projection_sha256 is not None
+    saved = state["gap_question_round"]
+    assert isinstance(saved, dict)
+    contract = saved.get("contract", 1)
+    request_sequence = saved.get("request_ledger_sequence")
+    if not isinstance(contract, int):
+        return _blocked(
+            "invalid gap question round", "the question-round contract is invalid"
+        )
     round_dir = work / "gap-question-rounds" / "round-000001"
     try:
         result, journal_sha256, result_sha256 = gap_clarification.validate_round(
@@ -2049,22 +4222,29 @@ def _consume_gap_question_round(
             projection_path=projection_path,
             projection_sha256=projection_sha256,
             purpose=purpose,
+            contract=contract,
         )
         journal_entries = gap_clarification._read_journal(
             round_dir / "interview.jsonl"
         )
     except gap_clarification.ClarificationError as error:
         return _blocked("invalid gap question round", str(error))
-    saved = state["gap_question_round"]
-    assert isinstance(saved, dict)
     gaps = saved["gaps"]
     assert isinstance(gaps, list)
-    shape_error = _validate_question_round_shape(result, gaps)
+    shape_error = _validate_question_round_shape(
+        result, gaps, contract=contract
+    )
     if shape_error:
         return _blocked("invalid gap question round", shape_error)
     timestamp = datetime.now(timezone.utc).isoformat()
+    request_sequence = saved.get("request_ledger_sequence")
+    if not isinstance(request_sequence, int) or len(entries) != request_sequence:
+        return _blocked(
+            "invalid gap question round",
+            "the question-round request sequence changed",
+        )
     completed = _ledger_entry(
-        12,
+        request_sequence + 1,
         "model_gap_question_round_completed",
         {
             "recorded_at": timestamp,
@@ -2092,7 +4272,7 @@ def _consume_gap_question_round(
         str(entries[-1]["entry_sha256"]),
     )
     prepared = _ledger_entry(
-        13,
+        request_sequence + 2,
         "operator_question_round_prepared",
         {
             "recorded_at": timestamp,
@@ -2105,7 +4285,7 @@ def _consume_gap_question_round(
     )
     first_question = result["questions"][0]
     first_asked = _ledger_entry(
-        14,
+        request_sequence + 3,
         "operator_question_asked",
         {
             "recorded_at": timestamp,
@@ -2129,7 +4309,7 @@ def _consume_gap_question_round(
         "question": first_question,
         "questions": result["questions"],
         "gap_question_answers": [],
-        "ledger_entries": 14,
+        "ledger_entries": request_sequence + 3,
         "ledger_tail_sha256": first_asked["entry_sha256"],
     })
     _write_state(work / "intake-state.json", state)
@@ -2930,13 +5110,79 @@ def _terminal_projection_qualification(
 
 
 def _clarification_terminal_disposition(
-    decision: dict[str, object], qualification: dict[str, object]
+    decision: dict[str, object],
+    qualification: dict[str, object],
+    source_projection_closure: dict[str, object],
 ) -> tuple[dict[str, object] | None, dict[str, object] | None]:
-    """Decide whether projection evidence permits the intake layer to finish."""
+    """Decide whether projection and intake-wide conversion evidence permit completion."""
     coverage = qualification.get("coverage")
     gaps = qualification.get("remaining_gaps")
     qualified_as = qualification.get("qualification")
     projection = qualification.get("projection")
+    closure_verdict = source_projection_closure.get("verdict")
+    source_count = source_projection_closure.get("source_count")
+    outcome_counts = source_projection_closure.get("outcome_counts")
+    outcomes = source_projection_closure.get("outcomes")
+    if (
+        closure_verdict not in {"all_projected", "conversion_incomplete"}
+        or not isinstance(source_count, int)
+        or source_count < 1
+        or not isinstance(outcome_counts, dict)
+        or set(outcome_counts) != {"projected", "pending", "failed"}
+        or any(
+            not isinstance(outcome_counts.get(name), int)
+            or outcome_counts[name] < 0
+            for name in ("projected", "pending", "failed")
+        )
+        or sum(outcome_counts.values()) != source_count
+        or not isinstance(outcomes, list)
+        or len(outcomes) != source_count
+        or any(
+            not isinstance(item, dict)
+            or not isinstance(item.get("source_id"), str)
+            or item.get("outcome") not in {"projected", "pending", "failed"}
+            for item in outcomes
+        )
+        or any(
+            (
+                item["outcome"] == "projected"
+                and (
+                    not isinstance(item.get("projection"), dict)
+                    or not isinstance(item["projection"].get("id"), str)
+                    or not isinstance(item["projection"].get("sha256"), str)
+                    or item.get("reason") is not None
+                )
+            )
+            or (
+                item["outcome"] in {"pending", "failed"}
+                and (
+                    item.get("projection") is not None
+                    or not isinstance(item.get("reason"), str)
+                    or not item["reason"].strip()
+                )
+            )
+            for item in outcomes
+        )
+        or len({item["source_id"] for item in outcomes}) != source_count
+        or any(
+            outcome_counts[name]
+            != sum(item["outcome"] == name for item in outcomes)
+            for name in ("projected", "pending", "failed")
+        )
+        or (
+            closure_verdict == "all_projected"
+            and outcome_counts
+            != {"projected": source_count, "pending": 0, "failed": 0}
+        )
+        or (
+            closure_verdict == "conversion_incomplete"
+            and outcome_counts["pending"] + outcome_counts["failed"] < 1
+        )
+    ):
+        return None, _blocked(
+            "terminal_invalid",
+            "source-to-projection closure evidence is incomplete or contradictory",
+        )
     if (
         decision.get("decision") != "clarification_complete"
         or not isinstance(decision.get("remaining_current_gap_count"), int)
@@ -2953,10 +5199,24 @@ def _clarification_terminal_disposition(
             "clarification decision and projection gap evidence contradict each other",
         )
     if qualified_as == "readable_projection_complete" and not gaps:
+        if closure_verdict == "conversion_incomplete":
+            incomplete_outcomes = [
+                item for item in outcomes if item["outcome"] != "projected"
+            ]
+            return {
+                "disposition": "source_conversion_required",
+                "projection_sha256": projection["sha256"],
+                "remaining_gap_count": 0,
+                "source_count": source_count,
+                "outcome_counts": outcome_counts,
+                "incomplete_source_outcomes": incomplete_outcomes,
+            }, None
         return {
             "disposition": "first_layer_complete",
             "projection_sha256": projection["sha256"],
             "remaining_gap_count": 0,
+            "source_count": source_count,
+            "outcome_counts": outcome_counts,
         }, None
     if qualified_as == "readable_projection_incomplete" and gaps:
         return {
@@ -2977,6 +5237,7 @@ def _clarification_required_result(
     decision: dict[str, object],
     qualification: dict[str, object],
     disposition: dict[str, object],
+    source_projection_closure: dict[str, object],
 ) -> dict[str, object]:
     return {
         "status": "ready_for_projection_assessment",
@@ -2985,8 +5246,32 @@ def _clarification_required_result(
         "projection": state.get("current_projection", state["first_projection"]),
         "continuation": decision,
         "projection_qualification": qualification,
+        "source_projection_closure": source_projection_closure,
         "terminal_disposition": disposition,
         "gaps": disposition["remaining_gaps"],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _source_conversion_required_result(
+    state: dict[str, object],
+    work: Path,
+    decision: dict[str, object],
+    qualification: dict[str, object],
+    disposition: dict[str, object],
+    source_projection_closure: dict[str, object],
+) -> dict[str, object]:
+    return {
+        "status": "source_projection_closure",
+        "stopped": "source_conversion_required",
+        "intake_id": state["intake_id"],
+        "projection": state.get("current_projection", state["first_projection"]),
+        "continuation": decision,
+        "projection_qualification": qualification,
+        "source_projection_closure": source_projection_closure,
+        "terminal_disposition": disposition,
+        "incomplete_source_outcomes": disposition["incomplete_source_outcomes"],
         "work": str(work.resolve()),
         "ledger": str((work / "ledger.jsonl").resolve()),
     }
@@ -2998,6 +5283,7 @@ def _clarification_completion_result(
     saved = state["clarification_completion"]
     assert isinstance(saved, dict) and isinstance(saved.get("decision"), dict)
     assert isinstance(saved.get("projection_qualification"), dict)
+    assert isinstance(saved.get("source_projection_closure"), dict)
     assert isinstance(saved.get("terminal_disposition"), dict)
     return {
         "status": "ready_for_projection_assessment",
@@ -3006,6 +5292,7 @@ def _clarification_completion_result(
         "projection": state.get("current_projection", state["first_projection"]),
         "continuation": saved["decision"],
         "projection_qualification": saved["projection_qualification"],
+        "source_projection_closure": saved["source_projection_closure"],
         "terminal_disposition": saved["terminal_disposition"],
         "work": str(work.resolve()),
         "ledger": str((work / "ledger.jsonl").resolve()),
@@ -3027,6 +5314,7 @@ def _validate_clarification_completion(
     decision = saved.get("decision")
     projection_sha256 = saved.get("projection_sha256")
     projection_qualification = saved.get("projection_qualification")
+    source_projection_closure = saved.get("source_projection_closure")
     terminal_disposition = saved.get("terminal_disposition")
     recomputed, decision_error = _clarification_continuation(work, state)
     if decision_error:
@@ -3037,8 +5325,14 @@ def _validate_clarification_completion(
     if qualification_error:
         return qualification_error
     assert recomputed is not None and recomputed_qualification is not None
+    recomputed_closure, closure_error = _source_projection_closure_inventory(
+        work, entries[:-1]
+    )
+    if closure_error:
+        return _blocked("terminal_invalid", str(closure_error["why"]))
+    assert recomputed_closure is not None
     recomputed_disposition, disposition_error = _clarification_terminal_disposition(
-        recomputed, recomputed_qualification
+        recomputed, recomputed_qualification, recomputed_closure
     )
     if disposition_error:
         return disposition_error
@@ -3049,6 +5343,8 @@ def _validate_clarification_completion(
         or recomputed != decision
         or not isinstance(projection_qualification, dict)
         or recomputed_qualification != projection_qualification
+        or not isinstance(source_projection_closure, dict)
+        or recomputed_closure != source_projection_closure
         or not isinstance(terminal_disposition, dict)
         or recomputed_disposition != terminal_disposition
         or terminal_disposition.get("disposition") != "first_layer_complete"
@@ -3058,6 +5354,8 @@ def _validate_clarification_completion(
         or entries[-1].get("decision") != decision
         or entries[-1].get("projection_sha256") != projection_sha256
         or entries[-1].get("projection_qualification") != projection_qualification
+        or entries[-1].get("source_projection_closure")
+        != source_projection_closure
         or entries[-1].get("terminal_disposition") != terminal_disposition
         or state.get("status") != "ready_for_projection_assessment"
         or state.get("phase") != "clarification_continuation_complete"
@@ -3175,8 +5473,14 @@ def _execute_clarification_continuation(
     if qualification_error:
         return qualification_error
     assert projection_qualification is not None
+    source_projection_closure, closure_error = _source_projection_closure_inventory(
+        work, entries
+    )
+    if closure_error:
+        return _blocked("terminal_invalid", str(closure_error["why"]))
+    assert source_projection_closure is not None
     terminal_disposition, disposition_error = _clarification_terminal_disposition(
-        decision, projection_qualification
+        decision, projection_qualification, source_projection_closure
     )
     if disposition_error:
         return disposition_error
@@ -3188,6 +5492,16 @@ def _execute_clarification_continuation(
             decision,
             projection_qualification,
             terminal_disposition,
+            source_projection_closure,
+        )
+    if terminal_disposition["disposition"] == "source_conversion_required":
+        return _source_conversion_required_result(
+            state,
+            work,
+            decision,
+            projection_qualification,
+            terminal_disposition,
+            source_projection_closure,
         )
     history = state.get("gap_resolution_history", [])
     current_resolution = state.get("gap_resolution")
@@ -3206,6 +5520,7 @@ def _execute_clarification_continuation(
             "decision": decision,
             "projection_sha256": parent["sha256"],
             "projection_qualification": projection_qualification,
+            "source_projection_closure": source_projection_closure,
             "terminal_disposition": terminal_disposition,
         },
         str(entries[-1]["entry_sha256"]),
@@ -3227,6 +5542,7 @@ def _execute_clarification_continuation(
             "decision": decision,
             "projection_sha256": parent["sha256"],
             "projection_qualification": projection_qualification,
+            "source_projection_closure": source_projection_closure,
             "terminal_disposition": terminal_disposition,
         },
         "ledger_entries": sequence,
@@ -3495,9 +5811,11 @@ def _validate_follow_up_question_round_shape(
     result: dict[str, object],
     gaps: list[dict[str, object]],
     round_number: int,
+    *,
+    contract: int = gap_clarification.ROUND_CONTRACT,
 ) -> str | None:
     shape_error = _validate_question_round_shape(
-        result, gaps, round_number=round_number
+        result, gaps, round_number=round_number, contract=contract
     )
     if shape_error:
         return shape_error
@@ -3536,11 +5854,13 @@ def _consume_follow_up_gap_question_round(
     assert gaps is not None and projection_path is not None
     assert projection_sha256 is not None and context is not None
     round_number = saved.get("round")
+    contract = saved.get("contract", 1)
     assessment_round = context.get("assessment_round")
     prior_assessment_sha256 = context.get("assessment_result_sha256")
     if (
         not isinstance(round_number, int)
         or round_number < 2
+        or contract not in gap_clarification.SUPPORTED_ROUND_CONTRACTS
         or not isinstance(assessment_round, int)
         or round_number != assessment_round + 1
         or not isinstance(prior_assessment_sha256, str)
@@ -3553,7 +5873,7 @@ def _consume_follow_up_gap_question_round(
     request_index = request_sequence - 1 if isinstance(request_sequence, int) else -1
     expected_request = {
         "round": round_number,
-        "contract": gap_clarification.ROUND_CONTRACT,
+        "contract": contract,
         "projection_path": str(projection_path.relative_to(work)),
         "projection_sha256": projection_sha256,
         "gap_count": len(gaps),
@@ -3582,6 +5902,7 @@ def _consume_follow_up_gap_question_round(
             projection_path=projection_path,
             projection_sha256=projection_sha256,
             purpose=purpose,
+            contract=contract,
             gaps=gaps,
             round_number=round_number,
         )
@@ -3591,7 +5912,7 @@ def _consume_follow_up_gap_question_round(
     except gap_clarification.ClarificationError as error:
         return _blocked("invalid follow-up gap question round", str(error))
     shape_error = _validate_follow_up_question_round_shape(
-        result, gaps, round_number
+        result, gaps, round_number, contract=contract
     )
     if shape_error:
         return _blocked("invalid follow-up gap question round", shape_error)
@@ -3671,6 +5992,7 @@ def _validate_follow_up_gap_question_round(
             "invalid intake state", "the follow-up question round is missing"
         )
     round_number = saved.get("round")
+    contract = saved.get("contract", 1)
     projection_value = saved.get("projection_path")
     projection_sha256 = saved.get("projection_sha256")
     gaps = saved.get("gaps")
@@ -3679,6 +6001,7 @@ def _validate_follow_up_gap_question_round(
     if (
         not isinstance(round_number, int)
         or round_number < 2
+        or contract not in gap_clarification.SUPPORTED_ROUND_CONTRACTS
         or not isinstance(projection_value, str)
         or not isinstance(projection_sha256, str)
         or not isinstance(gaps, list)
@@ -3708,7 +6031,7 @@ def _validate_follow_up_gap_question_round(
     round_dir_value = f"gap-question-rounds/round-{round_number:06d}"
     expected_request = {
         "round": round_number,
-        "contract": gap_clarification.ROUND_CONTRACT,
+        "contract": contract,
         "projection_path": str(projection_path.relative_to(work)),
         "projection_sha256": projection_sha256,
         "gap_count": len(gaps),
@@ -3748,6 +6071,7 @@ def _validate_follow_up_gap_question_round(
             purpose=purpose,
             gaps=gaps,
             round_number=round_number,
+            contract=contract,
         )
         journal_entries = gap_clarification._read_journal(
             round_dir / "interview.jsonl"
@@ -3755,7 +6079,7 @@ def _validate_follow_up_gap_question_round(
     except gap_clarification.ClarificationError as error:
         return _blocked("invalid follow-up gap question round", str(error))
     shape_error = _validate_follow_up_question_round_shape(
-        result, gaps, round_number
+        result, gaps, round_number, contract=contract
     )
     completed = entries[request_index + 1]
     prepared = entries[request_index + 2]
@@ -3827,7 +6151,7 @@ def _known_source_numbers(entries: list[dict[str, object]]) -> set[int]:
     def visit(value: object) -> None:
         if isinstance(value, dict):
             source_id = value.get("id")
-            path = value.get("path")
+            path = value.get("path", value.get("stored_path"))
             if (
                 isinstance(source_id, str)
                 and source_id.startswith("source-")
@@ -3845,6 +6169,1118 @@ def _known_source_numbers(entries: list[dict[str, object]]) -> set[int]:
 
     visit(entries)
     return numbers
+
+
+def _additional_source_ready_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    pending = state["pending_additional_source"]
+    assert isinstance(pending, dict)
+    return {
+        "status": "ready_for_projection",
+        "stopped": "additional_source_frozen",
+        "intake_id": state["intake_id"],
+        "question": pending["question"],
+        "source": pending["source"],
+        "projection": pending["projection"],
+        "lineage": pending["lineage"],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _acquire_additional_local_file(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    supplied: Path,
+    *,
+    question: dict[str, object],
+    lineage: dict[str, object],
+) -> dict[str, object]:
+    if question.get("answer_type") != "local_file":
+        return _blocked(
+            "operator input type mismatch",
+            "the current question requires non-empty text, not a local file",
+        )
+    resolved, content, source_error = _read_local_source(supplied)
+    if source_error:
+        return source_error
+    assert resolved is not None and content is not None
+    number = max(_known_source_numbers(entries), default=0) + 1
+    stored_relative = f"sources/source-{number:06d}"
+    stored_path = work / stored_relative
+    if stored_path.exists():
+        return _blocked(
+            "unbound source artifact",
+            "the additional local-file artifact already exists outside the ledger",
+        )
+    stored_path.write_bytes(content)
+    media_type, media_type_basis = _detect_media_type(stored_path)
+    source = _bind_local_file_to_question(
+        _local_file_record(
+            number,
+            supplied,
+            resolved,
+            stored_relative,
+            content,
+            media_type,
+            media_type_basis,
+        ),
+        question,
+    )
+    projection = _pending_additional_projection_record(number)
+    entry = _ledger_entry(
+        len(entries) + 1,
+        "source_acquired",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "answers_question": question["id"],
+            "answers_gap": question["answers_gap"],
+            "source": source,
+            "projection": projection,
+            "lineage": lineage,
+            "next_phase": "additional_source_frozen",
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    pending = {
+        "question": question,
+        "source": source,
+        "projection": projection,
+        "lineage": lineage,
+        "ledger_sequence": len(entries) + 1,
+    }
+    _append_ledger(work / "ledger.jsonl", [entry])
+    state.update({
+        "status": "ready_for_projection",
+        "phase": "additional_source_frozen",
+        "waiting_for": None,
+        "question": None,
+        "pending_additional_source": pending,
+        "ledger_entries": len(entries) + 1,
+        "ledger_tail_sha256": entry["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _additional_source_ready_result(state, work)
+
+
+def _acquire_additional_url(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    supplied_url: str,
+    *,
+    question: dict[str, object],
+    lineage: dict[str, object],
+) -> dict[str, object]:
+    if question.get("answer_type") != "url":
+        return _blocked(
+            "operator input type mismatch",
+            "the current question requires a different answer type, not a URL",
+        )
+    number = max(_known_source_numbers(entries), default=0) + 1
+    stored_relative = f"sources/source-{number:06d}"
+    stored_path = work / stored_relative
+    if stored_path.exists():
+        return _blocked(
+            "unbound source artifact",
+            "the additional URL artifact already exists outside the ledger",
+        )
+    retrieval, content, retrieval_error = _fetch_public_url(supplied_url)
+    if retrieval_error:
+        return retrieval_error
+    assert retrieval is not None and content is not None
+    stored_path.write_bytes(content)
+    media_type, media_type_basis = _url_media_type(retrieval, stored_path)
+    source = {
+        **_url_source_record(
+            number,
+            stored_relative,
+            content,
+            retrieval,
+            media_type,
+            media_type_basis,
+        ),
+        "answers_question": question["id"],
+        "answers_gap": question["answers_gap"],
+    }
+    projection = _pending_additional_projection_record(number)
+    entry = _ledger_entry(
+        len(entries) + 1,
+        "source_acquired",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "answers_question": question["id"],
+            "answers_gap": question["answers_gap"],
+            "source": source,
+            "projection": projection,
+            "lineage": lineage,
+            "next_phase": "additional_source_frozen",
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    pending = {
+        "question": question,
+        "source": source,
+        "projection": projection,
+        "lineage": lineage,
+        "ledger_sequence": len(entries) + 1,
+    }
+    _append_ledger(work / "ledger.jsonl", [entry])
+    state.update({
+        "status": "ready_for_projection",
+        "phase": "additional_source_frozen",
+        "waiting_for": None,
+        "question": None,
+        "pending_additional_source": pending,
+        "ledger_entries": len(entries) + 1,
+        "ledger_tail_sha256": entry["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _additional_source_ready_result(state, work)
+
+
+def _validate_pending_additional_source(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    supplied: Path | None,
+    supplied_url: str | None = None,
+    *,
+    allow_projection: bool = False,
+) -> dict[str, object] | None:
+    pending = state.get("pending_additional_source")
+    if not isinstance(pending, dict) or not entries:
+        return _blocked(
+            "invalid intake state", "the pending additional source record is missing"
+        )
+    question = pending.get("question")
+    source = pending.get("source")
+    projection = pending.get("projection")
+    lineage = pending.get("lineage")
+    sequence = pending.get("ledger_sequence")
+    if (
+        not isinstance(question, dict)
+        or question.get("answer_type") not in {"local_file", "url"}
+        or not isinstance(source, dict)
+        or not isinstance(projection, dict)
+        or not isinstance(lineage, dict)
+        or not isinstance(sequence, int)
+        or sequence < 1
+        or sequence > len(entries)
+        or (not allow_projection and sequence != len(entries))
+    ):
+        return _blocked(
+            "invalid intake state", "the pending additional source identity changed"
+        )
+    entry = entries[sequence - 1]
+    question_sequence = lineage.get("question_ledger_sequence")
+    if (
+        not isinstance(question_sequence, int)
+        or question_sequence < 1
+        or question_sequence >= sequence
+        or entries[question_sequence - 1].get("event") != "operator_question_asked"
+        or entries[question_sequence - 1].get("question") != question
+        or entry.get("event") != "source_acquired"
+        or entry.get("answers_question") != question.get("id")
+        or entry.get("answers_gap") != question.get("answers_gap")
+        or entry.get("source") != source
+        or entry.get("projection") != projection
+        or entry.get("lineage") != lineage
+        or entry.get("next_phase") != "additional_source_frozen"
+    ):
+        return _blocked(
+            "invalid ledger", "the additional source lost its question or gap lineage"
+        )
+    source_id = source.get("id")
+    stored_relative = source.get("stored_path")
+    if (
+        not isinstance(source_id, str)
+        or not source_id.startswith("source-")
+        or not isinstance(stored_relative, str)
+        or stored_relative != f"sources/{source_id}"
+        or source.get("answers_question") != question.get("id")
+        or source.get("answers_gap") != question.get("answers_gap")
+    ):
+        return _blocked(
+            "invalid ledger", "the additional local-file source record changed"
+        )
+    try:
+        number = int(source_id.removeprefix("source-"))
+        frozen = (work / stored_relative).read_bytes()
+    except (OSError, ValueError):
+        return _blocked(
+            "immutable source unavailable", "the frozen additional source cannot be read"
+        )
+    if question.get("answer_type") == "url":
+        if supplied is not None:
+            return _blocked(
+                "operator input type mismatch",
+                "the current question is bound to a URL, not a local file",
+            )
+        base_source = {
+            key: value
+            for key, value in source.items()
+            if key not in {"answers_question", "answers_gap"}
+        }
+        url_error = _validate_url_source_record(
+            base_source, number, frozen, supplied_url
+        )
+        if url_error:
+            return url_error
+        expected_source = {
+            **base_source,
+            "answers_question": question["id"],
+            "answers_gap": question["answers_gap"],
+        }
+    else:
+        if supplied_url is not None:
+            return _blocked(
+                "operator input type mismatch",
+                "the current question is bound to a local file, not a URL",
+            )
+        if (
+            source.get("kind") != "local_file"
+            or source.get("adapter")
+            != {"name": "local_file", "version": LOCAL_FILE_ADAPTER_VERSION}
+        ):
+            return _blocked(
+                "invalid ledger", "the additional local-file source record changed"
+            )
+        expected_source = _bind_local_file_to_question(
+            _local_file_record(
+                number,
+                Path(str(source.get("provided_path"))),
+                Path(str(source.get("resolved_path"))),
+                stored_relative,
+                frozen,
+                str(source.get("media_type")),
+                str(source.get("media_type_basis")),
+            ),
+            question,
+        )
+    if (
+        source != expected_source
+        or projection != _pending_additional_projection_record(number)
+        or number in _known_source_numbers(entries[: sequence - 1])
+        or (
+            not allow_projection
+            and (
+                state.get("status") != "ready_for_projection"
+                or state.get("phase") != "additional_source_frozen"
+                or state.get("waiting_for") is not None
+            )
+        )
+        or (
+            allow_projection
+            and state.get("phase")
+            not in {
+                "interviewing_additional_source_projection",
+                "additional_source_projection_recorded",
+            }
+        )
+        or state.get("question") is not None
+        or state.get("ledger_entries") != len(entries)
+        or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+    ):
+        return _blocked(
+            "invalid ledger", "the frozen additional source or pending projection changed"
+        )
+    if supplied is not None:
+        resolved, current, source_error = _read_local_source(supplied)
+        if source_error:
+            return source_error
+        assert resolved is not None and current is not None
+        if (
+            str(supplied) != source.get("provided_path")
+            or str(resolved) != source.get("resolved_path")
+        ):
+            return _blocked(
+                "source origin changed",
+                "this pending source is bound to a different local-file origin",
+            )
+        if current != frozen:
+            return _blocked(
+                "source changed",
+                "the supplied local file no longer matches the frozen additional source",
+            )
+    return None
+
+
+def _additional_projection_paths(source_id: str) -> dict[str, str]:
+    root = f"additional-source-projections/{source_id}"
+    return {
+        "interview_dir": f"{root}/projection-interview",
+        "interview_path": f"{root}/projection-interview/interview.jsonl",
+        "candidate_path": f"{root}/projection-interview/projection.json",
+        "verification_dir": f"{root}/relationship-verification",
+        "verification_path": f"{root}/relationship-verification/verification.json",
+        "verification_journal_path": f"{root}/relationship-verification/interview.jsonl",
+        "correction_dir": f"{root}/relationship-correction",
+        "correction_path": f"{root}/relationship-correction/corrections.json",
+        "correction_journal_path": f"{root}/relationship-correction/interview.jsonl",
+        "correction_candidate_path": f"{root}/relationship-correction/verification-candidate.json",
+        "correction_verification_dir": f"{root}/relationship-correction-verification",
+        "correction_verification_path": f"{root}/relationship-correction-verification/verification.json",
+        "correction_verification_journal_path": f"{root}/relationship-correction-verification/interview.jsonl",
+        "projection_path": f"projections/{source_id}-v1.json",
+    }
+
+
+def _additional_projection_waiting_result(
+    state: dict[str, object],
+    work: Path,
+    stage: str = "project_additional_source",
+) -> dict[str, object]:
+    pending = state["pending_additional_source"]
+    active = state["active_additional_projection"]
+    assert isinstance(pending, dict) and isinstance(active, dict)
+    source = pending["source"]
+    assert isinstance(source, dict)
+    stages = {
+        "project_additional_source": {
+            "flag": "--run-projection-interview",
+            "stopped": "interviewing_additional_source_projection",
+            "instruction": (
+                "Inspect the attached frozen source, run the command, and answer only the "
+                "typed question currently displayed. Code controls allowed choices and assembly."
+            ),
+        },
+        "verify_additional_source_projection": {
+            "flag": "--run-projection-verification",
+            "stopped": "verifying_additional_source_projection",
+            "instruction": (
+                "Independently inspect the attached frozen source, run the command, and answer "
+                "only the typed question currently displayed. Code controls allowed choices and assembly."
+            ),
+        },
+        "correct_additional_source_relationships": {
+            "flag": "--run-relationship-correction",
+            "stopped": "correcting_additional_source_relationships",
+            "instruction": (
+                "Inspect the attached frozen source, run the command, and address only the independently "
+                "rejected relationships. Code controls replacement choices, coordinate binding, and gaps."
+            ),
+        },
+        "verify_additional_source_relationship_corrections": {
+            "flag": "--run-correction-verification",
+            "stopped": "verifying_additional_source_relationship_corrections",
+            "instruction": (
+                "Independently inspect the attached frozen source, run the command, and verify only the "
+                "proposed corrected relationships. Code controls allowed verdicts and final assembly."
+            ),
+        },
+    }
+    selected = stages[stage]
+    return {
+        "status": "waiting_for_model",
+        "stopped": selected["stopped"],
+        "intake_id": state["intake_id"],
+        "source": source,
+        "reserved_projection": pending["projection"],
+        "lineage": pending["lineage"],
+        "work": [{
+            "stage": stage,
+            "instruction": selected["instruction"],
+            "attachments": [str((work / str(source["stored_path"])).resolve())],
+            "command": [
+                sys.executable,
+                str(Path(__file__).resolve()),
+                "--work",
+                str(work.resolve()),
+                selected["flag"],
+            ],
+        }],
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _request_additional_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object]:
+    pending = state["pending_additional_source"]
+    assert isinstance(pending, dict)
+    source = pending["source"]
+    projection = pending["projection"]
+    lineage = pending["lineage"]
+    assert isinstance(source, dict) and isinstance(projection, dict)
+    assert isinstance(lineage, dict)
+    source_id = str(source["id"])
+    if not str(source["media_type"]).startswith("image/"):
+        return _create_additional_verbatim_utf8_projection(
+            work, state, entries, pending
+        )
+    paths = _additional_projection_paths(source_id)
+    artifact_root = work / f"additional-source-projections/{source_id}"
+    projection_path = work / paths["projection_path"]
+    if artifact_root.exists() or projection_path.exists():
+        return _blocked(
+            "unbound projection artifacts",
+            f"projection artifacts for {source_id} already exist outside the ledger",
+        )
+    (work / paths["interview_dir"]).mkdir(parents=True)
+    sequence = len(entries) + 1
+    started = _ledger_entry(
+        sequence,
+        "model_projection_interview_started",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "attempt": 1,
+            "role": "additional_source_projection",
+            "source_id": source_id,
+            "source_sha256": source["sha256"],
+            "reserved_projection": projection,
+            "answers_question": pending["question"]["id"],
+            "answers_gap": pending["question"]["answers_gap"],
+            "lineage": lineage,
+            "interview_contract": PROJECTION_INTERVIEW_CONTRACT,
+            "interview_path": paths["interview_path"],
+            "attachment_path": source["stored_path"],
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    active = {
+        "source_id": source_id,
+        "source_sha256": source["sha256"],
+        "reserved_projection": projection,
+        "lineage": lineage,
+        "request_ledger_sequence": sequence,
+        "paths": paths,
+    }
+    _append_ledger(work / "ledger.jsonl", [started])
+    state.update({
+        "status": "waiting_for_model",
+        "phase": "interviewing_additional_source_projection",
+        "waiting_for": paths["interview_path"],
+        "question": None,
+        "active_additional_projection": active,
+        "ledger_entries": sequence,
+        "ledger_tail_sha256": started["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _additional_projection_waiting_result(state, work)
+
+
+def _create_additional_verbatim_utf8_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    pending: dict[str, object],
+) -> dict[str, object]:
+    source = pending["source"]
+    reservation = pending["projection"]
+    assert isinstance(source, dict) and isinstance(reservation, dict)
+    source_id = str(source["id"])
+    projection = _verbatim_utf8_projection_record(source_id, str(source["sha256"]))
+    if projection["id"] != reservation.get("id"):
+        return _blocked(
+            "invalid ledger", "the verbatim projection does not fill its reserved identity"
+        )
+    projection_path = work / str(projection["path"])
+    if projection_path.exists():
+        return _blocked(
+            "unbound projection artifact",
+            f"the verbatim projection already exists outside the ledger: {projection['path']}",
+        )
+    try:
+        frozen = (work / str(source["stored_path"])).read_bytes()
+    except OSError:
+        return _blocked(
+            "immutable source unavailable", "the frozen additional source cannot be read"
+        )
+    projection_bytes, projection_error = _verbatim_utf8_bytes(frozen)
+    if projection_error:
+        return projection_error
+    assert projection_bytes is not None
+    if _digest_bytes(projection_bytes) != source["sha256"]:
+        return _blocked(
+            "immutable source changed",
+            "the frozen additional source changed before verbatim projection",
+        )
+    projection_path.write_bytes(projection_bytes)
+    created = _ledger_entry(
+        len(entries) + 1,
+        "projection_version_created",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "attempt": 1,
+            "role": "verbatim_utf8_projection",
+            "source_id": source_id,
+            "source_sha256": source["sha256"],
+            "reserved_projection": reservation,
+            "projection": projection,
+            "answers_question": pending["question"]["id"],
+            "answers_gap": pending["question"]["answers_gap"],
+            "lineage": pending["lineage"],
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [created])
+    state.update({
+        "status": "ready_for_projection_assessment",
+        "phase": "additional_source_projection_recorded",
+        "waiting_for": None,
+        "question": None,
+        "additional_source_projection": projection,
+        "additional_projection_completion": {
+            "role": "verbatim_utf8_projection",
+            "source_id": source_id,
+            "source_sha256": source["sha256"],
+            "projection_sha256": projection["sha256"],
+            "reserved_projection": reservation,
+            "lineage": pending["lineage"],
+            "ledger_sequence": len(entries) + 1,
+        },
+        "ledger_entries": len(entries) + 1,
+        "ledger_tail_sha256": created["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _additional_projection_ready_result(state, work)
+
+
+def _validate_additional_verbatim_utf8_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object] | None:
+    pending = state.get("pending_additional_source")
+    completion = state.get("additional_projection_completion")
+    projection = state.get("additional_source_projection")
+    if (
+        not isinstance(pending, dict)
+        or not isinstance(completion, dict)
+        or not isinstance(projection, dict)
+    ):
+        return _blocked(
+            "invalid intake state", "the additional verbatim projection identity is missing"
+        )
+    source = pending.get("source")
+    reservation = pending.get("projection")
+    sequence = completion.get("ledger_sequence")
+    if (
+        not isinstance(source, dict)
+        or not isinstance(reservation, dict)
+        or not isinstance(sequence, int)
+        or sequence != len(entries)
+    ):
+        return _blocked(
+            "invalid ledger", "the additional verbatim projection sequence changed"
+        )
+    expected_projection = _verbatim_utf8_projection_record(
+        str(source.get("id")), str(source.get("sha256"))
+    )
+    expected_completion = {
+        "role": "verbatim_utf8_projection",
+        "source_id": source.get("id"),
+        "source_sha256": source.get("sha256"),
+        "projection_sha256": expected_projection["sha256"],
+        "reserved_projection": reservation,
+        "lineage": pending.get("lineage"),
+        "ledger_sequence": sequence,
+    }
+    created = entries[sequence - 1]
+    try:
+        source_bytes = (work / str(source["stored_path"])).read_bytes()
+        projection_bytes = (work / str(expected_projection["path"])).read_bytes()
+    except OSError:
+        return _blocked(
+            "immutable projection unavailable", str(expected_projection["path"])
+        )
+    _, utf8_error = _verbatim_utf8_bytes(source_bytes)
+    if utf8_error:
+        return _blocked("invalid ledger", str(utf8_error["why"]))
+    if (
+        projection != expected_projection
+        or completion != expected_completion
+        or source_bytes != projection_bytes
+        or _digest_bytes(source_bytes) != source.get("sha256")
+        or created.get("event") != "projection_version_created"
+        or created.get("attempt") != 1
+        or created.get("role") != "verbatim_utf8_projection"
+        or created.get("source_id") != source.get("id")
+        or created.get("source_sha256") != source.get("sha256")
+        or created.get("reserved_projection") != reservation
+        or created.get("projection") != projection
+        or created.get("answers_question") != pending["question"]["id"]
+        or created.get("answers_gap") != pending["question"]["answers_gap"]
+        or created.get("lineage") != pending.get("lineage")
+        or state.get("status") != "ready_for_projection_assessment"
+        or state.get("phase") != "additional_source_projection_recorded"
+        or state.get("waiting_for") is not None
+        or state.get("question") is not None
+        or state.get("ledger_entries") != len(entries)
+        or state.get("ledger_tail_sha256") != created.get("entry_sha256")
+    ):
+        return _blocked(
+            "invalid ledger", "the additional verbatim UTF-8 projection changed"
+        )
+    return None
+
+
+def _validate_additional_projection_request(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    *,
+    recorded: bool = False,
+) -> dict[str, object] | None:
+    pending = state.get("pending_additional_source")
+    active = state.get("active_additional_projection")
+    if not isinstance(pending, dict) or not isinstance(active, dict):
+        return _blocked(
+            "invalid intake state", "the active additional projection identity is missing"
+        )
+    source = pending.get("source")
+    projection = pending.get("projection")
+    lineage = pending.get("lineage")
+    sequence = active.get("request_ledger_sequence")
+    if (
+        not isinstance(source, dict)
+        or not isinstance(projection, dict)
+        or not isinstance(lineage, dict)
+        or not isinstance(sequence, int)
+        or sequence < 1
+        or sequence > len(entries)
+    ):
+        return _blocked(
+            "invalid intake state", "the active additional projection identity changed"
+        )
+    source_id = source.get("id")
+    if not isinstance(source_id, str):
+        return _blocked("invalid intake state", "the active projection source is missing")
+    paths = _additional_projection_paths(source_id)
+    expected_active = {
+        "source_id": source_id,
+        "source_sha256": source.get("sha256"),
+        "reserved_projection": projection,
+        "lineage": lineage,
+        "request_ledger_sequence": sequence,
+        "paths": paths,
+    }
+    started = entries[sequence - 1]
+    expected_started = {
+        "attempt": 1,
+        "role": "additional_source_projection",
+        "source_id": source_id,
+        "source_sha256": source.get("sha256"),
+        "reserved_projection": projection,
+        "answers_question": pending["question"]["id"],
+        "answers_gap": pending["question"]["answers_gap"],
+        "lineage": lineage,
+        "interview_contract": PROJECTION_INTERVIEW_CONTRACT,
+        "interview_path": paths["interview_path"],
+        "attachment_path": source.get("stored_path"),
+    }
+    if (
+        active != expected_active
+        or started.get("event") != "model_projection_interview_started"
+        or any(started.get(key) != value for key, value in expected_started.items())
+        or state.get("phase")
+        != (
+            "additional_source_projection_recorded"
+            if recorded
+            else "interviewing_additional_source_projection"
+        )
+        or state.get("status")
+        != ("ready_for_projection_assessment" if recorded else "waiting_for_model")
+        or state.get("waiting_for")
+        != (None if recorded else paths["interview_path"])
+    ):
+        return _blocked(
+            "invalid ledger", "the additional projection request changed"
+        )
+    return None
+
+
+def _collect_additional_projection_artifacts(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> tuple[dict[str, object] | None, str | None, dict[str, object] | None]:
+    pending = state["pending_additional_source"]
+    active = state["active_additional_projection"]
+    assert isinstance(pending, dict) and isinstance(active, dict)
+    source = pending["source"]
+    paths = active["paths"]
+    request_sequence = active["request_ledger_sequence"]
+    assert isinstance(source, dict) and isinstance(paths, dict)
+    assert isinstance(request_sequence, int)
+    attempt_dir = work / str(paths["interview_dir"])
+    try:
+        projection, journal_sha256, candidate_sha256 = projection_interview.validate(
+            attempt_dir,
+            source_sha256=str(source["sha256"]),
+            purpose=purpose,
+            contract=int(entries[request_sequence - 1]["interview_contract"]),
+        )
+        journal_entries = projection_interview._read_journal(
+            attempt_dir / "interview.jsonl"
+        )
+    except projection_interview.InterviewError as error:
+        return None, None, _blocked("invalid projection interview", str(error))
+    verification: dict[str, object] | None = None
+    verification_journal_sha256: str | None = None
+    verification_result_sha256: str | None = None
+    corrections: dict[str, object] | None = None
+    correction_journal_sha256: str | None = None
+    correction_result_sha256: str | None = None
+    correction_candidate_sha256: str | None = None
+    correction_verification: dict[str, object] | None = None
+    correction_verification_journal_sha256: str | None = None
+    correction_verification_result_sha256: str | None = None
+    if int(entries[request_sequence - 1]["interview_contract"]) >= 7:
+        verification_dir = work / str(paths["verification_dir"])
+        if not (verification_dir / "verification.json").exists():
+            return None, "verify_additional_source_projection", None
+        try:
+            verification, verification_journal_sha256, verification_result_sha256 = (
+                relationship_verification.validate(
+                    verification_dir,
+                    candidate_path=work / str(paths["candidate_path"]),
+                    candidate_sha256=candidate_sha256,
+                    purpose=purpose,
+                )
+            )
+        except relationship_verification.VerificationError as error:
+            return None, None, _blocked("invalid relationship verification", str(error))
+        rejected_count = sum(
+            verdict["verdict"] != "supported" for verdict in verification["verdicts"]
+        )
+        if rejected_count:
+            correction_dir = work / str(paths["correction_dir"])
+            if not (correction_dir / "corrections.json").exists():
+                return None, "correct_additional_source_relationships", None
+            try:
+                (
+                    corrections,
+                    correction_journal_sha256,
+                    correction_result_sha256,
+                    correction_candidate_sha256,
+                ) = relationship_correction.validate(
+                    correction_dir,
+                    candidate_path=work / str(paths["candidate_path"]),
+                    candidate_sha256=candidate_sha256,
+                    verification_path=work / str(paths["verification_path"]),
+                    verification_sha256=str(verification_result_sha256),
+                    purpose=purpose,
+                )
+            except relationship_correction.CorrectionError as error:
+                return None, None, _blocked("invalid relationship correction", str(error))
+            proposed_count = sum(
+                item["action"] == "propose_replacement_endpoint"
+                for item in corrections["corrections"]
+            )
+            if proposed_count:
+                correction_verification_dir = work / str(
+                    paths["correction_verification_dir"]
+                )
+                if not (correction_verification_dir / "verification.json").exists():
+                    return (
+                        None,
+                        "verify_additional_source_relationship_corrections",
+                        None,
+                    )
+                try:
+                    (
+                        correction_verification,
+                        correction_verification_journal_sha256,
+                        correction_verification_result_sha256,
+                    ) = relationship_verification.validate(
+                        correction_verification_dir,
+                        candidate_path=work / str(paths["correction_candidate_path"]),
+                        candidate_sha256=str(correction_candidate_sha256),
+                        purpose=purpose,
+                    )
+                except relationship_verification.VerificationError as error:
+                    return None, None, _blocked(
+                        "invalid relationship correction verification", str(error)
+                    )
+        verification_error = _apply_independent_verification(
+            projection, verification, corrections, correction_verification
+        )
+        if verification_error:
+            return None, None, verification_error
+    return {
+        "projection": projection,
+        "journal_sha256": journal_sha256,
+        "candidate_sha256": candidate_sha256,
+        "journal_entries": journal_entries,
+        "verification": verification,
+        "verification_journal_sha256": verification_journal_sha256,
+        "verification_result_sha256": verification_result_sha256,
+        "corrections": corrections,
+        "correction_journal_sha256": correction_journal_sha256,
+        "correction_result_sha256": correction_result_sha256,
+        "correction_candidate_sha256": correction_candidate_sha256,
+        "correction_verification": correction_verification,
+        "correction_verification_journal_sha256": correction_verification_journal_sha256,
+        "correction_verification_result_sha256": correction_verification_result_sha256,
+    }, None, None
+
+
+def _additional_projection_record(
+    source_id: str,
+    path: str,
+    projection_bytes: bytes,
+    projection: dict[str, object],
+) -> dict[str, object]:
+    gap_count = sum(item["status"] == "gap" for item in projection["elements"])
+    gap_count += sum(item["status"] == "gap" for item in projection["relationships"])
+    gap_count += sum(
+        item["status"] == "gap" for item in projection.get("scan_regions", [])
+    )
+    return {
+        "id": f"projection-{source_id}-v1",
+        "source_id": source_id,
+        "version": 1,
+        "path": path,
+        "sha256": _digest_bytes(projection_bytes),
+        "element_count": len(projection["elements"]),
+        "relationship_count": len(projection["relationships"]),
+        "gap_count": gap_count,
+        "coverage": "unassessed",
+    }
+
+
+def _additional_projection_completion_payload(
+    active: dict[str, object], bundle: dict[str, object]
+) -> dict[str, object]:
+    paths = active["paths"]
+    assert isinstance(paths, dict)
+    journal_entries = bundle["journal_entries"]
+    assert isinstance(journal_entries, list)
+    return {
+        "attempt": 1,
+        "role": "additional_source_projection",
+        "source_id": active["source_id"],
+        "reserved_projection": active["reserved_projection"],
+        "lineage": active["lineage"],
+        "interview_path": paths["interview_path"],
+        "interview_sha256": bundle["journal_sha256"],
+        "attempt_projection_path": paths["candidate_path"],
+        "attempt_projection_sha256": bundle["candidate_sha256"],
+        "question_count": sum(
+            entry["event"] == "question_asked" for entry in journal_entries
+        ),
+        "answer_count": sum(
+            entry["event"] == "answer_recorded" for entry in journal_entries
+        ),
+        "rejected_answer_count": sum(
+            entry["event"] == "answer_recorded" and entry["accepted"] is False
+            for entry in journal_entries
+        ),
+        "verification_path": (
+            paths["verification_journal_path"]
+            if bundle["verification"] is not None
+            else None
+        ),
+        "verification_journal_sha256": bundle["verification_journal_sha256"],
+        "verification_result_sha256": bundle["verification_result_sha256"],
+        "correction_path": (
+            paths["correction_journal_path"]
+            if bundle["corrections"] is not None
+            else None
+        ),
+        "correction_journal_sha256": bundle["correction_journal_sha256"],
+        "correction_result_sha256": bundle["correction_result_sha256"],
+        "correction_candidate_sha256": bundle["correction_candidate_sha256"],
+        "correction_verification_path": (
+            paths["correction_verification_journal_path"]
+            if bundle["correction_verification"] is not None
+            else None
+        ),
+        "correction_verification_journal_sha256": bundle[
+            "correction_verification_journal_sha256"
+        ],
+        "correction_verification_result_sha256": bundle[
+            "correction_verification_result_sha256"
+        ],
+    }
+
+
+def _additional_projection_ready_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    pending = state["pending_additional_source"]
+    assert isinstance(pending, dict)
+    return {
+        "status": "ready_for_projection_assessment",
+        "stopped": "additional_source_projection_recorded",
+        "intake_id": state["intake_id"],
+        "source": pending["source"],
+        "projection": state["additional_source_projection"],
+        "reserved_projection": pending["projection"],
+        "lineage": pending["lineage"],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _consume_additional_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object]:
+    bundle, stage, error = _collect_additional_projection_artifacts(
+        work, state, entries, purpose
+    )
+    if error:
+        return error
+    if stage:
+        return _additional_projection_waiting_result(state, work, stage)
+    assert bundle is not None
+    pending = state["pending_additional_source"]
+    active = state["active_additional_projection"]
+    assert isinstance(pending, dict) and isinstance(active, dict)
+    source = pending["source"]
+    paths = active["paths"]
+    projection = bundle["projection"]
+    assert isinstance(source, dict) and isinstance(paths, dict)
+    assert isinstance(projection, dict)
+    projection_path = work / str(paths["projection_path"])
+    if projection_path.exists():
+        return _blocked(
+            "unbound projection artifact",
+            f"the reserved projection for {source['id']} already exists outside the ledger",
+        )
+    projection_bytes = (
+        json.dumps(projection, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    )
+    projection_path.write_bytes(projection_bytes)
+    projection_record = _additional_projection_record(
+        str(source["id"]), str(paths["projection_path"]), projection_bytes, projection
+    )
+    completion_payload = _additional_projection_completion_payload(active, bundle)
+    completed = _ledger_entry(
+        len(entries) + 1,
+        "model_projection_interview_completed",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            **completion_payload,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    created = _ledger_entry(
+        len(entries) + 2,
+        "projection_version_created",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "attempt": 1,
+            "role": "additional_source_projection",
+            "projection": projection_record,
+            "reserved_projection": pending["projection"],
+            "answers_question": pending["question"]["id"],
+            "answers_gap": pending["question"]["answers_gap"],
+            "lineage": pending["lineage"],
+        },
+        str(completed["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [completed, created])
+    state.update({
+        "status": "ready_for_projection_assessment",
+        "phase": "additional_source_projection_recorded",
+        "waiting_for": None,
+        "question": None,
+        "additional_source_projection": projection_record,
+        "additional_projection_completion": completion_payload,
+        "ledger_entries": len(entries) + 2,
+        "ledger_tail_sha256": created["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _additional_projection_ready_result(state, work)
+
+
+def _validate_recorded_additional_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    completion = state.get("additional_projection_completion")
+    if (
+        isinstance(completion, dict)
+        and completion.get("role") == "verbatim_utf8_projection"
+    ):
+        return _validate_additional_verbatim_utf8_projection(work, state, entries)
+    request_error = _validate_additional_projection_request(
+        work, state, entries, recorded=True
+    )
+    if request_error:
+        return request_error
+    pending = state["pending_additional_source"]
+    active = state["active_additional_projection"]
+    assert isinstance(pending, dict) and isinstance(active, dict)
+    request_sequence = active["request_ledger_sequence"]
+    paths = active["paths"]
+    source = pending["source"]
+    assert isinstance(request_sequence, int) and isinstance(paths, dict)
+    assert isinstance(source, dict)
+    if len(entries) != request_sequence + 2:
+        return _blocked(
+            "invalid ledger", "the additional projection ledger length changed"
+        )
+    bundle, stage, error = _collect_additional_projection_artifacts(
+        work, state, entries, purpose
+    )
+    if error:
+        return error
+    if stage or bundle is None:
+        return _blocked(
+            "invalid ledger", "the recorded additional projection lost required artifacts"
+        )
+    projection = bundle["projection"]
+    assert isinstance(projection, dict)
+    projection_path = work / str(paths["projection_path"])
+    try:
+        projection_bytes = projection_path.read_bytes()
+    except OSError:
+        return _blocked(
+            "immutable projection unavailable", str(projection_path)
+        )
+    canonical = (
+        json.dumps(projection, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    )
+    projection_record = _additional_projection_record(
+        str(source["id"]), str(paths["projection_path"]), projection_bytes, projection
+    )
+    completion_payload = _additional_projection_completion_payload(active, bundle)
+    completed = entries[request_sequence]
+    created = entries[request_sequence + 1]
+    if (
+        projection_bytes != canonical
+        or state.get("additional_source_projection") != projection_record
+        or state.get("additional_projection_completion") != completion_payload
+        or completed.get("event") != "model_projection_interview_completed"
+        or any(
+            completed.get(key) != value
+            for key, value in completion_payload.items()
+        )
+        or created.get("event") != "projection_version_created"
+        or created.get("attempt") != 1
+        or created.get("role") != "additional_source_projection"
+        or created.get("projection") != projection_record
+        or created.get("reserved_projection") != pending["projection"]
+        or created.get("answers_question") != pending["question"]["id"]
+        or created.get("answers_gap") != pending["question"]["answers_gap"]
+        or created.get("lineage") != pending["lineage"]
+        or state.get("ledger_entries") != len(entries)
+        or state.get("ledger_tail_sha256") != created.get("entry_sha256")
+    ):
+        return _blocked(
+            "invalid ledger", "the recorded additional projection changed"
+        )
+    return None
 
 
 def _start_prepared_question_round_interview(
@@ -4119,12 +7555,30 @@ def _validate_prepared_question_round_interview(
         return None
     if len(answers) < len(questions):
         active = questions[len(answers)]
-        expected_state = (
-            "needs_operator",
-            "awaiting_prepared_question_round_answers",
-            active.get("id") if isinstance(active, dict) else None,
-            active,
-        )
+        pending = state.get("pending_additional_source")
+        if (
+            allow_later_phase
+            and state.get("phase") in {
+                "additional_source_frozen",
+                "interviewing_additional_source_projection",
+                "additional_source_projection_recorded",
+            }
+            and isinstance(pending, dict)
+            and pending.get("question") == active
+        ):
+            expected_state = (
+                state.get("status"),
+                state.get("phase"),
+                state.get("waiting_for"),
+                None,
+            )
+        else:
+            expected_state = (
+                "needs_operator",
+                "awaiting_prepared_question_round_answers",
+                active.get("id") if isinstance(active, dict) else None,
+                active,
+            )
     else:
         expected_states = {
             (
@@ -4219,18 +7673,15 @@ def _accept_prepared_question_round_answer(
     state: dict[str, object],
     entries: list[dict[str, object]],
     purpose: str,
-    answer: str,
+    answer: str | None,
+    supplied: Path | None = None,
+    supplied_url: str | None = None,
 ) -> dict[str, object]:
     interview_error = _validate_prepared_question_round_interview(
         work, state, entries, purpose
     )
     if interview_error:
         return interview_error
-    if not answer.strip():
-        return _blocked(
-            "gap answer required",
-            "answer the current operator question with non-whitespace text",
-        )
     saved = state["follow_up_gap_question_round"]
     interview = state["prepared_question_round_interview"]
     assert isinstance(saved, dict) and isinstance(interview, dict)
@@ -4245,6 +7696,73 @@ def _accept_prepared_question_round_answer(
         return _blocked("gap answer not requested", "the question round is already answered")
     question = questions[index]
     assert isinstance(question, dict)
+    answer_type = question.get("answer_type", "operator_text")
+    if answer_type == "local_file":
+        if answer is not None or supplied_url is not None:
+            return _blocked(
+                "operator input type mismatch",
+                "the current question requires one local file, not text",
+            )
+        if supplied is None:
+            return _blocked(
+                "local file required",
+                "supply one existing local file for the current operator question",
+            )
+        first_sequence = interview["first_question_ledger_sequence"]
+        assert isinstance(first_sequence, int)
+        return _acquire_additional_local_file(
+            work,
+            state,
+            entries,
+            supplied,
+            question=question,
+            lineage={
+                "question_ledger_sequence": first_sequence + (2 * index),
+                "question_round": round_number,
+                "question_position": index + 1,
+                "original_source_id": interview["original_source_id"],
+                "original_projection_id": interview["original_projection_id"],
+                "prepared_round_result_sha256": result_sha256,
+            },
+        )
+    if answer_type == "url":
+        if answer is not None or supplied is not None:
+            return _blocked(
+                "operator input type mismatch",
+                "the current question requires one public URL, not text or a local file",
+            )
+        if supplied_url is None or not supplied_url.strip():
+            return _blocked(
+                "URL required",
+                "supply one public HTTP(S) URL for the current operator question",
+            )
+        first_sequence = interview["first_question_ledger_sequence"]
+        assert isinstance(first_sequence, int)
+        return _acquire_additional_url(
+            work,
+            state,
+            entries,
+            supplied_url,
+            question=question,
+            lineage={
+                "question_ledger_sequence": first_sequence + (2 * index),
+                "question_round": round_number,
+                "question_position": index + 1,
+                "original_source_id": interview["original_source_id"],
+                "original_projection_id": interview["original_projection_id"],
+                "prepared_round_result_sha256": result_sha256,
+            },
+        )
+    if supplied is not None or supplied_url is not None:
+        return _blocked(
+            "operator input type mismatch",
+            "the current question requires non-empty text, not a file or URL",
+        )
+    if answer is None or not answer.strip():
+        return _blocked(
+            "gap answer required",
+            "answer the current operator question with non-whitespace text",
+        )
     known_numbers = _known_source_numbers(entries)
     number = max(known_numbers, default=0) + 1
     source_path = work / f"sources/source-{number:06d}.txt"
@@ -4352,19 +7870,28 @@ def _validate_gap_question_answer_records(
     allow_later_phase: bool = False,
 ) -> str | None:
     answers = state.get("gap_question_answers")
+    saved_round = state.get("gap_question_round")
+    request_sequence = (
+        saved_round.get("request_ledger_sequence")
+        if isinstance(saved_round, dict)
+        else None
+    )
+    if not isinstance(request_sequence, int):
+        return "the question-round request identity is missing"
     if not isinstance(answers, list) or len(answers) > len(questions):
         return "the preserved answer sequence is invalid"
-    answer_ledger_length = 14 + (2 * len(answers))
+    first_question_sequence = request_sequence + 3
+    answer_ledger_length = first_question_sequence + (2 * len(answers))
     if (
         len(entries) < answer_ledger_length
         or (not allow_later_phase and len(entries) != answer_ledger_length)
     ):
         return "the answer ledger length does not match the preserved answers"
     if (
-        entries[13].get("event") != "operator_question_asked"
-        or entries[13].get("round") != 1
-        or entries[13].get("question_position") != 1
-        or entries[13].get("question") != questions[0]
+        entries[first_question_sequence - 1].get("event") != "operator_question_asked"
+        or entries[first_question_sequence - 1].get("round") != 1
+        or entries[first_question_sequence - 1].get("question_position") != 1
+        or entries[first_question_sequence - 1].get("question") != questions[0]
     ):
         return "question 1 was not presented from the prepared round"
     for index, saved in enumerate(answers):
@@ -4380,7 +7907,7 @@ def _validate_gap_question_answer_records(
         sha256 = _digest_bytes(source_bytes)
         source = _round_answer_source_record(number, sha256, question)
         projection = _round_answer_projection_record(number, sha256)
-        question_sequence = 14 + (2 * index)
+        question_sequence = first_question_sequence + (2 * index)
         lineage = {
             "question_ledger_sequence": question_sequence,
             "question_round": 1,
@@ -4388,8 +7915,8 @@ def _validate_gap_question_answer_records(
             "original_source_id": "source-000003",
             "original_projection_id": state["first_projection"]["id"],
         }
-        answer_entry = entries[14 + (2 * index)]
-        following_entry = entries[15 + (2 * index)]
+        answer_entry = entries[question_sequence]
+        following_entry = entries[question_sequence + 1]
         if (
             not source_bytes.strip()
             or projection_bytes != source_bytes
@@ -4424,7 +7951,19 @@ def _validate_gap_question_answer_records(
             return "the completed answer round does not match its preserved sources"
     if len(answers) < len(questions):
         active = questions[len(answers)]
-        if (
+        pending = state.get("pending_additional_source")
+        pending_file_state = (
+            allow_later_phase
+            and state.get("phase") in {
+                "additional_source_frozen",
+                "interviewing_additional_source_projection",
+                "additional_source_projection_recorded",
+            }
+            and state.get("question") is None
+            and isinstance(pending, dict)
+            and pending.get("question") == active
+        )
+        if not pending_file_state and (
             state.get("status") != "needs_operator"
             or state.get("phase") != "awaiting_gap_answers"
             or state.get("waiting_for") != active["id"]
@@ -4554,6 +8093,15 @@ def _validate_gap_question_round(
     if request_error:
         return request_error
     assert projection_path is not None and projection_sha256 is not None
+    saved = state.get("gap_question_round")
+    if not isinstance(saved, dict) or not isinstance(saved.get("gaps"), list):
+        return _blocked("invalid intake state", "the gap question round is missing")
+    contract = saved.get("contract", 1)
+    request_sequence = saved.get("request_ledger_sequence")
+    if not isinstance(contract, int):
+        return _blocked(
+            "invalid gap question round", "the question-round contract is invalid"
+        )
     round_dir = work / "gap-question-rounds" / "round-000001"
     try:
         result, journal_sha256, result_sha256 = gap_clarification.validate_round(
@@ -4561,16 +8109,16 @@ def _validate_gap_question_round(
             projection_path=projection_path,
             projection_sha256=projection_sha256,
             purpose=purpose,
+            contract=contract,
         )
         journal_entries = gap_clarification._read_journal(
             round_dir / "interview.jsonl"
         )
     except gap_clarification.ClarificationError as error:
         return _blocked("invalid gap question round", str(error))
-    saved = state.get("gap_question_round")
-    if not isinstance(saved, dict) or not isinstance(saved.get("gaps"), list):
-        return _blocked("invalid intake state", "the gap question round is missing")
-    shape_error = _validate_question_round_shape(result, saved["gaps"])
+    shape_error = _validate_question_round_shape(
+        result, saved["gaps"], contract=contract
+    )
     expected_completed = {
         "round": 1,
         "interview_path": "gap-question-rounds/round-000001/interview.jsonl",
@@ -4603,11 +8151,13 @@ def _validate_gap_question_round(
     )
     if (
         shape_error
-        or entries[11].get("event") != "model_gap_question_round_completed"
-        or any(entries[11].get(key) != value for key, value in expected_completed.items())
-        or entries[12].get("event") != "operator_question_round_prepared"
-        or entries[12].get("questions") != result["questions"]
-        or entries[12].get("question_count") != len(result["questions"])
+        or not isinstance(request_sequence, int)
+        or len(entries) < request_sequence + 3
+        or entries[request_sequence].get("event") != "model_gap_question_round_completed"
+        or any(entries[request_sequence].get(key) != value for key, value in expected_completed.items())
+        or entries[request_sequence + 1].get("event") != "operator_question_round_prepared"
+        or entries[request_sequence + 1].get("questions") != result["questions"]
+        or entries[request_sequence + 1].get("question_count") != len(result["questions"])
         or saved.get("interview_sha256") != journal_sha256
         or saved.get("result_sha256") != result_sha256
         or saved.get("questioner") != result["questioner"]
@@ -4625,13 +8175,10 @@ def _accept_gap_question_round_answer(
     work: Path,
     state: dict[str, object],
     entries: list[dict[str, object]],
-    answer: str,
+    answer: str | None,
+    supplied: Path | None = None,
+    supplied_url: str | None = None,
 ) -> dict[str, object]:
-    if not answer.strip():
-        return _blocked(
-            "gap answer required",
-            "answer the current operator question with non-whitespace text",
-        )
     questions = state["questions"]
     answers = state["gap_question_answers"]
     assert isinstance(questions, list) and isinstance(answers, list)
@@ -4640,6 +8187,79 @@ def _accept_gap_question_round_answer(
         return _blocked("gap answer not requested", "the question round is already answered")
     question = questions[index]
     assert isinstance(question, dict)
+    saved_round = state.get("gap_question_round")
+    request_sequence = (
+        saved_round.get("request_ledger_sequence")
+        if isinstance(saved_round, dict)
+        else None
+    )
+    if not isinstance(request_sequence, int):
+        return _blocked(
+            "invalid gap question round",
+            "the question-round request identity is missing",
+        )
+    question_ledger_sequence = request_sequence + 3 + (2 * index)
+    answer_type = question.get("answer_type", "operator_text")
+    if answer_type == "local_file":
+        if answer is not None or supplied_url is not None:
+            return _blocked(
+                "operator input type mismatch",
+                "the current question requires one local file, not text",
+            )
+        if supplied is None:
+            return _blocked(
+                "local file required",
+                "supply one existing local file for the current operator question",
+            )
+        return _acquire_additional_local_file(
+            work,
+            state,
+            entries,
+            supplied,
+            question=question,
+            lineage={
+                "question_ledger_sequence": question_ledger_sequence,
+                "question_round": 1,
+                "question_position": index + 1,
+                "original_source_id": "source-000003",
+                "original_projection_id": state["first_projection"]["id"],
+            },
+        )
+    if answer_type == "url":
+        if answer is not None or supplied is not None:
+            return _blocked(
+                "operator input type mismatch",
+                "the current question requires one public URL, not text or a local file",
+            )
+        if supplied_url is None or not supplied_url.strip():
+            return _blocked(
+                "URL required",
+                "supply one public HTTP(S) URL for the current operator question",
+            )
+        return _acquire_additional_url(
+            work,
+            state,
+            entries,
+            supplied_url,
+            question=question,
+            lineage={
+                "question_ledger_sequence": question_ledger_sequence,
+                "question_round": 1,
+                "question_position": index + 1,
+                "original_source_id": "source-000003",
+                "original_projection_id": state["first_projection"]["id"],
+            },
+        )
+    if supplied is not None or supplied_url is not None:
+        return _blocked(
+            "operator input type mismatch",
+            "the current question requires non-empty text, not a file or URL",
+        )
+    if answer is None or not answer.strip():
+        return _blocked(
+            "gap answer required",
+            "answer the current operator question with non-whitespace text",
+        )
     number = 4 + index
     source_path = work / f"sources/source-{number:06d}.txt"
     projection_path = work / f"projections/source-{number:06d}-v1.txt"
@@ -4668,7 +8288,7 @@ def _accept_gap_question_round_answer(
             "source": source,
             "projection": projection,
             "lineage": {
-                "question_ledger_sequence": 14 + (2 * index),
+                "question_ledger_sequence": question_ledger_sequence,
                 "question_round": 1,
                 "question_position": index + 1,
                 "original_source_id": "source-000003",
@@ -7662,6 +11282,10 @@ def _clarification_boundary_result(
                 "assessing_prepared_question_round_answers",
                 "resolving_gap_answer",
                 "verifying_gap_resolution",
+                "interviewing_additional_source_projection",
+                "verifying_additional_source_projection",
+                "correcting_additional_source_relationships",
+                "verifying_additional_source_relationship_corrections",
             }
             or not isinstance(work_items, list)
             or len(work_items) != 1
@@ -7689,6 +11313,7 @@ def _clarification_boundary_result(
     elif boundary == "clarification_complete":
         continuation = result.get("continuation")
         qualification = result.get("projection_qualification")
+        closure = result.get("source_projection_closure")
         disposition = result.get("terminal_disposition")
         if (
             result.get("stopped") != "clarification_continuation_complete"
@@ -7696,12 +11321,46 @@ def _clarification_boundary_result(
             or continuation.get("decision") != "clarification_complete"
             or not isinstance(qualification, dict)
             or qualification.get("qualification") != "readable_projection_complete"
+            or not isinstance(closure, dict)
+            or closure.get("verdict") != "all_projected"
             or not isinstance(disposition, dict)
             or disposition.get("disposition") != "first_layer_complete"
         ):
             return _blocked(
                 "invalid clarification boundary",
                 "the terminal boundary lost its grounded decision or projection qualification",
+            )
+    elif boundary == "source_conversion_required":
+        continuation = result.get("continuation")
+        qualification = result.get("projection_qualification")
+        closure = result.get("source_projection_closure")
+        disposition = result.get("terminal_disposition")
+        incomplete = result.get("incomplete_source_outcomes")
+        if (
+            result.get("status") != "source_projection_closure"
+            or result.get("stopped") != "source_conversion_required"
+            or not isinstance(continuation, dict)
+            or continuation.get("decision") != "clarification_complete"
+            or not isinstance(qualification, dict)
+            or qualification.get("qualification") != "readable_projection_complete"
+            or not isinstance(closure, dict)
+            or closure.get("verdict") != "conversion_incomplete"
+            or not isinstance(disposition, dict)
+            or disposition.get("disposition") != "source_conversion_required"
+            or not isinstance(incomplete, list)
+            or incomplete != disposition.get("incomplete_source_outcomes")
+            or not isinstance(closure.get("outcomes"), list)
+            or any(not isinstance(item, dict) for item in closure["outcomes"])
+            or incomplete
+            != [
+                item
+                for item in closure["outcomes"]
+                if isinstance(item, dict) and item.get("outcome") != "projected"
+            ]
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the source-conversion boundary lost its exact incomplete outcomes",
             )
     elif boundary == "clarification_required":
         continuation = result.get("continuation")
@@ -7723,6 +11382,61 @@ def _clarification_boundary_result(
             return _blocked(
                 "invalid clarification boundary",
                 "the clarification-required boundary lost its exact remaining gaps",
+            )
+    elif boundary == "additional_source_projection_pending":
+        if (
+            result.get("status") != "ready_for_projection"
+            or result.get("stopped") != "additional_source_frozen"
+            or not isinstance(result.get("source"), dict)
+            or not isinstance(result.get("projection"), dict)
+            or result["projection"].get("status") != "pending"
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the additional-source boundary lost its frozen source or pending projection",
+            )
+    elif boundary == "first_source_projection_complete":
+        projection = result.get("projection")
+        method = projection.get("method") if isinstance(projection, dict) else None
+        if (
+            result.get("status") != "ready_for_projection_assessment"
+            or result.get("stopped") not in {
+                "first_verbatim_projection_recorded",
+                "first_pdf_projection_recorded",
+            }
+            or not isinstance(result.get("source"), dict)
+            or not isinstance(projection, dict)
+            or method not in {"verbatim_utf8", "pdf_visible_pages"}
+            or not isinstance(projection.get("coverage"), dict)
+            or projection["coverage"].get("status") != "complete"
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the first-source boundary lost its verbatim readable projection",
+            )
+    elif boundary == "additional_source_projection_complete":
+        projection = result.get("projection")
+        coverage = projection.get("coverage") if isinstance(projection, dict) else None
+        if (
+            result.get("status") != "ready_for_projection_assessment"
+            or result.get("stopped") != "additional_source_projection_recorded"
+            or not isinstance(result.get("source"), dict)
+            or not isinstance(projection, dict)
+            or not (
+                coverage == "unassessed"
+                or (
+                    projection.get("method") == "verbatim_utf8"
+                    and isinstance(coverage, dict)
+                    and coverage.get("status") == "complete"
+                )
+            )
+            or not isinstance(result.get("reserved_projection"), dict)
+            or result["reserved_projection"].get("status") != "pending"
+            or not isinstance(result.get("lineage"), dict)
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the completed additional-source boundary lost its projection or lineage",
             )
     else:
         return _blocked(
@@ -7757,6 +11471,31 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
         if stopped == "clarification_continuation_complete":
             return _clarification_boundary_result(
                 result, "clarification_complete"
+            )
+        if stopped in {
+            "first_verbatim_projection_recorded",
+        }:
+            return _clarification_boundary_result(
+                result, "first_source_projection_complete"
+            )
+        if stopped == "first_pdf_projection_recorded":
+            projection = result.get("projection")
+            if isinstance(projection, dict) and projection.get("gap_count") == 0:
+                return _clarification_boundary_result(
+                    result, "first_source_projection_complete"
+                )
+            result = drive(work, opening, purpose, clarify_gap=True)
+            continue
+        if stopped == "source_conversion_required":
+            return _clarification_boundary_result(
+                result, "source_conversion_required"
+            )
+        if stopped == "additional_source_frozen":
+            result = drive(work, opening, purpose, project_source=True)
+            continue
+        elif stopped == "additional_source_projection_recorded":
+            return _clarification_boundary_result(
+                result, "additional_source_projection_complete"
             )
         if stopped == "first_projection_recorded":
             result = drive(work, opening, purpose, clarify_gap=True)
@@ -7811,7 +11550,17 @@ def run_operator_turn(
             "the intake does not have one code-controlled current operator question",
         )
     output_fn(f"Question: {question['asks']}")
-    output_fn("Answer type: non-empty text")
+    answer_type = question.get("answer_type", "operator_text")
+    if answer_type not in {"operator_text", "local_file", "url"}:
+        return _blocked(
+            "operator turn unavailable",
+            "the current question does not have a supported answer type",
+        )
+    output_fn({
+        "local_file": "Answer type: one existing local file path",
+        "url": "Answer type: one public HTTP(S) URL",
+        "operator_text": "Answer type: non-empty text",
+    }[str(answer_type)])
     try:
         answer = input_fn("Answer: ")
     except EOFError:
@@ -7837,6 +11586,10 @@ def run_operator_turn(
         )
     except OSError as error:
         return _blocked("operator turn unavailable", str(error))
+    if answer_type == "local_file":
+        return drive(work, opening, purpose, gap_file=Path(answer))
+    if answer_type == "url":
+        return drive(work, opening, purpose, gap_url=answer)
     return drive(work, opening, purpose, gap_answer=answer)
 
 
@@ -7848,21 +11601,39 @@ def _resume(
     project_source: bool,
     clarify_gap: bool,
     gap_answer: str | None,
+    gap_file: Path | None,
     resolve_gap: bool,
     assess_gap_answers: bool,
     conduct_question_round: bool,
     continue_clarification: bool,
+    source_url: str | None,
+    gap_url: str | None,
 ) -> dict[str, object]:
     state, entries, error = _load_bound(work, opening_bytes)
     if error:
         return error
     assert state is not None
     phase = state.get("phase")
+    if source is not None and source_url is not None:
+        return _blocked(
+            "operator input type mismatch",
+            "supply either one local file or one URL as the first source, not both",
+        )
+    source_supplied = source is not None or source_url is not None
+    gap_inputs = sum(
+        value is not None for value in (gap_answer, gap_file, gap_url)
+    )
+    if gap_inputs > 1:
+        return _blocked(
+            "operator input type mismatch",
+            "supply exactly one of text, one local file, or one URL for the current question",
+        )
+    gap_input_supplied = gap_inputs == 1
     if continue_clarification and (
-        source is not None
+        source_supplied
         or project_source
         or clarify_gap
-        or gap_answer is not None
+        or gap_input_supplied
         or resolve_gap
         or assess_gap_answers
         or conduct_question_round
@@ -7883,10 +11654,10 @@ def _resume(
             "continue only after an assessment, terminal admission, or prior clarification completion",
         )
     if conduct_question_round and (
-        source is not None
+        source_supplied
         or project_source
         or clarify_gap
-        or gap_answer is not None
+        or gap_input_supplied
         or resolve_gap
         or assess_gap_answers
     ):
@@ -7895,7 +11666,8 @@ def _resume(
             "start or resume the prepared question round without another intake action",
         )
     gap_input_phases = {
-        "first_projection_recorded", "awaiting_gap_answer",
+        "first_projection_recorded", "first_pdf_projection_recorded",
+        "awaiting_gap_answer",
         "formulating_gap_question_round", "awaiting_gap_answers",
         "gap_question_round_answered",
         "gap_answer_assessment_recorded", "gap_resolution_applied",
@@ -7908,10 +11680,11 @@ def _resume(
             "gap clarification unavailable",
             "gap clarification input is only accepted after the first projection or at its operator question",
         )
-    if gap_answer is not None and phase not in {
+    if gap_input_supplied and phase not in {
         *gap_input_phases,
         "awaiting_prepared_question_round_answers",
         "prepared_question_round_answered",
+        "additional_source_frozen",
     }:
         return _blocked(
             "gap clarification unavailable",
@@ -7960,10 +11733,10 @@ def _resume(
         ):
             return _blocked("invalid intake state", "the opening stage does not match its ledger")
         if purpose is None:
-            if source is not None or project_source:
+            if source_supplied or project_source:
                 return _blocked("purpose required", "answer the intake-purpose question before supplying a source")
             return _operator_result(state, work)
-        if source is not None or project_source:
+        if source_supplied or project_source:
             return _blocked("source not requested", "preserve and assess the purpose before supplying a source")
         return _accept_purpose(work, state, entries, purpose)
 
@@ -7979,7 +11752,7 @@ def _resume(
             or state.get("question") is not None
         ):
             return _blocked("invalid intake state", "the assessment stage does not match its ledger")
-        if source is not None or project_source:
+        if source_supplied or project_source:
             return _blocked("purpose assessment pending", "finish the purpose assessment before supplying a source")
         result_path = work / "purpose-interview" / "assessment.json"
         if not result_path.exists():
@@ -7998,6 +11771,7 @@ def _resume(
         and state["gap_resolution"].get("mode") == "assessed_answer"
     )
     if phase in {
+        "formulating_gap_question_round",
         "awaiting_gap_answers",
         "gap_question_round_answered",
         "assessing_gap_answers",
@@ -8009,11 +11783,26 @@ def _resume(
         "assessing_prepared_question_round_answers",
         "prepared_question_round_assessment_recorded",
         "clarification_continuation_complete",
+        "additional_source_frozen",
+        "interviewing_additional_source_projection",
+        "additional_source_projection_recorded",
+        "interviewing_pdf_page_projection",
+        "first_pdf_projection_recorded",
+        "first_pdf_projection_failed",
     } or assessed_resolution_phase:
-        supported_ledger_length = len(entries) >= 14
+        supported_ledger_length = (
+            len(entries) >= 8
+            if phase in {
+                "interviewing_pdf_page_projection",
+                "first_pdf_projection_recorded",
+                "first_pdf_projection_failed",
+            }
+            else len(entries) >= 11
+        )
     if phase not in {
         "awaiting_first_source", "clarifying_intake_purpose", "first_source_frozen",
         "interviewing_first_projection", "first_projection_recorded",
+        "first_verbatim_projection_recorded",
         "formulating_gap_question", "awaiting_gap_answer", "gap_operator_source_recorded",
         "formulating_gap_question_round", "awaiting_gap_answers",
         "gap_question_round_answered",
@@ -8028,6 +11817,12 @@ def _resume(
         "assessing_prepared_question_round_answers",
         "prepared_question_round_assessment_recorded",
         "clarification_continuation_complete",
+        "additional_source_frozen",
+        "interviewing_additional_source_projection",
+        "additional_source_projection_recorded",
+        "interviewing_pdf_page_projection",
+        "first_pdf_projection_recorded",
+        "first_pdf_projection_failed",
     } or not supported_ledger_length:
         return _blocked("invalid intake state", "the saved purpose stage is unsupported")
     result_path = work / "purpose-interview" / "assessment.json"
@@ -8082,7 +11877,7 @@ def _resume(
     if entries[5].get("event") != "operator_question_asked" or entries[5].get("question") != expected_question:
         return _blocked("invalid ledger", "the current operator question is missing or changed")
     if assessment["sufficient"] == "no":
-        if source is not None or project_source:
+        if source_supplied or project_source:
             return _blocked("purpose clarification required", "answer the current clarification before supplying a source")
         if (
             len(entries) != 6
@@ -8108,7 +11903,7 @@ def _resume(
             or state.get("question") != FIRST_SOURCE_QUESTION
         ):
             return _blocked("invalid intake state", "the first-source request does not follow from the assessment")
-        if source is None:
+        if not source_supplied:
             if project_source:
                 return _blocked("source required", "freeze the first source before requesting its projection")
             return _operator_result(state, work)
@@ -8117,9 +11912,14 @@ def _resume(
                 "source not yet frozen",
                 "freeze the supplied source before requesting its projection",
             )
+        if source_url is not None:
+            return _acquire_first_url(work, state, entries, source_url)
+        assert source is not None
         return _acquire_first_source(work, state, entries, source)
 
-    frozen_error = _validate_frozen_first_source(work, state, entries, source)
+    frozen_error = _validate_frozen_first_source(
+        work, state, entries, source, source_url
+    )
     if frozen_error:
         return frozen_error
     if phase == "first_source_frozen":
@@ -8134,9 +11934,107 @@ def _resume(
             return _request_first_projection(work, state, entries)
         return _source_ready_result(state, work)
 
-    request_error = _validate_projection_request(work, state, entries)
-    if request_error:
-        return request_error
+    if phase == "first_verbatim_projection_recorded":
+        verbatim_error = _validate_first_verbatim_utf8_projection(
+            work, state, entries
+        )
+        if verbatim_error:
+            return verbatim_error
+        if (
+            source_supplied
+            or project_source
+            or clarify_gap
+            or gap_input_supplied
+            or resolve_gap
+            or assess_gap_answers
+            or conduct_question_round
+            or continue_clarification
+        ):
+            return _blocked(
+                "first verbatim projection already recorded",
+                "the frozen first source already has its immutable readable projection",
+            )
+        return _first_verbatim_projection_ready_result(state, work)
+
+    if phase in {
+        "interviewing_pdf_page_projection",
+        "first_pdf_projection_recorded",
+    }:
+        pdf_error = _validate_pdf_projection(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+        if pdf_error:
+            return pdf_error
+        if phase == "first_pdf_projection_recorded":
+            if clarify_gap:
+                projection = state.get("first_projection")
+                if not isinstance(projection, dict) or projection.get("gap_count") == 0:
+                    return _blocked(
+                        "gap clarification unavailable",
+                        "the frozen PDF projection has no explicit gap",
+                    )
+                return _request_gap_question_round(work, state, entries)
+            if (
+                project_source
+                or gap_input_supplied
+                or resolve_gap
+                or assess_gap_answers
+                or conduct_question_round
+                or continue_clarification
+            ):
+                return _blocked(
+                    "first PDF projection already recorded",
+                    "the frozen PDF already has its immutable readable projection",
+                )
+            return _pdf_projection_ready_result(state, work)
+        page = _active_pdf_page(state)
+        if page is None:
+            return _blocked("invalid PDF projection state", "the active PDF page is missing")
+        paths = _pdf_page_paths("source-000003", int(page["page"]))
+        if not (work / paths["candidate_path"]).exists():
+            return _pdf_projection_waiting_result(state, work, "project")
+        return _consume_pdf_page_projection(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+
+    if phase == "first_pdf_projection_failed":
+        failure_error = _validate_pdf_projection_failure(state, entries)
+        if failure_error:
+            return failure_error
+        if (
+            project_source
+            or clarify_gap
+            or gap_input_supplied
+            or resolve_gap
+            or assess_gap_answers
+            or conduct_question_round
+            or continue_clarification
+        ):
+            return _blocked(
+                "PDF conversion failure already recorded",
+                "the failed projection outcome is immutable; preserve a converted source as a new intake source",
+            )
+        return _pdf_projection_failed_result(state, work)
+
+    recorded_projection = state.get("first_projection")
+    pdf_later_phase = (
+        isinstance(recorded_projection, dict)
+        and recorded_projection.get("method") == "pdf_visible_pages"
+    )
+    if pdf_later_phase:
+        pdf_error = _validate_pdf_projection(
+            work,
+            state,
+            entries,
+            purpose_bytes.decode("utf-8"),
+            allow_later_phase=True,
+        )
+        if pdf_error:
+            return pdf_error
+    else:
+        request_error = _validate_projection_request(work, state, entries)
+        if request_error:
+            return request_error
     if phase == "interviewing_first_projection":
         if (
             len(entries) != 8
@@ -8164,21 +12062,157 @@ def _resume(
         "assessing_prepared_question_round_answers",
         "prepared_question_round_assessment_recorded",
         "clarification_continuation_complete",
+        "additional_source_frozen",
+        "interviewing_additional_source_projection",
+        "additional_source_projection_recorded",
     }
-    recorded_error = _validate_recorded_projection(
-        work,
-        state,
-        entries,
-        purpose_bytes.decode("utf-8"),
-        allow_later_phase=later_phase,
-    )
-    if recorded_error:
-        return recorded_error
+    if not pdf_later_phase:
+        recorded_error = _validate_recorded_projection(
+            work,
+            state,
+            entries,
+            purpose_bytes.decode("utf-8"),
+            allow_later_phase=later_phase,
+        )
+        if recorded_error:
+            return recorded_error
     prepared_history_error = _validate_prepared_question_round_history(
         work, state, entries, purpose_bytes.decode("utf-8")
     )
     if prepared_history_error:
         return prepared_history_error
+    if phase in {
+        "additional_source_frozen",
+        "interviewing_additional_source_projection",
+        "additional_source_projection_recorded",
+    }:
+        pending_error = _validate_pending_additional_source(
+            work,
+            state,
+            entries,
+            gap_file,
+            gap_url,
+            allow_projection=phase != "additional_source_frozen",
+        )
+        if pending_error:
+            return pending_error
+        pending = state.get("pending_additional_source")
+        lineage = pending.get("lineage") if isinstance(pending, dict) else None
+        round_number = (
+            lineage.get("question_round") if isinstance(lineage, dict) else None
+        )
+        if not isinstance(round_number, int) or round_number < 1:
+            return _blocked(
+                "invalid intake state", "the pending source lost its question round"
+            )
+        round_error = _validate_gap_question_round(
+            work,
+            state,
+            entries,
+            purpose_bytes.decode("utf-8"),
+            allow_later_phase=True,
+        )
+        if round_error:
+            return round_error
+        if round_number > 1:
+            assessment_error = _validate_gap_answer_assessment(
+                work,
+                state,
+                entries,
+                purpose_bytes.decode("utf-8"),
+                allow_later_phase=True,
+            )
+            if assessment_error:
+                return assessment_error
+            history_error = _validate_gap_resolution_history(
+                work, state, entries, purpose_bytes.decode("utf-8")
+            )
+            if history_error:
+                return history_error
+            follow_up_error = _validate_follow_up_gap_question_round(
+                work,
+                state,
+                entries,
+                purpose_bytes.decode("utf-8"),
+                allow_interview=True,
+            )
+            if follow_up_error:
+                return follow_up_error
+            interview_error = _validate_prepared_question_round_interview(
+                work,
+                state,
+                entries,
+                purpose_bytes.decode("utf-8"),
+                allow_later_phase=True,
+            )
+            if interview_error:
+                return interview_error
+        if phase == "interviewing_additional_source_projection":
+            request_error = _validate_additional_projection_request(
+                work, state, entries
+            )
+            if request_error:
+                return request_error
+            if any((
+                project_source,
+                clarify_gap,
+                resolve_gap,
+                assess_gap_answers,
+                conduct_question_round,
+                continue_clarification,
+            )) or gap_input_supplied:
+                return _blocked(
+                    "additional projection interview active",
+                    "finish the current code-controlled projection interview before another intake action",
+                )
+            active = state.get("active_additional_projection")
+            paths = active.get("paths") if isinstance(active, dict) else None
+            if not isinstance(paths, dict):
+                return _blocked(
+                    "invalid intake state",
+                    "the active additional projection paths are missing",
+                )
+            if not (work / str(paths["candidate_path"])).exists():
+                return _additional_projection_waiting_result(state, work)
+            return _consume_additional_projection(
+                work, state, entries, purpose_bytes.decode("utf-8")
+            )
+        if phase == "additional_source_projection_recorded":
+            recorded_additional_error = _validate_recorded_additional_projection(
+                work, state, entries, purpose_bytes.decode("utf-8")
+            )
+            if recorded_additional_error:
+                return recorded_additional_error
+            if any((
+                project_source,
+                clarify_gap,
+                resolve_gap,
+                assess_gap_answers,
+                conduct_question_round,
+                continue_clarification,
+            )) or gap_input_supplied:
+                return _blocked(
+                    "additional projection already recorded",
+                    "the additional source already has its immutable readable projection",
+                )
+            return _additional_projection_ready_result(state, work)
+        if project_source:
+            return _request_additional_projection(work, state, entries)
+        if (
+            any((
+                clarify_gap,
+                resolve_gap,
+                assess_gap_answers,
+                conduct_question_round,
+                continue_clarification,
+            ))
+            or gap_answer is not None
+        ):
+            return _blocked(
+                "additional source projection pending",
+                "project the frozen additional source before another intake action",
+            )
+        return _additional_source_ready_result(state, work)
     if phase == "clarification_continuation_complete":
         predecessor_error = _validate_clarification_completion_predecessors(
             work,
@@ -8193,7 +12227,7 @@ def _resume(
             return completion_error
         return _clarification_completion_result(state, work)
     if phase == "first_projection_recorded":
-        if gap_answer is not None:
+        if gap_input_supplied:
             return _blocked("gap answer not requested", "start a gap question round before answering it")
         if clarify_gap:
             return _request_gap_question_round(work, state, entries)
@@ -8228,7 +12262,7 @@ def _resume(
         if round_error:
             return round_error
         if phase == "gap_question_round_answered":
-            if gap_answer is not None:
+            if gap_input_supplied:
                 return _blocked(
                     "gap answer not requested", "the question round is already answered"
                 )
@@ -8260,10 +12294,10 @@ def _resume(
             if resolve_gap:
                 return _request_gap_resolution(work, state, entries)
             return _gap_answer_assessment_ready_result(state, work)
-        if gap_answer is None:
+        if not gap_input_supplied:
             return _gap_question_round_operator_result(state, work)
         return _accept_gap_question_round_answer(
-            work, state, entries, gap_answer
+            work, state, entries, gap_answer, gap_file, gap_url
         )
     resolution_state = state.get("gap_resolution")
     assessed_resolution = (
@@ -8319,7 +12353,7 @@ def _resume(
             )
             if follow_up_error:
                 return follow_up_error
-            if gap_answer is not None:
+            if gap_input_supplied:
                 return _blocked(
                     "gap answer not requested",
                     "start the prepared question round before answering it",
@@ -8351,17 +12385,19 @@ def _resume(
         if interview_error:
             return interview_error
         if phase == "awaiting_prepared_question_round_answers":
-            if gap_answer is not None:
+            if gap_input_supplied:
                 return _accept_prepared_question_round_answer(
                     work,
                     state,
                     entries,
                     purpose_bytes.decode("utf-8"),
                     gap_answer,
+                    gap_file,
+                    gap_url,
                 )
             return _prepared_question_round_operator_result(state, work)
         if phase == "prepared_question_round_answered":
-            if gap_answer is not None:
+            if gap_input_supplied:
                 return _blocked(
                     "gap answer not requested", "the question round is already answered"
                 )
@@ -8498,6 +12534,11 @@ def _resume(
         return clarification_error
     assert clarification_result is not None
     if phase == "awaiting_gap_answer":
+        if gap_file is not None or gap_url is not None:
+            return _blocked(
+                "operator input type mismatch",
+                "this legacy question requires non-empty text, not a file or URL",
+            )
         if gap_answer is None:
             return _operator_result(state, work)
         return _accept_gap_answer(
@@ -8547,10 +12588,13 @@ def drive(
     project_source: bool = False,
     clarify_gap: bool = False,
     gap_answer: str | None = None,
+    gap_file: Path | None = None,
     resolve_gap: bool = False,
     assess_gap_answers: bool = False,
     conduct_question_round: bool = False,
     continue_clarification: bool = False,
+    source_url: str | None = None,
+    gap_url: str | None = None,
 ) -> dict[str, object]:
     opening_bytes = opening.encode("utf-8")
     if not opening.strip():
@@ -8565,17 +12609,23 @@ def drive(
             project_source,
             clarify_gap,
             gap_answer,
+            gap_file,
             resolve_gap,
             assess_gap_answers,
             conduct_question_round,
             continue_clarification,
+            source_url,
+            gap_url,
         )
     if (
         purpose is not None
         or source is not None
+        or source_url is not None
         or project_source
         or clarify_gap
         or gap_answer is not None
+        or gap_file is not None
+        or gap_url is not None
         or resolve_gap
         or assess_gap_answers
         or conduct_question_round
@@ -8648,6 +12698,7 @@ def main() -> int:
     parser.add_argument("--opening", help="the operator's exact opening statement")
     parser.add_argument("--purpose", help="the operator's exact answer to the purpose question")
     parser.add_argument("--source", type=Path, help="the first local file supplied by the operator")
+    parser.add_argument("--source-url", help="the first public HTTP(S) URL supplied by the operator")
     parser.add_argument(
         "--project-source",
         action="store_true",
@@ -8683,6 +12734,15 @@ def main() -> int:
         help="the operator's exact answer to the current gap clarification",
     )
     parser.add_argument(
+        "--gap-file",
+        type=Path,
+        help="one local file supplied for a current file-typed gap question",
+    )
+    parser.add_argument(
+        "--gap-url",
+        help="one public HTTP(S) URL supplied for a current URL-typed gap question",
+    )
+    parser.add_argument(
         "--conduct-question-round",
         action="store_true",
         help="present the next question from a prepared operator round",
@@ -8696,6 +12756,11 @@ def main() -> int:
         "--clarification-boundary",
         action="store_true",
         help="advance code-only clarification transitions to one external boundary",
+    )
+    parser.add_argument(
+        "--source-projection-closure",
+        action="store_true",
+        help="reconstruct one immutable readable-projection outcome for every source",
     )
     parser.add_argument(
         "--run-gap-clarification",
@@ -8749,16 +12814,29 @@ def main() -> int:
         args.run_gap_resolution_verification,
         args.run_purpose_interview,
     ))
-    if args.run_operator_turn and (
+    if (args.gap_file is not None or args.gap_url is not None) and (
+        args.run_operator_turn
+        or args.clarification_boundary
+        or args.source_projection_closure
+        or interview_flags
+    ):
+        result = _blocked(
+            "operator input invocation invalid",
+            "supply a gap file or URL only through the ordinary intake input path",
+        )
+    elif args.run_operator_turn and (
         interview_flags
         or args.clarification_boundary
+        or args.source_projection_closure
         or any(
             value is not None
             for value in (
                 args.opening,
                 args.purpose,
                 args.source,
+                args.source_url,
                 args.gap_answer,
+                args.gap_url,
             )
         )
         or args.project_source
@@ -8790,6 +12868,34 @@ def main() -> int:
         )
     elif interview_flags > 1:
         result = _blocked("interview invocation invalid", "run exactly one interview at a time")
+    elif args.source_projection_closure:
+        if (
+            interview_flags
+            or args.clarification_boundary
+            or any(
+                value is not None
+                for value in (
+                    args.opening,
+                    args.purpose,
+                    args.source,
+                    args.source_url,
+                    args.gap_answer,
+                    args.gap_url,
+                )
+            )
+            or args.project_source
+            or args.clarify_gap
+            or args.resolve_gap
+            or args.assess_gap_answers
+            or args.conduct_question_round
+            or args.continue_clarification
+        ):
+            result = _blocked(
+                "source projection closure invocation invalid",
+                "run the source-projection closure gate with only --work and --source-projection-closure",
+            )
+        else:
+            result = run_source_projection_closure(args.work)
     elif args.clarification_boundary:
         if (
             interview_flags
@@ -8799,7 +12905,9 @@ def main() -> int:
                     args.opening,
                     args.purpose,
                     args.source,
+                    args.source_url,
                     args.gap_answer,
+                    args.gap_url,
                 )
             )
             or args.project_source
@@ -8817,7 +12925,7 @@ def main() -> int:
             result = run_clarification_boundary(args.work)
     elif args.run_purpose_interview:
         if (
-            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
             or args.project_source or args.clarify_gap or args.assess_gap_answers
         ):
             result = _blocked(
@@ -8828,7 +12936,7 @@ def main() -> int:
             result = run_purpose_interview(args.work)
     elif args.run_projection_interview:
         if (
-            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
             or args.project_source or args.clarify_gap or args.assess_gap_answers
         ):
             result = _blocked(
@@ -8839,7 +12947,7 @@ def main() -> int:
             result = run_first_projection_interview(args.work)
     elif args.run_projection_verification:
         if (
-            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
             or args.project_source or args.clarify_gap or args.assess_gap_answers
         ):
             result = _blocked(
@@ -8850,7 +12958,7 @@ def main() -> int:
             result = run_first_projection_verification(args.work)
     elif args.run_relationship_correction:
         if (
-            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
             or args.project_source or args.clarify_gap or args.assess_gap_answers
         ):
             result = _blocked(
@@ -8861,7 +12969,7 @@ def main() -> int:
             result = run_relationship_correction(args.work)
     elif args.run_correction_verification:
         if (
-            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
             or args.project_source or args.clarify_gap or args.assess_gap_answers
         ):
             result = _blocked(
@@ -8872,7 +12980,7 @@ def main() -> int:
             result = run_relationship_correction_verification(args.work)
     elif args.run_gap_clarification:
         if (
-            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
             or args.project_source or args.clarify_gap or args.assess_gap_answers
         ):
             result = _blocked(
@@ -8883,7 +12991,7 @@ def main() -> int:
             result = run_gap_clarification(args.work)
     elif args.run_gap_answer_assessment:
         if (
-            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
             or args.project_source or args.clarify_gap or args.resolve_gap
             or args.assess_gap_answers
         ):
@@ -8895,7 +13003,7 @@ def main() -> int:
             result = run_gap_answer_assessment(args.work)
     elif args.run_gap_resolution:
         if (
-            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
             or args.project_source or args.clarify_gap or args.resolve_gap
             or args.assess_gap_answers
         ):
@@ -8907,7 +13015,7 @@ def main() -> int:
             result = run_gap_resolution(args.work)
     elif args.run_gap_resolution_verification:
         if (
-            any(value is not None for value in (args.opening, args.purpose, args.source, args.gap_answer))
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
             or args.project_source or args.clarify_gap or args.resolve_gap
             or args.assess_gap_answers
         ):
@@ -8928,16 +13036,20 @@ def main() -> int:
             args.project_source,
             args.clarify_gap,
             args.gap_answer,
+            args.gap_file,
             args.resolve_gap,
             args.assess_gap_answers,
             args.conduct_question_round,
             args.continue_clarification,
+            args.source_url,
+            args.gap_url,
         )
     print(json.dumps(result, indent=2, sort_keys=True))
     return {
         "ready_for_projection": 0,
         "ready_for_projection_assessment": 0,
         "ready_for_operator_interview": 0,
+        "source_projection_closure": 0,
         "waiting_for_model": 2,
         "blocked": 3,
         "needs_operator": 4,

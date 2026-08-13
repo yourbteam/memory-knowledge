@@ -22,6 +22,10 @@ BOUNDARY_EXIT_CODES = {
     "needs_model_interview": 2,
     "needs_operator_answer": 4,
     "clarification_complete": 0,
+    "source_conversion_required": 0,
+    "first_source_projection_complete": 0,
+    "additional_source_projection_pending": 0,
+    "additional_source_projection_complete": 0,
 }
 
 
@@ -33,7 +37,7 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def load_request(work: Path) -> tuple[Path, list[str]]:
+def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
     work = work.expanduser().resolve()
     try:
         state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
@@ -43,8 +47,38 @@ def load_request(work: Path) -> tuple[Path, list[str]]:
         raise LaunchError("the intake state must be an object")
     projection_phase = (
         state.get("status") == "waiting_for_model"
-        and state.get("phase") == "interviewing_first_projection"
-        and state.get("waiting_for") == "projection-interviews/attempt-000001/interview.jsonl"
+        and (
+            (
+                state.get("phase") == "interviewing_first_projection"
+                and state.get("waiting_for")
+                == "projection-interviews/attempt-000001/interview.jsonl"
+            )
+            or (
+                state.get("phase") == "interviewing_additional_source_projection"
+                and isinstance(state.get("active_additional_projection"), dict)
+                and isinstance(
+                    state["active_additional_projection"].get("paths"), dict
+                )
+                and state.get("waiting_for")
+                == state["active_additional_projection"]["paths"].get(
+                    "interview_path"
+                )
+            )
+            or (
+                state.get("phase") == "interviewing_pdf_page_projection"
+                and isinstance(state.get("pdf_projection"), dict)
+                and isinstance(state["pdf_projection"].get("prepared"), dict)
+                and isinstance(state["pdf_projection"].get("active_page"), int)
+                and state.get("waiting_for")
+                == (
+                    "pdf-projections/"
+                    f"{state['pdf_projection']['prepared'].get('source_id')}-v1/"
+                    "page-projections/"
+                    f"page-{state['pdf_projection']['active_page']:06d}/"
+                    "projection-interview/interview.jsonl"
+                )
+            )
+        )
     )
     gap_phase = (
         state.get("status") == "waiting_for_model"
@@ -124,23 +158,116 @@ def load_request(work: Path) -> tuple[Path, list[str]]:
         )
     ):
         raise LaunchError("the intake is not waiting for a supported visual model stage")
-    source = state.get("first_source")
+    if (
+        gap_round_phase
+        and isinstance(state.get("first_projection"), dict)
+        and state["first_projection"].get("method") == "pdf_visible_pages"
+    ):
+        saved_round = state.get("gap_question_round")
+        gaps = saved_round.get("gaps") if isinstance(saved_round, dict) else None
+        if not isinstance(gaps, list) or not gaps:
+            raise LaunchError("the PDF gap inventory is missing")
+        attachments: list[Path] = []
+        seen_paths: set[str] = set()
+        previous_page = 0
+        for gap in gaps:
+            if not isinstance(gap, dict):
+                raise LaunchError("the PDF gap inventory is invalid")
+            page = gap.get("page")
+            stored_path = gap.get("render_path")
+            expected_sha256 = gap.get("render_sha256")
+            if (
+                not isinstance(page, int)
+                or page < previous_page
+                or not isinstance(stored_path, str)
+                or not isinstance(expected_sha256, str)
+            ):
+                raise LaunchError("the PDF gap page identity is invalid")
+            previous_page = page
+            if stored_path in seen_paths:
+                continue
+            attachment = (work / stored_path).resolve()
+            try:
+                attachment.relative_to(work)
+            except ValueError as error:
+                raise LaunchError("a PDF gap page escapes the intake directory") from error
+            if not attachment.is_file() or _sha256(attachment) != expected_sha256:
+                raise LaunchError("a frozen PDF gap page is unavailable or has changed")
+            seen_paths.add(stored_path)
+            attachments.append(attachment)
+        return tuple(attachments), [
+            sys.executable,
+            str(START_INTAKE),
+            "--work",
+            str(work),
+            "--run-gap-clarification",
+        ]
+    additional_projection = (
+        projection_phase
+        and state.get("phase") == "interviewing_additional_source_projection"
+    )
+    pdf_projection = (
+        projection_phase
+        and state.get("phase") == "interviewing_pdf_page_projection"
+    )
+    pending = state.get("pending_additional_source")
+    if pdf_projection:
+        saved_pdf = state.get("pdf_projection")
+        prepared = saved_pdf.get("prepared") if isinstance(saved_pdf, dict) else None
+        active_page = saved_pdf.get("active_page") if isinstance(saved_pdf, dict) else None
+        pages = prepared.get("pages") if isinstance(prepared, dict) else None
+        if (
+            not isinstance(active_page, int)
+            or not isinstance(pages, list)
+            or active_page < 1
+            or active_page > len(pages)
+            or not isinstance(pages[active_page - 1], dict)
+        ):
+            raise LaunchError("the active PDF page record is missing")
+        page = pages[active_page - 1]
+        source = {
+            "stored_path": page.get("render_path"),
+            "sha256": page.get("render_sha256"),
+            "media_type": page.get("media_type"),
+        }
+    else:
+        source = (
+            pending.get("source")
+            if additional_projection and isinstance(pending, dict)
+            else state.get("first_source")
+        )
     if not isinstance(source, dict):
-        raise LaunchError("the frozen first-source record is missing")
+        raise LaunchError(
+            "the frozen additional-source record is missing"
+            if additional_projection
+            else "the frozen first-source record is missing"
+        )
     media_type = source.get("media_type")
     if not isinstance(media_type, str) or not media_type.startswith("image/"):
         raise LaunchError("the pending source is not supported by the image projection adapter")
     stored_path = source.get("stored_path")
     expected_sha256 = source.get("sha256")
     if not isinstance(stored_path, str) or not isinstance(expected_sha256, str):
-        raise LaunchError("the frozen first-source identity is incomplete")
+        raise LaunchError(
+            "the frozen additional-source identity is incomplete"
+            if additional_projection
+            else "the frozen first-source identity is incomplete"
+        )
     attachment = (work / stored_path).resolve()
     try:
         attachment.relative_to(work)
     except ValueError as error:
-        raise LaunchError("the frozen first source escapes the intake directory") from error
+        raise LaunchError(
+            "the frozen additional source escapes the intake directory"
+            if additional_projection
+            else "the frozen first source escapes the intake directory"
+        ) from error
     if not attachment.is_file() or _sha256(attachment) != expected_sha256:
-        raise LaunchError("the frozen first source is unavailable or has changed")
+        raise LaunchError(
+            "the frozen additional source is unavailable or has changed"
+            if additional_projection
+            else "the frozen first source is unavailable or has changed"
+        )
     if gap_phase or gap_round_phase:
         return attachment, [
             sys.executable,
@@ -169,12 +296,37 @@ def load_request(work: Path) -> tuple[Path, list[str]]:
                 else "--run-gap-resolution"
             ),
         ]
-    candidate = work / "projection-interviews" / "attempt-000001" / "projection.json"
-    verification = work / "projection-verifications" / "attempt-000001" / "verification.json"
-    corrections = work / "relationship-corrections" / "attempt-000001" / "corrections.json"
-    correction_verification = (
-        work / "relationship-correction-verifications" / "attempt-000001" / "verification.json"
-    )
+    active = state.get("active_additional_projection")
+    paths = active.get("paths") if isinstance(active, dict) else None
+    if pdf_projection:
+        assert isinstance(saved_pdf, dict) and isinstance(prepared, dict)
+        assert isinstance(active_page, int)
+        root = (
+            "pdf-projections/"
+            f"{prepared['source_id']}-v1/page-projections/page-{active_page:06d}"
+        )
+        candidate = work / root / "projection-interview" / "projection.json"
+        verification = work / root / "relationship-verification" / "verification.json"
+        corrections = work / root / "relationship-correction" / "corrections.json"
+        correction_verification = (
+            work / root / "relationship-correction-verification" / "verification.json"
+        )
+    elif additional_projection:
+        if not isinstance(paths, dict):
+            raise LaunchError("the additional projection artifact paths are missing")
+        candidate = work / str(paths["candidate_path"])
+        verification = work / str(paths["verification_path"])
+        corrections = work / str(paths["correction_path"])
+        correction_verification = work / str(
+            paths["correction_verification_path"]
+        )
+    else:
+        candidate = work / "projection-interviews" / "attempt-000001" / "projection.json"
+        verification = work / "projection-verifications" / "attempt-000001" / "verification.json"
+        corrections = work / "relationship-corrections" / "attempt-000001" / "corrections.json"
+        correction_verification = (
+            work / "relationship-correction-verifications" / "attempt-000001" / "verification.json"
+        )
     flag = "--run-projection-interview"
     if candidate.exists() and int(state.get("projection_interview_contract", 0)) >= 7:
         flag = "--run-projection-verification"
@@ -213,7 +365,7 @@ def load_request(work: Path) -> tuple[Path, list[str]]:
 def build_codex_argv(
     executable: str,
     work: Path,
-    attachment: Path,
+    attachment: Path | tuple[Path, ...],
     interview_command: list[str],
 ) -> list[str]:
     command_text = " ".join(json.dumps(part) for part in interview_command)
@@ -256,6 +408,8 @@ def build_codex_argv(
         + "state directly. Do not assess projection completeness. Continue until the command "
         + "prints its terminal JSON result, then report that result."
     )
+    attachments = attachment if isinstance(attachment, tuple) else (attachment,)
+    image_arguments = [part for path in attachments for part in ("--image", str(path))]
     return [
         executable,
         "exec",
@@ -266,8 +420,7 @@ def build_codex_argv(
         "workspace-write",
         "--cd",
         str(work),
-        "--image",
-        str(attachment),
+        *image_arguments,
         "--",
         prompt,
     ]
@@ -305,7 +458,7 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
 def next_model_request(
     work: Path,
     boundary_result: dict[str, object],
-) -> tuple[Path, list[str]] | None:
+) -> tuple[Path | tuple[Path, ...], list[str]] | None:
     boundary = boundary_result.get("boundary")
     if boundary != "needs_model_interview":
         return None
@@ -321,7 +474,8 @@ def next_model_request(
     attachment, interview_command = load_request(work)
     if boundary_command != interview_command:
         raise LaunchError("the model boundary command does not match the saved intake")
-    if boundary_attachments != [str(attachment)]:
+    attachments = attachment if isinstance(attachment, tuple) else (attachment,)
+    if boundary_attachments != [str(path) for path in attachments]:
         raise LaunchError("the model boundary attachment does not match the frozen source")
     return attachment, interview_command
 
@@ -354,7 +508,7 @@ def main() -> int:
         print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
         return 3
     boundary_result: dict[str, object] | None = None
-    request: tuple[Path, list[str]] | None
+    request: tuple[Path | tuple[Path, ...], list[str]] | None
     try:
         request = load_request(work)
     except LaunchError:
@@ -365,7 +519,7 @@ def main() -> int:
             return 3
         request = None
     executable: str | None = None
-    seen_states: set[str] = set()
+    seen_model_stages: set[str] = set()
     while True:
         if request is not None:
             attachment, interview_command = request
@@ -375,14 +529,29 @@ def main() -> int:
                     print(json.dumps({"ok": False, "error": "codex executable is unavailable"}, sort_keys=True))
                     return 3
             try:
-                state_key = _sha256(work / "intake-state.json")
+                stage_key = json.dumps(
+                    {
+                        "state_sha256": _sha256(work / "intake-state.json"),
+                        "attachments": [
+                            str(path)
+                            for path in (
+                                attachment
+                                if isinstance(attachment, tuple)
+                                else (attachment,)
+                            )
+                        ],
+                        "command": interview_command,
+                    },
+                    sort_keys=True,
+                    separators=(",", ":"),
+                )
             except OSError as error:
                 print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
                 return 3
-            if state_key in seen_states:
+            if stage_key in seen_model_stages:
                 print(json.dumps({"ok": False, "error": "the intake did not advance after a model stage"}, sort_keys=True))
                 return 3
-            seen_states.add(state_key)
+            seen_model_stages.add(stage_key)
             argv = build_codex_argv(executable, work, attachment, interview_command)
             completed = subprocess.run(argv, check=False)
             if completed.returncode != 0:

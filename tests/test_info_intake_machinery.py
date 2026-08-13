@@ -8,6 +8,8 @@ import shutil
 import subprocess
 import sys
 
+import pytest
+
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "skills" / "info-intake-machinery" / "scripts" / "start_intake.py"
@@ -36,6 +38,64 @@ CORRECTION_SPEC = importlib.util.spec_from_file_location(
 assert CORRECTION_SPEC and CORRECTION_SPEC.loader
 RELATIONSHIP_CORRECTION = importlib.util.module_from_spec(CORRECTION_SPEC)
 CORRECTION_SPEC.loader.exec_module(RELATIONSHIP_CORRECTION)
+PDF_PROJECTION_SCRIPT = (
+    ROOT / "skills" / "info-intake-machinery" / "scripts" / "pdf_projection.py"
+)
+PDF_PROJECTION_SPEC = importlib.util.spec_from_file_location(
+    "pdf_projection", PDF_PROJECTION_SCRIPT
+)
+assert PDF_PROJECTION_SPEC and PDF_PROJECTION_SPEC.loader
+PDF_PROJECTION = importlib.util.module_from_spec(PDF_PROJECTION_SPEC)
+PDF_PROJECTION_SPEC.loader.exec_module(PDF_PROJECTION)
+
+
+def _visible_pdf(*page_texts: str) -> bytes:
+    """Build a small dependency-free PDF whose pages have distinct visible text."""
+    if not page_texts:
+        raise ValueError("at least one PDF page is required")
+    objects: list[bytes] = [b""]
+    objects.append(b"<< /Type /Catalog /Pages 2 0 R >>")
+    kids = " ".join(f"{4 + (2 * index)} 0 R" for index in range(len(page_texts)))
+    objects.append(
+        f"<< /Type /Pages /Kids [{kids}] /Count {len(page_texts)} >>".encode()
+    )
+    objects.append(b"<< /Type /Font /Subtype /Type1 /BaseFont /Helvetica >>")
+    for index, text in enumerate(page_texts):
+        page_object = 4 + (2 * index)
+        content_object = page_object + 1
+        escaped = text.replace("\\", "\\\\").replace("(", "\\(").replace(")", "\\)")
+        stream = f"BT /F1 18 Tf 72 720 Td ({escaped}) Tj ET\n".encode()
+        objects.append(
+            (
+                "<< /Type /Page /Parent 2 0 R /MediaBox [0 0 612 792] "
+                "/Resources << /Font << /F1 3 0 R >> >> "
+                f"/Contents {content_object} 0 R >>"
+            ).encode()
+        )
+        objects.append(
+            f"<< /Length {len(stream)} >>\nstream\n".encode()
+            + stream
+            + b"endstream"
+        )
+    content = bytearray(b"%PDF-1.4\n%\xe2\xe3\xcf\xd3\n")
+    offsets = [0]
+    for number, value in enumerate(objects[1:], start=1):
+        offsets.append(len(content))
+        content.extend(f"{number} 0 obj\n".encode())
+        content.extend(value)
+        content.extend(b"\nendobj\n")
+    xref = len(content)
+    content.extend(f"xref\n0 {len(objects)}\n".encode())
+    content.extend(b"0000000000 65535 f \n")
+    for offset in offsets[1:]:
+        content.extend(f"{offset:010d} 00000 n \n".encode())
+    content.extend(
+        (
+            f"trailer\n<< /Size {len(objects)} /Root 1 0 R >>\n"
+            f"startxref\n{xref}\n%%EOF\n"
+        ).encode()
+    )
+    return bytes(content)
 
 
 def test_empty_start_creates_one_resumable_intake_and_question(tmp_path: Path) -> None:
@@ -506,7 +566,7 @@ def test_codex_runner_crosses_human_boundary_and_continues_to_completion(
     ])
     model_calls: list[list[str]] = []
     operator_calls: list[Path] = []
-    state_hashes = iter(["a" * 64, "b" * 64])
+    state_hashes = iter(["a" * 64, "a" * 64])
 
     monkeypatch.setattr("builtins.input", lambda _prompt: str(work))
     monkeypatch.setattr(CODEX_RUNNER.shutil, "which", lambda _name: "/usr/bin/codex")
@@ -540,6 +600,51 @@ def test_codex_runner_crosses_human_boundary_and_continues_to_completion(
     assert model_calls == [first_command, second_command]
     assert operator_calls == [work]
     assert '"boundary": "clarification_complete"' in output
+
+
+def test_codex_runner_rejects_an_identical_repeated_model_stage(
+    tmp_path: Path, monkeypatch: object, capsys: object,
+) -> None:
+    work = tmp_path / "intake"
+    attachment = work / "sources" / "source-000003"
+    command = ["python", "start_intake.py", "--run-gap-clarification"]
+    requests = iter([(attachment, command), (attachment, command)])
+    boundary = {
+        "boundary": "needs_model_interview",
+        "status": "waiting_for_model",
+        "work": [{
+            "attachments": [str(attachment)],
+            "command": command,
+        }],
+    }
+    model_calls: list[list[str]] = []
+
+    monkeypatch.setattr("builtins.input", lambda _prompt: str(work))
+    monkeypatch.setattr(CODEX_RUNNER.shutil, "which", lambda _name: "/usr/bin/codex")
+    monkeypatch.setattr(CODEX_RUNNER, "load_request", lambda _work: next(requests))
+    monkeypatch.setattr(CODEX_RUNNER, "_sha256", lambda _path: "a" * 64)
+    monkeypatch.setattr(
+        CODEX_RUNNER,
+        "build_codex_argv",
+        lambda _executable, _work, _attachment, selected: selected,
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER,
+        "run_clarification_boundary",
+        lambda _work: boundary,
+    )
+
+    def run_model(argv: list[str], **_kwargs: object) -> object:
+        model_calls.append(argv)
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(CODEX_RUNNER.subprocess, "run", run_model)
+    monkeypatch.setattr(CODEX_RUNNER.sys, "argv", [str(CODEX_RUNNER_SCRIPT)])
+
+    assert CODEX_RUNNER.main() == 3
+    output = capsys.readouterr().out
+    assert model_calls == [command]
+    assert "the intake did not advance after a model stage" in output
 
 
 def test_operator_turn_presents_revalidates_and_submits_exact_answer(
@@ -584,6 +689,53 @@ def test_operator_turn_presents_revalidates_and_submits_exact_answer(
     ]
     assert drive_calls == [((work, "There is a new intake", REAL_PURPOSE), {
         "gap_answer": "The $48,000 Projected Close value",
+    })]
+
+
+def test_operator_turn_routes_a_file_typed_question_only_as_a_local_file(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    work = tmp_path / "intake"
+    additional = tmp_path / "reference.png"
+    additional.write_bytes(b"reference")
+    (work / "sources").mkdir(parents=True)
+    (work / "sources" / "source-000001.txt").write_text("There is a new intake")
+    (work / "sources" / "source-000002.txt").write_text(REAL_PURPOSE)
+    boundary = {
+        "boundary": "needs_operator_answer",
+        "status": "needs_operator",
+        "round": 1,
+        "answered_question_count": 0,
+        "question": {
+            "id": "question-1",
+            "asks": "Which additional file contains the missing evidence?",
+            "answer_type": "local_file",
+        },
+    }
+    drive_calls: list[tuple[tuple[object, ...], dict[str, object]]] = []
+    messages: list[str] = []
+    monkeypatch.setattr(
+        START_INTAKE, "run_clarification_boundary", lambda _work: boundary
+    )
+
+    def drive_file(*args: object, **kwargs: object) -> dict[str, object]:
+        drive_calls.append((args, kwargs))
+        return {"status": "ready_for_projection"}
+
+    monkeypatch.setattr(START_INTAKE, "drive", drive_file)
+    result = START_INTAKE.run_operator_turn(
+        work,
+        input_fn=lambda _prompt: str(additional),
+        output_fn=messages.append,
+    )
+
+    assert result == {"status": "ready_for_projection"}
+    assert messages == [
+        "Question: Which additional file contains the missing evidence?",
+        "Answer type: one existing local file path",
+    ]
+    assert drive_calls == [((work, "There is a new intake", REAL_PURPOSE), {
+        "gap_file": additional,
     })]
 
 
@@ -1406,6 +1558,368 @@ def test_completed_question_must_follow_assessment(tmp_path: Path) -> None:
     assert result["stopped"] == "invalid intake state"
 
 
+class _URLResponse:
+    def __init__(
+        self,
+        status: int,
+        headers: list[tuple[str, str]],
+        body: bytes = b"",
+        reason: str = "OK",
+    ) -> None:
+        self.status = status
+        self.reason = reason
+        self._headers = headers
+        self._body = body
+        self._offset = 0
+
+    def getheaders(self) -> list[tuple[str, str]]:
+        return self._headers
+
+    def read(self, size: int) -> bytes:
+        result = self._body[self._offset : self._offset + size]
+        self._offset += len(result)
+        return result
+
+
+class _URLConnection:
+    def __init__(self, response: _URLResponse) -> None:
+        self.response = response
+        self.requested: tuple[str, str, dict[str, str]] | None = None
+        self.closed = False
+
+    def request(
+        self, method: str, target: str, *, headers: dict[str, str]
+    ) -> None:
+        self.requested = (method, target, headers)
+
+    def getresponse(self) -> _URLResponse:
+        return self.response
+
+    def close(self) -> None:
+        self.closed = True
+
+
+def test_public_url_fetch_preserves_redirect_and_exact_response_bytes(
+    monkeypatch: object,
+) -> None:
+    responses = iter([
+        _URLResponse(
+            302,
+            [("Location", "https://cdn.example.test/final.txt#section"), ("X-Hop", "one")],
+            reason="Found",
+        ),
+        _URLResponse(
+            200,
+            [("Content-Type", "text/plain; charset=utf-8"), ("X-Final", "yes")],
+            "exact π\n".encode("utf-8"),
+        ),
+    ])
+    connections: list[_URLConnection] = []
+    monkeypatch.setattr(
+        START_INTAKE.socket,
+        "getaddrinfo",
+        lambda *_args, **_kwargs: [
+            (START_INTAKE.socket.AF_INET, START_INTAKE.socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
+        ],
+    )
+
+    def connect(*_args: object) -> _URLConnection:
+        connection = _URLConnection(next(responses))
+        connections.append(connection)
+        return connection
+
+    monkeypatch.setattr(START_INTAKE, "_url_connection", connect)
+
+    retrieval, content, error = START_INTAKE._fetch_public_url(
+        "https://example.test/start#operator-note"
+    )
+
+    assert error is None
+    assert content == "exact π\n".encode("utf-8")
+    assert retrieval["provided_url"] == "https://example.test/start#operator-note"
+    assert retrieval["request_url"] == "https://example.test/start"
+    assert retrieval["final_url"] == "https://cdn.example.test/final.txt"
+    assert retrieval["redirect_chain"][0]["next_url"] == (
+        "https://cdn.example.test/final.txt"
+    )
+    assert retrieval["response"]["headers"][-1] == {
+        "name": "X-Final",
+        "value": "yes",
+    }
+    assert connections[0].requested[0:2] == ("GET", "/start")
+    assert connections[1].requested[0:2] == ("GET", "/final.txt")
+    assert all(connection.closed for connection in connections)
+
+
+def test_public_url_fetch_rejects_unsafe_redirect_without_second_request(
+    monkeypatch: object,
+) -> None:
+    requested: list[str] = []
+
+    def resolve(host: str, *_args: object, **_kwargs: object) -> list[tuple[object, ...]]:
+        address = "127.0.0.1" if host == "127.0.0.1" else "93.184.216.34"
+        return [(START_INTAKE.socket.AF_INET, START_INTAKE.socket.SOCK_STREAM, 6, "", (address, 443))]
+
+    monkeypatch.setattr(START_INTAKE.socket, "getaddrinfo", resolve)
+
+    def connect(_scheme: str, _host: str, address: str, _port: int) -> _URLConnection:
+        requested.append(address)
+        return _URLConnection(
+            _URLResponse(302, [("Location", "http://127.0.0.1/private")], reason="Found")
+        )
+
+    monkeypatch.setattr(START_INTAKE, "_url_connection", connect)
+
+    retrieval, content, error = START_INTAKE._fetch_public_url(
+        "https://example.test/start"
+    )
+
+    assert retrieval is None and content is None
+    assert error["stopped"] == "unsafe URL destination"
+    assert requested == ["93.184.216.34"]
+
+
+def test_public_url_fetch_rejects_credentials_scheme_and_oversized_response(
+    monkeypatch: object,
+) -> None:
+    for url, stopped in (
+        ("file:///tmp/source", "URL scheme unsupported"),
+        ("https://operator:secret@example.test/source", "URL credentials prohibited"),
+    ):
+        retrieval, content, error = START_INTAKE._fetch_public_url(url)
+        assert retrieval is None and content is None
+        assert error["stopped"] == stopped
+
+    monkeypatch.setattr(
+        START_INTAKE.socket,
+        "getaddrinfo",
+        lambda *_args, **_kwargs: [
+            (START_INTAKE.socket.AF_INET, START_INTAKE.socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
+        ],
+    )
+    unsuccessful = _URLConnection(
+        _URLResponse(404, [("Content-Type", "text/plain")], reason="Not Found")
+    )
+    monkeypatch.setattr(
+        START_INTAKE, "_url_connection", lambda *_args: unsuccessful
+    )
+    retrieval, content, error = START_INTAKE._fetch_public_url(
+        "https://example.test/missing"
+    )
+    assert retrieval is None and content is None
+    assert error["stopped"] == "URL response unsuccessful"
+    assert unsuccessful.closed is True
+
+    connection = _URLConnection(
+        _URLResponse(
+            200,
+            [("Content-Length", str(START_INTAKE.URL_MAX_BYTES + 1))],
+        )
+    )
+    monkeypatch.setattr(
+        START_INTAKE, "_url_connection", lambda *_args: connection
+    )
+
+    retrieval, content, error = START_INTAKE._fetch_public_url(
+        "https://example.test/large"
+    )
+
+    assert retrieval is None and content is None
+    assert error["stopped"] == "URL response too large"
+    assert connection.closed is True
+
+
+def test_public_url_fetch_reports_resolution_timeout_and_redirect_limit(
+    monkeypatch: object,
+) -> None:
+    def resolution_failure(*_args: object, **_kwargs: object) -> object:
+        raise START_INTAKE.socket.gaierror("no address")
+
+    monkeypatch.setattr(
+        START_INTAKE.socket, "getaddrinfo", resolution_failure
+    )
+    retrieval, content, error = START_INTAKE._fetch_public_url(
+        "https://example.test/source"
+    )
+    assert retrieval is None and content is None
+    assert error["stopped"] == "URL resolution failed"
+
+    monkeypatch.setattr(
+        START_INTAKE.socket,
+        "getaddrinfo",
+        lambda *_args, **_kwargs: [
+            (START_INTAKE.socket.AF_INET, START_INTAKE.socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
+        ],
+    )
+
+    def timeout(*_args: object) -> object:
+        raise TimeoutError("timed out")
+
+    monkeypatch.setattr(START_INTAKE, "_url_connection", timeout)
+    retrieval, content, error = START_INTAKE._fetch_public_url(
+        "https://example.test/source"
+    )
+    assert retrieval is None and content is None
+    assert error["stopped"] == "URL retrieval failed"
+    assert "timed out" in error["why"]
+
+    connections: list[_URLConnection] = []
+
+    def redirect(*_args: object) -> _URLConnection:
+        connection = _URLConnection(
+            _URLResponse(302, [("Location", "/again")], reason="Found")
+        )
+        connections.append(connection)
+        return connection
+
+    monkeypatch.setattr(START_INTAKE, "_url_connection", redirect)
+    retrieval, content, error = START_INTAKE._fetch_public_url(
+        "https://example.test/start"
+    )
+    assert retrieval is None and content is None
+    assert error["stopped"] == "URL redirect limit exceeded"
+    assert len(connections) == START_INTAKE.URL_MAX_REDIRECTS + 1
+    assert all(connection.closed for connection in connections)
+
+
+def test_first_public_url_is_frozen_once_then_projected_verbatim(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    work = tmp_path / "intake"
+    content = "public source π\n".encode("utf-8")
+    connection = _URLConnection(
+        _URLResponse(200, [("Content-Type", "text/plain; charset=utf-8")], content)
+    )
+    monkeypatch.setattr(
+        START_INTAKE.socket,
+        "getaddrinfo",
+        lambda *_args, **_kwargs: [
+            (START_INTAKE.socket.AF_INET, START_INTAKE.socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
+        ],
+    )
+    monkeypatch.setattr(
+        START_INTAKE, "_url_connection", lambda *_args: connection
+    )
+    _advance_to_first_source(work)
+
+    frozen = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_url="https://example.test/source.txt#note",
+    )
+    ledger_after_freeze = (work / "ledger.jsonl").read_bytes()
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_fetch_public_url",
+        lambda *_args: (_ for _ in ()).throw(AssertionError("URL was fetched again")),
+    )
+    replay = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_url="https://example.test/source.txt#note",
+    )
+    projected = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+
+    assert frozen == replay
+    assert frozen["source"]["kind"] == "url"
+    assert frozen["source"]["adapter"] == {"name": "url", "version": 1}
+    assert frozen["source"]["provided_url"] == "https://example.test/source.txt#note"
+    assert frozen["source"]["request_url"] == "https://example.test/source.txt"
+    assert frozen["source"]["response"]["connected_address"] == "93.184.216.34"
+    assert (work / frozen["source"]["stored_path"]).read_bytes() == content
+    assert (work / projected["projection"]["path"]).read_bytes() == content
+    assert projected["projection"]["method"] == "verbatim_utf8"
+    assert START_INTAKE.run_source_projection_closure(work)["verdict"] == "all_projected"
+    assert len((work / "ledger.jsonl").read_bytes().splitlines()) == (
+        len(ledger_after_freeze.splitlines()) + 1
+    )
+
+
+def test_unsafe_first_url_does_not_create_source_or_advance_ledger(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_first_source(work)
+    before = (work / "ledger.jsonl").read_bytes()
+    monkeypatch.setattr(
+        START_INTAKE.socket,
+        "getaddrinfo",
+        lambda *_args, **_kwargs: [
+            (START_INTAKE.socket.AF_INET, START_INTAKE.socket.SOCK_STREAM, 6, "", ("127.0.0.1", 80))
+        ],
+    )
+
+    result = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_url="http://localhost/private",
+    )
+
+    assert result["status"] == "blocked"
+    assert result["stopped"] == "unsafe URL destination"
+    assert not (work / "sources" / "source-000003").exists()
+    assert (work / "ledger.jsonl").read_bytes() == before
+
+
+def test_unbound_first_url_artifact_blocks_before_network_access(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_first_source(work)
+    unbound = work / "sources" / "source-000003"
+    unbound.write_bytes(b"unbound")
+    before = (work / "ledger.jsonl").read_bytes()
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_fetch_public_url",
+        lambda *_args: (_ for _ in ()).throw(AssertionError("network was accessed")),
+    )
+
+    result = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_url="https://example.test/source",
+    )
+
+    assert result["status"] == "blocked"
+    assert result["stopped"] == "unbound source artifact"
+    assert unbound.read_bytes() == b"unbound"
+    assert (work / "ledger.jsonl").read_bytes() == before
+
+
+def test_cli_routes_source_url_through_the_url_adapter(tmp_path: Path) -> None:
+    work = tmp_path / "intake"
+    _advance_to_first_source(work)
+    before = (work / "ledger.jsonl").read_bytes()
+    completed = subprocess.run(
+        [
+            sys.executable,
+            str(SCRIPT),
+            "--work",
+            str(work),
+            "--opening",
+            "There is a new intake",
+            "--purpose",
+            REAL_PURPOSE,
+            "--source-url",
+            "file:///tmp/not-public",
+        ],
+        check=False,
+        text=True,
+        capture_output=True,
+    )
+
+    assert completed.returncode == 3
+    assert json.loads(completed.stdout)["stopped"] == "URL scheme unsupported"
+    assert (work / "ledger.jsonl").read_bytes() == before
+
+
 def test_first_local_file_is_frozen_and_resumes_without_duplication(tmp_path: Path) -> None:
     work = tmp_path / "intake"
     supplied = tmp_path / "first-source.txt"
@@ -1611,6 +2125,258 @@ def test_valid_projection_attempt_creates_immutable_unassessed_version(tmp_path:
         "model_projection_interview_completed", "projection_version_created"
     ]
     assert ledger[-2]["rejected_answer_count"] == 0
+
+
+def test_two_page_pdf_projects_every_visible_page_in_fixed_order(tmp_path: Path) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "two-pages.pdf"
+    supplied.write_bytes(_visible_pdf("Page one description", "Page two note"))
+    _advance_to_first_source(work)
+    frozen = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, supplied
+    )
+
+    current = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    assert frozen["source"]["media_type"] == "application/pdf"
+    assert current["pdf_page"] == 1
+    assert CODEX_RUNNER.load_request(work)[0].name == "page-000001.png"
+
+    for page_number, visible_text in enumerate(
+        ("Page one description", "Page two note"), start=1
+    ):
+        answers = _projection_answers(contract=7)
+        answers[answers.index("A readable description")] = visible_text
+        answer_iterator = iter(answers)
+        verifying = START_INTAKE.run_first_projection_interview(
+            work,
+            input_fn=lambda _prompt: next(answer_iterator),
+            output_fn=lambda _message: None,
+        )
+        assert verifying["stopped"] == "verifying_first_projection", verifying
+        verification_iterator = iter(_verification_answers(1))
+        current = START_INTAKE.run_first_projection_verification(
+            work,
+            input_fn=lambda _prompt: next(verification_iterator),
+            output_fn=lambda _message: None,
+        )
+        if page_number == 1:
+            assert current["pdf_page"] == 2
+            assert CODEX_RUNNER.load_request(work)[0].name == "page-000002.png"
+            pending = START_INTAKE.run_source_projection_closure(work)
+            assert pending["verdict"] == "conversion_incomplete"
+            assert pending["outcomes"][-1]["outcome"] == "pending"
+            assert "completed 1 of 2 pages" in pending["outcomes"][-1]["reason"]
+
+    replay = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+    manifest = json.loads((work / current["projection"]["path"]).read_text())
+    page_contents = [
+        json.loads((work / item["readable_projection"]["path"]).read_text())[
+            "elements"
+        ][0]["content"]
+        for item in manifest["pages"]
+    ]
+    ledger = [json.loads(line) for line in (work / "ledger.jsonl").read_text().splitlines()]
+
+    assert current == replay
+    assert current["stopped"] == "first_pdf_projection_recorded"
+    assert current["projection"]["method"] == "pdf_visible_pages"
+    assert current["projection"]["coverage"]["status"] == "complete"
+    assert current["projection"]["coverage"]["gaps"] == [
+        "page 1: 1 explicit projection gaps",
+        "page 2: 1 explicit projection gaps",
+    ]
+    assert [item["page"] for item in manifest["pages"]] == [1, 2]
+    assert [item["page"] for item in manifest["gap_inventory"]] == [1, 2]
+    assert [item["item_id"] for item in manifest["gap_inventory"]] == [
+        "element-000002",
+        "element-000002",
+    ]
+    assert page_contents == ["Page one description", "Page two note"]
+    assert [entry["event"] for entry in ledger[-4:]] == [
+        "pdf_projection_started",
+        "pdf_page_projection_completed",
+        "pdf_page_projection_completed",
+        "projection_version_created",
+    ]
+    assert START_INTAKE.run_source_projection_closure(work)["verdict"] == "all_projected"
+    boundary = START_INTAKE.run_clarification_boundary(work)
+    assert boundary["boundary"] == "needs_model_interview"
+    assert boundary["stopped"] == "formulating_gap_question_round"
+    assert [Path(path).name for path in boundary["work"][0]["attachments"]] == [
+        "page-000001.png",
+        "page-000002.png",
+    ]
+    state = json.loads((work / "intake-state.json").read_text())
+    assert [item["page"] for item in state["gap_question_round"]["gaps"]] == [1, 2]
+    assert [item["item_id"] for item in state["gap_question_round"]["gaps"]] == [
+        "element-000002",
+        "element-000002",
+    ]
+    assert state["gap_question_round"]["request_ledger_sequence"] == 12
+    attachments, command = CODEX_RUNNER.load_request(work)
+    assert CODEX_RUNNER.next_model_request(work, boundary) == (
+        attachments,
+        command,
+    )
+    assert isinstance(attachments, tuple)
+    assert [path.name for path in attachments] == [
+        "page-000001.png",
+        "page-000002.png",
+    ]
+    argv = CODEX_RUNNER.build_codex_argv(
+        "/usr/local/bin/codex", work, attachments, command
+    )
+    assert [argv[index + 1] for index, value in enumerate(argv) if value == "--image"] == [
+        str(attachments[0]),
+        str(attachments[1]),
+    ]
+    answers = iter([
+        "fresh-questioner",
+        "pytest-gap-question",
+        "operator_text",
+        "What exact value is unreadable in the identified element on page one?",
+        "operator_text",
+        "What exact value is unreadable in the identified element on page two?",
+    ])
+    waiting = START_INTAKE.run_gap_clarification(
+        work,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    assert waiting["stopped"] == "awaiting_gap_answers"
+    assert waiting["question_count"] == 2
+    assert waiting["answered_question_count"] == 0
+    assert waiting["question"]["answers_gap"]["page"] == 1
+    assert waiting["question"]["answers_gap"]["item_id"] == "element-000002"
+    assert "questions" not in waiting
+    state_path = work / "intake-state.json"
+    changed = json.loads(state_path.read_text())
+    changed["gap_question_round"]["gaps"][0]["page"] = 2
+    state_path.write_text(json.dumps(changed))
+    refused = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+    assert refused["status"] == "blocked"
+    assert refused["stopped"] == "invalid ledger"
+
+
+def test_pdf_render_change_fails_replay_before_model_intake(tmp_path: Path) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "source.pdf"
+    supplied.write_bytes(_visible_pdf("Visible page"))
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    rendered = (
+        work
+        / "pdf-projections/source-000003-v1/rendered-pages/page-000001.png"
+    )
+    rendered.write_bytes(b"changed")
+
+    result = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+
+    assert result["status"] == "blocked"
+    assert result["stopped"] == "immutable PDF rendering changed"
+
+
+def test_malformed_pdf_preserves_one_terminal_conversion_failure(tmp_path: Path) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "malformed.pdf"
+    supplied.write_bytes(b"%PDF-1.7\nmalformed\n")
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+
+    failed = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    ledger_before = (work / "ledger.jsonl").read_bytes()
+    replay = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+    closure = START_INTAKE.run_source_projection_closure(work)
+
+    assert failed == replay
+    assert failed["stopped"] == "first_pdf_projection_failed"
+    assert failed["projection"]["status"] == "failed"
+    assert failed["projection"]["path"] is None
+    assert (work / "ledger.jsonl").read_bytes() == ledger_before
+    assert closure["verdict"] == "conversion_incomplete"
+    assert closure["outcomes"][-1]["outcome"] == "failed"
+    assert closure["outcomes"][-1]["projection"]["status"] == "failed"
+
+
+def test_pdf_adapter_rejects_unsupported_features_and_bounds(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    source = tmp_path / "source.pdf"
+    source.write_bytes(_visible_pdf("Visible page"))
+    for fields, message in (
+        ({"Encrypted": "yes", "Form": "none", "JavaScript": "no"}, "encrypted"),
+        ({"Encrypted": "no", "Form": "AcroForm", "JavaScript": "no"}, "forms"),
+        ({"Encrypted": "no", "Form": "none", "JavaScript": "yes"}, "JavaScript"),
+    ):
+        with pytest.raises(PDF_PROJECTION.PDFProjectionError, match=message):
+            PDF_PROJECTION._reject_unsupported_features(source, fields)
+    monkeypatch.setattr(
+        PDF_PROJECTION,
+        "_run",
+        lambda command: subprocess.CompletedProcess(
+            command, 0, "1 embedded file\n", ""
+        ),
+    )
+    with pytest.raises(PDF_PROJECTION.PDFProjectionError, match="attachments"):
+        PDF_PROJECTION._reject_unsupported_features(
+            source, {"Encrypted": "no", "Form": "none", "JavaScript": "no"}
+        )
+    with pytest.raises(PDF_PROJECTION.PDFProjectionError, match="no visible pages"):
+        PDF_PROJECTION._page_count({"Pages": "0"})
+    with pytest.raises(PDF_PROJECTION.PDFProjectionError, match="limit"):
+        PDF_PROJECTION._page_count({"Pages": str(PDF_PROJECTION.MAX_PAGES + 1)})
+
+
+def test_pdf_adapter_fails_cleanly_on_renderer_error_and_changed_output(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    source = tmp_path / "source.pdf"
+    source.write_bytes(_visible_pdf("Visible page"))
+    source_sha256 = PDF_PROJECTION._sha256(source)
+    output = tmp_path / "failed" / "pdf-projections/source-000003-v1"
+    original_run = PDF_PROJECTION._run
+
+    def fail_renderer(command: list[str]) -> subprocess.CompletedProcess[str]:
+        if Path(command[0]).name == "pdftoppm" and "-singlefile" in command:
+            return subprocess.CompletedProcess(command, 1, "", "render failed")
+        return original_run(command)
+
+    monkeypatch.setattr(PDF_PROJECTION, "_run", fail_renderer)
+    with pytest.raises(PDF_PROJECTION.PDFProjectionError, match="rendering failed"):
+        PDF_PROJECTION.prepare(
+            source,
+            output,
+            source_id="source-000003",
+            source_sha256=source_sha256,
+        )
+    assert not output.exists()
+
+    monkeypatch.setattr(PDF_PROJECTION, "_run", original_run)
+    valid_output = tmp_path / "valid" / "pdf-projections/source-000003-v1"
+    prepared = PDF_PROJECTION.prepare(
+        source,
+        valid_output,
+        source_id="source-000003",
+        source_sha256=source_sha256,
+    )
+    rendered = valid_output / "rendered-pages/page-000001.png"
+    rendered.write_bytes(b"changed")
+    with pytest.raises(PDF_PROJECTION.PDFProjectionError, match="valid PNG"):
+        PDF_PROJECTION.validate_prepared(tmp_path / "valid", prepared)
+    with pytest.raises(PDF_PROJECTION.PDFProjectionError, match="unbound"):
+        PDF_PROJECTION.prepare(
+            source,
+            valid_output,
+            source_id="source-000003",
+            source_sha256=source_sha256,
+        )
 
 
 def test_projection_ledger_counts_spatial_traversal_gaps(tmp_path: Path) -> None:
@@ -1848,12 +2614,50 @@ def test_changed_projection_version_fails_closed(tmp_path: Path) -> None:
     assert result["stopped"] == "immutable projection changed"
 
 
-def test_visual_projection_adapter_fails_closed_for_other_media(tmp_path: Path) -> None:
+def test_first_utf8_file_is_projected_verbatim_without_model_work(tmp_path: Path) -> None:
     work = tmp_path / "intake"
     supplied = tmp_path / "first.txt"
-    supplied.write_text("plain text")
+    supplied_bytes = "plain text\nπ\n".encode("utf-8")
+    supplied.write_bytes(supplied_bytes)
     _advance_to_first_source(work)
     START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    before = (work / "ledger.jsonl").read_bytes()
+
+    result = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    after = (work / "ledger.jsonl").read_bytes()
+
+    assert result["status"] == "ready_for_projection_assessment"
+    assert result["stopped"] == "first_verbatim_projection_recorded"
+    assert result["projection"]["method"] == "verbatim_utf8"
+    assert result["projection"]["coverage"]["status"] == "complete"
+    assert (work / result["projection"]["path"]).read_bytes() == supplied_bytes
+    assert len(after.decode("utf-8").splitlines()) == len(
+        before.decode("utf-8").splitlines()
+    ) + 1
+    assert START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE) == result
+    boundary = START_INTAKE.run_clarification_boundary(work)
+    assert boundary["boundary"] == "first_source_projection_complete"
+    assert boundary["projection"] == result["projection"]
+    closure = START_INTAKE.run_source_projection_closure(work)
+    assert closure["verdict"] == "all_projected"
+    assert closure["outcome_counts"] == {
+        "projected": 3,
+        "pending": 0,
+        "failed": 0,
+    }
+    assert (work / "ledger.jsonl").read_bytes() == after
+
+
+def test_invalid_utf8_file_fails_without_filling_its_reservation(tmp_path: Path) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "binary.dat"
+    supplied.write_bytes(b"readable-prefix\xff\xfe")
+    _advance_to_first_source(work)
+    frozen = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, supplied
+    )
     before = (work / "ledger.jsonl").read_bytes()
 
     result = START_INTAKE.drive(
@@ -1862,6 +2666,40 @@ def test_visual_projection_adapter_fails_closed_for_other_media(tmp_path: Path) 
 
     assert result["status"] == "blocked"
     assert result["stopped"] == "projection adapter unavailable"
+    assert "not valid UTF-8" in result["why"]
+    assert not (work / "projections" / "source-000003-v1.txt").exists()
+    assert (work / "ledger.jsonl").read_bytes() == before
+    assert frozen["stopped"] == "first_source_frozen"
+    closure = START_INTAKE.run_source_projection_closure(work)
+    assert closure["verdict"] == "conversion_incomplete"
+    assert closure["outcome_counts"] == {
+        "projected": 2,
+        "pending": 0,
+        "failed": 1,
+    }
+    assert closure["outcomes"][-1]["outcome"] == "failed"
+    assert "not valid UTF-8" in closure["outcomes"][-1]["reason"]
+
+
+def test_verbatim_projection_rejects_a_preexisting_unbound_artifact(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "first.md"
+    supplied.write_text("# Existing repository notes\n")
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    projection_path = work / "projections" / "source-000003-v1.txt"
+    projection_path.write_text("unbound content\n")
+    before = (work / "ledger.jsonl").read_bytes()
+
+    result = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+
+    assert result["status"] == "blocked"
+    assert result["stopped"] == "unbound projection artifact"
+    assert projection_path.read_text() == "unbound content\n"
     assert (work / "ledger.jsonl").read_bytes() == before
 
 
@@ -1909,7 +2747,9 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     question_answers = iter([
         "fresh-questioner",
         "pytest-gap-question",
+        "operator_text",
         "What exact information is hidden by the first obscured target?",
+        "operator_text",
         "What exact information is hidden by the second obscured target?",
     ])
     waiting = START_INTAKE.run_gap_clarification(
@@ -2135,7 +2975,9 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     round_two_questions = iter([
         "fresh-round-two-questioner",
         "pytest-round-two",
+        "operator_text",
         "Which visible label identifies the first hidden value?",
+        "operator_text",
         "Which visible label identifies the second hidden value?",
     ])
     round_two_ready = START_INTAKE.run_gap_clarification(
@@ -2198,7 +3040,9 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     round_three_questions = iter([
         "fresh-round-three-questioner",
         "pytest-round-three",
+        "local_file",
         "What exact value is paired with the first visible label?",
+        "operator_text",
         "What exact value is paired with the second visible label?",
     ])
     round_three_ready = START_INTAKE.run_gap_clarification(
@@ -2211,7 +3055,448 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     round_three_operator = START_INTAKE.run_clarification_boundary(work)
     assert round_three_operator["boundary"] == "needs_operator_answer"
     assert round_three_operator["round"] == 3
+    round_three_file = tmp_path / "round-three-reference.png"
+    round_three_file.write_bytes(b"round three reference")
+    round_three_frozen = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_file=round_three_file,
+    )
+    assert round_three_frozen["stopped"] == "additional_source_frozen"
+    assert round_three_frozen["lineage"]["question_round"] == 3
+    round_three_state = json.loads((work / "intake-state.json").read_text())
+    assert round_three_frozen["lineage"]["prepared_round_result_sha256"] == (
+        round_three_state["follow_up_gap_question_round"]["result_sha256"]
+    )
     assert original_projection.read_bytes() == original_projection_before
+
+
+def test_file_typed_gap_question_freezes_one_bound_source_and_stops_before_projection(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    projection_answers = iter(_projection_answers(contract=7))
+    START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(projection_answers),
+        output_fn=lambda _message: None,
+    )
+    verification_answers = iter(_verification_answers(1))
+    recorded = START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verification_answers),
+        output_fn=lambda _message: None,
+    )
+    original_projection_path = work / recorded["projection"]["path"]
+    original_projection_bytes = original_projection_path.read_bytes()
+    requested = START_INTAKE.run_clarification_boundary(work)
+    assert requested["boundary"] == "needs_model_interview"
+
+    messages: list[str] = []
+    question_answers = iter([
+        "fresh-questioner",
+        "pytest-gap-question",
+        "image",
+        "local_file",
+        "Which additional local file shows the exact hidden value?",
+    ])
+    waiting = START_INTAKE.run_gap_clarification(
+        work,
+        input_fn=lambda _prompt: next(question_answers),
+        output_fn=messages.append,
+    )
+    assert waiting["question"]["answer_type"] == "local_file"
+    assert messages == [
+        "Invalid answer: operator_answer_type_000001: choose one of: operator_text, local_file, url."
+    ]
+
+    ledger_before_rejections = (work / "ledger.jsonl").read_bytes()
+    wrong_type = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_answer="The value is $48,000.",
+    )
+    assert wrong_type["stopped"] == "operator input type mismatch"
+    missing = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_file=tmp_path / "missing.png",
+    )
+    assert missing["stopped"] == "source unavailable"
+    wrong_file_kind = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_file=tmp_path,
+    )
+    assert wrong_file_kind["stopped"] == "source is not a file"
+    assert (work / "ledger.jsonl").read_bytes() == ledger_before_rejections
+
+    additional = tmp_path / "clean-reference.png"
+    additional_bytes = base64.b64decode(
+        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zl1sAAAAASUVORK5CYII="
+    )
+    additional.write_bytes(additional_bytes)
+    frozen = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_file=additional,
+    )
+    ledger_after_freeze = (work / "ledger.jsonl").read_bytes()
+    frozen_copy = work / frozen["source"]["stored_path"]
+    assert frozen["status"] == "ready_for_projection"
+    assert frozen["stopped"] == "additional_source_frozen"
+    assert frozen["source"]["answers_question"] == waiting["question"]["id"]
+    assert frozen["source"]["answers_gap"] == waiting["question"]["answers_gap"]
+    assert frozen["projection"] == START_INTAKE._pending_additional_projection_record(4)
+    assert frozen_copy.read_bytes() == additional_bytes
+    assert original_projection_path.read_bytes() == original_projection_bytes
+    assert not (work / "projections" / "source-000004-v1.txt").exists()
+
+    pending_closure = START_INTAKE.run_source_projection_closure(work)
+    assert pending_closure["verdict"] == "conversion_incomplete"
+    assert pending_closure["outcome_counts"] == {
+        "projected": 3,
+        "pending": 1,
+        "failed": 0,
+    }
+    assert pending_closure["outcomes"][-1]["outcome"] == "pending"
+    assert pending_closure["outcomes"][-1]["reserved_projection"] == frozen[
+        "projection"
+    ]
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after_freeze
+
+    resumed = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+    assert resumed == frozen
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after_freeze
+
+    additional.write_bytes(b"changed after freeze")
+    changed = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_file=additional,
+    )
+    assert changed["stopped"] == "source changed"
+    assert frozen_copy.read_bytes() == additional_bytes
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after_freeze
+
+    frozen_copy.write_bytes(b"changed frozen bytes")
+    changed_frozen = START_INTAKE.run_clarification_boundary(work)
+    assert changed_frozen["stopped"] == "invalid ledger"
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after_freeze
+    frozen_copy.write_bytes(additional_bytes)
+
+    additional.write_bytes(additional_bytes)
+    boundary = START_INTAKE.run_clarification_boundary(work)
+    runner_boundary = CODEX_RUNNER.run_clarification_boundary(work)
+    assert boundary.get("boundary") == "needs_model_interview", boundary
+    assert runner_boundary == boundary
+    assert boundary["work"][0]["attachments"] == [str(frozen_copy.resolve())]
+    assert boundary["work"][0]["command"][-1] == "--run-projection-interview"
+    attachment, command = CODEX_RUNNER.load_request(work)
+    assert attachment == frozen_copy
+    assert command == boundary["work"][0]["command"]
+
+    additional_projection_answers = iter(_projection_answers(contract=7))
+    verifying = START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(additional_projection_answers),
+        output_fn=lambda _message: None,
+    )
+    assert verifying["stopped"] == "verifying_additional_source_projection"
+    additional_verification_answers = iter(_verification_answers(1))
+    projected = START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(additional_verification_answers),
+        output_fn=lambda _message: None,
+    )
+    completed_boundary = START_INTAKE.run_clarification_boundary(work)
+    ledger_after_projection = (work / "ledger.jsonl").read_bytes()
+
+    assert projected["stopped"] == "additional_source_projection_recorded"
+    assert projected["projection"]["id"] == "projection-source-000004-v1"
+    assert projected["projection"]["source_id"] == "source-000004"
+    assert projected["projection"]["coverage"] == "unassessed"
+    assert projected["reserved_projection"] == frozen["projection"]
+    assert projected["lineage"] == frozen["lineage"]
+    assert completed_boundary["boundary"] == "additional_source_projection_complete"
+    assert completed_boundary["projection"] == projected["projection"]
+    assert original_projection_path.read_bytes() == original_projection_bytes
+    assert START_INTAKE.run_clarification_boundary(work) == completed_boundary
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after_projection
+
+    before_closure = {
+        path.relative_to(work): path.read_bytes()
+        for path in work.rglob("*")
+        if path.is_file()
+    }
+    closure = START_INTAKE.run_source_projection_closure(work)
+    replayed_closure = START_INTAKE.run_source_projection_closure(work)
+    after_closure = {
+        path.relative_to(work): path.read_bytes()
+        for path in work.rglob("*")
+        if path.is_file()
+    }
+    assert closure == replayed_closure
+    assert closure["verdict"] == "all_projected"
+    assert closure["source_count"] == 4
+    assert closure["outcome_counts"] == {
+        "projected": 4,
+        "pending": 0,
+        "failed": 0,
+    }
+    assert [item["source_id"] for item in closure["outcomes"]] == [
+        "source-000001",
+        "source-000002",
+        "source-000003",
+        "source-000004",
+    ]
+    assert closure["outcomes"][-1]["projection"]["id"] == (
+        "projection-source-000004-v1"
+    )
+    assert closure["outcomes"][-1]["reserved_projection"] == frozen["projection"]
+    assert before_closure == after_closure
+
+    ledger_entries, ledger_error = START_INTAKE._validate_ledger(
+        work / "ledger.jsonl"
+    )
+    assert ledger_error is None
+    duplicate_path_entries = json.loads(json.dumps(ledger_entries))
+    duplicate_path_entries[14]["source"]["stored_path"] = duplicate_path_entries[6][
+        "source"
+    ]["stored_path"]
+    duplicate_path_entries[14]["source"]["sha256"] = duplicate_path_entries[6][
+        "source"
+    ]["sha256"]
+    duplicate_inventory, duplicate_error = (
+        START_INTAKE._source_projection_closure_inventory(
+            work, duplicate_path_entries
+        )
+    )
+    assert duplicate_inventory is None
+    assert duplicate_error["stopped"] == "invalid source projection ledger"
+    assert "duplicate artifact path" in duplicate_error["why"]
+
+    missing_reservation_entries = json.loads(json.dumps(ledger_entries))
+    missing_reservation_entries[14]["projection"] = None
+    missing_inventory, missing_error = (
+        START_INTAKE._source_projection_closure_inventory(
+            work, missing_reservation_entries
+        )
+    )
+    assert missing_inventory is None
+    assert missing_error["stopped"] == "invalid source projection ledger"
+    assert "lost its pending projection reservation" in missing_error["why"]
+
+    additional_projection_path = work / projected["projection"]["path"]
+    additional_projection_bytes = additional_projection_path.read_bytes()
+    additional_projection_path.write_bytes(b"changed projection bytes")
+    changed_projection = START_INTAKE.run_source_projection_closure(work)
+    assert changed_projection["status"] == "blocked"
+    assert changed_projection["stopped"] == "immutable source projection changed"
+    additional_projection_path.write_bytes(additional_projection_bytes)
+
+    state_path = work / "intake-state.json"
+    changed_state = json.loads(state_path.read_text())
+    changed_state["pending_additional_source"]["lineage"]["question_round"] = 99
+    state_path.write_text(json.dumps(changed_state, indent=2, sort_keys=True) + "\n")
+    changed_lineage = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE
+    )
+    assert changed_lineage["status"] == "blocked"
+    assert changed_lineage["stopped"] == "invalid ledger"
+
+
+def test_utf8_additional_source_fills_its_reserved_projection_verbatim(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    projection_answers = iter(_projection_answers(contract=7))
+    START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(projection_answers),
+        output_fn=lambda _message: None,
+    )
+    verification_answers = iter(_verification_answers(1))
+    START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verification_answers),
+        output_fn=lambda _message: None,
+    )
+    START_INTAKE.run_clarification_boundary(work)
+    question_answers = iter([
+        "fresh-questioner",
+        "pytest-gap-question",
+        "local_file",
+        "Which local file contains the missing readable evidence?",
+    ])
+    START_INTAKE.run_gap_clarification(
+        work,
+        input_fn=lambda _prompt: next(question_answers),
+        output_fn=lambda _message: None,
+    )
+    supplied = tmp_path / "reference.txt"
+    supplied.write_text("plain text reference\n")
+    frozen = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_file=supplied,
+    )
+    ledger_before = (work / "ledger.jsonl").read_bytes()
+
+    result = START_INTAKE.run_clarification_boundary(work)
+    ledger_after = (work / "ledger.jsonl").read_bytes()
+
+    assert result["boundary"] == "additional_source_projection_complete"
+    assert result["status"] == "ready_for_projection_assessment"
+    assert result["stopped"] == "additional_source_projection_recorded"
+    assert frozen["projection"]["status"] == "pending"
+    assert result["reserved_projection"] == frozen["projection"]
+    assert result["projection"]["id"] == frozen["projection"]["id"]
+    assert result["projection"]["method"] == "verbatim_utf8"
+    assert result["projection"]["coverage"]["status"] == "complete"
+    assert (work / result["projection"]["path"]).read_bytes() == supplied.read_bytes()
+    assert len(ledger_after.decode("utf-8").splitlines()) == len(
+        ledger_before.decode("utf-8").splitlines()
+    ) + 1
+
+    closure = START_INTAKE.run_source_projection_closure(work)
+    assert closure["verdict"] == "all_projected"
+    assert closure["outcome_counts"] == {
+        "projected": 4,
+        "pending": 0,
+        "failed": 0,
+    }
+    assert closure["outcomes"][-1]["outcome"] == "projected"
+    assert closure["outcomes"][-1]["projection"]["id"] == frozen["projection"]["id"]
+    complete_qualification = {
+        "qualification": "readable_projection_complete",
+        "projection": {"sha256": "a" * 64},
+        "coverage": {"remaining_gap_count": 0},
+        "remaining_gaps": [],
+    }
+    disposition, disposition_error = START_INTAKE._clarification_terminal_disposition(
+        {
+            "decision": "clarification_complete",
+            "remaining_current_gap_count": 0,
+        },
+        complete_qualification,
+        closure,
+    )
+    assert disposition_error is None
+    assert disposition["disposition"] == "first_layer_complete"
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after
+
+
+def test_url_typed_question_freezes_and_projects_one_additional_public_url(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    projection_answers = iter(_projection_answers(contract=7))
+    START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(projection_answers),
+        output_fn=lambda _message: None,
+    )
+    verification_answers = iter(_verification_answers(1))
+    START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verification_answers),
+        output_fn=lambda _message: None,
+    )
+    START_INTAKE.run_clarification_boundary(work)
+    question_answers = iter([
+        "fresh-questioner",
+        "pytest-gap-question",
+        "url",
+        "Which public URL contains the missing readable evidence?",
+    ])
+    waiting = START_INTAKE.run_gap_clarification(
+        work,
+        input_fn=lambda _prompt: next(question_answers),
+        output_fn=lambda _message: None,
+    )
+    assert waiting["question"]["answer_type"] == "url"
+    content = "URL follow-up evidence π\n".encode("utf-8")
+    connection = _URLConnection(
+        _URLResponse(200, [("Content-Type", "text/plain")], content)
+    )
+    monkeypatch.setattr(
+        START_INTAKE.socket,
+        "getaddrinfo",
+        lambda *_args, **_kwargs: [
+            (START_INTAKE.socket.AF_INET, START_INTAKE.socket.SOCK_STREAM, 6, "", ("93.184.216.34", 443))
+        ],
+    )
+    monkeypatch.setattr(
+        START_INTAKE, "_url_connection", lambda *_args: connection
+    )
+
+    operator_messages: list[str] = []
+    frozen = START_INTAKE.run_operator_turn(
+        work,
+        input_fn=lambda _prompt: "https://example.test/follow-up.txt",
+        output_fn=operator_messages.append,
+    )
+    ledger_after_freeze = (work / "ledger.jsonl").read_bytes()
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_fetch_public_url",
+        lambda *_args: (_ for _ in ()).throw(AssertionError("URL was fetched again")),
+    )
+    replayed = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_url="https://example.test/follow-up.txt",
+    )
+    completed = START_INTAKE.run_clarification_boundary(work)
+
+    assert replayed == frozen
+    assert frozen["status"] == "ready_for_projection"
+    assert operator_messages == [
+        "Question: Which public URL contains the missing readable evidence?",
+        "Answer type: one public HTTP(S) URL",
+    ]
+    assert frozen["source"]["kind"] == "url"
+    assert frozen["source"]["provided_url"] == (
+        "https://example.test/follow-up.txt"
+    )
+    assert frozen["projection"]["status"] == "pending"
+    assert completed["boundary"] == "additional_source_projection_complete"
+    assert completed["reserved_projection"] == frozen["projection"]
+    assert completed["projection"]["id"] == frozen["projection"]["id"]
+    assert completed["projection"]["method"] == "verbatim_utf8"
+    assert (work / completed["projection"]["path"]).read_bytes() == content
+    assert completed["lineage"] == frozen["lineage"]
+    closure = START_INTAKE.run_source_projection_closure(work)
+    assert closure["verdict"] == "all_projected"
+    assert closure["outcome_counts"] == {
+        "projected": 4,
+        "pending": 0,
+        "failed": 0,
+    }
+    assert len((work / "ledger.jsonl").read_bytes().splitlines()) == (
+        len(ledger_after_freeze.splitlines()) + 1
+    )
 
 
 def test_question_round_shape_rejects_missing_duplicate_reordered_or_invented_questions() -> None:
@@ -2229,6 +3514,7 @@ def test_question_round_shape_rejects_missing_duplicate_reordered_or_invented_qu
         {
             "id": f"gap-clarification-answer-{index:06d}",
             "asks": f"Question {index}?",
+            "answer_type": "operator_text",
             "answers_gap": {
                 key: gaps[index - 1][key]
                 for key in ("projection_sha256", "collection", "kind", "id", "record_sha256")
@@ -2279,6 +3565,7 @@ def test_follow_up_question_round_shape_is_complete_unique_bound_and_new() -> No
         {
             "id": f"gap-clarification-round-000002-question-{index:06d}",
             "asks": f"What exact value appears in area {index}?",
+            "answer_type": "operator_text",
             "answers_gap": {
                 key: gaps[index - 1][key]
                 for key in (
@@ -2341,6 +3628,7 @@ def test_follow_up_round_engine_replays_bound_prior_context(tmp_path: Path) -> N
     answers = iter([
         "fresh-follow-up-questioner",
         "pytest-follow-up",
+        "operator_text",
         "What exact value should replace the unreadable metric?",
     ])
     result = START_INTAKE.gap_clarification.run_round(
@@ -2368,6 +3656,7 @@ def test_follow_up_round_engine_replays_bound_prior_context(tmp_path: Path) -> N
     assert result["questions"] == [{
         "id": "gap-clarification-round-000002-question-000001",
         "asks": "What exact value should replace the unreadable metric?",
+        "answer_type": "operator_text",
         "answers_gap": {
             "projection_sha256": projection_sha256,
             "collection": "elements",
@@ -2429,7 +3718,9 @@ def test_prepared_round_n_interview_persists_answers_and_rejects_changed_result(
     round_dir = tmp_path / "gap-question-rounds" / "round-000002"
     answers = iter([
         "fresh-reader", "pytest",
+        "operator_text",
         "What exact value should replace the first unreadable metric?",
+        "operator_text",
         "What exact value should replace the second unreadable metric?",
     ])
     result = START_INTAKE.gap_clarification.run_round(
@@ -2793,7 +4084,9 @@ def test_prepared_round_n_interview_persists_answers_and_rejects_changed_result(
     round_three_answers = iter([
         "fresh-round-three-questioner",
         "pytest-round-three",
+        "operator_text",
         "Which visible evidence identifies the exact first metric value?",
+        "operator_text",
         "Which visible evidence identifies the exact second metric value?",
     ])
     round_three_dir = next_work / "gap-question-rounds" / "round-000003"
@@ -3248,6 +4541,17 @@ def test_terminal_projection_qualification_fails_closed_on_coverage_conflicts(
 
 def test_clarification_terminal_disposition_is_code_constrained() -> None:
     gap = {"id": "element-000001", "record": {"status": "gap"}}
+    closure = {
+        "verdict": "all_projected",
+        "source_count": 1,
+        "outcome_counts": {"projected": 1, "pending": 0, "failed": 0},
+        "outcomes": [{
+            "source_id": "source-000001",
+            "outcome": "projected",
+            "reason": None,
+            "projection": {"id": "projection-000001", "sha256": "c" * 64},
+        }],
+    }
     incomplete = {
         "qualification": "readable_projection_incomplete",
         "projection": {"sha256": "a" * 64},
@@ -3260,6 +4564,7 @@ def test_clarification_terminal_disposition_is_code_constrained() -> None:
             "remaining_current_gap_count": 1,
         },
         incomplete,
+        closure,
     )
 
     assert required_error is None
@@ -3282,12 +4587,15 @@ def test_clarification_terminal_disposition_is_code_constrained() -> None:
             "remaining_current_gap_count": 0,
         },
         complete,
+        closure,
     )
     assert finished_error is None
     assert finished == {
         "disposition": "first_layer_complete",
         "projection_sha256": "b" * 64,
         "remaining_gap_count": 0,
+        "source_count": 1,
+        "outcome_counts": {"projected": 1, "pending": 0, "failed": 0},
     }
 
     invalid, invalid_error = START_INTAKE._clarification_terminal_disposition(
@@ -3296,9 +4604,57 @@ def test_clarification_terminal_disposition_is_code_constrained() -> None:
             "remaining_current_gap_count": 1,
         },
         complete,
+        closure,
     )
     assert invalid is None
     assert invalid_error["stopped"] == "terminal_invalid"
+
+    pending_outcome = {
+        "source_id": "source-000002",
+        "outcome": "pending",
+        "reason": "the frozen source has not yet been converted",
+        "projection": None,
+    }
+    incomplete_closure = {
+        "verdict": "conversion_incomplete",
+        "source_count": 2,
+        "outcome_counts": {"projected": 1, "pending": 1, "failed": 0},
+        "outcomes": [closure["outcomes"][0], pending_outcome],
+    }
+    conversion_required, conversion_error = (
+        START_INTAKE._clarification_terminal_disposition(
+            {
+                "decision": "clarification_complete",
+                "remaining_current_gap_count": 0,
+            },
+            complete,
+            incomplete_closure,
+        )
+    )
+    assert conversion_error is None
+    assert conversion_required == {
+        "disposition": "source_conversion_required",
+        "projection_sha256": "b" * 64,
+        "remaining_gap_count": 0,
+        "source_count": 2,
+        "outcome_counts": {"projected": 1, "pending": 1, "failed": 0},
+        "incomplete_source_outcomes": [pending_outcome],
+    }
+
+    contradictory_closure = json.loads(json.dumps(incomplete_closure))
+    contradictory_closure["verdict"] = "all_projected"
+    contradicted, contradiction_error = (
+        START_INTAKE._clarification_terminal_disposition(
+            {
+                "decision": "clarification_complete",
+                "remaining_current_gap_count": 0,
+            },
+            complete,
+            contradictory_closure,
+        )
+    )
+    assert contradicted is None
+    assert contradiction_error["stopped"] == "terminal_invalid"
 
 
 def test_clarification_continuation_returns_apply_then_complete_without_mutation(
@@ -3436,6 +4792,25 @@ def test_clarification_continuation_returns_apply_then_complete_without_mutation
     assert invalid_terminal["stopped"] == "gap resolution retry unavailable"
     assert (complete_work / "ledger.jsonl").read_bytes() == ledger_before_invalid_terminal
     consumed["phase"] = "gap_resolution_applied"
+    complete_closure = {
+        "verdict": "all_projected",
+        "source_count": 1,
+        "outcome_counts": {"projected": 1, "pending": 0, "failed": 0},
+        "outcomes": [{
+            "source_id": "source-000003",
+            "outcome": "projected",
+            "reason": None,
+            "projection": {
+                "id": "projection-source-000003-v1",
+                "sha256": inputs["projection_sha256"],
+            },
+        }],
+    }
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_source_projection_closure_inventory",
+        lambda *_args: (complete_closure, None),
+    )
     incomplete_qualification = {
         "qualification": "readable_projection_incomplete",
         "projection": {
@@ -3457,6 +4832,7 @@ def test_clarification_continuation_returns_apply_then_complete_without_mutation
     )
     assert required_result["stopped"] == "clarification_required"
     assert required_result["projection_qualification"] == incomplete_qualification
+    assert required_result["source_projection_closure"] == complete_closure
     assert required_result["terminal_disposition"]["disposition"] == (
         "clarification_required"
     )
@@ -3516,16 +4892,75 @@ def test_clarification_continuation_returns_apply_then_complete_without_mutation
         "_terminal_projection_qualification",
         lambda *_args: (complete_qualification, None),
     )
+    pending_source = {
+        "source_id": "source-000004",
+        "outcome": "pending",
+        "reason": "the frozen source has not yet been converted",
+        "projection": None,
+    }
+    incomplete_closure = {
+        "verdict": "conversion_incomplete",
+        "source_count": 2,
+        "outcome_counts": {"projected": 1, "pending": 1, "failed": 0},
+        "outcomes": [complete_closure["outcomes"][0], pending_source],
+    }
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_source_projection_closure_inventory",
+        lambda *_args: (incomplete_closure, None),
+    )
+    ledger_before_conversion_required = (complete_work / "ledger.jsonl").read_bytes()
+    conversion_required = START_INTAKE._execute_clarification_continuation(
+        complete_work, consumed, [seed]
+    )
+    assert conversion_required["stopped"] == "source_conversion_required"
+    assert conversion_required["source_projection_closure"] == incomplete_closure
+    assert conversion_required["incomplete_source_outcomes"] == [pending_source]
+    assert (complete_work / "ledger.jsonl").read_bytes() == (
+        ledger_before_conversion_required
+    )
+    conversion_boundary = START_INTAKE._clarification_boundary_result(
+        conversion_required, "source_conversion_required"
+    )
+    assert conversion_boundary["boundary"] == "source_conversion_required"
+
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_source_projection_closure_inventory",
+        lambda *_args: (
+            None,
+            START_INTAKE._blocked(
+                "immutable source projection changed",
+                "projection projection-source-000004-v1 changed",
+            ),
+        ),
+    )
+    invalid_closure = START_INTAKE._execute_clarification_continuation(
+        complete_work, consumed, [seed]
+    )
+    assert invalid_closure["stopped"] == "terminal_invalid"
+    assert (complete_work / "ledger.jsonl").read_bytes() == (
+        ledger_before_conversion_required
+    )
+
+    monkeypatch.setattr(
+        START_INTAKE,
+        "_source_projection_closure_inventory",
+        lambda *_args: (complete_closure, None),
+    )
     complete_result = START_INTAKE._execute_clarification_continuation(
         complete_work, consumed, [seed]
     )
     assert complete_result["stopped"] == "clarification_continuation_complete"
     assert complete_result["continuation"] == complete_decision
     assert complete_result["projection_qualification"] == complete_qualification
+    assert complete_result["source_projection_closure"] == complete_closure
     assert complete_result["terminal_disposition"] == {
         "disposition": "first_layer_complete",
         "projection_sha256": inputs["projection_sha256"],
         "remaining_gap_count": 0,
+        "source_count": 1,
+        "outcome_counts": {"projected": 1, "pending": 0, "failed": 0},
     }
     completion_ledger = (complete_work / "ledger.jsonl").read_bytes()
     completion_entries, ledger_error = START_INTAKE._validate_ledger(

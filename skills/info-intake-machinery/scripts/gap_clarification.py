@@ -13,7 +13,23 @@ from typing import Any
 
 
 CONTRACT = 1
-ROUND_CONTRACT = 1
+ROUND_CONTRACT = 3
+SUPPORTED_ROUND_CONTRACTS = {1, 2, ROUND_CONTRACT}
+LEGACY_ANSWER_TYPES = ("operator_text", "local_file")
+ANSWER_TYPES = (*LEGACY_ANSWER_TYPES, "url")
+GAP_BINDING_FIELDS = (
+    "projection_sha256",
+    "collection",
+    "kind",
+    "id",
+    "record_sha256",
+    "page",
+    "item_id",
+    "page_projection_path",
+    "page_projection_sha256",
+    "render_path",
+    "render_sha256",
+)
 
 
 class ClarificationError(ValueError):
@@ -43,6 +59,48 @@ def select_gaps(
     projection: dict[str, Any], projection_sha256: str
 ) -> list[dict[str, object]]:
     """Return every explicit gap in canonical projection order."""
+    if "gap_inventory" in projection:
+        inventory = projection.get("gap_inventory")
+        if not isinstance(inventory, list):
+            raise ClarificationError("clarification-gap-inventory-invalid")
+        selected: list[dict[str, object]] = []
+        previous_page = 0
+        identities: set[str] = set()
+        for item in inventory:
+            if not isinstance(item, dict):
+                raise ClarificationError("clarification-gap-inventory-invalid")
+            page = item.get("page")
+            identity = item.get("id")
+            record = item.get("record")
+            if (
+                not isinstance(page, int)
+                or page < 1
+                or page < previous_page
+                or not isinstance(identity, str)
+                or not identity
+                or identity in identities
+                or not isinstance(record, dict)
+                or record.get("status") != "gap"
+                or record.get("id") != item.get("item_id")
+                or item.get("record_sha256") != _digest(_canonical(record))
+                or not isinstance(item.get("recorded_context"), list)
+            ):
+                raise ClarificationError("clarification-gap-inventory-invalid")
+            for field in (
+                "collection",
+                "kind",
+                "item_id",
+                "page_projection_path",
+                "page_projection_sha256",
+                "render_path",
+                "render_sha256",
+            ):
+                if not isinstance(item.get(field), str) or not item[field]:
+                    raise ClarificationError("clarification-gap-inventory-invalid")
+            previous_page = page
+            identities.add(identity)
+            selected.append({"projection_sha256": projection_sha256, **item})
+        return selected
     gaps: list[dict[str, object]] = []
     for collection, kind in (
         ("scan_regions", "scan_region"),
@@ -78,6 +136,11 @@ def select_gaps(
                 "recorded_context": context,
             })
     return gaps
+
+
+def gap_binding(gap: dict[str, object]) -> dict[str, object]:
+    """Return the immutable identity a human answer must resolve."""
+    return {field: gap[field] for field in GAP_BINDING_FIELDS if field in gap}
 
 
 def require_gaps(
@@ -170,6 +233,9 @@ def _parse(question: dict[str, object], raw: str) -> tuple[str | None, str | Non
     value = raw.strip()
     if not value or "\n" in value or "\r" in value:
         return None, f"{question['id']}: answer one non-empty field at a time"
+    choices = question.get("choices")
+    if isinstance(choices, list) and value not in choices:
+        return None, f"{question['id']}: choose one of: {', '.join(choices)}"
     if str(question["id"]).startswith("operator_question") and (
         len(value) > 300 or value.count("?") != 1 or not value.endswith("?")
     ):
@@ -210,13 +276,18 @@ def _replay(
 
 
 def _prompt(question: dict[str, object], purpose: str, gap: dict[str, object]) -> str:
-    return "\n".join([
+    lines = [
         f"Intake purpose: {purpose}",
         "Frozen unresolved gap: " + json.dumps(gap, sort_keys=True),
         f"Question: {question['prompt']}",
-        "Answer type: string",
-        "Answer: ",
-    ])
+    ]
+    choices = question.get("choices")
+    if isinstance(choices, list):
+        lines.extend(("Answer type: enum", "Allowed values: " + ", ".join(choices)))
+    else:
+        lines.append("Answer type: string")
+    lines.append("Answer: ")
+    return "\n".join(lines)
 
 
 def _terminal_input(prompt: str) -> str:
@@ -253,10 +324,7 @@ def run(
             "question": {
                 "id": "gap-clarification-answer-000001",
                 "asks": state["question"],
-                "answers_gap": {
-                    key: gap[key]
-                    for key in ("projection_sha256", "collection", "kind", "id", "record_sha256")
-                },
+                "answers_gap": gap_binding(gap),
             },
         }
         result_bytes = json.dumps(result, indent=2, sort_keys=True).encode() + b"\n"
@@ -311,8 +379,14 @@ def validate(
 
 
 def _round_question(
-    state: dict[str, Any], gaps: list[dict[str, object]], *, round_number: int = 1
+    state: dict[str, Any],
+    gaps: list[dict[str, object]],
+    *,
+    round_number: int = 1,
+    contract: int = ROUND_CONTRACT,
 ) -> dict[str, object] | None:
+    if contract not in SUPPORTED_ROUND_CONTRACTS:
+        raise ClarificationError("clarification-round-contract-unsupported")
     if not state["model"]:
         return {
             "id": "questioner_model",
@@ -330,6 +404,23 @@ def _round_question(
     index = len(state["questions"])
     if index >= len(gaps):
         return None
+    if contract >= 2 and len(state["answer_types"]) == index:
+        answer_types = ANSWER_TYPES if contract >= 3 else LEGACY_ANSWER_TYPES
+        return {
+            "id": f"operator_answer_type_{index + 1:06d}",
+            "prompt": (
+                "What must the operator provide to answer this exact gap: text, "
+                "another local file, or one public URL?"
+                if contract >= 3
+                else "What must the operator provide to answer this exact gap: text "
+                "or another local file?"
+            ),
+            "type": "enum",
+            "choices": list(answer_types),
+            "required": True,
+            "gap_index": index,
+            "bound_gap": gaps[index],
+        }
     return {
         "id": f"operator_question_{index + 1:06d}",
         "prompt": (
@@ -348,14 +439,25 @@ def _round_question(
 
 
 def _round_replay(
-    entries: list[dict[str, object]], gaps: list[dict[str, object]], *, round_number: int = 1
+    entries: list[dict[str, object]],
+    gaps: list[dict[str, object]],
+    *,
+    round_number: int = 1,
+    contract: int = ROUND_CONTRACT,
 ) -> tuple[dict[str, Any], dict[str, object] | None, bool]:
-    state: dict[str, Any] = {"model": "", "harness": "", "questions": []}
+    state: dict[str, Any] = {
+        "model": "",
+        "harness": "",
+        "answer_types": [],
+        "questions": [],
+    }
     pending: dict[str, object] | None = None
     completed = False
     for entry in entries:
         if entry["event"] == "question_asked":
-            expected = _round_question(state, gaps, round_number=round_number)
+            expected = _round_question(
+                state, gaps, round_number=round_number, contract=contract
+            )
             if pending is not None or expected != entry.get("question"):
                 raise ClarificationError(
                     f"clarification-round-question-invalid:{entry['sequence']}"
@@ -372,6 +474,15 @@ def _round_replay(
                     state["model"] = str(entry["parsed"])
                 elif question_id == "questioner_harness":
                     state["harness"] = str(entry["parsed"])
+                elif question_id.startswith("operator_answer_type_"):
+                    expected_id = (
+                        f"operator_answer_type_{len(state['answer_types']) + 1:06d}"
+                    )
+                    if question_id != expected_id:
+                        raise ClarificationError(
+                            f"clarification-round-order-invalid:{entry['sequence']}"
+                        )
+                    state["answer_types"].append(str(entry["parsed"]))
                 else:
                     expected_id = f"operator_question_{len(state['questions']) + 1:06d}"
                     if question_id != expected_id:
@@ -383,7 +494,9 @@ def _round_replay(
         elif entry["event"] == "clarification_round_completed":
             if (
                 pending is not None
-                or _round_question(state, gaps, round_number=round_number) is not None
+                or _round_question(
+                    state, gaps, round_number=round_number, contract=contract
+                ) is not None
             ):
                 raise ClarificationError(
                     f"clarification-round-completion-invalid:{entry['sequence']}"
@@ -402,26 +515,29 @@ def _round_result(
     state: dict[str, Any],
     *,
     round_number: int = 1,
+    contract: int = ROUND_CONTRACT,
 ) -> dict[str, object]:
     questions = []
     for index, gap in enumerate(gaps):
         asks = state["questions"][index] if index < len(state["questions"]) else ""
-        questions.append({
+        question = {
             "id": (
                 f"gap-clarification-answer-{index + 1:06d}"
                 if round_number == 1
                 else f"gap-clarification-round-{round_number:06d}-question-{index + 1:06d}"
             ),
             "asks": asks,
-            "answers_gap": {
-                key: gap[key]
-                for key in (
-                    "projection_sha256", "collection", "kind", "id", "record_sha256"
-                )
-            },
-        })
+            "answers_gap": gap_binding(gap),
+        }
+        if contract >= 2:
+            question["answer_type"] = (
+                state["answer_types"][index]
+                if index < len(state["answer_types"])
+                else ""
+            )
+        questions.append(question)
     result: dict[str, object] = {
-        "schema_version": ROUND_CONTRACT,
+        "schema_version": contract,
         "projection_sha256": projection_sha256,
         "gaps": gaps,
         "questioner": {"model": state["model"], "harness": state["harness"]},
@@ -450,11 +566,8 @@ def _validate_bound_gaps(
         selected = current.get(key)
         if selected is None:
             raise ClarificationError("clarification-follow-up-gap-not-current")
-        for field in (
-            "projection_sha256", "collection", "kind", "id", "record_sha256",
-            "record", "recorded_context",
-        ):
-            if gap.get(field) != selected.get(field):
+        for field, value in selected.items():
+            if gap.get(field) != value:
                 raise ClarificationError("clarification-follow-up-gap-changed")
         follow_up = gap.get("follow_up_of")
         if not isinstance(follow_up, dict):
@@ -469,9 +582,12 @@ def run_round(
     purpose: str,
     gaps: list[dict[str, object]] | None = None,
     round_number: int = 1,
+    contract: int = ROUND_CONTRACT,
     input_fn: Callable[[str], str] | None = None,
     output_fn: Callable[[str], None] | None = None,
 ) -> dict[str, object]:
+    if contract not in SUPPORTED_ROUND_CONTRACTS:
+        raise ClarificationError("clarification-round-contract-unsupported")
     projection = _load_projection(projection_path, projection_sha256)
     if gaps is None:
         gaps = require_gaps(projection, projection_sha256)
@@ -484,10 +600,17 @@ def run_round(
     write = output_fn or (lambda message: print(message, file=sys.stderr))
     while True:
         state, pending, completed = _round_replay(
-            _read_journal(journal_path), gaps, round_number=round_number
+            _read_journal(journal_path),
+            gaps,
+            round_number=round_number,
+            contract=contract,
         )
         result = _round_result(
-            projection_sha256, gaps, state, round_number=round_number
+            projection_sha256,
+            gaps,
+            state,
+            round_number=round_number,
+            contract=contract,
         )
         result_bytes = json.dumps(result, indent=2, sort_keys=True).encode() + b"\n"
         if completed:
@@ -497,7 +620,7 @@ def run_round(
                 raise ClarificationError("clarification-round-result-changed")
             return result
         question = pending or _round_question(
-            state, gaps, round_number=round_number
+            state, gaps, round_number=round_number, contract=contract
         )
         if question is None:
             _append(
@@ -535,6 +658,7 @@ def validate_round(
     purpose: str,
     gaps: list[dict[str, object]] | None = None,
     round_number: int = 1,
+    contract: int = ROUND_CONTRACT,
 ) -> tuple[dict[str, object], str, str]:
     result = run_round(
         round_dir,
@@ -543,6 +667,7 @@ def validate_round(
         purpose=purpose,
         gaps=gaps,
         round_number=round_number,
+        contract=contract,
         input_fn=lambda _prompt: (_ for _ in ()).throw(
             ClarificationError("clarification-round-not-complete")
         ),
