@@ -76,15 +76,15 @@
       ]
     },
     "description-machinery": {
-      "canonical_tree_sha256": "b4a731b4f7ddc1a2eab7187327fa0405401e22ef29994c53583cbe72a64d276b",
+      "canonical_tree_sha256": "0479f9e5ad2c15c8b48d3b92a327dd33020a6dc8a42be73f042f2d6f52800652",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
       "generator": "machinery-client-model-v1",
       "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "c91fda8f22243253d9cc8d85b54d755952b69f08829a86b2237a964145c0fb3d",
-        "codex": "2151b602acc09d3236183400106815f1f7554ed4d1cf89daf5fadbde72b6eec1"
+        "claude": "4c987392bcf095c460be5cce6a6a5729affdaef39faf3b892d6982678403e925",
+        "codex": "78cd165a47c685e541c8680abe861fe1e6e6ebcf1ab9ae403bd428d18a5a45f7"
       },
       "scenario_groups": [
         "CAP-PDI"
@@ -294,15 +294,15 @@
       ]
     },
     "requirements-machine": {
-      "canonical_tree_sha256": "fc4289c39430969581137bfe96042e8172b99721dc1b1c7ace3d60acc5f8f9d8",
+      "canonical_tree_sha256": "e1b39b0c441634fb74731e55c528aee2132f180a7a8cfe04d2634e02fbf6ddf2",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
       "generator": "machinery-client-model-v1",
       "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "5cee00de9b540f2b25b05feb3297e894d378da505f3fe77d606c3cb756f44126",
-        "codex": "a42af73e56393e0074ea23a5a359af5aab0c67f774d47e21abf9bcf15d4a6a93"
+        "claude": "6b88c784f4ed13743c0cc2d3d7e2922da672a77c579e7f11235a9b1fcadf2158",
+        "codex": "2b38aaa5f9d71d6c74c830fa5f0551e2b68f7a78a9d8fe9e4189b3cdb8c28ddc"
       },
       "scenario_groups": [
         "CAP-PDI"

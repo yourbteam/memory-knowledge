@@ -1,10 +1,12 @@
 """Contract regressions for the end-to-end Requirements Machinery controller."""
 from __future__ import annotations
 
+import concurrent.futures
 import importlib.util
 import json
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 import pytest
@@ -30,6 +32,92 @@ def load_module(name: str, path: Path):
 def write_json(path: Path, payload: object) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps(payload, indent=2), encoding="utf-8")
+
+
+def test_reader_launcher_streams_safe_persistent_telemetry_and_preserves_restarts(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    readers = load_module("requirements_readers_telemetry", MACHINE / "readers.py")
+    worker = tmp_path / "fake_reader.py"
+    worker.write_text(
+        """import json
+import sys
+import time
+from pathlib import Path
+
+payload = json.loads(sys.stdin.read())
+print(json.dumps({"type": "item.started", "item": {"type": "command_execution", "command": "pytest focused.py"}}), flush=True)
+while payload.get("release") and not Path(payload["release"]).exists():
+    time.sleep(0.01)
+if payload["fail"]:
+    print(json.dumps({"type": "turn.failed", "error": {"message": "SECRET REPOSITORY TEXT"}}), flush=True)
+    print("private stderr detail", file=sys.stderr)
+    raise SystemExit(7)
+out = Path(payload["out"])
+scratch = Path(payload["scratch"])
+out.mkdir(parents=True, exist_ok=True)
+scratch.mkdir(parents=True, exist_ok=True)
+(out / "answer.json").write_text("{}", encoding="utf-8")
+(scratch / "reader.json").write_text(json.dumps({"model": "model-b", "harness": "claude"}), encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
+    monkeypatch.setattr(readers, "validate_reader_command", lambda _command: [sys.executable, str(worker)])
+    work = tmp_path / "work"
+    work.mkdir()
+
+    def job(name: str, fail: bool, release: Path | None = None) -> dict[str, object]:
+        out = work / name
+        scratch = work / f"{name}-scratch"
+        return {
+            "stage": "oblige", "waiting_for": str(out), "scratch": str(scratch),
+            "instruction": json.dumps({
+                "out": str(out), "scratch": str(scratch), "fail": fail,
+                "private": "SECRET REPOSITORY TEXT", "release": str(release) if release else "",
+            }),
+        }
+
+    release = work / "release"
+    with concurrent.futures.ThreadPoolExecutor(max_workers=1) as pool:
+        running = pool.submit(
+            readers.launch, [job("success", False, release)], "reader", tmp_path, work, "read",
+        )
+        deadline = time.monotonic() + 2
+        live = ""
+        while time.monotonic() < deadline:
+            live = (work / "feed.jsonl").read_text(encoding="utf-8") \
+                if (work / "feed.jsonl").exists() else ""
+            if '"doing": "command_execution pytest"' in live:
+                break
+            time.sleep(0.01)
+        assert '"what": "agent started"' in live
+        assert '"doing": "command_execution pytest"' in live
+        assert '"what": "agent finished"' not in live
+        assert not running.done()
+        release.write_text("continue", encoding="utf-8")
+        success = running.result()[0]
+    failure_one = readers.launch([job("failure", True)], "reader", tmp_path, work, "read")[0]
+    failure_two = readers.launch([job("failure", True)], "reader", tmp_path, work, "read")[0]
+
+    logs = sorted(work.glob("launch-*.log"))
+    feed_text = (work / "feed.jsonl").read_text(encoding="utf-8")
+    feed = [json.loads(line) for line in feed_text.splitlines()]
+    assert len(logs) == 3
+    assert len({path.name for path in logs}) == 3
+    assert success["delivery"] == "delivered"
+    assert success["model"] == "model-b" and success["harness"] == "claude"
+    assert failure_one["exit_code"] == failure_two["exit_code"] == 7
+    assert failure_one["log"] != failure_two["log"]
+    assert any(row["what"] == "agent started" and row["stage"] == "oblige" for row in feed)
+    assert any(row.get("doing") == "command_execution pytest" for row in feed)
+    assert any(row["what"] == "agent failure" and row["error"] == "turn.failed" for row in feed)
+    assert any(
+        row["what"] == "agent finished" and row["exit_code"] == 0
+        and row["model"] == "model-b" and row["delivery"] == "delivered"
+        for row in feed
+    )
+    assert "SECRET REPOSITORY TEXT" not in feed_text
+    assert "SECRET REPOSITORY TEXT" in Path(str(failure_one["log"])).read_text(encoding="utf-8")
 
 
 def test_obligation_coverage_returns_a_recoverable_incomplete_result(tmp_path: Path):
@@ -108,7 +196,7 @@ def test_reader_launcher_enforces_policy_before_starting_any_process(
         raise ValueError("wrong installed client")
 
     monkeypatch.setattr(readers, "validate_reader_command", refuse)
-    monkeypatch.setattr(readers.subprocess, "run", lambda *args, **kwargs: launched.append(args))
+    monkeypatch.setattr(readers.subprocess, "Popen", lambda *args, **kwargs: launched.append(args))
 
     with pytest.raises(ValueError, match="wrong installed client"):
         readers.launch([

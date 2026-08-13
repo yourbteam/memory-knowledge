@@ -424,6 +424,7 @@ def _packet(name: str, work: Path, twinned: bool = True, **fields: object) -> di
         "stage": name,
         "instruction": instruction + HOW_TO_READ.format(scratch=scratch),
         "waiting_for": str(out),
+        "scratch": str(scratch),
     }
 
 

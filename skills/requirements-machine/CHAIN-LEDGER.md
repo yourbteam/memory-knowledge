@@ -427,3 +427,19 @@ Entry 2 is the evidence: it cost two runs and moved the distance not at all.
 **The deciding fact:** if N and O pick the same id, Path A is confirmed and the distance is 3 of 3.
 If they disagree, the question is whether the cause is the *same* missing property or a *new* one —
 a new one each time is Path B.
+
+## 13 August 2026 — reader work became continuously observable
+
+The real reader launcher was run twice before the change. Both launches wrote the same
+`launch-read-1.log`, so only the last history survived, and no `feed.jsonl` existed while either
+reader worked. The launcher now appends and flushes start, safe activity, structured failure, and
+finish events for every blind reader job. Stage, seat, output, pid, duration, exit, delivery,
+model, harness, and the unique raw-log name stay attached to that job without entering any
+judgement gate. Prompt text, repository content, model prose, and error prose stay out of the
+feed; lossless output stays in the referenced raw log.
+
+Proof through the real launcher: a controlled reader was held open after emitting a tool event,
+and the start and activity lines were readable before it was released. One successful launch and
+two repeated failures then left three distinct logs; success recorded its model/harness and
+delivery, both failures retained their raw details, and the feed contained none of the supplied
+private text. The full Description and Requirements machinery tests passed together.

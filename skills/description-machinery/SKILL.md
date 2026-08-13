@@ -75,6 +75,23 @@ intent, context, owner answers, builder notes, fixed questions, or order returns
 Start a fresh directory; the machinery never deletes or silently reinterprets old reader state.
 A populated legacy directory without a binding is also refused.
 
+## Live reader telemetry
+
+When `--reader-command` is supplied, watch the run with:
+
+```text
+tail -f <work-or-out>/feed.jsonl
+```
+
+Every reader launch appends `agent started`, safe streamed `agent` activity, any structured
+`agent failure`, and `agent finished`. The events carry the machinery, stable stage/job, blind
+reader seat, output identity, process id, duration, exit result, delivery status, raw-log name,
+and—after delivery—the model and client harness from that reader's private `reader.json`.
+Restarts append new events and use a process-qualified `launch-*.log`; they never overwrite an
+earlier launch. The feed deliberately excludes the instruction, model prose, repository content,
+and detailed error prose. Lossless stdout and stderr remain in the referenced private raw log for
+diagnosis.
+
 ## Status and exit contract
 
 | `status` | Exit | Meaning | Next action |
