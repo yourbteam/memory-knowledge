@@ -13,8 +13,8 @@ from typing import Any
 
 
 CONTRACT = 1
-ROUND_CONTRACT = 3
-SUPPORTED_ROUND_CONTRACTS = {1, 2, ROUND_CONTRACT}
+ROUND_CONTRACT = 4
+SUPPORTED_ROUND_CONTRACTS = {1, 2, 3, ROUND_CONTRACT}
 LEGACY_ANSWER_TYPES = ("operator_text", "local_file")
 ANSWER_TYPES = (*LEGACY_ANSWER_TYPES, "url")
 GAP_BINDING_FIELDS = (
@@ -53,6 +53,21 @@ def _load_projection(path: Path, expected_sha256: str) -> dict[str, Any]:
     if _digest(content) != expected_sha256 or not isinstance(projection, dict):
         raise ClarificationError("clarification-projection-changed")
     return projection
+
+
+def _matching_element_ids(record: dict[str, Any]) -> list[str]:
+    binding = record.get("binding_issue")
+    if not isinstance(binding, dict) or "matching_element_ids" not in binding:
+        return []
+    values = binding.get("matching_element_ids")
+    if (
+        not isinstance(values, list)
+        or len(values) < 2
+        or any(not isinstance(value, str) or not value for value in values)
+        or len(set(values)) != len(values)
+    ):
+        raise ClarificationError("clarification-gap-candidate-identities-invalid")
+    return list(values)
 
 
 def select_gaps(
@@ -122,10 +137,20 @@ def select_gaps(
             context: list[dict[str, Any]] = []
             if collection == "relationships":
                 participant_ids = {item.get("from_id"), item.get("to_id")}
+                candidate_ids = _matching_element_ids(item)
+                participant_ids.update(candidate_ids)
                 context = [
                     element for element in projection.get("elements", [])
                     if isinstance(element, dict) and element.get("id") in participant_ids
                 ]
+                recorded_candidate_ids = {
+                    element.get("id") for element in context
+                    if element.get("id") in candidate_ids
+                }
+                if recorded_candidate_ids != set(candidate_ids):
+                    raise ClarificationError(
+                        "clarification-gap-candidate-context-missing"
+                    )
             gaps.append({
                 "projection_sha256": projection_sha256,
                 "collection": collection,
@@ -378,6 +403,71 @@ def validate(
     )
 
 
+def _candidate_question_context(
+    gap: dict[str, object],
+) -> dict[str, Any] | None:
+    record = gap.get("record")
+    if not isinstance(record, dict):
+        return None
+    candidate_ids = _matching_element_ids(record)
+    if not candidate_ids:
+        return None
+    binding = record.get("binding_issue")
+    participant = binding.get("participant") if isinstance(binding, dict) else None
+    if not isinstance(participant, str) or not participant:
+        raise ClarificationError("clarification-gap-candidate-participant-invalid")
+    context = gap.get("recorded_context")
+    if not isinstance(context, list):
+        raise ClarificationError("clarification-gap-candidate-context-missing")
+    by_id: dict[str, dict[str, Any]] = {}
+    for element in context:
+        if not isinstance(element, dict):
+            raise ClarificationError("clarification-gap-candidate-context-invalid")
+        element_id = element.get("id")
+        if element_id in candidate_ids:
+            if element_id in by_id:
+                raise ClarificationError(
+                    "clarification-gap-candidate-context-invalid"
+                )
+            by_id[str(element_id)] = element
+    if set(by_id) != set(candidate_ids):
+        raise ClarificationError("clarification-gap-candidate-context-missing")
+    elements = [by_id[element_id] for element_id in candidate_ids]
+    for element in elements:
+        content = element.get("content")
+        if not isinstance(content, str) or not content.strip():
+            raise ClarificationError("clarification-gap-candidate-content-invalid")
+    return {
+        "ids": candidate_ids,
+        "participant": participant,
+        "elements": elements,
+    }
+
+
+def _candidate_operator_question(
+    gap: dict[str, object], selected_id: str
+) -> str:
+    context = _candidate_question_context(gap)
+    if context is None or selected_id not in context["ids"]:
+        raise ClarificationError("clarification-gap-candidate-selection-invalid")
+    by_id = {element["id"]: element for element in context["elements"]}
+    ordered_ids = [selected_id] + [
+        element_id for element_id in context["ids"] if element_id != selected_id
+    ]
+    labels = [
+        f'{element_id} (“{" ".join(by_id[element_id]["content"].split())}”)'
+        for element_id in ordered_ids
+    ]
+    if len(labels) == 2:
+        rendered = " or ".join(labels)
+    else:
+        rendered = ", ".join(labels[:-1]) + f", or {labels[-1]}"
+    return (
+        f"Which recorded element is the intended {context['participant']} for "
+        f"{gap['id']}: {rendered}?"
+    )
+
+
 def _round_question(
     state: dict[str, Any],
     gaps: list[dict[str, object]],
@@ -421,6 +511,23 @@ def _round_question(
             "gap_index": index,
             "bound_gap": gaps[index],
         }
+    candidate = _candidate_question_context(gaps[index]) if contract >= 4 else None
+    if candidate is not None:
+        if len(state["candidate_selections"]) != index:
+            raise ClarificationError("clarification-round-candidate-order-invalid")
+        return {
+            "id": f"gap_candidate_{index + 1:06d}",
+            "prompt": (
+                "Which code-listed recorded element should be the primary focus "
+                "of the operator question for this exact ambiguous participant?"
+            ),
+            "type": "enum",
+            "choices": candidate["ids"],
+            "required": True,
+            "gap_index": index,
+            "bound_gap": gaps[index],
+            "candidate_evidence": candidate["elements"],
+        }
     return {
         "id": f"operator_question_{index + 1:06d}",
         "prompt": (
@@ -449,6 +556,7 @@ def _round_replay(
         "model": "",
         "harness": "",
         "answer_types": [],
+        "candidate_selections": [],
         "questions": [],
     }
     pending: dict[str, object] | None = None
@@ -483,6 +591,18 @@ def _round_replay(
                             f"clarification-round-order-invalid:{entry['sequence']}"
                         )
                     state["answer_types"].append(str(entry["parsed"]))
+                elif question_id.startswith("gap_candidate_"):
+                    index = len(state["questions"])
+                    expected_id = f"gap_candidate_{index + 1:06d}"
+                    if question_id != expected_id:
+                        raise ClarificationError(
+                            f"clarification-round-order-invalid:{entry['sequence']}"
+                        )
+                    selection = str(entry["parsed"])
+                    state["candidate_selections"].append(selection)
+                    state["questions"].append(
+                        _candidate_operator_question(gaps[index], selection)
+                    )
                 else:
                     expected_id = f"operator_question_{len(state['questions']) + 1:06d}"
                     if question_id != expected_id:
@@ -490,6 +610,8 @@ def _round_replay(
                             f"clarification-round-order-invalid:{entry['sequence']}"
                         )
                     state["questions"].append(str(entry["parsed"]))
+                    if contract >= 4:
+                        state["candidate_selections"].append(None)
             pending = None
         elif entry["event"] == "clarification_round_completed":
             if (
@@ -535,6 +657,10 @@ def _round_result(
                 if index < len(state["answer_types"])
                 else ""
             )
+        if contract >= 4 and index < len(state["candidate_selections"]):
+            selection = state["candidate_selections"][index]
+            if selection is not None:
+                question["candidate_focus"] = selection
         questions.append(question)
     result: dict[str, object] = {
         "schema_version": contract,

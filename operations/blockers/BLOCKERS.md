@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `3ea576f798f10d22d9d96d0508b4cde23d70a4a0aaa7ec013572b67ff98bc704`
+Ledger-SHA256: `58ee67838765c0810f8e22e7aaefa9092e1160d032b31e7c152edbbbc4956809`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -581,6 +581,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work-memory-event-schema`
 - Symptom: The generic 100-item work-memory array validator blocks a valid 101-entry authenticated run source bundle.
 - Evidence: The original same-path run-start failed at $.source_bundle before lifecycle validation; focused source trace reaches _validate_work_only from _validate_event_shape.
+
+## blk-0b59780da6a59f1b2d4c18be
+
+- Status: `closed`
+- Subject: `info-intake-real-dashboard-canary-20260814`
+- Step: `activate-discovery-bootstrap`
+- Surface: `sequence-guard`
+- Symptom: Discovery sequence activation rejects the stored directive-read receipt.
+- Evidence: The guard received the worktree DIRECTIVES.md path while requiring the canonical memory-knowledge DIRECTIVES.md path; the same result repeated from the canonical root.
 
 ## blk-0bafbe29b56a756064c4d337
 
@@ -1450,6 +1459,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The guard rejected the required atomic source-plus-tests expected-state command.
 - Evidence: sequence_guard returned command-not-grounded-in-selected-document before accept-baseline executed.
 
+## blk-2144376277fc0b7cb9d24390
+
+- Status: `open`
+- Subject: `discover-info-intake-dashboard-canary-20260814`
+- Step: `projection-region-ownership-admission`
+- Surface: `visual-projection-region-ownership`
+- Symptom: A visible unit anchored outside the active ownership core was admitted as a current-region element gap.
+- Evidence: In live canary p3, element-000007 was recorded at normalized top 194 inside region-r01-c01, but the frozen source red pixels for that callout begin at source y=477, normalized 294; the core ends at source y=406, normalized 250.
+
 ## blk-2165c0c033c5b4cae015ee1e
 
 - Status: `non-gap`
@@ -2125,6 +2143,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: generated-owner-artifacts-were-written-after-guard-rejection
 - Evidence: sequence_guard-reported-stale-source-bundle-before-both-materializers-yet-shell-newline-sequencing-continued
 
+## blk-339e8561d54a6ec7503bea65
+
+- Status: `closed`
+- Subject: `info-intake-real-dashboard-canary-20260814`
+- Step: `discover-zero-input-entrypoint`
+- Surface: `skills/info-intake-machinery/scripts`
+- Symptom: The governed discovery interview reached Checked-in zero-input script, but start_intake.py requires --work and an opening argument and no script begins a fresh operator intake from zero inputs.
+- Evidence: Live sequence_intake_launch.py session b9ae54 stopped at the zero-input-script question; start_intake.py argparse declares --work required and blocks when --opening is absent.
+
 ## blk-3436f8523d47d83a85299074
 
 - Status: `fixed-awaiting-verification`
@@ -2683,6 +2710,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: A portable ledger snapshot contains its adjacent plan.md but the shared validator resolves target=plan.md against an ancestor repository root and rejects the snapshot.
 - Evidence: Focused successor test failed render-verify-summary with INVALID_VERIFICATION_LEDGER after the original source plan was removed; snapshot/plan.md remained byte-identical. The owner contract computes target_base as repository_root(ledger.parent) before considering ledger.parent.
 
+## blk-41fffdb9b70c2f5f3e3770ca
+
+- Status: `closed`
+- Subject: `discover-info-intake-dashboard-canary-20260814`
+- Step: `verify-projection-verifier-routing`
+- Surface: `pyproject.toml`
+- Symptom: The focused routing regression cannot start under Python 3.14 or Python 3.13 because neither interpreter contains pytest.
+- Evidence: python3 -m pytest and python3.13 -m pytest both exited 1 with No module named pytest; pyproject.toml declares pytest in the dev extra.
+
 ## blk-426509eff35674e2ced27691
 
 - Status: `superseded`
@@ -2727,6 +2763,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `memory-knowledge:prevention-registry`
 - Symptom: Canonical sequence auto-selection aborts on unrelated greenfield-full-drive owner-source hash drift before evaluating the Vivacom task.
 - Evidence: work_memory.py select --task-id vivacom-decision5-live-validation-20260722 raised RegistryError executable-owner-source-hash-drift:greenfield-full-drive.
+
+## blk-42d3352b3ecdc98725a734ea
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `complete-final-spatial-region`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: The final visual region cannot finish because the interview asks for a context-only anchor but rejects every coordinate available inside that crop.
+- Evidence: The journal preserves context_only, accepts x=750, and then rejects y=796 and y=750 because both points are inside the active core; the model stage exits without a region outcome.
 
 ## blk-42fdf51290b206515c5a57da
 
@@ -4277,6 +4322,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: All three bounded platform-lock guide attempts failed the same grounding contract and the source run blocked at compose-platform-lock-session-guide.
 - Evidence: up-run-87ba98207ae2 records platform_lock_guide_grounding_invalid after the three-attempt correction implementation passed focused tests.
 
+## blk-65ea896223d542760b5a45d1
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `dry-run-directive-preflight`
+- Surface: `scripts/directive_guard.py`
+- Symptom: The registered publisher refuses its dry-run before Git because directive state names the canonical checkout instead of this worktree.
+- Evidence: Two no-argument commit-push-main launches prepared the exact approved dry-run and both exited before Git with the same directive read state path mismatch.
+- Classification: `incidental-system-defect`
+- Downstream owner: `commit-push-main-sequence-maintenance`
+
 ## blk-6602d5f0b7c4ebdc9d1f51c7
 
 - Status: `open`
@@ -4448,6 +4504,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Full memory regression fails because verify-plan/SKILL.md lacks the exact required phrase BLOCKED never counts as complete.
 - Evidence: scripts/run_pytest.sh -q: tests/test_skill_contracts.py::ContractTests::test_verify_plan_owns_obligation_level_completion failed; 1205 passed, 1 skipped.
 
+## blk-699239e73c137c937afbe9ac
+
+- Status: `verified`
+- Subject: `discover-info-intake-dashboard-canary-20260814`
+- Step: `preserve-cross-boundary-visual-context`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: A purpose-relevant unit crossing a deterministic region edge is presented only as a clipped fragment and is recorded as a gap even though the frozen source contains the complete readable unit.
+- Evidence: In live canary p3 region-r01-c01, the model recorded the dashboard value as gap because only $8,10 was visible at the right crop edge and recorded a red callout as gap because its text continued below the bottom crop edge.
+
 ## blk-69b59f33ae5466ecc1a524bd
 
 - Status: `non-gap`
@@ -4483,6 +4548,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `codex-managed-skill-installation`
 - Symptom: side-by-side install changed _shared and blocker-catalog in addition to adding research-playbook-v2
 - Evidence: compare-managed reported added research-playbook-v2 and changed _shared, blocker-catalog
+
+## blk-6afcc4b130eee4762cb6e561
+
+- Status: `closed`
+- Subject: `discover-info-intake-dashboard-canary-20260814`
+- Step: `run-info-intake-regression`
+- Surface: `tests/test_info_intake_machinery.py`
+- Symptom: The full info-intake regression stops after 117 passes because an existing mocked load_request exhausts an iterator with StopIteration.
+- Evidence: Focused routing test passed; full file reported 117 passed and one failure at the mock lambda next(requests), while production load_request exposes LaunchError when no visual stage remains.
 
 ## blk-6b01bc3647830f730117a63a
 
@@ -4774,6 +4848,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Corrected bootstrap spec conflicts with the earlier incomplete manually-created discovery path.
 - Evidence: An unselected discovery log already occupies 2026-07-18-research-playbook-verify-install; bootstrap correctly refuses to overwrite it.
 
+## blk-742bc454a603b644a22c1536
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discover-info-intake-dashboard-canary-20260814`
+- Step: `correct-rejected-relationship-endpoint`
+- Surface: `skills/info-intake-machinery/scripts/relationship_correction.py`
+- Symptom: The correction interview accepted x=812 for element-000016 whose x bounds are 728-750, then rejected every y and offered no append-only way to revise x.
+- Evidence: Live journal sequence accepted replacement_x=812, recorded repeated replacement_y containment failures, and resumed at replacement_y; the model stopped without terminal JSON and the launcher exited 3.
+
 ## blk-7441db416f180077aa835e06
 
 - Status: `fixed-awaiting-verification`
@@ -5034,6 +5117,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `convergence_state`
 - Symptom: The independent GAPS verdict cannot be recorded because the critic's new_gaps objects use fields accepted by the narrative contract but not the convergence state schema.
 - Evidence: convergence_state.py record-stage returned: new gap is missing required fields.
+
+## blk-79bb516142f467caf467e9cd
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `publish-approved-manifest`
+- Surface: `git-worktree-index`
+- Symptom: Registered publisher could not create the worktree Git index lock
+- Evidence: git add failed before staging: Unable to create /Users/kamenkamenov/memory-knowledge/.git/worktrees/memory-knowledge/index.lock: Operation not permitted
 
 ## blk-7a1c443a5046524fe853f25f
 
@@ -5539,6 +5631,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The convergence-state recorder rejected comma-separated requirement IDs.
 - Evidence: parse_json_list called json.loads and raised JSONDecodeError; --requirement-ids requires a JSON array.
 
+## blk-8a2556cdeafa90393587b96a
+
+- Status: `closed`
+- Subject: `info-intake-real-dashboard-canary-20260814`
+- Step: `authorize-discovery-bootstrap`
+- Surface: `scripts/discovery_bootstrap.py`
+- Symptom: The authorized discovery-bootstrap start stopped before writing because the shared receipt named the canonical directives while bootstrap activation required this worktree directives path.
+- Evidence: Live authorization ended with: directive read state was recorded for /Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md, expected /Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/working-agreement/DIRECTIVES.md.
+
 ## blk-8a4b8c26e54d0d7906bb0e86
 
 - Status: `fixed-awaiting-verification`
@@ -5610,6 +5711,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `reset-worker-sqlite`
 - Symptom: regression-tests-emit-repeated-unclosed-database-warnings
 - Evidence: python-unittest-emitted-multiple-ResourceWarning-unclosed-database-messages
+
+## blk-8c736c285bf9c44b259a750a
+
+- Status: `closed`
+- Subject: `discover-info-intake-dashboard-canary-20260814`
+- Step: `run-info-intake-canary`
+- Surface: `skills/info-intake-machinery/scripts/run_intake.py`
+- Symptom: The zero-input intake preserved the opening and purpose, then its first codex exec subprocess exited before the purpose interview because the sandbox made ~/.codex/state_5.sqlite read-only.
+- Evidence: Live launcher output reports failed to open state DB with SQLite code 8 and failed to initialize the in-process app-server client.
 
 ## blk-8cd3a1a6403620dca9893754
 
@@ -6146,6 +6256,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Both system and bundled Python reject python -m pytest because pytest is not installed.
 - Evidence: python3 -m pytest and bundled-python -m pytest both exited immediately with No module named pytest.
 
+## blk-98f655e29f9b4045fe26d126
+
+- Status: `open`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `record-same-path-verification`
+- Surface: `scripts/work_memory.py`
+- Symptom: The run ledger cannot record a passed same-path product verification after an unrelated open blocker is assigned downstream.
+- Evidence: A clean verification was rejected as clean-verification-after-correction; attaching the incidental blocker was rejected as paired-correction-blocker-required, although no product correction occurred.
+- Classification: `incidental-system-defect`
+- Downstream owner: `work-memory-incidental-verification-contract`
+
 ## blk-996603ec7720df17f1769744
 
 - Status: `closed`
@@ -6397,6 +6518,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `discovery-promotion-lifecycle-task-identity`
 - Symptom: Registered successor verification generates a new task identity instead of reusing the correction predecessor task owner.
 - Evidence: _verify_registered constructs registered-verify-{sequence}-{operation}; work_memory successor selection requires the predecessor run task identity, while PendingCorrection already carries that exact task_id.
+
+## blk-9f03d9dea29b8f5b6a81b9f1
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discover-info-intake-dashboard-canary-20260814`
+- Step: `handoff-first-projection-verification`
+- Surface: `skills/info-intake-machinery/scripts/run_projection_with_codex.py`
+- Symptom: The annotated source projection completed, but the zero-input launcher stopped instead of starting the code-requested first-projection verifier.
+- Evidence: Live direct launcher exited 3 after start_intake returned waiting_for_model, stopped=verifying_first_projection, with exactly one verify_first_projection work item and command.
 
 ## blk-9f5944123c564c8fed25e9a3
 
@@ -7136,6 +7266,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Registered sequence execution still uses sequence_guard/sequence_checked_exec raw argv; PreventionController.execute and SourceEdgeRegistry are instantiated only in acceptance/test code.
 - Evidence: Repository search finds controller.execute only in prevention_owner_acceptance_producer.py; SourceEdgeRegistry and HostSourceEdgeAuthority have no non-acceptance production construction; sequence_checked_exec.py calls subprocess.run(argv) directly.
 
+## blk-b0f3a28a72694a7f29696ddd
+
+- Status: `verified`
+- Subject: `discover-info-intake-dashboard-canary-20260814`
+- Step: `projection-visible-unit-identity`
+- Surface: `visual-projection-element-capture`
+- Symptom: One visibly unified source unit was recorded as two ledger elements.
+- Evidence: In live canary p3, element-000002 captured Column: W at [43,89,125,121], while contained element-000003 captured %=300/364 at [56,105,111,113]; both received separate pending relationship obligations.
+
 ## blk-b18c782a382063e4b40900ab
 
 - Status: `non-gap`
@@ -7408,6 +7547,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Classification: `incidental-system-defect`
 - Downstream owner: `memory-knowledge-maintenance`
 
+## blk-b721180ccf8c34c0cc219ba0
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `run-info-intake-canary`
+- Surface: `skills/info-intake-machinery/scripts/run_projection_with_codex.py`
+- Symptom: One Codex subprocess completed region one, reran the same projection command for region two, completed region two, and opened region three before the outer two-region counter regained control.
+- Evidence: The hash-valid journal records region outcomes at sequences 98 and 142, then region-r01-c03 evidence at sequence 143; PTY output shows the nested model explicitly reran the exact start_intake command after each continuation JSON.
+
 ## blk-b722a6699c4385c3252b251e
 
 - Status: `closed`
@@ -7416,6 +7564,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: the documented preservation step rejects the exact required four-correction command
 - Evidence: sequence guard exit 4 after matching the selected remediation document; row shows one repeatable preserved-correction placeholder while the governed operation requires four concrete IDs
+
+## blk-b731ce94e5965ad22ed9fd67
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `run-info-intake-canary`
+- Surface: `operations/sequences/discovery/2026-08-14-info-intake-real-dashboard-canary.md`
+- Symptom: The registered python3 launcher exits before creating intake state because system Python lacks Pillow.
+- Evidence: python3 skills/info-intake-machinery/scripts/run_intake.py exited 1 while importing projection_interview.py: from PIL import Image.
 
 ## blk-b7844825bd3857c3ce4176e3
 
@@ -7869,6 +8026,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Two controller tests failed before command assertions because their declared changed artifacts did not exist.
 - Evidence: 30 tests passed; test_correct_accepts_one_stable_artifact_manifest_argument and test_registered_correction_forwards_repository_roots raised changed-artifact-not-found from the new content-bound identity helper.
 
+## blk-bf48fceb64865e9749ef70b5
+
+- Status: `verified`
+- Subject: `discover-info-intake-dashboard-canary-20260814`
+- Step: `ground-active-region-with-visual-crop`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: The fresh canary recorded four elements in region-r01-c01, then marked the other fifteen regions scanned with no elements although the frozen source visibly contains annotated relationships throughout the image.
+- Evidence: Projection source-000003-v1 has element_ids only for region-r01-c01; journal sequences 78 through 108 accepted no for every later active region; terminal qualification counted all 16 region outcomes and declared first_layer_complete with only 8 elements and 4 relationships.
+
 ## blk-bfaccd0546fc71be51e67252
 
 - Status: `open`
@@ -8212,6 +8378,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `convergence_state`
 - Symptom: Baseline guard blocks reviewer spawn because docs working hash changed after creating the research artifact
 - Evidence: Only docs working_hash changed; src/workflow_orch and tests hashes match baseline
+
+## blk-cb5a5fb5969bdacc2e003aa9
+
+- Status: `verified`
+- Subject: `discover-info-intake-dashboard-canary-20260814`
+- Step: `ground-gap-question-to-candidate-identities`
+- Surface: `skills/info-intake-machinery`
+- Symptom: A relationship gap between element-000002 and element-000003 was asked as a Column AF question; the accepted resolution duplicated relationship-000001 and removed the real gap.
+- Evidence: clarification-round.json binds relationship-000003 with matching_element_ids element-000002 and element-000003 but asks Column AF; projection v2 relationship-000003 binds element-000001 to element-000006, duplicating relationship-000001; ledger sequence 29 reports zero gaps.
 
 ## blk-cc19a00d79446695934e63ab
 
@@ -8783,6 +8958,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `/Users/kamenkamenov/united-partners/scripts/run_cd_s_002_upgrade_canary.py`
 - Symptom: sequence guard rejected the approved scripts baseline transition because the selected bundle contains the placeholder canary while the worktree contains the implemented driver
 - Evidence: sequence_guard returned exit 4 with {error: stale-source-bundle, ok: false}
+
+## blk-d82e2e96c54a4e5714e04033
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discover-info-intake-dashboard-canary-20260814`
+- Step: `run-info-intake-canary`
+- Surface: `skills/info-intake-machinery/scripts/run_intake.py`
+- Symptom: A preserved intake waiting for its purpose model interview cannot resume: the zero-input launcher sends every resume directly to the later projection driver, which rejects the early purpose phase.
+- Evidence: The host-access resume returned invalid clarification boundary: the model boundary lost its single code-controlled interview command; intake state remains assessing_intake_purpose with immutable opening and purpose sources.
 
 ## blk-d830b3f69e35fb5ef45d512e
 
@@ -9414,6 +9598,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The read-only plan-verification sequence could not activate until directive-read state was refreshed.
 - Evidence: Initial sequence_guard.py activate exited nonzero with the exact stale directive-read message; documented directive_guard read then made activation pass.
 
+## blk-e77b2509ceac4cadf2cfd1a7
+
+- Status: `open`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `close-live-canary-verification`
+- Surface: `work_memory.verify`
+- Symptom: Successful same-path canary evidence cannot be attached to predecessor corrections because the active run was selected normally and carries no verifies_correction_ids.
+- Evidence: work_memory.py verify exited 3 with verification-correction-mismatch for correction d3d9d8ca-3e5a-48e9-a582-6507fd0fa5fd; run_started c6b5c148 has no verifies_correction_ids.
+- Classification: `incidental-system-defect`
+- Downstream owner: `work-memory-successor-lifecycle`
+
 ## blk-e7bdee265bcead7d611deee9
 
 - Status: `open`
@@ -9875,6 +10070,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The prepared commit-push operation is rejected because its controller script is resolved under the target repository.
 - Evidence: The adapter emits relative scripts/scoped_git_publish.py while dispatch runs with the selected target repository as cwd; the governed controller actually resides in memory-knowledge and is captured in the selected bundle.
 
+## blk-f4e70c13120817943ed3a0a6
+
+- Status: `open`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `launch-selected-discovery-operation`
+- Surface: `scripts/sequence_intake_launch.py`
+- Symptom: The no-argument governed intake launcher refuses the active discovery selection before presenting the recorded operation.
+- Evidence: The selected and activated document is the real-dashboard discovery record; sequence_intake_launch exited 2 with active-selection-is-not-registered.
+- Classification: `incidental-system-defect`
+- Downstream owner: `sequence-intake-discovery-routing`
+
 ## blk-f5083c31ebd4f7e372ef2c7b
 
 - Status: `superseded`
@@ -9983,6 +10189,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: atomic-verification-event-cannot-transition-two-valid-carried-blockers
 - Evidence: validator-line-432-requires-immediate-predecessor-despite-selected-correction-set-and-current-bundle
 
+## blk-f7d6db8e18d1893788b2b47b
+
+- Status: `open`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `launch-region-model-stage`
+- Surface: `codex-models-cache`
+- Symptom: The live child model process reports that its models cache lacks the required base_instructions field before starting the region interview.
+- Evidence: The first bounded region launch emitted a codex_models_manager cache error naming missing field base_instructions, then opened the requested model session.
+- Classification: `incidental-system-defect`
+- Downstream owner: `codex-model-cache-compatibility`
+
 ## blk-f813407233632962f7bda14b
 
 - Status: `non-gap`
@@ -10063,6 +10280,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence_guard`
 - Symptom: The exact correction-bootstrap guard produced no output for more than 30 seconds and had to be terminated.
 - Evidence: functions cell 331 remained running across three waits and was terminated before any command execution receipt was returned.
+
+## blk-f910e138ef59b0f2679476f0
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discover-info-intake-dashboard-canary-20260814`
+- Step: `run-info-intake-canary`
+- Surface: `skills/info-intake-machinery/scripts/run_intake.py`
+- Symptom: The registered launcher automatically continues beyond the second completed visual region.
+- Evidence: run_intake._continue_intake delegates to run_projection_with_codex.drive_work; its while loop repeatedly launches the next model request until an external terminal and exposes no region limit.
 
 ## blk-f92429b3b2b961c059641f99
 

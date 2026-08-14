@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-import base64
 import importlib.util
 import json
-from pathlib import Path
 import shutil
 import subprocess
 import sys
+from pathlib import Path
 
 import pytest
-
+from PIL import Image
 
 ROOT = Path(__file__).resolve().parents[1]
 SCRIPT = ROOT / "skills" / "info-intake-machinery" / "scripts" / "start_intake.py"
@@ -29,6 +28,15 @@ CODEX_RUNNER_SPEC = importlib.util.spec_from_file_location("run_projection_with_
 assert CODEX_RUNNER_SPEC and CODEX_RUNNER_SPEC.loader
 CODEX_RUNNER = importlib.util.module_from_spec(CODEX_RUNNER_SPEC)
 CODEX_RUNNER_SPEC.loader.exec_module(CODEX_RUNNER)
+INTAKE_RUNNER_SCRIPT = (
+    ROOT / "skills" / "info-intake-machinery" / "scripts" / "run_intake.py"
+)
+INTAKE_RUNNER_SPEC = importlib.util.spec_from_file_location(
+    "run_info_intake", INTAKE_RUNNER_SCRIPT
+)
+assert INTAKE_RUNNER_SPEC and INTAKE_RUNNER_SPEC.loader
+INTAKE_RUNNER = importlib.util.module_from_spec(INTAKE_RUNNER_SPEC)
+INTAKE_RUNNER_SPEC.loader.exec_module(INTAKE_RUNNER)
 CORRECTION_SCRIPT = (
     ROOT / "skills" / "info-intake-machinery" / "scripts" / "relationship_correction.py"
 )
@@ -248,9 +256,7 @@ def _advance_to_first_source(work: Path) -> None:
 
 
 def _advance_to_frozen_image(work: Path, supplied: Path) -> dict[str, object]:
-    supplied.write_bytes(base64.b64decode(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zl1sAAAAASUVORK5CYII="
-    ))
+    Image.new("RGB", (40, 40), "white").save(supplied, format="PNG")
     _advance_to_first_source(work)
     result = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
     assert result["status"] == "ready_for_projection"
@@ -275,16 +281,38 @@ def _projection_answers(
     completed_element_scan = (
         ["no", *(["no"] * 15)] if contract >= 4 else ["no"]
     )
+    ownership = ["owned_by_active_core"] if contract >= 11 else []
     return [
         "test-model", "pytest",
-        "yes", "visible-text", "10", "20", "100", "120", *element_status,
+        "yes", "visible-text", *ownership,
+        "10", "20", "100", "120", *element_status,
         "A readable description", *first_obligation,
-        "yes", "visible-target", "120", "20", "220", "120", "gap",
+        "yes", "visible-target", *ownership,
+        "120", "20", "220", "120", "gap",
         "The target is obscured.", *second_obligation,
         *completed_element_scan,
         *required_relationship,
         *(["supported"] if contract >= 6 else []),
         *relationship_status, "The first element connects to the second.",
+        "no",
+    ]
+
+
+def _projection_answers_with_two_element_gaps() -> list[str]:
+    return [
+        "test-model", "pytest",
+        "yes", "visible-text", "owned_by_active_core",
+        "10", "20", "100", "120", "readable",
+        "A readable description", "yes",
+        "yes", "visible-target", "owned_by_active_core",
+        "120", "20", "220", "120", "gap",
+        "The target is obscured.", "no",
+        "yes", "second-target", "owned_by_active_core",
+        "230", "20", "330", "120", "gap",
+        "The second target is obscured.", "no",
+        "no", *(["no"] * 15),
+        "use_recorded_endpoint", "visually-connected-to", "10", "20", "120", "20",
+        "supported", "readable", "The first element connects to the second.",
         "no",
     ]
 
@@ -393,6 +421,93 @@ def test_rejected_relationship_can_propose_a_bound_replacement_without_overwriti
     assert result["verification_sha256"] == verification_sha
 
 
+def test_replacement_coordinates_are_rejected_at_their_own_axis_boundary(
+    tmp_path: Path,
+) -> None:
+    candidate_path, candidate_sha, verification_path, verification_sha, _, _ = (
+        _correction_fixture(tmp_path)
+    )
+    answers = iter([
+        "fresh-corrector", "pytest-correction", "propose_replacement_endpoint", "target",
+        "use_recorded_element", "element-000003", "350", "250", "101", "50",
+        "Formula defines the correct metric.",
+    ])
+    messages: list[str] = []
+
+    result = RELATIONSHIP_CORRECTION.run(
+        tmp_path / "correction", candidate_path=candidate_path,
+        candidate_sha256=candidate_sha, verification_path=verification_path,
+        verification_sha256=verification_sha, purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers), output_fn=messages.append,
+    )
+
+    relationship = result["corrections"][0]["corrected_relationship"]
+    assert relationship["target_point"] == [250, 50]
+    assert messages == [
+        "Invalid answer: replacement_x: point must fall inside the selected recorded element.",
+        "Invalid answer: replacement_y: point must fall inside the selected recorded element.",
+    ]
+
+
+def test_impossible_preserved_x_is_superseded_append_only_before_reasking_x(
+    tmp_path: Path,
+) -> None:
+    candidate_path, candidate_sha, verification_path, verification_sha, _, _ = (
+        _correction_fixture(tmp_path)
+    )
+    candidate, _verification, rejected = RELATIONSHIP_CORRECTION._inputs(
+        candidate_path, candidate_sha, verification_path, verification_sha
+    )
+    attempt = tmp_path / "correction"
+    attempt.mkdir()
+    journal = attempt / "interview.jsonl"
+    state = {
+        "model": "", "harness": "", "index": 0, "draft": {}, "corrections": [],
+    }
+    historical_answers: list[str | int] = [
+        "fresh-corrector", "pytest-correction", "propose_replacement_endpoint", "target",
+        "use_recorded_element", "element-000003", 350,
+    ]
+    for answer in historical_answers:
+        question = RELATIONSHIP_CORRECTION._question(candidate, rejected, state)
+        assert question is not None
+        RELATIONSHIP_CORRECTION._append(journal, "question_asked", {"question": question})
+        RELATIONSHIP_CORRECTION._append(journal, "answer_recorded", {
+            "question_id": question["id"], "raw": str(answer), "accepted": True,
+            "parsed": answer, "error": None,
+        })
+        RELATIONSHIP_CORRECTION._apply_answer(
+            candidate, rejected, state, str(question["id"]), answer
+        )
+    pending = RELATIONSHIP_CORRECTION._question(candidate, rejected, state)
+    assert pending is not None and pending["id"] == "replacement_y"
+    RELATIONSHIP_CORRECTION._append(journal, "question_asked", {"question": pending})
+    preserved_before = journal.read_bytes()
+    answers = iter(["250", "50", "Formula defines the correct metric."])
+
+    result = RELATIONSHIP_CORRECTION.run(
+        attempt, candidate_path=candidate_path, candidate_sha256=candidate_sha,
+        verification_path=verification_path, verification_sha256=verification_sha,
+        purpose=REAL_PURPOSE, input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    assert journal.read_bytes().startswith(preserved_before)
+    entries = [json.loads(line) for line in journal.read_text().splitlines()]
+    superseded = [entry for entry in entries if entry["event"] == "answer_superseded"]
+    assert superseded == [{
+        **{key: superseded[0][key] for key in (
+            "sequence", "event", "previous_entry_sha256", "entry_sha256",
+        )},
+        "blocked_question_id": "replacement_y",
+        "reason": "accepted replacement_x is outside the selected endpoint horizontal bounds",
+        "superseded_question_id": "replacement_x",
+        "superseded_value": 350,
+    }]
+    relationship = result["corrections"][0]["corrected_relationship"]
+    assert relationship["target_point"] == [250, 50]
+
+
 def test_rejected_relationship_can_preserve_gap_and_rejected_choices_are_audited(
     tmp_path: Path,
 ) -> None:
@@ -462,9 +577,23 @@ def test_codex_projection_runner_derives_immutable_attachment_and_delimits_promp
     attachment, command = CODEX_RUNNER.load_request(work)
     argv = CODEX_RUNNER.build_codex_argv("/usr/local/bin/codex", work, attachment, command)
 
-    assert attachment == work / "sources" / "source-000003"
+    assert isinstance(attachment, tuple)
+    crop, guide = attachment
+    assert crop == (
+        work
+        / "projection-interviews"
+        / "attempt-000001"
+        / "region-evidence"
+        / "region-r01-c01.png"
+    )
+    assert guide == crop.with_name("region-r01-c01.ownership.png")
     assert command[-1] == "--run-projection-interview"
-    assert argv[argv.index("--image") + 1] == str(attachment)
+    image_paths = [
+        argv[index + 1]
+        for index, value in enumerate(argv)
+        if value == "--image"
+    ]
+    assert image_paths == [str(crop), str(guide)]
     assert argv[-2] == "--"
     assert command[0] in argv[-1]
     assert "self-contained local controller" in argv[-1]
@@ -540,10 +669,6 @@ def test_codex_runner_crosses_human_boundary_and_continues_to_completion(
     attachment = work / "sources" / "source-000003"
     first_command = ["python", "start_intake.py", "--run-gap-clarification"]
     second_command = ["python", "start_intake.py", "--run-gap-answer-assessment"]
-    requests = iter([
-        (attachment, first_command),
-        (attachment, second_command),
-    ])
     boundaries = iter([
         {
             "boundary": "needs_operator_answer",
@@ -568,9 +693,16 @@ def test_codex_runner_crosses_human_boundary_and_continues_to_completion(
     operator_calls: list[Path] = []
     state_hashes = iter(["a" * 64, "a" * 64])
 
+    def load_request(_work: Path) -> tuple[Path, list[str]]:
+        if not model_calls:
+            return attachment, first_command
+        if model_calls == [first_command] and operator_calls:
+            return attachment, second_command
+        raise CODEX_RUNNER.LaunchError("no visual model stage remains")
+
     monkeypatch.setattr("builtins.input", lambda _prompt: str(work))
     monkeypatch.setattr(CODEX_RUNNER.shutil, "which", lambda _name: "/usr/bin/codex")
-    monkeypatch.setattr(CODEX_RUNNER, "load_request", lambda _work: next(requests))
+    monkeypatch.setattr(CODEX_RUNNER, "load_request", load_request)
     monkeypatch.setattr(CODEX_RUNNER, "_sha256", lambda _path: next(state_hashes))
     monkeypatch.setattr(
         CODEX_RUNNER,
@@ -600,6 +732,335 @@ def test_codex_runner_crosses_human_boundary_and_continues_to_completion(
     assert model_calls == [first_command, second_command]
     assert operator_calls == [work]
     assert '"boundary": "clarification_complete"' in output
+
+
+def test_codex_runner_routes_projection_completion_to_verifier_before_clarification(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    work = tmp_path / "intake"
+    attachment = work / "sources" / "source-000003"
+    journal = work / "projection-interviews" / "attempt-000001" / "interview.jsonl"
+    journal.parent.mkdir(parents=True)
+    (work / "intake-state.json").write_text(json.dumps({
+        "waiting_for": "projection-interviews/attempt-000001/interview.jsonl",
+    }))
+    projection_command = ["python", "start_intake.py", "--run-projection-interview"]
+    verifier_command = ["python", "start_intake.py", "--run-projection-verification"]
+    requests = iter([
+        (attachment, projection_command),
+        (attachment, verifier_command),
+    ])
+    model_calls: list[list[str]] = []
+
+    def load_request(_work: Path) -> tuple[Path, list[str]]:
+        try:
+            return next(requests)
+        except StopIteration as error:
+            raise CODEX_RUNNER.LaunchError("no visual model stage remains") from error
+
+    def clarification_boundary(_work: Path) -> dict[str, object]:
+        assert model_calls == [projection_command, verifier_command]
+        return {
+            "boundary": "clarification_complete",
+            "status": "ready_for_projection_assessment",
+            "stopped": "clarification_continuation_complete",
+        }
+
+    def run_model(argv: list[str], **_kwargs: object) -> object:
+        model_calls.append(argv)
+        if argv == projection_command:
+            PROJECTION_INTERVIEW._append(journal, "region_outcome_recorded", {
+                "region_id": "region-r03-c03",
+            })
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(CODEX_RUNNER, "load_request", load_request)
+    monkeypatch.setattr(CODEX_RUNNER, "run_clarification_boundary", clarification_boundary)
+    monkeypatch.setattr(CODEX_RUNNER.shutil, "which", lambda _name: "/usr/bin/codex")
+    monkeypatch.setattr(CODEX_RUNNER, "_sha256", lambda _path: "a" * 64)
+    monkeypatch.setattr(
+        CODEX_RUNNER,
+        "build_codex_argv",
+        lambda _executable, _work, _attachment, command: command,
+    )
+    monkeypatch.setattr(CODEX_RUNNER.subprocess, "run", run_model)
+
+    assert CODEX_RUNNER.drive_work(work) == 0
+    assert model_calls == [projection_command, verifier_command]
+
+
+def test_zero_input_launcher_conducts_new_intake_one_answer_at_a_time(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    work = tmp_path / "new-intake"
+    source = tmp_path / "annotated.png"
+    source.write_bytes(b"image")
+    answers = iter([
+        "new",
+        str(work),
+        "next_external_boundary",
+        "There is a new intake",
+        "Make the source annotations AI-readable.",
+        "local_file",
+        str(source),
+    ])
+    calls: list[dict[str, object]] = []
+    results = iter([
+        {
+            "status": "needs_operator",
+            "question": {
+                "id": "intake-purpose",
+                "asks": "What information should this intake make AI-readable?",
+            },
+        },
+        {
+            "status": "waiting_for_model",
+            "stopped": "assessing_intake_purpose",
+            "work": [{"command": ["python", "start_intake.py", "--run-purpose-interview"]}],
+        },
+        {
+            "status": "needs_operator",
+            "question": {
+                "id": "first-source",
+                "asks": "Please provide the first source for this intake.",
+            },
+        },
+        {"status": "ready_for_projection", "stopped": "first_source_frozen"},
+        {"status": "waiting_for_model", "stopped": "interviewing_first_projection"},
+    ])
+
+    def drive(
+        selected_work: Path,
+        opening: str,
+        purpose: str | None = None,
+        selected_source: Path | None = None,
+        project_source: bool = False,
+        **kwargs: object,
+    ) -> dict[str, object]:
+        calls.append({
+            "work": selected_work,
+            "opening": opening,
+            "purpose": purpose,
+            "source": selected_source,
+            "project_source": project_source,
+            **kwargs,
+        })
+        return next(results)
+
+    monkeypatch.setattr(INTAKE_RUNNER.start_intake, "drive", drive)
+    monkeypatch.setattr(INTAKE_RUNNER, "_run_purpose_model", lambda *_args, **_kwargs: 0)
+    monkeypatch.setattr(
+        INTAKE_RUNNER.projection_runner,
+        "drive_work",
+        lambda selected, **_kwargs: 0,
+    )
+
+    assert INTAKE_RUNNER.run(input_fn=lambda _prompt: next(answers)) == 0
+    assert calls == [
+        {
+            "work": work,
+            "opening": "There is a new intake",
+            "purpose": None,
+            "source": None,
+            "project_source": False,
+        },
+        {
+            "work": work,
+            "opening": "There is a new intake",
+            "purpose": "Make the source annotations AI-readable.",
+            "source": None,
+            "project_source": False,
+        },
+        {
+            "work": work,
+            "opening": "There is a new intake",
+            "purpose": "Make the source annotations AI-readable.",
+            "source": None,
+            "project_source": False,
+        },
+        {
+            "work": work,
+            "opening": "There is a new intake",
+            "purpose": "Make the source annotations AI-readable.",
+            "source": source,
+            "project_source": False,
+        },
+        {
+            "work": work,
+            "opening": "There is a new intake",
+            "purpose": "Make the source annotations AI-readable.",
+            "source": None,
+            "project_source": True,
+        },
+    ]
+
+
+def test_zero_input_launcher_resumes_preserved_purpose_before_first_source(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    work = tmp_path / "preserved-intake"
+    sources = work / "sources"
+    sources.mkdir(parents=True)
+    opening = "There is a new intake."
+    purpose = "Make every annotated relationship AI-readable."
+    (sources / "source-000001.txt").write_text(opening)
+    (sources / "source-000002.txt").write_text(purpose)
+    source = tmp_path / "annotated.png"
+    source.write_bytes(b"image")
+    answers = iter([
+        "resume",
+        str(work),
+        "next_external_boundary",
+        "local_file",
+        str(source),
+    ])
+    calls: list[dict[str, object]] = []
+    results = iter([
+        {
+            "status": "waiting_for_model",
+            "stopped": "assessing_intake_purpose",
+            "work": [{"command": ["python", "start_intake.py", "--run-purpose-interview"]}],
+        },
+        {
+            "status": "needs_operator",
+            "question": {
+                "id": "first-source",
+                "asks": "Please provide the first source for this intake.",
+            },
+        },
+        {"status": "ready_for_projection", "stopped": "first_source_frozen"},
+        {"status": "waiting_for_model", "stopped": "interviewing_first_projection"},
+    ])
+
+    def drive(
+        selected_work: Path,
+        selected_opening: str,
+        selected_purpose: str | None = None,
+        selected_source: Path | None = None,
+        project_source: bool = False,
+        **kwargs: object,
+    ) -> dict[str, object]:
+        calls.append({
+            "work": selected_work,
+            "opening": selected_opening,
+            "purpose": selected_purpose,
+            "source": selected_source,
+            "project_source": project_source,
+            **kwargs,
+        })
+        return next(results)
+
+    monkeypatch.setattr(INTAKE_RUNNER.start_intake, "drive", drive)
+    monkeypatch.setattr(INTAKE_RUNNER, "_run_purpose_model", lambda *_args, **_kwargs: 0)
+    monkeypatch.setattr(
+        INTAKE_RUNNER.projection_runner,
+        "drive_work",
+        lambda selected, **_kwargs: 0,
+    )
+
+    assert INTAKE_RUNNER.run(input_fn=lambda _prompt: next(answers)) == 0
+    assert [call["opening"] for call in calls] == [opening] * 4
+    assert [call["purpose"] for call in calls] == [purpose] * 4
+    assert calls[2]["source"] == source
+    assert calls[3]["project_source"] is True
+
+
+def test_purpose_model_launcher_has_no_fabricated_visual_attachment(
+    tmp_path: Path,
+) -> None:
+    argv = CODEX_RUNNER.build_codex_argv(
+        "/usr/bin/codex",
+        tmp_path,
+        tuple(),
+        ["python", "start_intake.py", "--run-purpose-interview"],
+    )
+
+    assert "--image" not in argv
+    assert "Assess only the code-bound preserved operator purpose answer." in argv[-1]
+
+
+def test_zero_input_launcher_rejects_invalid_region_counts_one_at_a_time() -> None:
+    answers = iter(["0", "two", "2"])
+    messages: list[str] = []
+
+    result = INTAKE_RUNNER._positive_integer(
+        "How many completed visual regions should this invocation add?",
+        input_fn=lambda _prompt: next(answers),
+        output_fn=messages.append,
+    )
+
+    assert result == 2
+    assert messages.count(
+        "Invalid answer: enter a whole number greater than zero."
+    ) == 2
+
+
+def test_codex_runner_pauses_after_persisted_region_limit_and_resumes(
+    tmp_path: Path, monkeypatch: object, capsys: object,
+) -> None:
+    work = tmp_path / "intake"
+    journal = work / "projection-interviews" / "attempt-000001" / "interview.jsonl"
+    journal.parent.mkdir(parents=True)
+    (work / "intake-state.json").write_text(json.dumps({
+        "waiting_for": "projection-interviews/attempt-000001/interview.jsonl",
+    }))
+    attachments = [work / f"region-{position}.png" for position in range(1, 4)]
+    for attachment in attachments:
+        attachment.write_bytes(b"region")
+    command = ["python", "start_intake.py", "--run-projection-interview"]
+    model_calls: list[str] = []
+
+    def load_request(_work: Path) -> tuple[Path, list[str]]:
+        count = CODEX_RUNNER._projection_region_outcome_count(journal)
+        return attachments[count], command
+
+    def build_argv(
+        _executable: str,
+        _work: Path,
+        attachment: Path,
+        _command: list[str],
+    ) -> list[str]:
+        return ["model", str(attachment)]
+
+    def run_model(argv: list[str], **_kwargs: object) -> object:
+        model_calls.append(argv[-1])
+        PROJECTION_INTERVIEW._append(journal, "region_outcome_recorded", {
+            "region_id": f"region-{len(model_calls)}",
+        })
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(CODEX_RUNNER, "load_request", load_request)
+    monkeypatch.setattr(CODEX_RUNNER, "build_codex_argv", build_argv)
+    monkeypatch.setattr(CODEX_RUNNER.shutil, "which", lambda _name: "/usr/bin/codex")
+    monkeypatch.setattr(CODEX_RUNNER.subprocess, "run", run_model)
+
+    assert CODEX_RUNNER.drive_work(work, projection_region_limit=2) == 0
+    first_output = capsys.readouterr().out
+    assert model_calls == [str(attachments[0]), str(attachments[1])]
+    assert '"projection_regions_completed": 2' in first_output
+    assert '"stopped": "projection_region_limit_reached"' in first_output
+
+    assert CODEX_RUNNER.drive_work(work, projection_region_limit=1) == 0
+    second_output = capsys.readouterr().out
+    assert model_calls == [
+        str(attachments[0]), str(attachments[1]), str(attachments[2]),
+    ]
+    assert '"projection_regions_completed": 1' in second_output
+    entries = PROJECTION_INTERVIEW._read_journal(journal)
+    assert [entry["sequence"] for entry in entries] == [1, 2, 3]
+
+
+def test_codex_runner_rejects_invalid_projection_region_limit(
+    tmp_path: Path, capsys: object,
+) -> None:
+    assert CODEX_RUNNER.drive_work(tmp_path, projection_region_limit=0) == 3
+    assert "projection region limit must be a positive integer" in (
+        capsys.readouterr().out
+    )
+    assert CODEX_RUNNER.drive_work(tmp_path, projection_region_limit=True) == 3
+    assert "projection region limit must be a positive integer" in (
+        capsys.readouterr().out
+    )
 
 
 def test_codex_runner_rejects_an_identical_repeated_model_stage(
@@ -779,6 +1240,7 @@ def test_projection_interview_enforces_choices_and_code_assembles_result(tmp_pat
         tmp_path / "attempt",
         source_sha256="a" * 64,
         purpose=REAL_PURPOSE,
+        contract=7,
         input_fn=answer,
         output_fn=messages.append,
     )
@@ -786,6 +1248,7 @@ def test_projection_interview_enforces_choices_and_code_assembles_result(tmp_pat
         tmp_path / "attempt",
         source_sha256="a" * 64,
         purpose=REAL_PURPOSE,
+        contract=7,
         input_fn=lambda _prompt: (_ for _ in ()).throw(AssertionError("already complete")),
         output_fn=messages.append,
     )
@@ -855,6 +1318,7 @@ def test_spatial_traversal_rejects_element_anchor_outside_active_region(
         tmp_path / "attempt",
         source_sha256="f" * 64,
         purpose=REAL_PURPOSE,
+        contract=7,
         input_fn=lambda _prompt: answers.pop(0),
         output_fn=messages.append,
     )
@@ -878,6 +1342,7 @@ def test_spatial_traversal_preserves_explicit_region_gap(tmp_path: Path) -> None
         tmp_path / "attempt",
         source_sha256="0" * 64,
         purpose=REAL_PURPOSE,
+        contract=7,
         input_fn=lambda _prompt: next(answers),
         output_fn=lambda _message: None,
     )
@@ -913,6 +1378,7 @@ def test_coordinate_binding_preserves_unmatched_endpoint_as_relationship_gap(
         tmp_path / "attempt",
         source_sha256="2" * 64,
         purpose=REAL_PURPOSE,
+        contract=7,
         input_fn=lambda _prompt: next(answers),
         output_fn=lambda _message: None,
     )
@@ -952,6 +1418,7 @@ def test_coordinate_binding_preserves_ambiguous_endpoint_as_relationship_gap(
         tmp_path / "attempt",
         source_sha256="3" * 64,
         purpose=REAL_PURPOSE,
+        contract=7,
         input_fn=lambda _prompt: next(answers),
         output_fn=lambda _message: None,
     )
@@ -989,6 +1456,7 @@ def test_coordinate_binding_can_capture_a_missing_visible_endpoint(
         tmp_path / "attempt",
         source_sha256="4" * 64,
         purpose=REAL_PURPOSE,
+        contract=7,
         input_fn=lambda _prompt: next(answers),
         output_fn=lambda _message: None,
     )
@@ -1027,6 +1495,7 @@ def test_visual_verdict_blocks_unsupported_pair_from_readable_projection(
         tmp_path / "attempt",
         source_sha256="7" * 64,
         purpose=REAL_PURPOSE,
+        contract=7,
         input_fn=lambda _prompt: next(answers),
         output_fn=lambda _message: None,
     )
@@ -1061,6 +1530,7 @@ def test_visual_verdict_preserves_unreadable_connection_as_gap(
         tmp_path / "attempt",
         source_sha256="8" * 64,
         purpose=REAL_PURPOSE,
+        contract=7,
         input_fn=lambda _prompt: next(answers),
         output_fn=lambda _message: None,
     )
@@ -1096,6 +1566,7 @@ def test_supported_pair_resolves_only_the_current_relationship_obligation(
         tmp_path / "attempt",
         source_sha256="9" * 64,
         purpose=REAL_PURPOSE,
+        contract=7,
         input_fn=lambda _prompt: next(answers),
         output_fn=lambda _message: None,
     )
@@ -1118,6 +1589,7 @@ def test_visual_verdict_is_code_constrained_to_three_values(tmp_path: Path) -> N
         tmp_path / "attempt",
         source_sha256="a" * 64,
         purpose=REAL_PURPOSE,
+        contract=7,
         input_fn=lambda _prompt: answers.pop(0),
         output_fn=messages.append,
     )
@@ -1152,6 +1624,7 @@ def test_coordinate_binding_refuses_participants_that_omit_the_required_element(
         tmp_path / "attempt",
         source_sha256="6" * 64,
         purpose=REAL_PURPOSE,
+        contract=7,
         input_fn=lambda _prompt: next(answers),
         output_fn=lambda _message: None,
     )
@@ -2055,7 +2528,24 @@ def test_projection_request_is_general_and_bound_to_frozen_image(tmp_path: Path)
     assert waiting["status"] == "waiting_for_model"
     assert waiting["stopped"] == "interviewing_first_projection"
     assert waiting["work"][0]["attachments"] == [
-        str((work / "sources" / "source-000003").resolve())
+        str(
+            (
+                work
+                / "projection-interviews"
+                / "attempt-000001"
+                / "region-evidence"
+                / "region-r01-c01.png"
+            ).resolve()
+        ),
+        str(
+            (
+                work
+                / "projection-interviews"
+                / "attempt-000001"
+                / "region-evidence"
+                / "region-r01-c01.ownership.png"
+            ).resolve()
+        ),
     ]
     instruction = waiting["work"][0]["instruction"]
     assert "typed question currently displayed" in instruction
@@ -2066,6 +2556,801 @@ def test_projection_request_is_general_and_bound_to_frozen_image(tmp_path: Path)
     assert ledger[-1]["event"] == "model_projection_interview_started"
     assert ledger[-1]["source_sha256"] == frozen["source"]["sha256"]
     assert ledger[-1]["interview_contract"] == PROJECTION_INTERVIEW.CONTRACT
+
+
+def test_projection_request_binds_one_immutable_crop_and_advances_one_region(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "grid.png"
+    image = Image.new("RGB", (40, 40), "white")
+    for row in range(4):
+        for column in range(4):
+            color = (row * 50, column * 50, (row + column) * 25)
+            for y in range(row * 10, (row + 1) * 10):
+                for x in range(column * 10, (column + 1) * 10):
+                    image.putpixel((x, y), color)
+    image.save(supplied, format="PNG")
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+
+    first = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    first_crop = Path(first["work"][0]["attachments"][0])
+    first_guide = Path(first["work"][0]["attachments"][1])
+    first_entries = [
+        json.loads(line)
+        for line in (
+            work / "projection-interviews" / "attempt-000001" / "interview.jsonl"
+        ).read_text().splitlines()
+    ]
+
+    assert first_crop.name == "region-r01-c01.png"
+    assert Image.open(first_crop).size == (12, 12)
+    assert first_entries[-1]["event"] == "region_evidence_bound"
+    assert first_entries[-1]["region_id"] == "region-r01-c01"
+    assert first_entries[-1]["core_normalized_bounds"] == [0, 0, 250, 250]
+    assert first_entries[-1]["evidence_normalized_bounds"] == [0, 0, 300, 300]
+    assert first_entries[-1]["core_pixel_bounds"] == [0, 0, 10, 10]
+    assert first_entries[-1]["pixel_bounds"] == [0, 0, 12, 12]
+    assert first_entries[-1]["ownership_core_in_crop_pixels"] == [0, 0, 10, 10]
+    assert first_entries[-1]["guide_path"] == (
+        "region-evidence/region-r01-c01.ownership.png"
+    )
+    assert first_entries[-1]["guide_sha256"] == START_INTAKE._digest_bytes(
+        first_guide.read_bytes()
+    )
+    assert first_entries[-1]["crop_sha256"] == START_INTAKE._digest_bytes(
+        first_crop.read_bytes()
+    )
+
+    answers = iter(["test-model", "pytest", "no"])
+    second = START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+        single_region=True,
+    )
+    second_crop = Path(second["work"][0]["attachments"][0])
+    entries = [
+        json.loads(line)
+        for line in (
+            work / "projection-interviews" / "attempt-000001" / "interview.jsonl"
+        ).read_text().splitlines()
+    ]
+
+    assert second["stopped"] == "interviewing_first_projection"
+    assert second_crop.name == "region-r01-c02.png"
+    assert Image.open(second_crop).size == (12, 12)
+    assert [entry["event"] for entry in entries].count("region_outcome_recorded") == 1
+    outcome = next(
+        entry for entry in entries if entry["event"] == "region_outcome_recorded"
+    )
+    assert outcome["region_id"] == "region-r01-c01"
+    assert outcome["status"] == "scanned"
+    assert outcome["crop_sha256"] == first_entries[-1]["crop_sha256"]
+
+
+def test_projection_defers_context_only_candidate_without_element_or_obligation(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (40, 40), "white").save(source, format="PNG")
+    attempt = tmp_path / "attempt"
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    attachments = PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+    )
+    answers = iter([
+        "test-model", "pytest", "yes", "context callout", "context_only",
+        "260", "10", "no",
+    ])
+    prompts: list[str] = []
+
+    def answer(prompt: str) -> str:
+        prompts.append(prompt)
+        return next(answers)
+
+    projection = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        input_fn=answer,
+        output_fn=lambda _message: None,
+    )
+    next_attachments = PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+    )
+    entries = [
+        json.loads(line)
+        for line in (attempt / "interview.jsonl").read_text().splitlines()
+    ]
+    deferral = next(
+        entry for entry in entries if entry["event"] == "context_candidate_deferred"
+    )
+
+    assert PROJECTION_INTERVIEW.CONTRACT == 13
+    assert isinstance(attachments, tuple)
+    crop, guide = attachments
+    assert crop.name == "region-r01-c01.png"
+    assert guide.name == "region-r01-c01.ownership.png"
+    assert Image.open(crop).size == Image.open(guide).size == (12, 12)
+    assert any(
+        "owned_by_active_core" in prompt and "context_only" in prompt
+        for prompt in prompts
+    )
+    assert projection["elements"] == []
+    assert projection["relationship_obligations"] == []
+    assert isinstance(next_attachments, tuple)
+    assert next_attachments[0].name == "region-r01-c02.png"
+    assert deferral["region_id"] == "region-r01-c01"
+    assert deferral["owner_region_id"] == "region-r01-c02"
+    assert deferral["obligation_id"] == "context-obligation-000001"
+    assert deferral["anchor"] == [260, 10]
+    assert deferral["candidate_kind"] == "context callout"
+    assert deferral["crop_sha256"] == entries[0]["crop_sha256"]
+    assert deferral["guide_sha256"] == entries[0]["guide_sha256"]
+    assert projection["scan_regions"][0]["deferred_context_candidates"] == [
+        {
+            "candidate_kind": "context callout",
+            "obligation_id": "context-obligation-000001",
+            "owner_region_id": "region-r01-c02",
+            "anchor": [260, 10],
+            "crop_sha256": deferral["crop_sha256"],
+            "guide_sha256": deferral["guide_sha256"],
+            "reason": "context_only",
+        }
+    ]
+    assert projection["scan_regions"][1]["context_candidate_obligations"] == [
+        {
+            "id": "context-obligation-000001",
+            "source_region_id": "region-r01-c01",
+            "candidate_kind": "context callout",
+            "anchor": [260, 10],
+            "status": "pending",
+            "resolution": None,
+            "element_id": None,
+            "gap_reason": "",
+        }
+    ]
+
+
+def test_projection_does_not_offer_context_only_without_visible_context() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=13)
+    state["scan_region_index"] = 15
+    region = PROJECTION_INTERVIEW._active_scan_region(state)
+    assert region is not None
+    region["evidence"] = {
+        "core_normalized_bounds": [750, 750, 1000, 1000],
+        "evidence_normalized_bounds": [750, 750, 1000, 1000],
+    }
+    state["stage"] = "element_ownership"
+    state["current"] = {
+        "kind": "visible element",
+        "scan_region_id": region["id"],
+    }
+
+    question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=13,
+    )
+
+    assert question is not None
+    assert question["choices"] == ["owned_by_active_core"]
+    assert "no surrounding context" in str(question["prompt"])
+
+
+def test_projection_reclassifies_preserved_impossible_context_answer() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["scan_region_index"] = 15
+    region = PROJECTION_INTERVIEW._active_scan_region(state)
+    assert region is not None
+    region["evidence"] = {
+        "core_normalized_bounds": [750, 750, 1000, 1000],
+        "evidence_normalized_bounds": [750, 750, 1000, 1000],
+        "crop_sha256": "a" * 64,
+        "guide_sha256": "b" * 64,
+    }
+    state["stage"] = "context_anchor_y"
+    state["current"] = {
+        "kind": "visible element",
+        "scan_region_id": region["id"],
+        "context_anchor_x": 750,
+    }
+    pending = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+
+    event = PROJECTION_INTERVIEW._context_ownership_reclassification(
+        state, pending, contract=12,
+    )
+
+    assert event is not None
+    assert event["cancelled_question_id"] == "context_anchor_y"
+    assert event["classification"] == "owned_by_active_core"
+    PROJECTION_INTERVIEW._apply_context_ownership_reclassification(state, event)
+    assert state["stage"] == "element_left"
+    assert "context_anchor_x" not in state["current"]
+
+
+def test_projection_context_cannot_claim_an_element_outside_ownership_core(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (40, 40), "white").save(source, format="PNG")
+    attempt = tmp_path / "attempt"
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    attachments = PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+    )
+    answers = iter([
+        "test-model", "pytest", "yes", "value", "owned_by_active_core",
+        "260", "10", "10", "290", "100", "readable", "$8,100", "no", "no",
+    ])
+    prompts: list[str] = []
+    messages: list[str] = []
+
+    def answer(prompt: str) -> str:
+        prompts.append(prompt)
+        return next(answers)
+
+    projection = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        input_fn=answer,
+        output_fn=messages.append,
+    )
+
+    assert isinstance(attachments, tuple)
+    crop, _guide = attachments
+    assert Image.open(crop).size == (12, 12)
+    assert any("crop edges map to [0, 0, 300, 300]" in item for item in prompts)
+    assert any("bright green outline" in item for item in prompts)
+    assert any("normalized bounds [0, 0, 250, 250]" in item for item in prompts)
+    assert messages == [
+        (
+            "Invalid answer: element_left: left coordinate 260 must be inside "
+            "active region-r01-c01 horizontal bounds 0 through 249."
+        )
+    ]
+    assert projection["elements"][0]["region"] == [10, 10, 290, 100]
+    assert projection["elements"][0]["scan_region_id"] == "region-r01-c01"
+
+
+def test_projection_owner_region_requires_context_deferral_outcome(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (40, 40), "white").save(source, format="PNG")
+    attempt = tmp_path / "attempt"
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+    )
+    first_answers = iter([
+        "test-model", "pytest", "yes", "context callout", "context_only",
+        "260", "10", "no",
+    ])
+    PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(first_answers),
+        output_fn=lambda _message: None,
+    )
+    PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+    )
+    second_answers = iter([
+        "record_explicit_gap", "candidate is unreadable in its owning crop", "no",
+    ])
+    prompts: list[str] = []
+
+    def answer(prompt: str) -> str:
+        prompts.append(prompt)
+        return next(second_answers)
+
+    projection = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        input_fn=answer,
+        output_fn=lambda _message: None,
+    )
+    obligation = projection["scan_regions"][1][
+        "context_candidate_obligations"
+    ][0]
+
+    assert any(
+        "record_owned_element" in prompt and "record_explicit_gap" in prompt
+        for prompt in prompts
+    )
+    assert obligation["status"] == "resolved"
+    assert obligation["resolution"] == "gap"
+    assert obligation["element_id"] == "element-000001"
+    assert obligation["gap_reason"] == (
+        "candidate is unreadable in its owning crop"
+    )
+    assert projection["scan_regions"][1]["status"] == "scanned"
+    assert projection["scan_regions"][1]["element_ids"] == [
+        "element-000001"
+    ]
+    assert projection["elements"] == [
+        {
+            "id": "element-000001",
+            "kind": "context callout",
+            "region": [260, 10, 261, 11],
+            "status": "gap",
+            "content": "",
+            "gap_reason": "candidate is unreadable in its owning crop",
+            "capture_scope": "region-r01-c02",
+            "scan_region_id": "region-r01-c02",
+        }
+    ]
+    selected_gaps = START_INTAKE.gap_clarification.select_gaps(
+        projection, "a" * 64,
+    )
+    assert [(item["collection"], item["id"]) for item in selected_gaps] == [
+        ("elements", "element-000001")
+    ]
+
+
+def test_projection_owner_region_records_deferred_candidate_as_one_element(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (40, 40), "white").save(source, format="PNG")
+    attempt = tmp_path / "attempt"
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+    )
+    first_answers = iter([
+        "test-model", "pytest", "yes", "context callout", "context_only",
+        "260", "10", "no",
+    ])
+    PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(first_answers),
+        output_fn=lambda _message: None,
+    )
+    PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+    )
+    second_answers = iter([
+        "record_owned_element",
+        "250", "0", "255", "300", "50",
+        "readable", "Column AC", "no", "no",
+    ])
+    messages: list[str] = []
+    projection = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(second_answers),
+        output_fn=messages.append,
+    )
+    obligation = projection["scan_regions"][1][
+        "context_candidate_obligations"
+    ][0]
+
+    assert messages == [
+        (
+            "Invalid answer: element_right: value 255 does not contain deferred "
+            "candidate anchor [260, 10]; enter a value greater than 260."
+        )
+    ]
+    assert obligation["status"] == "resolved"
+    assert obligation["resolution"] == "element"
+    assert obligation["element_id"] == "element-000001"
+    assert obligation["gap_reason"] == ""
+    assert projection["elements"] == [
+        {
+            "id": "element-000001",
+            "kind": "context callout",
+            "region": [250, 0, 300, 50],
+            "status": "readable",
+            "content": "Column AC",
+            "gap_reason": "",
+            "capture_scope": "region-r01-c02",
+            "scan_region_id": "region-r01-c02",
+        }
+    ]
+
+
+def test_projection_rejects_rehashed_context_owner_tamper(tmp_path: Path) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (40, 40), "white").save(source, format="PNG")
+    attempt = tmp_path / "attempt"
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+    )
+    answers = iter([
+        "test-model", "pytest", "yes", "context callout", "context_only",
+        "260", "10", "no",
+    ])
+    PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    journal = attempt / "interview.jsonl"
+    entries = [json.loads(line) for line in journal.read_text().splitlines()]
+    deferral = next(
+        entry for entry in entries
+        if entry["event"] == "context_candidate_deferred"
+    )
+    deferral["owner_region_id"] = "region-r01-c03"
+    previous: str | None = None
+    rewritten: list[dict[str, object]] = []
+    for sequence, entry in enumerate(entries, start=1):
+        payload = {
+            key: value for key, value in entry.items()
+            if key not in {
+                "sequence", "event", "previous_entry_sha256", "entry_sha256",
+            }
+        }
+        rebuilt = PROJECTION_INTERVIEW._entry(
+            sequence, entry["event"], payload, previous,
+        )
+        previous = rebuilt["entry_sha256"]
+        rewritten.append(rebuilt)
+    journal.write_text(
+        "".join(json.dumps(entry, sort_keys=True) + "\n" for entry in rewritten)
+    )
+
+    with pytest.raises(
+        PROJECTION_INTERVIEW.InterviewError,
+        match="context-deferral-invalid",
+    ):
+        PROJECTION_INTERVIEW.prepare_region_evidence(
+            attempt,
+            source_path=source,
+            source_sha256=source_sha256,
+            purpose=REAL_PURPOSE,
+        )
+
+
+def test_projection_supersedes_a_contained_fragment_without_duplicate_identity(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (40, 40), "white").save(source, format="PNG")
+    attempt = tmp_path / "attempt"
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+    )
+    answers = iter([
+        "test-model", "pytest",
+        "yes", "annotation callout", "owned_by_active_core",
+        "43", "89", "125", "121",
+        "readable", "Column: W", "yes",
+        "yes", "annotation text", "owned_by_active_core",
+        "56", "105", "111", "113",
+        "same_unit", "element-000001",
+        "50", "43", "89", "125", "121", "readable",
+        "Column: W; % = 300/364", "no",
+    ])
+    prompts: list[str] = []
+    messages: list[str] = []
+
+    def answer(prompt: str) -> str:
+        prompts.append(prompt)
+        return next(answers)
+
+    projection = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        input_fn=answer,
+        output_fn=messages.append,
+    )
+    next_attachments = PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+    )
+    entries = [
+        json.loads(line)
+        for line in (attempt / "interview.jsonl").read_text().splitlines()
+    ]
+    supersession = next(
+        entry for entry in entries if entry["event"] == "element_superseded"
+    )
+
+    assert PROJECTION_INTERVIEW.CONTRACT == 13
+    assert any("same_unit" in prompt and "element-000001" in prompt for prompt in prompts)
+    assert messages == [
+        "Invalid answer: element_merge_left: enter a value from 0 through 43."
+    ]
+    assert isinstance(next_attachments, tuple)
+    next_crop, _next_guide = next_attachments
+    assert next_crop.name == "region-r01-c02.png"
+    assert len(projection["elements"]) == 1
+    assert projection["elements"][0]["id"] == "element-000001"
+    assert projection["elements"][0]["region"] == [43, 89, 125, 121]
+    assert projection["elements"][0]["content"] == "Column: W; % = 300/364"
+    assert [item["element_id"] for item in projection["relationship_obligations"]] == [
+        "element-000001"
+    ]
+    assert supersession["element_id"] == "element-000001"
+    assert supersession["previous_element"]["content"] == "Column: W"
+    assert supersession["replacement_element"] == projection["elements"][0]
+    assert supersession["trigger_candidate"]["region"] == [56, 105, 111, 113]
+
+
+def test_projection_keeps_spatially_nested_distinct_units_separate(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (40, 40), "white").save(source, format="PNG")
+    attempt = tmp_path / "attempt"
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+    )
+    answers = iter([
+        "test-model", "pytest",
+        "yes", "container", "owned_by_active_core",
+        "10", "10", "200", "200",
+        "readable", "Outer", "no",
+        "yes", "nested value", "owned_by_active_core",
+        "50", "50", "100", "100",
+        "distinct_unit", "readable", "Inner", "no", "no",
+    ])
+
+    projection = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    events = [
+        json.loads(line)["event"]
+        for line in (attempt / "interview.jsonl").read_text().splitlines()
+    ]
+
+    assert [item["content"] for item in projection["elements"]] == [
+        "Outer", "Inner"
+    ]
+    assert "element_superseded" not in events
+
+
+def test_projection_contract_nine_replays_without_unit_collision_gate(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (40, 40), "white").save(source, format="PNG")
+    attempt = tmp_path / "attempt"
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    crop = PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        contract=9,
+    )
+    answers = iter([
+        "test-model", "pytest",
+        "yes", "container", "10", "10", "200", "200",
+        "readable", "Outer", "no",
+        "yes", "nested value", "50", "50", "100", "100",
+        "readable", "Inner", "no", "no",
+    ])
+
+    projection = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        contract=9,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    assert crop is not None
+    assert Image.open(crop).size == (12, 12)
+    assert projection["schema_version"] == 9
+    assert [item["content"] for item in projection["elements"]] == [
+        "Outer", "Inner"
+    ]
+
+
+def test_projection_contract_ten_replays_without_ownership_admission_gate(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (40, 40), "white").save(source, format="PNG")
+    attempt = tmp_path / "attempt"
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    crop = PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        contract=10,
+    )
+    answers = iter([
+        "test-model", "pytest",
+        "yes", "container", "10", "10", "200", "200",
+        "readable", "Outer", "no",
+        "yes", "nested value", "50", "50", "100", "100",
+        "distinct_unit", "readable", "Inner", "no", "no",
+    ])
+
+    projection = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        contract=10,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    assert isinstance(crop, Path)
+    assert crop.name == "region-r01-c01.png"
+    assert projection["schema_version"] == 10
+    assert [item["content"] for item in projection["elements"]] == [
+        "Outer", "Inner"
+    ]
+
+
+def test_projection_contract_eleven_replays_without_context_owner_routing(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (40, 40), "white").save(source, format="PNG")
+    attempt = tmp_path / "attempt"
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    attachments = PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        contract=11,
+    )
+    answers = iter([
+        "test-model", "pytest", "yes", "context callout", "context_only", "no",
+    ])
+    projection = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        contract=11,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    next_attachments = PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        contract=11,
+    )
+
+    assert isinstance(attachments, tuple)
+    assert isinstance(next_attachments, tuple)
+    assert Image.open(next_attachments[0]).size == (14, 12)
+    assert projection["schema_version"] == 11
+    assert "context_candidate_obligations" not in projection["scan_regions"][1]
+    assert projection["scan_regions"][0]["deferred_context_candidates"] == [
+        {
+            "candidate_kind": "context callout",
+            "reason": "context_only",
+            "crop_sha256": projection["scan_regions"][0]["evidence"][
+                "crop_sha256"
+            ],
+            "guide_sha256": projection["scan_regions"][0]["evidence"][
+                "guide_sha256"
+            ],
+        }
+    ]
+
+
+def test_projection_contract_eight_keeps_exact_crop_replayable(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (40, 40), "white").save(source, format="PNG")
+    attempt = tmp_path / "attempt"
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    crop = PROJECTION_INTERVIEW.prepare_region_evidence(
+        attempt,
+        source_path=source,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        contract=8,
+    )
+    answers = iter(["test-model", "pytest", "no"])
+
+    projection = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        contract=8,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    event = json.loads((attempt / "interview.jsonl").read_text().splitlines()[0])
+
+    assert crop is not None
+    assert Image.open(crop).size == (10, 10)
+    assert event["normalized_bounds"] == [0, 0, 250, 250]
+    assert event["pixel_bounds"] == [0, 0, 10, 10]
+    assert event["adapter"] == PROJECTION_INTERVIEW.REGION_EVIDENCE_ADAPTER_V1
+    assert projection["schema_version"] == 8
+
+
+def test_projection_region_crop_cannot_be_overwritten(tmp_path: Path) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "source.png")
+    waiting = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    crop = Path(waiting["work"][0]["attachments"][0])
+    crop.write_bytes(b"changed")
+
+    blocked = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+
+    assert blocked["status"] == "blocked"
+    assert blocked["stopped"] == "projection region evidence failed"
+    assert "region-evidence-changed:region-r01-c01" in blocked["why"]
+
+
+def test_projection_region_ownership_guide_cannot_be_overwritten(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "source.png")
+    waiting = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    guide = Path(waiting["work"][0]["attachments"][1])
+    guide.write_bytes(b"changed")
+
+    blocked = START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+
+    assert blocked["status"] == "blocked"
+    assert blocked["stopped"] == "projection region evidence failed"
+    assert "region-ownership-guide-changed:region-r01-c01" in blocked["why"]
 
 
 def test_source_and_projection_request_must_be_separate_atomic_actions(tmp_path: Path) -> None:
@@ -2088,7 +3373,7 @@ def test_valid_projection_attempt_creates_immutable_unassessed_version(tmp_path:
     work = tmp_path / "intake"
     _advance_to_frozen_image(work, tmp_path / "first.png")
     START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
-    answers = iter(_projection_answers())
+    answers = iter(_projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT))
 
     waiting = START_INTAKE.run_first_projection_interview(
         work,
@@ -2141,12 +3426,14 @@ def test_two_page_pdf_projects_every_visible_page_in_fixed_order(tmp_path: Path)
     )
     assert frozen["source"]["media_type"] == "application/pdf"
     assert current["pdf_page"] == 1
-    assert CODEX_RUNNER.load_request(work)[0].name == "page-000001.png"
+    request_attachments, _command = CODEX_RUNNER.load_request(work)
+    assert isinstance(request_attachments, tuple)
+    assert request_attachments[0].name == "region-r01-c01.png"
 
     for page_number, visible_text in enumerate(
         ("Page one description", "Page two note"), start=1
     ):
-        answers = _projection_answers(contract=7)
+        answers = _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
         answers[answers.index("A readable description")] = visible_text
         answer_iterator = iter(answers)
         verifying = START_INTAKE.run_first_projection_interview(
@@ -2163,7 +3450,9 @@ def test_two_page_pdf_projects_every_visible_page_in_fixed_order(tmp_path: Path)
         )
         if page_number == 1:
             assert current["pdf_page"] == 2
-            assert CODEX_RUNNER.load_request(work)[0].name == "page-000002.png"
+            page_attachments, _page_command = CODEX_RUNNER.load_request(work)
+            assert isinstance(page_attachments, tuple)
+            assert page_attachments[0].name == "region-r01-c01.png"
             pending = START_INTAKE.run_source_projection_closure(work)
             assert pending["verdict"] == "conversion_incomplete"
             assert pending["outcomes"][-1]["outcome"] == "pending"
@@ -2416,7 +3705,9 @@ def test_independent_reader_turns_unsupported_proposal_into_a_gap(
     work = tmp_path / "intake"
     _advance_to_frozen_image(work, tmp_path / "first.png")
     START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
-    producer_answers = iter(_projection_answers())
+    producer_answers = iter(
+        _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
+    )
     waiting = START_INTAKE.run_first_projection_interview(
         work,
         input_fn=lambda _prompt: next(producer_answers),
@@ -2459,7 +3750,9 @@ def test_supported_correction_replaces_final_endpoint_and_preserves_all_prior_ar
     work = tmp_path / "intake"
     _advance_to_frozen_image(work, tmp_path / "first.png")
     START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
-    producer_answers = iter(_projection_answers())
+    producer_answers = iter(
+        _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
+    )
     START_INTAKE.run_first_projection_interview(
         work, input_fn=lambda _prompt: next(producer_answers), output_fn=lambda _message: None,
     )
@@ -2516,7 +3809,10 @@ def test_invalid_enum_answers_are_preserved_without_entering_projection(tmp_path
     work = tmp_path / "intake"
     _advance_to_frozen_image(work, tmp_path / "first.png")
     START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
-    answers = iter(_projection_answers(invalid_status_first=True))
+    answers = iter(_projection_answers(
+        invalid_status_first=True,
+        contract=PROJECTION_INTERVIEW.CONTRACT,
+    ))
     messages: list[str] = []
 
     waiting = START_INTAKE.run_first_projection_interview(
@@ -2548,18 +3844,19 @@ def test_invalid_enum_answers_are_preserved_without_entering_projection(tmp_path
 def test_cli_runs_the_same_typed_projection_interview(tmp_path: Path) -> None:
     work = tmp_path / "intake"
     _advance_to_frozen_image(work, tmp_path / "first.png")
-    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
-    command = [
-        sys.executable,
-        str(SCRIPT),
-        "--work",
-        str(work),
-        "--run-projection-interview",
+    waiting = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True,
+    )
+    command = waiting["work"][0]["command"]
+    assert command[-3:] == [
+        "--projection-region-id", "region-r01-c01", "--run-projection-interview",
     ]
 
     completed = subprocess.run(
         command,
-        input="\n".join(_projection_answers()) + "\n",
+        input="\n".join(
+            _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
+        ) + "\n",
         text=True,
         capture_output=True,
         check=False,
@@ -2567,33 +3864,41 @@ def test_cli_runs_the_same_typed_projection_interview(tmp_path: Path) -> None:
 
     assert completed.returncode == 2
     result = json.loads(completed.stdout)
-    assert result["stopped"] == "verifying_first_projection"
-    verification_command = [
-        sys.executable,
-        str(SCRIPT),
-        "--work",
-        str(work),
-        "--run-projection-verification",
-    ]
-    verified = subprocess.run(
-        verification_command,
-        input="\n".join(_verification_answers(1)) + "\n",
-        text=True,
-        capture_output=True,
-        check=False,
-    )
-    assert verified.returncode == 0
-    verified_result = json.loads(verified.stdout)
-    assert verified_result["status"] == "ready_for_projection_assessment"
+    assert result["stopped"] == "projection_region_step_complete"
+    assert result["completed_region_id"] == "region-r01-c01"
     assert "Allowed values: readable, gap" in completed.stderr
-    assert verified_result["projection"]["coverage"] == "unassessed"
+    next_attachment, next_command = CODEX_RUNNER.load_request(work)
+    assert isinstance(next_attachment, tuple)
+    assert next_attachment[0].name == "region-r01-c02.png"
+    assert next_command[-3:] == [
+        "--projection-region-id", "region-r01-c02", "--run-projection-interview",
+    ]
+    journal = [
+        json.loads(line)
+        for line in (
+            work / "projection-interviews" / "attempt-000001" / "interview.jsonl"
+        ).read_text().splitlines()
+    ]
+    assert [
+        entry["region_id"]
+        for entry in journal
+        if entry["event"] == "region_outcome_recorded"
+    ] == ["region-r01-c01"]
+
+    reused = subprocess.run(
+        command, text=True, capture_output=True, check=False,
+    )
+    assert reused.returncode == 3
+    reused_result = json.loads(reused.stdout)
+    assert reused_result["stopped"] == "projection region invocation expired"
+    assert "region-r01-c01" in reused_result["why"]
 
 
 def test_changed_projection_version_fails_closed(tmp_path: Path) -> None:
     work = tmp_path / "intake"
     _advance_to_frozen_image(work, tmp_path / "first.png")
     START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
-    answers = iter(_projection_answers())
+    answers = iter(_projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT))
     waiting = START_INTAKE.run_first_projection_interview(
         work,
         input_fn=lambda _prompt: next(answers),
@@ -2703,6 +4008,101 @@ def test_verbatim_projection_rejects_a_preexisting_unbound_artifact(
     assert (work / "ledger.jsonl").read_bytes() == before
 
 
+def test_relationship_gap_question_is_code_grounded_to_recorded_candidates(
+    tmp_path: Path,
+) -> None:
+    relationship = {
+        "id": "relationship-000003",
+        "kind": "annotation arrow connects",
+        "from_id": None,
+        "to_id": None,
+        "origin_point": [93, 137],
+        "status": "gap",
+        "description": "",
+        "gap_reason": "The origin point matches two recorded elements.",
+        "binding_issue": {
+            "participant": "origin",
+            "matching_element_ids": ["element-000002", "element-000003"],
+            "point": [93, 137],
+            "reason": "no_unique_recorded_element",
+        },
+    }
+    projection = {
+        "elements": [
+            {
+                "id": "element-000001",
+                "kind": "annotation callout",
+                "region": [32, 42, 151, 88],
+                "status": "readable",
+                "content": "Column: AF",
+            },
+            {
+                "id": "element-000002",
+                "kind": "annotation callout",
+                "region": [32, 109, 152, 149],
+                "status": "readable",
+                "content": "Column: W",
+            },
+            {
+                "id": "element-000003",
+                "kind": "annotation text line",
+                "region": [63, 131, 124, 144],
+                "status": "readable",
+                "content": "%= 300/364",
+            },
+        ],
+        "relationships": [relationship],
+    }
+    projection_path = tmp_path / "projection.json"
+    projection_path.write_text(
+        json.dumps(projection, indent=2, sort_keys=True) + "\n"
+    )
+    projection_sha256 = START_INTAKE._digest_bytes(projection_path.read_bytes())
+    answers = iter([
+        "fresh-questioner",
+        "pytest-gap-question",
+        "operator_text",
+        "element-000001",
+        "element-000003",
+    ])
+    messages: list[str] = []
+
+    result = START_INTAKE.gap_clarification.run_round(
+        tmp_path / "round-000001",
+        projection_path=projection_path,
+        projection_sha256=projection_sha256,
+        purpose=REAL_PURPOSE,
+        contract=4,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=messages.append,
+    )
+
+    assert result["schema_version"] == 4
+    assert [
+        item["id"] for item in result["gaps"][0]["recorded_context"]
+    ] == ["element-000002", "element-000003"]
+    assert result["questions"][0]["asks"] == (
+        "Which recorded element is the intended origin for relationship-000003: "
+        "element-000003 (\u201c%= 300/364\u201d) or element-000002 (\u201cColumn: W\u201d)?"
+    )
+    assert messages == [
+        "Invalid answer: gap_candidate_000001: choose one of: "
+        "element-000002, element-000003."
+    ]
+    journal = [
+        json.loads(line)
+        for line in (
+            tmp_path / "round-000001" / "interview.jsonl"
+        ).read_text().splitlines()
+    ]
+    rejected = [
+        entry for entry in journal
+        if entry["event"] == "answer_recorded" and not entry["accepted"]
+    ]
+    assert len(rejected) == 1
+    assert rejected[0]["raw"] == "element-000001"
+
+
 def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     tmp_path: Path,
 ) -> None:
@@ -2711,11 +4111,14 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, project_source=True)
     producer_answers = iter([
         "test-model", "pytest",
-        "yes", "visible-text", "10", "20", "100", "120", "readable",
+        "yes", "visible-text", "owned_by_active_core",
+        "10", "20", "100", "120", "readable",
         "A readable description", "yes",
-        "yes", "visible-target", "120", "20", "220", "120", "gap",
+        "yes", "visible-target", "owned_by_active_core",
+        "120", "20", "220", "120", "gap",
         "The first target is obscured.", "no",
-        "yes", "another-visible-target", "10", "130", "100", "220", "gap",
+        "yes", "another-visible-target", "owned_by_active_core",
+        "10", "130", "100", "220", "gap",
         "The second target is obscured.", "no",
         "no", *(["no"] * 15),
         "use_recorded_endpoint", "visually-connected-to", "10", "20", "120", "20",
@@ -3080,7 +4483,9 @@ def test_file_typed_gap_question_freezes_one_bound_source_and_stops_before_proje
     START_INTAKE.drive(
         work, "There is a new intake", REAL_PURPOSE, project_source=True
     )
-    projection_answers = iter(_projection_answers(contract=7))
+    projection_answers = iter(
+        _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
+    )
     START_INTAKE.run_first_projection_interview(
         work,
         input_fn=lambda _prompt: next(projection_answers),
@@ -3140,10 +4545,8 @@ def test_file_typed_gap_question_freezes_one_bound_source_and_stops_before_proje
     assert (work / "ledger.jsonl").read_bytes() == ledger_before_rejections
 
     additional = tmp_path / "clean-reference.png"
-    additional_bytes = base64.b64decode(
-        "iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAusB9Y9Zl1sAAAAASUVORK5CYII="
-    )
-    additional.write_bytes(additional_bytes)
+    Image.new("RGB", (40, 40), "white").save(additional, format="PNG")
+    additional_bytes = additional.read_bytes()
     frozen = START_INTAKE.drive(
         work,
         "There is a new intake",
@@ -3200,13 +4603,25 @@ def test_file_typed_gap_question_freezes_one_bound_source_and_stops_before_proje
     runner_boundary = CODEX_RUNNER.run_clarification_boundary(work)
     assert boundary.get("boundary") == "needs_model_interview", boundary
     assert runner_boundary == boundary
-    assert boundary["work"][0]["attachments"] == [str(frozen_copy.resolve())]
+    assert Path(boundary["work"][0]["attachments"][0]) == (
+        work
+        / "additional-source-projections"
+        / "source-000004"
+        / "projection-interview"
+        / "region-evidence"
+        / "region-r01-c01.png"
+    )
     assert boundary["work"][0]["command"][-1] == "--run-projection-interview"
     attachment, command = CODEX_RUNNER.load_request(work)
-    assert attachment == frozen_copy
+    assert isinstance(attachment, tuple)
+    assert attachment == tuple(
+        Path(path) for path in boundary["work"][0]["attachments"]
+    )
     assert command == boundary["work"][0]["command"]
 
-    additional_projection_answers = iter(_projection_answers(contract=7))
+    additional_projection_answers = iter(
+        _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
+    )
     verifying = START_INTAKE.run_first_projection_interview(
         work,
         input_fn=lambda _prompt: next(additional_projection_answers),
@@ -3228,8 +4643,11 @@ def test_file_typed_gap_question_freezes_one_bound_source_and_stops_before_proje
     assert projected["projection"]["coverage"] == "unassessed"
     assert projected["reserved_projection"] == frozen["projection"]
     assert projected["lineage"] == frozen["lineage"]
-    assert completed_boundary["boundary"] == "additional_source_projection_complete"
-    assert completed_boundary["projection"] == projected["projection"]
+    assert completed_boundary["boundary"] == "needs_model_interview"
+    assert completed_boundary["stopped"] == "assessing_additional_source_gap"
+    assert completed_boundary["evidence"][0]["projection_id"] == (
+        projected["projection"]["id"]
+    )
     assert original_projection_path.read_bytes() == original_projection_bytes
     assert START_INTAKE.run_clarification_boundary(work) == completed_boundary
     assert (work / "ledger.jsonl").read_bytes() == ledger_after_projection
@@ -3316,6 +4734,232 @@ def test_file_typed_gap_question_freezes_one_bound_source_and_stops_before_proje
     assert changed_lineage["stopped"] == "invalid ledger"
 
 
+def test_projected_additional_image_is_assessed_against_its_exact_original_gap(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "annotated.png")
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    first_answers = iter(
+        _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
+    )
+    START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(first_answers),
+        output_fn=lambda _message: None,
+    )
+    first_verification = iter(_verification_answers(1))
+    first_projected = START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(first_verification),
+        output_fn=lambda _message: None,
+    )
+    original_projection_path = work / first_projected["projection"]["path"]
+    original_projection_before = original_projection_path.read_bytes()
+
+    question_boundary = START_INTAKE.run_clarification_boundary(work)
+    assert question_boundary["boundary"] == "needs_model_interview"
+    original_gap = json.loads(
+        (work / "intake-state.json").read_text()
+    )["gap_question_round"]["gaps"][0]
+    question_answers = iter([
+        "fresh-questioner",
+        "pytest-gap-question",
+        "local_file",
+        "Which additional source shows the exact obscured value?",
+    ])
+    START_INTAKE.run_gap_clarification(
+        work,
+        input_fn=lambda _prompt: next(question_answers),
+        output_fn=lambda _message: None,
+    )
+    clean_image = tmp_path / "clean.png"
+    Image.new("RGB", (40, 40), "white").save(clean_image, format="PNG")
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_file=clean_image,
+    )
+    START_INTAKE.run_clarification_boundary(work)
+    additional_answers = _projection_answers(
+        contract=PROJECTION_INTERVIEW.CONTRACT
+    )
+    additional_answers[additional_answers.index("A readable description")] = "$48,000"
+    additional_iterator = iter(additional_answers)
+    START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(additional_iterator),
+        output_fn=lambda _message: None,
+    )
+    additional_verification = iter(_verification_answers(1))
+    additional_projected = START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(additional_verification),
+        output_fn=lambda _message: None,
+    )
+    additional_projection_path = work / additional_projected["projection"]["path"]
+    additional_projection_before = additional_projection_path.read_bytes()
+
+    assessment_boundary = START_INTAKE.run_clarification_boundary(work)
+    assert assessment_boundary["boundary"] == "needs_model_interview"
+    assert assessment_boundary["stopped"] == "assessing_additional_source_gap"
+    assert assessment_boundary["gap"] == original_gap
+    assert assessment_boundary["evidence"][0]["item"]["content"] == "$48,000"
+    attachments, command = CODEX_RUNNER.load_request(work)
+    assert isinstance(attachments, tuple)
+    assert [path.name for path in attachments] == ["source-000003", "source-000004"]
+    assert command[-1] == "--run-additional-source-gap-assessment"
+    runner_boundary = CODEX_RUNNER.run_clarification_boundary(work)
+    assert runner_boundary == assessment_boundary
+    assert CODEX_RUNNER.next_model_request(work, runner_boundary) == (
+        attachments,
+        command,
+    )
+    state_path = work / "intake-state.json"
+    state_before_attachment_tamper = state_path.read_bytes()
+    duplicate_attachment = work / "sources" / "equal-byte-duplicate"
+    duplicate_attachment.write_bytes(clean_image.read_bytes())
+    changed_state = json.loads(state_before_attachment_tamper)
+    changed_state["additional_source_gap_assessment"]["attachments"][1] = str(
+        duplicate_attachment.resolve()
+    )
+    state_path.write_text(json.dumps(changed_state, indent=2, sort_keys=True) + "\n")
+    with pytest.raises(
+        CODEX_RUNNER.LaunchError,
+        match="attachment identity changed",
+    ):
+        CODEX_RUNNER.load_request(work)
+    state_path.write_bytes(state_before_attachment_tamper)
+    duplicate_attachment.unlink()
+
+    messages: list[str] = []
+    assessment_answers = iter([
+        "fresh-additional-source-assessor",
+        "pytest-additional-source-assessment",
+        "resolves_gap",
+        "invented-evidence",
+        "evidence-000001",
+        "no_more_evidence",
+        "The selected element gives the exact value hidden in the original source.",
+    ])
+    assessed = START_INTAKE.run_additional_source_gap_assessment(
+        work,
+        input_fn=lambda _prompt: next(assessment_answers),
+        output_fn=messages.append,
+    )
+    assert assessed["stopped"] == "additional_source_gap_assessment_recorded"
+    assert assessed["assessment"]["verdict"] == "resolves_gap"
+    assert [item["evidence_id"] for item in assessed["assessment"]["evidence"]] == [
+        "evidence-000001"
+    ]
+    assert assessed["assessment"]["gap"] == assessment_boundary["gap"]
+    assert assessed["assessment"]["original_projection"]["sha256"] == (
+        assessment_boundary["gap"]["projection_sha256"]
+    )
+    assert assessed["assessment"]["current_projection"]["sha256"] == (
+        first_projected["projection"]["sha256"]
+    )
+    assert assessed["assessment"]["additional_projection"]["sha256"] == (
+        additional_projected["projection"]["sha256"]
+    )
+    assert assessed["assessment"]["evidence"][0]["collection"] == "elements"
+    assert assessed["assessment"]["evidence"][0]["item_id"] == "element-000001"
+    assert messages == [
+        "Invalid answer: evidence_selection_000001: got 'invented-evidence'; choose one of ['evidence-000001', 'evidence-000002']."
+    ]
+    assert original_projection_path.read_bytes() == original_projection_before
+    assert additional_projection_path.read_bytes() == additional_projection_before
+    completed = START_INTAKE.run_clarification_boundary(work)
+    assert completed["boundary"] == "clarification_complete"
+    assert completed["stopped"] == "clarification_continuation_complete"
+    assert completed["terminal_disposition"]["disposition"] == "first_layer_complete"
+    assert completed["projection_qualification"]["coverage"][
+        "remaining_gap_count"
+    ] == 0
+    assert completed["source_projection_closure"]["verdict"] == "all_projected"
+    admission = json.loads((work / "intake-state.json").read_text())[
+        "additional_source_element_gap_admission"
+    ]
+    assert admission["gap"] == original_gap
+    assert admission["selected_evidence"] == assessed["assessment"]["evidence"][0]
+    assert completed["projection"]["parent_projection_id"] == (
+        first_projected["projection"]["id"]
+    )
+    assert completed["projection"]["version"] == 2
+    assert completed["projection"]["gap_count"] == 0
+    assert original_projection_path.read_bytes() == original_projection_before
+    assert additional_projection_path.read_bytes() == additional_projection_before
+
+    parent_projection = json.loads(original_projection_before)
+    admitted_projection_path = work / completed["projection"]["path"]
+    admitted_projection_before = admitted_projection_path.read_bytes()
+    admitted_projection = json.loads(admitted_projection_before)
+    target = next(
+        item
+        for item in admitted_projection["elements"]
+        if item["id"] == original_gap["id"]
+    )
+    assert target["status"] == "readable"
+    assert target["content"] == "$48,000"
+    assert target["gap_reason"] == ""
+    assert target["region"] == original_gap["record"]["region"]
+    assert [
+        item
+        for item in admitted_projection["elements"]
+        if item["id"] != original_gap["id"]
+    ] == [
+        item
+        for item in parent_projection["elements"]
+        if item["id"] != original_gap["id"]
+    ]
+    assert admitted_projection["relationships"] == parent_projection["relationships"]
+    assert admitted_projection["scan_regions"] == parent_projection["scan_regions"]
+    assert START_INTAKE.run_clarification_boundary(work) == completed
+    assert CODEX_RUNNER.run_clarification_boundary(work) == completed
+    closure = START_INTAKE.run_source_projection_closure(work)
+    original_source_outcome = next(
+        item for item in closure["outcomes"] if item["source_id"] == "source-000003"
+    )
+    assert closure["verdict"] == "all_projected"
+    assert original_source_outcome["projection_version_count"] == 2
+    assert original_source_outcome["projection"]["id"] == completed["projection"]["id"]
+
+    ledger = [
+        json.loads(line)
+        for line in (work / "ledger.jsonl").read_text().splitlines()
+    ]
+    assert [entry["event"] for entry in ledger[-4:]] == [
+        "model_additional_source_gap_assessment_requested",
+        "model_additional_source_gap_assessment_completed",
+        "projection_version_created",
+        "clarification_continuation_completed",
+    ]
+    assert ledger[-3]["rejected_answer_count"] == 1
+    assert ledger[-2]["role"] == "additional_source_element_gap_admission"
+    assert ledger[-2]["resolved_gap"] == original_gap
+    assert ledger[-2]["selected_evidence"] == assessed["assessment"]["evidence"][0]
+    assert ledger[-1]["basis"] == "additional_source_element_gap_admission"
+    assessment_path = work / assessed["assessment_path"]
+    assessment_before = assessment_path.read_bytes()
+    changed = json.loads(assessment_path.read_text())
+    changed["assessment"]["evidence"][0]["item"]["content"] = "$47,999"
+    assessment_path.write_text(json.dumps(changed, indent=2, sort_keys=True) + "\n")
+    tampered = START_INTAKE.run_clarification_boundary(work)
+    assert tampered["status"] == "blocked"
+    assert tampered["stopped"] == "invalid additional source gap assessment"
+    assessment_path.write_bytes(assessment_before)
+
+    admitted_projection_path.write_bytes(b"changed child projection")
+    changed_projection = START_INTAKE.run_clarification_boundary(work)
+    assert changed_projection["status"] == "blocked"
+    assert changed_projection["stopped"] == "immutable projection changed"
+    admitted_projection_path.write_bytes(admitted_projection_before)
+    assert START_INTAKE.run_clarification_boundary(work) == completed
+
+
 def test_utf8_additional_source_fills_its_reserved_projection_verbatim(
     tmp_path: Path,
 ) -> None:
@@ -3324,7 +4968,9 @@ def test_utf8_additional_source_fills_its_reserved_projection_verbatim(
     START_INTAKE.drive(
         work, "There is a new intake", REAL_PURPOSE, project_source=True
     )
-    projection_answers = iter(_projection_answers(contract=7))
+    projection_answers = iter(
+        _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
+    )
     START_INTAKE.run_first_projection_interview(
         work,
         input_fn=lambda _prompt: next(projection_answers),
@@ -3358,21 +5004,48 @@ def test_utf8_additional_source_fills_its_reserved_projection_verbatim(
     )
     ledger_before = (work / "ledger.jsonl").read_bytes()
 
-    result = START_INTAKE.run_clarification_boundary(work)
+    boundary = START_INTAKE.run_clarification_boundary(work)
+    projected_state = json.loads((work / "intake-state.json").read_text())
+    projection = projected_state["additional_source_projection"]
+    assert boundary["boundary"] == "needs_model_interview"
+    assert boundary["stopped"] == "assessing_additional_source_gap"
+    assert boundary["evidence"][0]["item"] == {
+        "text": "plain text reference\n"
+    }
+    assessment_answers = iter([
+        "fresh-text-assessor",
+        "pytest-text-assessment",
+        "does_not_resolve_gap",
+        "The supplied text does not identify the exact obscured value.",
+    ])
+    result = START_INTAKE.run_additional_source_gap_assessment(
+        work,
+        input_fn=lambda _prompt: next(assessment_answers),
+        output_fn=lambda _message: None,
+    )
     ledger_after = (work / "ledger.jsonl").read_bytes()
 
-    assert result["boundary"] == "additional_source_projection_complete"
     assert result["status"] == "ready_for_projection_assessment"
-    assert result["stopped"] == "additional_source_projection_recorded"
+    assert result["stopped"] == "additional_source_gap_assessment_recorded"
+    assert result["assessment"]["verdict"] == "does_not_resolve_gap"
+    assert result["assessment"]["evidence"] == []
     assert frozen["projection"]["status"] == "pending"
     assert result["reserved_projection"] == frozen["projection"]
-    assert result["projection"]["id"] == frozen["projection"]["id"]
-    assert result["projection"]["method"] == "verbatim_utf8"
-    assert result["projection"]["coverage"]["status"] == "complete"
-    assert (work / result["projection"]["path"]).read_bytes() == supplied.read_bytes()
+    assert projection["id"] == frozen["projection"]["id"]
+    assert projection["method"] == "verbatim_utf8"
+    assert projection["coverage"]["status"] == "complete"
+    assert (work / projection["path"]).read_bytes() == supplied.read_bytes()
     assert len(ledger_after.decode("utf-8").splitlines()) == len(
         ledger_before.decode("utf-8").splitlines()
-    ) + 1
+    ) + 3
+    assert START_INTAKE.run_clarification_boundary(work) == {
+        **result,
+        "boundary": "additional_source_gap_assessment_complete",
+    }
+    assert "additional_source_element_gap_admission" not in json.loads(
+        (work / "intake-state.json").read_text()
+    )
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after
 
     closure = START_INTAKE.run_source_projection_closure(work)
     assert closure["verdict"] == "all_projected"
@@ -3402,6 +5075,311 @@ def test_utf8_additional_source_fills_its_reserved_projection_verbatim(
     assert (work / "ledger.jsonl").read_bytes() == ledger_after
 
 
+def test_element_admission_with_another_gap_cannot_finish_the_first_layer(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "annotated.png")
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    first_answers = iter(_projection_answers_with_two_element_gaps())
+    START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(first_answers),
+        output_fn=lambda _message: None,
+    )
+    verification = iter(_verification_answers(1))
+    first_projected = START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verification),
+        output_fn=lambda _message: None,
+    )
+    assert first_projected["projection"]["gap_count"] == 2
+
+    START_INTAKE.run_clarification_boundary(work)
+    question_answers = iter([
+        "fresh-questioner",
+        "pytest-gap-question",
+        "local_file",
+        "Which source shows the first obscured value?",
+        "operator_text",
+        "What is the second obscured value?",
+    ])
+    START_INTAKE.run_gap_clarification(
+        work,
+        input_fn=lambda _prompt: next(question_answers),
+        output_fn=lambda _message: None,
+    )
+    clean_image = tmp_path / "clean.png"
+    Image.new("RGB", (40, 40), "white").save(clean_image, format="PNG")
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_file=clean_image,
+    )
+    START_INTAKE.run_clarification_boundary(work)
+    additional_answers = _projection_answers(
+        contract=PROJECTION_INTERVIEW.CONTRACT
+    )
+    additional_answers[additional_answers.index("A readable description")] = "$48,000"
+    additional_iterator = iter(additional_answers)
+    START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(additional_iterator),
+        output_fn=lambda _message: None,
+    )
+    additional_verification = iter(_verification_answers(1))
+    START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(additional_verification),
+        output_fn=lambda _message: None,
+    )
+    START_INTAKE.run_clarification_boundary(work)
+    assessment_answers = iter([
+        "fresh-additional-source-assessor",
+        "pytest-additional-source-assessment",
+        "resolves_gap",
+        "evidence-000001",
+        "no_more_evidence",
+        "The selected element gives the exact first hidden value.",
+    ])
+    START_INTAKE.run_additional_source_gap_assessment(
+        work,
+        input_fn=lambda _prompt: next(assessment_answers),
+        output_fn=lambda _message: None,
+    )
+
+    state, entries, load_error = START_INTAKE._load_bound(
+        work, b"There is a new intake"
+    )
+    assert load_error is None and state is not None
+    admitted = START_INTAKE._consume_additional_source_element_gap_admission(
+        work, state, entries, REAL_PURPOSE
+    )
+    assert admitted["stopped"] == "additional_source_element_gap_admitted"
+    state, entries, load_error = START_INTAKE._load_bound(
+        work, b"There is a new intake"
+    )
+    assert load_error is None and state is not None
+    qualification, qualification_error = (
+        START_INTAKE._terminal_projection_qualification(work, state)
+    )
+    assert qualification_error is None and qualification is not None
+    changed_qualification = json.loads(json.dumps(qualification))
+    changed_qualification["remaining_gaps"][0]["id"] = "element-invented"
+    state_before_mismatch = (work / "intake-state.json").read_bytes()
+    ledger_before_mismatch = (work / "ledger.jsonl").read_bytes()
+    mismatch = START_INTAKE._resume_question_round_after_additional_source_admission(
+        work, state, entries, changed_qualification
+    )
+    assert mismatch["status"] == "blocked"
+    assert mismatch["stopped"] == "question round resumption unavailable"
+    assert "remaining gaps" in mismatch["why"]
+    assert (work / "intake-state.json").read_bytes() == state_before_mismatch
+    assert (work / "ledger.jsonl").read_bytes() == ledger_before_mismatch
+
+    resumed = START_INTAKE.run_clarification_boundary(work)
+
+    assert resumed["boundary"] == "needs_operator_answer"
+    assert resumed["stopped"] == "awaiting_gap_answers"
+    assert resumed["answered_question_count"] == 1
+    assert resumed["question_count"] == 2
+    assert resumed["question"]["asks"] == "What is the second obscured value?"
+    assert resumed["question"]["answers_gap"]["id"] == "element-000003"
+    assert CODEX_RUNNER.run_clarification_boundary(work) == resumed
+    ledger_events = [
+        json.loads(line)["event"]
+        for line in (work / "ledger.jsonl").read_text().splitlines()
+    ]
+    assert ledger_events[-2:] == [
+        "operator_question_fulfilled_by_additional_source",
+        "operator_question_asked",
+    ]
+    assert "clarification_continuation_completed" not in ledger_events
+
+    answered = START_INTAKE.run_operator_turn(
+        work,
+        input_fn=lambda _prompt: "The second value is 29.0%.",
+        output_fn=lambda _message: None,
+    )
+    assert answered["stopped"] == "gap_question_round_answered"
+    assert answered["answered_question_count"] == 2
+
+    assessment_requested = START_INTAKE.run_clarification_boundary(work)
+    assert assessment_requested["boundary"] == "needs_model_interview"
+    assert assessment_requested["stopped"] == "assessing_gap_answers"
+    assessment_state = json.loads((work / "intake-state.json").read_text())
+    request = assessment_state["gap_answer_assessment"]
+    assert request["assessment_count"] == 2
+    assert request["model_assessment_count"] == 1
+    assert [item["mode"] for item in request["assessment_plan"]] == [
+        "admitted_source",
+        "model",
+    ]
+    assert [item["round_position"] for item in request["assessment_plan"]] == [
+        1,
+        2,
+    ]
+    assert [item["position"] for item in request["bindings"]] == [1]
+
+    plan_tamper = tmp_path / "mixed-assessment-plan-tamper"
+    shutil.copytree(work, plan_tamper)
+    tampered_state_path = plan_tamper / "intake-state.json"
+    tampered_state = json.loads(tampered_state_path.read_text())
+    tampered_state["gap_answer_assessment"]["assessment_plan"].reverse()
+    tampered_state_path.write_text(
+        json.dumps(tampered_state, indent=2, sort_keys=True) + "\n"
+    )
+    tampered_ledger = (plan_tamper / "ledger.jsonl").read_bytes()
+    tampered = START_INTAKE.run_gap_answer_assessment(plan_tamper)
+    assert tampered["status"] == "blocked"
+    assert tampered["stopped"] == "invalid ledger"
+    assert "request changed" in tampered["why"]
+    assert (plan_tamper / "ledger.jsonl").read_bytes() == tampered_ledger
+
+    resolving_element = tmp_path / "resolving-operator-text-element"
+    shutil.copytree(work, resolving_element)
+    resolving_answers = iter([
+        "fresh-resolving-element-assessor",
+        "pytest-resolving-element-assessment",
+        "resolves_gap",
+        "The operator supplied the exact value for this element.",
+    ])
+    resolving_assessed = START_INTAKE.run_gap_answer_assessment(
+        resolving_element,
+        input_fn=lambda _prompt: next(resolving_answers),
+        output_fn=lambda _message: None,
+    )
+    assert resolving_assessed["stopped"] == "gap_answer_assessment_recorded"
+    assert resolving_assessed["continuation"]["decision"] == (
+        "apply_resolving_answer"
+    )
+    parent_record = json.loads(
+        (resolving_element / "intake-state.json").read_text()
+    )["current_projection"]
+    parent_bytes = (resolving_element / parent_record["path"]).read_bytes()
+
+    changed_answer = tmp_path / "resolving-element-answer-tamper"
+    shutil.copytree(resolving_element, changed_answer)
+    changed_answer_state = json.loads(
+        (changed_answer / "intake-state.json").read_text()
+    )
+    changed_answer_projection = changed_answer_state["gap_question_answers"][1][
+        "projection"
+    ]
+    (changed_answer / changed_answer_projection["path"]).write_text("changed")
+    changed_answer_ledger = (changed_answer / "ledger.jsonl").read_bytes()
+    rejected_admission = START_INTAKE.run_clarification_boundary(changed_answer)
+    assert rejected_admission["status"] == "blocked"
+    assert "answer source, projection, or question changed" in rejected_admission[
+        "why"
+    ]
+    assert (changed_answer / "ledger.jsonl").read_bytes() == changed_answer_ledger
+
+    resolved = CODEX_RUNNER.run_clarification_boundary(resolving_element)
+    assert resolved["boundary"] == "clarification_complete"
+    assert resolved["terminal_disposition"]["disposition"] == (
+        "first_layer_complete"
+    )
+    resolved_state = json.loads(
+        (resolving_element / "intake-state.json").read_text()
+    )
+    admissions = resolved_state["operator_text_element_gap_admissions"]
+    assert len(admissions) == 1
+    admission = admissions[0]
+    assert admission["assessment_round"] == 1
+    assert admission["assessment_position"] == 2
+    assert admission["answer_source"]["sha256"] == (
+        admission["answer_projection"]["sha256"]
+    )
+    assert admission["answer_text"] == "The second value is 29.0%."
+    assert (resolving_element / parent_record["path"]).read_bytes() == parent_bytes
+    child_path = resolving_element / admission["projection"]["path"]
+    child = json.loads(child_path.read_text())
+    resolved_elements = [
+        item for item in child["elements"] if item["id"] == "element-000003"
+    ]
+    assert len(resolved_elements) == 1
+    assert resolved_elements[0]["status"] == "readable"
+    assert resolved_elements[0]["content"] == "The second value is 29.0%."
+    assert resolved_elements[0]["resolution_audit"]["assessment_round"] == 1
+    assert resolved_elements[0]["resolution_audit"]["assessment_position"] == 2
+    projection_events = [
+        json.loads(line)
+        for line in (resolving_element / "ledger.jsonl").read_text().splitlines()
+        if json.loads(line)["event"] == "projection_version_created"
+        and json.loads(line).get("role") == "operator_text_element_gap_admission"
+    ]
+    assert len(projection_events) == 1
+    assert projection_events[0]["admission_input_sha256"] == admission[
+        "input_sha256"
+    ]
+    for name in ("missing", "duplicated"):
+        history_tamper = tmp_path / f"operator-text-admission-{name}"
+        shutil.copytree(resolving_element, history_tamper)
+        history_state_path = history_tamper / "intake-state.json"
+        history_state = json.loads(history_state_path.read_text())
+        if name == "missing":
+            history_state.pop("operator_text_element_gap_admissions")
+        else:
+            history_state["operator_text_element_gap_admissions"].append(
+                json.loads(json.dumps(
+                    history_state["operator_text_element_gap_admissions"][0]
+                ))
+            )
+        history_state_path.write_text(
+            json.dumps(history_state, indent=2, sort_keys=True) + "\n"
+        )
+        history_ledger = (history_tamper / "ledger.jsonl").read_bytes()
+        rejected_history = START_INTAKE.run_clarification_boundary(history_tamper)
+        assert rejected_history["status"] == "blocked"
+        assert rejected_history["stopped"] in {
+            "invalid operator-text element admission",
+            "immutable projection changed",
+        }
+        assert (history_tamper / "ledger.jsonl").read_bytes() == history_ledger
+
+    mixed_assessment_answers = iter([
+        "fresh-mixed-assessor",
+        "pytest-mixed-assessment",
+        "does_not_resolve_gap",
+        "The text supplies a value but does not identify the exact visible element.",
+    ])
+    assessed = START_INTAKE.run_gap_answer_assessment(
+        work,
+        input_fn=lambda _prompt: next(mixed_assessment_answers),
+        output_fn=lambda _message: None,
+    )
+    assert assessed["stopped"] == "gap_answer_assessment_recorded"
+    assert assessed["continuation"]["decision"] == "prepare_next_round"
+    assert [item["position"] for item in assessed["assessments"]] == [1, 2]
+    assert [item["verdict"] for item in assessed["assessments"]] == [
+        "resolves_gap",
+        "does_not_resolve_gap",
+    ]
+    assert assessed["assessments"][0]["basis"]["kind"] == "admitted_source"
+    assert assessed["assessments"][0]["basis"][
+        "accepted_assessment_result_sha256"
+    ] == assessment_state["gap_question_answers"][0]["fulfillment"][
+        "assessment_result_sha256"
+    ]
+    assert "basis" not in assessed["assessments"][1]
+    model_result = json.loads((
+        work / "gap-answer-assessments" / "round-000001" / "assessment.json"
+    ).read_text())
+    assert model_result["assessment_count"] == 1
+    assert model_result["assessments"][0]["gap"]["id"] == "element-000003"
+    completion = json.loads((work / "ledger.jsonl").read_text().splitlines()[-1])
+    assert completion["event"] == "model_gap_answer_assessment_completed"
+    assert completion["assessment_count"] == 2
+    assert completion["model_assessment_count"] == 1
+    next_round = START_INTAKE.run_clarification_boundary(work)
+    assert next_round.get("boundary") == "needs_model_interview", next_round
+    assert next_round["stopped"] == "formulating_follow_up_gap_question_round"
+    assert next_round["round"] == 2
+
 def test_url_typed_question_freezes_and_projects_one_additional_public_url(
     tmp_path: Path, monkeypatch: object,
 ) -> None:
@@ -3410,7 +5388,9 @@ def test_url_typed_question_freezes_and_projects_one_additional_public_url(
     START_INTAKE.drive(
         work, "There is a new intake", REAL_PURPOSE, project_source=True
     )
-    projection_answers = iter(_projection_answers(contract=7))
+    projection_answers = iter(
+        _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
+    )
     START_INTAKE.run_first_projection_interview(
         work,
         input_fn=lambda _prompt: next(projection_answers),
@@ -3469,6 +5449,8 @@ def test_url_typed_question_freezes_and_projects_one_additional_public_url(
         gap_url="https://example.test/follow-up.txt",
     )
     completed = START_INTAKE.run_clarification_boundary(work)
+    projected_state = json.loads((work / "intake-state.json").read_text())
+    projection = projected_state["additional_source_projection"]
 
     assert replayed == frozen
     assert frozen["status"] == "ready_for_projection"
@@ -3481,12 +5463,14 @@ def test_url_typed_question_freezes_and_projects_one_additional_public_url(
         "https://example.test/follow-up.txt"
     )
     assert frozen["projection"]["status"] == "pending"
-    assert completed["boundary"] == "additional_source_projection_complete"
-    assert completed["reserved_projection"] == frozen["projection"]
-    assert completed["projection"]["id"] == frozen["projection"]["id"]
-    assert completed["projection"]["method"] == "verbatim_utf8"
-    assert (work / completed["projection"]["path"]).read_bytes() == content
-    assert completed["lineage"] == frozen["lineage"]
+    assert completed["boundary"] == "needs_model_interview"
+    assert completed["stopped"] == "assessing_additional_source_gap"
+    assert completed["evidence"][0]["item"] == {
+        "text": content.decode("utf-8")
+    }
+    assert projection["id"] == frozen["projection"]["id"]
+    assert projection["method"] == "verbatim_utf8"
+    assert (work / projection["path"]).read_bytes() == content
     closure = START_INTAKE.run_source_projection_closure(work)
     assert closure["verdict"] == "all_projected"
     assert closure["outcome_counts"] == {
@@ -3495,7 +5479,7 @@ def test_url_typed_question_freezes_and_projects_one_additional_public_url(
         "failed": 0,
     }
     assert len((work / "ledger.jsonl").read_bytes().splitlines()) == (
-        len(ledger_after_freeze.splitlines()) + 1
+        len(ledger_after_freeze.splitlines()) + 2
     )
 
 
@@ -4310,6 +6294,8 @@ def _terminal_projection_fixture(
     regions = START_INTAKE.projection_interview._scan_regions()
     for region in regions:
         region["status"] = "scanned"
+        region["deferred_context_candidates"] = []
+        region["context_candidate_obligations"] = []
     regions[0]["element_ids"] = ["element-000001", "element-000002"]
     elements = [
         {
@@ -4389,6 +6375,171 @@ def _terminal_projection_fixture(
     return projection, {"first_projection": record, "current_projection": record}
 
 
+def _terminal_context_deferral_fixture(
+    tmp_path: Path, *, pending: bool = False, gap: bool = False,
+) -> tuple[dict[str, object], dict[str, object]]:
+    projection, state = _terminal_projection_fixture(tmp_path)
+    regions = projection["scan_regions"]
+    for region in regions:
+        region["deferred_context_candidates"] = []
+        region["context_candidate_obligations"] = []
+    element = projection["elements"][1]
+    regions[0]["element_ids"].remove(element["id"])
+    regions[1]["element_ids"].append(element["id"])
+    element.update({
+        "region": [260, 10, 350, 100],
+        "capture_scope": regions[1]["id"],
+        "scan_region_id": regions[1]["id"],
+        "status": "gap" if gap else "readable",
+        "content": "" if gap else "$8,100",
+        "gap_reason": "deferred field is unreadable" if gap else "",
+    })
+    regions[0]["deferred_context_candidates"].append({
+        "obligation_id": "context-obligation-000001",
+        "owner_region_id": regions[1]["id"],
+        "anchor": [280, 20],
+        "candidate_kind": "field",
+        "reason": "context_only",
+        "crop_sha256": "b" * 64,
+        "guide_sha256": "c" * 64,
+    })
+    regions[0]["evidence"] = {
+        "crop_sha256": "b" * 64,
+        "guide_sha256": "c" * 64,
+    }
+    regions[1]["context_candidate_obligations"].append({
+        "id": "context-obligation-000001",
+        "source_region_id": regions[0]["id"],
+        "candidate_kind": "field",
+        "anchor": [280, 20],
+        "status": "pending" if pending else "resolved",
+        "resolution": None if pending else "gap" if gap else "element",
+        "element_id": None if pending else element["id"],
+        "gap_reason": "" if pending or not gap else "deferred field is unreadable",
+    })
+    projection_path = tmp_path / state["current_projection"]["path"]
+    projection_path.write_text(
+        json.dumps(projection, indent=2, sort_keys=True) + "\n"
+    )
+    record = state["current_projection"]
+    record["sha256"] = START_INTAKE._digest_bytes(projection_path.read_bytes())
+    record["gap_count"] = sum(
+        item["status"] == "gap"
+        for collection in (
+            projection["scan_regions"],
+            projection["elements"],
+            projection["relationships"],
+        )
+        for item in collection
+    )
+    return projection, state
+
+
+def test_terminal_rejects_pending_context_candidate_obligation(
+    tmp_path: Path,
+) -> None:
+    _, state = _terminal_context_deferral_fixture(tmp_path, pending=True)
+
+    qualification, error = START_INTAKE._terminal_projection_qualification(
+        tmp_path, state,
+    )
+
+    assert qualification is None
+    assert error["status"] == "blocked"
+    assert error["stopped"] == "terminal_invalid"
+    assert "context obligation context-obligation-000001 is not resolved" in error[
+        "why"
+    ]
+
+
+def test_terminal_context_deferral_chain_qualifies_complete_and_gap_outcomes(
+    tmp_path: Path,
+) -> None:
+    complete_work = tmp_path / "complete"
+    complete_work.mkdir()
+    _, complete_state = _terminal_context_deferral_fixture(complete_work)
+    complete, complete_error = START_INTAKE._terminal_projection_qualification(
+        complete_work, complete_state,
+    )
+
+    assert complete_error is None
+    assert complete["qualification"] == "readable_projection_complete"
+    assert complete["coverage"]["context_candidate_obligation_count"] == 1
+    assert complete["coverage"]["closed_context_candidate_obligation_count"] == 1
+
+    gap_work = tmp_path / "gap"
+    gap_work.mkdir()
+    _, gap_state = _terminal_context_deferral_fixture(gap_work, gap=True)
+    incomplete, incomplete_error = START_INTAKE._terminal_projection_qualification(
+        gap_work, gap_state,
+    )
+
+    assert incomplete_error is None
+    assert incomplete["qualification"] == "readable_projection_incomplete"
+    assert [(item["collection"], item["id"]) for item in incomplete["remaining_gaps"]] == [
+        ("elements", "element-000002")
+    ]
+
+
+@pytest.mark.parametrize(
+    ("case", "why"),
+    [
+        ("missing", "identities differ"),
+        ("duplicated", "is duplicated"),
+        ("mismatched", "contradicts its deferral"),
+        ("altered", "anchor is not in the source region's context-only area"),
+        ("contradictory", "has invalid gap evidence"),
+        ("invalid_owner_type", "names an unknown owner region"),
+        ("invalid_resolution_type", "has an invalid resolution"),
+        ("missing_ledger", "context-deferral ledger is missing"),
+        ("evidence_mismatch", "contradicts its source evidence"),
+    ],
+)
+def test_terminal_context_deferral_chain_rejects_rehashed_conflicts(
+    tmp_path: Path, case: str, why: str,
+) -> None:
+    projection, state = _terminal_context_deferral_fixture(tmp_path)
+    source = projection["scan_regions"][0]["deferred_context_candidates"]
+    owner = projection["scan_regions"][1]["context_candidate_obligations"]
+    if case == "missing":
+        owner.clear()
+    elif case == "duplicated":
+        source.append(json.loads(json.dumps(source[0])))
+    elif case == "mismatched":
+        owner[0]["candidate_kind"] = "different field"
+    elif case == "altered":
+        source[0]["anchor"] = [700, 700]
+    elif case == "contradictory":
+        owner[0].update({
+            "resolution": "gap",
+            "gap_reason": "claimed gap without a gap element",
+        })
+    elif case == "invalid_owner_type":
+        source[0]["owner_region_id"] = []
+    elif case == "invalid_resolution_type":
+        owner[0]["resolution"] = []
+    elif case == "missing_ledger":
+        projection["scan_regions"][2].pop("context_candidate_obligations")
+    else:
+        source[0]["crop_sha256"] = "d" * 64
+    projection_path = tmp_path / state["current_projection"]["path"]
+    projection_path.write_text(
+        json.dumps(projection, indent=2, sort_keys=True) + "\n"
+    )
+    state["current_projection"]["sha256"] = START_INTAKE._digest_bytes(
+        projection_path.read_bytes()
+    )
+
+    qualification, error = START_INTAKE._terminal_projection_qualification(
+        tmp_path, state,
+    )
+
+    assert qualification is None
+    assert error["status"] == "blocked"
+    assert error["stopped"] == "terminal_invalid"
+    assert why in error["why"]
+
+
 def test_terminal_projection_qualification_proves_complete_or_exact_incomplete(
     tmp_path: Path,
 ) -> None:
@@ -4406,6 +6557,8 @@ def test_terminal_projection_qualification_proves_complete_or_exact_incomplete(
         "relationship_count": 1,
         "relationship_obligation_count": 1,
         "closed_relationship_obligation_count": 1,
+        "context_candidate_obligation_count": 0,
+        "closed_context_candidate_obligation_count": 0,
         "remaining_gap_count": 0,
     }
     assert complete["remaining_gaps"] == []

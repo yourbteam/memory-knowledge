@@ -18,6 +18,7 @@ dependencies = [
     "starlette>=0.40.0",
     "structlog>=24.0",
     "openai>=2.0.0",
+    "pillow>=12.3",
     "tenacity>=8.0",
     "gitpython>=3.1.0",
     "prometheus-client>=0.20",

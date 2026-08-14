@@ -211,6 +211,59 @@ def _contains(region: object, x: int, y: int) -> bool:
     )
 
 
+def _replacement_region(candidate: dict[str, Any], state: dict[str, Any]) -> list[int]:
+    draft = state["draft"]
+    if draft["source"] == "use_recorded_element":
+        endpoint = next(
+            (
+                element for element in candidate["elements"]
+                if element.get("id") == draft.get("element_id")
+            ),
+            None,
+        )
+        region = endpoint.get("region") if isinstance(endpoint, dict) else None
+    else:
+        region = [
+            draft.get("replacement_left"), draft.get("replacement_top"),
+            draft.get("replacement_right"), draft.get("replacement_bottom"),
+        ]
+    if (
+        not isinstance(region, list)
+        or len(region) != 4
+        or any(not isinstance(value, int) for value in region)
+        or region[0] >= region[2]
+        or region[1] >= region[3]
+    ):
+        raise CorrectionError("correction-replacement-region-invalid")
+    return region
+
+
+def _axis_contains(region: list[int], axis: str, value: int) -> bool:
+    lower, upper = (region[0], region[2]) if axis == "x" else (region[1], region[3])
+    return lower <= value <= upper
+
+
+def _coordinate_supersession(
+    candidate: dict[str, Any], state: dict[str, Any], pending: dict[str, object] | None,
+) -> dict[str, object] | None:
+    draft = state["draft"]
+    if (
+        pending is None
+        or pending.get("id") != "replacement_y"
+        or not isinstance(draft.get("replacement_x"), int)
+    ):
+        return None
+    value = int(draft["replacement_x"])
+    if _axis_contains(_replacement_region(candidate, state), "x", value):
+        return None
+    return {
+        "blocked_question_id": "replacement_y",
+        "reason": "accepted replacement_x is outside the selected endpoint horizontal bounds",
+        "superseded_question_id": "replacement_x",
+        "superseded_value": value,
+    }
+
+
 def _existing_endpoint(candidate: dict[str, Any], x: int, y: int) -> dict[str, Any] | None:
     matches = [
         element for element in candidate["elements"]
@@ -239,19 +292,15 @@ def _parse(
             return None, "replacement_right: must be greater than replacement_left"
         if question["id"] == "replacement_bottom" and parsed <= draft["replacement_top"]:
             return None, "replacement_bottom: must be greater than replacement_top"
-        if question["id"] == "replacement_y":
-            x = draft["replacement_x"]
-            if draft["source"] == "use_recorded_element":
-                endpoint = next(
-                    element for element in candidate["elements"]
-                    if element["id"] == draft["element_id"]
+        if question["id"] in {"replacement_x", "replacement_y"}:
+            axis = "x" if question["id"] == "replacement_x" else "y"
+            if not _axis_contains(_replacement_region(candidate, state), axis, parsed):
+                label = (
+                    "selected recorded element"
+                    if draft["source"] == "use_recorded_element"
+                    else "new replacement element"
                 )
-                if not _contains(endpoint.get("region"), x, parsed):
-                    return None, "replacement_y: point must fall inside the selected recorded element"
-            else:
-                region = [draft["replacement_left"], draft["replacement_top"], draft["replacement_right"], draft["replacement_bottom"]]
-                if not _contains(region, x, parsed):
-                    return None, "replacement_y: point must fall inside the new replacement element"
+                return None, f"{question['id']}: point must fall inside the {label}"
         return parsed, None
     return value, None
 
@@ -357,6 +406,17 @@ def _replay(
             if entry.get("accepted"):
                 _apply_answer(candidate, rejected, state, str(pending["id"]), entry["parsed"])
             pending = None
+        elif entry["event"] == "answer_superseded":
+            expected = _coordinate_supersession(candidate, state, pending)
+            keys = {
+                "blocked_question_id", "reason", "superseded_question_id",
+                "superseded_value",
+            }
+            payload = {key: entry.get(key) for key in keys}
+            if expected is None or payload != expected:
+                raise CorrectionError(f"correction-supersession-invalid:{entry['sequence']}")
+            state["draft"].pop("replacement_x")
+            pending = None
         elif entry["event"] == "correction_completed":
             if pending is not None or _question(candidate, rejected, state) is not None:
                 raise CorrectionError(f"correction-completion-invalid:{entry['sequence']}")
@@ -422,6 +482,10 @@ def run(
     write = output_fn or (lambda message: print(message, file=sys.stderr))
     while True:
         state, pending, completed = _replay(_read_journal(journal_path), candidate, rejected)
+        supersession = _coordinate_supersession(candidate, state, pending)
+        if supersession is not None:
+            _append(journal_path, "answer_superseded", supersession)
+            continue
         verification_candidate = _verification_candidate(candidate, state["corrections"])
         verification_candidate_bytes = json.dumps(verification_candidate, indent=2, sort_keys=True).encode() + b"\n"
         result = {

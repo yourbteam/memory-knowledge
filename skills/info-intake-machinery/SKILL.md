@@ -1,6 +1,6 @@
 ---
 name: info-intake-machinery
-description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers, files, and public URLs as immutable sources, records readable projections, verifies visual relationships, reconstructs one source-to-projection outcome for every intake source, turns every currently known gap into one code-bound question round, conducts any prepared operator round one question at a time, assesses every completed round against its exact gaps, and prepares immutable follow-up questions for failed clarifications without losing legacy single-gap replay.
+description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers, files, and public URLs as immutable sources, records readable projections, verifies visual relationships, reconstructs one source-to-projection outcome for every intake source, turns every currently known gap into one code-bound question round, conducts any prepared operator round one question at a time, assesses projected additional-source evidence and completed answer rounds against their exact gaps, and prepares immutable follow-up questions without losing legacy replay.
 ---
 
 # Info Intake Machinery
@@ -11,6 +11,25 @@ model-task boundaries, typed answer validation, canonical assembly, and resume c
 owns semantic judgments and visual reading, but code controls every accepted answer shape.
 
 ## Start from only an opening
+
+For the complete operator entry path, run the zero-input launcher:
+
+```text
+python3 scripts/run_intake.py
+```
+
+Code asks one question at a time. It first selects `new` or `resume`, obtains the intake work
+directory, and, for a new intake, preserves the operator's exact opening words. A statement such
+as `There is a new intake` is sufficient to begin. It then collects the purpose, sends the
+preserved purpose through its code-controlled model interview, accepts the first source only as a
+code-selected `local_file` or `url`, freezes it, and hands every subsequent model and operator
+boundary to the existing projection driver. Resume reconstructs the preserved opening and purpose
+and continues from purpose assessment, first-source acquisition, first projection, or any later
+supported boundary without asking the operator to repeat saved answers. The launcher contains no source-, image-, annotation-,
+or domain-specific rule.
+
+The stage commands below remain the deterministic replay and diagnostic interface used by that
+launcher.
 
 Run:
 
@@ -88,10 +107,37 @@ bytes, so the adapter performs no Unicode normalization or other rewriting. Inva
 closed: the pending acquisition reservation remains visible and no projection ledger entry is
 written. For an image, code instead starts the visual projection path below.
 
-The command returns the frozen attachment and an exact command for the code-controlled interview.
-Inspect the frozen image, run that command, and answer only its currently displayed question. Code
-asks one typed question at a time. It divides the source into a deterministic spatial grid and
-requires an explicit `scanned` or `gap` outcome for every region. It generates identities,
+The command returns an immutable crop of the first active region and an exact command for the
+code-controlled interview. Inspect that crop, run the command, and answer only its currently
+displayed question. Code asks one typed question at a time. It divides the source into a
+deterministic spatial grid and keeps each non-overlapping normalized region as its ownership core.
+It expands that core toward later traversal regions by a fixed, clipped context margin, maps both bounds to exact source pixels,
+renders a clean context PNG plus a companion ownership guide, and journals the source hash, core
+and context normalized bounds, core and crop pixel bounds, both paths and hashes, and both adapters
+before the model can judge that region. The clean crop preserves readable evidence. Its companion
+guide outlines the exact active core in bright green and dims context-only pixels; neither artifact
+may be missing or changed on replay. After the model names a candidate kind, code offers only
+`owned_by_active_core` or `context_only`. An owned candidate continues to coordinates, where code
+still requires its left/top anchor inside the active core. A context-only candidate creates no
+element or relationship obligation in the active region. The model supplies that candidate's
+top-left ownership anchor; code validates the point is inside the visible context but outside the active core,
+calculates the one later core that owns it, and appends an immutable deferral tied to the exact
+source region, owner region, point, clean crop, guide, and candidate kind. The owner region receives
+a pending candidate obligation before its ordinary scan. Code offers only `record_owned_element`
+or `record_explicit_gap`, and that region cannot finish while any such obligation remains pending.
+An owned resolution must contain the deferred point and creates exactly one ordinary element;
+an explicit gap creates one point-anchored gap element so existing qualification and clarification
+machinery must count it, without inventing readable content. When an owned proposed element spatially intersects a recorded element, code lists the
+exact colliding identities and offers only
+`distinct_unit` or `same_unit`. The model decides semantic unit identity. `distinct_unit` continues
+ordinary capture. `same_unit` requires selection of one code-listed identity, complete bounds that
+contain both records, and complete readable content or an explicit gap. Code appends an immutable
+supersession event containing the original element, triggering candidate, and replacement; it never
+overwrites history or creates a second relationship obligation for the same unit. Code accepts
+exactly one `scanned` or `gap` outcome for the active region, journals that outcome against the same
+crop, and stops the model run. Only then can the launcher attach the next region's distinct crop in
+a fresh model context. Crop bytes cannot be missing or changed on resume. After every region has an
+outcome, the full frozen source is attached for cross-region relationship work. Code generates identities,
 constrains each element's anchor to the active region, and binds relationship participants from
 source coordinates to exactly one recorded element. A point matching no element or overlapping
 elements cannot silently become a relationship: code requires corrected coordinates, capture of a
@@ -141,9 +187,14 @@ projection. A requested local file first becomes a new immutable source with a r
 The boundary then selects that exact pending source and validates its question and gap lineage.
 Valid UTF-8 is copied verbatim without a model; images run the same code-controlled visual
 producer, independent verifier, and correction stages under a source-specific artifact namespace.
-It stops after the reserved immutable projection is filled;
-it does not decide whether that projection resolves the original gap or combine projections. The
-launcher otherwise stops only at grounded first-layer completion or a managed failure.
+After the reserved projection is filled, code binds the exact original gap, original and current
+projection hashes, additional projection, and every readable evidence identity. A fresh model may
+choose only `resolves_gap` or `does_not_resolve_gap`; a resolving verdict must select one or more
+code-listed evidence items one at a time before giving its reason. The immutable assessment never
+changes either existing projection. When that verdict binds exactly one readable element to one
+unchanged element gap, code creates one immutable child projection that fills only that element
+and records the complete source, evidence, assessment, gap, and parent lineage. No second model
+judgment can rewrite the accepted verdict. The launcher otherwise stops only at a grounded boundary.
 A changed question, mismatched command, attachment, boundary, or exit status fails closed.
 
 ## Turn all current gaps into one operator question round
@@ -187,7 +238,7 @@ exact question and gap lineage, and a reserved projection identity with `pending
 stops at `additional_source_frozen`; acquisition itself does not project or combine the file or
 present the next question. Re-enter the clarification boundary to dispatch the applicable adapter.
 Valid UTF-8 fills that exact reserved identity verbatim without a model. An image fills it using
-complete spatial traversal. Both stop at `additional_source_projection_complete`. A non-image
+complete spatial traversal. Both proceed to the exact source-to-gap assessment above. A non-image
 whose complete bytes are not valid UTF-8 fails closed without changing the source, reservation,
 or ledger.
 
@@ -295,7 +346,11 @@ A stale round, position, gap set, or projection fails closed.
 The terminal event and result contain exactly one `projection_qualification`. Code first verifies
 the immutable projection identity, all sixteen ordered scan-region outcomes, unique element and
 relationship identities, consistent region-to-element membership, closed relationship
-obligations, and projection-record counts. With no explicit gaps the value is
+obligations, and projection-record counts. For current projections it also reconstructs every
+context deferral against its source evidence, deterministic owner, anchor, candidate kind, and
+unique resolved element. Missing, pending, duplicated, mismatched, or contradictory context chains
+make the terminal invalid. Qualification reports both total and closed context-obligation counts.
+With no explicit gaps the value is
 `readable_projection_complete`. With gaps it is `readable_projection_incomplete` and carries every
 exact gap record in canonical region, element, then relationship order. Missing, duplicated,
 reordered, contradictory, or changed coverage evidence returns `terminal_invalid` without writing
@@ -330,18 +385,24 @@ code-owned transitions until it reaches exactly one typed boundary:
 - `needs_operator_answer` returns exactly one current prepared question and stops.
 - `first_source_projection_complete` returns a frozen valid UTF-8 first source and its exact
   complete verbatim projection, then stops before later projection assessment.
-- `additional_source_projection_complete` returns the newly projected source, its unchanged
-  reservation, exact question and gap lineage, and its immutable readable projection, then stops
-  before any resolution assessment.
+- `additional_source_gap_assessment_complete` returns one immutable verdict with its exact original
+  gap and selected additional-projection evidence when it is non-resolving or not yet supported by
+  a typed reconciliation contract.
+- `clarification_required` returns the admitted child projection plus every exact remaining gap
+  when admission did not finish the readable representation; it cannot emit first-layer completion.
 - `source_conversion_required` returns the exact pending or failed source outcomes and stops
   without a first-layer completion event.
 - `clarification_complete` returns the preserved grounded terminal result plus its exact complete
   projection qualification, `all_projected` closure, and `first_layer_complete` disposition, then
   stops.
 
-`clarification_required` is an internal continuation, not an external boundary. The controller
-uses its exact ordered remaining gaps to request the next complete follow-up question round, then
-returns that round as `needs_model_interview`. It never invents, presents, or answers a question.
+`clarification_required` is an internal continuation, not an external boundary. When an admitted
+file or URL fulfilled the active question of an incomplete prepared round, code records that exact
+question as fulfilled, verifies every remaining gap still matches the already-prepared unanswered
+questions, and returns only the next question as `needs_operator_answer`. It does not call the model
+again or repeat the source request. After a completed assessed round, the controller instead uses
+the exact ordered remaining gaps to request the next complete follow-up question round and returns
+that request as `needs_model_interview`. It never invents, presents, or answers a question.
 
 The controller never executes a model interview and never supplies or accepts an operator answer.
 After that external response has entered through its existing code-controlled interview or
@@ -472,19 +533,40 @@ its boundary controller still stops for every model interview and operator answe
 external work or a fully automatic question loop
 to a grounded terminal condition. Its terminal qualification verifies the recorded
 coverage contract and explicit gaps, and its disposition gate prevents an incomplete projection
-from ending the first layer. Its boundary controller turns `clarification_required` into the next
-complete follow-up question-round request, but does not perform the later semantic projection
-assessment against the source. It can freeze one additional local file or public URL selected by
+from ending the first layer. Its boundary controller resumes the same prepared round after a
+resolving additional source, or turns a completed assessed round's `clarification_required` result
+into the next complete follow-up question-round request. It does not perform the later semantic
+projection assessment against the source. It can freeze one additional local file or public URL selected by
 a code-typed gap question, copy any completely valid UTF-8 source verbatim, route any pending image source
-through the source-neutral visual projection contract, and fill its reserved immutable projection
-without changing the original projection. It stops
-before assessing whether that new projection resolves the originating gap or combining the two
-projections. Legacy
+through the source-neutral visual projection contract, fill its reserved immutable projection,
+assess code-listed readable evidence against the exact originating gap, and deterministically admit
+one selected readable element into one exact unchanged element gap. The parent projection and the
+additional-source projection remain immutable; the admitted value exists only in a new child
+version whose ledger event binds every input hash. Code then requalifies that child and checks every
+source projection. A gap-free child with complete source conversion receives the append-only
+`first_layer_complete` terminal event; any remaining gap is returned exactly as
+`clarification_required`, with no false completion event. When that admission came from a prepared
+question, code appends its immutable source, assessment, and child-projection fulfillment to the
+same answer round, validates the remaining gap-to-question identities, and presents exactly the next
+existing question. The operator can finish the remaining questions one at a time. Assessing a
+mixed round now preserves one complete ordered assessment without asking the model to rejudge an
+already-admitted source: code carries that position's accepted assessment and exact child-projection
+proof, sends only operator-text positions through the code-controlled verdict interview, and merges
+the outcomes back into their immutable round positions. Missing, duplicated, or reordered plan
+positions fail before the interview or any ledger append. A non-resolving operator-text outcome can
+therefore advance directly to the next focused question round. For a resolving operator-text
+outcome bound to one exact unchanged element gap, code now copies the complete immutable answer
+verbatim into a new child projection. It preserves the parent, binds the question, assessment,
+answer-source, answer-projection, original gap, and child hashes in the ledger, prevents the same
+assessment position from being consumed twice, and re-enters the existing continuation decision.
+A gap-free child can therefore reach the grounded `first_layer_complete` terminal without another
+model call. Region-gap admission, semantic rewriting of an answer, and multi-evidence element
+admissions remain later units. Legacy
 gap resolution remains limited to an existing preserved single-gap answer bound to a relationship
 identity ambiguity. The projection layer currently accepts images, flat visible-page PDFs, and
 complete valid UTF-8 files; other non-image bytes fail closed. Its source-projection closure gate can prove whether every immutable source has
 a readable-projection outcome, but that gate remains separate from semantic gap assessment and
-projection combination. Do not simulate those later units in prose or extend the script while
+the remaining projection-combination contracts. Do not simulate those later units in prose or extend the script while
 running these proven stages.
 
 ## Status contract

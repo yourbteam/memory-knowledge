@@ -4,14 +4,22 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
-from pathlib import Path
 import shutil
 import subprocess
 import sys
-
+from pathlib import Path
 
 START_INTAKE = Path(__file__).resolve().with_name("start_intake.py")
+_INTERVIEW_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_projection_interview_for_runner",
+    Path(__file__).resolve().with_name("projection_interview.py"),
+)
+if _INTERVIEW_SPEC is None or _INTERVIEW_SPEC.loader is None:
+    raise RuntimeError("projection interview engine is unavailable")
+projection_interview = importlib.util.module_from_spec(_INTERVIEW_SPEC)
+_INTERVIEW_SPEC.loader.exec_module(projection_interview)
 
 
 class LaunchError(ValueError):
@@ -22,10 +30,11 @@ BOUNDARY_EXIT_CODES = {
     "needs_model_interview": 2,
     "needs_operator_answer": 4,
     "clarification_complete": 0,
+    "clarification_required": 0,
     "source_conversion_required": 0,
     "first_source_projection_complete": 0,
     "additional_source_projection_pending": 0,
-    "additional_source_projection_complete": 0,
+    "additional_source_gap_assessment_complete": 0,
 }
 
 
@@ -131,6 +140,18 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
             )
         )
     )
+    additional_source_gap_assessment_phase = (
+        state.get("status") == "waiting_for_model"
+        and state.get("phase") == "assessing_additional_source_gap"
+        and isinstance(state.get("additional_source_gap_assessment"), dict)
+        and isinstance(
+            state["additional_source_gap_assessment"].get("paths"), dict
+        )
+        and state.get("waiting_for")
+        == state["additional_source_gap_assessment"]["paths"].get(
+            "interview_path"
+        )
+    )
     resolution_phase = (
         state.get("status") == "waiting_for_model"
         and state.get("phase") == "resolving_gap_answer"
@@ -153,11 +174,91 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
             gap_phase,
             gap_round_phase,
             gap_answer_assessment_phase,
+            additional_source_gap_assessment_phase,
             resolution_phase,
             resolution_verification_phase,
         )
     ):
         raise LaunchError("the intake is not waiting for a supported visual model stage")
+    if additional_source_gap_assessment_phase:
+        saved = state["additional_source_gap_assessment"]
+        attachments = saved.get("attachments")
+        binding = saved.get("binding")
+        if (
+            not isinstance(attachments, list)
+            or not attachments
+            or not isinstance(binding, dict)
+        ):
+            raise LaunchError(
+                "the additional-source assessment lost its bound attachments"
+            )
+        gap = binding.get("gap")
+        first_source = state.get("first_source")
+        additional_source = binding.get("additional_source")
+        expected: list[tuple[str, str]] = []
+        if (
+            isinstance(gap, dict)
+            and isinstance(gap.get("render_path"), str)
+            and isinstance(gap.get("render_sha256"), str)
+        ):
+            expected.append((gap["render_path"], gap["render_sha256"]))
+        elif (
+            isinstance(first_source, dict)
+            and str(first_source.get("media_type", "")).startswith("image/")
+            and isinstance(first_source.get("stored_path"), str)
+            and isinstance(first_source.get("sha256"), str)
+        ):
+            expected.append(
+                (first_source["stored_path"], first_source["sha256"])
+            )
+        if (
+            isinstance(additional_source, dict)
+            and str(additional_source.get("media_type", "")).startswith("image/")
+            and isinstance(additional_source.get("stored_path"), str)
+            and isinstance(additional_source.get("sha256"), str)
+        ):
+            expected.append(
+                (
+                    additional_source["stored_path"],
+                    additional_source["sha256"],
+                )
+            )
+        expected_paths = [
+            str((work / stored_path).resolve())
+            for stored_path, _sha256_value in expected
+        ]
+        if attachments != expected_paths:
+            raise LaunchError(
+                "the additional-source assessment attachment identity changed"
+            )
+        resolved: list[Path] = []
+        for item, (_stored_path, expected_sha256) in zip(attachments, expected):
+            if not isinstance(item, str):
+                raise LaunchError(
+                    "an additional-source assessment attachment is invalid"
+                )
+            attachment = Path(item).resolve()
+            try:
+                attachment.relative_to(work)
+            except ValueError as error:
+                raise LaunchError(
+                    "an additional-source assessment attachment escapes the intake"
+                ) from error
+            if (
+                not attachment.is_file()
+                or _sha256(attachment) != expected_sha256
+            ):
+                raise LaunchError(
+                    "an additional-source assessment attachment changed"
+                )
+            resolved.append(attachment)
+        return tuple(resolved), [
+            sys.executable,
+            str(START_INTAKE),
+            "--work",
+            str(work),
+            "--run-additional-source-gap-assessment",
+        ]
     if (
         gap_round_phase
         and isinstance(state.get("first_projection"), dict)
@@ -359,6 +460,49 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
         str(work),
         flag,
     ]
+    if flag == "--run-projection-interview":
+        try:
+            purpose = (work / "sources" / "source-000002.txt").read_text(
+                encoding="utf-8"
+            )
+            contract = int(
+                state.get(
+                    "projection_interview_contract",
+                    projection_interview.CONTRACT,
+                )
+            )
+            crop = projection_interview.prepare_region_evidence(
+                candidate.parent,
+                source_path=attachment,
+                source_sha256=str(expected_sha256),
+                purpose=purpose,
+                contract=contract,
+            )
+            if contract >= 4:
+                journal = projection_interview._read_journal(
+                    candidate.parent / "interview.jsonl"
+                )
+                interview_state, _pending, _completed = (
+                    projection_interview._replay(
+                        journal, purpose=purpose, contract=contract,
+                    )
+                )
+                active_region = projection_interview._active_scan_region(
+                    interview_state
+                )
+                if not isinstance(active_region, dict) or not isinstance(
+                    active_region.get("id"), str
+                ):
+                    raise projection_interview.InterviewError(
+                        "active-projection-region-identity-missing"
+                    )
+                command[-1:-1] = [
+                    "--projection-region-id", str(active_region["id"]),
+                ]
+        except (OSError, projection_interview.InterviewError) as error:
+            raise LaunchError(f"projection region evidence failed: {error}") from error
+        if crop is not None:
+            attachment = crop
     return attachment, command
 
 
@@ -370,6 +514,7 @@ def build_codex_argv(
 ) -> list[str]:
     command_text = " ".join(json.dumps(part) for part in interview_command)
     flag = interview_command[-1]
+    purpose_assessment = flag == "--run-purpose-interview"
     independently = flag in {
         "--run-projection-verification",
         "--run-correction-verification",
@@ -378,18 +523,27 @@ def build_codex_argv(
     correction = flag == "--run-relationship-correction"
     gap_clarification = flag == "--run-gap-clarification"
     gap_answer_assessment = flag == "--run-gap-answer-assessment"
+    additional_source_gap_assessment = (
+        flag == "--run-additional-source-gap-assessment"
+    )
     gap_resolution = flag == "--run-gap-resolution"
     evidence_instruction = (
+        "the code-bound preserved operator purpose answer"
+        if purpose_assessment else
         "the code-bound preserved answer and visible source context"
-        if gap_answer_assessment or gap_resolution
+        if gap_answer_assessment or additional_source_gap_assessment or gap_resolution
         else "visible source evidence"
     )
     prompt = (
         (
+            "Assess only the code-bound preserved operator purpose answer. "
+            if purpose_assessment else
             "Inspect the attached frozen source and formulate one focused operator question for each code-bound gap presented. "
             if gap_clarification else
             "Inspect the attached frozen source and judge each code-bound preserved answer only against its exact gap. "
             if gap_answer_assessment else
+            "Inspect the attached frozen original and additional sources and assess only whether code-listed evidence resolves the exact bound gap. "
+            if additional_source_gap_assessment else
             "Inspect the attached frozen source and complete only the code-controlled gap-resolution interview. When an accepted assessment is bound, do not reassess it; supply only the requested relationship facts. "
             if gap_resolution else
             "Independently inspect the attached frozen source without relying on the producer's "
@@ -494,6 +648,40 @@ def conduct_operator_turn(work: Path) -> int:
     return completed.returncode
 
 
+def _projection_region_journal(
+    work: Path, interview_command: list[str],
+) -> Path | None:
+    if not interview_command or interview_command[-1] != "--run-projection-interview":
+        return None
+    try:
+        state = json.loads(
+            (work / "intake-state.json").read_text(encoding="utf-8")
+        )
+    except (OSError, json.JSONDecodeError) as error:
+        raise LaunchError(
+            "the projection region state is unavailable or invalid"
+        ) from error
+    waiting_for = state.get("waiting_for") if isinstance(state, dict) else None
+    if not isinstance(waiting_for, str):
+        raise LaunchError("the projection region journal identity is missing")
+    journal = (work / waiting_for).resolve()
+    try:
+        journal.relative_to(work.resolve())
+    except ValueError as error:
+        raise LaunchError("the projection region journal escapes the intake") from error
+    if journal.name != "interview.jsonl":
+        raise LaunchError("the projection region journal identity is invalid")
+    return journal
+
+
+def _projection_region_outcome_count(journal: Path) -> int:
+    try:
+        entries = projection_interview._read_journal(journal)
+    except projection_interview.InterviewError as error:
+        raise LaunchError(f"the projection region journal is invalid: {error}") from error
+    return sum(entry.get("event") == "region_outcome_recorded" for entry in entries)
+
+
 def main() -> int:
     if len(sys.argv) != 1:
         print(json.dumps({"ok": False, "error": "this launcher accepts no arguments"}))
@@ -506,6 +694,24 @@ def main() -> int:
         work = Path(input("Answer: ").strip()).expanduser().resolve()
     except EOFError as error:
         print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
+        return 3
+    return drive_work(work)
+
+
+def drive_work(work: Path, *, projection_region_limit: int | None = None) -> int:
+    """Drive one already-created intake from its current external boundary."""
+    if (
+        projection_region_limit is not None
+        and (
+            not isinstance(projection_region_limit, int)
+            or isinstance(projection_region_limit, bool)
+            or projection_region_limit < 1
+        )
+    ):
+        print(json.dumps({
+            "ok": False,
+            "error": "projection region limit must be a positive integer",
+        }, sort_keys=True))
         return 3
     boundary_result: dict[str, object] | None = None
     request: tuple[Path | tuple[Path, ...], list[str]] | None
@@ -520,9 +726,24 @@ def main() -> int:
         request = None
     executable: str | None = None
     seen_model_stages: set[str] = set()
+    completed_projection_regions = 0
     while True:
         if request is not None:
             attachment, interview_command = request
+            try:
+                region_journal = (
+                    _projection_region_journal(work, interview_command)
+                    if projection_region_limit is not None
+                    else None
+                )
+                region_outcomes_before = (
+                    _projection_region_outcome_count(region_journal)
+                    if region_journal is not None
+                    else None
+                )
+            except LaunchError as error:
+                print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
+                return 3
             if executable is None:
                 executable = shutil.which("codex")
                 if executable is None:
@@ -556,12 +777,47 @@ def main() -> int:
             completed = subprocess.run(argv, check=False)
             if completed.returncode != 0:
                 return completed.returncode
+            if region_journal is not None:
+                try:
+                    region_outcomes_after = _projection_region_outcome_count(
+                        region_journal
+                    )
+                except LaunchError as error:
+                    print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
+                    return 3
+                if region_outcomes_after != region_outcomes_before + 1:
+                    print(json.dumps({
+                        "ok": False,
+                        "error": (
+                            "the projection model stage did not preserve exactly "
+                            "one new region outcome"
+                        ),
+                    }, sort_keys=True))
+                    return 3
+                completed_projection_regions += 1
+                if (
+                    projection_region_limit is not None
+                    and completed_projection_regions == projection_region_limit
+                ):
+                    print(json.dumps({
+                        "ok": True,
+                        "status": "paused",
+                        "stopped": "projection_region_limit_reached",
+                        "projection_regions_completed": completed_projection_regions,
+                        "work": str(work),
+                    }, indent=2, sort_keys=True))
+                    return 0
             try:
-                boundary_result = run_clarification_boundary(work)
-            except LaunchError as error:
-                print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
-                return 3
-            request = None
+                request = load_request(work)
+            except LaunchError:
+                try:
+                    boundary_result = run_clarification_boundary(work)
+                except LaunchError as error:
+                    print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
+                    return 3
+                request = None
+            if request is not None:
+                continue
         assert boundary_result is not None
         try:
             request = next_model_request(work, boundary_result)
