@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `58ee67838765c0810f8e22e7aaefa9092e1160d032b31e7c152edbbbc4956809`
+Ledger-SHA256: `632b21ad8478978732bec846c33541e44819452517ab4a3783b0e1a1dd60929f`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -5126,6 +5126,8 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `git-worktree-index`
 - Symptom: Registered publisher could not create the worktree Git index lock
 - Evidence: git add failed before staging: Unable to create /Users/kamenkamenov/memory-knowledge/.git/worktrees/memory-knowledge/index.lock: Operation not permitted
+- Classification: `incidental-system-defect`
+- Downstream owner: `sandbox-permission-boundary-maintenance`
 
 ## blk-7a1c443a5046524fe853f25f
 
