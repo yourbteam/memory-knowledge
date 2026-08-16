@@ -1044,45 +1044,42 @@ def test_test_removal_authorization_does_not_steer_blind_readers(tmp_path: Path)
     assert not (work / "build-r1" / "ruling-state.json").exists()
 
 
-def test_unattended_loop_stops_on_the_terminal_refusal(
+def test_the_unattended_loop_steps_past_an_item_waiting_for_the_owner(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
+    """r19 held a live run for 163 minutes while 29 items with no dependency on it waited."""
+
     order_path = tmp_path / "order.json"
     order_path.write_text(json.dumps({"work": []}))
     (tmp_path / "work").mkdir()
-    calls = 0
+    asked = []
 
-    def terminal_drive(*_args, **_kwargs):
-        nonlocal calls
-        calls += 1
-        if calls > 1:
-            pytest.fail("the unattended loop asked for work after the terminal refusal")
-        return {
-            "item": "r1",
-            "built": False,
-            "attempt": machine.ATTEMPTS,
-            "for_a_person": "The configured attempt limit was reached.",
-        }
+    def drives(*_args, **kwargs):
+        asked.append(set(kwargs.get("waiting_for_the_owner") or set()))
+        if len(asked) == 1:
+            return {"item": "r1", "built": False, "attempt": machine.ATTEMPTS,
+                    "for_a_person": "The configured attempt limit was reached."}
+        if len(asked) == 2:
+            return {"item": "r2", "built": True}
+        return {"work": []}
 
     reported = []
-    monkeypatch.setattr(machine, "drive", terminal_drive)
+    monkeypatch.setattr(machine, "drive", drives)
     monkeypatch.setattr(machine, "_say", lambda result: reported.append(result) or 0)
 
-    exit_code = machine.main(
-        [
-            "--order", str(order_path),
-            "--work", str(tmp_path / "work"),
-            "--built", str(tmp_path),
-            "--tests", "tests",
-            "--reader-command", "codex exec",
-            "--items", "30",
-        ]
-    )
+    exit_code = machine.main([
+        "--order", str(order_path), "--work", str(tmp_path / "work"),
+        "--built", str(tmp_path), "--tests", "tests",
+        "--reader-command", "codex exec", "--items", "30",
+    ])
 
     assert exit_code == 0
-    assert calls == 1
-    assert reported[0]["stopped_at"] == "the configured attempt limit"
-    assert reported[0]["last"]["for_a_person"]
+    # It asked again after the terminal refusal, carrying that item as passed over.
+    assert asked[1] == {"r1"} and asked[2] == {"r1"}
+    # The item behind it was built, and the close-out names what is still waiting.
+    assert {"item": "r2", "built": True} in reported[0]["items"]
+    assert reported[0]["waiting_for_the_owner"][0]["item"] == "r1"
+    assert reported[0]["stopped_at"] == "everything else is built or waiting on the owner"
 
 
 def test_empty_builder_delivery_relaunches_without_consuming_an_attempt(
@@ -1798,15 +1795,20 @@ def test_what_running_the_tests_writes_is_not_counted_as_the_change(
     noisy = (
         f"{shlex.quote(sys.executable)} -c "
         + shlex.quote(
-            "import pathlib,uuid;"
-            "d=pathlib.Path('captured')/uuid.uuid4().hex;d.mkdir(parents=True);"
-            "(d/'run.json').write_text('{}')"
+            # The real suite names these for the object address that produced them.
+            "import pathlib,random;"
+            "d=pathlib.Path('captured')/str(random.randrange(10**9,10**10));"
+            "d.mkdir(parents=True);(d/'run.json').write_text('{}')"
         )
     )
 
     assert machine.drive(_order(source), work, built, noisy)["stopped"] == "building"
 
     subprocess.run(noisy, shell=True, cwd=built, check=True)
+    # The suite rewrites an artifact it made earlier under a different address, exactly as r100's
+    # third attempt did: the literal path never matches, only its shape does.
+    rewritten = next((built / "captured").iterdir()) / "run.json"
+    rewritten.write_text('{"again": true}')
     source.write_text("def target():\n    return 'needle'\n\n# built\n")
     out = work / "build-r1"
     (out / "change.json").write_text(json.dumps({
@@ -1856,3 +1858,18 @@ def test_a_second_attempt_that_changes_the_repository_is_not_read_as_changing_no
     settled = json.loads((out / "files-observed-2.json").read_text())
     assert settled["changed_without_saying_so"] == ["src/gate.py"]
     assert json.loads((out / "files-observed-1.json").read_text())["files"] == []
+
+
+def test_the_picker_passes_over_an_item_the_owner_is_being_asked_about(tmp_path: Path):
+    work = tmp_path / "work"
+    work.mkdir()
+    order = {"work": [
+        {"round": 1, "requirement_id": "r1", "part_count": 1,
+         "parts": [{"part_id": "r1.p1", "part": "one"}]},
+        {"round": 1, "requirement_id": "r2", "part_count": 1,
+         "parts": [{"part_id": "r2.p1", "part": "two"}]},
+    ]}
+
+    assert machine.next_item(order, work)["requirement_id"] == "r1"
+    assert machine.next_item(order, work, {"r1"})["requirement_id"] == "r2"
+    assert machine.next_item(order, work, {"r1", "r2"}) is None

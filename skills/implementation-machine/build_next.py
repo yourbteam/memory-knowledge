@@ -850,8 +850,17 @@ def _packet(instruction: str, out: Path, scratch: Path, blind: bool,
             "expect": expect, "wants": wants}
 
 
-def next_item(order: dict[str, object], work: Path) -> dict[str, object] | None:
-    """The earliest round first, and inside a round the smallest piece of work."""
+def next_item(order: dict[str, object], work: Path,
+              waiting_for_the_owner: set[str] | None = None) -> dict[str, object] | None:
+    """The earliest round first, and inside a round the smallest piece of work.
+
+    An item the owner has been asked about is passed over, not dropped: it keeps its refusals,
+    its history and its place, and the run reaches the work behind it. On 2026-08-16 one item
+    held a run for 163 minutes while twenty-nine untouched items waited, and the readers had
+    found no dependency between any of them.
+    """
+
+    passed_over = waiting_for_the_owner or set()
 
     for item in sorted(order["work"], key=lambda w: (w["round"], w["part_count"],
                                                      str(w["requirement_id"]))):
@@ -859,8 +868,14 @@ def next_item(order: dict[str, object], work: Path) -> dict[str, object] | None:
         public = work / f"build-{rid}" / "done.json"
         done = _read_controller_record(work, rid, public)
         if done is not None and not _valid_done_record(done, rid):
-            raise ValueError(f"controller_done_record_invalid:{public}")
-        if done is None:
+            raise ValueError(
+                f"{public} is the completion record for {rid} and does not carry what a "
+                "completion needs: the item id it belongs to, every ordered part named, both "
+                "blind readers answering yes to each of them, and the test command's exit code. "
+                "Delete it and let the item be built again, or restore the record the controller "
+                "wrote for it."
+            )
+        if done is None and rid not in passed_over:
             return item
     return None
 
@@ -1785,10 +1800,11 @@ def _timed(work: Path, what: str, **facts: object):
 def drive(order: dict[str, object], work: Path, built: Path, tests: str,
           *, with_body: bool = False, prepare_universal_paths: bool = False,
           reader_map: bool = False, repair_reader_records: bool = False,
-          owner_approved: bool = False) -> dict[str, object]:
+          owner_approved: bool = False,
+          waiting_for_the_owner: set[str] | None = None) -> dict[str, object]:
     work.mkdir(parents=True, exist_ok=True)
     _bootstrap_controller_state(order, work, tests)
-    item = next_item(order, work)
+    item = next_item(order, work, waiting_for_the_owner)
     if item is None:
         say(work, "the order is finished")
         return {"finished": "every item in the order has been built and verified"}
@@ -2511,12 +2527,15 @@ def main(argv: list[str] | None = None) -> int:
     # sees, so it stops at --items, and it stops the moment a round of reading leaves the step
     # exactly where it was — a reader that wrote nothing would otherwise be asked forever.
     settled, rounds, stuck, seen = [], 0, 0, None
+    waiting: list[dict[str, object]] = []
+    stepped_past: set[str] = set()
     while True:
         result = drive(
             order, work, built, args.tests, with_body=args.with_body,
             prepare_universal_paths=args.prepare_universal_paths,
             reader_map=args.reader_map, repair_reader_records=args.repair_reader_records,
             owner_approved=args.owner_approved,
+            waiting_for_the_owner=stepped_past,
         )
         if "built" in result:
             settled.append({"item": result.get("item"), "built": result.get("built")})
@@ -2524,8 +2543,15 @@ def main(argv: list[str] | None = None) -> int:
                 done_so_far=sum(1 for row in settled if row["built"]), of=args.items,
                 why=result.get("why") or result.get("not_built"))
             if result.get("for_a_person"):
-                return _say({"items": settled, "stopped_at": "the configured attempt limit",
-                             "last": result})
+                # The item has said what only the owner can settle, and it keeps its refusals,
+                # its history and its place in the order. What it must not keep is the run: the
+                # readers found no dependency between these items, and on 2026-08-16 one of them
+                # held a run for 163 minutes while twenty-nine untouched items waited behind it.
+                # The loop steps past and finishes with everything it could not settle named.
+                waiting.append({"item": result.get("item"), "for_a_person":
+                                result.get("for_a_person")})
+                stepped_past.add(str(result.get("item")))
+                continue
             # The cap counts items finished, not verdicts reached. On the first unattended run
             # --items 10 stopped after six items, because four of the ten verdicts were refusals
             # of one item that then passed on its fourth attempt. A refusal is the retry path
@@ -2537,7 +2563,9 @@ def main(argv: list[str] | None = None) -> int:
             continue
         jobs = result.get("work")
         if not jobs:
-            return _say({"items": settled, "stopped_at": "the step handed back no work",
+            return _say({"items": settled, "waiting_for_the_owner": waiting,
+                         "stopped_at": ("everything else is built or waiting on the owner"
+                                        if waiting else "the step handed back no work"),
                          "last": result})
         here = (result.get("item"), result.get("stopped"), len(jobs))
         stuck = stuck + 1 if here == seen else 0
