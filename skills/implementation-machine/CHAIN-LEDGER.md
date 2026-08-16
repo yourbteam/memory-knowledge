@@ -45,6 +45,27 @@ the strategy brief step. Its breakdown holds 183 parts still to build, spread ov
 
 | 19 | The record of which files an item changed was the builder's own sentence about itself, compared with nothing. Across two finished batches the builders named 37 files where 44 had to move, then 21 where 43 had to move; a clean copy of the repository carrying only the named files failed 67 tests. The same list is what both blind readers are told changed, so every short list also narrowed the evidence they judged against. Both were found from outside — by cloning the repository and watching the suite fail — never by the machinery | ask version control instead of the worker: record what is uncommitted before the baseline test run, again before the builder starts, and once more the moment the delivery is seen; subtract what the baseline run alone writes, so the suite's own artifacts are not counted; keep the union of what moved and what was claimed, so nothing shown to a reader can be lost; record the claim and the difference beside it and say so in the feed | red before and green after through the production `drive()` on a real repository: a builder that moved two files and declared one previously produced `['src/target.py']` and now produces `['src/gate.py', 'src/target.py']`, with `changed_without_saying_so` naming the undeclared file and both blind readers handed it. A built system with no version control falls back to the claim and records `repository_watched: false`. Test artifacts written under a fresh name every run are excluded by watching the baseline run, and are included again when that watching is removed. All 58 focused controller tests pass | **111 of 142 built** on the ledger's subject, unchanged by this; on the second subject the batch finished 42 of 42 | 2 finished batches published on a hand-verified manifest; 1 red-before reproduction; 3 proofs |
 
+| 20 | Entry 19's watching settled once per **item**. On its first live batch, r100's second builder wrote forty-eight lines into the engine's dispatch seam, declared no files, and the step reused the first attempt's "nothing moved": the item was refused for changing nothing while its change sat in the working tree, and the run was heading for a terminal refusal with real work unrecorded. The same hole existed across a ruling window, where attempt numbering restarts and an old window's observation would be read as the new attempt's | settle the observation per attempt, keeping the item's first before-image so an accepted attempt still names everything that moved since the item was taken up, including work an earlier refused attempt left behind; carry stale observations into the ruling-history directory with the rest of the preserved work | red before and green after through the production `drive()` on a real repository, reproducing r100 exactly: an attempt that declares nothing and moves nothing is refused, then a second attempt that moves a file and still declares nothing returns `checking the change` with that file named — the old code returns `building again`. All 59 focused controller tests pass | **0 of 68 parts built** on the pre-engagement subject; the batch was stopped at the owner's word and restarted on the fixed machine | 1 live batch stopped at item one; 2 refused attempts, one of them wrongly |
+
+## Verdict, entry 20 — the fix was right and its lifetime was wrong
+
+Path A. Entry 19's boundary is correct and this changed none of it: the record still asks version
+control rather than the worker, and the union rule still refuses to narrow what the readers see.
+What was wrong was how long one answer was allowed to stand — an item-lifetime cache over a
+per-attempt fact. The defect was found by the machinery's own feed on the first batch that
+exercised it, which is exactly the deciding fact entry 19 named, and it was found before a single
+item was accepted on a wrong list.
+
+Path B. This is a fix to a fix, one day apart, in the same few lines. A step whose caching lifetime
+had to be discovered by a live refusal is a step that was not thought through on the paths its own
+loop takes — the retry path existed before entry 19 was written, and the observation was fitted to
+the happy one.
+
+**Verdict: Path A, and Path B names the cost.** The evidence is that the second version was
+demanded by the machinery's record rather than by a person cloning the repository, which is what
+entry 19 asked for. **The deciding fact:** whether the restarted batch's next short list appears
+in the feed as it happens, with the accepted item's record naming every file that moved.
+
 ## Verdict, entry 19 — the last unobserved worker claim, found from outside again
 
 Path A. The judging has never been what failed. Both batches reached every item — 35 of 35, then

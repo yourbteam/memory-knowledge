@@ -1753,7 +1753,7 @@ def test_the_record_names_a_file_the_builder_moved_without_declaring_it(
 
     assert checking["stopped"] == "checking the change"
     assert checking["changed"] == ["src/gate.py", "src/target.py"]
-    settled = json.loads((out / "files-observed.json").read_text())
+    settled = json.loads((out / "files-observed-1.json").read_text())
     assert settled["builder_said_changed"] == ["src/target.py"]
     assert settled["changed_without_saying_so"] == ["src/gate.py"]
     assert settled["repository_watched"] is True
@@ -1783,7 +1783,7 @@ def test_without_version_control_the_record_says_the_list_is_only_the_claim(
     checking = machine.drive(_order(source), work, built, "tests")
 
     assert checking["changed"] == ["src/target.py"]
-    assert not (out / "files-observed.json").exists()
+    assert not (out / "files-observed-1.json").exists()
 
 
 def test_what_running_the_tests_writes_is_not_counted_as_the_change(
@@ -1817,3 +1817,42 @@ def test_what_running_the_tests_writes_is_not_counted_as_the_change(
 
     assert checking["changed"] == ["src/target.py"]
     assert not any("captured" in name for name in checking["changed"])
+
+
+def test_a_second_attempt_that_changes_the_repository_is_not_read_as_changing_nothing(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    """r100 on 2026-08-16: the second builder wrote 48 lines, declared none, and the step
+    reused the first attempt's 'nothing moved' and refused it for changing nothing."""
+
+    built, source, work = _built_repository(tmp_path)
+    monkeypatch.setenv("IMPLEMENTATION_MACHINE_CONTROL_ROOT", str(tmp_path / "control"))
+    monkeypatch.setattr(machine, "_failures", lambda *_: {
+        "command": "tests", "exit_code": 0, "failed": [], "names": [],
+    })
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_, **__: "")
+    order = _order(source)
+    out = work / "build-r1"
+
+    assert machine.drive(order, work, built, "tests")["stopped"] == "building"
+
+    # Attempt one: the builder declares nothing and moves nothing. A real refusal.
+    (out / "change.json").write_text(json.dumps({
+        "files": [], "what_changed": "already true", "tests_changed": [],
+    }))
+    assert machine.drive(order, work, built, "tests")["stopped"] == "building again"
+
+    # Attempt two: the builder moves a file and still declares nothing.
+    (built / "src" / "gate.py").write_text("def gate():\n    return False\n")
+    (out / "change.json").write_text(json.dumps({
+        "files": [], "what_changed": "the engine now enforces it", "tests_changed": [],
+    }))
+
+    second = machine.drive(order, work, built, "tests")
+
+    assert second["stopped"] == "checking the change"
+    assert second["changed"] == ["src/gate.py"]
+    settled = json.loads((out / "files-observed-2.json").read_text())
+    assert settled["changed_without_saying_so"] == ["src/gate.py"]
+    assert json.loads((out / "files-observed-1.json").read_text())["files"] == []

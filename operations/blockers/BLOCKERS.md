@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `cd33b11ae0fba4f516e8c9ef5b7cc20c6d5b87e9e0f26d5273f7a6d9c2173f85`
+Ledger-SHA256: `e63e1342abaec50d71f5badee412018be580a17a06b42311ff6d8b5414fce061`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -858,6 +858,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `tests/unit/test_final_strategy.py`
 - Symptom: The locked final-strategy unit vector returned invalid instead of valid because its draft question section failed the canonical parser.
 - Evidence: test_locked_roadmap_uses_supplied_values_and_verified_proof failed with final validation issue beginning owner_questions_invalid.
+
+## blk-140e8270e48e3a2d545e3525
+
+- Status: `verified`
+- Subject: `implementation-machine-build-next`
+- Step: `record-of-what-changed-per-attempt`
+- Surface: `implementation machine, the watching that reads what a builder changed`
+- Symptom: The repository observation was settled once per item. On the first live batch r100's second builder wrote 48 lines into the engine dispatch seam, declared no files, and the step reused the first attempt's empty result: the item was refused for changing nothing while its change sat in the working tree. The same hole existed across a ruling window, where attempt numbering restarts.
+- Evidence: united-partners Tasks/pre-engagement-feedback-revision/build/build-r100: refused-1.json and refused-2.json both recorded as changed nothing, files-observed.json empty, while git showed src/up_harness/engine/runner.py modified by 48 lines at 11:41:33
 
 ## blk-142074f4e303110bc777fa79
 

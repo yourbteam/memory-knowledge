@@ -718,14 +718,20 @@ def _what_the_builder_moved(
 
 
 def _reconcile_with_the_repository(
-    work: Path, rid: str, out: Path, built: Path, change_path: Path,
+    work: Path, rid: str, out: Path, built: Path, change_path: Path, attempt: int,
 ) -> dict[str, object]:
     """The change the repository shows, beside the change the builder says it made.
 
-    The list is settled once, the first time the delivery is seen, and kept: the readers run the
-    tests after this point and would otherwise move the ground under it. What the builder claimed
-    is kept too, and the difference is a fact in the record rather than something a person finds
-    later by cloning the repository and watching the suite fail.
+    Settled once per **attempt**, the first time that attempt's delivery is seen, and kept: the
+    readers run the tests after this point and would otherwise move the ground under it. It is per
+    attempt because the first version of this settled once per item, and on 2026-08-16 r100's
+    second builder wrote forty-eight lines into the engine, declared no files, and was refused for
+    changing nothing — the step had reused the first attempt's "nothing moved" and could not see
+    the change sitting in the tree. The before-image stays the item's first one, so the accepted
+    attempt's list still names everything that moved since the item was taken up, including work an
+    earlier refused attempt left behind. What the builder claimed is kept too, and the difference
+    is a fact in the record rather than something a person finds later by cloning the repository
+    and watching the suite fail.
     """
 
     change = json.loads(change_path.read_text(encoding="utf-8"))
@@ -733,7 +739,7 @@ def _reconcile_with_the_repository(
         _source_label(built, path if (path := Path(str(name))).is_absolute() else built / name)
         for name in (change.get("files") or []) if str(name).strip()
     })
-    observed_path = out / "files-observed.json"
+    observed_path = out / f"files-observed-{attempt}.json"
     settled = _read_controller_record(work, rid, observed_path)
     if not isinstance(settled, dict):
         started = _read_controller_record(work, rid, out / "files-before.json")
@@ -1665,6 +1671,10 @@ def _activate_ruling_epoch(
             work / f"check-{rid}-{index}",
             work / f"check-{rid}-{index}-scratch",
         ])
+    # Attempt numbering restarts inside a new ruling window, so an observation left under the old
+    # window's attempt number would be read as this attempt's. It travels into history with the
+    # rest of the stale work instead.
+    pending.extend(sorted(out.glob("files-observed-*.json")))
     moved = []
     for path in pending:
         if not path.exists():
@@ -1972,7 +1982,9 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
                 wants="change.json", owner_approved=owner_approved,
             )],
         }
-    change = _reconcile_with_the_repository(work, rid, out, built, change_path)
+    change = _reconcile_with_the_repository(
+        work, rid, out, built, change_path, len(refused) + 1,
+    )
 
     # A builder that changed nothing has produced nothing to check. Sending two readers at the
     # unchanged system to ask whether the sentence is true now is work whose answer is already
