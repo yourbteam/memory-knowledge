@@ -43,6 +43,30 @@ the strategy brief step. Its breakdown holds 183 parts still to build, spread ov
 | 17 | Two r158 builders independently said the requirement was already true, but each no-change refusal was written only to the inspectable item directory. The protected-state reader correctly rejected that untrusted file, deleted it, and relaunched attempt one, so the three-attempt brake could never fire | write controller-created no-change refusals through the same protected record boundary as semantic refusals, tests, and completion receipts; keep worker-authored refusal files untrusted | a successive-delivery reproduction runs production `drive()` after protection is active: red before because refusal one vanished; green after with protected attempts one, two, and three, the third returning the owner handoff and no fourth job. The forged-worker-refusal check remains green, and all 53 focused controller tests pass | **111 of 142 built**, unchanged; r158 can now reach the bounded owner handoff instead of permanently holding the remaining 31 items | 2 live no-change rounds; 1 captured production-path prototype; 1 controller-record call corrected |
 | 18 | The ordering producer described each 55-record reader job as `pairs: 55`, while the shared launcher accepted only `expect` and defaulted to one. It killed the two live readers after 2 and 10 records, then the integrated ordering path relaunched them every twenty seconds with no total launch bound | make the ordering job contract carry `expect`, `wants`, and the already-delivered count; route both standalone and integrated ordering through one controller that permits at most three incomplete launch rounds and preserves every partial answer | the captured production handoff was red before and green after: a slow reader wrote one record, stayed alive, then completed all 55 without being terminated; a zero-delivery reader stopped after exactly three launches. All 55 focused controller tests pass | **111 of 142 built**, unchanged; the 55-pair ordering can now finish once instead of consuming readers in a relaunch loop | 2 readers killed mid-answer; 18 recorded relaunches in under 5 minutes; 2 controller gaps found, 2 fixed |
 
+| 19 | The record of which files an item changed was the builder's own sentence about itself, compared with nothing. Across two finished batches the builders named 37 files where 44 had to move, then 21 where 43 had to move; a clean copy of the repository carrying only the named files failed 67 tests. The same list is what both blind readers are told changed, so every short list also narrowed the evidence they judged against. Both were found from outside — by cloning the repository and watching the suite fail — never by the machinery | ask version control instead of the worker: record what is uncommitted before the baseline test run, again before the builder starts, and once more the moment the delivery is seen; subtract what the baseline run alone writes, so the suite's own artifacts are not counted; keep the union of what moved and what was claimed, so nothing shown to a reader can be lost; record the claim and the difference beside it and say so in the feed | red before and green after through the production `drive()` on a real repository: a builder that moved two files and declared one previously produced `['src/target.py']` and now produces `['src/gate.py', 'src/target.py']`, with `changed_without_saying_so` naming the undeclared file and both blind readers handed it. A built system with no version control falls back to the claim and records `repository_watched: false`. Test artifacts written under a fresh name every run are excluded by watching the baseline run, and are included again when that watching is removed. All 58 focused controller tests pass | **111 of 142 built** on the ledger's subject, unchanged by this; on the second subject the batch finished 42 of 42 | 2 finished batches published on a hand-verified manifest; 1 red-before reproduction; 3 proofs |
+
+## Verdict, entry 19 — the last unobserved worker claim, found from outside again
+
+Path A. The judging has never been what failed. Both batches reached every item — 35 of 35, then
+42 of 42 — and the two readers agreed throughout. What failed is one field whose source was a
+worker's sentence, in a machinery that had already replaced exactly this kind of claim twice
+before: test identities are collected either side of a build, and changed symbols are read from a
+before-image. The same fix in the same shape closes the last one. It discards nothing and it
+widens what the readers see rather than narrowing it.
+
+Path B. Entries 4a, 15, 17, 18 and this one are one shape: a gate that fails permissive, found
+from outside the machinery. Entry 6 named the deciding fact — whether the next gap would be found
+by the machinery's own record — and this one was not: it was found by cloning the repository and
+running the suite by hand. A machinery whose record can only be trusted when somebody checks it
+against reality is not yet a record.
+
+**Verdict: Path A, and Path B's fact is now the one to watch.** The class was swept: of the four
+things a builder says about itself, its test changes were already observed, its prose is
+explicitly a claim, and the file list was the only fact taken on trust — 1 found, 1 fixed. **The
+deciding fact:** whether the next batch's discrepancy appears in the feed as it happens, rather
+than in a hand-built manifest afterwards. If the next run publishes on the machinery's own list
+without a person rebuilding it, the record has become one.
+
 ## Verdict, entry 18 — the ordering contract failed, not independent judgement
 
 Path A. The live readers were doing the requested work and explicitly said they would finish all

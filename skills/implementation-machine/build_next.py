@@ -622,6 +622,149 @@ def _test_names(built: Path, tests: str) -> list[str]:
     return list(_test_inventory(built, tests)["names"])
 
 
+def _repository_state(built: Path, work: Path) -> dict[str, list[int]] | None:
+    """What is uncommitted in the built system right now, by size and modification time.
+
+    Which files an item changed was the builder's own sentence about itself, and nothing ever
+    compared it with the repository. On 2026-08-15 a batch's builders named 37 files where 44 had
+    to move for the suite to pass; on 2026-08-16 they named 21 where the true number was 43, and a
+    clean copy of the repository carrying only the named files failed 67 tests. The same list is
+    what both blind readers are told changed, so an incomplete one narrows the evidence they judge
+    against. Version control already knows what moved and cannot be mistaken about its own
+    repository, so the record asks it instead of asking the worker. `None` means the built system
+    keeps no version control here and the claim is all there is — which the record then says.
+    """
+
+    listed = subprocess.run(
+        ["git", "status", "--porcelain", "-z", "--untracked-files=all"],
+        cwd=str(built), capture_output=True, text=True, check=False,
+    )
+    if listed.returncode != 0:
+        return None
+    try:
+        inside = work.resolve().relative_to(built.resolve()).as_posix()
+    except ValueError:
+        inside = ""
+    rows = iter([row for row in listed.stdout.split("\0") if row])
+    state: dict[str, list[int]] = {}
+    for row in rows:
+        if len(row) < 4:
+            continue
+        status, name = row[:2], row[3:]
+        # A rename carries its old path in the next field; it is not a change of its own.
+        if "R" in status or "C" in status:
+            next(rows, None)
+        if inside and (name == inside or name.startswith(inside + "/")):
+            continue
+        try:
+            info = (built / name).stat()
+        except OSError:
+            state[name] = []
+            continue
+        state[name] = [info.st_size, info.st_mtime_ns]
+    return state
+
+
+def _moved(before: dict[str, object], after: dict[str, object]) -> list[str]:
+    return sorted({
+        name for name in set(before) | set(after)
+        if before.get(name) != after.get(name)
+    })
+
+
+def _directories_above(name: str) -> list[str]:
+    parts = Path(name).parts[:-1]
+    return [Path(*parts[:depth + 1]).as_posix() for depth in range(len(parts))]
+
+
+def _what_running_the_tests_writes(
+    before: dict[str, object], after: dict[str, object],
+) -> dict[str, list[str]]:
+    """What moves when the tests run and nothing has been built yet.
+
+    The built system's own suite writes files as it runs — caches, packaging metadata, captured
+    run artifacts under names that differ every time. Those are moved by the builder too, because
+    the builder runs the tests, and counting them as the change would bury the four real files
+    under thirty thousand. Watching the baseline run, which happens anyway before anything is
+    touched, says which paths and which directories that is without anybody deciding it.
+    """
+
+    moved = _moved(before, after)
+    appeared = [name for name in moved if name not in before]
+    return {
+        "paths": moved,
+        "directories": sorted({
+            directory for name in appeared
+            for directory in _directories_above(name) if directory not in (".", "")
+        }),
+    }
+
+
+def _what_the_builder_moved(
+    before: dict[str, object], after: dict[str, object], noise: dict[str, object],
+) -> list[str]:
+    quiet_paths = set(noise.get("paths") or [])
+    quiet_directories = tuple(str(row) for row in (noise.get("directories") or []))
+    kept = []
+    for name in _moved(before, after):
+        if name in quiet_paths:
+            continue
+        if name not in before and any(
+            name.startswith(directory + "/") for directory in quiet_directories
+        ):
+            continue
+        kept.append(name)
+    return kept
+
+
+def _reconcile_with_the_repository(
+    work: Path, rid: str, out: Path, built: Path, change_path: Path,
+) -> dict[str, object]:
+    """The change the repository shows, beside the change the builder says it made.
+
+    The list is settled once, the first time the delivery is seen, and kept: the readers run the
+    tests after this point and would otherwise move the ground under it. What the builder claimed
+    is kept too, and the difference is a fact in the record rather than something a person finds
+    later by cloning the repository and watching the suite fail.
+    """
+
+    change = json.loads(change_path.read_text(encoding="utf-8"))
+    claimed = sorted({
+        _source_label(built, path if (path := Path(str(name))).is_absolute() else built / name)
+        for name in (change.get("files") or []) if str(name).strip()
+    })
+    observed_path = out / "files-observed.json"
+    settled = _read_controller_record(work, rid, observed_path)
+    if not isinstance(settled, dict):
+        started = _read_controller_record(work, rid, out / "files-before.json")
+        now = _repository_state(built, work)
+        if not isinstance(started, dict) or now is None:
+            change["files"] = claimed
+            change["builder_said_changed"] = claimed
+            change["repository_watched"] = False
+            return change
+        noise = _read_controller_record(work, rid, out / "files-the-tests-write.json")
+        moved = _what_the_builder_moved(
+            started, now, noise if isinstance(noise, dict) else {},
+        )
+        settled = {
+            # The union, never the intersection: a file either of them names is evidence, and
+            # narrowing what the two blind readers are shown is the failure this exists to end.
+            "files": sorted(set(moved) | set(claimed)),
+            "builder_said_changed": claimed,
+            "changed_without_saying_so": sorted(set(moved) - set(claimed)),
+            "said_but_did_not_change": sorted(set(claimed) - set(moved)),
+            "repository_watched": True,
+        }
+        _write_controller_record(work, rid, observed_path, settled)
+        if settled["changed_without_saying_so"]:
+            say(work, "the builder's file list was short", item=rid,
+                said=len(claimed), moved=len(moved),
+                without_saying_so=settled["changed_without_saying_so"][:20])
+    change.update({key: value for key, value in settled.items()})
+    return change
+
+
 def _failures(built: Path, tests: str) -> dict[str, object]:
     """Run the built system's own tests and note which ones fail, in its own words."""
 
@@ -1730,9 +1873,21 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
     before_path = out / "tests-before.json"
     before = _read_controller_test_record(work, rid, before_path, tests)
     if before is None:
+        quiet = _repository_state(built, work)
+        if quiet is not None:
+            _write_controller_record(work, rid, out / "files-before-tests.json", quiet)
         with _timed(work, "tests before the change", item=rid):
             before = _failures(built, tests)
         _write_controller_record(work, rid, before_path, before)
+        # The baseline run touched nothing anybody asked for, so whatever moved is what running
+        # the tests writes. Recorded now, it is subtracted from what the builder moved later.
+        if quiet is not None:
+            after_quiet = _repository_state(built, work)
+            if after_quiet is not None:
+                _write_controller_record(
+                    work, rid, out / "files-the-tests-write.json",
+                    _what_running_the_tests_writes(quiet, after_quiet),
+                )
     say(work, "tests before the change read", item=rid, already_failing=len(before["failed"]))
 
     approved_baseline_removals, _ = _test_removal_decision(
@@ -1755,11 +1910,16 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
     # and the whole order stalled on the first honest refusal.
     change_path = out / "change.json"
     navigation_before_path = out / "navigation-before.json"
+    files_before_path = out / "files-before.json"
     if not change_path.exists():
         if not navigation_before_path.exists():
             navigation_before_path.write_text(
                 json.dumps(_symbol_snapshot(built), indent=2), encoding="utf-8"
             )
+        if _read_controller_record(work, rid, files_before_path) is None:
+            state = _repository_state(built, work)
+            if state is not None:
+                _write_controller_record(work, rid, files_before_path, state)
         instruction = BUILD.format(
             built=built, requirement=item["requirement"], parts=parts, out=out,
         )
@@ -1812,7 +1972,7 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
                 wants="change.json", owner_approved=owner_approved,
             )],
         }
-    change = json.loads(change_path.read_text(encoding="utf-8"))
+    change = _reconcile_with_the_repository(work, rid, out, built, change_path)
 
     # A builder that changed nothing has produced nothing to check. Sending two readers at the
     # unchanged system to ask whether the sentence is true now is work whose answer is already
@@ -1891,6 +2051,8 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
                 "item": rid,
                 "requirement": item["requirement"],
                 "changed": change["files"],
+                "builder_said_changed": change.get("builder_said_changed"),
+                "changed_without_saying_so": change.get("changed_without_saying_so"),
                 "what_changed": change.get("what_changed"),
                 "left_alone": change.get("left_alone"),
                 "test_command_exit_code": None,
@@ -2045,6 +2207,8 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
         "item": rid,
         "requirement": item["requirement"],
         "changed": change["files"],
+        "builder_said_changed": change.get("builder_said_changed"),
+        "changed_without_saying_so": change.get("changed_without_saying_so"),
         "what_changed": change.get("what_changed"),
         "left_alone": change.get("left_alone"),
         "test_command_exit_code": after["exit_code"],

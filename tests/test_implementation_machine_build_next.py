@@ -1700,3 +1700,120 @@ def test_launch_routes_uv_cache_to_the_workers_own_scratch(tmp_path: Path):
     assert result[0]["wrote"] == 1
     assert Path(delivered["uv_cache"]) == scratch / "uv-cache"
     assert delivered["uv_no_sync"] == "1"
+
+
+def _repository(root: Path) -> None:
+    subprocess.run(["git", "init", "-q"], cwd=root, check=True)
+    subprocess.run(["git", "add", "-A"], cwd=root, check=True)
+    subprocess.run(
+        ["git", "-c", "user.email=t@t", "-c", "user.name=t", "commit", "-qm", "start"],
+        cwd=root, check=True,
+    )
+
+
+def _built_repository(tmp_path: Path) -> tuple[Path, Path, Path]:
+    built = tmp_path / "built"
+    (built / "src").mkdir(parents=True)
+    source = built / "src" / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    (built / "src" / "gate.py").write_text("def gate():\n    return True\n")
+    _repository(built)
+    return built, source, built / "Tasks" / "build"
+
+
+def test_the_record_names_a_file_the_builder_moved_without_declaring_it(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    """The whole defect: 21 files declared where 43 had moved, found only by a failing clone."""
+
+    built, source, work = _built_repository(tmp_path)
+    monkeypatch.setenv("IMPLEMENTATION_MACHINE_CONTROL_ROOT", str(tmp_path / "control"))
+    monkeypatch.setattr(machine, "_failures", lambda *_: {
+        "command": "tests", "exit_code": 0, "failed": [], "names": [],
+    })
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(
+        machine, "_navigation_map",
+        lambda built, item, changed_files=None, before=None: "\n".join(changed_files or []),
+    )
+
+    assert machine.drive(_order(source), work, built, "tests")["stopped"] == "building"
+
+    source.write_text("def target():\n    return 'needle'\n\n# built\n")
+    (built / "src" / "gate.py").write_text("def gate():\n    return False\n")
+    out = work / "build-r1"
+    (out / "change.json").write_text(json.dumps({
+        "files": ["src/target.py"],
+        "what_changed": "changed the target",
+        "tests_changed": [],
+        "left_alone": "nothing",
+    }))
+
+    checking = machine.drive(_order(source), work, built, "tests")
+
+    assert checking["stopped"] == "checking the change"
+    assert checking["changed"] == ["src/gate.py", "src/target.py"]
+    settled = json.loads((out / "files-observed.json").read_text())
+    assert settled["builder_said_changed"] == ["src/target.py"]
+    assert settled["changed_without_saying_so"] == ["src/gate.py"]
+    assert settled["repository_watched"] is True
+    reader = checking["work"][0]["instruction"]
+    assert "src/gate.py" in reader
+
+
+def test_without_version_control_the_record_says_the_list_is_only_the_claim(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    built, source, work = _built_repository(tmp_path)
+    monkeypatch.setenv("IMPLEMENTATION_MACHINE_CONTROL_ROOT", str(tmp_path / "control"))
+    monkeypatch.setattr(machine, "_failures", lambda *_: {
+        "command": "tests", "exit_code": 0, "failed": [], "names": [],
+    })
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_: "")
+    monkeypatch.setattr(machine, "_repository_state", lambda *_: None)
+
+    machine.drive(_order(source), work, built, "tests")
+    (built / "src" / "gate.py").write_text("def gate():\n    return False\n")
+    out = work / "build-r1"
+    (out / "change.json").write_text(json.dumps({
+        "files": ["src/target.py"], "what_changed": "x", "tests_changed": [],
+    }))
+
+    checking = machine.drive(_order(source), work, built, "tests")
+
+    assert checking["changed"] == ["src/target.py"]
+    assert not (out / "files-observed.json").exists()
+
+
+def test_what_running_the_tests_writes_is_not_counted_as_the_change(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    """The built system's own suite writes artifacts under a fresh name every run."""
+
+    built, source, work = _built_repository(tmp_path)
+    monkeypatch.setenv("IMPLEMENTATION_MACHINE_CONTROL_ROOT", str(tmp_path / "control"))
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_: "")
+    noisy = (
+        f"{shlex.quote(sys.executable)} -c "
+        + shlex.quote(
+            "import pathlib,uuid;"
+            "d=pathlib.Path('captured')/uuid.uuid4().hex;d.mkdir(parents=True);"
+            "(d/'run.json').write_text('{}')"
+        )
+    )
+
+    assert machine.drive(_order(source), work, built, noisy)["stopped"] == "building"
+
+    subprocess.run(noisy, shell=True, cwd=built, check=True)
+    source.write_text("def target():\n    return 'needle'\n\n# built\n")
+    out = work / "build-r1"
+    (out / "change.json").write_text(json.dumps({
+        "files": ["src/target.py"], "what_changed": "x", "tests_changed": [],
+    }))
+
+    checking = machine.drive(_order(source), work, built, noisy)
+
+    assert checking["changed"] == ["src/target.py"]
+    assert not any("captured" in name for name in checking["changed"])
