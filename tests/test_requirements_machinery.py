@@ -46,6 +46,41 @@ def test_owner_decision_recording_refuses_unoffered_choices(tmp_path: Path) -> N
     assert decisions.load(path) == {"merge:a|b": "keep both"}
 
 
+def test_semantic_dispute_never_offers_an_ungrounded_plain_no() -> None:
+    machine = load_module("requirements_owner_part_choices", MACHINE / "run.py")
+    rows = [{
+        "kind": "unresolved parts",
+        "requirement": "r91",
+        "calls": {"pass-1": "already met", "pass-2": "already met"},
+        "because_these_parts_were_answered_differently": [{
+            "part_id": "r91.p1",
+            "part": "The engine enforces it.",
+            "calls": {"pass-1": "yes", "pass-2": "yes"},
+            "semantic_support": "the two citation auditors did not both confirm the proof",
+            "settled_by": {"pass-1": "cannot settle", "pass-2": "cannot settle"},
+            "needed_by_settler": {},
+        }],
+    }]
+
+    decorated = machine._decorate_part_decisions(rows)
+    decision = decorated[0]["because_these_parts_were_answered_differently"][0]
+
+    assert decision["choices"] == ["yes", "no/add", "no/change", "no/remove"]
+    assert machine._parse_part_owner_choice("no/change") == ("no", "change")
+
+
+def test_grounded_no_keeps_the_short_yes_no_owner_choice() -> None:
+    machine = load_module("requirements_grounded_owner_part_choices", MACHINE / "run.py")
+    part = {
+        "calls": {"pass-1": "yes", "pass-2": "yes"},
+        "settled_by": {"pass-1": "no", "pass-2": "yes"},
+        "needed_by_pass": {},
+        "needed_by_settler": {"pass-1": "change"},
+    }
+
+    assert machine._part_owner_choices(part) == ["yes", "no"]
+
+
 def test_owner_keep_both_resolves_merge_disagreement_without_editing_reader_records(
     tmp_path: Path,
 ) -> None:

@@ -1009,20 +1009,33 @@ def _drive(subject: str, description: Path, work: Path, built: Path | None) -> d
         part_id = str(part["part_id"])
         calls = answers[part_id]
         values = {(call["answer"], call["needed"]) for call in calls.values()}
-        choice = recorded_owner_choices.get(owner_decisions.part_decision_id(part_id))
-        if len(values) <= 1 or choice not in {"yes", "no"}:
+        raw_choice = recorded_owner_choices.get(owner_decisions.part_decision_id(part_id))
+        choice = _parse_part_owner_choice(raw_choice)
+        if len(values) <= 1 or choice is None:
+            continue
+        answer_choice, explicit_needed = choice
+        if explicit_needed is not None:
+            resolved = {"answer": answer_choice, "needed": explicit_needed}
+            answers[part_id] = {
+                f"pass-{index}": resolved.copy() for index in range(1, PASSES + 1)
+            }
+            owner_resolved_parts.add(part_id)
             continue
         matching = next(
-            (call for call in calls.values() if call.get("answer") == choice), None,
+            (call for call in calls.values() if call.get("answer") == answer_choice), None,
         )
         if matching is None:
             matching = next(
                 (call for call in settled.get(part_id, {}).values()
-                 if call.get("answer") == choice), None,
+                 if call.get("answer") == answer_choice), None,
             )
         if matching is None:
-            raise ValueError(f"owner choice has no grounded reader side: {part_id}={choice}")
-        resolved = {"answer": choice, "needed": matching.get("needed") or ""}
+            # A previously offered plain choice can become stale when later evidence removes that
+            # reader side. Preserve it in owner-decisions.json, but do not let it block the run or
+            # silently invent the missing add/change/remove classification. The current report
+            # will offer only choices that this evidence state can actually consume.
+            continue
+        resolved = {"answer": answer_choice, "needed": matching.get("needed") or ""}
         answers[part_id] = {f"pass-{index}": resolved.copy() for index in range(1, PASSES + 1)}
         owner_resolved_parts.add(part_id)
 
@@ -1285,11 +1298,57 @@ def _decisions(final: dict[str, object]) -> list[dict[str, object]]:
     ]
 
 
+_PART_NEEDED_CHOICES: tuple[str, ...] = ("add", "change", "remove")
+
+
+def _parse_part_owner_choice(choice: str | None) -> tuple[str, str | None] | None:
+    normalized = str(choice or "").strip().lower()
+    if normalized in {"yes", "no"}:
+        return normalized, None
+    if normalized.startswith("no/"):
+        needed = normalized.split("/", 1)[1]
+        if needed in _PART_NEEDED_CHOICES:
+            return "no", needed
+    return None
+
+
+def _part_owner_choices(part: dict[str, object]) -> list[str]:
+    """Offer only choices the resolver can consume without inventing a reader judgement.
+
+    A grounded no side already carries add/change/remove, so the owner can choose plain ``no``.
+    When no reader supplied that side, the owner must classify the missing work explicitly. This
+    keeps an owner free to reject unsupported yes evidence without letting the controller guess
+    how that rejection belongs in the final add/change/remove document.
+    """
+
+    grounded = {
+        str(value).strip().lower()
+        for value in (part.get("calls") or {}).values()
+    } | {
+        str(value).strip().lower()
+        for value in (part.get("settled_by") or {}).values()
+    }
+    needed = {
+        str(value).strip().lower()
+        for key in ("needed_by_pass", "needed_by_settler")
+        for value in (part.get(key) or {}).values()
+        if str(value).strip().lower() in _PART_NEEDED_CHOICES
+    }
+    choices: list[str] = []
+    if "yes" in grounded:
+        choices.append("yes")
+    if "no" in grounded and len(needed) == 1:
+        choices.append("no")
+    else:
+        choices.extend(f"no/{value}" for value in _PART_NEEDED_CHOICES)
+    return choices
+
+
 def _decorate_part_decisions(rows: list[dict[str, object]]) -> list[dict[str, object]]:
     for row in rows:
         for part in row.get("because_these_parts_were_answered_differently") or []:
             part["decision_id"] = owner_decisions.part_decision_id(str(part["part_id"]))
-            part["choices"] = ["yes", "no"]
+            part["choices"] = _part_owner_choices(part)
     return rows
 
 
