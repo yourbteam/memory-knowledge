@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `e63e1342abaec50d71f5badee412018be580a17a06b42311ff6d8b5414fce061`
+Ledger-SHA256: `8e2ea8ad277cb881d541c98cbb9dceb121ba8c121c59a8192d211373818429cc`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -4787,6 +4787,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: A valid independent authority review cannot be recorded when the reviewer output uses normal pretty-printed JSON bytes.
 - Evidence: Guarded suite event 4f461726-6c28-4ebb-af4a-0ad76dbc91fd: 186 passed and 2 failed at record_fixture_authority_review because finalize rewrote the raw reviewer JSON canonically.
 
+## blk-75ce2d1894ed77daef0e14c3
+
+- Status: `closed`
+- Subject: `memory-knowledge-dotnet-deploy-fix-publish-20260817`
+- Step: `select-sequence`
+- Surface: `prevention-registry`
+- Symptom: The registered scoped publisher cannot be selected because its executable-owner source hash differs from the current memory-knowledge working tree.
+- Evidence: work_memory select stopped with executable-owner-source-hash-drift:commit-push-main before creating a selection receipt or changing Git state.
+
 ## blk-76231ce085b8783be95ac11d
 
 - Status: `non-gap`
@@ -7131,6 +7140,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: git diff --cached --check reports trailing whitespace in new durability research and plan documents
 - Evidence: 20 header metadata lines reported across six staged Markdown files
 
+## blk-b1fc9684649d52bfebf42890
+
+- Status: `closed`
+- Subject: `commit-push-main`
+- Step: `sequence-guard-activate`
+- Surface: `memory-knowledge:scripts/sequence_guard.py activate`
+- Symptom: sequence_guard.py activate exits 1 because the shared directive-read state names a different checkout of DIRECTIVES.md
+- Evidence: Two consecutive activate calls for task up-feedback-gate-and-pack-2026-08-17 printed: directive read state was recorded for /Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/working-agreement/DIRECTIVES.md, expected /Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md; exit=1 both times.
+
 ## blk-b20bcf38ad8cb8de94e38208
 
 - Status: `superseded`
@@ -7499,6 +7517,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `vivacom-phase20-strategy-claim-inventory-correction`
 - Symptom: The resumed Phase 20 generated a brief, completed all 17 inventory batches, then failed because two exact governed assertions remained unbound to valid claim ids after the correction binder ran.
 - Evidence: UP child up-run-87b03443196f persisted strategy_correction_progress started issue_count_before=4, then failed issue_count_after=4, followed by strategy_validation_rejected; rejected attempt is context.up.cd_s_002.strategy_brief_attempts[15].
+
+## blk-b8f3f38e418322aeade10e1f
+
+- Status: `closed`
+- Subject: `taggable-api-deploy`
+- Step: `prepare-dispatch`
+- Surface: `sequence-intake-adapter`
+- Symptom: The prepared deployment command cannot find dotnet, so it would stop before publishing or touching Azure.
+- Evidence: The selected runbook requires the local .dotnet directory on PATH; command -v dotnet returned no path while the prepared argv contained only bash and deploy-api.sh.
 
 ## blk-b94da55eefa02f78a7122744
 
@@ -8039,6 +8066,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `agentic-trading-main-staged-diff`
 - Symptom: The isolated main staged 118 of 120 manifest paths because two research files already match remote main, and git diff --cached --check found one extra EOF blank line in thirteen V2 files.
 - Evidence: Exact missing paths: plans/agentic-trading-v2-workflow-principles-research.gap-audit.md and .md; exact whitespace paths were printed by git diff --cached --check with new blank line at EOF.
+
+## blk-c65f410660b466a6d219f8b9
+
+- Status: `non-gap`
+- Subject: `commit-push-main`
+- Step: `publish-tests`
+- Surface: `united-partners-test-state`
+- Symptom: The mandatory publish suite cannot write its isolated harness test-state temporary files.
+- Evidence: The suite ran 2390 tests and ended with 12 PermissionError exceptions at .test-up-harness-state/up-run-*.tmp; no assertion failure caused the stop.
 
 ## blk-c6d54f9736b7c08a0c36d6be
 
@@ -9402,6 +9438,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: The checked r13 replay stopped after iteration 1 because the selected work-memory controller changed during observer remediation.
 - Evidence: Selection expected scripts/work_memory.py sha256 6fbe6acc51e037db5a0830cd46c82f71a4435a05a5d91ee34d43699d030a3c59; current file sha256 is ff6c9172e1536ce03e250fef9dfe3c080c673ddc514294acd9b3b76bdea96e56; sequence_guard returned stale-source-bundle before iteration 2 was claimed.
+
+## blk-e89f0c7ef3dc92616cfef835
+
+- Status: `closed`
+- Subject: `commit-push-main`
+- Step: `publish`
+- Surface: `memory-knowledge:origin/main`
+- Symptom: The scoped 42-file commit was created locally but origin/main rejected the push as non-fast-forward
+- Evidence: Local commit 6ff94c1bf0d28f98424fde859cf69a948485c215 remains at HEAD; git push origin main reported main behind remote
 
 ## blk-e8a3a400e76f077d97d0bae8
 
