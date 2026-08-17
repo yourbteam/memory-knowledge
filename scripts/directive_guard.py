@@ -18,7 +18,28 @@ except ModuleNotFoundError:  # direct script execution
 
 
 DEFAULT_DIRECTIVES_PATH = Path("/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md")
-DEFAULT_STATE_PATH = Path("/private/tmp/workflow-orch-directive-guard.json")
+STATE_PATH_PREFIX = "/private/tmp/workflow-orch-directive-guard"
+
+
+def default_state_path(directives_path: Path) -> Path:
+    """Where the read state for one directives file lives.
+
+    One file per directives checkout, not one file for the machine. Until 2026-08-17 every
+    session on this host shared /private/tmp/workflow-orch-directive-guard.json, so a session
+    working from a second checkout -- a git worktree, a codex sandbox -- overwrote the state
+    the first session had recorded, and the next activation refused with "directive read state
+    was recorded for <other path>, expected <this path>". The ledger carries nine blockers on
+    this receipt and seven of them are still open, because each occurrence was cleared by
+    re-recording the read rather than by removing the contention.
+    """
+    digest = hashlib.sha256(str(directives_path.resolve()).encode("utf-8")).hexdigest()[:12]
+    return Path(f"{STATE_PATH_PREFIX}-{digest}.json")
+
+
+#: The canonical checkout's state file, kept as a module constant for callers that have no
+#: directives path in hand. A caller that does have one derives its own with
+#: ``default_state_path`` instead, so two checkouts never write the same file.
+DEFAULT_STATE_PATH = default_state_path(DEFAULT_DIRECTIVES_PATH)
 DEFAULT_MAX_AGE_MINUTES = 1440
 SCHEMA_VERSION = 1
 INTAKE_SPEC = {
@@ -181,7 +202,7 @@ def check_directive_read_state(
 
 def cmd_read(args: argparse.Namespace) -> int:
     directives_path = _path(args.directives_path, DEFAULT_DIRECTIVES_PATH)
-    state_path = _path(args.state, DEFAULT_STATE_PATH)
+    state_path = _path(args.state, default_state_path(directives_path))
     state = write_directive_read_state(
         directives_path=directives_path,
         state_path=state_path,
@@ -193,7 +214,7 @@ def cmd_read(args: argparse.Namespace) -> int:
 
 def cmd_check(args: argparse.Namespace) -> int:
     directives_path = _path(args.directives_path, DEFAULT_DIRECTIVES_PATH)
-    state_path = _path(args.state, DEFAULT_STATE_PATH)
+    state_path = _path(args.state, default_state_path(directives_path))
     state = check_directive_read_state(
         directives_path=directives_path,
         state_path=state_path,
