@@ -462,6 +462,28 @@ RULED = (
     "'what_changed'. Nothing else about the rules above changes."
 )
 
+#: What this whole list of requirements is about. A requirement sentence often carries no subject —
+#: "Every acronym is defined at first use." names no document and no step — and a worker handed one
+#: has to choose a subject itself. On 2026-08-16 two of them chose every document the built system
+#: hands over, ten instead of two, and the item cost five hours and ten refusals before the owner
+#: saw what was being judged. The subject belongs to the batch, is written once by the owner, and
+#: reaches every builder and both blind readers unchanged.
+SUBJECT = (
+    "\n\nWhat this list of requirements is about, in the owner's words:\n\n{subject}\n\nEvery "
+    "sentence above is about that and only that. Where a sentence names no document, no step and "
+    "no output, it means the ones named here. Change what is needed to make the sentence true for "
+    "them; do not widen the change to satisfy anything outside them, and if the sentence cannot be "
+    "made true within them, say so in 'what_changed' instead of reaching further."
+)
+
+SUBJECT_FOR_READER = (
+    "\n\nWhat this list of requirements is about, in the owner's words:\n\n{subject}\n\nJudge each "
+    "sentence against that and only that. Where a sentence names no document, no step and no "
+    "output, it means the ones named here, and evidence from anything else does not decide it. A "
+    "'no' must rest on the subject above; if your reason lies outside it, the sentence is not "
+    "false — say what you found in 'looked_at' and answer on the subject."
+)
+
 RULING_FOR_READER = (
     "\n\nThe owner has settled an ambiguity in this item, in these exact words:\n\n"
     "{ruling}\n\nTreat that as the authoritative meaning of the requirement while judging the "
@@ -656,19 +678,47 @@ def _repository_state(built: Path, work: Path) -> dict[str, list[int]] | None:
             next(rows, None)
         if inside and (name == inside or name.startswith(inside + "/")):
             continue
+        path = built / name
         try:
-            info = (built / name).stat()
+            info = path.stat()
         except OSError:
             state[name] = []
             continue
-        state[name] = [info.st_size, info.st_mtime_ns]
+        state[name] = [info.st_size, info.st_mtime_ns, _content_fingerprint(path)]
     return state
+
+
+def _content_fingerprint(path: Path) -> str:
+    """What the file says, not when it was last written.
+
+    A modification time is not a change. On 2026-08-16 a packaging step inside the built system's
+    own test command stamped one instant onto every source file it manages, and the record read 103
+    files as moved where the builder had touched two — the sizes were identical and only the clocks
+    had turned. The comparison asks the content.
+    """
+
+    digest = hashlib.sha256()
+    try:
+        with path.open("rb") as opened:
+            for block in iter(lambda: opened.read(1 << 20), b""):
+                digest.update(block)
+    except OSError:
+        return ""
+    return digest.hexdigest()
+
+
+def _what_it_says(record: object) -> object:
+    """A snapshot entry with its modification time set aside, older two-part entries unchanged."""
+
+    if isinstance(record, list) and len(record) == 3:
+        return [record[0], record[2]]
+    return record
 
 
 def _moved(before: dict[str, object], after: dict[str, object]) -> list[str]:
     return sorted({
         name for name in set(before) | set(after)
-        if before.get(name) != after.get(name)
+        if _what_it_says(before.get(name)) != _what_it_says(after.get(name))
     })
 
 
@@ -1612,6 +1662,22 @@ def _test_removal_decision(
     return approved, sorted(set(disappeared) - set(approved))
 
 
+def _subject_text(work: Path) -> str:
+    """What the whole list is about, written once by the owner in `subject.md`.
+
+    Never authored or paraphrased here, exactly as a ruling is not: it is quoted into every builder
+    brief and both blind reader packets as it stands, or it is absent.
+    """
+
+    subject = work / "subject.md"
+    if not subject.is_file():
+        return ""
+    try:
+        return subject.read_text(encoding="utf-8").strip()
+    except OSError:
+        return ""
+
+
 def _ruling_text(ruling: object) -> str:
     """Keep legacy string rulings and render structured owner decisions without inventing prose."""
 
@@ -1664,6 +1730,25 @@ def _terminal_resume_authorized(ruling: object) -> bool:
     )
 
 
+def _retire_controller_authority(work: Path, rid: str, history: str, name: str) -> bool:
+    """Move the protected record into the epoch's history, beside its projection.
+
+    The epoch used to move the item-directory copies only, and the controller reads authority,
+    never the projection: on 2026-08-16 r19's reopened window read the first window's attempt-1
+    observation, four hours old, and handed both blind readers a file list naming two files that
+    attempt had not touched while omitting the four it had. Every record the epoch retires has the
+    same shape, so rotating the projection while authority stays put rotates nothing at all.
+    """
+
+    authority = _control_record_path(work, rid, name)
+    if not authority.is_file():
+        return False
+    destination = _control_record_path(work, rid, f"{history}/{name}")
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    authority.rename(destination)
+    return True
+
+
 def _activate_ruling_epoch(
     work: Path, out: Path, rid: str, ruling: object, refusal_start: int,
 ) -> dict[str, object]:
@@ -1678,6 +1763,11 @@ def _activate_ruling_epoch(
         out / "navigation-before.json",
         out / "tests-before.json",
         out / "tests-after.json",
+        # The file baseline goes with the test baseline. Kept, it dates from the window that was
+        # refused: on 2026-08-16 r19's second window measured the change against a picture of the
+        # repository four and a half hours old, and named two hundred and thirty-four files the
+        # demo's own runs had written in between. A refreshed window measures from its own start.
+        out / "files-before.json",
         work / f"build-{rid}-scratch",
     ]
     for index in range(1, PASSES + 1):
@@ -1689,6 +1779,11 @@ def _activate_ruling_epoch(
     # window's attempt number would be read as this attempt's. It travels into history with the
     # rest of the stale work instead.
     pending.extend(sorted(out.glob("files-observed-*.json")))
+    retiring = {path.name for path in pending if path.suffix == ".json"}
+    retiring.update(
+        path.name
+        for path in (_control_root(work) / "items" / rid).glob("files-observed-*.json")
+    )
     moved = []
     for path in pending:
         if not path.exists():
@@ -1697,16 +1792,22 @@ def _activate_ruling_epoch(
         destination = history / path.name
         path.rename(destination)
         moved.append(path.name)
-    if moved:
+    retired = []
+    for name in sorted(retiring):
+        if _retire_controller_authority(work, rid, history.name, name):
+            retired.append(name)
+    if moved or retired:
+        history.mkdir(parents=True, exist_ok=True)
         (history / "manifest.json").write_text(json.dumps({
             "reason": "owner ruling changed after earlier work",
             "preserved": moved,
+            "authority_retired": retired,
             "refusals_before_ruling": refusal_start,
         }, indent=2), encoding="utf-8")
     state = {
         "ruling_sha256": _ruling_sha256(ruling),
         "refusal_start": refusal_start,
-        "history": history.name if moved else None,
+        "history": history.name if (moved or retired) else None,
         "baseline_refreshed": True,
     }
     (out / "ruling-state.json").write_text(json.dumps(state, indent=2), encoding="utf-8")
@@ -1973,6 +2074,9 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
                 instruction += BODY.format(bodies=bodies)
         if prepare_universal_paths:
             instruction += _universal_preparation(str(item["requirement"]))
+        subject_text = _subject_text(work)
+        if subject_text:
+            instruction += SUBJECT.format(subject=subject_text)
         if ruling_text:
             instruction += RULED.format(ruling=ruling_text)
         if all_refused:
@@ -2137,6 +2241,10 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
         RULING_FOR_READER.format(ruling=semantic_ruling_text)
         if semantic_ruling_text else ""
     )
+    subject_text = _subject_text(work)
+    subject_context = (
+        SUBJECT_FOR_READER.format(subject=subject_text) if subject_text else ""
+    )
     waiting = []
     for index in range(1, PASSES + 1):
         checked = work / f"check-{rid}-{index}"
@@ -2144,6 +2252,7 @@ def drive(order: dict[str, object], work: Path, built: Path, tests: str,
         if answers == 0 or (not repair_reader_records and answers < len(item["parts"])):
             waiting.append(_packet(
                 VERIFY.format(built=built, named_parts=named_parts, out=checked)
+                + subject_context
                 + ruling_context
                 + reader_context,
                 checked, work / f"check-{rid}-{index}-scratch", blind=True,

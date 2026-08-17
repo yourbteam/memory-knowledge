@@ -956,6 +956,67 @@ def test_same_ruling_cannot_reopen_a_second_terminal_window(
     assert not (out / "ruling-history-2").exists()
 
 
+def test_a_touched_modification_time_is_not_a_change(tmp_path: Path):
+    built = tmp_path / "built"
+    built.mkdir()
+    (built / "kept.py").write_text("def kept():\n    return True\n")
+    _repository(built)
+    source = built / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    work.mkdir()
+    before = machine._repository_state(built, work)
+
+    # The built system's own packaging step stamps one instant onto files it did not rewrite.
+    stamped = source.stat().st_mtime_ns + 1_000_000_000
+    os.utime(source, ns=(stamped, stamped))
+
+    assert machine._moved(before, machine._repository_state(built, work)) == []
+
+    source.write_text("def target():\n    return 'thread'\n")
+
+    assert machine._moved(before, machine._repository_state(built, work)) == ["target.py"]
+
+
+def test_the_ruling_epoch_retires_the_protected_record_not_only_its_projection(
+    tmp_path: Path,
+):
+    work = tmp_path / "work"
+    out = work / "build-r1"
+    out.mkdir(parents=True)
+    stale = {
+        "files": ["old.py"],
+        "builder_said_changed": ["old.py"],
+        "changed_without_saying_so": [],
+        "said_but_did_not_change": [],
+        "repository_watched": True,
+    }
+    machine._write_controller_record(work, "r1", out / "files-observed-1.json", stale)
+    machine._write_controller_record(work, "r1", out / "tests-before.json", {
+        "command": "tests", "exit_code": 0, "failed": [], "names": [],
+    })
+    machine._write_controller_record(work, "r1", out / "files-before.json", {
+        "old.py": [1, 2],
+    })
+
+    state = machine._activate_ruling_epoch(
+        work, out, "r1", {"owner_ruling": "The owner settled it.",
+                          "resume_after_terminal": True}, 3,
+    )
+
+    # The new window's first attempt must not be able to read the old window's first attempt.
+    assert state["history"] == "ruling-history-1"
+    assert machine._read_controller_record(work, "r1", out / "files-observed-1.json") is None
+    assert machine._read_controller_record(work, "r1", out / "tests-before.json") is None
+    # The window measures the change from its own start, not from the refused window's.
+    assert machine._read_controller_record(work, "r1", out / "files-before.json") is None
+    kept = machine._control_record_path(work, "r1", "ruling-history-1/files-observed-1.json")
+    assert json.loads(kept.read_text()) == stale
+    manifest = json.loads((out / "ruling-history-1" / "manifest.json").read_text())
+    assert "files-observed-1.json" in manifest["authority_retired"]
+    assert "tests-before.json" in manifest["authority_retired"]
+
+
 def test_existing_ruling_epoch_refreshes_a_baseline_created_before_the_repair(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
@@ -1017,6 +1078,59 @@ def test_owner_ruling_reaches_both_blind_reader_packets(
         assert "authoritative meaning of the requirement" in packet["instruction"]
         assert "PRIVATE BUILDER CONCLUSION" not in packet["instruction"]
         assert "one of two independent readers" in packet["instruction"]
+
+
+def test_the_subject_of_the_list_reaches_the_builder_and_both_blind_readers(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    work.mkdir()
+    subject = (
+        "These requirements are about phases 2 and 3 and the two things they produce: "
+        "the one document and the list of questions that goes with it."
+    )
+    (work / "subject.md").write_text(subject, encoding="utf-8")
+    monkeypatch.setattr(
+        machine, "_failures",
+        lambda *_: {"command": "tests", "exit_code": 0, "failed": [], "names": []},
+    )
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_: "")
+
+    build = machine.drive(_order(source), work, tmp_path, "tests")
+
+    # A sentence with no subject of its own must arrive carrying the list's subject.
+    assert subject in build["work"][0]["instruction"]
+    assert "do not widen the change" in build["work"][0]["instruction"]
+    (work / "build-r1" / "change.json").write_text(json.dumps({
+        "files": ["target.py"], "what_changed": "made it true",
+        "tests_changed": [], "left_alone": "nothing",
+    }))
+
+    checking = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert len(checking["work"]) == machine.PASSES
+    for packet in checking["work"]:
+        assert subject in packet["instruction"]
+        assert "evidence from anything else does not decide it" in packet["instruction"]
+
+
+def test_a_list_with_no_subject_is_unchanged(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
+    source = tmp_path / "target.py"
+    source.write_text("def target():\n    return 'needle'\n")
+    work = tmp_path / "work"
+    monkeypatch.setattr(
+        machine, "_failures",
+        lambda *_: {"command": "tests", "exit_code": 0, "failed": [], "names": []},
+    )
+    monkeypatch.setattr(machine, "_symbol_snapshot", lambda *_: {})
+    monkeypatch.setattr(machine, "_navigation_map", lambda *_: "")
+
+    build = machine.drive(_order(source), work, tmp_path, "tests")
+
+    assert "What this list of requirements is about" not in build["work"][0]["instruction"]
 
 
 def test_test_removal_authorization_does_not_steer_blind_readers(tmp_path: Path):

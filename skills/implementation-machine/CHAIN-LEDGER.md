@@ -47,6 +47,53 @@ the strategy brief step. Its breakdown holds 183 parts still to build, spread ov
 
 | 20 | Entry 19's watching settled once per **item**. On its first live batch, r100's second builder wrote forty-eight lines into the engine's dispatch seam, declared no files, and the step reused the first attempt's "nothing moved": the item was refused for changing nothing while its change sat in the working tree, and the run was heading for a terminal refusal with real work unrecorded. The same hole existed across a ruling window, where attempt numbering restarts and an old window's observation would be read as the new attempt's | settle the observation per attempt, keeping the item's first before-image so an accepted attempt still names everything that moved since the item was taken up, including work an earlier refused attempt left behind; carry stale observations into the ruling-history directory with the rest of the preserved work | red before and green after through the production `drive()` on a real repository, reproducing r100 exactly: an attempt that declares nothing and moves nothing is refused, then a second attempt that moves a file and still declares nothing returns `checking the change` with that file named — the old code returns `building again`. All 59 focused controller tests pass | **0 of 68 parts built** on the pre-engagement subject; the batch was stopped at the owner's word and restarted on the fixed machine | 1 live batch stopped at item one; 2 refused attempts, one of them wrongly |
 
+| 21 | Entry 20 carried the stale observations into the ruling-history directory — but only the copies in the item directory, and the controller reads the protected record, never the projection. r19's reopened window therefore read the first window's attempt-1 observation, written four hours earlier, and told both blind readers that two files had changed which that attempt never touched, while omitting the four it did. Its second attempt read the old window's second, naming files from a different builder entirely. The file baseline stayed at the refused window's too, so the first honest re-observation measured against a picture of the repository four and a half hours old and named 234 files, most of them written by the demo's own runs in between | retire the protected record beside its projection every time the epoch preserves one, listing what was retired in the history manifest; rotate the file baseline with the test baseline, so a refreshed window measures the change from its own start | red before and green after on the production `_activate_ruling_epoch`: with the retirement disabled the new window reads the old window's observation, and with it in place the controller reads nothing and settles the attempt for itself, the retired records kept under `ruling-history-2`. Live on the restarted run: the controller removed the untrusted projection, re-observed r19's second attempt itself and said in the feed *the builder's file list was short — said 5, moved 234*, where the stale record had said 2. All 61 focused controller tests pass | **5 of 34 built** on the pre-engagement subject, unchanged by this | 2 windows of attempts judged on another window's list; 1 live restart at the owner's word; 2 found, 2 fixed |
+
+| 22 | The snapshot recorded each uncommitted file by size and modification time, and a modification time is not a change. The built system's own test command runs its packaging step, which stamps one fresh timestamp onto every source file it manages without rewriting a byte. On r91's second attempt the record therefore read **103 files moved where the builder had touched two** — 37 of them source and test files whose sizes were identical to the baseline's and whose clocks had all turned to the same instant, plus 34 folders from earlier demo runs. Both blind readers were handed that list | record what each file says beside its size — a content digest taken when the snapshot is taken — and compare on size and content, leaving the clock out of it; older two-part records keep their old meaning | red before and green after on the production `_repository_state` and `_moved`: a file whose modification time is pushed a second into the future is no longer reported as moved, and the same file rewritten still is. All 64 focused controller tests pass | **15 of 34 built** on the pre-engagement subject, unchanged by this | 1 live item read with a hundredfold file list; 1 record traced to identical sizes and one shared timestamp; 1 found, 1 fixed |
+
+## Verdict, entry 22 — four causes, four instruments, and the distance is moving
+
+Path A. The boundary has held through all four: the record still asks version control rather than
+the worker, and no fix has re-opened an earlier one. Each cause was a different instrument — where
+the answer is stored, how long it may stand, which copy is authority, and what counts as a change —
+and this one was found by reading the live record rather than by an item accepted on a wrong list.
+The distance is moving underneath it: 6 of 34 when the owner's scope went in, 15 now, nine straight
+items with one builder round each and no verdict resting on a document outside the subject.
+
+Path B. Four repairs to one record in two days is a record whose instrument is being discovered by
+outage. The controller reconstructs, from outside, a fact the built system could report from
+inside; every new thing that touches a file — a packaging step today, a formatter or a cache
+tomorrow — is another cause waiting. The replacement is to stop reconstructing it: ask the built
+system for its own diff at the moment of delivery and record that, which no timestamp, no cache and
+no run folder can confuse.
+
+**Verdict: Path A, because the goal's number moved nine items while these four were being fixed,
+and none of the four cost an accepted item.** **The deciding fact:** whether a fifth instrument
+appears in this batch's remaining nineteen items. If the record now names what moved without anyone
+reading it by hand, the boundary is finished. If a fifth appears, Path B is right and the record
+becomes the built system's own diff rather than the controller's reconstruction.
+
+## Verdict, entry 21 — the same boundary, one layer further down
+
+Path A. The boundary entries 19 and 20 drew is holding: the record is still taken from version
+control rather than from the worker, and it is still settled per attempt. What failed here is not
+that boundary but a rotation that stopped at the projection, and it was found by reading the live
+feed against the protected directory rather than by an accepted item — before any verdict rested on
+it. The distance did not move, and no reader verdict has to be withdrawn: the file list is
+navigation, and r19's refusal quoted the current run's own deliverable, correctly.
+
+Path B. This is the third fix to the change-observation in two days, and each was exposed by the
+next live run rather than by the one before it. A record that needs a repair every time it meets a
+new lifetime — item, attempt, ruling window — is a record whose lifetimes are being discovered one
+outage at a time, and the cost is now measured in restarts of a batch that stands at 5 of 34.
+
+**Verdict: Path A, because each of the three found a distinct lifetime and none re-opened an
+earlier one, and this one cost no accepted item.** **The deciding fact:** whether the next
+observation the machinery settles is right without a person reading it. If r19's remaining attempts
+and the items after them record what moved without anyone checking the protected directory by hand,
+the boundary is done. If a fourth lifetime appears, the record is the wrong shape and what replaces
+it is a change the built repository itself reports, not one the controller reconstructs.
+
 ## Verdict, entry 20 — the fix was right and its lifetime was wrong
 
 Path A. Entry 19's boundary is correct and this changed none of it: the record still asks version
