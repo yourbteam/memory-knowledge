@@ -283,6 +283,14 @@
       "stable_behavior": "The adapter module registers agent-heartbeat as a canonical sequence id carrying no adapter, so contract building no longer fails closed for every sequence when a sequence is registered without one, and workflow client regeneration requires the declared client-classification facts path so an omitted fact is reported unresolved rather than assumed. Owner effects, admission, and terminal semantics are unchanged."
     },
     {
+      "decision_id": "commit-push-main-dotnet-deploy-path-intake-adapter-source-correction-20260817",
+      "owner_sequence_id": "commit-push-main",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-08-17T18:39:45Z",
+      "approved_surface": "The sequence_intake_adapter source binding in owner-contract-proposals/commit-push-main.json and the matching implementation_sources entry in owner-executable-contracts.json.",
+      "stable_behavior": "The API and media-worker deployment profiles prepend the existing local .NET SDK directory to inherited PATH during semantic preparation, guarded dispatch receives that environment unchanged, and the admin SPA profile remains unaffected. This source correction authorizes no commit or deployment and changes no publisher effect, admission, or terminal semantics."
+    },
+    {
       "decision_id": "commit-push-main-source-branch-landing-source-correction-20260810",
       "owner_sequence_id": "commit-push-main",
       "status": "APPROVED",

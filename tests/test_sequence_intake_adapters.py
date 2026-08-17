@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 from pathlib import Path
 
 import pytest
@@ -193,8 +194,9 @@ def test_commit_push_resume_does_not_ask_for_or_emit_manifest_or_message():
     ],
 )
 def test_deploy_adapter_derives_verified_script_invocation(
-    sequence_id: str, repository_key: str, script: str,
+    sequence_id: str, repository_key: str, script: str, monkeypatch,
 ):
+    monkeypatch.setenv("PATH", "/usr/bin:/bin")
     prepared = sequence_intake_adapters.prepare(
         sequence_id,
         {"repository_key": repository_key, "verify": True},
@@ -207,6 +209,9 @@ def test_deploy_adapter_derives_verified_script_invocation(
     ]
     assert prepared["profile"] == "verified"
     assert prepared["authorization"]["operation"] == "deploy"
+    assert prepared["environment"]["PATH"] == (
+        f"{Path.home() / '.dotnet'}{os.pathsep}/usr/bin:/bin"
+    )
 
 
 def test_admin_deploy_derives_api_base_and_skip_verification_flags():
@@ -229,6 +234,7 @@ def test_admin_deploy_derives_api_base_and_skip_verification_flags():
         "--no-verify",
     ]
     assert prepared["profile"] == "no-verify"
+    assert "environment" not in prepared
 
 
 def test_deploy_intake_asks_semantics_and_emits_no_caller_authored_flags():
