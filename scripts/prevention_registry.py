@@ -4,6 +4,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -91,6 +92,23 @@ class RegistryError(ValueError):
     """Raised when the typed registry and its human projection diverge."""
 
 
+def _source_validation_path(path: str, sequence_id: str) -> Path:
+    source = Path(path)
+    source_root = os.environ.get("MK_PREVENTION_SOURCE_ROOT")
+    canonical_root = os.environ.get("MK_PREVENTION_CANONICAL_ROOT")
+    selected = frozenset(
+        value for value in os.environ.get(
+            "MK_PREVENTION_SOURCE_ROOT_OWNER_IDS", ""
+        ).split(",") if value
+    )
+    if source_root and canonical_root and (not selected or sequence_id in selected):
+        try:
+            return Path(source_root) / source.relative_to(Path(canonical_root))
+        except ValueError:
+            pass
+    return source
+
+
 def load_executable_owner_contracts(
     path: Path = EXECUTABLE_OWNER_CONTRACTS,
     *,
@@ -171,7 +189,9 @@ def load_executable_owner_contracts(
                 source_validation_owner_ids is None
                 or sequence_id in source_validation_owner_ids
             ):
-                source_path = Path(source["path"])
+                source_path = _source_validation_path(
+                    str(source["path"]), sequence_id
+                )
                 if (
                     not source_path.is_file()
                     or sha256_bytes(source_path.read_bytes())

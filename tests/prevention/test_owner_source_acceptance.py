@@ -69,6 +69,27 @@ def test_acceptance_repository_binding_returns_canonical_root_through_symlink(
     )
 
 
+def test_binding_validation_can_read_canonical_source_from_clean_worktree(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+):
+    canonical_root = tmp_path / "canonical"
+    source_root = tmp_path / "clean-worktree"
+    canonical_path = canonical_root / "scripts/source.py"
+    source_path = source_root / "scripts/source.py"
+    source_path.parent.mkdir(parents=True)
+    source_path.write_text("approved bytes\n", encoding="utf-8")
+    binding = {
+        "path": str(canonical_path),
+        "sha256": prevention_contract.sha256_bytes(source_path.read_bytes()),
+    }
+    monkeypatch.setenv("MK_PREVENTION_CANONICAL_ROOT", str(canonical_root))
+    monkeypatch.setenv("MK_PREVENTION_SOURCE_ROOT", str(source_root))
+
+    assert prevention_owner_acceptance._binding_current(binding)
+    source_path.write_text("drifted bytes\n", encoding="utf-8")
+    assert not prevention_owner_acceptance._binding_current(binding)
+
+
 class _CapturedEdge:
     def __init__(self):
         self.requests = []

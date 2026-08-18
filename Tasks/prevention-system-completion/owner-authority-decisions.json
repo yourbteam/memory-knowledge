@@ -291,6 +291,14 @@
       "stable_behavior": "The API and media-worker deployment profiles prepend the existing local .NET SDK directory to inherited PATH during semantic preparation, guarded dispatch receives that environment unchanged, and the admin SPA profile remains unaffected. This source correction authorizes no commit or deployment and changes no publisher effect, admission, or terminal semantics."
     },
     {
+      "decision_id": "commit-push-main-local-multimodal-benchmark-intake-adapter-source-correction-20260818",
+      "owner_sequence_id": "commit-push-main",
+      "status": "APPROVED",
+      "approved_at_utc": "2026-08-18T10:34:17Z",
+      "approved_surface": "The sequence_intake_adapter source binding in owner-contract-proposals/commit-push-main.json and the matching implementation_sources entry in owner-executable-contracts.json.",
+      "stable_behavior": "The shared adapter registers the local-multimodal-model-benchmark sequence, conducts its code-controlled intake, validates its bounded local-model benchmark cases, and prepares the registered runner invocation. This source correction authorizes no benchmark execution, commit, or deployment and changes no publisher effect, admission, or terminal semantics."
+    },
+    {
       "decision_id": "commit-push-main-source-branch-landing-source-correction-20260810",
       "owner_sequence_id": "commit-push-main",
       "status": "APPROVED",

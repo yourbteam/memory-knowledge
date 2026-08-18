@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `f995939089118a7d69af7b3c4dccabae7241aac31d5fb1fd54a09189612e79a8`
+Ledger-SHA256: `59aaef822fb9b00506facf6288dcadfc33bd898c53617d19609702634b7e139c`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 

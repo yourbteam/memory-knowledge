@@ -72,7 +72,9 @@ def test_selected_owner_materialization_ignores_unrelated_source_drift(
     unrelated.write_text(json.dumps(value), encoding="utf-8")
 
     selected = prevention_contract_materializer.materialize(
-        proposals, owner_ids=("commit-push-main",)
+        proposals,
+        owner_ids=("commit-push-main",),
+        source_root=prevention_contract_materializer.ROOT,
     )
     current = json.loads(
         prevention_contract_materializer.OUTPUT.read_text(encoding="utf-8")
@@ -86,6 +88,92 @@ def test_selected_owner_materialization_ignores_unrelated_source_drift(
         row for row in merged["owners"]
         if row["owner_sequence_id"] == "commit-push-main"
     ) == selected["owners"][0]
+
+
+def test_selected_owner_materialization_can_read_sources_from_clean_worktree(
+    tmp_path: Path,
+):
+    proposals = tmp_path / "proposals"
+    proposals.mkdir()
+    proposal_path = (
+        prevention_contract_materializer.PROPOSALS / "commit-push-main.json"
+    )
+    (proposals / proposal_path.name).write_bytes(proposal_path.read_bytes())
+    proposal = json.loads(proposal_path.read_text(encoding="utf-8"))
+    canonical_root = Path(proposal["trusted_roots"]["memory-knowledge"])
+    source_root = tmp_path / "clean-worktree"
+    for key, value in proposal["source"].items():
+        if not key.endswith("_path"):
+            continue
+        source_path = Path(value)
+        try:
+            relative = source_path.relative_to(canonical_root)
+        except ValueError:
+            continue
+        target = source_root / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        target.write_bytes(
+            (prevention_contract_materializer.ROOT / relative).read_bytes()
+        )
+
+    owner = prevention_contract_materializer.materialize(
+        proposals,
+        owner_ids=("commit-push-main",),
+        source_root=source_root,
+    )["owners"][0]
+
+    adapter = next(
+        item for item in owner["implementation_sources"]
+        if item["path"].endswith("sequence_intake_adapters.py")
+    )
+    assert adapter["path"] == proposal["source"]["sequence_intake_adapter_path"]
+    assert adapter["sha256"] == sha256_bytes(
+        (source_root / "scripts/sequence_intake_adapters.py").read_bytes()
+    )
+
+
+def test_source_root_can_be_limited_to_one_owner(monkeypatch, tmp_path: Path):
+    calls = []
+
+    def capture(proposal, *, source_root=None):
+        calls.append((proposal["owner_sequence_id"], source_root))
+        return [{"path": "/captured/source", "sha256": "a" * 64}]
+
+    monkeypatch.setattr(
+        prevention_contract_materializer, "_source_bindings", capture
+    )
+    prevention_contract_materializer.materialize(
+        owner_ids=("commit-push-main", "discovery-bootstrap"),
+        source_root=tmp_path,
+        source_root_owner_ids=frozenset({"commit-push-main"}),
+    )
+
+    assert calls == [
+        ("commit-push-main", tmp_path),
+        ("discovery-bootstrap", None),
+    ]
+
+
+def test_registry_source_validation_uses_selected_clean_worktree(
+    monkeypatch, tmp_path: Path,
+):
+    canonical_root = tmp_path / "canonical"
+    source_root = tmp_path / "clean"
+    relative = Path("scripts/source.py")
+    (source_root / relative).parent.mkdir(parents=True)
+    (source_root / relative).write_text("clean\n", encoding="utf-8")
+    monkeypatch.setenv("MK_PREVENTION_CANONICAL_ROOT", str(canonical_root))
+    monkeypatch.setenv("MK_PREVENTION_SOURCE_ROOT", str(source_root))
+    monkeypatch.setenv(
+        "MK_PREVENTION_SOURCE_ROOT_OWNER_IDS", "commit-push-main"
+    )
+
+    assert prevention_registry._source_validation_path(
+        str(canonical_root / relative), "commit-push-main"
+    ) == source_root / relative
+    assert prevention_registry._source_validation_path(
+        str(canonical_root / relative), "discovery-bootstrap"
+    ) == canonical_root / relative
 
 
 def test_selected_owner_registry_validation_ignores_unrelated_source_drift(

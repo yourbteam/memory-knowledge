@@ -39,6 +39,13 @@
       "approved_at_utc": "2026-08-17T18:39:45Z",
       "reason": "the registered API and media-worker deployment profiles now carry the documented local .NET SDK path into guarded dispatch, while the admin SPA remains unchanged"
     },
+    "sequence_intake_adapter_local_multimodal_benchmark_20260818": {
+      "decision_id": "commit-push-main-local-multimodal-benchmark-intake-adapter-source-correction-20260818",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-08-18T10:34:17Z",
+      "reason": "the approved Info Intake merge adds the registered local multimodal model benchmark intake and must remain runnable after the merged work becomes main"
+    },
     "runtime_and_terminal": {
       "decision_id": "commit-push-main-runtime-terminal-v1",
       "status": "APPROVED"
@@ -254,10 +261,10 @@
     "intake_sha256": "9955319d6c29bdf64025896e2bc9f4e1740866a88c3f0bfd1e0a3a042882b5cc",
     "intake_source_correction_decision_id": "commit-push-main-goal-store-intake-source-correction-20260806",
     "sequence_approved_post_correction_sha256": "daa618bf35ba1e74ecebc08df7934a45e5d10a7be1c3ad7d4df434ce0990a69f",
-    "sequence_intake_adapter_approved_post_correction_sha256": "1fd8be9868a551bc7e5ed5b37aab02956fb979a74209ccc45815d2c9697b91c2",
+    "sequence_intake_adapter_approved_post_correction_sha256": "aca0fb34888d23ea233ba105fd3b870a07f6eeee9f78d7be3c6b0e63eccdc376",
     "sequence_intake_adapter_path": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_intake_adapters.py",
     "sequence_intake_adapter_sha256": "71d625802d503eef10ab67ca08446cead079d287dac08d4e30b8f394a0691f57",
-    "sequence_intake_adapter_source_correction_decision_id": "commit-push-main-dotnet-deploy-path-intake-adapter-source-correction-20260817",
+    "sequence_intake_adapter_source_correction_decision_id": "commit-push-main-local-multimodal-benchmark-intake-adapter-source-correction-20260818",
     "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/commit-push-main/sequence.md",
     "sequence_sha256": "08706c31a48e96f58e2119fdbc16d9a79c72f22fa84f830d708cf7dca4e319dd",
     "sequence_source_correction_decision_id": "commit-push-main-git-auth-boundary-20260723",

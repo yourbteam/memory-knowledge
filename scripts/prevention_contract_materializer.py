@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -138,7 +139,9 @@ def _read_json(path: Path) -> dict[str, Any]:
     return value
 
 
-def _source_bindings(proposal: Mapping[str, Any]) -> list[dict[str, str]]:
+def _source_bindings(
+    proposal: Mapping[str, Any], *, source_root: Path | None = None
+) -> list[dict[str, str]]:
     raw_sources = proposal.get("sources")
     if raw_sources is None:
         source = proposal.get("source")
@@ -180,9 +183,24 @@ def _source_bindings(proposal: Mapping[str, Any]) -> list[dict[str, str]]:
         if not isinstance(path_value, str) or not isinstance(expected, str):
             raise MaterializationError("invalid-source-binding")
         path = Path(path_value)
-        if not path.is_file():
-            raise MaterializationError(f"source-missing:{path}")
-        actual = sha256_bytes(path.read_bytes())
+        read_path = path
+        if source_root is not None:
+            trusted_roots = proposal.get("trusted_roots")
+            canonical_root_value = (
+                trusted_roots.get("memory-knowledge")
+                if isinstance(trusted_roots, Mapping)
+                else None
+            )
+            if not isinstance(canonical_root_value, str):
+                raise MaterializationError("memory-knowledge-root-required")
+            canonical_root = Path(canonical_root_value)
+            try:
+                read_path = source_root / path.relative_to(canonical_root)
+            except ValueError:
+                pass
+        if not read_path.is_file():
+            raise MaterializationError(f"source-missing:{read_path}")
+        actual = sha256_bytes(read_path.read_bytes())
         binding = {"path": str(path), "sha256": actual}
         if actual != expected:
             approved_post = raw.get("approved_post_correction_sha256")
@@ -699,7 +717,24 @@ def _acceptance_proofs(
 def materialize(
     proposals_dir: Path = PROPOSALS,
     owner_ids: tuple[str, ...] = OWNER_IDS,
+    *,
+    source_root: Path | None = None,
+    source_root_owner_ids: frozenset[str] | None = None,
 ) -> dict[str, Any]:
+    if source_root is None and (configured := os.environ.get(
+        "MK_PREVENTION_SOURCE_ROOT"
+    )):
+        source_root = Path(configured)
+    if source_root_owner_ids is None and (configured_owners := os.environ.get(
+        "MK_PREVENTION_SOURCE_ROOT_OWNER_IDS"
+    )):
+        source_root_owner_ids = frozenset(
+            value for value in configured_owners.split(",") if value
+        )
+    if source_root_owner_ids is not None and not source_root_owner_ids.issubset(
+        OWNER_IDS
+    ):
+        raise MaterializationError("invalid-source-root-owner-selection")
     if (
         not owner_ids
         or len(owner_ids) != len(set(owner_ids))
@@ -735,7 +770,15 @@ def materialize(
             "allowed_parent_sequence_ids": sorted(proposal.get("allowed_parent_sequence_ids", [])),
             "approved_proposal_sha256": proposal_hash,
             "authority_decision_ids": _authority_decision_ids(proposal),
-            "implementation_sources": _source_bindings(proposal),
+            "implementation_sources": _source_bindings(
+                proposal,
+                source_root=(
+                    source_root
+                    if source_root_owner_ids is None
+                    or owner_id in source_root_owner_ids
+                    else None
+                ),
+            ),
             "budget_contract": _normalized_budget(proposal),
             "parameter_contract": parameter_contract,
             "trusted_roots": dict(roots),
@@ -826,13 +869,23 @@ def main() -> int:
         "--owner", choices=OWNER_IDS,
         help="Refresh only this owner while preserving all other generated rows.",
     )
+    parser.add_argument(
+        "--source-root",
+        type=Path,
+        help=(
+            "Read memory-knowledge implementation sources from this checkout "
+            "while preserving their canonical contract paths."
+        ),
+    )
     args = parser.parse_args()
     if args.owner:
         current = _read_json(args.output)
-        replacement = materialize(owner_ids=(args.owner,))["owners"][0]
+        replacement = materialize(
+            owner_ids=(args.owner,), source_root=args.source_root
+        )["owners"][0]
         document = merge_selected_owner(current, replacement)
     else:
-        document = materialize()
+        document = materialize(source_root=args.source_root)
     payload = canonical_bytes(document)
     if args.check:
         if not args.output.is_file() or args.output.read_bytes() != payload:

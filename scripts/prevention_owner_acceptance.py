@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 from typing import Any, Mapping, Sequence
 
@@ -15,12 +16,13 @@ except ModuleNotFoundError:  # direct script execution
 
 
 ROOT = Path(__file__).resolve().parents[1]
+CANONICAL_ROOT = Path(os.environ.get("MK_PREVENTION_CANONICAL_ROOT", ROOT))
 OUTPUT = ROOT / "Tasks/prevention-system-completion/owner-source-verification.json"
 TRACE_DIR = ROOT / "Tasks/prevention-system-completion/owner-acceptance-artifacts"
 CONTRACTS = ROOT / "Tasks/prevention-system-completion/owner-executable-contracts.json"
-PROVIDER_PATH = ROOT / "scripts/prevention_source_probes.py"
-PRODUCER_PATH = ROOT / "scripts/prevention_owner_acceptance_producer.py"
-FIXTURES_PATH = ROOT / "scripts/prevention_owner_acceptance_fixtures.py"
+PROVIDER_PATH = CANONICAL_ROOT / "scripts/prevention_source_probes.py"
+PRODUCER_PATH = CANONICAL_ROOT / "scripts/prevention_owner_acceptance_producer.py"
+FIXTURES_PATH = CANONICAL_ROOT / "scripts/prevention_owner_acceptance_fixtures.py"
 
 PROOF_KINDS = (
     "controller_runtime_positive",
@@ -65,10 +67,30 @@ def _read_object(path: Path, label: str) -> dict[str, Any]:
     return value
 
 
-def _binding_current(binding: Any) -> bool:
+def _source_root_enabled(owner_id: str) -> bool:
+    if not os.environ.get("MK_PREVENTION_SOURCE_ROOT"):
+        return False
+    selected = frozenset(
+        value for value in os.environ.get(
+            "MK_PREVENTION_SOURCE_ROOT_OWNER_IDS", ""
+        ).split(",") if value
+    )
+    return not selected or owner_id in selected
+
+
+def _binding_current(binding: Any, *, use_source_root: bool = True) -> bool:
     if not _binding_shape_valid(binding):
         return False
     path = Path(str(binding["path"]))
+    source_root_value = os.environ.get("MK_PREVENTION_SOURCE_ROOT")
+    canonical_root_value = os.environ.get("MK_PREVENTION_CANONICAL_ROOT")
+    if use_source_root and source_root_value and canonical_root_value:
+        try:
+            path = Path(source_root_value) / path.relative_to(
+                Path(canonical_root_value)
+            )
+        except ValueError:
+            pass
     return path.is_file() and sha256_bytes(path.read_bytes()) == binding["sha256"]
 
 
@@ -222,7 +244,7 @@ def _trace_path(trace_sha256: str, trace_dir: Path | None = None) -> Path:
 
 def _load_trace(
     trace_sha256: str, trace_dir: Path | None = None,
-    *, require_current_bindings: bool,
+    *, require_current_bindings: bool, use_source_root: bool = True,
 ) -> dict[str, Any]:
     path = _trace_path(trace_sha256, trace_dir)
     try:
@@ -250,7 +272,8 @@ def _load_trace(
     if {str(row["path"]) for row in test_bindings} != required_tests:
         raise AcceptanceError("owner-proof-producer-binding-invalid")
     if require_current_bindings and any(
-        not _binding_current(row) for row in [*source_bindings, *test_bindings]
+        not _binding_current(row, use_source_root=use_source_root)
+        for row in [*source_bindings, *test_bindings]
     ):
         raise AcceptanceError("owner-proof-binding-drift")
     for name in (
@@ -288,9 +311,11 @@ def _load_trace(
 
 def load_trace(
     trace_sha256: str, trace_dir: Path | None = None,
+    *, use_source_root: bool = True,
 ) -> dict[str, Any]:
     return _load_trace(
         trace_sha256, trace_dir, require_current_bindings=True,
+        use_source_root=use_source_root,
     )
 
 
@@ -389,10 +414,11 @@ def verify_owner_report(
     report: Mapping[str, Any], owner_contract: Mapping[str, Any],
 ) -> Mapping[str, Any]:
     owner_id = owner_contract["owner_sequence_id"]
+    use_source_root = _source_root_enabled(str(owner_id))
     if report.get("schema_version") != 2:
         raise AcceptanceError("owner-proof-report-schema-invalid")
     provider = report.get("provider_implementation")
-    if not _binding_current(provider):
+    if not _binding_current(provider, use_source_root=use_source_root):
         raise AcceptanceError("owner-proof-provider-drift")
     rows = [
         row for row in report.get("owners", [])
@@ -443,7 +469,9 @@ def verify_owner_report(
     for key, entry in indexed.items():
         if entry["applicability"] == "NOT_APPLICABLE":
             continue
-        trace = load_trace(str(entry["trace_sha256"]))
+        trace = load_trace(
+            str(entry["trace_sha256"]), use_source_root=use_source_root
+        )
         if (
             (trace["profile_id"], trace["proof_kind"]) != key
             or trace["owner_sequence_id"] != owner_id
@@ -512,7 +540,14 @@ def _trace_matches_current_contract(
         and actual_sources == expected_sources
         and len(test_bindings) == len(expected_tests)
         and {item["path"] for item in test_bindings} == expected_tests
-        and all(_binding_current(item) for item in test_bindings)
+        and all(
+            _binding_current(
+                item,
+                use_source_root=_source_root_enabled(
+                    str(owner_contract["owner_sequence_id"])
+                ),
+            ) for item in test_bindings
+        )
     )
 
 
