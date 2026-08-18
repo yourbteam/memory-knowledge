@@ -92,6 +92,8 @@ content hash. Read the matching log below before running the sequence.
   it; a roots manifest belongs on `select`, not on `correct`; a machine surface outside every
   dependency bundle is declared with `--changed-environment-artifact`; and a correction run that a
   bound successor will verify must be closed `failed`, not `passed`.
+| `local-multimodal-model-benchmark` | Benchmark a local multimodal model against image-based cases and persist comparable immutable evidence. | `operations/sequences/local-multimodal-model-benchmark/` | memory-knowledge:scripts/local_multimodal_model_benchmark.py | Benchmark runner writes one immutable schema-valid evidence artifact and preserves all pre-existing local models. | `package` | `discovery-be91fd3a-3553-59c0-8500-e50e8b73b6ea` |
+
 
 ## Missing Sequence Discovery
 

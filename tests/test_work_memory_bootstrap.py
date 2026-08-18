@@ -792,6 +792,32 @@ def test_atomic_bootstrap_corrects_with_unimportable_current_controller_and_clos
     assert events_after_retry == events
 
 
+@pytest.mark.parametrize("bootstrap_flow", ["legacy-launcher"], indirect=True)
+def test_sealed_launcher_records_absolute_environment_artifact(bootstrap_flow):
+    flow = bootstrap_flow
+    environment = Path(flow["root"]).parent / "host-directive-state.json"
+    environment.write_text('{"receipt":"operator-token-not-stored"}\n')
+    args = _correct_args(flow)
+    args[args.index("--solution"):args.index("--solution")] = [
+        "--changed-environment-artifact", str(environment),
+    ]
+
+    assert launcher.main(args) == 0
+
+    events, _ = flow["controller"].load_ledger()
+    correction = next(
+        event for event in events if event["event_type"] == "correction_recorded"
+    )
+    assert correction["environment_artifacts"] == [{
+        "repository_key": "host-environment",
+        "path": str(environment.resolve()),
+    }]
+    assert correction["environment_artifact_hashes"] == [
+        hashlib.sha256(environment.read_bytes()).hexdigest()
+    ]
+    assert b"operator-token-not-stored" not in flow["controller"].LEDGER.read_bytes()
+
+
 def test_launcher_finalizes_exact_existing_correction_without_duplicate_events(
     bootstrap_flow,
 ):

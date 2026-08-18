@@ -28,6 +28,10 @@ and continues from purpose assessment, first-source acquisition, first projectio
 supported boundary without asking the operator to repeat saved answers. The launcher contains no source-, image-, annotation-,
 or domain-specific rule.
 
+For a bounded visual resume, code can limit the invocation by completed spatial regions or by
+completed relationship outcomes. It accepts only a positive whole-number limit and counts only
+outcomes preserved in the immutable projection journal.
+
 The stage commands below remain the deterministic replay and diagnostic interface used by that
 launcher.
 
@@ -139,9 +143,23 @@ crop, and stops the model run. Only then can the launcher attach the next region
 a fresh model context. Crop bytes cannot be missing or changed on resume. After every region has an
 outcome, the full frozen source is attached for cross-region relationship work. Code generates identities,
 constrains each element's anchor to the active region, and binds relationship participants from
-source coordinates to exactly one recorded element. A point matching no element or overlapping
+the pending obligation and source coordinates. The model first chooses whether the exact
+code-required element is the relationship origin or target. Code locks that element identity and
+accepts only a point inside its unchanged complete bounds; the model cannot substitute a different
+participant. Only the other participant is discovered from source coordinates. A point matching no element or overlapping
 elements cannot silently become a relationship: code requires corrected coordinates, capture of a
-missing visible endpoint, or an explicit relationship gap. After coordinate binding, code requires
+missing visible endpoint, selection of one exact overlapping recorded identity, or an explicit
+relationship gap. For an overlap, code presents only the exact matching element IDs together with
+their complete recorded evidence as a constrained enum. The model selects one identity; code
+validates that it is one of the point-containing candidates and binds it without changing any
+element bounds. Historical bound-refinement events remain replayable, but before a journal resumes,
+code appends migration events that restore still-active prior bounds, preserve supported
+relationships whose selected participant identity remains grounded, and reopen only false gaps or
+relationships whose participant identity no longer holds. No prior source, answer, relationship,
+or journal entry is overwritten. Legacy gaps that omitted their required participant are likewise
+invalidated and reopened by append-only migration before command generation. The launcher selects
+its obligation only after these deterministic preparations, so the displayed and executed command
+cannot retain a stale pre-migration obligation. After coordinate binding, code requires
 a separate visual verdict of `supported`, `not_supported`, or `unreadable` for the proposed pair.
 The proposal is then preserved and a fresh visual-reader run, launched in a new model context,
 must independently judge whether the visible relationship terminates at those exact participants.
@@ -155,10 +173,16 @@ selected element. The original proposal and rejection remain unchanged. A second
 reader judges only the corrected pair. Independent support admits the correction; rejection or an
 explicit `preserve_gap` leaves the final relationship as a gap. A producer-side `not_supported` requires corrected
 coordinates, capture of a replacement visible endpoint, or an explicit gap; `unreadable` becomes
-an explicit gap. Each supported pair resolves only the currently presented relationship obligation,
-so another participant's obligation must receive its own visual verdict. It offers only `readable`
-or `gap` as status choices after support is established. An answer outside an allowed set is
+an explicit gap. A supported readable pair resolves the currently presented relationship obligation.
+Code then appends a reconciliation event for every still-pending obligation held by either exact
+participant, binding those closures to the same relationship without another model verdict; unrelated
+obligations remain pending. It offers only `readable` or `gap` as status choices after support is established. An answer outside an allowed set is
 preserved as rejected and the same question is asked again without advancing.
+
+Each generated relationship command is bound to the exact next pending obligation. One model
+context may preserve exactly one readable relationship or explicit relationship gap and then
+returns. The launcher can stop after a code-selected positive relationship count; replayed or stale
+commands fail before another outcome is written.
 
 The model supplies only visual judgments and free text where reasoning is needed: whether another
 purpose-relevant unit exists in the active region, its source-neutral kind, its visible content or
@@ -166,7 +190,7 @@ concrete gap reason, coordinates inside the two visible relationship participant
 relationship establishes. For each coordinate-bound pair, the model independently judges whether
 the visible source supports that connection; code constrains and records the verdict. Code
 assembles the canonical projection, including every spatial-region outcome, coordinate evidence,
-visual verdict, and the single obligation that verdict resolves, and records the hash-chained
+visual verdict, and every participant obligation reconciled to that verdict, and records the hash-chained
 interview journal in the intake ledger. The completed projection is immutable version 1 with
 coverage explicitly `unassessed`. No question contains rules for a particular image, annotation
 style, color, application, or domain.
@@ -560,7 +584,9 @@ verbatim into a new child projection. It preserves the parent, binds the questio
 answer-source, answer-projection, original gap, and child hashes in the ledger, prevents the same
 assessment position from being consumed twice, and re-enters the existing continuation decision.
 A gap-free child can therefore reach the grounded `first_layer_complete` terminal without another
-model call. Region-gap admission, semantic rewriting of an answer, and multi-evidence element
+model call. Visual projection can also resume from completed spatial traversal with the full
+immutable source, bind the exact next pending relationship obligation, preserve one relationship
+outcome, and stop before the next obligation. Region-gap admission, semantic rewriting of an answer, and multi-evidence element
 admissions remain later units. Legacy
 gap resolution remains limited to an existing preserved single-gap answer bound to a relationship
 identity ambiguity. The projection layer currently accepts images, flat visible-page PDFs, and

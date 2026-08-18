@@ -298,6 +298,26 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
             )
     except module.WorkMemoryError as exc:
         raise BootstrapError("bootstrap-artifact-invalid", 2) from exc
+    declared_environment = (
+        getattr(args, "changed_environment_artifact", None) or []
+    )
+    try:
+        if repository_roots is None:
+            environment_artifacts, environment_hashes = (
+                module._environment_artifact_hashes(
+                    declared_environment, repo_roots_file,
+                )
+                if declared_environment else ([], [])
+            )
+        else:
+            environment_artifacts, environment_hashes = (
+                module._environment_artifact_hashes(
+                    declared_environment, repository_roots=repository_roots,
+                )
+                if declared_environment else ([], [])
+            )
+    except module.WorkMemoryError as exc:
+        raise BootstrapError("bootstrap-environment-artifact-invalid", 2) from exc
     try:
         effective_bundle, _, _ = module._effective_correction_bundle(
             start, related,
@@ -312,6 +332,9 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         existing is not None
         and artifacts == existing.get("changed_artifacts")
         and hashes == existing.get("changed_artifact_hashes")
+        and environment_artifacts == existing.get("environment_artifacts", [])
+        and environment_hashes
+        == existing.get("environment_artifact_hashes", [])
     )
     if existing is not None and not replay_matches:
         raise BootstrapError("bootstrap-artifact-drift-mismatch")
@@ -325,9 +348,14 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         raise BootstrapError("bootstrap-controller-artifact-required")
 
     original_hashes = module._artifact_hashes
+    original_environment_hashes = module._environment_artifact_hashes
     original_resolve = module.resolve_bundle
     module._artifact_hashes = _sealed_artifact_hashes(
         module, artifacts, hashes, repo_roots_file, repository_roots,
+    )
+    module._environment_artifact_hashes = _sealed_artifact_hashes(
+        module, environment_artifacts, environment_hashes,
+        repo_roots_file, repository_roots,
     )
     module.resolve_bundle = lambda **kwargs: (
         context["current_bundle"], context["current_bundle_hash"], context["selection"]["lineage_id"]
@@ -336,6 +364,7 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         result = module.cmd_correct(args)
     finally:
         module._artifact_hashes = original_hashes
+        module._environment_artifact_hashes = original_environment_hashes
         module.resolve_bundle = original_resolve
     if result.get("changed_artifact_hashes") != hashes or result.get("new_bundle_hash") != context["current_bundle_hash"]:
         raise BootstrapError("bootstrap-execution-result-mismatch", 5)
@@ -448,6 +477,7 @@ def build_parser() -> argparse.ArgumentParser:
     correct.add_argument("--occurrence-id", required=True)
     correct.add_argument("--step-id", required=True)
     correct.add_argument("--changed-artifact", action="append", required=True)
+    correct.add_argument("--changed-environment-artifact", action="append")
     correct.add_argument("--solution", required=True)
     correct.add_argument("--reusable-behavior-changed", choices=["yes", "no"], required=True)
     correct.add_argument("--supersedes-correction-id", action="append")

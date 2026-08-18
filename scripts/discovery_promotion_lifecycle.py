@@ -6,6 +6,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import re
 import shlex
 import subprocess
@@ -16,10 +17,14 @@ from pathlib import Path
 from typing import Any, Sequence
 
 try:
-    from scripts import prevention_source_receipt, sequence_discovery_log, work_memory
+    from scripts import (
+        prevention_source_receipt, sequence_discovery_log, sequence_guard,
+        work_memory,
+    )
 except ImportError:
     import prevention_source_receipt  # type: ignore
     import sequence_discovery_log  # type: ignore
+    import sequence_guard  # type: ignore
     import work_memory  # type: ignore
 
 
@@ -99,6 +104,18 @@ def _json_command(command: list[str], *, root: Path) -> dict[str, Any]:
             details={"command": command, "exit_code": completed.returncode, "payload": payload},
         )
     return payload
+
+
+def _directive_guard_args(root: Path) -> list[str]:
+    directive_state = os.environ.get(
+        "MK_DIRECTIVE_STATE_PATH",
+        str(sequence_guard.DEFAULT_DIRECTIVE_STATE_PATH),
+    )
+    return [
+        "--directives-path",
+        str((root / "working-agreement/DIRECTIVES.md").resolve()),
+        "--directive-state", str(Path(directive_state).resolve()),
+    ]
 
 
 def _classify(task_id: str, *, root: Path, operation_kind: str) -> None:
@@ -241,6 +258,7 @@ def _select_and_start(
     receipt = _json_command(select, root=root)
     activate = ["python3", "scripts/sequence_guard.py", "activate", "--task-id", task_id,
                 "--root", str(root)]
+    activate.extend(_directive_guard_args(root))
     if discovery is not None:
         activate.extend(["--discovery-log", str(discovery)])
     else:
@@ -258,7 +276,7 @@ def _guard_and_verify(
     _json_command([
         "python3", "scripts/sequence_guard.py", "guard", "--step", "verify-automation",
         "--command", command, "--source", source, "--source-ref", str(document),
-        "--task-id", task_id, "--root", str(root),
+        "--task-id", task_id, "--root", str(root), *_directive_guard_args(root),
     ], root=root)
     return subprocess.run(shlex.split(command), cwd=root, text=True, capture_output=True, check=False)
 

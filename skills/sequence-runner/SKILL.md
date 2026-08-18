@@ -42,11 +42,16 @@ under G20 and preserve approval boundaries.
 5. Activate with `sequence_guard.py activate --task-id <task-id>` and exactly the selected `--sequence-doc` or `--discovery-log`. Activation by `--sequence-id` is retired.
 6. Start the durable run with `work_memory.py run-start --task-id <task-id>` and retain returned ids for exact retry.
 7. When the run has complete safe observer context, persist it once with `work_memory.py record-operation-context --run-id <run-id> --context-file <json>`; never put input values, credentials, raw output, conversation, or terminal history in that file.
-8. Launch `python3 scripts/sequence_intake_launch.py` with no arguments. Answer only the semantic
-   questions; never compose JSON, files, environment assignments, flags, argv, or shell syntax.
-9. Review the exact prepared operation. Authorize it only when its displayed sequence, operation,
-   repository, artifacts, and effect match the current explicit authority. The controller then
-   guards and dispatches the deterministic machine interface.
+8. Dispatch from the verified mode in the persisted selection receipt:
+   - `registered`: launch `python3 scripts/sequence_intake_launch.py` with no arguments. Answer
+     only the semantic questions; never compose JSON, files, environment assignments, flags,
+     argv, or shell syntax.
+   - `discovery`: do not invoke the registered-only intake launcher. Guard and run the exact
+     command already recorded in the selected discovery log.
+9. Review the exact operation before authorizing it. For a registered selection, verify the
+   launcher's displayed sequence, operation, repository, artifacts, and effect; its controller
+   guards and dispatches the deterministic machine interface. For a discovery selection, verify
+   the recorded command and its effect before executing the guarded command directly.
 10. Treat argument-bearing commands in runbooks, help, generated retry text, and the registry
     automation column as machine compatibility evidence, not operator instructions.
 11. If a command fails, classify it under G20. Invoke `blocker-catalog` before changing a

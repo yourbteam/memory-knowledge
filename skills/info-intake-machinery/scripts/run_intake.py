@@ -148,6 +148,7 @@ def _continue_intake(
     output_fn: Callable[[str], None],
     model_run_fn: Callable[..., object],
     projection_region_limit: int | None,
+    projection_relationship_limit: int | None,
 ) -> int:
     result = start_intake.drive(work, opening, purpose)
     failed = _blocked(result, output_fn)
@@ -231,7 +232,9 @@ def _continue_intake(
         if failed is not None:
             return failed
     return projection_runner.drive_work(
-        work, projection_region_limit=projection_region_limit,
+        work,
+        projection_region_limit=projection_region_limit,
+        projection_relationship_limit=projection_relationship_limit,
     )
 
 
@@ -258,7 +261,11 @@ def run(
     ).expanduser().resolve()
     projection_scope = _choose(
         "How far should this launcher drive visual projection?",
-        ("next_external_boundary", "region_limit"),
+        (
+            "next_external_boundary",
+            "region_limit",
+            "relationship_limit",
+        ),
         input_fn=input_fn,
         output_fn=output_fn,
     )
@@ -269,6 +276,15 @@ def run(
             output_fn=output_fn,
         )
         if projection_scope == "region_limit"
+        else None
+    )
+    projection_relationship_limit = (
+        _positive_integer(
+            "How many completed visual relationships should this invocation add?",
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+        if projection_scope == "relationship_limit"
         else None
     )
     if action == "resume":
@@ -292,6 +308,7 @@ def run(
         output_fn=output_fn,
         model_run_fn=model_run_fn,
         projection_region_limit=projection_region_limit,
+        projection_relationship_limit=projection_relationship_limit,
     )
 
 

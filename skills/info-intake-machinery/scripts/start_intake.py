@@ -248,11 +248,38 @@ def _projection_model_attachment(
 ) -> tuple[
     Path | tuple[Path, Path] | None,
     str | None,
+    str | None,
+    str | None,
     dict[str, object] | None,
 ]:
     try:
         purpose = (work / "sources" / "source-000002.txt").read_text(
             encoding="utf-8"
+        )
+        projection_interview.enable_endpoint_crop_verification(
+            attempt_dir, purpose=purpose, contract=contract,
+        )
+        projection_interview.enable_existing_participant_crop_verification(
+            attempt_dir, purpose=purpose, contract=contract,
+        )
+        projection_interview.enable_contextual_endpoint_verification(
+            attempt_dir, purpose=purpose, contract=contract,
+        )
+        projection_interview.enable_endpoint_context_evidence(
+            attempt_dir, purpose=purpose, contract=contract,
+        )
+        projection_interview.enable_rejected_endpoint_reuse_block(
+            attempt_dir, purpose=purpose, contract=contract,
+        )
+        projection_interview.enable_rejected_endpoint_collision_exclusion(
+            attempt_dir, purpose=purpose, contract=contract,
+        )
+        endpoint_evidence = projection_interview.prepare_endpoint_evidence(
+            attempt_dir,
+            source_path=source_path,
+            source_sha256=source_sha256,
+            purpose=purpose,
+            contract=contract,
         )
         crop = projection_interview.prepare_region_evidence(
             attempt_dir,
@@ -261,33 +288,64 @@ def _projection_model_attachment(
             purpose=purpose,
             contract=contract,
         )
+        interview_state, _pending, _completed = (
+            projection_interview.prepare_resume(
+                attempt_dir,
+                purpose=purpose,
+                contract=contract,
+            )
+        )
+        replacement_attachments = (
+            projection_interview.required_participant_replacement_attachments(
+                attempt_dir,
+                interview_state,
+                source_path=source_path,
+                source_sha256=source_sha256,
+            )
+        )
     except (OSError, projection_interview.InterviewError) as error:
-        return None, None, _blocked("projection region evidence failed", str(error))
+        return None, None, None, None, _blocked(
+            "projection region evidence failed", str(error)
+        )
     region_id: str | None = None
+    obligation_id: str | None = None
+    endpoint_evidence_sha256: str | None = None
     if contract >= 4:
         try:
-            journal = projection_interview._read_journal(
-                attempt_dir / "interview.jsonl"
-            )
-            interview_state, _pending, _completed = projection_interview._replay(
-                journal, purpose=purpose, contract=contract,
-            )
             active_region = projection_interview._active_scan_region(
                 interview_state
             )
         except projection_interview.InterviewError as error:
-            return None, None, _blocked(
+            return None, None, None, _blocked(
                 "projection region evidence failed", str(error)
             )
-        if not isinstance(active_region, dict) or not isinstance(
+        if isinstance(active_region, dict) and isinstance(
             active_region.get("id"), str
         ):
-            return None, None, _blocked(
-                "projection region evidence failed",
-                "the active projection region identity is missing",
+            region_id = str(active_region["id"])
+        else:
+            obligation = projection_interview._pending_obligation(
+                interview_state
             )
-        region_id = str(active_region["id"])
-    return crop or source_path, region_id, None
+            if not isinstance(obligation, dict) or not isinstance(
+                obligation.get("id"), str
+            ):
+                return None, None, None, _blocked(
+                    "projection relationship binding failed",
+                    "no active region or pending relationship obligation is available",
+                )
+            obligation_id = str(obligation["id"])
+    if endpoint_evidence is not None:
+        crop, endpoint_evidence_sha256 = endpoint_evidence
+    elif replacement_attachments is not None:
+        crop = replacement_attachments
+    return (
+        crop or source_path,
+        region_id,
+        obligation_id,
+        endpoint_evidence_sha256,
+        None,
+    )
 
 
 def _projection_waiting_result(
@@ -342,7 +400,13 @@ def _projection_waiting_result(
             return _blocked(
                 "projection region evidence failed", "the frozen source identity is missing"
             )
-        attachment, region_id, attachment_error = _projection_model_attachment(
+        (
+            attachment,
+            region_id,
+            obligation_id,
+            endpoint_evidence_sha256,
+            attachment_error,
+        ) = _projection_model_attachment(
             work,
             source_path=attachment,
             source_sha256=str(source["sha256"]),
@@ -361,6 +425,16 @@ def _projection_waiting_result(
     ]
     if stage == "project_first_source" and region_id is not None:
         command.extend(["--projection-region-id", region_id])
+    elif stage == "project_first_source" and obligation_id is not None:
+        command.extend(["--projection-obligation-id", obligation_id])
+    if (
+        stage == "project_first_source"
+        and endpoint_evidence_sha256 is not None
+    ):
+        command.extend([
+            "--projection-endpoint-evidence-sha256",
+            endpoint_evidence_sha256,
+        ])
     command.append(selected["flag"])
     return {
         "status": "waiting_for_model",
@@ -525,7 +599,13 @@ def _pdf_projection_waiting_result(
                 "projection region evidence failed", "the PDF projection identity is missing"
             )
         paths = _pdf_page_paths(str(prepared["source_id"]), int(page["page"]))
-        attachment, region_id, attachment_error = _projection_model_attachment(
+        (
+            attachment,
+            region_id,
+            obligation_id,
+            endpoint_evidence_sha256,
+            attachment_error,
+        ) = _projection_model_attachment(
             work,
             source_path=attachment,
             source_sha256=str(page["render_sha256"]),
@@ -544,6 +624,13 @@ def _pdf_projection_waiting_result(
     ]
     if stage == "project" and region_id is not None:
         command.extend(["--projection-region-id", region_id])
+    elif stage == "project" and obligation_id is not None:
+        command.extend(["--projection-obligation-id", obligation_id])
+    if stage == "project" and endpoint_evidence_sha256 is not None:
+        command.extend([
+            "--projection-endpoint-evidence-sha256",
+            endpoint_evidence_sha256,
+        ])
     command.append(flag)
     return {
         "status": "waiting_for_model",
@@ -3874,6 +3961,8 @@ def run_first_projection_interview(
     output_fn: object | None = None,
     single_region: bool | None = None,
     expected_region_id: str | None = None,
+    expected_obligation_id: str | None = None,
+    expected_endpoint_evidence_sha256: str | None = None,
     region_binding_required: bool = False,
 ) -> dict[str, object]:
     try:
@@ -3928,12 +4017,32 @@ def run_first_projection_interview(
         source_path = work / str(source["stored_path"])
         attempt_dir = work / "projection-interviews" / "attempt-000001"
         contract = int(entries[7]["interview_contract"])
-    if region_binding_required and contract >= 4 and expected_region_id is None:
+    if expected_region_id is not None and expected_obligation_id is not None:
         return _blocked(
-            "projection region invocation invalid",
-            "the generated command lost its active projection region identity",
+            "projection invocation invalid",
+            "one command cannot bind both a region and a relationship obligation",
         )
-    if expected_region_id is not None:
+    if expected_endpoint_evidence_sha256 is not None and (
+        expected_obligation_id is None or expected_region_id is not None
+    ):
+        return _blocked(
+            "projection invocation invalid",
+            (
+                "a fresh endpoint crop must remain bound to exactly one "
+                "pending relationship obligation"
+            ),
+        )
+    if (
+        region_binding_required
+        and contract >= 4
+        and expected_region_id is None
+        and expected_obligation_id is None
+    ):
+        return _blocked(
+            "projection invocation invalid",
+            "the generated command lost its active projection binding",
+        )
+    if expected_region_id is not None or expected_obligation_id is not None:
         try:
             journal = projection_interview._read_journal(
                 attempt_dir / "interview.jsonl"
@@ -3944,9 +4053,12 @@ def run_first_projection_interview(
             active_region = projection_interview._active_scan_region(
                 interview_state
             )
+            active_obligation = projection_interview._pending_obligation(
+                interview_state
+            )
         except projection_interview.InterviewError as error:
-            return _blocked("projection region invocation invalid", str(error))
-        if (
+            return _blocked("projection invocation invalid", str(error))
+        if expected_region_id is not None and (
             not isinstance(active_region, dict)
             or active_region.get("id") != expected_region_id
         ):
@@ -3957,6 +4069,37 @@ def run_first_projection_interview(
                     "longer the active projection region"
                 ),
             )
+        if expected_obligation_id is not None and (
+            active_region is not None
+            or not isinstance(active_obligation, dict)
+            or active_obligation.get("id") != expected_obligation_id
+        ):
+            return _blocked(
+                "projection relationship invocation expired",
+                (
+                    f"the command was bound to {expected_obligation_id}, which "
+                    "is no longer the next pending relationship obligation"
+                ),
+            )
+        if expected_endpoint_evidence_sha256 is not None:
+            evidence = interview_state.get("current", {}).get(
+                "endpoint_crop_evidence"
+            )
+            if (
+                not isinstance(evidence, dict)
+                or not projection_interview._valid_endpoint_evidence(
+                    interview_state, evidence,
+                )
+                or evidence.get("crop_sha256")
+                != expected_endpoint_evidence_sha256
+            ):
+                return _blocked(
+                    "projection endpoint verification invocation expired",
+                    (
+                        "the command is no longer bound to the active exact "
+                        "endpoint crop"
+                    ),
+                )
     try:
         projection_interview.run(
             attempt_dir,
@@ -3965,9 +4108,37 @@ def run_first_projection_interview(
             contract=contract,
             input_fn=input_fn,
             output_fn=output_fn,
+            stop_after_relationship=expected_obligation_id is not None,
+            stop_after_endpoint_verification=(
+                expected_endpoint_evidence_sha256 is not None
+            ),
         )
+        if expected_endpoint_evidence_sha256 is not None:
+            return {
+                "status": "waiting_for_model",
+                "stopped": "projection_endpoint_verification_step_complete",
+                "completed_obligation_id": expected_obligation_id,
+                "endpoint_evidence_sha256": expected_endpoint_evidence_sha256,
+                "work": str(work.resolve()),
+                "ledger": str((work / "ledger.jsonl").resolve()),
+            }
+        if expected_obligation_id is not None:
+            return {
+                "status": "waiting_for_model",
+                "stopped": "projection_relationship_step_complete",
+                "completed_obligation_id": expected_obligation_id,
+                "work": str(work.resolve()),
+                "ledger": str((work / "ledger.jsonl").resolve()),
+            }
         stop_after_region = input_fn is None if single_region is None else single_region
         while not stop_after_region and not (attempt_dir / "projection.json").exists():
+            projection_interview.prepare_endpoint_evidence(
+                attempt_dir,
+                source_path=source_path,
+                source_sha256=str(source["sha256"]),
+                purpose=purpose,
+                contract=contract,
+            )
             projection_interview.prepare_region_evidence(
                 attempt_dir,
                 source_path=source_path,
@@ -7013,7 +7184,13 @@ def _additional_projection_waiting_result(
                 "projection region evidence failed",
                 "the additional-source projection identity is missing",
             )
-        attachment, region_id, attachment_error = _projection_model_attachment(
+        (
+            attachment,
+            region_id,
+            obligation_id,
+            endpoint_evidence_sha256,
+            attachment_error,
+        ) = _projection_model_attachment(
             work,
             source_path=attachment,
             source_sha256=str(source["sha256"]),
@@ -7032,6 +7209,16 @@ def _additional_projection_waiting_result(
     ]
     if stage == "project_additional_source" and region_id is not None:
         command.extend(["--projection-region-id", region_id])
+    elif stage == "project_additional_source" and obligation_id is not None:
+        command.extend(["--projection-obligation-id", obligation_id])
+    if (
+        stage == "project_additional_source"
+        and endpoint_evidence_sha256 is not None
+    ):
+        command.extend([
+            "--projection-endpoint-evidence-sha256",
+            endpoint_evidence_sha256,
+        ])
     command.append(selected["flag"])
     return {
         "status": "waiting_for_model",
@@ -16318,6 +16505,20 @@ def main() -> int:
         help="the exact active region identity bound into a generated projection command",
     )
     parser.add_argument(
+        "--projection-obligation-id",
+        help=(
+            "the exact pending relationship obligation identity bound into a "
+            "generated projection command"
+        ),
+    )
+    parser.add_argument(
+        "--projection-endpoint-evidence-sha256",
+        help=(
+            "the exact endpoint crop identity bound into a generated fresh "
+            "verification command"
+        ),
+    )
+    parser.add_argument(
         "--run-projection-verification",
         action="store_true",
         help="independently verify proposed visual relationships for the frozen image",
@@ -16428,10 +16629,22 @@ def main() -> int:
         args.run_gap_resolution_verification,
         args.run_purpose_interview,
     ))
-    if args.projection_region_id is not None and not args.run_projection_interview:
+    if (
+        args.projection_region_id is not None
+        and args.projection_obligation_id is not None
+    ):
         result = _blocked(
-            "projection region invocation invalid",
-            "use a generated projection region identity only for its projection interview",
+            "projection invocation invalid",
+            "supply exactly one generated projection binding",
+        )
+    elif (
+        args.projection_region_id is not None
+        or args.projection_obligation_id is not None
+        or args.projection_endpoint_evidence_sha256 is not None
+    ) and not args.run_projection_interview:
+        result = _blocked(
+            "projection invocation invalid",
+            "use a generated projection binding only for its projection interview",
         )
     elif (args.gap_file is not None or args.gap_url is not None) and (
         args.run_operator_turn
@@ -16569,6 +16782,10 @@ def main() -> int:
             result = run_first_projection_interview(
                 args.work,
                 expected_region_id=args.projection_region_id,
+                expected_obligation_id=args.projection_obligation_id,
+                expected_endpoint_evidence_sha256=(
+                    args.projection_endpoint_evidence_sha256
+                ),
                 region_binding_required=True,
             )
     elif args.run_projection_verification:

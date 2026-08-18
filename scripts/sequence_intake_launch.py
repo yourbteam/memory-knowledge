@@ -89,6 +89,7 @@ def _artifact_paths(task_id: str, sequence_id: str) -> dict[str, str]:
         "changed_artifacts": ".json",
         "request": ".json",
         "spec": ".json",
+        "benchmark_spec": ".json",
     }
     return {
         artifact_id: str(root / f"{artifact_id}{suffixes[artifact_id]}")
@@ -251,6 +252,12 @@ def _prepare_correction_bootstrap(
         or not isinstance(artifacts.get("changed_artifacts"), Mapping)
     ):
         raise SequenceLaunchError("prepared-correction-invalid")
+    target_task_id = _required_argv_value(argv, "--task-id")
+    target_subject_id = (
+        _required_argv_value(argv, "--subject-id")
+        if prepared.get("profile") == "correct-registered"
+        else None
+    )
     events, _ = work_memory.load_ledger()
     terminal_run_ids = {
         event["run_id"]
@@ -261,23 +268,27 @@ def _prepare_correction_bootstrap(
         event for event in events
         if (
             event.get("event_type") == "run_started"
-            and event.get("task_id") == task_id
-            and event.get("subject_id") == selection.get("subject_id")
-            and event.get("lineage_id") == selection.get("lineage_id")
+            and event.get("task_id") == target_task_id
+            and (
+                target_subject_id is None
+                or event.get("subject_id") == target_subject_id
+            )
             and event["run_id"] not in terminal_run_ids
         )
     ]
     if len(starts) != 1:
         raise SequenceLaunchError("active-correction-run-ambiguous")
     run_id = starts[0]["run_id"]
+    target_subject_id = starts[0]["subject_id"]
+    target_lineage_id = starts[0]["lineage_id"]
     blockers: dict[str, dict[str, Any]] = {}
     for event in events:
         blocker_id = event.get("blocker_id")
         kind = event.get("event_type")
         if kind == "blocker_opened":
             if (
-                event.get("subject_id") != selection.get("subject_id")
-                or event.get("lineage_id") != selection.get("lineage_id")
+                event.get("subject_id") != target_subject_id
+                or event.get("lineage_id") != target_lineage_id
             ):
                 continue
             blockers[blocker_id] = {
@@ -322,8 +333,7 @@ def _prepare_correction_bootstrap(
         ))
     solution = _required_argv_value(argv, "--solution")
     reusable = _required_argv_value(argv, "--reusable-behavior-changed")
-    supplied_task = _required_argv_value(argv, "--task-id")
-    if supplied_task != task_id or reusable not in {"yes", "no"}:
+    if reusable not in {"yes", "no"}:
         raise SequenceLaunchError("prepared-correction-context-mismatch")
     supersedes = [
         argv[index + 1]
@@ -331,11 +341,19 @@ def _prepare_correction_bootstrap(
         if token == "--supersedes-correction-id"
     ]
     repository_root = Path(repository_roots["memory-knowledge"])
+    directive_state = Path(os.environ.get(
+        "MK_DIRECTIVE_STATE_PATH",
+        str(sequence_guard.DEFAULT_DIRECTIVE_STATE_PATH),
+    )).resolve()
     bootstrap_argv = [
         "python3",
         str(repository_root / "scripts/work_memory_bootstrap_launcher.py"),
         "correct",
-        "--task-id", task_id,
+        "--task-id", target_task_id,
+        "--directives-path", str(
+            repository_root / "working-agreement/DIRECTIVES.md"
+        ),
+        "--directive-state", str(directive_state),
         "--run-id", run_id,
         "--blocker-id", primary_id,
     ]
@@ -467,7 +485,7 @@ def _guard_prepared(task_id: str, prepared: Mapping[str, Any]) -> None:
             or len(argv) < 3
             or Path(argv[1]).name != "work_memory_bootstrap_launcher.py"
             or argv[2] != "correct"
-            or _required_argv_value(argv, "--task-id") != task_id
+            or not _required_argv_value(argv, "--task-id")
             or "--changed-artifacts-file" in argv
             or "--changed-artifact" not in argv
             or not isinstance(artifact, Mapping)

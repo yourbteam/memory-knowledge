@@ -229,6 +229,9 @@ def _install_current_correction_contract(controller: types.ModuleType) -> None:
     controller._effective_correction_bundle = (
         current_work_memory._effective_correction_bundle
     )
+    controller._environment_artifact_hashes = (
+        current_work_memory._environment_artifact_hashes
+    )
     current = current_work_memory.cmd_correct
     bridged = types.FunctionType(
         current.__code__, controller.__dict__, current.__name__,
@@ -252,7 +255,7 @@ def _install_current_bootstrap_correction_contract(
 
 
 def _extend_prior_bootstrap_parser(module: types.ModuleType) -> None:
-    """Add the explicit co-blocker option to a selected historical bootstrap."""
+    """Add current correction inputs to a selected historical bootstrap."""
     original = module.build_parser
 
     def build_parser():
@@ -264,6 +267,13 @@ def _extend_prior_bootstrap_parser(module: types.ModuleType) -> None:
             correct = choices["correct"]
             if not any("--co-blocker-id" in item.option_strings for item in correct._actions):
                 correct.add_argument("--co-blocker-id", action="append")
+            if not any(
+                "--changed-environment-artifact" in item.option_strings
+                for item in correct._actions
+            ):
+                correct.add_argument(
+                    "--changed-environment-artifact", action="append",
+                )
             return parser
         raise LauncherError("prior-bootstrap-correct-parser-missing")
 
@@ -450,6 +460,7 @@ def _load_snapshot(argv: Sequence[str]) -> tuple[types.ModuleType, Path]:
 
     module.current_work_memory = current_work_memory
     module._load_context = governed_load_context
+    _extend_prior_bootstrap_parser(module)
     _install_current_bootstrap_correction_contract(module)
     return module, sealed_path
 

@@ -38,6 +38,7 @@ Create the complete missing-sequence discovery bundle, bind receipts to that exa
 | --- | --- | --- | --- |
 | bootstrap-discovery | python3 scripts/discovery_bootstrap.py start --spec <spec-json> | required | Validate first; create the complete document and manifest before receipts; select and activate only that exact bundle; start one deterministic run. |
 | bootstrap-cross-repository | python3 scripts/discovery_bootstrap.py start --spec <spec-json> --repo-roots-file <repo-roots-file> | required | Use when any dependency belongs to another repository. |
+| protected-correct | python3 scripts/work_memory_bootstrap_launcher.py correct --task-id <task-id> --run-id <run-id> --blocker-id <blocker-id> --occurrence-id <occurrence-id> --step-id <step-id> --changed-artifact <path> [--changed-environment-artifact <absolute-host-path>] --solution <solution> --reusable-behavior-changed yes | required after protected selected-bundle drift | The lifecycle controller constructs this command. The sealed pre-change snapshot validates the complete repository drift and records any host-environment evidence by absolute path and SHA-256 only. |
 | verify-automation | scripts/run_pytest.sh tests/test_discovery_bootstrap.py tests/test_sequence_discovery_log.py tests/test_work_memory.py tests/test_sequence_guard.py tests/test_discovery_promotion_lifecycle.py tests/test_install_skills.py | passed | Prove strict validation, atomic retry/recovery, legacy compatibility, receipt and guard contracts, lifecycle promotion, and live skill installation behavior. |
 
 ## Failure Handling

@@ -58,6 +58,25 @@ def test_prepare_active_sequence_collects_semantics_without_dispatch(
     assert all("Constraints:" in prompt for prompt in prompts)
 
 
+def test_benchmark_artifact_path_is_json(monkeypatch):
+    monkeypatch.setattr(
+        sequence_intake_launch.sequence_intake_adapters,
+        "artifact_ids",
+        lambda _sequence_id: ("benchmark_spec",),
+    )
+
+    paths = sequence_intake_launch._artifact_paths(
+        "task-123", "local-multimodal-model-benchmark",
+    )
+
+    assert paths == {
+        "benchmark_spec": (
+            "/private/tmp/sequence-intake/task-123/"
+            "local-multimodal-model-benchmark/benchmark_spec.json"
+        ),
+    }
+
+
 def test_stale_registry_still_allows_intake_from_exact_active_selection(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
@@ -106,17 +125,22 @@ def test_stale_registry_still_allows_intake_from_exact_active_selection(
 def test_correction_intake_prepares_sealed_bootstrap_with_same_run_co_blockers(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
-    task_id = "task-123"
+    intake_task_id = "correction-intake-task"
+    failed_task_id = "failed-task-123"
+    target_subject_id = "target-registered-sequence"
     run_id = "11111111-1111-4111-8111-111111111111"
     primary_occurrence = "22222222-2222-4222-8222-222222222222"
     repository = tmp_path / "memory"
+    directive_state = tmp_path / "directive-state.json"
+    monkeypatch.setenv("MK_DIRECTIVE_STATE_PATH", str(directive_state))
     (repository / "scripts").mkdir(parents=True)
     (repository / "scripts/one.py").write_text("# changed\n")
     prepared = {
         "profile": "correct-registered",
         "argv": [
             "python3", str(repository / "scripts/discovery_promotion_lifecycle.py"),
-            "correct-registered", "--task-id", task_id,
+            "correct-registered", "--subject-id", target_subject_id,
+            "--task-id", failed_task_id,
             "--solution", "Stable correction.",
             "--reusable-behavior-changed", "yes",
             "--supersedes-correction-id",
@@ -138,20 +162,20 @@ def test_correction_intake_prepares_sealed_bootstrap_with_same_run_co_blockers(
     }
     events = [
         {
-            "event_type": "run_started", "task_id": task_id,
-            "subject_id": selection["subject_id"],
-            "lineage_id": selection["lineage_id"], "run_id": run_id,
+            "event_type": "run_started", "task_id": failed_task_id,
+            "subject_id": target_subject_id,
+            "lineage_id": "target-lineage", "run_id": run_id,
         },
         {
             "event_type": "blocker_opened", "blocker_id": "blk-primary",
-            "subject_id": selection["subject_id"],
-            "lineage_id": selection["lineage_id"], "run_id": run_id,
+            "subject_id": target_subject_id,
+            "lineage_id": "target-lineage", "run_id": run_id,
             "occurrence_id": primary_occurrence, "step_id": "verify",
         },
         {
             "event_type": "blocker_opened", "blocker_id": "blk-secondary",
-            "subject_id": selection["subject_id"],
-            "lineage_id": selection["lineage_id"], "run_id": run_id,
+            "subject_id": target_subject_id,
+            "lineage_id": "target-lineage", "run_id": run_id,
             "occurrence_id": "44444444-4444-4444-8444-444444444444",
             "step_id": "dispatch",
         },
@@ -163,7 +187,7 @@ def test_correction_intake_prepares_sealed_bootstrap_with_same_run_co_blockers(
     )
 
     result = sequence_intake_launch._prepare_correction_bootstrap(
-        task_id,
+        intake_task_id,
         prepared,
         selection,
         {"memory-knowledge": str(repository)},
@@ -174,7 +198,11 @@ def test_correction_intake_prepares_sealed_bootstrap_with_same_run_co_blockers(
     assert argv[2] == "correct"
     assert argv[argv.index("--blocker-id") + 1] == "blk-primary"
     assert argv[argv.index("--co-blocker-id") + 1] == "blk-secondary"
-    assert argv[argv.index("--task-id") + 1] == task_id
+    assert argv[argv.index("--task-id") + 1] == failed_task_id
+    assert argv[argv.index("--directives-path") + 1] == str(
+        repository / "working-agreement/DIRECTIVES.md"
+    )
+    assert argv[argv.index("--directive-state") + 1] == str(directive_state)
     assert argv[argv.index("--step-id") + 1] == "verify"
     assert argv[argv.index("--correction-id") + 1] == str(uuid5(
         NAMESPACE_URL,
@@ -271,6 +299,56 @@ def test_prepared_guard_uses_the_controller_checkout_directives(monkeypatch):
     assert observed["directives_path"] == str(
         sequence_intake_launch.DIRECTIVES_PATH
     )
+
+
+def test_prepared_correction_guard_accepts_authenticated_failed_task_target(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    intake_task_id = "correction-intake-task"
+    failed_task_id = "failed-task-123"
+    repository = tmp_path / "memory"
+    launcher = repository / "scripts/work_memory_bootstrap_launcher.py"
+    launcher.parent.mkdir(parents=True)
+    launcher.write_text("# sealed launcher\n", encoding="utf-8")
+    artifact_path = (
+        Path("/private/tmp/sequence-intake") / intake_task_id
+        / "discovery-promotion-lifecycle/changed_artifacts.json"
+    )
+    prepared = {
+        "profile": "correct-registered",
+        "argv": [
+            "python3", str(launcher), "correct",
+            "--task-id", failed_task_id,
+            "--changed-artifact", str(repository / "scripts/changed.py"),
+        ],
+        "artifacts": {
+            "changed_artifacts": {
+                "path": str(artifact_path),
+                "content": "[]",
+            },
+        },
+        "repository": {
+            "key": "memory-knowledge",
+            "root": str(repository),
+        },
+    }
+    selection = {
+        "repository_roots": {"memory-knowledge": str(repository)},
+        "source_bundle": [{
+            "repository_key": "memory-knowledge",
+            "path": "scripts/work_memory_bootstrap_launcher.py",
+            "sha256": sequence_intake_launch.work_memory.sha256_bytes(
+                launcher.read_bytes()
+            ),
+        }],
+    }
+    monkeypatch.setattr(
+        sequence_intake_launch.work_memory,
+        "load_receipt",
+        lambda *_args: (selection, "a" * 64, Path("unused")),
+    )
+
+    sequence_intake_launch._guard_prepared(intake_task_id, prepared)
 
 
 def test_main_asks_for_task_reviews_payload_then_requires_authorization(

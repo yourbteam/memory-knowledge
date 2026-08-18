@@ -1,0 +1,219 @@
+{
+  "cases": [
+    {
+      "done": true,
+      "done_reason": "stop",
+      "id": "dashboard-annotation-map",
+      "metrics": {
+        "eval_count": 6605,
+        "eval_duration_ns": 58294453500,
+        "load_duration_ns": 1173308792,
+        "prompt_eval_count": 206,
+        "prompt_eval_duration_ns": 27260583,
+        "total_duration_ns": 100365257209,
+        "wall_seconds": 100.367772
+      },
+      "prompt": "You receive two images of the same dashboard. Image 1 contains red annotation boxes and arrows; image 2 is the clean reference.\nExtract every red annotation from image 1, scanning the whole source from top to bottom.\nFor each annotation, transcribe the annotation text as exactly as visible and identify the specific dashboard element at the arrowhead, not the enclosing section.\nUse image 2 to confirm the target element's visible text and report its normalized x, y, width, and height from 0 to 1 relative to the clean image.\nDo not invent unreadable text or uncertain targets. Record readability, target identification status, confidence, and an unresolved reason when needed.\nPut every unresolved ambiguity in unresolved_items with the follow-up information needed.\nCoverage matters: include every red callout, including those around charts and lower-page content.",
+      "prompt_sha256": "c018df35776af358acbd216a2e5c953b76fe1ee98bb96ea33c22e56d7eb9dfdd",
+      "response_raw": "```json\n[\n  {\n    \"text\": \"Total Revenue\",\n    \"target_element\": \"$4,567,890\",\n    \"x\": 0.12,\n    \"y\": 0.13,\n    \"width\": 0.1,\n    \"height\": 0.04\n  },\n  {\n    \"text\": \"Net Profit\",\n    \"target_element\": \"$1,234,567\",\n    \"x\": 0.37,\n    \"y\": 0.13,\n    \"width\": 0.1,\n    \"height\": 0.04\n  },\n  {\n    \"text\": \"Operating Expenses\",\n    \"target_element\": \"$890,123\",\n    \"x\": 0.62,\n    \"y\": 0.13,\n    \"width\": 0.1,\n    \"height\": 0.04\n  },\n  {\n    \"text\": \"Gross Margin %\",\n    \"target_element\": \"25.5%\",\n    \"x\": 0.87,\n    \"y\": 0.13,\n    \"width\": 0.06,\n    \"height\": 0.04\n  },\n  {\n    \"text\": \"Monthly Revenue Trend\",\n    \"target_element\": \"March bar\",\n    \"x\": 0.42,\n    \"y\": 0.52,\n    \"width\": 0.05,\n    \"height\": 0.05\n  }\n]\n```",
+      "response_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "annotations": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "annotation_readability": {
+                  "enum": [
+                    "readable",
+                    "partially_readable",
+                    "unreadable"
+                  ],
+                  "type": "string"
+                },
+                "annotation_text": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "confidence": {
+                  "enum": [
+                    "high",
+                    "medium",
+                    "low"
+                  ],
+                  "type": "string"
+                },
+                "relationship_description": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "target_element": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "element_kind": {
+                      "enum": [
+                        "metric",
+                        "label",
+                        "button",
+                        "selector",
+                        "chart",
+                        "chart-point",
+                        "chart-series",
+                        "section",
+                        "status",
+                        "date",
+                        "other"
+                      ],
+                      "type": "string"
+                    },
+                    "normalized_region": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "height": {
+                          "type": "number"
+                        },
+                        "width": {
+                          "type": "number"
+                        },
+                        "x": {
+                          "type": "number"
+                        },
+                        "y": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "width",
+                        "height"
+                      ],
+                      "type": "object"
+                    },
+                    "visible_text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "visible_text",
+                    "element_kind",
+                    "normalized_region"
+                  ],
+                  "type": "object"
+                },
+                "target_identification": {
+                  "enum": [
+                    "specific",
+                    "ambiguous",
+                    "not_identified"
+                  ],
+                  "type": "string"
+                },
+                "unresolved_reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "annotation_text",
+                "annotation_readability",
+                "target_element",
+                "target_identification",
+                "relationship_description",
+                "confidence",
+                "unresolved_reason"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "overall_source_readability": {
+            "enum": [
+              "complete",
+              "partial",
+              "insufficient"
+            ],
+            "type": "string"
+          },
+          "summary": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "unresolved_items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "needed_follow_up": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "reason": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "source_description": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source_description",
+                "reason",
+                "needed_follow_up"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "annotations",
+          "unresolved_items",
+          "overall_source_readability",
+          "summary"
+        ],
+        "type": "object"
+      },
+      "response_sha256": "837f1b140df148da60eeb8721cd1f657d212ff78fe5fe73c0f692fcde32f53b2",
+      "source_files": [
+        {
+          "path": "/Users/kamenkamenov/Downloads/Operator Dashboard formula explanation.jpg",
+          "sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "size_bytes": 879014
+        },
+        {
+          "path": "/Users/kamenkamenov/Desktop/Screenshot 2026-08-12 at 15.44.10.png",
+          "sha256": "3a1cab37709765fa2b05eed990791514b180d344421267821b4f95d4ddf31d88",
+          "size_bytes": 340866
+        }
+      ]
+    }
+  ],
+  "endpoint": "http://127.0.0.1:11434",
+  "error": {
+    "code": "model-response-not-json"
+  },
+  "finished_at_utc": "2026-08-16T14:39:27.068300Z",
+  "model": "gemma4:26b-mlx",
+  "models_after": [
+    "gemma4:26b-mlx",
+    "qwen2.5:32b"
+  ],
+  "models_before": [
+    "qwen2.5:32b"
+  ],
+  "ollama_version": "0.31.1",
+  "options": {
+    "num_ctx": 32768,
+    "temperature": 0
+  },
+  "pull_if_missing": true,
+  "pulled_model": true,
+  "schema_version": 1,
+  "spec": {
+    "path": "/private/tmp/sequence-intake/gemma4-26b-mlx-annotation-map-benchmark-20260816/local-multimodal-model-benchmark/benchmark_spec.json",
+    "sha256": "b682786aaf19682c5485ecbc150410b493b87e1bf86016d0b7dbffad2d9a6ef3"
+  },
+  "started_at_utc": "2026-08-16T14:27:19.230812Z",
+  "status": "failed"
+}

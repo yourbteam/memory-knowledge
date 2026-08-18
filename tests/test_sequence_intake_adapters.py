@@ -1082,6 +1082,159 @@ def test_airgapped_judge_smoke_derives_private_environment_contract():
     assert prepared["environment"]["HF_HUB_OFFLINE"] == "1"
 
 
+def test_local_multimodal_benchmark_derives_spec_from_semantic_inputs(
+    tmp_path: Path,
+) -> None:
+    script_intake._validate_spec(sequence_intake_adapters.intake_spec(
+        "local-multimodal-model-benchmark",
+        repository_roots={"memory-knowledge": "/repos/memory"},
+    ))
+    source = tmp_path / "dashboard.png"
+    source.write_bytes(b"image")
+    schema = tmp_path / "response-schema.json"
+    schema.write_text(json.dumps({
+        "type": "object",
+        "required": ["elements"],
+        "properties": {
+            "elements": {
+                "type": "array",
+                "items": {"type": "string"},
+            },
+        },
+    }))
+    output = tmp_path / "evidence.json"
+    artifact = tmp_path / "benchmark-spec.json"
+
+    prepared = sequence_intake_adapters.prepare(
+        "local-multimodal-model-benchmark",
+        {
+            "source_repository_key": "memory-knowledge",
+            "model": "gemma4:26b-mlx",
+            "endpoint": "http://127.0.0.1:11434",
+            "pull_if_missing": True,
+            "thinking_mode": "disabled",
+            "timeout_seconds": 600,
+            "context_length": 32768,
+            "output_path": str(output),
+            "cases": [{
+                "id": "annotation-map",
+                "prompt": "Return the visible annotations.",
+                "source_files": [str(source)],
+                "response_schema_file": str(schema),
+            }],
+        },
+        artifact_paths={"benchmark_spec": str(artifact)},
+        repository_roots={"memory-knowledge": "/repos/memory"},
+    )
+
+    spec = json.loads(prepared["artifacts"]["benchmark_spec"]["content"])
+    assert spec == {
+        "schema_version": 1,
+        "model": "gemma4:26b-mlx",
+        "endpoint": "http://127.0.0.1:11434",
+        "pull_if_missing": True,
+        "think": False,
+        "timeout_seconds": 600,
+        "output_path": str(output),
+        "options": {"temperature": 0, "num_ctx": 32768},
+        "cases": [{
+            "id": "annotation-map",
+            "prompt": "Return the visible annotations.",
+            "source_files": [str(source)],
+            "response_schema": json.loads(schema.read_text()),
+        }],
+    }
+    assert prepared["argv"] == [
+        "python3",
+        "/repos/memory/scripts/local_multimodal_model_benchmark.py",
+        "--spec",
+        str(artifact),
+    ]
+    assert prepared["authorization"] == {
+        "effectful": True,
+        "required": True,
+        "operation": "run",
+    }
+
+
+def test_local_multimodal_benchmark_rejects_non_loopback_endpoint(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "dashboard.jpg"
+    source.write_bytes(b"image")
+    schema = tmp_path / "response-schema.json"
+    schema.write_text('{"type":"object"}')
+
+    with pytest.raises(
+        sequence_intake_adapters.AdapterError,
+        match="local-multimodal-benchmark-invalid:endpoint-not-loopback",
+    ):
+        sequence_intake_adapters.prepare(
+            "local-multimodal-model-benchmark",
+            {
+                "source_repository_key": "memory-knowledge",
+                "model": "gemma4:26b-mlx",
+                "endpoint": "https://models.example.com",
+                "pull_if_missing": False,
+                "thinking_mode": "disabled",
+                "timeout_seconds": 60,
+                "context_length": 8192,
+                "output_path": str(tmp_path / "evidence.json"),
+                "cases": [{
+                    "id": "case",
+                    "prompt": "Read the image.",
+                    "source_files": [str(source)],
+                    "response_schema_file": str(schema),
+                }],
+            },
+            artifact_paths={"benchmark_spec": str(tmp_path / "spec.json")},
+            repository_roots={"memory-knowledge": "/repos/memory"},
+        )
+
+
+def test_local_multimodal_benchmark_collects_one_semantic_answer_at_a_time(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "dashboard.png"
+    source.write_bytes(b"image")
+    schema = tmp_path / "response-schema.json"
+    schema.write_text('{"type":"object"}')
+    output = tmp_path / "evidence.json"
+    prompts: list[str] = []
+    answers = iter([
+        "memory-knowledge",
+        "gemma4:26b-mlx",
+        "",  # default loopback endpoint
+        "",  # default pull-if-missing
+        "disabled",
+        "",  # default timeout
+        "",  # default context length
+        str(output),
+        "annotation-map",
+        "Read every annotation.",
+        ".",
+        str(source),
+        "no",  # no additional source image
+        str(schema),
+        "no",  # no additional benchmark case
+    ])
+
+    prepared = sequence_intake_adapters.collect_and_prepare(
+        "local-multimodal-model-benchmark",
+        artifact_paths={"benchmark_spec": str(tmp_path / "spec.json")},
+        repository_roots={"memory-knowledge": "/repos/memory"},
+        input_fn=lambda prompt: prompts.append(prompt) or next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    assert prepared["profile"] == "run"
+    shown = [prompt for prompt in prompts if prompt]
+    assert len(shown) == 14
+    assert all("Question:" in prompt for prompt in shown)
+    assert all("Response format:" in prompt for prompt in shown)
+    assert all("Constraints:" in prompt for prompt in shown)
+
+
 def test_secure_landing_scrub_derives_fail_closed_retirement_invocation():
     prepared = sequence_intake_adapters.prepare(
         "secure-landing-seed",

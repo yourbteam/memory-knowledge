@@ -1,10 +1,10 @@
 {
-  "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+  "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
   "contract_version": 1,
   "entries": [
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -35,7 +35,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -65,7 +65,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -91,7 +91,7 @@
     },
     {
       "adapter_id": "_prepare_blocker_backlog_reconciliation",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -123,7 +123,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -151,7 +151,7 @@
     },
     {
       "adapter_id": "_prepare_callcenter_provision",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -179,7 +179,7 @@
     },
     {
       "adapter_id": "_prepare_claude_auth",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -224,7 +224,7 @@
     },
     {
       "adapter_id": "_prepare_commit_push",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [
           "approved_paths",
@@ -270,7 +270,7 @@
     },
     {
       "adapter_id": "_prepare_convergence_checkpoint",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -303,7 +303,7 @@
     },
     {
       "adapter_id": "_prepare_convergence_review",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [
           "request"
@@ -338,7 +338,7 @@
     },
     {
       "adapter_id": "_prepare_discovery_bootstrap",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [
           "spec"
@@ -391,7 +391,7 @@
     },
     {
       "adapter_id": "_prepare_discovery_reconciliation",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -427,7 +427,7 @@
     },
     {
       "adapter_id": "_prepare_discovery_promotion",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [
           "changed_artifacts"
@@ -437,7 +437,7 @@
       },
       "contract_version": 1,
       "entrypoint": "memory-knowledge:scripts/discovery_promotion_lifecycle.py",
-      "entrypoint_source_sha256": "c081fc06fd37389edce2eedd5662b4f33f9a082231f2ddbef6d65f4afd9ba4c9",
+      "entrypoint_source_sha256": "59a7d4ddc83921c45880ad10d822d3cd2e1949842667627024df9cef86ca721b",
       "optional_inputs": [
         "changed_artifacts",
         "operation_kinds",
@@ -484,7 +484,7 @@
     },
     {
       "adapter_id": "_prepare_github_refresh",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -518,7 +518,7 @@
     },
     {
       "adapter_id": "_prepare_greenfield",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -581,7 +581,7 @@
     },
     {
       "adapter_id": "_prepare_greenfield_recreate",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -627,8 +627,51 @@
       ]
     },
     {
+      "adapter_id": "_prepare_local_multimodal_benchmark",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
+      "argv_shape": {
+        "artifact_inputs": [
+          "benchmark_spec"
+        ],
+        "caller_constructs_argv": false,
+        "derivation": "scripts/sequence_intake_adapters.py:prepare"
+      },
+      "contract_version": 1,
+      "entrypoint": "memory-knowledge:scripts/local_multimodal_model_benchmark.py",
+      "entrypoint_source_sha256": "c79950562c0c1b79d239592b9fbbe69910ccbbef8a17eae2e08f17c627d4f1c4",
+      "optional_inputs": [
+        "context_length",
+        "endpoint",
+        "pull_if_missing",
+        "timeout_seconds"
+      ],
+      "required_inputs": [
+        "cases",
+        "model",
+        "output_path",
+        "source_repository_key",
+        "thinking_mode"
+      ],
+      "semantic_fields": [
+        "source_repository_key",
+        "model",
+        "endpoint",
+        "pull_if_missing",
+        "thinking_mode",
+        "timeout_seconds",
+        "context_length",
+        "output_path",
+        "cases"
+      ],
+      "sequence_id": "local-multimodal-model-benchmark",
+      "verification_case_ids": [
+        "tests/test_sequence_intake_adapters.py",
+        "tests/test_sequence_intake_launch.py"
+      ]
+    },
+    {
       "adapter_id": "_prepare_local_image",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -689,7 +732,7 @@
     },
     {
       "adapter_id": "_prepare_mawf_blocker",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -736,7 +779,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -785,7 +828,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -834,7 +877,7 @@
     },
     {
       "adapter_id": "_prepare_remote_onboarding",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -884,7 +927,7 @@
     },
     {
       "adapter_id": "_prepare_scoped_context",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -925,7 +968,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -960,7 +1003,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -989,7 +1032,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1016,7 +1059,7 @@
     },
     {
       "adapter_id": "<lambda>",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1043,7 +1086,7 @@
     },
     {
       "adapter_id": "_prepare_taggable_reload",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1076,7 +1119,7 @@
     },
     {
       "adapter_id": "_prepare_workflow_client_regeneration",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,
@@ -1110,7 +1153,7 @@
     },
     {
       "adapter_id": "_prepare_workflow_phase_resume",
-      "adapter_source_sha256": "163848af2b5117749fc2e964d0ebc7d431f7f0445a9d0fffd46874bf3e5e679b",
+      "adapter_source_sha256": "2d4d389ddbfce7a23e2b523baddc8f6d0142f04edd7b0174af5bc9ab6a578d0e",
       "argv_shape": {
         "artifact_inputs": [],
         "caller_constructs_argv": false,

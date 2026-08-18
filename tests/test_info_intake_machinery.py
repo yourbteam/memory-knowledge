@@ -265,31 +265,62 @@ def _advance_to_frozen_image(work: Path, supplied: Path) -> dict[str, object]:
 
 
 def _projection_answers(
-    *, invalid_status_first: bool = False, contract: int = 6,
+    *,
+    invalid_status_first: bool = False,
+    contract: int = 6,
+    second_relationship_obligation: bool = False,
+    third_relationship_obligation: bool = False,
 ) -> list[str]:
     element_status = ["ok", "readable"] if invalid_status_first else ["readable"]
     relationship_status = ["ok", "readable"] if invalid_status_first else ["readable"]
     first_obligation = ["yes"] if contract >= 3 else []
-    second_obligation = ["no"] if contract >= 6 else ["yes"] if contract >= 3 else []
+    second_obligation = (
+        ["yes"]
+        if contract >= 3 and second_relationship_obligation
+        else ["no"]
+        if contract >= 6
+        else ["yes"]
+        if contract >= 3
+        else []
+    )
     required_relationship = (
-        ["use_recorded_endpoint", "visually-connected-to", "10", "20", "120", "20"]
+        [
+            *(["contains_claimed_content"] if contract >= 13 else []),
+            "use_recorded_endpoint", "visually-connected-to",
+            *(["origin"] if contract >= 12 else []),
+            "10", "20", "120", "20",
+        ]
         if contract >= 5 else
         ["use_recorded_endpoint", "visually-connected-to", "origin", "element-000002"]
         if contract >= 3 else
         ["yes", "visually-connected-to", "element-000001", "element-000002"]
     )
-    completed_element_scan = (
-        ["no", *(["no"] * 15)] if contract >= 4 else ["no"]
-    )
     ownership = ["owned_by_active_core"] if contract >= 11 else []
+    third_element = (
+        [
+            "yes", "unrelated-visible-text", *ownership,
+            "120", "130", "220", "220", "readable",
+            "An unrelated readable description", "yes",
+        ]
+        if third_relationship_obligation else []
+    )
+    explicit_gap = [
+        "yes", "obscured-visible-target", *ownership,
+        "10", "130", "100", "220", "gap",
+        "The target is obscured.", "no",
+    ]
+    completed_element_scan = (
+        [*explicit_gap, *third_element, "no", *(["no"] * 15)]
+        if contract >= 4 else ["no"]
+    )
     return [
         "test-model", "pytest",
         "yes", "visible-text", *ownership,
         "10", "20", "100", "120", *element_status,
         "A readable description", *first_obligation,
         "yes", "visible-target", *ownership,
-        "120", "20", "220", "120", "gap",
-        "The target is obscured.", *second_obligation,
+        "120", "20", "220", "120", "readable",
+        "A readable target", *second_obligation,
         *completed_element_scan,
         *required_relationship,
         *(["supported"] if contract >= 6 else []),
@@ -305,13 +336,18 @@ def _projection_answers_with_two_element_gaps() -> list[str]:
         "10", "20", "100", "120", "readable",
         "A readable description", "yes",
         "yes", "visible-target", "owned_by_active_core",
-        "120", "20", "220", "120", "gap",
+        "120", "20", "220", "120", "readable",
+        "A readable target", "no",
+        "yes", "first-obscured-target", "owned_by_active_core",
+        "10", "130", "100", "220", "gap",
         "The target is obscured.", "no",
-        "yes", "second-target", "owned_by_active_core",
-        "230", "20", "330", "120", "gap",
+        "yes", "second-obscured-target", "owned_by_active_core",
+        "120", "130", "220", "220", "gap",
         "The second target is obscured.", "no",
         "no", *(["no"] * 15),
-        "use_recorded_endpoint", "visually-connected-to", "10", "20", "120", "20",
+        "contains_claimed_content",
+        "use_recorded_endpoint", "visually-connected-to", "origin",
+        "10", "20", "120", "20",
         "supported", "readable", "The first element connects to the second.",
         "no",
     ]
@@ -667,6 +703,14 @@ def test_codex_runner_crosses_human_boundary_and_continues_to_completion(
 ) -> None:
     work = tmp_path / "intake"
     attachment = work / "sources" / "source-000003"
+    journal = work / "gap-clarifications" / "attempt-000001" / "interview.jsonl"
+    journal.parent.mkdir(parents=True)
+    attachment.parent.mkdir(parents=True)
+    attachment.write_bytes(b"source")
+    journal.write_text("")
+    (work / "intake-state.json").write_text(json.dumps({
+        "waiting_for": "gap-clarifications/attempt-000001/interview.jsonl",
+    }))
     first_command = ["python", "start_intake.py", "--run-gap-clarification"]
     second_command = ["python", "start_intake.py", "--run-gap-answer-assessment"]
     boundaries = iter([
@@ -691,8 +735,6 @@ def test_codex_runner_crosses_human_boundary_and_continues_to_completion(
     ])
     model_calls: list[list[str]] = []
     operator_calls: list[Path] = []
-    state_hashes = iter(["a" * 64, "a" * 64])
-
     def load_request(_work: Path) -> tuple[Path, list[str]]:
         if not model_calls:
             return attachment, first_command
@@ -703,7 +745,6 @@ def test_codex_runner_crosses_human_boundary_and_continues_to_completion(
     monkeypatch.setattr("builtins.input", lambda _prompt: str(work))
     monkeypatch.setattr(CODEX_RUNNER.shutil, "which", lambda _name: "/usr/bin/codex")
     monkeypatch.setattr(CODEX_RUNNER, "load_request", load_request)
-    monkeypatch.setattr(CODEX_RUNNER, "_sha256", lambda _path: next(state_hashes))
     monkeypatch.setattr(
         CODEX_RUNNER,
         "build_codex_argv",
@@ -741,6 +782,7 @@ def test_codex_runner_routes_projection_completion_to_verifier_before_clarificat
     attachment = work / "sources" / "source-000003"
     journal = work / "projection-interviews" / "attempt-000001" / "interview.jsonl"
     journal.parent.mkdir(parents=True)
+    journal.write_text("")
     (work / "intake-state.json").write_text(json.dumps({
         "waiting_for": "projection-interviews/attempt-000001/interview.jsonl",
     }))
@@ -1001,6 +1043,7 @@ def test_codex_runner_pauses_after_persisted_region_limit_and_resumes(
     work = tmp_path / "intake"
     journal = work / "projection-interviews" / "attempt-000001" / "interview.jsonl"
     journal.parent.mkdir(parents=True)
+    journal.write_text("")
     (work / "intake-state.json").write_text(json.dumps({
         "waiting_for": "projection-interviews/attempt-000001/interview.jsonl",
     }))
@@ -1063,11 +1106,166 @@ def test_codex_runner_rejects_invalid_projection_region_limit(
     )
 
 
+def test_codex_runner_pauses_after_one_persisted_relationship_outcome(
+    tmp_path: Path, monkeypatch: object, capsys: object,
+) -> None:
+    work = tmp_path / "intake"
+    journal = work / "projection-interviews" / "attempt-000001" / "interview.jsonl"
+    journal.parent.mkdir(parents=True)
+    journal.write_text("")
+    (work / "intake-state.json").write_text(json.dumps({
+        "waiting_for": "projection-interviews/attempt-000001/interview.jsonl",
+    }))
+    attachment = work / "source.png"
+    attachment.write_bytes(b"source")
+    command = [
+        "python", "start_intake.py",
+        "--projection-obligation-id", "obligation-000001",
+        "--run-projection-interview",
+    ]
+    model_calls: list[list[str]] = []
+    semantic_relationship_count = [0]
+
+    monkeypatch.setattr(
+        CODEX_RUNNER, "load_request", lambda _work: (attachment, command)
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER,
+        "build_codex_argv",
+        lambda *_args: ["model", "relationship"],
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER.shutil, "which", lambda _name: "/usr/bin/codex"
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER, "_projection_relationship_outcome_count",
+        lambda _journal: semantic_relationship_count[0],
+    )
+
+    def run_model(argv: list[str], **_kwargs: object) -> object:
+        model_calls.append(argv)
+        semantic_relationship_count[0] += 1
+        PROJECTION_INTERVIEW._append(journal, "answer_recorded", {
+            "question_id": "relationship_description",
+            "raw": "The callout points to the metric.",
+            "accepted": True,
+            "parsed": "The callout points to the metric.",
+            "error": None,
+        })
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(CODEX_RUNNER.subprocess, "run", run_model)
+
+    assert CODEX_RUNNER.drive_work(
+        work, projection_relationship_limit=1,
+    ) == 0
+
+    output = capsys.readouterr().out
+    assert model_calls == [["model", "relationship"]]
+    assert '"projection_relationships_completed": 1' in output
+    assert '"stopped": "projection_relationship_limit_reached"' in output
+    assert CODEX_RUNNER._projection_relationship_outcome_count(journal) == 1
+
+
+def test_codex_runner_continues_when_projection_journal_advances_between_identical_commands(
+    tmp_path: Path, monkeypatch: object, capsys: object,
+) -> None:
+    work = tmp_path / "intake"
+    journal = work / "projection-interviews" / "attempt-000001" / "interview.jsonl"
+    journal.parent.mkdir(parents=True)
+    journal.write_text("")
+    (work / "intake-state.json").write_text(json.dumps({
+        "waiting_for": "projection-interviews/attempt-000001/interview.jsonl",
+    }))
+    attachment = work / "source.png"
+    attachment.write_bytes(b"source")
+    command = [
+        "python", "start_intake.py",
+        "--projection-obligation-id", "obligation-000027",
+        "--run-projection-interview",
+    ]
+    model_calls: list[list[str]] = []
+    semantic_relationship_count = [0]
+
+    monkeypatch.setattr(
+        CODEX_RUNNER, "load_request", lambda _work: (attachment, command)
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER,
+        "build_codex_argv",
+        lambda *_args: ["model", "relationship"],
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER.shutil, "which", lambda _name: "/usr/bin/codex"
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER, "_projection_relationship_outcome_count",
+        lambda _journal: semantic_relationship_count[0],
+    )
+
+    def run_model(argv: list[str], **_kwargs: object) -> object:
+        model_calls.append(argv)
+        if len(model_calls) == 3:
+            semantic_relationship_count[0] += 1
+        question_id = (
+            "relationship_description"
+            if len(model_calls) == 3
+            else "element_content_crop_verdict"
+        )
+        PROJECTION_INTERVIEW._append(journal, "answer_recorded", {
+            "question_id": question_id,
+            "raw": "supported",
+            "accepted": True,
+            "parsed": "supported",
+            "error": None,
+        })
+        return subprocess.CompletedProcess(argv, 0)
+
+    monkeypatch.setattr(CODEX_RUNNER.subprocess, "run", run_model)
+
+    assert CODEX_RUNNER.drive_work(
+        work, projection_relationship_limit=1,
+    ) == 0
+
+    output = capsys.readouterr().out
+    assert model_calls == [
+        ["model", "relationship"],
+        ["model", "relationship"],
+        ["model", "relationship"],
+    ]
+    assert '"projection_relationships_completed": 1' in output
+
+
+def test_codex_runner_rejects_invalid_projection_relationship_limit(
+    tmp_path: Path, capsys: object,
+) -> None:
+    assert CODEX_RUNNER.drive_work(
+        tmp_path, projection_relationship_limit=0,
+    ) == 3
+    assert "projection relationship limit must be a positive integer" in (
+        capsys.readouterr().out
+    )
+    assert CODEX_RUNNER.drive_work(
+        tmp_path, projection_relationship_limit=True,
+    ) == 3
+    assert "projection relationship limit must be a positive integer" in (
+        capsys.readouterr().out
+    )
+
+
 def test_codex_runner_rejects_an_identical_repeated_model_stage(
     tmp_path: Path, monkeypatch: object, capsys: object,
 ) -> None:
     work = tmp_path / "intake"
     attachment = work / "sources" / "source-000003"
+    journal = work / "gap-clarifications" / "attempt-000001" / "interview.jsonl"
+    journal.parent.mkdir(parents=True)
+    attachment.parent.mkdir(parents=True)
+    attachment.write_bytes(b"source")
+    journal.write_text("")
+    (work / "intake-state.json").write_text(json.dumps({
+        "waiting_for": "gap-clarifications/attempt-000001/interview.jsonl",
+    }))
     command = ["python", "start_intake.py", "--run-gap-clarification"]
     requests = iter([(attachment, command), (attachment, command)])
     boundary = {
@@ -1083,7 +1281,6 @@ def test_codex_runner_rejects_an_identical_repeated_model_stage(
     monkeypatch.setattr("builtins.input", lambda _prompt: str(work))
     monkeypatch.setattr(CODEX_RUNNER.shutil, "which", lambda _name: "/usr/bin/codex")
     monkeypatch.setattr(CODEX_RUNNER, "load_request", lambda _work: next(requests))
-    monkeypatch.setattr(CODEX_RUNNER, "_sha256", lambda _path: "a" * 64)
     monkeypatch.setattr(
         CODEX_RUNNER,
         "build_codex_argv",
@@ -1254,7 +1451,9 @@ def test_projection_interview_enforces_choices_and_code_assembles_result(tmp_pat
     )
 
     assert result == resumed
-    assert [item["status"] for item in result["elements"]] == ["readable", "gap"]
+    assert [item["status"] for item in result["elements"]] == [
+        "readable", "readable", "gap",
+    ]
     assert result["relationships"][0]["status"] == "readable"
     assert result["relationships"][0]["from_id"] == "element-000001"
     assert result["relationships"][0]["to_id"] == "element-000002"
@@ -1271,7 +1470,7 @@ def test_projection_interview_enforces_choices_and_code_assembles_result(tmp_pat
     assert len(result["scan_regions"]) == 16
     assert all(region["status"] == "scanned" for region in result["scan_regions"])
     assert result["scan_regions"][0]["element_ids"] == [
-        "element-000001", "element-000002",
+        "element-000001", "element-000002", "element-000003",
     ]
     assert all(not region["element_ids"] for region in result["scan_regions"][1:])
     assert messages == [
@@ -1432,6 +1631,909 @@ def test_coordinate_binding_preserves_ambiguous_endpoint_as_relationship_gap(
     assert projection["relationship_obligations"][0]["resolution"] == "gap"
 
 
+def test_historical_spatial_identity_refinement_event_still_replays() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["spatial_identity_refinement_enabled"] = True
+    state["elements"] = [
+        {
+            "id": "element-000001", "kind": "annotation",
+            "region": [10, 10, 100, 100], "status": "readable",
+            "content": "Formula description", "gap_reason": "",
+        },
+        {
+            "id": "element-000002", "kind": "broad metric card",
+            "region": [50, 50, 200, 200], "status": "readable",
+            "content": "Revenue card", "gap_reason": "",
+        },
+    ]
+    state["current"] = {
+        "origin_x": 75,
+        "origin_y": 75,
+        "origin_point": [75, 75],
+        "spatial_identity_issue": {
+            "participant": "origin",
+            "point": [75, 75],
+            "matching_element_ids": ["element-000001", "element-000002"],
+            "reason": "no_unique_recorded_element",
+        },
+        "spatial_intended_element_id": "element-000001",
+        "spatial_conflicting_element_id": "element-000002",
+        "spatial_conflicting_element_ids": ["element-000002"],
+        "refine_left": 120,
+        "refine_top": 50,
+        "refine_right": 200,
+    }
+
+    PROJECTION_INTERVIEW._prepare_spatial_identity_refinement(state, 200)
+    pending = state["spatial_identity_refinement_pending"]
+    event = pending["event"]
+    PROJECTION_INTERVIEW._apply_spatial_identity_refinement(
+        state, event, contract=12,
+    )
+
+    assert event["element_id"] == "element-000002"
+    assert event["previous_element"]["region"] == [50, 50, 200, 200]
+    assert event["replacement_element"]["region"] == [120, 50, 200, 200]
+    assert state["elements"][1]["region"] == [120, 50, 200, 200]
+    assert state["current"]["origin_id"] == "element-000001"
+
+
+def test_legacy_overlap_migration_restores_bounds_and_preserves_relationship() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    original = {
+        "id": "element-000001", "kind": "directional arrow",
+        "region": [10, 10, 100, 100], "status": "readable",
+        "content": "Visible arrow", "gap_reason": "",
+    }
+    narrowed = {**original, "region": [10, 10, 49, 100]}
+    target = {
+        "id": "element-000002", "kind": "dashboard metric",
+        "region": [40, 10, 120, 100], "status": "readable",
+        "content": "Visible metric", "gap_reason": "",
+    }
+    refinement = {
+        "participant": "origin",
+        "intended_element_id": "element-000001",
+        "refined_element_id": "element-000001",
+        "conflicting_point": [50, 50],
+        "previous_element": original,
+        "replacement_element": narrowed,
+    }
+    state["elements"] = [narrowed, target]
+    state["relationships"] = [{
+        "id": "relationship-000001", "kind": "arrow links to metric",
+        "from_id": "element-000001", "to_id": "element-000002",
+        "status": "readable", "description": "The arrow points to the metric.",
+        "gap_reason": "", "binding_method": "coordinate_unique_containment",
+        "origin_point": [25, 50], "target_point": [75, 50],
+        "visual_verification": "supported",
+        "verified_obligation_id": "obligation-000001",
+        "verified_element_id": "element-000001",
+        "legacy_binding_refinements": [refinement],
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000001", "element_id": "element-000001",
+        "status": "resolved", "resolution": "relationship",
+        "relationship_id": "relationship-000001",
+    }]
+
+    event = PROJECTION_INTERVIEW._legacy_overlap_binding_migration(state)
+    PROJECTION_INTERVIEW._apply_legacy_overlap_binding_migration(state, event)
+
+    assert state["elements"][0] == original
+    relationship = state["relationships"][0]
+    assert relationship["binding_method"] == (
+        "coordinate_selected_identity_and_containment"
+    )
+    assert relationship["selected_identity_participants"] == {
+        "origin": "element-000001",
+    }
+    assert relationship["legacy_binding_migration"]["action"] == (
+        "preserve_selected_identity"
+    )
+    assert state["relationship_obligations"][0]["status"] == "resolved"
+
+
+def test_legacy_overlap_migration_restores_bounds_and_reopens_false_gap() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    original = {
+        "id": "element-000001", "kind": "directional arrow",
+        "region": [10, 10, 100, 100], "status": "readable",
+        "content": "Visible arrow", "gap_reason": "",
+    }
+    narrowed = {**original, "region": [51, 10, 100, 100]}
+    target = {
+        "id": "element-000002", "kind": "dashboard metric",
+        "region": [40, 10, 120, 100], "status": "readable",
+        "content": "Visible metric", "gap_reason": "",
+    }
+    state["elements"] = [narrowed, target]
+    state["relationships"] = [{
+        "id": "relationship-000001", "kind": "arrow links to metric",
+        "from_id": None, "to_id": "element-000002", "status": "gap",
+        "description": "", "gap_reason": "Required arrow was not bound.",
+        "binding_method": "coordinate_unique_containment",
+        "binding_issue": {
+            "participant": "relationship", "origin_id": None,
+            "target_id": "element-000002",
+            "required_element_id": "element-000001",
+            "reason": "required_element_not_bound",
+        },
+        "legacy_binding_refinements": [{
+            "participant": "target",
+            "intended_element_id": "element-000002",
+            "refined_element_id": "element-000001",
+            "conflicting_point": [50, 50],
+            "previous_element": original,
+            "replacement_element": narrowed,
+        }],
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000001", "element_id": "element-000001",
+        "status": "resolved", "resolution": "gap",
+        "relationship_id": "relationship-000001",
+    }]
+
+    event = PROJECTION_INTERVIEW._legacy_overlap_binding_migration(state)
+    PROJECTION_INTERVIEW._apply_legacy_overlap_binding_migration(state, event)
+
+    assert state["elements"][0] == original
+    relationship = state["relationships"][0]
+    assert relationship["legacy_binding_migration"]["action"] == (
+        "invalidate_false_gap"
+    )
+    assert relationship["resolution_status"] == "invalidated"
+    assert state["relationship_obligations"][0] == {
+        "id": "obligation-000001", "element_id": "element-000001",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }
+
+
+def test_required_participant_binding_locks_the_obligated_overlapping_element() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["overlap_identity_selection_enabled"] = True
+    state["required_participant_binding_enabled"] = True
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["elements"] = [
+        {
+            "id": "element-000001", "kind": "directional arrow",
+            "region": [100, 100, 200, 200], "status": "readable",
+            "content": "Visible arrow", "gap_reason": "",
+        },
+        {
+            "id": "element-000002", "kind": "dashboard metric",
+            "region": [100, 100, 200, 200], "status": "readable",
+            "content": "Visible metric", "gap_reason": "",
+        },
+    ]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000001", "element_id": "element-000001",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    state["stage"] = "relationship_kind"
+    state["current"] = {}
+
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_kind", "arrow links to metric", contract=12,
+    )
+    assert state["stage"] == "obligation_role"
+    PROJECTION_INTERVIEW._advance(
+        state, "obligation_role", "origin", contract=12,
+    )
+    assert state["current"]["origin_id"] == "element-000001"
+    assert state["stage"] == "obligation_endpoint_x"
+    question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+    parsed, error = PROJECTION_INTERVIEW._parse(question, "99", state)
+    assert parsed is None
+    assert error == (
+        "obligation_endpoint_x: coordinate 99 must be inside obligated "
+        "element-000001 bounds [100, 100, 200, 200]"
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "obligation_endpoint_x", 150, contract=12,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "obligation_endpoint_y", 150, contract=12,
+    )
+    assert state["current"]["origin_point"] == [150, 150]
+    assert state["stage"] == "relationship_target_x"
+    state["current"]["target_x"] = 150
+    PROJECTION_INTERVIEW._bind_relationship_point(
+        state, "target", 150, contract=12,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_binding_resolution", "select_recorded_element",
+        contract=12,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_binding_intended_element", "element-000002",
+        contract=12,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_visual_verdict", "supported", contract=12,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_status", "readable", contract=12,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_description", "The arrow points to the metric.",
+        contract=12,
+    )
+
+    relationship = state["relationships"][0]
+    assert relationship["from_id"] == "element-000001"
+    assert relationship["to_id"] == "element-000002"
+    assert relationship["locked_identity_participants"] == {
+        "origin": "element-000001",
+    }
+    assert relationship["binding_method"] == (
+        "required_identity_and_selected_identity_containment"
+    )
+
+
+def test_visual_endpoint_replacement_cannot_replace_the_locked_participant() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["locked_participant_replacement_blocked_enabled"] = True
+    state["stage"] = "relationship_visual_endpoint_role"
+    state["current"] = {
+        "kind": "annotation arrow",
+        "origin_id": "element-000047",
+        "origin_point": [895, 732],
+        "target_id": "element-000049",
+        "target_point": [796, 729],
+        "locked_identity_participants": {"target": "element-000049"},
+    }
+
+    question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+
+    assert question["choices"] == ["origin"]
+    parsed, error = PROJECTION_INTERVIEW._parse(question, "target", state)
+    assert parsed is None
+    assert error == (
+        "relationship_visual_endpoint_role: choose one of: origin"
+    )
+    with pytest.raises(
+        PROJECTION_INTERVIEW.InterviewError,
+        match="locked-relationship-participant-replacement",
+    ):
+        PROJECTION_INTERVIEW._advance(
+            state, "relationship_visual_endpoint_role", "target", contract=12,
+        )
+
+
+def test_locked_participant_activation_recovers_interrupted_replacement_to_gap() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    original_draft = {
+        "kind": "annotation arrow",
+        "origin_id": "element-000047",
+        "origin_x": 895,
+        "origin_y": 732,
+        "origin_point": [895, 732],
+        "locked_identity_participants": {"target": "element-000049"},
+    }
+    state["relationship_draft"] = dict(original_draft)
+    state["current"] = {
+        "return_stage": "relationship_target_x",
+        "capture_scope": "relationship_endpoint",
+    }
+    state["stage"] = "element_kind"
+    pending = {"id": "element_kind"}
+    proposed = {
+        "kind": "annotation arrow",
+        "required_obligation_id": "obligation-000047",
+        "required_element_id": "element-000049",
+        "origin": {
+            "element_id": "element-000047", "point": [895, 732],
+        },
+        "target": {
+            "element_id": "element-000049", "point": [796, 729],
+        },
+    }
+    history = [{
+        "event": "question_asked", "sequence": 4020,
+        "question": {
+            "id": "relationship_visual_verdict",
+            "proposed_relationship": proposed,
+        },
+    }, {
+        "event": "answer_recorded", "sequence": 4021,
+        "question_id": "relationship_visual_verdict",
+        "accepted": True, "parsed": "not_supported",
+    }, {
+        "event": "answer_recorded", "sequence": 4023,
+        "question_id": "relationship_visual_resolution",
+        "accepted": True, "parsed": "record_visible_endpoint",
+    }, {
+        "event": "answer_recorded", "sequence": 4025,
+        "question_id": "relationship_visual_endpoint_role",
+        "accepted": True, "parsed": "target",
+    }]
+
+    event = PROJECTION_INTERVIEW._locked_participant_replacement_activation(
+        state, pending, history, contract=12,
+    )
+    before = json.loads(json.dumps(event))
+    PROJECTION_INTERVIEW._apply_locked_participant_replacement_activation(
+        state, event,
+    )
+
+    assert event == before
+    assert state["locked_participant_replacement_blocked_enabled"] is True
+    assert state["relationship_draft"] is None
+    assert state["stage"] == "relationship_visual_gap_reason"
+    assert state["current"] == {
+        **original_draft,
+        "target_id": "element-000049",
+        "target_x": 796,
+        "target_y": 729,
+        "target_point": [796, 729],
+        "visual_verification": "not_supported",
+        "verification_issue": {
+            "origin_id": "element-000047",
+            "target_id": "element-000049",
+            "required_element_id": "element-000049",
+            "reason": "visible_connection_not_supported",
+        },
+    }
+
+
+def test_locked_participant_activation_does_not_wait_behind_a_pending_question(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["failed_participant_recovery_enabled"] = True
+    state["stage"] = "obligation_resolution"
+    pending = {"id": "obligation_resolution"}
+    appended: list[tuple[str, dict[str, object]]] = []
+
+    monkeypatch.setattr(
+        PROJECTION_INTERVIEW, "_read_journal", lambda _path: appended,
+    )
+
+    def replay(_entries, *, purpose, contract):
+        replayed = json.loads(json.dumps(state))
+        if appended:
+            replayed["locked_participant_replacement_blocked_enabled"] = True
+        return replayed, pending, False
+
+    monkeypatch.setattr(PROJECTION_INTERVIEW, "_replay", replay)
+    monkeypatch.setattr(
+        PROJECTION_INTERVIEW,
+        "_append",
+        lambda _path, event, payload: appended.append((event, payload)),
+    )
+
+    resumed, resumed_pending, completed = PROJECTION_INTERVIEW.prepare_resume(
+        tmp_path / "attempt", purpose=REAL_PURPOSE, contract=12,
+    )
+
+    assert [event for event, _payload in appended] == [
+        "locked_participant_replacement_blocked_enabled",
+    ]
+    assert resumed["locked_participant_replacement_blocked_enabled"] is True
+    assert resumed_pending == pending
+    assert completed is False
+
+
+def test_required_participant_migration_reopens_an_unbound_required_gap() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["relationships"] = [{
+        "id": "relationship-000001", "kind": "arrow links to metric",
+        "from_id": "element-000003", "to_id": "element-000002",
+        "status": "gap", "description": "",
+        "gap_reason": "The required arrow was not bound.",
+        "binding_method": "coordinate_unique_containment",
+        "binding_issue": {
+            "participant": "relationship", "origin_id": "element-000003",
+            "target_id": "element-000002",
+            "required_element_id": "element-000001",
+            "reason": "required_element_not_bound",
+        },
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000001", "element_id": "element-000001",
+        "status": "resolved", "resolution": "gap",
+        "relationship_id": "relationship-000001",
+    }]
+
+    event = PROJECTION_INTERVIEW._required_participant_gap_migration(state)
+    PROJECTION_INTERVIEW._apply_required_participant_gap_migration(state, event)
+
+    assert state["relationships"][0]["resolution_status"] == "invalidated"
+    assert state["relationships"][0]["required_participant_migration"] == {
+        "action": "reopen_required_participant"
+    }
+    assert state["relationship_obligations"][0]["status"] == "pending"
+
+
+def test_projection_attachment_selects_obligation_after_resume_preparation(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    work = tmp_path / "intake"
+    attempt = work / "projection-interviews" / "attempt-000001"
+    source = work / "sources" / "source-000003"
+    source.parent.mkdir(parents=True)
+    source.write_bytes(b"source")
+    (source.parent / "source-000002.txt").write_text(
+        REAL_PURPOSE, encoding="utf-8",
+    )
+    prepared = PROJECTION_INTERVIEW._initial_state(contract=12)
+    prepared["scan_region_index"] = len(prepared["scan_regions"])
+    prepared["relationship_obligations"] = [
+        {
+            "id": "obligation-000022", "element_id": "element-000022",
+            "status": "pending", "resolution": None, "relationship_id": None,
+        },
+        {
+            "id": "obligation-000023", "element_id": "element-000023",
+            "status": "pending", "resolution": None, "relationship_id": None,
+        },
+    ]
+    calls: list[str] = []
+
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "enable_endpoint_crop_verification",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "enable_existing_participant_crop_verification",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "enable_contextual_endpoint_verification",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "enable_endpoint_context_evidence",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "enable_negative_context_replacement",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "enable_rejected_endpoint_reuse_block",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "enable_rejected_endpoint_collision_exclusion",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "prepare_endpoint_evidence",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "prepare_region_evidence",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "prepare_resume",
+        lambda *args, **kwargs: (
+            calls.append("prepared") or prepared, None, False,
+        ),
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "_read_journal",
+        lambda *_args, **_kwargs: pytest.fail(
+            "attachment selection replayed stale pre-migration state"
+        ),
+    )
+
+    attachment, region_id, obligation_id, endpoint_sha256, error = (
+        START_INTAKE._projection_model_attachment(
+            work,
+            source_path=source,
+            source_sha256="a" * 64,
+            attempt_dir=attempt,
+            contract=12,
+        )
+    )
+
+    assert calls == ["prepared"]
+    assert attachment == source
+    assert region_id is None
+    assert obligation_id == "obligation-000022"
+    assert endpoint_sha256 is None
+    assert error is None
+
+
+def test_coordinate_binding_selects_an_overlapping_identity_without_changing_bounds(
+    tmp_path: Path,
+) -> None:
+    source = tmp_path / "source.png"
+    Image.new("RGB", (40, 40), "white").save(source, format="PNG")
+    attempt = tmp_path / "attempt"
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    prompts: list[str] = []
+    answers = iter([
+        "test-model", "pytest",
+        "yes", "annotation", "owned_by_active_core",
+        "10", "10", "100", "100", "readable",
+        "Formula description", "yes",
+        "yes", "broad metric card", "owned_by_active_core",
+        "50", "50", "200", "200",
+        "distinct_unit", "readable", "Revenue card", "no",
+        "yes", "dashboard field", "owned_by_active_core",
+        "220", "10", "320", "100", "readable",
+        "Conversion rate", "no",
+        "no", *(["no"] * 15),
+        "use_recorded_endpoint", "visible connector", "origin",
+        "75", "75", "75", "75",
+        "select_recorded_element", "element-000002",
+        "supported", "readable",
+        "The formula description applies to Conversion rate.",
+    ])
+
+    for _ in range(16):
+        PROJECTION_INTERVIEW.prepare_region_evidence(
+            attempt,
+            source_path=source,
+            source_sha256=source_sha256,
+            purpose=REAL_PURPOSE,
+            contract=12,
+        )
+        projection = PROJECTION_INTERVIEW.run(
+            attempt,
+            source_sha256=source_sha256,
+            purpose=REAL_PURPOSE,
+            contract=12,
+            input_fn=lambda prompt: (prompts.append(prompt), next(answers))[1],
+            output_fn=lambda _message: None,
+            stop_after_relationship=True,
+        )
+    projection = PROJECTION_INTERVIEW.run(
+        attempt,
+        source_sha256=source_sha256,
+        purpose=REAL_PURPOSE,
+        contract=12,
+        input_fn=lambda prompt: (prompts.append(prompt), next(answers))[1],
+        output_fn=lambda _message: None,
+        stop_after_relationship=True,
+    )
+
+    assert projection["elements"][0]["region"] == [10, 10, 100, 100]
+    assert projection["elements"][1]["region"] == [50, 50, 200, 200]
+    assert projection["relationships"][0]["from_id"] == "element-000001"
+    assert projection["relationships"][0]["to_id"] == "element-000002"
+    assert projection["relationships"][0]["binding_method"] == (
+        "required_identity_and_selected_identity_containment"
+    )
+    entries = [
+        json.loads(line)
+        for line in (attempt / "interview.jsonl").read_text().splitlines()
+    ]
+    activation = next(
+        entry for entry in entries
+        if entry["event"] == "overlap_identity_selection_enabled"
+    )
+    selection = next(
+        entry for entry in entries
+        if entry["event"] == "answer_recorded"
+        and entry["question_id"] == "relationship_binding_resolution"
+    )
+    assert activation["sequence"] < selection["sequence"]
+    selection_prompt = next(
+        prompt for prompt in prompts
+        if "Which listed recorded element is the exact visible participant" in prompt
+    )
+    assert "Exact overlapping recorded element choices:" in selection_prompt
+    assert '"id": "element-000001"' in selection_prompt
+    assert '"id": "element-000002"' in selection_prompt
+    assert not any(
+        entry["event"] == "element_spatial_identity_refined"
+        for entry in entries
+    )
+
+
+def test_coordinate_binding_selects_identities_with_identical_complete_bounds() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["overlap_identity_selection_enabled"] = True
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["elements"] = [
+        {
+            "id": "element-000001", "kind": "directional arrow",
+            "region": [100, 100, 200, 200], "status": "readable",
+            "content": "Visible arrow", "gap_reason": "",
+        },
+        {
+            "id": "element-000002", "kind": "dashboard metric",
+            "region": [100, 100, 200, 200], "status": "readable",
+            "content": "Visible metric", "gap_reason": "",
+        },
+    ]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000001", "element_id": "element-000001",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    state["stage"] = "relationship_binding_resolution"
+    state["current"] = {
+        "kind": "arrow links to metric",
+        "origin_x": 150,
+        "origin_y": 150,
+        "origin_point": [150, 150],
+        "binding_issue": {
+            "participant": "origin",
+            "point": [150, 150],
+            "matching_element_ids": ["element-000001", "element-000002"],
+            "reason": "no_unique_recorded_element",
+        },
+    }
+
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_binding_resolution", "select_recorded_element",
+        contract=12,
+    )
+    question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+    parsed, error = PROJECTION_INTERVIEW._parse(
+        question, "element-999999", state,
+    )
+    assert parsed is None
+    assert error == (
+        "relationship_binding_intended_element: choose one of: "
+        "element-000001, element-000002"
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_binding_intended_element", "element-000001",
+        contract=12,
+    )
+    state["current"]["target_x"] = 150
+    PROJECTION_INTERVIEW._bind_relationship_point(
+        state, "target", 150, contract=12,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_binding_resolution", "select_recorded_element",
+        contract=12,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_binding_intended_element", "element-000002",
+        contract=12,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_visual_verdict", "supported", contract=12,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_status", "readable", contract=12,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_description", "The arrow points to the metric.",
+        contract=12,
+    )
+
+    assert [item["region"] for item in state["elements"]] == [
+        [100, 100, 200, 200], [100, 100, 200, 200],
+    ]
+    assert state["relationships"][0]["from_id"] == "element-000001"
+    assert state["relationships"][0]["to_id"] == "element-000002"
+    assert state["relationship_obligations"][0]["resolution"] == "relationship"
+
+
+def test_spatial_identity_choice_requires_append_only_capability_activation() -> None:
+    for contract in (12, PROJECTION_INTERVIEW.CONTRACT):
+        state = PROJECTION_INTERVIEW._initial_state(contract=contract)
+        state["stage"] = "relationship_binding_resolution"
+        state["current"] = {
+            "binding_issue": {
+                "participant": "origin",
+                "point": [75, 75],
+                "matching_element_ids": ["element-000001", "element-000002"],
+                "reason": "no_unique_recorded_element",
+            },
+        }
+
+        historical = PROJECTION_INTERVIEW._question(
+            state,
+            purpose=REAL_PURPOSE,
+            contract=contract,
+        )
+        assert historical["choices"] == [
+            "retry_coordinates", "record_visible_endpoint", "record_endpoint_gap",
+        ]
+
+        state["spatial_identity_refinement_enabled"] = True
+        activated = PROJECTION_INTERVIEW._question(
+            state,
+            purpose=REAL_PURPOSE,
+            contract=contract,
+        )
+        assert activated["choices"] == [
+            "retry_coordinates", "record_visible_endpoint",
+            "refine_spatial_identity", "record_endpoint_gap",
+        ]
+
+        state["overlap_identity_selection_enabled"] = True
+        selected = PROJECTION_INTERVIEW._question(
+            state,
+            purpose=REAL_PURPOSE,
+            contract=contract,
+        )
+        assert selected["choices"] == [
+            "retry_coordinates", "record_visible_endpoint",
+            "select_recorded_element", "record_endpoint_gap",
+        ]
+
+
+def test_relationship_prompt_identifies_required_element_from_preserved_evidence() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "obligation_resolution"
+    state["elements"] = [{
+        "id": "element-000008",
+        "kind": "dashboard metric",
+        "region": [424, 233, 533, 250],
+        "status": "readable",
+        "content": "250 non-package (69%)",
+        "gap_reason": "",
+        "capture_scope": "region-r01-c02",
+        "scan_region_id": "region-r01-c02",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000008",
+        "element_id": "element-000008",
+        "status": "pending",
+        "resolution": None,
+        "relationship_id": None,
+    }]
+
+    question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+    prompt = PROJECTION_INTERVIEW._prompt(question, state)
+
+    assert '"id": "element-000008"' in prompt
+    assert '"kind": "dashboard metric"' in prompt
+    assert '"normalized_bounds": [424, 233, 533, 250]' in prompt
+    assert '"content": "250 non-package (69%)"' in prompt
+    assert '"status": "readable"' in prompt
+    assert "Required relationship for element:" not in prompt
+
+
+def test_relationship_endpoint_capture_prompt_distinguishes_other_participant() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "element_content"
+    state["elements"] = [{
+        "id": "element-000027", "kind": "annotation", "region": [312, 265, 413, 308],
+        "status": "readable", "content": "Sum of Column X divided by Column W",
+        "gap_reason": "", "capture_scope": "region-r02-c02",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000027", "element_id": "element-000027",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    state["current"] = {
+        "capture_scope": "relationship_endpoint",
+        "return_stage": "relationship_target_x",
+        "kind": "metric", "left": 355, "top": 318, "right": 425,
+        "bottom": 365, "status": "readable",
+    }
+
+    question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+    prompt = PROJECTION_INTERVIEW._prompt(question, state)
+
+    assert "record the other visible endpoint" in prompt
+    assert "Do not copy or recapture the already-recorded participant" in prompt
+    assert "Select one precise visible endpoint" in prompt
+    assert "collect a separate context window" in prompt
+
+
+def test_region_prompt_does_not_receive_pending_relationship_evidence() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["elements"] = [{
+        "id": "element-000001",
+        "kind": "annotation callout",
+        "region": [10, 10, 100, 100],
+        "status": "readable",
+        "content": "Visible description",
+        "gap_reason": "",
+        "capture_scope": "region-r01-c01",
+        "scan_region_id": "region-r01-c01",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000001",
+        "element_id": "element-000001",
+        "status": "pending",
+        "resolution": None,
+        "relationship_id": None,
+    }]
+    question = PROJECTION_INTERVIEW._field(
+        "region_element_more", "Another element?", "choice",
+        choices=["yes", "no"],
+    )
+
+    prompt = PROJECTION_INTERVIEW._prompt(question, state)
+
+    assert "Required relationship element evidence:" not in prompt
+
+
+def test_relationship_reuse_decision_receives_complete_ordered_element_index() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "obligation_resolution"
+    state["elements"] = [
+        {
+            "id": "element-000011",
+            "kind": "annotation callout",
+            "region": [511, 1, 709, 49],
+            "status": "readable",
+            "content": "Clicking refresh updates the displayed numbers.",
+            "gap_reason": "",
+            "capture_scope": "region-r01-c03",
+            "scan_region_id": "region-r01-c03",
+        },
+        {
+            "id": "element-000057",
+            "kind": "button",
+            "region": [460, 64, 530, 92],
+            "status": "readable",
+            "content": "Refresh",
+            "gap_reason": "",
+            "capture_scope": "relationship_endpoint",
+        },
+        {
+            "id": "element-000012",
+            "kind": "directional arrow",
+            "region": [528, 48, 568, 66],
+            "status": "gap",
+            "content": "",
+            "gap_reason": "Arrow endpoint is visually unclear.",
+            "capture_scope": "region-r01-c03",
+            "scan_region_id": "region-r01-c03",
+        },
+    ]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000011",
+        "element_id": "element-000011",
+        "status": "pending",
+        "resolution": None,
+        "relationship_id": None,
+    }]
+
+    prompt = PROJECTION_INTERVIEW._prompt(
+        PROJECTION_INTERVIEW._question(
+            state, purpose=REAL_PURPOSE, contract=12,
+        ),
+        state,
+    )
+
+    index = prompt.split(
+        "Complete index of other recorded relationship endpoint candidates: ", 1,
+    )[1].split("\n", 1)[0]
+    candidates = json.loads(index)
+    assert [item["id"] for item in candidates] == [
+        "element-000012", "element-000057",
+    ]
+    assert candidates[0]["gap_reason"] == "Arrow endpoint is visually unclear."
+    assert candidates[1] == {
+        "content": "Refresh",
+        "gap_reason": "",
+        "id": "element-000057",
+        "kind": "button",
+        "normalized_bounds": [460, 64, 530, 92],
+        "status": "readable",
+    }
+    assert "element-000011" not in index
+
+
 def test_coordinate_binding_can_capture_a_missing_visible_endpoint(
     tmp_path: Path,
 ) -> None:
@@ -1543,7 +2645,7 @@ def test_visual_verdict_preserves_unreadable_connection_as_gap(
     )
 
 
-def test_supported_pair_resolves_only_the_current_relationship_obligation(
+def test_supported_pair_resolves_both_participant_obligations_but_not_unrelated(
     tmp_path: Path,
 ) -> None:
     answers = iter([
@@ -1552,14 +2654,12 @@ def test_supported_pair_resolves_only_the_current_relationship_obligation(
         "Formula description", "yes",
         "yes", "dashboard field", "120", "10", "220", "100", "readable",
         "Conversion rate", "yes",
+        "yes", "unrelated annotation", "10", "120", "100", "200", "readable",
+        "A separate description", "yes",
         "no", *(["no"] * 15),
         "use_recorded_endpoint", "visible connector",
         "10", "10", "120", "10", "supported", "readable",
         "The annotation applies to the field.",
-        "use_recorded_endpoint", "visible connector",
-        "120", "10", "10", "10", "supported", "readable",
-        "The field is explained by the annotation.",
-        "no",
     ])
 
     projection = PROJECTION_INTERVIEW.run(
@@ -1569,14 +2669,34 @@ def test_supported_pair_resolves_only_the_current_relationship_obligation(
         contract=7,
         input_fn=lambda _prompt: next(answers),
         output_fn=lambda _message: None,
+        stop_after_relationship=True,
     )
 
-    assert [item["relationship_id"] for item in projection["relationship_obligations"]] == [
-        "relationship-000001", "relationship-000002",
+    assert [
+        (item["status"], item["relationship_id"])
+        for item in projection["relationship_obligations"]
+    ] == [
+        ("resolved", "relationship-000001"),
+        ("resolved", "relationship-000001"),
+        ("pending", None),
     ]
     assert [item["verified_obligation_id"] for item in projection["relationships"]] == [
-        "obligation-000001", "obligation-000002",
+        "obligation-000001",
     ]
+    entries = [
+        json.loads(line)
+        for line in (tmp_path / "attempt" / "interview.jsonl").read_text().splitlines()
+    ]
+    reconciliation = [
+        entry
+        for entry in entries
+        if entry["event"] == "relationship_obligations_reconciled"
+    ]
+    assert [{
+        "obligation_id": "obligation-000002",
+        "element_id": "element-000002",
+    }] == reconciliation[0]["covered_obligations"]
+    assert reconciliation[0]["relationship_id"] == "relationship-000001"
 
 
 def test_visual_verdict_is_code_constrained_to_three_values(tmp_path: Path) -> None:
@@ -2588,20 +3708,23 @@ def test_projection_request_binds_one_immutable_crop_and_advances_one_region(
 
     assert first_crop.name == "region-r01-c01.png"
     assert Image.open(first_crop).size == (12, 12)
-    assert first_entries[-1]["event"] == "region_evidence_bound"
-    assert first_entries[-1]["region_id"] == "region-r01-c01"
-    assert first_entries[-1]["core_normalized_bounds"] == [0, 0, 250, 250]
-    assert first_entries[-1]["evidence_normalized_bounds"] == [0, 0, 300, 300]
-    assert first_entries[-1]["core_pixel_bounds"] == [0, 0, 10, 10]
-    assert first_entries[-1]["pixel_bounds"] == [0, 0, 12, 12]
-    assert first_entries[-1]["ownership_core_in_crop_pixels"] == [0, 0, 10, 10]
-    assert first_entries[-1]["guide_path"] == (
+    first_region_event = next(
+        entry for entry in first_entries
+        if entry["event"] == "region_evidence_bound"
+    )
+    assert first_region_event["region_id"] == "region-r01-c01"
+    assert first_region_event["core_normalized_bounds"] == [0, 0, 250, 250]
+    assert first_region_event["evidence_normalized_bounds"] == [0, 0, 300, 300]
+    assert first_region_event["core_pixel_bounds"] == [0, 0, 10, 10]
+    assert first_region_event["pixel_bounds"] == [0, 0, 12, 12]
+    assert first_region_event["ownership_core_in_crop_pixels"] == [0, 0, 10, 10]
+    assert first_region_event["guide_path"] == (
         "region-evidence/region-r01-c01.ownership.png"
     )
-    assert first_entries[-1]["guide_sha256"] == START_INTAKE._digest_bytes(
+    assert first_region_event["guide_sha256"] == START_INTAKE._digest_bytes(
         first_guide.read_bytes()
     )
-    assert first_entries[-1]["crop_sha256"] == START_INTAKE._digest_bytes(
+    assert first_region_event["crop_sha256"] == START_INTAKE._digest_bytes(
         first_crop.read_bytes()
     )
 
@@ -2629,7 +3752,7 @@ def test_projection_request_binds_one_immutable_crop_and_advances_one_region(
     )
     assert outcome["region_id"] == "region-r01-c01"
     assert outcome["status"] == "scanned"
-    assert outcome["crop_sha256"] == first_entries[-1]["crop_sha256"]
+    assert outcome["crop_sha256"] == first_region_event["crop_sha256"]
 
 
 def test_projection_defers_context_only_candidate_without_element_or_obligation(
@@ -2744,6 +3867,76 @@ def test_projection_does_not_offer_context_only_without_visible_context() -> Non
     assert question is not None
     assert question["choices"] == ["owned_by_active_core"]
     assert "no surrounding context" in str(question["prompt"])
+
+
+def test_projection_replays_contract12_ownership_question_after_contract13_narrowing(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=13)
+    state["scan_region_index"] = 15
+    region = PROJECTION_INTERVIEW._active_scan_region(state)
+    assert region is not None
+    region["evidence"] = {
+        "core_normalized_bounds": [750, 750, 1000, 1000],
+        "evidence_normalized_bounds": [750, 750, 1000, 1000],
+    }
+    state["stage"] = "element_ownership"
+    state["current"] = {
+        "kind": "description annotation box",
+        "scan_region_id": region["id"],
+    }
+    legacy_question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+    monkeypatch.setattr(
+        PROJECTION_INTERVIEW,
+        "_initial_state",
+        lambda *, contract: state,
+    )
+
+    replayed, pending, completed = PROJECTION_INTERVIEW._replay(
+        [
+            {
+                "event": "question_asked",
+                "question": legacy_question,
+                "sequence": 1317,
+            },
+            {
+                "event": "answer_recorded",
+                "question_id": "element_ownership",
+                "raw": "context_only",
+                "parsed": "context_only",
+                "accepted": True,
+                "error": None,
+                "sequence": 1318,
+            },
+        ],
+        purpose=REAL_PURPOSE,
+        contract=13,
+    )
+
+    assert replayed["stage"] == "context_anchor_x"
+    assert pending is None
+    assert completed is False
+
+
+def test_projection_replays_supported_older_feature_activation_contract() -> None:
+    state, pending, completed = PROJECTION_INTERVIEW._replay(
+        [
+            {
+                "event": "spatial_identity_refinement_enabled",
+                "feature": "append_only_spatial_identity_refinement_v1",
+                "contract": 12,
+                "sequence": 1677,
+            },
+        ],
+        purpose=REAL_PURPOSE,
+        contract=13,
+    )
+
+    assert state["spatial_identity_refinement_enabled"] is True
+    assert pending is None
+    assert completed is False
 
 
 def test_projection_reclassifies_preserved_impossible_context_answer() -> None:
@@ -3114,6 +4307,79 @@ def test_projection_supersedes_a_contained_fragment_without_duplicate_identity(
     assert supersession["trigger_candidate"]["region"] == [56, 105, 111, 113]
 
 
+def test_relationship_endpoint_supersession_restores_the_captured_relationship_draft() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(
+        contract=PROJECTION_INTERVIEW.CONTRACT,
+    )
+    origin = {
+        "id": "element-000001",
+        "kind": "annotation callout linked to a dashboard metric value",
+        "region": [32, 44, 186, 139],
+        "status": "readable",
+        "content": "Column:AF points to $8,100",
+        "gap_reason": "",
+        "capture_scope": "region-r01-c01",
+        "scan_region_id": "region-r01-c01",
+    }
+    previous_target = {
+        "id": "element-000053",
+        "kind": "metric value",
+        "region": [194, 120, 268, 151],
+        "status": "readable",
+        "content": "NET REVENUE TODAY displays $8,100",
+        "gap_reason": "",
+        "capture_scope": "relationship_endpoint",
+    }
+    replacement_target = {
+        **previous_target,
+        "region": [184, 98, 571, 175],
+        "content": "NET REVENUE TODAY displays $8,100 and Operator Net",
+    }
+    event = {
+        "element_id": "element-000053",
+        "reason": "same_visible_unit",
+        "previous_element": previous_target,
+        "trigger_candidate": {
+            "kind": "dashboard metric card",
+            "region": [184, 98, 571, 175],
+        },
+        "replacement_element": replacement_target,
+    }
+    state["elements"] = [origin, previous_target]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000001",
+        "element_id": "element-000001",
+        "status": "pending",
+        "resolution": None,
+        "relationship_id": None,
+    }]
+    state["relationship_draft"] = {
+        "kind": "annotation callout arrow linking a data-source label to a dashboard metric value",
+        "origin_x": 100,
+        "origin_y": 65,
+        "origin_id": "element-000001",
+        "origin_point": [100, 65],
+    }
+    state["element_supersession_pending"] = {
+        "event": event,
+        "return_stage": "relationship_target_x",
+    }
+
+    PROJECTION_INTERVIEW._apply_element_supersession(state, event)
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_target_x", 300,
+        contract=PROJECTION_INTERVIEW.CONTRACT,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_target_y", 105,
+        contract=PROJECTION_INTERVIEW.CONTRACT,
+    )
+
+    assert state["current"]["origin_id"] == "element-000001"
+    assert state["current"]["target_id"] == "element-000053"
+    assert state["stage"] == "relationship_visual_verdict"
+
+
 def test_projection_keeps_spatially_nested_distinct_units_separate(
     tmp_path: Path,
 ) -> None:
@@ -3394,14 +4660,14 @@ def test_valid_projection_attempt_creates_immutable_unassessed_version(tmp_path:
     assert accepted == resumed
     assert accepted["status"] == "ready_for_projection_assessment"
     assert accepted["projection"]["coverage"] == "unassessed"
-    assert accepted["projection"]["element_count"] == 2
+    assert accepted["projection"]["element_count"] == 3
     assert accepted["projection"]["relationship_count"] == 1
     assert accepted["projection"]["gap_count"] == 1
     assert before == after
     projection = json.loads((work / accepted["projection"]["path"]).read_text())
     assert projection["reader"] == {"model": "test-model", "harness": "pytest"}
     assert [item["id"] for item in projection["elements"]] == [
-        "element-000001", "element-000002"
+            "element-000001", "element-000002", "element-000003"
     ]
     assert projection["relationships"][0]["from_id"] == "element-000001"
     assert projection["relationships"][0]["to_id"] == "element-000002"
@@ -3479,8 +4745,8 @@ def test_two_page_pdf_projects_every_visible_page_in_fixed_order(tmp_path: Path)
     assert [item["page"] for item in manifest["pages"]] == [1, 2]
     assert [item["page"] for item in manifest["gap_inventory"]] == [1, 2]
     assert [item["item_id"] for item in manifest["gap_inventory"]] == [
-        "element-000002",
-        "element-000002",
+        "element-000003",
+        "element-000003",
     ]
     assert page_contents == ["Page one description", "Page two note"]
     assert [entry["event"] for entry in ledger[-4:]] == [
@@ -3500,8 +4766,8 @@ def test_two_page_pdf_projects_every_visible_page_in_fixed_order(tmp_path: Path)
     state = json.loads((work / "intake-state.json").read_text())
     assert [item["page"] for item in state["gap_question_round"]["gaps"]] == [1, 2]
     assert [item["item_id"] for item in state["gap_question_round"]["gaps"]] == [
-        "element-000002",
-        "element-000002",
+        "element-000003",
+        "element-000003",
     ]
     assert state["gap_question_round"]["request_ledger_sequence"] == 12
     attachments, command = CODEX_RUNNER.load_request(work)
@@ -3538,7 +4804,7 @@ def test_two_page_pdf_projects_every_visible_page_in_fixed_order(tmp_path: Path)
     assert waiting["question_count"] == 2
     assert waiting["answered_question_count"] == 0
     assert waiting["question"]["answers_gap"]["page"] == 1
-    assert waiting["question"]["answers_gap"]["item_id"] == "element-000002"
+    assert waiting["question"]["answers_gap"]["item_id"] == "element-000003"
     assert "questions" not in waiting
     state_path = work / "intake-state.json"
     changed = json.loads(state_path.read_text())
@@ -3798,7 +5064,7 @@ def test_supported_correction_replaces_final_endpoint_and_preserves_all_prior_ar
     assert relationship["correction_outcome"]["independent_visual_verification"]["verdict"] == (
         "supported"
     )
-    assert accepted["projection"]["element_count"] == 3
+    assert accepted["projection"]["element_count"] == 4
     assert accepted["projection"]["gap_count"] == 1
     ledger = [json.loads(line) for line in (work / "ledger.jsonl").read_text().splitlines()]
     assert ledger[-2]["correction_result_sha256"]
@@ -3892,6 +5158,89 @@ def test_cli_runs_the_same_typed_projection_interview(tmp_path: Path) -> None:
     reused_result = json.loads(reused.stdout)
     assert reused_result["stopped"] == "projection region invocation expired"
     assert "region-r01-c01" in reused_result["why"]
+
+
+def test_cli_binds_and_stops_after_one_relationship_obligation(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    waiting = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True,
+    )
+    answers = iter(_projection_answers(
+        contract=PROJECTION_INTERVIEW.CONTRACT,
+        second_relationship_obligation=True,
+        third_relationship_obligation=True,
+    ))
+
+    for _ in range(16):
+        waiting = START_INTAKE.run_first_projection_interview(
+            work,
+            input_fn=lambda _prompt: next(answers),
+            output_fn=lambda _message: None,
+            single_region=True,
+        )
+
+    assert waiting["status"] == "waiting_for_model"
+    attachment, command = CODEX_RUNNER.load_request(work)
+    assert isinstance(attachment, Path)
+    assert attachment.name.startswith(
+        "element-000001-required-recorded-participant-"
+    )
+    assert attachment.suffix == ".png"
+    assert command[-5] == "--projection-obligation-id"
+    assert command[-4] == "obligation-000001"
+    assert command[-3] == "--projection-endpoint-evidence-sha256"
+
+    verified = subprocess.run(
+        command,
+        input=next(answers) + "\n",
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+    assert verified.returncode == 2
+    verification_result = json.loads(verified.stdout)
+    assert verification_result["stopped"] == (
+        "projection_endpoint_verification_step_complete"
+    )
+    attachment, command = CODEX_RUNNER.load_request(work)
+    assert isinstance(attachment, Path)
+    assert attachment.name == "source-000003"
+    assert command[-3:] == [
+        "--projection-obligation-id", "obligation-000001",
+        "--run-projection-interview",
+    ]
+
+    completed = subprocess.run(
+        command,
+        input="\n".join(list(answers)) + "\n",
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert completed.returncode == 2
+    result = json.loads(completed.stdout)
+    assert result["stopped"] == "projection_relationship_step_complete"
+    assert result["completed_obligation_id"] == "obligation-000001"
+    journal = (
+        work / "projection-interviews" / "attempt-000001" / "interview.jsonl"
+    )
+    assert CODEX_RUNNER._projection_region_outcome_count(journal) == 16
+    assert CODEX_RUNNER._projection_relationship_outcome_count(journal) == 1
+    assert not journal.with_name("projection.json").exists()
+
+    next_attachment, next_command = CODEX_RUNNER.load_request(work)
+    assert isinstance(next_attachment, Path)
+    assert next_attachment.name.startswith(
+        "element-000004-required-recorded-participant-"
+    )
+    assert next_attachment.suffix == ".png"
+    assert next_command[-5] == "--projection-obligation-id"
+    assert next_command[-4] == "obligation-000003"
+    assert next_command[-3] == "--projection-endpoint-evidence-sha256"
 
 
 def test_changed_projection_version_fails_closed(tmp_path: Path) -> None:
@@ -4115,13 +5464,18 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
         "10", "20", "100", "120", "readable",
         "A readable description", "yes",
         "yes", "visible-target", "owned_by_active_core",
-        "120", "20", "220", "120", "gap",
-        "The first target is obscured.", "no",
-        "yes", "another-visible-target", "owned_by_active_core",
+        "120", "20", "220", "120", "readable",
+        "A readable target", "no",
+        "yes", "first-obscured-target", "owned_by_active_core",
         "10", "130", "100", "220", "gap",
+        "The first target is obscured.", "no",
+        "yes", "second-obscured-target", "owned_by_active_core",
+        "120", "130", "220", "220", "gap",
         "The second target is obscured.", "no",
         "no", *(["no"] * 15),
-        "use_recorded_endpoint", "visually-connected-to", "10", "20", "120", "20",
+        "contains_claimed_content",
+        "use_recorded_endpoint", "visually-connected-to", "origin",
+        "10", "20", "120", "20",
         "supported", "readable", "The description connects to the first target.", "no",
     ])
     START_INTAKE.run_first_projection_interview(
@@ -4170,7 +5524,7 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     assert waiting["stopped"] == "awaiting_gap_answers"
     assert waiting["answered_question_count"] == 0
     assert waiting["question_count"] == 2
-    assert waiting["question"]["answers_gap"]["id"] == "element-000002"
+    assert waiting["question"]["answers_gap"]["id"] == "element-000003"
     assert "questions" not in waiting
     ledger_before_operator_boundary = (work / "ledger.jsonl").read_bytes()
     operator_boundary = START_INTAKE.run_clarification_boundary(work)
@@ -4179,7 +5533,7 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     assert (work / "ledger.jsonl").read_bytes() == ledger_before_operator_boundary
     state = json.loads((work / "intake-state.json").read_text())
     assert [item["answers_gap"]["id"] for item in state["questions"]] == [
-        "element-000002", "element-000003",
+        "element-000003", "element-000004",
     ]
     assert [item["id"] for item in state["questions"]] == [
         "gap-clarification-answer-000001",
@@ -4202,7 +5556,7 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     assert second_question["status"] == "needs_operator"
     assert second_question["answered_question_count"] == 1
     assert second_question["question_count"] == 2
-    assert second_question["question"]["answers_gap"]["id"] == "element-000003"
+    assert second_question["question"]["answers_gap"]["id"] == "element-000004"
     assert "questions" not in second_question
     assert (work / "sources" / "source-000004.txt").read_text() == first_answer_text
     assert (work / "projections" / "source-000004-v1.txt").read_text() == first_answer_text
@@ -4235,9 +5589,9 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
         "operator_question_round_answered",
     ]
     assert ledger[-4]["source"]["answers_question"] == "gap-clarification-answer-000001"
-    assert ledger[-4]["source"]["answers_gap"]["id"] == "element-000002"
+    assert ledger[-4]["source"]["answers_gap"]["id"] == "element-000003"
     assert ledger[-2]["source"]["answers_question"] == "gap-clarification-answer-000002"
-    assert ledger[-2]["source"]["answers_gap"]["id"] == "element-000003"
+    assert ledger[-2]["source"]["answers_gap"]["id"] == "element-000004"
 
     assessment_requested = START_INTAKE.run_clarification_boundary(work)
     assessment_attachment, assessment_command = CODEX_RUNNER.load_request(work)
@@ -4279,7 +5633,7 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
     assert assessed["continuation"]["assessment_round"] == 1
     assert assessed["continuation"]["next_round"] == 2
     assert [item["id"] for item in assessed["continuation"]["gaps"]] == [
-        "element-000002", "element-000003",
+        "element-000003", "element-000004",
     ]
     assert (work / "ledger.jsonl").read_bytes() == ledger_after_assessment
     assert (work / "intake-state.json").read_bytes() == state_after_assessment
@@ -4287,7 +5641,7 @@ def test_all_known_gaps_become_one_operator_question_round_without_overwriting(
         "does_not_resolve_gap", "does_not_resolve_gap",
     ]
     assert [item["gap"]["id"] for item in assessed["assessments"]] == [
-        "element-000002", "element-000003",
+        "element-000003", "element-000004",
     ]
     assert original_projection.read_bytes() == original_projection_before
     ledger_before_reassessment = (work / "ledger.jsonl").read_bytes()
@@ -4868,7 +6222,7 @@ def test_projected_additional_image_is_assessed_against_its_exact_original_gap(
     assert assessed["assessment"]["evidence"][0]["collection"] == "elements"
     assert assessed["assessment"]["evidence"][0]["item_id"] == "element-000001"
     assert messages == [
-        "Invalid answer: evidence_selection_000001: got 'invented-evidence'; choose one of ['evidence-000001', 'evidence-000002']."
+            "Invalid answer: evidence_selection_000001: got 'invented-evidence'; choose one of ['evidence-000001', 'evidence-000002', 'evidence-000003']."
     ]
     assert original_projection_path.read_bytes() == original_projection_before
     assert additional_projection_path.read_bytes() == additional_projection_before
@@ -5187,7 +6541,7 @@ def test_element_admission_with_another_gap_cannot_finish_the_first_layer(
     assert resumed["answered_question_count"] == 1
     assert resumed["question_count"] == 2
     assert resumed["question"]["asks"] == "What is the second obscured value?"
-    assert resumed["question"]["answers_gap"]["id"] == "element-000003"
+    assert resumed["question"]["answers_gap"]["id"] == "element-000004"
     assert CODEX_RUNNER.run_clarification_boundary(work) == resumed
     ledger_events = [
         json.loads(line)["event"]
@@ -5299,7 +6653,7 @@ def test_element_admission_with_another_gap_cannot_finish_the_first_layer(
     child_path = resolving_element / admission["projection"]["path"]
     child = json.loads(child_path.read_text())
     resolved_elements = [
-        item for item in child["elements"] if item["id"] == "element-000003"
+        item for item in child["elements"] if item["id"] == "element-000004"
     ]
     assert len(resolved_elements) == 1
     assert resolved_elements[0]["status"] == "readable"
@@ -5370,7 +6724,7 @@ def test_element_admission_with_another_gap_cannot_finish_the_first_layer(
         work / "gap-answer-assessments" / "round-000001" / "assessment.json"
     ).read_text())
     assert model_result["assessment_count"] == 1
-    assert model_result["assessments"][0]["gap"]["id"] == "element-000003"
+    assert model_result["assessments"][0]["gap"]["id"] == "element-000004"
     completion = json.loads((work / "ledger.jsonl").read_text().splitlines()[-1])
     assert completion["event"] == "model_gap_answer_assessment_completed"
     assert completion["assessment_count"] == 2
@@ -8350,3 +9704,1586 @@ def test_gap_resolution_reuses_spatially_matching_record_instead_of_duplicating(
     )
     assert "element-000003" in overlap_prompt
     assert "May 16 · ACH" in overlap_prompt
+
+
+def test_relationship_endpoint_claim_waits_for_independent_crop_verdict(
+    tmp_path: Path,
+) -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["endpoint_crop_verification_enabled"] = True
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "element_content"
+    state["current"] = {
+        "capture_scope": "relationship_endpoint",
+        "return_stage": "relationship_target_x",
+        "kind": "dashboard average-revenue-per-transaction metric",
+        "left": 363,
+        "top": 416,
+        "right": 407,
+        "bottom": 442,
+        "status": "readable",
+    }
+
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "element_content",
+        "$22.25 avg / transaction",
+        contract=12,
+    )
+
+    assert state["stage"] == "element_content_crop_verdict"
+    assert state["elements"] == []
+    assert state["current"]["content"] == "$22.25 avg / transaction"
+
+
+def test_failed_endpoint_crop_stays_as_gap_and_reopens_capture(
+) -> None:
+    verdict = "does_not_contain_claimed_content"
+    gap_reason = "The claimed content is not visible inside the claimed source bounds."
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["endpoint_crop_verification_enabled"] = True
+    state["contextual_endpoint_verification_enabled"] = True
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "element_content_crop_verdict"
+    state["relationship_draft"] = {"kind": "visible arrow"}
+    state["current"] = {
+        "capture_scope": "relationship_endpoint",
+        "return_stage": "relationship_target_x",
+        "kind": "dashboard average-revenue-per-transaction metric",
+        "left": 363,
+        "top": 416,
+        "right": 407,
+        "bottom": 442,
+        "status": "readable",
+        "content": "$22.25 avg / transaction",
+    }
+    bounds = [363, 416, 407, 442]
+    state["current"]["endpoint_crop_evidence"] = {
+        "candidate_id": "element-000001",
+        "source_sha256": "6" * 64,
+        "source_pixel_size": [1653, 1232],
+        "normalized_bounds": bounds,
+        "pixel_bounds": PROJECTION_INTERVIEW._pixel_bounds(
+            bounds, width=1653, height=1232,
+        ),
+        "crop_path": "endpoint-evidence/element-000001.png",
+        "crop_sha256": "7" * 64,
+        "claimed_content": "$22.25 avg / transaction",
+        "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+    }
+
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "element_content_crop_verdict",
+        verdict,
+        contract=12,
+    )
+
+    assert state["stage"] == "element_kind"
+    assert state["relationship_draft"] == {"kind": "visible arrow"}
+    assert state["elements"] == [{
+        "id": "element-000001",
+        "kind": "dashboard average-revenue-per-transaction metric",
+        "region": bounds,
+        "status": "gap",
+        "content": "",
+        "gap_reason": gap_reason,
+        "capture_scope": "relationship_endpoint",
+        "endpoint_verification": {
+            "verdict": verdict,
+            "claimed_content": "$22.25 avg / transaction",
+            "evidence": state["elements"][0]["endpoint_verification"]["evidence"],
+        },
+    }]
+
+
+def test_relationship_endpoint_rejects_a_multi_field_section_before_binding() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["endpoint_crop_verification_enabled"] = True
+    state["endpoint_selector_context_enabled"] = True
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "element_content"
+    state["relationship_draft"] = {"kind": "visible arrow"}
+    state["current"] = {
+        "capture_scope": "relationship_endpoint",
+        "return_stage": "relationship_target_x",
+        "kind": "dashboard section",
+        "left": 172,
+        "top": 516,
+        "right": 840,
+        "bottom": 654,
+        "status": "readable",
+    }
+
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "element_content",
+        "Period Summary containing earned to date, projected close, next payout, and last period total",
+        contract=12,
+    )
+
+    assert state["stage"] == "relationship_endpoint_specificity"
+    question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+    assert question["choices"] == [
+        "one_precise_visible_element",
+        "multiple_independent_visible_elements",
+    ]
+
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "relationship_endpoint_specificity",
+        "multiple_independent_visible_elements",
+        contract=12,
+    )
+
+    assert state["stage"] == "element_kind"
+    assert state["relationship_draft"] == {"kind": "visible arrow"}
+    assert state["elements"][0]["region"] == [172, 516, 840, 654]
+    assert state["elements"][0]["status"] == "gap"
+    assert state["elements"][0]["endpoint_verification"]["verdict"] == (
+        "multiple_independent_visible_elements"
+    )
+
+
+def test_relationship_endpoint_uses_precise_selector_with_separate_context() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["endpoint_crop_verification_enabled"] = True
+    state["contextual_endpoint_verification_enabled"] = True
+    state["endpoint_context_evidence_enabled"] = True
+    state["endpoint_selector_context_enabled"] = True
+    state["endpoint_identity_context_choice_enabled"] = True
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "element_content"
+    state["relationship_draft"] = {"kind": "visible arrow"}
+    state["current"] = {
+        "capture_scope": "relationship_endpoint",
+        "return_stage": "relationship_target_x",
+        "kind": "dashboard value",
+        "left": 183,
+        "top": 601,
+        "right": 292,
+        "bottom": 654,
+        "status": "readable",
+    }
+
+    PROJECTION_INTERVIEW._advance(
+        state, "element_content", "$41,004", contract=12,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "relationship_endpoint_specificity",
+        "one_precise_element_requires_context",
+        contract=12,
+    )
+    selector_claim = PROJECTION_INTERVIEW._endpoint_evidence_claim(state)
+    assert selector_claim is not None
+    state["current"]["endpoint_crop_evidence"] = {
+        **selector_claim,
+        "source_sha256": "6" * 64,
+        "source_pixel_size": [1000, 1000],
+        "pixel_bounds": [183, 601, 292, 654],
+        "crop_path": PROJECTION_INTERVIEW._endpoint_evidence_relative_path(
+            selector_claim,
+        ),
+        "crop_sha256": "7" * 64,
+        "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+    }
+
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "element_content_crop_verdict",
+        "contains_claimed_content",
+        contract=12,
+    )
+
+    assert state["stage"] == "endpoint_context_left"
+    assert state["current"]["capture_scope"] == "relationship_endpoint_context"
+    assert state["current"]["selector_region"] == [183, 601, 292, 654]
+    assert state["elements"] == []
+
+    for field, value in (
+        ("endpoint_context_left", 183),
+        ("endpoint_context_top", 570),
+        ("endpoint_context_right", 305),
+        ("endpoint_context_bottom", 654),
+    ):
+        PROJECTION_INTERVIEW._advance(state, field, value, contract=12)
+    context_claim = PROJECTION_INTERVIEW._endpoint_evidence_claim(state)
+    assert context_claim is not None
+    state["current"]["endpoint_crop_evidence"] = {
+        **context_claim,
+        "source_sha256": "6" * 64,
+        "source_pixel_size": [1000, 1000],
+        "pixel_bounds": [183, 570, 305, 654],
+        "crop_path": PROJECTION_INTERVIEW._endpoint_evidence_relative_path(
+            context_claim,
+        ),
+        "crop_sha256": "8" * 64,
+        "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+    }
+
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "endpoint_context_crop_verdict",
+        "contains_claimed_content",
+        contract=12,
+    )
+
+    assert state["stage"] == "element_relationship_obligation"
+    endpoint = state["elements"][0]
+    assert endpoint["region"] == [183, 601, 292, 654]
+    assert endpoint["content"] == "$41,004"
+    assert endpoint["endpoint_verification"]["selector_region"] == [
+        183, 601, 292, 654,
+    ]
+    assert endpoint["endpoint_verification"]["evidence"][
+        "normalized_bounds"
+    ] == [183, 570, 305, 654]
+    assert endpoint["endpoint_verification"]["selector_evidence"][
+        "normalized_bounds"
+    ] == [183, 601, 292, 654]
+
+    PROJECTION_INTERVIEW._advance(
+        state, "element_relationship_obligation", "no", contract=12,
+    )
+    assert state["stage"] == "relationship_target_x"
+    assert state["current"] == {"kind": "visible arrow"}
+
+
+def test_selector_context_activation_replaces_pending_overbroad_crop_question() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["endpoint_crop_verification_enabled"] = True
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "element_content_crop_verdict"
+    state["current"] = {
+        "capture_scope": "relationship_endpoint",
+        "return_stage": "relationship_target_x",
+        "kind": "dashboard section",
+        "left": 172,
+        "top": 516,
+        "right": 840,
+        "bottom": 654,
+        "status": "readable",
+        "content": "Period Summary with several independent fields",
+    }
+    claim = PROJECTION_INTERVIEW._endpoint_evidence_claim(state)
+    assert claim is not None
+    state["current"]["endpoint_crop_evidence"] = {
+        **claim,
+        "source_sha256": "6" * 64,
+        "source_pixel_size": [1000, 1000],
+        "pixel_bounds": [172, 516, 840, 654],
+        "crop_path": PROJECTION_INTERVIEW._endpoint_evidence_relative_path(
+            claim,
+        ),
+        "crop_sha256": "7" * 64,
+        "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+    }
+    pending = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+
+    event = PROJECTION_INTERVIEW._endpoint_selector_context_activation(
+        state, pending, contract=12,
+    )
+    PROJECTION_INTERVIEW._apply_endpoint_selector_context_activation(
+        state, event,
+    )
+
+    assert event["pending_scope_recovery"] == {
+        "action": "replace_crop_question_with_specificity_question",
+        "abandoned_question_id": "element_content_crop_verdict",
+    }
+    assert state["endpoint_selector_context_enabled"] is True
+    assert state["stage"] == "relationship_endpoint_specificity"
+
+
+def test_identity_context_activation_recovers_a_supported_text_only_selector() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "element_relationship_obligation"
+    state["relationship_draft"] = {"kind": "visible arrow"}
+    selector_evidence = {
+        "candidate_id": "element-000001",
+        "normalized_bounds": [183, 611, 268, 642],
+        "claimed_content": "$41,004",
+    }
+    state["elements"] = [{
+        "id": "element-000001",
+        "kind": "current pay-period earned-to-date monetary value",
+        "region": [183, 611, 268, 642],
+        "status": "readable",
+        "content": "$41,004",
+        "gap_reason": "",
+        "capture_scope": "relationship_endpoint",
+        "endpoint_verification": {
+            "verdict": "supported",
+            "claimed_content": "$41,004",
+            "evidence": selector_evidence,
+        },
+    }]
+    state["current"] = {
+        "element_id": "element-000001",
+        "return_stage": "relationship_target_x",
+    }
+    pending = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+
+    event = PROJECTION_INTERVIEW._endpoint_identity_context_choice_activation(
+        state, pending, contract=12,
+    )
+    PROJECTION_INTERVIEW._apply_endpoint_identity_context_choice_activation(
+        state, event,
+    )
+
+    assert event["pending_identity_recovery"]["abandoned_question_id"] == (
+        "element_relationship_obligation"
+    )
+    assert state["elements"][0]["status"] == "gap"
+    assert state["elements"][0]["endpoint_verification"]["verdict"] == (
+        "requires_visible_context"
+    )
+    assert state["stage"] == "endpoint_context_left"
+    assert state["current"]["selector_region"] == [183, 611, 268, 642]
+    assert state["current"]["selector_evidence"] == selector_evidence
+
+
+def test_identity_context_decision_is_code_controlled() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["endpoint_identity_context_choice_enabled"] = True
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "relationship_endpoint_specificity"
+    state["current"] = {
+        "kind": "current pay-period earned-to-date monetary value",
+        "left": 183,
+        "top": 611,
+        "right": 268,
+        "bottom": 642,
+        "content": "$41,004",
+    }
+
+    question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+
+    assert question["choices"] == [
+        "one_precise_self_identifying_element",
+        "one_precise_element_requires_context",
+        "multiple_independent_visible_elements",
+    ]
+
+
+def test_required_recorded_participant_must_be_crop_verified_before_reuse() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["existing_participant_crop_verification_enabled"] = True
+    state["required_participant_replacement_identity_enabled"] = True
+    state["required_participant_content_identity_separation_enabled"] = True
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "obligation_resolution"
+    state["elements"] = [{
+        "id": "element-000001",
+        "kind": "dashboard metric",
+        "region": [600, 300, 650, 350],
+        "status": "readable",
+        "content": "$20.16 — Avg revenue / visitor",
+        "gap_reason": "",
+        "capture_scope": "region-r02-c03",
+        "scan_region_id": "region-r02-c03",
+    }, {
+        "id": "element-000002",
+        "kind": "annotation",
+        "region": [700, 200, 900, 290],
+        "status": "readable",
+        "content": "The annotation points to the average metric.",
+        "gap_reason": "",
+        "capture_scope": "region-r01-c04",
+        "scan_region_id": "region-r01-c04",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000001",
+        "element_id": "element-000001",
+        "status": "pending",
+        "resolution": None,
+        "relationship_id": None,
+    }]
+
+    claim = PROJECTION_INTERVIEW._endpoint_evidence_claim(state)
+    assert claim == {
+        "candidate_id": "element-000001",
+        "normalized_bounds": [600, 300, 650, 350],
+        "claimed_content": "$20.16 — Avg revenue / visitor",
+        "verification_scope": "required_recorded_participant",
+    }
+    state["current"]["endpoint_crop_evidence"] = {
+        **claim,
+        "source_sha256": "6" * 64,
+        "source_pixel_size": [1000, 1000],
+        "pixel_bounds": [600, 300, 650, 350],
+        "crop_path": "endpoint-evidence/element-000001-required-recorded-participant.png",
+        "crop_sha256": "7" * 64,
+        "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+    }
+    question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+    assert question["id"] == "required_participant_crop_verdict"
+    assert question["choices"] == [
+        "contains_claimed_content",
+        "does_not_contain_claimed_content",
+        "unreadable",
+    ]
+
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "required_participant_crop_verdict",
+        "does_not_contain_claimed_content",
+        contract=12,
+    )
+    invalidation = state["element_supersession_pending"]["event"]
+    assert invalidation["previous_element"]["content"] == (
+        "$20.16 — Avg revenue / visitor"
+    )
+    assert invalidation["replacement_element"]["status"] == "gap"
+    assert invalidation["replacement_element"]["content"] == ""
+    PROJECTION_INTERVIEW._apply_element_supersession(state, invalidation)
+    assert state["stage"] == "element_kind"
+    assert state["current"] == {
+        "capture_scope": "required_participant_replacement",
+        "return_stage": "obligation_resolution",
+        "superseded_element_id": "element-000001",
+        "required_identity_claim": "$20.16 — Avg revenue / visitor",
+    }
+
+    for field_id, value in (
+        ("element_kind", "dashboard metric"),
+        ("element_left", 600),
+        ("element_top", 300),
+        ("element_right", 700),
+        ("element_bottom", 360),
+        ("element_status", "readable"),
+        ("element_content", "$20.16 — Avg revenue / transaction"),
+    ):
+        PROJECTION_INTERVIEW._advance(state, field_id, value, contract=12)
+    replacement_claim = PROJECTION_INTERVIEW._endpoint_evidence_claim(state)
+    state["current"]["endpoint_crop_evidence"] = {
+        **replacement_claim,
+        "source_sha256": "6" * 64,
+        "source_pixel_size": [1000, 1000],
+        "pixel_bounds": [600, 300, 700, 360],
+        "crop_path": "endpoint-evidence/element-000001-required-participant-replacement.png",
+        "crop_sha256": "8" * 64,
+        "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+    }
+    crop_question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+    crop_prompt = PROJECTION_INTERVIEW._prompt(crop_question, state)
+    assert "Judge only that proposed content here" in crop_question["prompt"]
+    assert "Preserved required identity" not in crop_prompt
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "element_content_crop_verdict",
+        "contains_claimed_content",
+        contract=12,
+    )
+    identity_question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+    assert identity_question["id"] == (
+        "required_participant_replacement_identity_verdict"
+    )
+    assert identity_question["choices"] == [
+        "same_required_source_unit", "different_source_unit",
+    ]
+    assert identity_question["required_identity_comparison"] == {
+        "required_claim": "$20.16 — Avg revenue / visitor",
+        "proposed_kind": "dashboard metric",
+        "proposed_content": "$20.16 — Avg revenue / transaction",
+        "proposed_bounds": [600, 300, 700, 360],
+    }
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "required_participant_replacement_identity_verdict",
+        "same_required_source_unit",
+        contract=12,
+    )
+    correction = state["element_supersession_pending"]["event"]
+    assert correction["previous_element"]["status"] == "gap"
+    assert correction["replacement_element"]["content"] == (
+        "$20.16 — Avg revenue / transaction"
+    )
+    assert correction["replacement_element"]["endpoint_verification"]["verdict"] == (
+        "supported"
+    )
+    assert correction["replacement_element"]["endpoint_verification"][
+        "identity_continuity"
+    ] == {
+        "verdict": "same_required_source_unit",
+        "required_claim": "$20.16 — Avg revenue / visitor",
+    }
+    PROJECTION_INTERVIEW._apply_element_supersession(state, correction)
+
+    assert state["elements"][0]["id"] == "element-000001"
+    assert state["elements"][0]["status"] == "readable"
+    assert state["elements"][0]["content"] == (
+        "$20.16 — Avg revenue / transaction"
+    )
+    assert state["relationship_obligations"][0]["status"] == "pending"
+    assert PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )["id"] == "obligation_resolution"
+
+
+def test_context_dependent_claim_cannot_be_supported_by_tight_crop_alone() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["existing_participant_crop_verification_enabled"] = True
+    state["contextual_endpoint_verification_enabled"] = True
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "obligation_resolution"
+    state["elements"] = [{
+        "id": "element-000001",
+        "kind": "chart data point",
+        "region": [725, 449, 730, 454],
+        "status": "readable",
+        "content": "June monthly line-chart data point",
+        "gap_reason": "",
+        "capture_scope": "region-r02-c03",
+        "scan_region_id": "region-r02-c03",
+        "endpoint_verification": {
+            "verdict": "supported",
+            "claimed_content": "June monthly line-chart data point",
+            "evidence": {"crop_sha256": "7" * 64},
+        },
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000001",
+        "element_id": "element-000001",
+        "status": "pending",
+        "resolution": None,
+        "relationship_id": None,
+    }]
+    claim = PROJECTION_INTERVIEW._endpoint_evidence_claim(state)
+    state["current"]["endpoint_crop_evidence"] = {
+        **claim,
+        "source_sha256": "6" * 64,
+        "source_pixel_size": [1778, 1623],
+        "pixel_bounds": [1289, 728, 1298, 737],
+        "crop_path": (
+            "endpoint-evidence/element-000001-required-recorded-participant.png"
+        ),
+        "crop_sha256": "8" * 64,
+        "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+    }
+
+    question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+    assert "requires_visible_context" in question["choices"]
+    assert "crop alone" in question["prompt"]
+
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "required_participant_crop_verdict",
+        "requires_visible_context",
+        contract=12,
+    )
+    replacement = state["element_supersession_pending"]["event"][
+        "replacement_element"
+    ]
+    assert replacement["status"] == "gap"
+    assert replacement["content"] == ""
+    assert "context outside" in replacement["gap_reason"]
+    assert replacement["endpoint_verification"]["verdict"] == (
+        "requires_visible_context"
+    )
+
+
+def test_different_required_participant_replacement_is_rejected_by_enum() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["required_participant_replacement_identity_enabled"] = True
+    state["stage"] = "required_participant_replacement_identity_verdict"
+    original_gap = {
+        "id": "element-000055", "kind": "metric value",
+        "region": [185, 135, 267, 153], "status": "gap", "content": "",
+        "gap_reason": "The claimed content is not visible inside the claimed bounds.",
+        "endpoint_verification": {
+            "verdict": "does_not_contain_claimed_content",
+            "claimed_content": "364 transactions today",
+            "evidence": {"crop_sha256": "7" * 64},
+        },
+    }
+    state["elements"] = [original_gap]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000053", "element_id": "element-000055",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    state["current"] = {
+        "capture_scope": "required_participant_replacement",
+        "return_stage": "obligation_resolution",
+        "superseded_element_id": "element-000055",
+        "required_identity_claim": "364 transactions today",
+        "kind": "metric label", "left": 184, "top": 102,
+        "right": 280, "bottom": 164, "status": "readable",
+        "content": "NET REVENUE TODAY: $8,100; Operator Net",
+        "endpoint_crop_evidence": {
+            "candidate_id": "element-000055",
+            "source_sha256": "6" * 64,
+            "source_pixel_size": [1000, 1000],
+            "normalized_bounds": [184, 102, 280, 164],
+            "pixel_bounds": [184, 102, 280, 164],
+            "crop_path": (
+                "endpoint-evidence/element-000055-"
+                "required-participant-replacement.png"
+            ),
+            "crop_sha256": "8" * 64,
+            "claimed_content": "NET REVENUE TODAY: $8,100; Operator Net",
+            "verification_scope": "required_participant_replacement",
+            "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+        },
+        "endpoint_verification": {"verdict": "supported"},
+    }
+
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "required_participant_replacement_identity_verdict",
+        "different_source_unit",
+        contract=12,
+    )
+
+    assert state["elements"] == [original_gap]
+    assert state["relationship_obligations"][0]["status"] == "pending"
+    assert state["stage"] == "element_kind"
+    assert state["current"]["required_identity_claim"] == "364 transactions today"
+    assert state["current"]["last_identity_rejection"]["proposed_content"] == (
+        "NET REVENUE TODAY: $8,100; Operator Net"
+    )
+    assert "content" not in state["current"]
+
+
+def test_unverified_live_replacement_is_reopened_append_only() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    restored = {
+        "id": "element-000055", "kind": "metric value",
+        "region": [185, 135, 267, 153], "status": "gap", "content": "",
+        "gap_reason": "The claimed content is not visible inside the claimed bounds.",
+        "endpoint_verification": {
+            "verdict": "does_not_contain_claimed_content",
+            "claimed_content": "364 transactions today",
+            "evidence": {"crop_sha256": "7" * 64},
+        },
+    }
+    false_replacement = {
+        **restored, "kind": "metric label", "region": [184, 102, 280, 164],
+        "status": "readable", "content": "NET REVENUE TODAY: $8,100",
+        "gap_reason": "",
+        "endpoint_verification": {
+            "verdict": "supported",
+            "claimed_content": "NET REVENUE TODAY: $8,100",
+            "evidence": {"crop_sha256": "8" * 64},
+        },
+    }
+    relationship = {
+        "id": "relationship-000047", "kind": "annotation arrow",
+        "from_id": "element-000001", "to_id": "element-000055",
+        "status": "readable", "description": "Column AF points to $8,100.",
+        "gap_reason": "", "visual_verification": "supported",
+        "verified_obligation_id": "obligation-000053",
+        "verified_element_id": "element-000055",
+    }
+    obligation = {
+        "id": "obligation-000053", "element_id": "element-000055",
+        "status": "resolved", "resolution": "relationship",
+        "relationship_id": "relationship-000047",
+    }
+    state["elements"] = [false_replacement]
+    state["relationships"] = [relationship]
+    state["relationship_obligations"] = [obligation]
+    entries = [{
+        "event": "element_superseded",
+        "element_id": "element-000055",
+        "reason": "required_participant_replaced_from_source",
+        "previous_element": restored,
+        "trigger_candidate": {
+            "kind": "metric label", "region": [184, 102, 280, 164],
+            "verification_scope": "required_participant_replacement",
+        },
+        "replacement_element": false_replacement,
+    }]
+
+    migration = (
+        PROJECTION_INTERVIEW._latest_unverified_replacement_identity_migration(
+            state, entries,
+        )
+    )
+    assert migration is not None
+    PROJECTION_INTERVIEW._apply_unverified_replacement_identity_migration(
+        state, migration,
+    )
+
+    assert state["elements"] == [restored]
+    assert state["relationships"][0]["resolution_status"] == "invalidated"
+    assert state["relationship_obligations"][0]["status"] == "pending"
+    assert state["current"] == {
+        "capture_scope": "required_participant_replacement",
+        "return_stage": "obligation_resolution",
+        "superseded_element_id": "element-000055",
+        "required_identity_claim": "364 transactions today",
+    }
+    assert state["stage"] == "element_kind"
+
+
+def test_context_evidence_keeps_precise_endpoint_bounds_immutable() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["existing_participant_crop_verification_enabled"] = True
+    state["contextual_endpoint_verification_enabled"] = True
+    state["endpoint_context_evidence_enabled"] = True
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "obligation_resolution"
+    state["elements"] = [{
+        "id": "element-000001",
+        "kind": "chart data point",
+        "region": [725, 449, 730, 454],
+        "status": "readable",
+        "content": "June monthly line-chart data point",
+        "gap_reason": "",
+        "capture_scope": "region-r02-c03",
+        "scan_region_id": "region-r02-c03",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000001",
+        "element_id": "element-000001",
+        "status": "pending",
+        "resolution": None,
+        "relationship_id": None,
+    }]
+    claim = PROJECTION_INTERVIEW._endpoint_evidence_claim(state)
+    state["current"]["endpoint_crop_evidence"] = {
+        **claim,
+        "source_sha256": "6" * 64,
+        "source_pixel_size": [1778, 1623],
+        "pixel_bounds": [1289, 728, 1298, 737],
+        "crop_path": (
+            "endpoint-evidence/element-000001-required-recorded-participant.png"
+        ),
+        "crop_sha256": "8" * 64,
+        "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+    }
+
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "required_participant_crop_verdict",
+        "requires_visible_context",
+        contract=12,
+    )
+
+    assert state["elements"][0]["status"] == "readable"
+    assert state["elements"][0]["region"] == [725, 449, 730, 454]
+    assert state["stage"] == "endpoint_context_left"
+    assert state["current"]["selector_region"] == [725, 449, 730, 454]
+
+    for field_id, value in (
+        ("endpoint_context_left", 700),
+        ("endpoint_context_top", 400),
+        ("endpoint_context_right", 760),
+        ("endpoint_context_bottom", 540),
+    ):
+        PROJECTION_INTERVIEW._advance(state, field_id, value, contract=12)
+
+    context_claim = PROJECTION_INTERVIEW._endpoint_evidence_claim(state)
+    assert context_claim["normalized_bounds"] == [700, 400, 760, 540]
+    assert context_claim["verification_scope"] == "required_participant_context"
+    state["current"]["endpoint_crop_evidence"] = {
+        **context_claim,
+        "source_sha256": "6" * 64,
+        "source_pixel_size": [1000, 1000],
+        "pixel_bounds": [700, 400, 760, 540],
+        "crop_path": PROJECTION_INTERVIEW._endpoint_evidence_relative_path(
+            context_claim
+        ),
+        "crop_sha256": "9" * 64,
+        "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+    }
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "endpoint_context_crop_verdict",
+        "contains_claimed_content",
+        contract=12,
+    )
+    correction = state["element_supersession_pending"]["event"]
+
+    assert correction["replacement_element"]["region"] == [725, 449, 730, 454]
+    verification = correction["replacement_element"]["endpoint_verification"]
+    assert verification["evidence"]["normalized_bounds"] == [700, 400, 760, 540]
+    assert verification["selector_region"] == [725, 449, 730, 454]
+    assert verification["claim_scope"] == "selector_with_context_v3"
+
+
+def test_negative_context_verdict_reopens_required_participant_for_replacement() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["existing_participant_crop_verification_enabled"] = True
+    state["contextual_endpoint_verification_enabled"] = True
+    state["endpoint_context_evidence_enabled"] = True
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "endpoint_context_crop_verdict"
+    state["elements"] = [{
+        "id": "element-000041",
+        "kind": "annotation",
+        "region": [10, 603, 260, 680],
+        "status": "readable",
+        "content": "The sum of Column: AF for the current pay period.",
+        "gap_reason": "",
+        "capture_scope": "region-r03-c01",
+        "scan_region_id": "region-r03-c01",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000039",
+        "element_id": "element-000041",
+        "status": "pending",
+        "resolution": None,
+        "relationship_id": None,
+    }]
+    state["current"] = {
+        "capture_scope": "required_participant_context",
+        "element_id": "element-000041",
+        "claimed_content": "The sum of Column: AF for the current pay period.",
+        "selector_region": [10, 603, 260, 680],
+        "context_left": 0,
+        "context_top": 525,
+        "context_right": 500,
+        "context_bottom": 680,
+    }
+    claim = PROJECTION_INTERVIEW._endpoint_evidence_claim(state)
+    state["current"]["endpoint_crop_evidence"] = {
+        **claim,
+        "source_sha256": "6" * 64,
+        "source_pixel_size": [1778, 1623],
+        "pixel_bounds": [0, 852, 889, 1104],
+        "crop_path": (
+            "endpoint-evidence/element-000041-required-participant-context.png"
+        ),
+        "crop_sha256": "9" * 64,
+        "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+    }
+
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "endpoint_context_crop_verdict",
+        "does_not_contain_claimed_content",
+        contract=12,
+    )
+
+    pending = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+    activation = PROJECTION_INTERVIEW._negative_context_replacement_activation(
+        state, pending, contract=12,
+    )
+    assert activation["pending_negative_context_recovery"][
+        "abandoned_question_id"
+    ] == "endpoint_context_left"
+    PROJECTION_INTERVIEW._apply_negative_context_replacement_activation(
+        state, activation,
+    )
+
+    invalidation = state["element_supersession_pending"]
+    assert invalidation["event"]["reason"] == "required_participant_source_rejected"
+    assert invalidation["event"]["replacement_element"]["status"] == "gap"
+    assert invalidation["event"]["replacement_element"]["region"] == [
+        10, 603, 260, 680,
+    ]
+    assert invalidation["next_current"] == {
+        "capture_scope": "required_participant_replacement",
+        "return_stage": "obligation_resolution",
+        "superseded_element_id": "element-000041",
+        "required_identity_claim": (
+            "The sum of Column: AF for the current pay period."
+        ),
+    }
+    assert state["stage"] == "element_supersession_pending"
+
+
+def test_context_verification_migration_reopens_latest_relationship() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["elements"] = [{
+        "id": "element-000001",
+        "kind": "chart data point",
+        "region": [725, 449, 730, 454],
+        "status": "readable",
+        "content": "June monthly line-chart data point",
+        "gap_reason": "",
+        "capture_scope": "region-r02-c03",
+        "scan_region_id": "region-r02-c03",
+        "endpoint_verification": {
+            "verdict": "supported",
+            "claimed_content": "June monthly line-chart data point",
+            "evidence": {"crop_sha256": "7" * 64},
+        },
+    }]
+    state["relationships"] = [{
+        "id": "relationship-000001",
+        "kind": "annotation linked to chart point",
+        "from_id": "element-000002",
+        "to_id": "element-000001",
+        "status": "readable",
+        "description": "The annotation points to the June chart point.",
+        "gap_reason": "",
+        "visual_verification": "supported",
+        "verified_obligation_id": "obligation-000001",
+        "verified_element_id": "element-000001",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000001",
+        "element_id": "element-000001",
+        "status": "resolved",
+        "resolution": "relationship",
+        "relationship_id": "relationship-000001",
+    }]
+
+    migration = (
+        PROJECTION_INTERVIEW._latest_context_unassessed_participant_migration(
+            state,
+        )
+    )
+    assert migration["replacement_obligation"]["status"] == "pending"
+    assert migration["replacement_relationship"]["resolution_status"] == (
+        "invalidated"
+    )
+    PROJECTION_INTERVIEW._apply_latest_unverified_required_participant_migration(
+        state, migration,
+    )
+    assert state["relationship_obligations"][0]["status"] == "pending"
+    assert state["stage"] == "obligation_resolution"
+
+
+def test_contract_twelve_reopens_latest_relationship_that_bypassed_crop_gate() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "obligation_resolution"
+    state["elements"] = [{
+        "id": "element-000001", "kind": "metric",
+        "region": [600, 300, 650, 350], "status": "readable",
+        "content": "$20.16 — Avg revenue / visitor", "gap_reason": "",
+        "capture_scope": "region-r02-c03",
+    }, {
+        "id": "element-000002", "kind": "annotation",
+        "region": [700, 200, 900, 290], "status": "readable",
+        "content": "Formula annotation", "gap_reason": "",
+        "capture_scope": "region-r01-c04",
+    }]
+    state["relationships"] = [{
+        "id": "relationship-000001", "kind": "visible arrow",
+        "from_id": "element-000002", "to_id": "element-000001",
+        "status": "readable", "description": "The formula points to $20.16.",
+        "gap_reason": "", "visual_verification": "supported",
+        "verified_obligation_id": "obligation-000001",
+        "verified_element_id": "element-000001",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000001", "element_id": "element-000001",
+        "status": "resolved", "resolution": "relationship",
+        "relationship_id": "relationship-000001",
+    }]
+
+    event = (
+        PROJECTION_INTERVIEW._latest_unverified_required_participant_migration(
+            state
+        )
+    )
+    assert event is not None
+    PROJECTION_INTERVIEW._apply_latest_unverified_required_participant_migration(
+        state, event,
+    )
+
+    assert state["relationships"][0]["status"] == "gap"
+    assert state["relationships"][0]["resolution_status"] == "invalidated"
+    assert state["relationship_obligations"][0] == {
+        "id": "obligation-000001", "element_id": "element-000001",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }
+    assert state["stage"] == "obligation_resolution"
+
+
+def test_required_participant_recapture_receives_exact_rejected_crop_and_full_source(
+    tmp_path: Path,
+) -> None:
+    attempt = tmp_path / "attempt"
+    crop = attempt / "endpoint-evidence" / (
+        "element-000001-required-participant-replacement.png"
+    )
+    crop.parent.mkdir(parents=True)
+    crop.write_bytes(b"exact rejected crop")
+    source = tmp_path / "source.png"
+    source.write_bytes(b"full frozen source")
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["stage"] = "element_kind"
+    state["elements"] = [{
+        "id": "element-000001", "kind": "metric",
+        "region": [600, 300, 650, 350], "status": "gap", "content": "",
+        "gap_reason": "The replacement claim is outside the exact crop.",
+        "capture_scope": "region-r02-c03",
+        "endpoint_verification": {
+            "verdict": "does_not_contain_claimed_content",
+            "claimed_content": "18.2%",
+            "evidence": {
+                "candidate_id": "element-000001",
+                "source_sha256": "6" * 64,
+                "source_pixel_size": [1000, 1000],
+                "normalized_bounds": [600, 300, 650, 350],
+                "pixel_bounds": [600, 300, 650, 350],
+                "crop_path": (
+                    "endpoint-evidence/element-000001-"
+                    "required-participant-replacement.png"
+                ),
+                "crop_sha256": PROJECTION_INTERVIEW._digest(
+                    b"exact rejected crop"
+                ),
+                "claimed_content": "18.2%",
+                "verification_scope": "required_participant_replacement",
+                "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+            },
+        },
+    }]
+    state["current"] = {
+        "capture_scope": "required_participant_replacement",
+        "return_stage": "obligation_resolution",
+        "superseded_element_id": "element-000001",
+        "required_identity_claim": "18.2%",
+    }
+
+    attachments = (
+        PROJECTION_INTERVIEW.required_participant_replacement_attachments(
+            attempt,
+            state,
+            source_path=source,
+            source_sha256="6" * 64,
+        )
+    )
+    assert attachments == (crop, source)
+    question = PROJECTION_INTERVIEW._question(
+        state, purpose=REAL_PURPOSE, contract=12,
+    )
+    prompt = PROJECTION_INTERVIEW._prompt(question, state)
+    assert "first attached image shows why the old bounds were rejected" in prompt
+    assert "second attached image is the complete frozen source" in prompt
+    assert 'Preserved required identity: "18.2%"' in prompt
+    first_claim = {
+        "candidate_id": "element-000001",
+        "normalized_bounds": [600, 300, 650, 350],
+        "claimed_content": "18.2%",
+        "verification_scope": "required_participant_replacement",
+    }
+    corrected_claim = {
+        **first_claim,
+        "normalized_bounds": [590, 290, 700, 370],
+        "claimed_content": "Avg revenue / transaction: $20.16",
+    }
+    assert PROJECTION_INTERVIEW._endpoint_evidence_relative_path(
+        first_claim
+    ) != PROJECTION_INTERVIEW._endpoint_evidence_relative_path(corrected_claim)
+
+
+def test_historical_false_endpoint_becomes_gap_and_only_required_claim_reopens() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["scan_region_index"] = len(state["scan_regions"])
+    state["stage"] = "obligation_resolution"
+    state["elements"] = [{
+        "id": "element-000027", "kind": "annotation", "region": [312, 265, 413, 308],
+        "status": "readable", "content": "Sum of Column X divided by Column W",
+        "gap_reason": "", "capture_scope": "region-r02-c02",
+    }, {
+        "id": "element-000061", "kind": "metric", "region": [363, 416, 407, 442],
+        "status": "readable", "content": "$22.25 avg / transaction",
+        "gap_reason": "", "capture_scope": "relationship_endpoint",
+    }]
+    state["relationships"] = [{
+        "id": "relationship-000023", "kind": "visible arrow",
+        "from_id": "element-000027", "to_id": "element-000061",
+        "status": "readable", "description": "The annotation points to $22.25.",
+        "gap_reason": "", "visual_verification": "supported",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000027", "element_id": "element-000027",
+        "status": "resolved", "resolution": "relationship",
+        "relationship_id": "relationship-000023",
+    }, {
+        "id": "obligation-000059", "element_id": "element-000061",
+        "status": "resolved", "resolution": "relationship",
+        "relationship_id": "relationship-000023",
+    }]
+    reason = "Independent crop evidence does not contain the claimed content."
+
+    event = PROJECTION_INTERVIEW._historical_endpoint_grounding_invalidation(
+        state,
+        element_id="element-000061",
+        relationship_id="relationship-000023",
+        reason=reason,
+    )
+    PROJECTION_INTERVIEW._apply_historical_endpoint_grounding_invalidation(
+        state, event,
+    )
+
+    assert state["elements"][1]["status"] == "gap"
+    assert state["elements"][1]["content"] == ""
+    assert state["relationships"][0]["status"] == "gap"
+    assert state["relationships"][0]["description"] == ""
+    assert state["relationship_obligations"][0]["status"] == "pending"
+    assert state["relationship_obligations"][1]["resolution"] == (
+        "invalidated_endpoint"
+    )
+    assert PROJECTION_INTERVIEW._pending_obligation(state)["id"] == (
+        "obligation-000027"
+    )
+
+
+def test_relationship_point_binding_excludes_rejected_gap_endpoint() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["rejected_endpoint_reuse_blocked_enabled"] = True
+    state["elements"] = [{
+        "id": "element-000027", "kind": "annotation", "region": [312, 265, 413, 308],
+        "status": "readable", "content": "Sum of Column X divided by Column W",
+        "gap_reason": "", "capture_scope": "region-r02-c02",
+    }, {
+        "id": "element-000062", "kind": "metric", "region": [363, 326, 407, 350],
+        "status": "gap", "content": "",
+        "gap_reason": "The claimed content is not visible inside the claimed source bounds.",
+        "capture_scope": "relationship_endpoint",
+        "endpoint_verification": {
+            "verdict": "does_not_contain_claimed_content",
+        },
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000027", "element_id": "element-000027",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    state["current"] = {
+        "kind": "directional annotation-to-metric relationship",
+        "role": "origin",
+        "origin_id": "element-000027",
+        "origin_point": [362, 286],
+        "target_x": 380,
+    }
+    state["stage"] = "relationship_target_y"
+
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_target_y", 338, contract=12,
+    )
+
+    assert state["stage"] == "relationship_binding_resolution"
+    assert state["current"]["binding_issue"] == {
+        "participant": "target",
+        "point": [380, 338],
+        "matching_element_ids": [],
+        "reason": "no_unique_recorded_element",
+    }
+
+
+def test_relationship_point_binding_excludes_region_gap_participant() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["rejected_endpoint_reuse_blocked_enabled"] = True
+    state["unreadable_participant_reuse_blocked_enabled"] = True
+    state["elements"] = [{
+        "id": "element-000042", "kind": "metric", "region": [357, 590, 419, 616],
+        "status": "readable", "content": "PROJECTED CLOSE: $48,000",
+        "gap_reason": "", "capture_scope": "region-r03-c02",
+    }, {
+        "id": "element-000028", "kind": "annotation", "region": [376, 465, 550, 568],
+        "status": "gap", "content": "",
+        "gap_reason": "The description is clipped at the region edge.",
+        "capture_scope": "region-r03-c02",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000040", "element_id": "element-000042",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    state["current"] = {
+        "kind": "annotation-to-metric relationship",
+        "role": "target",
+        "target_id": "element-000042",
+        "target_point": [388, 603],
+        "origin_x": 465,
+    }
+    state["stage"] = "relationship_origin_y"
+
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_origin_y", 530, contract=12,
+    )
+
+    assert state["stage"] == "relationship_binding_resolution"
+    assert state["current"]["binding_issue"] == {
+        "participant": "origin",
+        "point": [465, 530],
+        "matching_element_ids": [],
+        "reason": "no_unique_recorded_element",
+    }
+
+
+def test_readable_relationship_with_rejected_endpoint_is_reopened_append_only() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["elements"] = [{
+        "id": "element-000027", "kind": "annotation", "region": [312, 265, 413, 308],
+        "status": "readable", "content": "Sum of Column X divided by Column W",
+        "gap_reason": "", "capture_scope": "region-r02-c02",
+    }, {
+        "id": "element-000062", "kind": "metric", "region": [363, 326, 407, 350],
+        "status": "gap", "content": "", "gap_reason": "Rejected by exact crop.",
+        "capture_scope": "relationship_endpoint",
+        "endpoint_verification": {
+            "verdict": "does_not_contain_claimed_content",
+        },
+    }]
+    state["relationships"] = [{
+        "id": "relationship-000024", "kind": "visible arrow",
+        "from_id": "element-000027", "to_id": "element-000062",
+        "status": "readable", "description": "Annotation points to metric.",
+        "gap_reason": "", "visual_verification": "supported",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000027", "element_id": "element-000027",
+        "status": "resolved", "resolution": "relationship",
+        "relationship_id": "relationship-000024",
+    }]
+
+    event = (
+        PROJECTION_INTERVIEW._readable_relationship_rejected_endpoint_migration(
+            state,
+        )
+    )
+    PROJECTION_INTERVIEW._apply_readable_relationship_rejected_endpoint_migration(
+        state, event,
+    )
+
+    assert state["relationships"][0]["status"] == "gap"
+    assert state["relationships"][0]["description"] == ""
+    assert state["relationships"][0]["rejected_endpoint_invalidation"][
+        "element_ids"
+    ] == ["element-000062"]
+    assert state["relationship_obligations"][0] == {
+        "id": "obligation-000027", "element_id": "element-000027",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }
+
+
+def test_legacy_rejected_endpoint_invalidation_keeps_original_contract() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["elements"] = [{
+        "id": "element-000027", "kind": "annotation", "region": [312, 265, 413, 308],
+        "status": "readable", "content": "Sum of Column X divided by Column W",
+        "gap_reason": "", "capture_scope": "region-r02-c02",
+    }, {
+        "id": "element-000062", "kind": "metric", "region": [363, 326, 407, 350],
+        "status": "gap", "content": "", "gap_reason": "Rejected by exact crop.",
+        "capture_scope": "relationship_endpoint",
+        "endpoint_verification": {
+            "verdict": "does_not_contain_claimed_content",
+        },
+    }]
+    state["relationships"] = [{
+        "id": "relationship-000024", "kind": "visible arrow",
+        "from_id": "element-000027", "to_id": "element-000062",
+        "status": "readable", "description": "Annotation points to metric.",
+        "gap_reason": "", "visual_verification": "supported",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000027", "element_id": "element-000027",
+        "status": "resolved", "resolution": "relationship",
+        "relationship_id": "relationship-000024",
+    }]
+
+    event = PROJECTION_INTERVIEW._readable_relationship_rejected_endpoint_migration(
+        state, eligibility_contract="rejected_endpoint_v1",
+    )
+
+    assert event is not None
+    assert "eligibility_contract" not in event
+    assert event["replacement_relationship"]["gap_reason"] == (
+        "A readable relationship cannot reuse an endpoint rejected by exact source evidence."
+    )
+
+
+def test_readable_relationship_with_region_gap_participant_is_reopened() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["elements"] = [{
+        "id": "element-000028", "kind": "annotation", "region": [376, 465, 550, 568],
+        "status": "gap", "content": "",
+        "gap_reason": "The description is clipped at the region edge.",
+        "capture_scope": "region-r03-c02",
+    }, {
+        "id": "element-000042", "kind": "metric", "region": [357, 590, 419, 616],
+        "status": "readable", "content": "PROJECTED CLOSE: $48,000",
+        "gap_reason": "", "capture_scope": "region-r03-c02",
+    }]
+    state["relationships"] = [{
+        "id": "relationship-000034", "kind": "visible arrow",
+        "from_id": "element-000028", "to_id": "element-000042",
+        "status": "readable", "description": "Annotation explains projected close.",
+        "gap_reason": "", "visual_verification": "supported",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000040", "element_id": "element-000042",
+        "status": "resolved", "resolution": "relationship",
+        "relationship_id": "relationship-000034",
+    }]
+
+    event = (
+        PROJECTION_INTERVIEW._readable_relationship_rejected_endpoint_migration(
+            state,
+        )
+    )
+
+    assert event is not None
+    assert event["eligibility_contract"] == "unreadable_participant_v2"
+    PROJECTION_INTERVIEW._apply_readable_relationship_rejected_endpoint_migration(
+        state, event,
+    )
+    assert state["relationships"][0]["status"] == "gap"
+    assert state["relationship_obligations"][0]["status"] == "pending"
+
+
+def test_v1_relationship_completion_replays_before_v2_gap_enforcement() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["rejected_endpoint_reuse_blocked_enabled"] = True
+    state["elements"] = [{
+        "id": "element-000028", "kind": "annotation", "region": [376, 465, 550, 568],
+        "status": "gap", "content": "", "gap_reason": "Clipped at the edge.",
+        "capture_scope": "region-r03-c02",
+    }, {
+        "id": "element-000042", "kind": "metric", "region": [357, 590, 419, 616],
+        "status": "readable", "content": "PROJECTED CLOSE: $48,000",
+        "gap_reason": "", "capture_scope": "region-r03-c02",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000040", "element_id": "element-000042",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    state["current"] = {
+        "kind": "visible arrow", "origin_id": "element-000028",
+        "target_id": "element-000042", "status": "readable",
+        "description": "Annotation explains projected close.",
+        "visual_verification": "supported",
+    }
+
+    PROJECTION_INTERVIEW._finish_relationship(
+        state, "description", "Annotation explains projected close.", contract=12,
+    )
+
+    assert state["relationships"][0]["status"] == "readable"
+    state["unreadable_participant_reuse_blocked_enabled"] = True
+    state["relationship_obligations"][0].update({
+        "status": "pending", "resolution": None, "relationship_id": None,
+    })
+    state["current"] = {
+        "kind": "visible arrow", "origin_id": "element-000028",
+        "target_id": "element-000042", "status": "readable",
+        "description": "Annotation explains projected close.",
+        "visual_verification": "supported",
+    }
+    PROJECTION_INTERVIEW._finish_relationship(
+        state, "description", "Annotation explains projected close.", contract=12,
+    )
+    assert len(state["relationships"]) == 1
+    assert state["stage"] == "relationship_binding_resolution"
+    assert state["current"]["binding_issue"]["participant"] == "origin"
+
+
+def test_unreadable_required_participant_recovery_recaptures_that_participant() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=13)
+    state["unreadable_participant_reuse_blocked_enabled"] = True
+    state["failed_participant_recovery_enabled"] = True
+    state["elements"] = [{
+        "id": "element-000031", "kind": "annotation", "region": [694, 385, 800, 428],
+        "status": "gap", "content": "", "gap_reason": "Clipped by region crop.",
+        "capture_scope": "region-r02-c03",
+    }, {
+        "id": "element-000032", "kind": "metric", "region": [477, 349, 650, 405],
+        "status": "readable", "content": "Capture rate: 18.2%.", "gap_reason": "",
+        "capture_scope": "region-r02-c03",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000030", "element_id": "element-000031",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    state["current"] = {
+        "kind": "annotation arrow", "origin_id": "element-000031",
+        "target_id": "element-000032", "origin_point": [750, 405],
+        "target_point": [625, 370], "visual_verification": "supported",
+        "status": "readable",
+    }
+
+    PROJECTION_INTERVIEW._finish_relationship(
+        state, "description", "The annotation points to Capture rate.", contract=13,
+    )
+    PROJECTION_INTERVIEW._advance(
+        state, "relationship_binding_resolution", "record_visible_endpoint",
+        contract=13,
+    )
+
+    assert state["stage"] == "element_kind"
+    assert state["relationship_draft"] is None
+    assert state["current"] == {
+        "capture_scope": "required_participant_replacement",
+        "return_stage": "obligation_resolution",
+        "superseded_element_id": "element-000031",
+    }
+    prompt = PROJECTION_INTERVIEW._prompt(
+        PROJECTION_INTERVIEW._question(
+            state, purpose=REAL_PURPOSE, contract=13,
+        ),
+        state,
+    )
+    assert "Required participant replacement capture" in prompt
+    assert "record the other visible endpoint" not in prompt
+
+
+def test_misdirected_required_participant_gap_is_reopened_append_only() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=13)
+    state["elements"] = [{
+        "id": "element-000031", "kind": "annotation", "region": [694, 385, 800, 428],
+        "status": "gap", "content": "", "gap_reason": "Clipped by region crop.",
+    }, {
+        "id": "element-000032", "kind": "metric", "region": [477, 349, 650, 405],
+        "status": "readable", "content": "Capture rate: 18.2%.", "gap_reason": "",
+    }]
+    state["relationships"] = [{
+        "id": "relationship-000035", "kind": "annotation arrow",
+        "from_id": None, "to_id": "element-000032", "status": "gap",
+        "description": "", "gap_reason": "The origin could not be bound.",
+        "binding_method": "coordinate_unique_containment",
+        "binding_issue": {
+            "participant": "origin", "point": [750, 405],
+            "matching_element_ids": [], "reason": "no_unique_recorded_element",
+        },
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000030", "element_id": "element-000031",
+        "status": "resolved", "resolution": "gap",
+        "relationship_id": "relationship-000035",
+    }]
+    history = [{
+        "event": "answer_recorded", "question_id": "relationship_binding_resolution",
+        "accepted": True, "parsed": "record_visible_endpoint", "sequence": 3625,
+    }, {
+        "event": "element_superseded", "element_id": "element-000032",
+        "sequence": 3652,
+    }, {
+        "event": "answer_recorded", "question_id": "relationship_binding_resolution",
+        "accepted": True, "parsed": "record_endpoint_gap", "sequence": 3658,
+    }]
+
+    event = PROJECTION_INTERVIEW._misdirected_participant_gap_migration(
+        state, history,
+    )
+    assert event is not None
+    PROJECTION_INTERVIEW._apply_misdirected_participant_gap_migration(
+        state, event,
+    )
+
+    assert state["relationships"][0]["resolution_status"] == "invalidated"
+    assert state["relationship_obligations"][0] == {
+        "id": "obligation-000030", "element_id": "element-000031",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }
+
+
+def test_relationship_counter_uses_replayed_semantic_outcomes(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    entries = [{
+        "event": "question_asked",
+        "question": {"context": {"intake_purpose": REAL_PURPOSE}},
+    }, {
+        "event": "answer_recorded", "accepted": True,
+        "question_id": "relationship_description",
+    }]
+    monkeypatch.setattr(
+        CODEX_RUNNER.projection_interview, "_read_journal",
+        lambda _journal: entries,
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER.projection_interview, "_replay",
+        lambda _entries, *, purpose, contract: (
+            {"relationships": []}, None, False,
+        ),
+    )
+
+    assert CODEX_RUNNER._projection_relationship_outcome_count(
+        tmp_path / "interview.jsonl",
+    ) == 0
+
+
+def test_rejected_endpoint_is_not_a_same_unit_collision_candidate() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["rejected_endpoint_collision_excluded_enabled"] = True
+    state["elements"] = [{
+        "id": "element-000062", "kind": "metric", "region": [363, 326, 407, 350],
+        "status": "gap", "content": "", "gap_reason": "Rejected by exact crop.",
+        "capture_scope": "relationship_endpoint",
+        "endpoint_verification": {
+            "verdict": "does_not_contain_claimed_content",
+        },
+    }]
+    current = {
+        "left": 355, "top": 318, "right": 425, "bottom": 365,
+        "capture_scope": "relationship_endpoint",
+    }
+
+    assert PROJECTION_INTERVIEW._element_collision_candidates(
+        state, current,
+    ) == []
+
+
+def test_region_gap_remains_a_same_unit_collision_candidate() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["rejected_endpoint_collision_excluded_enabled"] = True
+    state["elements"] = [{
+        "id": "element-000028", "kind": "annotation", "region": [376, 465, 550, 568],
+        "status": "gap", "content": "", "gap_reason": "Clipped at the edge.",
+        "capture_scope": "region-r03-c02",
+    }]
+    current = {
+        "left": 400, "top": 500, "right": 520, "bottom": 560,
+        "capture_scope": "relationship_endpoint",
+    }
+
+    candidates = PROJECTION_INTERVIEW._element_collision_candidates(state, current)
+
+    assert [item["id"] for item in candidates] == ["element-000028"]
+
+
+def test_collision_activation_recovers_pending_rejected_merge_question() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=12)
+    state["elements"] = [{
+        "id": "element-000062", "kind": "metric", "region": [363, 326, 407, 350],
+        "status": "gap", "content": "", "gap_reason": "Rejected by exact crop.",
+        "capture_scope": "relationship_endpoint",
+        "endpoint_verification": {
+            "verdict": "does_not_contain_claimed_content",
+        },
+    }]
+    state["current"] = {
+        "kind": "metric", "left": 355, "top": 318, "right": 425,
+        "bottom": 365, "capture_scope": "relationship_endpoint",
+        "return_stage": "relationship_target_x",
+        "unit_collision_candidate_ids": ["element-000062"],
+        "superseded_element_id": "element-000062",
+        "merge_left": 355,
+    }
+    state["stage"] = "element_merge_top"
+    pending = {
+        "id": "element_merge_top",
+    }
+
+    event = PROJECTION_INTERVIEW._rejected_endpoint_collision_activation(
+        state, pending, contract=12,
+    )
+    PROJECTION_INTERVIEW._apply_rejected_endpoint_collision_activation(
+        state, event,
+    )
+
+    assert state["stage"] == "element_status"
+    assert "unit_collision_candidate_ids" not in state["current"]
+    assert "superseded_element_id" not in state["current"]
+    assert "merge_left" not in state["current"]
+    assert state["rejected_endpoint_collision_excluded_enabled"] is True

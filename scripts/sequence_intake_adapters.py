@@ -13,8 +13,9 @@ from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 try:
-    from scripts import script_intake
+    from scripts import local_multimodal_model_benchmark, script_intake
 except ModuleNotFoundError:  # direct script execution
+    import local_multimodal_model_benchmark  # type: ignore
     import script_intake
 
 
@@ -74,6 +75,7 @@ CANONICAL_SEQUENCE_IDS = (
     # carries no adapter on purpose: a goal is declared and measured by running
     # `goal_tracker.py` directly, so zero-input intake has nothing to prepare for it.
     "goal-declaration",
+    "local-multimodal-model-benchmark",
 )
 
 COMMIT_PUSH_OPERATIONS = (
@@ -2048,6 +2050,101 @@ DISCOVERY_BOOTSTRAP_SPEC = {
             "One existing registry file path, or press Enter to omit it.",
             "operations/sequences/discovery/repositories.json",
             "Provide the path only; never paste its JSON.", "path",
+        ),
+    ],
+}
+
+
+LOCAL_MULTIMODAL_BENCHMARK_SPEC = {
+    "schema_version": script_intake.SCHEMA_VERSION,
+    "fields": [
+        _semantic_field(
+            "source_repository_key", "Benchmark controller repository",
+            "One registered repository name.", "memory-knowledge",
+            "Choose the repository containing the benchmark controller.",
+            "choice", choices=["memory-knowledge"], required=True,
+        ),
+        _semantic_field(
+            "model", "Local model", "One Ollama model tag.",
+            "gemma4:26b-mlx",
+            "Provide only the local model identity; do not provide command syntax.",
+            "string", required=True,
+        ),
+        _semantic_field(
+            "endpoint", "Local Ollama endpoint", "One loopback HTTP URL.",
+            "http://127.0.0.1:11434",
+            "Only localhost or a loopback IP address is accepted.",
+            "string", default="http://127.0.0.1:11434",
+        ),
+        _semantic_field(
+            "pull_if_missing", "Download the model if it is absent",
+            "Answer yes or no.", "yes",
+            "Existing local models are preserved in either case.",
+            "boolean", default=True,
+        ),
+        _semantic_field(
+            "thinking_mode", "Model thinking mode",
+            "Choose exactly one listed value.", "disabled",
+            "Disabled reserves the response budget for the final structured answer; enabled permits a separate reasoning channel.",
+            "choice", choices=["disabled", "enabled"], required=True,
+        ),
+        _semantic_field(
+            "timeout_seconds", "Per-request timeout",
+            "One whole number of seconds.", "600",
+            "Choose a value from 1 through 3600.",
+            "integer", default=600, minimum=1, maximum=3600,
+        ),
+        _semantic_field(
+            "context_length", "Model context length",
+            "One whole token count.", "32768",
+            "Choose a value from 1024 through 262144.",
+            "integer", default=32768, minimum=1024, maximum=262144,
+        ),
+        _semantic_field(
+            "output_path", "Immutable benchmark evidence destination",
+            "One absolute new JSON file path.",
+            "/private/tmp/local-model-benchmark/evidence.json",
+            "The destination must not already exist and will never be overwritten.",
+            "path", required=True,
+        ),
+        _semantic_field(
+            "cases", "Benchmark case",
+            "Answer one case's semantic subquestions at a time.",
+            "one multimodal assessment case",
+            "Each case binds its prompt, source images, and expected response schema.",
+            "object_list", required=True,
+            item_fields=[
+                _semantic_field(
+                    "id", "Case identity", "One stable short identity.",
+                    "annotation-map",
+                    "Use letters, numbers, dots, underscores, or hyphens.",
+                    "string", required=True,
+                ),
+                _semantic_field(
+                    "prompt", "Model task", "One or more lines of task text.",
+                    "Return every visible annotation as structured evidence.",
+                    "Describe the assessment goal; close the answer with a line containing only a period.",
+                    "text", required=True,
+                ),
+                _semantic_field(
+                    "source_files", "Source image",
+                    "One or more absolute image file paths.",
+                    "/private/tmp/source.png",
+                    "Supported image types are PNG, JPEG, and WebP.",
+                    "string_list", required=True,
+                    item_prompt="Source image path",
+                    item_response_format="One absolute image file path.",
+                    item_example="/private/tmp/source.png",
+                    item_constraints="Provide an existing PNG, JPEG, or WebP file.",
+                ),
+                _semantic_field(
+                    "response_schema_file", "Expected response schema",
+                    "One existing JSON Schema file path.",
+                    "/private/tmp/response-schema.json",
+                    "Provide a schema file; do not paste schema or invocation syntax.",
+                    "path", required=True,
+                ),
+            ],
         ),
     ],
 }
@@ -4049,6 +4146,89 @@ def _prepare_discovery_bootstrap(
     return payload
 
 
+def _prepare_local_multimodal_benchmark(
+    answers: Mapping[str, Any],
+    artifact_paths: Mapping[str, str],
+    repository_roots: Mapping[str, str],
+) -> dict[str, Any]:
+    expected = {
+        "source_repository_key", "model", "endpoint", "pull_if_missing",
+        "thinking_mode", "timeout_seconds", "context_length", "output_path", "cases",
+    }
+    if set(answers) != expected:
+        raise AdapterError("answer-fields-do-not-match-local-multimodal-benchmark")
+    repository_key, repository = _registered_repository(
+        answers, repository_roots, answer_key="source_repository_key",
+    )
+    thinking_modes = {"disabled": False, "enabled": True}
+    thinking_mode = _required_text(answers, "thinking_mode")
+    if thinking_mode not in thinking_modes:
+        raise AdapterError("answer-invalid:thinking_mode")
+    raw_cases = answers.get("cases")
+    if not isinstance(raw_cases, list) or not raw_cases:
+        raise AdapterError("answer-required:cases")
+    cases: list[dict[str, Any]] = []
+    for item in raw_cases:
+        if not isinstance(item, Mapping) or set(item) != {
+            "id", "prompt", "source_files", "response_schema_file",
+        }:
+            raise AdapterError("invalid-local-multimodal-benchmark-case")
+        source_files = item.get("source_files")
+        if not isinstance(source_files, list) or not source_files:
+            raise AdapterError("answer-required:source_files")
+        schema_path = Path(
+            _required_text(item, "response_schema_file")
+        ).expanduser()
+        try:
+            response_schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError) as exc:
+            raise AdapterError("response-schema-file-invalid") from exc
+        cases.append({
+            "id": _required_text(item, "id"),
+            "prompt": _required_text(item, "prompt"),
+            "source_files": [
+                _required_text({"value": value}, "value")
+                for value in source_files
+            ],
+            "response_schema": response_schema,
+        })
+    spec = {
+        "schema_version": 1,
+        "model": _required_text(answers, "model"),
+        "endpoint": _required_text(answers, "endpoint"),
+        "pull_if_missing": answers.get("pull_if_missing"),
+        "think": thinking_modes[thinking_mode],
+        "timeout_seconds": answers.get("timeout_seconds"),
+        "output_path": _required_text(answers, "output_path"),
+        "options": {
+            "temperature": 0,
+            "num_ctx": answers.get("context_length"),
+        },
+        "cases": cases,
+    }
+    try:
+        local_multimodal_model_benchmark._normalize_spec(spec)
+    except local_multimodal_model_benchmark.BenchmarkError as exc:
+        raise AdapterError(f"local-multimodal-benchmark-invalid:{exc.code}") from exc
+    artifact = _json_artifact(artifact_paths, "benchmark_spec", spec)
+    payload = _script_payload(
+        sequence_id="local-multimodal-model-benchmark",
+        profile="run",
+        argv=[
+            "python3",
+            str(Path(repository, "scripts/local_multimodal_model_benchmark.py")),
+            "--spec",
+            artifact["path"],
+        ],
+        repository_key=repository_key,
+        repository_root=repository,
+        effectful=True,
+        operation="run",
+    )
+    payload["artifacts"] = {"benchmark_spec": artifact}
+    return payload
+
+
 def _offline_adapter(sequence_id: str) -> Adapter:
     return lambda answers, _artifact_paths, repository_roots: (
         _prepare_offline_sequence(sequence_id, answers, repository_roots)
@@ -4115,6 +4295,9 @@ ADAPTER_REGISTRY[
     "remote-mcp-user-onboarding"
 ] = _prepare_remote_onboarding
 ADAPTER_REGISTRY["discovery-bootstrap"] = _prepare_discovery_bootstrap
+ADAPTER_REGISTRY[
+    "local-multimodal-model-benchmark"
+] = _prepare_local_multimodal_benchmark
 INTAKE_SPECS = {
     "commit-push-main": COMMIT_PUSH_SPEC,
     **DEPLOY_SPECS,
@@ -4142,6 +4325,7 @@ INTAKE_SPECS = {
     "callcenter-harness-provision-verify": CALLCENTER_PROVISION_SPEC,
     "remote-mcp-user-onboarding": REMOTE_ONBOARDING_SPEC,
     "discovery-bootstrap": DISCOVERY_BOOTSTRAP_SPEC,
+    "local-multimodal-model-benchmark": LOCAL_MULTIMODAL_BENCHMARK_SPEC,
 }
 
 ARTIFACT_IDS: dict[str, tuple[str, ...]] = {
@@ -4149,6 +4333,7 @@ ARTIFACT_IDS: dict[str, tuple[str, ...]] = {
     "discovery-promotion-lifecycle": ("changed_artifacts",),
     "convergence-state-review-cycle": ("request",),
     "discovery-bootstrap": ("spec",),
+    "local-multimodal-model-benchmark": ("benchmark_spec",),
 }
 
 

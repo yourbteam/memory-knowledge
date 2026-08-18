@@ -46,6 +46,33 @@ def _sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def _model_stage_progress(work: Path) -> dict[str, str | None]:
+    state_path = work / "intake-state.json"
+    try:
+        state = json.loads(state_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as error:
+        raise LaunchError("the intake state is unavailable or invalid") from error
+    if not isinstance(state, dict):
+        raise LaunchError("the intake state must be an object")
+    waiting_for = state.get("waiting_for")
+    if not isinstance(waiting_for, str):
+        return {
+            "intake_state_sha256": _sha256(state_path),
+            "model_journal_sha256": None,
+        }
+    journal = (work / waiting_for).resolve()
+    try:
+        journal.relative_to(work.resolve())
+    except ValueError as error:
+        raise LaunchError("the active model journal escapes the intake") from error
+    if not journal.is_file():
+        raise LaunchError("the active model journal is unavailable")
+    return {
+        "intake_state_sha256": _sha256(state_path),
+        "model_journal_sha256": _sha256(journal),
+    }
+
+
 def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
     work = work.expanduser().resolve()
     try:
@@ -471,6 +498,40 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
                     projection_interview.CONTRACT,
                 )
             )
+            projection_interview.enable_endpoint_crop_verification(
+                candidate.parent, purpose=purpose, contract=contract,
+            )
+            projection_interview.enable_existing_participant_crop_verification(
+                candidate.parent, purpose=purpose, contract=contract,
+            )
+            projection_interview.enable_contextual_endpoint_verification(
+                candidate.parent, purpose=purpose, contract=contract,
+            )
+            projection_interview.enable_endpoint_context_evidence(
+                candidate.parent, purpose=purpose, contract=contract,
+            )
+            projection_interview.enable_endpoint_selector_context(
+                candidate.parent, purpose=purpose, contract=contract,
+            )
+            projection_interview.enable_endpoint_identity_context_choice(
+                candidate.parent, purpose=purpose, contract=contract,
+            )
+            projection_interview.enable_negative_context_replacement(
+                candidate.parent, purpose=purpose, contract=contract,
+            )
+            projection_interview.enable_rejected_endpoint_reuse_block(
+                candidate.parent, purpose=purpose, contract=contract,
+            )
+            projection_interview.enable_rejected_endpoint_collision_exclusion(
+                candidate.parent, purpose=purpose, contract=contract,
+            )
+            endpoint_evidence = projection_interview.prepare_endpoint_evidence(
+                candidate.parent,
+                source_path=attachment,
+                source_sha256=str(expected_sha256),
+                purpose=purpose,
+                contract=contract,
+            )
             crop = projection_interview.prepare_region_evidence(
                 candidate.parent,
                 source_path=attachment,
@@ -478,30 +539,59 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
                 purpose=purpose,
                 contract=contract,
             )
+            interview_state, _pending, _completed = (
+                projection_interview.prepare_resume(
+                    candidate.parent,
+                    purpose=purpose,
+                    contract=contract,
+                )
+            )
+            replacement_attachments = (
+                projection_interview.required_participant_replacement_attachments(
+                    candidate.parent,
+                    interview_state,
+                    source_path=attachment,
+                    source_sha256=str(expected_sha256),
+                )
+            )
             if contract >= 4:
-                journal = projection_interview._read_journal(
-                    candidate.parent / "interview.jsonl"
-                )
-                interview_state, _pending, _completed = (
-                    projection_interview._replay(
-                        journal, purpose=purpose, contract=contract,
-                    )
-                )
                 active_region = projection_interview._active_scan_region(
                     interview_state
                 )
-                if not isinstance(active_region, dict) or not isinstance(
+                if isinstance(active_region, dict) and isinstance(
                     active_region.get("id"), str
                 ):
-                    raise projection_interview.InterviewError(
-                        "active-projection-region-identity-missing"
+                    command[-1:-1] = [
+                        "--projection-region-id", str(active_region["id"]),
+                    ]
+                else:
+                    obligation = projection_interview._pending_obligation(
+                        interview_state
                     )
-                command[-1:-1] = [
-                    "--projection-region-id", str(active_region["id"]),
-                ]
+                    if not isinstance(obligation, dict) or not isinstance(
+                        obligation.get("id"), str
+                    ):
+                        raise projection_interview.InterviewError(
+                            "active-projection-binding-missing"
+                        )
+                    command[-1:-1] = [
+                        "--projection-obligation-id",
+                        str(obligation["id"]),
+                    ]
+                    if endpoint_evidence is not None:
+                        command[-1:-1] = [
+                            "--projection-endpoint-evidence-sha256",
+                            endpoint_evidence[1],
+                        ]
         except (OSError, projection_interview.InterviewError) as error:
-            raise LaunchError(f"projection region evidence failed: {error}") from error
-        if crop is not None:
+            raise LaunchError(
+                f"projection binding evidence failed: {error}"
+            ) from error
+        if endpoint_evidence is not None:
+            attachment = endpoint_evidence[0]
+        elif replacement_attachments is not None:
+            attachment = replacement_attachments
+        elif crop is not None:
             attachment = crop
     return attachment, command
 
@@ -682,6 +772,40 @@ def _projection_region_outcome_count(journal: Path) -> int:
     return sum(entry.get("event") == "region_outcome_recorded" for entry in entries)
 
 
+def _projection_relationship_outcome_count(journal: Path) -> int:
+    try:
+        entries = projection_interview._read_journal(journal)
+    except projection_interview.InterviewError as error:
+        raise LaunchError(
+            f"the projection relationship journal is invalid: {error}"
+        ) from error
+    purposes = {
+        context.get("intake_purpose")
+        for entry in entries
+        if entry.get("event") == "question_asked"
+        for question in (entry.get("question"),)
+        if isinstance(question, dict)
+        for context in (question.get("context"),)
+        if isinstance(context, dict)
+        and isinstance(context.get("intake_purpose"), str)
+    }
+    if len(purposes) != 1:
+        raise LaunchError(
+            "the projection relationship journal has no unique bound purpose"
+        )
+    try:
+        state, _pending, _completed = projection_interview._replay(
+            entries,
+            purpose=next(iter(purposes)),
+            contract=projection_interview.CONTRACT,
+        )
+    except projection_interview.InterviewError as error:
+        raise LaunchError(
+            f"the projection relationship journal is not replayable: {error}"
+        ) from error
+    return len(state["relationships"])
+
+
 def main() -> int:
     if len(sys.argv) != 1:
         print(json.dumps({"ok": False, "error": "this launcher accepts no arguments"}))
@@ -698,7 +822,12 @@ def main() -> int:
     return drive_work(work)
 
 
-def drive_work(work: Path, *, projection_region_limit: int | None = None) -> int:
+def drive_work(
+    work: Path,
+    *,
+    projection_region_limit: int | None = None,
+    projection_relationship_limit: int | None = None,
+) -> int:
     """Drive one already-created intake from its current external boundary."""
     if (
         projection_region_limit is not None
@@ -711,6 +840,19 @@ def drive_work(work: Path, *, projection_region_limit: int | None = None) -> int
         print(json.dumps({
             "ok": False,
             "error": "projection region limit must be a positive integer",
+        }, sort_keys=True))
+        return 3
+    if (
+        projection_relationship_limit is not None
+        and (
+            not isinstance(projection_relationship_limit, int)
+            or isinstance(projection_relationship_limit, bool)
+            or projection_relationship_limit < 1
+        )
+    ):
+        print(json.dumps({
+            "ok": False,
+            "error": "projection relationship limit must be a positive integer",
         }, sort_keys=True))
         return 3
     boundary_result: dict[str, object] | None = None
@@ -727,10 +869,19 @@ def drive_work(work: Path, *, projection_region_limit: int | None = None) -> int
     executable: str | None = None
     seen_model_stages: set[str] = set()
     completed_projection_regions = 0
+    completed_projection_relationships = 0
     while True:
         if request is not None:
             attachment, interview_command = request
             try:
+                relationship_bound = "--projection-obligation-id" in interview_command
+                if (
+                    projection_relationship_limit is not None
+                    and not relationship_bound
+                ):
+                    raise LaunchError(
+                        "projection relationship limiting requires completed spatial coverage and a pending relationship obligation"
+                    )
                 region_journal = (
                     _projection_region_journal(work, interview_command)
                     if projection_region_limit is not None
@@ -739,6 +890,18 @@ def drive_work(work: Path, *, projection_region_limit: int | None = None) -> int
                 region_outcomes_before = (
                     _projection_region_outcome_count(region_journal)
                     if region_journal is not None
+                    else None
+                )
+                relationship_journal = (
+                    _projection_region_journal(work, interview_command)
+                    if projection_relationship_limit is not None
+                    else None
+                )
+                relationship_outcomes_before = (
+                    _projection_relationship_outcome_count(
+                        relationship_journal
+                    )
+                    if relationship_journal is not None
                     else None
                 )
             except LaunchError as error:
@@ -752,7 +915,7 @@ def drive_work(work: Path, *, projection_region_limit: int | None = None) -> int
             try:
                 stage_key = json.dumps(
                     {
-                        "state_sha256": _sha256(work / "intake-state.json"),
+                        "progress": _model_stage_progress(work),
                         "attachments": [
                             str(path)
                             for path in (
@@ -766,7 +929,7 @@ def drive_work(work: Path, *, projection_region_limit: int | None = None) -> int
                     sort_keys=True,
                     separators=(",", ":"),
                 )
-            except OSError as error:
+            except (LaunchError, OSError) as error:
                 print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
                 return 3
             if stage_key in seen_model_stages:
@@ -804,6 +967,44 @@ def drive_work(work: Path, *, projection_region_limit: int | None = None) -> int
                         "status": "paused",
                         "stopped": "projection_region_limit_reached",
                         "projection_regions_completed": completed_projection_regions,
+                        "work": str(work),
+                    }, indent=2, sort_keys=True))
+                    return 0
+            if relationship_journal is not None:
+                try:
+                    relationship_outcomes_after = (
+                        _projection_relationship_outcome_count(
+                            relationship_journal
+                        )
+                    )
+                except LaunchError as error:
+                    print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
+                    return 3
+                relationship_delta = (
+                    relationship_outcomes_after - relationship_outcomes_before
+                )
+                if relationship_delta not in {0, 1}:
+                    print(json.dumps({
+                        "ok": False,
+                        "error": (
+                            "one projection model stage added more than one "
+                            "relationship outcome or removed an existing outcome"
+                        ),
+                    }, sort_keys=True))
+                    return 3
+                completed_projection_relationships += relationship_delta
+                if (
+                    projection_relationship_limit is not None
+                    and completed_projection_relationships
+                    == projection_relationship_limit
+                ):
+                    print(json.dumps({
+                        "ok": True,
+                        "status": "paused",
+                        "stopped": "projection_relationship_limit_reached",
+                        "projection_relationships_completed": (
+                            completed_projection_relationships
+                        ),
                         "work": str(work),
                     }, indent=2, sort_keys=True))
                     return 0
