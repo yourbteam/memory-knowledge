@@ -910,7 +910,7 @@ def drive_work(
             if executable is None:
                 executable = shutil.which("codex")
                 if executable is None:
-                    print(json.dumps({"ok": False, "error": "codex executable is unavailable"}, sort_keys=True))
+                    print(json.dumps({"ok": False, "error": "Codex CLI is unavailable"}, sort_keys=True))
                     return 3
             try:
                 stage_key = json.dumps(

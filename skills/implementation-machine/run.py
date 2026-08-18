@@ -35,6 +35,9 @@ import pair_requirements  # noqa: E402
 import read_dependencies  # noqa: E402
 
 
+ORDERING_LAUNCH_ATTEMPTS = 3
+
+
 def drive(report_path: Path, work: Path, per_reader: int, floor: float) -> dict[str, object]:
     work.mkdir(parents=True, exist_ok=True)
     report = json.loads(report_path.read_text(encoding="utf-8"))
@@ -99,6 +102,34 @@ def drive(report_path: Path, work: Path, per_reader: int, floor: float) -> dict[
     }
 
 
+def complete_ordering(
+    report: Path, work: Path, per_reader: int, floor: float,
+    reader_command: str, built: Path, tag: str = "order",
+) -> dict[str, object]:
+    """Run bounded reader launches until the order is complete or must be handed back.
+
+    Reader answers are durable, so a later launch resumes the incomplete slice.  The controller
+    must still have a finite boundary: a worker that repeatedly exits without completing its slice
+    cannot be allowed to relaunch forever inside one unattended machinery invocation.
+    """
+
+    result = drive(report, work, per_reader, floor)
+    for attempt in range(1, ORDERING_LAUNCH_ATTEMPTS + 1):
+        jobs = result.get("work")
+        if not jobs:
+            return result
+        build_next._launch(
+            jobs, reader_command, built, work, f"{tag}-{attempt}",
+        )
+        result = drive(report, work, per_reader, floor)
+    if result.get("work"):
+        result["stopped_again"] = (
+            "the ordering readers are still incomplete after "
+            f"{ORDERING_LAUNCH_ATTEMPTS} launch rounds"
+        )
+    return result
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--report", type=Path, required=True)
@@ -122,21 +153,11 @@ def main(argv: list[str] | None = None) -> int:
         print(json.dumps(drive(report, work, args.per_reader, args.floor), indent=2))
         return 0
 
-    stuck, seen = 0, None
-    while True:
-        result = drive(report, work, args.per_reader, args.floor)
-        jobs = result.get("work")
-        if not jobs:
-            print(json.dumps(result, indent=2, default=str))
-            return 0
-        here = (result.get("stopped"), len(jobs))
-        stuck = stuck + 1 if here == seen else 0
-        seen = here
-        if stuck >= 2:
-            result["stopped_again"] = "a round of reading changed nothing twice over"
-            print(json.dumps(result, indent=2, default=str))
-            return 0
-        build_next._launch(jobs, args.reader_command, work, work, "read")
+    result = complete_ordering(
+        report, work, args.per_reader, args.floor, args.reader_command, work, "read",
+    )
+    print(json.dumps(result, indent=2, default=str))
+    return 0
 
 
 if __name__ == "__main__":

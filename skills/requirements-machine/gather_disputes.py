@@ -40,6 +40,16 @@ def _load(directory: Path) -> dict[str, dict[str, object]]:
     return out
 
 
+def needed_from_evidence(call: dict[str, object]) -> str:
+    """Classify a false part from inspectable evidence, not a reader's policy preference."""
+
+    if str(call.get("answer") or "").strip().lower() != "no":
+        return ""
+    if str(call.get("needed") or "").strip().lower() == "remove":
+        return "remove"
+    return "change" if call.get("citations") else "add"
+
+
 def gather(answer_dirs: list[Path], parts: list[dict[str, object]]) -> dict[str, object]:
     passes = [_load(d) for d in answer_dirs]
     by_id = {str(part["part_id"]): part for part in parts}
@@ -51,10 +61,7 @@ def gather(answer_dirs: list[Path], parts: list[dict[str, object]]) -> dict[str,
             missing.append(part_id)
             continue
         answers = [str(call.get("answer") or "").strip().lower() for call in calls]
-        decisions = {
-            (answer, str(call.get("needed") or "").strip().lower() if answer == "no" else "")
-            for answer, call in zip(answers, calls)
-        }
+        decisions = {(answer, needed_from_evidence(call)) for answer, call in zip(answers, calls)}
         if len(decisions) == 1:
             agreed += 1
             continue
@@ -67,7 +74,7 @@ def gather(answer_dirs: list[Path], parts: list[dict[str, object]]) -> dict[str,
                 {
                     "read_by": answer_dirs[index].name,
                     "answer": answers[index],
-                    "needed": str(call.get("needed") or "").strip().lower(),
+                    "needed": needed_from_evidence(call),
                     "citations": call.get("citations") or [],
                     "looked_at": call.get("looked_at"),
                     "note": call.get("note"),

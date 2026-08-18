@@ -464,10 +464,13 @@ def bootstrap(
                 }
                 if any(active.get(key) != value for key, value in expected_active.items()):
                     raise work_memory.WorkMemoryError("bootstrap-active-state-conflict", 4)
-            else:
-                directive_state = os.environ.get(
-                    "MK_DIRECTIVE_STATE_PATH", str(sequence_guard.DEFAULT_DIRECTIVE_STATE_PATH),
-                )
+                else:
+                    directive_state = os.environ.get(
+                        "MK_DIRECTIVE_STATE_PATH",
+                        str(sequence_guard.default_state_path(
+                            root / "working-agreement" / "DIRECTIVES.md"
+                        )),
+                    )
                 sequence_guard.cmd_activate(argparse.Namespace(
                     task_id=task_id, root=str(root), state=None, sequence_doc=None,
                     discovery_log=str(document_path), sequence_id=None,

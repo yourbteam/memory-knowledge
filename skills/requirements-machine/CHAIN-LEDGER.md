@@ -427,3 +427,51 @@ Entry 2 is the evidence: it cost two runs and moved the distance not at all.
 **The deciding fact:** if N and O pick the same id, Path A is confirmed and the distance is 3 of 3.
 If they disagree, the question is whether the cause is the *same* missing property or a *new* one —
 a new one each time is Path B.
+
+## 13 August 2026 — reader work became continuously observable
+
+The real reader launcher was run twice before the change. Both launches wrote the same
+`launch-read-1.log`, so only the last history survived, and no `feed.jsonl` existed while either
+reader worked. The launcher now appends and flushes start, safe activity, structured failure, and
+finish events for every blind reader job. Stage, seat, output, pid, duration, exit, delivery,
+model, harness, and the unique raw-log name stay attached to that job without entering any
+judgement gate. Prompt text, repository content, model prose, and error prose stay out of the
+feed; lossless output stays in the referenced raw log.
+
+Proof through the real launcher: a controlled reader was held open after emitting a tool event,
+and the start and activity lines were readable before it was released. One successful launch and
+two repeated failures then left three distinct logs; success recorded its model/harness and
+delivery, both failures retained their raw details, and the feed contained none of the supplied
+private text. The full Description and Requirements machinery tests passed together.
+
+## 13 August 2026 — rejected extras stopped becoming required retry work
+
+A live description run enumerated 34 leftover entries. One reader returned complete answers for
+all 34 plus four records named L35–L38, which did not exist in the fixed input. The identity gate
+correctly quarantined the four extras, but the controller built its retry instruction from the
+pre-quarantine gate. Three replacement readers were therefore told to create the same nonexistent
+records; each correctly refused, and the bounded reader loop stopped.
+
+Every model-stage gate now inspects again after quarantining rejected files. The original refusal
+is retained when legitimate records are missing or invalid, so the retry remains actionable. When
+only unknown extras were removed and every expected record is present, the stage advances without
+launching another reader. The shared boundary covers verification, obligation and leftover
+reading, merge, split, answer, and settlement.
+
+Proof uses the captured live shape through the real controller: 34 accepted leftover records plus
+L35–L38 failed before the change with `waiting_for_readers`; after the change it quarantined all
+four extras, retained all 34 expected records, emitted no retry work, and completed. The full
+Requirements Machinery test file passes 11 tests before client installation and live resumption.
+
+## 13 August 2026 — an owner answer became controller input
+
+The first upgraded real run ended correctly with `needs_owner`, but the controller only printed
+the questions. It had no operation for accepting the owner's answer, so finishing the run would
+have required a person to edit a merge record, part answer, or generated document—the exact manual
+output repair the machinery forbids.
+
+Every question now carries a stable decision id and complete choices. The same `run.py` command
+accepts one offered id and choice, validates it against the current terminal result, records it in
+the work directory, applies it at the original merge or part boundary, and immediately recomputes
+the report. A merge answer changes consolidation; a part answer selects the grounded reader side
+that already supplied that verdict. Nothing edits reader evidence or the generated documents.

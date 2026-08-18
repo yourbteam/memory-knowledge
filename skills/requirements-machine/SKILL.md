@@ -53,9 +53,39 @@ python3 run.py --subject "<subject>" --description <file.md> --work <dir> \
 4. When they return, run the command again. It will either hand back the next jobs or finish.
 5. Repeat until it stops handing back jobs.
 
+When the terminal status is `needs_owner`, every unresolved item carries a stable `decision_id`
+and its complete `choices`. Record one answer through the same controller—never by editing a
+reader record or either generated document—and rerun is automatic:
+
+```text
+python3 run.py <the same run arguments> \
+  --owner-decision-id '<decision_id>' --owner-choice '<offered choice>'
+```
+
+The controller refuses an id it did not ask for and a choice it did not offer. It stores accepted
+answers in the work directory, applies them at the original merge or part boundary, and asks only
+for what remains.
+
 With `--reader-command`, steps 2–5 are owned by the controller. It validates the installed client
 runtime before launch, starts every job in the round in parallel, and stops on a terminal status.
 Two rounds with no gate-visible progress return `blocked`; they never loop indefinitely.
+
+### Live reader telemetry
+
+While that autonomous loop runs, watch it with:
+
+```text
+tail -f <work>/feed.jsonl
+```
+
+Every reader launch appends `agent started`, safe streamed `agent` activity, any structured
+`agent failure`, and `agent finished`. The events carry the machinery, stable stage/job, blind
+reader seat, output identity, process id, duration, exit result, delivery status, raw-log name,
+and—after delivery—the model and client harness from that reader's private `reader.json`.
+Restarts append new events and use a process-qualified `launch-*.log`; they never overwrite an
+earlier launch. The feed deliberately excludes the instruction, model prose, repository content,
+and detailed error prose. Lossless stdout and stderr remain in the referenced private raw log for
+diagnosis.
 
 Nothing else is yours to decide. Do not re-order stages, do not skip a second pass because the
 first looked good, and do not fix a stage's output by hand — if a gate refuses, the reading was

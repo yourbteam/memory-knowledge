@@ -109,7 +109,9 @@ def _json_command(command: list[str], *, root: Path) -> dict[str, Any]:
 def _directive_guard_args(root: Path) -> list[str]:
     directive_state = os.environ.get(
         "MK_DIRECTIVE_STATE_PATH",
-        str(sequence_guard.DEFAULT_DIRECTIVE_STATE_PATH),
+        str(sequence_guard.default_state_path(
+            root / "working-agreement" / "DIRECTIVES.md"
+        )),
     )
     return [
         "--directives-path",

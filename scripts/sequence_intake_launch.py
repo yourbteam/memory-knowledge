@@ -343,7 +343,9 @@ def _prepare_correction_bootstrap(
     repository_root = Path(repository_roots["memory-knowledge"])
     directive_state = Path(os.environ.get(
         "MK_DIRECTIVE_STATE_PATH",
-        str(sequence_guard.DEFAULT_DIRECTIVE_STATE_PATH),
+        str(sequence_guard.default_state_path(
+            repository_root / "working-agreement" / "DIRECTIVES.md"
+        )),
     )).resolve()
     bootstrap_argv = [
         "python3",

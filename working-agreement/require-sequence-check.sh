@@ -22,6 +22,12 @@ MAX_AGE_SECONDS="${MK_SEQUENCE_CHECK_MAX_AGE:-10800}"   # 3h; a long session re-
 
 payload="$(cat)" || exit 0
 
+# A helper run has no channel to Kamen, so a gate written about him cannot be satisfied from
+# inside one. That includes a worker the implementation machinery starts as its own process:
+# on 2026-08-16 an r19 builder spent 11.4 minutes blocked by these gates and delivered nothing.
+# Stand down there; see is-helper-transcript.sh.
+printf '%s' "$payload" | "$(dirname "$0")/is-helper-transcript.sh" && exit 0
+
 read -r tool_name session_id <<EOF
 $(python3 - "$payload" <<'PY' 2>/dev/null || echo "? ?"
 import json, sys

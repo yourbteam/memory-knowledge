@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import json
+import os
 from pathlib import Path
 from uuid import NAMESPACE_URL, uuid5
 
@@ -511,6 +512,39 @@ def test_dispatch_marks_zero_argument_child_as_prepared(
     assert observed["env"][
         sequence_intake_launch.DISPATCH_MARKER
     ] == "1"
+
+
+def test_dotnet_deploy_adapter_environment_reaches_child(
+    monkeypatch,
+):
+    monkeypatch.setenv("PATH", "/usr/bin:/bin")
+    prepared = sequence_intake_launch.sequence_intake_adapters.prepare(
+        "taggable-api-deploy",
+        {"repository_key": "taggable-api", "verify": True},
+        artifact_paths={},
+        repository_roots={"taggable-api": "/repos/taggable-api"},
+    )
+    observed = {}
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_guard_prepared",
+        lambda *_args: None,
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch.subprocess,
+        "run",
+        lambda argv, **kwargs: (
+            observed.update(argv=argv, **kwargs)
+            or type("Completed", (), {"returncode": 0})()
+        ),
+    )
+
+    assert sequence_intake_launch._dispatch_prepared(
+        "task-123", prepared,
+    ) == 0
+    assert observed["env"]["PATH"] == (
+        f"{Path.home() / '.dotnet'}{os.pathsep}/usr/bin:/bin"
+    )
 
 
 def test_workflow_resume_dispatch_requires_controller_owned_preflight() -> None:

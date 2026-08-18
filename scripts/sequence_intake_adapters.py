@@ -3,8 +3,9 @@
 
 from __future__ import annotations
 
-import json
 import hashlib
+import json
+import os
 from collections.abc import Callable, Mapping
 from copy import deepcopy
 from datetime import datetime
@@ -218,6 +219,7 @@ DEPLOY_SEQUENCE_CONFIG = {
     "taggable-api-deploy": {
         "script": "scripts/deploy-api.sh",
         "repository_example": "taggable-api",
+        "requires_dotnet": True,
     },
     "taggable-admin-spa-deploy": {
         "script": "scripts/deploy-admin-spa.sh",
@@ -227,6 +229,7 @@ DEPLOY_SEQUENCE_CONFIG = {
     "taggable-media-worker-deploy": {
         "script": "scripts/deploy-media-worker.sh",
         "repository_example": "taggable-api",
+        "requires_dotnet": True,
     },
 }
 
@@ -2364,6 +2367,16 @@ def _prepare_deploy(
         argv.extend(["--api-base", api_base])
     if not verify:
         argv.append("--no-verify")
+    environment = None
+    if config.get("requires_dotnet"):
+        inherited_path = os.environ.get("PATH", "")
+        dotnet_path = str(Path.home() / ".dotnet")
+        environment = {
+            "PATH": (
+                f"{dotnet_path}{os.pathsep}{inherited_path}"
+                if inherited_path else dotnet_path
+            ),
+        }
     return _script_payload(
         sequence_id=sequence_id,
         profile="verified" if verify else "no-verify",
@@ -2372,6 +2385,7 @@ def _prepare_deploy(
         repository_root=repository,
         effectful=True,
         operation="deploy",
+        environment=environment,
     )
 
 

@@ -92,6 +92,7 @@ def _packet(intent: Path, context: Path, questions: Path, out: Path) -> dict[str
         "instruction": LOOK.format(questions=questions, intent=intent, context=context, out=out)
         + BLIND + HOW_TO_READ.format(scratch=scratch),
         "waiting_for": str(out),
+        "scratch": str(scratch),
     }
 
 

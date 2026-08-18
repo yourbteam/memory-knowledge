@@ -119,7 +119,7 @@ def _run_purpose_model(
         raise ValueError("the purpose stage lost its code-controlled model command")
     executable = shutil.which("codex")
     if executable is None:
-        raise ValueError("codex executable is unavailable")
+        raise ValueError("Codex CLI is unavailable")
     argv = projection_runner.build_codex_argv(
         executable, work, tuple(), work_items[0]["command"]
     )

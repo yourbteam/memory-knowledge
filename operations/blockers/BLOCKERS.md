@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `afe1c07bc93e1624c781934f741cc55844c37186d47813ea78f1533df94d8d4d`
+Ledger-SHA256: `f995939089118a7d69af7b3c4dccabae7241aac31d5fb1fd54a09189612e79a8`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -645,6 +645,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The isolated recovery test expected a leading porcelain status space that the shared git helper strips.
 - Evidence: Runtime recovery succeeded; pytest reported only expected M excluded.txt versus actual stripped M excluded.txt.
 
+## blk-0c207ee59708569480bf39db
+
+- Status: `closed`
+- Subject: `deploy-login-email-pause-20260812`
+- Step: `select-discovery-bootstrap`
+- Surface: `sequence-selection`
+- Symptom: The required discovery-bootstrap controller cannot be selected for the workflow-orchestrator deployment.
+- Evidence: Exact select command returned sequence-not-valid-for-operation before any deployment run or Azure action.
+
 ## blk-0c551f9a30f8cf4d583644cb
 
 - Status: `non-gap`
@@ -919,6 +928,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The locked final-strategy unit vector returned invalid instead of valid because its draft question section failed the canonical parser.
 - Evidence: test_locked_roadmap_uses_supplied_values_and_verified_proof failed with final validation issue beginning owner_questions_invalid.
 
+## blk-140e8270e48e3a2d545e3525
+
+- Status: `verified`
+- Subject: `implementation-machine-build-next`
+- Step: `record-of-what-changed-per-attempt`
+- Surface: `implementation machine, the watching that reads what a builder changed`
+- Symptom: The repository observation was settled once per item. On the first live batch r100's second builder wrote 48 lines into the engine dispatch seam, declared no files, and the step reused the first attempt's empty result: the item was refused for changing nothing while its change sat in the working tree. The same hole existed across a ruling window, where attempt numbering restarts.
+- Evidence: united-partners Tasks/pre-engagement-feedback-revision/build/build-r100: refused-1.json and refused-2.json both recorded as changed nothing, files-observed.json empty, while git showed src/up_harness/engine/runner.py modified by 48 lines at 11:41:33
+
 ## blk-142074f4e303110bc777fa79
 
 - Status: `fixed-awaiting-verification`
@@ -972,6 +990,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: The focused test guard rejected the pre-edit source receipt after the approved test file changed.
 - Evidence: sequence_guard returned stale-source-bundle after tests/test_plan_playbook_v2.py was extended.
+
+## blk-157f7304f284f36fd707e4ad
+
+- Status: `closed`
+- Subject: `phase-58-implementation-item-71`
+- Step: `implementation-machine-ruling-baseline-refresh`
+- Surface: `implementation-machine-controller`
+- Symptom: The resumed r194 attempt reused a tests-before record with 8 failures even though the builder fresh pre-change suite passed 1244 tests.
+- Evidence: Real feed reported already_failing=8; machinery builder progress.md reported unchanged full suite 1244 passed, 3 skipped, 596 subtests.
 
 ## blk-159b550dc7ccadc3990bb1cf
 
@@ -2215,6 +2242,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Fresh verifier rejected O-C04-02 because its launch prompt supplied d0c85b0f... while the active ledger binds d0c85cffa239....
 - Evidence: Ledger contains d0c85cffa239a1369f13c75fcb709b0e655bf0532e27d5d34ebd0a82185b9a14 twice; verifier reported the supplied d0c85b0f... value is absent and unresolvable.
 
+## blk-3552f3759a4c3448d66e011d
+
+- Status: `closed`
+- Subject: `phase-58-implementation-item-71`
+- Step: `greenfield-selected-owner-materialization`
+- Surface: `prevention-contract-materializer`
+- Symptom: Selected-owner materialization cannot regenerate greenfield-full-drive after the approved drive_dag binding because two additional source hashes lack authority projection
+- Evidence: Materializer refused greenfield_program_state.py; source inspection also identifies mcp_server.py drift; executable projection was not written
+
 ## blk-355efcd50c2e0f3e79a4e455
 
 - Status: `closed`
@@ -2466,6 +2502,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `discovery-promotion-lifecycle executable owner source binding`
 - Symptom: Canonical sequence promotion cannot load the typed registry after the approved lifecycle controller correction.
 - Evidence: sequence_promote failed in prevention_registry.load_executable_owner_contracts; materializer --check independently reports source-correction-not-approved for scripts/discovery_promotion_lifecycle.py. Current source hash is 312fb94f while the proposal approved-post hash is 43db4c4c.
+
+## blk-3c186b726daed036e2e5b000
+
+- Status: `closed`
+- Subject: `phase-58-implementation-item-71`
+- Step: `implementation-machine-terminal-refusal-brake`
+- Surface: `skills/implementation-machine/build_next.py`
+- Symptom: Implementation Machinery opened attempt 7 after six valid semantic refusals despite its configured three-attempt limit.
+- Evidence: The r67 live feed recorded refusals 1 through 6 and then item taken up attempt 7; source ATTEMPTS=3 but the unattended loop continues every built:false verdict.
 
 ## blk-3c36ef4df4eb4e316591755b
 
@@ -2845,6 +2890,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The convergence state rejected expected-state advancement for approved executor edits.
 - Evidence: accept-baseline rejected src as lacking a matching path approval, then scripts as drift outside the declared change set.
 
+## blk-44010617dc49894ff6e00848
+
+- Status: `superseded`
+- Subject: `commit-push-main`
+- Step: `repository-registration`
+- Surface: `sequence_intake_launch.py:repository-selection`
+- Symptom: The guarded publisher cannot select the current taggable-operator-portal checkout.
+- Evidence: The repository choices omit taggable-operator-portal and the configured repository registry has no matching root.
+
 ## blk-44599b6976b59b1f17db1443
 
 - Status: `fixed-awaiting-verification`
@@ -2991,6 +3045,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: compose-llm-strategy-brief remains running while the persisted run exposes no attempt number, retry state, heartbeat, elapsed time, or safe progress reference.
 - Evidence: run up-run-d99c2431f89f remained at updated_at 2026-07-19T17:20:40.088682+00:00 with phase 20 running and empty output; executor.py uses blocking subprocess.run and runner persists only after the role returns.
 
+## blk-45dfda9c4188bdf2f04f1678
+
+- Status: `closed`
+- Subject: `phase-58-implementation-item-71`
+- Step: `implementation-machine-r194-owner-ruling`
+- Surface: `united-partners-strategy-brief`
+- Symptom: Implementation Machinery refused r194 after five attempts because live code still tidies blank_slate_requirements and rewrites an explicit empty clearance_state to cleared
+- Evidence: Two independent readers produced counterexamples; prescribed scratch tests passed; build-r194 refused attempt 5 names r194.p1 and r194.p2 not agreed
+
 ## blk-45feac2859a7b950a41fcc61
 
 - Status: `non-gap`
@@ -3044,6 +3107,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `focused-pytest-suite`
 - Symptom: The focused suite completed with at least one failure marker but the command transport did not return the traceback or exit code.
 - Evidence: Pytest progress ended at ....................................................F...; ps confirms no pytest process remains.
+
+## blk-46f10602de58bdf93487609f
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `verify-session-memory-scope`
+- Surface: `memory-knowledge-registry-publication`
+- Symptom: The registry bundle materializes, but its full acceptance suite reports source-observable evidence drift after the approved publisher source change.
+- Evidence: Focused run: 115 collected, 108 passed, 7 failed; four registry failures resolve to source-observable-source-drift for commit-push-main.
+- Classification: `incidental-system-defect`
+- Downstream owner: `registry-observable-evidence-repair`
 
 ## blk-471c325bdc1a6e949cf96158
 
@@ -3252,6 +3326,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Drive stdout says stage complete but the persisted source receipt discards that stage
 - Evidence: main writes result_identity next_stage for every non-status command while cmd_drive returns stage complete
 
+## blk-4c46132a9e475781cbe2d9b6
+
+- Status: `closed`
+- Subject: `taggable-payouts-publish-20260811`
+- Step: `run-start`
+- Surface: `work-memory ledger`
+- Symptom: The guarded commit/push run cannot start
+- Evidence: run-start returned ok:false error PermissionError after successful activation
+
 ## blk-4c8b8fb67b86ea3078916913
 
 - Status: `fixed-awaiting-verification`
@@ -3296,6 +3379,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `skills/research-playbook-v2/references/planner-handoff.md`
 - Symptom: All six fresh core agents produced richer requirement_statuses objects without the required research_value field, so terminal PASS states cannot emit packages.
 - Evidence: emit-package returned every requirement status must contain requirement_id, research_value, and evidence_ids. Every final-v3 candidate status uses status/conclusion fields instead; SKILL.md and planner-handoff.md do not define the exact candidate requirement_statuses schema, and record_candidate accepts it until emission.
+
+## blk-4d8f88392804cea3d108d576
+
+- Status: `closed`
+- Subject: `phase-58-implementation-item-71`
+- Step: `implementation-machine-r210-empty-builder-delivery`
+- Surface: `implementation-machine-codex-worker`
+- Symptom: Four Codex builder workers for r210 attempt 2 exited with code 1 without delivering change.json; two ran for minutes and two exited quickly.
+- Evidence: feed.jsonl jobs 7-1, 8-1, 1-1, and 2-1 each wrote 0 of 1 with exit_code 1; build-r210 has no change-2.json; attempt remains 2.
 
 ## blk-4db16bbef8b7b6cc6c1d4d9e
 
@@ -3368,6 +3460,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard-markdown-tokenization`
 - Symptom: The corrected approval command is still ungrounded because shlex rejects the entire Markdown row
 - Evidence: Record row note contains unmatched apostrophe in helper's; shlex.split raises No closing quotation
+
+## blk-4fce5fe94a90472f1332b97a
+
+- Status: `closed`
+- Subject: `deploy-login-email-pause-20260812`
+- Step: `bootstrap-deploy-discovery`
+- Surface: `sequence-intake`
+- Symptom: Discovery intake rejects the existing Azure deployment script because it is not a zero-input semantic-intake launcher.
+- Evidence: sequence_intake_launch.py reached Checked-in zero-input script and required: The script must launch its own semantic intake; mcp-agents-workflow/infra/azure-push.sh parses operational flags and directly deploys.
 
 ## blk-501bd5b780fabace56be3965
 
@@ -4884,6 +4985,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: A legitimate bootstrap edit is dispatched to the changed bootstrap, which rejects itself against the old activated hash before recording correction.
 - Evidence: Iteration-3 reviewer and critic confirmed REV-LIFECYCLE-002 remains FIX NOW and requires an immutable launcher executing authenticated old bootstrap bytes.
 
+## blk-7134e82812f4639d8ce33d65
+
+- Status: `closed`
+- Subject: `commit-push-main`
+- Step: `publish`
+- Surface: `united-partners-publish-test-preflight`
+- Symptom: The scoped publish stopped before staging because the repository test suite could not create its temporary state file.
+- Evidence: 1313 tests ran; 11 errors all ended in PermissionError Errno 1 for .test-up-harness-state/up-run-*.tmp; no commit was created.
+
 ## blk-717474e2e230ab661680b7df
 
 - Status: `non-gap`
@@ -5063,6 +5173,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/evaluate_plan_playbook_v2.py,tests/test_plan_playbook_v2_evaluator.py`
 - Symptom: A valid independent authority review cannot be recorded when the reviewer output uses normal pretty-printed JSON bytes.
 - Evidence: Guarded suite event 4f461726-6c28-4ebb-af4a-0ad76dbc91fd: 186 passed and 2 failed at record_fixture_authority_review because finalize rewrote the raw reviewer JSON canonically.
+
+## blk-75ce2d1894ed77daef0e14c3
+
+- Status: `closed`
+- Subject: `memory-knowledge-dotnet-deploy-fix-publish-20260817`
+- Step: `select-sequence`
+- Surface: `prevention-registry`
+- Symptom: The registered scoped publisher cannot be selected because its executable-owner source hash differs from the current memory-knowledge working tree.
+- Evidence: work_memory select stopped with executable-owner-source-hash-drift:commit-push-main before creating a selection receipt or changing Git state.
 
 ## blk-76231ce085b8783be95ac11d
 
@@ -5363,6 +5482,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The discovery controller rejected the assessment sequence before creating a run because its research controller executable was not declared as a dependency.
 - Evidence: discovery_bootstrap.py exited 3 with executable-outside-manifest::skills/research-playbook/scripts/research_package.py.
 
+## blk-7d12e1c16a6ed7cda9fbe9d3
+
+- Status: `closed`
+- Subject: `phase-58-implementation-item-71`
+- Step: `sequence-selection`
+- Surface: `prevention-registry`
+- Symptom: Registered sequence selection aborts before the implementation drive can be authorized
+- Evidence: work_memory.py select returned executable-owner-source-hash-drift:commit-push-main
+
 ## blk-7d3180cd71670435a795f1d8
 
 - Status: `non-gap`
@@ -5569,6 +5697,24 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `owner-runtime`
 - Symptom: Three local-workflow-orch-image run tests fail because cmd_run invokes docker image prune -f outside the modeled command contract.
 - Evidence: test_run_maps_host_port, test_run_uses_docker_assigned_port, and test_run_recovers_from_docker_bind_failure all raise unexpected command docker image prune -f.
+
+## blk-832e14c2521ba05fd8e5fe49
+
+- Status: `open`
+- Subject: `taggable-dashboard-visuals-20260811`
+- Step: `dashboard-build-and-lint`
+- Surface: `local-verification`
+- Symptom: The Dashboard build and lint commands stop before reading the changed code.
+- Evidence: npm run build reports tsc not found; npm run lint reports eslint not found; node_modules is absent.
+
+## blk-836d8865fc49e709b78c3cc5
+
+- Status: `closed`
+- Subject: `commit-push-main`
+- Step: `publish`
+- Surface: `git-index-write`
+- Symptom: Registered publish could not create .git/index.lock.
+- Evidence: scoped_git_publish returned ok=false before staging: fatal Unable to create /Users/kamenkamenov/memory-knowledge/.git/index.lock: Operation not permitted.
 
 ## blk-83777f30fb095c83dee19e78
 
@@ -5812,6 +5958,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `git-index-ledger-conflict`
 - Symptom: A concurrent stash application reintroduced conflict markers after a clean 143-test verification, making selection stale before run-start.
 - Evidence: git status showed UU in ledger, blocker view, sequence document, and bootstrap; canonical ledger union appended 104 events and regenerated the blocker view.
+
+## blk-89a4c871db834fe17ec9b6cd
+
+- Status: `verified`
+- Subject: `implementation-machine-build-next`
+- Step: `record-of-what-changed`
+- Surface: `implementation machine, the durable record of which files a builder changed`
+- Symptom: The item record names only the files the builder said it changed. Phases 10-11: 37 named where 44 had to move. Phases 12-13: 21 named where 43 had to move; a clean copy of the repository carrying only the named files failed 67 tests. The same list is what both blind readers are told changed.
+- Evidence: united-partners 5f5934b and 1ce9eec, each published on a hand-rebuilt manifest; the 67-failure clone run on 2026-08-16; done.json under the protected control root naming 21 files for a batch whose true set was 43
 
 ## blk-89c71cdc28f87c510f3a1a23
 
@@ -6084,6 +6239,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/discovery_bootstrap.py`
 - Symptom: Bootstrap rejected the research discovery because its controller executable was not declared as a dependency.
 - Evidence: Controller returned executable-outside-manifest::skills/research-playbook/scripts/research_package.py.
+
+## blk-90691007e741d002754dc2b5
+
+- Status: `closed`
+- Subject: `phase-58-implementation-item-71`
+- Step: `sequence-selection`
+- Surface: `prevention-registry`
+- Symptom: Registered sequence selection advances past commit-push-main but aborts on greenfield-full-drive source drift
+- Evidence: Exact work_memory.py select retry returned executable-owner-source-hash-drift:greenfield-full-drive
 
 ## blk-909a39c3c98f1f638ca79574
 
@@ -6836,6 +7000,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Internal-readiness and coverage lenses started, but the concurrent satisfaction spawn was rejected by the runtime thread limit.
 - Evidence: collaboration.spawn_agent returned agent thread limit reached before creating prevention_successor_satisfaction.
 
+## blk-a0b2ea74b5108d4bc2190dc3
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `lifecycle-closeout`
+- Surface: `scripts/work_memory.py`
+- Symptom: The public verify command cannot record same-path investigation proof for a non-gap blocker unless a correction is also supplied.
+- Evidence: cmd_verify requires equal correction and blocker counts, while ledger validation supports blocker-only investigation verification; clean verify is rejected after a correction-required blocker.
+- Classification: `incidental-system-defect`
+- Downstream owner: `work-memory-maintainers`
+
 ## blk-a0f0406e9bb3d9073a2d1c20
 
 - Status: `closed`
@@ -6907,6 +7082,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-guard`
 - Symptom: sequence_guard rejected the symbolic multi_agent verifier action before launch
 - Evidence: guard returned exit 4 with {error: invalid-guarded-command, ok: false}; no verifier agent was spawned
+
+## blk-a3432c1ce4a72558bf99bab8
+
+- Status: `closed`
+- Subject: `phase-58-implementation-item-71`
+- Step: `implementation-machine-no-change-attempt-accounting`
+- Surface: `skills/implementation-machine/build_next.py`
+- Symptom: Two consecutive r158 builders delivered no change, but each controller pass deleted its own refusal and relaunched attempt one.
+- Evidence: The live feed records builder changed nothing, untrusted refused-1 removal, and another attempt-one dispatch twice; protected state contains two violation copies and no authoritative refusal.
 
 ## blk-a378cab0b0824efa4baa83cd
 
@@ -7078,6 +7262,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `research-playbook-driver-tests`
 - Symptom: Focused suite has 4 failures: two old global/shared-deadline assertions, one admission expectation, and one exhausted retry deadline after TERM-resistant first attempt.
 - Evidence: 177 passed; failures are test_whole_round_admission_is_non_mutating, test_admitted_lens_retry_receives_a_fresh_deadline, test_lens_launches_share_the_first_lens_deadline, and test_term_resistant_worker_and_descendant_are_killed_before_retry.
+
+## blk-a6ce7996f3ffa29dec90e185
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `publish`
+- Surface: `git-index`
+- Symptom: Git could not create the repository index lock, so staging did not start.
+- Evidence: The guarded publish returned fatal Unable to create .git/index.lock: Operation not permitted.
+- Classification: `incidental-system-defect`
+- Downstream owner: `memory-knowledge-maintainers`
 
 ## blk-a6d5609428c01782ddc1e715
 
@@ -7547,6 +7742,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: One visibly unified source unit was recorded as two ledger elements.
 - Evidence: In live canary p3, element-000002 captured Column: W at [43,89,125,121], while contained element-000003 captured %=300/364 at [56,105,111,113]; both received separate pending relationship obligations.
 
+## blk-b14d6009e66c9b743128dc51
+
+- Status: `closed`
+- Subject: `implementation-machine-upgrade-20260811`
+- Step: `implementation-machine-cli-proof`
+- Surface: `skills/implementation-machine/__pycache__`
+- Symptom: The direct CLI proof wrote bytecode into the canonical skill tree, so both projection checks refused the release.
+- Evidence: Projection manifest expected eec3c82c but canonical validation read f968f446 after the CLI proof.
+
 ## blk-b18c782a382063e4b40900ab
 
 - Status: `non-gap`
@@ -7564,6 +7768,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `staged-markdown`
 - Symptom: git diff --cached --check reports trailing whitespace in new durability research and plan documents
 - Evidence: 20 header metadata lines reported across six staged Markdown files
+
+## blk-b1fc9684649d52bfebf42890
+
+- Status: `closed`
+- Subject: `commit-push-main`
+- Step: `sequence-guard-activate`
+- Surface: `memory-knowledge:scripts/sequence_guard.py activate`
+- Symptom: sequence_guard.py activate exits 1 because the shared directive-read state names a different checkout of DIRECTIVES.md
+- Evidence: Two consecutive activate calls for task up-feedback-gate-and-pack-2026-08-17 printed: directive read state was recorded for /Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/working-agreement/DIRECTIVES.md, expected /Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md; exit=1 both times.
 
 ## blk-b20bcf38ad8cb8de94e38208
 
@@ -7790,6 +8003,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Every connection to taggable-dev from this machine is refused at the Azure SQL firewall, so no taggable-api device change can be verified against real schema or real data.
 - Evidence: Taggable.MigrationRunner query returned the firewall rejection for 94.68.48.88; az sql server firewall-rule list -g DB -s taggable-dev shows no rule covering that address. taggable-api has no test project and no local database, so taggable-dev is the only verification seam.
 
+## blk-b629ba34c8cb1f0df7fb0fc8
+
+- Status: `closed`
+- Subject: `commit-push-main`
+- Step: `publish`
+- Surface: `git-index-lock`
+- Symptom: The guarded publisher could not stage the approved telemetry manifest because Git could not create its index lock.
+- Evidence: The publish result returned ok=false before staging with Operation not permitted for .git/index.lock; the index was empty before launch.
+
 ## blk-b6ae492051e5bbefdedfc855
 
 - Status: `non-gap`
@@ -7918,6 +8140,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The Vivacom live verification cannot start because sequence_guard status and activate both reject the recorded phase-20 correction bundle as stale.
 - Evidence: Work-memory correction b5ddc89d-0ddc-46c1-b3eb-18d17ad3031f transitioned source bundle e6baaa2c to 6fd55d43. sequence_guard status and activate for task vivacom-decision5-base-regeneration-v2 both returned stale-source-bundle. The corrected predecessor run d199be4d cannot close while incidental telemetry blocker blk-c85e95150851b3c431fc1f04 remains open.
 
+## blk-b832fe88a1f2f4f8c3553443
+
+- Status: `closed`
+- Subject: `commit-push-main`
+- Step: `launch-intake`
+- Surface: `sequence-intake-contract`
+- Symptom: The no-argument commit-push intake refused before preparing or dispatching Git.
+- Evidence: sequence_intake_launch.py returned intake-contracts-stale:intake-contract-drift:commit-push-main.
+
 ## blk-b85621e74770aebf365e9883
 
 - Status: `closed`
@@ -7962,6 +8193,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `vivacom-phase20-strategy-claim-inventory-correction`
 - Symptom: The resumed Phase 20 generated a brief, completed all 17 inventory batches, then failed because two exact governed assertions remained unbound to valid claim ids after the correction binder ran.
 - Evidence: UP child up-run-87b03443196f persisted strategy_correction_progress started issue_count_before=4, then failed issue_count_after=4, followed by strategy_validation_rejected; rejected attempt is context.up.cd_s_002.strategy_brief_attempts[15].
+
+## blk-b8f3f38e418322aeade10e1f
+
+- Status: `closed`
+- Subject: `taggable-api-deploy`
+- Step: `prepare-dispatch`
+- Surface: `sequence-intake-adapter`
+- Symptom: The prepared deployment command cannot find dotnet, so it would stop before publishing or touching Azure.
+- Evidence: The selected runbook requires the local .dotnet directory on PATH; command -v dotnet returned no path while the prepared argv contained only bash and deploy-api.sh.
 
 ## blk-b94da55eefa02f78a7122744
 
@@ -8223,6 +8463,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `operator-tooling`
 - Symptom: Verification remediation help commands could not be guard-authorized with scripts/work_memory.py as source-ref.
 - Evidence: sequence_guard returned source-ref-outside-selected-bundle for five command receipts; selected manifest covers only scripts/blocker_catalog.py.
+
+## blk-bd6b715c22e2a9670e9b235a
+
+- Status: `closed`
+- Subject: `phase-58-implementation-item-71`
+- Step: `sequence-selection`
+- Surface: `prevention-registry`
+- Symptom: Global sequence selection advances past synchronized greenfield-full-drive but aborts on local-workflow-orch-image source drift
+- Evidence: Exact work_memory.py select retry returned executable-owner-source-hash-drift:local-workflow-orch-image
 
 ## blk-bda776c0b943ade30f758fbc
 
@@ -8523,6 +8772,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The isolated main staged 118 of 120 manifest paths because two research files already match remote main, and git diff --cached --check found one extra EOF blank line in thirteen V2 files.
 - Evidence: Exact missing paths: plans/agentic-trading-v2-workflow-principles-research.gap-audit.md and .md; exact whitespace paths were printed by git diff --cached --check with new blank line at EOF.
 
+## blk-c65f410660b466a6d219f8b9
+
+- Status: `non-gap`
+- Subject: `commit-push-main`
+- Step: `publish-tests`
+- Surface: `united-partners-test-state`
+- Symptom: The mandatory publish suite cannot write its isolated harness test-state temporary files.
+- Evidence: The suite ran 2390 tests and ended with 12 PermissionError exceptions at .test-up-harness-state/up-run-*.tmp; no assertion failure caused the stop.
+
 ## blk-c6d54f9736b7c08a0c36d6be
 
 - Status: `non-gap`
@@ -8677,6 +8935,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `skills/info-intake-machinery`
 - Symptom: A relationship gap between element-000002 and element-000003 was asked as a Column AF question; the accepted resolution duplicated relationship-000001 and removed the real gap.
 - Evidence: clarification-round.json binds relationship-000003 with matching_element_ids element-000002 and element-000003 but asks Column AF; projection v2 relationship-000003 binds element-000001 to element-000006, duplicating relationship-000001; ledger sequence 29 reports zero gaps.
+
+## blk-cbe2bdd9c2deb765c93cdb34
+
+- Status: `closed`
+- Subject: `deploy-login-email-pause-20260812`
+- Step: `bootstrap-deployment-discovery`
+- Surface: `bootstrap-task-identity`
+- Symptom: The prepared deployment discovery cannot start because its task identity already owns the registered discovery-bootstrap selection.
+- Evidence: The exact discovery_bootstrap.py start returned bootstrap-selection-conflict; the task receipt already selects registered subject discovery-bootstrap, while bootstrap requires a fresh identity for the generated discovery.
 
 ## blk-cc19a00d79446695934e63ab
 
@@ -9238,6 +9505,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Applying the exact authorized claim marker splits the captured span into a one-space non-assertive fragment and the governed claim, so the correction helper rejects the changed span set.
 - Evidence: Captured answer-25 span equals one leading space plus proposed_claim_text, with no suffix; same-path unittest reaches evidence_manifest_correction_surface_changed.
 
+## blk-d7102183a8822efbadc3cf45
+
+- Status: `superseded`
+- Subject: `commit-push-main`
+- Step: `publish`
+- Surface: `git-index`
+- Symptom: The scoped publisher could not stage the four approved Reporting files.
+- Evidence: git add failed creating .git/index.lock with Operation not permitted.
+
 ## blk-d744bd7251029dd92f30e887
 
 - Status: `superseded`
@@ -9798,6 +10074,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Planner v2 fixture authority has no independently reviewed PASS receipt
 - Evidence: fixture authority validates, but fixture-authority-review.json is absent
 
+## blk-e3d74bff609792f6b294dc07
+
+- Status: `open`
+- Subject: `commit-push-main`
+- Step: `publish-index-lock`
+- Surface: `scoped-git-publish-sandbox`
+- Symptom: The registered publisher could not create the Git index lock before staging.
+- Evidence: The exact prepared publish returned fatal Unable to create .git/index.lock Operation not permitted and ok false.
+
 ## blk-e3e8339cdc5096a5c6d991cc
 
 - Status: `closed`
@@ -10025,6 +10310,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The checked r13 replay stopped after iteration 1 because the selected work-memory controller changed during observer remediation.
 - Evidence: Selection expected scripts/work_memory.py sha256 6fbe6acc51e037db5a0830cd46c82f71a4435a05a5d91ee34d43699d030a3c59; current file sha256 is ff6c9172e1536ce03e250fef9dfe3c080c673ddc514294acd9b3b76bdea96e56; sequence_guard returned stale-source-bundle before iteration 2 was claimed.
 
+## blk-e89f0c7ef3dc92616cfef835
+
+- Status: `closed`
+- Subject: `commit-push-main`
+- Step: `publish`
+- Surface: `memory-knowledge:origin/main`
+- Symptom: The scoped 42-file commit was created locally but origin/main rejected the push as non-fast-forward
+- Evidence: Local commit 6ff94c1bf0d28f98424fde859cf69a948485c215 remains at HEAD; git push origin main reported main behind remote
+
 ## blk-e8a3a400e76f077d97d0bae8
 
 - Status: `open`
@@ -10060,6 +10354,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `blocker_catalog.py`
 - Symptom: The corrected approval blocker remains open after same-path verification because the failed run was closed before its fixed-awaiting transition
 - Evidence: blocker_catalog transition on run 3bfc... returned event-after-terminal; BLOCKERS.md still reports blk-9ee... open
+
+## blk-ea2c01febb1400e86d4828e6
+
+- Status: `closed`
+- Subject: `commit-push-main`
+- Step: `publish-stage-exact-manifest`
+- Surface: `/Users/kamenkamenov/memory-knowledge/.git/index.lock`
+- Symptom: The exact four-file publish could not stage because Git could not create index.lock.
+- Evidence: scoped_git_publish exited before commit with fatal Unable to create .git/index.lock: Operation not permitted.
 
 ## blk-ea35a79c54528b86774ece46
 
@@ -10961,6 +11264,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Evidence: Current projection v4 has gap_count 1 and relationship-000029 is readable; duplicate-consumption validation passes, then follow-up selection reports no still-current gap has a non-resolving preserved answer.
 - Classification: `incidental-system-defect`
 - Downstream owner: `next-info-intake-atomic-step`
+
+## blk-fd7f4fcc74c856d29a809337
+
+- Status: `non-gap`
+- Subject: `commit-push-main`
+- Step: `scoped-publish`
+- Surface: `git-index`
+- Symptom: The exact-scope publisher could not create .git/index.lock before staging.
+- Evidence: scoped_git_publish returned exit 2: Unable to create .git/index.lock: Operation not permitted
 
 ## blk-fd86d6eb585eb417e72fd9ab
 

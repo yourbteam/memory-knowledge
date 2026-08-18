@@ -29,6 +29,12 @@ nothing that passed before fails, no test disappears without an exact owner ruli
 readers say yes with repository-resolved citations. Parsed pytest failure names are diagnostics,
 never a substitute for the command exit code. `--items` is how many items may finish unattended.
 
+Each ordering-reader job carries the exact number of pair records its slice requires. Partial
+delivery remains durable but never counts as completion and never causes the launcher to terminate
+the reader. One machinery invocation permits at most three incomplete ordering-reader launch
+rounds; if the slice is still incomplete, it hands back the exact remaining work instead of
+relaunching forever.
+
 Give `--order <order.json>` instead of `--report` when the order already exists; `run.py` produces one on its own if you ever want it separately.
 
 Use `--owner-approved` only after the owner explicitly approves the bounded machinery run. It
@@ -63,10 +69,35 @@ its line must exist, and its quoted text must equal that repository line charact
 Any non-zero final test exit, unresolved citation, or unapproved disappeared test refuses the item
 with the exact failing identity and correction needed.
 
+Before a builder starts, it receives a projection of every protected pre-existing collected test
+identity. After the builder delivers, the controller collects those identities again before either
+blind reader starts. An identity that disappeared without its exact owner ruling refuses the build
+immediately and returns every missing name to the next builder request; the readers spend no time
+judging a mechanically invalid surface. An unchanged identity and an owner-authorized removal pass
+through normally. The final post-reader collection and disappearance gate still run unchanged.
+
+Controller-authored test and acceptance records have protected authority outside the built
+repository. The JSON files beside an item are inspectable projections, never the source the
+controller trusts. If a worker replaces one, the machinery preserves that write as a control
+violation and restores the protected record before making a decision. On the first protected run,
+receipts made by an earlier machinery release are adopted once only: a legacy completion must name
+every ordered part, carry two complete yes-reader records, and have matching before/after failure
+sets under the prescribed test command. Later repository files can never bootstrap authority. A
+legacy clean baseline may
+be recovered only with `--recover-clean-baseline <item> --owner-approved`: the feed must prove the
+zero-failure result preceded the builder launch, the neutral pre-builder snapshot must prove no
+pre-existing test identity disappeared, and a fresh full-suite run must still be clean.
+
 Without `--reader-command` it hands the reading back instead of running it. Then, and only then,
 launch **one agent per job, all of them, in parallel**, each given its `instruction` verbatim and
 nothing else — two jobs of one stage are two independent readers, and agreement between readers who
 could not see each other is the only evidence this machinery accepts.
+
+With a reader command, every launch gets a collision-proof log containing the complete raw stdout
+and stderr streams. Codex and Claude tool events are adapted into the live feed without replacing
+those raw records, and a streamed terminal error is repeated in the final launch event. A worker
+that delivers nothing still consumes no build attempt, but its next launch must not erase the
+evidence needed to distinguish model capacity, authentication, runtime, or item failures.
 
 ## Three things are yours
 
@@ -75,7 +106,11 @@ could not see each other is the only evidence this machinery accepts.
 - **A ruling.** When a builder refuses because the requirement and the system's own tests disagree,
   only the owner can say which is wrong. Put their answer **in their words** in `rulings.json` in
   the work directory, keyed by item id. It is quoted verbatim into the build instruction. Never
-  write one yourself and never paraphrase one. A disappeared test requires a structured ruling
+  write one yourself and never paraphrase one. When an item has already exhausted its attempts,
+  record the owner's explicit approval to resume as `{"owner_ruling": "<their exact words>",
+  "resume_after_terminal": true}`. That exact ruling opens one fresh three-attempt window, reaches
+  the builder and both blind readers, preserves all earlier work as history, and cannot reopen the
+  same item a second time. A disappeared test requires a structured ruling
   under that item, keyed by the exact collected test identity, with `authorized: true`, the
   `owner_ruling`, and non-empty `replacement_or_remaining_coverage`. A ruling for another test or
   one without its coverage record does not authorize the disappearance:

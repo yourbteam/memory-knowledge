@@ -20,6 +20,12 @@ STATE_DIR="${MK_TRIGGER_STATE_DIR:-/private/tmp/directive-trigger-state}"
 
 payload="$(cat)" || exit 0
 
+# A helper run has no channel to Kamen, so a gate written about him cannot be satisfied from
+# inside one. That includes a worker the implementation machinery starts as its own process:
+# on 2026-08-16 an r19 builder spent 11.4 minutes blocked by these gates and delivered nothing.
+# Stand down there; see is-helper-transcript.sh.
+printf '%s' "$payload" | "$(dirname "$0")/is-helper-transcript.sh" && exit 0
+
 python3 - "$payload" "$DIRECTIVES" "$TRIGGERS" "$STATE_DIR" <<'PY'
 import hashlib, json, os, re, shlex, sys
 

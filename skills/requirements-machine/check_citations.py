@@ -29,6 +29,8 @@ import argparse
 import json
 from pathlib import Path
 
+from evidence_map import source_kind
+
 #: How much of the quoted line must match. A reader retyping a line will normalise whitespace and
 #: may trim it; demanding a byte-identical match would refuse honest citations.
 def _normalise(text: str) -> str:
@@ -42,7 +44,12 @@ def _resolve(built: Path, citation: dict[str, object]) -> dict[str, object]:
 
     if not where:
         return {"ok": False, "why": "the citation names no file"}
-    path = built / where
+    named = Path(where)
+    path = named if named.is_absolute() else built / named
+    try:
+        relative = path.resolve().relative_to(built.resolve())
+    except ValueError:
+        return {"ok": False, "why": f"{where} is outside the measured repository"}
     if not path.is_file():
         return {"ok": False, "why": f"no file at {where}"}
     try:
@@ -55,11 +62,13 @@ def _resolve(built: Path, citation: dict[str, object]) -> dict[str, object]:
 
     if not quoted:
         if on_the_line:
-            return {"ok": True, "line": actual.strip(), "matched": "line exists; nothing was quoted"}
+            return {"ok": True, "line": actual.strip(), "matched": "line exists; nothing was quoted",
+                    "where": relative.as_posix(), "source_kind": source_kind(relative)}
         return {"ok": False, "why": f"{where} has {len(lines)} lines; {line_no} is not one of them, "
                                     f"and nothing was quoted that could be looked for instead"}
     if on_the_line and _normalise(quoted) in _normalise(actual):
-        return {"ok": True, "line": actual.strip(), "matched": "exact"}
+        return {"ok": True, "line": actual.strip(), "matched": "exact",
+                "where": relative.as_posix(), "source_kind": source_kind(relative)}
 
     # Readers cite a line and quote a nearby one often enough that a window is worth searching —
     # but the refusal must say what was actually there, or a retry cannot act on it.
@@ -68,7 +77,8 @@ def _resolve(built: Path, citation: dict[str, object]) -> dict[str, object]:
         for index in window:
             if _normalise(quoted) in _normalise(lines[index]):
                 return {"ok": True, "line": lines[index].strip(),
-                        "matched": f"found at line {index + 1}"}
+                        "matched": f"found at line {index + 1}", "where": relative.as_posix(),
+                        "source_kind": source_kind(relative)}
 
     # A citation is its text in a file, not its line number. Seven true answers were refused on one
     # run because another machinery was building into the same repository while they were being
@@ -80,7 +90,8 @@ def _resolve(built: Path, citation: dict[str, object]) -> dict[str, object]:
     found = [index + 1 for index, line in enumerate(lines) if _normalise(quoted) in _normalise(line)]
     if len(found) == 1:
         return {"ok": True, "line": lines[found[0] - 1].strip(),
-                "matched": f"the line moved; it is now line {found[0]}"}
+                "matched": f"the line moved; it is now line {found[0]}",
+                "where": relative.as_posix(), "source_kind": source_kind(relative)}
 
     if not found:
         why = (f"{where} does not contain the quoted text anywhere. " + (
@@ -119,6 +130,16 @@ def check(records: Path, built: Path) -> dict[str, object]:
             "follows_from_citations": "nothing addresses it" if not citations else
                                       "something addresses it",
         }
+        # A general built-system claim needs an implementation surface. A demo, generated output,
+        # test, or prose document can corroborate it but cannot alone prove future runtime behavior.
+        if verdict in {"yes", "holds", "already met", "change", "remove"} and results \
+                and not bad and not any(r.get("source_kind") == "production" for r in results):
+            kinds = sorted({str(r.get("source_kind")) for r in results})
+            row["unresolved"].append(
+                f"the verdict is {verdict!r}, but every citation is {kinds}. Cite production "
+                "code or an executable contract that carries the behavior; examples, outputs, "
+                "tests, and documentation can only corroborate it."
+            )
         # A record claiming something is done while citing nothing is unfalsifiable; refuse it.
         if citations == [] and row["verdict"] in {
             "already met", "change", "remove", "holds", "wrong", "yes",
@@ -138,8 +159,8 @@ def check(records: Path, built: Path) -> dict[str, object]:
         "checked": out,
         "refusals": refused,
         "note": (
-            "This checks that cited evidence exists and says what was quoted. Whether the cited "
-            "thing satisfies the requirement remains the reader's judgement."
+            "This checks repository scope, exact quoted text, and evidence eligibility. Semantic "
+            "support remains the judgement made independently by both readers."
         ),
     }
 

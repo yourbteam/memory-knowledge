@@ -32,4 +32,24 @@ def validate_reader_command(command: str, policy_path: Path | None = None) -> li
             f"{client} projection refuses reader command {command!r}; "
             f"it must begin with {policy['required_runtime']!r}"
         )
+    # Embedded readers do not need session persistence, skills, hooks, or MCP. Isolate those
+    # surfaces in the invoking client's own syntax without changing which client/model it runs.
+    if client == "codex":
+        forbidden_flags = {"--dangerously-bypass-approvals-and-sandbox"}
+        if forbidden_flags.intersection(parts):
+            raise ValueError("codex machinery readers refuse unrestricted host access")
+        for flag in ("--ignore-user-config", "--ephemeral"):
+            if flag not in parts:
+                parts.append(flag)
+    elif client == "claude":
+        forbidden_flags = {"--dangerously-skip-permissions", "--allow-dangerously-skip-permissions"}
+        if forbidden_flags.intersection(parts):
+            raise ValueError("claude machinery readers refuse unrestricted host access")
+        additions = (
+            "--disable-slash-commands", "--strict-mcp-config", "--mcp-config",
+            '{"mcpServers":{}}', "--no-session-persistence",
+        )
+        for item in additions:
+            if item not in parts:
+                parts.append(item)
     return parts

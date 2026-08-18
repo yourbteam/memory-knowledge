@@ -211,6 +211,7 @@ def _job(instruction: str, out: Path, scratch: Path, stage: str, count: int) -> 
         "stage": stage,
         "instruction": instruction + BLIND + HOW_TO_READ.format(scratch=scratch),
         "waiting_for": str(out),
+        "scratch": str(scratch),
         "records": count,
     }
 
