@@ -16,12 +16,12 @@
       ]
     },
     "auto-capture": {
-      "canonical_tree_sha256": "dc8696b88f693ba58bf64a874fc474b6cb1fd4489627a80ac8aa411dbf890f36",
+      "canonical_tree_sha256": "74bb43fd5d60ef2d2bc06b0f6aff1ae3726614ac8eb1750221b7dd0704f459ee",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "dc8696b88f693ba58bf64a874fc474b6cb1fd4489627a80ac8aa411dbf890f36",
+      "projected_tree_sha256": "74bb43fd5d60ef2d2bc06b0f6aff1ae3726614ac8eb1750221b7dd0704f459ee",
       "scenario_groups": [
         "CAP-MEMORY"
       ],
