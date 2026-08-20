@@ -59,7 +59,7 @@ Use it when a task involves a multi-step command sequence that has been run befo
 | `callcenter-harness-engine-invariants` | Modifying or auditing the callcenter-harness workflow engine (phase dispatch, ordering, retry, ledger/state). Guards two MAWF-derived invariants: `depends_on` is load-bearing via a stable topological `execution_order()` (cycle/unknown-dep/duplicate-id fail-closed; `subscribes_to` stays declarative by design), and per-phase retry on a RAISED exception (`max_attempts` per phase, default 1; heavy STT phases use 3; a HOLD is never retried; `attempts` on the ledger). Fork of `up_harness`, sibling of MAWF. | `operations/sequences/callcenter-harness-engine-invariants/` | `callcenter-harness:scripts/test_engine_upgrades.py` | `ALL ENGINE-UPGRADE UNIT TESTS PASS` (21 assertions: topo T1–T6 incl. all 5 workflows order-unchanged + cycle/unknown/dup raise; retry R1–R5 incl. HOLD-not-retried + attempts persisted). cc-harness commit b02903a. | `single-test` | `callcenter-harness-engine-invariants` |
 | `discovery-promotion-lifecycle` | Promote a governed discovery sequence through two same-bundle qualifications, atomic registration, and registered same-path verification. | `operations/sequences/discovery-promotion-lifecycle/` | memory-knowledge:scripts/discovery_promotion_lifecycle.py | The controller returns stage complete after a passed registered same-path run. | `workflow-drive` | `discovery-b6658d35-7870-5d15-9f4b-d316138cec83` |
 
-| `commit-push-main` | Commit and push an explicitly approved file scope while preserving unrelated working-tree changes. | `operations/sequences/commit-push-main/` | memory-knowledge:scripts/scoped_git_publish.py | The script returns ok:true with local commit equal to remote_commit, and unrelated unstaged work remains untouched. | `other` | `discovery-9c51594b-6ca3-54a0-b7d7-31632ac2d48c` |
+| `commit-push-main` | Commit and push an explicitly approved file scope while preserving unrelated working-tree changes. | `operations/sequences/commit-push-main/` | memory-knowledge:scripts/commit_push_main_launch.py | The no-argument controller returns ok:true only after exact-scope verification, commit, push, and fresh remote confirmation; unrelated changes remain untouched. | `publish` | `discovery-9c51594b-6ca3-54a0-b7d7-31632ac2d48c` |
 
 | `discovery-bootstrap` | Create and activate a missing-sequence discovery from one validated spec without stale-bundle bootstrap churn | `operations/sequences/discovery-bootstrap/` | memory-knowledge:scripts/discovery_bootstrap.py | Controller returns ok:true with one discovery, matching bundle/receipt hashes, and one started run | `deploy,workflow-drive` | `discovery-1cd9d4cf-c214-58b4-b5a7-022f51a2d344` |
 
@@ -92,6 +92,8 @@ content hash. Read the matching log below before running the sequence.
   it; a roots manifest belongs on `select`, not on `correct`; a machine surface outside every
   dependency bundle is declared with `--changed-environment-artifact`; and a correction run that a
   bound successor will verify must be closed `failed`, not `passed`.
+| `local-multimodal-model-benchmark` | Benchmark a local multimodal model against image-based cases and persist comparable immutable evidence. | `operations/sequences/local-multimodal-model-benchmark/` | memory-knowledge:scripts/local_multimodal_model_benchmark.py | Benchmark runner writes one immutable schema-valid evidence artifact and preserves all pre-existing local models. | `package` | `discovery-be91fd3a-3553-59c0-8500-e50e8b73b6ea` |
+
 
 ## Missing Sequence Discovery
 

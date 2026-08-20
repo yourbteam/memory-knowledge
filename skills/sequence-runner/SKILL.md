@@ -13,6 +13,19 @@ Invoke this skill only after `task-intake` returns an operational receipt. Do no
 local-development fast path merely because work uses a shell command or has three or more local
 steps. Fast-path work consists of G26 preflight, the approved action, and direct verification.
 
+Exception for every commit/push task: run `python3 scripts/commit_push_main_launch.py` with no
+arguments. That dedicated controller owns the complete numbered interview and the five mechanical
+publish boundaries. Do not classify, select, activate, start a lifecycle run, invoke
+`sequence_intake_launch.py`, or add ingestion, ledger, or proof work around this sequence. An
+already-active lifecycle record does not change this entrypoint.
+
+Choose the launch host from the requested effect before starting that interview. A dry run may run
+inside the repository sandbox. A commit-and-push request must launch the same no-argument controller
+with host permission to write the repository's Git common directory and reach the configured Git
+remote. Do not first launch a real publish in a read-only Git-metadata sandbox and treat the
+resulting `index.lock` denial as a repository defect. Host permission does not replace the
+controller's exact-scope display and numbered authorization gate.
+
 Do not wrap a self-contained local controller skill that already owns launch, ordering,
 monitoring, retries, verification, and stopping. In particular, invoke `requirements-machine`,
 `implementation-machine`, and `description-machinery` directly; their internal worker/reader loop
@@ -42,11 +55,22 @@ under G20 and preserve approval boundaries.
 5. Activate with `sequence_guard.py activate --task-id <task-id>` and exactly the selected `--sequence-doc` or `--discovery-log`. Activation by `--sequence-id` is retired.
 6. Start the durable run with `work_memory.py run-start --task-id <task-id>` and retain returned ids for exact retry.
 7. When the run has complete safe observer context, persist it once with `work_memory.py record-operation-context --run-id <run-id> --context-file <json>`; never put input values, credentials, raw output, conversation, or terminal history in that file.
-8. Launch `python3 scripts/sequence_intake_launch.py` with no arguments. Answer only the semantic
-   questions; never compose JSON, files, environment assignments, flags, argv, or shell syntax.
-9. Review the exact prepared operation. Authorize it only when its displayed sequence, operation,
-   repository, artifacts, and effect match the current explicit authority. The controller then
-   guards and dispatches the deterministic machine interface.
+8. Dispatch from the verified mode in the persisted selection receipt:
+   - `registered`: launch `python3 scripts/sequence_intake_launch.py` with no arguments. Answer
+     only the semantic questions; never compose JSON, files, environment assignments, flags,
+     argv, or shell syntax.
+   - `discovery`: do not invoke the registered-only intake launcher. Guard and run the exact
+     command already recorded in the selected discovery log.
+9. Review the exact operation before authorizing it. For a registered selection, verify the
+   launcher's displayed sequence, operation, repository, artifacts, and effect; its controller
+   guards and dispatches the deterministic machine interface. For a discovery selection, verify
+   the recorded command and its effect before executing the guarded command directly.
+   - If the prepared operation declares `host_capabilities`, do not dispatch it in a host that
+     lacks them and do not hand-build a replacement command. Request the named capability through
+     the host tool, then rerun the same zero-argument launcher. Set `MK_HOST_CAPABILITIES` only in
+     that same host-approved call; the variable records the host grant but does not grant access.
+     The launcher reuses its selection-bound prepared receipt on that rerun; do not reconstruct or
+     re-enter its semantic inputs unless it reports that the active selection changed.
 10. Treat argument-bearing commands in runbooks, help, generated retry text, and the registry
     automation column as machine compatibility evidence, not operator instructions.
 11. If a command fails, classify it under G20. Invoke `blocker-catalog` before changing a
