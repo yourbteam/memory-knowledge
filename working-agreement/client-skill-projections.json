@@ -109,6 +109,21 @@
         "claude"
       ]
     },
+    "experiment-machinery": {
+      "canonical_tree_sha256": "9c420b2cf28a5ede3ab955fab44cefbdfd81a104db054c36716f102439ce53f8",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "9c420b2cf28a5ede3ab955fab44cefbdfd81a104db054c36716f102439ce53f8",
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
     "implementation-machine": {
       "canonical_tree_sha256": "3cde23b33a730056284c97ed788ad847dd617ed66de69ae339558c094a75810e",
       "disposition": "GENERATED_CLIENT_PROJECTION",
