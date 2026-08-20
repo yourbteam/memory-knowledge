@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import hashlib
+import importlib.util
 import json
 import os
 import subprocess
@@ -10,6 +11,13 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 RUNNER = ROOT / "skills" / "experiment-machinery" / "scripts" / "run_experiment.py"
 ADAPTER = ROOT / "skills" / "experiment-machinery" / "scripts" / "intake_purpose_probe.py"
+TERMINAL_ADAPTER = (
+    ROOT
+    / "skills"
+    / "experiment-machinery"
+    / "scripts"
+    / "intake_projection_terminal_probe.py"
+)
 INTAKE_ROOT = ROOT / "skills" / "info-intake-machinery"
 REAL_PURPOSE = (
     "the important thing the intake is for is the description in the red rectangles, but each "
@@ -46,6 +54,34 @@ def _source_sha256(path: Path) -> str:
     )
     assert completed.returncode == 0, completed.stderr
     return completed.stdout.strip()
+
+
+def _terminal_adapter_module() -> object:
+    spec = importlib.util.spec_from_file_location(
+        "test_intake_projection_terminal_probe", TERMINAL_ADAPTER,
+    )
+    assert spec is not None and spec.loader is not None
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
+
+
+def test_terminal_probe_schema_keeps_citation_uniqueness_out_of_provider_schema() -> None:
+    adapter = _terminal_adapter_module()
+
+    schema = adapter._response_schema()
+
+    citations = schema["properties"]["compared_relationship_ids"]
+    assert "uniqueItems" not in citations
+    assert adapter._controlled_citations(["relationship-1", "relationship-2"]) == [
+        "relationship-1", "relationship-2",
+    ]
+    try:
+        adapter._controlled_citations(["relationship-1", "relationship-1"])
+    except adapter.ProbeError as error:
+        assert str(error) == "model response contains duplicate relationship citations"
+    else:
+        raise AssertionError("duplicate citations must fail closed")
 
 
 def _write_spec(
