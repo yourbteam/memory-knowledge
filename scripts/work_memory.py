@@ -4578,9 +4578,29 @@ def cmd_run_start(args: argparse.Namespace) -> dict[str, Any]:
             source_bundle_hash=digest,
         )
     run_id = args.run_id or str(uuid.uuid4())
+    # Both of these are read back out of receipt files, and the ledger reader refuses a
+    # run_started event whose mode or operation kind is outside its set. The writer used to copy
+    # them across unchecked, so a receipt carrying anything else wrote a line the reader would
+    # not accept -- and because every command re-validates the whole ledger, one such line on
+    # 2026-08-20 (a commit-push run whose kind read "publish", the operation it was performing
+    # rather than a kind) stopped classification, selection and everything downstream from that
+    # moment on. The check the reader applies is applied here, at the moment of writing, so a bad
+    # receipt is refused at the door instead of becoming a permanent record nothing can read.
+    mode_value = selection["mode"]
+    kind_value = classification["operation_kind"]
+    if mode_value not in {"registered", "discovery"}:
+        raise WorkMemoryError(
+            f"invalid-run-start-mode:{mode_value!r}-not-in-registered-discovery", 2
+        )
+    if kind_value not in OPERATION_KINDS:
+        raise WorkMemoryError(
+            f"invalid-run-start-operation-kind:{kind_value!r}-not-in-"
+            + "-".join(sorted(OPERATION_KINDS)),
+            2,
+        )
     fields: dict[str, Any] = {
         "run_id": run_id, "subject_id": selection["subject_id"], "lineage_id": lineage,
-        "mode": selection["mode"], "operation_kind": classification["operation_kind"],
+        "mode": mode_value, "operation_kind": kind_value,
         "source_bundle": bundle, "source_bundle_hash": digest,
         "repository_roots": repository_roots,
         "classification_receipt_hash": class_hash, "selection_receipt_hash": selection_hash,
