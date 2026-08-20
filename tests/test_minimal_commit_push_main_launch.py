@@ -4,12 +4,53 @@ import json
 import subprocess
 from pathlib import Path
 
+import pytest
+
 from scripts import commit_push_main_launch as launch
 
 
 def answers(*values: str):
     remaining = iter(values)
     return lambda _prompt: next(remaining)
+
+
+@pytest.mark.parametrize(
+    ("supplied", "expected_arguments"),
+    [
+        ("python3 -m pytest -q tests/test_one.py", ["-q", "tests/test_one.py"]),
+        (
+            "/opt/homebrew/opt/python@3.14/bin/python3.14 -m pytest tests/test_one.py",
+            ["tests/test_one.py"],
+        ),
+        ("pytest tests/test_one.py", ["tests/test_one.py"]),
+        ("uv run pytest tests/test_one.py", ["tests/test_one.py"]),
+    ],
+)
+def test_pytest_verification_uses_repository_managed_wrapper(
+    tmp_path: Path, supplied: str, expected_arguments: list[str],
+) -> None:
+    wrapper = tmp_path / launch.PYTEST_WRAPPER
+    wrapper.parent.mkdir(parents=True)
+    wrapper.write_text("#!/usr/bin/env bash\n", encoding="utf-8")
+    wrapper.chmod(0o755)
+
+    assert launch._verification_command(tmp_path, supplied) == [
+        launch.PYTEST_WRAPPER.as_posix(), *expected_arguments,
+    ]
+
+
+def test_pytest_verification_refuses_unmanaged_host_python(tmp_path: Path) -> None:
+    with pytest.raises(
+        launch.InterviewError,
+        match="selected repository's executable scripts/run_pytest.sh wrapper",
+    ):
+        launch._verification_command(tmp_path, "python3 -m pytest tests/test_one.py")
+
+
+def test_non_pytest_verification_is_preserved(tmp_path: Path) -> None:
+    assert launch._verification_command(
+        tmp_path, "git diff --check --cached -- approved.txt"
+    ) == ["git", "diff", "--check", "--cached", "--", "approved.txt"]
 
 
 def test_no_argument_dry_run_collects_numbered_choices_and_calls_minimal_publisher(

@@ -15,8 +15,10 @@ common directory and reach its configured remote. Dry runs do not need that perm
 grant never replaces the controller's exact prepared-operation display and numbered authorization.
 
 The controller displays numbered choices for the operation, repository, and changed paths. It
-collects one focused verification command, shows the complete prepared operation, and requires a
-separate numbered authorization before any commit or push.
+collects one focused verification command, mechanically routes every pytest form through the
+selected repository's executable `scripts/run_pytest.sh` wrapper, shows the normalized prepared
+operation, and requires a separate numbered authorization before any commit or push. An unmanaged
+host Python can therefore never become the pytest runtime.
 
 ## Outcome
 

@@ -5,6 +5,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shlex
 import sys
 import tempfile
@@ -19,6 +20,7 @@ except ModuleNotFoundError:  # direct script execution
 
 ROOT = Path(__file__).resolve().parents[1]
 REPOSITORY_REGISTRY_ENV = "MK_REPO_ROOTS_FILE"
+PYTEST_WRAPPER = Path("scripts/run_pytest.sh")
 
 
 class InterviewError(ValueError):
@@ -116,6 +118,37 @@ def _current_branch(repo: Path) -> str:
     return branch
 
 
+def _verification_command(repo: Path, text: str) -> list[str]:
+    """Bind pytest verification to the selected repository's managed runtime."""
+
+    command = shlex.split(text)
+    if not command:
+        raise InterviewError("focused verification command is empty")
+
+    executable = Path(command[0]).name
+    pytest_arguments: list[str] | None = None
+    if (
+        re.fullmatch(r"python(?:\d+(?:\.\d+)*)?", executable)
+        and command[1:3] == ["-m", "pytest"]
+    ):
+        pytest_arguments = command[3:]
+    elif executable == "pytest":
+        pytest_arguments = command[1:]
+    elif command[:3] == ["uv", "run", "pytest"]:
+        pytest_arguments = command[3:]
+
+    if pytest_arguments is None:
+        return command
+
+    wrapper = repo / PYTEST_WRAPPER
+    if not wrapper.is_file() or not os.access(wrapper, os.X_OK):
+        raise InterviewError(
+            "pytest verification requires the selected repository's executable "
+            f"{PYTEST_WRAPPER.as_posix()} wrapper"
+        )
+    return [PYTEST_WRAPPER.as_posix(), *pytest_arguments]
+
+
 def _run_interview(
     *,
     input_fn: Callable[[str], str],
@@ -151,9 +184,7 @@ def _run_interview(
     verification_text = _required(
         "Focused verification command: ", input_fn=input_fn
     )
-    verification = shlex.split(verification_text)
-    if not verification:
-        raise InterviewError("focused verification command is empty")
+    verification = _verification_command(repo, verification_text)
     branch = _defaulted(
         "Branch", _current_branch(repo), input_fn=input_fn
     )
