@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import importlib.util
+import io
 import json
 import shutil
 import subprocess
 import sys
 from pathlib import Path
+from zipfile import ZIP_DEFLATED, ZipFile
 
 import pytest
 from PIL import Image
@@ -28,6 +30,36 @@ CODEX_RUNNER_SPEC = importlib.util.spec_from_file_location("run_projection_with_
 assert CODEX_RUNNER_SPEC and CODEX_RUNNER_SPEC.loader
 CODEX_RUNNER = importlib.util.module_from_spec(CODEX_RUNNER_SPEC)
 CODEX_RUNNER_SPEC.loader.exec_module(CODEX_RUNNER)
+VERIFICATION_STAGE_RUNNER_SCRIPT = (
+    ROOT
+    / "skills"
+    / "info-intake-machinery"
+    / "scripts"
+    / "run_relationship_verification_with_codex.py"
+)
+VERIFICATION_STAGE_RUNNER_SPEC = importlib.util.spec_from_file_location(
+    "run_relationship_verification_with_codex", VERIFICATION_STAGE_RUNNER_SCRIPT
+)
+assert VERIFICATION_STAGE_RUNNER_SPEC and VERIFICATION_STAGE_RUNNER_SPEC.loader
+VERIFICATION_STAGE_RUNNER = importlib.util.module_from_spec(
+    VERIFICATION_STAGE_RUNNER_SPEC
+)
+VERIFICATION_STAGE_RUNNER_SPEC.loader.exec_module(VERIFICATION_STAGE_RUNNER)
+CORRECTION_STAGE_RUNNER_SCRIPT = (
+    ROOT
+    / "skills"
+    / "info-intake-machinery"
+    / "scripts"
+    / "run_relationship_correction_with_codex.py"
+)
+CORRECTION_STAGE_RUNNER_SPEC = importlib.util.spec_from_file_location(
+    "run_relationship_correction_with_codex", CORRECTION_STAGE_RUNNER_SCRIPT
+)
+assert CORRECTION_STAGE_RUNNER_SPEC and CORRECTION_STAGE_RUNNER_SPEC.loader
+CORRECTION_STAGE_RUNNER = importlib.util.module_from_spec(
+    CORRECTION_STAGE_RUNNER_SPEC
+)
+CORRECTION_STAGE_RUNNER_SPEC.loader.exec_module(CORRECTION_STAGE_RUNNER)
 INTAKE_RUNNER_SCRIPT = (
     ROOT / "skills" / "info-intake-machinery" / "scripts" / "run_intake.py"
 )
@@ -55,6 +87,39 @@ PDF_PROJECTION_SPEC = importlib.util.spec_from_file_location(
 assert PDF_PROJECTION_SPEC and PDF_PROJECTION_SPEC.loader
 PDF_PROJECTION = importlib.util.module_from_spec(PDF_PROJECTION_SPEC)
 PDF_PROJECTION_SPEC.loader.exec_module(PDF_PROJECTION)
+
+
+def _representative_workbook_bytes(*, missing_workbook: bool = False) -> bytes:
+    content_types = """<?xml version="1.0" encoding="UTF-8"?>
+<Types xmlns="http://schemas.openxmlformats.org/package/2006/content-types">
+  <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+  <Default Extension="xml" ContentType="application/xml"/>
+  <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
+</Types>"""
+    workbook = """<?xml version="1.0" encoding="UTF-8"?>
+<workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
+  <sheets><sheet name="Dashboard Inputs" sheetId="1" r:id="rId1"/><sheet name="Hidden Logic" sheetId="2" state="hidden" r:id="rId2"/></sheets>
+</workbook>"""
+    relationships = """<?xml version="1.0" encoding="UTF-8"?>
+<Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
+  <Relationship Id="rId1" Type="worksheet" Target="worksheets/primary.xml"/>
+  <Relationship Id="rId2" Type="worksheet" Target="worksheets/hidden.xml"/>
+</Relationships>"""
+    primary = """<?xml version="1.0" encoding="UTF-8"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1" t="inlineStr"><is><t>Column AC</t></is></c></row><row r="2"><c r="A2"><v>64</v></c><c r="B2"><f>A2/364</f><v>0.175824</v></c></row></sheetData><mergeCells count="1"><mergeCell ref="A1:B1"/></mergeCells></worksheet>"""
+    hidden = """<?xml version="1.0" encoding="UTF-8"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><sheetData><row r="1"><c r="A1"><f>SUM('Dashboard Inputs'!A2)</f><v>64</v></c></row></sheetData></worksheet>"""
+    output = io.BytesIO()
+    with ZipFile(output, "w", ZIP_DEFLATED) as archive:
+        archive.writestr("[Content_Types].xml", content_types)
+        archive.writestr("_rels/.rels", "<Relationships xmlns=\"http://schemas.openxmlformats.org/package/2006/relationships\"/>")
+        archive.writestr("xl/_rels/workbook.xml.rels", relationships)
+        archive.writestr("xl/worksheets/primary.xml", primary)
+        archive.writestr("xl/worksheets/hidden.xml", hidden)
+        archive.writestr("xl/customData/metrics.xml", "<metrics><name>unadapted</name></metrics>")
+        if not missing_workbook:
+            archive.writestr("xl/workbook.xml", workbook)
+    return output.getvalue()
 
 
 def _visible_pdf(*page_texts: str) -> bytes:
@@ -855,6 +920,277 @@ def test_codex_runner_routes_projection_completion_to_verifier_before_clarificat
 
     assert CODEX_RUNNER.drive_work(work) == 0
     assert model_calls == [projection_command, verifier_command]
+
+
+@pytest.mark.parametrize(
+    ("verdict", "expected_boundary", "expected_status"),
+    [
+        ("supported", "projection_recorded", "ready_for_projection_assessment"),
+        (
+            "not_supported",
+            "relationship_correction_required",
+            "waiting_for_model",
+        ),
+    ],
+)
+def test_relationship_verification_launcher_runs_exactly_one_real_stage(
+    tmp_path: Path,
+    monkeypatch: object,
+    verdict: str,
+    expected_boundary: str,
+    expected_status: str,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    projection_answers = iter(
+        _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
+    )
+    waiting = START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(projection_answers),
+        output_fn=lambda _message: None,
+    )
+    assert waiting["stopped"] == "verifying_first_projection"
+    model_calls: list[list[str]] = []
+
+    monkeypatch.setattr(
+        VERIFICATION_STAGE_RUNNER.CODEX_RUNNER,
+        "resolve_model_executable",
+        lambda _client: "/usr/bin/codex",
+    )
+
+    def run_model(argv: list[str], **_kwargs: object) -> object:
+        model_calls.append(argv)
+        answers = iter(_verification_answers(1, verdict=verdict))
+        result = START_INTAKE.run_first_projection_verification(
+            work,
+            input_fn=lambda _prompt: next(answers),
+            output_fn=lambda _message: None,
+        )
+        assert result["status"] == expected_status
+        return subprocess.CompletedProcess(argv, 0)
+
+    code, payload = VERIFICATION_STAGE_RUNNER.run_one_stage(
+        work, model_runner=run_model
+    )
+
+    assert code == 0
+    assert payload["boundary"] == expected_boundary
+    assert payload["status"] == expected_status
+    assert len(model_calls) == 1
+    ledger_events = [
+        json.loads(line)["event"]
+        for line in (work / "ledger.jsonl").read_text().splitlines()
+    ]
+    if verdict == "supported":
+        assert ledger_events[-2:] == [
+            "model_projection_interview_completed",
+            "projection_version_created",
+        ]
+    else:
+        assert "model_projection_interview_completed" not in ledger_events
+        assert not (work / "relationship-corrections").exists()
+
+
+def test_relationship_verification_launcher_refuses_any_other_stage(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    model_calls: list[list[str]] = []
+    monkeypatch.setattr(
+        VERIFICATION_STAGE_RUNNER.CODEX_RUNNER,
+        "resolve_model_executable",
+        lambda _client: "/usr/bin/codex",
+    )
+
+    code, payload = VERIFICATION_STAGE_RUNNER.run_one_stage(
+        work,
+        model_runner=lambda argv, **_kwargs: model_calls.append(argv),
+    )
+
+    assert code == 3
+    assert payload["error"] == "the intake is not waiting for relationship verification"
+    assert model_calls == []
+
+
+def test_relationship_correction_launcher_runs_correction_then_fresh_verification(
+    tmp_path: Path,
+    monkeypatch: object,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    projection_answers = iter(
+        _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
+    )
+    START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(projection_answers),
+        output_fn=lambda _message: None,
+    )
+    verifier_answers = iter(_verification_answers(1, verdict="not_supported"))
+    correcting = START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verifier_answers),
+        output_fn=lambda _message: None,
+    )
+    assert correcting["stopped"] == "correcting_rejected_relationships"
+    model_calls: list[list[str]] = []
+
+    monkeypatch.setattr(
+        CORRECTION_STAGE_RUNNER.CODEX_RUNNER,
+        "resolve_model_executable",
+        lambda _client: "/usr/bin/codex",
+    )
+
+    def run_model(argv: list[str], **_kwargs: object) -> object:
+        model_calls.append(argv)
+        if len(model_calls) == 1:
+            answers = iter(_new_endpoint_correction_answers())
+            result = START_INTAKE.run_relationship_correction(
+                work,
+                input_fn=lambda _prompt: next(answers),
+                output_fn=lambda _message: None,
+            )
+            assert result["stopped"] == "verifying_relationship_corrections"
+        else:
+            answers = iter(_verification_answers(1))
+            result = START_INTAKE.run_relationship_correction_verification(
+                work,
+                input_fn=lambda _prompt: next(answers),
+                output_fn=lambda _message: None,
+            )
+            assert result["stopped"] == "first_projection_recorded"
+        return subprocess.CompletedProcess(argv, 0)
+
+    code, payload = CORRECTION_STAGE_RUNNER.run_one_stage(
+        work, model_runner=run_model
+    )
+
+    assert code == 0
+    assert payload["boundary"] == "projection_recorded"
+    assert payload["status"] == "ready_for_projection_assessment"
+    assert len(model_calls) == 2
+    assert model_calls[0] != model_calls[1]
+    assert model_calls[0][-1] != model_calls[1][-1]
+
+
+def test_relationship_correction_launcher_records_a_gap_without_false_verification(
+    tmp_path: Path,
+    monkeypatch: object,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    projection_answers = iter(
+        _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
+    )
+    START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(projection_answers),
+        output_fn=lambda _message: None,
+    )
+    verifier_answers = iter(_verification_answers(1, verdict="not_supported"))
+    START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verifier_answers),
+        output_fn=lambda _message: None,
+    )
+    model_calls: list[list[str]] = []
+    monkeypatch.setattr(
+        CORRECTION_STAGE_RUNNER.CODEX_RUNNER,
+        "resolve_model_executable",
+        lambda _client: "/usr/bin/codex",
+    )
+
+    def run_model(argv: list[str], **_kwargs: object) -> object:
+        model_calls.append(argv)
+        answers = iter(_gap_correction_answers())
+        result = START_INTAKE.run_relationship_correction(
+            work,
+            input_fn=lambda _prompt: next(answers),
+            output_fn=lambda _message: None,
+        )
+        assert result["stopped"] == "first_projection_recorded"
+        return subprocess.CompletedProcess(argv, 0)
+
+    code, payload = CORRECTION_STAGE_RUNNER.run_one_stage(
+        work, model_runner=run_model
+    )
+
+    assert code == 0
+    assert payload["boundary"] == "projection_recorded"
+    assert len(model_calls) == 1
+    projection = json.loads((work / payload["projection"]["path"]).read_text())
+    assert projection["relationships"][0]["status"] == "gap"
+
+
+def test_relationship_correction_launcher_refuses_any_other_stage(
+    tmp_path: Path,
+    monkeypatch: object,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    model_calls: list[list[str]] = []
+    monkeypatch.setattr(
+        CORRECTION_STAGE_RUNNER.CODEX_RUNNER,
+        "resolve_model_executable",
+        lambda _client: "/usr/bin/codex",
+    )
+
+    code, payload = CORRECTION_STAGE_RUNNER.run_one_stage(
+        work,
+        model_runner=lambda argv, **_kwargs: model_calls.append(argv),
+    )
+
+    assert code == 3
+    assert payload["error"] == "the intake is not waiting for relationship correction"
+    assert model_calls == []
+
+
+def test_relationship_correction_launcher_enters_managed_python_before_imports() -> None:
+    completed = subprocess.run(
+        ["python3", str(CORRECTION_STAGE_RUNNER_SCRIPT), "unexpected-argument"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 2
+    assert json.loads(completed.stdout) == {
+        "ok": False,
+        "error": "this launcher accepts no arguments",
+    }
+    assert "ModuleNotFoundError" not in completed.stderr
+
+
+def test_relationship_verification_launcher_enters_managed_python_before_imports() -> None:
+    completed = subprocess.run(
+        ["python3", str(VERIFICATION_STAGE_RUNNER_SCRIPT), "unexpected-argument"],
+        cwd=ROOT,
+        check=False,
+        capture_output=True,
+        text=True,
+    )
+
+    assert completed.returncode == 2
+    assert json.loads(completed.stdout) == {
+        "ok": False,
+        "error": "this launcher accepts no arguments",
+    }
+    assert "ModuleNotFoundError" not in completed.stderr
 
 
 def test_zero_input_launcher_conducts_new_intake_one_answer_at_a_time(
@@ -11375,3 +11711,397 @@ def test_collision_activation_recovers_pending_rejected_merge_question() -> None
     assert "superseded_element_id" not in state["current"]
     assert "merge_left" not in state["current"]
     assert state["rejected_endpoint_collision_excluded_enabled"] is True
+
+
+def test_first_spreadsheet_projection_preserves_structure_formulas_and_gaps(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "dashboard-data.bin"
+    supplied.write_bytes(_representative_workbook_bytes())
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+
+    result = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    assert result["status"] == "ready_for_projection_assessment", result
+    projection_bytes = (work / result["projection"]["path"]).read_bytes()
+    projected = json.loads(projection_bytes)
+
+    assert result["stopped"] == "first_spreadsheet_projection_recorded"
+    assert result["projection"]["method"] == "spreadsheet_ooxml_v1"
+    assert [sheet["name"] for sheet in projected["workbook"]["sheets"]] == [
+        "Dashboard Inputs",
+        "Hidden Logic",
+    ]
+    assert projected["workbook"]["sheets"][1]["state"] == "hidden"
+    assert projected["workbook"]["sheets"][0]["cells"][2]["formula"] == "A2/364"
+    assert projected["coverage"]["source_units"] == len(
+        projected["coverage"]["parts"]
+    )
+    assert projected["coverage"]["represented_units"] + projected["coverage"]["gap_units"] == projected["coverage"]["source_units"]
+    assert projected["coverage"]["gap_units"] == 1
+    assert START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE) == result
+    boundary = START_INTAKE.run_clarification_boundary(work)
+    assert boundary["boundary"] == "first_source_projection_complete"
+    assert START_INTAKE.run_source_projection_closure(work)["verdict"] == "all_projected"
+
+
+def test_corrupt_spreadsheet_records_one_replayable_failed_outcome(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "corrupt.xlsx"
+    supplied.write_bytes(_representative_workbook_bytes(missing_workbook=True))
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+
+    result = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    ledger = (work / "ledger.jsonl").read_bytes()
+
+    assert result["stopped"] == "first_spreadsheet_projection_failed"
+    assert result["projection"]["status"] == "failed"
+    assert "missing xl/workbook.xml" in result["projection"]["coverage"]["gaps"][0]
+    assert START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE) == result
+    boundary = START_INTAKE.run_clarification_boundary(work)
+    assert boundary["boundary"] == "source_conversion_failed"
+    assert (work / "ledger.jsonl").read_bytes() == ledger
+    closure = START_INTAKE.run_source_projection_closure(work)
+    assert closure["verdict"] == "conversion_incomplete"
+    assert closure["outcomes"][-1]["outcome"] == "failed"
+
+
+def test_additional_spreadsheet_uses_the_same_deterministic_projection(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_to_frozen_image(work, tmp_path / "first.png")
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    projection_answers = iter(
+        _projection_answers(contract=PROJECTION_INTERVIEW.CONTRACT)
+    )
+    START_INTAKE.run_first_projection_interview(
+        work,
+        input_fn=lambda _prompt: next(projection_answers),
+        output_fn=lambda _message: None,
+    )
+    verification_answers = iter(_verification_answers(1))
+    START_INTAKE.run_first_projection_verification(
+        work,
+        input_fn=lambda _prompt: next(verification_answers),
+        output_fn=lambda _message: None,
+    )
+    START_INTAKE.run_clarification_boundary(work)
+    question_answers = iter([
+        "spreadsheet-questioner",
+        "pytest-spreadsheet-gap",
+        "local_file",
+        "Which spreadsheet contains the missing logic?",
+    ])
+    START_INTAKE.run_gap_clarification(
+        work,
+        input_fn=lambda _prompt: next(question_answers),
+        output_fn=lambda _message: None,
+    )
+    supplied = tmp_path / "reference.xlsx"
+    supplied.write_bytes(_representative_workbook_bytes())
+    frozen = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, gap_file=supplied
+    )
+
+    result = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+
+    assert frozen["stopped"] == "additional_source_frozen"
+    assert result["stopped"] == "additional_source_projection_recorded"
+    assert result["projection"]["method"] == "spreadsheet_ooxml_v1"
+    assert result["projection"]["id"] == frozen["projection"]["id"]
+    assert START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE) == result
+    boundary = START_INTAKE.run_clarification_boundary(work)
+    assert boundary["boundary"] == "additional_source_projection_complete"
+    assert START_INTAKE.run_source_projection_closure(work)["verdict"] == "all_projected"
+
+
+def test_operator_launcher_finishes_collection_after_deterministic_spreadsheet_projection(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "reference.xlsx"
+    supplied.write_bytes(_representative_workbook_bytes())
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    messages: list[str] = []
+    answers = iter(["finish_sources"])
+
+    returncode = INTAKE_RUNNER._continue_intake(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=messages.append,
+        model_run_fn=lambda *_args, **_kwargs: pytest.fail("no model should run"),
+        projection_region_limit=None,
+        projection_relationship_limit=None,
+    )
+
+    assert returncode == 0
+    assert json.loads(messages[-1])["stopped"] == "source_collection_complete"
+
+
+def test_operator_launcher_interviews_one_source_collection_answer_at_a_time(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    workbook = tmp_path / "reference.xlsx"
+    workbook.write_bytes(_representative_workbook_bytes())
+    generator = tmp_path / "generator.py"
+    generator.write_text("FORMULA = 'A2/364'\n", encoding="utf-8")
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, workbook)
+    answers = iter([
+        "add_source",
+        "local_file",
+        str(generator),
+        "finish_sources",
+    ])
+    prompts: list[str] = []
+
+    returncode = INTAKE_RUNNER._continue_intake(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        input_fn=lambda prompt: (prompts.append(prompt), next(answers))[1],
+        output_fn=lambda _message: None,
+        model_run_fn=lambda *_args, **_kwargs: pytest.fail("no model should run"),
+        projection_region_limit=None,
+        projection_relationship_limit=None,
+    )
+
+    assert returncode == 0
+    assert len(prompts) == 4
+    assert START_INTAKE.run_source_projection_closure(work)["source_count"] == 4
+
+
+def test_independent_source_collection_adds_projects_and_closes_replayably(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    workbook = tmp_path / "reference.xlsx"
+    workbook.write_bytes(_representative_workbook_bytes())
+    generator = tmp_path / "generate_reference.py"
+    generator.write_text(
+        "def net_revenue(values):\n    return sum(values)\n",
+        encoding="utf-8",
+    )
+    supporting_workbook = tmp_path / "supporting-reference.xlsx"
+    supporting_workbook.write_bytes(_representative_workbook_bytes())
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, workbook)
+    first = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    assert first["stopped"] == "first_spreadsheet_projection_recorded"
+
+    decision = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        begin_source_collection=True,
+    )
+    assert decision["status"] == "needs_operator"
+    assert decision["question"]["allowed_values"] == [
+        "add_source",
+        "finish_sources",
+    ]
+    kind = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="add_source",
+    )
+    assert kind["question"]["allowed_values"] == ["local_file", "url"]
+    requested = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_kind="local_file",
+    )
+    assert requested["question"]["answer_type"] == "local_file"
+
+    frozen = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, generator
+    )
+    assert frozen["stopped"] == "additional_source_frozen"
+    assert frozen["source"]["id"] == "source-000004"
+    assert frozen["projection"]["id"] == "projection-source-000004-v1"
+    projected = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    assert projected["stopped"] == "additional_source_projection_recorded"
+    assert projected["projection"]["method"] == "verbatim_utf8"
+
+    next_decision = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE
+    )
+    assert next_decision["question"]["allowed_values"] == [
+        "add_source",
+        "finish_sources",
+    ]
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="add_source",
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_kind="local_file",
+    )
+    second_frozen = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, supporting_workbook
+    )
+    assert second_frozen["source"]["id"] == "source-000005"
+    second_projected = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    assert second_projected["projection"]["method"] == "spreadsheet_ooxml_v1"
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+    completed = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+    ledger_before_replay = (work / "ledger.jsonl").read_bytes()
+
+    assert completed["status"] == "source_collection_complete"
+    assert completed["source_collection"]["source_ids"] == [
+        "source-000001",
+        "source-000002",
+        "source-000003",
+        "source-000004",
+        "source-000005",
+    ]
+    assert completed["source_projection_closure"]["verdict"] == "all_projected"
+    assert START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE
+    ) == completed
+    assert (work / "ledger.jsonl").read_bytes() == ledger_before_replay
+    events = [
+        json.loads(line)["event"]
+        for line in ledger_before_replay.decode("utf-8").splitlines()
+    ]
+    assert events.count("source_collection_completed") == 1
+    assert "model_additional_source_gap_assessment_requested" not in events
+
+
+def test_source_collection_refuses_finish_while_projection_is_pending(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    workbook = tmp_path / "reference.xlsx"
+    workbook.write_bytes(_representative_workbook_bytes())
+    generator = tmp_path / "generate_reference.py"
+    generator.write_text("VALUE = 1\n", encoding="utf-8")
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, workbook)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="add_source",
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_kind="local_file",
+    )
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, generator)
+
+    result = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+
+    assert result["status"] == "blocked"
+    assert result["stopped"] == "source projection pending"
+    assert "source_collection_completed" not in (
+        work / "ledger.jsonl"
+    ).read_text(encoding="utf-8")
+
+
+def test_independent_image_source_enters_existing_visual_projection_path(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    workbook = tmp_path / "reference.xlsx"
+    workbook.write_bytes(_representative_workbook_bytes())
+    image = tmp_path / "clean-reference.png"
+    Image.new("RGB", (64, 48), "white").save(image)
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, workbook)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="add_source",
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_kind="local_file",
+    )
+    frozen = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, image
+    )
+
+    result = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+
+    assert frozen["source"]["id"] == "source-000004"
+    assert result["status"] == "waiting_for_model"
+    assert result["stopped"] == "interviewing_additional_source_projection"
+    assert result["lineage"]["mode"] == "independent_source_collection"
+    assert result["work"][0]["stage"] == "project_additional_source"
+
+
+def test_source_collection_probe_units_reject_ambiguous_identity_and_coverage() -> None:
+    with pytest.raises(ValueError, match="duplicate source identity"):
+        START_INTAKE.source_collection_reservation.reserve(
+            ["source-000003", "source-000003"]
+        )
+    result = START_INTAKE.source_collection_closure.reconcile(
+        ["source-000003", "source-000005"],
+        [
+            {"source_id": "source-000003", "outcome": "projected"},
+            {"source_id": "source-999999", "outcome": "failed"},
+        ],
+    )
+    assert result["complete"] is False
+    assert "missing outcomes: source-000005" in result["why"]
+    assert "unknown outcomes: source-999999" in result["why"]

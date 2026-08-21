@@ -137,6 +137,73 @@ if _PDF_PROJECTION_SPEC is None or _PDF_PROJECTION_SPEC.loader is None:
     raise RuntimeError("PDF projection adapter is unavailable")
 pdf_projection = importlib.util.module_from_spec(_PDF_PROJECTION_SPEC)
 _PDF_PROJECTION_SPEC.loader.exec_module(pdf_projection)
+_SPREADSHEET_PROJECTION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_spreadsheet_projection",
+    Path(__file__).resolve().with_name("spreadsheet_projection.py"),
+)
+if (
+    _SPREADSHEET_PROJECTION_SPEC is None
+    or _SPREADSHEET_PROJECTION_SPEC.loader is None
+):
+    raise RuntimeError("spreadsheet projection adapter is unavailable")
+spreadsheet_projection = importlib.util.module_from_spec(
+    _SPREADSHEET_PROJECTION_SPEC
+)
+_SPREADSHEET_PROJECTION_SPEC.loader.exec_module(spreadsheet_projection)
+_SOURCE_COLLECTION_DECISION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_source_collection_decision",
+    Path(__file__).resolve().with_name("source_collection_decision.py"),
+)
+if (
+    _SOURCE_COLLECTION_DECISION_SPEC is None
+    or _SOURCE_COLLECTION_DECISION_SPEC.loader is None
+):
+    raise RuntimeError("source collection decision probe is unavailable")
+source_collection_decision = importlib.util.module_from_spec(
+    _SOURCE_COLLECTION_DECISION_SPEC
+)
+_SOURCE_COLLECTION_DECISION_SPEC.loader.exec_module(source_collection_decision)
+_SOURCE_COLLECTION_RESERVATION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_source_collection_reservation",
+    Path(__file__).resolve().with_name("source_collection_reservation.py"),
+)
+if (
+    _SOURCE_COLLECTION_RESERVATION_SPEC is None
+    or _SOURCE_COLLECTION_RESERVATION_SPEC.loader is None
+):
+    raise RuntimeError("source collection reservation probe is unavailable")
+source_collection_reservation = importlib.util.module_from_spec(
+    _SOURCE_COLLECTION_RESERVATION_SPEC
+)
+_SOURCE_COLLECTION_RESERVATION_SPEC.loader.exec_module(
+    source_collection_reservation
+)
+_SOURCE_COLLECTION_CLOSURE_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_source_collection_closure",
+    Path(__file__).resolve().with_name("source_collection_closure.py"),
+)
+if (
+    _SOURCE_COLLECTION_CLOSURE_SPEC is None
+    or _SOURCE_COLLECTION_CLOSURE_SPEC.loader is None
+):
+    raise RuntimeError("source collection closure probe is unavailable")
+source_collection_closure = importlib.util.module_from_spec(
+    _SOURCE_COLLECTION_CLOSURE_SPEC
+)
+_SOURCE_COLLECTION_CLOSURE_SPEC.loader.exec_module(source_collection_closure)
+
+SOURCE_COLLECTION_DECISION_QUESTION = {
+    "id": "source-collection-decision",
+    "asks": "Do you want to add another independent source or finish source collection?",
+    "answer_type": "enum",
+    "allowed_values": list(source_collection_decision.ALLOWED_ACTIONS),
+}
+SOURCE_COLLECTION_KIND_QUESTION = {
+    "id": "source-collection-kind",
+    "asks": "How will you provide the next independent source?",
+    "answer_type": "enum",
+    "allowed_values": ["local_file", "url"],
+}
 
 
 def _canonical(value: object) -> bytes:
@@ -248,11 +315,38 @@ def _projection_model_attachment(
 ) -> tuple[
     Path | tuple[Path, Path] | None,
     str | None,
+    str | None,
+    str | None,
     dict[str, object] | None,
 ]:
     try:
         purpose = (work / "sources" / "source-000002.txt").read_text(
             encoding="utf-8"
+        )
+        projection_interview.enable_endpoint_crop_verification(
+            attempt_dir, purpose=purpose, contract=contract,
+        )
+        projection_interview.enable_existing_participant_crop_verification(
+            attempt_dir, purpose=purpose, contract=contract,
+        )
+        projection_interview.enable_contextual_endpoint_verification(
+            attempt_dir, purpose=purpose, contract=contract,
+        )
+        projection_interview.enable_endpoint_context_evidence(
+            attempt_dir, purpose=purpose, contract=contract,
+        )
+        projection_interview.enable_rejected_endpoint_reuse_block(
+            attempt_dir, purpose=purpose, contract=contract,
+        )
+        projection_interview.enable_rejected_endpoint_collision_exclusion(
+            attempt_dir, purpose=purpose, contract=contract,
+        )
+        endpoint_evidence = projection_interview.prepare_endpoint_evidence(
+            attempt_dir,
+            source_path=source_path,
+            source_sha256=source_sha256,
+            purpose=purpose,
+            contract=contract,
         )
         crop = projection_interview.prepare_region_evidence(
             attempt_dir,
@@ -261,33 +355,64 @@ def _projection_model_attachment(
             purpose=purpose,
             contract=contract,
         )
+        interview_state, _pending, _completed = (
+            projection_interview.prepare_resume(
+                attempt_dir,
+                purpose=purpose,
+                contract=contract,
+            )
+        )
+        replacement_attachments = (
+            projection_interview.required_participant_replacement_attachments(
+                attempt_dir,
+                interview_state,
+                source_path=source_path,
+                source_sha256=source_sha256,
+            )
+        )
     except (OSError, projection_interview.InterviewError) as error:
-        return None, None, _blocked("projection region evidence failed", str(error))
+        return None, None, None, None, _blocked(
+            "projection region evidence failed", str(error)
+        )
     region_id: str | None = None
+    obligation_id: str | None = None
+    endpoint_evidence_sha256: str | None = None
     if contract >= 4:
         try:
-            journal = projection_interview._read_journal(
-                attempt_dir / "interview.jsonl"
-            )
-            interview_state, _pending, _completed = projection_interview._replay(
-                journal, purpose=purpose, contract=contract,
-            )
             active_region = projection_interview._active_scan_region(
                 interview_state
             )
         except projection_interview.InterviewError as error:
-            return None, None, _blocked(
+            return None, None, None, _blocked(
                 "projection region evidence failed", str(error)
             )
-        if not isinstance(active_region, dict) or not isinstance(
+        if isinstance(active_region, dict) and isinstance(
             active_region.get("id"), str
         ):
-            return None, None, _blocked(
-                "projection region evidence failed",
-                "the active projection region identity is missing",
+            region_id = str(active_region["id"])
+        else:
+            obligation = projection_interview._pending_obligation(
+                interview_state
             )
-        region_id = str(active_region["id"])
-    return crop or source_path, region_id, None
+            if not isinstance(obligation, dict) or not isinstance(
+                obligation.get("id"), str
+            ):
+                return None, None, None, _blocked(
+                    "projection relationship binding failed",
+                    "no active region or pending relationship obligation is available",
+                )
+            obligation_id = str(obligation["id"])
+    if endpoint_evidence is not None:
+        crop, endpoint_evidence_sha256 = endpoint_evidence
+    elif replacement_attachments is not None:
+        crop = replacement_attachments
+    return (
+        crop or source_path,
+        region_id,
+        obligation_id,
+        endpoint_evidence_sha256,
+        None,
+    )
 
 
 def _projection_waiting_result(
@@ -342,7 +467,13 @@ def _projection_waiting_result(
             return _blocked(
                 "projection region evidence failed", "the frozen source identity is missing"
             )
-        attachment, region_id, attachment_error = _projection_model_attachment(
+        (
+            attachment,
+            region_id,
+            obligation_id,
+            endpoint_evidence_sha256,
+            attachment_error,
+        ) = _projection_model_attachment(
             work,
             source_path=attachment,
             source_sha256=str(source["sha256"]),
@@ -361,6 +492,16 @@ def _projection_waiting_result(
     ]
     if stage == "project_first_source" and region_id is not None:
         command.extend(["--projection-region-id", region_id])
+    elif stage == "project_first_source" and obligation_id is not None:
+        command.extend(["--projection-obligation-id", obligation_id])
+    if (
+        stage == "project_first_source"
+        and endpoint_evidence_sha256 is not None
+    ):
+        command.extend([
+            "--projection-endpoint-evidence-sha256",
+            endpoint_evidence_sha256,
+        ])
     command.append(selected["flag"])
     return {
         "status": "waiting_for_model",
@@ -525,7 +666,13 @@ def _pdf_projection_waiting_result(
                 "projection region evidence failed", "the PDF projection identity is missing"
             )
         paths = _pdf_page_paths(str(prepared["source_id"]), int(page["page"]))
-        attachment, region_id, attachment_error = _projection_model_attachment(
+        (
+            attachment,
+            region_id,
+            obligation_id,
+            endpoint_evidence_sha256,
+            attachment_error,
+        ) = _projection_model_attachment(
             work,
             source_path=attachment,
             source_sha256=str(page["render_sha256"]),
@@ -544,6 +691,13 @@ def _pdf_projection_waiting_result(
     ]
     if stage == "project" and region_id is not None:
         command.extend(["--projection-region-id", region_id])
+    elif stage == "project" and obligation_id is not None:
+        command.extend(["--projection-obligation-id", obligation_id])
+    if stage == "project" and endpoint_evidence_sha256 is not None:
+        command.extend([
+            "--projection-endpoint-evidence-sha256",
+            endpoint_evidence_sha256,
+        ])
     command.append(flag)
     return {
         "status": "waiting_for_model",
@@ -1833,6 +1987,563 @@ def run_source_projection_closure(work: Path) -> dict[str, object]:
     }
 
 
+SOURCE_COLLECTION_TERMINAL_PHASES = {
+    "first_projection_recorded",
+    "first_verbatim_projection_recorded",
+    "first_pdf_projection_recorded",
+    "first_pdf_projection_failed",
+    "first_spreadsheet_projection_recorded",
+    "first_spreadsheet_projection_failed",
+    "additional_source_projection_recorded",
+    "additional_spreadsheet_projection_failed",
+}
+SOURCE_COLLECTION_PHASES = {
+    "awaiting_source_collection_decision",
+    "awaiting_source_collection_kind",
+    "awaiting_independent_source",
+    "additional_source_frozen",
+    "interviewing_additional_source_projection",
+    "additional_source_projection_recorded",
+    "additional_spreadsheet_projection_failed",
+    "source_collection_complete",
+}
+
+
+def _numbered_collection_question(
+    template: dict[str, object], position: int
+) -> dict[str, object]:
+    return {**template, "id": f"{template['id']}-{position:06d}"}
+
+
+def _source_collection_result(
+    state: dict[str, object], work: Path, inventory: dict[str, object]
+) -> dict[str, object]:
+    return {
+        "status": "source_collection_complete",
+        "stopped": "source_collection_complete",
+        "intake_id": state["intake_id"],
+        "source_collection": state["source_collection"],
+        "source_projection_closure": inventory,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _source_collection_inventory(
+    work: Path, entries: list[dict[str, object]]
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    inventory, error = _source_projection_closure_inventory(work, entries)
+    if error:
+        return None, error
+    assert inventory is not None
+    outcomes = inventory.get("outcomes")
+    if not isinstance(outcomes, list):
+        return None, _blocked(
+            "source collection unavailable",
+            "the source projection closure lost its ordered outcomes",
+        )
+    return inventory, None
+
+
+def _offer_source_collection_decision(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object]:
+    inventory, inventory_error = _source_collection_inventory(work, entries)
+    if inventory_error:
+        return inventory_error
+    assert inventory is not None
+    outcomes = inventory["outcomes"]
+    assert isinstance(outcomes, list)
+    pending = [
+        str(item.get("source_id"))
+        for item in outcomes
+        if isinstance(item, dict) and item.get("outcome") not in {"projected", "failed"}
+    ]
+    if pending:
+        return _blocked(
+            "source collection decision unavailable",
+            "complete or explicitly fail the pending projection for: "
+            + ", ".join(pending),
+        )
+    collection = state.get("source_collection")
+    position = (
+        int(collection.get("decision_count", 0)) + 1
+        if isinstance(collection, dict)
+        else 1
+    )
+    question = _numbered_collection_question(
+        SOURCE_COLLECTION_DECISION_QUESTION, position
+    )
+    asked = _ledger_entry(
+        len(entries) + 1,
+        "operator_question_asked",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "source_collection_decision",
+            "question": question,
+            "source_projection_closure": inventory,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [asked])
+    source_collection = {
+        **(collection if isinstance(collection, dict) else {}),
+        "mode": "independent_multi_source",
+        "decision_count": position,
+        "decision_question_ledger_sequence": asked["sequence"],
+    }
+    state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_source_collection_decision",
+        "waiting_for": question["id"],
+        "question": question,
+        "source_collection": source_collection,
+        "ledger_entries": asked["sequence"],
+        "ledger_tail_sha256": asked["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _operator_result(state, work)
+
+
+def _validate_collection_question(
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    *,
+    phase: str,
+    role: str,
+    sequence_key: str,
+) -> dict[str, object] | None:
+    collection = state.get("source_collection")
+    question = state.get("question")
+    sequence = collection.get(sequence_key) if isinstance(collection, dict) else None
+    if (
+        state.get("status") != "needs_operator"
+        or state.get("phase") != phase
+        or not isinstance(question, dict)
+        or state.get("waiting_for") != question.get("id")
+        or not isinstance(sequence, int)
+        or sequence < 1
+        or sequence > len(entries)
+    ):
+        return _blocked(
+            "invalid source collection state",
+            "the active code-controlled source question changed",
+        )
+    asked = entries[sequence - 1]
+    if (
+        sequence != len(entries)
+        or asked.get("event") != "operator_question_asked"
+        or asked.get("role") != role
+        or asked.get("question") != question
+    ):
+        return _blocked(
+            "invalid source collection ledger",
+            "the active source question lost its immutable ledger entry",
+        )
+    return None
+
+
+def _answer_source_collection_decision(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    action: object,
+) -> dict[str, object]:
+    question_error = _validate_collection_question(
+        state,
+        entries,
+        phase="awaiting_source_collection_decision",
+        role="source_collection_decision",
+        sequence_key="decision_question_ledger_sequence",
+    )
+    if question_error:
+        return question_error
+    inventory, inventory_error = _source_collection_inventory(work, entries)
+    if inventory_error:
+        return inventory_error
+    assert inventory is not None and isinstance(inventory["outcomes"], list)
+    decision = source_collection_decision.decide(action, inventory["outcomes"])
+    if decision.get("accepted") is not True:
+        return _blocked("invalid source collection decision", str(decision["why"]))
+    question = state["question"]
+    assert isinstance(question, dict)
+    answered = _ledger_entry(
+        len(entries) + 1,
+        "operator_answer_recorded",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "source_collection_decision",
+            "answers_question": question["id"],
+            "answer": action,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    if action == "finish_sources":
+        declared = [
+            item.get("source_id")
+            for item in inventory["outcomes"]
+            if isinstance(item, dict)
+        ]
+        closure = source_collection_closure.reconcile(
+            declared, inventory["outcomes"]
+        )
+        if closure.get("complete") is not True:
+            return _blocked("source collection incomplete", str(closure["why"]))
+        completed = _ledger_entry(
+            len(entries) + 2,
+            "source_collection_completed",
+            {
+                "recorded_at": datetime.now(timezone.utc).isoformat(),
+                "intake_id": state["intake_id"],
+                "decision_ledger_sequence": answered["sequence"],
+                "source_ids": closure["source_ids"],
+                "source_projection_closure": inventory,
+            },
+            str(answered["entry_sha256"]),
+        )
+        _append_ledger(work / "ledger.jsonl", [answered, completed])
+        collection = state["source_collection"]
+        assert isinstance(collection, dict)
+        collection = {
+            **collection,
+            "status": "complete",
+            "source_ids": closure["source_ids"],
+            "completion_ledger_sequence": completed["sequence"],
+        }
+        state.update({
+            "status": "source_collection_complete",
+            "phase": "source_collection_complete",
+            "waiting_for": None,
+            "question": None,
+            "source_collection": collection,
+            "ledger_entries": completed["sequence"],
+            "ledger_tail_sha256": completed["entry_sha256"],
+        })
+        _write_state(work / "intake-state.json", state)
+        return _source_collection_result(state, work, inventory)
+
+    collection = state["source_collection"]
+    assert isinstance(collection, dict)
+    position = int(collection["decision_count"])
+    kind_question = _numbered_collection_question(
+        SOURCE_COLLECTION_KIND_QUESTION, position
+    )
+    asked = _ledger_entry(
+        len(entries) + 2,
+        "operator_question_asked",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "source_collection_kind",
+            "question": kind_question,
+        },
+        str(answered["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [answered, asked])
+    collection = {
+        **collection,
+        "kind_question_ledger_sequence": asked["sequence"],
+    }
+    state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_source_collection_kind",
+        "waiting_for": kind_question["id"],
+        "question": kind_question,
+        "source_collection": collection,
+        "ledger_entries": asked["sequence"],
+        "ledger_tail_sha256": asked["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _operator_result(state, work)
+
+
+def _answer_source_collection_kind(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    kind: object,
+) -> dict[str, object]:
+    question_error = _validate_collection_question(
+        state,
+        entries,
+        phase="awaiting_source_collection_kind",
+        role="source_collection_kind",
+        sequence_key="kind_question_ledger_sequence",
+    )
+    if question_error:
+        return question_error
+    if kind not in {"local_file", "url"}:
+        return _blocked(
+            "invalid source collection kind",
+            "source kind must be exactly one of: local_file, url",
+        )
+    collection = state["source_collection"]
+    assert isinstance(collection, dict)
+    reservation = source_collection_reservation.reserve(
+        [f"source-{number:06d}" for number in sorted(_known_source_numbers(entries))]
+    )
+    source_id = str(reservation["source_id"])
+    question = state["question"]
+    assert isinstance(question, dict)
+    answered = _ledger_entry(
+        len(entries) + 1,
+        "operator_answer_recorded",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "source_collection_kind",
+            "answers_question": question["id"],
+            "answer": kind,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    source_question = {
+        "id": f"independent-{source_id}",
+        "asks": "Please provide the next independent source for this intake.",
+        "answer_type": kind,
+        "answers_gap": {
+            "kind": "independent_source_collection",
+            "source_id": source_id,
+        },
+    }
+    asked = _ledger_entry(
+        len(entries) + 2,
+        "operator_question_asked",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "independent_source_collection",
+            "question": source_question,
+            "reservation": reservation,
+        },
+        str(answered["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [answered, asked])
+    collection = {
+        **collection,
+        "source_kind": kind,
+        "source_question_ledger_sequence": asked["sequence"],
+        "reservation": reservation,
+    }
+    state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_independent_source",
+        "waiting_for": source_question["id"],
+        "question": source_question,
+        "source_collection": collection,
+        "ledger_entries": asked["sequence"],
+        "ledger_tail_sha256": asked["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _operator_result(state, work)
+
+
+def _resume_source_collection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+    source: Path | None,
+    source_url: str | None,
+    project_source: bool,
+    begin: bool,
+    action: str | None,
+    kind: str | None,
+) -> dict[str, object]:
+    phase = str(state.get("phase"))
+    if phase in SOURCE_COLLECTION_TERMINAL_PHASES and begin:
+        if any(value is not None for value in (source, source_url, action, kind)) or project_source:
+            return _blocked(
+                "source collection invocation invalid",
+                "begin source collection without answering its first question in the same call",
+            )
+        return _offer_source_collection_decision(work, state, entries)
+    if phase == "awaiting_source_collection_decision":
+        if begin or source is not None or source_url is not None or kind is not None or project_source:
+            return _blocked(
+                "source collection decision required",
+                "answer only the current add_source or finish_sources question",
+            )
+        if action is None:
+            error = _validate_collection_question(
+                state,
+                entries,
+                phase=phase,
+                role="source_collection_decision",
+                sequence_key="decision_question_ledger_sequence",
+            )
+            return error or _operator_result(state, work)
+        return _answer_source_collection_decision(work, state, entries, action)
+    if phase == "awaiting_source_collection_kind":
+        if begin or source is not None or source_url is not None or action is not None or project_source:
+            return _blocked(
+                "source collection kind required",
+                "answer only the current local_file or url question",
+            )
+        if kind is None:
+            error = _validate_collection_question(
+                state,
+                entries,
+                phase=phase,
+                role="source_collection_kind",
+                sequence_key="kind_question_ledger_sequence",
+            )
+            return error or _operator_result(state, work)
+        return _answer_source_collection_kind(work, state, entries, kind)
+    if phase == "awaiting_independent_source":
+        if begin or action is not None or kind is not None or project_source:
+            return _blocked(
+                "independent source required",
+                "supply only the source requested by the current question",
+            )
+        collection = state.get("source_collection")
+        question = state.get("question")
+        sequence = (
+            collection.get("source_question_ledger_sequence")
+            if isinstance(collection, dict)
+            else None
+        )
+        if (
+            not isinstance(question, dict)
+            or not isinstance(sequence, int)
+            or sequence != len(entries)
+            or entries[-1].get("event") != "operator_question_asked"
+            or entries[-1].get("role") != "independent_source_collection"
+            or entries[-1].get("question") != question
+        ):
+            return _blocked(
+                "invalid source collection state",
+                "the independent source request changed",
+            )
+        if source is None and source_url is None:
+            return _operator_result(state, work)
+        if source is not None and source_url is not None:
+            return _blocked(
+                "operator input type mismatch",
+                "supply either one local file or one URL, not both",
+            )
+        lineage = {
+            "mode": "independent_source_collection",
+            "decision_question_ledger_sequence": collection["decision_question_ledger_sequence"],
+            "source_kind_question_ledger_sequence": collection["kind_question_ledger_sequence"],
+            "question_ledger_sequence": sequence,
+        }
+        if source_url is not None:
+            return _acquire_additional_url(
+                work, state, entries, source_url, question=question, lineage=lineage
+            )
+        assert source is not None
+        return _acquire_additional_local_file(
+            work, state, entries, source, question=question, lineage=lineage
+        )
+    if phase in {
+        "additional_source_frozen",
+        "interviewing_additional_source_projection",
+        "additional_source_projection_recorded",
+        "additional_spreadsheet_projection_failed",
+    }:
+        pending = state.get("pending_additional_source")
+        lineage = pending.get("lineage") if isinstance(pending, dict) else None
+        if not isinstance(lineage, dict) or lineage.get("mode") != "independent_source_collection":
+            return _blocked(
+                "invalid source collection state",
+                "the pending source is not bound to independent source collection",
+            )
+        pending_error = _validate_pending_additional_source(
+            work,
+            state,
+            entries,
+            source,
+            source_url,
+            allow_projection=phase != "additional_source_frozen",
+        )
+        if pending_error:
+            return pending_error
+        if any(value is not None for value in (action, kind)) or begin:
+            return _blocked(
+                "source projection pending",
+                "finish the current source projection before another collection decision",
+            )
+        if phase == "additional_source_frozen":
+            if project_source:
+                return _request_additional_projection(work, state, entries)
+            return _additional_source_ready_result(state, work)
+        if phase == "interviewing_additional_source_projection":
+            request_error = _validate_additional_projection_request(work, state, entries)
+            if request_error:
+                return request_error
+            if project_source or source is not None or source_url is not None:
+                return _blocked(
+                    "additional projection interview active",
+                    "finish the current code-controlled projection interview",
+                )
+            active = state.get("active_additional_projection")
+            paths = active.get("paths") if isinstance(active, dict) else None
+            if not isinstance(paths, dict):
+                return _blocked(
+                    "invalid intake state", "the active projection paths are missing"
+                )
+            if not (work / str(paths["candidate_path"])).exists():
+                return _additional_projection_waiting_result(state, work)
+            return _consume_additional_projection(work, state, entries, purpose)
+        if phase == "additional_source_projection_recorded":
+            recorded_error = _validate_recorded_additional_projection(
+                work, state, entries, purpose
+            )
+            if recorded_error:
+                return recorded_error
+        else:
+            failure_error = _validate_spreadsheet_failure(
+                work, state, entries, additional=True
+            )
+            if failure_error:
+                return failure_error
+        if project_source or source is not None or source_url is not None:
+            return _blocked(
+                "source projection complete",
+                "resume once to receive the next source-collection decision",
+            )
+        return _offer_source_collection_decision(work, state, entries)
+    if phase == "source_collection_complete":
+        if any(
+            value is not None for value in (source, source_url, action, kind)
+        ) or project_source or begin:
+            return _blocked(
+                "source collection already complete",
+                "the append-only source collection has already reached its terminal result",
+            )
+        inventory, inventory_error = _source_collection_inventory(work, entries)
+        if inventory_error:
+            return inventory_error
+        assert inventory is not None
+        collection = state.get("source_collection")
+        sequence = (
+            collection.get("completion_ledger_sequence")
+            if isinstance(collection, dict)
+            else None
+        )
+        if (
+            not isinstance(sequence, int)
+            or sequence != len(entries)
+            or entries[-1].get("event") != "source_collection_completed"
+            or entries[-1].get("source_ids") != collection.get("source_ids")
+            or entries[-1].get("source_projection_closure") != inventory
+        ):
+            return _blocked(
+                "invalid source collection ledger",
+                "the completed source set changed",
+            )
+        return _source_collection_result(state, work, inventory)
+    return _blocked(
+        "source collection unavailable",
+        "begin source collection only after a source has a terminal projection outcome",
+    )
+
+
 def _load_bound(
     work: Path, opening_bytes: bytes
 ) -> tuple[dict[str, object] | None, list[dict[str, object]], dict[str, object] | None]:
@@ -2435,6 +3146,19 @@ def _request_first_projection(
 ) -> dict[str, object]:
     source = state["first_source"]
     assert isinstance(source, dict)
+    source_path = work / str(source["stored_path"])
+    try:
+        source_bytes = source_path.read_bytes()
+    except OSError:
+        return _blocked("immutable source unavailable", str(source_path))
+    if spreadsheet_projection.is_workbook(
+        Path(str(source.get("filename", source_path.name))),
+        str(source.get("media_type", "")),
+        source_bytes,
+    ):
+        return _create_spreadsheet_projection(
+            work, state, entries, source, entries[6]["projection"]
+        )
     if source.get("media_type") == "application/pdf":
         return _request_first_pdf_projection(work, state, entries, source)
     if not str(source["media_type"]).startswith("image/"):
@@ -2471,6 +3195,389 @@ def _request_first_projection(
     })
     _write_state(work / "intake-state.json", state)
     return _projection_waiting_result(state, work)
+
+
+def _spreadsheet_projection_record(
+    source_id: str,
+    projection_bytes: bytes,
+    projected: dict[str, object],
+) -> dict[str, object]:
+    return {
+        "id": f"projection-{source_id}-v1",
+        "source_id": source_id,
+        "version": 1,
+        "path": f"projections/{source_id}-v1.json",
+        "sha256": _digest_bytes(projection_bytes),
+        "method": "spreadsheet_ooxml_v1",
+        "coverage": projected["coverage"],
+    }
+
+
+def _spreadsheet_failure(
+    source_id: str, reason: str
+) -> dict[str, object]:
+    return {
+        "id": f"projection-{source_id}-v1",
+        "source_id": source_id,
+        "version": 1,
+        "status": "failed",
+        "path": None,
+        "sha256": None,
+        "method": "spreadsheet_ooxml_v1",
+        "coverage": {
+            "status": "failed",
+            "source_units": None,
+            "represented_units": 0,
+            "gaps": [reason],
+        },
+    }
+
+
+def _spreadsheet_result(
+    state: dict[str, object], work: Path, *, additional: bool, failed: bool
+) -> dict[str, object]:
+    pending = state.get("pending_additional_source")
+    source = (
+        pending.get("source")
+        if additional and isinstance(pending, dict)
+        else state["first_source"]
+    )
+    projection = (
+        state["additional_source_projection"]
+        if additional
+        else state["first_projection"]
+    )
+    result = {
+        "status": "ready_for_projection" if failed else "ready_for_projection_assessment",
+        "stopped": (
+            "additional_spreadsheet_projection_failed"
+            if additional and failed
+            else "additional_source_projection_recorded"
+            if additional
+            else "first_spreadsheet_projection_failed"
+            if failed
+            else "first_spreadsheet_projection_recorded"
+        ),
+        "intake_id": state["intake_id"],
+        "source": source,
+        "projection": projection,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+    if additional and isinstance(pending, dict):
+        result["reserved_projection"] = pending["projection"]
+        result["lineage"] = pending["lineage"]
+    return result
+
+
+def _create_spreadsheet_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    source: dict[str, object],
+    reservation: object,
+    *,
+    pending: dict[str, object] | None = None,
+) -> dict[str, object]:
+    additional = pending is not None
+    source_id = str(source["id"])
+    source_path = work / str(source["stored_path"])
+    try:
+        source_bytes = source_path.read_bytes()
+    except OSError:
+        return _blocked("immutable source unavailable", str(source_path))
+    if _digest_bytes(source_bytes) != source.get("sha256"):
+        return _blocked(
+            "immutable source changed",
+            "the frozen spreadsheet changed before projection",
+        )
+    try:
+        projected = spreadsheet_projection.project(source_bytes)
+    except spreadsheet_projection.SpreadsheetProjectionError as error:
+        failure = _spreadsheet_failure(source_id, str(error))
+        failed = _ledger_entry(
+            len(entries) + 1,
+            "projection_conversion_failed",
+            {
+                "recorded_at": datetime.now(timezone.utc).isoformat(),
+                "intake_id": state["intake_id"],
+                "source_id": source_id,
+                "source_sha256": source["sha256"],
+                "adapter": {
+                    "name": "spreadsheet_ooxml_v1",
+                    "version": spreadsheet_projection.ADAPTER_VERSION,
+                },
+                "reserved_projection": reservation,
+                "failure": failure,
+            },
+            str(entries[-1]["entry_sha256"]),
+        )
+        _append_ledger(work / "ledger.jsonl", [failed])
+        state.update(
+            {
+                "status": "ready_for_projection",
+                "phase": (
+                    "additional_spreadsheet_projection_failed"
+                    if additional
+                    else "first_spreadsheet_projection_failed"
+                ),
+                "waiting_for": None,
+                "question": None,
+                (
+                    "additional_source_projection"
+                    if additional
+                    else "first_projection"
+                ): failure,
+                "spreadsheet_projection_completion": {
+                    "role": "spreadsheet_ooxml_projection_failure",
+                    "ledger_sequence": failed["sequence"],
+                },
+                "ledger_entries": failed["sequence"],
+                "ledger_tail_sha256": failed["entry_sha256"],
+            }
+        )
+        _write_state(work / "intake-state.json", state)
+        return _spreadsheet_result(
+            state, work, additional=additional, failed=True
+        )
+    projection_bytes = spreadsheet_projection.canonical_bytes(projected)
+    projection = _spreadsheet_projection_record(
+        source_id, projection_bytes, projected
+    )
+    reserved_id = reservation.get("id") if isinstance(reservation, dict) else None
+    if isinstance(reserved_id, str) and projection["id"] != reserved_id:
+        return _blocked(
+            "invalid ledger",
+            "the spreadsheet projection does not fill its reserved identity",
+        )
+    projection_path = work / str(projection["path"])
+    if projection_path.exists():
+        return _blocked(
+            "unbound projection artifact",
+            f"the spreadsheet projection already exists outside the ledger: {projection['path']}",
+        )
+    projection_path.write_bytes(projection_bytes)
+    payload: dict[str, object] = {
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+        "intake_id": state["intake_id"],
+        "attempt": 1,
+        "role": "spreadsheet_ooxml_projection",
+        "source_id": source_id,
+        "source_sha256": source["sha256"],
+        "reserved_projection": reservation,
+        "projection": projection,
+    }
+    if additional:
+        assert pending is not None
+        payload.update(
+            {
+                "answers_question": pending["question"]["id"],
+                "answers_gap": pending["question"]["answers_gap"],
+                "lineage": pending["lineage"],
+            }
+        )
+    created = _ledger_entry(
+        len(entries) + 1,
+        "projection_version_created",
+        payload,
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [created])
+    completion = {
+        "role": "spreadsheet_ooxml_projection",
+        "source_id": source_id,
+        "source_sha256": source["sha256"],
+        "projection_sha256": projection["sha256"],
+        "reserved_projection": reservation,
+        "ledger_sequence": created["sequence"],
+    }
+    if additional:
+        assert pending is not None
+        completion["lineage"] = pending["lineage"]
+    state.update(
+        {
+            "status": "ready_for_projection_assessment",
+            "phase": (
+                "additional_source_projection_recorded"
+                if additional
+                else "first_spreadsheet_projection_recorded"
+            ),
+            "waiting_for": None,
+            "question": None,
+            (
+                "additional_source_projection"
+                if additional
+                else "first_projection"
+            ): projection,
+            "spreadsheet_projection_completion": completion,
+            "ledger_entries": created["sequence"],
+            "ledger_tail_sha256": created["entry_sha256"],
+        }
+    )
+    if additional:
+        state["additional_projection_completion"] = completion
+    _write_state(work / "intake-state.json", state)
+    return _spreadsheet_result(
+        state, work, additional=additional, failed=False
+    )
+
+
+def _validate_spreadsheet_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    *,
+    additional: bool,
+    allow_later_phase: bool = False,
+) -> dict[str, object] | None:
+    pending = state.get("pending_additional_source")
+    source = (
+        pending.get("source")
+        if additional and isinstance(pending, dict)
+        else state.get("first_source")
+    )
+    projection = state.get(
+        "additional_source_projection" if additional else "first_projection"
+    )
+    completion = state.get(
+        "additional_projection_completion"
+        if additional
+        else "spreadsheet_projection_completion"
+    )
+    if not all(
+        isinstance(item, dict) for item in (source, projection, completion)
+    ):
+        return _blocked(
+            "invalid spreadsheet projection",
+            "the source, projection, or completion identity is missing",
+        )
+    assert isinstance(source, dict)
+    assert isinstance(projection, dict)
+    assert isinstance(completion, dict)
+    sequence = completion.get("ledger_sequence")
+    if (
+        not isinstance(sequence, int)
+        or sequence < 1
+        or sequence > len(entries)
+        or (not allow_later_phase and sequence != len(entries))
+    ):
+        return _blocked(
+            "invalid spreadsheet projection", "the ledger sequence changed"
+        )
+    try:
+        source_bytes = (work / str(source["stored_path"])).read_bytes()
+        projected = spreadsheet_projection.project(source_bytes)
+        expected_bytes = spreadsheet_projection.canonical_bytes(projected)
+        actual_bytes = (work / str(projection["path"])).read_bytes()
+    except (OSError, spreadsheet_projection.SpreadsheetProjectionError) as error:
+        return _blocked("immutable spreadsheet projection unavailable", str(error))
+    expected = _spreadsheet_projection_record(
+        str(source["id"]), expected_bytes, projected
+    )
+    reservation = (
+        pending.get("projection")
+        if additional and isinstance(pending, dict)
+        else entries[6].get("projection")
+    )
+    expected_completion: dict[str, object] = {
+        "role": "spreadsheet_ooxml_projection",
+        "source_id": source["id"],
+        "source_sha256": source["sha256"],
+        "projection_sha256": expected["sha256"],
+        "reserved_projection": reservation,
+        "ledger_sequence": sequence,
+    }
+    if additional and isinstance(pending, dict):
+        expected_completion["lineage"] = pending["lineage"]
+    created = entries[sequence - 1]
+    if (
+        _digest_bytes(source_bytes) != source.get("sha256")
+        or actual_bytes != expected_bytes
+        or projection != expected
+        or completion != expected_completion
+        or created.get("event") != "projection_version_created"
+        or created.get("attempt") != 1
+        or created.get("role") != "spreadsheet_ooxml_projection"
+        or created.get("source_id") != source.get("id")
+        or created.get("source_sha256") != source.get("sha256")
+        or created.get("reserved_projection") != reservation
+        or created.get("projection") != projection
+        or (
+            additional
+            and isinstance(pending, dict)
+            and (
+                created.get("answers_question") != pending["question"]["id"]
+                or created.get("answers_gap")
+                != pending["question"]["answers_gap"]
+                or created.get("lineage") != pending["lineage"]
+            )
+        )
+    ):
+        return _blocked(
+            "immutable spreadsheet projection changed",
+            "the readable projection no longer matches its source and ledger",
+        )
+    return None
+
+
+def _validate_spreadsheet_failure(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    *,
+    additional: bool,
+) -> dict[str, object] | None:
+    pending = state.get("pending_additional_source")
+    source = (
+        pending.get("source")
+        if additional and isinstance(pending, dict)
+        else state.get("first_source")
+    )
+    failure = state.get(
+        "additional_source_projection" if additional else "first_projection"
+    )
+    if not isinstance(source, dict) or not isinstance(failure, dict):
+        return _blocked(
+            "invalid spreadsheet projection failure", "the failure identity is missing"
+        )
+    try:
+        source_bytes = (work / str(source["stored_path"])).read_bytes()
+        spreadsheet_projection.project(source_bytes)
+    except OSError as error:
+        return _blocked("immutable source unavailable", str(error))
+    except spreadsheet_projection.SpreadsheetProjectionError as error:
+        expected = _spreadsheet_failure(str(source["id"]), str(error))
+    else:
+        return _blocked(
+            "invalid spreadsheet projection failure",
+            "the preserved source now produces a readable projection",
+        )
+    failed = entries[-1]
+    reservation = (
+        pending.get("projection")
+        if additional and isinstance(pending, dict)
+        else entries[6].get("projection")
+    )
+    if (
+        _digest_bytes(source_bytes) != source.get("sha256")
+        or failure != expected
+        or failed.get("event") != "projection_conversion_failed"
+        or failed.get("source_id") != source.get("id")
+        or failed.get("source_sha256") != source.get("sha256")
+        or failed.get("adapter")
+        != {
+            "name": "spreadsheet_ooxml_v1",
+            "version": spreadsheet_projection.ADAPTER_VERSION,
+        }
+        or failed.get("reserved_projection") != reservation
+        or failed.get("failure") != failure
+        or state.get("status") != "ready_for_projection"
+    ):
+        return _blocked(
+            "invalid spreadsheet projection failure",
+            "the recorded failure changed",
+        )
+    return None
 
 
 def _request_first_pdf_projection(
@@ -3874,6 +4981,8 @@ def run_first_projection_interview(
     output_fn: object | None = None,
     single_region: bool | None = None,
     expected_region_id: str | None = None,
+    expected_obligation_id: str | None = None,
+    expected_endpoint_evidence_sha256: str | None = None,
     region_binding_required: bool = False,
 ) -> dict[str, object]:
     try:
@@ -3928,12 +5037,32 @@ def run_first_projection_interview(
         source_path = work / str(source["stored_path"])
         attempt_dir = work / "projection-interviews" / "attempt-000001"
         contract = int(entries[7]["interview_contract"])
-    if region_binding_required and contract >= 4 and expected_region_id is None:
+    if expected_region_id is not None and expected_obligation_id is not None:
         return _blocked(
-            "projection region invocation invalid",
-            "the generated command lost its active projection region identity",
+            "projection invocation invalid",
+            "one command cannot bind both a region and a relationship obligation",
         )
-    if expected_region_id is not None:
+    if expected_endpoint_evidence_sha256 is not None and (
+        expected_obligation_id is None or expected_region_id is not None
+    ):
+        return _blocked(
+            "projection invocation invalid",
+            (
+                "a fresh endpoint crop must remain bound to exactly one "
+                "pending relationship obligation"
+            ),
+        )
+    if (
+        region_binding_required
+        and contract >= 4
+        and expected_region_id is None
+        and expected_obligation_id is None
+    ):
+        return _blocked(
+            "projection invocation invalid",
+            "the generated command lost its active projection binding",
+        )
+    if expected_region_id is not None or expected_obligation_id is not None:
         try:
             journal = projection_interview._read_journal(
                 attempt_dir / "interview.jsonl"
@@ -3944,9 +5073,12 @@ def run_first_projection_interview(
             active_region = projection_interview._active_scan_region(
                 interview_state
             )
+            active_obligation = projection_interview._pending_obligation(
+                interview_state
+            )
         except projection_interview.InterviewError as error:
-            return _blocked("projection region invocation invalid", str(error))
-        if (
+            return _blocked("projection invocation invalid", str(error))
+        if expected_region_id is not None and (
             not isinstance(active_region, dict)
             or active_region.get("id") != expected_region_id
         ):
@@ -3957,6 +5089,37 @@ def run_first_projection_interview(
                     "longer the active projection region"
                 ),
             )
+        if expected_obligation_id is not None and (
+            active_region is not None
+            or not isinstance(active_obligation, dict)
+            or active_obligation.get("id") != expected_obligation_id
+        ):
+            return _blocked(
+                "projection relationship invocation expired",
+                (
+                    f"the command was bound to {expected_obligation_id}, which "
+                    "is no longer the next pending relationship obligation"
+                ),
+            )
+        if expected_endpoint_evidence_sha256 is not None:
+            evidence = interview_state.get("current", {}).get(
+                "endpoint_crop_evidence"
+            )
+            if (
+                not isinstance(evidence, dict)
+                or not projection_interview._valid_endpoint_evidence(
+                    interview_state, evidence,
+                )
+                or evidence.get("crop_sha256")
+                != expected_endpoint_evidence_sha256
+            ):
+                return _blocked(
+                    "projection endpoint verification invocation expired",
+                    (
+                        "the command is no longer bound to the active exact "
+                        "endpoint crop"
+                    ),
+                )
     try:
         projection_interview.run(
             attempt_dir,
@@ -3965,9 +5128,37 @@ def run_first_projection_interview(
             contract=contract,
             input_fn=input_fn,
             output_fn=output_fn,
+            stop_after_relationship=expected_obligation_id is not None,
+            stop_after_endpoint_verification=(
+                expected_endpoint_evidence_sha256 is not None
+            ),
         )
+        if expected_endpoint_evidence_sha256 is not None:
+            return {
+                "status": "waiting_for_model",
+                "stopped": "projection_endpoint_verification_step_complete",
+                "completed_obligation_id": expected_obligation_id,
+                "endpoint_evidence_sha256": expected_endpoint_evidence_sha256,
+                "work": str(work.resolve()),
+                "ledger": str((work / "ledger.jsonl").resolve()),
+            }
+        if expected_obligation_id is not None:
+            return {
+                "status": "waiting_for_model",
+                "stopped": "projection_relationship_step_complete",
+                "completed_obligation_id": expected_obligation_id,
+                "work": str(work.resolve()),
+                "ledger": str((work / "ledger.jsonl").resolve()),
+            }
         stop_after_region = input_fn is None if single_region is None else single_region
         while not stop_after_region and not (attempt_dir / "projection.json").exists():
+            projection_interview.prepare_endpoint_evidence(
+                attempt_dir,
+                source_path=source_path,
+                source_sha256=str(source["sha256"]),
+                purpose=purpose,
+                contract=contract,
+            )
             projection_interview.prepare_region_evidence(
                 attempt_dir,
                 source_path=source_path,
@@ -6631,7 +7822,10 @@ def _acquire_additional_local_file(
     if source_error:
         return source_error
     assert resolved is not None and content is not None
-    number = max(_known_source_numbers(entries), default=0) + 1
+    reservation = source_collection_reservation.reserve(
+        [f"source-{number:06d}" for number in sorted(_known_source_numbers(entries))]
+    )
+    number = int(reservation["source_number"])
     stored_relative = f"sources/source-{number:06d}"
     stored_path = work / stored_relative
     if stored_path.exists():
@@ -6654,6 +7848,11 @@ def _acquire_additional_local_file(
         question,
     )
     projection = _pending_additional_projection_record(number)
+    if projection.get("id") != reservation["projection_id"]:
+        return _blocked(
+            "source reservation failed",
+            "the reserved source and projection identities disagree",
+        )
     entry = _ledger_entry(
         len(entries) + 1,
         "source_acquired",
@@ -6704,7 +7903,10 @@ def _acquire_additional_url(
             "operator input type mismatch",
             "the current question requires a different answer type, not a URL",
         )
-    number = max(_known_source_numbers(entries), default=0) + 1
+    reservation = source_collection_reservation.reserve(
+        [f"source-{number:06d}" for number in sorted(_known_source_numbers(entries))]
+    )
+    number = int(reservation["source_number"])
     stored_relative = f"sources/source-{number:06d}"
     stored_path = work / stored_relative
     if stored_path.exists():
@@ -6731,6 +7933,11 @@ def _acquire_additional_url(
         "answers_gap": question["answers_gap"],
     }
     projection = _pending_additional_projection_record(number)
+    if projection.get("id") != reservation["projection_id"]:
+        return _blocked(
+            "source reservation failed",
+            "the reserved source and projection identities disagree",
+        )
     entry = _ledger_entry(
         len(entries) + 1,
         "source_acquired",
@@ -6904,6 +8111,7 @@ def _validate_pending_additional_source(
             not in {
                 "interviewing_additional_source_projection",
                 "additional_source_projection_recorded",
+                "additional_spreadsheet_projection_failed",
                 "assessing_additional_source_gap",
                 "additional_source_gap_assessment_recorded",
                 "additional_source_element_gap_admitted",
@@ -7013,7 +8221,13 @@ def _additional_projection_waiting_result(
                 "projection region evidence failed",
                 "the additional-source projection identity is missing",
             )
-        attachment, region_id, attachment_error = _projection_model_attachment(
+        (
+            attachment,
+            region_id,
+            obligation_id,
+            endpoint_evidence_sha256,
+            attachment_error,
+        ) = _projection_model_attachment(
             work,
             source_path=attachment,
             source_sha256=str(source["sha256"]),
@@ -7032,6 +8246,16 @@ def _additional_projection_waiting_result(
     ]
     if stage == "project_additional_source" and region_id is not None:
         command.extend(["--projection-region-id", region_id])
+    elif stage == "project_additional_source" and obligation_id is not None:
+        command.extend(["--projection-obligation-id", obligation_id])
+    if (
+        stage == "project_additional_source"
+        and endpoint_evidence_sha256 is not None
+    ):
+        command.extend([
+            "--projection-endpoint-evidence-sha256",
+            endpoint_evidence_sha256,
+        ])
     command.append(selected["flag"])
     return {
         "status": "waiting_for_model",
@@ -7063,6 +8287,24 @@ def _request_additional_projection(
     assert isinstance(source, dict) and isinstance(projection, dict)
     assert isinstance(lineage, dict)
     source_id = str(source["id"])
+    source_path = work / str(source["stored_path"])
+    try:
+        source_bytes = source_path.read_bytes()
+    except OSError:
+        return _blocked("immutable source unavailable", str(source_path))
+    if spreadsheet_projection.is_workbook(
+        Path(str(source.get("filename", source_path.name))),
+        str(source.get("media_type", "")),
+        source_bytes,
+    ):
+        return _create_spreadsheet_projection(
+            work,
+            state,
+            entries,
+            source,
+            projection,
+            pending=pending,
+        )
     if not str(source["media_type"]).startswith("image/"):
         return _create_additional_verbatim_utf8_projection(
             work, state, entries, pending
@@ -9059,6 +10301,13 @@ def _validate_recorded_additional_projection(
     completion = state.get("additional_projection_completion")
     if (
         isinstance(completion, dict)
+        and completion.get("role") == "spreadsheet_ooxml_projection"
+    ):
+        return _validate_spreadsheet_projection(
+            work, state, entries, additional=True, allow_later_phase=allow_later_phase
+        )
+    if (
+        isinstance(completion, dict)
         and completion.get("role") == "verbatim_utf8_projection"
     ):
         return _validate_additional_verbatim_utf8_projection(
@@ -9452,6 +10701,7 @@ def _validate_prepared_question_round_interview(
                 "additional_source_frozen",
                 "interviewing_additional_source_projection",
                 "additional_source_projection_recorded",
+                "additional_spreadsheet_projection_failed",
                 "assessing_additional_source_gap",
                 "additional_source_gap_assessment_recorded",
                 "additional_source_element_gap_admitted",
@@ -10095,6 +11345,7 @@ def _validate_mixed_question_answer_records(
                 "additional_source_frozen",
                 "interviewing_additional_source_projection",
                 "additional_source_projection_recorded",
+                "additional_spreadsheet_projection_failed",
                 "assessing_additional_source_gap",
                 "additional_source_gap_assessment_recorded",
                 "additional_source_element_gap_admitted",
@@ -10347,6 +11598,7 @@ def _validate_gap_question_answer_records(
                 "additional_source_frozen",
                 "interviewing_additional_source_projection",
                 "additional_source_projection_recorded",
+                "additional_spreadsheet_projection_failed",
                 "assessing_additional_source_gap",
                 "additional_source_gap_assessment_recorded",
                 "additional_source_element_gap_admitted",
@@ -14766,21 +16018,73 @@ def _clarification_boundary_result(
     elif boundary == "first_source_projection_complete":
         projection = result.get("projection")
         method = projection.get("method") if isinstance(projection, dict) else None
+        coverage = projection.get("coverage") if isinstance(projection, dict) else None
+        spreadsheet_accounted = (
+            method == "spreadsheet_ooxml_v1"
+            and isinstance(coverage, dict)
+            and coverage.get("status") in {"complete", "partial"}
+            and isinstance(coverage.get("source_units"), int)
+            and isinstance(coverage.get("represented_units"), int)
+            and isinstance(coverage.get("gap_units"), int)
+            and coverage["represented_units"] + coverage["gap_units"]
+            == coverage["source_units"]
+            and isinstance(coverage.get("parts"), list)
+            and len(coverage["parts"]) == coverage["source_units"]
+        )
         if (
             result.get("status") != "ready_for_projection_assessment"
             or result.get("stopped") not in {
                 "first_verbatim_projection_recorded",
                 "first_pdf_projection_recorded",
+                "first_spreadsheet_projection_recorded",
             }
             or not isinstance(result.get("source"), dict)
             or not isinstance(projection, dict)
-            or method not in {"verbatim_utf8", "pdf_visible_pages"}
-            or not isinstance(projection.get("coverage"), dict)
-            or projection["coverage"].get("status") != "complete"
+            or method not in {
+                "verbatim_utf8", "pdf_visible_pages", "spreadsheet_ooxml_v1"
+            }
+            or not isinstance(coverage, dict)
+            or (
+                method != "spreadsheet_ooxml_v1"
+                and coverage.get("status") != "complete"
+            )
+            or (method == "spreadsheet_ooxml_v1" and not spreadsheet_accounted)
         ):
             return _blocked(
                 "invalid clarification boundary",
-                "the first-source boundary lost its verbatim readable projection",
+                "the first-source boundary lost its accounted readable projection",
+            )
+    elif boundary == "additional_source_projection_complete":
+        projection = result.get("projection")
+        if (
+            result.get("status") != "ready_for_projection_assessment"
+            or result.get("stopped") != "additional_source_projection_recorded"
+            or not isinstance(result.get("source"), dict)
+            or not isinstance(projection, dict)
+            or projection.get("method") != "spreadsheet_ooxml_v1"
+            or not isinstance(result.get("reserved_projection"), dict)
+            or not isinstance(result.get("lineage"), dict)
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the additional-source boundary lost its spreadsheet projection identity",
+            )
+    elif boundary == "source_conversion_failed":
+        projection = result.get("projection")
+        if (
+            result.get("status") != "ready_for_projection"
+            or result.get("stopped") not in {
+                "first_spreadsheet_projection_failed",
+                "additional_spreadsheet_projection_failed",
+            }
+            or not isinstance(result.get("source"), dict)
+            or not isinstance(projection, dict)
+            or projection.get("status") != "failed"
+            or projection.get("method") != "spreadsheet_ooxml_v1"
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the source-conversion failure lost its source-bound audit outcome",
             )
     elif boundary == "additional_source_gap_assessment_complete":
         assessment = result.get("assessment")
@@ -14838,6 +16142,7 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
             )
         if stopped in {
             "first_verbatim_projection_recorded",
+            "first_spreadsheet_projection_recorded",
         }:
             return _clarification_boundary_result(
                 result, "first_source_projection_complete"
@@ -14854,10 +16159,25 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
             return _clarification_boundary_result(
                 result, "source_conversion_required"
             )
+        if stopped in {
+            "first_spreadsheet_projection_failed",
+            "additional_spreadsheet_projection_failed",
+        }:
+            return _clarification_boundary_result(
+                result, "source_conversion_failed"
+            )
         if stopped == "additional_source_frozen":
             result = drive(work, opening, purpose, project_source=True)
             continue
         elif stopped == "additional_source_projection_recorded":
+            projection = result.get("projection")
+            if (
+                isinstance(projection, dict)
+                and projection.get("method") == "spreadsheet_ooxml_v1"
+            ):
+                return _clarification_boundary_result(
+                    result, "additional_source_projection_complete"
+                )
             state, entries, load_error = _load_bound(
                 work, opening.encode("utf-8")
             )
@@ -15019,6 +16339,9 @@ def _resume(
     continue_clarification: bool,
     source_url: str | None,
     gap_url: str | None,
+    begin_source_collection: bool,
+    source_collection_action: str | None,
+    source_collection_kind: str | None,
 ) -> dict[str, object]:
     state, entries, error = _load_bound(work, opening_bytes)
     if error:
@@ -15031,6 +16354,15 @@ def _resume(
             "supply either one local file or one URL as the first source, not both",
         )
     source_supplied = source is not None or source_url is not None
+    if (
+        begin_source_collection
+        or source_collection_action is not None
+        or source_collection_kind is not None
+    ) and phase not in SOURCE_COLLECTION_TERMINAL_PHASES | SOURCE_COLLECTION_PHASES:
+        return _blocked(
+            "source collection unavailable",
+            "begin source collection only after a source has a terminal projection outcome",
+        )
     gap_inputs = sum(
         value is not None for value in (gap_answer, gap_file, gap_url)
     )
@@ -15199,12 +16531,15 @@ def _resume(
         "additional_source_frozen",
         "interviewing_additional_source_projection",
         "additional_source_projection_recorded",
+        "additional_spreadsheet_projection_failed",
         "assessing_additional_source_gap",
         "additional_source_gap_assessment_recorded",
         "additional_source_element_gap_admitted",
         "interviewing_pdf_page_projection",
         "first_pdf_projection_recorded",
         "first_pdf_projection_failed",
+        "first_spreadsheet_projection_recorded",
+        "first_spreadsheet_projection_failed",
     } or assessed_resolution_phase:
         supported_ledger_length = (
             len(entries) >= 8
@@ -15212,13 +16547,19 @@ def _resume(
                 "interviewing_pdf_page_projection",
                 "first_pdf_projection_recorded",
                 "first_pdf_projection_failed",
+                "first_spreadsheet_projection_recorded",
+                "first_spreadsheet_projection_failed",
             }
             else len(entries) >= 11
         )
+    if phase in SOURCE_COLLECTION_PHASES:
+        supported_ledger_length = len(entries) >= 8
     if phase not in {
         "awaiting_first_source", "clarifying_intake_purpose", "first_source_frozen",
         "interviewing_first_projection", "first_projection_recorded",
         "first_verbatim_projection_recorded",
+        "first_spreadsheet_projection_recorded",
+        "first_spreadsheet_projection_failed",
         "formulating_gap_question", "awaiting_gap_answer", "gap_operator_source_recorded",
         "formulating_gap_question_round", "awaiting_gap_answers",
         "gap_question_round_answered",
@@ -15237,12 +16578,16 @@ def _resume(
         "additional_source_frozen",
         "interviewing_additional_source_projection",
         "additional_source_projection_recorded",
+        "additional_spreadsheet_projection_failed",
         "assessing_additional_source_gap",
         "additional_source_gap_assessment_recorded",
         "additional_source_element_gap_admitted",
         "interviewing_pdf_page_projection",
         "first_pdf_projection_recorded",
         "first_pdf_projection_failed",
+        "first_spreadsheet_projection_recorded",
+        "first_spreadsheet_projection_failed",
+        *SOURCE_COLLECTION_PHASES,
     } or not supported_ledger_length:
         return _blocked("invalid intake state", "the saved purpose stage is unsupported")
     result_path = work / "purpose-interview" / "assessment.json"
@@ -15337,6 +16682,42 @@ def _resume(
         assert source is not None
         return _acquire_first_source(work, state, entries, source)
 
+    collection = state.get("source_collection")
+    collection_active = (
+        isinstance(collection, dict)
+        and collection.get("mode") == "independent_multi_source"
+    )
+    if begin_source_collection or collection_active:
+        if any((
+            clarify_gap,
+            gap_input_supplied,
+            resolve_gap,
+            assess_gap_answers,
+            conduct_question_round,
+            continue_clarification,
+        )):
+            return _blocked(
+                "source collection invocation invalid",
+                "source collection cannot be combined with semantic gap assessment",
+            )
+        return _resume_source_collection(
+            work,
+            state,
+            entries,
+            purpose_bytes.decode("utf-8"),
+            source,
+            source_url,
+            project_source,
+            begin_source_collection,
+            source_collection_action,
+            source_collection_kind,
+        )
+    if source_collection_action is not None or source_collection_kind is not None:
+        return _blocked(
+            "source collection unavailable",
+            "begin source collection after the current source reaches a terminal projection outcome",
+        )
+
     frozen_error = _validate_frozen_first_source(
         work, state, entries, source, source_url
     )
@@ -15375,6 +16756,57 @@ def _resume(
                 "the frozen first source already has its immutable readable projection",
             )
         return _first_verbatim_projection_ready_result(state, work)
+
+    if phase == "first_spreadsheet_projection_recorded":
+        spreadsheet_error = _validate_spreadsheet_projection(
+            work, state, entries, additional=False
+        )
+        if spreadsheet_error:
+            return spreadsheet_error
+        if any(
+            (
+                source_supplied,
+                project_source,
+                clarify_gap,
+                gap_input_supplied,
+                resolve_gap,
+                assess_gap_answers,
+                conduct_question_round,
+                continue_clarification,
+            )
+        ):
+            return _blocked(
+                "first spreadsheet projection already recorded",
+                "the frozen workbook already has its immutable readable projection",
+            )
+        return _spreadsheet_result(
+            state, work, additional=False, failed=False
+        )
+
+    if phase == "first_spreadsheet_projection_failed":
+        spreadsheet_error = _validate_spreadsheet_failure(
+            work, state, entries, additional=False
+        )
+        if spreadsheet_error:
+            return spreadsheet_error
+        if any(
+            (
+                project_source,
+                clarify_gap,
+                gap_input_supplied,
+                resolve_gap,
+                assess_gap_answers,
+                conduct_question_round,
+                continue_clarification,
+            )
+        ):
+            return _blocked(
+                "spreadsheet conversion failure already recorded",
+                "the failed outcome is immutable; preserve a corrected workbook as a new source",
+            )
+        return _spreadsheet_result(
+            state, work, additional=False, failed=True
+        )
 
     if phase in {
         "interviewing_pdf_page_projection",
@@ -15486,6 +16918,7 @@ def _resume(
         "additional_source_frozen",
         "interviewing_additional_source_projection",
         "additional_source_projection_recorded",
+        "additional_spreadsheet_projection_failed",
         "assessing_additional_source_gap",
         "additional_source_gap_assessment_recorded",
         "additional_source_element_gap_admitted",
@@ -15735,6 +17168,27 @@ def _resume(
                     "the additional source already has its immutable readable projection",
                 )
             return _additional_projection_ready_result(state, work)
+        if phase == "additional_spreadsheet_projection_failed":
+            failure_error = _validate_spreadsheet_failure(
+                work, state, entries, additional=True
+            )
+            if failure_error:
+                return failure_error
+            if any((
+                project_source,
+                clarify_gap,
+                resolve_gap,
+                assess_gap_answers,
+                conduct_question_round,
+                continue_clarification,
+            )) or gap_input_supplied:
+                return _blocked(
+                    "spreadsheet conversion failure already recorded",
+                    "the failed outcome is immutable; preserve a corrected workbook as a new source",
+                )
+            return _spreadsheet_result(
+                state, work, additional=True, failed=True
+            )
         if project_source:
             return _request_additional_projection(work, state, entries)
         if (
@@ -16199,6 +17653,9 @@ def drive(
     continue_clarification: bool = False,
     source_url: str | None = None,
     gap_url: str | None = None,
+    begin_source_collection: bool = False,
+    source_collection_action: str | None = None,
+    source_collection_kind: str | None = None,
 ) -> dict[str, object]:
     opening_bytes = opening.encode("utf-8")
     if not opening.strip():
@@ -16220,6 +17677,9 @@ def drive(
             continue_clarification,
             source_url,
             gap_url,
+            begin_source_collection,
+            source_collection_action,
+            source_collection_kind,
         )
     if (
         purpose is not None
@@ -16234,6 +17694,9 @@ def drive(
         or assess_gap_answers
         or conduct_question_round
         or continue_clarification
+        or begin_source_collection
+        or source_collection_action is not None
+        or source_collection_kind is not None
     ):
         return _blocked("intake not started", "start the intake before supplying its purpose or source")
     if work.exists() and not work.is_dir():
@@ -16316,6 +17779,20 @@ def main() -> int:
     parser.add_argument(
         "--projection-region-id",
         help="the exact active region identity bound into a generated projection command",
+    )
+    parser.add_argument(
+        "--projection-obligation-id",
+        help=(
+            "the exact pending relationship obligation identity bound into a "
+            "generated projection command"
+        ),
+    )
+    parser.add_argument(
+        "--projection-endpoint-evidence-sha256",
+        help=(
+            "the exact endpoint crop identity bound into a generated fresh "
+            "verification command"
+        ),
     )
     parser.add_argument(
         "--run-projection-verification",
@@ -16428,10 +17905,22 @@ def main() -> int:
         args.run_gap_resolution_verification,
         args.run_purpose_interview,
     ))
-    if args.projection_region_id is not None and not args.run_projection_interview:
+    if (
+        args.projection_region_id is not None
+        and args.projection_obligation_id is not None
+    ):
         result = _blocked(
-            "projection region invocation invalid",
-            "use a generated projection region identity only for its projection interview",
+            "projection invocation invalid",
+            "supply exactly one generated projection binding",
+        )
+    elif (
+        args.projection_region_id is not None
+        or args.projection_obligation_id is not None
+        or args.projection_endpoint_evidence_sha256 is not None
+    ) and not args.run_projection_interview:
+        result = _blocked(
+            "projection invocation invalid",
+            "use a generated projection binding only for its projection interview",
         )
     elif (args.gap_file is not None or args.gap_url is not None) and (
         args.run_operator_turn
@@ -16569,6 +18058,10 @@ def main() -> int:
             result = run_first_projection_interview(
                 args.work,
                 expected_region_id=args.projection_region_id,
+                expected_obligation_id=args.projection_obligation_id,
+                expected_endpoint_evidence_sha256=(
+                    args.projection_endpoint_evidence_sha256
+                ),
                 region_binding_required=True,
             )
     elif args.run_projection_verification:

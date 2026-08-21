@@ -117,11 +117,13 @@ def _run_purpose_model(
         or not isinstance(work_items[0].get("command"), list)
     ):
         raise ValueError("the purpose stage lost its code-controlled model command")
-    executable = shutil.which("codex")
-    if executable is None:
-        raise ValueError("codex executable is unavailable")
-    argv = projection_runner.build_codex_argv(
-        executable, work, tuple(), work_items[0]["command"]
+    try:
+        client = projection_runner.active_model_client()
+        executable = projection_runner.resolve_model_executable(client)
+    except projection_runner.LaunchError as error:
+        raise ValueError(str(error)) from error
+    argv = projection_runner.build_model_argv(
+        client, executable, work, tuple(), work_items[0]["command"]
     )
     completed = run_fn(argv, check=False)
     return int(completed.returncode)
@@ -139,6 +141,98 @@ def _preserved_text(work: Path, name: str, *, required: bool) -> str | None:
         raise ValueError(f"the preserved intake source is unreadable: {name}") from error
 
 
+def _conduct_source_collection_interview(
+    work: Path,
+    opening: str,
+    purpose: str,
+    result: dict[str, object],
+    *,
+    input_fn: Callable[[str], str],
+    output_fn: Callable[[str], None],
+) -> dict[str, object]:
+    terminal_stops = {
+        "first_projection_recorded",
+        "first_verbatim_projection_recorded",
+        "first_pdf_projection_recorded",
+        "first_pdf_projection_failed",
+        "first_spreadsheet_projection_recorded",
+        "first_spreadsheet_projection_failed",
+    }
+    if result.get("stopped") in terminal_stops:
+        result = start_intake.drive(
+            work, opening, purpose, begin_source_collection=True
+        )
+    while result.get("status") == "needs_operator":
+        question = result.get("question")
+        if not isinstance(question, dict) or not isinstance(question.get("id"), str):
+            raise ValueError("the source collection lost its code-controlled question")
+        question_id = str(question["id"])
+        if question_id.startswith("source-collection-decision-"):
+            action = _choose(
+                str(question["asks"]),
+                tuple(str(value) for value in question["allowed_values"]),
+                input_fn=input_fn,
+                output_fn=output_fn,
+            )
+            result = start_intake.drive(
+                work,
+                opening,
+                purpose,
+                source_collection_action=action,
+            )
+        elif question_id.startswith("source-collection-kind-"):
+            kind = _choose(
+                str(question["asks"]),
+                tuple(str(value) for value in question["allowed_values"]),
+                input_fn=input_fn,
+                output_fn=output_fn,
+            )
+            result = start_intake.drive(
+                work,
+                opening,
+                purpose,
+                source_collection_kind=kind,
+            )
+        elif question_id.startswith("independent-source-"):
+            answer_type = str(question.get("answer_type"))
+            supplied = _ask(
+                str(question["asks"]),
+                "One existing local file path."
+                if answer_type == "local_file"
+                else "One public HTTP(S) URL.",
+                "Provide only the independent source requested for this intake.",
+                input_fn=input_fn,
+                output_fn=output_fn,
+            )
+            result = (
+                start_intake.drive(work, opening, purpose, Path(supplied))
+                if answer_type == "local_file"
+                else start_intake.drive(
+                    work, opening, purpose, source_url=supplied
+                )
+            )
+        else:
+            raise ValueError(
+                f"unsupported source collection question: {question_id}"
+            )
+        failed = _blocked(result, output_fn)
+        if failed is not None:
+            raise ValueError(str(result.get("why", result.get("stopped"))))
+        if result.get("stopped") == "additional_source_frozen":
+            result = start_intake.drive(
+                work, opening, purpose, project_source=True
+            )
+            failed = _blocked(result, output_fn)
+            if failed is not None:
+                raise ValueError(str(result.get("why", result.get("stopped"))))
+        if result.get("stopped") in {
+            "additional_source_projection_recorded",
+            "additional_spreadsheet_projection_failed",
+        }:
+            result = start_intake.drive(work, opening, purpose)
+    return result
+
+
 def _continue_intake(
     work: Path,
     opening: str,
@@ -148,6 +242,7 @@ def _continue_intake(
     output_fn: Callable[[str], None],
     model_run_fn: Callable[..., object],
     projection_region_limit: int | None,
+    projection_relationship_limit: int | None,
 ) -> int:
     result = start_intake.drive(work, opening, purpose)
     failed = _blocked(result, output_fn)
@@ -230,8 +325,38 @@ def _continue_intake(
         failed = _blocked(result, output_fn)
         if failed is not None:
             return failed
+    if result.get("stopped") in {
+        "first_projection_recorded",
+        "first_verbatim_projection_recorded",
+        "first_pdf_projection_recorded",
+        "first_pdf_projection_failed",
+        "first_spreadsheet_projection_recorded",
+        "first_spreadsheet_projection_failed",
+        "additional_source_projection_recorded",
+        "additional_spreadsheet_projection_failed",
+    }:
+        result = _conduct_source_collection_interview(
+            work,
+            opening,
+            purpose,
+            result,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+        output_fn(json.dumps(result, indent=2, sort_keys=True))
+        if result.get("status") == "source_collection_complete":
+            return 0
+        if result.get("status") == "waiting_for_model":
+            return projection_runner.drive_work(
+                work,
+                projection_region_limit=projection_region_limit,
+                projection_relationship_limit=projection_relationship_limit,
+            )
+        return 4
     return projection_runner.drive_work(
-        work, projection_region_limit=projection_region_limit,
+        work,
+        projection_region_limit=projection_region_limit,
+        projection_relationship_limit=projection_relationship_limit,
     )
 
 
@@ -258,7 +383,11 @@ def run(
     ).expanduser().resolve()
     projection_scope = _choose(
         "How far should this launcher drive visual projection?",
-        ("next_external_boundary", "region_limit"),
+        (
+            "next_external_boundary",
+            "region_limit",
+            "relationship_limit",
+        ),
         input_fn=input_fn,
         output_fn=output_fn,
     )
@@ -269,6 +398,15 @@ def run(
             output_fn=output_fn,
         )
         if projection_scope == "region_limit"
+        else None
+    )
+    projection_relationship_limit = (
+        _positive_integer(
+            "How many completed visual relationships should this invocation add?",
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+        if projection_scope == "relationship_limit"
         else None
     )
     if action == "resume":
@@ -292,6 +430,7 @@ def run(
         output_fn=output_fn,
         model_run_fn=model_run_fn,
         projection_region_limit=projection_region_limit,
+        projection_relationship_limit=projection_relationship_limit,
     )
 
 
