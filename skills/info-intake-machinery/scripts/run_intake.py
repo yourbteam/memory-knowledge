@@ -348,6 +348,10 @@ def _continue_intake(
             failed = _blocked(result, output_fn)
             if failed is not None:
                 return failed
+            result = start_intake.run_qualification_admission(work)
+            failed = _blocked(result, output_fn)
+            if failed is not None:
+                return failed
             output_fn(json.dumps(result, indent=2, sort_keys=True))
             return 0
         output_fn(json.dumps(result, indent=2, sort_keys=True))

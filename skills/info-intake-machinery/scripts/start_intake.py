@@ -236,6 +236,51 @@ source_qualification_reconciliation = importlib.util.module_from_spec(
 _SOURCE_QUALIFICATION_RECONCILIATION_SPEC.loader.exec_module(
     source_qualification_reconciliation
 )
+_QUALIFICATION_TERMINAL_DISPOSITION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_terminal_disposition",
+    Path(__file__).resolve().with_name("qualification_terminal_disposition.py"),
+)
+if (
+    _QUALIFICATION_TERMINAL_DISPOSITION_SPEC is None
+    or _QUALIFICATION_TERMINAL_DISPOSITION_SPEC.loader is None
+):
+    raise RuntimeError("qualification terminal disposition probe is unavailable")
+qualification_terminal_disposition = importlib.util.module_from_spec(
+    _QUALIFICATION_TERMINAL_DISPOSITION_SPEC
+)
+_QUALIFICATION_TERMINAL_DISPOSITION_SPEC.loader.exec_module(
+    qualification_terminal_disposition
+)
+_CLARIFICATION_OBLIGATION_BINDING_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_clarification_obligation_binding",
+    Path(__file__).resolve().with_name("clarification_obligation_binding.py"),
+)
+if (
+    _CLARIFICATION_OBLIGATION_BINDING_SPEC is None
+    or _CLARIFICATION_OBLIGATION_BINDING_SPEC.loader is None
+):
+    raise RuntimeError("clarification obligation binding probe is unavailable")
+clarification_obligation_binding = importlib.util.module_from_spec(
+    _CLARIFICATION_OBLIGATION_BINDING_SPEC
+)
+_CLARIFICATION_OBLIGATION_BINDING_SPEC.loader.exec_module(
+    clarification_obligation_binding
+)
+_QUALIFICATION_ADMISSION_PUBLICATION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_admission_publication",
+    Path(__file__).resolve().with_name("qualification_admission_publication.py"),
+)
+if (
+    _QUALIFICATION_ADMISSION_PUBLICATION_SPEC is None
+    or _QUALIFICATION_ADMISSION_PUBLICATION_SPEC.loader is None
+):
+    raise RuntimeError("qualification admission publication probe is unavailable")
+qualification_admission_publication = importlib.util.module_from_spec(
+    _QUALIFICATION_ADMISSION_PUBLICATION_SPEC
+)
+_QUALIFICATION_ADMISSION_PUBLICATION_SPEC.loader.exec_module(
+    qualification_admission_publication
+)
 
 SOURCE_COLLECTION_DECISION_QUESTION = {
     "id": "source-collection-decision",
@@ -2234,6 +2279,188 @@ def run_source_set_qualification(work: Path) -> dict[str, object]:
     return _source_set_qualification_result(state, work, closure, qualification)
 
 
+def _qualification_admission_result(
+    state: dict[str, object],
+    work: Path,
+    closure: dict[str, object],
+    qualification: dict[str, object],
+    route: str,
+    obligations: list[dict[str, object]],
+) -> dict[str, object]:
+    return {
+        "status": "qualification_admission_complete",
+        "stopped": "qualification_admission_complete",
+        "intake_id": state["intake_id"],
+        "route": route,
+        "clarification_obligations": obligations,
+        "source_projection_closure": closure,
+        "source_set_qualification": qualification,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def run_qualification_admission(work: Path) -> dict[str, object]:
+    try:
+        opening_bytes = (work / "sources" / "source-000001.txt").read_bytes()
+    except OSError as error:
+        return _blocked("qualification admission unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening_bytes)
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") not in {
+        "source_set_qualification_complete",
+        "qualification_admission_complete",
+    }:
+        return _blocked(
+            "qualification admission unavailable",
+            "admit only a completed intake-wide source qualification",
+        )
+    closure, closure_error = _source_projection_closure_inventory(work, entries)
+    if closure_error:
+        return closure_error
+    assert closure is not None
+    qualification, qualification_error = _source_set_qualification_evidence(
+        work, entries, closure
+    )
+    if qualification_error:
+        return qualification_error
+    assert qualification is not None
+    saved = state.get("source_set_qualification")
+    qualification_sequence = (
+        saved.get("ledger_sequence") if isinstance(saved, dict) else None
+    )
+    qualification_index = (
+        qualification_sequence - 1
+        if isinstance(qualification_sequence, int)
+        else -1
+    )
+    if (
+        qualification_index < 0
+        or qualification_index >= len(entries)
+        or entries[qualification_index].get("event")
+        != "source_set_qualification_completed"
+        or entries[qualification_index].get("source_set_qualification")
+        != qualification
+        or saved.get("qualification") != qualification
+    ):
+        return _blocked(
+            "invalid qualification admission ledger",
+            "the admission lost its exact source-set qualification event",
+        )
+    qualification_event_sha256 = entries[qualification_index].get(
+        "entry_sha256"
+    )
+    disposition = qualification_terminal_disposition.decide(qualification)
+    if disposition.get("complete") is not True:
+        return _blocked(
+            "qualification admission invalid", str(disposition.get("why"))
+        )
+    route = disposition.get("route")
+    obligations: list[dict[str, object]] = []
+    if route == "clarification_required":
+        bound = clarification_obligation_binding.bind(
+            qualification, str(qualification_event_sha256)
+        )
+        if bound.get("complete") is not True:
+            return _blocked(
+                "qualification admission invalid", str(bound.get("why"))
+            )
+        exact = bound.get("obligations")
+        if not isinstance(exact, list) or any(
+            not isinstance(item, dict) for item in exact
+        ):
+            return _blocked(
+                "qualification admission invalid",
+                "the obligation binding probe lost its exact ordered results",
+            )
+        obligations = exact
+    prepared = qualification_admission_publication.prepare(
+        route, obligations, qualification_event_sha256
+    )
+    if prepared.get("complete") is not True:
+        return _blocked(
+            "qualification admission invalid", str(prepared.get("why"))
+        )
+    publication = prepared.get("publication")
+    if not isinstance(publication, dict):
+        return _blocked(
+            "qualification admission invalid",
+            "the publication probe lost its exact event payload",
+        )
+    if state.get("phase") == "qualification_admission_complete":
+        admission = state.get("qualification_admission")
+        sequence = (
+            admission.get("ledger_sequence")
+            if isinstance(admission, dict)
+            else None
+        )
+        entry = (
+            entries[sequence - 1]
+            if isinstance(sequence, int) and 1 <= sequence <= len(entries)
+            else None
+        )
+        if (
+            sequence != len(entries)
+            or not isinstance(entry, dict)
+            or entry.get("event") != "qualification_admission_completed"
+            or entry.get("source_set_qualification_ledger_sequence")
+            != qualification_sequence
+            or any(entry.get(key) != value for key, value in publication.items())
+            or admission.get("qualification_event_sha256")
+            != qualification_event_sha256
+            or admission.get("route") != route
+            or admission.get("clarification_obligations") != obligations
+            or state.get("status") != "qualification_admission_complete"
+            or state.get("waiting_for") is not None
+            or state.get("question") is not None
+        ):
+            return _blocked(
+                "invalid qualification admission ledger",
+                "the preserved qualification admission changed",
+            )
+        return _qualification_admission_result(
+            state, work, closure, qualification, str(route), obligations
+        )
+
+    if qualification_sequence != len(entries):
+        return _blocked(
+            "invalid qualification admission ledger",
+            "the qualification event is not the current immutable ledger tail",
+        )
+    completed = _ledger_entry(
+        len(entries) + 1,
+        "qualification_admission_completed",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "source_set_qualification_ledger_sequence": qualification_sequence,
+            **publication,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [completed])
+    state.update({
+        "status": "qualification_admission_complete",
+        "phase": "qualification_admission_complete",
+        "waiting_for": None,
+        "question": None,
+        "qualification_admission": {
+            "ledger_sequence": completed["sequence"],
+            "qualification_event_sha256": qualification_event_sha256,
+            "route": route,
+            "clarification_obligations": obligations,
+        },
+        "ledger_entries": completed["sequence"],
+        "ledger_tail_sha256": completed["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_admission_result(
+        state, work, closure, qualification, str(route), obligations
+    )
+
+
 SOURCE_COLLECTION_TERMINAL_PHASES = {
     "first_projection_recorded",
     "first_verbatim_projection_recorded",
@@ -2254,6 +2481,7 @@ SOURCE_COLLECTION_PHASES = {
     "additional_spreadsheet_projection_failed",
     "source_collection_complete",
     "source_set_qualification_complete",
+    "qualification_admission_complete",
 }
 
 
@@ -2756,7 +2984,11 @@ def _resume_source_collection(
                 "resume once to receive the next source-collection decision",
             )
         return _offer_source_collection_decision(work, state, entries)
-    if phase in {"source_collection_complete", "source_set_qualification_complete"}:
+    if phase in {
+        "source_collection_complete",
+        "source_set_qualification_complete",
+        "qualification_admission_complete",
+    }:
         if any(
             value is not None for value in (source, source_url, action, kind)
         ) or project_source or begin:
@@ -2764,6 +2996,8 @@ def _resume_source_collection(
                 "source collection already complete",
                 "the append-only source collection has already reached its terminal result",
             )
+        if phase == "qualification_admission_complete":
+            return run_qualification_admission(work)
         if phase == "source_set_qualification_complete":
             return run_source_set_qualification(work)
         inventory, inventory_error = _source_collection_inventory(work, entries)
@@ -16301,6 +16535,26 @@ def _clarification_boundary_result(
                 "invalid clarification boundary",
                 "the source-set boundary lost its ordered adapter qualifications",
             )
+    elif boundary == "qualification_admission_complete":
+        qualification = result.get("source_set_qualification")
+        route = result.get("route")
+        obligations = result.get("clarification_obligations")
+        if (
+            result.get("status") != "qualification_admission_complete"
+            or result.get("stopped") != "qualification_admission_complete"
+            or route not in {
+                "first_layer_complete",
+                "clarification_required",
+            }
+            or not isinstance(qualification, dict)
+            or not isinstance(obligations, list)
+            or (route == "first_layer_complete" and obligations)
+            or (route == "clarification_required" and not obligations)
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the qualification admission lost its terminal route or exact obligations",
+            )
     elif boundary == "additional_source_projection_pending":
         if (
             result.get("status") != "ready_for_projection"
@@ -16438,8 +16692,11 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
             result = run_source_set_qualification(work)
             continue
         if stopped == "source_set_qualification_complete":
+            result = run_qualification_admission(work)
+            continue
+        if stopped == "qualification_admission_complete":
             return _clarification_boundary_result(
-                result, "source_set_qualification_complete"
+                result, "qualification_admission_complete"
             )
         if stopped == "clarification_continuation_complete":
             return _clarification_boundary_result(

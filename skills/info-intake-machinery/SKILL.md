@@ -1,6 +1,6 @@
 ---
 name: info-intake-machinery
-description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers, files, and public URLs as immutable sources, collects any number of independent sources through a one-question-at-a-time code interview, records readable projections, verifies visual relationships, reconstructs one source-to-projection outcome for every intake source, qualifies every collected projection against its exact adapter evidence before clarification, turns every currently known gap into one code-bound question round, conducts any prepared operator round one question at a time, assesses projected additional-source evidence and completed answer rounds against their exact gaps, and prepares immutable follow-up questions without losing legacy replay.
+description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers, files, and public URLs as immutable sources, collects any number of independent sources through a one-question-at-a-time code interview, records readable projections, verifies visual relationships, reconstructs one source-to-projection outcome for every intake source, qualifies every collected projection against its exact adapter evidence, admits that qualification as either Layer-One completion or an immutable ordered clarification queue, turns every currently known gap into one code-bound question round, conducts any prepared operator round one question at a time, assesses projected additional-source evidence and completed answer rounds against their exact gaps, and prepares immutable follow-up questions without losing legacy replay.
 ---
 
 # Info Intake Machinery
@@ -255,8 +255,8 @@ assessment responsibilities.
 ## Qualify the complete collected source set
 
 On the next clarification-boundary resume after `source_collection_complete`, code qualifies the
-whole collected set and stops at `source_set_qualification_complete`. Three maintained product
-probes remain independently repairable:
+whole collected set at `source_set_qualification_complete`. Three maintained product probes remain
+independently repairable:
 
 - `source_qualification_binding.py` binds every closure outcome to the exact source identity,
   projection ledger sequence, projection identity, version, path, and SHA-256;
@@ -276,9 +276,29 @@ Code appends one hash-chained `source_set_qualification_completed` event contain
 source-projection closure and the ordered qualification. Replay recomputes the result from the
 immutable artifacts and adds nothing.
 
-This step performs no semantic comparison between sources, does not decide whether one source
-explains another, and does not formulate operator questions. It establishes the complete,
-auditable input to that later assessment.
+This qualification performs no semantic comparison between sources, does not decide whether one
+source explains another, and does not formulate operator questions. It establishes the complete,
+auditable input to the deterministic admission below.
+
+## Admit qualification to completion or clarification
+
+The same launcher then derives one route from every exact source outcome. Three additional product
+probes remain separate repair boundaries:
+
+- `qualification_terminal_disposition.py` recomputes the intake-wide status from every source and
+  refuses contradictory aggregate or gap evidence;
+- `clarification_obligation_binding.py` converts every incomplete unit, in source and gap order,
+  into an obligation bound to its source, projection, adapter method, reason, qualification event,
+  and gap SHA-256;
+- `qualification_admission_publication.py` permits only `first_layer_complete` with no obligations
+  or `clarification_required` with at least one exact obligation.
+
+Code appends one hash-chained `qualification_admission_completed` event. Replay requalifies the
+immutable artifacts, reconstructs the same route and obligations, verifies the preserved event,
+and appends nothing. `first_layer_complete` means every collected source has a complete readable
+projection. `clarification_required` exposes one ordered queue for the later question-formulation
+step. This admission itself performs no model call, semantic source comparison, or question
+formulation, and contains no source-type or domain exception.
 
 ## Turn all current gaps into one operator question round
 
@@ -670,3 +690,4 @@ running these proven stages.
 | `source_projection_closure` | 0 | The read-only gate returned one validated projected, pending, or failed conversion outcome per immutable source. |
 | `source_collection_complete` | 0 | The operator finished the independent source set and code preserved one terminal projection outcome per source. |
 | `source_set_qualification_complete` | 0 | Code bound and adapter-qualified every collected source projection in collection order and stopped before semantic comparison or clarification. |
+| `qualification_admission_complete` | 0 | Code admitted the exact intake-wide qualification as either `first_layer_complete` or one immutable ordered `clarification_required` obligation queue. |

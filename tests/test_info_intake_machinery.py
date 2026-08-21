@@ -11852,10 +11852,11 @@ def test_operator_launcher_finishes_collection_after_deterministic_spreadsheet_p
 
     assert returncode == 0
     terminal = json.loads(messages[-1])
-    assert terminal["stopped"] == "source_set_qualification_complete"
-    assert terminal["source_set_qualification"]["qualification"] == (
-        "readable_source_set_incomplete"
-    )
+    assert terminal["stopped"] == "qualification_admission_complete"
+    assert terminal["route"] == "clarification_required"
+    assert [item["unit"] for item in terminal["clarification_obligations"]] == [
+        "xl/customData/metrics.xml"
+    ]
 
 
 def test_operator_launcher_interviews_one_source_collection_answer_at_a_time(
@@ -12111,7 +12112,7 @@ def test_source_collection_probe_units_reject_ambiguous_identity_and_coverage() 
     assert "unknown outcomes: source-999999" in result["why"]
 
 
-def test_source_set_qualification_covers_every_collected_source_replayably(
+def test_source_set_qualification_admits_every_collected_source_replayably(
     tmp_path: Path,
 ) -> None:
     work = tmp_path / "intake"
@@ -12155,7 +12156,8 @@ def test_source_set_qualification_covers_every_collected_source_replayably(
     ledger_after = (work / "ledger.jsonl").read_bytes()
     replay = START_INTAKE.run_clarification_boundary(work)
 
-    assert qualified["boundary"] == "source_set_qualification_complete"
+    assert qualified["boundary"] == "qualification_admission_complete"
+    assert qualified["route"] == "clarification_required"
     assert qualified["source_set_qualification"]["qualification"] == (
         "readable_source_set_incomplete"
     )
@@ -12181,6 +12183,20 @@ def test_source_set_qualification_covers_every_collected_source_replayably(
             ),
         }
     ]
+    obligation = qualified["clarification_obligations"][0]
+    qualification_event = [
+        json.loads(line)
+        for line in ledger_after.decode("utf-8").splitlines()
+        if json.loads(line)["event"] == "source_set_qualification_completed"
+    ][0]
+    assert obligation["source_id"] == "source-000003"
+    assert obligation["projection_id"] == outcomes[2]["projection_id"]
+    assert obligation["projection_sha256"] == outcomes[2]["projection_sha256"]
+    assert obligation["method"] == "spreadsheet_ooxml_v1"
+    assert obligation["qualification_event_sha256"] == qualification_event[
+        "entry_sha256"
+    ]
+    assert len(obligation["gap_sha256"]) == 64
     assert replay == qualified
     assert (work / "ledger.jsonl").read_bytes() == ledger_after
     events = [
@@ -12188,6 +12204,130 @@ def test_source_set_qualification_covers_every_collected_source_replayably(
         for line in ledger_after.decode("utf-8").splitlines()
     ]
     assert events.count("source_set_qualification_completed") == 1
+    assert events.count("qualification_admission_completed") == 1
+
+
+def test_qualification_admission_closes_an_all_readable_source_set(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    generator = tmp_path / "generate_reference.py"
+    generator.write_text("VALUE = 1\n", encoding="utf-8")
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, generator)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+    START_INTAKE.run_source_set_qualification(work)
+
+    admitted = START_INTAKE.run_qualification_admission(work)
+    ledger_after = (work / "ledger.jsonl").read_bytes()
+
+    assert admitted["status"] == "qualification_admission_complete"
+    assert admitted["route"] == "first_layer_complete"
+    assert admitted["clarification_obligations"] == []
+    assert START_INTAKE.run_qualification_admission(work) == admitted
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after
+
+
+def test_qualification_admission_preserves_a_conversion_failure_obligation(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "corrupt.xlsx"
+    supplied.write_bytes(_representative_workbook_bytes(missing_workbook=True))
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    failed = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+    START_INTAKE.run_source_set_qualification(work)
+
+    admitted = START_INTAKE.run_qualification_admission(work)
+
+    assert failed["stopped"] == "first_spreadsheet_projection_failed"
+    assert admitted["route"] == "clarification_required"
+    obligation = admitted["clarification_obligations"][0]
+    assert obligation["source_id"] == "source-000003"
+    assert obligation["projection_id"] is None
+    assert obligation["projection_sha256"] is None
+    assert obligation["method"] is None
+    assert obligation["qualification"] == "conversion_incomplete"
+    assert obligation["unit"] == "projection"
+    assert "missing xl/workbook.xml" in obligation["reason"]
+
+
+def test_qualification_admission_probe_units_refuse_unbound_evidence() -> None:
+    contradictory = START_INTAKE.qualification_terminal_disposition.decide({
+        "qualification": "readable_source_set_complete",
+        "source_count": 1,
+        "outcomes": [{
+            "source_id": "source-000003",
+            "qualification": "readable_projection_incomplete",
+            "gaps": [{
+                "source_id": "source-000003",
+                "unit": "xl/customData/metrics.xml",
+                "reason": "no readable adapter",
+            }],
+        }],
+    })
+    misbound = START_INTAKE.clarification_obligation_binding.bind(
+        {
+            "qualification": "readable_source_set_incomplete",
+            "source_count": 1,
+            "outcomes": [{
+                "source_id": "source-000003",
+                "projection_id": "projection-source-000003-v1",
+                "projection_sha256": "a" * 64,
+                "method": "spreadsheet_ooxml_v1",
+                "qualification": "readable_projection_incomplete",
+                "gaps": [{
+                    "source_id": "source-999999",
+                    "unit": "xl/customData/metrics.xml",
+                    "reason": "no readable adapter",
+                }],
+            }],
+        },
+        "b" * 64,
+    )
+    complete_with_gap = START_INTAKE.qualification_terminal_disposition.decide({
+        "qualification": "readable_source_set_complete",
+        "source_count": 1,
+        "outcomes": [{
+            "source_id": "source-000003",
+            "qualification": "readable_projection_complete",
+            "gaps": [{
+                "source_id": "source-000003",
+                "unit": "unexpected",
+                "reason": "contradictory gap",
+            }],
+        }],
+    })
+
+    assert contradictory["complete"] is False
+    assert "contradicts exact source outcomes" in contradictory["why"]
+    assert misbound["complete"] is False
+    assert "contradicts its source" in misbound["why"]
+    assert complete_with_gap["complete"] is False
+    assert "still contains gaps" in complete_with_gap["why"]
 
 
 def test_source_set_qualification_can_finish_with_all_sources_readable(
