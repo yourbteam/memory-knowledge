@@ -352,6 +352,17 @@ def _continue_intake(
             failed = _blocked(result, output_fn)
             if failed is not None:
                 return failed
+            if result.get("route") == "clarification_required":
+                result = start_intake.request_qualification_question_round(work)
+                failed = _blocked(result, output_fn)
+                if failed is not None:
+                    return failed
+                return projection_runner.drive_work(
+                    work,
+                    projection_region_limit=projection_region_limit,
+                    projection_relationship_limit=projection_relationship_limit,
+                    model_run_fn=model_run_fn,
+                )
             output_fn(json.dumps(result, indent=2, sort_keys=True))
             return 0
         output_fn(json.dumps(result, indent=2, sort_keys=True))
@@ -360,12 +371,14 @@ def _continue_intake(
                 work,
                 projection_region_limit=projection_region_limit,
                 projection_relationship_limit=projection_relationship_limit,
+                model_run_fn=model_run_fn,
             )
         return 4
     return projection_runner.drive_work(
         work,
         projection_region_limit=projection_region_limit,
         projection_relationship_limit=projection_relationship_limit,
+        model_run_fn=model_run_fn,
     )
 
 

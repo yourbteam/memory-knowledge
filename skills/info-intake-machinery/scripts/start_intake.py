@@ -281,6 +281,21 @@ qualification_admission_publication = importlib.util.module_from_spec(
 _QUALIFICATION_ADMISSION_PUBLICATION_SPEC.loader.exec_module(
     qualification_admission_publication
 )
+_QUALIFICATION_QUESTION_ROUND_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_question_round",
+    Path(__file__).resolve().with_name("qualification_question_round.py"),
+)
+if (
+    _QUALIFICATION_QUESTION_ROUND_SPEC is None
+    or _QUALIFICATION_QUESTION_ROUND_SPEC.loader is None
+):
+    raise RuntimeError("qualification question-round controller is unavailable")
+qualification_question_round = importlib.util.module_from_spec(
+    _QUALIFICATION_QUESTION_ROUND_SPEC
+)
+_QUALIFICATION_QUESTION_ROUND_SPEC.loader.exec_module(
+    qualification_question_round
+)
 
 SOURCE_COLLECTION_DECISION_QUESTION = {
     "id": "source-collection-decision",
@@ -2458,6 +2473,511 @@ def run_qualification_admission(work: Path) -> dict[str, object]:
     _write_state(work / "intake-state.json", state)
     return _qualification_admission_result(
         state, work, closure, qualification, str(route), obligations
+    )
+
+
+def _qualification_question_round_model_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    return {
+        "status": "waiting_for_model",
+        "stopped": "formulating_qualification_question_round",
+        "intake_id": state["intake_id"],
+        "work": [{
+            "stage": "formulate_qualification_question_round",
+            "instruction": (
+                "Answer only each typed question displayed. Code fixes every "
+                "clarification obligation, allowed answer type, order, and final round."
+            ),
+            "attachments": [],
+            "command": [
+                sys.executable,
+                str(Path(__file__).resolve()),
+                "--work",
+                str(work.resolve()),
+                "--run-qualification-question-round",
+            ],
+        }],
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _qualification_question_round_operator_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    questions = state.get("questions")
+    assert isinstance(questions, list) and questions
+    return {
+        "status": "needs_operator",
+        "stopped": "awaiting_qualification_clarification_answers",
+        "intake_id": state["intake_id"],
+        "question": questions[0],
+        "questions": questions,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _qualification_question_round_request_context(
+    state: dict[str, object], entries: list[dict[str, object]]
+) -> tuple[
+    dict[str, object] | None,
+    list[dict[str, object]] | None,
+    dict[str, object] | None,
+]:
+    saved = state.get("qualification_question_round")
+    request_sequence = (
+        saved.get("request_ledger_sequence") if isinstance(saved, dict) else None
+    )
+    admission_sequence = (
+        saved.get("admission_ledger_sequence") if isinstance(saved, dict) else None
+    )
+    if (
+        not isinstance(request_sequence, int)
+        or not isinstance(admission_sequence, int)
+        or admission_sequence < 1
+        or request_sequence != admission_sequence + 1
+        or len(entries) < request_sequence
+    ):
+        return None, None, _blocked(
+            "invalid qualification question round",
+            (
+                f"saved request {request_sequence!r} and admission {admission_sequence!r} "
+                "are not adjacent ledger positions; restore their exact recorded positions"
+            ),
+        )
+    admission = entries[admission_sequence - 1]
+    request = entries[request_sequence - 1]
+    try:
+        contexts = qualification_question_round.bind_contexts(admission)
+    except qualification_question_round.QuestionRoundError as error:
+        return None, None, _blocked(
+            "invalid qualification question round", str(error)
+        )
+    context_digests = [str(item["evidence_sha256"]) for item in contexts]
+    obligation_ids = [str(item["obligation_id"]) for item in contexts]
+    expected_request = {
+        "contract": qualification_question_round.CONTRACT,
+        "qualification_admission_ledger_sequence": admission_sequence,
+        "qualification_admission_sha256": admission.get("entry_sha256"),
+        "obligation_count": len(contexts),
+        "obligation_ids": obligation_ids,
+        "evidence_sha256s": context_digests,
+        "interview_path": "qualification-question-round/interview.jsonl",
+        "result_path": "qualification-question-round/question-round.json",
+    }
+    if (
+        request.get("event") != "qualification_question_round_requested"
+        or any(request.get(key) != value for key, value in expected_request.items())
+        or not isinstance(saved, dict)
+        or any(saved.get(key) != value for key, value in {
+            "contract": qualification_question_round.CONTRACT,
+            "admission_ledger_sequence": admission_sequence,
+            "admission_sha256": admission.get("entry_sha256"),
+            "obligation_ids": obligation_ids,
+            "evidence_sha256s": context_digests,
+            "request_ledger_sequence": request_sequence,
+        }.items())
+    ):
+        return None, None, _blocked(
+            "invalid qualification question round",
+            (
+                f"request at ledger position {request_sequence} changed; restore the "
+                "recorded admission identity, obligation identities, evidence digests, and paths"
+            ),
+        )
+    return admission, contexts, None
+
+
+def request_qualification_question_round(work: Path) -> dict[str, object]:
+    admitted = run_qualification_admission(work)
+    if admitted.get("status") == "blocked":
+        return admitted
+    if admitted.get("route") != "clarification_required":
+        return _blocked(
+            "qualification question round unavailable",
+            (
+                f"qualification route {admitted.get('route')!r} needs no operator "
+                "clarification; preserve first-layer completion"
+            ),
+        )
+    try:
+        opening_bytes = (work / "sources" / "source-000001.txt").read_bytes()
+    except OSError as error:
+        return _blocked("qualification question round unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening_bytes)
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") == "formulating_qualification_question_round":
+        admission, _contexts, request_error = (
+            _qualification_question_round_request_context(state, entries)
+        )
+        if request_error:
+            return request_error
+        assert admission is not None
+        return _qualification_question_round_model_result(state, work)
+    if state.get("phase") != "qualification_admission_complete":
+        return _blocked(
+            "qualification question round unavailable",
+            (
+                f"intake phase {state.get('phase')!r} is not an admitted clarification; "
+                "resume the preserved current boundary"
+            ),
+        )
+    admission = entries[-1]
+    try:
+        contexts = qualification_question_round.bind_contexts(admission)
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("qualification question round unavailable", str(error))
+    round_dir = work / "qualification-question-round"
+    if round_dir.exists():
+        return _blocked(
+            "unbound qualification question round",
+            (
+                f"artifact directory {round_dir} already exists without a request event; "
+                "remove only that unbound directory before retrying"
+            ),
+        )
+    round_dir.mkdir(parents=True)
+    (round_dir / "interview.jsonl").touch()
+    request_sequence = len(entries) + 1
+    request = _ledger_entry(
+        request_sequence,
+        "qualification_question_round_requested",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "contract": qualification_question_round.CONTRACT,
+            "qualification_admission_ledger_sequence": admission["sequence"],
+            "qualification_admission_sha256": admission["entry_sha256"],
+            "obligation_count": len(contexts),
+            "obligation_ids": [item["obligation_id"] for item in contexts],
+            "evidence_sha256s": [item["evidence_sha256"] for item in contexts],
+            "interview_path": "qualification-question-round/interview.jsonl",
+            "result_path": "qualification-question-round/question-round.json",
+        },
+        str(admission["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [request])
+    state.update({
+        "status": "waiting_for_model",
+        "phase": "formulating_qualification_question_round",
+        "waiting_for": "qualification-question-round/interview.jsonl",
+        "question": None,
+        "questions": [],
+        "qualification_question_round": {
+            "contract": qualification_question_round.CONTRACT,
+            "admission_ledger_sequence": admission["sequence"],
+            "admission_sha256": admission["entry_sha256"],
+            "obligation_ids": [item["obligation_id"] for item in contexts],
+            "evidence_sha256s": [item["evidence_sha256"] for item in contexts],
+            "request_ledger_sequence": request_sequence,
+        },
+        "ledger_entries": request_sequence,
+        "ledger_tail_sha256": request["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_question_round_model_result(state, work)
+
+
+def _validate_qualification_question_round(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    admission, contexts, request_error = (
+        _qualification_question_round_request_context(state, entries)
+    )
+    if request_error:
+        return request_error
+    assert admission is not None and contexts is not None
+    saved = state["qualification_question_round"]
+    assert isinstance(saved, dict)
+    request_sequence = saved["request_ledger_sequence"]
+    assert isinstance(request_sequence, int)
+    try:
+        result, interview_sha256, result_sha256 = (
+            qualification_question_round.validate(
+                work / "qualification-question-round",
+                admission=admission,
+                purpose=purpose,
+            )
+        )
+        interview_entries = qualification_question_round._read_journal(
+            work / "qualification-question-round" / "interview.jsonl"
+        )
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("invalid qualification question round", str(error))
+    questions = result.get("questions")
+    if not isinstance(questions, list) or len(questions) != len(contexts):
+        return _blocked(
+            "invalid qualification question round",
+            (
+                f"prepared questions {questions!r} do not cover all {len(contexts)} "
+                "admitted obligations; preserve exactly one question per obligation"
+            ),
+        )
+    for position, (question, context) in enumerate(
+        zip(questions, contexts, strict=True), 1
+    ):
+        if (
+            not isinstance(question, dict)
+            or question.get("id")
+            != f"qualification-clarification-answer-{position:06d}"
+            or question.get("answers_obligation") != context["evidence"]
+            or question.get("evidence_sha256") != context["evidence_sha256"]
+            or question.get("answer_type")
+            not in qualification_question_round.ANSWER_TYPES
+            or not isinstance(question.get("asks"), str)
+            or not str(question["asks"]).strip()
+        ):
+            return _blocked(
+                "invalid qualification question round",
+                (
+                    f"question {position} value {question!r} is not the exact "
+                    f"evidence-bound question for obligation {context['obligation_id']!r}; "
+                    "restore its generated identity, enum answer type, wording, obligation, and evidence digest"
+                ),
+            )
+    expected_completed = {
+        "interview_path": "qualification-question-round/interview.jsonl",
+        "interview_sha256": interview_sha256,
+        "result_path": "qualification-question-round/question-round.json",
+        "result_sha256": result_sha256,
+        "question_count": len(questions),
+        "interview_question_count": sum(
+            entry["event"] == "question_asked" for entry in interview_entries
+        ),
+        "answer_count": sum(
+            entry["event"] == "answer_recorded" for entry in interview_entries
+        ),
+        "rejected_answer_count": sum(
+            entry["event"] == "answer_recorded" and entry["accepted"] is False
+            for entry in interview_entries
+        ),
+        "questions": questions,
+    }
+    completed = entries[request_sequence] if len(entries) > request_sequence else None
+    prepared = entries[request_sequence + 1] if len(entries) > request_sequence + 1 else None
+    asked = entries[request_sequence + 2] if len(entries) > request_sequence + 2 else None
+    if (
+        len(entries) != request_sequence + 3
+        or not isinstance(completed, dict)
+        or completed.get("event") != "qualification_question_round_completed"
+        or any(completed.get(key) != value for key, value in expected_completed.items())
+        or not isinstance(prepared, dict)
+        or prepared.get("event")
+        != "operator_qualification_question_round_prepared"
+        or prepared.get("question_count") != len(questions)
+        or prepared.get("questions") != questions
+        or not isinstance(asked, dict)
+        or asked.get("event") != "operator_qualification_question_asked"
+        or asked.get("question_position") != 1
+        or asked.get("question") != questions[0]
+        or saved.get("interview_sha256") != interview_sha256
+        or saved.get("result_sha256") != result_sha256
+        or state.get("status") != "needs_operator"
+        or state.get("phase") != "awaiting_qualification_clarification_answers"
+        or state.get("waiting_for") != questions[0]["id"]
+        or state.get("question") != questions[0]
+        or state.get("questions") != questions
+        or state.get("ledger_entries") != len(entries)
+        or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+    ):
+        return _blocked(
+            "invalid qualification question round",
+            (
+                "the completed question round, prepared full list, first active question, "
+                "or ledger binding changed; restore the exact append-only recorded values"
+            ),
+        )
+    return None
+
+
+def _consume_qualification_question_round(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object]:
+    admission, contexts, request_error = (
+        _qualification_question_round_request_context(state, entries)
+    )
+    if request_error:
+        return request_error
+    assert admission is not None and contexts is not None
+    saved = state["qualification_question_round"]
+    assert isinstance(saved, dict)
+    request_sequence = saved["request_ledger_sequence"]
+    assert isinstance(request_sequence, int)
+    if len(entries) != request_sequence:
+        return _blocked(
+            "invalid qualification question round",
+            (
+                f"request ledger position {request_sequence} is no longer the current tail "
+                f"of {len(entries)} entries; preserve the exact append-only request"
+            ),
+        )
+    try:
+        result, interview_sha256, result_sha256 = (
+            qualification_question_round.validate(
+                work / "qualification-question-round",
+                admission=admission,
+                purpose=purpose,
+            )
+        )
+        interview_entries = qualification_question_round._read_journal(
+            work / "qualification-question-round" / "interview.jsonl"
+        )
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("invalid qualification question round", str(error))
+    questions = result.get("questions")
+    if not isinstance(questions, list) or not questions:
+        return _blocked(
+            "invalid qualification question round",
+            (
+                f"model result questions {questions!r} are invalid; preserve one "
+                "evidence-bound question for every admitted obligation"
+            ),
+        )
+    for position, (question, context) in enumerate(
+        zip(questions, contexts, strict=True), 1
+    ):
+        if (
+            not isinstance(question, dict)
+            or question.get("id")
+            != f"qualification-clarification-answer-{position:06d}"
+            or question.get("answers_obligation") != context["evidence"]
+            or question.get("evidence_sha256") != context["evidence_sha256"]
+            or question.get("answer_type")
+            not in qualification_question_round.ANSWER_TYPES
+        ):
+            return _blocked(
+                "invalid qualification question round",
+                (
+                    f"question {position} value {question!r} changed; preserve the exact "
+                    f"question for obligation {context['obligation_id']!r} and one allowed answer type"
+                ),
+            )
+    timestamp = datetime.now(timezone.utc).isoformat()
+    completed = _ledger_entry(
+        request_sequence + 1,
+        "qualification_question_round_completed",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "interview_path": "qualification-question-round/interview.jsonl",
+            "interview_sha256": interview_sha256,
+            "result_path": "qualification-question-round/question-round.json",
+            "result_sha256": result_sha256,
+            "question_count": len(questions),
+            "interview_question_count": sum(
+                entry["event"] == "question_asked" for entry in interview_entries
+            ),
+            "answer_count": sum(
+                entry["event"] == "answer_recorded" for entry in interview_entries
+            ),
+            "rejected_answer_count": sum(
+                entry["event"] == "answer_recorded" and entry["accepted"] is False
+                for entry in interview_entries
+            ),
+            "questions": questions,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    prepared = _ledger_entry(
+        request_sequence + 2,
+        "operator_qualification_question_round_prepared",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "question_count": len(questions),
+            "questions": questions,
+        },
+        str(completed["entry_sha256"]),
+    )
+    asked = _ledger_entry(
+        request_sequence + 3,
+        "operator_qualification_question_asked",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "question_position": 1,
+            "question": questions[0],
+        },
+        str(prepared["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [completed, prepared, asked])
+    state["qualification_question_round"].update({
+        "interview_sha256": interview_sha256,
+        "result_sha256": result_sha256,
+    })
+    state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_qualification_clarification_answers",
+        "waiting_for": questions[0]["id"],
+        "question": questions[0],
+        "questions": questions,
+        "qualification_question_answers": [],
+        "ledger_entries": request_sequence + 3,
+        "ledger_tail_sha256": asked["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_question_round_operator_result(state, work)
+
+
+def run_qualification_question_round(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources" / "source-000001.txt").read_text(
+            encoding="utf-8"
+        )
+        purpose = (work / "sources" / "source-000002.txt").read_text(
+            encoding="utf-8"
+        )
+        opening_bytes = opening.encode("utf-8")
+    except OSError as error:
+        return _blocked("qualification question round unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening_bytes)
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") != "formulating_qualification_question_round":
+        return _blocked(
+            "qualification question round unavailable",
+            (
+                f"intake phase {state.get('phase')!r} is not waiting for question "
+                "formulation; resume its preserved current boundary"
+            ),
+        )
+    admission, _contexts, request_error = (
+        _qualification_question_round_request_context(state, entries)
+    )
+    if request_error:
+        return request_error
+    assert admission is not None
+    try:
+        qualification_question_round.run(
+            work / "qualification-question-round",
+            admission=admission,
+            purpose=purpose,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("qualification question round failed", str(error))
+    state, entries, load_error = _load_bound(work, opening_bytes)
+    if load_error:
+        return load_error
+    assert state is not None
+    return _consume_qualification_question_round(
+        work, state, entries, purpose
     )
 
 
@@ -16388,6 +16908,7 @@ def _clarification_boundary_result(
         if (
             result.get("status") != "waiting_for_model"
             or result.get("stopped") not in {
+                "formulating_qualification_question_round",
                 "formulating_gap_question",
                 "formulating_gap_question_round",
                 "formulating_follow_up_gap_question_round",
@@ -16414,6 +16935,7 @@ def _clarification_boundary_result(
         if (
             result.get("status") != "needs_operator"
             or result.get("stopped") not in {
+                "awaiting_qualification_clarification_answers",
                 "awaiting_gap_answer",
                 "awaiting_gap_answers",
                 "awaiting_prepared_question_round_answer",
@@ -16695,6 +17217,9 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
             result = run_qualification_admission(work)
             continue
         if stopped == "qualification_admission_complete":
+            if result.get("route") == "clarification_required":
+                result = request_qualification_question_round(work)
+                continue
             return _clarification_boundary_result(
                 result, "qualification_admission_complete"
             )
@@ -17077,6 +17602,8 @@ def _resume(
         and state["gap_resolution"].get("mode") == "assessed_answer"
     )
     if phase in {
+        "formulating_qualification_question_round",
+        "awaiting_qualification_clarification_answers",
         "formulating_gap_question_round",
         "awaiting_gap_answers",
         "gap_question_round_answered",
@@ -17149,6 +17676,8 @@ def _resume(
         "first_pdf_projection_failed",
         "first_spreadsheet_projection_recorded",
         "first_spreadsheet_projection_failed",
+        "formulating_qualification_question_round",
+        "awaiting_qualification_clarification_answers",
         *SOURCE_COLLECTION_PHASES,
     } or not supported_ledger_length:
         return _blocked("invalid intake state", "the saved purpose stage is unsupported")
@@ -17196,6 +17725,62 @@ def _resume(
         or entries[4].get("result") != assessment
     ):
         return _blocked("invalid ledger", "the completed assessment does not match its preserved result")
+
+    if phase == "formulating_qualification_question_round":
+        if (
+            source_supplied
+            or project_source
+            or clarify_gap
+            or gap_input_supplied
+            or resolve_gap
+            or assess_gap_answers
+            or conduct_question_round
+            or continue_clarification
+            or begin_source_collection
+            or source_collection_action is not None
+            or source_collection_kind is not None
+        ):
+            return _blocked(
+                "qualification question round active",
+                "finish the current code-controlled question formulation without another intake action",
+            )
+        result_path = (
+            work / "qualification-question-round" / "question-round.json"
+        )
+        if not result_path.exists():
+            return _qualification_question_round_model_result(state, work)
+        return _consume_qualification_question_round(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+
+    if phase == "awaiting_qualification_clarification_answers":
+        round_error = _validate_qualification_question_round(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+        if round_error:
+            return round_error
+        if (
+            source_supplied
+            or project_source
+            or clarify_gap
+            or gap_input_supplied
+            or resolve_gap
+            or assess_gap_answers
+            or conduct_question_round
+            or continue_clarification
+            or begin_source_collection
+            or source_collection_action is not None
+            or source_collection_kind is not None
+        ):
+            return _blocked(
+                "qualification clarification answer not implemented",
+                (
+                    "preserve the current first question without another intake action; "
+                    "answer capture belongs to the next approved atom"
+                ),
+            )
+        return _qualification_question_round_operator_result(state, work)
+
     expected_question = (
         FIRST_SOURCE_QUESTION
         if assessment["sufficient"] == "yes"
@@ -18415,6 +19000,11 @@ def main() -> int:
         help="formulate the code-bound operator question round for current gaps",
     )
     parser.add_argument(
+        "--run-qualification-question-round",
+        action="store_true",
+        help="formulate one code-bound operator question for every admitted obligation",
+    )
+    parser.add_argument(
         "--assess-gap-answers",
         action="store_true",
         help="request assessment of every preserved question-round answer",
@@ -18460,6 +19050,7 @@ def main() -> int:
         args.run_projection_verification,
         args.run_relationship_correction,
         args.run_correction_verification,
+        args.run_qualification_question_round,
         args.run_gap_clarification,
         args.run_gap_answer_assessment,
         args.run_additional_source_gap_assessment,
@@ -18659,6 +19250,17 @@ def main() -> int:
             )
         else:
             result = run_relationship_correction_verification(args.work)
+    elif args.run_qualification_question_round:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
+            or args.project_source or args.clarify_gap or args.assess_gap_answers
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run qualification question formulation with only --work and --run-qualification-question-round",
+            )
+        else:
+            result = run_qualification_question_round(args.work)
     elif args.run_gap_clarification:
         if (
             any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))

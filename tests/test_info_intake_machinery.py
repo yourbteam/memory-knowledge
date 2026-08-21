@@ -11828,7 +11828,7 @@ def test_additional_spreadsheet_uses_the_same_deterministic_projection(
     assert START_INTAKE.run_source_projection_closure(work)["verdict"] == "all_projected"
 
 
-def test_operator_launcher_finishes_collection_after_deterministic_spreadsheet_projection(
+def test_operator_launcher_prepares_first_qualification_clarification_question(
     tmp_path: Path,
 ) -> None:
     work = tmp_path / "intake"
@@ -11839,24 +11839,39 @@ def test_operator_launcher_finishes_collection_after_deterministic_spreadsheet_p
     messages: list[str] = []
     answers = iter(["finish_sources"])
 
+    def run_model(_argv: list[str], *, check: bool) -> subprocess.CompletedProcess[str]:
+        assert check is False
+        model_answers = iter([
+            "local_file",
+            "Please provide the workbook source containing this missing part?",
+        ])
+        prepared = START_INTAKE.run_qualification_question_round(
+            work,
+            input_fn=lambda _prompt: next(model_answers),
+            output_fn=lambda _message: None,
+        )
+        assert prepared["status"] == "needs_operator"
+        return subprocess.CompletedProcess(_argv, 0)
+
     returncode = INTAKE_RUNNER._continue_intake(
         work,
         "There is a new intake",
         REAL_PURPOSE,
         input_fn=lambda _prompt: next(answers),
         output_fn=messages.append,
-        model_run_fn=lambda *_args, **_kwargs: pytest.fail("no model should run"),
+        model_run_fn=run_model,
         projection_region_limit=None,
         projection_relationship_limit=None,
     )
 
-    assert returncode == 0
-    terminal = json.loads(messages[-1])
-    assert terminal["stopped"] == "qualification_admission_complete"
-    assert terminal["route"] == "clarification_required"
-    assert [item["unit"] for item in terminal["clarification_obligations"]] == [
+    state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
+    assert returncode == 4
+    assert state["phase"] == "awaiting_qualification_clarification_answers"
+    assert state["question"] == state["questions"][0]
+    assert state["question"]["answer_type"] == "local_file"
+    assert state["question"]["answers_obligation"]["unit"] == (
         "xl/customData/metrics.xml"
-    ]
+    )
 
 
 def test_operator_launcher_interviews_one_source_collection_answer_at_a_time(
@@ -11877,20 +11892,36 @@ def test_operator_launcher_interviews_one_source_collection_answer_at_a_time(
     ])
     prompts: list[str] = []
 
+    def run_model(_argv: list[str], *, check: bool) -> subprocess.CompletedProcess[str]:
+        assert check is False
+        model_answers = iter([
+            "local_file",
+            "Please provide the workbook source containing this missing part?",
+        ])
+        prepared = START_INTAKE.run_qualification_question_round(
+            work,
+            input_fn=lambda _prompt: next(model_answers),
+            output_fn=lambda _message: None,
+        )
+        assert prepared["status"] == "needs_operator"
+        return subprocess.CompletedProcess(_argv, 0)
+
     returncode = INTAKE_RUNNER._continue_intake(
         work,
         "There is a new intake",
         REAL_PURPOSE,
         input_fn=lambda prompt: (prompts.append(prompt), next(answers))[1],
         output_fn=lambda _message: None,
-        model_run_fn=lambda *_args, **_kwargs: pytest.fail("no model should run"),
+        model_run_fn=run_model,
         projection_region_limit=None,
         projection_relationship_limit=None,
     )
 
-    assert returncode == 0
+    assert returncode == 4
     assert len(prompts) == 4
     assert START_INTAKE.run_source_projection_closure(work)["source_count"] == 4
+    state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
+    assert state["phase"] == "awaiting_qualification_clarification_answers"
 
 
 def test_independent_source_collection_adds_projects_and_closes_replayably(
@@ -12152,11 +12183,12 @@ def test_source_set_qualification_admits_every_collected_source_replayably(
         source_collection_action="finish_sources",
     )
 
-    qualified = START_INTAKE.run_clarification_boundary(work)
+    START_INTAKE.run_source_set_qualification(work)
+    qualified = START_INTAKE.run_qualification_admission(work)
     ledger_after = (work / "ledger.jsonl").read_bytes()
-    replay = START_INTAKE.run_clarification_boundary(work)
+    replay = START_INTAKE.run_qualification_admission(work)
 
-    assert qualified["boundary"] == "qualification_admission_complete"
+    assert qualified["status"] == "qualification_admission_complete"
     assert qualified["route"] == "clarification_required"
     assert qualified["source_set_qualification"]["qualification"] == (
         "readable_source_set_incomplete"
@@ -12273,6 +12305,138 @@ def test_qualification_admission_preserves_a_conversion_failure_obligation(
     assert obligation["qualification"] == "conversion_incomplete"
     assert obligation["unit"] == "projection"
     assert "missing xl/workbook.xml" in obligation["reason"]
+
+
+def test_qualification_clarification_round_reaches_one_operator_question(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "reference.xlsx"
+    supplied.write_bytes(_representative_workbook_bytes())
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+    START_INTAKE.run_source_set_qualification(work)
+    admitted = START_INTAKE.run_qualification_admission(work)
+
+    requested = START_INTAKE.request_qualification_question_round(work)
+    attachments, command = CODEX_RUNNER.load_request(work)
+    answers = iter([
+        "local_file",
+        "Please provide the workbook source containing this missing part?",
+    ])
+    prepared = START_INTAKE.run_qualification_question_round(
+        work,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    ledger_after = (work / "ledger.jsonl").read_bytes()
+
+    assert admitted["route"] == "clarification_required"
+    assert requested["status"] == "waiting_for_model"
+    assert requested["stopped"] == "formulating_qualification_question_round"
+    assert attachments == ()
+    assert command[-1] == "--run-qualification-question-round"
+    assert prepared["status"] == "needs_operator"
+    assert prepared["stopped"] == "awaiting_qualification_clarification_answers"
+    assert prepared["question"] == prepared["questions"][0]
+    assert len(prepared["questions"]) == len(admitted["clarification_obligations"])
+    assert prepared["question"]["answers_obligation"] == admitted[
+        "clarification_obligations"
+    ][0]
+    assert START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE) == prepared
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after
+    events = [
+        json.loads(line)["event"]
+        for line in ledger_after.decode("utf-8").splitlines()
+    ]
+    assert events[-4:] == [
+        "qualification_question_round_requested",
+        "qualification_question_round_completed",
+        "operator_qualification_question_round_prepared",
+        "operator_qualification_question_asked",
+    ]
+
+
+def test_qualification_question_round_captures_every_known_question_once(
+    tmp_path: Path,
+) -> None:
+    event_sha256 = "a" * 64
+    obligations = [
+        {
+            "id": f"clarification-obligation-{position:06d}",
+            "qualification_event_sha256": event_sha256,
+            "source_position": position,
+            "gap_position": 1,
+            "source_id": f"source-{position + 2:06d}",
+            "projection_id": f"projection-source-{position + 2:06d}-v1",
+            "projection_sha256": str(position) * 64,
+            "method": "spreadsheet_ooxml_v1",
+            "qualification": "readable_projection_incomplete",
+            "unit": f"xl/missing-{position}.xml",
+            "reason": f"workbook part {position} has no readable adapter",
+            "gap_sha256": chr(98 + position) * 64,
+        }
+        for position in (1, 2)
+    ]
+    admission = {
+        "sequence": 10,
+        "event": "qualification_admission_completed",
+        "previous_entry_sha256": "f" * 64,
+        "entry_sha256": "e" * 64,
+        "qualification_event_sha256": event_sha256,
+        "route": "clarification_required",
+        "clarification_obligations": obligations,
+    }
+    answers = iter([
+        "binary",
+        "local_file",
+        "Please provide the first missing workbook part?",
+        "operator_text",
+        "What exact value belongs in the second missing workbook part?",
+    ])
+    messages: list[str] = []
+    round_dir = tmp_path / "round"
+
+    result = START_INTAKE.qualification_question_round.run(
+        round_dir,
+        admission=admission,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=messages.append,
+    )
+    journal_after = (round_dir / "interview.jsonl").read_bytes()
+    replay, _journal_sha256, _result_sha256 = (
+        START_INTAKE.qualification_question_round.validate(
+            round_dir,
+            admission=admission,
+            purpose=REAL_PURPOSE,
+        )
+    )
+
+    assert replay == result
+    assert (round_dir / "interview.jsonl").read_bytes() == journal_after
+    assert [question["answer_type"] for question in result["questions"]] == [
+        "local_file",
+        "operator_text",
+    ]
+    assert [question["answers_obligation"] for question in result["questions"]] == (
+        obligations
+    )
+    assert len(messages) == 1
+    assert "received 'binary'" in messages[0]
+    assert "choose exactly one of" in messages[0]
 
 
 def test_qualification_admission_probe_units_refuse_unbound_evidence() -> None:

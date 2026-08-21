@@ -3,6 +3,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import hashlib
 import importlib.util
 import json
@@ -145,6 +146,12 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
             )
         )
     )
+    qualification_question_round_phase = (
+        state.get("status") == "waiting_for_model"
+        and state.get("phase") == "formulating_qualification_question_round"
+        and state.get("waiting_for")
+        == "qualification-question-round/interview.jsonl"
+    )
     gap_answer_assessment_phase = (
         state.get("status") == "waiting_for_model"
         and (
@@ -201,6 +208,7 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
             projection_phase,
             gap_phase,
             gap_round_phase,
+            qualification_question_round_phase,
             gap_answer_assessment_phase,
             additional_source_gap_assessment_phase,
             resolution_phase,
@@ -208,6 +216,14 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
         )
     ):
         raise LaunchError("the intake is not waiting for a supported visual model stage")
+    if qualification_question_round_phase:
+        return (), [
+            sys.executable,
+            str(START_INTAKE),
+            "--work",
+            str(work),
+            "--run-qualification-question-round",
+        ]
     if additional_source_gap_assessment_phase:
         saved = state["additional_source_gap_assessment"]
         attachments = saved.get("attachments")
@@ -612,6 +628,9 @@ def _model_request(
     }
     correction = flag == "--run-relationship-correction"
     gap_clarification = flag == "--run-gap-clarification"
+    qualification_question_round = (
+        flag == "--run-qualification-question-round"
+    )
     gap_answer_assessment = flag == "--run-gap-answer-assessment"
     additional_source_gap_assessment = (
         flag == "--run-additional-source-gap-assessment"
@@ -620,6 +639,8 @@ def _model_request(
     evidence_instruction = (
         "the code-bound preserved operator purpose answer"
         if purpose_assessment else
+        "the code-bound immutable clarification obligation"
+        if qualification_question_round else
         "the code-bound preserved answer and visible source context"
         if gap_answer_assessment or additional_source_gap_assessment or gap_resolution
         else "visible source evidence"
@@ -628,6 +649,8 @@ def _model_request(
         (
             "Assess only the code-bound preserved operator purpose answer. "
             if purpose_assessment else
+            "Formulate questions only from each code-bound immutable clarification obligation. "
+            if qualification_question_round else
             "Inspect the attached frozen source and formulate one focused operator question for each code-bound gap presented. "
             if gap_clarification else
             "Inspect the attached frozen source and judge each code-bound preserved answer only against its exact gap. "
@@ -904,6 +927,7 @@ def drive_work(
     *,
     projection_region_limit: int | None = None,
     projection_relationship_limit: int | None = None,
+    model_run_fn: Callable[..., object] | None = None,
 ) -> int:
     """Drive one already-created intake from its current external boundary."""
     if (
@@ -933,6 +957,7 @@ def drive_work(
         }, sort_keys=True))
         return 3
     boundary_result: dict[str, object] | None = None
+    run_model = model_run_fn or subprocess.run
     request: tuple[Path | tuple[Path, ...], list[str]] | None
     try:
         request = load_request(work)
@@ -1022,7 +1047,13 @@ def drive_work(
             argv = build_model_argv(
                 model_client, executable, work, attachment, interview_command,
             )
-            completed = subprocess.run(argv, check=False)
+            completed = run_model(argv, check=False)
+            if not hasattr(completed, "returncode"):
+                print(json.dumps({
+                    "ok": False,
+                    "error": "the model runner returned no process return code",
+                }, sort_keys=True))
+                return 3
             if completed.returncode != 0:
                 return completed.returncode
             if region_journal is not None:
@@ -1113,6 +1144,12 @@ def drive_work(
         if request is not None:
             continue
         if boundary_result.get("boundary") == "needs_operator_answer":
+            if (
+                boundary_result.get("stopped")
+                == "awaiting_qualification_clarification_answers"
+            ):
+                print(json.dumps(boundary_result, indent=2, sort_keys=True))
+                return 4
             operator_returncode = conduct_operator_turn(work)
             if operator_returncode not in {0, 4}:
                 return operator_returncode
