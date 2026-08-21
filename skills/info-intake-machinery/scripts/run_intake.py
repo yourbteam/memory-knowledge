@@ -343,9 +343,14 @@ def _continue_intake(
             input_fn=input_fn,
             output_fn=output_fn,
         )
-        output_fn(json.dumps(result, indent=2, sort_keys=True))
         if result.get("status") == "source_collection_complete":
+            result = start_intake.run_source_set_qualification(work)
+            failed = _blocked(result, output_fn)
+            if failed is not None:
+                return failed
+            output_fn(json.dumps(result, indent=2, sort_keys=True))
             return 0
+        output_fn(json.dumps(result, indent=2, sort_keys=True))
         if result.get("status") == "waiting_for_model":
             return projection_runner.drive_work(
                 work,

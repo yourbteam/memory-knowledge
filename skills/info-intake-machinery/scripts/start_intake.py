@@ -191,6 +191,51 @@ source_collection_closure = importlib.util.module_from_spec(
     _SOURCE_COLLECTION_CLOSURE_SPEC
 )
 _SOURCE_COLLECTION_CLOSURE_SPEC.loader.exec_module(source_collection_closure)
+_SOURCE_QUALIFICATION_BINDING_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_source_qualification_binding",
+    Path(__file__).resolve().with_name("source_qualification_binding.py"),
+)
+if (
+    _SOURCE_QUALIFICATION_BINDING_SPEC is None
+    or _SOURCE_QUALIFICATION_BINDING_SPEC.loader is None
+):
+    raise RuntimeError("source qualification binding probe is unavailable")
+source_qualification_binding = importlib.util.module_from_spec(
+    _SOURCE_QUALIFICATION_BINDING_SPEC
+)
+_SOURCE_QUALIFICATION_BINDING_SPEC.loader.exec_module(
+    source_qualification_binding
+)
+_SOURCE_PROJECTION_QUALIFICATION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_source_projection_qualification",
+    Path(__file__).resolve().with_name("source_projection_qualification.py"),
+)
+if (
+    _SOURCE_PROJECTION_QUALIFICATION_SPEC is None
+    or _SOURCE_PROJECTION_QUALIFICATION_SPEC.loader is None
+):
+    raise RuntimeError("source projection qualification probe is unavailable")
+source_projection_qualification = importlib.util.module_from_spec(
+    _SOURCE_PROJECTION_QUALIFICATION_SPEC
+)
+_SOURCE_PROJECTION_QUALIFICATION_SPEC.loader.exec_module(
+    source_projection_qualification
+)
+_SOURCE_QUALIFICATION_RECONCILIATION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_source_qualification_reconciliation",
+    Path(__file__).resolve().with_name("source_qualification_reconciliation.py"),
+)
+if (
+    _SOURCE_QUALIFICATION_RECONCILIATION_SPEC is None
+    or _SOURCE_QUALIFICATION_RECONCILIATION_SPEC.loader is None
+):
+    raise RuntimeError("source qualification reconciliation probe is unavailable")
+source_qualification_reconciliation = importlib.util.module_from_spec(
+    _SOURCE_QUALIFICATION_RECONCILIATION_SPEC
+)
+_SOURCE_QUALIFICATION_RECONCILIATION_SPEC.loader.exec_module(
+    source_qualification_reconciliation
+)
 
 SOURCE_COLLECTION_DECISION_QUESTION = {
     "id": "source-collection-decision",
@@ -1987,6 +2032,208 @@ def run_source_projection_closure(work: Path) -> dict[str, object]:
     }
 
 
+def _source_set_qualification_evidence(
+    work: Path,
+    entries: list[dict[str, object]],
+    closure: dict[str, object],
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    bound = source_qualification_binding.bind(closure, entries)
+    if bound.get("complete") is not True:
+        return None, _blocked(
+            "source-set qualification invalid", str(bound.get("why"))
+        )
+    records = bound.get("records")
+    if not isinstance(records, list):
+        return None, _blocked(
+            "source-set qualification invalid",
+            "the binding probe lost its ordered source records",
+        )
+    qualifications: list[dict[str, object]] = []
+    for item in records:
+        if not isinstance(item, dict):
+            return None, _blocked(
+                "source-set qualification invalid",
+                "the binding probe returned a malformed source record",
+            )
+        record = item.get("record")
+        artifact_bytes: bytes | None = None
+        artifact_sha256: str | None = None
+        visual_qualification: dict[str, object] | None = None
+        if item.get("outcome") == "projected":
+            if not isinstance(record, dict):
+                return None, _blocked(
+                    "source-set qualification invalid",
+                    f"projected source {item.get('source_id')} lost its record",
+                )
+            artifact_bytes, artifact_error = _closure_artifact(
+                work,
+                record.get("path"),
+                record.get("sha256"),
+                f"qualification projection {record.get('id')}",
+            )
+            if artifact_error:
+                return None, artifact_error
+            artifact_sha256 = str(record["sha256"])
+            if record.get("method") == "visual_spatial_v1":
+                visual_qualification, visual_error = (
+                    _visual_projection_qualification(work, record)
+                )
+                if visual_error:
+                    return None, visual_error
+                assert visual_qualification is not None
+        qualified = source_projection_qualification.qualify(
+            item,
+            artifact_bytes,
+            artifact_sha256,
+            visual_qualification=visual_qualification,
+        )
+        if qualified.get("complete") is not True:
+            return None, _blocked(
+                "source-set qualification invalid", str(qualified.get("why"))
+            )
+        qualification = qualified.get("qualification")
+        if not isinstance(qualification, dict):
+            return None, _blocked(
+                "source-set qualification invalid",
+                "an adapter probe lost its source qualification",
+            )
+        qualifications.append(qualification)
+    reconciled = source_qualification_reconciliation.reconcile(
+        closure, qualifications
+    )
+    if reconciled.get("complete") is not True:
+        return None, _blocked(
+            "source-set qualification invalid", str(reconciled.get("why"))
+        )
+    result = reconciled.get("qualification")
+    if not isinstance(result, dict):
+        return None, _blocked(
+            "source-set qualification invalid",
+            "the reconciliation probe lost its intake-wide outcome",
+        )
+    return result, None
+
+
+def _source_set_qualification_result(
+    state: dict[str, object],
+    work: Path,
+    closure: dict[str, object],
+    qualification: dict[str, object],
+) -> dict[str, object]:
+    return {
+        "status": "source_set_qualification_complete",
+        "stopped": "source_set_qualification_complete",
+        "intake_id": state["intake_id"],
+        "source_projection_closure": closure,
+        "source_set_qualification": qualification,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def run_source_set_qualification(work: Path) -> dict[str, object]:
+    try:
+        opening_bytes = (work / "sources" / "source-000001.txt").read_bytes()
+    except OSError as error:
+        return _blocked("source-set qualification unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening_bytes)
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") not in {
+        "source_collection_complete",
+        "source_set_qualification_complete",
+    }:
+        return _blocked(
+            "source-set qualification unavailable",
+            "qualify the complete collected source set before clarification",
+        )
+    closure, closure_error = _source_projection_closure_inventory(work, entries)
+    if closure_error:
+        return closure_error
+    assert closure is not None
+    collection = state.get("source_collection")
+    completion_sequence = (
+        collection.get("completion_ledger_sequence")
+        if isinstance(collection, dict)
+        else None
+    )
+    if (
+        not isinstance(completion_sequence, int)
+        or completion_sequence < 1
+        or completion_sequence > len(entries)
+        or entries[completion_sequence - 1].get("event")
+        != "source_collection_completed"
+        or entries[completion_sequence - 1].get("source_ids")
+        != collection.get("source_ids")
+        or entries[completion_sequence - 1].get("source_projection_closure")
+        != closure
+    ):
+        return _blocked(
+            "invalid source collection ledger",
+            "the completed source set changed before qualification",
+        )
+    qualification, qualification_error = _source_set_qualification_evidence(
+        work, entries, closure
+    )
+    if qualification_error:
+        return qualification_error
+    assert qualification is not None
+    if state.get("phase") == "source_set_qualification_complete":
+        saved = state.get("source_set_qualification")
+        sequence = (
+            saved.get("ledger_sequence") if isinstance(saved, dict) else None
+        )
+        if (
+            not isinstance(sequence, int)
+            or sequence != len(entries)
+            or entries[-1].get("event") != "source_set_qualification_completed"
+            or entries[-1].get("source_collection_completion_ledger_sequence")
+            != completion_sequence
+            or entries[-1].get("source_projection_closure") != closure
+            or entries[-1].get("source_set_qualification") != qualification
+            or saved.get("qualification") != qualification
+            or state.get("status") != "source_set_qualification_complete"
+            or state.get("waiting_for") is not None
+            or state.get("question") is not None
+        ):
+            return _blocked(
+                "invalid source-set qualification ledger",
+                "the preserved intake-wide qualification changed",
+            )
+        return _source_set_qualification_result(
+            state, work, closure, qualification
+        )
+
+    completed = _ledger_entry(
+        len(entries) + 1,
+        "source_set_qualification_completed",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "source_collection_completion_ledger_sequence": completion_sequence,
+            "source_projection_closure": closure,
+            "source_set_qualification": qualification,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [completed])
+    state.update({
+        "status": "source_set_qualification_complete",
+        "phase": "source_set_qualification_complete",
+        "waiting_for": None,
+        "question": None,
+        "source_set_qualification": {
+            "ledger_sequence": completed["sequence"],
+            "qualification": qualification,
+        },
+        "ledger_entries": completed["sequence"],
+        "ledger_tail_sha256": completed["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _source_set_qualification_result(state, work, closure, qualification)
+
+
 SOURCE_COLLECTION_TERMINAL_PHASES = {
     "first_projection_recorded",
     "first_verbatim_projection_recorded",
@@ -2006,6 +2253,7 @@ SOURCE_COLLECTION_PHASES = {
     "additional_source_projection_recorded",
     "additional_spreadsheet_projection_failed",
     "source_collection_complete",
+    "source_set_qualification_complete",
 }
 
 
@@ -2508,7 +2756,7 @@ def _resume_source_collection(
                 "resume once to receive the next source-collection decision",
             )
         return _offer_source_collection_decision(work, state, entries)
-    if phase == "source_collection_complete":
+    if phase in {"source_collection_complete", "source_set_qualification_complete"}:
         if any(
             value is not None for value in (source, source_url, action, kind)
         ) or project_source or begin:
@@ -2516,6 +2764,8 @@ def _resume_source_collection(
                 "source collection already complete",
                 "the append-only source collection has already reached its terminal result",
             )
+        if phase == "source_set_qualification_complete":
+            return run_source_set_qualification(work)
         inventory, inventory_error = _source_collection_inventory(work, entries)
         if inventory_error:
             return inventory_error
@@ -6361,18 +6611,16 @@ def _validate_terminal_context_deferrals(
     return len(obligations), None
 
 
-def _terminal_projection_qualification(
-    work: Path, state: dict[str, object]
+def _visual_projection_qualification(
+    work: Path, record: dict[str, object]
 ) -> tuple[dict[str, object] | None, dict[str, object] | None]:
-    """Qualify the clarification terminal from canonical projection evidence."""
-    record = state.get("current_projection", state.get("first_projection"))
+    """Qualify one visual projection from canonical projection evidence."""
     path, projection_sha256, record_error = _validated_projection_record(
-        work, record if isinstance(record, dict) else None
+        work, record
     )
     if record_error:
         return None, _blocked("terminal_invalid", str(record_error["why"]))
     assert path is not None and projection_sha256 is not None
-    assert isinstance(record, dict)
     if (
         not isinstance(record.get("id"), str)
         or not record["id"]
@@ -6678,6 +6926,18 @@ def _terminal_projection_qualification(
         "remaining_gaps": remaining_gaps,
     }
     return qualification, None
+
+
+def _terminal_projection_qualification(
+    work: Path, state: dict[str, object]
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    """Qualify the active clarification projection."""
+    record = state.get("current_projection", state.get("first_projection"))
+    if not isinstance(record, dict):
+        return None, _blocked(
+            "terminal_invalid", "the active projection record is missing"
+        )
+    return _visual_projection_qualification(work, record)
 
 
 def _clarification_terminal_disposition(
@@ -16003,6 +16263,44 @@ def _clarification_boundary_result(
                 "invalid clarification boundary",
                 "the clarification-required boundary lost its exact remaining gaps",
             )
+    elif boundary == "source_set_qualification_complete":
+        closure = result.get("source_projection_closure")
+        qualification = result.get("source_set_qualification")
+        closure_outcomes = (
+            closure.get("outcomes") if isinstance(closure, dict) else None
+        )
+        qualification_outcomes = (
+            qualification.get("outcomes")
+            if isinstance(qualification, dict)
+            else None
+        )
+        if (
+            result.get("status") != "source_set_qualification_complete"
+            or result.get("stopped") != "source_set_qualification_complete"
+            or not isinstance(closure_outcomes, list)
+            or not isinstance(qualification_outcomes, list)
+            or qualification.get("qualification")
+            not in {
+                "readable_source_set_complete",
+                "readable_source_set_incomplete",
+            }
+            or qualification.get("source_count") != len(closure_outcomes)
+            or len(qualification_outcomes) != len(closure_outcomes)
+            or any(not isinstance(item, dict) for item in closure_outcomes)
+            or any(not isinstance(item, dict) for item in qualification_outcomes)
+            or [item.get("source_id") for item in qualification_outcomes]
+            != [item.get("source_id") for item in closure_outcomes]
+            or any(
+                item.get("qualification")
+                not in source_projection_qualification.QUALIFICATIONS
+                for item in qualification_outcomes
+                if isinstance(item, dict)
+            )
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the source-set boundary lost its ordered adapter qualifications",
+            )
     elif boundary == "additional_source_projection_pending":
         if (
             result.get("status") != "ready_for_projection"
@@ -16136,6 +16434,13 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
                 result, "needs_operator_answer"
             )
         stopped = result.get("stopped")
+        if stopped == "source_collection_complete":
+            result = run_source_set_qualification(work)
+            continue
+        if stopped == "source_set_qualification_complete":
+            return _clarification_boundary_result(
+                result, "source_set_qualification_complete"
+            )
         if stopped == "clarification_continuation_complete":
             return _clarification_boundary_result(
                 result, "clarification_complete"

@@ -11851,7 +11851,11 @@ def test_operator_launcher_finishes_collection_after_deterministic_spreadsheet_p
     )
 
     assert returncode == 0
-    assert json.loads(messages[-1])["stopped"] == "source_collection_complete"
+    terminal = json.loads(messages[-1])
+    assert terminal["stopped"] == "source_set_qualification_complete"
+    assert terminal["source_set_qualification"]["qualification"] == (
+        "readable_source_set_incomplete"
+    )
 
 
 def test_operator_launcher_interviews_one_source_collection_answer_at_a_time(
@@ -12105,3 +12109,176 @@ def test_source_collection_probe_units_reject_ambiguous_identity_and_coverage() 
     assert result["complete"] is False
     assert "missing outcomes: source-000005" in result["why"]
     assert "unknown outcomes: source-999999" in result["why"]
+
+
+def test_source_set_qualification_covers_every_collected_source_replayably(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    workbook = tmp_path / "reference.xlsx"
+    workbook.write_bytes(_representative_workbook_bytes())
+    generator = tmp_path / "generate_reference.py"
+    generator.write_text("FORMULA = 'A2/364'\n", encoding="utf-8")
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, workbook)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="add_source",
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_kind="local_file",
+    )
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, generator)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE)
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+
+    qualified = START_INTAKE.run_clarification_boundary(work)
+    ledger_after = (work / "ledger.jsonl").read_bytes()
+    replay = START_INTAKE.run_clarification_boundary(work)
+
+    assert qualified["boundary"] == "source_set_qualification_complete"
+    assert qualified["source_set_qualification"]["qualification"] == (
+        "readable_source_set_incomplete"
+    )
+    outcomes = qualified["source_set_qualification"]["outcomes"]
+    assert [item["source_id"] for item in outcomes] == [
+        "source-000001",
+        "source-000002",
+        "source-000003",
+        "source-000004",
+    ]
+    assert [item["qualification"] for item in outcomes] == [
+        "readable_projection_complete",
+        "readable_projection_complete",
+        "readable_projection_incomplete",
+        "readable_projection_complete",
+    ]
+    assert outcomes[2]["gaps"] == [
+        {
+            "source_id": "source-000003",
+            "unit": "xl/customData/metrics.xml",
+            "reason": (
+                "workbook part xl/customData/metrics.xml has no readable adapter"
+            ),
+        }
+    ]
+    assert replay == qualified
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after
+    events = [
+        json.loads(line)["event"]
+        for line in ledger_after.decode("utf-8").splitlines()
+    ]
+    assert events.count("source_set_qualification_completed") == 1
+
+
+def test_source_set_qualification_can_finish_with_all_sources_readable(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    generator = tmp_path / "generate_reference.py"
+    generator.write_text("VALUE = 1\n", encoding="utf-8")
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, generator)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+
+    qualified = START_INTAKE.run_source_set_qualification(work)
+
+    assert qualified["status"] == "source_set_qualification_complete"
+    assert qualified["source_set_qualification"]["qualification"] == (
+        "readable_source_set_complete"
+    )
+    assert all(
+        item["qualification"] == "readable_projection_complete"
+        for item in qualified["source_set_qualification"]["outcomes"]
+    )
+
+
+def test_source_set_probe_units_reject_mismatch_and_duplicate_outcomes() -> None:
+    closure = {
+        "outcomes": [
+            {
+                "source_id": "source-000001",
+                "source_sha256": "a" * 64,
+                "outcome": "projected",
+                "projection": {
+                    "ledger_sequence": 1,
+                    "id": "projection-000001",
+                    "version": 1,
+                    "path": "projections/projection-000001.txt",
+                    "sha256": "a" * 64,
+                },
+            }
+        ]
+    }
+    bound = START_INTAKE.source_qualification_binding.bind(
+        closure,
+        [
+            {
+                "event": "source_projected",
+                "source": {
+                    "id": "source-000001",
+                    "sha256": "a" * 64,
+                },
+                "projection": {
+                    "id": "projection-000001",
+                    "version": 1,
+                    "path": "projections/projection-000001.txt",
+                    "sha256": "b" * 64,
+                    "coverage": {
+                        "status": "complete",
+                        "source_units": 1,
+                        "represented_units": 1,
+                        "gaps": [],
+                    },
+                },
+            }
+        ],
+    )
+    duplicate = START_INTAKE.source_qualification_reconciliation.reconcile(
+        closure,
+        [
+            {
+                "source_id": "source-000001",
+                "qualification": "readable_projection_complete",
+            },
+            {
+                "source_id": "source-000001",
+                "qualification": "readable_projection_complete",
+            },
+        ],
+    )
+
+    assert bound["complete"] is False
+    assert "projection sha256 differs" in bound["why"]
+    assert duplicate["complete"] is False
+    assert "duplicate=['source-000001']" in duplicate["why"]

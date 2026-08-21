@@ -1,6 +1,6 @@
 ---
 name: info-intake-machinery
-description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers, files, and public URLs as immutable sources, collects any number of independent sources through a one-question-at-a-time code interview, records readable projections, verifies visual relationships, reconstructs one source-to-projection outcome for every intake source, turns every currently known gap into one code-bound question round, conducts any prepared operator round one question at a time, assesses projected additional-source evidence and completed answer rounds against their exact gaps, and prepares immutable follow-up questions without losing legacy replay.
+description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers, files, and public URLs as immutable sources, collects any number of independent sources through a one-question-at-a-time code interview, records readable projections, verifies visual relationships, reconstructs one source-to-projection outcome for every intake source, qualifies every collected projection against its exact adapter evidence before clarification, turns every currently known gap into one code-bound question round, conducts any prepared operator round one question at a time, assesses projected additional-source evidence and completed answer rounds against their exact gaps, and prepares immutable follow-up questions without losing legacy replay.
 ---
 
 # Info Intake Machinery
@@ -251,6 +251,34 @@ without another question or ledger entry. This stage does not compare sources, d
 source is needed to explain, assess whether one source resolves another, or contain rules for
 annotations, spreadsheets, generators, dashboards, or any other domain. Those are later semantic
 assessment responsibilities.
+
+## Qualify the complete collected source set
+
+On the next clarification-boundary resume after `source_collection_complete`, code qualifies the
+whole collected set and stops at `source_set_qualification_complete`. Three maintained product
+probes remain independently repairable:
+
+- `source_qualification_binding.py` binds every closure outcome to the exact source identity,
+  projection ledger sequence, projection identity, version, path, and SHA-256;
+- `source_projection_qualification.py` applies the evidence contract of the adapter that created
+  each projection: exact byte preservation for verbatim UTF-8, complete part accounting for OOXML
+  spreadsheets, page and explicit-gap accounting for PDFs, and the existing sixteen-region visual
+  qualification contract for images;
+- `source_qualification_reconciliation.py` requires exactly one qualification for every collected
+  source and restores collection order, refusing missing, duplicate, unknown, or invalid outcomes.
+
+Each source receives exactly one of `readable_projection_complete`,
+`readable_projection_incomplete`, or `conversion_incomplete`. The intake-wide result is
+`readable_source_set_complete` only when every source projection is complete; otherwise it is
+`readable_source_set_incomplete` and retains every exact adapter gap, including the specific
+spreadsheet package part, PDF page item, or visual projection unit that did not become readable.
+Code appends one hash-chained `source_set_qualification_completed` event containing the unchanged
+source-projection closure and the ordered qualification. Replay recomputes the result from the
+immutable artifacts and adds nothing.
+
+This step performs no semantic comparison between sources, does not decide whether one source
+explains another, and does not formulate operator questions. It establishes the complete,
+auditable input to that later assessment.
 
 ## Turn all current gaps into one operator question round
 
@@ -640,3 +668,5 @@ running these proven stages.
 | `ready_for_projection_assessment` | 0 | The current immutable projection version is ready. Before clarification terminal, completeness remains unassessed; the terminal result includes the code-derived projection qualification. |
 | `ready_for_operator_interview` | 0 | A complete follow-up question round is preserved but no operator question has been presented. |
 | `source_projection_closure` | 0 | The read-only gate returned one validated projected, pending, or failed conversion outcome per immutable source. |
+| `source_collection_complete` | 0 | The operator finished the independent source set and code preserved one terminal projection outcome per source. |
+| `source_set_qualification_complete` | 0 | Code bound and adapter-qualified every collected source projection in collection order and stopped before semantic comparison or clarification. |
