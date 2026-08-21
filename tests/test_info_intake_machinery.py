@@ -11834,10 +11834,12 @@ def test_operator_launcher_prepares_first_qualification_clarification_question(
     work = tmp_path / "intake"
     supplied = tmp_path / "reference.xlsx"
     supplied.write_bytes(_representative_workbook_bytes())
+    answer = tmp_path / "supporting-reference.xlsx"
+    answer.write_bytes(_representative_workbook_bytes())
     _advance_to_first_source(work)
     START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
     messages: list[str] = []
-    answers = iter(["finish_sources"])
+    answers = iter(["finish_sources", str(answer)])
 
     def run_model(_argv: list[str], *, check: bool) -> subprocess.CompletedProcess[str]:
         assert check is False
@@ -11865,13 +11867,14 @@ def test_operator_launcher_prepares_first_qualification_clarification_question(
     )
 
     state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
-    assert returncode == 4
-    assert state["phase"] == "awaiting_qualification_clarification_answers"
-    assert state["question"] == state["questions"][0]
-    assert state["question"]["answer_type"] == "local_file"
-    assert state["question"]["answers_obligation"]["unit"] == (
+    assert returncode == 0
+    assert state["phase"] == "qualification_question_round_answered"
+    assert state["question"] is None
+    assert state["questions"][0]["answer_type"] == "local_file"
+    assert state["questions"][0]["answers_obligation"]["unit"] == (
         "xl/customData/metrics.xml"
     )
+    assert len(state["qualification_question_answers"]) == 1
 
 
 def test_operator_launcher_interviews_one_source_collection_answer_at_a_time(
@@ -11889,6 +11892,7 @@ def test_operator_launcher_interviews_one_source_collection_answer_at_a_time(
         "local_file",
         str(generator),
         "finish_sources",
+        str(generator),
     ])
     prompts: list[str] = []
 
@@ -11917,11 +11921,11 @@ def test_operator_launcher_interviews_one_source_collection_answer_at_a_time(
         projection_relationship_limit=None,
     )
 
-    assert returncode == 4
-    assert len(prompts) == 4
-    assert START_INTAKE.run_source_projection_closure(work)["source_count"] == 4
+    assert returncode == 0
+    assert len(prompts) == 5
+    assert START_INTAKE.run_source_projection_closure(work)["source_count"] == 5
     state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
-    assert state["phase"] == "awaiting_qualification_clarification_answers"
+    assert state["phase"] == "qualification_question_round_answered"
 
 
 def test_independent_source_collection_adds_projects_and_closes_replayably(
@@ -12367,6 +12371,372 @@ def test_qualification_clarification_round_reaches_one_operator_question(
         "operator_qualification_question_round_prepared",
         "operator_qualification_question_asked",
     ]
+
+
+def test_qualification_local_file_answer_enters_through_real_operator_turn(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "reference.xlsx"
+    supplied.write_bytes(_representative_workbook_bytes())
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+    START_INTAKE.run_source_set_qualification(work)
+    START_INTAKE.run_qualification_admission(work)
+    START_INTAKE.request_qualification_question_round(work)
+    model_answers = iter([
+        "local_file",
+        "Please provide the workbook source containing this missing part?",
+    ])
+    START_INTAKE.run_qualification_question_round(
+        work,
+        input_fn=lambda _prompt: next(model_answers),
+        output_fn=lambda _message: None,
+    )
+    answer = tmp_path / "supporting-reference.xlsx"
+    answer.write_bytes(_representative_workbook_bytes())
+
+    result = START_INTAKE.run_operator_turn(
+        work,
+        input_fn=lambda _prompt: str(answer),
+        output_fn=lambda _message: None,
+    )
+
+    assert result["status"] == "ready_for_projection", result
+    assert result["stopped"] == "additional_source_frozen"
+    assert result["source"]["answers_question"] == (
+        "qualification-clarification-answer-000001"
+    )
+    assert result["source"]["answers_obligation"]["unit"] == (
+        "xl/customData/metrics.xml"
+    )
+    assert result["lineage"]["mode"] == "qualification_clarification_answer"
+    completed = START_INTAKE.run_clarification_boundary(work)
+    replay_ledger = (work / "ledger.jsonl").read_bytes()
+
+    assert completed["boundary"] == "qualification_answers_complete"
+    assert completed["answered_question_count"] == 1
+    assert completed["question_count"] == 1
+    assert completed["answer_source_ids"] == [result["source"]["id"]]
+    saved = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
+    answer_record = saved["qualification_question_answers"][0]
+    assert answer_record["source"]["sha256"] == result["source"]["sha256"]
+    assert answer_record["projection"]["source_id"] == result["source"]["id"]
+    assert START_INTAKE.run_clarification_boundary(work) == completed
+    assert (work / "ledger.jsonl").read_bytes() == replay_ledger
+
+
+def test_qualification_answers_advance_once_in_prepared_order(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    workbook = io.BytesIO(_representative_workbook_bytes())
+    with ZipFile(workbook, "a", ZIP_DEFLATED) as archive:
+        archive.writestr(
+            "xl/customData/second.xml", "<metrics><name>second</name></metrics>"
+        )
+    supplied = tmp_path / "reference.xlsx"
+    supplied.write_bytes(workbook.getvalue())
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+    START_INTAKE.run_source_set_qualification(work)
+    START_INTAKE.run_qualification_admission(work)
+    START_INTAKE.request_qualification_question_round(work)
+    model_answers = iter([
+        "local_file",
+        "Please provide the first missing source?",
+        "operator_text",
+        "What exact information covers the second missing source?",
+    ])
+    START_INTAKE.run_qualification_question_round(
+        work,
+        input_fn=lambda _prompt: next(model_answers),
+        output_fn=lambda _message: None,
+    )
+    answer_file = tmp_path / "supporting.txt"
+    answer_file.write_text("first immutable answer\n", encoding="utf-8")
+    START_INTAKE.run_operator_turn(
+        work,
+        input_fn=lambda _prompt: str(answer_file),
+        output_fn=lambda _message: None,
+    )
+
+    second = START_INTAKE.run_clarification_boundary(work)
+    after_first = json.loads(
+        (work / "intake-state.json").read_text(encoding="utf-8")
+    )
+
+    assert second["boundary"] == "needs_operator_answer"
+    assert second["answered_question_count"] == 1
+    assert second["question"] == after_first["questions"][1]
+    assert len(after_first["qualification_question_answers"]) == 1
+    completed = START_INTAKE.run_operator_turn(
+        work,
+        input_fn=lambda _prompt: "second exact operator answer",
+        output_fn=lambda _message: None,
+    )
+    assert completed["stopped"] == "qualification_question_round_answered"
+    assert completed["answered_question_count"] == 2
+    saved = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
+    assert [
+        item["question_id"] for item in saved["qualification_question_answers"]
+    ] == [question["id"] for question in saved["questions"]]
+
+
+def test_qualification_wrong_answer_channel_refuses_without_mutation(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "reference.xlsx"
+    supplied.write_bytes(_representative_workbook_bytes())
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+    START_INTAKE.run_source_set_qualification(work)
+    START_INTAKE.run_qualification_admission(work)
+    START_INTAKE.request_qualification_question_round(work)
+    model_answers = iter([
+        "local_file",
+        "Please provide the workbook source containing this missing part?",
+    ])
+    START_INTAKE.run_qualification_question_round(
+        work,
+        input_fn=lambda _prompt: next(model_answers),
+        output_fn=lambda _message: None,
+    )
+    before_ledger = (work / "ledger.jsonl").read_bytes()
+    before_state = (work / "intake-state.json").read_bytes()
+
+    refused = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_answer="this is text, not the requested file",
+    )
+
+    assert refused["status"] == "blocked"
+    assert refused["stopped"] == "qualification answer admission refused"
+    assert "provide exactly 'local_file'" in refused["why"]
+    assert (work / "ledger.jsonl").read_bytes() == before_ledger
+    assert (work / "intake-state.json").read_bytes() == before_state
+
+
+def test_qualification_changed_frozen_answer_source_refuses_before_projection(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "reference.xlsx"
+    supplied.write_bytes(_representative_workbook_bytes())
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+    START_INTAKE.run_source_set_qualification(work)
+    START_INTAKE.run_qualification_admission(work)
+    START_INTAKE.request_qualification_question_round(work)
+    model_answers = iter([
+        "local_file",
+        "Please provide the workbook source containing this missing part?",
+    ])
+    START_INTAKE.run_qualification_question_round(
+        work,
+        input_fn=lambda _prompt: next(model_answers),
+        output_fn=lambda _message: None,
+    )
+    answer = tmp_path / "supporting-reference.xlsx"
+    answer.write_bytes(_representative_workbook_bytes())
+    frozen = START_INTAKE.run_operator_turn(
+        work,
+        input_fn=lambda _prompt: str(answer),
+        output_fn=lambda _message: None,
+    )
+    frozen_path = work / frozen["source"]["stored_path"]
+    frozen_path.write_bytes(b"changed after preservation")
+    before_ledger = (work / "ledger.jsonl").read_bytes()
+
+    refused = START_INTAKE.run_clarification_boundary(work)
+
+    assert refused["status"] == "blocked"
+    assert refused["stopped"] == "invalid ledger"
+    assert "frozen additional source" in refused["why"]
+    assert (work / "ledger.jsonl").read_bytes() == before_ledger
+
+
+def test_qualification_url_answer_is_frozen_and_projected_once(
+    tmp_path: Path, monkeypatch: object,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "reference.xlsx"
+    supplied.write_bytes(_representative_workbook_bytes())
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+    START_INTAKE.run_source_set_qualification(work)
+    START_INTAKE.run_qualification_admission(work)
+    START_INTAKE.request_qualification_question_round(work)
+    model_answers = iter([
+        "url",
+        "Please provide the public source containing this missing part?",
+    ])
+    START_INTAKE.run_qualification_question_round(
+        work,
+        input_fn=lambda _prompt: next(model_answers),
+        output_fn=lambda _message: None,
+    )
+    content = b"exact public qualification answer\n"
+    connection = _URLConnection(
+        _URLResponse(200, [("Content-Type", "text/plain; charset=utf-8")], content)
+    )
+    monkeypatch.setattr(
+        START_INTAKE.socket,
+        "getaddrinfo",
+        lambda *_args, **_kwargs: [
+            (
+                START_INTAKE.socket.AF_INET,
+                START_INTAKE.socket.SOCK_STREAM,
+                6,
+                "",
+                ("93.184.216.34", 443),
+            )
+        ],
+    )
+    monkeypatch.setattr(
+        START_INTAKE, "_url_connection", lambda *_args: connection
+    )
+
+    frozen = START_INTAKE.run_operator_turn(
+        work,
+        input_fn=lambda _prompt: "https://example.test/answer.txt",
+        output_fn=lambda _message: None,
+    )
+    completed = START_INTAKE.run_clarification_boundary(work)
+
+    assert frozen["source"]["answers_obligation"]["unit"] == (
+        "xl/customData/metrics.xml"
+    )
+    assert (work / frozen["source"]["stored_path"]).read_bytes() == content
+    assert completed["boundary"] == "qualification_answers_complete"
+    state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
+    assert state["qualification_question_answers"][0]["submission"] == {
+        "channel": "url",
+        "value": "https://example.test/answer.txt",
+    }
+
+
+def test_qualification_image_answer_reuses_the_general_projection_interview(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "reference.xlsx"
+    supplied.write_bytes(_representative_workbook_bytes())
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+    START_INTAKE.run_source_set_qualification(work)
+    START_INTAKE.run_qualification_admission(work)
+    START_INTAKE.request_qualification_question_round(work)
+    model_answers = iter([
+        "local_file",
+        "Please provide the visual source containing this missing part?",
+    ])
+    START_INTAKE.run_qualification_question_round(
+        work,
+        input_fn=lambda _prompt: next(model_answers),
+        output_fn=lambda _message: None,
+    )
+    image_answer = tmp_path / "supporting.png"
+    Image.new("RGB", (40, 40), "white").save(image_answer, format="PNG")
+    START_INTAKE.run_operator_turn(
+        work,
+        input_fn=lambda _prompt: str(image_answer),
+        output_fn=lambda _message: None,
+    )
+
+    waiting = START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    attachments, command = CODEX_RUNNER.load_request(work)
+
+    assert waiting["status"] == "waiting_for_model"
+    assert waiting["stopped"] == "interviewing_additional_source_projection"
+    assert waiting["lineage"]["mode"] == "qualification_clarification_answer"
+    assert isinstance(attachments, tuple)
+    assert command[-1] == "--run-projection-interview"
+    ledger = [
+        json.loads(line)
+        for line in (work / "ledger.jsonl").read_text(encoding="utf-8").splitlines()
+    ]
+    assert ledger[-1]["answers_obligation"]["unit"] == (
+        "xl/customData/metrics.xml"
+    )
+    assert "answers_gap" not in ledger[-1]
 
 
 def test_qualification_question_round_captures_every_known_question_once(

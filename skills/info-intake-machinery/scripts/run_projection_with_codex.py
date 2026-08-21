@@ -37,6 +37,7 @@ BOUNDARY_EXIT_CODES = {
     "first_source_projection_complete": 0,
     "additional_source_projection_pending": 0,
     "additional_source_gap_assessment_complete": 0,
+    "qualification_answers_complete": 0,
 }
 
 

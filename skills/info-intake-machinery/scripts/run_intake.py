@@ -233,6 +233,51 @@ def _conduct_source_collection_interview(
     return result
 
 
+def _conduct_qualification_answer_interview(
+    work: Path,
+    *,
+    input_fn: Callable[[str], str],
+    output_fn: Callable[[str], None],
+    model_run_fn: Callable[..., object],
+    projection_region_limit: int | None,
+    projection_relationship_limit: int | None,
+) -> int:
+    while True:
+        boundary = start_intake.run_clarification_boundary(work)
+        failed = _blocked(boundary, output_fn)
+        if failed is not None:
+            return failed
+        if boundary.get("boundary") == "qualification_answers_complete":
+            output_fn(json.dumps(boundary, indent=2, sort_keys=True))
+            return 0
+        if (
+            boundary.get("boundary") != "needs_operator_answer"
+            or boundary.get("stopped")
+            != "awaiting_qualification_clarification_answers"
+        ):
+            return projection_runner.drive_work(
+                work,
+                projection_region_limit=projection_region_limit,
+                projection_relationship_limit=projection_relationship_limit,
+                model_run_fn=model_run_fn,
+            )
+        answered = start_intake.run_operator_turn(
+            work, input_fn=input_fn, output_fn=output_fn
+        )
+        failed = _blocked(answered, output_fn)
+        if failed is not None:
+            return failed
+        if answered.get("stopped") == "additional_source_frozen":
+            returncode = projection_runner.drive_work(
+                work,
+                projection_region_limit=projection_region_limit,
+                projection_relationship_limit=projection_relationship_limit,
+                model_run_fn=model_run_fn,
+            )
+            if returncode not in {0, 4}:
+                return returncode
+
+
 def _continue_intake(
     work: Path,
     opening: str,
@@ -313,6 +358,18 @@ def _continue_intake(
         if failed is not None:
             return failed
     elif result.get("status") == "needs_operator":
+        if (
+            result.get("stopped")
+            == "awaiting_qualification_clarification_answers"
+        ):
+            return _conduct_qualification_answer_interview(
+                work,
+                input_fn=input_fn,
+                output_fn=output_fn,
+                model_run_fn=model_run_fn,
+                projection_region_limit=projection_region_limit,
+                projection_relationship_limit=projection_relationship_limit,
+            )
         output_fn(json.dumps(result, indent=2, sort_keys=True))
         return 4
     if (
@@ -357,11 +414,21 @@ def _continue_intake(
                 failed = _blocked(result, output_fn)
                 if failed is not None:
                     return failed
-                return projection_runner.drive_work(
+                returncode = projection_runner.drive_work(
                     work,
                     projection_region_limit=projection_region_limit,
                     projection_relationship_limit=projection_relationship_limit,
                     model_run_fn=model_run_fn,
+                )
+                if returncode != 4:
+                    return returncode
+                return _conduct_qualification_answer_interview(
+                    work,
+                    input_fn=input_fn,
+                    output_fn=output_fn,
+                    model_run_fn=model_run_fn,
+                    projection_region_limit=projection_region_limit,
+                    projection_relationship_limit=projection_relationship_limit,
                 )
             output_fn(json.dumps(result, indent=2, sort_keys=True))
             return 0
