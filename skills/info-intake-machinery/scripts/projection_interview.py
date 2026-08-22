@@ -3329,6 +3329,22 @@ def _prepare_element_supersession(
         "trigger_candidate": trigger_candidate,
         "replacement_element": replacement,
     }
+    context_obligation_id = current.get("context_obligation_id")
+    if isinstance(context_obligation_id, str):
+        obligation = _context_obligation_by_id(state, context_obligation_id)
+        if obligation.get("status") != "pending":
+            raise InterviewError("context-obligation-already-resolved")
+        event["context_obligation_resolution"] = {
+            "obligation_id": context_obligation_id,
+            "previous_obligation": dict(obligation),
+            "replacement_obligation": {
+                **obligation,
+                "status": "resolved",
+                "resolution": "element",
+                "element_id": target_id,
+                "gap_reason": "",
+            },
+        }
     state["element_supersession_pending"] = {
         "event": event,
         "return_stage": current.get("return_stage", "element_more"),
@@ -3364,6 +3380,27 @@ def _apply_element_supersession(
         )
     index = state["elements"].index(target)
     state["elements"][index] = replacement
+    context_resolution = event.get("context_obligation_resolution")
+    if context_resolution is not None:
+        if not isinstance(context_resolution, dict):
+            raise InterviewError("context-obligation-resolution-invalid")
+        obligation_id = context_resolution.get("obligation_id")
+        if not isinstance(obligation_id, str):
+            raise InterviewError("context-obligation-resolution-invalid")
+        obligation = _context_obligation_by_id(state, obligation_id)
+        replacement_obligation = context_resolution.get(
+            "replacement_obligation"
+        )
+        if (
+            obligation != context_resolution.get("previous_obligation")
+            or not isinstance(replacement_obligation, dict)
+            or replacement_obligation.get("status") != "resolved"
+            or replacement_obligation.get("resolution") != "element"
+            or replacement_obligation.get("element_id") != target_id
+            or replacement_obligation.get("gap_reason") != ""
+        ):
+            raise InterviewError("context-obligation-resolution-invalid")
+        obligation.update(replacement_obligation)
     state["element_supersession_pending"] = None
     return_stage = str(pending["return_stage"])
     next_current = pending.get("next_current")
@@ -5858,6 +5895,10 @@ def _replay(
                     "trigger_candidate", "replacement_element",
                 )
             }
+            if "context_obligation_resolution" in entry:
+                supersession["context_obligation_resolution"] = entry.get(
+                    "context_obligation_resolution"
+                )
             try:
                 _apply_element_supersession(state, supersession)
             except InterviewError as error:

@@ -44,6 +44,7 @@ BOUNDARY_EXIT_CODES = {
     "first_layer_complete": 0,
     "qualification_follow_up_required": 0,
     "qualification_followup_admission_complete": 0,
+    "source_collection_answer_required": 4,
 }
 
 
@@ -74,11 +75,9 @@ def _model_stage_progress(work: Path) -> dict[str, str | None]:
         journal.relative_to(work.resolve())
     except ValueError as error:
         raise LaunchError("the active model journal escapes the intake") from error
-    if not journal.is_file():
-        raise LaunchError("the active model journal is unavailable")
     return {
         "intake_state_sha256": _sha256(state_path),
-        "model_journal_sha256": _sha256(journal),
+        "model_journal_sha256": _sha256(journal) if journal.is_file() else None,
     }
 
 
@@ -646,21 +645,18 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
                     obligation = projection_interview._pending_obligation(
                         interview_state
                     )
-                    if not isinstance(obligation, dict) or not isinstance(
+                    if isinstance(obligation, dict) and isinstance(
                         obligation.get("id"), str
                     ):
-                        raise projection_interview.InterviewError(
-                            "active-projection-binding-missing"
-                        )
-                    command[-1:-1] = [
-                        "--projection-obligation-id",
-                        str(obligation["id"]),
-                    ]
-                    if endpoint_evidence is not None:
                         command[-1:-1] = [
-                            "--projection-endpoint-evidence-sha256",
-                            endpoint_evidence[1],
+                            "--projection-obligation-id",
+                            str(obligation["id"]),
                         ]
+                        if endpoint_evidence is not None:
+                            command[-1:-1] = [
+                                "--projection-endpoint-evidence-sha256",
+                                endpoint_evidence[1],
+                            ]
         except (OSError, projection_interview.InterviewError) as error:
             raise LaunchError(
                 f"projection binding evidence failed: {error}"

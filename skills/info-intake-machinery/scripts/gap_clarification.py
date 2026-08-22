@@ -62,12 +62,11 @@ def _matching_element_ids(record: dict[str, Any]) -> list[str]:
     values = binding.get("matching_element_ids")
     if (
         not isinstance(values, list)
-        or len(values) < 2
         or any(not isinstance(value, str) or not value for value in values)
         or len(set(values)) != len(values)
     ):
         raise ClarificationError("clarification-gap-candidate-identities-invalid")
-    return list(values)
+    return list(values) if len(values) >= 2 else []
 
 
 def select_gaps(

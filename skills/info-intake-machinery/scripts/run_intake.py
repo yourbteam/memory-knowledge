@@ -141,6 +141,25 @@ def _preserved_text(work: Path, name: str, *, required: bool) -> str | None:
         raise ValueError(f"the preserved intake source is unreadable: {name}") from error
 
 
+def _completed_intake_action(
+    result: dict[str, object],
+    *,
+    input_fn: Callable[[str], str],
+    output_fn: Callable[[str], None],
+) -> str | None:
+    if (
+        result.get("status") != "first_layer_complete"
+        or result.get("stopped") != "effective_first_layer_terminal_recorded"
+    ):
+        return None
+    return _choose(
+        "The intake is complete. What should happen next?",
+        ("return_result", "add_source"),
+        input_fn=input_fn,
+        output_fn=output_fn,
+    )
+
+
 def _conduct_source_collection_interview(
     work: Path,
     opening: str,
@@ -157,6 +176,7 @@ def _conduct_source_collection_interview(
         "first_pdf_projection_failed",
         "first_spreadsheet_projection_recorded",
         "first_spreadsheet_projection_failed",
+        "gap_resolution_applied",
     }
     if result.get("stopped") in terminal_stops:
         result = start_intake.drive(
@@ -309,6 +329,32 @@ def _conduct_qualification_answer_interview(
                     return failed
 
 
+def _resume_after_projection_boundary(
+    returncode: int,
+    work: Path,
+    opening: str,
+    purpose: str,
+    *,
+    input_fn: Callable[[str], str],
+    output_fn: Callable[[str], None],
+    model_run_fn: Callable[..., object],
+    projection_region_limit: int | None,
+    projection_relationship_limit: int | None,
+) -> int:
+    if returncode != 4:
+        return returncode
+    return _continue_intake(
+        work,
+        opening,
+        purpose,
+        input_fn=input_fn,
+        output_fn=output_fn,
+        model_run_fn=model_run_fn,
+        projection_region_limit=projection_region_limit,
+        projection_relationship_limit=projection_relationship_limit,
+    )
+
+
 def _continue_intake(
     work: Path,
     opening: str,
@@ -324,6 +370,19 @@ def _continue_intake(
     failed = _blocked(result, output_fn)
     if failed is not None:
         return failed
+    completed_action = _completed_intake_action(
+        result, input_fn=input_fn, output_fn=output_fn
+    )
+    if completed_action == "return_result":
+        output_fn(json.dumps(result, indent=2, sort_keys=True))
+        return 0
+    if completed_action == "add_source":
+        result = start_intake.drive(
+            work, opening, purpose, begin_source_collection=True
+        )
+        failed = _blocked(result, output_fn)
+        if failed is not None:
+            return failed
     question = result.get("question")
     if (
         result.get("status") == "needs_operator"
@@ -388,7 +447,10 @@ def _continue_intake(
         failed = _blocked(result, output_fn)
         if failed is not None:
             return failed
-    elif result.get("status") == "needs_operator":
+    elif (
+        result.get("status") == "needs_operator"
+        and result.get("stopped") != "awaiting_source_collection_decision"
+    ):
         if result.get("stopped") in {
             "awaiting_qualification_clarification_answers",
             "awaiting_qualification_followup_answers",
@@ -422,6 +484,8 @@ def _continue_intake(
         "first_spreadsheet_projection_failed",
         "additional_source_projection_recorded",
         "additional_spreadsheet_projection_failed",
+        "gap_resolution_applied",
+        "awaiting_source_collection_decision",
     }:
         result = _conduct_source_collection_interview(
             work,
@@ -461,22 +525,46 @@ def _continue_intake(
                     projection_region_limit=projection_region_limit,
                     projection_relationship_limit=projection_relationship_limit,
                 )
+            result = start_intake.run_clarification_boundary(work)
+            failed = _blocked(result, output_fn)
+            if failed is not None:
+                return failed
             output_fn(json.dumps(result, indent=2, sort_keys=True))
             return 0
         output_fn(json.dumps(result, indent=2, sort_keys=True))
         if result.get("status") == "waiting_for_model":
-            return projection_runner.drive_work(
+            return _resume_after_projection_boundary(
+                projection_runner.drive_work(
+                    work,
+                    projection_region_limit=projection_region_limit,
+                    projection_relationship_limit=projection_relationship_limit,
+                    model_run_fn=model_run_fn,
+                ),
                 work,
+                opening,
+                purpose,
+                input_fn=input_fn,
+                output_fn=output_fn,
+                model_run_fn=model_run_fn,
                 projection_region_limit=projection_region_limit,
                 projection_relationship_limit=projection_relationship_limit,
-                model_run_fn=model_run_fn,
             )
         return 4
-    return projection_runner.drive_work(
+    return _resume_after_projection_boundary(
+        projection_runner.drive_work(
+            work,
+            projection_region_limit=projection_region_limit,
+            projection_relationship_limit=projection_relationship_limit,
+            model_run_fn=model_run_fn,
+        ),
         work,
+        opening,
+        purpose,
+        input_fn=input_fn,
+        output_fn=output_fn,
+        model_run_fn=model_run_fn,
         projection_region_limit=projection_region_limit,
         projection_relationship_limit=projection_relationship_limit,
-        model_run_fn=model_run_fn,
     )
 
 

@@ -653,7 +653,7 @@ def _projection_model_attachment(
                 interview_state
             )
         except projection_interview.InterviewError as error:
-            return None, None, None, _blocked(
+            return None, None, None, None, _blocked(
                 "projection region evidence failed", str(error)
             )
         if isinstance(active_region, dict) and isinstance(
@@ -664,14 +664,10 @@ def _projection_model_attachment(
             obligation = projection_interview._pending_obligation(
                 interview_state
             )
-            if not isinstance(obligation, dict) or not isinstance(
+            if isinstance(obligation, dict) and isinstance(
                 obligation.get("id"), str
             ):
-                return None, None, None, _blocked(
-                    "projection relationship binding failed",
-                    "no active region or pending relationship obligation is available",
-                )
-            obligation_id = str(obligation["id"])
+                obligation_id = str(obligation["id"])
     if endpoint_evidence is not None:
         crop, endpoint_evidence_sha256 = endpoint_evidence
     elif replacement_attachments is not None:
@@ -2420,6 +2416,264 @@ def _source_set_qualification_result(
     }
 
 
+def _historical_context_same_unit_evidence(
+    journal_entries: list[dict[str, object]],
+    obligation: dict[str, object],
+) -> list[dict[str, object]]:
+    obligation_id = obligation.get("id")
+    anchor = obligation.get("anchor")
+    if (
+        not isinstance(obligation_id, str)
+        or not isinstance(anchor, list)
+        or len(anchor) != 2
+        or not all(isinstance(value, int) for value in anchor)
+    ):
+        return []
+    evidence: list[dict[str, object]] = []
+    for index, entry in enumerate(journal_entries):
+        question = entry.get("question")
+        candidate = (
+            question.get("context_candidate_obligation")
+            if isinstance(question, dict)
+            else None
+        )
+        if (
+            entry.get("event") != "question_asked"
+            or not isinstance(question, dict)
+            or question.get("id") != "context_obligation_resolution"
+            or not isinstance(candidate, dict)
+            or candidate.get("id") != obligation_id
+        ):
+            continue
+        target_id: str | None = None
+        target_sequence: int | None = None
+        for later in journal_entries[index + 1 :]:
+            later_question = later.get("question")
+            if (
+                later.get("event") == "question_asked"
+                and isinstance(later_question, dict)
+                and later_question.get("id") == "context_obligation_resolution"
+            ) or later.get("event") == "region_outcome_recorded":
+                break
+            if (
+                later.get("event") == "answer_recorded"
+                and later.get("accepted") is True
+                and later.get("question_id") == "element_same_unit_target"
+                and isinstance(later.get("parsed"), str)
+            ):
+                target_id = str(later["parsed"])
+                target_sequence = int(later["sequence"])
+                continue
+            trigger = later.get("trigger_candidate")
+            bounds = trigger.get("region") if isinstance(trigger, dict) else None
+            if (
+                later.get("event") == "element_superseded"
+                and later.get("reason") == "same_visible_unit"
+                and later.get("element_id") == target_id
+                and isinstance(bounds, list)
+                and len(bounds) == 4
+                and all(isinstance(value, int) for value in bounds)
+                and bounds[0] <= anchor[0] < bounds[2]
+                and bounds[1] <= anchor[1] < bounds[3]
+                and isinstance(target_sequence, int)
+            ):
+                evidence.append({
+                    "question_sequence": entry["sequence"],
+                    "target_answer_sequence": target_sequence,
+                    "supersession_sequence": later["sequence"],
+                    "target_element_id": target_id,
+                    "question_entry_sha256": entry["entry_sha256"],
+                    "supersession_entry_sha256": later["entry_sha256"],
+                })
+                break
+    return evidence
+
+
+def _build_context_same_unit_reconciliation(
+    work: Path,
+    state: dict[str, object],
+    parent: dict[str, object],
+) -> tuple[bytes, dict[str, object], list[dict[str, object]], str] | None:
+    try:
+        projection = json.loads((work / str(parent["path"])).read_text())
+        journal_path = (
+            work / "projection-interviews" / "attempt-000001" / "interview.jsonl"
+        )
+        journal_entries = projection_interview._read_journal(journal_path)
+        journal_sha256 = _digest_bytes(journal_path.read_bytes())
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+        return None
+    elements = {
+        item.get("id"): item
+        for item in projection.get("elements", [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    resolutions: list[dict[str, object]] = []
+    for region in projection.get("scan_regions", []):
+        if not isinstance(region, dict):
+            continue
+        obligations = region.get("context_candidate_obligations")
+        if not isinstance(obligations, list):
+            continue
+        for obligation in obligations:
+            if not isinstance(obligation, dict) or obligation.get("status") != "pending":
+                continue
+            evidence = _historical_context_same_unit_evidence(
+                journal_entries, obligation
+            )
+            targets = {
+                item["target_element_id"]
+                for item in evidence
+                if item.get("target_element_id") in elements
+            }
+            if len(targets) != 1:
+                continue
+            target_id = next(iter(targets))
+            previous = json.loads(json.dumps(obligation))
+            obligation.update({
+                "status": "resolved",
+                "resolution": "element",
+                "element_id": target_id,
+                "gap_reason": "",
+            })
+            resolutions.append({
+                "obligation_id": obligation["id"],
+                "previous_obligation": previous,
+                "replacement_obligation": json.loads(json.dumps(obligation)),
+                "target_element_id": target_id,
+                "evidence": evidence,
+            })
+    if not resolutions:
+        return None
+    version = int(parent["version"]) + 1
+    content = json.dumps(projection, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    record = {
+        "id": f"projection-{parent['source_id']}-v{version}",
+        "source_id": parent["source_id"],
+        "version": version,
+        "parent_projection_id": parent["id"],
+        "path": f"projections/{parent['source_id']}-v{version}.json",
+        "sha256": _digest_bytes(content),
+        "element_count": len(projection["elements"]),
+        "relationship_count": len(projection["relationships"]),
+        "gap_count": int(parent["gap_count"]),
+        "coverage": "unassessed",
+    }
+    return content, record, resolutions, journal_sha256
+
+
+def _reconcile_historical_context_same_unit(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> tuple[bool, dict[str, object] | None]:
+    saved = state.get("context_same_unit_reconciliation")
+    if isinstance(saved, dict):
+        sequence = saved.get("ledger_sequence")
+        completion_sequence = saved.get("completion_ledger_sequence")
+        projection = saved.get("projection")
+        if (
+            not isinstance(sequence, int)
+            or not isinstance(completion_sequence, int)
+            or not isinstance(projection, dict)
+            or completion_sequence != sequence + 1
+            or completion_sequence > len(entries)
+            or entries[sequence - 1].get("event") != "projection_version_created"
+            or entries[sequence - 1].get("role")
+            != "context_same_unit_reconciliation"
+            or entries[sequence - 1].get("projection") != projection
+            or state.get("current_projection") != projection
+        ):
+            return False, _blocked(
+                "invalid context reconciliation",
+                "the append-only context-obligation correction changed",
+            )
+        try:
+            if _digest_bytes((work / str(projection["path"])).read_bytes()) != projection.get("sha256"):
+                raise OSError("projection digest changed")
+        except OSError as error:
+            return False, _blocked("invalid context reconciliation", str(error))
+        return False, None
+
+    parent = state.get("current_projection", state.get("first_projection"))
+    if not isinstance(parent, dict):
+        return False, None
+    built = _build_context_same_unit_reconciliation(work, state, parent)
+    if built is None:
+        return False, None
+    content, projection, resolutions, journal_sha256 = built
+    projection_path = work / str(projection["path"])
+    if projection_path.exists():
+        return False, _blocked(
+            "unbound projection version", str(projection["path"])
+        )
+    projection_path.write_bytes(content)
+    created = _ledger_entry(
+        len(entries) + 1,
+        "projection_version_created",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "context_same_unit_reconciliation",
+            "parent_projection": parent,
+            "projection_interview_sha256": journal_sha256,
+            "resolutions": resolutions,
+            "projection": projection,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    closure, closure_error = _source_projection_closure_inventory(
+        work, [*entries, created]
+    )
+    if closure_error:
+        return False, closure_error
+    assert closure is not None
+    collection = state.get("source_collection")
+    if not isinstance(collection, dict):
+        return False, _blocked(
+            "context reconciliation unavailable", "source collection is missing"
+        )
+    previous_completion = collection.get("completion_ledger_sequence")
+    completed = _ledger_entry(
+        len(entries) + 2,
+        "source_collection_completed",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "supersedes_completion_ledger_sequence": previous_completion,
+            "source_ids": collection["source_ids"],
+            "source_projection_closure": closure,
+        },
+        str(created["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [created, completed])
+    current_resolution = state.get("gap_resolution")
+    history = state.get("gap_resolution_history", [])
+    if isinstance(current_resolution, dict) and isinstance(history, list):
+        archived = json.loads(json.dumps(current_resolution))
+        archived["terminal_phase"] = "gap_resolution_applied"
+        archived["output_projection"] = parent
+        state["gap_resolution_history"] = [*history, archived]
+        state.pop("gap_resolution", None)
+    state["source_collection"] = {
+        **collection,
+        "completion_ledger_sequence": completed["sequence"],
+    }
+    state["current_projection"] = projection
+    state["context_same_unit_reconciliation"] = {
+        "ledger_sequence": created["sequence"],
+        "completion_ledger_sequence": completed["sequence"],
+        "parent_projection": parent,
+        "projection_interview_sha256": journal_sha256,
+        "resolutions": resolutions,
+        "projection": projection,
+    }
+    state["ledger_entries"] = completed["sequence"]
+    state["ledger_tail_sha256"] = completed["entry_sha256"]
+    _write_state(work / "intake-state.json", state)
+    return True, None
+
+
 def run_source_set_qualification(work: Path) -> dict[str, object]:
     try:
         opening_bytes = (work / "sources" / "source-000001.txt").read_bytes()
@@ -2437,6 +2691,16 @@ def run_source_set_qualification(work: Path) -> dict[str, object]:
             "source-set qualification unavailable",
             "qualify the complete collected source set before clarification",
         )
+    applied, reconciliation_error = _reconcile_historical_context_same_unit(
+        work, state, entries
+    )
+    if reconciliation_error:
+        return reconciliation_error
+    if applied:
+        state, entries, load_error = _load_bound(work, opening_bytes)
+        if load_error:
+            return load_error
+        assert state is not None
     closure, closure_error = _source_projection_closure_inventory(work, entries)
     if closure_error:
         return closure_error
@@ -3986,29 +4250,54 @@ def run_qualification_obligation_closure(work: Path) -> dict[str, object]:
                 "the preserved closure no longer matches its admission or immutable ledger event",
             )
         return _qualification_obligation_closure_result(state, work)
-    if phase != "qualification_resolution_admission_recorded":
+    direct_complete = (
+        phase == "qualification_admission_complete"
+        and isinstance(state.get("qualification_admission"), dict)
+        and state["qualification_admission"].get("route")
+        == "first_layer_complete"
+        and state["qualification_admission"].get("clarification_obligations")
+        == []
+    )
+    if phase != "qualification_resolution_admission_recorded" and not direct_complete:
         return _blocked(
             "qualification obligation closure unavailable",
             f"phase received {phase!r}; provide one completed resolution admission",
         )
-    admission_result = run_qualification_resolution_admission(work)
-    if admission_result.get("status") == "blocked":
-        return admission_result
     qualification = state.get("qualification_admission")
-    resolution = state.get("qualification_resolution_admission")
     obligations = (
         qualification.get("clarification_obligations")
         if isinstance(qualification, dict)
         else None
     )
-    admission = resolution.get("admission") if isinstance(resolution, dict) else None
-    resolutions = admission.get("resolutions") if isinstance(admission, dict) else None
+    if direct_complete:
+        resolution = None
+        resolutions: object = []
+        admission_sequence = (
+            qualification.get("ledger_sequence")
+            if isinstance(qualification, dict)
+            else None
+        )
+    else:
+        admission_result = run_qualification_resolution_admission(work)
+        if admission_result.get("status") == "blocked":
+            return admission_result
+        resolution = state.get("qualification_resolution_admission")
+        admission = (
+            resolution.get("admission") if isinstance(resolution, dict) else None
+        )
+        resolutions = (
+            admission.get("resolutions") if isinstance(admission, dict) else None
+        )
+        admission_sequence = (
+            resolution.get("ledger_sequence")
+            if isinstance(resolution, dict)
+            else None
+        )
     closure = qualification_obligation_closure.reconcile(obligations, resolutions)
     if closure.get("reconciled") is not True:
         return _blocked(
             "qualification obligation closure invalid", str(closure.get("why"))
         )
-    admission_sequence = resolution.get("ledger_sequence") if isinstance(resolution, dict) else None
     admission_event = (
         entries[admission_sequence - 1]
         if isinstance(admission_sequence, int) and 1 <= admission_sequence <= len(entries)
@@ -4026,6 +4315,11 @@ def run_qualification_obligation_closure(work: Path) -> dict[str, object]:
             "recorded_at": datetime.now(timezone.utc).isoformat(),
             "intake_id": state["intake_id"],
             "resolution_admission_entry_sha256": admission_event["entry_sha256"],
+            "basis": (
+                "qualification_admission_no_obligations"
+                if direct_complete
+                else "qualification_resolution_admission"
+            ),
             "closure": closure,
         },
         str(entries[-1]["entry_sha256"]),
@@ -4040,6 +4334,7 @@ def run_qualification_obligation_closure(work: Path) -> dict[str, object]:
             "ledger_sequence": event["sequence"],
             "entry_sha256": event["entry_sha256"],
             "resolution_admission_entry_sha256": admission_event["entry_sha256"],
+            "basis": event["basis"],
             "closure": closure,
         },
         "ledger_entries": event["sequence"],
@@ -5180,6 +5475,7 @@ SOURCE_COLLECTION_TERMINAL_PHASES = {
     "first_pdf_projection_failed",
     "first_spreadsheet_projection_recorded",
     "first_spreadsheet_projection_failed",
+    "gap_resolution_applied",
     "additional_source_projection_recorded",
     "additional_spreadsheet_projection_failed",
 }
@@ -5195,6 +5491,106 @@ SOURCE_COLLECTION_PHASES = {
     "source_set_qualification_complete",
     "qualification_admission_complete",
 }
+
+
+def _reopen_completed_source_collection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object]:
+    terminal = run_effective_first_layer_terminal(work)
+    if terminal.get("status") != "first_layer_complete":
+        return terminal
+    inventory, inventory_error = _source_collection_inventory(work, entries)
+    if inventory_error:
+        return inventory_error
+    assert inventory is not None
+    collection = state.get("source_collection")
+    position = (
+        int(collection.get("decision_count", 0)) + 1
+        if isinstance(collection, dict)
+        else 1
+    )
+    question = _numbered_collection_question(
+        SOURCE_COLLECTION_DECISION_QUESTION, position
+    )
+    terminal_saved = state.get("effective_first_layer_terminal")
+    terminal_sequence = (
+        terminal_saved.get("ledger_sequence")
+        if isinstance(terminal_saved, dict)
+        else None
+    )
+    terminal_event = (
+        entries[terminal_sequence - 1]
+        if isinstance(terminal_sequence, int)
+        and 1 <= terminal_sequence <= len(entries)
+        else None
+    )
+    if (
+        not isinstance(terminal_event, dict)
+        or terminal_event.get("event")
+        != "effective_first_layer_terminal_recorded"
+    ):
+        return _blocked(
+            "source collection reopen unavailable",
+            "the completed intake has no exact terminal ledger event",
+        )
+    reopened = _ledger_entry(
+        len(entries) + 1,
+        "source_collection_reopened",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "previous_terminal_ledger_sequence": terminal_sequence,
+            "previous_terminal_entry_sha256": terminal_event["entry_sha256"],
+            "previous_source_ids": [
+                item.get("source_id")
+                for item in inventory["outcomes"]
+                if isinstance(item, dict)
+            ],
+            "reason": "operator_requested_additional_source",
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    asked = _ledger_entry(
+        len(entries) + 2,
+        "operator_question_asked",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "source_collection_decision",
+            "question": question,
+            "source_projection_closure": inventory,
+            "reopen_ledger_sequence": reopened["sequence"],
+        },
+        str(reopened["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [reopened, asked])
+    state.update(
+        {
+            "status": "needs_operator",
+            "phase": "awaiting_source_collection_decision",
+            "waiting_for": question["id"],
+            "question": question,
+            "source_collection": {
+                **(collection if isinstance(collection, dict) else {}),
+                "mode": "independent_multi_source",
+                "status": "reopened",
+                "decision_count": position,
+                "decision_question_ledger_sequence": asked["sequence"],
+                "reopen_ledger_sequence": reopened["sequence"],
+                "previous_completion_ledger_sequence": (
+                    collection.get("completion_ledger_sequence")
+                    if isinstance(collection, dict)
+                    else None
+                ),
+            },
+            "ledger_entries": asked["sequence"],
+            "ledger_tail_sha256": asked["entry_sha256"],
+        }
+    )
+    _write_state(work / "intake-state.json", state)
+    return _operator_result(state, work)
 
 
 def _numbered_collection_question(
@@ -8256,10 +8652,26 @@ def run_first_projection_interview(
         and expected_region_id is None
         and expected_obligation_id is None
     ):
-        return _blocked(
-            "projection invocation invalid",
-            "the generated command lost its active projection binding",
-        )
+        try:
+            journal = projection_interview._read_journal(
+                attempt_dir / "interview.jsonl"
+            )
+            interview_state, _pending, _completed = projection_interview._replay(
+                journal, purpose=purpose, contract=contract,
+            )
+            active_region = projection_interview._active_scan_region(
+                interview_state
+            )
+            active_obligation = projection_interview._pending_obligation(
+                interview_state
+            )
+        except projection_interview.InterviewError as error:
+            return _blocked("projection invocation invalid", str(error))
+        if active_region is not None or active_obligation is not None:
+            return _blocked(
+                "projection invocation invalid",
+                "the generated command lost its active projection binding",
+            )
     if expected_region_id is not None or expected_obligation_id is not None:
         try:
             journal = projection_interview._read_journal(
@@ -9513,7 +9925,6 @@ def _validate_terminal_context_deferrals(
             "context deferral and owner-obligation identities differ: "
             f"missing owners {missing}; unbound obligations {extra}"
         )
-    resolved_element_ids: set[str] = set()
     for obligation_id, (source_region_id, deferred) in deferrals.items():
         owner_region_id, obligation = obligations[obligation_id]
         if (
@@ -9526,17 +9937,11 @@ def _validate_terminal_context_deferrals(
         element_id = obligation.get("element_id")
         if not isinstance(element_id, str) or element_id not in element_by_id:
             return 0, f"context obligation {obligation_id} names no recorded element"
-        if element_id in resolved_element_ids:
-            return 0, f"context element {element_id} resolves multiple obligations"
         element = element_by_id[element_id]
-        owner = region_by_id[owner_region_id]
         bounds = element.get("region")
         anchor = deferred["anchor"]
         if (
-            element.get("scan_region_id") != owner_region_id
-            or element_id not in owner.get("element_ids", [])
-            or element.get("kind") != deferred.get("candidate_kind")
-            or not isinstance(bounds, list)
+            not isinstance(bounds, list)
             or len(bounds) != 4
             or not all(isinstance(value, int) for value in bounds)
             or not (
@@ -9555,7 +9960,6 @@ def _validate_terminal_context_deferrals(
                 return 0, f"context obligation {obligation_id} has invalid gap evidence"
         elif obligation.get("gap_reason") not in {None, ""}:
             return 0, f"context obligation {obligation_id} has contradictory gap evidence"
-        resolved_element_ids.add(element_id)
     return len(obligations), None
 
 
@@ -11967,7 +12371,7 @@ def _additional_projection_record(
         "version": 1,
         "path": path,
         "sha256": _digest_bytes(projection_bytes),
-        "method": "visual_spatial",
+        "method": "visual_spatial_v1",
         "element_count": len(projection["elements"]),
         "relationship_count": len(projection["relationships"]),
         "gap_count": gap_count,
@@ -12191,7 +12595,7 @@ def _additional_projection_evidence(
                 f"the verbatim additional projection is unreadable: {error}",
             )
         records.append(("content", "content-000001", {"text": text}))
-    elif method == "visual_spatial":
+    elif method == "visual_spatial_v1":
         try:
             readable = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:
@@ -17064,28 +17468,13 @@ def _assessed_binding_at_position(
         return None, None, selection_error
     assert binding is not None and assessment is not None
     gap = binding.get("gap")
-    original_record = gap.get("record") if isinstance(gap, dict) else None
-    binding_issue = (
-        original_record.get("binding_issue")
-        if isinstance(original_record, dict)
-        else None
-    )
-    missing_endpoint_count = (
-        sum(original_record.get(key) is None for key in ("from_id", "to_id"))
-        if isinstance(original_record, dict)
-        else 0
-    )
     if (
         not isinstance(gap, dict)
         or gap.get("collection") != "relationships"
-        or (
-            not isinstance(binding_issue, dict)
-            and missing_endpoint_count != 1
-        )
     ):
         return None, None, _blocked(
             "gap resolution unavailable",
-            f"round {round_number} assessment position {position} is not a resolving relationship gap with either an identity ambiguity or exactly one missing endpoint",
+            f"round {round_number} assessment position {position} is not a resolving relationship gap",
         )
     projection_path, _, projection_error = _validated_projection_record(
         work, parent
@@ -19104,6 +19493,10 @@ def _clarification_boundary_result(
         if (
             result.get("status") != "waiting_for_model"
             or result.get("stopped") not in {
+                "interviewing_first_projection",
+                "verifying_first_projection",
+                "correcting_rejected_relationships",
+                "verifying_relationship_corrections",
                 "formulating_qualification_question_round",
                 "assessing_qualification_answers",
                 "formulating_qualification_followup_question_round",
@@ -19128,6 +19521,24 @@ def _clarification_boundary_result(
             return _blocked(
                 "invalid clarification boundary",
                 "the model boundary lost its single code-controlled interview command",
+            )
+    elif boundary == "source_collection_answer_required":
+        question = result.get("question")
+        if (
+            result.get("status") != "needs_operator"
+            or result.get("stopped") != "awaiting_source_collection_decision"
+            or not isinstance(question, dict)
+            or not str(question.get("id", "")).startswith(
+                "source-collection-decision-"
+            )
+            or question.get("allowed_values") != [
+                "add_source",
+                "finish_sources",
+            ]
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the source-collection boundary lost its exact current decision",
             )
     elif boundary == "needs_operator_answer":
         if (
@@ -19509,6 +19920,13 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
             return _clarification_boundary_result(
                 result, "needs_model_interview"
             )
+        if (
+            result.get("status") == "needs_operator"
+            and result.get("stopped") == "awaiting_source_collection_decision"
+        ):
+            return _clarification_boundary_result(
+                result, "source_collection_answer_required"
+            )
         if result.get("status") == "needs_operator":
             return _clarification_boundary_result(
                 result, "needs_operator_answer"
@@ -19524,9 +19942,8 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
             if result.get("route") == "clarification_required":
                 result = request_qualification_question_round(work)
                 continue
-            return _clarification_boundary_result(
-                result, "qualification_admission_complete"
-            )
+            result = run_qualification_obligation_closure(work)
+            continue
         if stopped == "clarification_continuation_complete":
             return _clarification_boundary_result(
                 result, "clarification_complete"
@@ -19774,6 +20191,26 @@ def _resume(
             "supply either one local file or one URL as the first source, not both",
         )
     source_supplied = source is not None or source_url is not None
+    if phase == "effective_first_layer_terminal_recorded" and begin_source_collection:
+        if (
+            source_supplied
+            or project_source
+            or clarify_gap
+            or gap_answer is not None
+            or gap_file is not None
+            or gap_url is not None
+            or resolve_gap
+            or assess_gap_answers
+            or conduct_question_round
+            or continue_clarification
+            or source_collection_action is not None
+            or source_collection_kind is not None
+        ):
+            return _blocked(
+                "source collection reopen invocation invalid",
+                "reopen one completed intake without combining another action",
+            )
+        return _reopen_completed_source_collection(work, state, entries)
     if (
         begin_source_collection
         or source_collection_action is not None

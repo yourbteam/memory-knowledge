@@ -213,18 +213,22 @@ def qualify(
             "complete": False,
             "why": f"{source_id} has unsupported projection method {method!r}",
         }
+    qualification = {
+        "source_id": source_id,
+        "projection_id": record.get("id"),
+        "projection_sha256": record.get("sha256"),
+        "method": method,
+        "qualification": (
+            "readable_projection_incomplete"
+            if gaps
+            else "readable_projection_complete"
+        ),
+        "gaps": gaps,
+    }
+    compatibility = record.get("method_compatibility")
+    if isinstance(compatibility, dict):
+        qualification["method_compatibility"] = compatibility
     return {
         "complete": True,
-        "qualification": {
-            "source_id": source_id,
-            "projection_id": record.get("id"),
-            "projection_sha256": record.get("sha256"),
-            "method": method,
-            "qualification": (
-                "readable_projection_incomplete"
-                if gaps
-                else "readable_projection_complete"
-            ),
-            "gaps": gaps,
-        },
+        "qualification": qualification,
     }

@@ -48,12 +48,43 @@ def _entry_source_sha256(entry: dict[str, object]) -> object:
     )
 
 
+def _source_digests(
+    entries: list[dict[str, object]],
+) -> tuple[dict[str, object], str | None]:
+    digests: dict[str, object] = {}
+    for entry in entries:
+        if entry.get("event") not in {
+            "source_acquired",
+            "source_projected",
+            "qualification_answer_source_projected",
+        }:
+            continue
+        answer = entry.get("answer")
+        source = entry.get("source")
+        if not isinstance(source, dict) and isinstance(answer, dict):
+            source = answer.get("source")
+        if not isinstance(source, dict):
+            continue
+        source_id = source.get("id")
+        source_sha256 = source.get("sha256")
+        if not isinstance(source_id, str) or not source_id:
+            continue
+        previous = digests.get(source_id)
+        if previous is not None and previous != source_sha256:
+            return {}, f"{source_id} has conflicting immutable source digests"
+        digests[source_id] = source_sha256
+    return digests, None
+
+
 def bind(
     closure: dict[str, object], entries: list[dict[str, object]]
 ) -> dict[str, object]:
     outcomes = closure.get("outcomes")
     if not isinstance(outcomes, list):
         return {"complete": False, "why": "closure outcomes must be one ordered list"}
+    source_digests, source_error = _source_digests(entries)
+    if source_error is not None:
+        return {"complete": False, "why": source_error}
     records: list[dict[str, object]] = []
     seen: set[str] = set()
     for position, outcome in enumerate(outcomes, 1):
@@ -119,7 +150,7 @@ def bind(
                 "complete": False,
                 "why": f"ledger entry {sequence} is bound to a different source than {source_id}",
             }
-        if _entry_source_sha256(entry) != outcome.get("source_sha256"):
+        if source_digests.get(source_id) != outcome.get("source_sha256"):
             return {
                 "complete": False,
                 "why": f"{source_id} source digest differs between closure and ledger",
@@ -131,6 +162,13 @@ def bind(
                     "why": f"{source_id} projection {key} differs between closure and ledger",
                 }
         method = _projection_method(entry, full)
+        compatibility = None
+        if method == "visual_spatial":
+            compatibility = {
+                "legacy_method": "visual_spatial",
+                "canonical_method": "visual_spatial_v1",
+            }
+            method = "visual_spatial_v1"
         if method not in SUPPORTED_METHODS:
             return {
                 "complete": False,
@@ -142,7 +180,15 @@ def bind(
                 "source_sha256": outcome.get("source_sha256"),
                 "outcome": terminal,
                 "reason": None,
-                "record": {**full, "method": method},
+                "record": {
+                    **full,
+                    "method": method,
+                    **(
+                        {"method_compatibility": compatibility}
+                        if compatibility is not None
+                        else {}
+                    ),
+                },
                 "projection_ledger_sequence": sequence,
             }
         )
