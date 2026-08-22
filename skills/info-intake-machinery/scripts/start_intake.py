@@ -625,14 +625,21 @@ def _projection_model_attachment(
                 contract=contract,
             )
         )
-        replacement_attachments = (
-            projection_interview.required_participant_replacement_attachments(
-                attempt_dir,
-                interview_state,
-                source_path=source_path,
-                source_sha256=source_sha256,
+        replacement_attachments = None
+        if (
+            endpoint_evidence is None
+            and not isinstance(
+                interview_state.get("element_supersession_pending"), dict
             )
-        )
+        ):
+            replacement_attachments = (
+                projection_interview.required_participant_replacement_attachments(
+                    attempt_dir,
+                    interview_state,
+                    source_path=source_path,
+                    source_sha256=source_sha256,
+                )
+            )
     except (OSError, projection_interview.InterviewError) as error:
         return None, None, None, None, _blocked(
             "projection region evidence failed", str(error)

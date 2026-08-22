@@ -2515,6 +2515,310 @@ def test_projection_attachment_selects_obligation_after_resume_preparation(
     assert error is None
 
 
+def test_projection_attachment_skips_unused_replacement_fallback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    work = tmp_path / "intake"
+    attempt = work / "projection-interviews" / "attempt-000001"
+    source = work / "sources" / "source-000003"
+    endpoint = attempt / "endpoint-evidence" / "replacement.png"
+    source.parent.mkdir(parents=True)
+    endpoint.parent.mkdir(parents=True)
+    source.write_bytes(b"source")
+    endpoint.write_bytes(b"endpoint")
+    (source.parent / "source-000002.txt").write_text(
+        REAL_PURPOSE, encoding="utf-8",
+    )
+    prepared = PROJECTION_INTERVIEW._initial_state(contract=13)
+    prepared["scan_region_index"] = len(prepared["scan_regions"])
+    prepared["relationship_obligations"] = [{
+        "id": "obligation-000023", "element_id": "element-000023",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    for name in (
+        "enable_endpoint_crop_verification",
+        "enable_existing_participant_crop_verification",
+        "enable_contextual_endpoint_verification",
+        "enable_endpoint_context_evidence",
+        "enable_rejected_endpoint_reuse_block",
+        "enable_rejected_endpoint_collision_exclusion",
+    ):
+        monkeypatch.setattr(
+            START_INTAKE.projection_interview, name,
+            lambda *args, **kwargs: None,
+        )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "prepare_endpoint_evidence",
+        lambda *args, **kwargs: (endpoint, "b" * 64),
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "prepare_region_evidence",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "prepare_resume",
+        lambda *args, **kwargs: (prepared, None, False),
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "required_participant_replacement_attachments",
+        lambda *args, **kwargs: pytest.fail(
+            "unused replacement fallback was evaluated"
+        ),
+    )
+
+    attachment, region_id, obligation_id, endpoint_sha256, error = (
+        START_INTAKE._projection_model_attachment(
+            work,
+            source_path=source,
+            source_sha256="a" * 64,
+            attempt_dir=attempt,
+            contract=13,
+        )
+    )
+
+    assert attachment == endpoint
+    assert region_id is None
+    assert obligation_id == "obligation-000023"
+    assert endpoint_sha256 == "b" * 64
+    assert error is None
+
+
+def test_codex_runner_skips_unused_replacement_fallback(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    work = tmp_path / "intake"
+    source = work / "sources" / "source-000003"
+    endpoint = (
+        work / "projection-interviews" / "attempt-000001"
+        / "endpoint-evidence" / "replacement.png"
+    )
+    source.parent.mkdir(parents=True)
+    endpoint.parent.mkdir(parents=True)
+    source.write_bytes(b"source")
+    endpoint.write_bytes(b"endpoint")
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    (source.parent / "source-000002.txt").write_text(
+        REAL_PURPOSE, encoding="utf-8",
+    )
+    (work / "intake-state.json").write_text(json.dumps({
+        "status": "waiting_for_model",
+        "phase": "interviewing_first_projection",
+        "waiting_for": "projection-interviews/attempt-000001/interview.jsonl",
+        "projection_interview_contract": 13,
+        "first_source": {
+            "stored_path": "sources/source-000003",
+            "media_type": "image/png",
+            "sha256": source_sha256,
+        },
+    }), encoding="utf-8")
+    prepared = PROJECTION_INTERVIEW._initial_state(contract=13)
+    prepared["scan_region_index"] = len(prepared["scan_regions"])
+    prepared["relationship_obligations"] = [{
+        "id": "obligation-000023", "element_id": "element-000023",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    for name in (
+        "enable_endpoint_crop_verification",
+        "enable_existing_participant_crop_verification",
+        "enable_contextual_endpoint_verification",
+        "enable_endpoint_context_evidence",
+        "enable_endpoint_selector_context",
+        "enable_endpoint_identity_context_choice",
+        "enable_negative_context_replacement",
+        "enable_rejected_endpoint_reuse_block",
+        "enable_rejected_endpoint_collision_exclusion",
+    ):
+        monkeypatch.setattr(
+            CODEX_RUNNER.projection_interview, name,
+            lambda *args, **kwargs: None,
+        )
+    monkeypatch.setattr(
+        CODEX_RUNNER.projection_interview,
+        "prepare_endpoint_evidence",
+        lambda *args, **kwargs: (endpoint, "b" * 64),
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER.projection_interview,
+        "prepare_region_evidence",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER.projection_interview,
+        "prepare_resume",
+        lambda *args, **kwargs: (prepared, None, False),
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER.projection_interview,
+        "required_participant_replacement_attachments",
+        lambda *args, **kwargs: pytest.fail(
+            "unused replacement fallback was evaluated"
+        ),
+    )
+
+    attachment, command = CODEX_RUNNER.load_request(work)
+
+    assert attachment == endpoint
+    assert command[-5:] == [
+        "--projection-obligation-id", "obligation-000023",
+        "--projection-endpoint-evidence-sha256", "b" * 64,
+        "--run-projection-interview",
+    ]
+
+
+def test_projection_attachment_skips_fallback_during_pending_supersession(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    work = tmp_path / "intake"
+    attempt = work / "projection-interviews" / "attempt-000001"
+    source = work / "sources" / "source-000003"
+    source.parent.mkdir(parents=True)
+    source.write_bytes(b"source")
+    (source.parent / "source-000002.txt").write_text(
+        REAL_PURPOSE, encoding="utf-8",
+    )
+    prepared = PROJECTION_INTERVIEW._initial_state(contract=13)
+    prepared["scan_region_index"] = len(prepared["scan_regions"])
+    prepared["relationship_obligations"] = [{
+        "id": "obligation-000023", "element_id": "element-000023",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    prepared["element_supersession_pending"] = {
+        "event": {"superseded_element_id": "element-000023"},
+    }
+    for name in (
+        "enable_endpoint_crop_verification",
+        "enable_existing_participant_crop_verification",
+        "enable_contextual_endpoint_verification",
+        "enable_endpoint_context_evidence",
+        "enable_rejected_endpoint_reuse_block",
+        "enable_rejected_endpoint_collision_exclusion",
+    ):
+        monkeypatch.setattr(
+            START_INTAKE.projection_interview, name,
+            lambda *args, **kwargs: None,
+        )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "prepare_endpoint_evidence",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "prepare_region_evidence",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "prepare_resume",
+        lambda *args, **kwargs: (prepared, None, False),
+    )
+    monkeypatch.setattr(
+        START_INTAKE.projection_interview,
+        "required_participant_replacement_attachments",
+        lambda *args, **kwargs: pytest.fail(
+            "fallback was evaluated during deterministic supersession"
+        ),
+    )
+
+    attachment, region_id, obligation_id, endpoint_sha256, error = (
+        START_INTAKE._projection_model_attachment(
+            work,
+            source_path=source,
+            source_sha256="a" * 64,
+            attempt_dir=attempt,
+            contract=13,
+        )
+    )
+
+    assert attachment == source
+    assert region_id is None
+    assert obligation_id == "obligation-000023"
+    assert endpoint_sha256 is None
+    assert error is None
+
+
+def test_codex_runner_skips_fallback_during_pending_supersession(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    work = tmp_path / "intake"
+    source = work / "sources" / "source-000003"
+    source.parent.mkdir(parents=True)
+    source.write_bytes(b"source")
+    source_sha256 = START_INTAKE._digest_bytes(source.read_bytes())
+    (source.parent / "source-000002.txt").write_text(
+        REAL_PURPOSE, encoding="utf-8",
+    )
+    (work / "intake-state.json").write_text(json.dumps({
+        "status": "waiting_for_model",
+        "phase": "interviewing_first_projection",
+        "waiting_for": "projection-interviews/attempt-000001/interview.jsonl",
+        "projection_interview_contract": 13,
+        "first_source": {
+            "stored_path": "sources/source-000003",
+            "media_type": "image/png",
+            "sha256": source_sha256,
+        },
+    }), encoding="utf-8")
+    prepared = PROJECTION_INTERVIEW._initial_state(contract=13)
+    prepared["scan_region_index"] = len(prepared["scan_regions"])
+    prepared["relationship_obligations"] = [{
+        "id": "obligation-000023", "element_id": "element-000023",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    prepared["element_supersession_pending"] = {
+        "event": {"superseded_element_id": "element-000023"},
+    }
+    for name in (
+        "enable_endpoint_crop_verification",
+        "enable_existing_participant_crop_verification",
+        "enable_contextual_endpoint_verification",
+        "enable_endpoint_context_evidence",
+        "enable_endpoint_selector_context",
+        "enable_endpoint_identity_context_choice",
+        "enable_negative_context_replacement",
+        "enable_rejected_endpoint_reuse_block",
+        "enable_rejected_endpoint_collision_exclusion",
+    ):
+        monkeypatch.setattr(
+            CODEX_RUNNER.projection_interview, name,
+            lambda *args, **kwargs: None,
+        )
+    monkeypatch.setattr(
+        CODEX_RUNNER.projection_interview,
+        "prepare_endpoint_evidence",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER.projection_interview,
+        "prepare_region_evidence",
+        lambda *args, **kwargs: None,
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER.projection_interview,
+        "prepare_resume",
+        lambda *args, **kwargs: (prepared, None, False),
+    )
+    monkeypatch.setattr(
+        CODEX_RUNNER.projection_interview,
+        "required_participant_replacement_attachments",
+        lambda *args, **kwargs: pytest.fail(
+            "fallback was evaluated during deterministic supersession"
+        ),
+    )
+
+    attachment, command = CODEX_RUNNER.load_request(work)
+
+    assert attachment == source
+    assert command[-3:] == [
+        "--projection-obligation-id", "obligation-000023",
+        "--run-projection-interview",
+    ]
+
+
 def test_coordinate_binding_selects_an_overlapping_identity_without_changing_bounds(
     tmp_path: Path,
 ) -> None:
@@ -10785,6 +11089,124 @@ def test_different_required_participant_replacement_is_rejected_by_enum() -> Non
         "NET REVENUE TODAY: $8,100; Operator Net"
     )
     assert "content" not in state["current"]
+
+
+def test_different_required_participant_replacement_terminalizes_as_gap() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=13)
+    state["required_participant_replacement_identity_enabled"] = True
+    state["required_participant_identity_mismatch_terminalization_enabled"] = True
+    state["stage"] = "required_participant_replacement_identity_verdict"
+    original_gap = {
+        "id": "element-000020", "kind": "red annotation text box",
+        "region": [1, 294, 159, 364], "status": "gap", "content": "",
+        "gap_reason": "The claimed content is not visible inside the claimed source bounds.",
+        "endpoint_verification": {
+            "verdict": "does_not_contain_claimed_content",
+            "claimed_content": "The sum of Column AE for all locations for the current day.",
+            "evidence": {"crop_sha256": "7" * 64},
+        },
+    }
+    state["elements"] = [original_gap]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000020", "element_id": "element-000020",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    state["current"] = {
+        "capture_scope": "required_participant_replacement",
+        "return_stage": "obligation_resolution",
+        "superseded_element_id": "element-000020",
+        "required_identity_claim": (
+            "The sum of Column AE for all locations for the current day."
+        ),
+        "kind": "red annotation text box", "left": 0, "top": 287,
+        "right": 160, "bottom": 359, "status": "readable",
+        "content": "The sum of Column AF for all locations for the current day.",
+        "endpoint_crop_evidence": {
+            "candidate_id": "element-000020",
+            "source_sha256": "6" * 64,
+            "source_pixel_size": [1778, 1623],
+            "normalized_bounds": [0, 287, 160, 359],
+            "pixel_bounds": [0, 465, 285, 583],
+            "crop_path": "endpoint-evidence/element-000020-replacement.png",
+            "crop_sha256": "8" * 64,
+            "claimed_content": (
+                "The sum of Column AF for all locations for the current day."
+            ),
+            "verification_scope": "required_participant_replacement",
+            "adapter": PROJECTION_INTERVIEW.ENDPOINT_CROP_EVIDENCE_ADAPTER,
+        },
+        "endpoint_verification": {"verdict": "supported"},
+    }
+
+    PROJECTION_INTERVIEW._advance(
+        state,
+        "required_participant_replacement_identity_verdict",
+        "different_source_unit",
+        contract=13,
+    )
+
+    obligation = state["relationship_obligations"][0]
+    assert obligation["status"] == "resolved"
+    assert obligation["resolution"] == "gap"
+    relationship = state["relationships"][0]
+    assert relationship["status"] == "gap"
+    assert relationship["participant_id"] == "element-000020"
+    assert "Column AE" in relationship["gap_reason"]
+    assert "Column AF" in relationship["gap_reason"]
+    assert state["stage"] != "element_kind"
+    assert state["current"] == {}
+
+
+def test_pending_legacy_identity_mismatch_has_append_only_terminalization() -> None:
+    state = PROJECTION_INTERVIEW._initial_state(contract=13)
+    state["stage"] = "element_left"
+    state["elements"] = [{
+        "id": "element-000020", "kind": "red annotation text box",
+        "region": [1, 294, 159, 364], "status": "gap", "content": "",
+        "gap_reason": "The claimed content is not visible inside the claimed source bounds.",
+    }]
+    state["relationship_obligations"] = [{
+        "id": "obligation-000020", "element_id": "element-000020",
+        "status": "pending", "resolution": None, "relationship_id": None,
+    }]
+    state["current"] = {
+        "capture_scope": "required_participant_replacement",
+        "return_stage": "obligation_resolution",
+        "superseded_element_id": "element-000020",
+        "required_identity_claim": "The sum of Column AE for all locations.",
+        "kind": "red annotation text box",
+        "last_identity_rejection": {
+            "verdict": "different_source_unit",
+            "required_claim": "The sum of Column AE for all locations.",
+            "proposed_kind": "red annotation text box",
+            "proposed_content": "The sum of Column AF for all locations.",
+            "proposed_bounds": [0, 287, 160, 359],
+            "endpoint_crop_evidence": {"crop_sha256": "8" * 64},
+        },
+    }
+    pending = {
+        "id": "element_left", "type": "integer", "required": True,
+        "minimum": 0, "maximum": 999,
+        "prompt": "What is the element's normalized left coordinate?",
+        "context": {"intake_purpose": REAL_PURPOSE},
+    }
+
+    activation = (
+        PROJECTION_INTERVIEW
+        ._required_participant_identity_mismatch_terminalization_activation(
+            state, pending, contract=13,
+        )
+    )
+    assert activation["pending_recovery"]["abandoned_question_id"] == "element_left"
+
+    PROJECTION_INTERVIEW._apply_required_participant_identity_mismatch_terminalization(
+        state, activation,
+    )
+
+    assert state["required_participant_identity_mismatch_terminalization_enabled"] is True
+    assert state["relationship_obligations"][0]["resolution"] == "gap"
+    assert state["relationships"][0]["status"] == "gap"
+    assert state["current"] == {}
 
 
 def test_unverified_live_replacement_is_reopened_append_only() -> None:

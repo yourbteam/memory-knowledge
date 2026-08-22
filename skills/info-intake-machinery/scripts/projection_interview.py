@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import json
 import sys
+from copy import deepcopy
 from collections.abc import Callable
 from io import BytesIO
 from pathlib import Path
@@ -149,6 +150,7 @@ def _initial_state(*, contract: int) -> dict[str, Any]:
         "locked_participant_replacement_blocked_enabled": False,
         "required_participant_replacement_identity_enabled": False,
         "required_participant_content_identity_separation_enabled": False,
+        "required_participant_identity_mismatch_terminalization_enabled": False,
         "_replacement_identity_migration_applied": False,
         "_context_selector_candidates": {},
         "rejected_endpoint_reuse_blocked_enabled": False,
@@ -5056,6 +5058,121 @@ def _finish_obligation_gap(state: dict[str, Any], reason: str) -> None:
     state["stage"] = _next_relationship_stage(state)
 
 
+def _terminalize_required_participant_identity_mismatch(
+    state: dict[str, Any], identity_rejection: dict[str, object],
+) -> None:
+    required_claim = str(identity_rejection["required_claim"])
+    proposed_content = str(identity_rejection["proposed_content"])
+    state["current"] = {
+        "kind": "required participant relationship",
+        "role": "unknown",
+    }
+    _finish_obligation_gap(
+        state,
+        "The preserved required identity " + json.dumps(required_claim)
+        + " was not established because the proposed visible unit "
+        + json.dumps(proposed_content)
+        + " was verified as a different source unit.",
+    )
+    state["relationships"][-1]["identity_mismatch"] = deepcopy(
+        identity_rejection
+    )
+
+
+def _required_participant_identity_mismatch_terminalization_activation(
+    state: dict[str, Any], pending: dict[str, object] | None, *, contract: int,
+) -> dict[str, object]:
+    recovery = None
+    if pending is not None:
+        current = state.get("current")
+        rejection = (
+            current.get("last_identity_rejection")
+            if isinstance(current, dict) else None
+        )
+        if (
+            contract < 13
+            or not isinstance(rejection, dict)
+            or rejection.get("verdict") != "different_source_unit"
+            or current.get("capture_scope")
+            != "required_participant_replacement"
+            or pending.get("id") not in {
+                "element_kind", "element_left", "element_top",
+                "element_right", "element_bottom", "element_status",
+                "element_content", "element_gap_reason",
+            }
+        ):
+            raise InterviewError(
+                "participant-identity-mismatch-recovery-invalid"
+            )
+        obligation = _pending_obligation(state)
+        if obligation is None:
+            raise InterviewError("relationship-obligation-missing")
+        preview = deepcopy(state)
+        _terminalize_required_participant_identity_mismatch(
+            preview, rejection,
+        )
+        recovery = {
+            "abandoned_question_id": pending["id"],
+            "previous_current": deepcopy(current),
+            "identity_rejection": deepcopy(rejection),
+            "previous_obligation": deepcopy(obligation),
+            "replacement_obligation": deepcopy(next(
+                item for item in preview["relationship_obligations"]
+                if item["id"] == obligation["id"]
+            )),
+            "relationship": deepcopy(preview["relationships"][-1]),
+        }
+    return {
+        "feature": (
+            "required_participant_identity_mismatch_terminalization_v1"
+        ),
+        "contract": contract,
+        "pending_recovery": recovery,
+    }
+
+
+def _apply_required_participant_identity_mismatch_terminalization(
+    state: dict[str, Any], event: dict[str, object],
+) -> None:
+    recovery = event.get("pending_recovery")
+    if recovery is not None:
+        if (
+            not isinstance(recovery, dict)
+            or state.get("current") != recovery.get("previous_current")
+        ):
+            raise InterviewError(
+                "participant-identity-mismatch-recovery-state-changed"
+            )
+        obligation = _pending_obligation(state)
+        if obligation != recovery.get("previous_obligation"):
+            raise InterviewError(
+                "participant-identity-mismatch-recovery-obligation-changed"
+            )
+        rejection = recovery.get("identity_rejection")
+        if not isinstance(rejection, dict):
+            raise InterviewError(
+                "participant-identity-mismatch-recovery-evidence-invalid"
+            )
+        _terminalize_required_participant_identity_mismatch(
+            state, rejection,
+        )
+        replacement_obligation = next(
+            item for item in state["relationship_obligations"]
+            if item["id"] == obligation["id"]
+        )
+        if (
+            state["relationships"][-1] != recovery.get("relationship")
+            or replacement_obligation
+            != recovery.get("replacement_obligation")
+        ):
+            raise InterviewError(
+                "participant-identity-mismatch-recovery-result-changed"
+            )
+    state[
+        "required_participant_identity_mismatch_terminalization_enabled"
+    ] = True
+
+
 def _advance(
     state: dict[str, Any], field_id: str, value: object, *, contract: int,
 ) -> None:
@@ -5317,13 +5434,20 @@ def _advance(
                 ],
                 "endpoint_crop_evidence": current["endpoint_crop_evidence"],
             }
-            for key in (
-                "kind", "left", "top", "right", "bottom", "status",
-                "content", "gap_reason", "endpoint_verification",
-                "endpoint_crop_evidence",
-            ):
-                current.pop(key, None)
-            state["stage"] = "element_kind"
+            if state.get(
+                "required_participant_identity_mismatch_terminalization_enabled"
+            ) is True:
+                _terminalize_required_participant_identity_mismatch(
+                    state, current["last_identity_rejection"],
+                )
+            else:
+                for key in (
+                    "kind", "left", "top", "right", "bottom", "status",
+                    "content", "gap_reason", "endpoint_verification",
+                    "endpoint_crop_evidence",
+                ):
+                    current.pop(key, None)
+                state["stage"] = "element_kind"
     elif field_id == "required_participant_crop_verdict":
         _required_participant_verdict_supersession(state, str(value))
     elif field_id == "endpoint_context_crop_verdict":
@@ -6047,6 +6171,43 @@ def _replay(
                     f"{entry['sequence']}"
                 )
             _apply_unverified_replacement_identity_migration(state, actual)
+        elif event == (
+            "required_participant_identity_mismatch_terminalization_enabled"
+        ):
+            activation_contract = _activation_contract_for_replay(
+                entry, current_contract=contract, minimum=13,
+            )
+            actual = {
+                "feature": entry.get("feature"),
+                "contract": entry.get("contract"),
+                "pending_recovery": entry.get("pending_recovery"),
+            }
+            if (
+                contract < 13
+                or activation_contract is None
+                or state.get(
+                    "required_participant_identity_mismatch_terminalization_enabled"
+                ) is True
+            ):
+                raise InterviewError(
+                    "participant-identity-mismatch-terminalization-"
+                    f"activation-invalid:{entry['sequence']}"
+                )
+            expected = (
+                _required_participant_identity_mismatch_terminalization_activation(
+                    state, pending, contract=activation_contract,
+                )
+            )
+            if actual != expected:
+                raise InterviewError(
+                    "participant-identity-mismatch-terminalization-"
+                    f"content-changed:{entry['sequence']}"
+                )
+            _apply_required_participant_identity_mismatch_terminalization(
+                state, actual,
+            )
+            if actual["pending_recovery"] is not None:
+                pending = None
         elif event == "required_participant_replacement_identity_enabled":
             activation_contract = _activation_contract_for_replay(
                 entry, current_contract=contract,
@@ -6884,6 +7045,25 @@ def prepare_resume(
                 )
                 continue
             if (
+                contract >= 13
+                and state.get(
+                    "required_participant_identity_mismatch_terminalization_enabled"
+                ) is not True
+                and state.get("current", {}).get("capture_scope")
+                == "required_participant_replacement"
+                and state.get("current", {}).get(
+                    "last_identity_rejection", {}
+                ).get("verdict") == "different_source_unit"
+            ):
+                _append(
+                    journal_path,
+                    "required_participant_identity_mismatch_terminalization_enabled",
+                    _required_participant_identity_mismatch_terminalization_activation(
+                        state, pending, contract=contract,
+                    ),
+                )
+                continue
+            if (
                 contract >= 12
                 and state.get(
                     "locked_participant_replacement_blocked_enabled"
@@ -6980,6 +7160,20 @@ def prepare_resume(
                     "feature": "required_participant_replacement_identity_v1",
                     "contract": contract,
                 },
+            )
+            continue
+        if (
+            contract >= 13
+            and state.get(
+                "required_participant_identity_mismatch_terminalization_enabled"
+            ) is not True
+        ):
+            _append(
+                journal_path,
+                "required_participant_identity_mismatch_terminalization_enabled",
+                _required_participant_identity_mismatch_terminalization_activation(
+                    state, pending, contract=contract,
+                ),
             )
             continue
         if (

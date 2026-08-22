@@ -617,14 +617,21 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
                     contract=contract,
                 )
             )
-            replacement_attachments = (
-                projection_interview.required_participant_replacement_attachments(
-                    candidate.parent,
-                    interview_state,
-                    source_path=attachment,
-                    source_sha256=str(expected_sha256),
+            replacement_attachments = None
+            if (
+                endpoint_evidence is None
+                and not isinstance(
+                    interview_state.get("element_supersession_pending"), dict
                 )
-            )
+            ):
+                replacement_attachments = (
+                    projection_interview.required_participant_replacement_attachments(
+                        candidate.parent,
+                        interview_state,
+                        source_path=attachment,
+                        source_sha256=str(expected_sha256),
+                    )
+                )
             if contract >= 4:
                 active_region = projection_interview._active_scan_region(
                     interview_state
