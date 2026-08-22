@@ -628,6 +628,21 @@ the current readable projection.
 
 ## Current boundary
 
+The intake-wide qualification path now continues beyond the first operator answer. Code binds every
+prepared question to one exact obligation, preserves each text, file, or URL answer as a new
+immutable source plus readable projection, and presents each answer to the model through the
+code-controlled assessment interview. Only the declared `resolves_obligation` or
+`does_not_resolve_obligation` verdict can be recorded. Exact resolving assessments are admitted and
+closed by code; unresolved current gaps become the next ordered question round. Each successor
+round has its own directory and one indexed readable-state record containing the complete prior
+round, and the event that activates it ledger-binds that complete history. The operator launcher can
+therefore conduct question → answer → projection → assessment rounds until a terminal boundary,
+while still stopping at each actual operator or model turn. The terminal recomputes the current
+source set and accepts cumulative resolutions only when source, projection id and digest, method,
+qualification, unit, reason, and gap digest all match the current gap. It emits
+`first_layer_complete` only when no unmatched current gap remains; otherwise it opens the next
+round without rewriting any earlier source, projection, answer, assessment, or ledger event.
+
 Each `--resolve-gap` invocation applies at most the next unused canonical resolving assessment from
 any completed round to one unchanged relationship gap and then stops. Eligible assessed gaps have either a code-listed
 identity ambiguity or exactly one known and one missing endpoint. It does not automatically loop
@@ -691,3 +706,6 @@ running these proven stages.
 | `source_collection_complete` | 0 | The operator finished the independent source set and code preserved one terminal projection outcome per source. |
 | `source_set_qualification_complete` | 0 | Code bound and adapter-qualified every collected source projection in collection order and stopped before semantic comparison or clarification. |
 | `qualification_admission_complete` | 0 | Code admitted the exact intake-wide qualification as either `first_layer_complete` or one immutable ordered `clarification_required` obligation queue. |
+| `ready_for_qualification_assessment` | 0 | Every answer in the active indexed qualification round is preserved as an immutable source and readable projection, ready for the code-controlled model verdict interview. |
+| `qualification_answer_assessment_complete` | 0 | One exact enum verdict and reason is preserved for every active-round answer and reconciled in question order. |
+| `first_layer_complete` | 0 | Every current source gap is either absent or matched by one cumulatively admitted resolution with exact source, projection, method, qualification, unit, reason, and gap identity. |

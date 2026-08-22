@@ -252,15 +252,20 @@ def _conduct_qualification_answer_interview(
             return 0
         if (
             boundary.get("boundary") != "needs_operator_answer"
-            or boundary.get("stopped")
-            != "awaiting_qualification_clarification_answers"
+            or boundary.get("stopped") not in {
+                "awaiting_qualification_clarification_answers",
+                "awaiting_qualification_followup_answers",
+            }
         ):
-            return projection_runner.drive_work(
+            returncode = projection_runner.drive_work(
                 work,
                 projection_region_limit=projection_region_limit,
                 projection_relationship_limit=projection_relationship_limit,
                 model_run_fn=model_run_fn,
             )
+            if returncode == 4:
+                continue
+            return returncode
         answered = start_intake.run_operator_turn(
             work, input_fn=input_fn, output_fn=output_fn
         )
@@ -268,14 +273,40 @@ def _conduct_qualification_answer_interview(
         if failed is not None:
             return failed
         if answered.get("stopped") == "additional_source_frozen":
-            returncode = projection_runner.drive_work(
-                work,
-                projection_region_limit=projection_region_limit,
-                projection_relationship_limit=projection_relationship_limit,
-                model_run_fn=model_run_fn,
+            try:
+                opening = (work / "sources/source-000001.txt").read_text(
+                    encoding="utf-8"
+                )
+                purpose = (work / "sources/source-000002.txt").read_text(
+                    encoding="utf-8"
+                )
+            except OSError as error:
+                output_fn(json.dumps({
+                    "status": "blocked",
+                    "stopped": "qualification answer source unavailable",
+                    "why": str(error),
+                }, indent=2, sort_keys=True))
+                return 3
+            projected = start_intake.drive(
+                work, opening, purpose, project_source=True
             )
-            if returncode not in {0, 4}:
-                return returncode
+            failed = _blocked(projected, output_fn)
+            if failed is not None:
+                return failed
+            if projected.get("status") == "waiting_for_model":
+                returncode = projection_runner.drive_work(
+                    work,
+                    projection_region_limit=projection_region_limit,
+                    projection_relationship_limit=projection_relationship_limit,
+                    model_run_fn=model_run_fn,
+                )
+                if returncode not in {0, 4}:
+                    return returncode
+            elif projected.get("stopped") == "additional_source_projection_recorded":
+                preserved = start_intake.drive(work, opening, purpose)
+                failed = _blocked(preserved, output_fn)
+                if failed is not None:
+                    return failed
 
 
 def _continue_intake(
@@ -358,10 +389,10 @@ def _continue_intake(
         if failed is not None:
             return failed
     elif result.get("status") == "needs_operator":
-        if (
-            result.get("stopped")
-            == "awaiting_qualification_clarification_answers"
-        ):
+        if result.get("stopped") in {
+            "awaiting_qualification_clarification_answers",
+            "awaiting_qualification_followup_answers",
+        }:
             return _conduct_qualification_answer_interview(
                 work,
                 input_fn=input_fn,

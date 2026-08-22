@@ -38,6 +38,12 @@ BOUNDARY_EXIT_CODES = {
     "additional_source_projection_pending": 0,
     "additional_source_gap_assessment_complete": 0,
     "qualification_answers_complete": 0,
+    "qualification_answer_assessment_complete": 0,
+    "qualification_resolution_admission_complete": 0,
+    "qualification_obligation_closure_complete": 0,
+    "first_layer_complete": 0,
+    "qualification_follow_up_required": 0,
+    "qualification_followup_admission_complete": 0,
 }
 
 
@@ -153,6 +159,35 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
         and state.get("waiting_for")
         == "qualification-question-round/interview.jsonl"
     )
+    qualification_answer_assessment_phase = (
+        state.get("status") == "waiting_for_model"
+        and state.get("phase") == "assessing_qualification_answers"
+        and (
+            (
+                state.get("qualification_round_number", 1) == 1
+                and state.get("waiting_for")
+                == "qualification-answer-assessment/interview.jsonl"
+            )
+            or (
+                isinstance(state.get("qualification_round_number"), int)
+                and state["qualification_round_number"] > 1
+                and state.get("waiting_for")
+                == (
+                    "qualification-question-rounds/"
+                    f"round-{state['qualification_round_number']:06d}/"
+                    "answer-assessment/interview.jsonl"
+                )
+            )
+        )
+    )
+    qualification_followup_question_round_phase = (
+        state.get("status") == "waiting_for_model"
+        and state.get("phase")
+        == "formulating_qualification_followup_question_round"
+        and isinstance(state.get("waiting_for"), str)
+        and state["waiting_for"].startswith("qualification-question-rounds/")
+        and state["waiting_for"].endswith("/interview.jsonl")
+    )
     gap_answer_assessment_phase = (
         state.get("status") == "waiting_for_model"
         and (
@@ -210,6 +245,8 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
             gap_phase,
             gap_round_phase,
             qualification_question_round_phase,
+            qualification_answer_assessment_phase,
+            qualification_followup_question_round_phase,
             gap_answer_assessment_phase,
             additional_source_gap_assessment_phase,
             resolution_phase,
@@ -224,6 +261,22 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
             "--work",
             str(work),
             "--run-qualification-question-round",
+        ]
+    if qualification_answer_assessment_phase:
+        return (), [
+            sys.executable,
+            str(START_INTAKE),
+            "--work",
+            str(work),
+            "--run-qualification-answer-assessment",
+        ]
+    if qualification_followup_question_round_phase:
+        return (), [
+            sys.executable,
+            str(START_INTAKE),
+            "--work",
+            str(work),
+            "--run-qualification-followup-question-round",
         ]
     if additional_source_gap_assessment_phase:
         saved = state["additional_source_gap_assessment"]
@@ -632,6 +685,12 @@ def _model_request(
     qualification_question_round = (
         flag == "--run-qualification-question-round"
     )
+    qualification_answer_assessment = (
+        flag == "--run-qualification-answer-assessment"
+    )
+    qualification_followup_question_round = (
+        flag == "--run-qualification-followup-question-round"
+    )
     gap_answer_assessment = flag == "--run-gap-answer-assessment"
     additional_source_gap_assessment = (
         flag == "--run-additional-source-gap-assessment"
@@ -642,6 +701,10 @@ def _model_request(
         if purpose_assessment else
         "the code-bound immutable clarification obligation"
         if qualification_question_round else
+        "the code-bound preserved qualification answer and its exact obligation"
+        if qualification_answer_assessment else
+        "the code-bound current follow-up qualification obligations"
+        if qualification_followup_question_round else
         "the code-bound preserved answer and visible source context"
         if gap_answer_assessment or additional_source_gap_assessment or gap_resolution
         else "visible source evidence"
@@ -652,6 +715,10 @@ def _model_request(
             if purpose_assessment else
             "Formulate questions only from each code-bound immutable clarification obligation. "
             if qualification_question_round else
+            "Assess each code-bound preserved qualification answer only against its exact obligation. "
+            if qualification_answer_assessment else
+            "Formulate follow-up questions only from each code-bound current qualification obligation. "
+            if qualification_followup_question_round else
             "Inspect the attached frozen source and formulate one focused operator question for each code-bound gap presented. "
             if gap_clarification else
             "Inspect the attached frozen source and judge each code-bound preserved answer only against its exact gap. "
@@ -1145,10 +1212,10 @@ def drive_work(
         if request is not None:
             continue
         if boundary_result.get("boundary") == "needs_operator_answer":
-            if (
-                boundary_result.get("stopped")
-                == "awaiting_qualification_clarification_answers"
-            ):
+            if boundary_result.get("stopped") in {
+                "awaiting_qualification_clarification_answers",
+                "awaiting_qualification_followup_answers",
+            }:
                 print(json.dumps(boundary_result, indent=2, sort_keys=True))
                 return 4
             operator_returncode = conduct_operator_turn(work)

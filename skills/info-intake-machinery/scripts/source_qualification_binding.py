@@ -16,7 +16,10 @@ def _projection_method(entry: dict[str, object], record: dict[str, object]) -> o
     method = record.get("method")
     if method is not None:
         return method
-    if entry.get("event") == "source_projected":
+    if entry.get("event") in {
+        "source_projected",
+        "qualification_answer_source_projected",
+    }:
         return "verbatim_utf8"
     if record.get("coverage") == "unassessed":
         return "visual_spatial_v1"
@@ -24,7 +27,10 @@ def _projection_method(entry: dict[str, object], record: dict[str, object]) -> o
 
 
 def _entry_source_id(entry: dict[str, object], record: dict[str, object]) -> object:
+    answer = entry.get("answer")
     source = entry.get("source")
+    if not isinstance(source, dict) and isinstance(answer, dict):
+        source = answer.get("source")
     return record.get(
         "source_id",
         entry.get("source_id", source.get("id") if isinstance(source, dict) else None),
@@ -32,7 +38,10 @@ def _entry_source_id(entry: dict[str, object], record: dict[str, object]) -> obj
 
 
 def _entry_source_sha256(entry: dict[str, object]) -> object:
+    answer = entry.get("answer")
     source = entry.get("source")
+    if not isinstance(source, dict) and isinstance(answer, dict):
+        source = answer.get("source")
     return entry.get(
         "source_sha256",
         source.get("sha256") if isinstance(source, dict) else None,
@@ -97,6 +106,9 @@ def bind(
             }
         entry = entries[sequence - 1]
         full = entry.get("projection")
+        answer = entry.get("answer")
+        if not isinstance(full, dict) and isinstance(answer, dict):
+            full = answer.get("projection")
         if not isinstance(full, dict):
             return {
                 "complete": False,

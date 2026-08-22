@@ -341,6 +341,119 @@ qualification_answer_progression = importlib.util.module_from_spec(
 _QUALIFICATION_ANSWER_PROGRESSION_SPEC.loader.exec_module(
     qualification_answer_progression
 )
+_QUALIFICATION_ANSWER_ASSESSMENT_BINDING_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_answer_assessment_binding",
+    Path(__file__).resolve().with_name(
+        "qualification_answer_assessment_binding.py"
+    ),
+)
+if (
+    _QUALIFICATION_ANSWER_ASSESSMENT_BINDING_SPEC is None
+    or _QUALIFICATION_ANSWER_ASSESSMENT_BINDING_SPEC.loader is None
+):
+    raise RuntimeError("qualification answer assessment binding is unavailable")
+qualification_answer_assessment_binding = importlib.util.module_from_spec(
+    _QUALIFICATION_ANSWER_ASSESSMENT_BINDING_SPEC
+)
+_QUALIFICATION_ANSWER_ASSESSMENT_BINDING_SPEC.loader.exec_module(
+    qualification_answer_assessment_binding
+)
+_QUALIFICATION_ANSWER_ASSESSMENT_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_answer_assessment",
+    Path(__file__).resolve().with_name("qualification_answer_assessment.py"),
+)
+if (
+    _QUALIFICATION_ANSWER_ASSESSMENT_SPEC is None
+    or _QUALIFICATION_ANSWER_ASSESSMENT_SPEC.loader is None
+):
+    raise RuntimeError("qualification answer assessment interview is unavailable")
+qualification_answer_assessment = importlib.util.module_from_spec(
+    _QUALIFICATION_ANSWER_ASSESSMENT_SPEC
+)
+_QUALIFICATION_ANSWER_ASSESSMENT_SPEC.loader.exec_module(
+    qualification_answer_assessment
+)
+_QUALIFICATION_ANSWER_ASSESSMENT_RECONCILIATION_SPEC = (
+    importlib.util.spec_from_file_location(
+        "info_intake_qualification_answer_assessment_reconciliation",
+        Path(__file__).resolve().with_name(
+            "qualification_answer_assessment_reconciliation.py"
+        ),
+    )
+)
+if (
+    _QUALIFICATION_ANSWER_ASSESSMENT_RECONCILIATION_SPEC is None
+    or _QUALIFICATION_ANSWER_ASSESSMENT_RECONCILIATION_SPEC.loader is None
+):
+    raise RuntimeError(
+        "qualification answer assessment reconciliation is unavailable"
+    )
+qualification_answer_assessment_reconciliation = importlib.util.module_from_spec(
+    _QUALIFICATION_ANSWER_ASSESSMENT_RECONCILIATION_SPEC
+)
+_QUALIFICATION_ANSWER_ASSESSMENT_RECONCILIATION_SPEC.loader.exec_module(
+    qualification_answer_assessment_reconciliation
+)
+_QUALIFICATION_RESOLUTION_ADMISSION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_resolution_admission",
+    Path(__file__).resolve().with_name("qualification_resolution_admission.py"),
+)
+if (
+    _QUALIFICATION_RESOLUTION_ADMISSION_SPEC is None
+    or _QUALIFICATION_RESOLUTION_ADMISSION_SPEC.loader is None
+):
+    raise RuntimeError("qualification resolution admission is unavailable")
+qualification_resolution_admission = importlib.util.module_from_spec(
+    _QUALIFICATION_RESOLUTION_ADMISSION_SPEC
+)
+_QUALIFICATION_RESOLUTION_ADMISSION_SPEC.loader.exec_module(
+    qualification_resolution_admission
+)
+_QUALIFICATION_OBLIGATION_CLOSURE_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_obligation_closure",
+    Path(__file__).resolve().with_name("qualification_obligation_closure.py"),
+)
+if (
+    _QUALIFICATION_OBLIGATION_CLOSURE_SPEC is None
+    or _QUALIFICATION_OBLIGATION_CLOSURE_SPEC.loader is None
+):
+    raise RuntimeError("qualification obligation closure is unavailable")
+qualification_obligation_closure = importlib.util.module_from_spec(
+    _QUALIFICATION_OBLIGATION_CLOSURE_SPEC
+)
+_QUALIFICATION_OBLIGATION_CLOSURE_SPEC.loader.exec_module(
+    qualification_obligation_closure
+)
+_EFFECTIVE_FIRST_LAYER_TERMINAL_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_effective_first_layer_terminal",
+    Path(__file__).resolve().with_name("effective_first_layer_terminal.py"),
+)
+if (
+    _EFFECTIVE_FIRST_LAYER_TERMINAL_SPEC is None
+    or _EFFECTIVE_FIRST_LAYER_TERMINAL_SPEC.loader is None
+):
+    raise RuntimeError("effective first-layer terminal is unavailable")
+effective_first_layer_terminal = importlib.util.module_from_spec(
+    _EFFECTIVE_FIRST_LAYER_TERMINAL_SPEC
+)
+_EFFECTIVE_FIRST_LAYER_TERMINAL_SPEC.loader.exec_module(
+    effective_first_layer_terminal
+)
+_QUALIFICATION_FOLLOWUP_ADMISSION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_followup_admission",
+    Path(__file__).resolve().with_name("qualification_followup_admission.py"),
+)
+if (
+    _QUALIFICATION_FOLLOWUP_ADMISSION_SPEC is None
+    or _QUALIFICATION_FOLLOWUP_ADMISSION_SPEC.loader is None
+):
+    raise RuntimeError("qualification follow-up admission is unavailable")
+qualification_followup_admission = importlib.util.module_from_spec(
+    _QUALIFICATION_FOLLOWUP_ADMISSION_SPEC
+)
+_QUALIFICATION_FOLLOWUP_ADMISSION_SPEC.loader.exec_module(
+    qualification_followup_admission
+)
 
 SOURCE_COLLECTION_DECISION_QUESTION = {
     "id": "source-collection-decision",
@@ -1950,6 +2063,55 @@ def _source_projection_closure_inventory(
             projection_error = register_projection(source_id, projection, entry)
             if projection_error:
                 return None, projection_error
+        elif event == "qualification_answer_source_projected":
+            answer = entry.get("answer")
+            source = answer.get("source") if isinstance(answer, dict) else None
+            projection = (
+                answer.get("projection") if isinstance(answer, dict) else None
+            )
+            source_id = source.get("id") if isinstance(source, dict) else None
+            if not isinstance(source_id, str) or not isinstance(projection, dict):
+                return None, _blocked(
+                    "invalid source projection ledger",
+                    f"ledger entry {entry.get('sequence')} lost its qualification-answer source or projection",
+                )
+            if source_id not in sources:
+                direct_entry = {**entry, "source": source, "projection": projection}
+                source_error = register_source(
+                    direct_entry, directly_projected=True
+                )
+                if source_error:
+                    return None, source_error
+                source_bytes = sources[source_id]["source_bytes"]
+                assert isinstance(source_bytes, bytes)
+                projection_error = register_projection(
+                    source_id,
+                    projection,
+                    direct_entry,
+                    direct_source_bytes=source_bytes,
+                )
+                if projection_error:
+                    return None, projection_error
+            else:
+                registered_source = sources[source_id]["source"]
+                registered_projections = projections[source_id]
+                matching_projections = [
+                    item
+                    for item in registered_projections
+                    if item.get("id") == projection.get("id")
+                    and item.get("version") == projection.get("version")
+                    and item.get("path") == projection.get("path")
+                    and item.get("sha256") == projection.get("sha256")
+                ]
+                if (
+                    registered_source != source
+                    or projection.get("source_id") != source_id
+                    or len(matching_projections) != 1
+                ):
+                    return None, _blocked(
+                        "invalid source projection ledger",
+                        f"qualification-answer source {source_id} does not match its acquired immutable source and projection",
+                    )
         elif event == "projection_conversion_failed":
             source_id = entry.get("source_id")
             failure = entry.get("failure")
@@ -2573,7 +2735,11 @@ def _qualification_question_round_operator_result(
     assert isinstance(question, dict)
     return {
         "status": "needs_operator",
-        "stopped": "awaiting_qualification_clarification_answers",
+        "stopped": (
+            "awaiting_qualification_followup_answers"
+            if state.get("qualification_round_number", 1) > 1
+            else "awaiting_qualification_clarification_answers"
+        ),
         "intake_id": state["intake_id"],
         "question": question,
         "questions": questions,
@@ -2600,6 +2766,96 @@ def _qualification_question_round_answered_result(
         "work": str(work.resolve()),
         "ledger": str((work / "ledger.jsonl").resolve()),
     }
+
+
+def _completed_qualification_round_record(
+    state: dict[str, object],
+) -> dict[str, object]:
+    round_number = state.get("qualification_round_number", 1)
+    if not isinstance(round_number, int) or round_number < 1:
+        raise ValueError("qualification round number must be a positive integer")
+    return {
+        "round": round_number,
+        "qualification_admission": state.get("qualification_admission"),
+        "question_round": state.get("qualification_question_round"),
+        "questions": state.get("questions"),
+        "answers": state.get("qualification_question_answers"),
+        "answer_assessment": state.get("qualification_answer_assessment"),
+        "resolution_admission": state.get("qualification_resolution_admission"),
+        "obligation_closure": state.get("qualification_obligation_closure"),
+        "terminal": state.get("effective_first_layer_terminal"),
+    }
+
+
+def _archive_completed_qualification_round(
+    state: dict[str, object], next_round: int
+) -> list[dict[str, object]]:
+    history = state.get("qualification_rounds", [])
+    if not isinstance(history, list) or any(
+        not isinstance(item, dict) for item in history
+    ):
+        raise ValueError("qualification round history must be an ordered object list")
+    current = _completed_qualification_round_record(state)
+    current_round = current["round"]
+    if next_round != current_round + 1:
+        raise ValueError(
+            f"qualification round received {next_round}; provide next round {current_round + 1}"
+        )
+    if any(item.get("round") == current_round for item in history):
+        raise ValueError(
+            f"qualification round {current_round} already has immutable history"
+        )
+    return [*history, current]
+
+
+def _cumulative_qualification_resolution_context(
+    state: dict[str, object],
+) -> tuple[list[dict[str, object]], list[str]]:
+    history = state.get("qualification_rounds", [])
+    if not isinstance(history, list):
+        raise ValueError("qualification round history must be an ordered object list")
+    contexts = [
+        *history,
+        {
+            "round": state.get("qualification_round_number", 1),
+            "qualification_admission": state.get("qualification_admission"),
+            "obligation_closure": state.get("qualification_obligation_closure"),
+        },
+    ]
+    if any(not isinstance(item, dict) for item in contexts):
+        raise ValueError("qualification round history must be an ordered object list")
+    obligations: list[dict[str, object]] = []
+    resolved_ids: list[str] = []
+    for record in contexts:
+        admission = record.get("qualification_admission")
+        closure_record = record.get("obligation_closure")
+        closure = (
+            closure_record.get("closure")
+            if isinstance(closure_record, dict)
+            else None
+        )
+        round_obligations = (
+            admission.get("clarification_obligations")
+            if isinstance(admission, dict)
+            else None
+        )
+        round_resolved = (
+            closure.get("resolved_obligation_ids")
+            if isinstance(closure, dict)
+            else None
+        )
+        if (
+            not isinstance(round_obligations, list)
+            or any(not isinstance(item, dict) for item in round_obligations)
+            or not isinstance(round_resolved, list)
+            or any(not isinstance(item, str) for item in round_resolved)
+        ):
+            raise ValueError(
+                f"qualification round {record.get('round')!r} lost its admission or closure"
+            )
+        obligations.extend(round_obligations)
+        resolved_ids.extend(round_resolved)
+    return obligations, resolved_ids
 
 
 def _active_qualification_question_ledger_sequence(
@@ -2653,12 +2909,14 @@ def _record_qualification_answer(
         {
             "recorded_at": timestamp,
             "intake_id": state["intake_id"],
+            "qualification_round": state.get("qualification_round_number", 1),
             "question_position": position,
             "answer": preserved,
         },
         str(entries[-1]["entry_sha256"]),
     )
     next_question = progression["next_question"]
+    followup_round = state.get("qualification_round_number", 1) > 1
     if isinstance(next_question, dict):
         following = _ledger_entry(
             len(entries) + 2,
@@ -2666,6 +2924,7 @@ def _record_qualification_answer(
             {
                 "recorded_at": timestamp,
                 "intake_id": state["intake_id"],
+                "qualification_round": state.get("qualification_round_number", 1),
                 "question_position": position + 1,
                 "question": next_question,
             },
@@ -2684,6 +2943,7 @@ def _record_qualification_answer(
             {
                 "recorded_at": timestamp,
                 "intake_id": state["intake_id"],
+                "qualification_round": state.get("qualification_round_number", 1),
                 "question_count": len(updated_answers),
                 "answered_question_count": len(updated_answers),
                 "answer_source_ids": [item["source"]["id"] for item in updated_answers],
@@ -2699,6 +2959,11 @@ def _record_qualification_answer(
     _append_ledger(work / "ledger.jsonl", [answer_entry, following])
     state.update({
         "qualification_question_answers": updated_answers,
+        **(
+            {"qualification_followup_answers": updated_answers}
+            if followup_round
+            else {}
+        ),
         "ledger_entries": following["sequence"],
         "ledger_tail_sha256": following["entry_sha256"],
     })
@@ -2817,6 +3082,10 @@ def _validate_qualification_answer_history(
     entries: list[dict[str, object]],
     purpose: str,
 ) -> dict[str, object] | None:
+    if state.get("qualification_round_number", 1) > 1:
+        return _validate_followup_qualification_answer_history(
+            work, state, entries, purpose
+        )
     saved_round = state.get("qualification_question_round")
     questions = state.get("questions")
     answers = state.get("qualification_question_answers")
@@ -2999,6 +3268,1349 @@ def _validate_qualification_answer_history(
             "the current question or completed round no longer follows the preserved answers",
         )
     return None
+
+
+def _validate_followup_qualification_answer_history(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    round_number = state.get("qualification_round_number")
+    saved = state.get("qualification_question_round")
+    questions = state.get("questions")
+    answers = state.get("qualification_question_answers")
+    history = state.get("qualification_rounds")
+    if (
+        not isinstance(round_number, int)
+        or round_number < 2
+        or not isinstance(saved, dict)
+        or saved.get("round") != round_number
+        or not isinstance(saved.get("admission"), dict)
+        or not isinstance(saved.get("directory"), str)
+        or not isinstance(questions, list)
+        or not questions
+        or not isinstance(answers, list)
+        or len(answers) > len(questions)
+        or not isinstance(history, list)
+        or [item.get("round") for item in history if isinstance(item, dict)]
+        != list(range(1, round_number))
+    ):
+        return _blocked(
+            "invalid qualification answer history",
+            "the indexed follow-up round, prior-round history, questions, or answers are missing",
+        )
+    request_sequence = saved.get("request_ledger_sequence")
+    completion_sequence = saved.get("completion_ledger_sequence")
+    if (
+        not isinstance(request_sequence, int)
+        or not isinstance(completion_sequence, int)
+        or completion_sequence != request_sequence + 1
+        or completion_sequence >= len(entries)
+    ):
+        return _blocked(
+            "invalid qualification answer history",
+            "the follow-up request and completion lost their exact ledger positions",
+        )
+    request = entries[request_sequence - 1]
+    completed = entries[completion_sequence - 1]
+    first_question = entries[completion_sequence]
+    try:
+        validated, journal_sha256, result_sha256 = qualification_question_round.validate(
+            work / saved["directory"],
+            admission=saved["admission"],
+            purpose=purpose,
+        )
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("invalid qualification answer history", str(error))
+    if (
+        validated.get("questions") != questions
+        or journal_sha256 != saved.get("journal_sha256")
+        or result_sha256 != saved.get("result_sha256")
+        or request.get("event") != "qualification_followup_question_round_requested"
+        or request.get("round") != round_number
+        or request.get("admission_entry_sha256")
+        != saved["admission"].get("entry_sha256")
+        or completed.get("event")
+        != "qualification_followup_question_round_completed"
+        or completed.get("round") != round_number
+        or completed.get("request_entry_sha256") != request.get("entry_sha256")
+        or completed.get("journal_sha256") != journal_sha256
+        or completed.get("result_sha256") != result_sha256
+        or completed.get("questions") != questions
+        or completed.get("qualification_rounds") != history
+        or first_question.get("event") != "operator_qualification_question_asked"
+        or first_question.get("qualification_round") != round_number
+        or first_question.get("question_position") != 1
+        or first_question.get("question") != questions[0]
+    ):
+        return _blocked(
+            "invalid qualification answer history",
+            "the follow-up request, interview, questions, or first question changed",
+        )
+    answer_events = [
+        entry
+        for entry in entries[completion_sequence + 1 :]
+        if entry.get("event") == "qualification_answer_source_projected"
+    ]
+    if len(answer_events) != len(answers):
+        return _blocked(
+            "invalid qualification answer history",
+            f"answer list has {len(answers)} items but ledger has {len(answer_events)} answer events",
+        )
+    replayed_answers: list[dict[str, object]] = []
+    for position, (question, answer, answer_entry) in enumerate(
+        zip(questions, answers, answer_events, strict=False), 1
+    ):
+        if not all(isinstance(item, dict) for item in (question, answer, answer_entry)):
+            return _blocked(
+                "invalid qualification answer history",
+                f"follow-up answer {position} is not one complete object",
+            )
+        source = answer.get("source")
+        projection = answer.get("projection")
+        submission = answer.get("submission")
+        if not all(isinstance(item, dict) for item in (source, projection, submission)):
+            return _blocked(
+                "invalid qualification answer history",
+                f"follow-up answer {position} lost its source or readable projection",
+            )
+        source_path = source.get("path", source.get("stored_path"))
+        projection_path = projection.get("path")
+        try:
+            source_bytes = (work / str(source_path)).read_bytes()
+            projection_bytes = (work / str(projection_path)).read_bytes()
+        except OSError as error:
+            return _blocked("qualification answer evidence unavailable", str(error))
+        admitted = {
+            "accepted": True,
+            "question_id": question.get("id"),
+            "obligation_id": question.get("answers_obligation", {}).get("id"),
+            "evidence_sha256": question.get("evidence_sha256"),
+            "channel": submission.get("channel"),
+            "value": submission.get("value"),
+        }
+        replayed = qualification_answer_preservation.preserve(
+            admitted, question, source, projection
+        )
+        progression = qualification_answer_progression.advance(
+            questions, replayed_answers, question, replayed
+        )
+        sequence = answer_entry.get("sequence")
+        following = (
+            entries[sequence]
+            if isinstance(sequence, int) and sequence < len(entries)
+            else None
+        )
+        expected_event = (
+            "operator_qualification_question_asked"
+            if position < len(questions)
+            else "qualification_question_round_answered"
+        )
+        if (
+            replayed != answer
+            or progression.get("advanced") is not True
+            or progression.get("answers") != [*replayed_answers, answer]
+            or _digest_bytes(source_bytes) != source.get("sha256")
+            or _digest_bytes(projection_bytes) != projection.get("sha256")
+            or projection.get("source_id") != source.get("id")
+            or answer_entry.get("qualification_round") != round_number
+            or answer_entry.get("question_position") != position
+            or answer_entry.get("answer") != answer
+            or not isinstance(following, dict)
+            or following.get("qualification_round") != round_number
+            or following.get("event") != expected_event
+        ):
+            return _blocked(
+                "invalid qualification answer history",
+                f"follow-up answer {position} changed from its append-only evidence",
+            )
+        replayed_answers.append(answer)
+    if answers:
+        expected = (
+            ("needs_operator", "awaiting_qualification_clarification_answers")
+            if len(answers) < len(questions)
+            else ("ready_for_qualification_assessment", "qualification_question_round_answered")
+        )
+        if (state.get("status"), state.get("phase")) != expected:
+            return _blocked(
+                "invalid qualification answer history",
+                "the active follow-up question state does not follow its preserved answers",
+            )
+    if (
+        state.get("ledger_entries") != len(entries)
+        or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+    ):
+        return _blocked(
+            "invalid qualification answer history",
+            "the follow-up state no longer names the exact ledger tail",
+        )
+    return None
+
+
+def _qualification_answer_assessment_model_result(state: dict[str, object], work: Path) -> dict[str, object]:
+    return {
+        "status": "waiting_for_model",
+        "stopped": "assessing_qualification_answers",
+        "intake_id": state["intake_id"],
+        "work": [
+            {
+                "stage": "assess_qualification_answers",
+                "instruction": (
+                    "Answer only the currently displayed typed question. Code fixes every "
+                    "answer, qualification obligation, allowed verdict, order, and result."
+                ),
+                "attachments": [],
+                "command": [
+                    sys.executable,
+                    str(Path(__file__).resolve()),
+                    "--work",
+                    str(work.resolve()),
+                    "--run-qualification-answer-assessment",
+                ],
+            }
+        ],
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _qualification_answer_assessment_result(state: dict[str, object], work: Path) -> dict[str, object]:
+    saved = state.get("qualification_answer_assessment")
+    assert isinstance(saved, dict)
+    assessment = saved.get("reconciliation")
+    assert isinstance(assessment, dict)
+    return {
+        "status": "qualification_answer_assessment_complete",
+        "stopped": "qualification_answer_assessment_recorded",
+        "intake_id": state["intake_id"],
+        "assessment": assessment,
+        "assessor": saved.get("assessor"),
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _qualification_answer_assessment_directory(
+    work: Path, state: dict[str, object]
+) -> Path:
+    round_number = state.get("qualification_round_number", 1)
+    if not isinstance(round_number, int) or round_number < 1:
+        raise ValueError("qualification assessment round must be a positive integer")
+    if round_number == 1:
+        return work / "qualification-answer-assessment"
+    return (
+        work
+        / "qualification-question-rounds"
+        / f"round-{round_number:06d}"
+        / "answer-assessment"
+    )
+
+
+def _qualification_answer_assessment_request_error(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    saved = state.get("qualification_answer_assessment")
+    request_sequence = saved.get("request_ledger_sequence") if isinstance(saved, dict) else None
+    if (
+        not isinstance(saved, dict)
+        or not isinstance(request_sequence, int)
+        or request_sequence < 1
+        or request_sequence > len(entries)
+    ):
+        return _blocked(
+            "qualification answer assessment invalid",
+            "the assessment request lost its immutable ledger position",
+        )
+    request_entry = entries[request_sequence - 1]
+    request = saved.get("request")
+    if (
+        request_entry.get("event") != "qualification_answer_assessment_requested"
+        or request_entry.get("request") != request
+        or request_entry.get("entry_sha256") != saved.get("request_entry_sha256")
+        or not isinstance(request, dict)
+        or request.get("contract") != qualification_answer_assessment.CONTRACT
+    ):
+        return _blocked(
+            "qualification answer assessment invalid",
+            "the saved assessment request changed; restore its exact ledger event",
+        )
+    prefix_entries = entries[: request_sequence - 1]
+    if not prefix_entries:
+        return _blocked(
+            "qualification answer assessment invalid",
+            "the completed answer-round prefix is missing",
+        )
+    prefix_state = dict(state)
+    prefix_state.update(
+        {
+            "status": "ready_for_qualification_assessment",
+            "phase": "qualification_question_round_answered",
+            "waiting_for": None,
+            "question": None,
+            "ledger_entries": len(prefix_entries),
+            "ledger_tail_sha256": prefix_entries[-1]["entry_sha256"],
+        }
+    )
+    history_error = _validate_qualification_answer_history(work, prefix_state, prefix_entries, purpose)
+    if history_error:
+        return history_error
+    bound = qualification_answer_assessment_binding.bind(
+        work,
+        state.get("questions"),
+        state.get("qualification_question_answers"),
+    )
+    if bound.get("complete") is not True:
+        return _blocked("qualification answer assessment invalid", str(bound.get("why")))
+    if request.get("question_round_result_sha256") != state.get("qualification_question_round", {}).get(
+        "result_sha256"
+    ) or request.get("bindings") != bound.get("bindings"):
+        return _blocked(
+            "qualification answer assessment invalid",
+            "the assessment bindings no longer match the immutable answer round",
+        )
+    return None
+
+
+def request_qualification_answer_assessment(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+        purpose = (work / "sources/source-000002.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification answer assessment unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") == "assessing_qualification_answers":
+        request_error = _qualification_answer_assessment_request_error(work, state, entries, purpose)
+        return request_error or _qualification_answer_assessment_model_result(state, work)
+    if state.get("phase") != "qualification_question_round_answered":
+        return _blocked(
+            "qualification answer assessment unavailable",
+            f"phase received {state.get('phase')!r}; provide one completed qualification-answer round",
+        )
+    history_error = _validate_qualification_answer_history(work, state, entries, purpose)
+    if history_error:
+        return history_error
+    bound = qualification_answer_assessment_binding.bind(
+        work,
+        state.get("questions"),
+        state.get("qualification_question_answers"),
+    )
+    if bound.get("complete") is not True:
+        return _blocked("qualification answer assessment unavailable", str(bound.get("why")))
+    try:
+        round_dir = _qualification_answer_assessment_directory(work, state)
+    except ValueError as error:
+        return _blocked("qualification answer assessment unavailable", str(error))
+    if round_dir.exists():
+        return _blocked(
+            "unbound qualification answer assessment",
+            (
+                f"artifact directory {round_dir} already exists without a request event; "
+                "remove only that unbound directory before retrying"
+            ),
+        )
+    round_dir.mkdir(parents=True)
+    (round_dir / "interview.jsonl").touch()
+    request = {
+        "contract": qualification_answer_assessment.CONTRACT,
+        "question_round_result_sha256": state["qualification_question_round"]["result_sha256"],
+        "bindings": bound["bindings"],
+    }
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_answer_assessment_requested",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "request": request,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update(
+        {
+            "status": "waiting_for_model",
+            "phase": "assessing_qualification_answers",
+            "waiting_for": str((round_dir / "interview.jsonl").relative_to(work)),
+            "question": None,
+            "qualification_answer_assessment": {
+                "request_ledger_sequence": event["sequence"],
+                "request_entry_sha256": event["entry_sha256"],
+                "request": request,
+            },
+            "ledger_entries": event["sequence"],
+            "ledger_tail_sha256": event["entry_sha256"],
+        }
+    )
+    _write_state(work / "intake-state.json", state)
+    return _qualification_answer_assessment_model_result(state, work)
+
+
+def _consume_qualification_answer_assessment(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object]:
+    request_error = _qualification_answer_assessment_request_error(work, state, entries, purpose)
+    if request_error:
+        return request_error
+    saved = state["qualification_answer_assessment"]
+    assert isinstance(saved, dict)
+    request = saved["request"]
+    assert isinstance(request, dict)
+    bindings = request["bindings"]
+    assert isinstance(bindings, list)
+    try:
+        result, journal_sha256, result_sha256 = qualification_answer_assessment.validate(
+            _qualification_answer_assessment_directory(work, state),
+            bindings=bindings,
+            purpose=purpose,
+        )
+    except qualification_answer_assessment.AssessmentError as error:
+        return _blocked("qualification answer assessment invalid", str(error))
+    reconciled = qualification_answer_assessment_reconciliation.reconcile(bindings, result.get("assessments"))
+    if reconciled.get("complete") is not True:
+        return _blocked(
+            "qualification answer assessment invalid",
+            str(reconciled.get("why")),
+        )
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_answer_assessment_completed",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "request_entry_sha256": saved["request_entry_sha256"],
+            "contract": qualification_answer_assessment.CONTRACT,
+            "journal_sha256": journal_sha256,
+            "result_sha256": result_sha256,
+            "result": result,
+            "reconciliation": reconciled,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update(
+        {
+            "status": "qualification_answer_assessment_complete",
+            "phase": "qualification_answer_assessment_recorded",
+            "waiting_for": None,
+            "question": None,
+            "qualification_answer_assessment": {
+                **saved,
+                "completion_ledger_sequence": event["sequence"],
+                "completion_entry_sha256": event["entry_sha256"],
+                "journal_sha256": journal_sha256,
+                "result_sha256": result_sha256,
+                "assessor": result.get("assessor"),
+                "reconciliation": reconciled,
+            },
+            "ledger_entries": event["sequence"],
+            "ledger_tail_sha256": event["entry_sha256"],
+        }
+    )
+    _write_state(work / "intake-state.json", state)
+    return _qualification_answer_assessment_result(state, work)
+
+
+def _validate_completed_qualification_answer_assessment(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    request_error = _qualification_answer_assessment_request_error(work, state, entries, purpose)
+    if request_error:
+        return request_error
+    saved = state.get("qualification_answer_assessment")
+    assert isinstance(saved, dict)
+    request = saved.get("request")
+    assert isinstance(request, dict) and isinstance(request.get("bindings"), list)
+    try:
+        result, journal_sha256, result_sha256 = qualification_answer_assessment.validate(
+            _qualification_answer_assessment_directory(work, state),
+            bindings=request["bindings"],
+            purpose=purpose,
+        )
+    except qualification_answer_assessment.AssessmentError as error:
+        return _blocked("qualification answer assessment invalid", str(error))
+    reconciled = qualification_answer_assessment_reconciliation.reconcile(
+        request["bindings"], result.get("assessments")
+    )
+    sequence = saved.get("completion_ledger_sequence")
+    completed = entries[sequence - 1] if isinstance(sequence, int) and 1 <= sequence <= len(entries) else None
+    if (
+        reconciled.get("complete") is not True
+        or not isinstance(completed, dict)
+        or completed.get("event") != "qualification_answer_assessment_completed"
+        or completed.get("request_entry_sha256") != saved.get("request_entry_sha256")
+        or completed.get("contract") != qualification_answer_assessment.CONTRACT
+        or completed.get("journal_sha256") != journal_sha256
+        or completed.get("result_sha256") != result_sha256
+        or completed.get("result") != result
+        or completed.get("reconciliation") != reconciled
+        or completed.get("entry_sha256") != saved.get("completion_entry_sha256")
+        or saved.get("journal_sha256") != journal_sha256
+        or saved.get("result_sha256") != result_sha256
+        or saved.get("assessor") != result.get("assessor")
+        or saved.get("reconciliation") != reconciled
+        or state.get("ledger_entries") != len(entries)
+        or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+    ):
+        return _blocked(
+            "qualification answer assessment invalid",
+            "the completed assessment no longer matches its immutable request, interview, result, or ledger event",
+        )
+    return None
+
+
+def run_qualification_answer_assessment(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+        purpose = (work / "sources/source-000002.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification answer assessment unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") != "assessing_qualification_answers":
+        return _blocked(
+            "qualification answer assessment unavailable",
+            f"phase received {state.get('phase')!r}; request the bound assessment first",
+        )
+    request_error = _qualification_answer_assessment_request_error(work, state, entries, purpose)
+    if request_error:
+        return request_error
+    saved = state["qualification_answer_assessment"]
+    assert isinstance(saved, dict) and isinstance(saved.get("request"), dict)
+    bindings = saved["request"]["bindings"]
+    assert isinstance(bindings, list)
+    try:
+        qualification_answer_assessment.run(
+            _qualification_answer_assessment_directory(work, state),
+            bindings=bindings,
+            purpose=purpose,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+    except qualification_answer_assessment.AssessmentError as error:
+        return _blocked("qualification answer assessment failed", str(error))
+    return _consume_qualification_answer_assessment(work, state, entries, purpose)
+
+
+def _qualification_resolution_admission_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    saved = state.get("qualification_resolution_admission")
+    assert isinstance(saved, dict)
+    admission = saved.get("admission")
+    assert isinstance(admission, dict)
+    return {
+        "status": "qualification_resolution_admission_complete",
+        "stopped": "qualification_resolution_admission_recorded",
+        "intake_id": state["intake_id"],
+        **admission,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def run_qualification_resolution_admission(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+        purpose = (work / "sources/source-000002.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification resolution admission unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    phase = state.get("phase")
+    if phase == "qualification_resolution_admission_recorded":
+        saved = state.get("qualification_resolution_admission")
+        sequence = (
+            saved.get("ledger_sequence") if isinstance(saved, dict) else None
+        )
+        event = (
+            entries[sequence - 1]
+            if isinstance(sequence, int) and 1 <= sequence <= len(entries)
+            else None
+        )
+        if (
+            not isinstance(saved, dict)
+            or not isinstance(event, dict)
+            or event.get("event") != "qualification_resolution_admission_recorded"
+            or event.get("assessment_completion_entry_sha256")
+            != saved.get("assessment_completion_entry_sha256")
+            or event.get("admission") != saved.get("admission")
+            or event.get("entry_sha256") != saved.get("entry_sha256")
+            or state.get("ledger_entries") != len(entries)
+            or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+        ):
+            return _blocked(
+                "qualification resolution admission invalid",
+                "the preserved admission no longer matches its assessment or immutable ledger event",
+            )
+        return _qualification_resolution_admission_result(state, work)
+    if phase != "qualification_answer_assessment_recorded":
+        return _blocked(
+            "qualification resolution admission unavailable",
+            f"phase received {phase!r}; provide one completed qualification-answer assessment",
+        )
+    completed_error = _validate_completed_qualification_answer_assessment(
+        work, state, entries, purpose
+    )
+    if completed_error:
+        return completed_error
+    saved_assessment = state.get("qualification_answer_assessment")
+    assert isinstance(saved_assessment, dict)
+    request = saved_assessment.get("request")
+    reconciliation = saved_assessment.get("reconciliation")
+    assert isinstance(request, dict) and isinstance(reconciliation, dict)
+    admission = qualification_resolution_admission.admit_all(
+        request.get("bindings"), reconciliation.get("assessments")
+    )
+    if admission.get("complete") is not True:
+        return _blocked(
+            "qualification resolution admission invalid", str(admission.get("why"))
+        )
+    assessment_sequence = saved_assessment.get("completion_ledger_sequence")
+    assessment_event = (
+        entries[assessment_sequence - 1]
+        if isinstance(assessment_sequence, int)
+        and 1 <= assessment_sequence <= len(entries)
+        else None
+    )
+    if not isinstance(assessment_event, dict):
+        return _blocked(
+            "qualification resolution admission invalid",
+            "the completed assessment ledger event is unavailable",
+        )
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_resolution_admission_recorded",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "assessment_completion_entry_sha256": assessment_event["entry_sha256"],
+            "admission": admission,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update({
+        "status": "qualification_resolution_admission_complete",
+        "phase": "qualification_resolution_admission_recorded",
+        "waiting_for": None,
+        "question": None,
+        "qualification_resolution_admission": {
+            "ledger_sequence": event["sequence"],
+            "entry_sha256": event["entry_sha256"],
+            "assessment_completion_entry_sha256": assessment_event["entry_sha256"],
+            "admission": admission,
+        },
+        "ledger_entries": event["sequence"],
+        "ledger_tail_sha256": event["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_resolution_admission_result(state, work)
+
+
+def _qualification_obligation_closure_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    saved = state.get("qualification_obligation_closure")
+    assert isinstance(saved, dict)
+    closure = saved.get("closure")
+    assert isinstance(closure, dict)
+    return {
+        "status": "qualification_obligation_closure_complete",
+        "stopped": "qualification_obligation_closure_recorded",
+        "intake_id": state["intake_id"],
+        **closure,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def run_qualification_obligation_closure(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification obligation closure unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    phase = state.get("phase")
+    if phase == "qualification_obligation_closure_recorded":
+        saved = state.get("qualification_obligation_closure")
+        sequence = saved.get("ledger_sequence") if isinstance(saved, dict) else None
+        event = (
+            entries[sequence - 1]
+            if isinstance(sequence, int) and 1 <= sequence <= len(entries)
+            else None
+        )
+        if (
+            not isinstance(saved, dict)
+            or not isinstance(event, dict)
+            or event.get("event") != "qualification_obligation_closure_recorded"
+            or event.get("resolution_admission_entry_sha256")
+            != saved.get("resolution_admission_entry_sha256")
+            or event.get("closure") != saved.get("closure")
+            or event.get("entry_sha256") != saved.get("entry_sha256")
+            or state.get("ledger_entries") != len(entries)
+            or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+        ):
+            return _blocked(
+                "qualification obligation closure invalid",
+                "the preserved closure no longer matches its admission or immutable ledger event",
+            )
+        return _qualification_obligation_closure_result(state, work)
+    if phase != "qualification_resolution_admission_recorded":
+        return _blocked(
+            "qualification obligation closure unavailable",
+            f"phase received {phase!r}; provide one completed resolution admission",
+        )
+    admission_result = run_qualification_resolution_admission(work)
+    if admission_result.get("status") == "blocked":
+        return admission_result
+    qualification = state.get("qualification_admission")
+    resolution = state.get("qualification_resolution_admission")
+    obligations = (
+        qualification.get("clarification_obligations")
+        if isinstance(qualification, dict)
+        else None
+    )
+    admission = resolution.get("admission") if isinstance(resolution, dict) else None
+    resolutions = admission.get("resolutions") if isinstance(admission, dict) else None
+    closure = qualification_obligation_closure.reconcile(obligations, resolutions)
+    if closure.get("reconciled") is not True:
+        return _blocked(
+            "qualification obligation closure invalid", str(closure.get("why"))
+        )
+    admission_sequence = resolution.get("ledger_sequence") if isinstance(resolution, dict) else None
+    admission_event = (
+        entries[admission_sequence - 1]
+        if isinstance(admission_sequence, int) and 1 <= admission_sequence <= len(entries)
+        else None
+    )
+    if not isinstance(admission_event, dict):
+        return _blocked(
+            "qualification obligation closure invalid",
+            "the resolution-admission ledger event is unavailable",
+        )
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_obligation_closure_recorded",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "resolution_admission_entry_sha256": admission_event["entry_sha256"],
+            "closure": closure,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update({
+        "status": "qualification_obligation_closure_complete",
+        "phase": "qualification_obligation_closure_recorded",
+        "waiting_for": None,
+        "question": None,
+        "qualification_obligation_closure": {
+            "ledger_sequence": event["sequence"],
+            "entry_sha256": event["entry_sha256"],
+            "resolution_admission_entry_sha256": admission_event["entry_sha256"],
+            "closure": closure,
+        },
+        "ledger_entries": event["sequence"],
+        "ledger_tail_sha256": event["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_obligation_closure_result(state, work)
+
+
+def _effective_first_layer_terminal_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    saved = state.get("effective_first_layer_terminal")
+    assert isinstance(saved, dict)
+    disposition = saved.get("disposition")
+    assert isinstance(disposition, dict)
+    return {
+        "status": str(disposition["disposition"]),
+        "stopped": "effective_first_layer_terminal_recorded",
+        "intake_id": state["intake_id"],
+        **disposition,
+        "qualification_obligation_closure": saved.get("qualification_obligation_closure"),
+        "source_projection_closure": saved.get("source_projection_closure"),
+        "source_set_qualification": saved.get("source_set_qualification"),
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def run_effective_first_layer_terminal(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("effective first-layer terminal unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    phase = state.get("phase")
+    if phase == "effective_first_layer_terminal_recorded":
+        saved = state.get("effective_first_layer_terminal")
+        fresh_source_closure, closure_error = (
+            _source_projection_closure_inventory(work, entries)
+        )
+        if closure_error:
+            return closure_error
+        assert fresh_source_closure is not None
+        fresh_qualification, qualification_error = (
+            _source_set_qualification_evidence(
+                work, entries, fresh_source_closure
+            )
+        )
+        if qualification_error:
+            return qualification_error
+        assert fresh_qualification is not None
+        try:
+            cumulative_obligations, cumulative_resolved_ids = (
+                _cumulative_qualification_resolution_context(state)
+            )
+        except ValueError as error:
+            return _blocked("effective first-layer terminal invalid", str(error))
+        sequence = saved.get("ledger_sequence") if isinstance(saved, dict) else None
+        event = (
+            entries[sequence - 1]
+            if isinstance(sequence, int) and 1 <= sequence <= len(entries)
+            else None
+        )
+        if (
+            not isinstance(saved, dict)
+            or not isinstance(event, dict)
+            or event.get("event") != "effective_first_layer_terminal_recorded"
+            or event.get("obligation_closure_entry_sha256")
+            != saved.get("obligation_closure_entry_sha256")
+            or event.get("source_projection_closure")
+            != saved.get("source_projection_closure")
+            or saved.get("source_projection_closure") != fresh_source_closure
+            or event.get("qualification_obligation_closure")
+            != saved.get("qualification_obligation_closure")
+            or event.get("source_set_qualification")
+            != saved.get("source_set_qualification")
+            or saved.get("source_set_qualification") != fresh_qualification
+            or event.get("cumulative_obligations")
+            != saved.get("cumulative_obligations")
+            or event.get("cumulative_resolved_obligation_ids")
+            != saved.get("cumulative_resolved_obligation_ids")
+            or saved.get("cumulative_obligations") != cumulative_obligations
+            or saved.get("cumulative_resolved_obligation_ids")
+            != cumulative_resolved_ids
+            or event.get("disposition") != saved.get("disposition")
+            or event.get("entry_sha256") != saved.get("entry_sha256")
+            or state.get("ledger_entries") != len(entries)
+            or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+        ):
+            return _blocked(
+                "effective first-layer terminal invalid",
+                "the preserved terminal no longer matches its current-source evidence or immutable ledger event",
+            )
+        return _effective_first_layer_terminal_result(state, work)
+    if phase != "qualification_obligation_closure_recorded":
+        return _blocked(
+            "effective first-layer terminal unavailable",
+            f"phase received {phase!r}; provide one exact qualification-obligation closure",
+        )
+    closure_result = run_qualification_obligation_closure(work)
+    if closure_result.get("status") == "blocked":
+        return closure_result
+    source_closure, closure_error = _source_projection_closure_inventory(work, entries)
+    if closure_error:
+        return closure_error
+    assert source_closure is not None
+    qualification, qualification_error = _source_set_qualification_evidence(
+        work, entries, source_closure
+    )
+    if qualification_error:
+        return qualification_error
+    assert qualification is not None
+    obligation_closure = state.get("qualification_obligation_closure")
+    exact_closure = (
+        obligation_closure.get("closure")
+        if isinstance(obligation_closure, dict)
+        else None
+    )
+    try:
+        cumulative_obligations, cumulative_resolved_ids = (
+            _cumulative_qualification_resolution_context(state)
+        )
+    except ValueError as error:
+        return _blocked("effective first-layer terminal invalid", str(error))
+    disposition = effective_first_layer_terminal.decide(
+        qualification, cumulative_obligations, cumulative_resolved_ids
+    )
+    if disposition.get("decided") is not True:
+        return _blocked(
+            "effective first-layer terminal invalid", str(disposition.get("why"))
+        )
+    closure_sequence = (
+        obligation_closure.get("ledger_sequence")
+        if isinstance(obligation_closure, dict)
+        else None
+    )
+    closure_event = (
+        entries[closure_sequence - 1]
+        if isinstance(closure_sequence, int) and 1 <= closure_sequence <= len(entries)
+        else None
+    )
+    if not isinstance(closure_event, dict):
+        return _blocked(
+            "effective first-layer terminal invalid",
+            "the exact obligation-closure event is unavailable",
+        )
+    event = _ledger_entry(
+        len(entries) + 1,
+        "effective_first_layer_terminal_recorded",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "obligation_closure_entry_sha256": closure_event["entry_sha256"],
+            "qualification_obligation_closure": exact_closure,
+            "source_projection_closure": source_closure,
+            "source_set_qualification": qualification,
+            "cumulative_obligations": cumulative_obligations,
+            "cumulative_resolved_obligation_ids": cumulative_resolved_ids,
+            "disposition": disposition,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update({
+        "status": disposition["disposition"],
+        "phase": "effective_first_layer_terminal_recorded",
+        "waiting_for": None,
+        "question": None,
+        "effective_first_layer_terminal": {
+            "ledger_sequence": event["sequence"],
+            "entry_sha256": event["entry_sha256"],
+            "obligation_closure_entry_sha256": closure_event["entry_sha256"],
+            "qualification_obligation_closure": exact_closure,
+            "source_projection_closure": source_closure,
+        "source_set_qualification": qualification,
+        "cumulative_obligations": cumulative_obligations,
+        "cumulative_resolved_obligation_ids": cumulative_resolved_ids,
+        "disposition": disposition,
+        },
+        "ledger_entries": event["sequence"],
+        "ledger_tail_sha256": event["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _effective_first_layer_terminal_result(state, work)
+
+
+def _qualification_followup_admission_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    saved = state.get("qualification_followup_admission")
+    assert isinstance(saved, dict)
+    return {
+        "status": "qualification_followup_admission_complete",
+        "stopped": "qualification_followup_admission_recorded",
+        "intake_id": state["intake_id"],
+        "round": saved.get("round"),
+        "clarification_obligations": saved.get("clarification_obligations"),
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def run_qualification_followup_admission(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification follow-up admission unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    phase = state.get("phase")
+    if phase == "qualification_followup_admission_recorded":
+        saved = state.get("qualification_followup_admission")
+        sequence = saved.get("ledger_sequence") if isinstance(saved, dict) else None
+        event = (
+            entries[sequence - 1]
+            if isinstance(sequence, int) and 1 <= sequence <= len(entries)
+            else None
+        )
+        if (
+            not isinstance(saved, dict)
+            or not isinstance(event, dict)
+            or event.get("event") != "qualification_followup_admission_recorded"
+            or event.get("clarification_obligations")
+            != saved.get("clarification_obligations")
+            or event.get("entry_sha256") != saved.get("entry_sha256")
+            or state.get("ledger_entries") != len(entries)
+            or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+        ):
+            return _blocked(
+                "qualification follow-up admission invalid",
+                "the preserved follow-up obligations no longer match their immutable ledger event",
+            )
+        return _qualification_followup_admission_result(state, work)
+    if phase != "effective_first_layer_terminal_recorded":
+        return _blocked(
+            "qualification follow-up admission unavailable",
+            f"phase received {phase!r}; provide one clarification-required terminal",
+        )
+    terminal_result = run_effective_first_layer_terminal(work)
+    if terminal_result.get("status") != "clarification_required":
+        return _blocked(
+            "qualification follow-up admission unavailable",
+            "the current terminal has no remaining source gap",
+        )
+    terminal = state.get("effective_first_layer_terminal")
+    assert isinstance(terminal, dict)
+    terminal_sequence = terminal.get("ledger_sequence")
+    terminal_event = (
+        entries[terminal_sequence - 1]
+        if isinstance(terminal_sequence, int)
+        and 1 <= terminal_sequence <= len(entries)
+        else None
+    )
+    if not isinstance(terminal_event, dict):
+        return _blocked(
+            "qualification follow-up admission invalid",
+            "the clarification-required terminal event is unavailable",
+        )
+    current_round = state.get("qualification_round_number", 1)
+    if not isinstance(current_round, int) or current_round < 1:
+        return _blocked(
+            "qualification follow-up admission invalid",
+            "the active qualification round number is unavailable",
+        )
+    prepared = qualification_followup_admission.prepare(
+        terminal.get("source_set_qualification"),
+        terminal_result.get("remaining_gaps"),
+        terminal_event["entry_sha256"],
+        current_round + 1,
+    )
+    if prepared.get("complete") is not True:
+        return _blocked(
+            "qualification follow-up admission invalid", str(prepared.get("why"))
+        )
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_followup_admission_recorded",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "round": prepared["round"],
+            "qualification_event_sha256": terminal_event["entry_sha256"],
+            "route": "clarification_required",
+            "clarification_obligations": prepared["obligations"],
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update({
+        "status": "qualification_followup_admission_complete",
+        "phase": "qualification_followup_admission_recorded",
+        "waiting_for": None,
+        "question": None,
+        "qualification_followup_admission": {
+            "ledger_sequence": event["sequence"],
+            "entry_sha256": event["entry_sha256"],
+            "round": prepared["round"],
+            "qualification_event_sha256": terminal_event["entry_sha256"],
+            "clarification_obligations": prepared["obligations"],
+        },
+        "ledger_entries": event["sequence"],
+        "ledger_tail_sha256": event["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_followup_admission_result(state, work)
+
+
+def _qualification_followup_question_model_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    return {
+        "status": "waiting_for_model",
+        "stopped": "formulating_qualification_followup_question_round",
+        "intake_id": state["intake_id"],
+        "work": [{
+            "stage": "formulate_qualification_followup_question_round",
+            "instruction": (
+                "Answer only each typed question displayed. Code fixes every current "
+                "gap obligation, answer type, order, and final question round."
+            ),
+            "attachments": [],
+            "command": [
+                sys.executable,
+                str(Path(__file__).resolve()),
+                "--work",
+                str(work.resolve()),
+                "--run-qualification-followup-question-round",
+            ],
+        }],
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _qualification_followup_operator_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    questions = state.get("qualification_followup_questions")
+    assert isinstance(questions, list) and questions
+    question = state.get("question")
+    assert isinstance(question, dict)
+    return {
+        "status": "needs_operator",
+        "stopped": "awaiting_qualification_followup_answers",
+        "intake_id": state["intake_id"],
+        "question": question,
+        "questions": questions,
+        "answered_question_count": 0,
+        "question_count": len(questions),
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _qualification_followup_admission_event(
+    state: dict[str, object], entries: list[dict[str, object]]
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    saved = state.get("qualification_followup_admission")
+    sequence = saved.get("ledger_sequence") if isinstance(saved, dict) else None
+    event = (
+        entries[sequence - 1]
+        if isinstance(sequence, int) and 1 <= sequence <= len(entries)
+        else None
+    )
+    if not isinstance(event, dict):
+        return None, _blocked(
+            "qualification follow-up question round invalid",
+            "the follow-up admission event is unavailable",
+        )
+    synthetic = {
+        **event,
+        "event": "qualification_admission_completed",
+    }
+    return synthetic, None
+
+
+def request_qualification_followup_question_round(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification follow-up question round unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") == "formulating_qualification_followup_question_round":
+        return _qualification_followup_question_model_result(state, work)
+    if state.get("phase") != "qualification_followup_admission_recorded":
+        return _blocked(
+            "qualification follow-up question round unavailable",
+            f"phase received {state.get('phase')!r}; provide one follow-up admission",
+        )
+    admission, admission_error = _qualification_followup_admission_event(
+        state, entries
+    )
+    if admission_error:
+        return admission_error
+    assert admission is not None
+    try:
+        contexts = qualification_question_round.bind_contexts(admission)
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("qualification follow-up question round unavailable", str(error))
+    round_number = saved_admission_round = state.get(
+        "qualification_followup_admission", {}
+    ).get("round")
+    if not isinstance(saved_admission_round, int) or saved_admission_round < 2:
+        return _blocked(
+            "qualification follow-up question round unavailable",
+            "the follow-up admission lost its positive round number",
+        )
+    relative_dir = f"qualification-question-rounds/round-{round_number:06d}"
+    round_dir = work / relative_dir
+    if round_dir.exists():
+        return _blocked(
+            "unbound qualification follow-up question round",
+            f"round path received {relative_dir!r}; provide one unused round path",
+        )
+    round_dir.mkdir(parents=True)
+    (round_dir / "interview.jsonl").touch()
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_followup_question_round_requested",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "round": round_number,
+            "admission_entry_sha256": admission["entry_sha256"],
+            "obligation_ids": [item["obligation_id"] for item in contexts],
+            "interview_path": f"{relative_dir}/interview.jsonl",
+            "result_path": f"{relative_dir}/question-round.json",
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update({
+        "status": "waiting_for_model",
+        "phase": "formulating_qualification_followup_question_round",
+        "waiting_for": f"{relative_dir}/interview.jsonl",
+        "question": None,
+        "qualification_followup_question_round": {
+            "round": round_number,
+            "directory": relative_dir,
+            "request_ledger_sequence": event["sequence"],
+            "request_entry_sha256": event["entry_sha256"],
+            "admission": admission,
+        },
+        "ledger_entries": event["sequence"],
+        "ledger_tail_sha256": event["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_followup_question_model_result(state, work)
+
+
+def run_qualification_followup_question_round(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+        purpose = (work / "sources/source-000002.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification follow-up question round unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    saved = state.get("qualification_followup_question_round")
+    if (
+        state.get("phase") != "formulating_qualification_followup_question_round"
+        or not isinstance(saved, dict)
+        or not isinstance(saved.get("admission"), dict)
+        or not isinstance(saved.get("directory"), str)
+    ):
+        return _blocked(
+            "qualification follow-up question round unavailable",
+            "request the isolated follow-up question round first",
+        )
+    round_dir = work / saved["directory"]
+    try:
+        result = qualification_question_round.run(
+            round_dir,
+            admission=saved["admission"],
+            purpose=purpose,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+        validated, journal_sha256, result_sha256 = qualification_question_round.validate(
+            round_dir, admission=saved["admission"], purpose=purpose
+        )
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("qualification follow-up question round failed", str(error))
+    if result != validated:
+        return _blocked(
+            "qualification follow-up question round invalid",
+            "the prepared question round changed during validation",
+        )
+    questions = result.get("questions")
+    if not isinstance(questions, list) or not questions:
+        return _blocked(
+            "qualification follow-up question round invalid",
+            "the prepared round contains no question",
+        )
+    try:
+        history = _archive_completed_qualification_round(state, int(saved["round"]))
+    except (TypeError, ValueError) as error:
+        return _blocked("qualification follow-up question round invalid", str(error))
+    timestamp = datetime.now(timezone.utc).isoformat()
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_followup_question_round_completed",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "round": saved["round"],
+            "request_entry_sha256": saved["request_entry_sha256"],
+            "journal_sha256": journal_sha256,
+            "result_sha256": result_sha256,
+            "questions": questions,
+            "qualification_rounds": history,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    question_event = _ledger_entry(
+        len(entries) + 2,
+        "operator_qualification_question_asked",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "qualification_round": saved["round"],
+            "question_position": 1,
+            "question": questions[0],
+        },
+        str(event["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event, question_event])
+    for key in (
+        "qualification_answer_assessment",
+        "qualification_resolution_admission",
+        "qualification_obligation_closure",
+        "effective_first_layer_terminal",
+        "pending_additional_source",
+        "additional_source_projection",
+        "active_additional_projection",
+    ):
+        state.pop(key, None)
+    active_round = {
+        **saved,
+        "completion_ledger_sequence": event["sequence"],
+        "completion_entry_sha256": event["entry_sha256"],
+        "journal_sha256": journal_sha256,
+        "result_sha256": result_sha256,
+    }
+    state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_qualification_clarification_answers",
+        "waiting_for": questions[0]["id"],
+        "question": questions[0],
+        "qualification_round_number": saved["round"],
+        "qualification_rounds": history,
+        "qualification_admission": state["qualification_followup_admission"],
+        "qualification_question_round": active_round,
+        "questions": questions,
+        "qualification_question_answers": [],
+        "qualification_followup_questions": questions,
+        "qualification_followup_answers": [],
+        "qualification_followup_question_round": active_round,
+        "ledger_entries": question_event["sequence"],
+        "ledger_tail_sha256": question_event["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_question_round_operator_result(state, work)
 
 
 def _resume_qualification_answer_source(
@@ -17486,6 +19098,8 @@ def _clarification_boundary_result(
             result.get("status") != "waiting_for_model"
             or result.get("stopped") not in {
                 "formulating_qualification_question_round",
+                "assessing_qualification_answers",
+                "formulating_qualification_followup_question_round",
                 "formulating_gap_question",
                 "formulating_gap_question_round",
                 "formulating_follow_up_gap_question_round",
@@ -17513,6 +19127,7 @@ def _clarification_boundary_result(
             result.get("status") != "needs_operator"
             or result.get("stopped") not in {
                 "awaiting_qualification_clarification_answers",
+                "awaiting_qualification_followup_answers",
                 "awaiting_gap_answer",
                 "awaiting_gap_answers",
                 "awaiting_prepared_question_round_answer",
@@ -17666,6 +19281,98 @@ def _clarification_boundary_result(
             return _blocked(
                 "invalid clarification boundary",
                 "the qualification answer round lost its complete ordered source evidence",
+            )
+    elif boundary == "qualification_answer_assessment_complete":
+        assessment = result.get("assessment")
+        if (
+            result.get("status")
+            != "qualification_answer_assessment_complete"
+            or result.get("stopped")
+            != "qualification_answer_assessment_recorded"
+            or not isinstance(assessment, dict)
+            or assessment.get("complete") is not True
+            or assessment.get("route")
+            not in {
+                "ready_for_qualification_admission",
+                "ready_for_qualification_follow_up",
+            }
+            or not isinstance(assessment.get("assessments"), list)
+            or assessment.get("assessment_count")
+            != len(assessment["assessments"])
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the qualification assessment lost its complete evidence-bound outcome set",
+            )
+    elif boundary == "qualification_resolution_admission_complete":
+        resolutions = result.get("resolutions")
+        follow_ups = result.get("follow_ups")
+        if (
+            result.get("status")
+            != "qualification_resolution_admission_complete"
+            or result.get("stopped")
+            != "qualification_resolution_admission_recorded"
+            or result.get("complete") is not True
+            or not isinstance(resolutions, list)
+            or not isinstance(follow_ups, list)
+            or result.get("resolution_count") != len(resolutions)
+            or result.get("follow_up_count") != len(follow_ups)
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the qualification admission lost its exact resolution and follow-up sets",
+            )
+    elif boundary == "qualification_obligation_closure_complete":
+        if (
+            result.get("status") != "qualification_obligation_closure_complete"
+            or result.get("stopped") != "qualification_obligation_closure_recorded"
+            or result.get("reconciled") is not True
+            or result.get("route")
+            not in {"all_obligations_resolved", "follow_up_required"}
+            or not isinstance(result.get("resolved_obligation_ids"), list)
+            or not isinstance(result.get("unresolved_obligation_ids"), list)
+            or result.get("resolved_count")
+            != len(result["resolved_obligation_ids"])
+            or result.get("unresolved_count")
+            != len(result["unresolved_obligation_ids"])
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the qualification closure lost its exact resolved and unresolved obligation sets",
+            )
+    elif boundary in {"first_layer_complete", "qualification_follow_up_required"}:
+        expected_disposition = (
+            "first_layer_complete"
+            if boundary == "first_layer_complete"
+            else "clarification_required"
+        )
+        remaining = result.get("remaining_gaps")
+        if (
+            result.get("status") != expected_disposition
+            or result.get("stopped") != "effective_first_layer_terminal_recorded"
+            or result.get("decided") is not True
+            or result.get("disposition") != expected_disposition
+            or not isinstance(remaining, list)
+            or result.get("remaining_gap_count") != len(remaining)
+            or (boundary == "first_layer_complete" and remaining)
+            or (boundary == "qualification_follow_up_required" and not remaining)
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the effective terminal lost its exact current source-gap disposition",
+            )
+    elif boundary == "qualification_followup_admission_complete":
+        obligations = result.get("clarification_obligations")
+        if (
+            result.get("status") != "qualification_followup_admission_complete"
+            or result.get("stopped") != "qualification_followup_admission_recorded"
+            or result.get("round") != 2
+            or not isinstance(obligations, list)
+            or not obligations
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the follow-up admission lost its exact nonempty next-round obligations",
             )
     elif boundary == "additional_source_projection_pending":
         if (
@@ -17929,9 +19636,25 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
                 work, opening, purpose, assess_gap_answers=True
             )
         elif stopped == "qualification_question_round_answered":
-            return _clarification_boundary_result(
-                result, "qualification_answers_complete"
-            )
+            result = request_qualification_answer_assessment(work)
+            continue
+        elif stopped == "qualification_answer_assessment_recorded":
+            result = run_qualification_resolution_admission(work)
+            continue
+        elif stopped == "qualification_resolution_admission_recorded":
+            result = run_qualification_obligation_closure(work)
+            continue
+        elif stopped == "qualification_obligation_closure_recorded":
+            result = run_effective_first_layer_terminal(work)
+            continue
+        elif stopped == "effective_first_layer_terminal_recorded":
+            if result.get("status") == "first_layer_complete":
+                return _clarification_boundary_result(result, "first_layer_complete")
+            result = run_qualification_followup_admission(work)
+            continue
+        elif stopped == "qualification_followup_admission_recorded":
+            result = request_qualification_followup_question_round(work)
+            continue
         elif stopped in {
             "gap_answer_assessment_recorded",
             "prepared_question_round_assessment_recorded",
@@ -18209,6 +19932,14 @@ def _resume(
         "formulating_qualification_question_round",
         "awaiting_qualification_clarification_answers",
         "qualification_question_round_answered",
+        "assessing_qualification_answers",
+        "qualification_answer_assessment_recorded",
+        "qualification_resolution_admission_recorded",
+        "qualification_obligation_closure_recorded",
+        "effective_first_layer_terminal_recorded",
+        "qualification_followup_admission_recorded",
+        "formulating_qualification_followup_question_round",
+        "awaiting_qualification_followup_answers",
         "formulating_gap_question_round",
         "awaiting_gap_answers",
         "gap_question_round_answered",
@@ -18284,6 +20015,14 @@ def _resume(
         "formulating_qualification_question_round",
         "awaiting_qualification_clarification_answers",
         "qualification_question_round_answered",
+        "assessing_qualification_answers",
+        "qualification_answer_assessment_recorded",
+        "qualification_resolution_admission_recorded",
+        "qualification_obligation_closure_recorded",
+        "effective_first_layer_terminal_recorded",
+        "qualification_followup_admission_recorded",
+        "formulating_qualification_followup_question_round",
+        "awaiting_qualification_followup_answers",
         *SOURCE_COLLECTION_PHASES,
     } or not supported_ledger_length:
         return _blocked("invalid intake state", "the saved purpose stage is unsupported")
@@ -18362,6 +20101,11 @@ def _resume(
     if phase == "awaiting_qualification_clarification_answers":
         qualification_answers = state.get("qualification_question_answers", [])
         round_error = (
+            _validate_followup_qualification_answer_history(
+                work, state, entries, purpose_bytes.decode("utf-8")
+            )
+            if state.get("qualification_round_number", 1) > 1
+            else
             _validate_qualification_answer_history(
                 work, state, entries, purpose_bytes.decode("utf-8")
             )
@@ -18414,6 +20158,81 @@ def _resume(
                 "resume without another answer; every prepared question already has immutable evidence",
             )
         return _qualification_question_round_answered_result(state, work)
+
+    if phase == "assessing_qualification_answers":
+        request_error = _qualification_answer_assessment_request_error(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+        if request_error:
+            return request_error
+        if (
+            source_supplied
+            or project_source
+            or clarify_gap
+            or gap_input_supplied
+            or resolve_gap
+            or assess_gap_answers
+            or conduct_question_round
+            or continue_clarification
+            or begin_source_collection
+            or source_collection_action is not None
+            or source_collection_kind is not None
+        ):
+            return _blocked(
+                "qualification answer assessment active",
+                "finish the current code-controlled assessment without another intake action",
+            )
+        if not (
+            _qualification_answer_assessment_directory(work, state)
+            / "assessment.json"
+        ).exists():
+            return _qualification_answer_assessment_model_result(state, work)
+        return _consume_qualification_answer_assessment(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+
+    if phase == "qualification_answer_assessment_recorded":
+        completed_error = _validate_completed_qualification_answer_assessment(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+        if completed_error:
+            return completed_error
+        if (
+            source_supplied
+            or project_source
+            or clarify_gap
+            or gap_input_supplied
+            or resolve_gap
+            or assess_gap_answers
+            or conduct_question_round
+            or continue_clarification
+            or begin_source_collection
+            or source_collection_action is not None
+            or source_collection_kind is not None
+        ):
+            return _blocked(
+                "qualification answer assessment already completed",
+                "resume without another intake action; the complete assessment is immutable",
+            )
+        return _qualification_answer_assessment_result(state, work)
+
+    if phase == "qualification_resolution_admission_recorded":
+        return run_qualification_resolution_admission(work)
+
+    if phase == "qualification_obligation_closure_recorded":
+        return run_qualification_obligation_closure(work)
+
+    if phase == "effective_first_layer_terminal_recorded":
+        return run_effective_first_layer_terminal(work)
+
+    if phase == "qualification_followup_admission_recorded":
+        return run_qualification_followup_admission(work)
+
+    if phase == "formulating_qualification_followup_question_round":
+        return _qualification_followup_question_model_result(state, work)
+
+    if phase == "awaiting_qualification_followup_answers":
+        return _qualification_followup_operator_result(state, work)
 
     if _qualification_answer_source_active(state):
         if (
@@ -19666,6 +21485,16 @@ def main() -> int:
         help="formulate one code-bound operator question for every admitted obligation",
     )
     parser.add_argument(
+        "--run-qualification-answer-assessment",
+        action="store_true",
+        help="assess every preserved qualification answer through its bound obligation",
+    )
+    parser.add_argument(
+        "--run-qualification-followup-question-round",
+        action="store_true",
+        help="formulate one isolated question round for current follow-up obligations",
+    )
+    parser.add_argument(
         "--assess-gap-answers",
         action="store_true",
         help="request assessment of every preserved question-round answer",
@@ -19712,6 +21541,8 @@ def main() -> int:
         args.run_relationship_correction,
         args.run_correction_verification,
         args.run_qualification_question_round,
+        args.run_qualification_answer_assessment,
+        args.run_qualification_followup_question_round,
         args.run_gap_clarification,
         args.run_gap_answer_assessment,
         args.run_additional_source_gap_assessment,
@@ -19922,6 +21753,28 @@ def main() -> int:
             )
         else:
             result = run_qualification_question_round(args.work)
+    elif args.run_qualification_answer_assessment:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
+            or args.project_source or args.clarify_gap or args.assess_gap_answers
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run qualification answer assessment with only --work and --run-qualification-answer-assessment",
+            )
+        else:
+            result = run_qualification_answer_assessment(args.work)
+    elif args.run_qualification_followup_question_round:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
+            or args.project_source or args.clarify_gap or args.assess_gap_answers
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run qualification follow-up formulation with only --work and --run-qualification-followup-question-round",
+            )
+        else:
+            result = run_qualification_followup_question_round(args.work)
     elif args.run_gap_clarification:
         if (
             any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
@@ -20005,6 +21858,12 @@ def main() -> int:
         "ready_for_projection": 0,
         "ready_for_projection_assessment": 0,
         "ready_for_qualification_assessment": 0,
+        "qualification_answer_assessment_complete": 0,
+        "qualification_resolution_admission_complete": 0,
+        "qualification_obligation_closure_complete": 0,
+        "first_layer_complete": 0,
+        "clarification_required": 0,
+        "qualification_followup_admission_complete": 0,
         "ready_for_operator_interview": 0,
         "source_projection_closure": 0,
         "waiting_for_model": 2,

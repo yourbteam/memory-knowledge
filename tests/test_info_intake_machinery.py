@@ -11836,23 +11836,59 @@ def test_operator_launcher_prepares_first_qualification_clarification_question(
     supplied.write_bytes(_representative_workbook_bytes())
     answer = tmp_path / "supporting-reference.xlsx"
     answer.write_bytes(_representative_workbook_bytes())
+    followup_answer = tmp_path / "supporting-logic.py"
+    followup_answer.write_text("FORMULA = 'net_revenue / transactions'\n")
     _advance_to_first_source(work)
     START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
     messages: list[str] = []
-    answers = iter(["finish_sources", str(answer)])
+    answers = iter(["finish_sources", str(answer), str(followup_answer)])
 
     def run_model(_argv: list[str], *, check: bool) -> subprocess.CompletedProcess[str]:
         assert check is False
-        model_answers = iter([
-            "local_file",
-            "Please provide the workbook source containing this missing part?",
-        ])
-        prepared = START_INTAKE.run_qualification_question_round(
-            work,
-            input_fn=lambda _prompt: next(model_answers),
-            output_fn=lambda _message: None,
+        active_state = json.loads(
+            (work / "intake-state.json").read_text(encoding="utf-8")
         )
-        assert prepared["status"] == "needs_operator"
+        if active_state["phase"] == "formulating_qualification_question_round":
+            model_answers = iter([
+                "local_file",
+                "Please provide the workbook source containing this missing part?",
+            ])
+            prepared = START_INTAKE.run_qualification_question_round(
+                work,
+                input_fn=lambda _prompt: next(model_answers),
+                output_fn=lambda _message: None,
+            )
+            assert prepared["status"] == "needs_operator"
+        elif (
+            active_state["phase"]
+            == "formulating_qualification_followup_question_round"
+        ):
+            model_answers = iter([
+                "local_file",
+                "Please provide a different source that contains this missing part?",
+            ])
+            prepared = START_INTAKE.run_qualification_followup_question_round(
+                work,
+                input_fn=lambda _prompt: next(model_answers),
+                output_fn=lambda _message: None,
+            )
+            assert prepared["status"] == "needs_operator"
+        else:
+            assert active_state["phase"] == "assessing_qualification_answers"
+            assessment_answers = iter([
+                "codex",
+                "qualification-answer-assessment",
+                "resolves_obligation",
+                "The supplied workbook contains the exact requested unit.",
+            ])
+            assessed = START_INTAKE.run_qualification_answer_assessment(
+                work,
+                input_fn=lambda _prompt: next(assessment_answers),
+                output_fn=lambda _message: None,
+            )
+            assert assessed["status"] == (
+                "qualification_answer_assessment_complete"
+            )
         return subprocess.CompletedProcess(_argv, 0)
 
     returncode = INTAKE_RUNNER._continue_intake(
@@ -11868,12 +11904,12 @@ def test_operator_launcher_prepares_first_qualification_clarification_question(
 
     state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
     assert returncode == 0
-    assert state["phase"] == "qualification_question_round_answered"
-    assert state["question"] is None
-    assert state["questions"][0]["answer_type"] == "local_file"
-    assert state["questions"][0]["answers_obligation"]["unit"] == (
-        "xl/customData/metrics.xml"
-    )
+    assert state["phase"] == "effective_first_layer_terminal_recorded"
+    assert state["effective_first_layer_terminal"]["disposition"][
+        "disposition"
+    ] == "first_layer_complete"
+    assert len(state["qualification_followup_questions"]) == 1
+    assert len(state["qualification_followup_answers"]) == 1
     assert len(state["qualification_question_answers"]) == 1
 
 
@@ -11898,16 +11934,36 @@ def test_operator_launcher_interviews_one_source_collection_answer_at_a_time(
 
     def run_model(_argv: list[str], *, check: bool) -> subprocess.CompletedProcess[str]:
         assert check is False
-        model_answers = iter([
-            "local_file",
-            "Please provide the workbook source containing this missing part?",
-        ])
-        prepared = START_INTAKE.run_qualification_question_round(
-            work,
-            input_fn=lambda _prompt: next(model_answers),
-            output_fn=lambda _message: None,
+        active_state = json.loads(
+            (work / "intake-state.json").read_text(encoding="utf-8")
         )
-        assert prepared["status"] == "needs_operator"
+        if active_state["phase"] == "formulating_qualification_question_round":
+            model_answers = iter([
+                "local_file",
+                "Please provide the workbook source containing this missing part?",
+            ])
+            prepared = START_INTAKE.run_qualification_question_round(
+                work,
+                input_fn=lambda _prompt: next(model_answers),
+                output_fn=lambda _message: None,
+            )
+            assert prepared["status"] == "needs_operator"
+        else:
+            assert active_state["phase"] == "assessing_qualification_answers"
+            assessment_answers = iter([
+                "codex",
+                "qualification-answer-assessment",
+                "resolves_obligation",
+                "The supplied source contains the requested unit.",
+            ])
+            assessed = START_INTAKE.run_qualification_answer_assessment(
+                work,
+                input_fn=lambda _prompt: next(assessment_answers),
+                output_fn=lambda _message: None,
+            )
+            assert assessed["status"] == (
+                "qualification_answer_assessment_complete"
+            )
         return subprocess.CompletedProcess(_argv, 0)
 
     returncode = INTAKE_RUNNER._continue_intake(
@@ -11925,7 +11981,7 @@ def test_operator_launcher_interviews_one_source_collection_answer_at_a_time(
     assert len(prompts) == 5
     assert START_INTAKE.run_source_projection_closure(work)["source_count"] == 5
     state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
-    assert state["phase"] == "qualification_question_round_answered"
+    assert state["phase"] == "effective_first_layer_terminal_recorded"
 
 
 def test_independent_source_collection_adds_projects_and_closes_replayably(
@@ -12426,10 +12482,8 @@ def test_qualification_local_file_answer_enters_through_real_operator_turn(
     completed = START_INTAKE.run_clarification_boundary(work)
     replay_ledger = (work / "ledger.jsonl").read_bytes()
 
-    assert completed["boundary"] == "qualification_answers_complete"
-    assert completed["answered_question_count"] == 1
-    assert completed["question_count"] == 1
-    assert completed["answer_source_ids"] == [result["source"]["id"]]
+    assert completed["boundary"] == "needs_model_interview"
+    assert completed["stopped"] == "assessing_qualification_answers"
     saved = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
     answer_record = saved["qualification_question_answers"][0]
     assert answer_record["source"]["sha256"] == result["source"]["sha256"]
@@ -12671,7 +12725,8 @@ def test_qualification_url_answer_is_frozen_and_projected_once(
         "xl/customData/metrics.xml"
     )
     assert (work / frozen["source"]["stored_path"]).read_bytes() == content
-    assert completed["boundary"] == "qualification_answers_complete"
+    assert completed["boundary"] == "needs_model_interview"
+    assert completed["stopped"] == "assessing_qualification_answers"
     state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
     assert state["qualification_question_answers"][0]["submission"] == {
         "channel": "url",
@@ -12956,3 +13011,327 @@ def test_source_set_probe_units_reject_mismatch_and_duplicate_outcomes() -> None
     assert "projection sha256 differs" in bound["why"]
     assert duplicate["complete"] is False
     assert "duplicate=['source-000001']" in duplicate["why"]
+
+
+def test_first_layer_terminal_requires_the_exact_current_gap_projection() -> None:
+    gap = {
+        "source_id": "source-000003",
+        "unit": "xl/customData/metrics.xml",
+        "reason": "no readable adapter",
+    }
+    outcome = {
+        "source_id": "source-000003",
+        "projection_id": "projection-source-000003-v1",
+        "projection_sha256": "a" * 64,
+        "method": "spreadsheet_ooxml_v1",
+        "qualification": "readable_projection_incomplete",
+        "gaps": [gap],
+    }
+    obligation = {
+        "id": "clarification-obligation-000001",
+        "source_id": gap["source_id"],
+        "projection_id": outcome["projection_id"],
+        "projection_sha256": outcome["projection_sha256"],
+        "method": outcome["method"],
+        "qualification": outcome["qualification"],
+        "unit": gap["unit"],
+        "reason": gap["reason"],
+        "gap_sha256": START_INTAKE.effective_first_layer_terminal._digest(gap),
+    }
+    exact = START_INTAKE.effective_first_layer_terminal.decide(
+        {"source_count": 1, "outcomes": [outcome]},
+        [obligation],
+        [obligation["id"]],
+    )
+    changed_projection = START_INTAKE.effective_first_layer_terminal.decide(
+        {
+            "source_count": 1,
+            "outcomes": [{**outcome, "projection_sha256": "b" * 64}],
+        },
+        [obligation],
+        [obligation["id"]],
+    )
+
+    assert exact["disposition"] == "first_layer_complete"
+    assert changed_projection["disposition"] == "clarification_required"
+    assert changed_projection["remaining_gaps"] == [gap]
+
+
+def test_qualification_answers_enter_one_evidence_bound_assessment_round(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "reference.xlsx"
+    supplied.write_bytes(_representative_workbook_bytes())
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+    START_INTAKE.run_source_set_qualification(work)
+    START_INTAKE.run_qualification_admission(work)
+    START_INTAKE.request_qualification_question_round(work)
+    question_answers = iter([
+        "operator_text",
+        "What exact readable content belongs to this missing workbook unit?",
+    ])
+    START_INTAKE.run_qualification_question_round(
+        work,
+        input_fn=lambda _prompt: next(question_answers),
+        output_fn=lambda _message: None,
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_answer="The unit contains the dashboard metric definition.",
+    )
+
+    answer_state = json.loads(
+        (work / "intake-state.json").read_text(encoding="utf-8")
+    )
+    projection_path = (
+        work
+        / answer_state["qualification_question_answers"][0]["projection"]["path"]
+    )
+    projection_bytes = projection_path.read_bytes()
+    ledger_before_changed_evidence = (work / "ledger.jsonl").read_bytes()
+    projection_path.write_bytes(projection_bytes + b"changed")
+    changed = START_INTAKE.run_clarification_boundary(work)
+
+    assert changed["status"] == "blocked"
+    assert "projection bytes" in changed["why"]
+    assert (work / "ledger.jsonl").read_bytes() == ledger_before_changed_evidence
+    projection_path.write_bytes(projection_bytes)
+
+    requested = START_INTAKE.run_clarification_boundary(work)
+
+    assert requested["boundary"] == "needs_model_interview"
+    assert requested["stopped"] == "assessing_qualification_answers"
+    assert requested["work"][0]["command"][-1] == (
+        "--run-qualification-answer-assessment"
+    )
+    model_answers = iter([
+        "codex",
+        "qualification-answer-assessment",
+        "yes",
+        "resolves_obligation",
+        "The answer supplies readable content for the exact missing unit.",
+    ])
+    assessment_messages: list[str] = []
+    assessed = START_INTAKE.run_qualification_answer_assessment(
+        work,
+        input_fn=lambda _prompt: next(model_answers),
+        output_fn=assessment_messages.append,
+    )
+    ledger_after = (work / "ledger.jsonl").read_bytes()
+
+    assert assessed["status"] == "qualification_answer_assessment_complete"
+    assert assessed["assessment"]["assessment_count"] == 1
+    assert assessed["assessment"]["resolving_count"] == 1
+    assert assessed["assessment"]["assessments"][0]["verdict"] == (
+        "resolves_obligation"
+    )
+    assert len(assessment_messages) == 1
+    assert "choose one of" in assessment_messages[0]
+    admitted = START_INTAKE.run_clarification_boundary(work)
+
+    assert admitted["boundary"] == "first_layer_complete"
+    assert admitted["disposition"] == "first_layer_complete"
+    assert admitted["remaining_gap_count"] == 0
+    obligation_closure = admitted["qualification_obligation_closure"]
+    assert obligation_closure["resolved_count"] == 1
+    assert obligation_closure["unresolved_count"] == 0
+    assert obligation_closure["resolutions"][0]["obligation_id"] == (
+        "clarification-obligation-000001"
+    )
+    assert obligation_closure["resolutions"][0]["answer_projection_id"] == (
+        assessed["assessment"]["assessments"][0]["answer_projection_id"]
+    )
+    ledger_after_admission = (work / "ledger.jsonl").read_bytes()
+    assert ledger_after_admission.startswith(ledger_after)
+    assert START_INTAKE.run_clarification_boundary(work) == admitted
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after_admission
+
+
+def test_nonresolving_qualification_answer_admits_exact_followup_obligation(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    supplied = tmp_path / "reference.xlsx"
+    supplied.write_bytes(_representative_workbook_bytes())
+    _advance_to_first_source(work)
+    START_INTAKE.drive(work, "There is a new intake", REAL_PURPOSE, supplied)
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, project_source=True
+    )
+    START_INTAKE.drive(
+        work, "There is a new intake", REAL_PURPOSE, begin_source_collection=True
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        source_collection_action="finish_sources",
+    )
+    START_INTAKE.run_source_set_qualification(work)
+    START_INTAKE.run_qualification_admission(work)
+    START_INTAKE.request_qualification_question_round(work)
+    question_answers = iter([
+        "operator_text",
+        "What exact readable content belongs to this missing workbook unit?",
+    ])
+    START_INTAKE.run_qualification_question_round(
+        work,
+        input_fn=lambda _prompt: next(question_answers),
+        output_fn=lambda _message: None,
+    )
+    START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_answer="I do not know what this unit contains.",
+    )
+    START_INTAKE.run_clarification_boundary(work)
+    assessment_answers = iter([
+        "codex",
+        "qualification-answer-assessment",
+        "does_not_resolve_obligation",
+        "The answer supplies no readable content for the missing unit.",
+    ])
+    START_INTAKE.run_qualification_answer_assessment(
+        work,
+        input_fn=lambda _prompt: next(assessment_answers),
+        output_fn=lambda _message: None,
+    )
+    first_round_journal = (
+        work / "qualification-question-round/interview.jsonl"
+    ).read_bytes()
+
+    followup = START_INTAKE.run_clarification_boundary(work)
+
+    assert followup["boundary"] == "needs_model_interview"
+    assert followup["stopped"] == (
+        "formulating_qualification_followup_question_round"
+    )
+    followup_answers = iter([
+        "operator_text",
+        "What readable content belongs to this still-missing workbook unit?",
+    ])
+    prepared = START_INTAKE.run_qualification_followup_question_round(
+        work,
+        input_fn=lambda _prompt: next(followup_answers),
+        output_fn=lambda _message: None,
+    )
+    ledger_after = (work / "ledger.jsonl").read_bytes()
+
+    assert prepared["status"] == "needs_operator"
+    assert prepared["stopped"] == "awaiting_qualification_followup_answers"
+    obligation = prepared["question"]["answers_obligation"]
+    assert obligation["source_id"] == "source-000003"
+    assert obligation["unit"] == "xl/customData/metrics.xml"
+    assert obligation["id"] == "qualification-follow-up-000002-000001"
+    assert (
+        work / "qualification-question-round/interview.jsonl"
+    ).read_bytes() == first_round_journal
+    assert START_INTAKE.run_clarification_boundary(work) == {
+        **prepared,
+        "boundary": "needs_operator_answer",
+    }
+    assert (work / "ledger.jsonl").read_bytes() == ledger_after
+
+    answered = START_INTAKE.drive(
+        work,
+        "There is a new intake",
+        REAL_PURPOSE,
+        gap_answer="The missing unit defines the dashboard metric as net revenue divided by transactions.",
+    )
+    assert answered["status"] == "ready_for_qualification_assessment"
+    state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
+    assert state["qualification_round_number"] == 2
+    assert [item["round"] for item in state["qualification_rounds"]] == [1]
+    assert state["qualification_rounds"][0]["answers"][0]["submission"][
+        "value"
+    ] == "I do not know what this unit contains."
+    assert len(state["qualification_followup_answers"]) == 1
+
+    assessment_request = START_INTAKE.run_clarification_boundary(work)
+    assert assessment_request["boundary"] == "needs_model_interview"
+    assert assessment_request["stopped"] == "assessing_qualification_answers"
+    followup_assessment_answers = iter([
+        "codex",
+        "qualification-answer-assessment",
+        "resolves_obligation",
+        "The follow-up answer supplies readable logic for the exact missing unit.",
+    ])
+    assessed = START_INTAKE.run_qualification_answer_assessment(
+        work,
+        input_fn=lambda _prompt: next(followup_assessment_answers),
+        output_fn=lambda _message: None,
+    )
+    assert assessed["assessment"]["resolving_count"] == 1
+
+    terminal = START_INTAKE.run_clarification_boundary(work)
+    assert terminal["boundary"] == "first_layer_complete"
+    assert terminal["remaining_gap_count"] == 0
+    assert terminal["qualification_obligation_closure"][
+        "resolved_obligation_ids"
+    ] == ["qualification-follow-up-000002-000001"]
+    final_ledger = (work / "ledger.jsonl").read_bytes()
+    state_path = work / "intake-state.json"
+    final_state = state_path.read_bytes()
+    terminal_state = json.loads(final_state)
+    active_answer = terminal_state["qualification_question_answers"][0]
+    ledger_entries = [
+        json.loads(line)
+        for line in final_ledger.decode("utf-8").splitlines()
+        if line.strip()
+    ]
+    original_source = next(
+        entry["source"]
+        for entry in ledger_entries
+        if isinstance(entry.get("source"), dict)
+        and entry["source"].get("id") == "source-000003"
+    )
+    original_projection = next(
+        outcome["projection"]
+        for outcome in terminal_state["effective_first_layer_terminal"][
+            "source_projection_closure"
+        ]["outcomes"]
+        if outcome["source_id"] == "source-000003"
+    )
+    for relative_path in (
+        original_source.get("path", original_source.get("stored_path")),
+        original_projection["path"],
+        active_answer["source"]["path"],
+        active_answer["projection"]["path"],
+    ):
+        evidence_path = work / relative_path
+        evidence_bytes = evidence_path.read_bytes()
+        evidence_path.write_bytes(evidence_bytes + b"changed")
+        changed_evidence = START_INTAKE.run_clarification_boundary(work)
+        assert changed_evidence["status"] == "blocked"
+        assert "changed" in changed_evidence["stopped"]
+        assert (work / "ledger.jsonl").read_bytes() == final_ledger
+        evidence_path.write_bytes(evidence_bytes)
+    changed_state = json.loads(final_state)
+    changed_state["qualification_rounds"][0]["qualification_admission"][
+        "clarification_obligations"
+    ][0]["unit"] = "changed-unit"
+    state_path.write_text(json.dumps(changed_state, sort_keys=True) + "\n")
+    changed = START_INTAKE.run_clarification_boundary(work)
+    assert changed["status"] == "blocked"
+    assert "terminal" in changed["stopped"]
+    assert (work / "ledger.jsonl").read_bytes() == final_ledger
+    state_path.write_bytes(final_state)
+    assert START_INTAKE.run_clarification_boundary(work) == terminal
+    assert (work / "ledger.jsonl").read_bytes() == final_ledger
