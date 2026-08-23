@@ -12,7 +12,7 @@ import sys
 from typing import Any
 
 
-CONTRACT = 1
+CONTRACT = 2
 
 
 class ResolutionError(ValueError):
@@ -166,10 +166,22 @@ def _participant_contract(
     known_role = "target" if unresolved_role == "origin" else "origin"
     known_id = ids[known_role]
     known_element = element_by_id.get(known_id)
+    known_status = (
+        known_element.get("status") if isinstance(known_element, dict) else None
+    )
+    known_gap_is_preserved = (
+        known_status == "gap"
+        and known_element.get("content") == ""
+        and isinstance(known_element.get("gap_reason"), str)
+        and bool(known_element["gap_reason"].strip())
+        and isinstance(known_element.get("region"), list)
+        and len(known_element["region"]) == 4
+        and all(isinstance(value, int) for value in known_element["region"])
+    )
     if (
         not isinstance(known_id, str)
         or not isinstance(known_element, dict)
-        or known_element.get("status") != "readable"
+        or (known_status != "readable" and not known_gap_is_preserved)
         or (
             relationship.get("participant_id") is not None
             and relationship.get("participant_id") != known_id
@@ -189,6 +201,7 @@ def _participant_contract(
         "known_role": known_role,
         "known_id": known_id,
         "known_point": known_point,
+        "known_status": known_status,
     }
 
 
@@ -285,7 +298,7 @@ def _inputs(
             )
             if known_id is not None and (
                 not isinstance(known_element, dict)
-                or known_element.get("status") != "readable"
+                or known_element.get("status") != contract.get("known_status", "readable")
                 or (
                     contract["mode"] == "ambiguous_identity"
                     and not _contains(known_element.get("region"), known_point)
@@ -670,6 +683,7 @@ def _question(
     relationship: dict[str, Any],
     answer: str,
     state: dict[str, Any],
+    contract_version: int = CONTRACT,
 ) -> dict[str, object] | None:
     context = {
         "bound_gap": clarification["gap"],
@@ -714,7 +728,12 @@ def _question(
         }
     if draft["verdict"] == "does_not_resolve_gap":
         return None
+    contract = _participant_contract(projection, relationship)
     if clarification.get("prior_rejection") is not None:
+        if contract_version >= 2 and contract["mode"] == "missing_participant":
+            return _missing_participant_question(
+                projection, clarification, relationship, context, draft
+            )
         if "retry_from_element_id" not in draft:
             choices, evidence = _element_choices(projection, set())
             return {
@@ -767,7 +786,6 @@ def _question(
                 "context": context,
             }
         return None
-    contract = _participant_contract(projection, relationship)
     if contract["mode"] == "missing_both_participants":
         return _missing_both_participants_question(projection, context, draft)
     if contract["mode"] == "complete_recorded_participants":
@@ -1034,6 +1052,7 @@ def _replay(
     relationship: dict[str, Any],
     answer: str,
     accepted_assessment: dict[str, Any] | None,
+    contract_version: int = CONTRACT,
 ) -> tuple[dict[str, Any], dict[str, object] | None, bool]:
     draft = (
         {
@@ -1048,7 +1067,10 @@ def _replay(
     completed = False
     for entry in entries:
         if entry["event"] == "question_asked":
-            expected = _question(projection, clarification, relationship, answer, state)
+            expected = _question(
+                projection, clarification, relationship, answer, state,
+                contract_version,
+            )
             if pending is not None or expected != entry.get("question"):
                 raise ResolutionError(f"resolution-question-invalid:{entry['sequence']}")
             pending = expected
@@ -1060,7 +1082,8 @@ def _replay(
             pending = None
         elif entry["event"] == "resolution_completed":
             if pending is not None or _question(
-                projection, clarification, relationship, answer, state
+                projection, clarification, relationship, answer, state,
+                contract_version,
             ) is not None:
                 raise ResolutionError(f"resolution-completion-invalid:{entry['sequence']}")
             completed = True
@@ -1146,6 +1169,9 @@ def _missing_participant_candidate(
             ),
             "locked_known_role": known_role,
             "locked_known_element_id": known_id,
+            "locked_known_element_status": contract.get(
+                "known_status", "readable"
+            ),
         },
     }
     return {
@@ -1213,6 +1239,7 @@ def _candidate(
     relationship: dict[str, Any],
     answer_source_sha256: str,
     state: dict[str, Any],
+    contract_version: int = CONTRACT,
 ) -> dict[str, object]:
     draft = state["draft"]
     if draft.get("verdict") != "resolves_gap" or "description" not in draft:
@@ -1224,6 +1251,28 @@ def _candidate(
             "relationships": [],
         }
     if clarification.get("prior_rejection") is not None:
+        contract = _participant_contract(projection, relationship)
+        if contract_version >= 2 and contract["mode"] == "missing_participant":
+            candidate = _missing_participant_candidate(
+                projection,
+                clarification,
+                relationship,
+                answer_source_sha256,
+                draft,
+            )
+            resolved = candidate["relationships"][0]
+            resolved["binding_method"] = (
+                "verifier_rejection_corrected_missing_participant_with_locked_endpoint"
+            )
+            resolved["resolution_evidence"].update({
+                "rejected_candidate_sha256": clarification["prior_rejection"][
+                    "candidate_sha256"
+                ],
+                "rejected_verification_sha256": clarification[
+                    "prior_rejection"
+                ]["verification_result_sha256"],
+            })
+            return candidate
         resolved = {
             "id": f"{relationship['id']}-resolution-000001",
             "resolution_of": relationship["id"],
@@ -1396,6 +1445,7 @@ def run(
     answer_projection_path: Path,
     answer_projection_sha256: str,
     purpose: str,
+    contract_version: int = CONTRACT,
     input_fn: Callable[[str], str] | None = None,
     output_fn: Callable[[str], None] | None = None,
 ) -> dict[str, object]:
@@ -1423,6 +1473,7 @@ def run(
             relationship,
             answer,
             accepted_assessment,
+            contract_version,
         )
         candidate = _candidate(
             projection,
@@ -1430,10 +1481,12 @@ def run(
             relationship,
             answer_source_sha256,
             state,
+            contract_version,
         )
+        candidate["schema_version"] = contract_version
         candidate_bytes = json.dumps(candidate, indent=2, sort_keys=True).encode() + b"\n"
         result = {
-            "schema_version": CONTRACT,
+            "schema_version": contract_version,
             "projection_sha256": projection_sha256,
             "clarification_sha256": clarification_sha256,
             "operator_answer_source_sha256": answer_source_sha256,
@@ -1458,7 +1511,8 @@ def run(
                 raise ResolutionError("resolution-result-or-candidate-changed")
             return result
         question = pending or _question(
-            projection, clarification, relationship, answer, state
+            projection, clarification, relationship, answer, state,
+            contract_version,
         )
         if question is None:
             _append(journal_path, "resolution_completed", {"result_sha256": _digest(result_bytes)})

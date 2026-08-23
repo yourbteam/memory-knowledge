@@ -18114,7 +18114,7 @@ def _gap_resolution_inputs(
                 f"attempt {attempt} binding differs from its preserved request",
             )
         if (
-            clarification.get("schema_version") != gap_resolution.CONTRACT
+            clarification.get("schema_version") != saved_resolution.get("contract", 1)
             or clarification.get("gap") != binding["gap"]
             or clarification.get("question") != binding["question"]
             or clarification.get("accepted_assessment") != assessment
@@ -18527,6 +18527,7 @@ def _validated_gap_resolution(
                 work / _resolution_paths(saved_resolution["attempt"])["attempt_dir"],
                 **inputs,
                 purpose=purpose,
+                contract_version=int(saved_resolution.get("contract", 1)),
             )
         )
     except gap_resolution.ResolutionError as resolution_error:
@@ -18926,6 +18927,7 @@ def run_gap_resolution(
             work / paths["attempt_dir"],
             **inputs,
             purpose=purpose,
+            contract_version=int(resolution.get("contract", 1)),
             input_fn=input_fn,
             output_fn=output_fn,
         )
@@ -19200,11 +19202,174 @@ def _validate_gap_resolution_history(
                 f"active attempt received {current.get('attempt')}; expected {expected_attempt}",
             )
         if history and current.get("parent_projection") != previous_output:
-            return _blocked(
-                "invalid gap resolution ledger",
-                f"active attempt {expected_attempt} parent does not match prior output",
-            )
+            recoveries = state.get("gap_resolution_recoveries", [])
+            matching_recovery = [
+                item
+                for item in recoveries
+                if isinstance(item, dict)
+                and item.get("after_attempt") == expected_attempt - 1
+                and item.get("from_projection") == previous_output
+                and item.get("to_projection") == current.get("parent_projection")
+            ] if isinstance(recoveries, list) else []
+            if len(matching_recovery) != 1:
+                return _blocked(
+                    "invalid gap resolution ledger",
+                    f"active attempt {expected_attempt} parent does not match prior output",
+                )
     return None
+
+
+def _recover_dropped_locked_gap_participant(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object] | None:
+    """Append a corrective projection when a legacy retry dropped its locked endpoint."""
+    if state.get("gap_resolution_recoveries"):
+        return None
+    if state.get("phase") != "formulating_follow_up_gap_question_round":
+        return None
+    history = state.get("gap_resolution_history")
+    if not isinstance(history, list) or len(history) < 2:
+        return None
+    applied = history[-1]
+    retry = applied.get("retry_of") if isinstance(applied, dict) else None
+    rejected = retry.get("rejected_relationship") if isinstance(retry, dict) else None
+    evidence = rejected.get("resolution_evidence") if isinstance(rejected, dict) else None
+    locked_id = evidence.get("locked_known_element_id") if isinstance(evidence, dict) else None
+    locked_status = evidence.get("locked_known_element_status") if isinstance(evidence, dict) else None
+    gap_id = rejected.get("resolution_of") if isinstance(rejected, dict) else None
+    output = applied.get("output_projection") if isinstance(applied, dict) else None
+    if not (
+        applied.get("terminal_phase") == "gap_resolution_applied"
+        and applied.get("verification_verdict") == "supported"
+        and isinstance(locked_id, str)
+        and locked_status == "gap"
+        and isinstance(gap_id, str)
+        and isinstance(output, dict)
+        and state.get("current_projection") == output
+        and entries
+        and entries[-1].get("event") == "model_follow_up_gap_question_round_requested"
+    ):
+        return None
+    try:
+        current = json.loads((work / str(output["path"])).read_text(encoding="utf-8"))
+        clarification = json.loads(
+            (work / str(applied["clarification_path"])).read_text(encoding="utf-8")
+        )
+        original_gap = clarification["gap"]["record"]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        return _blocked(
+            "locked-participant recovery unavailable",
+            "the applied retry or its bound original gap is unavailable",
+        )
+    admitted = next(
+        (
+            item for item in current.get("relationships", [])
+            if isinstance(item, dict) and item.get("id") == gap_id
+        ),
+        None,
+    )
+    if not isinstance(admitted, dict) or locked_id in {
+        admitted.get("from_id"), admitted.get("to_id")
+    }:
+        return None
+    restored_relationships = [
+        json.loads(json.dumps(original_gap)) if item.get("id") == gap_id else item
+        for item in current["relationships"]
+    ]
+    restored = json.loads(json.dumps(current))
+    restored["relationships"] = restored_relationships
+    restored["projection_lineage"] = {
+        "parent_projection_id": output["id"],
+        "parent_projection_sha256": output["sha256"],
+        "recovery": "dropped_locked_gap_participant",
+        "invalidated_attempt": applied["attempt"],
+        "restored_gap_id": gap_id,
+        "locked_element_id": locked_id,
+    }
+    version = int(output["version"]) + 1
+    content = json.dumps(restored, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    gap_count = sum(item.get("status") == "gap" for item in restored["elements"])
+    gap_count += sum(item.get("status") == "gap" for item in restored["relationships"])
+    gap_count += sum(
+        item.get("status") == "gap" for item in restored.get("scan_regions", [])
+    )
+    projection = {
+        "id": f"projection-source-000003-v{version}",
+        "source_id": output["source_id"],
+        "version": version,
+        "parent_projection_id": output["id"],
+        "path": f"projections/source-000003-v{version}.json",
+        "sha256": _digest_bytes(content),
+        "element_count": len(restored["elements"]),
+        "relationship_count": len(restored["relationships"]),
+        "gap_count": gap_count,
+        "coverage": "unassessed",
+    }
+    projection_path = work / projection["path"]
+    if projection_path.exists():
+        return _blocked(
+            "locked-participant recovery unavailable",
+            f"recovery projection path already exists: {projection['path']}",
+        )
+    invalidation = _ledger_entry(
+        len(entries) + 1,
+        "gap_resolution_locked_participant_invalidated",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "invalidated_attempt": applied["attempt"],
+            "invalidated_projection": output,
+            "gap_id": gap_id,
+            "locked_element_id": locked_id,
+            "interrupted_request_sequence": entries[-1]["sequence"],
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    creation = _ledger_entry(
+        len(entries) + 2,
+        "projection_version_created",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "gap_resolution_locked_participant_recovery",
+            "parent_projection": output,
+            "invalidated_attempt": applied["attempt"],
+            "restored_gap": clarification["gap"],
+            "projection": projection,
+        },
+        str(invalidation["entry_sha256"]),
+    )
+    projection_path.write_bytes(content)
+    _append_ledger(work / "ledger.jsonl", [invalidation, creation])
+    recovery = {
+        "after_attempt": applied["attempt"],
+        "from_projection": output,
+        "to_projection": projection,
+        "gap_id": gap_id,
+        "locked_element_id": locked_id,
+        "invalidation_ledger_sequence": invalidation["sequence"],
+        "projection_ledger_sequence": creation["sequence"],
+    }
+    state.update({
+        "status": "ready_for_projection_assessment",
+        "phase": "gap_resolution_applied",
+        "waiting_for": None,
+        "question": None,
+        "current_projection": projection,
+        "gap_resolution_recoveries": [recovery],
+        "ledger_entries": creation["sequence"],
+        "ledger_tail_sha256": creation["entry_sha256"],
+    })
+    state.pop("follow_up_gap_question_round", None)
+    _write_state(work / "intake-state.json", state)
+    return _request_gap_resolution(
+        work,
+        state,
+        [*entries, invalidation, creation],
+        retry_rejected_resolution=history[-2],
+    )
 
 
 def _validate_clarification_completion_predecessors(
@@ -21004,6 +21169,11 @@ def _resume(
         )
         if recorded_error:
             return recorded_error
+    recovery_result = _recover_dropped_locked_gap_participant(
+        work, state, entries
+    )
+    if recovery_result is not None:
+        return recovery_result
     prepared_history_error = _validate_prepared_question_round_history(
         work, state, entries, purpose_bytes.decode("utf-8")
     )

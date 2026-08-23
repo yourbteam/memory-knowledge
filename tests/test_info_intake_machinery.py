@@ -8769,9 +8769,13 @@ def _missing_endpoint_resolution_fixture(tmp_path: Path) -> dict[str, object]:
         inputs["projection_path"].read_bytes()
     )
     clarification = json.loads(inputs["clarification_path"].read_text())
-    clarification["gap"] = START_INTAKE.gap_clarification.select_gaps(
-        projection, inputs["projection_sha256"]
-    )[0]
+    clarification["gap"] = next(
+        gap
+        for gap in START_INTAKE.gap_clarification.select_gaps(
+            projection, inputs["projection_sha256"]
+        )
+        if gap["collection"] == "relationships"
+    )
     identity = {
         key: clarification["gap"][key]
         for key in (
@@ -8802,6 +8806,179 @@ def _missing_endpoint_resolution_fixture(tmp_path: Path) -> dict[str, object]:
         inputs["clarification_path"].read_bytes()
     )
     return inputs
+
+
+def test_missing_participant_contract_preserves_a_locked_unreadable_endpoint() -> None:
+    """Captured source-000003-v3 shape: relationship knowledge can outgrow text legibility."""
+    projection = {
+        "elements": [{
+            "capture_scope": "region-r04-c02",
+            "content": "",
+            "gap_reason": (
+                "The text is clipped by the source at the left, right, and bottom "
+                "edges, so the full sentence is not visible."
+            ),
+            "id": "element-000020",
+            "kind": "explanatory text",
+            "region": [0, 974, 1000, 1000],
+            "scan_region_id": "region-r04-c02",
+            "status": "gap",
+        }],
+    }
+    relationship = {
+        "description": "",
+        "from_id": "element-000020",
+        "gap_reason": (
+            "The explanatory sentence is clipped by the source at the left, right, "
+            "and bottom edges, so its full text and the endpoint or relationship it "
+            "identifies are not visible."
+        ),
+        "id": "relationship-000015",
+        "kind": "explanatory footer text",
+        "participant_id": "element-000020",
+        "status": "gap",
+        "to_id": None,
+    }
+
+    contract = START_INTAKE.gap_resolution._participant_contract(
+        projection, relationship
+    )
+
+    assert contract == {
+        "mode": "missing_participant",
+        "unresolved_role": "target",
+        "known_role": "origin",
+        "known_id": "element-000020",
+        "known_point": None,
+        "known_status": "gap",
+    }
+    assert projection["elements"][0]["status"] == "gap"
+    assert projection["elements"][0]["content"] == ""
+
+
+def test_operator_answer_resolves_relationship_without_rewriting_unreadable_endpoint(
+    tmp_path: Path,
+) -> None:
+    inputs = _missing_endpoint_resolution_fixture(tmp_path)
+    projection = json.loads(inputs["projection_path"].read_text())
+    projection["elements"][0] = {
+        "capture_scope": "region-r04-c02",
+        "content": "",
+        "gap_reason": (
+            "The text is clipped by the source at the left, right, and bottom "
+            "edges, so the full sentence is not visible."
+        ),
+        "id": "element-000001",
+        "kind": "explanatory text",
+        "region": [0, 974, 1000, 1000],
+        "scan_region_id": "region-r04-c02",
+        "status": "gap",
+    }
+    relationship = projection["relationships"][0]
+    relationship.update({
+        "from_id": "element-000001",
+        "to_id": None,
+        "participant_id": "element-000001",
+        "kind": "explanatory footer text",
+        "gap_reason": (
+            "The explanatory sentence is clipped, so the endpoint or relationship "
+            "it identifies is not visible."
+        ),
+    })
+    inputs["projection_path"].write_text(
+        json.dumps(projection, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["projection_sha256"] = START_INTAKE._digest_bytes(
+        inputs["projection_path"].read_bytes()
+    )
+    clarification = json.loads(inputs["clarification_path"].read_text())
+    clarification["gap"] = next(
+        gap
+        for gap in START_INTAKE.gap_clarification.select_gaps(
+            projection, inputs["projection_sha256"]
+        )
+        if gap["collection"] == "relationships"
+    )
+    identity = {
+        key: clarification["gap"][key]
+        for key in (
+            "projection_sha256", "collection", "kind", "id", "record_sha256"
+        )
+    }
+    clarification["question"]["answers_gap"] = identity
+    clarification["assessment_gap"] = json.loads(json.dumps(clarification["gap"]))
+    clarification["accepted_assessment"] = {
+        "position": 1,
+        "question_id": clarification["question"]["id"],
+        "gap": identity,
+        "answer_source": {
+            "id": "source-answer",
+            "sha256": inputs["answer_source_sha256"],
+        },
+        "answer_projection": {
+            "id": "projection-answer-v1",
+            "sha256": inputs["answer_projection_sha256"],
+        },
+        "verdict": "resolves_gap",
+        "reason": "The answer identifies the history list and its search behavior.",
+    }
+    clarification["prior_rejection"] = {
+        "attempt": 3,
+        "candidate_sha256": "a" * 64,
+        "verification_result_sha256": "b" * 64,
+        "verification_verdict": "not_supported",
+        "verification_reason": "The proposed target was the rejected heading.",
+        "rejected_relationship": {
+            "resolution_of": relationship["id"],
+        },
+    }
+    inputs["clarification_path"].write_text(
+        json.dumps(clarification, indent=2, sort_keys=True) + "\n"
+    )
+    inputs["clarification_sha256"] = START_INTAKE._digest_bytes(
+        inputs["clarification_path"].read_bytes()
+    )
+    answers = iter([
+        "fresh-resolver",
+        "captured-gap-endpoint",
+        "use_recorded_element",
+        "element-000003",
+        "700",
+        "100",
+        "500",
+        "990",
+        "The clipped footer describes the payout history list and search behavior.",
+    ])
+
+    result = START_INTAKE.gap_resolution.run(
+        tmp_path / "preserved-gap-endpoint-resolution",
+        **inputs,
+        purpose=REAL_PURPOSE,
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    )
+    candidate = json.loads(
+        (
+            tmp_path
+            / "preserved-gap-endpoint-resolution"
+            / "verification-candidate.json"
+        ).read_text()
+    )
+
+    assert result["verdict"] == "resolves_gap"
+    locked = next(
+        item for item in candidate["elements"] if item["id"] == "element-000001"
+    )
+    assert locked == projection["elements"][0]
+    resolved = candidate["relationships"][0]
+    assert resolved["status"] == "readable"
+    assert resolved["from_id"] == "element-000001"
+    assert resolved["to_id"] == "element-000003"
+    assert resolved["binding_method"] == (
+        "verifier_rejection_corrected_missing_participant_with_locked_endpoint"
+    )
+    assert resolved["resolution_evidence"]["locked_known_element_status"] == "gap"
+    assert resolved["resolution_evidence"]["rejected_candidate_sha256"] == "a" * 64
 
 
 def _terminal_projection_fixture(
@@ -10381,7 +10558,7 @@ def test_rejected_resolution_retries_same_assessment_with_preserved_verifier_evi
     ).encode()
 
 
-def test_retry_resolution_reselects_both_endpoints_through_code_choices(
+def test_retry_resolution_keeps_locked_endpoint_and_reselects_only_missing_participant(
     tmp_path: Path,
 ) -> None:
     inputs = _missing_endpoint_resolution_fixture(tmp_path)
@@ -10392,7 +10569,7 @@ def test_retry_resolution_reselects_both_endpoints_through_code_choices(
         "resolution_result_sha256": "b" * 64,
         "verification_result_sha256": "c" * 64,
         "verification_verdict": "not_supported",
-        "verification_reason": "The rejected proposal kept the wrong locked target.",
+        "verification_reason": "The rejected proposal selected the wrong missing origin.",
         "rejected_relationship": {
             "resolution_of": "relationship-000001",
             "from_id": "element-000001",
@@ -10408,8 +10585,8 @@ def test_retry_resolution_reselects_both_endpoints_through_code_choices(
     answers = iter([
         "fresh-retry-resolver",
         "pytest-retry",
+        "use_recorded_element",
         "element-000001",
-        "element-000003",
         "100",
         "100",
         "700",
@@ -10439,14 +10616,19 @@ def test_retry_resolution_reselects_both_endpoints_through_code_choices(
     assert candidate["relationships"][0]["from_id"] == "element-000001"
     assert candidate["relationships"][0]["to_id"] == "element-000003"
     assert candidate["relationships"][0]["binding_method"] == (
-        "verifier_rejection_corrected_with_recorded_endpoints"
+        "verifier_rejection_corrected_missing_participant_with_locked_endpoint"
     )
     assert questions[2]["choices"] == [
-        "element-000001", "element-000002", "element-000003"
+        "use_recorded_element", "record_visible_element"
     ]
+    assert questions[3]["choices"] == ["element-000001", "element-000002"]
     assert questions[2]["context"]["prior_rejection"]["verification_reason"] == (
-        "The rejected proposal kept the wrong locked target."
+        "The rejected proposal selected the wrong missing origin."
     )
+    evidence = candidate["relationships"][0]["resolution_evidence"]
+    assert evidence["locked_known_role"] == "target"
+    assert evidence["locked_known_element_id"] == "element-000003"
+    assert evidence["locked_known_element_status"] == "readable"
 
 
 def test_linked_rejected_resolution_retry_is_one_logical_assessment_consumption() -> None:
@@ -10780,6 +10962,7 @@ def test_missing_endpoint_resolution_locks_known_identity_and_enforces_bounds(
         ),
         "locked_known_role": "target",
         "locked_known_element_id": "element-000003",
+        "locked_known_element_status": "readable",
     }
     assert len(messages) == 3
     assert "choose one of" in messages[0]
