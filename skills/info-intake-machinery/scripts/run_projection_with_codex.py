@@ -42,6 +42,7 @@ BOUNDARY_EXIT_CODES = {
     "qualification_resolution_admission_complete": 0,
     "qualification_obligation_closure_complete": 0,
     "first_layer_complete": 0,
+    "first_layer_complete_with_preserved_gaps": 0,
     "qualification_follow_up_required": 0,
     "qualification_followup_admission_complete": 0,
     "source_collection_answer_required": 4,
@@ -152,11 +153,33 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
             )
         )
     )
+    saved_qualification_round = state.get("qualification_question_round")
+    qualification_question_directory = (
+        saved_qualification_round.get("directory", "qualification-question-round")
+        if isinstance(saved_qualification_round, dict)
+        else "qualification-question-round"
+    )
+    qualification_question_directory_supported = (
+        qualification_question_directory == "qualification-question-round"
+        or (
+            isinstance(qualification_question_directory, str)
+            and any(
+                qualification_question_directory.startswith(prefix)
+                and len(qualification_question_directory.removeprefix(prefix)) == 6
+                and qualification_question_directory.removeprefix(prefix).isdigit()
+                for prefix in (
+                    "qualification-question-rounds/admission-",
+                    "qualification-question-rounds/round-",
+                )
+            )
+        )
+    )
     qualification_question_round_phase = (
         state.get("status") == "waiting_for_model"
         and state.get("phase") == "formulating_qualification_question_round"
+        and qualification_question_directory_supported
         and state.get("waiting_for")
-        == "qualification-question-round/interview.jsonl"
+        == f"{qualification_question_directory}/interview.jsonl"
     )
     qualification_answer_assessment_phase = (
         state.get("status") == "waiting_for_model"
@@ -175,10 +198,20 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
                     "qualification-question-rounds/"
                     f"round-{state['qualification_round_number']:06d}/"
                     "answer-assessment/interview.jsonl"
+                    )
+                )
+            )
+            or (
+                qualification_question_directory_supported
+                and qualification_question_directory
+                != "qualification-question-round"
+                and state.get("waiting_for")
+                == (
+                    f"{qualification_question_directory}/"
+                    "answer-assessment/interview.jsonl"
                 )
             )
         )
-    )
     qualification_followup_question_round_phase = (
         state.get("status") == "waiting_for_model"
         and state.get("phase")

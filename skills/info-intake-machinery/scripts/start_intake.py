@@ -296,6 +296,22 @@ qualification_question_round = importlib.util.module_from_spec(
 _QUALIFICATION_QUESTION_ROUND_SPEC.loader.exec_module(
     qualification_question_round
 )
+
+_QUALIFICATION_OPERATOR_DISPOSITION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_operator_disposition",
+    Path(__file__).resolve().with_name("qualification_operator_disposition.py"),
+)
+if (
+    _QUALIFICATION_OPERATOR_DISPOSITION_SPEC is None
+    or _QUALIFICATION_OPERATOR_DISPOSITION_SPEC.loader is None
+):
+    raise RuntimeError("qualification operator disposition contract is unavailable")
+qualification_operator_disposition = importlib.util.module_from_spec(
+    _QUALIFICATION_OPERATOR_DISPOSITION_SPEC
+)
+_QUALIFICATION_OPERATOR_DISPOSITION_SPEC.loader.exec_module(
+    qualification_operator_disposition
+)
 _QUALIFICATION_ANSWER_ADMISSION_SPEC = importlib.util.spec_from_file_location(
     "info_intake_qualification_answer_admission",
     Path(__file__).resolve().with_name("qualification_answer_admission.py"),
@@ -3081,7 +3097,7 @@ def _archive_completed_qualification_round(
 
 def _cumulative_qualification_resolution_context(
     state: dict[str, object],
-) -> tuple[list[dict[str, object]], list[str]]:
+) -> tuple[list[dict[str, object]], list[str], list[str]]:
     history = state.get("qualification_rounds", [])
     if not isinstance(history, list):
         raise ValueError("qualification round history must be an ordered object list")
@@ -3097,6 +3113,7 @@ def _cumulative_qualification_resolution_context(
         raise ValueError("qualification round history must be an ordered object list")
     obligations: list[dict[str, object]] = []
     resolved_ids: list[str] = []
+    preserved_ids: list[str] = []
     for record in contexts:
         admission = record.get("qualification_admission")
         closure_record = record.get("obligation_closure")
@@ -3115,18 +3132,26 @@ def _cumulative_qualification_resolution_context(
             if isinstance(closure, dict)
             else None
         )
+        round_preserved = (
+            closure.get("preserved_gap_obligation_ids", [])
+            if isinstance(closure, dict)
+            else None
+        )
         if (
             not isinstance(round_obligations, list)
             or any(not isinstance(item, dict) for item in round_obligations)
             or not isinstance(round_resolved, list)
             or any(not isinstance(item, str) for item in round_resolved)
+            or not isinstance(round_preserved, list)
+            or any(not isinstance(item, str) for item in round_preserved)
         ):
             raise ValueError(
                 f"qualification round {record.get('round')!r} lost its admission or closure"
             )
         obligations.extend(round_obligations)
         resolved_ids.extend(round_resolved)
-    return obligations, resolved_ids
+        preserved_ids.extend(round_preserved)
+    return obligations, resolved_ids, preserved_ids
 
 
 def _active_qualification_question_ledger_sequence(
@@ -3315,6 +3340,55 @@ def _accept_qualification_question_answer(
             f"question {question['id']!r} answer artifacts already exist outside the ledger; remove only those unbound artifacts",
         )
     content = answer.encode("utf-8")
+    sha256 = _digest_bytes(content)
+    source = {
+        "id": f"source-{number:06d}",
+        "kind": "human_operator_answer",
+        "path": f"sources/source-{number:06d}.txt",
+        "sha256": sha256,
+        **_question_answer_binding(question),
+    }
+    projection = _round_answer_projection_record(number, sha256)
+    source_path.write_bytes(content)
+    projection_path.write_bytes(content)
+    return _record_qualification_answer(
+        work, state, entries, admitted, question, source, projection
+    )
+
+
+def _preserve_qualification_obligation_as_gap(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    question: dict[str, object],
+) -> dict[str, object]:
+    if (
+        state.get("phase") != "awaiting_qualification_clarification_answers"
+        or state.get("question") != question
+    ):
+        return _blocked(
+            "qualification gap preservation unavailable",
+            "the exact qualification question is no longer active",
+        )
+    admitted = qualification_answer_admission.admit(
+        question, channel="preserve_gap", value="preserve_gap"
+    )
+    if admitted.get("accepted") is not True:
+        return _blocked(
+            "qualification gap preservation refused", str(admitted.get("why"))
+        )
+    reservation = source_collection_reservation.reserve(
+        [f"source-{number:06d}" for number in sorted(_known_source_numbers(entries))]
+    )
+    number = int(reservation["source_number"])
+    source_path = work / f"sources/source-{number:06d}.txt"
+    projection_path = work / f"projections/source-{number:06d}-v1.txt"
+    if source_path.exists() or projection_path.exists():
+        return _blocked(
+            "unbound qualification gap-preservation artifacts",
+            f"question {question['id']!r} preservation artifacts already exist outside the ledger; remove only those unbound artifacts",
+        )
+    content = b"preserve_gap"
     sha256 = _digest_bytes(content)
     source = {
         "id": f"source-{number:06d}",
@@ -3764,6 +3838,10 @@ def _qualification_answer_assessment_result(state: dict[str, object], work: Path
 def _qualification_answer_assessment_directory(
     work: Path, state: dict[str, object]
 ) -> Path:
+    question_round = state.get("qualification_question_round")
+    relative_question_dir = _qualification_question_round_directory(question_round)
+    if relative_question_dir != "qualification-question-round":
+        return work / relative_question_dir / "answer-assessment"
     round_number = state.get("qualification_round_number", 1)
     if not isinstance(round_number, int) or round_number < 1:
         raise ValueError("qualification assessment round must be a positive integer")
@@ -4272,6 +4350,7 @@ def run_qualification_obligation_closure(work: Path) -> dict[str, object]:
     if direct_complete:
         resolution = None
         resolutions: object = []
+        preserved_gaps: object = []
         admission_sequence = (
             qualification.get("ledger_sequence")
             if isinstance(qualification, dict)
@@ -4288,12 +4367,19 @@ def run_qualification_obligation_closure(work: Path) -> dict[str, object]:
         resolutions = (
             admission.get("resolutions") if isinstance(admission, dict) else None
         )
+        preserved_gaps = (
+            admission.get("preserved_gaps")
+            if isinstance(admission, dict)
+            else None
+        )
         admission_sequence = (
             resolution.get("ledger_sequence")
             if isinstance(resolution, dict)
             else None
         )
-    closure = qualification_obligation_closure.reconcile(obligations, resolutions)
+    closure = qualification_obligation_closure.reconcile(
+        obligations, resolutions, preserved_gaps
+    )
     if closure.get("reconciled") is not True:
         return _blocked(
             "qualification obligation closure invalid", str(closure.get("why"))
@@ -4391,7 +4477,11 @@ def run_effective_first_layer_terminal(work: Path) -> dict[str, object]:
             return qualification_error
         assert fresh_qualification is not None
         try:
-            cumulative_obligations, cumulative_resolved_ids = (
+            (
+                cumulative_obligations,
+                cumulative_resolved_ids,
+                cumulative_preserved_ids,
+            ) = (
                 _cumulative_qualification_resolution_context(state)
             )
         except ValueError as error:
@@ -4420,9 +4510,13 @@ def run_effective_first_layer_terminal(work: Path) -> dict[str, object]:
             != saved.get("cumulative_obligations")
             or event.get("cumulative_resolved_obligation_ids")
             != saved.get("cumulative_resolved_obligation_ids")
+            or event.get("cumulative_preserved_gap_obligation_ids", [])
+            != saved.get("cumulative_preserved_gap_obligation_ids", [])
             or saved.get("cumulative_obligations") != cumulative_obligations
             or saved.get("cumulative_resolved_obligation_ids")
             != cumulative_resolved_ids
+            or saved.get("cumulative_preserved_gap_obligation_ids", [])
+            != cumulative_preserved_ids
             or event.get("disposition") != saved.get("disposition")
             or event.get("entry_sha256") != saved.get("entry_sha256")
             or state.get("ledger_entries") != len(entries)
@@ -4458,13 +4552,20 @@ def run_effective_first_layer_terminal(work: Path) -> dict[str, object]:
         else None
     )
     try:
-        cumulative_obligations, cumulative_resolved_ids = (
+        (
+            cumulative_obligations,
+            cumulative_resolved_ids,
+            cumulative_preserved_ids,
+        ) = (
             _cumulative_qualification_resolution_context(state)
         )
     except ValueError as error:
         return _blocked("effective first-layer terminal invalid", str(error))
     disposition = effective_first_layer_terminal.decide(
-        qualification, cumulative_obligations, cumulative_resolved_ids
+        qualification,
+        cumulative_obligations,
+        cumulative_resolved_ids,
+        cumulative_preserved_ids,
     )
     if disposition.get("decided") is not True:
         return _blocked(
@@ -4497,6 +4598,7 @@ def run_effective_first_layer_terminal(work: Path) -> dict[str, object]:
             "source_set_qualification": qualification,
             "cumulative_obligations": cumulative_obligations,
             "cumulative_resolved_obligation_ids": cumulative_resolved_ids,
+            "cumulative_preserved_gap_obligation_ids": cumulative_preserved_ids,
             "disposition": disposition,
         },
         str(entries[-1]["entry_sha256"]),
@@ -4516,6 +4618,7 @@ def run_effective_first_layer_terminal(work: Path) -> dict[str, object]:
         "source_set_qualification": qualification,
         "cumulative_obligations": cumulative_obligations,
         "cumulative_resolved_obligation_ids": cumulative_resolved_ids,
+        "cumulative_preserved_gap_obligation_ids": cumulative_preserved_ids,
         "disposition": disposition,
         },
         "ledger_entries": event["sequence"],
@@ -5013,6 +5116,12 @@ def _qualification_question_round_request_context(
     dict[str, object] | None,
 ]:
     saved = state.get("qualification_question_round")
+    try:
+        relative_dir = _qualification_question_round_directory(saved)
+    except ValueError as error:
+        return None, None, _blocked(
+            "invalid qualification question round", str(error)
+        )
     request_sequence = (
         saved.get("request_ledger_sequence") if isinstance(saved, dict) else None
     )
@@ -5050,8 +5159,8 @@ def _qualification_question_round_request_context(
         "obligation_count": len(contexts),
         "obligation_ids": obligation_ids,
         "evidence_sha256s": context_digests,
-        "interview_path": "qualification-question-round/interview.jsonl",
-        "result_path": "qualification-question-round/question-round.json",
+        "interview_path": f"{relative_dir}/interview.jsonl",
+        "result_path": f"{relative_dir}/question-round.json",
     }
     if (
         request.get("event") != "qualification_question_round_requested"
@@ -5074,6 +5183,28 @@ def _qualification_question_round_request_context(
             ),
         )
     return admission, contexts, None
+
+
+def _qualification_question_round_directory(saved: object) -> str:
+    directory = (
+        saved.get("directory", "qualification-question-round")
+        if isinstance(saved, dict)
+        else "qualification-question-round"
+    )
+    if directory == "qualification-question-round":
+        return directory
+    if isinstance(directory, str):
+        for prefix in (
+            "qualification-question-rounds/admission-",
+            "qualification-question-rounds/round-",
+        ):
+            suffix = directory.removeprefix(prefix)
+            if directory.startswith(prefix) and len(suffix) == 6 and suffix.isdigit():
+                return directory
+    raise ValueError(
+        f"qualification question round directory {directory!r} is invalid; "
+        "restore the fixed first-round path or one admission-bound versioned path"
+    )
 
 
 def request_qualification_question_round(work: Path) -> dict[str, object]:
@@ -5117,15 +5248,23 @@ def request_qualification_question_round(work: Path) -> dict[str, object]:
         contexts = qualification_question_round.bind_contexts(admission)
     except qualification_question_round.QuestionRoundError as error:
         return _blocked("qualification question round unavailable", str(error))
-    round_dir = work / "qualification-question-round"
+    relative_dir = "qualification-question-round"
+    round_dir = work / relative_dir
     if round_dir.exists():
-        return _blocked(
-            "unbound qualification question round",
-            (
-                f"artifact directory {round_dir} already exists without a request event; "
-                "remove only that unbound directory before retrying"
-            ),
+        relative_dir = (
+            "qualification-question-rounds/"
+            f"admission-{int(admission['sequence']):06d}"
         )
+        round_dir = work / relative_dir
+        if round_dir.exists():
+            return _blocked(
+                "unbound qualification question round",
+                (
+                    f"artifact directory {round_dir} already exists without its current "
+                    "request event; preserve completed earlier rounds and remove only this "
+                    "admission-bound unbound directory before retrying"
+                ),
+            )
     round_dir.mkdir(parents=True)
     (round_dir / "interview.jsonl").touch()
     request_sequence = len(entries) + 1
@@ -5141,8 +5280,8 @@ def request_qualification_question_round(work: Path) -> dict[str, object]:
             "obligation_count": len(contexts),
             "obligation_ids": [item["obligation_id"] for item in contexts],
             "evidence_sha256s": [item["evidence_sha256"] for item in contexts],
-            "interview_path": "qualification-question-round/interview.jsonl",
-            "result_path": "qualification-question-round/question-round.json",
+            "interview_path": f"{relative_dir}/interview.jsonl",
+            "result_path": f"{relative_dir}/question-round.json",
         },
         str(admission["entry_sha256"]),
     )
@@ -5160,6 +5299,7 @@ def request_qualification_question_round(work: Path) -> dict[str, object]:
             "obligation_ids": [item["obligation_id"] for item in contexts],
             "evidence_sha256s": [item["evidence_sha256"] for item in contexts],
             "request_ledger_sequence": request_sequence,
+            "directory": relative_dir,
         },
         "ledger_entries": request_sequence,
         "ledger_tail_sha256": request["entry_sha256"],
@@ -5182,18 +5322,22 @@ def _validate_qualification_question_round(
     assert admission is not None and contexts is not None
     saved = state["qualification_question_round"]
     assert isinstance(saved, dict)
+    try:
+        relative_dir = _qualification_question_round_directory(saved)
+    except ValueError as error:
+        return _blocked("invalid qualification question round", str(error))
     request_sequence = saved["request_ledger_sequence"]
     assert isinstance(request_sequence, int)
     try:
         result, interview_sha256, result_sha256 = (
             qualification_question_round.validate(
-                work / "qualification-question-round",
+                work / relative_dir,
                 admission=admission,
                 purpose=purpose,
             )
         )
         interview_entries = qualification_question_round._read_journal(
-            work / "qualification-question-round" / "interview.jsonl"
+            work / relative_dir / "interview.jsonl"
         )
     except qualification_question_round.QuestionRoundError as error:
         return _blocked("invalid qualification question round", str(error))
@@ -5229,9 +5373,9 @@ def _validate_qualification_question_round(
                 ),
             )
     expected_completed = {
-        "interview_path": "qualification-question-round/interview.jsonl",
+        "interview_path": f"{relative_dir}/interview.jsonl",
         "interview_sha256": interview_sha256,
-        "result_path": "qualification-question-round/question-round.json",
+        "result_path": f"{relative_dir}/question-round.json",
         "result_sha256": result_sha256,
         "question_count": len(questions),
         "interview_question_count": sum(
@@ -5297,6 +5441,10 @@ def _consume_qualification_question_round(
     assert admission is not None and contexts is not None
     saved = state["qualification_question_round"]
     assert isinstance(saved, dict)
+    try:
+        relative_dir = _qualification_question_round_directory(saved)
+    except ValueError as error:
+        return _blocked("invalid qualification question round", str(error))
     request_sequence = saved["request_ledger_sequence"]
     assert isinstance(request_sequence, int)
     if len(entries) != request_sequence:
@@ -5310,13 +5458,13 @@ def _consume_qualification_question_round(
     try:
         result, interview_sha256, result_sha256 = (
             qualification_question_round.validate(
-                work / "qualification-question-round",
+                work / relative_dir,
                 admission=admission,
                 purpose=purpose,
             )
         )
         interview_entries = qualification_question_round._read_journal(
-            work / "qualification-question-round" / "interview.jsonl"
+            work / relative_dir / "interview.jsonl"
         )
     except qualification_question_round.QuestionRoundError as error:
         return _blocked("invalid qualification question round", str(error))
@@ -5355,9 +5503,9 @@ def _consume_qualification_question_round(
         {
             "recorded_at": timestamp,
             "intake_id": state["intake_id"],
-            "interview_path": "qualification-question-round/interview.jsonl",
+            "interview_path": f"{relative_dir}/interview.jsonl",
             "interview_sha256": interview_sha256,
-            "result_path": "qualification-question-round/question-round.json",
+            "result_path": f"{relative_dir}/question-round.json",
             "result_sha256": result_sha256,
             "question_count": len(questions),
             "interview_question_count": sum(
@@ -5449,9 +5597,14 @@ def run_qualification_question_round(
     if request_error:
         return request_error
     assert admission is not None
+    saved = state.get("qualification_question_round")
+    try:
+        relative_dir = _qualification_question_round_directory(saved)
+    except ValueError as error:
+        return _blocked("qualification question round unavailable", str(error))
     try:
         qualification_question_round.run(
-            work / "qualification-question-round",
+            work / relative_dir,
             admission=admission,
             purpose=purpose,
             input_fn=input_fn,
@@ -5499,7 +5652,10 @@ def _reopen_completed_source_collection(
     entries: list[dict[str, object]],
 ) -> dict[str, object]:
     terminal = run_effective_first_layer_terminal(work)
-    if terminal.get("status") != "first_layer_complete":
+    if terminal.get("status") not in {
+        "first_layer_complete",
+        "first_layer_complete_with_preserved_gaps",
+    }:
         return terminal
     inventory, inventory_error = _source_collection_inventory(work, entries)
     if inventory_error:
@@ -9451,10 +9607,16 @@ def _latest_assessed_round(
 
 def _consumed_assessment_identities(
     resolutions: list[dict[str, object]],
+    *,
+    invalidated_attempts: set[int] | None = None,
 ) -> tuple[set[tuple[int, int]] | None, str | None]:
+    invalidated = invalidated_attempts or set()
     consumed: dict[tuple[int, int], dict[str, object]] = {}
     for resolution in resolutions:
         if resolution.get("mode") != "assessed_answer":
+            continue
+        attempt = resolution.get("attempt")
+        if attempt in invalidated:
             continue
         round_number = resolution.get("selected_assessment_round", 1)
         position = resolution.get("selected_assessment_position")
@@ -9491,6 +9653,115 @@ def _consumed_assessment_identities(
             return None, "an assessed answer was consumed more than once"
         consumed[identity] = resolution
     return set(consumed), None
+
+
+def _recovery_invalidated_assessment_attempts(
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    resolutions: list[dict[str, object]],
+) -> tuple[set[int] | None, str | None]:
+    recoveries = state.get("gap_resolution_recoveries", [])
+    if not isinstance(recoveries, list) or not all(
+        isinstance(item, dict) for item in recoveries
+    ):
+        return None, "gap resolution recoveries must remain an ordered list"
+    if not recoveries:
+        return set(), None
+    by_attempt = {
+        item.get("attempt"): item
+        for item in resolutions
+        if isinstance(item.get("attempt"), int)
+    }
+    invalidated: set[int] = set()
+    required_keys = {
+        "after_attempt",
+        "from_projection",
+        "to_projection",
+        "gap_id",
+        "locked_element_id",
+        "invalidation_ledger_sequence",
+        "projection_ledger_sequence",
+    }
+    for index, recovery in enumerate(recoveries, start=1):
+        if set(recovery) != required_keys:
+            return None, (
+                f"recovery {index} fields changed; expected exactly "
+                f"{sorted(required_keys)}, received {sorted(recovery)}"
+            )
+        attempt = recovery.get("after_attempt")
+        if not isinstance(attempt, int) or attempt < 1:
+            return None, (
+                f"recovery {index} after_attempt received {attempt!r}; "
+                "expected one positive archived attempt number"
+            )
+        if attempt in invalidated:
+            return None, (
+                f"recovery {index} repeats invalidated attempt {attempt}; "
+                "each attempt may be invalidated once"
+            )
+        resolution = by_attempt.get(attempt)
+        successor = by_attempt.get(attempt + 1)
+        if (
+            not isinstance(resolution, dict)
+            or resolution.get("terminal_phase") != "gap_resolution_applied"
+            or resolution.get("output_projection") != recovery["from_projection"]
+        ):
+            return None, (
+                f"recovery {index} names attempt {attempt}, but that exact applied "
+                "attempt and output projection are not preserved"
+            )
+        if (
+            not isinstance(successor, dict)
+            or successor.get("parent_projection") != recovery["to_projection"]
+            or successor.get("selected_assessment_round", 1)
+            != resolution.get("selected_assessment_round", 1)
+            or successor.get("selected_assessment_position")
+            != resolution.get("selected_assessment_position")
+        ):
+            return None, (
+                f"recovery {index} invalidates attempt {attempt}, but attempt "
+                f"{attempt + 1} is not its exact same-assessment successor"
+            )
+        invalidation_sequence = recovery.get("invalidation_ledger_sequence")
+        projection_sequence = recovery.get("projection_ledger_sequence")
+        if (
+            not isinstance(invalidation_sequence, int)
+            or not isinstance(projection_sequence, int)
+            or projection_sequence != invalidation_sequence + 1
+            or invalidation_sequence < 1
+            or projection_sequence > len(entries)
+        ):
+            return None, (
+                f"recovery {index} ledger sequences received "
+                f"{invalidation_sequence!r} and {projection_sequence!r}; "
+                "expected adjacent existing entries"
+            )
+        invalidation = entries[invalidation_sequence - 1]
+        creation = entries[projection_sequence - 1]
+        if not (
+            invalidation.get("sequence") == invalidation_sequence
+            and invalidation.get("event")
+            == "gap_resolution_locked_participant_invalidated"
+            and invalidation.get("invalidated_attempt") == attempt
+            and invalidation.get("invalidated_projection")
+            == recovery["from_projection"]
+            and invalidation.get("gap_id") == recovery["gap_id"]
+            and invalidation.get("locked_element_id")
+            == recovery["locked_element_id"]
+            and creation.get("sequence") == projection_sequence
+            and creation.get("event") == "projection_version_created"
+            and creation.get("role")
+            == "gap_resolution_locked_participant_recovery"
+            and creation.get("invalidated_attempt") == attempt
+            and creation.get("parent_projection") == recovery["from_projection"]
+            and creation.get("projection") == recovery["to_projection"]
+        ):
+            return None, (
+                f"recovery {index} does not match its exact invalidation and "
+                "successor-projection ledger entries"
+            )
+        invalidated.add(attempt)
+    return invalidated, None
 
 
 def _retryable_rejected_resolution(
@@ -9588,8 +9859,20 @@ def _retryable_rejected_resolution(
 
 
 def _clarification_continuation(
-    work: Path, state: dict[str, object]
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]] | None = None,
 ) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    if entries is None:
+        if state.get("gap_resolution_recoveries"):
+            entries, ledger_error = _validate_ledger(work / "ledger.jsonl")
+            if ledger_error:
+                return None, _blocked(
+                    "clarification continuation unavailable",
+                    f"the recovery ledger is invalid: {ledger_error}",
+                )
+        else:
+            entries = []
     latest_round, latest_bindings, latest_assessment, latest_error = (
         _latest_assessed_round(work, state)
     )
@@ -9636,7 +9919,21 @@ def _clarification_continuation(
     current_resolution = state.get("gap_resolution")
     if isinstance(current_resolution, dict) and current_resolution.get("result_sha256"):
         completed_resolutions.append(current_resolution)
-    used, used_error = _consumed_assessment_identities(completed_resolutions)
+    invalidated_attempts, recovery_error = (
+        _recovery_invalidated_assessment_attempts(
+            state, entries, completed_resolutions
+        )
+    )
+    if recovery_error:
+        return None, _blocked(
+            "clarification continuation unavailable",
+            recovery_error,
+        )
+    assert invalidated_attempts is not None
+    used, used_error = _consumed_assessment_identities(
+        completed_resolutions,
+        invalidated_attempts=invalidated_attempts,
+    )
     if used_error:
         return None, _blocked(
             "clarification continuation unavailable",
@@ -10633,7 +10930,7 @@ def _execute_clarification_continuation(
             entries,
             retry_rejected_resolution=rejected,
         )
-    decision, decision_error = _clarification_continuation(work, state)
+    decision, decision_error = _clarification_continuation(work, state, entries)
     if decision_error:
         return decision_error
     assert decision is not None
@@ -19911,7 +20208,11 @@ def _clarification_boundary_result(
             or result.get("stopped") != "qualification_obligation_closure_recorded"
             or result.get("reconciled") is not True
             or result.get("route")
-            not in {"all_obligations_resolved", "follow_up_required"}
+            not in {
+                "all_obligations_resolved",
+                "all_obligations_accounted",
+                "follow_up_required",
+            }
             or not isinstance(result.get("resolved_obligation_ids"), list)
             or not isinstance(result.get("unresolved_obligation_ids"), list)
             or result.get("resolved_count")
@@ -19923,10 +20224,18 @@ def _clarification_boundary_result(
                 "invalid clarification boundary",
                 "the qualification closure lost its exact resolved and unresolved obligation sets",
             )
-    elif boundary in {"first_layer_complete", "qualification_follow_up_required"}:
+    elif boundary in {
+        "first_layer_complete",
+        "first_layer_complete_with_preserved_gaps",
+        "qualification_follow_up_required",
+    }:
         expected_disposition = (
-            "first_layer_complete"
-            if boundary == "first_layer_complete"
+            boundary
+            if boundary
+            in {
+                "first_layer_complete",
+                "first_layer_complete_with_preserved_gaps",
+            }
             else "clarification_required"
         )
         remaining = result.get("remaining_gaps")
@@ -19937,7 +20246,23 @@ def _clarification_boundary_result(
             or result.get("disposition") != expected_disposition
             or not isinstance(remaining, list)
             or result.get("remaining_gap_count") != len(remaining)
-            or (boundary == "first_layer_complete" and remaining)
+            or (
+                boundary
+                in {
+                    "first_layer_complete",
+                    "first_layer_complete_with_preserved_gaps",
+                }
+                and remaining
+            )
+            or (
+                boundary == "first_layer_complete_with_preserved_gaps"
+                and (
+                    not isinstance(result.get("preserved_gaps"), list)
+                    or not result["preserved_gaps"]
+                    or result.get("preserved_gap_count")
+                    != len(result["preserved_gaps"])
+                )
+            )
             or (boundary == "qualification_follow_up_required" and not remaining)
         ):
             return _blocked(
@@ -20237,8 +20562,13 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
             result = run_effective_first_layer_terminal(work)
             continue
         elif stopped == "effective_first_layer_terminal_recorded":
-            if result.get("status") == "first_layer_complete":
-                return _clarification_boundary_result(result, "first_layer_complete")
+            if result.get("status") in {
+                "first_layer_complete",
+                "first_layer_complete_with_preserved_gaps",
+            }:
+                return _clarification_boundary_result(
+                    result, str(result["status"])
+                )
             result = run_qualification_followup_admission(work)
             continue
         elif stopped == "qualification_followup_admission_recorded":
@@ -20289,6 +20619,62 @@ def run_operator_turn(
             "operator turn unavailable",
             "the current question does not have a supported answer type",
         )
+    qualification_question = str(question["id"]).startswith(
+        "qualification-clarification-answer-"
+    )
+    if qualification_question:
+        prepared = qualification_operator_disposition.prepare(question)
+        disposition_question = prepared.get("question")
+        if prepared.get("prepared") is not True or not isinstance(
+            disposition_question, dict
+        ):
+            return _blocked(
+                "operator turn unavailable", str(prepared.get("why"))
+            )
+        output_fn(f"Question: {disposition_question['asks']}")
+        output_fn("Allowed actions: provide_answer, preserve_gap")
+        try:
+            action = input_fn("Answer: ")
+        except EOFError:
+            return _blocked(
+                "operator answer unavailable", "no operator disposition was supplied"
+            )
+        confirmed = run_clarification_boundary(work)
+        if (
+            confirmed.get("boundary") != "needs_operator_answer"
+            or confirmed.get("question") != question
+            or confirmed.get("round") != boundary.get("round")
+            or confirmed.get("answered_question_count")
+            != boundary.get("answered_question_count")
+        ):
+            return _blocked(
+                "operator question changed",
+                "the active question changed before its disposition could be preserved",
+            )
+        admitted_disposition = qualification_operator_disposition.admit(
+            question, action
+        )
+        if admitted_disposition.get("accepted") is not True:
+            return _blocked(
+                "qualification operator disposition refused",
+                str(admitted_disposition.get("why")),
+            )
+        if action == "preserve_gap":
+            try:
+                opening = (work / "sources" / "source-000001.txt").read_text(
+                    encoding="utf-8"
+                )
+            except OSError as error:
+                return _blocked("operator turn unavailable", str(error))
+            state, entries, load_error = _load_bound(
+                work, opening.encode("utf-8")
+            )
+            if load_error:
+                return load_error
+            assert state is not None
+            return _preserve_qualification_obligation_as_gap(
+                work, state, entries, question
+            )
     output_fn({
         "local_file": "Answer type: one existing local file path",
         "url": "Answer type: one public HTTP(S) URL",
@@ -20698,9 +21084,13 @@ def _resume(
                 "qualification question round active",
                 "finish the current code-controlled question formulation without another intake action",
             )
-        result_path = (
-            work / "qualification-question-round" / "question-round.json"
-        )
+        try:
+            relative_dir = _qualification_question_round_directory(
+                state.get("qualification_question_round")
+            )
+        except ValueError as error:
+            return _blocked("invalid qualification question round", str(error))
+        result_path = work / relative_dir / "question-round.json"
         if not result_path.exists():
             return _qualification_question_round_model_result(state, work)
         return _consume_qualification_question_round(
@@ -22476,6 +22866,7 @@ def main() -> int:
         "qualification_resolution_admission_complete": 0,
         "qualification_obligation_closure_complete": 0,
         "first_layer_complete": 0,
+        "first_layer_complete_with_preserved_gaps": 0,
         "clarification_required": 0,
         "qualification_followup_admission_complete": 0,
         "ready_for_operator_interview": 0,

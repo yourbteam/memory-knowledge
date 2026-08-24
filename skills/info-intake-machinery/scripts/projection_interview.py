@@ -2537,11 +2537,15 @@ def _question(
         )
     elif stage == "relationship_visual_verdict":
         obligation = _pending_obligation(state)
-        if obligation is None:
-            raise InterviewError("relationship-obligation-missing")
         question = _field(
             "relationship_visual_verdict",
-            "Based only on visible source evidence, are these proposed participants visibly connected for the currently required relationship?",
+            (
+                "Based only on visible source evidence, are these proposed "
+                "participants visibly connected for the currently required relationship?"
+                if obligation is not None else
+                "Based only on visible source evidence, are these proposed "
+                "participants visibly connected for this additional relationship?"
+            ),
             "choice",
             choices=["supported", "not_supported", "unreadable"],
         )
@@ -4159,15 +4163,14 @@ def _finish_relationship(
         if current.get("visual_verification") != "supported":
             raise InterviewError("relationship-visual-verification-missing")
         obligation = _pending_obligation(state)
-        if obligation is None:
-            raise InterviewError("relationship-obligation-missing")
-        relationship.update({
-            "visual_verification": "supported",
-            "verified_obligation_id": obligation["id"],
-            "verified_element_id": obligation["element_id"],
-        })
+        relationship["visual_verification"] = "supported"
+        if obligation is not None:
+            relationship.update({
+                "verified_obligation_id": obligation["id"],
+                "verified_element_id": obligation["element_id"],
+            })
     state["relationships"].append(relationship)
-    if contract >= 6:
+    if contract >= 6 and _pending_obligation(state) is not None:
         _resolve_current_obligation(state, relationship_id, "relationship")
     else:
         _resolve_obligations(
@@ -4968,14 +4971,14 @@ def _finish_visual_gap(state: dict[str, Any], reason: str) -> None:
     if "verification_issue" in current:
         relationship["verification_issue"] = current["verification_issue"]
     obligation = _pending_obligation(state)
-    if obligation is None:
-        raise InterviewError("relationship-obligation-missing")
-    relationship.update({
-        "verified_obligation_id": obligation["id"],
-        "verified_element_id": obligation["element_id"],
-    })
+    if obligation is not None:
+        relationship.update({
+            "verified_obligation_id": obligation["id"],
+            "verified_element_id": obligation["element_id"],
+        })
     state["relationships"].append(relationship)
-    _resolve_current_obligation(state, relationship_id, "gap")
+    if obligation is not None:
+        _resolve_current_obligation(state, relationship_id, "gap")
     state["current"] = {}
     state["stage"] = _next_relationship_stage(state)
 
@@ -4983,8 +4986,6 @@ def _finish_visual_gap(state: dict[str, Any], reason: str) -> None:
 def _proposed_relationship(state: dict[str, Any]) -> dict[str, Any]:
     current = state["current"]
     obligation = _pending_obligation(state)
-    if obligation is None:
-        raise InterviewError("relationship-obligation-missing")
     participants: dict[str, Any] = {}
     for role in ("origin", "target"):
         element_id = str(current[f"{role}_id"])
@@ -5002,12 +5003,16 @@ def _proposed_relationship(state: dict[str, Any]) -> dict[str, Any]:
             "content": element["content"],
             "gap_reason": element["gap_reason"],
         }
-    return {
+    proposed = {
         "kind": current["kind"],
-        "required_obligation_id": obligation["id"],
-        "required_element_id": obligation["element_id"],
         **participants,
     }
+    if obligation is not None:
+        proposed.update({
+            "required_obligation_id": obligation["id"],
+            "required_element_id": obligation["element_id"],
+        })
+    return proposed
 
 
 def _bind_relationship_point(
@@ -5747,12 +5752,15 @@ def _advance(
         if value == "supported":
             state["stage"] = "relationship_status"
         elif value == "not_supported":
-            current["verification_issue"] = {
+            issue = {
                 "origin_id": current["origin_id"],
                 "target_id": current["target_id"],
-                "required_element_id": _pending_obligation(state)["element_id"],
                 "reason": "visible_connection_not_supported",
             }
+            obligation = _pending_obligation(state)
+            if obligation is not None:
+                issue["required_element_id"] = obligation["element_id"]
+            current["verification_issue"] = issue
             state["stage"] = "relationship_visual_resolution"
         else:
             state["stage"] = "relationship_visual_gap_reason"
