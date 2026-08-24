@@ -1,0 +1,75 @@
+{
+  "candidate_sha256": "f0bce7f191e41d222933f513b2c18c77a8e5809965764450bbf6b503e8502765",
+  "reader": {
+    "harness": "Codex CLI PTY",
+    "model": "Codex (GPT-5)"
+  },
+  "schema_version": 1,
+  "verdicts": [
+    {
+      "reason": "The red callout\u2019s arrow visibly terminates on the orange \u201cNet payout \u00b7 to date\u201d summary card, and the card\u2019s displayed components match the instruction: photo revenue, negative code fees, and negative refunds combine into the net payout.",
+      "relationship_id": "relationship-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "A red diagonal arrow runs from the photo-versus-video tracking callout and visibly ends inside the green content-revenue summary card containing $54,620.35 and 1,942 total transactions.",
+      "relationship_id": "relationship-000002",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout\u2019s red arrow visibly points to the green card\u2019s revenue and total-transactions metrics, matching its explicit Column X revenue and Column W transaction mappings.",
+      "relationship_id": "relationship-000003",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from the Column AD/AC callout visibly terminates on the red Redemption code fees card, which shows both an owed fee amount (-$311.75) and a codes-used count (96).",
+      "relationship_id": "relationship-000004",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout explicitly says \u201cin this box,\u201d and its red arrow visibly ends on the blue Refunds card showing reversed transactions and the current $0.00 placeholder.",
+      "relationship_id": "relationship-000005",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout lists mappings for several payout-report values and its arrow ends near the report row around the photo-revenue/codes-used area, not on the separately bounded \u201c3,763 PAID TXNS\u201d metric at the left.",
+      "relationship_id": "relationship-000006",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The callout explicitly maps \u201cPhoto Rev: X,\u201d and its arrow visibly points into the first payout-report row immediately beside the displayed \u201c$101,503.80 PHOTO REVENUE\u201d value.",
+      "relationship_id": "relationship-000007",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout explicitly maps \u201cCodes Used: AC,\u201d and the arrowhead visibly lands immediately beside the first report row\u2019s \u201c179 CODES USED\u201d metric.",
+      "relationship_id": "relationship-000008",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout explicitly identifies \u201cCode Fees: AD,\u201d while the targeted payout-report row visibly contains the corresponding \u201c-$581.75 CODE FEES\u201d metric.",
+      "relationship_id": "relationship-000009",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout\u2019s arrow visibly targets the top Jul 16\u201331, 2026 payout row; the proposed participant is the separate Jun 16\u201330, 2026 card several rows below, with no arrow terminating on it.",
+      "relationship_id": "relationship-000011",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The arrow terminates near the central metrics of the first payout row, not on the separately bounded far-right \u201c$100,922.05 / PDF / open\u201d controls; the callout also maps calculated values, not those controls as a transaction record.",
+      "relationship_id": "relationship-000012",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The annotation arrow points only to the top Jul 16\u201331 payout row. The proposed historical Jun 1\u201315 summary is much farther down and has no visible connector from the callout.",
+      "relationship_id": "relationship-000013",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The visible arrow ends at the top Jul 16\u201331 report row, whereas the proposed May 16\u201331 historical row is near the bottom of the screenshot and has no connector from the annotation.",
+      "relationship_id": "relationship-000014",
+      "verdict": "not_supported"
+    }
+  ]
+}

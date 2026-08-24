@@ -25,6 +25,18 @@ def test_repository_registry_is_typed_and_complete():
     assert promoted["lineage_id"] == "discovery-b6658d35-7870-5d15-9f4b-d316138cec83"
 
 
+def test_repository_source_identity_rebases_into_linked_checkout(tmp_path: Path):
+    canonical = tmp_path / "primary"
+    checkout = tmp_path / "worktree"
+    source = canonical / "scripts/example.py"
+
+    assert prevention_contract.resolve_repository_source_path(
+        str(source),
+        repository_root=checkout,
+        canonical_repository_root=canonical,
+    ) == checkout / "scripts/example.py"
+
+
 def test_discovery_lifecycle_bundle_contains_directive_guard_intake_dependency():
     manifest = json.loads(Path(
         "operations/sequences/discovery-promotion-lifecycle/dependencies.json"

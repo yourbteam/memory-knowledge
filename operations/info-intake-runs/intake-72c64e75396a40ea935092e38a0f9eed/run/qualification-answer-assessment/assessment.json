@@ -1,0 +1,22 @@
+{
+  "assessment_count": 1,
+  "assessments": [
+    {
+      "answer_projection_id": "projection-source-000008-v1",
+      "answer_projection_sha256": "c75531e879120115f086cde660faa02059d582070559797c23f0bd8fc9da6966",
+      "answer_source_id": "source-000008",
+      "answer_source_sha256": "c75531e879120115f086cde660faa02059d582070559797c23f0bd8fc9da6966",
+      "evidence_sha256": "6bfd37e87c7aaeee3fb7413045e14caee2cc86b828cbfff624f217d8fcf33ffb",
+      "obligation_id": "clarification-obligation-000001",
+      "position": 1,
+      "question_id": "qualification-clarification-answer-000001",
+      "reason": "The obligation asks for a specific local file containing the missing visual information, but the preserved answer only says preserve_gap and identifies no file.",
+      "verdict": "does_not_resolve_obligation"
+    }
+  ],
+  "assessor": {
+    "harness": "Codex",
+    "model": "GPT-5"
+  },
+  "schema_version": 1
+}

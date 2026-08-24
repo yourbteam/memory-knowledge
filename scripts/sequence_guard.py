@@ -17,12 +17,14 @@ from typing import Any, Sequence
 try:
     from scripts.directive_guard import (
         DEFAULT_DIRECTIVES_PATH, DEFAULT_MAX_AGE_MINUTES,
+        DEFAULT_STATE_PATH as DEFAULT_DIRECTIVE_STATE_PATH,
         check_directive_read_state, default_state_path,
     )
     from scripts import work_memory
 except ModuleNotFoundError:
     from directive_guard import (  # type: ignore
         DEFAULT_DIRECTIVES_PATH, DEFAULT_MAX_AGE_MINUTES,
+        DEFAULT_STATE_PATH as DEFAULT_DIRECTIVE_STATE_PATH,
         check_directive_read_state, default_state_path,
     )
     import work_memory  # type: ignore
@@ -78,18 +80,26 @@ def _state_path(task_id: str, value: str | None) -> Path:
 
 
 def _require_directives(args: argparse.Namespace) -> None:
-    # The state file is derived from the directives file this call was given, so a second
-    # checkout on the same host reads and writes its own receipt instead of overwriting this
-    # one's.
+    # Sequence execution is bound to the exact directive path and bytes. Wall-clock age
+    # cannot make unchanged instructions unsafe; only a missing receipt or content/path
+    # drift requires a new read. The standalone directive check retains its optional age
+    # policy for callers that explicitly want periodic rereads.
     directives_path = (
         Path(args.directives_path).resolve() if args.directives_path else DEFAULT_DIRECTIVES_PATH
     )
+    directive_state_path = (
+        Path(args.directive_state).resolve()
+        if args.directive_state
+        else (
+            default_state_path(directives_path)
+            if args.directives_path
+            else DEFAULT_DIRECTIVE_STATE_PATH
+        )
+    )
     check_directive_read_state(
         directives_path=directives_path,
-        state_path=Path(args.directive_state).resolve()
-        if args.directive_state
-        else default_state_path(directives_path),
-        max_age_minutes=int(args.directive_max_age_minutes),
+        state_path=directive_state_path,
+        max_age_minutes=None,
     )
 
 
@@ -131,6 +141,9 @@ def _load_receipt_chain(
         raise work_memory.WorkMemoryError("classification-is-not-operational", 4)
     if selection["classification_receipt_hash"] != class_hash:
         raise work_memory.WorkMemoryError("receipt-chain-mismatch", 4)
+    roots = _selection_roots(selection)
+    if roots.get("memory-knowledge") != work_memory.ROOT.resolve():
+        raise work_memory.WorkMemoryError("controller-checkout-mismatch", 4)
     rows: list[dict[str, str]] = []
     if selection["mode"] == "registered":
         rows, registry_hash = work_memory.registry_rows(

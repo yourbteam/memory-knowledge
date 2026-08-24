@@ -18,6 +18,7 @@ try:
         require_exact_keys,
         require_id,
         require_sha256,
+        resolve_repository_source_path,
         sha256_bytes,
     )
 except ModuleNotFoundError:  # direct script execution
@@ -30,6 +31,7 @@ except ModuleNotFoundError:  # direct script execution
         require_exact_keys,
         require_id,
         require_sha256,
+        resolve_repository_source_path,
         sha256_bytes,
     )
 
@@ -92,8 +94,13 @@ class RegistryError(ValueError):
     """Raised when the typed registry and its human projection diverge."""
 
 
-def _source_validation_path(path: str, sequence_id: str) -> Path:
-    source = Path(path)
+def _source_validation_path(
+    path: str,
+    sequence_id: str,
+    *,
+    repository_root: Path = ROOT,
+    canonical_repository_root: Path | None = None,
+) -> Path:
     source_root = os.environ.get("MK_PREVENTION_SOURCE_ROOT")
     canonical_root = os.environ.get("MK_PREVENTION_CANONICAL_ROOT")
     selected = frozenset(
@@ -102,17 +109,22 @@ def _source_validation_path(path: str, sequence_id: str) -> Path:
         ).split(",") if value
     )
     if source_root and canonical_root and (not selected or sequence_id in selected):
-        try:
-            return Path(source_root) / source.relative_to(Path(canonical_root))
-        except ValueError:
-            pass
-    return source
+        repository_root = Path(source_root)
+        canonical_repository_root = Path(canonical_root)
+    if canonical_repository_root is None:
+        return Path(path)
+    return resolve_repository_source_path(
+        path,
+        repository_root=repository_root,
+        canonical_repository_root=canonical_repository_root,
+    )
 
 
 def load_executable_owner_contracts(
     path: Path = EXECUTABLE_OWNER_CONTRACTS,
     *,
     proposals_dir: Path = OWNER_CONTRACT_PROPOSALS,
+    repository_root: Path = ROOT,
     source_validation_owner_ids: frozenset[str] | None = None,
 ) -> tuple[dict[str, dict[str, Any]], str]:
     """Load the ten approved execution contracts without changing availability."""
@@ -189,8 +201,16 @@ def load_executable_owner_contracts(
                 source_validation_owner_ids is None
                 or sequence_id in source_validation_owner_ids
             ):
+                roots = value.get("trusted_roots")
+                canonical_root = roots.get("memory-knowledge") if isinstance(roots, Mapping) else None
+                if not isinstance(canonical_root, str):
+                    raise RegistryError(
+                        f"executable-owner-memory-root-missing:{sequence_id}"
+                    )
                 source_path = _source_validation_path(
-                    str(source["path"]), sequence_id
+                    str(source["path"]), sequence_id,
+                    repository_root=repository_root,
+                    canonical_repository_root=Path(canonical_root),
                 )
                 if (
                     not source_path.is_file()
@@ -344,6 +364,7 @@ def load_typed_registry(
     executable_contracts, executable_contracts_hash = load_executable_owner_contracts(
         root / EXECUTABLE_OWNER_CONTRACTS.relative_to(ROOT),
         proposals_dir=root / OWNER_CONTRACT_PROPOSALS.relative_to(ROOT),
+        repository_root=root,
         source_validation_owner_ids=source_validation_owner_ids,
     )
     if set(contracts) != {owner.sequence_id for owner in owners.rows}:
@@ -427,7 +448,8 @@ def legacy_fixture_rows(
 
 
 def registry_rows(
-    path: Path | None = None, *, selected_sequence_id: str | None = None
+    path: Path | None = None, *, selected_sequence_id: str | None = None,
+    validate_owner_sources: bool = True,
 ) -> tuple[list[dict[str, Any]], str]:
     """Return typed owners plus validated promoted non-owner sequence rows."""
     if path is None:
@@ -442,7 +464,10 @@ def registry_rows(
     typed_rows, typed_hash = load_typed_registry(
         root=repository_root, markdown_path=selected,
         source_validation_owner_ids=(
-            frozenset({selected_sequence_id}) if selected_sequence_id else None
+            frozenset({selected_sequence_id})
+            if selected_sequence_id else (
+                None if validate_owner_sources else frozenset()
+            )
         ),
     )
     return _merge_runtime_projection(

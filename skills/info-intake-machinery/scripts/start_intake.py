@@ -137,6 +137,352 @@ if _PDF_PROJECTION_SPEC is None or _PDF_PROJECTION_SPEC.loader is None:
     raise RuntimeError("PDF projection adapter is unavailable")
 pdf_projection = importlib.util.module_from_spec(_PDF_PROJECTION_SPEC)
 _PDF_PROJECTION_SPEC.loader.exec_module(pdf_projection)
+_SPREADSHEET_PROJECTION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_spreadsheet_projection",
+    Path(__file__).resolve().with_name("spreadsheet_projection.py"),
+)
+if (
+    _SPREADSHEET_PROJECTION_SPEC is None
+    or _SPREADSHEET_PROJECTION_SPEC.loader is None
+):
+    raise RuntimeError("spreadsheet projection adapter is unavailable")
+spreadsheet_projection = importlib.util.module_from_spec(
+    _SPREADSHEET_PROJECTION_SPEC
+)
+_SPREADSHEET_PROJECTION_SPEC.loader.exec_module(spreadsheet_projection)
+_SOURCE_COLLECTION_DECISION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_source_collection_decision",
+    Path(__file__).resolve().with_name("source_collection_decision.py"),
+)
+if (
+    _SOURCE_COLLECTION_DECISION_SPEC is None
+    or _SOURCE_COLLECTION_DECISION_SPEC.loader is None
+):
+    raise RuntimeError("source collection decision probe is unavailable")
+source_collection_decision = importlib.util.module_from_spec(
+    _SOURCE_COLLECTION_DECISION_SPEC
+)
+_SOURCE_COLLECTION_DECISION_SPEC.loader.exec_module(source_collection_decision)
+_SOURCE_COLLECTION_RESERVATION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_source_collection_reservation",
+    Path(__file__).resolve().with_name("source_collection_reservation.py"),
+)
+if (
+    _SOURCE_COLLECTION_RESERVATION_SPEC is None
+    or _SOURCE_COLLECTION_RESERVATION_SPEC.loader is None
+):
+    raise RuntimeError("source collection reservation probe is unavailable")
+source_collection_reservation = importlib.util.module_from_spec(
+    _SOURCE_COLLECTION_RESERVATION_SPEC
+)
+_SOURCE_COLLECTION_RESERVATION_SPEC.loader.exec_module(
+    source_collection_reservation
+)
+_SOURCE_COLLECTION_CLOSURE_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_source_collection_closure",
+    Path(__file__).resolve().with_name("source_collection_closure.py"),
+)
+if (
+    _SOURCE_COLLECTION_CLOSURE_SPEC is None
+    or _SOURCE_COLLECTION_CLOSURE_SPEC.loader is None
+):
+    raise RuntimeError("source collection closure probe is unavailable")
+source_collection_closure = importlib.util.module_from_spec(
+    _SOURCE_COLLECTION_CLOSURE_SPEC
+)
+_SOURCE_COLLECTION_CLOSURE_SPEC.loader.exec_module(source_collection_closure)
+_SOURCE_QUALIFICATION_BINDING_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_source_qualification_binding",
+    Path(__file__).resolve().with_name("source_qualification_binding.py"),
+)
+if (
+    _SOURCE_QUALIFICATION_BINDING_SPEC is None
+    or _SOURCE_QUALIFICATION_BINDING_SPEC.loader is None
+):
+    raise RuntimeError("source qualification binding probe is unavailable")
+source_qualification_binding = importlib.util.module_from_spec(
+    _SOURCE_QUALIFICATION_BINDING_SPEC
+)
+_SOURCE_QUALIFICATION_BINDING_SPEC.loader.exec_module(
+    source_qualification_binding
+)
+_SOURCE_PROJECTION_QUALIFICATION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_source_projection_qualification",
+    Path(__file__).resolve().with_name("source_projection_qualification.py"),
+)
+if (
+    _SOURCE_PROJECTION_QUALIFICATION_SPEC is None
+    or _SOURCE_PROJECTION_QUALIFICATION_SPEC.loader is None
+):
+    raise RuntimeError("source projection qualification probe is unavailable")
+source_projection_qualification = importlib.util.module_from_spec(
+    _SOURCE_PROJECTION_QUALIFICATION_SPEC
+)
+_SOURCE_PROJECTION_QUALIFICATION_SPEC.loader.exec_module(
+    source_projection_qualification
+)
+_SOURCE_QUALIFICATION_RECONCILIATION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_source_qualification_reconciliation",
+    Path(__file__).resolve().with_name("source_qualification_reconciliation.py"),
+)
+if (
+    _SOURCE_QUALIFICATION_RECONCILIATION_SPEC is None
+    or _SOURCE_QUALIFICATION_RECONCILIATION_SPEC.loader is None
+):
+    raise RuntimeError("source qualification reconciliation probe is unavailable")
+source_qualification_reconciliation = importlib.util.module_from_spec(
+    _SOURCE_QUALIFICATION_RECONCILIATION_SPEC
+)
+_SOURCE_QUALIFICATION_RECONCILIATION_SPEC.loader.exec_module(
+    source_qualification_reconciliation
+)
+_QUALIFICATION_TERMINAL_DISPOSITION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_terminal_disposition",
+    Path(__file__).resolve().with_name("qualification_terminal_disposition.py"),
+)
+if (
+    _QUALIFICATION_TERMINAL_DISPOSITION_SPEC is None
+    or _QUALIFICATION_TERMINAL_DISPOSITION_SPEC.loader is None
+):
+    raise RuntimeError("qualification terminal disposition probe is unavailable")
+qualification_terminal_disposition = importlib.util.module_from_spec(
+    _QUALIFICATION_TERMINAL_DISPOSITION_SPEC
+)
+_QUALIFICATION_TERMINAL_DISPOSITION_SPEC.loader.exec_module(
+    qualification_terminal_disposition
+)
+_CLARIFICATION_OBLIGATION_BINDING_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_clarification_obligation_binding",
+    Path(__file__).resolve().with_name("clarification_obligation_binding.py"),
+)
+if (
+    _CLARIFICATION_OBLIGATION_BINDING_SPEC is None
+    or _CLARIFICATION_OBLIGATION_BINDING_SPEC.loader is None
+):
+    raise RuntimeError("clarification obligation binding probe is unavailable")
+clarification_obligation_binding = importlib.util.module_from_spec(
+    _CLARIFICATION_OBLIGATION_BINDING_SPEC
+)
+_CLARIFICATION_OBLIGATION_BINDING_SPEC.loader.exec_module(
+    clarification_obligation_binding
+)
+_QUALIFICATION_ADMISSION_PUBLICATION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_admission_publication",
+    Path(__file__).resolve().with_name("qualification_admission_publication.py"),
+)
+if (
+    _QUALIFICATION_ADMISSION_PUBLICATION_SPEC is None
+    or _QUALIFICATION_ADMISSION_PUBLICATION_SPEC.loader is None
+):
+    raise RuntimeError("qualification admission publication probe is unavailable")
+qualification_admission_publication = importlib.util.module_from_spec(
+    _QUALIFICATION_ADMISSION_PUBLICATION_SPEC
+)
+_QUALIFICATION_ADMISSION_PUBLICATION_SPEC.loader.exec_module(
+    qualification_admission_publication
+)
+_QUALIFICATION_QUESTION_ROUND_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_question_round",
+    Path(__file__).resolve().with_name("qualification_question_round.py"),
+)
+if (
+    _QUALIFICATION_QUESTION_ROUND_SPEC is None
+    or _QUALIFICATION_QUESTION_ROUND_SPEC.loader is None
+):
+    raise RuntimeError("qualification question-round controller is unavailable")
+qualification_question_round = importlib.util.module_from_spec(
+    _QUALIFICATION_QUESTION_ROUND_SPEC
+)
+_QUALIFICATION_QUESTION_ROUND_SPEC.loader.exec_module(
+    qualification_question_round
+)
+
+_QUALIFICATION_OPERATOR_DISPOSITION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_operator_disposition",
+    Path(__file__).resolve().with_name("qualification_operator_disposition.py"),
+)
+if (
+    _QUALIFICATION_OPERATOR_DISPOSITION_SPEC is None
+    or _QUALIFICATION_OPERATOR_DISPOSITION_SPEC.loader is None
+):
+    raise RuntimeError("qualification operator disposition contract is unavailable")
+qualification_operator_disposition = importlib.util.module_from_spec(
+    _QUALIFICATION_OPERATOR_DISPOSITION_SPEC
+)
+_QUALIFICATION_OPERATOR_DISPOSITION_SPEC.loader.exec_module(
+    qualification_operator_disposition
+)
+_QUALIFICATION_ANSWER_ADMISSION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_answer_admission",
+    Path(__file__).resolve().with_name("qualification_answer_admission.py"),
+)
+if (
+    _QUALIFICATION_ANSWER_ADMISSION_SPEC is None
+    or _QUALIFICATION_ANSWER_ADMISSION_SPEC.loader is None
+):
+    raise RuntimeError("qualification answer admission probe is unavailable")
+qualification_answer_admission = importlib.util.module_from_spec(
+    _QUALIFICATION_ANSWER_ADMISSION_SPEC
+)
+_QUALIFICATION_ANSWER_ADMISSION_SPEC.loader.exec_module(
+    qualification_answer_admission
+)
+_QUALIFICATION_ANSWER_PRESERVATION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_answer_preservation",
+    Path(__file__).resolve().with_name("qualification_answer_preservation.py"),
+)
+if (
+    _QUALIFICATION_ANSWER_PRESERVATION_SPEC is None
+    or _QUALIFICATION_ANSWER_PRESERVATION_SPEC.loader is None
+):
+    raise RuntimeError("qualification answer preservation probe is unavailable")
+qualification_answer_preservation = importlib.util.module_from_spec(
+    _QUALIFICATION_ANSWER_PRESERVATION_SPEC
+)
+_QUALIFICATION_ANSWER_PRESERVATION_SPEC.loader.exec_module(
+    qualification_answer_preservation
+)
+_QUALIFICATION_ANSWER_PROGRESSION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_answer_progression",
+    Path(__file__).resolve().with_name("qualification_answer_progression.py"),
+)
+if (
+    _QUALIFICATION_ANSWER_PROGRESSION_SPEC is None
+    or _QUALIFICATION_ANSWER_PROGRESSION_SPEC.loader is None
+):
+    raise RuntimeError("qualification answer progression probe is unavailable")
+qualification_answer_progression = importlib.util.module_from_spec(
+    _QUALIFICATION_ANSWER_PROGRESSION_SPEC
+)
+_QUALIFICATION_ANSWER_PROGRESSION_SPEC.loader.exec_module(
+    qualification_answer_progression
+)
+_QUALIFICATION_ANSWER_ASSESSMENT_BINDING_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_answer_assessment_binding",
+    Path(__file__).resolve().with_name(
+        "qualification_answer_assessment_binding.py"
+    ),
+)
+if (
+    _QUALIFICATION_ANSWER_ASSESSMENT_BINDING_SPEC is None
+    or _QUALIFICATION_ANSWER_ASSESSMENT_BINDING_SPEC.loader is None
+):
+    raise RuntimeError("qualification answer assessment binding is unavailable")
+qualification_answer_assessment_binding = importlib.util.module_from_spec(
+    _QUALIFICATION_ANSWER_ASSESSMENT_BINDING_SPEC
+)
+_QUALIFICATION_ANSWER_ASSESSMENT_BINDING_SPEC.loader.exec_module(
+    qualification_answer_assessment_binding
+)
+_QUALIFICATION_ANSWER_ASSESSMENT_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_answer_assessment",
+    Path(__file__).resolve().with_name("qualification_answer_assessment.py"),
+)
+if (
+    _QUALIFICATION_ANSWER_ASSESSMENT_SPEC is None
+    or _QUALIFICATION_ANSWER_ASSESSMENT_SPEC.loader is None
+):
+    raise RuntimeError("qualification answer assessment interview is unavailable")
+qualification_answer_assessment = importlib.util.module_from_spec(
+    _QUALIFICATION_ANSWER_ASSESSMENT_SPEC
+)
+_QUALIFICATION_ANSWER_ASSESSMENT_SPEC.loader.exec_module(
+    qualification_answer_assessment
+)
+_QUALIFICATION_ANSWER_ASSESSMENT_RECONCILIATION_SPEC = (
+    importlib.util.spec_from_file_location(
+        "info_intake_qualification_answer_assessment_reconciliation",
+        Path(__file__).resolve().with_name(
+            "qualification_answer_assessment_reconciliation.py"
+        ),
+    )
+)
+if (
+    _QUALIFICATION_ANSWER_ASSESSMENT_RECONCILIATION_SPEC is None
+    or _QUALIFICATION_ANSWER_ASSESSMENT_RECONCILIATION_SPEC.loader is None
+):
+    raise RuntimeError(
+        "qualification answer assessment reconciliation is unavailable"
+    )
+qualification_answer_assessment_reconciliation = importlib.util.module_from_spec(
+    _QUALIFICATION_ANSWER_ASSESSMENT_RECONCILIATION_SPEC
+)
+_QUALIFICATION_ANSWER_ASSESSMENT_RECONCILIATION_SPEC.loader.exec_module(
+    qualification_answer_assessment_reconciliation
+)
+_QUALIFICATION_RESOLUTION_ADMISSION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_resolution_admission",
+    Path(__file__).resolve().with_name("qualification_resolution_admission.py"),
+)
+if (
+    _QUALIFICATION_RESOLUTION_ADMISSION_SPEC is None
+    or _QUALIFICATION_RESOLUTION_ADMISSION_SPEC.loader is None
+):
+    raise RuntimeError("qualification resolution admission is unavailable")
+qualification_resolution_admission = importlib.util.module_from_spec(
+    _QUALIFICATION_RESOLUTION_ADMISSION_SPEC
+)
+_QUALIFICATION_RESOLUTION_ADMISSION_SPEC.loader.exec_module(
+    qualification_resolution_admission
+)
+_QUALIFICATION_OBLIGATION_CLOSURE_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_obligation_closure",
+    Path(__file__).resolve().with_name("qualification_obligation_closure.py"),
+)
+if (
+    _QUALIFICATION_OBLIGATION_CLOSURE_SPEC is None
+    or _QUALIFICATION_OBLIGATION_CLOSURE_SPEC.loader is None
+):
+    raise RuntimeError("qualification obligation closure is unavailable")
+qualification_obligation_closure = importlib.util.module_from_spec(
+    _QUALIFICATION_OBLIGATION_CLOSURE_SPEC
+)
+_QUALIFICATION_OBLIGATION_CLOSURE_SPEC.loader.exec_module(
+    qualification_obligation_closure
+)
+_EFFECTIVE_FIRST_LAYER_TERMINAL_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_effective_first_layer_terminal",
+    Path(__file__).resolve().with_name("effective_first_layer_terminal.py"),
+)
+if (
+    _EFFECTIVE_FIRST_LAYER_TERMINAL_SPEC is None
+    or _EFFECTIVE_FIRST_LAYER_TERMINAL_SPEC.loader is None
+):
+    raise RuntimeError("effective first-layer terminal is unavailable")
+effective_first_layer_terminal = importlib.util.module_from_spec(
+    _EFFECTIVE_FIRST_LAYER_TERMINAL_SPEC
+)
+_EFFECTIVE_FIRST_LAYER_TERMINAL_SPEC.loader.exec_module(
+    effective_first_layer_terminal
+)
+_QUALIFICATION_FOLLOWUP_ADMISSION_SPEC = importlib.util.spec_from_file_location(
+    "info_intake_qualification_followup_admission",
+    Path(__file__).resolve().with_name("qualification_followup_admission.py"),
+)
+if (
+    _QUALIFICATION_FOLLOWUP_ADMISSION_SPEC is None
+    or _QUALIFICATION_FOLLOWUP_ADMISSION_SPEC.loader is None
+):
+    raise RuntimeError("qualification follow-up admission is unavailable")
+qualification_followup_admission = importlib.util.module_from_spec(
+    _QUALIFICATION_FOLLOWUP_ADMISSION_SPEC
+)
+_QUALIFICATION_FOLLOWUP_ADMISSION_SPEC.loader.exec_module(
+    qualification_followup_admission
+)
+
+SOURCE_COLLECTION_DECISION_QUESTION = {
+    "id": "source-collection-decision",
+    "asks": "Do you want to add another independent source or finish source collection?",
+    "answer_type": "enum",
+    "allowed_values": list(source_collection_decision.ALLOWED_ACTIONS),
+}
+SOURCE_COLLECTION_KIND_QUESTION = {
+    "id": "source-collection-kind",
+    "asks": "How will you provide the next independent source?",
+    "answer_type": "enum",
+    "allowed_values": ["local_file", "url"],
+}
 
 
 def _canonical(value: object) -> bytes:
@@ -295,14 +641,21 @@ def _projection_model_attachment(
                 contract=contract,
             )
         )
-        replacement_attachments = (
-            projection_interview.required_participant_replacement_attachments(
-                attempt_dir,
-                interview_state,
-                source_path=source_path,
-                source_sha256=source_sha256,
+        replacement_attachments = None
+        if (
+            endpoint_evidence is None
+            and not isinstance(
+                interview_state.get("element_supersession_pending"), dict
             )
-        )
+        ):
+            replacement_attachments = (
+                projection_interview.required_participant_replacement_attachments(
+                    attempt_dir,
+                    interview_state,
+                    source_path=source_path,
+                    source_sha256=source_sha256,
+                )
+            )
     except (OSError, projection_interview.InterviewError) as error:
         return None, None, None, None, _blocked(
             "projection region evidence failed", str(error)
@@ -316,7 +669,7 @@ def _projection_model_attachment(
                 interview_state
             )
         except projection_interview.InterviewError as error:
-            return None, None, None, _blocked(
+            return None, None, None, None, _blocked(
                 "projection region evidence failed", str(error)
             )
         if isinstance(active_region, dict) and isinstance(
@@ -327,14 +680,10 @@ def _projection_model_attachment(
             obligation = projection_interview._pending_obligation(
                 interview_state
             )
-            if not isinstance(obligation, dict) or not isinstance(
+            if isinstance(obligation, dict) and isinstance(
                 obligation.get("id"), str
             ):
-                return None, None, None, _blocked(
-                    "projection relationship binding failed",
-                    "no active region or pending relationship obligation is available",
-                )
-            obligation_id = str(obligation["id"])
+                obligation_id = str(obligation["id"])
     if endpoint_evidence is not None:
         crop, endpoint_evidence_sha256 = endpoint_evidence
     elif replacement_attachments is not None:
@@ -1128,8 +1477,23 @@ def _bind_local_file_to_question(
 ) -> dict[str, object]:
     return {
         **source,
+        **_question_answer_binding(question),
+    }
+
+
+def _question_answer_binding(
+    question: dict[str, object],
+) -> dict[str, object]:
+    gap = question.get("answers_gap")
+    obligation = question.get("answers_obligation")
+    if isinstance(gap, dict) == isinstance(obligation, dict):
+        raise ValueError(
+            "one question must bind exactly one answers_gap or answers_obligation target"
+        )
+    target_key = "answers_gap" if isinstance(gap, dict) else "answers_obligation"
+    return {
         "answers_question": question["id"],
-        "answers_gap": question["answers_gap"],
+        target_key: gap if isinstance(gap, dict) else obligation,
     }
 
 
@@ -1718,6 +2082,55 @@ def _source_projection_closure_inventory(
             projection_error = register_projection(source_id, projection, entry)
             if projection_error:
                 return None, projection_error
+        elif event == "qualification_answer_source_projected":
+            answer = entry.get("answer")
+            source = answer.get("source") if isinstance(answer, dict) else None
+            projection = (
+                answer.get("projection") if isinstance(answer, dict) else None
+            )
+            source_id = source.get("id") if isinstance(source, dict) else None
+            if not isinstance(source_id, str) or not isinstance(projection, dict):
+                return None, _blocked(
+                    "invalid source projection ledger",
+                    f"ledger entry {entry.get('sequence')} lost its qualification-answer source or projection",
+                )
+            if source_id not in sources:
+                direct_entry = {**entry, "source": source, "projection": projection}
+                source_error = register_source(
+                    direct_entry, directly_projected=True
+                )
+                if source_error:
+                    return None, source_error
+                source_bytes = sources[source_id]["source_bytes"]
+                assert isinstance(source_bytes, bytes)
+                projection_error = register_projection(
+                    source_id,
+                    projection,
+                    direct_entry,
+                    direct_source_bytes=source_bytes,
+                )
+                if projection_error:
+                    return None, projection_error
+            else:
+                registered_source = sources[source_id]["source"]
+                registered_projections = projections[source_id]
+                matching_projections = [
+                    item
+                    for item in registered_projections
+                    if item.get("id") == projection.get("id")
+                    and item.get("version") == projection.get("version")
+                    and item.get("path") == projection.get("path")
+                    and item.get("sha256") == projection.get("sha256")
+                ]
+                if (
+                    registered_source != source
+                    or projection.get("source_id") != source_id
+                    or len(matching_projections) != 1
+                ):
+                    return None, _blocked(
+                        "invalid source projection ledger",
+                        f"qualification-answer source {source_id} does not match its acquired immutable source and projection",
+                    )
         elif event == "projection_conversion_failed":
             source_id = entry.get("source_id")
             failure = entry.get("failure")
@@ -1918,6 +2331,3965 @@ def run_source_projection_closure(work: Path) -> dict[str, object]:
         "work": str(work.resolve()),
         "ledger": str((work / "ledger.jsonl").resolve()),
     }
+
+
+def _source_set_qualification_evidence(
+    work: Path,
+    entries: list[dict[str, object]],
+    closure: dict[str, object],
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    bound = source_qualification_binding.bind(closure, entries)
+    if bound.get("complete") is not True:
+        return None, _blocked(
+            "source-set qualification invalid", str(bound.get("why"))
+        )
+    records = bound.get("records")
+    if not isinstance(records, list):
+        return None, _blocked(
+            "source-set qualification invalid",
+            "the binding probe lost its ordered source records",
+        )
+    qualifications: list[dict[str, object]] = []
+    for item in records:
+        if not isinstance(item, dict):
+            return None, _blocked(
+                "source-set qualification invalid",
+                "the binding probe returned a malformed source record",
+            )
+        record = item.get("record")
+        artifact_bytes: bytes | None = None
+        artifact_sha256: str | None = None
+        visual_qualification: dict[str, object] | None = None
+        if item.get("outcome") == "projected":
+            if not isinstance(record, dict):
+                return None, _blocked(
+                    "source-set qualification invalid",
+                    f"projected source {item.get('source_id')} lost its record",
+                )
+            artifact_bytes, artifact_error = _closure_artifact(
+                work,
+                record.get("path"),
+                record.get("sha256"),
+                f"qualification projection {record.get('id')}",
+            )
+            if artifact_error:
+                return None, artifact_error
+            artifact_sha256 = str(record["sha256"])
+            if record.get("method") == "visual_spatial_v1":
+                visual_qualification, visual_error = (
+                    _visual_projection_qualification(work, record)
+                )
+                if visual_error:
+                    return None, visual_error
+                assert visual_qualification is not None
+        qualified = source_projection_qualification.qualify(
+            item,
+            artifact_bytes,
+            artifact_sha256,
+            visual_qualification=visual_qualification,
+        )
+        if qualified.get("complete") is not True:
+            return None, _blocked(
+                "source-set qualification invalid", str(qualified.get("why"))
+            )
+        qualification = qualified.get("qualification")
+        if not isinstance(qualification, dict):
+            return None, _blocked(
+                "source-set qualification invalid",
+                "an adapter probe lost its source qualification",
+            )
+        qualifications.append(qualification)
+    reconciled = source_qualification_reconciliation.reconcile(
+        closure, qualifications
+    )
+    if reconciled.get("complete") is not True:
+        return None, _blocked(
+            "source-set qualification invalid", str(reconciled.get("why"))
+        )
+    result = reconciled.get("qualification")
+    if not isinstance(result, dict):
+        return None, _blocked(
+            "source-set qualification invalid",
+            "the reconciliation probe lost its intake-wide outcome",
+        )
+    return result, None
+
+
+def _source_set_qualification_result(
+    state: dict[str, object],
+    work: Path,
+    closure: dict[str, object],
+    qualification: dict[str, object],
+) -> dict[str, object]:
+    return {
+        "status": "source_set_qualification_complete",
+        "stopped": "source_set_qualification_complete",
+        "intake_id": state["intake_id"],
+        "source_projection_closure": closure,
+        "source_set_qualification": qualification,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _historical_context_same_unit_evidence(
+    journal_entries: list[dict[str, object]],
+    obligation: dict[str, object],
+) -> list[dict[str, object]]:
+    obligation_id = obligation.get("id")
+    anchor = obligation.get("anchor")
+    if (
+        not isinstance(obligation_id, str)
+        or not isinstance(anchor, list)
+        or len(anchor) != 2
+        or not all(isinstance(value, int) for value in anchor)
+    ):
+        return []
+    evidence: list[dict[str, object]] = []
+    for index, entry in enumerate(journal_entries):
+        question = entry.get("question")
+        candidate = (
+            question.get("context_candidate_obligation")
+            if isinstance(question, dict)
+            else None
+        )
+        if (
+            entry.get("event") != "question_asked"
+            or not isinstance(question, dict)
+            or question.get("id") != "context_obligation_resolution"
+            or not isinstance(candidate, dict)
+            or candidate.get("id") != obligation_id
+        ):
+            continue
+        target_id: str | None = None
+        target_sequence: int | None = None
+        for later in journal_entries[index + 1 :]:
+            later_question = later.get("question")
+            if (
+                later.get("event") == "question_asked"
+                and isinstance(later_question, dict)
+                and later_question.get("id") == "context_obligation_resolution"
+            ) or later.get("event") == "region_outcome_recorded":
+                break
+            if (
+                later.get("event") == "answer_recorded"
+                and later.get("accepted") is True
+                and later.get("question_id") == "element_same_unit_target"
+                and isinstance(later.get("parsed"), str)
+            ):
+                target_id = str(later["parsed"])
+                target_sequence = int(later["sequence"])
+                continue
+            trigger = later.get("trigger_candidate")
+            bounds = trigger.get("region") if isinstance(trigger, dict) else None
+            if (
+                later.get("event") == "element_superseded"
+                and later.get("reason") == "same_visible_unit"
+                and later.get("element_id") == target_id
+                and isinstance(bounds, list)
+                and len(bounds) == 4
+                and all(isinstance(value, int) for value in bounds)
+                and bounds[0] <= anchor[0] < bounds[2]
+                and bounds[1] <= anchor[1] < bounds[3]
+                and isinstance(target_sequence, int)
+            ):
+                evidence.append({
+                    "question_sequence": entry["sequence"],
+                    "target_answer_sequence": target_sequence,
+                    "supersession_sequence": later["sequence"],
+                    "target_element_id": target_id,
+                    "question_entry_sha256": entry["entry_sha256"],
+                    "supersession_entry_sha256": later["entry_sha256"],
+                })
+                break
+    return evidence
+
+
+def _build_context_same_unit_reconciliation(
+    work: Path,
+    state: dict[str, object],
+    parent: dict[str, object],
+) -> tuple[bytes, dict[str, object], list[dict[str, object]], str] | None:
+    try:
+        projection = json.loads((work / str(parent["path"])).read_text())
+        journal_path = (
+            work / "projection-interviews" / "attempt-000001" / "interview.jsonl"
+        )
+        journal_entries = projection_interview._read_journal(journal_path)
+        journal_sha256 = _digest_bytes(journal_path.read_bytes())
+    except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+        return None
+    elements = {
+        item.get("id"): item
+        for item in projection.get("elements", [])
+        if isinstance(item, dict) and isinstance(item.get("id"), str)
+    }
+    resolutions: list[dict[str, object]] = []
+    for region in projection.get("scan_regions", []):
+        if not isinstance(region, dict):
+            continue
+        obligations = region.get("context_candidate_obligations")
+        if not isinstance(obligations, list):
+            continue
+        for obligation in obligations:
+            if not isinstance(obligation, dict) or obligation.get("status") != "pending":
+                continue
+            evidence = _historical_context_same_unit_evidence(
+                journal_entries, obligation
+            )
+            targets = {
+                item["target_element_id"]
+                for item in evidence
+                if item.get("target_element_id") in elements
+            }
+            if len(targets) != 1:
+                continue
+            target_id = next(iter(targets))
+            previous = json.loads(json.dumps(obligation))
+            obligation.update({
+                "status": "resolved",
+                "resolution": "element",
+                "element_id": target_id,
+                "gap_reason": "",
+            })
+            resolutions.append({
+                "obligation_id": obligation["id"],
+                "previous_obligation": previous,
+                "replacement_obligation": json.loads(json.dumps(obligation)),
+                "target_element_id": target_id,
+                "evidence": evidence,
+            })
+    if not resolutions:
+        return None
+    version = int(parent["version"]) + 1
+    content = json.dumps(projection, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    record = {
+        "id": f"projection-{parent['source_id']}-v{version}",
+        "source_id": parent["source_id"],
+        "version": version,
+        "parent_projection_id": parent["id"],
+        "path": f"projections/{parent['source_id']}-v{version}.json",
+        "sha256": _digest_bytes(content),
+        "element_count": len(projection["elements"]),
+        "relationship_count": len(projection["relationships"]),
+        "gap_count": int(parent["gap_count"]),
+        "coverage": "unassessed",
+    }
+    return content, record, resolutions, journal_sha256
+
+
+def _reconcile_historical_context_same_unit(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> tuple[bool, dict[str, object] | None]:
+    saved = state.get("context_same_unit_reconciliation")
+    if isinstance(saved, dict):
+        sequence = saved.get("ledger_sequence")
+        completion_sequence = saved.get("completion_ledger_sequence")
+        projection = saved.get("projection")
+        if (
+            not isinstance(sequence, int)
+            or not isinstance(completion_sequence, int)
+            or not isinstance(projection, dict)
+            or completion_sequence != sequence + 1
+            or completion_sequence > len(entries)
+            or entries[sequence - 1].get("event") != "projection_version_created"
+            or entries[sequence - 1].get("role")
+            != "context_same_unit_reconciliation"
+            or entries[sequence - 1].get("projection") != projection
+            or state.get("current_projection") != projection
+        ):
+            return False, _blocked(
+                "invalid context reconciliation",
+                "the append-only context-obligation correction changed",
+            )
+        try:
+            if _digest_bytes((work / str(projection["path"])).read_bytes()) != projection.get("sha256"):
+                raise OSError("projection digest changed")
+        except OSError as error:
+            return False, _blocked("invalid context reconciliation", str(error))
+        return False, None
+
+    parent = state.get("current_projection", state.get("first_projection"))
+    if not isinstance(parent, dict):
+        return False, None
+    built = _build_context_same_unit_reconciliation(work, state, parent)
+    if built is None:
+        return False, None
+    content, projection, resolutions, journal_sha256 = built
+    projection_path = work / str(projection["path"])
+    if projection_path.exists():
+        return False, _blocked(
+            "unbound projection version", str(projection["path"])
+        )
+    projection_path.write_bytes(content)
+    created = _ledger_entry(
+        len(entries) + 1,
+        "projection_version_created",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "context_same_unit_reconciliation",
+            "parent_projection": parent,
+            "projection_interview_sha256": journal_sha256,
+            "resolutions": resolutions,
+            "projection": projection,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    closure, closure_error = _source_projection_closure_inventory(
+        work, [*entries, created]
+    )
+    if closure_error:
+        return False, closure_error
+    assert closure is not None
+    collection = state.get("source_collection")
+    if not isinstance(collection, dict):
+        return False, _blocked(
+            "context reconciliation unavailable", "source collection is missing"
+        )
+    previous_completion = collection.get("completion_ledger_sequence")
+    completed = _ledger_entry(
+        len(entries) + 2,
+        "source_collection_completed",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "supersedes_completion_ledger_sequence": previous_completion,
+            "source_ids": collection["source_ids"],
+            "source_projection_closure": closure,
+        },
+        str(created["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [created, completed])
+    current_resolution = state.get("gap_resolution")
+    history = state.get("gap_resolution_history", [])
+    if isinstance(current_resolution, dict) and isinstance(history, list):
+        archived = json.loads(json.dumps(current_resolution))
+        archived["terminal_phase"] = "gap_resolution_applied"
+        archived["output_projection"] = parent
+        state["gap_resolution_history"] = [*history, archived]
+        state.pop("gap_resolution", None)
+    state["source_collection"] = {
+        **collection,
+        "completion_ledger_sequence": completed["sequence"],
+    }
+    state["current_projection"] = projection
+    state["context_same_unit_reconciliation"] = {
+        "ledger_sequence": created["sequence"],
+        "completion_ledger_sequence": completed["sequence"],
+        "parent_projection": parent,
+        "projection_interview_sha256": journal_sha256,
+        "resolutions": resolutions,
+        "projection": projection,
+    }
+    state["ledger_entries"] = completed["sequence"]
+    state["ledger_tail_sha256"] = completed["entry_sha256"]
+    _write_state(work / "intake-state.json", state)
+    return True, None
+
+
+def run_source_set_qualification(work: Path) -> dict[str, object]:
+    try:
+        opening_bytes = (work / "sources" / "source-000001.txt").read_bytes()
+    except OSError as error:
+        return _blocked("source-set qualification unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening_bytes)
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") not in {
+        "source_collection_complete",
+        "source_set_qualification_complete",
+    }:
+        return _blocked(
+            "source-set qualification unavailable",
+            "qualify the complete collected source set before clarification",
+        )
+    applied, reconciliation_error = _reconcile_historical_context_same_unit(
+        work, state, entries
+    )
+    if reconciliation_error:
+        return reconciliation_error
+    if applied:
+        state, entries, load_error = _load_bound(work, opening_bytes)
+        if load_error:
+            return load_error
+        assert state is not None
+    closure, closure_error = _source_projection_closure_inventory(work, entries)
+    if closure_error:
+        return closure_error
+    assert closure is not None
+    collection = state.get("source_collection")
+    completion_sequence = (
+        collection.get("completion_ledger_sequence")
+        if isinstance(collection, dict)
+        else None
+    )
+    if (
+        not isinstance(completion_sequence, int)
+        or completion_sequence < 1
+        or completion_sequence > len(entries)
+        or entries[completion_sequence - 1].get("event")
+        != "source_collection_completed"
+        or entries[completion_sequence - 1].get("source_ids")
+        != collection.get("source_ids")
+        or entries[completion_sequence - 1].get("source_projection_closure")
+        != closure
+    ):
+        return _blocked(
+            "invalid source collection ledger",
+            "the completed source set changed before qualification",
+        )
+    qualification, qualification_error = _source_set_qualification_evidence(
+        work, entries, closure
+    )
+    if qualification_error:
+        return qualification_error
+    assert qualification is not None
+    if state.get("phase") == "source_set_qualification_complete":
+        saved = state.get("source_set_qualification")
+        sequence = (
+            saved.get("ledger_sequence") if isinstance(saved, dict) else None
+        )
+        if (
+            not isinstance(sequence, int)
+            or sequence != len(entries)
+            or entries[-1].get("event") != "source_set_qualification_completed"
+            or entries[-1].get("source_collection_completion_ledger_sequence")
+            != completion_sequence
+            or entries[-1].get("source_projection_closure") != closure
+            or entries[-1].get("source_set_qualification") != qualification
+            or saved.get("qualification") != qualification
+            or state.get("status") != "source_set_qualification_complete"
+            or state.get("waiting_for") is not None
+            or state.get("question") is not None
+        ):
+            return _blocked(
+                "invalid source-set qualification ledger",
+                "the preserved intake-wide qualification changed",
+            )
+        return _source_set_qualification_result(
+            state, work, closure, qualification
+        )
+
+    completed = _ledger_entry(
+        len(entries) + 1,
+        "source_set_qualification_completed",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "source_collection_completion_ledger_sequence": completion_sequence,
+            "source_projection_closure": closure,
+            "source_set_qualification": qualification,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [completed])
+    state.update({
+        "status": "source_set_qualification_complete",
+        "phase": "source_set_qualification_complete",
+        "waiting_for": None,
+        "question": None,
+        "source_set_qualification": {
+            "ledger_sequence": completed["sequence"],
+            "qualification": qualification,
+        },
+        "ledger_entries": completed["sequence"],
+        "ledger_tail_sha256": completed["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _source_set_qualification_result(state, work, closure, qualification)
+
+
+def _qualification_admission_result(
+    state: dict[str, object],
+    work: Path,
+    closure: dict[str, object],
+    qualification: dict[str, object],
+    route: str,
+    obligations: list[dict[str, object]],
+) -> dict[str, object]:
+    return {
+        "status": "qualification_admission_complete",
+        "stopped": "qualification_admission_complete",
+        "intake_id": state["intake_id"],
+        "route": route,
+        "clarification_obligations": obligations,
+        "source_projection_closure": closure,
+        "source_set_qualification": qualification,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def run_qualification_admission(work: Path) -> dict[str, object]:
+    try:
+        opening_bytes = (work / "sources" / "source-000001.txt").read_bytes()
+    except OSError as error:
+        return _blocked("qualification admission unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening_bytes)
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") not in {
+        "source_set_qualification_complete",
+        "qualification_admission_complete",
+    }:
+        return _blocked(
+            "qualification admission unavailable",
+            "admit only a completed intake-wide source qualification",
+        )
+    closure, closure_error = _source_projection_closure_inventory(work, entries)
+    if closure_error:
+        return closure_error
+    assert closure is not None
+    qualification, qualification_error = _source_set_qualification_evidence(
+        work, entries, closure
+    )
+    if qualification_error:
+        return qualification_error
+    assert qualification is not None
+    saved = state.get("source_set_qualification")
+    qualification_sequence = (
+        saved.get("ledger_sequence") if isinstance(saved, dict) else None
+    )
+    qualification_index = (
+        qualification_sequence - 1
+        if isinstance(qualification_sequence, int)
+        else -1
+    )
+    if (
+        qualification_index < 0
+        or qualification_index >= len(entries)
+        or entries[qualification_index].get("event")
+        != "source_set_qualification_completed"
+        or entries[qualification_index].get("source_set_qualification")
+        != qualification
+        or saved.get("qualification") != qualification
+    ):
+        return _blocked(
+            "invalid qualification admission ledger",
+            "the admission lost its exact source-set qualification event",
+        )
+    qualification_event_sha256 = entries[qualification_index].get(
+        "entry_sha256"
+    )
+    disposition = qualification_terminal_disposition.decide(qualification)
+    if disposition.get("complete") is not True:
+        return _blocked(
+            "qualification admission invalid", str(disposition.get("why"))
+        )
+    route = disposition.get("route")
+    obligations: list[dict[str, object]] = []
+    if route == "clarification_required":
+        bound = clarification_obligation_binding.bind(
+            qualification, str(qualification_event_sha256)
+        )
+        if bound.get("complete") is not True:
+            return _blocked(
+                "qualification admission invalid", str(bound.get("why"))
+            )
+        exact = bound.get("obligations")
+        if not isinstance(exact, list) or any(
+            not isinstance(item, dict) for item in exact
+        ):
+            return _blocked(
+                "qualification admission invalid",
+                "the obligation binding probe lost its exact ordered results",
+            )
+        obligations = exact
+    prepared = qualification_admission_publication.prepare(
+        route, obligations, qualification_event_sha256
+    )
+    if prepared.get("complete") is not True:
+        return _blocked(
+            "qualification admission invalid", str(prepared.get("why"))
+        )
+    publication = prepared.get("publication")
+    if not isinstance(publication, dict):
+        return _blocked(
+            "qualification admission invalid",
+            "the publication probe lost its exact event payload",
+        )
+    if state.get("phase") == "qualification_admission_complete":
+        admission = state.get("qualification_admission")
+        sequence = (
+            admission.get("ledger_sequence")
+            if isinstance(admission, dict)
+            else None
+        )
+        entry = (
+            entries[sequence - 1]
+            if isinstance(sequence, int) and 1 <= sequence <= len(entries)
+            else None
+        )
+        if (
+            sequence != len(entries)
+            or not isinstance(entry, dict)
+            or entry.get("event") != "qualification_admission_completed"
+            or entry.get("source_set_qualification_ledger_sequence")
+            != qualification_sequence
+            or any(entry.get(key) != value for key, value in publication.items())
+            or admission.get("qualification_event_sha256")
+            != qualification_event_sha256
+            or admission.get("route") != route
+            or admission.get("clarification_obligations") != obligations
+            or state.get("status") != "qualification_admission_complete"
+            or state.get("waiting_for") is not None
+            or state.get("question") is not None
+        ):
+            return _blocked(
+                "invalid qualification admission ledger",
+                "the preserved qualification admission changed",
+            )
+        return _qualification_admission_result(
+            state, work, closure, qualification, str(route), obligations
+        )
+
+    if qualification_sequence != len(entries):
+        return _blocked(
+            "invalid qualification admission ledger",
+            "the qualification event is not the current immutable ledger tail",
+        )
+    completed = _ledger_entry(
+        len(entries) + 1,
+        "qualification_admission_completed",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "source_set_qualification_ledger_sequence": qualification_sequence,
+            **publication,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [completed])
+    state.update({
+        "status": "qualification_admission_complete",
+        "phase": "qualification_admission_complete",
+        "waiting_for": None,
+        "question": None,
+        "qualification_admission": {
+            "ledger_sequence": completed["sequence"],
+            "qualification_event_sha256": qualification_event_sha256,
+            "route": route,
+            "clarification_obligations": obligations,
+        },
+        "ledger_entries": completed["sequence"],
+        "ledger_tail_sha256": completed["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_admission_result(
+        state, work, closure, qualification, str(route), obligations
+    )
+
+
+def _qualification_question_round_model_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    return {
+        "status": "waiting_for_model",
+        "stopped": "formulating_qualification_question_round",
+        "intake_id": state["intake_id"],
+        "work": [{
+            "stage": "formulate_qualification_question_round",
+            "instruction": (
+                "Answer only each typed question displayed. Code fixes every "
+                "clarification obligation, allowed answer type, order, and final round."
+            ),
+            "attachments": [],
+            "command": [
+                sys.executable,
+                str(Path(__file__).resolve()),
+                "--work",
+                str(work.resolve()),
+                "--run-qualification-question-round",
+            ],
+        }],
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _qualification_question_round_operator_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    questions = state.get("questions")
+    answers = state.get("qualification_question_answers", [])
+    assert isinstance(questions, list) and questions
+    assert isinstance(answers, list)
+    question = state.get("question")
+    assert isinstance(question, dict)
+    return {
+        "status": "needs_operator",
+        "stopped": (
+            "awaiting_qualification_followup_answers"
+            if state.get("qualification_round_number", 1) > 1
+            else "awaiting_qualification_clarification_answers"
+        ),
+        "intake_id": state["intake_id"],
+        "question": question,
+        "questions": questions,
+        "answered_question_count": len(answers),
+        "question_count": len(questions),
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _qualification_question_round_answered_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    questions = state.get("questions")
+    answers = state.get("qualification_question_answers")
+    assert isinstance(questions, list) and isinstance(answers, list)
+    return {
+        "status": "ready_for_qualification_assessment",
+        "stopped": "qualification_question_round_answered",
+        "intake_id": state["intake_id"],
+        "answered_question_count": len(answers),
+        "question_count": len(questions),
+        "answer_source_ids": [item["source"]["id"] for item in answers],
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _completed_qualification_round_record(
+    state: dict[str, object],
+) -> dict[str, object]:
+    round_number = state.get("qualification_round_number", 1)
+    if not isinstance(round_number, int) or round_number < 1:
+        raise ValueError("qualification round number must be a positive integer")
+    return {
+        "round": round_number,
+        "qualification_admission": state.get("qualification_admission"),
+        "question_round": state.get("qualification_question_round"),
+        "questions": state.get("questions"),
+        "answers": state.get("qualification_question_answers"),
+        "answer_assessment": state.get("qualification_answer_assessment"),
+        "resolution_admission": state.get("qualification_resolution_admission"),
+        "obligation_closure": state.get("qualification_obligation_closure"),
+        "terminal": state.get("effective_first_layer_terminal"),
+    }
+
+
+def _archive_completed_qualification_round(
+    state: dict[str, object], next_round: int
+) -> list[dict[str, object]]:
+    history = state.get("qualification_rounds", [])
+    if not isinstance(history, list) or any(
+        not isinstance(item, dict) for item in history
+    ):
+        raise ValueError("qualification round history must be an ordered object list")
+    current = _completed_qualification_round_record(state)
+    current_round = current["round"]
+    if next_round != current_round + 1:
+        raise ValueError(
+            f"qualification round received {next_round}; provide next round {current_round + 1}"
+        )
+    if any(item.get("round") == current_round for item in history):
+        raise ValueError(
+            f"qualification round {current_round} already has immutable history"
+        )
+    return [*history, current]
+
+
+def _cumulative_qualification_resolution_context(
+    state: dict[str, object],
+) -> tuple[list[dict[str, object]], list[str], list[str]]:
+    history = state.get("qualification_rounds", [])
+    if not isinstance(history, list):
+        raise ValueError("qualification round history must be an ordered object list")
+    contexts = [
+        *history,
+        {
+            "round": state.get("qualification_round_number", 1),
+            "qualification_admission": state.get("qualification_admission"),
+            "obligation_closure": state.get("qualification_obligation_closure"),
+        },
+    ]
+    if any(not isinstance(item, dict) for item in contexts):
+        raise ValueError("qualification round history must be an ordered object list")
+    obligations: list[dict[str, object]] = []
+    resolved_ids: list[str] = []
+    preserved_ids: list[str] = []
+    for record in contexts:
+        admission = record.get("qualification_admission")
+        closure_record = record.get("obligation_closure")
+        closure = (
+            closure_record.get("closure")
+            if isinstance(closure_record, dict)
+            else None
+        )
+        round_obligations = (
+            admission.get("clarification_obligations")
+            if isinstance(admission, dict)
+            else None
+        )
+        round_resolved = (
+            closure.get("resolved_obligation_ids")
+            if isinstance(closure, dict)
+            else None
+        )
+        round_preserved = (
+            closure.get("preserved_gap_obligation_ids", [])
+            if isinstance(closure, dict)
+            else None
+        )
+        if (
+            not isinstance(round_obligations, list)
+            or any(not isinstance(item, dict) for item in round_obligations)
+            or not isinstance(round_resolved, list)
+            or any(not isinstance(item, str) for item in round_resolved)
+            or not isinstance(round_preserved, list)
+            or any(not isinstance(item, str) for item in round_preserved)
+        ):
+            raise ValueError(
+                f"qualification round {record.get('round')!r} lost its admission or closure"
+            )
+        obligations.extend(round_obligations)
+        resolved_ids.extend(round_resolved)
+        preserved_ids.extend(round_preserved)
+    return obligations, resolved_ids, preserved_ids
+
+
+def _active_qualification_question_ledger_sequence(
+    state: dict[str, object], entries: list[dict[str, object]]
+) -> int | None:
+    question = state.get("question")
+    answers = state.get("qualification_question_answers", [])
+    if not isinstance(question, dict) or not isinstance(answers, list):
+        return None
+    position = len(answers) + 1
+    matches = [
+        entry
+        for entry in entries
+        if entry.get("event") == "operator_qualification_question_asked"
+        and entry.get("question_position") == position
+        and entry.get("question") == question
+    ]
+    if len(matches) != 1 or not isinstance(matches[0].get("sequence"), int):
+        return None
+    return int(matches[0]["sequence"])
+
+
+def _record_qualification_answer(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    admitted: dict[str, object],
+    question: dict[str, object],
+    source: dict[str, object],
+    projection: dict[str, object],
+) -> dict[str, object]:
+    preserved = qualification_answer_preservation.preserve(
+        admitted, question, source, projection
+    )
+    if preserved.get("preserved") is not True:
+        return _blocked("qualification answer preservation refused", str(preserved["why"]))
+    answers = state.get("qualification_question_answers", [])
+    progression = qualification_answer_progression.advance(
+        state.get("questions"), answers, question, preserved
+    )
+    if progression.get("advanced") is not True:
+        return _blocked("qualification answer progression refused", str(progression["why"]))
+    updated_answers = progression["answers"]
+    assert isinstance(updated_answers, list)
+    position = progression["question_position"]
+    assert isinstance(position, int)
+    timestamp = datetime.now(timezone.utc).isoformat()
+    answer_entry = _ledger_entry(
+        len(entries) + 1,
+        "qualification_answer_source_projected",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "qualification_round": state.get("qualification_round_number", 1),
+            "question_position": position,
+            "answer": preserved,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    next_question = progression["next_question"]
+    followup_round = state.get("qualification_round_number", 1) > 1
+    if isinstance(next_question, dict):
+        following = _ledger_entry(
+            len(entries) + 2,
+            "operator_qualification_question_asked",
+            {
+                "recorded_at": timestamp,
+                "intake_id": state["intake_id"],
+                "qualification_round": state.get("qualification_round_number", 1),
+                "question_position": position + 1,
+                "question": next_question,
+            },
+            str(answer_entry["entry_sha256"]),
+        )
+        state.update({
+            "status": "needs_operator",
+            "phase": "awaiting_qualification_clarification_answers",
+            "waiting_for": next_question["id"],
+            "question": next_question,
+        })
+    else:
+        following = _ledger_entry(
+            len(entries) + 2,
+            "qualification_question_round_answered",
+            {
+                "recorded_at": timestamp,
+                "intake_id": state["intake_id"],
+                "qualification_round": state.get("qualification_round_number", 1),
+                "question_count": len(updated_answers),
+                "answered_question_count": len(updated_answers),
+                "answer_source_ids": [item["source"]["id"] for item in updated_answers],
+            },
+            str(answer_entry["entry_sha256"]),
+        )
+        state.update({
+            "status": "ready_for_qualification_assessment",
+            "phase": "qualification_question_round_answered",
+            "waiting_for": None,
+            "question": None,
+        })
+    _append_ledger(work / "ledger.jsonl", [answer_entry, following])
+    state.update({
+        "qualification_question_answers": updated_answers,
+        **(
+            {"qualification_followup_answers": updated_answers}
+            if followup_round
+            else {}
+        ),
+        "ledger_entries": following["sequence"],
+        "ledger_tail_sha256": following["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    if state["phase"] == "qualification_question_round_answered":
+        return _qualification_question_round_answered_result(state, work)
+    return _qualification_question_round_operator_result(state, work)
+
+
+def _accept_qualification_question_answer(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    answer: str | None,
+    supplied: Path | None,
+    supplied_url: str | None,
+) -> dict[str, object]:
+    question = state.get("question")
+    if not isinstance(question, dict):
+        return _blocked(
+            "qualification answer unavailable",
+            "the active qualification question is missing",
+        )
+    submissions = [
+        ("operator_text", answer),
+        ("local_file", str(supplied) if supplied is not None else None),
+        ("url", supplied_url),
+    ]
+    provided = [(channel, value) for channel, value in submissions if value is not None]
+    if len(provided) != 1:
+        return _blocked(
+            "qualification answer input refused",
+            f"question {question.get('id')!r} received {len(provided)} answer channels; provide exactly one",
+        )
+    channel, value = provided[0]
+    admitted = qualification_answer_admission.admit(
+        question, channel=channel, value=value
+    )
+    if admitted.get("accepted") is not True:
+        return _blocked("qualification answer admission refused", str(admitted["why"]))
+    question_sequence = _active_qualification_question_ledger_sequence(state, entries)
+    if question_sequence is None:
+        return _blocked(
+            "qualification answer unavailable",
+            "the active question does not have one immutable ledger position",
+        )
+    answers = state.get("qualification_question_answers", [])
+    assert isinstance(answers, list)
+    lineage = {
+        "mode": "qualification_clarification_answer",
+        "question_ledger_sequence": question_sequence,
+        "question_position": len(answers) + 1,
+        "question_round_result_sha256": state["qualification_question_round"][
+            "result_sha256"
+        ],
+        "admitted_answer": admitted,
+    }
+    if channel == "local_file":
+        assert supplied is not None
+        return _acquire_additional_local_file(
+            work, state, entries, supplied, question=question, lineage=lineage
+        )
+    if channel == "url":
+        assert supplied_url is not None
+        return _acquire_additional_url(
+            work, state, entries, supplied_url, question=question, lineage=lineage
+        )
+    assert answer is not None
+    reservation = source_collection_reservation.reserve(
+        [f"source-{number:06d}" for number in sorted(_known_source_numbers(entries))]
+    )
+    number = int(reservation["source_number"])
+    source_path = work / f"sources/source-{number:06d}.txt"
+    projection_path = work / f"projections/source-{number:06d}-v1.txt"
+    if source_path.exists() or projection_path.exists():
+        return _blocked(
+            "unbound qualification answer artifacts",
+            f"question {question['id']!r} answer artifacts already exist outside the ledger; remove only those unbound artifacts",
+        )
+    content = answer.encode("utf-8")
+    sha256 = _digest_bytes(content)
+    source = {
+        "id": f"source-{number:06d}",
+        "kind": "human_operator_answer",
+        "path": f"sources/source-{number:06d}.txt",
+        "sha256": sha256,
+        **_question_answer_binding(question),
+    }
+    projection = _round_answer_projection_record(number, sha256)
+    source_path.write_bytes(content)
+    projection_path.write_bytes(content)
+    return _record_qualification_answer(
+        work, state, entries, admitted, question, source, projection
+    )
+
+
+def _preserve_qualification_obligation_as_gap(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    question: dict[str, object],
+) -> dict[str, object]:
+    if (
+        state.get("phase") != "awaiting_qualification_clarification_answers"
+        or state.get("question") != question
+    ):
+        return _blocked(
+            "qualification gap preservation unavailable",
+            "the exact qualification question is no longer active",
+        )
+    admitted = qualification_answer_admission.admit(
+        question, channel="preserve_gap", value="preserve_gap"
+    )
+    if admitted.get("accepted") is not True:
+        return _blocked(
+            "qualification gap preservation refused", str(admitted.get("why"))
+        )
+    reservation = source_collection_reservation.reserve(
+        [f"source-{number:06d}" for number in sorted(_known_source_numbers(entries))]
+    )
+    number = int(reservation["source_number"])
+    source_path = work / f"sources/source-{number:06d}.txt"
+    projection_path = work / f"projections/source-{number:06d}-v1.txt"
+    if source_path.exists() or projection_path.exists():
+        return _blocked(
+            "unbound qualification gap-preservation artifacts",
+            f"question {question['id']!r} preservation artifacts already exist outside the ledger; remove only those unbound artifacts",
+        )
+    content = b"preserve_gap"
+    sha256 = _digest_bytes(content)
+    source = {
+        "id": f"source-{number:06d}",
+        "kind": "human_operator_answer",
+        "path": f"sources/source-{number:06d}.txt",
+        "sha256": sha256,
+        **_question_answer_binding(question),
+    }
+    projection = _round_answer_projection_record(number, sha256)
+    source_path.write_bytes(content)
+    projection_path.write_bytes(content)
+    return _record_qualification_answer(
+        work, state, entries, admitted, question, source, projection
+    )
+
+
+def _qualification_answer_source_active(state: dict[str, object]) -> bool:
+    pending = state.get("pending_additional_source")
+    lineage = pending.get("lineage") if isinstance(pending, dict) else None
+    return (
+        state.get("phase")
+        in {
+            "additional_source_frozen",
+            "interviewing_additional_source_projection",
+            "additional_source_projection_recorded",
+            "additional_spreadsheet_projection_failed",
+        }
+        and isinstance(lineage, dict)
+        and lineage.get("mode") == "qualification_clarification_answer"
+    )
+
+
+def _validate_qualification_answer_history(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    if state.get("qualification_round_number", 1) > 1:
+        return _validate_followup_qualification_answer_history(
+            work, state, entries, purpose
+        )
+    saved_round = state.get("qualification_question_round")
+    questions = state.get("questions")
+    answers = state.get("qualification_question_answers")
+    request_sequence = (
+        saved_round.get("request_ledger_sequence")
+        if isinstance(saved_round, dict)
+        else None
+    )
+    if (
+        not isinstance(request_sequence, int)
+        or not isinstance(questions, list)
+        or not questions
+        or not isinstance(answers, list)
+        or len(answers) > len(questions)
+    ):
+        return _blocked(
+            "invalid qualification answer history",
+            "the saved question round or ordered answer list is missing",
+        )
+    prefix_length = request_sequence + 3
+    if len(entries) < prefix_length:
+        return _blocked(
+            "invalid qualification answer history",
+            "the immutable prepared-question ledger prefix is incomplete",
+        )
+    prefix_state = dict(state)
+    prefix_state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_qualification_clarification_answers",
+        "waiting_for": questions[0]["id"],
+        "question": questions[0],
+        "qualification_question_answers": [],
+        "ledger_entries": prefix_length,
+        "ledger_tail_sha256": entries[prefix_length - 1]["entry_sha256"],
+    })
+    prefix_error = _validate_qualification_question_round(
+        work, prefix_state, entries[:prefix_length], purpose
+    )
+    if prefix_error:
+        return prefix_error
+    answer_events = [
+        entry
+        for entry in entries[prefix_length:]
+        if entry.get("event") == "qualification_answer_source_projected"
+    ]
+    if len(answer_events) != len(answers):
+        return _blocked(
+            "invalid qualification answer history",
+            f"answer list has {len(answers)} items but ledger has {len(answer_events)} answer events; restore the exact append-only history",
+        )
+    replayed_answers: list[dict[str, object]] = []
+    for position, (question, answer, answer_entry) in enumerate(
+        zip(questions, answers, answer_events, strict=False), 1
+    ):
+        if not all(isinstance(item, dict) for item in (question, answer, answer_entry)):
+            return _blocked(
+                "invalid qualification answer history",
+                f"answer {position} received a non-object record; restore its exact source and projection",
+            )
+        assert isinstance(question, dict)
+        assert isinstance(answer, dict)
+        assert isinstance(answer_entry, dict)
+        source = answer.get("source")
+        projection = answer.get("projection")
+        submission = answer.get("submission")
+        if (
+            not isinstance(source, dict)
+            or not isinstance(projection, dict)
+            or not isinstance(submission, dict)
+        ):
+            return _blocked(
+                "invalid qualification answer history",
+                f"answer {position} lost its frozen source or readable projection; restore both records",
+            )
+        source_path = source.get("path", source.get("stored_path"))
+        projection_path = projection.get("path")
+        try:
+            source_bytes = (work / str(source_path)).read_bytes()
+            projection_bytes = (work / str(projection_path)).read_bytes()
+        except OSError as error:
+            return _blocked("qualification answer evidence unavailable", str(error))
+        sequence = answer_entry.get("sequence")
+        following = (
+            entries[sequence]
+            if isinstance(sequence, int) and sequence < len(entries)
+            else None
+        )
+        expected_following_event = (
+            "operator_qualification_question_asked"
+            if position < len(questions)
+            else "qualification_question_round_answered"
+        )
+        admitted = {
+            "accepted": True,
+            "question_id": question.get("id"),
+            "obligation_id": question.get("answers_obligation", {}).get("id"),
+            "evidence_sha256": question.get("evidence_sha256"),
+            "channel": submission.get("channel"),
+            "value": submission.get("value"),
+        }
+        replayed = qualification_answer_preservation.preserve(
+            admitted, question, source, projection
+        )
+        progression = qualification_answer_progression.advance(
+            questions, replayed_answers, question, replayed
+        )
+        expected_answer_source_ids = [
+            item["source"]["id"] for item in [*replayed_answers, answer]
+        ]
+        if (
+            replayed != answer
+            or progression.get("advanced") is not True
+            or progression.get("answers") != [*replayed_answers, answer]
+            or answer.get("question") != question
+            or answer.get("question_id") != question.get("id")
+            or answer.get("obligation_id")
+            != question.get("answers_obligation", {}).get("id")
+            or _digest_bytes(source_bytes) != source.get("sha256")
+            or _digest_bytes(projection_bytes) != projection.get("sha256")
+            or projection.get("source_id") != source.get("id")
+            or answer_entry.get("question_position") != position
+            or answer_entry.get("answer") != answer
+            or not isinstance(following, dict)
+            or following.get("event") != expected_following_event
+            or (
+                position < len(questions)
+                and (
+                    following.get("question_position") != position + 1
+                    or following.get("question") != questions[position]
+                )
+            )
+            or (
+                position == len(questions)
+                and (
+                    following.get("question_count") != len(questions)
+                    or following.get("answered_question_count") != len(questions)
+                    or following.get("answer_source_ids")
+                    != expected_answer_source_ids
+                )
+            )
+        ):
+            return _blocked(
+                "invalid qualification answer history",
+                f"answer {position} changed; restore its exact question, source bytes, projection bytes, and following boundary",
+            )
+        replayed_answers.append(answer)
+    if not answers:
+        return _blocked(
+            "invalid qualification answer history",
+            "the completed qualification round has no preserved answer",
+        )
+    if len(answers) < len(questions):
+        next_question = questions[len(answers)]
+        expected_state = (
+            "needs_operator",
+            "awaiting_qualification_clarification_answers",
+            next_question["id"],
+            next_question,
+        )
+    else:
+        expected_state = (
+            "ready_for_qualification_assessment",
+            "qualification_question_round_answered",
+            None,
+            None,
+        )
+    if (
+        (
+            state.get("status"),
+            state.get("phase"),
+            state.get("waiting_for"),
+            state.get("question"),
+        )
+        != expected_state
+        or state.get("ledger_entries") != len(entries)
+        or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+    ):
+        return _blocked(
+            "invalid qualification answer history",
+            "the current question or completed round no longer follows the preserved answers",
+        )
+    return None
+
+
+def _validate_followup_qualification_answer_history(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    round_number = state.get("qualification_round_number")
+    saved = state.get("qualification_question_round")
+    questions = state.get("questions")
+    answers = state.get("qualification_question_answers")
+    history = state.get("qualification_rounds")
+    if (
+        not isinstance(round_number, int)
+        or round_number < 2
+        or not isinstance(saved, dict)
+        or saved.get("round") != round_number
+        or not isinstance(saved.get("admission"), dict)
+        or not isinstance(saved.get("directory"), str)
+        or not isinstance(questions, list)
+        or not questions
+        or not isinstance(answers, list)
+        or len(answers) > len(questions)
+        or not isinstance(history, list)
+        or [item.get("round") for item in history if isinstance(item, dict)]
+        != list(range(1, round_number))
+    ):
+        return _blocked(
+            "invalid qualification answer history",
+            "the indexed follow-up round, prior-round history, questions, or answers are missing",
+        )
+    request_sequence = saved.get("request_ledger_sequence")
+    completion_sequence = saved.get("completion_ledger_sequence")
+    if (
+        not isinstance(request_sequence, int)
+        or not isinstance(completion_sequence, int)
+        or completion_sequence != request_sequence + 1
+        or completion_sequence >= len(entries)
+    ):
+        return _blocked(
+            "invalid qualification answer history",
+            "the follow-up request and completion lost their exact ledger positions",
+        )
+    request = entries[request_sequence - 1]
+    completed = entries[completion_sequence - 1]
+    first_question = entries[completion_sequence]
+    try:
+        validated, journal_sha256, result_sha256 = qualification_question_round.validate(
+            work / saved["directory"],
+            admission=saved["admission"],
+            purpose=purpose,
+        )
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("invalid qualification answer history", str(error))
+    if (
+        validated.get("questions") != questions
+        or journal_sha256 != saved.get("journal_sha256")
+        or result_sha256 != saved.get("result_sha256")
+        or request.get("event") != "qualification_followup_question_round_requested"
+        or request.get("round") != round_number
+        or request.get("admission_entry_sha256")
+        != saved["admission"].get("entry_sha256")
+        or completed.get("event")
+        != "qualification_followup_question_round_completed"
+        or completed.get("round") != round_number
+        or completed.get("request_entry_sha256") != request.get("entry_sha256")
+        or completed.get("journal_sha256") != journal_sha256
+        or completed.get("result_sha256") != result_sha256
+        or completed.get("questions") != questions
+        or completed.get("qualification_rounds") != history
+        or first_question.get("event") != "operator_qualification_question_asked"
+        or first_question.get("qualification_round") != round_number
+        or first_question.get("question_position") != 1
+        or first_question.get("question") != questions[0]
+    ):
+        return _blocked(
+            "invalid qualification answer history",
+            "the follow-up request, interview, questions, or first question changed",
+        )
+    answer_events = [
+        entry
+        for entry in entries[completion_sequence + 1 :]
+        if entry.get("event") == "qualification_answer_source_projected"
+    ]
+    if len(answer_events) != len(answers):
+        return _blocked(
+            "invalid qualification answer history",
+            f"answer list has {len(answers)} items but ledger has {len(answer_events)} answer events",
+        )
+    replayed_answers: list[dict[str, object]] = []
+    for position, (question, answer, answer_entry) in enumerate(
+        zip(questions, answers, answer_events, strict=False), 1
+    ):
+        if not all(isinstance(item, dict) for item in (question, answer, answer_entry)):
+            return _blocked(
+                "invalid qualification answer history",
+                f"follow-up answer {position} is not one complete object",
+            )
+        source = answer.get("source")
+        projection = answer.get("projection")
+        submission = answer.get("submission")
+        if not all(isinstance(item, dict) for item in (source, projection, submission)):
+            return _blocked(
+                "invalid qualification answer history",
+                f"follow-up answer {position} lost its source or readable projection",
+            )
+        source_path = source.get("path", source.get("stored_path"))
+        projection_path = projection.get("path")
+        try:
+            source_bytes = (work / str(source_path)).read_bytes()
+            projection_bytes = (work / str(projection_path)).read_bytes()
+        except OSError as error:
+            return _blocked("qualification answer evidence unavailable", str(error))
+        admitted = {
+            "accepted": True,
+            "question_id": question.get("id"),
+            "obligation_id": question.get("answers_obligation", {}).get("id"),
+            "evidence_sha256": question.get("evidence_sha256"),
+            "channel": submission.get("channel"),
+            "value": submission.get("value"),
+        }
+        replayed = qualification_answer_preservation.preserve(
+            admitted, question, source, projection
+        )
+        progression = qualification_answer_progression.advance(
+            questions, replayed_answers, question, replayed
+        )
+        sequence = answer_entry.get("sequence")
+        following = (
+            entries[sequence]
+            if isinstance(sequence, int) and sequence < len(entries)
+            else None
+        )
+        expected_event = (
+            "operator_qualification_question_asked"
+            if position < len(questions)
+            else "qualification_question_round_answered"
+        )
+        if (
+            replayed != answer
+            or progression.get("advanced") is not True
+            or progression.get("answers") != [*replayed_answers, answer]
+            or _digest_bytes(source_bytes) != source.get("sha256")
+            or _digest_bytes(projection_bytes) != projection.get("sha256")
+            or projection.get("source_id") != source.get("id")
+            or answer_entry.get("qualification_round") != round_number
+            or answer_entry.get("question_position") != position
+            or answer_entry.get("answer") != answer
+            or not isinstance(following, dict)
+            or following.get("qualification_round") != round_number
+            or following.get("event") != expected_event
+        ):
+            return _blocked(
+                "invalid qualification answer history",
+                f"follow-up answer {position} changed from its append-only evidence",
+            )
+        replayed_answers.append(answer)
+    if answers:
+        expected = (
+            ("needs_operator", "awaiting_qualification_clarification_answers")
+            if len(answers) < len(questions)
+            else ("ready_for_qualification_assessment", "qualification_question_round_answered")
+        )
+        if (state.get("status"), state.get("phase")) != expected:
+            return _blocked(
+                "invalid qualification answer history",
+                "the active follow-up question state does not follow its preserved answers",
+            )
+    if (
+        state.get("ledger_entries") != len(entries)
+        or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+    ):
+        return _blocked(
+            "invalid qualification answer history",
+            "the follow-up state no longer names the exact ledger tail",
+        )
+    return None
+
+
+def _qualification_answer_assessment_model_result(state: dict[str, object], work: Path) -> dict[str, object]:
+    return {
+        "status": "waiting_for_model",
+        "stopped": "assessing_qualification_answers",
+        "intake_id": state["intake_id"],
+        "work": [
+            {
+                "stage": "assess_qualification_answers",
+                "instruction": (
+                    "Answer only the currently displayed typed question. Code fixes every "
+                    "answer, qualification obligation, allowed verdict, order, and result."
+                ),
+                "attachments": [],
+                "command": [
+                    sys.executable,
+                    str(Path(__file__).resolve()),
+                    "--work",
+                    str(work.resolve()),
+                    "--run-qualification-answer-assessment",
+                ],
+            }
+        ],
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _qualification_answer_assessment_result(state: dict[str, object], work: Path) -> dict[str, object]:
+    saved = state.get("qualification_answer_assessment")
+    assert isinstance(saved, dict)
+    assessment = saved.get("reconciliation")
+    assert isinstance(assessment, dict)
+    return {
+        "status": "qualification_answer_assessment_complete",
+        "stopped": "qualification_answer_assessment_recorded",
+        "intake_id": state["intake_id"],
+        "assessment": assessment,
+        "assessor": saved.get("assessor"),
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _qualification_answer_assessment_directory(
+    work: Path, state: dict[str, object]
+) -> Path:
+    question_round = state.get("qualification_question_round")
+    relative_question_dir = _qualification_question_round_directory(question_round)
+    if relative_question_dir != "qualification-question-round":
+        return work / relative_question_dir / "answer-assessment"
+    round_number = state.get("qualification_round_number", 1)
+    if not isinstance(round_number, int) or round_number < 1:
+        raise ValueError("qualification assessment round must be a positive integer")
+    if round_number == 1:
+        return work / "qualification-answer-assessment"
+    return (
+        work
+        / "qualification-question-rounds"
+        / f"round-{round_number:06d}"
+        / "answer-assessment"
+    )
+
+
+def _qualification_answer_assessment_request_error(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    saved = state.get("qualification_answer_assessment")
+    request_sequence = saved.get("request_ledger_sequence") if isinstance(saved, dict) else None
+    if (
+        not isinstance(saved, dict)
+        or not isinstance(request_sequence, int)
+        or request_sequence < 1
+        or request_sequence > len(entries)
+    ):
+        return _blocked(
+            "qualification answer assessment invalid",
+            "the assessment request lost its immutable ledger position",
+        )
+    request_entry = entries[request_sequence - 1]
+    request = saved.get("request")
+    if (
+        request_entry.get("event") != "qualification_answer_assessment_requested"
+        or request_entry.get("request") != request
+        or request_entry.get("entry_sha256") != saved.get("request_entry_sha256")
+        or not isinstance(request, dict)
+        or request.get("contract") != qualification_answer_assessment.CONTRACT
+    ):
+        return _blocked(
+            "qualification answer assessment invalid",
+            "the saved assessment request changed; restore its exact ledger event",
+        )
+    prefix_entries = entries[: request_sequence - 1]
+    if not prefix_entries:
+        return _blocked(
+            "qualification answer assessment invalid",
+            "the completed answer-round prefix is missing",
+        )
+    prefix_state = dict(state)
+    prefix_state.update(
+        {
+            "status": "ready_for_qualification_assessment",
+            "phase": "qualification_question_round_answered",
+            "waiting_for": None,
+            "question": None,
+            "ledger_entries": len(prefix_entries),
+            "ledger_tail_sha256": prefix_entries[-1]["entry_sha256"],
+        }
+    )
+    history_error = _validate_qualification_answer_history(work, prefix_state, prefix_entries, purpose)
+    if history_error:
+        return history_error
+    bound = qualification_answer_assessment_binding.bind(
+        work,
+        state.get("questions"),
+        state.get("qualification_question_answers"),
+    )
+    if bound.get("complete") is not True:
+        return _blocked("qualification answer assessment invalid", str(bound.get("why")))
+    if request.get("question_round_result_sha256") != state.get("qualification_question_round", {}).get(
+        "result_sha256"
+    ) or request.get("bindings") != bound.get("bindings"):
+        return _blocked(
+            "qualification answer assessment invalid",
+            "the assessment bindings no longer match the immutable answer round",
+        )
+    return None
+
+
+def request_qualification_answer_assessment(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+        purpose = (work / "sources/source-000002.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification answer assessment unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") == "assessing_qualification_answers":
+        request_error = _qualification_answer_assessment_request_error(work, state, entries, purpose)
+        return request_error or _qualification_answer_assessment_model_result(state, work)
+    if state.get("phase") != "qualification_question_round_answered":
+        return _blocked(
+            "qualification answer assessment unavailable",
+            f"phase received {state.get('phase')!r}; provide one completed qualification-answer round",
+        )
+    history_error = _validate_qualification_answer_history(work, state, entries, purpose)
+    if history_error:
+        return history_error
+    bound = qualification_answer_assessment_binding.bind(
+        work,
+        state.get("questions"),
+        state.get("qualification_question_answers"),
+    )
+    if bound.get("complete") is not True:
+        return _blocked("qualification answer assessment unavailable", str(bound.get("why")))
+    try:
+        round_dir = _qualification_answer_assessment_directory(work, state)
+    except ValueError as error:
+        return _blocked("qualification answer assessment unavailable", str(error))
+    if round_dir.exists():
+        return _blocked(
+            "unbound qualification answer assessment",
+            (
+                f"artifact directory {round_dir} already exists without a request event; "
+                "remove only that unbound directory before retrying"
+            ),
+        )
+    round_dir.mkdir(parents=True)
+    (round_dir / "interview.jsonl").touch()
+    request = {
+        "contract": qualification_answer_assessment.CONTRACT,
+        "question_round_result_sha256": state["qualification_question_round"]["result_sha256"],
+        "bindings": bound["bindings"],
+    }
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_answer_assessment_requested",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "request": request,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update(
+        {
+            "status": "waiting_for_model",
+            "phase": "assessing_qualification_answers",
+            "waiting_for": str((round_dir / "interview.jsonl").relative_to(work)),
+            "question": None,
+            "qualification_answer_assessment": {
+                "request_ledger_sequence": event["sequence"],
+                "request_entry_sha256": event["entry_sha256"],
+                "request": request,
+            },
+            "ledger_entries": event["sequence"],
+            "ledger_tail_sha256": event["entry_sha256"],
+        }
+    )
+    _write_state(work / "intake-state.json", state)
+    return _qualification_answer_assessment_model_result(state, work)
+
+
+def _consume_qualification_answer_assessment(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object]:
+    request_error = _qualification_answer_assessment_request_error(work, state, entries, purpose)
+    if request_error:
+        return request_error
+    saved = state["qualification_answer_assessment"]
+    assert isinstance(saved, dict)
+    request = saved["request"]
+    assert isinstance(request, dict)
+    bindings = request["bindings"]
+    assert isinstance(bindings, list)
+    try:
+        result, journal_sha256, result_sha256 = qualification_answer_assessment.validate(
+            _qualification_answer_assessment_directory(work, state),
+            bindings=bindings,
+            purpose=purpose,
+        )
+    except qualification_answer_assessment.AssessmentError as error:
+        return _blocked("qualification answer assessment invalid", str(error))
+    reconciled = qualification_answer_assessment_reconciliation.reconcile(bindings, result.get("assessments"))
+    if reconciled.get("complete") is not True:
+        return _blocked(
+            "qualification answer assessment invalid",
+            str(reconciled.get("why")),
+        )
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_answer_assessment_completed",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "request_entry_sha256": saved["request_entry_sha256"],
+            "contract": qualification_answer_assessment.CONTRACT,
+            "journal_sha256": journal_sha256,
+            "result_sha256": result_sha256,
+            "result": result,
+            "reconciliation": reconciled,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update(
+        {
+            "status": "qualification_answer_assessment_complete",
+            "phase": "qualification_answer_assessment_recorded",
+            "waiting_for": None,
+            "question": None,
+            "qualification_answer_assessment": {
+                **saved,
+                "completion_ledger_sequence": event["sequence"],
+                "completion_entry_sha256": event["entry_sha256"],
+                "journal_sha256": journal_sha256,
+                "result_sha256": result_sha256,
+                "assessor": result.get("assessor"),
+                "reconciliation": reconciled,
+            },
+            "ledger_entries": event["sequence"],
+            "ledger_tail_sha256": event["entry_sha256"],
+        }
+    )
+    _write_state(work / "intake-state.json", state)
+    return _qualification_answer_assessment_result(state, work)
+
+
+def _validate_completed_qualification_answer_assessment(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    request_error = _qualification_answer_assessment_request_error(work, state, entries, purpose)
+    if request_error:
+        return request_error
+    saved = state.get("qualification_answer_assessment")
+    assert isinstance(saved, dict)
+    request = saved.get("request")
+    assert isinstance(request, dict) and isinstance(request.get("bindings"), list)
+    try:
+        result, journal_sha256, result_sha256 = qualification_answer_assessment.validate(
+            _qualification_answer_assessment_directory(work, state),
+            bindings=request["bindings"],
+            purpose=purpose,
+        )
+    except qualification_answer_assessment.AssessmentError as error:
+        return _blocked("qualification answer assessment invalid", str(error))
+    reconciled = qualification_answer_assessment_reconciliation.reconcile(
+        request["bindings"], result.get("assessments")
+    )
+    sequence = saved.get("completion_ledger_sequence")
+    completed = entries[sequence - 1] if isinstance(sequence, int) and 1 <= sequence <= len(entries) else None
+    if (
+        reconciled.get("complete") is not True
+        or not isinstance(completed, dict)
+        or completed.get("event") != "qualification_answer_assessment_completed"
+        or completed.get("request_entry_sha256") != saved.get("request_entry_sha256")
+        or completed.get("contract") != qualification_answer_assessment.CONTRACT
+        or completed.get("journal_sha256") != journal_sha256
+        or completed.get("result_sha256") != result_sha256
+        or completed.get("result") != result
+        or completed.get("reconciliation") != reconciled
+        or completed.get("entry_sha256") != saved.get("completion_entry_sha256")
+        or saved.get("journal_sha256") != journal_sha256
+        or saved.get("result_sha256") != result_sha256
+        or saved.get("assessor") != result.get("assessor")
+        or saved.get("reconciliation") != reconciled
+        or state.get("ledger_entries") != len(entries)
+        or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+    ):
+        return _blocked(
+            "qualification answer assessment invalid",
+            "the completed assessment no longer matches its immutable request, interview, result, or ledger event",
+        )
+    return None
+
+
+def run_qualification_answer_assessment(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+        purpose = (work / "sources/source-000002.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification answer assessment unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") != "assessing_qualification_answers":
+        return _blocked(
+            "qualification answer assessment unavailable",
+            f"phase received {state.get('phase')!r}; request the bound assessment first",
+        )
+    request_error = _qualification_answer_assessment_request_error(work, state, entries, purpose)
+    if request_error:
+        return request_error
+    saved = state["qualification_answer_assessment"]
+    assert isinstance(saved, dict) and isinstance(saved.get("request"), dict)
+    bindings = saved["request"]["bindings"]
+    assert isinstance(bindings, list)
+    try:
+        qualification_answer_assessment.run(
+            _qualification_answer_assessment_directory(work, state),
+            bindings=bindings,
+            purpose=purpose,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+    except qualification_answer_assessment.AssessmentError as error:
+        return _blocked("qualification answer assessment failed", str(error))
+    return _consume_qualification_answer_assessment(work, state, entries, purpose)
+
+
+def _qualification_resolution_admission_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    saved = state.get("qualification_resolution_admission")
+    assert isinstance(saved, dict)
+    admission = saved.get("admission")
+    assert isinstance(admission, dict)
+    return {
+        "status": "qualification_resolution_admission_complete",
+        "stopped": "qualification_resolution_admission_recorded",
+        "intake_id": state["intake_id"],
+        **admission,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def run_qualification_resolution_admission(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+        purpose = (work / "sources/source-000002.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification resolution admission unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    phase = state.get("phase")
+    if phase == "qualification_resolution_admission_recorded":
+        saved = state.get("qualification_resolution_admission")
+        sequence = (
+            saved.get("ledger_sequence") if isinstance(saved, dict) else None
+        )
+        event = (
+            entries[sequence - 1]
+            if isinstance(sequence, int) and 1 <= sequence <= len(entries)
+            else None
+        )
+        if (
+            not isinstance(saved, dict)
+            or not isinstance(event, dict)
+            or event.get("event") != "qualification_resolution_admission_recorded"
+            or event.get("assessment_completion_entry_sha256")
+            != saved.get("assessment_completion_entry_sha256")
+            or event.get("admission") != saved.get("admission")
+            or event.get("entry_sha256") != saved.get("entry_sha256")
+            or state.get("ledger_entries") != len(entries)
+            or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+        ):
+            return _blocked(
+                "qualification resolution admission invalid",
+                "the preserved admission no longer matches its assessment or immutable ledger event",
+            )
+        return _qualification_resolution_admission_result(state, work)
+    if phase != "qualification_answer_assessment_recorded":
+        return _blocked(
+            "qualification resolution admission unavailable",
+            f"phase received {phase!r}; provide one completed qualification-answer assessment",
+        )
+    completed_error = _validate_completed_qualification_answer_assessment(
+        work, state, entries, purpose
+    )
+    if completed_error:
+        return completed_error
+    saved_assessment = state.get("qualification_answer_assessment")
+    assert isinstance(saved_assessment, dict)
+    request = saved_assessment.get("request")
+    reconciliation = saved_assessment.get("reconciliation")
+    assert isinstance(request, dict) and isinstance(reconciliation, dict)
+    admission = qualification_resolution_admission.admit_all(
+        request.get("bindings"), reconciliation.get("assessments")
+    )
+    if admission.get("complete") is not True:
+        return _blocked(
+            "qualification resolution admission invalid", str(admission.get("why"))
+        )
+    assessment_sequence = saved_assessment.get("completion_ledger_sequence")
+    assessment_event = (
+        entries[assessment_sequence - 1]
+        if isinstance(assessment_sequence, int)
+        and 1 <= assessment_sequence <= len(entries)
+        else None
+    )
+    if not isinstance(assessment_event, dict):
+        return _blocked(
+            "qualification resolution admission invalid",
+            "the completed assessment ledger event is unavailable",
+        )
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_resolution_admission_recorded",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "assessment_completion_entry_sha256": assessment_event["entry_sha256"],
+            "admission": admission,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update({
+        "status": "qualification_resolution_admission_complete",
+        "phase": "qualification_resolution_admission_recorded",
+        "waiting_for": None,
+        "question": None,
+        "qualification_resolution_admission": {
+            "ledger_sequence": event["sequence"],
+            "entry_sha256": event["entry_sha256"],
+            "assessment_completion_entry_sha256": assessment_event["entry_sha256"],
+            "admission": admission,
+        },
+        "ledger_entries": event["sequence"],
+        "ledger_tail_sha256": event["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_resolution_admission_result(state, work)
+
+
+def _qualification_obligation_closure_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    saved = state.get("qualification_obligation_closure")
+    assert isinstance(saved, dict)
+    closure = saved.get("closure")
+    assert isinstance(closure, dict)
+    return {
+        "status": "qualification_obligation_closure_complete",
+        "stopped": "qualification_obligation_closure_recorded",
+        "intake_id": state["intake_id"],
+        **closure,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def run_qualification_obligation_closure(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification obligation closure unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    phase = state.get("phase")
+    if phase == "qualification_obligation_closure_recorded":
+        saved = state.get("qualification_obligation_closure")
+        sequence = saved.get("ledger_sequence") if isinstance(saved, dict) else None
+        event = (
+            entries[sequence - 1]
+            if isinstance(sequence, int) and 1 <= sequence <= len(entries)
+            else None
+        )
+        if (
+            not isinstance(saved, dict)
+            or not isinstance(event, dict)
+            or event.get("event") != "qualification_obligation_closure_recorded"
+            or event.get("resolution_admission_entry_sha256")
+            != saved.get("resolution_admission_entry_sha256")
+            or event.get("closure") != saved.get("closure")
+            or event.get("entry_sha256") != saved.get("entry_sha256")
+            or state.get("ledger_entries") != len(entries)
+            or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+        ):
+            return _blocked(
+                "qualification obligation closure invalid",
+                "the preserved closure no longer matches its admission or immutable ledger event",
+            )
+        return _qualification_obligation_closure_result(state, work)
+    direct_complete = (
+        phase == "qualification_admission_complete"
+        and isinstance(state.get("qualification_admission"), dict)
+        and state["qualification_admission"].get("route")
+        == "first_layer_complete"
+        and state["qualification_admission"].get("clarification_obligations")
+        == []
+    )
+    if phase != "qualification_resolution_admission_recorded" and not direct_complete:
+        return _blocked(
+            "qualification obligation closure unavailable",
+            f"phase received {phase!r}; provide one completed resolution admission",
+        )
+    qualification = state.get("qualification_admission")
+    obligations = (
+        qualification.get("clarification_obligations")
+        if isinstance(qualification, dict)
+        else None
+    )
+    if direct_complete:
+        resolution = None
+        resolutions: object = []
+        preserved_gaps: object = []
+        admission_sequence = (
+            qualification.get("ledger_sequence")
+            if isinstance(qualification, dict)
+            else None
+        )
+    else:
+        admission_result = run_qualification_resolution_admission(work)
+        if admission_result.get("status") == "blocked":
+            return admission_result
+        resolution = state.get("qualification_resolution_admission")
+        admission = (
+            resolution.get("admission") if isinstance(resolution, dict) else None
+        )
+        resolutions = (
+            admission.get("resolutions") if isinstance(admission, dict) else None
+        )
+        preserved_gaps = (
+            admission.get("preserved_gaps")
+            if isinstance(admission, dict)
+            else None
+        )
+        admission_sequence = (
+            resolution.get("ledger_sequence")
+            if isinstance(resolution, dict)
+            else None
+        )
+    closure = qualification_obligation_closure.reconcile(
+        obligations, resolutions, preserved_gaps
+    )
+    if closure.get("reconciled") is not True:
+        return _blocked(
+            "qualification obligation closure invalid", str(closure.get("why"))
+        )
+    admission_event = (
+        entries[admission_sequence - 1]
+        if isinstance(admission_sequence, int) and 1 <= admission_sequence <= len(entries)
+        else None
+    )
+    if not isinstance(admission_event, dict):
+        return _blocked(
+            "qualification obligation closure invalid",
+            "the resolution-admission ledger event is unavailable",
+        )
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_obligation_closure_recorded",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "resolution_admission_entry_sha256": admission_event["entry_sha256"],
+            "basis": (
+                "qualification_admission_no_obligations"
+                if direct_complete
+                else "qualification_resolution_admission"
+            ),
+            "closure": closure,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update({
+        "status": "qualification_obligation_closure_complete",
+        "phase": "qualification_obligation_closure_recorded",
+        "waiting_for": None,
+        "question": None,
+        "qualification_obligation_closure": {
+            "ledger_sequence": event["sequence"],
+            "entry_sha256": event["entry_sha256"],
+            "resolution_admission_entry_sha256": admission_event["entry_sha256"],
+            "basis": event["basis"],
+            "closure": closure,
+        },
+        "ledger_entries": event["sequence"],
+        "ledger_tail_sha256": event["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_obligation_closure_result(state, work)
+
+
+def _effective_first_layer_terminal_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    saved = state.get("effective_first_layer_terminal")
+    assert isinstance(saved, dict)
+    disposition = saved.get("disposition")
+    assert isinstance(disposition, dict)
+    return {
+        "status": str(disposition["disposition"]),
+        "stopped": "effective_first_layer_terminal_recorded",
+        "intake_id": state["intake_id"],
+        **disposition,
+        "qualification_obligation_closure": saved.get("qualification_obligation_closure"),
+        "source_projection_closure": saved.get("source_projection_closure"),
+        "source_set_qualification": saved.get("source_set_qualification"),
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def run_effective_first_layer_terminal(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("effective first-layer terminal unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    phase = state.get("phase")
+    if phase == "effective_first_layer_terminal_recorded":
+        saved = state.get("effective_first_layer_terminal")
+        fresh_source_closure, closure_error = (
+            _source_projection_closure_inventory(work, entries)
+        )
+        if closure_error:
+            return closure_error
+        assert fresh_source_closure is not None
+        fresh_qualification, qualification_error = (
+            _source_set_qualification_evidence(
+                work, entries, fresh_source_closure
+            )
+        )
+        if qualification_error:
+            return qualification_error
+        assert fresh_qualification is not None
+        try:
+            (
+                cumulative_obligations,
+                cumulative_resolved_ids,
+                cumulative_preserved_ids,
+            ) = (
+                _cumulative_qualification_resolution_context(state)
+            )
+        except ValueError as error:
+            return _blocked("effective first-layer terminal invalid", str(error))
+        sequence = saved.get("ledger_sequence") if isinstance(saved, dict) else None
+        event = (
+            entries[sequence - 1]
+            if isinstance(sequence, int) and 1 <= sequence <= len(entries)
+            else None
+        )
+        if (
+            not isinstance(saved, dict)
+            or not isinstance(event, dict)
+            or event.get("event") != "effective_first_layer_terminal_recorded"
+            or event.get("obligation_closure_entry_sha256")
+            != saved.get("obligation_closure_entry_sha256")
+            or event.get("source_projection_closure")
+            != saved.get("source_projection_closure")
+            or saved.get("source_projection_closure") != fresh_source_closure
+            or event.get("qualification_obligation_closure")
+            != saved.get("qualification_obligation_closure")
+            or event.get("source_set_qualification")
+            != saved.get("source_set_qualification")
+            or saved.get("source_set_qualification") != fresh_qualification
+            or event.get("cumulative_obligations")
+            != saved.get("cumulative_obligations")
+            or event.get("cumulative_resolved_obligation_ids")
+            != saved.get("cumulative_resolved_obligation_ids")
+            or event.get("cumulative_preserved_gap_obligation_ids", [])
+            != saved.get("cumulative_preserved_gap_obligation_ids", [])
+            or saved.get("cumulative_obligations") != cumulative_obligations
+            or saved.get("cumulative_resolved_obligation_ids")
+            != cumulative_resolved_ids
+            or saved.get("cumulative_preserved_gap_obligation_ids", [])
+            != cumulative_preserved_ids
+            or event.get("disposition") != saved.get("disposition")
+            or event.get("entry_sha256") != saved.get("entry_sha256")
+            or state.get("ledger_entries") != len(entries)
+            or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+        ):
+            return _blocked(
+                "effective first-layer terminal invalid",
+                "the preserved terminal no longer matches its current-source evidence or immutable ledger event",
+            )
+        return _effective_first_layer_terminal_result(state, work)
+    if phase != "qualification_obligation_closure_recorded":
+        return _blocked(
+            "effective first-layer terminal unavailable",
+            f"phase received {phase!r}; provide one exact qualification-obligation closure",
+        )
+    closure_result = run_qualification_obligation_closure(work)
+    if closure_result.get("status") == "blocked":
+        return closure_result
+    source_closure, closure_error = _source_projection_closure_inventory(work, entries)
+    if closure_error:
+        return closure_error
+    assert source_closure is not None
+    qualification, qualification_error = _source_set_qualification_evidence(
+        work, entries, source_closure
+    )
+    if qualification_error:
+        return qualification_error
+    assert qualification is not None
+    obligation_closure = state.get("qualification_obligation_closure")
+    exact_closure = (
+        obligation_closure.get("closure")
+        if isinstance(obligation_closure, dict)
+        else None
+    )
+    try:
+        (
+            cumulative_obligations,
+            cumulative_resolved_ids,
+            cumulative_preserved_ids,
+        ) = (
+            _cumulative_qualification_resolution_context(state)
+        )
+    except ValueError as error:
+        return _blocked("effective first-layer terminal invalid", str(error))
+    disposition = effective_first_layer_terminal.decide(
+        qualification,
+        cumulative_obligations,
+        cumulative_resolved_ids,
+        cumulative_preserved_ids,
+    )
+    if disposition.get("decided") is not True:
+        return _blocked(
+            "effective first-layer terminal invalid", str(disposition.get("why"))
+        )
+    closure_sequence = (
+        obligation_closure.get("ledger_sequence")
+        if isinstance(obligation_closure, dict)
+        else None
+    )
+    closure_event = (
+        entries[closure_sequence - 1]
+        if isinstance(closure_sequence, int) and 1 <= closure_sequence <= len(entries)
+        else None
+    )
+    if not isinstance(closure_event, dict):
+        return _blocked(
+            "effective first-layer terminal invalid",
+            "the exact obligation-closure event is unavailable",
+        )
+    event = _ledger_entry(
+        len(entries) + 1,
+        "effective_first_layer_terminal_recorded",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "obligation_closure_entry_sha256": closure_event["entry_sha256"],
+            "qualification_obligation_closure": exact_closure,
+            "source_projection_closure": source_closure,
+            "source_set_qualification": qualification,
+            "cumulative_obligations": cumulative_obligations,
+            "cumulative_resolved_obligation_ids": cumulative_resolved_ids,
+            "cumulative_preserved_gap_obligation_ids": cumulative_preserved_ids,
+            "disposition": disposition,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update({
+        "status": disposition["disposition"],
+        "phase": "effective_first_layer_terminal_recorded",
+        "waiting_for": None,
+        "question": None,
+        "effective_first_layer_terminal": {
+            "ledger_sequence": event["sequence"],
+            "entry_sha256": event["entry_sha256"],
+            "obligation_closure_entry_sha256": closure_event["entry_sha256"],
+            "qualification_obligation_closure": exact_closure,
+            "source_projection_closure": source_closure,
+        "source_set_qualification": qualification,
+        "cumulative_obligations": cumulative_obligations,
+        "cumulative_resolved_obligation_ids": cumulative_resolved_ids,
+        "cumulative_preserved_gap_obligation_ids": cumulative_preserved_ids,
+        "disposition": disposition,
+        },
+        "ledger_entries": event["sequence"],
+        "ledger_tail_sha256": event["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _effective_first_layer_terminal_result(state, work)
+
+
+def _qualification_followup_admission_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    saved = state.get("qualification_followup_admission")
+    assert isinstance(saved, dict)
+    return {
+        "status": "qualification_followup_admission_complete",
+        "stopped": "qualification_followup_admission_recorded",
+        "intake_id": state["intake_id"],
+        "round": saved.get("round"),
+        "clarification_obligations": saved.get("clarification_obligations"),
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def run_qualification_followup_admission(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification follow-up admission unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    phase = state.get("phase")
+    if phase == "qualification_followup_admission_recorded":
+        saved = state.get("qualification_followup_admission")
+        sequence = saved.get("ledger_sequence") if isinstance(saved, dict) else None
+        event = (
+            entries[sequence - 1]
+            if isinstance(sequence, int) and 1 <= sequence <= len(entries)
+            else None
+        )
+        if (
+            not isinstance(saved, dict)
+            or not isinstance(event, dict)
+            or event.get("event") != "qualification_followup_admission_recorded"
+            or event.get("clarification_obligations")
+            != saved.get("clarification_obligations")
+            or event.get("entry_sha256") != saved.get("entry_sha256")
+            or state.get("ledger_entries") != len(entries)
+            or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+        ):
+            return _blocked(
+                "qualification follow-up admission invalid",
+                "the preserved follow-up obligations no longer match their immutable ledger event",
+            )
+        return _qualification_followup_admission_result(state, work)
+    if phase != "effective_first_layer_terminal_recorded":
+        return _blocked(
+            "qualification follow-up admission unavailable",
+            f"phase received {phase!r}; provide one clarification-required terminal",
+        )
+    terminal_result = run_effective_first_layer_terminal(work)
+    if terminal_result.get("status") != "clarification_required":
+        return _blocked(
+            "qualification follow-up admission unavailable",
+            "the current terminal has no remaining source gap",
+        )
+    terminal = state.get("effective_first_layer_terminal")
+    assert isinstance(terminal, dict)
+    terminal_sequence = terminal.get("ledger_sequence")
+    terminal_event = (
+        entries[terminal_sequence - 1]
+        if isinstance(terminal_sequence, int)
+        and 1 <= terminal_sequence <= len(entries)
+        else None
+    )
+    if not isinstance(terminal_event, dict):
+        return _blocked(
+            "qualification follow-up admission invalid",
+            "the clarification-required terminal event is unavailable",
+        )
+    current_round = state.get("qualification_round_number", 1)
+    if not isinstance(current_round, int) or current_round < 1:
+        return _blocked(
+            "qualification follow-up admission invalid",
+            "the active qualification round number is unavailable",
+        )
+    prepared = qualification_followup_admission.prepare(
+        terminal.get("source_set_qualification"),
+        terminal_result.get("remaining_gaps"),
+        terminal_event["entry_sha256"],
+        current_round + 1,
+    )
+    if prepared.get("complete") is not True:
+        return _blocked(
+            "qualification follow-up admission invalid", str(prepared.get("why"))
+        )
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_followup_admission_recorded",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "round": prepared["round"],
+            "qualification_event_sha256": terminal_event["entry_sha256"],
+            "route": "clarification_required",
+            "clarification_obligations": prepared["obligations"],
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update({
+        "status": "qualification_followup_admission_complete",
+        "phase": "qualification_followup_admission_recorded",
+        "waiting_for": None,
+        "question": None,
+        "qualification_followup_admission": {
+            "ledger_sequence": event["sequence"],
+            "entry_sha256": event["entry_sha256"],
+            "round": prepared["round"],
+            "qualification_event_sha256": terminal_event["entry_sha256"],
+            "clarification_obligations": prepared["obligations"],
+        },
+        "ledger_entries": event["sequence"],
+        "ledger_tail_sha256": event["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_followup_admission_result(state, work)
+
+
+def _qualification_followup_question_model_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    return {
+        "status": "waiting_for_model",
+        "stopped": "formulating_qualification_followup_question_round",
+        "intake_id": state["intake_id"],
+        "work": [{
+            "stage": "formulate_qualification_followup_question_round",
+            "instruction": (
+                "Answer only each typed question displayed. Code fixes every current "
+                "gap obligation, answer type, order, and final question round."
+            ),
+            "attachments": [],
+            "command": [
+                sys.executable,
+                str(Path(__file__).resolve()),
+                "--work",
+                str(work.resolve()),
+                "--run-qualification-followup-question-round",
+            ],
+        }],
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _qualification_followup_operator_result(
+    state: dict[str, object], work: Path
+) -> dict[str, object]:
+    questions = state.get("qualification_followup_questions")
+    assert isinstance(questions, list) and questions
+    question = state.get("question")
+    assert isinstance(question, dict)
+    return {
+        "status": "needs_operator",
+        "stopped": "awaiting_qualification_followup_answers",
+        "intake_id": state["intake_id"],
+        "question": question,
+        "questions": questions,
+        "answered_question_count": 0,
+        "question_count": len(questions),
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _qualification_followup_admission_event(
+    state: dict[str, object], entries: list[dict[str, object]]
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    saved = state.get("qualification_followup_admission")
+    sequence = saved.get("ledger_sequence") if isinstance(saved, dict) else None
+    event = (
+        entries[sequence - 1]
+        if isinstance(sequence, int) and 1 <= sequence <= len(entries)
+        else None
+    )
+    if not isinstance(event, dict):
+        return None, _blocked(
+            "qualification follow-up question round invalid",
+            "the follow-up admission event is unavailable",
+        )
+    synthetic = {
+        **event,
+        "event": "qualification_admission_completed",
+    }
+    return synthetic, None
+
+
+def request_qualification_followup_question_round(work: Path) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification follow-up question round unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") == "formulating_qualification_followup_question_round":
+        return _qualification_followup_question_model_result(state, work)
+    if state.get("phase") != "qualification_followup_admission_recorded":
+        return _blocked(
+            "qualification follow-up question round unavailable",
+            f"phase received {state.get('phase')!r}; provide one follow-up admission",
+        )
+    admission, admission_error = _qualification_followup_admission_event(
+        state, entries
+    )
+    if admission_error:
+        return admission_error
+    assert admission is not None
+    try:
+        contexts = qualification_question_round.bind_contexts(admission)
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("qualification follow-up question round unavailable", str(error))
+    round_number = saved_admission_round = state.get(
+        "qualification_followup_admission", {}
+    ).get("round")
+    if not isinstance(saved_admission_round, int) or saved_admission_round < 2:
+        return _blocked(
+            "qualification follow-up question round unavailable",
+            "the follow-up admission lost its positive round number",
+        )
+    relative_dir = f"qualification-question-rounds/round-{round_number:06d}"
+    round_dir = work / relative_dir
+    if round_dir.exists():
+        return _blocked(
+            "unbound qualification follow-up question round",
+            f"round path received {relative_dir!r}; provide one unused round path",
+        )
+    round_dir.mkdir(parents=True)
+    (round_dir / "interview.jsonl").touch()
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_followup_question_round_requested",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "round": round_number,
+            "admission_entry_sha256": admission["entry_sha256"],
+            "obligation_ids": [item["obligation_id"] for item in contexts],
+            "interview_path": f"{relative_dir}/interview.jsonl",
+            "result_path": f"{relative_dir}/question-round.json",
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event])
+    state.update({
+        "status": "waiting_for_model",
+        "phase": "formulating_qualification_followup_question_round",
+        "waiting_for": f"{relative_dir}/interview.jsonl",
+        "question": None,
+        "qualification_followup_question_round": {
+            "round": round_number,
+            "directory": relative_dir,
+            "request_ledger_sequence": event["sequence"],
+            "request_entry_sha256": event["entry_sha256"],
+            "admission": admission,
+        },
+        "ledger_entries": event["sequence"],
+        "ledger_tail_sha256": event["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_followup_question_model_result(state, work)
+
+
+def run_qualification_followup_question_round(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources/source-000001.txt").read_text(encoding="utf-8")
+        purpose = (work / "sources/source-000002.txt").read_text(encoding="utf-8")
+    except OSError as error:
+        return _blocked("qualification follow-up question round unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening.encode("utf-8"))
+    if load_error:
+        return load_error
+    assert state is not None
+    saved = state.get("qualification_followup_question_round")
+    if (
+        state.get("phase") != "formulating_qualification_followup_question_round"
+        or not isinstance(saved, dict)
+        or not isinstance(saved.get("admission"), dict)
+        or not isinstance(saved.get("directory"), str)
+    ):
+        return _blocked(
+            "qualification follow-up question round unavailable",
+            "request the isolated follow-up question round first",
+        )
+    round_dir = work / saved["directory"]
+    try:
+        result = qualification_question_round.run(
+            round_dir,
+            admission=saved["admission"],
+            purpose=purpose,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+        validated, journal_sha256, result_sha256 = qualification_question_round.validate(
+            round_dir, admission=saved["admission"], purpose=purpose
+        )
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("qualification follow-up question round failed", str(error))
+    if result != validated:
+        return _blocked(
+            "qualification follow-up question round invalid",
+            "the prepared question round changed during validation",
+        )
+    questions = result.get("questions")
+    if not isinstance(questions, list) or not questions:
+        return _blocked(
+            "qualification follow-up question round invalid",
+            "the prepared round contains no question",
+        )
+    try:
+        history = _archive_completed_qualification_round(state, int(saved["round"]))
+    except (TypeError, ValueError) as error:
+        return _blocked("qualification follow-up question round invalid", str(error))
+    timestamp = datetime.now(timezone.utc).isoformat()
+    event = _ledger_entry(
+        len(entries) + 1,
+        "qualification_followup_question_round_completed",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "round": saved["round"],
+            "request_entry_sha256": saved["request_entry_sha256"],
+            "journal_sha256": journal_sha256,
+            "result_sha256": result_sha256,
+            "questions": questions,
+            "qualification_rounds": history,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    question_event = _ledger_entry(
+        len(entries) + 2,
+        "operator_qualification_question_asked",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "qualification_round": saved["round"],
+            "question_position": 1,
+            "question": questions[0],
+        },
+        str(event["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [event, question_event])
+    for key in (
+        "qualification_answer_assessment",
+        "qualification_resolution_admission",
+        "qualification_obligation_closure",
+        "effective_first_layer_terminal",
+        "pending_additional_source",
+        "additional_source_projection",
+        "active_additional_projection",
+    ):
+        state.pop(key, None)
+    active_round = {
+        **saved,
+        "completion_ledger_sequence": event["sequence"],
+        "completion_entry_sha256": event["entry_sha256"],
+        "journal_sha256": journal_sha256,
+        "result_sha256": result_sha256,
+    }
+    state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_qualification_clarification_answers",
+        "waiting_for": questions[0]["id"],
+        "question": questions[0],
+        "qualification_round_number": saved["round"],
+        "qualification_rounds": history,
+        "qualification_admission": state["qualification_followup_admission"],
+        "qualification_question_round": active_round,
+        "questions": questions,
+        "qualification_question_answers": [],
+        "qualification_followup_questions": questions,
+        "qualification_followup_answers": [],
+        "qualification_followup_question_round": active_round,
+        "ledger_entries": question_event["sequence"],
+        "ledger_tail_sha256": question_event["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_question_round_operator_result(state, work)
+
+
+def _resume_qualification_answer_source(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+    *,
+    supplied: Path | None,
+    supplied_url: str | None,
+    project_source: bool,
+) -> dict[str, object]:
+    phase = state.get("phase")
+    if phase not in {
+        "additional_source_frozen",
+        "interviewing_additional_source_projection",
+        "additional_source_projection_recorded",
+        "additional_spreadsheet_projection_failed",
+    }:
+        return _blocked(
+            "qualification answer source unavailable",
+            f"source phase received {phase!r}; resume the exact frozen answer source",
+        )
+    pending_error = _validate_pending_additional_source(
+        work,
+        state,
+        entries,
+        supplied,
+        supplied_url,
+        allow_projection=phase != "additional_source_frozen",
+    )
+    if pending_error:
+        return pending_error
+    if phase == "additional_source_frozen":
+        if project_source:
+            return _request_additional_projection(work, state, entries)
+        return _additional_source_ready_result(state, work)
+    if supplied is not None or supplied_url is not None or project_source:
+        return _blocked(
+            "qualification answer source invocation refused",
+            "resume the already frozen answer source without supplying it again",
+        )
+    if phase == "interviewing_additional_source_projection":
+        request_error = _validate_additional_projection_request(work, state, entries)
+        if request_error:
+            return request_error
+        active = state.get("active_additional_projection")
+        paths = active.get("paths") if isinstance(active, dict) else None
+        if not isinstance(paths, dict):
+            return _blocked(
+                "qualification answer projection unavailable",
+                "the active projection paths are missing",
+            )
+        if not (work / str(paths["candidate_path"])).exists():
+            return _additional_projection_waiting_result(state, work)
+        return _consume_additional_projection(work, state, entries, purpose)
+    if phase == "additional_spreadsheet_projection_failed":
+        failure_error = _validate_spreadsheet_failure(
+            work, state, entries, additional=True
+        )
+        return failure_error or _spreadsheet_result(
+            state, work, additional=True, failed=True
+        )
+    recorded_error = _validate_recorded_additional_projection(
+        work, state, entries, purpose
+    )
+    if recorded_error:
+        return recorded_error
+    pending = state.get("pending_additional_source")
+    projection = state.get("additional_source_projection")
+    if not isinstance(pending, dict) or not isinstance(projection, dict):
+        return _blocked(
+            "qualification answer preservation unavailable",
+            "the frozen source or readable projection is missing",
+        )
+    lineage = pending.get("lineage")
+    question = pending.get("question")
+    source = pending.get("source")
+    admitted = lineage.get("admitted_answer") if isinstance(lineage, dict) else None
+    if not all(isinstance(item, dict) for item in (question, source, admitted)):
+        return _blocked(
+            "qualification answer preservation unavailable",
+            "the admitted answer lost its question, source, or exact submitted value",
+        )
+    assert isinstance(question, dict)
+    assert isinstance(source, dict)
+    assert isinstance(admitted, dict)
+    return _record_qualification_answer(
+        work, state, entries, admitted, question, source, projection
+    )
+
+
+def _qualification_question_round_request_context(
+    state: dict[str, object], entries: list[dict[str, object]]
+) -> tuple[
+    dict[str, object] | None,
+    list[dict[str, object]] | None,
+    dict[str, object] | None,
+]:
+    saved = state.get("qualification_question_round")
+    try:
+        relative_dir = _qualification_question_round_directory(saved)
+    except ValueError as error:
+        return None, None, _blocked(
+            "invalid qualification question round", str(error)
+        )
+    request_sequence = (
+        saved.get("request_ledger_sequence") if isinstance(saved, dict) else None
+    )
+    admission_sequence = (
+        saved.get("admission_ledger_sequence") if isinstance(saved, dict) else None
+    )
+    if (
+        not isinstance(request_sequence, int)
+        or not isinstance(admission_sequence, int)
+        or admission_sequence < 1
+        or request_sequence != admission_sequence + 1
+        or len(entries) < request_sequence
+    ):
+        return None, None, _blocked(
+            "invalid qualification question round",
+            (
+                f"saved request {request_sequence!r} and admission {admission_sequence!r} "
+                "are not adjacent ledger positions; restore their exact recorded positions"
+            ),
+        )
+    admission = entries[admission_sequence - 1]
+    request = entries[request_sequence - 1]
+    try:
+        contexts = qualification_question_round.bind_contexts(admission)
+    except qualification_question_round.QuestionRoundError as error:
+        return None, None, _blocked(
+            "invalid qualification question round", str(error)
+        )
+    context_digests = [str(item["evidence_sha256"]) for item in contexts]
+    obligation_ids = [str(item["obligation_id"]) for item in contexts]
+    expected_request = {
+        "contract": qualification_question_round.CONTRACT,
+        "qualification_admission_ledger_sequence": admission_sequence,
+        "qualification_admission_sha256": admission.get("entry_sha256"),
+        "obligation_count": len(contexts),
+        "obligation_ids": obligation_ids,
+        "evidence_sha256s": context_digests,
+        "interview_path": f"{relative_dir}/interview.jsonl",
+        "result_path": f"{relative_dir}/question-round.json",
+    }
+    if (
+        request.get("event") != "qualification_question_round_requested"
+        or any(request.get(key) != value for key, value in expected_request.items())
+        or not isinstance(saved, dict)
+        or any(saved.get(key) != value for key, value in {
+            "contract": qualification_question_round.CONTRACT,
+            "admission_ledger_sequence": admission_sequence,
+            "admission_sha256": admission.get("entry_sha256"),
+            "obligation_ids": obligation_ids,
+            "evidence_sha256s": context_digests,
+            "request_ledger_sequence": request_sequence,
+        }.items())
+    ):
+        return None, None, _blocked(
+            "invalid qualification question round",
+            (
+                f"request at ledger position {request_sequence} changed; restore the "
+                "recorded admission identity, obligation identities, evidence digests, and paths"
+            ),
+        )
+    return admission, contexts, None
+
+
+def _qualification_question_round_directory(saved: object) -> str:
+    directory = (
+        saved.get("directory", "qualification-question-round")
+        if isinstance(saved, dict)
+        else "qualification-question-round"
+    )
+    if directory == "qualification-question-round":
+        return directory
+    if isinstance(directory, str):
+        for prefix in (
+            "qualification-question-rounds/admission-",
+            "qualification-question-rounds/round-",
+        ):
+            suffix = directory.removeprefix(prefix)
+            if directory.startswith(prefix) and len(suffix) == 6 and suffix.isdigit():
+                return directory
+    raise ValueError(
+        f"qualification question round directory {directory!r} is invalid; "
+        "restore the fixed first-round path or one admission-bound versioned path"
+    )
+
+
+def request_qualification_question_round(work: Path) -> dict[str, object]:
+    admitted = run_qualification_admission(work)
+    if admitted.get("status") == "blocked":
+        return admitted
+    if admitted.get("route") != "clarification_required":
+        return _blocked(
+            "qualification question round unavailable",
+            (
+                f"qualification route {admitted.get('route')!r} needs no operator "
+                "clarification; preserve first-layer completion"
+            ),
+        )
+    try:
+        opening_bytes = (work / "sources" / "source-000001.txt").read_bytes()
+    except OSError as error:
+        return _blocked("qualification question round unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening_bytes)
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") == "formulating_qualification_question_round":
+        admission, _contexts, request_error = (
+            _qualification_question_round_request_context(state, entries)
+        )
+        if request_error:
+            return request_error
+        assert admission is not None
+        return _qualification_question_round_model_result(state, work)
+    if state.get("phase") != "qualification_admission_complete":
+        return _blocked(
+            "qualification question round unavailable",
+            (
+                f"intake phase {state.get('phase')!r} is not an admitted clarification; "
+                "resume the preserved current boundary"
+            ),
+        )
+    admission = entries[-1]
+    try:
+        contexts = qualification_question_round.bind_contexts(admission)
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("qualification question round unavailable", str(error))
+    relative_dir = "qualification-question-round"
+    round_dir = work / relative_dir
+    if round_dir.exists():
+        relative_dir = (
+            "qualification-question-rounds/"
+            f"admission-{int(admission['sequence']):06d}"
+        )
+        round_dir = work / relative_dir
+        if round_dir.exists():
+            return _blocked(
+                "unbound qualification question round",
+                (
+                    f"artifact directory {round_dir} already exists without its current "
+                    "request event; preserve completed earlier rounds and remove only this "
+                    "admission-bound unbound directory before retrying"
+                ),
+            )
+    round_dir.mkdir(parents=True)
+    (round_dir / "interview.jsonl").touch()
+    request_sequence = len(entries) + 1
+    request = _ledger_entry(
+        request_sequence,
+        "qualification_question_round_requested",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "contract": qualification_question_round.CONTRACT,
+            "qualification_admission_ledger_sequence": admission["sequence"],
+            "qualification_admission_sha256": admission["entry_sha256"],
+            "obligation_count": len(contexts),
+            "obligation_ids": [item["obligation_id"] for item in contexts],
+            "evidence_sha256s": [item["evidence_sha256"] for item in contexts],
+            "interview_path": f"{relative_dir}/interview.jsonl",
+            "result_path": f"{relative_dir}/question-round.json",
+        },
+        str(admission["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [request])
+    state.update({
+        "status": "waiting_for_model",
+        "phase": "formulating_qualification_question_round",
+        "waiting_for": "qualification-question-round/interview.jsonl",
+        "question": None,
+        "questions": [],
+        "qualification_question_round": {
+            "contract": qualification_question_round.CONTRACT,
+            "admission_ledger_sequence": admission["sequence"],
+            "admission_sha256": admission["entry_sha256"],
+            "obligation_ids": [item["obligation_id"] for item in contexts],
+            "evidence_sha256s": [item["evidence_sha256"] for item in contexts],
+            "request_ledger_sequence": request_sequence,
+            "directory": relative_dir,
+        },
+        "ledger_entries": request_sequence,
+        "ledger_tail_sha256": request["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_question_round_model_result(state, work)
+
+
+def _validate_qualification_question_round(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object] | None:
+    admission, contexts, request_error = (
+        _qualification_question_round_request_context(state, entries)
+    )
+    if request_error:
+        return request_error
+    assert admission is not None and contexts is not None
+    saved = state["qualification_question_round"]
+    assert isinstance(saved, dict)
+    try:
+        relative_dir = _qualification_question_round_directory(saved)
+    except ValueError as error:
+        return _blocked("invalid qualification question round", str(error))
+    request_sequence = saved["request_ledger_sequence"]
+    assert isinstance(request_sequence, int)
+    try:
+        result, interview_sha256, result_sha256 = (
+            qualification_question_round.validate(
+                work / relative_dir,
+                admission=admission,
+                purpose=purpose,
+            )
+        )
+        interview_entries = qualification_question_round._read_journal(
+            work / relative_dir / "interview.jsonl"
+        )
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("invalid qualification question round", str(error))
+    questions = result.get("questions")
+    if not isinstance(questions, list) or len(questions) != len(contexts):
+        return _blocked(
+            "invalid qualification question round",
+            (
+                f"prepared questions {questions!r} do not cover all {len(contexts)} "
+                "admitted obligations; preserve exactly one question per obligation"
+            ),
+        )
+    for position, (question, context) in enumerate(
+        zip(questions, contexts, strict=True), 1
+    ):
+        if (
+            not isinstance(question, dict)
+            or question.get("id")
+            != f"qualification-clarification-answer-{position:06d}"
+            or question.get("answers_obligation") != context["evidence"]
+            or question.get("evidence_sha256") != context["evidence_sha256"]
+            or question.get("answer_type")
+            not in qualification_question_round.ANSWER_TYPES
+            or not isinstance(question.get("asks"), str)
+            or not str(question["asks"]).strip()
+        ):
+            return _blocked(
+                "invalid qualification question round",
+                (
+                    f"question {position} value {question!r} is not the exact "
+                    f"evidence-bound question for obligation {context['obligation_id']!r}; "
+                    "restore its generated identity, enum answer type, wording, obligation, and evidence digest"
+                ),
+            )
+    expected_completed = {
+        "interview_path": f"{relative_dir}/interview.jsonl",
+        "interview_sha256": interview_sha256,
+        "result_path": f"{relative_dir}/question-round.json",
+        "result_sha256": result_sha256,
+        "question_count": len(questions),
+        "interview_question_count": sum(
+            entry["event"] == "question_asked" for entry in interview_entries
+        ),
+        "answer_count": sum(
+            entry["event"] == "answer_recorded" for entry in interview_entries
+        ),
+        "rejected_answer_count": sum(
+            entry["event"] == "answer_recorded" and entry["accepted"] is False
+            for entry in interview_entries
+        ),
+        "questions": questions,
+    }
+    completed = entries[request_sequence] if len(entries) > request_sequence else None
+    prepared = entries[request_sequence + 1] if len(entries) > request_sequence + 1 else None
+    asked = entries[request_sequence + 2] if len(entries) > request_sequence + 2 else None
+    if (
+        len(entries) != request_sequence + 3
+        or not isinstance(completed, dict)
+        or completed.get("event") != "qualification_question_round_completed"
+        or any(completed.get(key) != value for key, value in expected_completed.items())
+        or not isinstance(prepared, dict)
+        or prepared.get("event")
+        != "operator_qualification_question_round_prepared"
+        or prepared.get("question_count") != len(questions)
+        or prepared.get("questions") != questions
+        or not isinstance(asked, dict)
+        or asked.get("event") != "operator_qualification_question_asked"
+        or asked.get("question_position") != 1
+        or asked.get("question") != questions[0]
+        or saved.get("interview_sha256") != interview_sha256
+        or saved.get("result_sha256") != result_sha256
+        or state.get("status") != "needs_operator"
+        or state.get("phase") != "awaiting_qualification_clarification_answers"
+        or state.get("waiting_for") != questions[0]["id"]
+        or state.get("question") != questions[0]
+        or state.get("questions") != questions
+        or state.get("ledger_entries") != len(entries)
+        or state.get("ledger_tail_sha256") != entries[-1].get("entry_sha256")
+    ):
+        return _blocked(
+            "invalid qualification question round",
+            (
+                "the completed question round, prepared full list, first active question, "
+                "or ledger binding changed; restore the exact append-only recorded values"
+            ),
+        )
+    return None
+
+
+def _consume_qualification_question_round(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+) -> dict[str, object]:
+    admission, contexts, request_error = (
+        _qualification_question_round_request_context(state, entries)
+    )
+    if request_error:
+        return request_error
+    assert admission is not None and contexts is not None
+    saved = state["qualification_question_round"]
+    assert isinstance(saved, dict)
+    try:
+        relative_dir = _qualification_question_round_directory(saved)
+    except ValueError as error:
+        return _blocked("invalid qualification question round", str(error))
+    request_sequence = saved["request_ledger_sequence"]
+    assert isinstance(request_sequence, int)
+    if len(entries) != request_sequence:
+        return _blocked(
+            "invalid qualification question round",
+            (
+                f"request ledger position {request_sequence} is no longer the current tail "
+                f"of {len(entries)} entries; preserve the exact append-only request"
+            ),
+        )
+    try:
+        result, interview_sha256, result_sha256 = (
+            qualification_question_round.validate(
+                work / relative_dir,
+                admission=admission,
+                purpose=purpose,
+            )
+        )
+        interview_entries = qualification_question_round._read_journal(
+            work / relative_dir / "interview.jsonl"
+        )
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("invalid qualification question round", str(error))
+    questions = result.get("questions")
+    if not isinstance(questions, list) or not questions:
+        return _blocked(
+            "invalid qualification question round",
+            (
+                f"model result questions {questions!r} are invalid; preserve one "
+                "evidence-bound question for every admitted obligation"
+            ),
+        )
+    for position, (question, context) in enumerate(
+        zip(questions, contexts, strict=True), 1
+    ):
+        if (
+            not isinstance(question, dict)
+            or question.get("id")
+            != f"qualification-clarification-answer-{position:06d}"
+            or question.get("answers_obligation") != context["evidence"]
+            or question.get("evidence_sha256") != context["evidence_sha256"]
+            or question.get("answer_type")
+            not in qualification_question_round.ANSWER_TYPES
+        ):
+            return _blocked(
+                "invalid qualification question round",
+                (
+                    f"question {position} value {question!r} changed; preserve the exact "
+                    f"question for obligation {context['obligation_id']!r} and one allowed answer type"
+                ),
+            )
+    timestamp = datetime.now(timezone.utc).isoformat()
+    completed = _ledger_entry(
+        request_sequence + 1,
+        "qualification_question_round_completed",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "interview_path": f"{relative_dir}/interview.jsonl",
+            "interview_sha256": interview_sha256,
+            "result_path": f"{relative_dir}/question-round.json",
+            "result_sha256": result_sha256,
+            "question_count": len(questions),
+            "interview_question_count": sum(
+                entry["event"] == "question_asked" for entry in interview_entries
+            ),
+            "answer_count": sum(
+                entry["event"] == "answer_recorded" for entry in interview_entries
+            ),
+            "rejected_answer_count": sum(
+                entry["event"] == "answer_recorded" and entry["accepted"] is False
+                for entry in interview_entries
+            ),
+            "questions": questions,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    prepared = _ledger_entry(
+        request_sequence + 2,
+        "operator_qualification_question_round_prepared",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "question_count": len(questions),
+            "questions": questions,
+        },
+        str(completed["entry_sha256"]),
+    )
+    asked = _ledger_entry(
+        request_sequence + 3,
+        "operator_qualification_question_asked",
+        {
+            "recorded_at": timestamp,
+            "intake_id": state["intake_id"],
+            "question_position": 1,
+            "question": questions[0],
+        },
+        str(prepared["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [completed, prepared, asked])
+    state["qualification_question_round"].update({
+        "interview_sha256": interview_sha256,
+        "result_sha256": result_sha256,
+    })
+    state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_qualification_clarification_answers",
+        "waiting_for": questions[0]["id"],
+        "question": questions[0],
+        "questions": questions,
+        "qualification_question_answers": [],
+        "ledger_entries": request_sequence + 3,
+        "ledger_tail_sha256": asked["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _qualification_question_round_operator_result(state, work)
+
+
+def run_qualification_question_round(
+    work: Path,
+    *,
+    input_fn: object | None = None,
+    output_fn: object | None = None,
+) -> dict[str, object]:
+    try:
+        opening = (work / "sources" / "source-000001.txt").read_text(
+            encoding="utf-8"
+        )
+        purpose = (work / "sources" / "source-000002.txt").read_text(
+            encoding="utf-8"
+        )
+        opening_bytes = opening.encode("utf-8")
+    except OSError as error:
+        return _blocked("qualification question round unavailable", str(error))
+    state, entries, load_error = _load_bound(work, opening_bytes)
+    if load_error:
+        return load_error
+    assert state is not None
+    if state.get("phase") != "formulating_qualification_question_round":
+        return _blocked(
+            "qualification question round unavailable",
+            (
+                f"intake phase {state.get('phase')!r} is not waiting for question "
+                "formulation; resume its preserved current boundary"
+            ),
+        )
+    admission, _contexts, request_error = (
+        _qualification_question_round_request_context(state, entries)
+    )
+    if request_error:
+        return request_error
+    assert admission is not None
+    saved = state.get("qualification_question_round")
+    try:
+        relative_dir = _qualification_question_round_directory(saved)
+    except ValueError as error:
+        return _blocked("qualification question round unavailable", str(error))
+    try:
+        qualification_question_round.run(
+            work / relative_dir,
+            admission=admission,
+            purpose=purpose,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+    except qualification_question_round.QuestionRoundError as error:
+        return _blocked("qualification question round failed", str(error))
+    state, entries, load_error = _load_bound(work, opening_bytes)
+    if load_error:
+        return load_error
+    assert state is not None
+    return _consume_qualification_question_round(
+        work, state, entries, purpose
+    )
+
+
+SOURCE_COLLECTION_TERMINAL_PHASES = {
+    "first_projection_recorded",
+    "first_verbatim_projection_recorded",
+    "first_pdf_projection_recorded",
+    "first_pdf_projection_failed",
+    "first_spreadsheet_projection_recorded",
+    "first_spreadsheet_projection_failed",
+    "gap_resolution_applied",
+    "additional_source_projection_recorded",
+    "additional_spreadsheet_projection_failed",
+}
+SOURCE_COLLECTION_PHASES = {
+    "awaiting_source_collection_decision",
+    "awaiting_source_collection_kind",
+    "awaiting_independent_source",
+    "additional_source_frozen",
+    "interviewing_additional_source_projection",
+    "additional_source_projection_recorded",
+    "additional_spreadsheet_projection_failed",
+    "source_collection_complete",
+    "source_set_qualification_complete",
+    "qualification_admission_complete",
+}
+
+
+def _reopen_completed_source_collection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object]:
+    terminal = run_effective_first_layer_terminal(work)
+    if terminal.get("status") not in {
+        "first_layer_complete",
+        "first_layer_complete_with_preserved_gaps",
+    }:
+        return terminal
+    inventory, inventory_error = _source_collection_inventory(work, entries)
+    if inventory_error:
+        return inventory_error
+    assert inventory is not None
+    collection = state.get("source_collection")
+    position = (
+        int(collection.get("decision_count", 0)) + 1
+        if isinstance(collection, dict)
+        else 1
+    )
+    question = _numbered_collection_question(
+        SOURCE_COLLECTION_DECISION_QUESTION, position
+    )
+    terminal_saved = state.get("effective_first_layer_terminal")
+    terminal_sequence = (
+        terminal_saved.get("ledger_sequence")
+        if isinstance(terminal_saved, dict)
+        else None
+    )
+    terminal_event = (
+        entries[terminal_sequence - 1]
+        if isinstance(terminal_sequence, int)
+        and 1 <= terminal_sequence <= len(entries)
+        else None
+    )
+    if (
+        not isinstance(terminal_event, dict)
+        or terminal_event.get("event")
+        != "effective_first_layer_terminal_recorded"
+    ):
+        return _blocked(
+            "source collection reopen unavailable",
+            "the completed intake has no exact terminal ledger event",
+        )
+    reopened = _ledger_entry(
+        len(entries) + 1,
+        "source_collection_reopened",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "previous_terminal_ledger_sequence": terminal_sequence,
+            "previous_terminal_entry_sha256": terminal_event["entry_sha256"],
+            "previous_source_ids": [
+                item.get("source_id")
+                for item in inventory["outcomes"]
+                if isinstance(item, dict)
+            ],
+            "reason": "operator_requested_additional_source",
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    asked = _ledger_entry(
+        len(entries) + 2,
+        "operator_question_asked",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "source_collection_decision",
+            "question": question,
+            "source_projection_closure": inventory,
+            "reopen_ledger_sequence": reopened["sequence"],
+        },
+        str(reopened["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [reopened, asked])
+    state.update(
+        {
+            "status": "needs_operator",
+            "phase": "awaiting_source_collection_decision",
+            "waiting_for": question["id"],
+            "question": question,
+            "source_collection": {
+                **(collection if isinstance(collection, dict) else {}),
+                "mode": "independent_multi_source",
+                "status": "reopened",
+                "decision_count": position,
+                "decision_question_ledger_sequence": asked["sequence"],
+                "reopen_ledger_sequence": reopened["sequence"],
+                "previous_completion_ledger_sequence": (
+                    collection.get("completion_ledger_sequence")
+                    if isinstance(collection, dict)
+                    else None
+                ),
+            },
+            "ledger_entries": asked["sequence"],
+            "ledger_tail_sha256": asked["entry_sha256"],
+        }
+    )
+    _write_state(work / "intake-state.json", state)
+    return _operator_result(state, work)
+
+
+def _numbered_collection_question(
+    template: dict[str, object], position: int
+) -> dict[str, object]:
+    return {**template, "id": f"{template['id']}-{position:06d}"}
+
+
+def _source_collection_result(
+    state: dict[str, object], work: Path, inventory: dict[str, object]
+) -> dict[str, object]:
+    return {
+        "status": "source_collection_complete",
+        "stopped": "source_collection_complete",
+        "intake_id": state["intake_id"],
+        "source_collection": state["source_collection"],
+        "source_projection_closure": inventory,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+
+
+def _source_collection_inventory(
+    work: Path, entries: list[dict[str, object]]
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    inventory, error = _source_projection_closure_inventory(work, entries)
+    if error:
+        return None, error
+    assert inventory is not None
+    outcomes = inventory.get("outcomes")
+    if not isinstance(outcomes, list):
+        return None, _blocked(
+            "source collection unavailable",
+            "the source projection closure lost its ordered outcomes",
+        )
+    return inventory, None
+
+
+def _offer_source_collection_decision(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object]:
+    inventory, inventory_error = _source_collection_inventory(work, entries)
+    if inventory_error:
+        return inventory_error
+    assert inventory is not None
+    outcomes = inventory["outcomes"]
+    assert isinstance(outcomes, list)
+    pending = [
+        str(item.get("source_id"))
+        for item in outcomes
+        if isinstance(item, dict) and item.get("outcome") not in {"projected", "failed"}
+    ]
+    if pending:
+        return _blocked(
+            "source collection decision unavailable",
+            "complete or explicitly fail the pending projection for: "
+            + ", ".join(pending),
+        )
+    collection = state.get("source_collection")
+    position = (
+        int(collection.get("decision_count", 0)) + 1
+        if isinstance(collection, dict)
+        else 1
+    )
+    question = _numbered_collection_question(
+        SOURCE_COLLECTION_DECISION_QUESTION, position
+    )
+    asked = _ledger_entry(
+        len(entries) + 1,
+        "operator_question_asked",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "source_collection_decision",
+            "question": question,
+            "source_projection_closure": inventory,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [asked])
+    source_collection = {
+        **(collection if isinstance(collection, dict) else {}),
+        "mode": "independent_multi_source",
+        "decision_count": position,
+        "decision_question_ledger_sequence": asked["sequence"],
+    }
+    state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_source_collection_decision",
+        "waiting_for": question["id"],
+        "question": question,
+        "source_collection": source_collection,
+        "ledger_entries": asked["sequence"],
+        "ledger_tail_sha256": asked["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _operator_result(state, work)
+
+
+def _validate_collection_question(
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    *,
+    phase: str,
+    role: str,
+    sequence_key: str,
+) -> dict[str, object] | None:
+    collection = state.get("source_collection")
+    question = state.get("question")
+    sequence = collection.get(sequence_key) if isinstance(collection, dict) else None
+    if (
+        state.get("status") != "needs_operator"
+        or state.get("phase") != phase
+        or not isinstance(question, dict)
+        or state.get("waiting_for") != question.get("id")
+        or not isinstance(sequence, int)
+        or sequence < 1
+        or sequence > len(entries)
+    ):
+        return _blocked(
+            "invalid source collection state",
+            "the active code-controlled source question changed",
+        )
+    asked = entries[sequence - 1]
+    if (
+        sequence != len(entries)
+        or asked.get("event") != "operator_question_asked"
+        or asked.get("role") != role
+        or asked.get("question") != question
+    ):
+        return _blocked(
+            "invalid source collection ledger",
+            "the active source question lost its immutable ledger entry",
+        )
+    return None
+
+
+def _answer_source_collection_decision(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    action: object,
+) -> dict[str, object]:
+    question_error = _validate_collection_question(
+        state,
+        entries,
+        phase="awaiting_source_collection_decision",
+        role="source_collection_decision",
+        sequence_key="decision_question_ledger_sequence",
+    )
+    if question_error:
+        return question_error
+    inventory, inventory_error = _source_collection_inventory(work, entries)
+    if inventory_error:
+        return inventory_error
+    assert inventory is not None and isinstance(inventory["outcomes"], list)
+    decision = source_collection_decision.decide(action, inventory["outcomes"])
+    if decision.get("accepted") is not True:
+        return _blocked("invalid source collection decision", str(decision["why"]))
+    question = state["question"]
+    assert isinstance(question, dict)
+    answered = _ledger_entry(
+        len(entries) + 1,
+        "operator_answer_recorded",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "source_collection_decision",
+            "answers_question": question["id"],
+            "answer": action,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    if action == "finish_sources":
+        declared = [
+            item.get("source_id")
+            for item in inventory["outcomes"]
+            if isinstance(item, dict)
+        ]
+        closure = source_collection_closure.reconcile(
+            declared, inventory["outcomes"]
+        )
+        if closure.get("complete") is not True:
+            return _blocked("source collection incomplete", str(closure["why"]))
+        completed = _ledger_entry(
+            len(entries) + 2,
+            "source_collection_completed",
+            {
+                "recorded_at": datetime.now(timezone.utc).isoformat(),
+                "intake_id": state["intake_id"],
+                "decision_ledger_sequence": answered["sequence"],
+                "source_ids": closure["source_ids"],
+                "source_projection_closure": inventory,
+            },
+            str(answered["entry_sha256"]),
+        )
+        _append_ledger(work / "ledger.jsonl", [answered, completed])
+        collection = state["source_collection"]
+        assert isinstance(collection, dict)
+        collection = {
+            **collection,
+            "status": "complete",
+            "source_ids": closure["source_ids"],
+            "completion_ledger_sequence": completed["sequence"],
+        }
+        state.update({
+            "status": "source_collection_complete",
+            "phase": "source_collection_complete",
+            "waiting_for": None,
+            "question": None,
+            "source_collection": collection,
+            "ledger_entries": completed["sequence"],
+            "ledger_tail_sha256": completed["entry_sha256"],
+        })
+        _write_state(work / "intake-state.json", state)
+        return _source_collection_result(state, work, inventory)
+
+    collection = state["source_collection"]
+    assert isinstance(collection, dict)
+    position = int(collection["decision_count"])
+    kind_question = _numbered_collection_question(
+        SOURCE_COLLECTION_KIND_QUESTION, position
+    )
+    asked = _ledger_entry(
+        len(entries) + 2,
+        "operator_question_asked",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "source_collection_kind",
+            "question": kind_question,
+        },
+        str(answered["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [answered, asked])
+    collection = {
+        **collection,
+        "kind_question_ledger_sequence": asked["sequence"],
+    }
+    state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_source_collection_kind",
+        "waiting_for": kind_question["id"],
+        "question": kind_question,
+        "source_collection": collection,
+        "ledger_entries": asked["sequence"],
+        "ledger_tail_sha256": asked["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _operator_result(state, work)
+
+
+def _answer_source_collection_kind(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    kind: object,
+) -> dict[str, object]:
+    question_error = _validate_collection_question(
+        state,
+        entries,
+        phase="awaiting_source_collection_kind",
+        role="source_collection_kind",
+        sequence_key="kind_question_ledger_sequence",
+    )
+    if question_error:
+        return question_error
+    if kind not in {"local_file", "url"}:
+        return _blocked(
+            "invalid source collection kind",
+            "source kind must be exactly one of: local_file, url",
+        )
+    collection = state["source_collection"]
+    assert isinstance(collection, dict)
+    reservation = source_collection_reservation.reserve(
+        [f"source-{number:06d}" for number in sorted(_known_source_numbers(entries))]
+    )
+    source_id = str(reservation["source_id"])
+    question = state["question"]
+    assert isinstance(question, dict)
+    answered = _ledger_entry(
+        len(entries) + 1,
+        "operator_answer_recorded",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "source_collection_kind",
+            "answers_question": question["id"],
+            "answer": kind,
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    source_question = {
+        "id": f"independent-{source_id}",
+        "asks": "Please provide the next independent source for this intake.",
+        "answer_type": kind,
+        "answers_gap": {
+            "kind": "independent_source_collection",
+            "source_id": source_id,
+        },
+    }
+    asked = _ledger_entry(
+        len(entries) + 2,
+        "operator_question_asked",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "independent_source_collection",
+            "question": source_question,
+            "reservation": reservation,
+        },
+        str(answered["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [answered, asked])
+    collection = {
+        **collection,
+        "source_kind": kind,
+        "source_question_ledger_sequence": asked["sequence"],
+        "reservation": reservation,
+    }
+    state.update({
+        "status": "needs_operator",
+        "phase": "awaiting_independent_source",
+        "waiting_for": source_question["id"],
+        "question": source_question,
+        "source_collection": collection,
+        "ledger_entries": asked["sequence"],
+        "ledger_tail_sha256": asked["entry_sha256"],
+    })
+    _write_state(work / "intake-state.json", state)
+    return _operator_result(state, work)
+
+
+def _resume_source_collection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    purpose: str,
+    source: Path | None,
+    source_url: str | None,
+    project_source: bool,
+    begin: bool,
+    action: str | None,
+    kind: str | None,
+) -> dict[str, object]:
+    phase = str(state.get("phase"))
+    if phase in SOURCE_COLLECTION_TERMINAL_PHASES and begin:
+        if any(value is not None for value in (source, source_url, action, kind)) or project_source:
+            return _blocked(
+                "source collection invocation invalid",
+                "begin source collection without answering its first question in the same call",
+            )
+        return _offer_source_collection_decision(work, state, entries)
+    if phase == "awaiting_source_collection_decision":
+        if begin or source is not None or source_url is not None or kind is not None or project_source:
+            return _blocked(
+                "source collection decision required",
+                "answer only the current add_source or finish_sources question",
+            )
+        if action is None:
+            error = _validate_collection_question(
+                state,
+                entries,
+                phase=phase,
+                role="source_collection_decision",
+                sequence_key="decision_question_ledger_sequence",
+            )
+            return error or _operator_result(state, work)
+        return _answer_source_collection_decision(work, state, entries, action)
+    if phase == "awaiting_source_collection_kind":
+        if begin or source is not None or source_url is not None or action is not None or project_source:
+            return _blocked(
+                "source collection kind required",
+                "answer only the current local_file or url question",
+            )
+        if kind is None:
+            error = _validate_collection_question(
+                state,
+                entries,
+                phase=phase,
+                role="source_collection_kind",
+                sequence_key="kind_question_ledger_sequence",
+            )
+            return error or _operator_result(state, work)
+        return _answer_source_collection_kind(work, state, entries, kind)
+    if phase == "awaiting_independent_source":
+        if begin or action is not None or kind is not None or project_source:
+            return _blocked(
+                "independent source required",
+                "supply only the source requested by the current question",
+            )
+        collection = state.get("source_collection")
+        question = state.get("question")
+        sequence = (
+            collection.get("source_question_ledger_sequence")
+            if isinstance(collection, dict)
+            else None
+        )
+        if (
+            not isinstance(question, dict)
+            or not isinstance(sequence, int)
+            or sequence != len(entries)
+            or entries[-1].get("event") != "operator_question_asked"
+            or entries[-1].get("role") != "independent_source_collection"
+            or entries[-1].get("question") != question
+        ):
+            return _blocked(
+                "invalid source collection state",
+                "the independent source request changed",
+            )
+        if source is None and source_url is None:
+            return _operator_result(state, work)
+        if source is not None and source_url is not None:
+            return _blocked(
+                "operator input type mismatch",
+                "supply either one local file or one URL, not both",
+            )
+        lineage = {
+            "mode": "independent_source_collection",
+            "decision_question_ledger_sequence": collection["decision_question_ledger_sequence"],
+            "source_kind_question_ledger_sequence": collection["kind_question_ledger_sequence"],
+            "question_ledger_sequence": sequence,
+        }
+        if source_url is not None:
+            return _acquire_additional_url(
+                work, state, entries, source_url, question=question, lineage=lineage
+            )
+        assert source is not None
+        return _acquire_additional_local_file(
+            work, state, entries, source, question=question, lineage=lineage
+        )
+    if phase in {
+        "additional_source_frozen",
+        "interviewing_additional_source_projection",
+        "additional_source_projection_recorded",
+        "additional_spreadsheet_projection_failed",
+    }:
+        pending = state.get("pending_additional_source")
+        lineage = pending.get("lineage") if isinstance(pending, dict) else None
+        if not isinstance(lineage, dict) or lineage.get("mode") != "independent_source_collection":
+            return _blocked(
+                "invalid source collection state",
+                "the pending source is not bound to independent source collection",
+            )
+        pending_error = _validate_pending_additional_source(
+            work,
+            state,
+            entries,
+            source,
+            source_url,
+            allow_projection=phase != "additional_source_frozen",
+        )
+        if pending_error:
+            return pending_error
+        if any(value is not None for value in (action, kind)) or begin:
+            return _blocked(
+                "source projection pending",
+                "finish the current source projection before another collection decision",
+            )
+        if phase == "additional_source_frozen":
+            if project_source:
+                return _request_additional_projection(work, state, entries)
+            return _additional_source_ready_result(state, work)
+        if phase == "interviewing_additional_source_projection":
+            request_error = _validate_additional_projection_request(work, state, entries)
+            if request_error:
+                return request_error
+            if project_source or source is not None or source_url is not None:
+                return _blocked(
+                    "additional projection interview active",
+                    "finish the current code-controlled projection interview",
+                )
+            active = state.get("active_additional_projection")
+            paths = active.get("paths") if isinstance(active, dict) else None
+            if not isinstance(paths, dict):
+                return _blocked(
+                    "invalid intake state", "the active projection paths are missing"
+                )
+            if not (work / str(paths["candidate_path"])).exists():
+                return _additional_projection_waiting_result(state, work)
+            return _consume_additional_projection(work, state, entries, purpose)
+        if phase == "additional_source_projection_recorded":
+            recorded_error = _validate_recorded_additional_projection(
+                work, state, entries, purpose
+            )
+            if recorded_error:
+                return recorded_error
+        else:
+            failure_error = _validate_spreadsheet_failure(
+                work, state, entries, additional=True
+            )
+            if failure_error:
+                return failure_error
+        if project_source or source is not None or source_url is not None:
+            return _blocked(
+                "source projection complete",
+                "resume once to receive the next source-collection decision",
+            )
+        return _offer_source_collection_decision(work, state, entries)
+    if phase in {
+        "source_collection_complete",
+        "source_set_qualification_complete",
+        "qualification_admission_complete",
+    }:
+        if any(
+            value is not None for value in (source, source_url, action, kind)
+        ) or project_source or begin:
+            return _blocked(
+                "source collection already complete",
+                "the append-only source collection has already reached its terminal result",
+            )
+        if phase == "qualification_admission_complete":
+            return run_qualification_admission(work)
+        if phase == "source_set_qualification_complete":
+            return run_source_set_qualification(work)
+        inventory, inventory_error = _source_collection_inventory(work, entries)
+        if inventory_error:
+            return inventory_error
+        assert inventory is not None
+        collection = state.get("source_collection")
+        sequence = (
+            collection.get("completion_ledger_sequence")
+            if isinstance(collection, dict)
+            else None
+        )
+        if (
+            not isinstance(sequence, int)
+            or sequence != len(entries)
+            or entries[-1].get("event") != "source_collection_completed"
+            or entries[-1].get("source_ids") != collection.get("source_ids")
+            or entries[-1].get("source_projection_closure") != inventory
+        ):
+            return _blocked(
+                "invalid source collection ledger",
+                "the completed source set changed",
+            )
+        return _source_collection_result(state, work, inventory)
+    return _blocked(
+        "source collection unavailable",
+        "begin source collection only after a source has a terminal projection outcome",
+    )
 
 
 def _load_bound(
@@ -2522,6 +6894,19 @@ def _request_first_projection(
 ) -> dict[str, object]:
     source = state["first_source"]
     assert isinstance(source, dict)
+    source_path = work / str(source["stored_path"])
+    try:
+        source_bytes = source_path.read_bytes()
+    except OSError:
+        return _blocked("immutable source unavailable", str(source_path))
+    if spreadsheet_projection.is_workbook(
+        Path(str(source.get("filename", source_path.name))),
+        str(source.get("media_type", "")),
+        source_bytes,
+    ):
+        return _create_spreadsheet_projection(
+            work, state, entries, source, entries[6]["projection"]
+        )
     if source.get("media_type") == "application/pdf":
         return _request_first_pdf_projection(work, state, entries, source)
     if not str(source["media_type"]).startswith("image/"):
@@ -2558,6 +6943,391 @@ def _request_first_projection(
     })
     _write_state(work / "intake-state.json", state)
     return _projection_waiting_result(state, work)
+
+
+def _spreadsheet_projection_record(
+    source_id: str,
+    projection_bytes: bytes,
+    projected: dict[str, object],
+) -> dict[str, object]:
+    return {
+        "id": f"projection-{source_id}-v1",
+        "source_id": source_id,
+        "version": 1,
+        "path": f"projections/{source_id}-v1.json",
+        "sha256": _digest_bytes(projection_bytes),
+        "method": "spreadsheet_ooxml_v1",
+        "coverage": projected["coverage"],
+    }
+
+
+def _spreadsheet_failure(
+    source_id: str, reason: str
+) -> dict[str, object]:
+    return {
+        "id": f"projection-{source_id}-v1",
+        "source_id": source_id,
+        "version": 1,
+        "status": "failed",
+        "path": None,
+        "sha256": None,
+        "method": "spreadsheet_ooxml_v1",
+        "coverage": {
+            "status": "failed",
+            "source_units": None,
+            "represented_units": 0,
+            "gaps": [reason],
+        },
+    }
+
+
+def _spreadsheet_result(
+    state: dict[str, object], work: Path, *, additional: bool, failed: bool
+) -> dict[str, object]:
+    pending = state.get("pending_additional_source")
+    source = (
+        pending.get("source")
+        if additional and isinstance(pending, dict)
+        else state["first_source"]
+    )
+    projection = (
+        state["additional_source_projection"]
+        if additional
+        else state["first_projection"]
+    )
+    result = {
+        "status": "ready_for_projection" if failed else "ready_for_projection_assessment",
+        "stopped": (
+            "additional_spreadsheet_projection_failed"
+            if additional and failed
+            else "additional_source_projection_recorded"
+            if additional
+            else "first_spreadsheet_projection_failed"
+            if failed
+            else "first_spreadsheet_projection_recorded"
+        ),
+        "intake_id": state["intake_id"],
+        "source": source,
+        "projection": projection,
+        "work": str(work.resolve()),
+        "ledger": str((work / "ledger.jsonl").resolve()),
+    }
+    if additional and isinstance(pending, dict):
+        result["reserved_projection"] = pending["projection"]
+        result["lineage"] = pending["lineage"]
+    return result
+
+
+def _create_spreadsheet_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    source: dict[str, object],
+    reservation: object,
+    *,
+    pending: dict[str, object] | None = None,
+) -> dict[str, object]:
+    additional = pending is not None
+    source_id = str(source["id"])
+    source_path = work / str(source["stored_path"])
+    try:
+        source_bytes = source_path.read_bytes()
+    except OSError:
+        return _blocked("immutable source unavailable", str(source_path))
+    if _digest_bytes(source_bytes) != source.get("sha256"):
+        return _blocked(
+            "immutable source changed",
+            "the frozen spreadsheet changed before projection",
+        )
+    try:
+        projected = spreadsheet_projection.project(source_bytes)
+    except spreadsheet_projection.SpreadsheetProjectionError as error:
+        failure = _spreadsheet_failure(source_id, str(error))
+        failed = _ledger_entry(
+            len(entries) + 1,
+            "projection_conversion_failed",
+            {
+                "recorded_at": datetime.now(timezone.utc).isoformat(),
+                "intake_id": state["intake_id"],
+                "source_id": source_id,
+                "source_sha256": source["sha256"],
+                "adapter": {
+                    "name": "spreadsheet_ooxml_v1",
+                    "version": spreadsheet_projection.ADAPTER_VERSION,
+                },
+                "reserved_projection": reservation,
+                "failure": failure,
+            },
+            str(entries[-1]["entry_sha256"]),
+        )
+        _append_ledger(work / "ledger.jsonl", [failed])
+        state.update(
+            {
+                "status": "ready_for_projection",
+                "phase": (
+                    "additional_spreadsheet_projection_failed"
+                    if additional
+                    else "first_spreadsheet_projection_failed"
+                ),
+                "waiting_for": None,
+                "question": None,
+                (
+                    "additional_source_projection"
+                    if additional
+                    else "first_projection"
+                ): failure,
+                "spreadsheet_projection_completion": {
+                    "role": "spreadsheet_ooxml_projection_failure",
+                    "ledger_sequence": failed["sequence"],
+                },
+                "ledger_entries": failed["sequence"],
+                "ledger_tail_sha256": failed["entry_sha256"],
+            }
+        )
+        _write_state(work / "intake-state.json", state)
+        return _spreadsheet_result(
+            state, work, additional=additional, failed=True
+        )
+    projection_bytes = spreadsheet_projection.canonical_bytes(projected)
+    projection = _spreadsheet_projection_record(
+        source_id, projection_bytes, projected
+    )
+    reserved_id = reservation.get("id") if isinstance(reservation, dict) else None
+    if isinstance(reserved_id, str) and projection["id"] != reserved_id:
+        return _blocked(
+            "invalid ledger",
+            "the spreadsheet projection does not fill its reserved identity",
+        )
+    projection_path = work / str(projection["path"])
+    if projection_path.exists():
+        return _blocked(
+            "unbound projection artifact",
+            f"the spreadsheet projection already exists outside the ledger: {projection['path']}",
+        )
+    projection_path.write_bytes(projection_bytes)
+    payload: dict[str, object] = {
+        "recorded_at": datetime.now(timezone.utc).isoformat(),
+        "intake_id": state["intake_id"],
+        "attempt": 1,
+        "role": "spreadsheet_ooxml_projection",
+        "source_id": source_id,
+        "source_sha256": source["sha256"],
+        "reserved_projection": reservation,
+        "projection": projection,
+    }
+    if additional:
+        assert pending is not None
+        payload.update(
+            {
+                **_question_answer_binding(pending["question"]),
+                "lineage": pending["lineage"],
+            }
+        )
+    created = _ledger_entry(
+        len(entries) + 1,
+        "projection_version_created",
+        payload,
+        str(entries[-1]["entry_sha256"]),
+    )
+    _append_ledger(work / "ledger.jsonl", [created])
+    completion = {
+        "role": "spreadsheet_ooxml_projection",
+        "source_id": source_id,
+        "source_sha256": source["sha256"],
+        "projection_sha256": projection["sha256"],
+        "reserved_projection": reservation,
+        "ledger_sequence": created["sequence"],
+    }
+    if additional:
+        assert pending is not None
+        completion["lineage"] = pending["lineage"]
+    state.update(
+        {
+            "status": "ready_for_projection_assessment",
+            "phase": (
+                "additional_source_projection_recorded"
+                if additional
+                else "first_spreadsheet_projection_recorded"
+            ),
+            "waiting_for": None,
+            "question": None,
+            (
+                "additional_source_projection"
+                if additional
+                else "first_projection"
+            ): projection,
+            "spreadsheet_projection_completion": completion,
+            "ledger_entries": created["sequence"],
+            "ledger_tail_sha256": created["entry_sha256"],
+        }
+    )
+    if additional:
+        state["additional_projection_completion"] = completion
+    _write_state(work / "intake-state.json", state)
+    return _spreadsheet_result(
+        state, work, additional=additional, failed=False
+    )
+
+
+def _validate_spreadsheet_projection(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    *,
+    additional: bool,
+    allow_later_phase: bool = False,
+) -> dict[str, object] | None:
+    pending = state.get("pending_additional_source")
+    source = (
+        pending.get("source")
+        if additional and isinstance(pending, dict)
+        else state.get("first_source")
+    )
+    projection = state.get(
+        "additional_source_projection" if additional else "first_projection"
+    )
+    completion = state.get(
+        "additional_projection_completion"
+        if additional
+        else "spreadsheet_projection_completion"
+    )
+    if not all(
+        isinstance(item, dict) for item in (source, projection, completion)
+    ):
+        return _blocked(
+            "invalid spreadsheet projection",
+            "the source, projection, or completion identity is missing",
+        )
+    assert isinstance(source, dict)
+    assert isinstance(projection, dict)
+    assert isinstance(completion, dict)
+    sequence = completion.get("ledger_sequence")
+    if (
+        not isinstance(sequence, int)
+        or sequence < 1
+        or sequence > len(entries)
+        or (not allow_later_phase and sequence != len(entries))
+    ):
+        return _blocked(
+            "invalid spreadsheet projection", "the ledger sequence changed"
+        )
+    try:
+        source_bytes = (work / str(source["stored_path"])).read_bytes()
+        projected = spreadsheet_projection.project(source_bytes)
+        expected_bytes = spreadsheet_projection.canonical_bytes(projected)
+        actual_bytes = (work / str(projection["path"])).read_bytes()
+    except (OSError, spreadsheet_projection.SpreadsheetProjectionError) as error:
+        return _blocked("immutable spreadsheet projection unavailable", str(error))
+    expected = _spreadsheet_projection_record(
+        str(source["id"]), expected_bytes, projected
+    )
+    reservation = (
+        pending.get("projection")
+        if additional and isinstance(pending, dict)
+        else entries[6].get("projection")
+    )
+    expected_completion: dict[str, object] = {
+        "role": "spreadsheet_ooxml_projection",
+        "source_id": source["id"],
+        "source_sha256": source["sha256"],
+        "projection_sha256": expected["sha256"],
+        "reserved_projection": reservation,
+        "ledger_sequence": sequence,
+    }
+    if additional and isinstance(pending, dict):
+        expected_completion["lineage"] = pending["lineage"]
+    created = entries[sequence - 1]
+    binding = (
+        _question_answer_binding(pending["question"])
+        if additional and isinstance(pending, dict)
+        else {}
+    )
+    if (
+        _digest_bytes(source_bytes) != source.get("sha256")
+        or actual_bytes != expected_bytes
+        or projection != expected
+        or completion != expected_completion
+        or created.get("event") != "projection_version_created"
+        or created.get("attempt") != 1
+        or created.get("role") != "spreadsheet_ooxml_projection"
+        or created.get("source_id") != source.get("id")
+        or created.get("source_sha256") != source.get("sha256")
+        or created.get("reserved_projection") != reservation
+        or created.get("projection") != projection
+        or (
+            additional
+            and isinstance(pending, dict)
+            and (
+                any(created.get(key) != value for key, value in binding.items())
+                or created.get("lineage") != pending["lineage"]
+            )
+        )
+    ):
+        return _blocked(
+            "immutable spreadsheet projection changed",
+            "the readable projection no longer matches its source and ledger",
+        )
+    return None
+
+
+def _validate_spreadsheet_failure(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    *,
+    additional: bool,
+) -> dict[str, object] | None:
+    pending = state.get("pending_additional_source")
+    source = (
+        pending.get("source")
+        if additional and isinstance(pending, dict)
+        else state.get("first_source")
+    )
+    failure = state.get(
+        "additional_source_projection" if additional else "first_projection"
+    )
+    if not isinstance(source, dict) or not isinstance(failure, dict):
+        return _blocked(
+            "invalid spreadsheet projection failure", "the failure identity is missing"
+        )
+    try:
+        source_bytes = (work / str(source["stored_path"])).read_bytes()
+        spreadsheet_projection.project(source_bytes)
+    except OSError as error:
+        return _blocked("immutable source unavailable", str(error))
+    except spreadsheet_projection.SpreadsheetProjectionError as error:
+        expected = _spreadsheet_failure(str(source["id"]), str(error))
+    else:
+        return _blocked(
+            "invalid spreadsheet projection failure",
+            "the preserved source now produces a readable projection",
+        )
+    failed = entries[-1]
+    reservation = (
+        pending.get("projection")
+        if additional and isinstance(pending, dict)
+        else entries[6].get("projection")
+    )
+    if (
+        _digest_bytes(source_bytes) != source.get("sha256")
+        or failure != expected
+        or failed.get("event") != "projection_conversion_failed"
+        or failed.get("source_id") != source.get("id")
+        or failed.get("source_sha256") != source.get("sha256")
+        or failed.get("adapter")
+        != {
+            "name": "spreadsheet_ooxml_v1",
+            "version": spreadsheet_projection.ADAPTER_VERSION,
+        }
+        or failed.get("reserved_projection") != reservation
+        or failed.get("failure") != failure
+        or state.get("status") != "ready_for_projection"
+    ):
+        return _blocked(
+            "invalid spreadsheet projection failure",
+            "the recorded failure changed",
+        )
+    return None
 
 
 def _request_first_pdf_projection(
@@ -4038,10 +8808,26 @@ def run_first_projection_interview(
         and expected_region_id is None
         and expected_obligation_id is None
     ):
-        return _blocked(
-            "projection invocation invalid",
-            "the generated command lost its active projection binding",
-        )
+        try:
+            journal = projection_interview._read_journal(
+                attempt_dir / "interview.jsonl"
+            )
+            interview_state, _pending, _completed = projection_interview._replay(
+                journal, purpose=purpose, contract=contract,
+            )
+            active_region = projection_interview._active_scan_region(
+                interview_state
+            )
+            active_obligation = projection_interview._pending_obligation(
+                interview_state
+            )
+        except projection_interview.InterviewError as error:
+            return _blocked("projection invocation invalid", str(error))
+        if active_region is not None or active_obligation is not None:
+            return _blocked(
+                "projection invocation invalid",
+                "the generated command lost its active projection binding",
+            )
     if expected_region_id is not None or expected_obligation_id is not None:
         try:
             journal = projection_interview._read_journal(
@@ -4821,10 +9607,16 @@ def _latest_assessed_round(
 
 def _consumed_assessment_identities(
     resolutions: list[dict[str, object]],
+    *,
+    invalidated_attempts: set[int] | None = None,
 ) -> tuple[set[tuple[int, int]] | None, str | None]:
+    invalidated = invalidated_attempts or set()
     consumed: dict[tuple[int, int], dict[str, object]] = {}
     for resolution in resolutions:
         if resolution.get("mode") != "assessed_answer":
+            continue
+        attempt = resolution.get("attempt")
+        if attempt in invalidated:
             continue
         round_number = resolution.get("selected_assessment_round", 1)
         position = resolution.get("selected_assessment_position")
@@ -4861,6 +9653,115 @@ def _consumed_assessment_identities(
             return None, "an assessed answer was consumed more than once"
         consumed[identity] = resolution
     return set(consumed), None
+
+
+def _recovery_invalidated_assessment_attempts(
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+    resolutions: list[dict[str, object]],
+) -> tuple[set[int] | None, str | None]:
+    recoveries = state.get("gap_resolution_recoveries", [])
+    if not isinstance(recoveries, list) or not all(
+        isinstance(item, dict) for item in recoveries
+    ):
+        return None, "gap resolution recoveries must remain an ordered list"
+    if not recoveries:
+        return set(), None
+    by_attempt = {
+        item.get("attempt"): item
+        for item in resolutions
+        if isinstance(item.get("attempt"), int)
+    }
+    invalidated: set[int] = set()
+    required_keys = {
+        "after_attempt",
+        "from_projection",
+        "to_projection",
+        "gap_id",
+        "locked_element_id",
+        "invalidation_ledger_sequence",
+        "projection_ledger_sequence",
+    }
+    for index, recovery in enumerate(recoveries, start=1):
+        if set(recovery) != required_keys:
+            return None, (
+                f"recovery {index} fields changed; expected exactly "
+                f"{sorted(required_keys)}, received {sorted(recovery)}"
+            )
+        attempt = recovery.get("after_attempt")
+        if not isinstance(attempt, int) or attempt < 1:
+            return None, (
+                f"recovery {index} after_attempt received {attempt!r}; "
+                "expected one positive archived attempt number"
+            )
+        if attempt in invalidated:
+            return None, (
+                f"recovery {index} repeats invalidated attempt {attempt}; "
+                "each attempt may be invalidated once"
+            )
+        resolution = by_attempt.get(attempt)
+        successor = by_attempt.get(attempt + 1)
+        if (
+            not isinstance(resolution, dict)
+            or resolution.get("terminal_phase") != "gap_resolution_applied"
+            or resolution.get("output_projection") != recovery["from_projection"]
+        ):
+            return None, (
+                f"recovery {index} names attempt {attempt}, but that exact applied "
+                "attempt and output projection are not preserved"
+            )
+        if (
+            not isinstance(successor, dict)
+            or successor.get("parent_projection") != recovery["to_projection"]
+            or successor.get("selected_assessment_round", 1)
+            != resolution.get("selected_assessment_round", 1)
+            or successor.get("selected_assessment_position")
+            != resolution.get("selected_assessment_position")
+        ):
+            return None, (
+                f"recovery {index} invalidates attempt {attempt}, but attempt "
+                f"{attempt + 1} is not its exact same-assessment successor"
+            )
+        invalidation_sequence = recovery.get("invalidation_ledger_sequence")
+        projection_sequence = recovery.get("projection_ledger_sequence")
+        if (
+            not isinstance(invalidation_sequence, int)
+            or not isinstance(projection_sequence, int)
+            or projection_sequence != invalidation_sequence + 1
+            or invalidation_sequence < 1
+            or projection_sequence > len(entries)
+        ):
+            return None, (
+                f"recovery {index} ledger sequences received "
+                f"{invalidation_sequence!r} and {projection_sequence!r}; "
+                "expected adjacent existing entries"
+            )
+        invalidation = entries[invalidation_sequence - 1]
+        creation = entries[projection_sequence - 1]
+        if not (
+            invalidation.get("sequence") == invalidation_sequence
+            and invalidation.get("event")
+            == "gap_resolution_locked_participant_invalidated"
+            and invalidation.get("invalidated_attempt") == attempt
+            and invalidation.get("invalidated_projection")
+            == recovery["from_projection"]
+            and invalidation.get("gap_id") == recovery["gap_id"]
+            and invalidation.get("locked_element_id")
+            == recovery["locked_element_id"]
+            and creation.get("sequence") == projection_sequence
+            and creation.get("event") == "projection_version_created"
+            and creation.get("role")
+            == "gap_resolution_locked_participant_recovery"
+            and creation.get("invalidated_attempt") == attempt
+            and creation.get("parent_projection") == recovery["from_projection"]
+            and creation.get("projection") == recovery["to_projection"]
+        ):
+            return None, (
+                f"recovery {index} does not match its exact invalidation and "
+                "successor-projection ledger entries"
+            )
+        invalidated.add(attempt)
+    return invalidated, None
 
 
 def _retryable_rejected_resolution(
@@ -4958,8 +9859,20 @@ def _retryable_rejected_resolution(
 
 
 def _clarification_continuation(
-    work: Path, state: dict[str, object]
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]] | None = None,
 ) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    if entries is None:
+        if state.get("gap_resolution_recoveries"):
+            entries, ledger_error = _validate_ledger(work / "ledger.jsonl")
+            if ledger_error:
+                return None, _blocked(
+                    "clarification continuation unavailable",
+                    f"the recovery ledger is invalid: {ledger_error}",
+                )
+        else:
+            entries = []
     latest_round, latest_bindings, latest_assessment, latest_error = (
         _latest_assessed_round(work, state)
     )
@@ -5006,7 +9919,21 @@ def _clarification_continuation(
     current_resolution = state.get("gap_resolution")
     if isinstance(current_resolution, dict) and current_resolution.get("result_sha256"):
         completed_resolutions.append(current_resolution)
-    used, used_error = _consumed_assessment_identities(completed_resolutions)
+    invalidated_attempts, recovery_error = (
+        _recovery_invalidated_assessment_attempts(
+            state, entries, completed_resolutions
+        )
+    )
+    if recovery_error:
+        return None, _blocked(
+            "clarification continuation unavailable",
+            recovery_error,
+        )
+    assert invalidated_attempts is not None
+    used, used_error = _consumed_assessment_identities(
+        completed_resolutions,
+        invalidated_attempts=invalidated_attempts,
+    )
     if used_error:
         return None, _blocked(
             "clarification continuation unavailable",
@@ -5295,7 +10222,6 @@ def _validate_terminal_context_deferrals(
             "context deferral and owner-obligation identities differ: "
             f"missing owners {missing}; unbound obligations {extra}"
         )
-    resolved_element_ids: set[str] = set()
     for obligation_id, (source_region_id, deferred) in deferrals.items():
         owner_region_id, obligation = obligations[obligation_id]
         if (
@@ -5308,17 +10234,11 @@ def _validate_terminal_context_deferrals(
         element_id = obligation.get("element_id")
         if not isinstance(element_id, str) or element_id not in element_by_id:
             return 0, f"context obligation {obligation_id} names no recorded element"
-        if element_id in resolved_element_ids:
-            return 0, f"context element {element_id} resolves multiple obligations"
         element = element_by_id[element_id]
-        owner = region_by_id[owner_region_id]
         bounds = element.get("region")
         anchor = deferred["anchor"]
         if (
-            element.get("scan_region_id") != owner_region_id
-            or element_id not in owner.get("element_ids", [])
-            or element.get("kind") != deferred.get("candidate_kind")
-            or not isinstance(bounds, list)
+            not isinstance(bounds, list)
             or len(bounds) != 4
             or not all(isinstance(value, int) for value in bounds)
             or not (
@@ -5337,22 +10257,19 @@ def _validate_terminal_context_deferrals(
                 return 0, f"context obligation {obligation_id} has invalid gap evidence"
         elif obligation.get("gap_reason") not in {None, ""}:
             return 0, f"context obligation {obligation_id} has contradictory gap evidence"
-        resolved_element_ids.add(element_id)
     return len(obligations), None
 
 
-def _terminal_projection_qualification(
-    work: Path, state: dict[str, object]
+def _visual_projection_qualification(
+    work: Path, record: dict[str, object]
 ) -> tuple[dict[str, object] | None, dict[str, object] | None]:
-    """Qualify the clarification terminal from canonical projection evidence."""
-    record = state.get("current_projection", state.get("first_projection"))
+    """Qualify one visual projection from canonical projection evidence."""
     path, projection_sha256, record_error = _validated_projection_record(
-        work, record if isinstance(record, dict) else None
+        work, record
     )
     if record_error:
         return None, _blocked("terminal_invalid", str(record_error["why"]))
     assert path is not None and projection_sha256 is not None
-    assert isinstance(record, dict)
     if (
         not isinstance(record.get("id"), str)
         or not record["id"]
@@ -5658,6 +10575,18 @@ def _terminal_projection_qualification(
         "remaining_gaps": remaining_gaps,
     }
     return qualification, None
+
+
+def _terminal_projection_qualification(
+    work: Path, state: dict[str, object]
+) -> tuple[dict[str, object] | None, dict[str, object] | None]:
+    """Qualify the active clarification projection."""
+    record = state.get("current_projection", state.get("first_projection"))
+    if not isinstance(record, dict):
+        return None, _blocked(
+            "terminal_invalid", "the active projection record is missing"
+        )
+    return _visual_projection_qualification(work, record)
 
 
 def _clarification_terminal_disposition(
@@ -6001,7 +10930,7 @@ def _execute_clarification_continuation(
             entries,
             retry_rejected_resolution=rejected,
         )
-    decision, decision_error = _clarification_continuation(work, state)
+    decision, decision_error = _clarification_continuation(work, state, entries)
     if decision_error:
         return decision_error
     assert decision is not None
@@ -6802,7 +11731,10 @@ def _acquire_additional_local_file(
     if source_error:
         return source_error
     assert resolved is not None and content is not None
-    number = max(_known_source_numbers(entries), default=0) + 1
+    reservation = source_collection_reservation.reserve(
+        [f"source-{number:06d}" for number in sorted(_known_source_numbers(entries))]
+    )
+    number = int(reservation["source_number"])
     stored_relative = f"sources/source-{number:06d}"
     stored_path = work / stored_relative
     if stored_path.exists():
@@ -6824,15 +11756,20 @@ def _acquire_additional_local_file(
         ),
         question,
     )
+    binding = _question_answer_binding(question)
     projection = _pending_additional_projection_record(number)
+    if projection.get("id") != reservation["projection_id"]:
+        return _blocked(
+            "source reservation failed",
+            "the reserved source and projection identities disagree",
+        )
     entry = _ledger_entry(
         len(entries) + 1,
         "source_acquired",
         {
             "recorded_at": datetime.now(timezone.utc).isoformat(),
             "intake_id": state["intake_id"],
-            "answers_question": question["id"],
-            "answers_gap": question["answers_gap"],
+            **binding,
             "source": source,
             "projection": projection,
             "lineage": lineage,
@@ -6875,7 +11812,10 @@ def _acquire_additional_url(
             "operator input type mismatch",
             "the current question requires a different answer type, not a URL",
         )
-    number = max(_known_source_numbers(entries), default=0) + 1
+    reservation = source_collection_reservation.reserve(
+        [f"source-{number:06d}" for number in sorted(_known_source_numbers(entries))]
+    )
+    number = int(reservation["source_number"])
     stored_relative = f"sources/source-{number:06d}"
     stored_path = work / stored_relative
     if stored_path.exists():
@@ -6889,6 +11829,7 @@ def _acquire_additional_url(
     assert retrieval is not None and content is not None
     stored_path.write_bytes(content)
     media_type, media_type_basis = _url_media_type(retrieval, stored_path)
+    binding = _question_answer_binding(question)
     source = {
         **_url_source_record(
             number,
@@ -6898,18 +11839,21 @@ def _acquire_additional_url(
             media_type,
             media_type_basis,
         ),
-        "answers_question": question["id"],
-        "answers_gap": question["answers_gap"],
+        **binding,
     }
     projection = _pending_additional_projection_record(number)
+    if projection.get("id") != reservation["projection_id"]:
+        return _blocked(
+            "source reservation failed",
+            "the reserved source and projection identities disagree",
+        )
     entry = _ledger_entry(
         len(entries) + 1,
         "source_acquired",
         {
             "recorded_at": datetime.now(timezone.utc).isoformat(),
             "intake_id": state["intake_id"],
-            "answers_question": question["id"],
-            "answers_gap": question["answers_gap"],
+            **binding,
             "source": source,
             "projection": projection,
             "lineage": lineage,
@@ -6973,15 +11917,23 @@ def _validate_pending_additional_source(
         )
     entry = entries[sequence - 1]
     question_sequence = lineage.get("question_ledger_sequence")
+    expected_question_event = (
+        "operator_qualification_question_asked"
+        if lineage.get("mode") == "qualification_clarification_answer"
+        else "operator_question_asked"
+    )
+    try:
+        binding = _question_answer_binding(question)
+    except ValueError as error:
+        return _blocked("invalid intake state", str(error))
     if (
         not isinstance(question_sequence, int)
         or question_sequence < 1
         or question_sequence >= sequence
-        or entries[question_sequence - 1].get("event") != "operator_question_asked"
+        or entries[question_sequence - 1].get("event") != expected_question_event
         or entries[question_sequence - 1].get("question") != question
         or entry.get("event") != "source_acquired"
-        or entry.get("answers_question") != question.get("id")
-        or entry.get("answers_gap") != question.get("answers_gap")
+        or any(entry.get(key) != value for key, value in binding.items())
         or entry.get("source") != source
         or entry.get("projection") != projection
         or entry.get("lineage") != lineage
@@ -6997,8 +11949,7 @@ def _validate_pending_additional_source(
         or not source_id.startswith("source-")
         or not isinstance(stored_relative, str)
         or stored_relative != f"sources/{source_id}"
-        or source.get("answers_question") != question.get("id")
-        or source.get("answers_gap") != question.get("answers_gap")
+        or any(source.get(key) != value for key, value in binding.items())
     ):
         return _blocked(
             "invalid ledger", "the additional local-file source record changed"
@@ -7019,7 +11970,8 @@ def _validate_pending_additional_source(
         base_source = {
             key: value
             for key, value in source.items()
-            if key not in {"answers_question", "answers_gap"}
+            if key
+            not in {"answers_question", "answers_gap", "answers_obligation"}
         }
         url_error = _validate_url_source_record(
             base_source, number, frozen, supplied_url
@@ -7028,8 +11980,7 @@ def _validate_pending_additional_source(
             return url_error
         expected_source = {
             **base_source,
-            "answers_question": question["id"],
-            "answers_gap": question["answers_gap"],
+            **binding,
         }
     else:
         if supplied_url is not None:
@@ -7075,6 +12026,7 @@ def _validate_pending_additional_source(
             not in {
                 "interviewing_additional_source_projection",
                 "additional_source_projection_recorded",
+                "additional_spreadsheet_projection_failed",
                 "assessing_additional_source_gap",
                 "additional_source_gap_assessment_recorded",
                 "additional_source_element_gap_admitted",
@@ -7250,6 +12202,24 @@ def _request_additional_projection(
     assert isinstance(source, dict) and isinstance(projection, dict)
     assert isinstance(lineage, dict)
     source_id = str(source["id"])
+    source_path = work / str(source["stored_path"])
+    try:
+        source_bytes = source_path.read_bytes()
+    except OSError:
+        return _blocked("immutable source unavailable", str(source_path))
+    if spreadsheet_projection.is_workbook(
+        Path(str(source.get("filename", source_path.name))),
+        str(source.get("media_type", "")),
+        source_bytes,
+    ):
+        return _create_spreadsheet_projection(
+            work,
+            state,
+            entries,
+            source,
+            projection,
+            pending=pending,
+        )
     if not str(source["media_type"]).startswith("image/"):
         return _create_additional_verbatim_utf8_projection(
             work, state, entries, pending
@@ -7275,8 +12245,7 @@ def _request_additional_projection(
             "source_id": source_id,
             "source_sha256": source["sha256"],
             "reserved_projection": projection,
-            "answers_question": pending["question"]["id"],
-            "answers_gap": pending["question"]["answers_gap"],
+            **_question_answer_binding(pending["question"]),
             "lineage": lineage,
             "interview_contract": PROJECTION_INTERVIEW_CONTRACT,
             "interview_path": paths["interview_path"],
@@ -7355,8 +12324,7 @@ def _create_additional_verbatim_utf8_projection(
             "source_sha256": source["sha256"],
             "reserved_projection": reservation,
             "projection": projection,
-            "answers_question": pending["question"]["id"],
-            "answers_gap": pending["question"]["answers_gap"],
+            **_question_answer_binding(pending["question"]),
             "lineage": pending["lineage"],
         },
         str(entries[-1]["entry_sha256"]),
@@ -7428,6 +12396,7 @@ def _validate_additional_verbatim_utf8_projection(
         "ledger_sequence": sequence,
     }
     created = entries[sequence - 1]
+    binding = _question_answer_binding(pending["question"])
     try:
         source_bytes = (work / str(source["stored_path"])).read_bytes()
         projection_bytes = (work / str(expected_projection["path"])).read_bytes()
@@ -7450,8 +12419,7 @@ def _validate_additional_verbatim_utf8_projection(
         or created.get("source_sha256") != source.get("sha256")
         or created.get("reserved_projection") != reservation
         or created.get("projection") != projection
-        or created.get("answers_question") != pending["question"]["id"]
-        or created.get("answers_gap") != pending["question"]["answers_gap"]
+        or any(created.get(key) != value for key, value in binding.items())
         or created.get("lineage") != pending.get("lineage")
         or (
             not allow_later_phase
@@ -7520,8 +12488,7 @@ def _validate_additional_projection_request(
         "source_id": source_id,
         "source_sha256": source.get("sha256"),
         "reserved_projection": projection,
-        "answers_question": pending["question"]["id"],
-        "answers_gap": pending["question"]["answers_gap"],
+        **_question_answer_binding(pending["question"]),
         "lineage": lineage,
         "interview_contract": PROJECTION_INTERVIEW_CONTRACT,
         "interview_path": paths["interview_path"],
@@ -7701,7 +12668,7 @@ def _additional_projection_record(
         "version": 1,
         "path": path,
         "sha256": _digest_bytes(projection_bytes),
-        "method": "visual_spatial",
+        "method": "visual_spatial_v1",
         "element_count": len(projection["elements"]),
         "relationship_count": len(projection["relationships"]),
         "gap_count": gap_count,
@@ -7925,7 +12892,7 @@ def _additional_projection_evidence(
                 f"the verbatim additional projection is unreadable: {error}",
             )
         records.append(("content", "content-000001", {"text": text}))
-    elif method == "visual_spatial":
+    elif method == "visual_spatial_v1":
         try:
             readable = json.loads(path.read_text(encoding="utf-8"))
         except (OSError, json.JSONDecodeError) as error:
@@ -9214,8 +14181,7 @@ def _consume_additional_projection(
             "role": "additional_source_projection",
             "projection": projection_record,
             "reserved_projection": pending["projection"],
-            "answers_question": pending["question"]["id"],
-            "answers_gap": pending["question"]["answers_gap"],
+            **_question_answer_binding(pending["question"]),
             "lineage": pending["lineage"],
         },
         str(completed["entry_sha256"]),
@@ -9244,6 +14210,13 @@ def _validate_recorded_additional_projection(
     allow_later_phase: bool = False,
 ) -> dict[str, object] | None:
     completion = state.get("additional_projection_completion")
+    if (
+        isinstance(completion, dict)
+        and completion.get("role") == "spreadsheet_ooxml_projection"
+    ):
+        return _validate_spreadsheet_projection(
+            work, state, entries, additional=True, allow_later_phase=allow_later_phase
+        )
     if (
         isinstance(completion, dict)
         and completion.get("role") == "verbatim_utf8_projection"
@@ -9301,6 +14274,7 @@ def _validate_recorded_additional_projection(
     completion_payload = _additional_projection_completion_payload(active, bundle)
     completed = entries[request_sequence]
     created = entries[request_sequence + 1]
+    binding = _question_answer_binding(pending["question"])
     if (
         projection_bytes != canonical
         or state.get("additional_source_projection") != projection_record
@@ -9315,8 +14289,7 @@ def _validate_recorded_additional_projection(
         or created.get("role") != "additional_source_projection"
         or created.get("projection") != projection_record
         or created.get("reserved_projection") != pending["projection"]
-        or created.get("answers_question") != pending["question"]["id"]
-        or created.get("answers_gap") != pending["question"]["answers_gap"]
+        or any(created.get(key) != value for key, value in binding.items())
         or created.get("lineage") != pending["lineage"]
         or (
             not allow_later_phase
@@ -9639,6 +14612,7 @@ def _validate_prepared_question_round_interview(
                 "additional_source_frozen",
                 "interviewing_additional_source_projection",
                 "additional_source_projection_recorded",
+                "additional_spreadsheet_projection_failed",
                 "assessing_additional_source_gap",
                 "additional_source_gap_assessment_recorded",
                 "additional_source_element_gap_admitted",
@@ -10282,6 +15256,7 @@ def _validate_mixed_question_answer_records(
                 "additional_source_frozen",
                 "interviewing_additional_source_projection",
                 "additional_source_projection_recorded",
+                "additional_spreadsheet_projection_failed",
                 "assessing_additional_source_gap",
                 "additional_source_gap_assessment_recorded",
                 "additional_source_element_gap_admitted",
@@ -10534,6 +15509,7 @@ def _validate_gap_question_answer_records(
                 "additional_source_frozen",
                 "interviewing_additional_source_projection",
                 "additional_source_projection_recorded",
+                "additional_spreadsheet_projection_failed",
                 "assessing_additional_source_gap",
                 "additional_source_gap_assessment_recorded",
                 "additional_source_element_gap_admitted",
@@ -12789,28 +17765,13 @@ def _assessed_binding_at_position(
         return None, None, selection_error
     assert binding is not None and assessment is not None
     gap = binding.get("gap")
-    original_record = gap.get("record") if isinstance(gap, dict) else None
-    binding_issue = (
-        original_record.get("binding_issue")
-        if isinstance(original_record, dict)
-        else None
-    )
-    missing_endpoint_count = (
-        sum(original_record.get(key) is None for key in ("from_id", "to_id"))
-        if isinstance(original_record, dict)
-        else 0
-    )
     if (
         not isinstance(gap, dict)
         or gap.get("collection") != "relationships"
-        or (
-            not isinstance(binding_issue, dict)
-            and missing_endpoint_count != 1
-        )
     ):
         return None, None, _blocked(
             "gap resolution unavailable",
-            f"round {round_number} assessment position {position} is not a resolving relationship gap with either an identity ambiguity or exactly one missing endpoint",
+            f"round {round_number} assessment position {position} is not a resolving relationship gap",
         )
     projection_path, _, projection_error = _validated_projection_record(
         work, parent
@@ -13450,7 +18411,7 @@ def _gap_resolution_inputs(
                 f"attempt {attempt} binding differs from its preserved request",
             )
         if (
-            clarification.get("schema_version") != gap_resolution.CONTRACT
+            clarification.get("schema_version") != saved_resolution.get("contract", 1)
             or clarification.get("gap") != binding["gap"]
             or clarification.get("question") != binding["question"]
             or clarification.get("accepted_assessment") != assessment
@@ -13863,6 +18824,7 @@ def _validated_gap_resolution(
                 work / _resolution_paths(saved_resolution["attempt"])["attempt_dir"],
                 **inputs,
                 purpose=purpose,
+                contract_version=int(saved_resolution.get("contract", 1)),
             )
         )
     except gap_resolution.ResolutionError as resolution_error:
@@ -14262,6 +19224,7 @@ def run_gap_resolution(
             work / paths["attempt_dir"],
             **inputs,
             purpose=purpose,
+            contract_version=int(resolution.get("contract", 1)),
             input_fn=input_fn,
             output_fn=output_fn,
         )
@@ -14536,11 +19499,174 @@ def _validate_gap_resolution_history(
                 f"active attempt received {current.get('attempt')}; expected {expected_attempt}",
             )
         if history and current.get("parent_projection") != previous_output:
-            return _blocked(
-                "invalid gap resolution ledger",
-                f"active attempt {expected_attempt} parent does not match prior output",
-            )
+            recoveries = state.get("gap_resolution_recoveries", [])
+            matching_recovery = [
+                item
+                for item in recoveries
+                if isinstance(item, dict)
+                and item.get("after_attempt") == expected_attempt - 1
+                and item.get("from_projection") == previous_output
+                and item.get("to_projection") == current.get("parent_projection")
+            ] if isinstance(recoveries, list) else []
+            if len(matching_recovery) != 1:
+                return _blocked(
+                    "invalid gap resolution ledger",
+                    f"active attempt {expected_attempt} parent does not match prior output",
+                )
     return None
+
+
+def _recover_dropped_locked_gap_participant(
+    work: Path,
+    state: dict[str, object],
+    entries: list[dict[str, object]],
+) -> dict[str, object] | None:
+    """Append a corrective projection when a legacy retry dropped its locked endpoint."""
+    if state.get("gap_resolution_recoveries"):
+        return None
+    if state.get("phase") != "formulating_follow_up_gap_question_round":
+        return None
+    history = state.get("gap_resolution_history")
+    if not isinstance(history, list) or len(history) < 2:
+        return None
+    applied = history[-1]
+    retry = applied.get("retry_of") if isinstance(applied, dict) else None
+    rejected = retry.get("rejected_relationship") if isinstance(retry, dict) else None
+    evidence = rejected.get("resolution_evidence") if isinstance(rejected, dict) else None
+    locked_id = evidence.get("locked_known_element_id") if isinstance(evidence, dict) else None
+    locked_status = evidence.get("locked_known_element_status") if isinstance(evidence, dict) else None
+    gap_id = rejected.get("resolution_of") if isinstance(rejected, dict) else None
+    output = applied.get("output_projection") if isinstance(applied, dict) else None
+    if not (
+        applied.get("terminal_phase") == "gap_resolution_applied"
+        and applied.get("verification_verdict") == "supported"
+        and isinstance(locked_id, str)
+        and locked_status == "gap"
+        and isinstance(gap_id, str)
+        and isinstance(output, dict)
+        and state.get("current_projection") == output
+        and entries
+        and entries[-1].get("event") == "model_follow_up_gap_question_round_requested"
+    ):
+        return None
+    try:
+        current = json.loads((work / str(output["path"])).read_text(encoding="utf-8"))
+        clarification = json.loads(
+            (work / str(applied["clarification_path"])).read_text(encoding="utf-8")
+        )
+        original_gap = clarification["gap"]["record"]
+    except (OSError, json.JSONDecodeError, KeyError, TypeError):
+        return _blocked(
+            "locked-participant recovery unavailable",
+            "the applied retry or its bound original gap is unavailable",
+        )
+    admitted = next(
+        (
+            item for item in current.get("relationships", [])
+            if isinstance(item, dict) and item.get("id") == gap_id
+        ),
+        None,
+    )
+    if not isinstance(admitted, dict) or locked_id in {
+        admitted.get("from_id"), admitted.get("to_id")
+    }:
+        return None
+    restored_relationships = [
+        json.loads(json.dumps(original_gap)) if item.get("id") == gap_id else item
+        for item in current["relationships"]
+    ]
+    restored = json.loads(json.dumps(current))
+    restored["relationships"] = restored_relationships
+    restored["projection_lineage"] = {
+        "parent_projection_id": output["id"],
+        "parent_projection_sha256": output["sha256"],
+        "recovery": "dropped_locked_gap_participant",
+        "invalidated_attempt": applied["attempt"],
+        "restored_gap_id": gap_id,
+        "locked_element_id": locked_id,
+    }
+    version = int(output["version"]) + 1
+    content = json.dumps(restored, indent=2, sort_keys=True).encode("utf-8") + b"\n"
+    gap_count = sum(item.get("status") == "gap" for item in restored["elements"])
+    gap_count += sum(item.get("status") == "gap" for item in restored["relationships"])
+    gap_count += sum(
+        item.get("status") == "gap" for item in restored.get("scan_regions", [])
+    )
+    projection = {
+        "id": f"projection-source-000003-v{version}",
+        "source_id": output["source_id"],
+        "version": version,
+        "parent_projection_id": output["id"],
+        "path": f"projections/source-000003-v{version}.json",
+        "sha256": _digest_bytes(content),
+        "element_count": len(restored["elements"]),
+        "relationship_count": len(restored["relationships"]),
+        "gap_count": gap_count,
+        "coverage": "unassessed",
+    }
+    projection_path = work / projection["path"]
+    if projection_path.exists():
+        return _blocked(
+            "locked-participant recovery unavailable",
+            f"recovery projection path already exists: {projection['path']}",
+        )
+    invalidation = _ledger_entry(
+        len(entries) + 1,
+        "gap_resolution_locked_participant_invalidated",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "invalidated_attempt": applied["attempt"],
+            "invalidated_projection": output,
+            "gap_id": gap_id,
+            "locked_element_id": locked_id,
+            "interrupted_request_sequence": entries[-1]["sequence"],
+        },
+        str(entries[-1]["entry_sha256"]),
+    )
+    creation = _ledger_entry(
+        len(entries) + 2,
+        "projection_version_created",
+        {
+            "recorded_at": datetime.now(timezone.utc).isoformat(),
+            "intake_id": state["intake_id"],
+            "role": "gap_resolution_locked_participant_recovery",
+            "parent_projection": output,
+            "invalidated_attempt": applied["attempt"],
+            "restored_gap": clarification["gap"],
+            "projection": projection,
+        },
+        str(invalidation["entry_sha256"]),
+    )
+    projection_path.write_bytes(content)
+    _append_ledger(work / "ledger.jsonl", [invalidation, creation])
+    recovery = {
+        "after_attempt": applied["attempt"],
+        "from_projection": output,
+        "to_projection": projection,
+        "gap_id": gap_id,
+        "locked_element_id": locked_id,
+        "invalidation_ledger_sequence": invalidation["sequence"],
+        "projection_ledger_sequence": creation["sequence"],
+    }
+    state.update({
+        "status": "ready_for_projection_assessment",
+        "phase": "gap_resolution_applied",
+        "waiting_for": None,
+        "question": None,
+        "current_projection": projection,
+        "gap_resolution_recoveries": [recovery],
+        "ledger_entries": creation["sequence"],
+        "ledger_tail_sha256": creation["entry_sha256"],
+    })
+    state.pop("follow_up_gap_question_round", None)
+    _write_state(work / "intake-state.json", state)
+    return _request_gap_resolution(
+        work,
+        state,
+        [*entries, invalidation, creation],
+        retry_rejected_resolution=history[-2],
+    )
 
 
 def _validate_clarification_completion_predecessors(
@@ -14829,6 +19955,13 @@ def _clarification_boundary_result(
         if (
             result.get("status") != "waiting_for_model"
             or result.get("stopped") not in {
+                "interviewing_first_projection",
+                "verifying_first_projection",
+                "correcting_rejected_relationships",
+                "verifying_relationship_corrections",
+                "formulating_qualification_question_round",
+                "assessing_qualification_answers",
+                "formulating_qualification_followup_question_round",
                 "formulating_gap_question",
                 "formulating_gap_question_round",
                 "formulating_follow_up_gap_question_round",
@@ -14851,10 +19984,30 @@ def _clarification_boundary_result(
                 "invalid clarification boundary",
                 "the model boundary lost its single code-controlled interview command",
             )
+    elif boundary == "source_collection_answer_required":
+        question = result.get("question")
+        if (
+            result.get("status") != "needs_operator"
+            or result.get("stopped") != "awaiting_source_collection_decision"
+            or not isinstance(question, dict)
+            or not str(question.get("id", "")).startswith(
+                "source-collection-decision-"
+            )
+            or question.get("allowed_values") != [
+                "add_source",
+                "finish_sources",
+            ]
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the source-collection boundary lost its exact current decision",
+            )
     elif boundary == "needs_operator_answer":
         if (
             result.get("status") != "needs_operator"
             or result.get("stopped") not in {
+                "awaiting_qualification_clarification_answers",
+                "awaiting_qualification_followup_answers",
                 "awaiting_gap_answer",
                 "awaiting_gap_answers",
                 "awaiting_prepared_question_round_answer",
@@ -14938,6 +20091,197 @@ def _clarification_boundary_result(
                 "invalid clarification boundary",
                 "the clarification-required boundary lost its exact remaining gaps",
             )
+    elif boundary == "source_set_qualification_complete":
+        closure = result.get("source_projection_closure")
+        qualification = result.get("source_set_qualification")
+        closure_outcomes = (
+            closure.get("outcomes") if isinstance(closure, dict) else None
+        )
+        qualification_outcomes = (
+            qualification.get("outcomes")
+            if isinstance(qualification, dict)
+            else None
+        )
+        if (
+            result.get("status") != "source_set_qualification_complete"
+            or result.get("stopped") != "source_set_qualification_complete"
+            or not isinstance(closure_outcomes, list)
+            or not isinstance(qualification_outcomes, list)
+            or qualification.get("qualification")
+            not in {
+                "readable_source_set_complete",
+                "readable_source_set_incomplete",
+            }
+            or qualification.get("source_count") != len(closure_outcomes)
+            or len(qualification_outcomes) != len(closure_outcomes)
+            or any(not isinstance(item, dict) for item in closure_outcomes)
+            or any(not isinstance(item, dict) for item in qualification_outcomes)
+            or [item.get("source_id") for item in qualification_outcomes]
+            != [item.get("source_id") for item in closure_outcomes]
+            or any(
+                item.get("qualification")
+                not in source_projection_qualification.QUALIFICATIONS
+                for item in qualification_outcomes
+                if isinstance(item, dict)
+            )
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the source-set boundary lost its ordered adapter qualifications",
+            )
+    elif boundary == "qualification_admission_complete":
+        qualification = result.get("source_set_qualification")
+        route = result.get("route")
+        obligations = result.get("clarification_obligations")
+        if (
+            result.get("status") != "qualification_admission_complete"
+            or result.get("stopped") != "qualification_admission_complete"
+            or route not in {
+                "first_layer_complete",
+                "clarification_required",
+            }
+            or not isinstance(qualification, dict)
+            or not isinstance(obligations, list)
+            or (route == "first_layer_complete" and obligations)
+            or (route == "clarification_required" and not obligations)
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the qualification admission lost its terminal route or exact obligations",
+            )
+    elif boundary == "qualification_answers_complete":
+        if (
+            result.get("status") != "ready_for_qualification_assessment"
+            or result.get("stopped") != "qualification_question_round_answered"
+            or not isinstance(result.get("question_count"), int)
+            or result.get("answered_question_count") != result.get("question_count")
+            or not isinstance(result.get("answer_source_ids"), list)
+            or len(result["answer_source_ids"]) != result["question_count"]
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the qualification answer round lost its complete ordered source evidence",
+            )
+    elif boundary == "qualification_answer_assessment_complete":
+        assessment = result.get("assessment")
+        if (
+            result.get("status")
+            != "qualification_answer_assessment_complete"
+            or result.get("stopped")
+            != "qualification_answer_assessment_recorded"
+            or not isinstance(assessment, dict)
+            or assessment.get("complete") is not True
+            or assessment.get("route")
+            not in {
+                "ready_for_qualification_admission",
+                "ready_for_qualification_follow_up",
+            }
+            or not isinstance(assessment.get("assessments"), list)
+            or assessment.get("assessment_count")
+            != len(assessment["assessments"])
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the qualification assessment lost its complete evidence-bound outcome set",
+            )
+    elif boundary == "qualification_resolution_admission_complete":
+        resolutions = result.get("resolutions")
+        follow_ups = result.get("follow_ups")
+        if (
+            result.get("status")
+            != "qualification_resolution_admission_complete"
+            or result.get("stopped")
+            != "qualification_resolution_admission_recorded"
+            or result.get("complete") is not True
+            or not isinstance(resolutions, list)
+            or not isinstance(follow_ups, list)
+            or result.get("resolution_count") != len(resolutions)
+            or result.get("follow_up_count") != len(follow_ups)
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the qualification admission lost its exact resolution and follow-up sets",
+            )
+    elif boundary == "qualification_obligation_closure_complete":
+        if (
+            result.get("status") != "qualification_obligation_closure_complete"
+            or result.get("stopped") != "qualification_obligation_closure_recorded"
+            or result.get("reconciled") is not True
+            or result.get("route")
+            not in {
+                "all_obligations_resolved",
+                "all_obligations_accounted",
+                "follow_up_required",
+            }
+            or not isinstance(result.get("resolved_obligation_ids"), list)
+            or not isinstance(result.get("unresolved_obligation_ids"), list)
+            or result.get("resolved_count")
+            != len(result["resolved_obligation_ids"])
+            or result.get("unresolved_count")
+            != len(result["unresolved_obligation_ids"])
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the qualification closure lost its exact resolved and unresolved obligation sets",
+            )
+    elif boundary in {
+        "first_layer_complete",
+        "first_layer_complete_with_preserved_gaps",
+        "qualification_follow_up_required",
+    }:
+        expected_disposition = (
+            boundary
+            if boundary
+            in {
+                "first_layer_complete",
+                "first_layer_complete_with_preserved_gaps",
+            }
+            else "clarification_required"
+        )
+        remaining = result.get("remaining_gaps")
+        if (
+            result.get("status") != expected_disposition
+            or result.get("stopped") != "effective_first_layer_terminal_recorded"
+            or result.get("decided") is not True
+            or result.get("disposition") != expected_disposition
+            or not isinstance(remaining, list)
+            or result.get("remaining_gap_count") != len(remaining)
+            or (
+                boundary
+                in {
+                    "first_layer_complete",
+                    "first_layer_complete_with_preserved_gaps",
+                }
+                and remaining
+            )
+            or (
+                boundary == "first_layer_complete_with_preserved_gaps"
+                and (
+                    not isinstance(result.get("preserved_gaps"), list)
+                    or not result["preserved_gaps"]
+                    or result.get("preserved_gap_count")
+                    != len(result["preserved_gaps"])
+                )
+            )
+            or (boundary == "qualification_follow_up_required" and not remaining)
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the effective terminal lost its exact current source-gap disposition",
+            )
+    elif boundary == "qualification_followup_admission_complete":
+        obligations = result.get("clarification_obligations")
+        if (
+            result.get("status") != "qualification_followup_admission_complete"
+            or result.get("stopped") != "qualification_followup_admission_recorded"
+            or result.get("round") != 2
+            or not isinstance(obligations, list)
+            or not obligations
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the follow-up admission lost its exact nonempty next-round obligations",
+            )
     elif boundary == "additional_source_projection_pending":
         if (
             result.get("status") != "ready_for_projection"
@@ -14953,21 +20297,73 @@ def _clarification_boundary_result(
     elif boundary == "first_source_projection_complete":
         projection = result.get("projection")
         method = projection.get("method") if isinstance(projection, dict) else None
+        coverage = projection.get("coverage") if isinstance(projection, dict) else None
+        spreadsheet_accounted = (
+            method == "spreadsheet_ooxml_v1"
+            and isinstance(coverage, dict)
+            and coverage.get("status") in {"complete", "partial"}
+            and isinstance(coverage.get("source_units"), int)
+            and isinstance(coverage.get("represented_units"), int)
+            and isinstance(coverage.get("gap_units"), int)
+            and coverage["represented_units"] + coverage["gap_units"]
+            == coverage["source_units"]
+            and isinstance(coverage.get("parts"), list)
+            and len(coverage["parts"]) == coverage["source_units"]
+        )
         if (
             result.get("status") != "ready_for_projection_assessment"
             or result.get("stopped") not in {
                 "first_verbatim_projection_recorded",
                 "first_pdf_projection_recorded",
+                "first_spreadsheet_projection_recorded",
             }
             or not isinstance(result.get("source"), dict)
             or not isinstance(projection, dict)
-            or method not in {"verbatim_utf8", "pdf_visible_pages"}
-            or not isinstance(projection.get("coverage"), dict)
-            or projection["coverage"].get("status") != "complete"
+            or method not in {
+                "verbatim_utf8", "pdf_visible_pages", "spreadsheet_ooxml_v1"
+            }
+            or not isinstance(coverage, dict)
+            or (
+                method != "spreadsheet_ooxml_v1"
+                and coverage.get("status") != "complete"
+            )
+            or (method == "spreadsheet_ooxml_v1" and not spreadsheet_accounted)
         ):
             return _blocked(
                 "invalid clarification boundary",
-                "the first-source boundary lost its verbatim readable projection",
+                "the first-source boundary lost its accounted readable projection",
+            )
+    elif boundary == "additional_source_projection_complete":
+        projection = result.get("projection")
+        if (
+            result.get("status") != "ready_for_projection_assessment"
+            or result.get("stopped") != "additional_source_projection_recorded"
+            or not isinstance(result.get("source"), dict)
+            or not isinstance(projection, dict)
+            or projection.get("method") != "spreadsheet_ooxml_v1"
+            or not isinstance(result.get("reserved_projection"), dict)
+            or not isinstance(result.get("lineage"), dict)
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the additional-source boundary lost its spreadsheet projection identity",
+            )
+    elif boundary == "source_conversion_failed":
+        projection = result.get("projection")
+        if (
+            result.get("status") != "ready_for_projection"
+            or result.get("stopped") not in {
+                "first_spreadsheet_projection_failed",
+                "additional_spreadsheet_projection_failed",
+            }
+            or not isinstance(result.get("source"), dict)
+            or not isinstance(projection, dict)
+            or projection.get("status") != "failed"
+            or projection.get("method") != "spreadsheet_ooxml_v1"
+        ):
+            return _blocked(
+                "invalid clarification boundary",
+                "the source-conversion failure lost its source-bound audit outcome",
             )
     elif boundary == "additional_source_gap_assessment_complete":
         assessment = result.get("assessment")
@@ -15014,17 +20410,37 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
             return _clarification_boundary_result(
                 result, "needs_model_interview"
             )
+        if (
+            result.get("status") == "needs_operator"
+            and result.get("stopped") == "awaiting_source_collection_decision"
+        ):
+            return _clarification_boundary_result(
+                result, "source_collection_answer_required"
+            )
         if result.get("status") == "needs_operator":
             return _clarification_boundary_result(
                 result, "needs_operator_answer"
             )
         stopped = result.get("stopped")
+        if stopped == "source_collection_complete":
+            result = run_source_set_qualification(work)
+            continue
+        if stopped == "source_set_qualification_complete":
+            result = run_qualification_admission(work)
+            continue
+        if stopped == "qualification_admission_complete":
+            if result.get("route") == "clarification_required":
+                result = request_qualification_question_round(work)
+                continue
+            result = run_qualification_obligation_closure(work)
+            continue
         if stopped == "clarification_continuation_complete":
             return _clarification_boundary_result(
                 result, "clarification_complete"
             )
         if stopped in {
             "first_verbatim_projection_recorded",
+            "first_spreadsheet_projection_recorded",
         }:
             return _clarification_boundary_result(
                 result, "first_source_projection_complete"
@@ -15041,10 +20457,34 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
             return _clarification_boundary_result(
                 result, "source_conversion_required"
             )
+        if stopped in {
+            "first_spreadsheet_projection_failed",
+            "additional_spreadsheet_projection_failed",
+        }:
+            return _clarification_boundary_result(
+                result, "source_conversion_failed"
+            )
         if stopped == "additional_source_frozen":
             result = drive(work, opening, purpose, project_source=True)
             continue
         elif stopped == "additional_source_projection_recorded":
+            state, _entries, load_error = _load_bound(
+                work, opening.encode("utf-8")
+            )
+            if load_error:
+                return load_error
+            assert state is not None
+            if _qualification_answer_source_active(state):
+                result = drive(work, opening, purpose)
+                continue
+            projection = result.get("projection")
+            if (
+                isinstance(projection, dict)
+                and projection.get("method") == "spreadsheet_ooxml_v1"
+            ):
+                return _clarification_boundary_result(
+                    result, "additional_source_projection_complete"
+                )
             state, entries, load_error = _load_bound(
                 work, opening.encode("utf-8")
             )
@@ -15109,6 +20549,31 @@ def run_clarification_boundary(work: Path) -> dict[str, object]:
             result = drive(
                 work, opening, purpose, assess_gap_answers=True
             )
+        elif stopped == "qualification_question_round_answered":
+            result = request_qualification_answer_assessment(work)
+            continue
+        elif stopped == "qualification_answer_assessment_recorded":
+            result = run_qualification_resolution_admission(work)
+            continue
+        elif stopped == "qualification_resolution_admission_recorded":
+            result = run_qualification_obligation_closure(work)
+            continue
+        elif stopped == "qualification_obligation_closure_recorded":
+            result = run_effective_first_layer_terminal(work)
+            continue
+        elif stopped == "effective_first_layer_terminal_recorded":
+            if result.get("status") in {
+                "first_layer_complete",
+                "first_layer_complete_with_preserved_gaps",
+            }:
+                return _clarification_boundary_result(
+                    result, str(result["status"])
+                )
+            result = run_qualification_followup_admission(work)
+            continue
+        elif stopped == "qualification_followup_admission_recorded":
+            result = request_qualification_followup_question_round(work)
+            continue
         elif stopped in {
             "gap_answer_assessment_recorded",
             "prepared_question_round_assessment_recorded",
@@ -15154,6 +20619,62 @@ def run_operator_turn(
             "operator turn unavailable",
             "the current question does not have a supported answer type",
         )
+    qualification_question = str(question["id"]).startswith(
+        "qualification-clarification-answer-"
+    )
+    if qualification_question:
+        prepared = qualification_operator_disposition.prepare(question)
+        disposition_question = prepared.get("question")
+        if prepared.get("prepared") is not True or not isinstance(
+            disposition_question, dict
+        ):
+            return _blocked(
+                "operator turn unavailable", str(prepared.get("why"))
+            )
+        output_fn(f"Question: {disposition_question['asks']}")
+        output_fn("Allowed actions: provide_answer, preserve_gap")
+        try:
+            action = input_fn("Answer: ")
+        except EOFError:
+            return _blocked(
+                "operator answer unavailable", "no operator disposition was supplied"
+            )
+        confirmed = run_clarification_boundary(work)
+        if (
+            confirmed.get("boundary") != "needs_operator_answer"
+            or confirmed.get("question") != question
+            or confirmed.get("round") != boundary.get("round")
+            or confirmed.get("answered_question_count")
+            != boundary.get("answered_question_count")
+        ):
+            return _blocked(
+                "operator question changed",
+                "the active question changed before its disposition could be preserved",
+            )
+        admitted_disposition = qualification_operator_disposition.admit(
+            question, action
+        )
+        if admitted_disposition.get("accepted") is not True:
+            return _blocked(
+                "qualification operator disposition refused",
+                str(admitted_disposition.get("why")),
+            )
+        if action == "preserve_gap":
+            try:
+                opening = (work / "sources" / "source-000001.txt").read_text(
+                    encoding="utf-8"
+                )
+            except OSError as error:
+                return _blocked("operator turn unavailable", str(error))
+            state, entries, load_error = _load_bound(
+                work, opening.encode("utf-8")
+            )
+            if load_error:
+                return load_error
+            assert state is not None
+            return _preserve_qualification_obligation_as_gap(
+                work, state, entries, question
+            )
     output_fn({
         "local_file": "Answer type: one existing local file path",
         "url": "Answer type: one public HTTP(S) URL",
@@ -15206,6 +20727,9 @@ def _resume(
     continue_clarification: bool,
     source_url: str | None,
     gap_url: str | None,
+    begin_source_collection: bool,
+    source_collection_action: str | None,
+    source_collection_kind: str | None,
 ) -> dict[str, object]:
     state, entries, error = _load_bound(work, opening_bytes)
     if error:
@@ -15218,6 +20742,35 @@ def _resume(
             "supply either one local file or one URL as the first source, not both",
         )
     source_supplied = source is not None or source_url is not None
+    if phase == "effective_first_layer_terminal_recorded" and begin_source_collection:
+        if (
+            source_supplied
+            or project_source
+            or clarify_gap
+            or gap_answer is not None
+            or gap_file is not None
+            or gap_url is not None
+            or resolve_gap
+            or assess_gap_answers
+            or conduct_question_round
+            or continue_clarification
+            or source_collection_action is not None
+            or source_collection_kind is not None
+        ):
+            return _blocked(
+                "source collection reopen invocation invalid",
+                "reopen one completed intake without combining another action",
+            )
+        return _reopen_completed_source_collection(work, state, entries)
+    if (
+        begin_source_collection
+        or source_collection_action is not None
+        or source_collection_kind is not None
+    ) and phase not in SOURCE_COLLECTION_TERMINAL_PHASES | SOURCE_COLLECTION_PHASES:
+        return _blocked(
+            "source collection unavailable",
+            "begin source collection only after a source has a terminal projection outcome",
+        )
     gap_inputs = sum(
         value is not None for value in (gap_answer, gap_file, gap_url)
     )
@@ -15281,6 +20834,7 @@ def _resume(
         )
     if gap_input_supplied and phase not in {
         *gap_input_phases,
+        "awaiting_qualification_clarification_answers",
         "awaiting_prepared_question_round_answers",
         "prepared_question_round_answered",
         "additional_source_frozen",
@@ -15370,6 +20924,17 @@ def _resume(
         and state["gap_resolution"].get("mode") == "assessed_answer"
     )
     if phase in {
+        "formulating_qualification_question_round",
+        "awaiting_qualification_clarification_answers",
+        "qualification_question_round_answered",
+        "assessing_qualification_answers",
+        "qualification_answer_assessment_recorded",
+        "qualification_resolution_admission_recorded",
+        "qualification_obligation_closure_recorded",
+        "effective_first_layer_terminal_recorded",
+        "qualification_followup_admission_recorded",
+        "formulating_qualification_followup_question_round",
+        "awaiting_qualification_followup_answers",
         "formulating_gap_question_round",
         "awaiting_gap_answers",
         "gap_question_round_answered",
@@ -15386,12 +20951,15 @@ def _resume(
         "additional_source_frozen",
         "interviewing_additional_source_projection",
         "additional_source_projection_recorded",
+        "additional_spreadsheet_projection_failed",
         "assessing_additional_source_gap",
         "additional_source_gap_assessment_recorded",
         "additional_source_element_gap_admitted",
         "interviewing_pdf_page_projection",
         "first_pdf_projection_recorded",
         "first_pdf_projection_failed",
+        "first_spreadsheet_projection_recorded",
+        "first_spreadsheet_projection_failed",
     } or assessed_resolution_phase:
         supported_ledger_length = (
             len(entries) >= 8
@@ -15399,13 +20967,19 @@ def _resume(
                 "interviewing_pdf_page_projection",
                 "first_pdf_projection_recorded",
                 "first_pdf_projection_failed",
+                "first_spreadsheet_projection_recorded",
+                "first_spreadsheet_projection_failed",
             }
             else len(entries) >= 11
         )
+    if phase in SOURCE_COLLECTION_PHASES:
+        supported_ledger_length = len(entries) >= 8
     if phase not in {
         "awaiting_first_source", "clarifying_intake_purpose", "first_source_frozen",
         "interviewing_first_projection", "first_projection_recorded",
         "first_verbatim_projection_recorded",
+        "first_spreadsheet_projection_recorded",
+        "first_spreadsheet_projection_failed",
         "formulating_gap_question", "awaiting_gap_answer", "gap_operator_source_recorded",
         "formulating_gap_question_round", "awaiting_gap_answers",
         "gap_question_round_answered",
@@ -15424,12 +20998,27 @@ def _resume(
         "additional_source_frozen",
         "interviewing_additional_source_projection",
         "additional_source_projection_recorded",
+        "additional_spreadsheet_projection_failed",
         "assessing_additional_source_gap",
         "additional_source_gap_assessment_recorded",
         "additional_source_element_gap_admitted",
         "interviewing_pdf_page_projection",
         "first_pdf_projection_recorded",
         "first_pdf_projection_failed",
+        "first_spreadsheet_projection_recorded",
+        "first_spreadsheet_projection_failed",
+        "formulating_qualification_question_round",
+        "awaiting_qualification_clarification_answers",
+        "qualification_question_round_answered",
+        "assessing_qualification_answers",
+        "qualification_answer_assessment_recorded",
+        "qualification_resolution_admission_recorded",
+        "qualification_obligation_closure_recorded",
+        "effective_first_layer_terminal_recorded",
+        "qualification_followup_admission_recorded",
+        "formulating_qualification_followup_question_round",
+        "awaiting_qualification_followup_answers",
+        *SOURCE_COLLECTION_PHASES,
     } or not supported_ledger_length:
         return _blocked("invalid intake state", "the saved purpose stage is unsupported")
     result_path = work / "purpose-interview" / "assessment.json"
@@ -15476,6 +21065,201 @@ def _resume(
         or entries[4].get("result") != assessment
     ):
         return _blocked("invalid ledger", "the completed assessment does not match its preserved result")
+
+    if phase == "formulating_qualification_question_round":
+        if (
+            source_supplied
+            or project_source
+            or clarify_gap
+            or gap_input_supplied
+            or resolve_gap
+            or assess_gap_answers
+            or conduct_question_round
+            or continue_clarification
+            or begin_source_collection
+            or source_collection_action is not None
+            or source_collection_kind is not None
+        ):
+            return _blocked(
+                "qualification question round active",
+                "finish the current code-controlled question formulation without another intake action",
+            )
+        try:
+            relative_dir = _qualification_question_round_directory(
+                state.get("qualification_question_round")
+            )
+        except ValueError as error:
+            return _blocked("invalid qualification question round", str(error))
+        result_path = work / relative_dir / "question-round.json"
+        if not result_path.exists():
+            return _qualification_question_round_model_result(state, work)
+        return _consume_qualification_question_round(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+
+    if phase == "awaiting_qualification_clarification_answers":
+        qualification_answers = state.get("qualification_question_answers", [])
+        round_error = (
+            _validate_followup_qualification_answer_history(
+                work, state, entries, purpose_bytes.decode("utf-8")
+            )
+            if state.get("qualification_round_number", 1) > 1
+            else
+            _validate_qualification_answer_history(
+                work, state, entries, purpose_bytes.decode("utf-8")
+            )
+            if isinstance(qualification_answers, list) and qualification_answers
+            else _validate_qualification_question_round(
+                work, state, entries, purpose_bytes.decode("utf-8")
+            )
+        )
+        if round_error:
+            return round_error
+        if source_supplied or project_source or clarify_gap or any((
+            resolve_gap,
+            assess_gap_answers,
+            conduct_question_round,
+            continue_clarification,
+            begin_source_collection,
+        )) or source_collection_action is not None or source_collection_kind is not None:
+            return _blocked(
+                "qualification clarification answer invocation refused",
+                (
+                    "answer only the active qualification question with its declared text, "
+                    "local-file, or URL channel"
+                ),
+            )
+        if gap_input_supplied:
+            return _accept_qualification_question_answer(
+                work, state, entries, gap_answer, gap_file, gap_url
+            )
+        return _qualification_question_round_operator_result(state, work)
+
+    if phase == "qualification_question_round_answered":
+        history_error = _validate_qualification_answer_history(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+        if history_error:
+            return history_error
+        if any((
+            source_supplied,
+            project_source,
+            clarify_gap,
+            gap_input_supplied,
+            resolve_gap,
+            assess_gap_answers,
+            conduct_question_round,
+            continue_clarification,
+            begin_source_collection,
+        )) or source_collection_action is not None or source_collection_kind is not None:
+            return _blocked(
+                "qualification question round already answered",
+                "resume without another answer; every prepared question already has immutable evidence",
+            )
+        return _qualification_question_round_answered_result(state, work)
+
+    if phase == "assessing_qualification_answers":
+        request_error = _qualification_answer_assessment_request_error(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+        if request_error:
+            return request_error
+        if (
+            source_supplied
+            or project_source
+            or clarify_gap
+            or gap_input_supplied
+            or resolve_gap
+            or assess_gap_answers
+            or conduct_question_round
+            or continue_clarification
+            or begin_source_collection
+            or source_collection_action is not None
+            or source_collection_kind is not None
+        ):
+            return _blocked(
+                "qualification answer assessment active",
+                "finish the current code-controlled assessment without another intake action",
+            )
+        if not (
+            _qualification_answer_assessment_directory(work, state)
+            / "assessment.json"
+        ).exists():
+            return _qualification_answer_assessment_model_result(state, work)
+        return _consume_qualification_answer_assessment(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+
+    if phase == "qualification_answer_assessment_recorded":
+        completed_error = _validate_completed_qualification_answer_assessment(
+            work, state, entries, purpose_bytes.decode("utf-8")
+        )
+        if completed_error:
+            return completed_error
+        if (
+            source_supplied
+            or project_source
+            or clarify_gap
+            or gap_input_supplied
+            or resolve_gap
+            or assess_gap_answers
+            or conduct_question_round
+            or continue_clarification
+            or begin_source_collection
+            or source_collection_action is not None
+            or source_collection_kind is not None
+        ):
+            return _blocked(
+                "qualification answer assessment already completed",
+                "resume without another intake action; the complete assessment is immutable",
+            )
+        return _qualification_answer_assessment_result(state, work)
+
+    if phase == "qualification_resolution_admission_recorded":
+        return run_qualification_resolution_admission(work)
+
+    if phase == "qualification_obligation_closure_recorded":
+        return run_qualification_obligation_closure(work)
+
+    if phase == "effective_first_layer_terminal_recorded":
+        return run_effective_first_layer_terminal(work)
+
+    if phase == "qualification_followup_admission_recorded":
+        return run_qualification_followup_admission(work)
+
+    if phase == "formulating_qualification_followup_question_round":
+        return _qualification_followup_question_model_result(state, work)
+
+    if phase == "awaiting_qualification_followup_answers":
+        return _qualification_followup_operator_result(state, work)
+
+    if _qualification_answer_source_active(state):
+        if (
+            source_supplied
+            or gap_answer is not None
+            or clarify_gap
+            or resolve_gap
+            or assess_gap_answers
+            or conduct_question_round
+            or continue_clarification
+            or begin_source_collection
+            or source_collection_action is not None
+            or source_collection_kind is not None
+        ):
+            return _blocked(
+                "qualification answer source invocation refused",
+                "finish projecting the active answer source without another intake action",
+            )
+        return _resume_qualification_answer_source(
+            work,
+            state,
+            entries,
+            purpose_bytes.decode("utf-8"),
+            supplied=gap_file,
+            supplied_url=gap_url,
+            project_source=project_source,
+        )
+
     expected_question = (
         FIRST_SOURCE_QUESTION
         if assessment["sufficient"] == "yes"
@@ -15524,6 +21308,42 @@ def _resume(
         assert source is not None
         return _acquire_first_source(work, state, entries, source)
 
+    collection = state.get("source_collection")
+    collection_active = (
+        isinstance(collection, dict)
+        and collection.get("mode") == "independent_multi_source"
+    )
+    if begin_source_collection or collection_active:
+        if any((
+            clarify_gap,
+            gap_input_supplied,
+            resolve_gap,
+            assess_gap_answers,
+            conduct_question_round,
+            continue_clarification,
+        )):
+            return _blocked(
+                "source collection invocation invalid",
+                "source collection cannot be combined with semantic gap assessment",
+            )
+        return _resume_source_collection(
+            work,
+            state,
+            entries,
+            purpose_bytes.decode("utf-8"),
+            source,
+            source_url,
+            project_source,
+            begin_source_collection,
+            source_collection_action,
+            source_collection_kind,
+        )
+    if source_collection_action is not None or source_collection_kind is not None:
+        return _blocked(
+            "source collection unavailable",
+            "begin source collection after the current source reaches a terminal projection outcome",
+        )
+
     frozen_error = _validate_frozen_first_source(
         work, state, entries, source, source_url
     )
@@ -15562,6 +21382,57 @@ def _resume(
                 "the frozen first source already has its immutable readable projection",
             )
         return _first_verbatim_projection_ready_result(state, work)
+
+    if phase == "first_spreadsheet_projection_recorded":
+        spreadsheet_error = _validate_spreadsheet_projection(
+            work, state, entries, additional=False
+        )
+        if spreadsheet_error:
+            return spreadsheet_error
+        if any(
+            (
+                source_supplied,
+                project_source,
+                clarify_gap,
+                gap_input_supplied,
+                resolve_gap,
+                assess_gap_answers,
+                conduct_question_round,
+                continue_clarification,
+            )
+        ):
+            return _blocked(
+                "first spreadsheet projection already recorded",
+                "the frozen workbook already has its immutable readable projection",
+            )
+        return _spreadsheet_result(
+            state, work, additional=False, failed=False
+        )
+
+    if phase == "first_spreadsheet_projection_failed":
+        spreadsheet_error = _validate_spreadsheet_failure(
+            work, state, entries, additional=False
+        )
+        if spreadsheet_error:
+            return spreadsheet_error
+        if any(
+            (
+                project_source,
+                clarify_gap,
+                gap_input_supplied,
+                resolve_gap,
+                assess_gap_answers,
+                conduct_question_round,
+                continue_clarification,
+            )
+        ):
+            return _blocked(
+                "spreadsheet conversion failure already recorded",
+                "the failed outcome is immutable; preserve a corrected workbook as a new source",
+            )
+        return _spreadsheet_result(
+            state, work, additional=False, failed=True
+        )
 
     if phase in {
         "interviewing_pdf_page_projection",
@@ -15673,6 +21544,7 @@ def _resume(
         "additional_source_frozen",
         "interviewing_additional_source_projection",
         "additional_source_projection_recorded",
+        "additional_spreadsheet_projection_failed",
         "assessing_additional_source_gap",
         "additional_source_gap_assessment_recorded",
         "additional_source_element_gap_admitted",
@@ -15687,6 +21559,11 @@ def _resume(
         )
         if recorded_error:
             return recorded_error
+    recovery_result = _recover_dropped_locked_gap_participant(
+        work, state, entries
+    )
+    if recovery_result is not None:
+        return recovery_result
     prepared_history_error = _validate_prepared_question_round_history(
         work, state, entries, purpose_bytes.decode("utf-8")
     )
@@ -15922,6 +21799,27 @@ def _resume(
                     "the additional source already has its immutable readable projection",
                 )
             return _additional_projection_ready_result(state, work)
+        if phase == "additional_spreadsheet_projection_failed":
+            failure_error = _validate_spreadsheet_failure(
+                work, state, entries, additional=True
+            )
+            if failure_error:
+                return failure_error
+            if any((
+                project_source,
+                clarify_gap,
+                resolve_gap,
+                assess_gap_answers,
+                conduct_question_round,
+                continue_clarification,
+            )) or gap_input_supplied:
+                return _blocked(
+                    "spreadsheet conversion failure already recorded",
+                    "the failed outcome is immutable; preserve a corrected workbook as a new source",
+                )
+            return _spreadsheet_result(
+                state, work, additional=True, failed=True
+            )
         if project_source:
             return _request_additional_projection(work, state, entries)
         if (
@@ -16386,6 +22284,9 @@ def drive(
     continue_clarification: bool = False,
     source_url: str | None = None,
     gap_url: str | None = None,
+    begin_source_collection: bool = False,
+    source_collection_action: str | None = None,
+    source_collection_kind: str | None = None,
 ) -> dict[str, object]:
     opening_bytes = opening.encode("utf-8")
     if not opening.strip():
@@ -16407,6 +22308,9 @@ def drive(
             continue_clarification,
             source_url,
             gap_url,
+            begin_source_collection,
+            source_collection_action,
+            source_collection_kind,
         )
     if (
         purpose is not None
@@ -16421,6 +22325,9 @@ def drive(
         or assess_gap_answers
         or conduct_question_round
         or continue_clarification
+        or begin_source_collection
+        or source_collection_action is not None
+        or source_collection_kind is not None
     ):
         return _blocked("intake not started", "start the intake before supplying its purpose or source")
     if work.exists() and not work.is_dir():
@@ -16577,6 +22484,21 @@ def main() -> int:
         help="formulate the code-bound operator question round for current gaps",
     )
     parser.add_argument(
+        "--run-qualification-question-round",
+        action="store_true",
+        help="formulate one code-bound operator question for every admitted obligation",
+    )
+    parser.add_argument(
+        "--run-qualification-answer-assessment",
+        action="store_true",
+        help="assess every preserved qualification answer through its bound obligation",
+    )
+    parser.add_argument(
+        "--run-qualification-followup-question-round",
+        action="store_true",
+        help="formulate one isolated question round for current follow-up obligations",
+    )
+    parser.add_argument(
         "--assess-gap-answers",
         action="store_true",
         help="request assessment of every preserved question-round answer",
@@ -16622,6 +22544,9 @@ def main() -> int:
         args.run_projection_verification,
         args.run_relationship_correction,
         args.run_correction_verification,
+        args.run_qualification_question_round,
+        args.run_qualification_answer_assessment,
+        args.run_qualification_followup_question_round,
         args.run_gap_clarification,
         args.run_gap_answer_assessment,
         args.run_additional_source_gap_assessment,
@@ -16821,6 +22746,39 @@ def main() -> int:
             )
         else:
             result = run_relationship_correction_verification(args.work)
+    elif args.run_qualification_question_round:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
+            or args.project_source or args.clarify_gap or args.assess_gap_answers
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run qualification question formulation with only --work and --run-qualification-question-round",
+            )
+        else:
+            result = run_qualification_question_round(args.work)
+    elif args.run_qualification_answer_assessment:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
+            or args.project_source or args.clarify_gap or args.assess_gap_answers
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run qualification answer assessment with only --work and --run-qualification-answer-assessment",
+            )
+        else:
+            result = run_qualification_answer_assessment(args.work)
+    elif args.run_qualification_followup_question_round:
+        if (
+            any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
+            or args.project_source or args.clarify_gap or args.assess_gap_answers
+        ):
+            result = _blocked(
+                "interview invocation invalid",
+                "run qualification follow-up formulation with only --work and --run-qualification-followup-question-round",
+            )
+        else:
+            result = run_qualification_followup_question_round(args.work)
     elif args.run_gap_clarification:
         if (
             any(value is not None for value in (args.opening, args.purpose, args.source, args.source_url, args.gap_answer, args.gap_url))
@@ -16903,6 +22861,14 @@ def main() -> int:
     return {
         "ready_for_projection": 0,
         "ready_for_projection_assessment": 0,
+        "ready_for_qualification_assessment": 0,
+        "qualification_answer_assessment_complete": 0,
+        "qualification_resolution_admission_complete": 0,
+        "qualification_obligation_closure_complete": 0,
+        "first_layer_complete": 0,
+        "first_layer_complete_with_preserved_gaps": 0,
+        "clarification_required": 0,
+        "qualification_followup_admission_complete": 0,
         "ready_for_operator_interview": 0,
         "source_projection_closure": 0,
         "waiting_for_model": 2,

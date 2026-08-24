@@ -10,19 +10,23 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 try:
-    from scripts.prevention_contract import canonical_bytes, sha256_bytes
+    from scripts.prevention_contract import (
+        canonical_bytes, resolve_repository_source_path, sha256_bytes,
+    )
 except ModuleNotFoundError:  # direct script execution
-    from prevention_contract import canonical_bytes, sha256_bytes
+    from prevention_contract import (
+        canonical_bytes, resolve_repository_source_path, sha256_bytes,
+    )
 
 
 ROOT = Path(__file__).resolve().parents[1]
-CANONICAL_ROOT = Path(os.environ.get("MK_PREVENTION_CANONICAL_ROOT", ROOT))
+CANONICAL_ROOT = Path.home() / "memory-knowledge"
 OUTPUT = ROOT / "Tasks/prevention-system-completion/owner-source-verification.json"
 TRACE_DIR = ROOT / "Tasks/prevention-system-completion/owner-acceptance-artifacts"
 CONTRACTS = ROOT / "Tasks/prevention-system-completion/owner-executable-contracts.json"
-PROVIDER_PATH = CANONICAL_ROOT / "scripts/prevention_source_probes.py"
-PRODUCER_PATH = CANONICAL_ROOT / "scripts/prevention_owner_acceptance_producer.py"
-FIXTURES_PATH = CANONICAL_ROOT / "scripts/prevention_owner_acceptance_fixtures.py"
+PROVIDER_PATH = ROOT / "scripts/prevention_source_probes.py"
+PRODUCER_PATH = ROOT / "scripts/prevention_owner_acceptance_producer.py"
+FIXTURES_PATH = ROOT / "scripts/prevention_owner_acceptance_fixtures.py"
 
 PROOF_KINDS = (
     "controller_runtime_positive",
@@ -78,19 +82,27 @@ def _source_root_enabled(owner_id: str) -> bool:
     return not selected or owner_id in selected
 
 
-def _binding_current(binding: Any, *, use_source_root: bool = True) -> bool:
-    if not _binding_shape_valid(binding):
-        return False
-    path = Path(str(binding["path"]))
+def _binding_path(path_value: str, *, use_source_root: bool) -> Path:
+    repository_root = ROOT
+    canonical_root = CANONICAL_ROOT
     source_root_value = os.environ.get("MK_PREVENTION_SOURCE_ROOT")
     canonical_root_value = os.environ.get("MK_PREVENTION_CANONICAL_ROOT")
     if use_source_root and source_root_value and canonical_root_value:
-        try:
-            path = Path(source_root_value) / path.relative_to(
-                Path(canonical_root_value)
-            )
-        except ValueError:
-            pass
+        repository_root = Path(source_root_value)
+        canonical_root = Path(canonical_root_value)
+    return resolve_repository_source_path(
+        path_value,
+        repository_root=repository_root,
+        canonical_repository_root=canonical_root,
+    )
+
+
+def _binding_current(binding: Any, *, use_source_root: bool = True) -> bool:
+    if not _binding_shape_valid(binding):
+        return False
+    path = _binding_path(
+        str(binding["path"]), use_source_root=use_source_root,
+    )
     return path.is_file() and sha256_bytes(path.read_bytes()) == binding["sha256"]
 
 
@@ -269,7 +281,13 @@ def _load_trace(
     ):
         raise AcceptanceError("owner-proof-binding-invalid")
     required_tests = {str(PRODUCER_PATH), str(FIXTURES_PATH)}
-    if {str(row["path"]) for row in test_bindings} != required_tests:
+    resolved_tests = {
+        str(_binding_path(
+            str(row["path"]), use_source_root=use_source_root,
+        ))
+        for row in test_bindings
+    }
+    if require_current_bindings and resolved_tests != required_tests:
         raise AcceptanceError("owner-proof-producer-binding-invalid")
     if require_current_bindings and any(
         not _binding_current(row, use_source_root=use_source_root)
@@ -470,7 +488,7 @@ def verify_owner_report(
         if entry["applicability"] == "NOT_APPLICABLE":
             continue
         trace = load_trace(
-            str(entry["trace_sha256"]), use_source_root=use_source_root
+            str(entry["trace_sha256"]), use_source_root=use_source_root,
         )
         if (
             (trace["profile_id"], trace["proof_kind"]) != key
@@ -539,14 +557,23 @@ def _trace_matches_current_contract(
         and len(trace["source_bindings"]) == len(expected_sources)
         and actual_sources == expected_sources
         and len(test_bindings) == len(expected_tests)
-        and {item["path"] for item in test_bindings} == expected_tests
+        and {
+            str(_binding_path(
+                str(item["path"]),
+                use_source_root=_source_root_enabled(
+                    str(owner_contract["owner_sequence_id"])
+                ),
+            ))
+            for item in test_bindings
+        } == expected_tests
         and all(
             _binding_current(
                 item,
                 use_source_root=_source_root_enabled(
                     str(owner_contract["owner_sequence_id"])
                 ),
-            ) for item in test_bindings
+            )
+            for item in test_bindings
         )
     )
 

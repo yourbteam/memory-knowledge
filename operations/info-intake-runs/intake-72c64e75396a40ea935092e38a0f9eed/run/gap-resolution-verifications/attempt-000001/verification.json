@@ -1,0 +1,13 @@
+{
+  "candidate_sha256": "1a306f21620120fdd98adf1db7f8c96330ec6b723215917c7c13540b652ddcea",
+  "clarification_sha256": "15a958bfea75edf69be3928fdcec03deffedda230d3f70f4642719c181cace0a",
+  "operator_answer_source_sha256": "fafde1a06539c01182d98bbe95cfe491601c817896deb1805b24966cf3082722",
+  "reader": {
+    "harness": "Codex CLI PTY session running the provided local intake controller",
+    "model": "GPT-5 Codex (this fresh independent model instance)"
+  },
+  "reason": "The preserved answer says the pay-period interval is source context and mentions both Jul 1\u201315 and Jul 16\u201331; it does not select a distinct ambiguous participant. In the frozen image, the red note says to pull Paid tx, Photo Rev, Codes Used, Code Fees, and Total net payout from the payout report, and its arrow visibly lands by the Jul 16\u201331 report row. No visible arrow or text establishes a Jul 1\u201315 payout-card-to-itself relationship, so the complete proposed relationship is not supported.",
+  "resolution_sha256": "40b1ec892d9d9ba3cdc78e3d7b8b593f9c968ece26e12c597b2f3f9718746217",
+  "schema_version": 1,
+  "verdict": "not_supported"
+}

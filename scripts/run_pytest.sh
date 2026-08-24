@@ -12,7 +12,7 @@ export PYTHONPYCACHEPREFIX="${cache_root}/pycache"
 export PYTHONDONTWRITEBYTECODE=1
 
 pytest_python="${MK_PYTEST_PYTHON:-${repo_root}/.venv/bin/python}"
-if [[ -x "${pytest_python}" ]]; then
+if [[ -x "${pytest_python}" ]] && "${pytest_python}" -c 'import pytest' >/dev/null 2>&1; then
   exec "${pytest_python}" -m pytest -p no:cacheprovider "$@"
 fi
 
@@ -21,4 +21,4 @@ if ! command -v uv >/dev/null 2>&1; then
   exit 2
 fi
 
-exec uv run pytest -p no:cacheprovider "$@"
+exec uv run --extra dev pytest -p no:cacheprovider "$@"

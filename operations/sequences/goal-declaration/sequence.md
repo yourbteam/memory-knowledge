@@ -3,19 +3,19 @@
 <!-- BEGIN SEMANTIC INTAKE ENTRYPOINT -->
 ## Operator entry point
 
-Declaring or replacing a goal is a zero-argument interview. Run it from the repository the goal
-belongs to:
+After selecting and activating this registered sequence, launch the shared controller with no
+arguments:
 
 ```bash
-python3 ~/memory-knowledge/scripts/goal_tracker.py --repo "$PWD" set
+python3 scripts/sequence_intake_launch.py
 ```
 
-Answer only the semantic questions shown. Every question carries its response format, an example
-and its constraints. Nothing about JSON, flags, file layout or argv is ever asked, and the script
-refuses a KPI whose producer is not a checked-in file.
+Answer only the semantic questions shown. Every question includes its response format, an example,
+and constraints. The controller derives JSON, files, environment, flags, and argv; displays the
+exact prepared operation; and requires a separate yes/no authorization before guarded dispatch.
 
-Any argument-bearing command below is machine-compatibility evidence. Do not compose the store by
-hand: `.goal/goal.json` is written by this script and by nothing else.
+Any argument-bearing commands below are machine-compatibility and verification evidence for the
+deterministic adapter. Operators and agents must not construct or invoke those forms directly.
 <!-- END SEMANTIC INTAKE ENTRYPOINT -->
 
 ## Purpose

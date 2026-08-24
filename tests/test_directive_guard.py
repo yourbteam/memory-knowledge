@@ -5,6 +5,15 @@ import json
 from scripts import directive_guard, script_intake
 
 
+def test_default_directives_path_follows_the_running_controller_checkout():
+    expected = (
+        directive_guard.Path(directive_guard.__file__).resolve().parents[1]
+        / "working-agreement/DIRECTIVES.md"
+    )
+
+    assert directive_guard.DEFAULT_DIRECTIVES_PATH == expected
+
+
 def test_no_argument_read_uses_intake_answers_directly(
     monkeypatch, tmp_path, capsys,
 ):

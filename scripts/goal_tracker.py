@@ -35,6 +35,7 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import subprocess
 import sys
 from datetime import datetime, timezone
@@ -50,6 +51,8 @@ except ModuleNotFoundError:  # direct script execution
 
 SCHEMA_VERSION = 1
 STORE_RELATIVE = Path(".goal") / "goal.json"
+SEQUENCE_INTAKE_DISPATCH_MARKER = "SEQUENCE_INTAKE_DISPATCHED"
+SEQUENCE_INTAKE_ARTIFACT_ROOT = Path("/private/tmp/sequence-intake")
 
 
 # --------------------------------------------------------------------------------------
@@ -193,11 +196,12 @@ GOAL_SPEC = {
                 {
                     "id": "direction",
                     "prompt": "Which way is progress",
-                    "response_format": "up or down.",
-                    "example": "up",
+                    "response_format": "One selection number.",
+                    "example": "1",
                     "constraints": "up when a larger number is better; down when smaller is.",
                     "type": "choice",
                     "choices": ["up", "down"],
+                    "numbered_selection": True,
                     "required": True,
                 },
             ],
@@ -206,9 +210,64 @@ GOAL_SPEC = {
 }
 
 
+def validate_goal_answers(repo: Path, answers: Any) -> dict[str, Any]:
+    """Validate the same exact goal shape for both interview and controller dispatch."""
+
+    if not isinstance(answers, dict) or set(answers) != {
+        "statement", "set_by", "supersede_reason", "kpis",
+    }:
+        raise SystemExit("goal answers must contain statement, set_by, supersede_reason, and kpis")
+    for key in ("statement", "set_by", "supersede_reason"):
+        if not isinstance(answers[key], str) or not answers[key].strip():
+            raise SystemExit(f"goal answer {key!r} must be a non-empty string")
+    kpis = answers["kpis"]
+    if not isinstance(kpis, list) or not kpis:
+        raise SystemExit("a goal must declare at least one KPI")
+    repository = repo.resolve()
+    for index, kpi in enumerate(kpis, start=1):
+        if not isinstance(kpi, dict) or set(kpi) != {
+            "id", "question", "producer", "deterministic", "direction",
+        }:
+            raise SystemExit(f"KPI {index} has an invalid field set")
+        for key in ("id", "question", "producer"):
+            if not isinstance(kpi[key], str) or not kpi[key].strip():
+                raise SystemExit(f"KPI {index} answer {key!r} must be a non-empty string")
+        if not isinstance(kpi["deterministic"], bool):
+            raise SystemExit(f"KPI {index} deterministic must be yes or no")
+        if kpi["direction"] not in {"up", "down"}:
+            raise SystemExit(f"KPI {index} direction must be up or down")
+        relative = Path(kpi["producer"])
+        if relative.is_absolute() or ".." in relative.parts:
+            raise SystemExit(f"KPI {index} producer must be a repository-relative path")
+        producer = (repository / relative).resolve()
+        if not producer.is_relative_to(repository) or not producer.is_file():
+            raise SystemExit(
+                f"KPI {kpi['id']!r} names producer {kpi['producer']!r}, which is not a file "
+                f"under {repository}. Name the script that prints the number; a KPI whose "
+                "producer cannot be run is an opinion with a number on it."
+            )
+    return answers
+
+
+def _load_controller_answers(repo: Path, answers_file: Path) -> dict[str, Any]:
+    if os.environ.get(SEQUENCE_INTAKE_DISPATCH_MARKER) != "1":
+        raise SystemExit("--answers-file is reserved for the authorized sequence controller")
+    supplied = answers_file.expanduser()
+    path = supplied.resolve()
+    root = SEQUENCE_INTAKE_ARTIFACT_ROOT.resolve()
+    if supplied.is_symlink() or not path.is_file() or not path.is_relative_to(root):
+        raise SystemExit("controller goal answers must be a regular sequence-intake artifact")
+    try:
+        answers = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        raise SystemExit(f"controller goal answers are invalid: {exc}") from None
+    return validate_goal_answers(repo, answers)
+
+
 def set_goal(repo: Path, answers: dict[str, Any], *, clock: Any = None) -> dict[str, Any]:
     """Record a new goal, superseding the one in force and keeping everything it recorded."""
 
+    answers = validate_goal_answers(repo, answers)
     data = load(repo)
     stamp = _now(clock)
     live = current_goal(data)
@@ -221,16 +280,6 @@ def set_goal(repo: Path, answers: dict[str, Any], *, clock: Any = None) -> dict[
             )
         live["superseded_at"] = stamp
         live["superseded_reason"] = reason
-    for kpi in answers["kpis"]:
-        producer = repo / str(kpi["producer"])
-        if not producer.is_file():
-            # `exists()` was not enough: an intake defect that shifted the answers by one
-            # recorded a producer of "." on 2026-08-06, and a directory exists.
-            raise SystemExit(
-                f"KPI {kpi['id']!r} names producer {kpi['producer']!r}, which is not a file "
-                f"under {repo}. Name the script that prints the number; a KPI whose producer "
-                f"cannot be run is an opinion with a number on it."
-            )
     goal = {
         "id": f"g{len(data['goals']) + 1}",
         "statement": str(answers["statement"]).strip(),
@@ -441,7 +490,10 @@ def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", type=Path, default=Path.cwd())
     sub = parser.add_subparsers(dest="command", required=True)
-    sub.add_parser("set", help="declare a new goal and its KPIs, by interview; takes no arguments")
+    declare = sub.add_parser(
+        "set", help="declare a new goal and its KPIs, by interview; takes no operator arguments"
+    )
+    declare.add_argument("--answers-file", type=Path, help=argparse.SUPPRESS)
     sub.add_parser("show", help="print the stored goal, its KPIs and its readings")
     report = sub.add_parser("report", help="print the three report lines")
     report.add_argument("--now", default="", help="what is running, for the NOW line")
@@ -457,7 +509,11 @@ def main(argv: list[str] | None = None) -> int:
     repo = args.repo.resolve()
 
     if args.command == "set":
-        answers = script_intake.collect(GOAL_SPEC)
+        answers = (
+            _load_controller_answers(repo, args.answers_file)
+            if args.answers_file is not None
+            else script_intake.collect(GOAL_SPEC)
+        )
         goal = set_goal(repo, answers)
         print(f"goal {goal['id']} recorded: {goal['statement']}")
         for kpi in goal["kpis"]:

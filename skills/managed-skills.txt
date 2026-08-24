@@ -5,6 +5,7 @@ corpus-add
 critic-foundry
 description-machinery
 doc-gap-closure-loop
+experiment-machinery
 implementation-machine
 phase-categorization-foundry
 phase-ledger-category-contract-foundry

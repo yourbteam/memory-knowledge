@@ -59,6 +59,107 @@ def test_prepare_active_sequence_collects_semantics_without_dispatch(
     assert all("Constraints:" in prompt for prompt in prompts)
 
 
+def test_prepared_intake_advances_dry_run_to_publish_and_reuses_retry(
+    monkeypatch,
+):
+    stored = {}
+    collect_count = 0
+    verified = {
+        "mode": "registered",
+        "subject_id": "commit-push-main",
+        "selection_receipt_hash": "a" * 64,
+        "source_bundle_hash": "b" * 64,
+        "selection": {
+            "task_id": "task-123",
+            "subject_id": "commit-push-main",
+            "expires_at_utc": "2099-01-01T00:00:00Z",
+            "writer_thread_id": "11111111-1111-4111-8111-111111111111",
+            "ownership_generation": 1,
+            "ownership_event_id": "22222222-2222-4222-8222-222222222222",
+            "ownership_sha256": "c" * 64,
+            "repository_roots": {"memory-knowledge": "/repos/memory"},
+        },
+    }
+    prepared = {
+        "schema_version": 1,
+        "sequence_id": "commit-push-main",
+        "profile": "dry-run",
+        "artifacts": {},
+        "argv": [
+            "python3", "scripts/scoped_git_publish.py",
+            "--repo", "/repos/memory",
+            "--manifest", "/tmp/manifest.txt",
+            "--message", "Publish exact scope",
+            "--branch", "main", "--remote", "origin",
+        ],
+        "repository": {
+            "key": "memory-knowledge", "root": "/repos/memory",
+        },
+        "authorization": {
+            "effectful": False, "required": False, "operation": "dry-run",
+        },
+    }
+
+    def collect(*_args, **_kwargs):
+        nonlocal collect_count
+        collect_count += 1
+        return prepared
+
+    def load_receipt(_task_id, name, **_kwargs):
+        if name not in stored:
+            raise sequence_intake_launch.work_memory.WorkMemoryError(
+                f"missing-{name}-receipt", 4,
+            )
+        return stored[name], "d" * 64, Path(f"/tmp/{name}.json")
+
+    def write_receipt(_task_id, name, payload):
+        stored[name] = payload
+        return Path(f"/tmp/{name}.json"), "d" * 64
+
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_active_selection_for_intake",
+        lambda *_args: verified,
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch.sequence_intake_adapters,
+        "collect_and_prepare",
+        collect,
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch.work_memory,
+        "load_receipt",
+        load_receipt,
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch.work_memory,
+        "write_receipt",
+        write_receipt,
+    )
+
+    first = sequence_intake_launch._load_or_prepare_active_sequence(
+        "task-123",
+    )
+    sequence_intake_launch._record_prepared_dispatch(first, 0)
+    second = sequence_intake_launch._load_or_prepare_active_sequence(
+        "task-123",
+    )
+    sequence_intake_launch._record_prepared_dispatch(second, 23)
+    third = sequence_intake_launch._load_or_prepare_active_sequence(
+        "task-123",
+    )
+
+    assert collect_count == 1
+    assert first["intake_reused"] is False
+    assert second["intake_reused"] is True
+    assert second["prepared"]["profile"] == "publish"
+    assert second["prepared"]["argv"][-1] == "--execute"
+    assert second["prepared"]["host_capabilities"] == [
+        "repository-git-metadata-write",
+    ]
+    assert third["prepared"] == second["prepared"]
+
+
 def test_benchmark_artifact_path_is_json(monkeypatch):
     monkeypatch.setattr(
         sequence_intake_launch.sequence_intake_adapters,
@@ -74,6 +175,25 @@ def test_benchmark_artifact_path_is_json(monkeypatch):
         "benchmark_spec": (
             "/private/tmp/sequence-intake/task-123/"
             "local-multimodal-model-benchmark/benchmark_spec.json"
+        ),
+    }
+
+
+def test_goal_answers_artifact_path_is_json(monkeypatch):
+    monkeypatch.setattr(
+        sequence_intake_launch.sequence_intake_adapters,
+        "artifact_ids",
+        lambda _sequence_id: ("goal_answers",),
+    )
+
+    paths = sequence_intake_launch._artifact_paths(
+        "task-123", "goal-declaration",
+    )
+
+    assert paths == {
+        "goal_answers": (
+            "/private/tmp/sequence-intake/task-123/"
+            "goal-declaration/goal_answers.json"
         ),
     }
 
@@ -215,16 +335,24 @@ def test_correction_intake_prepares_sealed_bootstrap_with_same_run_co_blockers(
 
 
 def test_prepare_active_sequence_builds_artifacts_in_memory_only(
-    monkeypatch,
+    tmp_path: Path, monkeypatch,
 ):
+    sequence_doc = tmp_path / "sequence.md"
+    sequence_doc.write_text(
+        "# scoped-git-publish\n\n"
+        "Stable sequence id: `commit-push-main`.\n",
+        encoding="utf-8",
+    )
+    verified = _verified("commit-push-main")
+    verified["selection"]["document"] = str(sequence_doc)
     monkeypatch.setattr(
         sequence_intake_launch.sequence_guard,
         "verify_receipts",
-        lambda _task_id, _active_path: _verified("commit-push-main"),
+        lambda _task_id, _active_path: verified,
     )
     answers = iter([
-        "dry-run",
-        "memory-knowledge",
+        "1",
+        "1",
         "scripts/example.py",
         "no",
         # Commit message: subject line, then the marker that closes a multi-line answer.
@@ -240,6 +368,14 @@ def test_prepare_active_sequence_builds_artifacts_in_memory_only(
         output_fn=lambda _message: None,
     )
 
+    assert result["sequence_id"] == "commit-push-main"
+    assert result["sequence_name"] == "scoped-git-publish"
+    assert sequence_intake_launch._sequence_name({
+        "document": str(
+            sequence_intake_launch.work_memory.ROOT
+            / "operations/sequences/commit-push-main/sequence.md"
+        ),
+    }, "commit-push-main") == "Minimal commit and push"
     artifact = result["prepared"]["artifacts"]["approved_paths"]
     assert artifact["content"] == "scripts/example.py\n"
     assert artifact["path"].startswith(
@@ -248,11 +384,69 @@ def test_prepare_active_sequence_builds_artifacts_in_memory_only(
     assert not Path(artifact["path"]).exists()
 
 
+def test_active_task_entrypoint_bypasses_task_id_interview(monkeypatch, capsys):
+    observed = {}
+    monkeypatch.setattr(
+        sequence_intake_launch.sequence_intake_adapters,
+        "check_intake_contracts",
+        lambda _root: [],
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_load_or_prepare_active_sequence",
+        lambda task_id, **kwargs: (
+            observed.update({"task_id": task_id, **kwargs})
+            or {
+                "task_id": task_id,
+                "sequence_id": "commit-push-main",
+                "prepared": {"profile": "dry-run"},
+            }
+        ),
+    )
+    answers = iter(["no"])
+
+    assert sequence_intake_launch.main_for_active_task(
+        "commit-push-main",
+        "controller-owned-task",
+        input_fn=lambda _prompt: next(answers),
+        output_fn=lambda _message: None,
+    ) == 0
+
+    assert observed["task_id"] == "controller-owned-task"
+    assert observed["expected_sequence_id"] == "commit-push-main"
+    assert json.loads(capsys.readouterr().out) == {
+        "dispatch_status": "DECLINED",
+        "ok": True,
+        "sequence_id": "commit-push-main",
+        "task_id": "controller-owned-task",
+    }
+
+
 def test_main_rejects_operator_arguments(capsys):
     assert sequence_intake_launch.main(["commit-push-main"]) == 2
 
     error = json.loads(capsys.readouterr().err)
     assert error["error"] == "no-argument-entrypoint-required"
+
+
+def test_selected_owner_contract_gate_ignores_only_unrelated_owner_drift(monkeypatch):
+    monkeypatch.setattr(
+        sequence_intake_launch.sequence_intake_adapters,
+        "check_intake_contracts",
+        lambda _root: ["intake-contract-drift:commit-push-main"],
+    )
+    sequence_intake_launch._require_current_intake_contract("discovery-bootstrap")
+
+    monkeypatch.setattr(
+        sequence_intake_launch.sequence_intake_adapters,
+        "check_intake_contracts",
+        lambda _root: ["intake-contract-drift:discovery-bootstrap"],
+    )
+    with pytest.raises(
+        sequence_intake_launch.SequenceLaunchError,
+        match="intake-contracts-stale:intake-contract-drift:discovery-bootstrap",
+    ):
+        sequence_intake_launch._require_current_intake_contract("discovery-bootstrap")
 
 
 def test_invoked_script_resolves_machine_relative_script_from_repository():
@@ -514,9 +708,7 @@ def test_dispatch_marks_zero_argument_child_as_prepared(
     ] == "1"
 
 
-def test_dotnet_deploy_adapter_environment_reaches_child(
-    monkeypatch,
-):
+def test_dotnet_deploy_adapter_environment_reaches_child(monkeypatch):
     monkeypatch.setenv("PATH", "/usr/bin:/bin")
     prepared = sequence_intake_launch.sequence_intake_adapters.prepare(
         "taggable-api-deploy",
@@ -525,11 +717,7 @@ def test_dotnet_deploy_adapter_environment_reaches_child(
         repository_roots={"taggable-api": "/repos/taggable-api"},
     )
     observed = {}
-    monkeypatch.setattr(
-        sequence_intake_launch,
-        "_guard_prepared",
-        lambda *_args: None,
-    )
+    monkeypatch.setattr(sequence_intake_launch, "_guard_prepared", lambda *_args: None)
     monkeypatch.setattr(
         sequence_intake_launch.subprocess,
         "run",
@@ -539,12 +727,136 @@ def test_dotnet_deploy_adapter_environment_reaches_child(
         ),
     )
 
-    assert sequence_intake_launch._dispatch_prepared(
-        "task-123", prepared,
-    ) == 0
+    assert sequence_intake_launch._dispatch_prepared("task-123", prepared) == 0
     assert observed["env"]["PATH"] == (
         f"{Path.home() / '.dotnet'}{os.pathsep}/usr/bin:/bin"
     )
+
+
+def test_dispatch_requires_declared_host_capability_before_any_effect(
+    monkeypatch,
+):
+    observed = []
+    prepared = {
+        "argv": ["python3", "scripts/scoped_git_publish.py", "--execute"],
+        "repository": {"root": "/repos/memory"},
+        "environment": {},
+        "profile": "publish",
+        "artifacts": {},
+        "host_capabilities": ["repository-git-metadata-write"],
+    }
+    monkeypatch.delenv(
+        sequence_intake_launch.HOST_CAPABILITIES_ENV,
+        raising=False,
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_guard_prepared",
+        lambda *_args: observed.append("guard"),
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_materialize_artifacts",
+        lambda *_args: observed.append("materialize"),
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch.subprocess,
+        "run",
+        lambda *_args, **_kwargs: observed.append("dispatch"),
+    )
+
+    with pytest.raises(
+        sequence_intake_launch.SequenceLaunchError,
+        match="host-capability-required:repository-git-metadata-write",
+    ):
+        sequence_intake_launch._dispatch_prepared("task-123", prepared)
+
+    assert observed == []
+
+
+def test_dispatch_accepts_capability_attested_by_the_host_call(monkeypatch):
+    observed = []
+    prepared = {
+        "argv": ["python3", "scripts/scoped_git_publish.py", "--execute"],
+        "repository": {"root": "/repos/memory"},
+        "environment": {},
+        "profile": "publish",
+        "artifacts": {},
+        "host_capabilities": ["repository-git-metadata-write"],
+    }
+    monkeypatch.setenv(
+        sequence_intake_launch.HOST_CAPABILITIES_ENV,
+        "repository-git-metadata-write",
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_guard_prepared",
+        lambda *_args: observed.append("guard"),
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_materialize_artifacts",
+        lambda *_args: observed.append("materialize"),
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch.subprocess,
+        "run",
+        lambda *_args, **_kwargs: (
+            observed.append("dispatch")
+            or type("Completed", (), {"returncode": 0})()
+        ),
+    )
+
+    assert sequence_intake_launch._dispatch_prepared(
+        "task-123", prepared,
+    ) == 0
+    assert observed == ["guard", "materialize", "dispatch"]
+
+
+def test_effectful_publisher_dispatch_binds_the_single_active_run(monkeypatch):
+    run_id = "33333333-3333-4333-8333-333333333333"
+    observed = {}
+    prepared = {
+        "sequence_id": "commit-push-main",
+        "argv": ["python3", "scripts/scoped_git_publish.py", "--execute"],
+        "repository": {"root": "/repos/memory"},
+        "environment": {},
+        "profile": "publish",
+        "artifacts": {},
+        "host_capabilities": ["repository-git-metadata-write"],
+    }
+    monkeypatch.setenv(
+        sequence_intake_launch.HOST_CAPABILITIES_ENV,
+        "repository-git-metadata-write",
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch.work_memory,
+        "load_ledger",
+        lambda: ([{
+            "event_type": "run_started",
+            "task_id": "task-123",
+            "subject_id": "commit-push-main",
+            "run_id": run_id,
+        }], "a" * 64),
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch,
+        "_guard_prepared",
+        lambda *_args: None,
+    )
+    monkeypatch.setattr(
+        sequence_intake_launch.subprocess,
+        "run",
+        lambda _argv, **kwargs: (
+            observed.update(kwargs["env"])
+            or type("Completed", (), {"returncode": 0})()
+        ),
+    )
+
+    assert sequence_intake_launch._dispatch_prepared(
+        "task-123", prepared,
+    ) == 0
+    assert observed[sequence_intake_launch.SEQUENCE_RUN_ID_ENV] == run_id
 
 
 def test_workflow_resume_dispatch_requires_controller_owned_preflight() -> None:

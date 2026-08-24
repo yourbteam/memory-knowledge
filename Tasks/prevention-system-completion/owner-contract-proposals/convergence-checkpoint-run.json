@@ -13,6 +13,13 @@
       "decision_id": "convergence-checkpoint-run-claude-parity-source-correction-20260724",
       "status": "APPROVED"
     },
+    "full_suite_reconciliation_20260820": {
+      "decision_id": "convergence-checkpoint-run-full-suite-reconciliation-source-correction-20260820",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-08-20",
+      "reason": "bind the exact approved convergence checkpoint implementation and dependency manifest required by the canonical full-suite publish gate"
+    },
     "runtime_and_terminal": {
       "decision_id": "convergence-checkpoint-run-runtime-terminal-v1",
       "status": "APPROVED"
@@ -121,13 +128,13 @@
   "proposal_status": "APPROVED",
   "schema_version": 1,
   "source": {
-    "dependencies_sha256": "98ccc872ffac8e9114e0120816e83bec675554440f9c4331390672814b66c981",
+    "dependencies_sha256": "15cefaab95bc78d761717c315b0dd2410468b2c6ee1cec24013a335b63ccceb1",
     "helper_path": "/Users/kamenkamenov/.codex/skills/_shared/convergence_state.py",
     "helper_sha256": "82c11a852ffa373be821106577b2b2c2b62cb6c537a98b829bfe97e16fd0b8ae",
-    "implementation_approved_post_correction_sha256": "107afe04109f9e03e59ce6885dd98ba6c0c0f4fe8dbf4e85f2273bac48286ff8",
+    "implementation_approved_post_correction_sha256": "1191e43db9b67f90b4419188cea1b480c1385807026597f9fb4562f8c17a8904",
     "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/convergence_checkpoint_run.py",
     "implementation_sha256": "70962f95a2a9df988c6e33bcb599a497f0f8fbf41258d8bf504c8e2559e82a0d",
-    "implementation_source_correction_decision_id": "convergence-checkpoint-run-claude-parity-source-correction-20260724",
+    "implementation_source_correction_decision_id": "convergence-checkpoint-run-full-suite-reconciliation-source-correction-20260820",
     "sequence_approved_post_correction_sha256": "e4a4fc81269a11ad3a1d1754199b97d3ecca5aba562bf885b8bd485546c40c64",
     "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/convergence-checkpoint-run/sequence.md",
     "sequence_sha256": "a31c6225caa60e30393dbcd11828cfa4832801d3b7ee734cd11a47fc20788f12",

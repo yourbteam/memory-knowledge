@@ -1,0 +1,160 @@
+{
+  "candidate_sha256": "7464ea08f3565b95274db048505caf56e96f47897696b87bff617762a797de22",
+  "reader": {
+    "harness": "Codex CLI",
+    "model": "GPT-5 Codex"
+  },
+  "schema_version": 1,
+  "verdicts": [
+    {
+      "reason": "The red arrow from the callout labeled \"Column:AF\" visibly ends at the Net Revenue Today value \"$8,100\".",
+      "relationship_id": "relationship-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from the \"Column: W %= 300/364\" callout visibly terminates at the value \"300\" beside \"paid in cash\".",
+      "relationship_id": "relationship-000002",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow leaving the \"Column: AE\" callout visibly points to the green transactions-today value \"364\".",
+      "relationship_id": "relationship-000003",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from the \"Column: AC; %=64/364\" callout visibly terminates at the value \"64\" beside \"codes\".",
+      "relationship_id": "relationship-000004",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from the \"Column: F + Column: K %=114/364\" callout visibly ends at the displayed \"114 package (31%)\" metric.",
+      "relationship_id": "relationship-000005",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from the \"Column: C + Column: I %=250/364\" callout visibly terminates at \"250 non-package (69%)\".",
+      "relationship_id": "relationship-000006",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout's red arrow visibly terminates at the Refresh button near the top center, not at the All Locations Today summary panel.",
+      "relationship_id": "relationship-000007",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The callout's arrow visibly ends at the green \"42%\" Conversion rate value, not at the dashboard panel as a whole.",
+      "relationship_id": "relationship-000008",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The red arrow from the selected-location scope callout visibly terminates at the \"CHOOSE LOCATION \u2014 Skywalk\" selector.",
+      "relationship_id": "relationship-000009",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout's arrow visibly ends at the green \"29.0%\" Capture rate value, not at the full guest-count/performance panel.",
+      "relationship_id": "relationship-000010",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The red arrow associated with the \"Column: AC; %=64/364\" annotation visibly terminates at the displayed value \"64\".",
+      "relationship_id": "relationship-000011",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout's red arrow visibly terminates at the \"$13,060\" net revenue metric inside the panel, not at the All Locations Today panel as a whole.",
+      "relationship_id": "relationship-000013",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The arrow visibly terminates at the donut chart's central \"62% Skywalk\" display, not at the complete All Locations Today panel.",
+      "relationship_id": "relationship-000014",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The callout's red arrow visibly terminates within the per-location legend listing revenue, percentage, and transaction counts for Skywalk through Zipline.",
+      "relationship_id": "relationship-000015",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from the Column X divided by Column W callout visibly terminates at \"$22.25 avg / transaction\".",
+      "relationship_id": "relationship-000016",
+      "verdict": "supported"
+    },
+    {
+      "reason": "No visible arrow or connector runs from \"$22.25 avg / transaction\" to \"587 transactions today\"; they appear as separate neighboring metrics.",
+      "relationship_id": "relationship-000017",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The arrow visibly points to \"18.2%\" under \"Capture rate\"; the proposed target identifies that value as \"Conversion rate,\" while the visible Conversion rate is 42%.",
+      "relationship_id": "relationship-000019",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The callout's red arrow visibly terminates on a plotted point of the monthly Capture vs Conversion line chart.",
+      "relationship_id": "relationship-000020",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from \"The sum of X YTD divided by guest count YTD\" visibly terminates at the \"$3.67\" metric.",
+      "relationship_id": "relationship-000021",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from \"The average of column: AT\" visibly terminates at the \"42%\" metric.",
+      "relationship_id": "relationship-000022",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from \"The sum of Column: AF for the current pay period\" visibly terminates at the Earned to Date value \"$41,004\".",
+      "relationship_id": "relationship-000023",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The calculation callout's red arrow visibly terminates at the \"PROJECTED CLOSE $48,000\" metric.",
+      "relationship_id": "relationship-000024",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The previous-pay-period payout callout's red arrow visibly terminates at \"LAST PERIOD TOTAL $34,700\".",
+      "relationship_id": "relationship-000025",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The payout-date rule callout's red arrow visibly terminates at \"NEXT PAYOUT May 16 \u00b7 ACH\".",
+      "relationship_id": "relationship-000026",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The selected-period sum callout's red arrow visibly terminates at \"$1,632,289 TOTAL PAID TO YOU \u00b7 YEAR TO DATE\".",
+      "relationship_id": "relationship-000028",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The dollar scale and date labels are visibly positioned on the axes of the same filled red line chart whose series occupies the adjacent plotting area.",
+      "relationship_id": "relationship-000030",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout's red arrow visibly terminates at the tooltip card showing the weekly total \"$48,497\" and the five-location payout breakdown.",
+      "relationship_id": "relationship-000031",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The Nov-through-Apr tick labels are visibly aligned along the horizontal axis directly beneath the red filled line-chart series.",
+      "relationship_id": "relationship-000032",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red dashed vertical hover guide is visibly aligned with and immediately adjacent to the displayed $48,497 by-location tooltip card.",
+      "relationship_id": "relationship-000033",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from \"The sum of Column: AE for all the locations for that day\" visibly terminates at \"587 transactions today\".",
+      "relationship_id": "relationship-000035",
+      "verdict": "supported"
+    }
+  ]
+}

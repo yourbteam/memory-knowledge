@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import inspect
+import json
 from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
@@ -272,6 +273,33 @@ def test_proof_scan_chooses_stable_representative_for_two_current_successors(
     }
 
 
+def test_historical_trace_from_another_checkout_is_scannable_but_not_current(
+    tmp_path: Path,
+) -> None:
+    source_path = next(prevention_owner_acceptance.TRACE_DIR.glob("*.json"))
+    trace = json.loads(source_path.read_text(encoding="utf-8"))
+    for binding in trace["test_bindings"]:
+        binding["path"] = f"/another-checkout/{Path(binding['path']).name}"
+    payload = prevention_contract.canonical_bytes(trace)
+    trace_sha256 = prevention_contract.sha256_bytes(payload)
+    (tmp_path / f"{trace_sha256}.json").write_bytes(payload)
+
+    assert prevention_owner_acceptance._load_trace(
+        trace_sha256,
+        tmp_path,
+        require_current_bindings=False,
+    )["test_bindings"] == trace["test_bindings"]
+    with pytest.raises(
+        prevention_owner_acceptance.AcceptanceError,
+        match="owner-proof-producer-binding-invalid",
+    ):
+        prevention_owner_acceptance._load_trace(
+            trace_sha256,
+            tmp_path,
+            require_current_bindings=True,
+        )
+
+
 def test_report_assembly_fails_closed_without_current_trace(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
@@ -465,6 +493,19 @@ def test_checkpoint_acceptance_uses_materialized_child_contracts_in_memory(
     assert result["result"]["status"] == "TERMINAL"
 
 
+def test_commit_push_acceptance_mirrors_exact_entrypoint_and_is_terminal():
+    result = prevention_owner_acceptance_producer.execute_case(
+        "commit-push-main", "dry-run", scenario="positive",
+    )
+
+    assert result["result"]["status"] == "TERMINAL"
+    assert result["commands"][0][1].endswith("/scripts/scoped_git_publish.py")
+    assert result["executed_commands"][0][1].endswith(
+        "/memory-knowledge/scripts/scoped_git_publish.py"
+    )
+    assert "prevention-owner-acceptance-" in result["executed_commands"][0][1]
+
+
 def test_credential_acceptance_all_is_hermetic_and_terminal():
     result = prevention_owner_acceptance_producer.execute_case(
         "claude-auth-token-refresh", "all", scenario="positive",
@@ -507,10 +548,10 @@ def test_discovery_reconciliation_drive_is_hermetic_and_terminal():
     )
 
     assert result["result"]["status"] == "TERMINAL"
-    assert result["executed_commands"][0][1] == (
-        "/Users/kamenkamenov/memory-knowledge/scripts/"
-        "discovery_candidate_reconciliation.py"
+    assert result["executed_commands"][0][1].endswith(
+        "/memory-knowledge/scripts/discovery_candidate_reconciliation.py"
     )
+    assert "prevention-owner-acceptance-" in result["executed_commands"][0][1]
 
 
 def test_discovery_promotion_correction_fixture_is_hermetic_and_terminal():
@@ -519,6 +560,18 @@ def test_discovery_promotion_correction_fixture_is_hermetic_and_terminal():
     )
 
     assert result["result"]["status"] == "TERMINAL"
+
+
+def test_discovery_promotion_drive_is_hermetic_and_terminal():
+    result = prevention_owner_acceptance_producer.execute_case(
+        "discovery-promotion-lifecycle", "drive", scenario="positive",
+    )
+
+    assert result["result"]["status"] == "TERMINAL"
+    assert result["executed_commands"][0][1].endswith(
+        "/memory-knowledge/scripts/discovery_promotion_lifecycle.py"
+    )
+    assert "prevention-owner-acceptance-" in result["executed_commands"][0][1]
 
 
 def test_promotion_drive_receipt_requires_its_declared_complete_stage():

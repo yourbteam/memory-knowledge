@@ -96,6 +96,12 @@ def _validate_spec(spec: Mapping[str, Any]) -> list[Mapping[str, Any]]:
                 or len(set(choices)) != len(choices)
             ):
                 raise IntakeSpecError(f"field-choices-invalid:{field_id}")
+        numbered_selection = raw_field.get("numbered_selection", False)
+        if (
+            not isinstance(numbered_selection, bool)
+            or (numbered_selection and field_type != "choice")
+        ):
+            raise IntakeSpecError(f"field-numbered-selection-invalid:{field_id}")
         if field_type in {"string_list", "object_list"} and "default" in raw_field:
             raise IntakeSpecError(f"field-default-invalid:{field_id}")
         if field_type == "string_list":
@@ -209,7 +215,15 @@ def _prompt_text(field: Mapping[str, Any]) -> str:
         f"Constraints: {field['constraints']}",
     ]
     if field["type"] == "choice":
-        details.append("Allowed values: " + ", ".join(field["choices"]))
+        if field.get("numbered_selection", False):
+            details.append("Selection options:")
+            details.extend(
+                f"{index}. {choice}"
+                for index, choice in enumerate(field["choices"], start=1)
+            )
+            details.append("Choose one selection number.")
+        else:
+            details.append("Allowed values: " + ", ".join(field["choices"]))
     elif field["type"] == "boolean":
         details.append("Allowed values: yes, no")
     elif field["type"] == "text":
@@ -236,6 +250,17 @@ def _parse_value(field: Mapping[str, Any], raw: str) -> Any:
 
     field_type = field["type"]
     if field_type == "choice":
+        if field.get("numbered_selection", False):
+            if not value.isascii() or not value.isdecimal():
+                raise ValueError(
+                    f"choose a selection number from 1 to {len(field['choices'])}"
+                )
+            selected = int(value)
+            if selected < 1 or selected > len(field["choices"]):
+                raise ValueError(
+                    f"choose a selection number from 1 to {len(field['choices'])}"
+                )
+            return field["choices"][selected - 1]
         if value not in field["choices"]:
             raise ValueError("choose one of: " + ", ".join(field["choices"]))
         return value

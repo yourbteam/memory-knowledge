@@ -3,9 +3,11 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 import hashlib
 import importlib.util
 import json
+import os
 import shutil
 import subprocess
 import sys
@@ -35,6 +37,15 @@ BOUNDARY_EXIT_CODES = {
     "first_source_projection_complete": 0,
     "additional_source_projection_pending": 0,
     "additional_source_gap_assessment_complete": 0,
+    "qualification_answers_complete": 0,
+    "qualification_answer_assessment_complete": 0,
+    "qualification_resolution_admission_complete": 0,
+    "qualification_obligation_closure_complete": 0,
+    "first_layer_complete": 0,
+    "first_layer_complete_with_preserved_gaps": 0,
+    "qualification_follow_up_required": 0,
+    "qualification_followup_admission_complete": 0,
+    "source_collection_answer_required": 4,
 }
 
 
@@ -65,11 +76,9 @@ def _model_stage_progress(work: Path) -> dict[str, str | None]:
         journal.relative_to(work.resolve())
     except ValueError as error:
         raise LaunchError("the active model journal escapes the intake") from error
-    if not journal.is_file():
-        raise LaunchError("the active model journal is unavailable")
     return {
         "intake_state_sha256": _sha256(state_path),
-        "model_journal_sha256": _sha256(journal),
+        "model_journal_sha256": _sha256(journal) if journal.is_file() else None,
     }
 
 
@@ -144,6 +153,73 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
             )
         )
     )
+    saved_qualification_round = state.get("qualification_question_round")
+    qualification_question_directory = (
+        saved_qualification_round.get("directory", "qualification-question-round")
+        if isinstance(saved_qualification_round, dict)
+        else "qualification-question-round"
+    )
+    qualification_question_directory_supported = (
+        qualification_question_directory == "qualification-question-round"
+        or (
+            isinstance(qualification_question_directory, str)
+            and any(
+                qualification_question_directory.startswith(prefix)
+                and len(qualification_question_directory.removeprefix(prefix)) == 6
+                and qualification_question_directory.removeprefix(prefix).isdigit()
+                for prefix in (
+                    "qualification-question-rounds/admission-",
+                    "qualification-question-rounds/round-",
+                )
+            )
+        )
+    )
+    qualification_question_round_phase = (
+        state.get("status") == "waiting_for_model"
+        and state.get("phase") == "formulating_qualification_question_round"
+        and qualification_question_directory_supported
+        and state.get("waiting_for")
+        == f"{qualification_question_directory}/interview.jsonl"
+    )
+    qualification_answer_assessment_phase = (
+        state.get("status") == "waiting_for_model"
+        and state.get("phase") == "assessing_qualification_answers"
+        and (
+            (
+                state.get("qualification_round_number", 1) == 1
+                and state.get("waiting_for")
+                == "qualification-answer-assessment/interview.jsonl"
+            )
+            or (
+                isinstance(state.get("qualification_round_number"), int)
+                and state["qualification_round_number"] > 1
+                and state.get("waiting_for")
+                == (
+                    "qualification-question-rounds/"
+                    f"round-{state['qualification_round_number']:06d}/"
+                    "answer-assessment/interview.jsonl"
+                    )
+                )
+            )
+            or (
+                qualification_question_directory_supported
+                and qualification_question_directory
+                != "qualification-question-round"
+                and state.get("waiting_for")
+                == (
+                    f"{qualification_question_directory}/"
+                    "answer-assessment/interview.jsonl"
+                )
+            )
+        )
+    qualification_followup_question_round_phase = (
+        state.get("status") == "waiting_for_model"
+        and state.get("phase")
+        == "formulating_qualification_followup_question_round"
+        and isinstance(state.get("waiting_for"), str)
+        and state["waiting_for"].startswith("qualification-question-rounds/")
+        and state["waiting_for"].endswith("/interview.jsonl")
+    )
     gap_answer_assessment_phase = (
         state.get("status") == "waiting_for_model"
         and (
@@ -200,6 +276,9 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
             projection_phase,
             gap_phase,
             gap_round_phase,
+            qualification_question_round_phase,
+            qualification_answer_assessment_phase,
+            qualification_followup_question_round_phase,
             gap_answer_assessment_phase,
             additional_source_gap_assessment_phase,
             resolution_phase,
@@ -207,6 +286,30 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
         )
     ):
         raise LaunchError("the intake is not waiting for a supported visual model stage")
+    if qualification_question_round_phase:
+        return (), [
+            sys.executable,
+            str(START_INTAKE),
+            "--work",
+            str(work),
+            "--run-qualification-question-round",
+        ]
+    if qualification_answer_assessment_phase:
+        return (), [
+            sys.executable,
+            str(START_INTAKE),
+            "--work",
+            str(work),
+            "--run-qualification-answer-assessment",
+        ]
+    if qualification_followup_question_round_phase:
+        return (), [
+            sys.executable,
+            str(START_INTAKE),
+            "--work",
+            str(work),
+            "--run-qualification-followup-question-round",
+        ]
     if additional_source_gap_assessment_phase:
         saved = state["additional_source_gap_assessment"]
         attachments = saved.get("attachments")
@@ -546,14 +649,21 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
                     contract=contract,
                 )
             )
-            replacement_attachments = (
-                projection_interview.required_participant_replacement_attachments(
-                    candidate.parent,
-                    interview_state,
-                    source_path=attachment,
-                    source_sha256=str(expected_sha256),
+            replacement_attachments = None
+            if (
+                endpoint_evidence is None
+                and not isinstance(
+                    interview_state.get("element_supersession_pending"), dict
                 )
-            )
+            ):
+                replacement_attachments = (
+                    projection_interview.required_participant_replacement_attachments(
+                        candidate.parent,
+                        interview_state,
+                        source_path=attachment,
+                        source_sha256=str(expected_sha256),
+                    )
+                )
             if contract >= 4:
                 active_region = projection_interview._active_scan_region(
                     interview_state
@@ -568,21 +678,18 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
                     obligation = projection_interview._pending_obligation(
                         interview_state
                     )
-                    if not isinstance(obligation, dict) or not isinstance(
+                    if isinstance(obligation, dict) and isinstance(
                         obligation.get("id"), str
                     ):
-                        raise projection_interview.InterviewError(
-                            "active-projection-binding-missing"
-                        )
-                    command[-1:-1] = [
-                        "--projection-obligation-id",
-                        str(obligation["id"]),
-                    ]
-                    if endpoint_evidence is not None:
                         command[-1:-1] = [
-                            "--projection-endpoint-evidence-sha256",
-                            endpoint_evidence[1],
+                            "--projection-obligation-id",
+                            str(obligation["id"]),
                         ]
+                        if endpoint_evidence is not None:
+                            command[-1:-1] = [
+                                "--projection-endpoint-evidence-sha256",
+                                endpoint_evidence[1],
+                            ]
         except (OSError, projection_interview.InterviewError) as error:
             raise LaunchError(
                 f"projection binding evidence failed: {error}"
@@ -596,12 +703,11 @@ def load_request(work: Path) -> tuple[Path | tuple[Path, ...], list[str]]:
     return attachment, command
 
 
-def build_codex_argv(
-    executable: str,
+def _model_request(
     work: Path,
     attachment: Path | tuple[Path, ...],
     interview_command: list[str],
-) -> list[str]:
+) -> tuple[str, tuple[Path, ...]]:
     command_text = " ".join(json.dumps(part) for part in interview_command)
     flag = interview_command[-1]
     purpose_assessment = flag == "--run-purpose-interview"
@@ -612,6 +718,15 @@ def build_codex_argv(
     }
     correction = flag == "--run-relationship-correction"
     gap_clarification = flag == "--run-gap-clarification"
+    qualification_question_round = (
+        flag == "--run-qualification-question-round"
+    )
+    qualification_answer_assessment = (
+        flag == "--run-qualification-answer-assessment"
+    )
+    qualification_followup_question_round = (
+        flag == "--run-qualification-followup-question-round"
+    )
     gap_answer_assessment = flag == "--run-gap-answer-assessment"
     additional_source_gap_assessment = (
         flag == "--run-additional-source-gap-assessment"
@@ -620,6 +735,12 @@ def build_codex_argv(
     evidence_instruction = (
         "the code-bound preserved operator purpose answer"
         if purpose_assessment else
+        "the code-bound immutable clarification obligation"
+        if qualification_question_round else
+        "the code-bound preserved qualification answer and its exact obligation"
+        if qualification_answer_assessment else
+        "the code-bound current follow-up qualification obligations"
+        if qualification_followup_question_round else
         "the code-bound preserved answer and visible source context"
         if gap_answer_assessment or additional_source_gap_assessment or gap_resolution
         else "visible source evidence"
@@ -628,6 +749,12 @@ def build_codex_argv(
         (
             "Assess only the code-bound preserved operator purpose answer. "
             if purpose_assessment else
+            "Formulate questions only from each code-bound immutable clarification obligation. "
+            if qualification_question_round else
+            "Assess each code-bound preserved qualification answer only against its exact obligation. "
+            if qualification_answer_assessment else
+            "Formulate follow-up questions only from each code-bound current qualification obligation. "
+            if qualification_followup_question_round else
             "Inspect the attached frozen source and formulate one focused operator question for each code-bound gap presented. "
             if gap_clarification else
             "Inspect the attached frozen source and judge each code-bound preserved answer only against its exact gap. "
@@ -653,6 +780,16 @@ def build_codex_argv(
         + "prints its terminal JSON result, then report that result."
     )
     attachments = attachment if isinstance(attachment, tuple) else (attachment,)
+    return prompt, attachments
+
+
+def build_codex_argv(
+    executable: str,
+    work: Path,
+    attachment: Path | tuple[Path, ...],
+    interview_command: list[str],
+) -> list[str]:
+    prompt, attachments = _model_request(work, attachment, interview_command)
     image_arguments = [part for path in attachments for part in ("--image", str(path))]
     return [
         executable,
@@ -668,6 +805,73 @@ def build_codex_argv(
         "--",
         prompt,
     ]
+
+
+def build_claude_argv(
+    executable: str,
+    work: Path,
+    attachment: Path | tuple[Path, ...],
+    interview_command: list[str],
+) -> list[str]:
+    prompt, attachments = _model_request(work, attachment, interview_command)
+    frozen_sources = "\n".join(f"- {path}" for path in attachments)
+    prompt = (
+        f"{prompt}\n\nFrozen source paths available through the Read tool:\n"
+        f"{frozen_sources}"
+    )
+    add_dirs = sorted({str(work), *(str(path.parent) for path in attachments)})
+    argv = [
+        executable,
+        "-p",
+        prompt,
+        "--output-format",
+        "json",
+        "--max-budget-usd",
+        "5",
+        "--permission-mode",
+        "default",
+        "--no-session-persistence",
+        "--allowedTools",
+        "Read,Bash",
+        "--disallowedTools",
+        "Edit,Write,NotebookEdit",
+    ]
+    for directory in add_dirs:
+        argv.extend(["--add-dir", directory])
+    return argv
+
+
+def active_model_client(environ: dict[str, str] | None = None) -> str:
+    values = os.environ if environ is None else environ
+    configured = values.get("MK_CLIENT_KIND")
+    if configured is not None:
+        if configured not in {"codex", "claude"}:
+            raise LaunchError("MK_CLIENT_KIND must be codex or claude")
+        return configured
+    return "claude" if values.get("CLAUDECODE") else "codex"
+
+
+def resolve_model_executable(client: str) -> str:
+    if client not in {"codex", "claude"}:
+        raise LaunchError("model client must be codex or claude")
+    executable = shutil.which(client)
+    if executable is None:
+        raise LaunchError(f"model executable is unavailable for client {client}")
+    return executable
+
+
+def build_model_argv(
+    client: str,
+    executable: str,
+    work: Path,
+    attachment: Path | tuple[Path, ...],
+    interview_command: list[str],
+) -> list[str]:
+    if client == "claude":
+        return build_claude_argv(executable, work, attachment, interview_command)
+    if client == "codex":
+        return build_codex_argv(executable, work, attachment, interview_command)
+    raise LaunchError("model client must be codex or claude")
 
 
 def run_clarification_boundary(work: Path) -> dict[str, object]:
@@ -827,6 +1031,7 @@ def drive_work(
     *,
     projection_region_limit: int | None = None,
     projection_relationship_limit: int | None = None,
+    model_run_fn: Callable[..., object] | None = None,
 ) -> int:
     """Drive one already-created intake from its current external boundary."""
     if (
@@ -856,6 +1061,7 @@ def drive_work(
         }, sort_keys=True))
         return 3
     boundary_result: dict[str, object] | None = None
+    run_model = model_run_fn or subprocess.run
     request: tuple[Path | tuple[Path, ...], list[str]] | None
     try:
         request = load_request(work)
@@ -867,6 +1073,11 @@ def drive_work(
             return 3
         request = None
     executable: str | None = None
+    try:
+        model_client = active_model_client()
+    except LaunchError as error:
+        print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
+        return 3
     seen_model_stages: set[str] = set()
     completed_projection_regions = 0
     completed_projection_relationships = 0
@@ -908,9 +1119,10 @@ def drive_work(
                 print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
                 return 3
             if executable is None:
-                executable = shutil.which("codex")
-                if executable is None:
-                    print(json.dumps({"ok": False, "error": "Codex CLI is unavailable"}, sort_keys=True))
+                try:
+                    executable = resolve_model_executable(model_client)
+                except LaunchError as error:
+                    print(json.dumps({"ok": False, "error": str(error)}, sort_keys=True))
                     return 3
             try:
                 stage_key = json.dumps(
@@ -936,8 +1148,16 @@ def drive_work(
                 print(json.dumps({"ok": False, "error": "the intake did not advance after a model stage"}, sort_keys=True))
                 return 3
             seen_model_stages.add(stage_key)
-            argv = build_codex_argv(executable, work, attachment, interview_command)
-            completed = subprocess.run(argv, check=False)
+            argv = build_model_argv(
+                model_client, executable, work, attachment, interview_command,
+            )
+            completed = run_model(argv, check=False)
+            if not hasattr(completed, "returncode"):
+                print(json.dumps({
+                    "ok": False,
+                    "error": "the model runner returned no process return code",
+                }, sort_keys=True))
+                return 3
             if completed.returncode != 0:
                 return completed.returncode
             if region_journal is not None:
@@ -1028,6 +1248,12 @@ def drive_work(
         if request is not None:
             continue
         if boundary_result.get("boundary") == "needs_operator_answer":
+            if boundary_result.get("stopped") in {
+                "awaiting_qualification_clarification_answers",
+                "awaiting_qualification_followup_answers",
+            }:
+                print(json.dumps(boundary_result, indent=2, sort_keys=True))
+                return 4
             operator_returncode = conduct_operator_turn(work)
             if operator_returncode not in {0, 4}:
                 return operator_returncode

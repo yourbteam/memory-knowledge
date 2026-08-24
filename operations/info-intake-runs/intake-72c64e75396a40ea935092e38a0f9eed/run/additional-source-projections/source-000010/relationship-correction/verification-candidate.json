@@ -1,0 +1,1271 @@
+{
+  "elements": [
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Grand Canyon Resort",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Grand Canyon Resort",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000001",
+          "claimed_content": "Grand Canyon Resort",
+          "crop_path": "endpoint-evidence/element-000001-required-recorded-participant-647b7736582b04c0.png",
+          "crop_sha256": "b91ce82cf30627360b17b14ff62e3bd97389090e70be1471999d47ce1c40657d",
+          "normalized_bounds": [
+            3,
+            50,
+            185,
+            72
+          ],
+          "pixel_bounds": [
+            5,
+            106,
+            335,
+            154
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000001",
+      "kind": "text input",
+      "region": [
+        3,
+        50,
+        185,
+        72
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Net payout; content - code fees - refunds; $54,308.60; this range",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Net payout; content - code fees - refunds; $54,308.60; this range",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000002",
+          "claimed_content": "Net payout; content - code fees - refunds; $54,308.60; this range",
+          "crop_path": "endpoint-evidence/element-000002-required-recorded-participant-7207b5317f4344cc.png",
+          "crop_sha256": "a845ab8483ec8c68a5a1e1ac2569d47c12effcacbc6158f79eaef7a3a263592f",
+          "normalized_bounds": [
+            3,
+            83,
+            159,
+            189
+          ],
+          "pixel_bounds": [
+            5,
+            176,
+            288,
+            403
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000002",
+      "kind": "metric summary card",
+      "region": [
+        3,
+        83,
+        159,
+        189
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Content revenue \u00b7 net to you; Photo 1,880 \u00b7 Video 62 txns; $54,620.35; paid transactions",
+      "gap_reason": "",
+      "id": "element-000003",
+      "kind": "metric summary card",
+      "region": [
+        168,
+        83,
+        332,
+        189
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Payouts over time; check a series to add/remove \u00b7 hover for values; Net payout; We sent them; They owed us; $112k; $84k; $56k; $27k; \u2212$900; D1; D3; D5; D7; red vertical hover guide at D7; green, red, blue, and cyan plotted series",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Payouts over time; check a series to add/remove \u00b7 hover for values; Net payout; We sent them; They owed us; $112k; $84k; $56k; $27k; \u2212$900; D1; D3; D5; D7; red vertical hover guide at D7; green, red, blue, and cyan plotted series",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000004",
+          "claimed_content": "Payouts over time; check a series to add/remove \u00b7 hover for values; Net payout; We sent them; They owed us; $112k; $84k; $56k; $27k; \u2212$900; D1; D3; D5; D7; red vertical hover guide at D7; green, red, blue, and cyan plotted series",
+          "crop_path": "endpoint-evidence/element-000004-required-recorded-participant-e886f28df9b12f89.png",
+          "crop_sha256": "13746b28d9ffd8af31b3aced06216f2c56a68419288b0cf0f55318b74b24a214",
+          "normalized_bounds": [
+            3,
+            199,
+            997,
+            484
+          ],
+          "pixel_bounds": [
+            5,
+            423,
+            1804,
+            1030
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000004",
+      "kind": "chart panel",
+      "region": [
+        3,
+        199,
+        997,
+        484
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "admin only \u2013 operato\u2026",
+      "gap_reason": "",
+      "id": "element-000005",
+      "kind": "text annotation",
+      "region": [
+        192,
+        58,
+        300,
+        68
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "These are all the same as the payout report one but you populate the numbers in here for the date range selected.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "These are all the same as the payout report one but you populate the numbers in here for the date range selected.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000006",
+          "claimed_content": "These are all the same as the payout report one but you populate the numbers in here for the date range selected.",
+          "crop_path": "endpoint-evidence/element-000006-required-recorded-participant-74621aea949ea4e3.png",
+          "crop_sha256": "7e0a771667180f949e71ecffcee68c654b3c56a4ec81df64de2e27211d8ee1f9",
+          "normalized_bounds": [
+            265,
+            2,
+            446,
+            95
+          ],
+          "pixel_bounds": [
+            479,
+            4,
+            807,
+            203
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000006",
+      "kind": "annotation callout",
+      "region": [
+        265,
+        2,
+        446,
+        95
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "Redemption-code fees; 96 codes; \u2212$311.75; charged per comped photo",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Redemption-code fees; 96 codes; \u2212$311.75; charged per comped photo",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000007",
+          "claimed_content": "Redemption-code fees; 96 codes; \u2212$311.75; charged per comped photo",
+          "crop_path": "endpoint-evidence/element-000007-required-recorded-participant-412e6df2db3cf965.png",
+          "crop_sha256": "6fa59092c2d3d23cd2ece0b8fa3c270535f2a096dfd5f4d17b94947198fa3817",
+          "normalized_bounds": [
+            335,
+            97,
+            491,
+            223
+          ],
+          "pixel_bounds": [
+            606,
+            206,
+            889,
+            475
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000007",
+      "kind": "metric summary card",
+      "region": [
+        335,
+        97,
+        491,
+        223
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "D7; Net payout $89k; We sent them $90k; They owed us $0; Refunds \u2212$650",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "D7; Net payout $89k; We sent them $90k; They owed us $0; Refunds \u2212$650",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000008",
+          "claimed_content": "D7; Net payout $89k; We sent them $90k; They owed us $0; Refunds \u2212$650",
+          "crop_path": "endpoint-evidence/element-000008-required-participant-context-ad1cb3fb170484bd.png",
+          "crop_sha256": "421bfae3a36cbd502826aa7a97c52aac2b49e7be69129abb77c2af0b4311acf9",
+          "normalized_bounds": [
+            0,
+            195,
+            650,
+            475
+          ],
+          "pixel_bounds": [
+            0,
+            414,
+            1176,
+            1011
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_participant_context"
+        },
+        "selector_region": [
+          386,
+          209,
+          518,
+          305
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000008",
+      "kind": "chart tooltip",
+      "region": [
+        386,
+        209,
+        518,
+        305
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "For refunds if we can enter manually for now that would be good.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "For refunds if we can enter manually for now that would be good.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000009",
+          "claimed_content": "For refunds if we can enter manually for now that would be good.",
+          "crop_path": "endpoint-evidence/element-000009-required-recorded-participant-c46d5559db9861d4.png",
+          "crop_sha256": "9b77e09e49b8ee047d467b6f37d6f8e7a196986ee7be723dee0612d18ca35e12",
+          "normalized_bounds": [
+            521,
+            19,
+            616,
+            91
+          ],
+          "pixel_bounds": [
+            942,
+            40,
+            1115,
+            194
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000009",
+      "kind": "annotation callout",
+      "region": [
+        521,
+        19,
+        616,
+        91
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "Refunds \u2014 reversed transactions \u2014 $0.00 \u2014 this range",
+      "gap_reason": "",
+      "id": "element-000010",
+      "kind": "metric summary card",
+      "region": [
+        501,
+        83,
+        657,
+        190
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "This chart just plots the numbers calculated above over the time period selected.",
+      "gap_reason": "",
+      "id": "element-000011",
+      "kind": "annotation callout",
+      "region": [
+        535,
+        202,
+        782,
+        295
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "Content add-ons \u2014 add-on content \u00b7 net to you \u2014 $0 \u2014 this range",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Content add-ons \u2014 add-on content \u00b7 net to you \u2014 $0 \u2014 this range",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000012",
+          "claimed_content": "Content add-ons \u2014 add-on content \u00b7 net to you \u2014 $0 \u2014 this range",
+          "crop_path": "endpoint-evidence/element-000012-required-recorded-participant-1c29da32dab644ba.png",
+          "crop_sha256": "fe076ca8caa80a60387404f9c970415ae775dfec0b811a11916af7370db2f835",
+          "normalized_bounds": [
+            667,
+            83,
+            800,
+            190
+          ],
+          "pixel_bounds": [
+            1206,
+            176,
+            1448,
+            405
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000012",
+      "kind": "metric summary card",
+      "region": [
+        667,
+        83,
+        800,
+        190
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "For the add ons just put NA for now or something until they are live.",
+      "gap_reason": "",
+      "id": "element-000013",
+      "kind": "annotation callout",
+      "region": [
+        759,
+        23,
+        889,
+        135
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "Merch add-ons \u2014 prints / merch \u00b7 net to you \u2014 $0 \u2014 this range",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Merch add-ons \u2014 prints / merch \u00b7 net to you \u2014 $0 \u2014 this range",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000014",
+          "claimed_content": "Merch add-ons \u2014 prints / merch \u00b7 net to you \u2014 $0 \u2014 this range",
+          "crop_path": "endpoint-evidence/element-000014-required-recorded-participant-ae230f1b4643b713.png",
+          "crop_sha256": "a8880572efb73242f1d0a8cb3172d3c2b0ac9984104aed35890088e83ee2dec0",
+          "normalized_bounds": [
+            832,
+            99,
+            988,
+            228
+          ],
+          "pixel_bounds": [
+            1505,
+            210,
+            1788,
+            486
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000014",
+      "kind": "metric summary card",
+      "region": [
+        832,
+        99,
+        988,
+        228
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "\u2193 Generate report",
+      "gap_reason": "",
+      "id": "element-000015",
+      "kind": "action button",
+      "region": [
+        889,
+        61,
+        988,
+        85
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "Revenue Breakdown; photo \u00b7 video \u00b7 content add-ons \u00b7 merch \u2014 check any on/off; checked legend items Photo, Video, Content add-ons; y-axis labels $114k, $86k, $57k, $29k, $0; x-axis labels D1 and D3; orange Photo line near $80k, purple Video line near $4k, and green Content add-ons line at $0.",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "Revenue Breakdown; photo \u00b7 video \u00b7 content add-ons \u00b7 merch \u2014 check any on/off; checked legend items Photo, Video, Content add-ons; y-axis labels $114k, $86k, $57k, $29k, $0; x-axis labels D1 and D3; orange Photo line near $80k, purple Video line near $4k, and green Content add-ons line at $0.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000016",
+          "claimed_content": "Revenue Breakdown; photo \u00b7 video \u00b7 content add-ons \u00b7 merch \u2014 check any on/off; checked legend items Photo, Video, Content add-ons; y-axis labels $114k, $86k, $57k, $29k, $0; x-axis labels D1 and D3; orange Photo line near $80k, purple Video line near $4k, and green Content add-ons line at $0.",
+          "crop_path": "endpoint-evidence/element-000016-required-participant-context-d75715c3ac1097bd.png",
+          "crop_sha256": "3b593960c5ed13e13ce07e1c64b16bd775e9830909ca5bc333692a3966bc8f5a",
+          "normalized_bounds": [
+            0,
+            480,
+            500,
+            740
+          ],
+          "pixel_bounds": [
+            0,
+            1021,
+            905,
+            1575
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_participant_context"
+        },
+        "selector_region": [
+          60,
+          500,
+          500,
+          715
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000016",
+      "kind": "multi-series line chart",
+      "region": [
+        60,
+        500,
+        500,
+        715
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c02",
+      "content": "This section should just plot package sales and non package sales over the time period selected. Should show the total revenue from each and # of transactions. Can toggle on/off either one. IF both are on then the pop up box shows the total rev and transactions at the top of the pop up and the break out below: Non package rev: E+J; Non package txts: C+I; Package Rev: H+L; Package txts: F+K",
+      "gap_reason": "",
+      "id": "element-000017",
+      "kind": "annotation callout",
+      "region": [
+        255,
+        590,
+        545,
+        698
+      ],
+      "scan_region_id": "region-r03-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c02",
+      "content": "For these jult have not numbers. Show them. Put coming soon if you can?",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "For these jult have not numbers. Show them. Put coming soon if you can?",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000018",
+          "claimed_content": "For these jult have not numbers. Show them. Put coming soon if you can?",
+          "crop_path": "endpoint-evidence/element-000018-required-recorded-participant-26fa4673e63e03d3.png",
+          "crop_sha256": "b551e921646c424c4246a2106714163cd2e75c8c7a3f741bbae835b7bcad628a",
+          "normalized_bounds": [
+            392,
+            736,
+            545,
+            814
+          ],
+          "pixel_bounds": [
+            709,
+            1566,
+            986,
+            1733
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000018",
+      "kind": "annotation callout",
+      "region": [
+        392,
+        736,
+        545,
+        814
+      ],
+      "scan_region_id": "region-r03-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c03",
+      "content": "Once we have video working and the add on products working we will figure out how to add them to the report and track them and add them into this reporting. Can have it there and just not active. Want operators to see its coming. Maybe put \"Coming soon\" in the areas that are not active yet.",
+      "gap_reason": "",
+      "id": "element-000019",
+      "kind": "annotation callout",
+      "region": [
+        510,
+        503,
+        740,
+        569
+      ],
+      "scan_region_id": "region-r03-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c03",
+      "content": "codes used: AC",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "codes used: AC",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000020",
+          "claimed_content": "codes used: AC",
+          "crop_path": "endpoint-evidence/element-000020-required-recorded-participant-d146953af5c2f35d.png",
+          "crop_sha256": "135358e2fd4577034085c5f9603988792a5a891cb8e8d61141104dd5070999e3",
+          "normalized_bounds": [
+            602,
+            739,
+            728,
+            805
+          ],
+          "pixel_bounds": [
+            1089,
+            1572,
+            1317,
+            1714
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000020",
+      "kind": "annotation callout",
+      "region": [
+        602,
+        739,
+        728,
+        805
+      ],
+      "scan_region_id": "region-r03-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c03",
+      "content": "D9; D11",
+      "gap_reason": "",
+      "id": "element-000021",
+      "kind": "chart x-axis labels",
+      "region": [
+        565,
+        728,
+        695,
+        739
+      ],
+      "scan_region_id": "region-r03-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c04",
+      "content": "Net payout: AF",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Net payout: AF",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000022",
+          "claimed_content": "Net payout: AF",
+          "crop_path": "endpoint-evidence/element-000022-required-recorded-participant-6fa92f86e5000767.png",
+          "crop_sha256": "ee42ea12420bc54bdb2bb8b657e093e19c978da86f5480d81690b79320bdeb1d",
+          "normalized_bounds": [
+            750,
+            500,
+            976,
+            753
+          ],
+          "pixel_bounds": [
+            1356,
+            1064,
+            1766,
+            1603
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000022",
+      "kind": "multi-series line chart",
+      "region": [
+        750,
+        500,
+        976,
+        753
+      ],
+      "scan_region_id": "region-r03-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c04",
+      "content": "owed for codes: AD",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "owed for codes: AD",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000023",
+          "claimed_content": "owed for codes: AD",
+          "crop_path": "endpoint-evidence/element-000023-required-recorded-participant-f8ef29a6cbae4794.png",
+          "crop_sha256": "16d72928831237407a9bfbbd07f4a197176f5a42aeb7ab9a630b78fe9b331ab2",
+          "normalized_bounds": [
+            750,
+            730,
+            863,
+            808
+          ],
+          "pixel_bounds": [
+            1356,
+            1553,
+            1562,
+            1720
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000023",
+      "kind": "annotation callout",
+      "region": [
+        750,
+        730,
+        863,
+        808
+      ],
+      "scan_region_id": "region-r03-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c04",
+      "content": "Net payout: AF",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Net payout: AF",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000024",
+          "claimed_content": "Net payout: AF",
+          "crop_path": "endpoint-evidence/element-000024-required-recorded-participant-ce063be60eeca93c.png",
+          "crop_sha256": "16e7a14e9290fa39abb94f923b74b59e799d5172b6e9d6790cc96a38759d0cae",
+          "normalized_bounds": [
+            872,
+            730,
+            977,
+            801
+          ],
+          "pixel_bounds": [
+            1577,
+            1553,
+            1768,
+            1705
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000024",
+      "kind": "annotation callout",
+      "region": [
+        872,
+        730,
+        977,
+        801
+      ],
+      "scan_region_id": "region-r03-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "Content rev: X; Content txns: W",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Content rev: X; Content txns: W",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000025",
+          "claimed_content": "Content rev: X; Content txns: W",
+          "crop_path": "endpoint-evidence/element-000025-required-recorded-participant-81e89025d08fe22d.png",
+          "crop_sha256": "9455f1e639ae17717c3d520ed3956f5382816fd95aea9fa615947300ff0de951",
+          "normalized_bounds": [
+            172,
+            751,
+            300,
+            806
+          ],
+          "pixel_bounds": [
+            311,
+            1598,
+            543,
+            1716
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000025",
+      "kind": "annotation callout",
+      "region": [
+        172,
+        751,
+        300,
+        806
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "LOCATION | CONTENT REVENUE; Skywalk | $681,240.50 | 28,410 txns; River Runners | $25,110.00 | 1,120 txns; All locations | $706,350.50 | 29,530 txns",
+      "gap_reason": "",
+      "id": "element-000026",
+      "kind": "location performance table",
+      "region": [
+        3,
+        796,
+        300,
+        974
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "BY LOCATION; This period \u00b7 Aug 1\u201315, 202\u2026; recalculated for the selected r\u2026",
+      "gap_reason": "",
+      "id": "element-000027",
+      "kind": "section heading",
+      "region": [
+        3,
+        796,
+        172,
+        797
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "Click Generate report to freeze this range into a save\u2026",
+      "gap_reason": "",
+      "id": "element-000028",
+      "kind": "instructional text",
+      "region": [
+        12,
+        959,
+        300,
+        974
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c02",
+      "content": "CONTENT ADD-ONS | $4,120.00 | 176 txns | $0.00 | 0 txns | $4,120.00 | 176 txns",
+      "gap_reason": "",
+      "id": "element-000029",
+      "kind": "table column",
+      "region": [
+        351,
+        807,
+        500,
+        952
+      ],
+      "scan_region_id": "region-r04-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c03",
+      "content": "Click Generate report to freeze this range into a saved operator statement (same layout as the finalized reports).",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Click Generate report to freeze this range into a saved operator statement (same layout as the finalized reports).",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000030",
+          "claimed_content": "Click Generate report to freeze this range into a saved operator statement (same layout as the finalized reports).",
+          "crop_path": "endpoint-evidence/element-000030-required-participant-replacement-f0bd16d30b0681a4.png",
+          "crop_sha256": "2aa9fd5cf3bc55a6b97722dc706a38918be22bf4a6177538d95ce09f5b1e1067",
+          "normalized_bounds": [
+            12,
+            958,
+            625,
+            974
+          ],
+          "pixel_bounds": [
+            21,
+            2038,
+            1131,
+            2073
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_participant_replacement"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000030",
+      "kind": "instructional text",
+      "region": [
+        12,
+        958,
+        625,
+        974
+      ],
+      "scan_region_id": "region-r04-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c03",
+      "content": "CODES USED; 1,204; 0; 1,204",
+      "gap_reason": "",
+      "id": "element-000031",
+      "kind": "table column",
+      "region": [
+        615,
+        808,
+        750,
+        952
+      ],
+      "scan_region_id": "region-r04-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c03",
+      "content": "MERCH ADD-ONS; $4,880.00 / 158 txns; $0.00 / 0 txns; $4,880.00 / 158 txns",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "MERCH ADD-ONS; $4,880.00 / 158 txns; $0.00 / 0 txns; $4,880.00 / 158 txns",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000032",
+          "claimed_content": "MERCH ADD-ONS; $4,880.00 / 158 txns; $0.00 / 0 txns; $4,880.00 / 158 txns",
+          "crop_path": "endpoint-evidence/element-000032-required-recorded-participant-36e62149295997b0.png",
+          "crop_sha256": "8eeaabd4363a947e06addbec78dd488ef27b1dc071a68f3edc56fd7123e5f713",
+          "normalized_bounds": [
+            500,
+            808,
+            615,
+            952
+          ],
+          "pixel_bounds": [
+            904,
+            1719,
+            1113,
+            2026
+          ],
+          "source_pixel_size": [
+            1809,
+            2128
+          ],
+          "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000032",
+      "kind": "table column",
+      "region": [
+        500,
+        808,
+        615,
+        952
+      ],
+      "scan_region_id": "region-r04-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c04",
+      "content": "OWED FOR CODES | NET PAYOUT; -$3,910.25 | $686,330.25; $0.00 | $25,110.00; -$3,910.25 | $711,440.25",
+      "gap_reason": "",
+      "id": "element-000033",
+      "kind": "financial summary table",
+      "region": [
+        750,
+        796,
+        988,
+        975
+      ],
+      "scan_region_id": "region-r04-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_correction_endpoint",
+      "content": "OWED FOR CODES; -$3,910.25; $0.00; -$3,910.25",
+      "gap_reason": "",
+      "id": "correction-element-000001",
+      "kind": "table column",
+      "region": [
+        750,
+        796,
+        872,
+        952
+      ],
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_correction_endpoint",
+      "content": "NET PAYOUT; $686,330.25; $25,110.00; $711,440.25",
+      "gap_reason": "",
+      "id": "correction-element-000002",
+      "kind": "table column",
+      "region": [
+        872,
+        796,
+        988,
+        952
+      ],
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_correction_endpoint",
+      "content": "CONTENT REVENUE; $681,240.50 with 28,410 txns; $25,110.00 with 1,120 txns; $706,350.50 with 29,530 txns",
+      "gap_reason": "",
+      "id": "correction-element-000003",
+      "kind": "table column",
+      "region": [
+        200,
+        796,
+        351,
+        952
+      ],
+      "status": "readable"
+    }
+  ],
+  "relationships": [
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000009",
+      "description": "The add-ons annotation directs the Content add-ons summary card to show NA or a similar placeholder until add-ons are live.",
+      "from_id": "element-000013",
+      "gap_reason": "",
+      "id": "relationship-000009-correction-000001",
+      "kind": "placeholder-state instruction for metric summary card",
+      "locked_identity_participants": {
+        "target": "element-000014"
+      },
+      "origin_point": [
+        824,
+        79
+      ],
+      "status": "readable",
+      "target_point": [
+        790,
+        120
+      ],
+      "to_id": "element-000012",
+      "verified_element_id": "element-000014",
+      "verified_obligation_id": "obligation-000013"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000013",
+      "description": "The red \"Net payout: AF\" annotation points specifically to the NET PAYOUT column, identifying spreadsheet column AF as the source for those values.",
+      "from_id": "element-000024",
+      "gap_reason": "",
+      "id": "relationship-000013-correction-000001",
+      "kind": "annotation callout points to table column",
+      "locked_identity_participants": {
+        "origin": "element-000022"
+      },
+      "origin_point": [
+        925,
+        765
+      ],
+      "status": "readable",
+      "target_point": [
+        930,
+        930
+      ],
+      "to_id": "element-000033",
+      "verified_element_id": "element-000022",
+      "verified_obligation_id": "obligation-000018"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000014",
+      "description": "The \"owed for codes: AD\" annotation maps spreadsheet column AD specifically to the OWED FOR CODES table column.",
+      "from_id": "element-000023",
+      "gap_reason": "",
+      "id": "relationship-000014-correction-000001",
+      "kind": "source-field mapping",
+      "locked_identity_participants": {
+        "origin": "element-000023"
+      },
+      "origin_point": [
+        806,
+        769
+      ],
+      "status": "readable",
+      "target_point": [
+        810,
+        815
+      ],
+      "to_id": "correction-element-000001",
+      "verified_element_id": "element-000023",
+      "verified_obligation_id": "obligation-000019"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000015",
+      "description": "The \"Net payout: AF\" annotation maps spreadsheet column AF specifically to the NET PAYOUT table column.",
+      "from_id": "element-000024",
+      "gap_reason": "",
+      "id": "relationship-000015-correction-000001",
+      "kind": "field-to-source-column mapping",
+      "locked_identity_participants": {
+        "origin": "element-000024"
+      },
+      "origin_point": [
+        930,
+        765
+      ],
+      "status": "readable",
+      "target_point": [
+        934,
+        815
+      ],
+      "to_id": "correction-element-000002",
+      "verified_element_id": "element-000024",
+      "verified_obligation_id": "obligation-000020"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000016",
+      "description": "The annotation maps content revenue to spreadsheet column X and content transaction counts to column W specifically for the CONTENT REVENUE table column.",
+      "from_id": "element-000025",
+      "gap_reason": "",
+      "id": "relationship-000016-correction-000001",
+      "kind": "spreadsheet-column-to-report-field mapping",
+      "locked_identity_participants": {
+        "origin": "element-000025"
+      },
+      "origin_point": [
+        236,
+        778
+      ],
+      "status": "readable",
+      "target_point": [
+        290,
+        815
+      ],
+      "to_id": "correction-element-000003",
+      "verified_element_id": "element-000025",
+      "verified_obligation_id": "obligation-000021"
+    }
+  ],
+  "schema_version": 1,
+  "source_sha256": "557a46b0f4d69f5004a5c63b348991b758e6ae8b28a792743f64fb58ad88c377"
+}

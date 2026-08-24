@@ -1,0 +1,13 @@
+{
+  "candidate_sha256": "5964cbb1a61ea7ce05452317f87ed94201fff4cce202e88bd7a6a948b1bba533",
+  "clarification_sha256": "d48ee0d4de76cd8048c53a2cc4837e952c4be8c357e2e5a8f38e759c319c39c8",
+  "operator_answer_source_sha256": "0769e7917a4fc9f98e8ec237ee31e289044c71c86e10835113beaffbb2ff2bb7",
+  "reader": {
+    "harness": "Codex",
+    "model": "GPT-5"
+  },
+  "reason": "The preserved answer explicitly identifies the selected operator's Payout reports history list and its date-range or report-number search behavior. The frozen image visibly contains the search field and dated payout-report rows within the proposed participant bounds, while element-000020 remains recorded as a clipped, unreadable gap.",
+  "resolution_sha256": "14edea2c3f05e426e6c7a12177ee77d7a4a1cd76c2bcfee056c9a9ed4920fb1f",
+  "schema_version": 1,
+  "verdict": "supported"
+}

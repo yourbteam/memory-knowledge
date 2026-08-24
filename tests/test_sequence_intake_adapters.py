@@ -22,8 +22,8 @@ def test_registry_covers_every_canonical_sequence_identity():
 def test_commit_push_collects_semantic_answers_then_derives_payload():
     prompts = []
     answers = iter([
-        "dry-run",
-        "memory-knowledge",
+        "1",
+        "2",
         "scripts/script_intake.py",
         "yes",
         "tests/test_script_intake.py",
@@ -43,6 +43,7 @@ def test_commit_push_collects_semantic_answers_then_derives_payload():
             "approved_paths": "/private/tmp/intake-approved-paths.txt",
         },
         repository_roots={
+            "mcp-agents-workflow": "/Users/kamenkamenov/mcp-agents-workflow",
             "memory-knowledge": "/Users/kamenkamenov/memory-knowledge",
         },
         input_fn=lambda prompt: prompts.append(prompt) or next(answers),
@@ -67,6 +68,13 @@ def test_commit_push_collects_semantic_answers_then_derives_payload():
     assert all("Response format:" in prompt for prompt in shown)
     assert all("Example:" in prompt for prompt in shown)
     assert all("Constraints:" in prompt for prompt in shown)
+    assert "Selection options:" in shown[0]
+    assert "1. dry-run" in shown[0]
+    assert "Choose one selection number." in shown[0]
+    assert "Selection options:" in shown[1]
+    assert "Example: 1" in shown[1]
+    assert "1. mcp-agents-workflow" in shown[1]
+    assert "2. memory-knowledge" in shown[1]
 
 
 def test_commit_push_dry_run_derives_exact_argv_and_manifest():
@@ -107,6 +115,8 @@ def test_commit_push_dry_run_derives_exact_argv_and_manifest():
             sequence_intake_adapters.SCOPED_GIT_PUBLISH_SCRIPT,
             "--repo",
             "/Users/kamenkamenov/memory-knowledge",
+            "--repository-key",
+            "memory-knowledge",
             "--manifest",
             "/private/tmp/intake-approved-paths.txt",
             "--message",
@@ -126,6 +136,136 @@ def test_commit_push_dry_run_derives_exact_argv_and_manifest():
             "operation": "dry-run",
         },
     }
+
+
+def test_goal_declaration_derives_one_authorized_answers_artifact(tmp_path: Path):
+    repository = tmp_path / "target"
+    (repository / "scripts").mkdir(parents=True)
+    (repository / "scripts/measure.py").write_text("print('{}')\n")
+    answers = {
+        "repository_key": "target",
+        "statement": "make every generated document sendable",
+        "set_by": "Kamen",
+        "supersede_reason": "none",
+        "kpis": [{
+            "id": "sendable-documents",
+            "question": "how many generated documents are sendable",
+            "producer": "scripts/measure.py",
+            "deterministic": True,
+            "direction": "up",
+        }],
+    }
+
+    prepared = sequence_intake_adapters.prepare(
+        "goal-declaration",
+        answers,
+        artifact_paths={"goal_answers": "/private/tmp/goal-answers.json"},
+        repository_roots={
+            "memory-knowledge": "/repos/memory",
+            "target": str(repository),
+        },
+    )
+
+    assert prepared["argv"] == [
+        "python3", "/repos/memory/scripts/goal_tracker.py",
+        "--repo", str(repository.resolve()), "set",
+        "--answers-file", "/private/tmp/goal-answers.json",
+    ]
+    assert json.loads(prepared["artifacts"]["goal_answers"]["content"]) == {
+        key: value for key, value in answers.items() if key != "repository_key"
+    }
+    assert prepared["authorization"] == {
+        "effectful": True,
+        "required": True,
+        "operation": "set",
+    }
+
+
+def test_goal_declaration_repository_is_a_numbered_selection(tmp_path: Path):
+    repository = tmp_path / "target"
+    (repository / "scripts").mkdir(parents=True)
+    (repository / "scripts/measure.py").write_text("print('{}')\n")
+    prompts = []
+    answers = iter([
+        "2",
+        "make every generated document sendable", ".",
+        "Kamen",
+        "none",
+        "sendable-documents",
+        "how many generated documents are sendable", ".",
+        "scripts/measure.py",
+        "yes",
+        "1",
+        "no",
+    ])
+
+    prepared = sequence_intake_adapters.collect_and_prepare(
+        "goal-declaration",
+        artifact_paths={"goal_answers": "/private/tmp/goal-answers.json"},
+        repository_roots={
+            "memory-knowledge": "/repos/memory",
+            "target": str(repository),
+        },
+        input_fn=lambda prompt: prompts.append(prompt) or next(answers),
+        output_fn=lambda _message: None,
+    )
+
+    assert prepared["repository"]["key"] == "target"
+    assert "1. memory-knowledge" in prompts[0]
+    assert "2. target" in prompts[0]
+
+
+def test_agent_heartbeat_derives_only_fixed_template_probes():
+    prepared = sequence_intake_adapters.prepare(
+        "agent-heartbeat",
+        {
+            "source_repository_key": "memory-knowledge",
+            "seconds": 270,
+            "label": "feature 11 live drive",
+            "probes": [
+                {"type": "file-tail", "path": "/private/tmp/run/result.json", "lines": 80},
+                {
+                    "type": "container-logs",
+                    "container": "workflow-orch-local",
+                    "lookback_seconds": 300,
+                    "lines": 120,
+                },
+            ],
+        },
+        artifact_paths={},
+        repository_roots={"memory-knowledge": "/repos/memory"},
+    )
+
+    assert prepared["argv"] == [
+        "bash", "/repos/memory/scripts/agent_heartbeat.sh",
+        "--seconds", "270",
+        "--label", "feature 11 live drive",
+        "--probe", "tail -n 80 -- /private/tmp/run/result.json",
+        "--probe", "docker logs --since 300s workflow-orch-local 2>&1 | tail -n 120",
+    ]
+    assert prepared["authorization"]["required"] is True
+
+
+def test_agent_heartbeat_rejects_shell_and_untrusted_paths():
+    base = {
+        "source_repository_key": "memory-knowledge",
+        "seconds": 270,
+        "label": "live drive",
+    }
+    roots = {"memory-knowledge": "/repos/memory"}
+
+    with pytest.raises(sequence_intake_adapters.AdapterError, match="probe-contract-invalid"):
+        sequence_intake_adapters.prepare(
+            "agent-heartbeat",
+            {**base, "probes": [{"type": "raw-shell", "command": "curl secret"}]},
+            artifact_paths={}, repository_roots=roots,
+        )
+    with pytest.raises(sequence_intake_adapters.AdapterError, match="outside-trusted-roots"):
+        sequence_intake_adapters.prepare(
+            "agent-heartbeat",
+            {**base, "probes": [{"type": "file-metadata", "path": "/etc/passwd"}]},
+            artifact_paths={}, repository_roots=roots,
+        )
 
 
 def test_commit_push_publish_derives_execute_without_operator_authored_flag():
@@ -151,6 +291,9 @@ def test_commit_push_publish_derives_execute_without_operator_authored_flag():
         "required": True,
         "operation": "publish",
     }
+    assert prepared["host_capabilities"] == [
+        "repository-git-metadata-write",
+    ]
 
 
 def test_commit_push_resume_does_not_ask_for_or_emit_manifest_or_message():
@@ -171,9 +314,11 @@ def test_commit_push_resume_does_not_ask_for_or_emit_manifest_or_message():
     assert prepared["argv"] == [
         "python3",
         sequence_intake_adapters.SCOPED_GIT_PUBLISH_SCRIPT,
-        "--repo",
-        "/repo",
-        "--branch",
+            "--repo",
+            "/repo",
+            "--repository-key",
+            "repo",
+            "--branch",
         "main",
         "--remote",
         "origin",
@@ -687,6 +832,7 @@ def test_workflow_phase_resume_owns_live_runtime_environment():
             "client": "vivacom",
             "source_run_id": "up-run-123",
             "first_unfinished_phase": "phase-33",
+            "reopen_completed_phase": False,
         },
         artifact_paths={},
         repository_roots={"united-partners": "/repos/united-partners"},
@@ -729,7 +875,7 @@ def test_remote_onboarding_serializes_confirmation_file(tmp_path):
     assert "--token-output-file" in prepared["argv"]
 
 
-@pytest.mark.parametrize("operation_kind", ["deploy", "workflow-drive"])
+@pytest.mark.parametrize("operation_kind", ["deploy", "workflow-drive", "publish"])
 def test_discovery_bootstrap_builds_zero_input_script_spec(operation_kind):
     prepared = sequence_intake_adapters.prepare(
         "discovery-bootstrap",

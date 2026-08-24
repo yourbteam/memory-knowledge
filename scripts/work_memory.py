@@ -30,10 +30,40 @@ except ModuleNotFoundError:  # direct script execution
     import prevention_registry
 
 
+def _repository_state_root(root: Path) -> Path:
+    """Return the primary checkout that owns shared operational state."""
+    checkout = root.resolve()
+    marker = checkout / ".git"
+    if marker.is_dir() or not marker.is_file():
+        return checkout
+    try:
+        declaration = marker.read_text(encoding="utf-8").strip()
+        if not declaration.startswith("gitdir:"):
+            return checkout
+        raw_gitdir = declaration.split(":", 1)[1].strip()
+        gitdir = Path(raw_gitdir)
+        if not gitdir.is_absolute():
+            gitdir = (checkout / gitdir).resolve()
+        common_decl = (gitdir / "commondir").read_text(
+            encoding="utf-8",
+        ).strip()
+        common_dir = Path(common_decl)
+        if not common_dir.is_absolute():
+            common_dir = (gitdir / common_dir).resolve()
+    except (OSError, UnicodeError):
+        return checkout
+    if common_dir.name != ".git" or not common_dir.is_dir():
+        return checkout
+    return common_dir.parent.resolve()
+
+
 SCHEMA_VERSION = 1
 ROOT = Path(__file__).resolve().parents[1]
-LEDGER = ROOT / "operations/work-memory/events.jsonl"
-BLOCKER_VIEW = ROOT / "operations/blockers/BLOCKERS.md"
+STATE_ROOT = _repository_state_root(ROOT)
+LEDGER_RELATIVE_PATH = Path("operations/work-memory/events.jsonl")
+BLOCKER_VIEW_RELATIVE_PATH = Path("operations/blockers/BLOCKERS.md")
+LEDGER = STATE_ROOT / LEDGER_RELATIVE_PATH
+BLOCKER_VIEW = STATE_ROOT / BLOCKER_VIEW_RELATIVE_PATH
 REGISTRY = ROOT / "operations/sequences/SEQUENCES.md"
 RECEIPT_ROOT = Path("/private/tmp/work-memory")
 HOST_THREAD_ENV = "CODEX_THREAD_ID"
@@ -82,10 +112,12 @@ HANDOFF_REFRESH_FIELDS = {
 }
 OPERATION_KINDS = {
     "image", "container", "auth", "deploy", "workflow-drive", "package",
-    "database", "remote-operator", "cleanup", "other", "read-only",
+    "database", "remote-operator", "cleanup", "publish", "other", "read-only",
     "single-test", "single-build",
 }
-ALWAYS_OPERATIONAL = {"image", "container", "auth", "deploy", "workflow-drive"}
+ALWAYS_OPERATIONAL = {
+    "image", "container", "auth", "deploy", "workflow-drive", "publish",
+}
 CONDITIONAL_OPERATIONAL = {"package", "database", "remote-operator", "cleanup", "other"}
 NON_OPERATIONAL = {"read-only", "single-test", "single-build"}
 BOOTSTRAP_TRUST_ANCHORS = (
@@ -143,12 +175,14 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
     "pre_run_correction_recorded": (
         {"task_id", "ownership_event_id", "blocker_id", "occurrence_id", "correction_id",
          "step_id", "changed_artifacts", "changed_artifact_hashes", "solution",
-         "reusable_behavior_changed"}, {"supersedes_correction_id"},
+         "reusable_behavior_changed"},
+        {"supersedes_correction_id", "environment_artifacts",
+         "environment_artifact_hashes"},
     ),
     "pre_run_verification_recorded": (
         {"task_id", "ownership_event_id", "blocker_id", "occurrence_id", "correction_id",
          "verification_command", "outcome", "quality", "evidence",
-         "changed_artifact_hashes"}, set(),
+         "changed_artifact_hashes"}, {"environment_artifact_hashes"},
     ),
     "pre_run_blocker_transitioned": (
         {"task_id", "ownership_event_id", "blocker_id", "occurrence_id", "from_status",
@@ -170,7 +204,11 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
                        # host registry) rather than a file in the sequence's own dependency bundle.
                        # Those surfaces can never drift-match the bundle, so they are recorded and
                        # hashed separately instead of being forced through the bundle drift gate.
-                       "environment_artifacts", "environment_artifact_hashes"},
+                       "environment_artifacts", "environment_artifact_hashes",
+                       # Some remote state changes have no local file to hash. Historical and
+                       # canonical events may carry this marker only with an unchanged bundle and
+                       # no claim that reusable behavior changed.
+                       "external_state_only"},
     ),
     "correction_preservation_recorded": (
         {"target_task_id", "preserved_task_id", "subject_id", "lineage_id",
@@ -189,7 +227,7 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
          # An environment-surface correction changes no bundle file, so the bundle hash does not
          # move. The transition is still recorded (every downstream consumer links a correction to
          # its transition) but names the environment surface instead of a bundle change.
-         "environment_artifacts", "environment_artifact_hashes"},
+         "environment_artifacts", "environment_artifact_hashes", "external_state_only"},
     ),
     "verification_recorded": (
         {"run_id", "subject_id", "lineage_id", "source_bundle_hash", "outcome", "quality",
@@ -400,15 +438,16 @@ REGISTRY_GOVERNANCE_LEVEL = os.environ.get(
 
 def configure_root(root: Path, *, registry_governance_level: str | None = None) -> None:
     """Rebind canonical repository-owned paths for an isolated invocation or test root."""
-    global ROOT, LEDGER, BLOCKER_VIEW, REGISTRY, REGISTRY_GOVERNANCE_LEVEL
+    global ROOT, STATE_ROOT, LEDGER, BLOCKER_VIEW, REGISTRY, REGISTRY_GOVERNANCE_LEVEL
     registry_governance_level = registry_governance_level or os.environ.get(
         "WORK_MEMORY_REGISTRY_GOVERNANCE_LEVEL", "FULLY_GOVERNED"
     )
     if registry_governance_level not in {"FULLY_GOVERNED", "UNGOVERNED_DIAGNOSTIC"}:
         raise ValueError("invalid-registry-governance-level")
     ROOT = root.resolve()
-    LEDGER = ROOT / "operations/work-memory/events.jsonl"
-    BLOCKER_VIEW = ROOT / "operations/blockers/BLOCKERS.md"
+    STATE_ROOT = _repository_state_root(ROOT)
+    LEDGER = STATE_ROOT / LEDGER_RELATIVE_PATH
+    BLOCKER_VIEW = STATE_ROOT / BLOCKER_VIEW_RELATIVE_PATH
     REGISTRY = ROOT / "operations/sequences/SEQUENCES.md"
     REGISTRY_GOVERNANCE_LEVEL = registry_governance_level
 
@@ -1166,18 +1205,23 @@ def _validate_event_values(event: dict[str, Any]) -> None:
         # still validates unchanged.
         environment = _optional_list(event, "environment_artifacts")
         environment_hashes = _optional_list(event, "environment_artifact_hashes")
-        # changed_artifacts may be empty ONLY for an environment-surface correction; a correction
-        # that names nothing at all stays rejected.
+        reusable_changed = event["reusable_behavior_changed"]
+        external_state_only = event.get("external_state_only", False)
+        if not isinstance(reusable_changed, bool) or not isinstance(external_state_only, bool):
+            raise WorkMemoryError("invalid-correction-artifacts", 2)
+        # changed_artifacts may be empty for a hashed environment surface or for an explicitly
+        # external-state-only correction. The latter cannot claim reusable behavior changed.
         artifacts = _require_list(
-            event, "changed_artifacts", nonempty=not environment,
+            event, "changed_artifacts", nonempty=not environment and not external_state_only,
         )
         hashes = _require_list(
-            event, "changed_artifact_hashes", nonempty=not environment,
+            event, "changed_artifact_hashes", nonempty=not environment and not external_state_only,
         )
         if (
             len(artifacts) != len(hashes)
             or len(environment) != len(environment_hashes)
-            or not isinstance(event["reusable_behavior_changed"], bool)
+            or external_state_only != (not artifacts and not environment)
+            or (external_state_only and reusable_changed)
         ):
             raise WorkMemoryError("invalid-correction-artifacts", 2)
         for artifact in artifacts:
@@ -1201,14 +1245,28 @@ def _validate_event_values(event: dict[str, Any]) -> None:
             )
             if event["supersedes_correction_id"] == event["correction_id"]:
                 raise WorkMemoryError("self-superseding-pre-run-correction", 2)
-        artifacts = _require_list(event, "changed_artifacts", nonempty=True)
-        hashes = _require_list(event, "changed_artifact_hashes", nonempty=True)
-        if len(artifacts) != len(hashes) or not isinstance(event["reusable_behavior_changed"], bool):
+        environment = _optional_list(event, "environment_artifacts")
+        environment_hashes = _optional_list(
+            event, "environment_artifact_hashes",
+        )
+        artifacts = _require_list(
+            event, "changed_artifacts", nonempty=not environment,
+        )
+        hashes = _require_list(
+            event, "changed_artifact_hashes", nonempty=not environment,
+        )
+        if (
+            len(artifacts) != len(hashes)
+            or len(environment) != len(environment_hashes)
+            or not isinstance(event["reusable_behavior_changed"], bool)
+        ):
             raise WorkMemoryError("invalid-pre-run-correction-artifacts", 2)
-        for artifact in artifacts:
+        for artifact in (*artifacts, *environment):
             _artifact_identity(artifact)
         for value in hashes:
             _require_hash(value, "changed-artifact-hash")
+        for value in environment_hashes:
+            _require_hash(value, "environment-artifact-hash")
     elif kind == "pre_run_verification_recorded":
         require_id(event["task_id"], "task-id")
         require_uuid(event["ownership_event_id"], "ownership-event-id")
@@ -1216,8 +1274,16 @@ def _validate_event_values(event: dict[str, Any]) -> None:
             raise WorkMemoryError("invalid-pre-run-verification-enum", 2)
         if not isinstance(event["verification_command"], str) or not event["verification_command"].strip():
             raise WorkMemoryError("invalid-pre-run-verification-command", 2)
-        for value in _require_list(event, "changed_artifact_hashes", nonempty=True):
+        hashes = _require_list(event, "changed_artifact_hashes")
+        environment_hashes = _optional_list(
+            event, "environment_artifact_hashes",
+        )
+        if not hashes and not environment_hashes:
+            raise WorkMemoryError("invalid-pre-run-verification-artifacts", 2)
+        for value in hashes:
             _require_hash(value, "changed-artifact-hash")
+        for value in environment_hashes:
+            _require_hash(value, "environment-artifact-hash")
     elif kind == "pre_run_blocker_transitioned":
         require_id(event["task_id"], "task-id")
         require_uuid(event["ownership_event_id"], "ownership-event-id")
@@ -1268,21 +1334,29 @@ def _validate_event_values(event: dict[str, Any]) -> None:
             ids = _require_list(event, "correction_ids", nonempty=True)
             environment = _optional_list(event, "environment_artifacts")
             environment_hashes = _optional_list(event, "environment_artifact_hashes")
-            # Bundle artifacts may be empty ONLY for an environment-surface correction, and then
-            # the bundle must genuinely be unchanged. A bundle that moved must still name its files.
+            external_state_only = event.get("external_state_only", False)
+            if not isinstance(external_state_only, bool):
+                raise WorkMemoryError("invalid-correction-transition", 2)
+            # Bundle artifacts may be empty for a hashed environment surface or an explicitly
+            # external-state-only correction. In both cases the bundle must remain unchanged.
             arts = _require_list(
-                event, "changed_artifacts", nonempty=not environment,
+                event, "changed_artifacts", nonempty=not environment and not external_state_only,
             )
             hashes = _require_list(
-                event, "changed_artifact_hashes", nonempty=not environment,
+                event, "changed_artifact_hashes", nonempty=not environment and not external_state_only,
             )
             if (
                 not ids
                 or len(arts) != len(hashes)
                 or len(environment) != len(environment_hashes)
+                or external_state_only != (not arts and not environment)
             ):
                 raise WorkMemoryError("invalid-correction-transition", 2)
-            if environment and not arts and event["old_bundle_hash"] != event["new_bundle_hash"]:
+            if (
+                (environment or external_state_only)
+                and not arts
+                and event["old_bundle_hash"] != event["new_bundle_hash"]
+            ):
                 raise WorkMemoryError("environment-transition-moved-the-bundle", 2)
             for artifact in (*arts, *environment):
                 _artifact_identity(artifact)
@@ -2105,6 +2179,8 @@ def validate_lifecycle(
                 or event["blocker_id"] != correction["blocker_id"]
                 or event["occurrence_id"] != correction["occurrence_id"]
                 or event["changed_artifact_hashes"] != correction["changed_artifact_hashes"]
+                or event.get("environment_artifact_hashes", [])
+                != correction.get("environment_artifact_hashes", [])
                 or event["event_id"] in pre_run_verifications
             ):
                 raise WorkMemoryError("invalid-pre-run-verification-binding", 3)
@@ -2168,6 +2244,17 @@ def validate_lifecycle(
                 expected_hashes = [value for item in selected for value in item["changed_artifact_hashes"]]
                 if event["changed_artifact_hashes"] != expected_hashes:
                     raise WorkMemoryError("verification-artifact-hash-mismatch", 3)
+                expected_environment_hashes = [
+                    value for item in selected
+                    for value in item.get("environment_artifact_hashes", [])
+                ]
+                if (
+                    event.get("environment_artifact_hashes", [])
+                    != expected_environment_hashes
+                ):
+                    raise WorkMemoryError(
+                        "verification-environment-artifact-hash-mismatch", 3,
+                    )
             elif event["blocker_ids"]:
                 if (
                     event["quality"] != "same-path"
@@ -2944,7 +3031,14 @@ def _repo_roots(
     ):
         raise WorkMemoryError("invalid-repo-roots", 2)
     roots = {str(key): Path(value).expanduser().resolve() for key, value in raw.items()}
-    roots.setdefault("memory-knowledge", ROOT.resolve())
+    if snapshot is None:
+        # The controller checkout owns its own repository identity. A global repository
+        # registry may point `memory-knowledge` at main, but using that value while this
+        # controller runs from a worktree makes selection publish the wrong checkout.
+        roots["memory-knowledge"] = ROOT.resolve()
+    else:
+        # Stored run/selection snapshots remain immutable historical evidence.
+        roots.setdefault("memory-knowledge", ROOT.resolve())
     return roots
 
 
@@ -3113,7 +3207,8 @@ def resolve_bundle(
 
 
 def registry_rows(
-    path: Path | None = None, *, selected_sequence_id: str | None = None
+    path: Path | None = None, *, selected_sequence_id: str | None = None,
+    validate_owner_sources: bool = True,
 ) -> tuple[list[dict[str, Any]], str]:
     selected = path or REGISTRY
     if REGISTRY_GOVERNANCE_LEVEL == "UNGOVERNED_DIAGNOSTIC":
@@ -3121,7 +3216,8 @@ def registry_rows(
             selected, governance_level=REGISTRY_GOVERNANCE_LEVEL
         )
     return prevention_registry.registry_rows(
-        selected, selected_sequence_id=selected_sequence_id
+        selected, selected_sequence_id=selected_sequence_id,
+        validate_owner_sources=validate_owner_sources,
     )
 
 
@@ -3920,10 +4016,18 @@ def _cmd_select_for_task(args: argparse.Namespace) -> dict[str, Any]:
         registry_hash = sha256_bytes(canonical_bytes(rows))
     else:
         rows, registry_hash = registry_rows(
-            selected_sequence_id=args.sequence_id
+            selected_sequence_id=args.sequence_id,
+            validate_owner_sources=bool(args.sequence_id),
         )
     events, ledger_hash = load_ledger()
-    candidates = [row for row in rows if classification["operation_kind"] in row["operation_kinds"].split(",")]
+    candidates = [
+        row for row in rows
+        if classification["operation_kind"] in row["operation_kinds"].split(",")
+        and (
+            args.sequence_id == "discovery-bootstrap"
+            or row["sequence_id"] != "discovery-bootstrap"
+        )
+    ]
     fingerprint_row = None
     fingerprint_link: tuple[str, int, str, str] | None = None
     if args.fingerprint and not args.sequence_id and not args.discovery_log:
@@ -3987,6 +4091,20 @@ def _cmd_select_for_task(args: argparse.Namespace) -> dict[str, Any]:
             raise WorkMemoryError("discovery-required", 3)
         else:
             raise WorkMemoryError("ambiguous-sequence:" + ",".join(sorted(r["sequence_id"] for r in candidates)), 3)
+        if not args.sequence_id:
+            validated_rows, registry_hash = registry_rows(
+                selected_sequence_id=row["sequence_id"],
+                validate_owner_sources=True,
+            )
+            row = next(
+                (
+                    item for item in validated_rows
+                    if item["sequence_id"] == row["sequence_id"]
+                ),
+                None,
+            )
+            if row is None:
+                raise WorkMemoryError("selected-sequence-disappeared", 4)
         subject_id, mode = row["sequence_id"], "registered"
         document = ROOT / row["folder"] / "sequence.md"
         manifest = document.with_name("dependencies.json")
@@ -4578,14 +4696,9 @@ def cmd_run_start(args: argparse.Namespace) -> dict[str, Any]:
             source_bundle_hash=digest,
         )
     run_id = args.run_id or str(uuid.uuid4())
-    # Both of these are read back out of receipt files, and the ledger reader refuses a
-    # run_started event whose mode or operation kind is outside its set. The writer used to copy
-    # them across unchecked, so a receipt carrying anything else wrote a line the reader would
-    # not accept -- and because every command re-validates the whole ledger, one such line on
-    # 2026-08-20 (a commit-push run whose kind read "publish", the operation it was performing
-    # rather than a kind) stopped classification, selection and everything downstream from that
-    # moment on. The check the reader applies is applied here, at the moment of writing, so a bad
-    # receipt is refused at the door instead of becoming a permanent record nothing can read.
+    # Validate the same enums at the write boundary that the ledger reader validates.
+    # Otherwise one malformed receipt can append an unreadable event and disable every
+    # subsequent ledger command.
     mode_value = selection["mode"]
     kind_value = classification["operation_kind"]
     if mode_value not in {"registered", "discovery"}:
@@ -4871,6 +4984,37 @@ def _environment_artifact_hashes(
             })
         hashes.append(sha256_bytes(path.read_bytes()))
     return artifacts, hashes
+
+
+def _rehash_recorded_environment_artifacts(
+    artifacts: Iterable[Any], *,
+    repository_roots: dict[str, str] | None = None,
+) -> tuple[list[Any], list[str]]:
+    """Rehash identities already stored in the ledger without weakening their identity."""
+    raw: list[Any] = []
+    for artifact in artifacts:
+        repository_key, path = _artifact_identity(artifact)
+        if repository_key == "host-environment":
+            raw.append(path)
+        else:
+            raw.append(artifact)
+    if repository_roots is None:
+        return _environment_artifact_hashes(raw)
+    return _environment_artifact_hashes(raw, repository_roots=repository_roots)
+
+
+def _rehash_recorded_artifacts(
+    artifacts: Iterable[Any], *,
+    repository_roots: dict[str, str] | None = None,
+) -> tuple[list[Any], list[str]]:
+    raw = [
+        {"repository_key": "memory-knowledge", "path": artifact}
+        if isinstance(artifact, str) else artifact
+        for artifact in artifacts
+    ]
+    if repository_roots is None:
+        return _artifact_hashes(raw)
+    return _artifact_hashes(raw, repository_roots=repository_roots)
 
 
 def _effective_correction_bundle(
@@ -5670,6 +5814,215 @@ def cmd_verify(args: argparse.Namespace) -> dict[str, Any]:
     )
     result = transact({"schema_version": 1, "expected_ledger_hash": None, "events": [event]})
     return {**result, "event_id": event["event_id"], "changed_artifact_hashes": artifact_hashes}
+
+
+def cmd_verify_and_close(args: argparse.Namespace) -> dict[str, Any]:
+    """Atomically bind passed same-path evidence and close its exact corrections."""
+    if args.outcome != "passed" or args.quality != "same-path":
+        raise WorkMemoryError("verify-and-close-requires-passed-same-path", 2)
+    events, _ = load_ledger()
+    start, related = _run_state(events, args.run_id)
+    if any(
+        event["event_type"] == "correction_recorded" for event in related
+    ):
+        raise WorkMemoryError("verify-and-close-successor-run-required", 3)
+
+    correction_ids = list(start.get("verifies_correction_ids", []))
+    corrections_by_id = {
+        event["correction_id"]: event for event in events
+        if event["event_type"] == "correction_recorded"
+    }
+    try:
+        corrections = [corrections_by_id[item] for item in correction_ids]
+    except KeyError as exc:
+        raise WorkMemoryError("correction-not-found", 3) from exc
+    blocker_ids = [event["blocker_id"] for event in corrections]
+    if len(blocker_ids) != len(set(blocker_ids)):
+        raise WorkMemoryError("verify-and-close-ambiguous-blocker-corrections", 3)
+
+    repository_roots = start.get("repository_roots")
+    artifact_hashes = [
+        value for correction in corrections
+        for value in correction["changed_artifact_hashes"]
+    ]
+    environment_hashes: list[str] = []
+    for correction in corrections:
+        recorded_environment = correction.get("environment_artifacts", [])
+        recorded_hashes = correction.get("environment_artifact_hashes", [])
+        if recorded_environment:
+            current_environment, current_hashes = (
+                _rehash_recorded_environment_artifacts(
+                    recorded_environment,
+                    repository_roots=repository_roots,
+                )
+            )
+            if (
+                current_environment != recorded_environment
+                or current_hashes != recorded_hashes
+            ):
+                raise WorkMemoryError(
+                    "verification-environment-artifact-hash-mismatch", 3,
+                )
+        environment_hashes.extend(recorded_hashes)
+
+    verification = _event(
+        "verification_recorded", args.event_id, run_id=args.run_id,
+        subject_id=start["subject_id"], lineage_id=start["lineage_id"],
+        source_bundle_hash=start["source_bundle_hash"], outcome="passed",
+        quality="same-path", evidence=args.evidence, blocker_ids=blocker_ids,
+        correction_ids=correction_ids,
+        changed_artifact_hashes=artifact_hashes,
+        **(
+            {"environment_artifact_hashes": environment_hashes}
+            if environment_hashes else {}
+        ),
+    )
+
+    regular_states: dict[str, str] = {}
+    for event in events:
+        blocker_id = event.get("blocker_id")
+        if event["event_type"] in {"blocker_opened", "blocker_recurred"}:
+            regular_states[blocker_id] = "open"
+        elif (
+            event["event_type"] == "blocker_transitioned"
+            and blocker_id in regular_states
+        ):
+            regular_states[blocker_id] = event["to_status"]
+
+    batch = [verification]
+    closed_blocker_ids: list[str] = []
+    for blocker_id in blocker_ids:
+        status = regular_states.get(blocker_id)
+        if status == "fixed-awaiting-verification":
+            batch.append(_event(
+                "blocker_transitioned", run_id=args.run_id,
+                blocker_id=blocker_id, from_status=status, to_status="verified",
+                verification_event_id=verification["event_id"],
+            ))
+            status = "verified"
+        if status == "verified":
+            batch.append(_event(
+                "blocker_transitioned", run_id=args.run_id,
+                blocker_id=blocker_id, from_status=status, to_status="closed",
+                verification_event_id=verification["event_id"],
+                remaining_work="none",
+            ))
+            closed_blocker_ids.append(blocker_id)
+        elif status != "closed":
+            raise WorkMemoryError("verify-and-close-blocker-not-ready", 3)
+
+    task_id = start.get("task_id")
+    ownership_event_id = start.get("ownership_event_id")
+    if isinstance(task_id, str) and isinstance(ownership_event_id, str):
+        pre_run_states: dict[str, str] = {}
+        for event in events:
+            blocker_id = event.get("blocker_id")
+            if (
+                event["event_type"] == "pre_run_blocker_opened"
+                and event.get("task_id") == task_id
+                and event.get("ownership_event_id") == ownership_event_id
+            ):
+                pre_run_states[blocker_id] = "open"
+            elif (
+                event["event_type"] == "pre_run_blocker_transitioned"
+                and blocker_id in pre_run_states
+            ):
+                pre_run_states[blocker_id] = event["to_status"]
+        pre_run_rows = [
+            event for event in events
+            if event["event_type"] == "pre_run_correction_recorded"
+            and event.get("task_id") == task_id
+            and event.get("ownership_event_id") == ownership_event_id
+        ]
+        superseded = {
+            event["supersedes_correction_id"] for event in pre_run_rows
+            if "supersedes_correction_id" in event
+        }
+        active_pre_run = [
+            event for event in pre_run_rows
+            if event["correction_id"] not in superseded
+            and pre_run_states.get(event["blocker_id"])
+            in {"fixed-awaiting-verification", "verified"}
+        ]
+        for correction in active_pre_run:
+            changed_artifacts, changed_hashes = _rehash_recorded_artifacts(
+                correction["changed_artifacts"],
+                repository_roots=repository_roots,
+            )
+            if (
+                changed_artifacts != correction["changed_artifacts"]
+                or changed_hashes != correction["changed_artifact_hashes"]
+            ):
+                raise WorkMemoryError(
+                    "pre-run-correction-artifact-hash-mismatch", 3,
+                )
+            recorded_environment = correction.get("environment_artifacts", [])
+            recorded_environment_hashes = correction.get(
+                "environment_artifact_hashes", [],
+            )
+            if recorded_environment:
+                current_environment, current_environment_hashes = (
+                    _rehash_recorded_environment_artifacts(
+                        recorded_environment,
+                        repository_roots=repository_roots,
+                    )
+                )
+                if (
+                    current_environment != recorded_environment
+                    or current_environment_hashes != recorded_environment_hashes
+                ):
+                    raise WorkMemoryError(
+                        "pre-run-correction-environment-hash-mismatch", 3,
+                    )
+            pre_verification = _event(
+                "pre_run_verification_recorded",
+                str(uuid.uuid5(
+                    uuid.NAMESPACE_URL,
+                    f"memory-knowledge:pre-run-publication-verification:"
+                    f"{verification['event_id']}:{correction['correction_id']}",
+                )),
+                task_id=task_id, ownership_event_id=ownership_event_id,
+                blocker_id=correction["blocker_id"],
+                occurrence_id=correction["occurrence_id"],
+                correction_id=correction["correction_id"],
+                verification_command=args.verification_command,
+                outcome="passed", quality="same-command", evidence=args.evidence,
+                changed_artifact_hashes=changed_hashes,
+                **(
+                    {"environment_artifact_hashes": recorded_environment_hashes}
+                    if recorded_environment_hashes else {}
+                ),
+            )
+            batch.append(pre_verification)
+            status = pre_run_states[correction["blocker_id"]]
+            if status == "fixed-awaiting-verification":
+                batch.append(_event(
+                    "pre_run_blocker_transitioned", task_id=task_id,
+                    ownership_event_id=ownership_event_id,
+                    blocker_id=correction["blocker_id"],
+                    occurrence_id=correction["occurrence_id"],
+                    from_status=status, to_status="verified",
+                    verification_event_id=pre_verification["event_id"],
+                ))
+                status = "verified"
+            batch.append(_event(
+                "pre_run_blocker_transitioned", task_id=task_id,
+                ownership_event_id=ownership_event_id,
+                blocker_id=correction["blocker_id"],
+                occurrence_id=correction["occurrence_id"],
+                from_status=status, to_status="closed",
+                verification_event_id=pre_verification["event_id"],
+                remaining_work="none",
+            ))
+            closed_blocker_ids.append(correction["blocker_id"])
+
+    result = transact({
+        "schema_version": 1, "expected_ledger_hash": None, "events": batch,
+    })
+    return {
+        **result, "event_id": verification["event_id"],
+        "closed_blocker_ids": closed_blocker_ids,
+    }
 
 
 def cmd_run_close(args: argparse.Namespace) -> dict[str, Any]:

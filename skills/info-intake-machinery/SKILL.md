@@ -1,6 +1,6 @@
 ---
 name: info-intake-machinery
-description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers, files, and public URLs as immutable sources, records readable projections, verifies visual relationships, reconstructs one source-to-projection outcome for every intake source, turns every currently known gap into one code-bound question round, conducts any prepared operator round one question at a time, assesses projected additional-source evidence and completed answer rounds against their exact gaps, and prepares immutable follow-up questions without losing legacy replay.
+description: Starts and advances a new auditable information intake from only an opening statement. Preserves human answers, files, and public URLs as immutable sources, collects any number of independent sources through a one-question-at-a-time code interview, records readable projections, verifies visual relationships, reconstructs one source-to-projection outcome for every intake source, qualifies every collected projection against its exact adapter evidence, admits that qualification as either Layer-One completion or an immutable ordered clarification queue, turns every currently known gap into one code-bound question round, conducts any prepared operator round one question at a time, assesses projected additional-source evidence and completed answer rounds against their exact gaps, and prepares immutable follow-up questions without losing legacy replay.
 ---
 
 # Info Intake Machinery
@@ -34,6 +34,13 @@ outcomes preserved in the immutable projection journal.
 
 The stage commands below remain the deterministic replay and diagnostic interface used by that
 launcher.
+
+Before the zero-input launcher returns success for a terminal intake, it copies the complete work
+directory byte-for-byte into `operations/info-intake-runs/<intake-id>/run/` and writes a
+hash-bound `archive-manifest.json` beside it. Publication is atomic and append-only: an identical
+replay reuses the verified archive, while a partial, changed, or colliding archive fails closed.
+Archival never deletes temporary work. It is a local repository effect only; committing or pushing
+the archive still requires explicit operator approval.
 
 Run:
 
@@ -109,7 +116,13 @@ exact bytes as projection version 1, records complete one-to-one coverage, and s
 `first_source_projection_complete` without a model call. Decoding must round-trip to the frozen
 bytes, so the adapter performs no Unicode normalization or other rewriting. Invalid UTF-8 fails
 closed: the pending acquisition reservation remains visible and no projection ledger entry is
-written. For an image, code instead starts the visual projection path below.
+written. For an OOXML spreadsheet, code identifies the workbook from its media type or package
+content declaration, follows the workbook relationship graph rather than assuming numbered sheet
+paths, and writes deterministic JSON containing sheet order, names, visibility, cells, stored
+values, formulas, styles, merges, and a hash/size inventory of every package part. Every package
+part receives exactly one `represented` or explicit `gap` coverage outcome. A malformed workbook
+records one immutable failed conversion outcome with its exact reason. Neither path calls a model.
+For an image, code instead starts the visual projection path below.
 
 The command returns an immutable crop of the first active region and an exact command for the
 code-controlled interview. Inspect that crop, run the command, and answer only its currently
@@ -221,6 +234,79 @@ and records the complete source, evidence, assessment, gap, and parent lineage. 
 judgment can rewrite the accepted verdict. The launcher otherwise stops only at a grounded boundary.
 A changed question, mismatched command, attachment, boundary, or exit status fails closed.
 
+## Collect independent sources before semantic assessment
+
+After any source reaches a projected or explicitly failed conversion outcome, the zero-input
+launcher starts a code-controlled source-collection interview. It asks exactly one question at a
+time. The operator first chooses only `add_source` or `finish_sources`. `add_source` then asks only
+`local_file` or `url`, requests that one source, freezes it under the next ledger-derived identity,
+and sends it through the existing adapter selected from its immutable bytes. After that source has
+a terminal projection outcome, code asks the add-or-finish question again. No model chooses these
+enum values and no prompt instruction is trusted to enforce them.
+
+The three maintained product probes are `source_collection_decision.py`,
+`source_collection_reservation.py`, and `source_collection_closure.py`. Decision constrains the
+operator action, reservation derives a collision-free source/projection pair from exact ledger
+identities, and closure reconciles exactly one terminal outcome for every declared source. They
+remain separate repair boundaries; the launcher only composes their accepted results with the
+existing acquisition and projection adapters.
+
+`finish_sources` appends an immutable collection-completion event only after exact reconciliation.
+Missing, duplicate, unknown, or pending outcomes refuse closure and name the affected source.
+Replay rehashes all source and projection artifacts and returns the same completed source set
+without another question or ledger entry. This stage does not compare sources, decide what another
+source is needed to explain, assess whether one source resolves another, or contain rules for
+annotations, spreadsheets, generators, dashboards, or any other domain. Those are later semantic
+assessment responsibilities.
+
+## Qualify the complete collected source set
+
+On the next clarification-boundary resume after `source_collection_complete`, code qualifies the
+whole collected set at `source_set_qualification_complete`. Three maintained product probes remain
+independently repairable:
+
+- `source_qualification_binding.py` binds every closure outcome to the exact source identity,
+  projection ledger sequence, projection identity, version, path, and SHA-256;
+- `source_projection_qualification.py` applies the evidence contract of the adapter that created
+  each projection: exact byte preservation for verbatim UTF-8, complete part accounting for OOXML
+  spreadsheets, page and explicit-gap accounting for PDFs, and the existing sixteen-region visual
+  qualification contract for images;
+- `source_qualification_reconciliation.py` requires exactly one qualification for every collected
+  source and restores collection order, refusing missing, duplicate, unknown, or invalid outcomes.
+
+Each source receives exactly one of `readable_projection_complete`,
+`readable_projection_incomplete`, or `conversion_incomplete`. The intake-wide result is
+`readable_source_set_complete` only when every source projection is complete; otherwise it is
+`readable_source_set_incomplete` and retains every exact adapter gap, including the specific
+spreadsheet package part, PDF page item, or visual projection unit that did not become readable.
+Code appends one hash-chained `source_set_qualification_completed` event containing the unchanged
+source-projection closure and the ordered qualification. Replay recomputes the result from the
+immutable artifacts and adds nothing.
+
+This qualification performs no semantic comparison between sources, does not decide whether one
+source explains another, and does not formulate operator questions. It establishes the complete,
+auditable input to the deterministic admission below.
+
+## Admit qualification to completion or clarification
+
+The same launcher then derives one route from every exact source outcome. Three additional product
+probes remain separate repair boundaries:
+
+- `qualification_terminal_disposition.py` recomputes the intake-wide status from every source and
+  refuses contradictory aggregate or gap evidence;
+- `clarification_obligation_binding.py` converts every incomplete unit, in source and gap order,
+  into an obligation bound to its source, projection, adapter method, reason, qualification event,
+  and gap SHA-256;
+- `qualification_admission_publication.py` permits only `first_layer_complete` with no obligations
+  or `clarification_required` with at least one exact obligation.
+
+Code appends one hash-chained `qualification_admission_completed` event. Replay requalifies the
+immutable artifacts, reconstructs the same route and obligations, verifies the preserved event,
+and appends nothing. `first_layer_complete` means every collected source has a complete readable
+projection. `clarification_required` exposes one ordered queue for the later question-formulation
+step. This admission itself performs no model call, semantic source comparison, or question
+formulation, and contains no source-type or domain exception.
+
 ## Turn all current gaps into one operator question round
 
 After projection version 1 is recorded with an explicit gap, run:
@@ -261,7 +347,9 @@ Code freezes the exact bytes under the next source identity and records origin, 
 exact question and gap lineage, and a reserved projection identity with `pending` coverage. It then
 stops at `additional_source_frozen`; acquisition itself does not project or combine the file or
 present the next question. Re-enter the clarification boundary to dispatch the applicable adapter.
-Valid UTF-8 fills that exact reserved identity verbatim without a model. An image fills it using
+Valid UTF-8 fills that exact reserved identity verbatim without a model. An OOXML spreadsheet fills
+the same reserved identity with the deterministic workbook projection and complete part-accounting
+outcomes, then stops before semantic source-to-gap assessment. An image fills it using
 complete spatial traversal. Both proceed to the exact source-to-gap assessment above. A non-image
 whose complete bytes are not valid UTF-8 fails closed without changing the source, reservation,
 or ledger.
@@ -392,6 +480,40 @@ This gate does not formulate questions, run interviews, or alter the projection.
 Any model work started by this dispatcher remains accepted only through its code-controlled,
 one-question-at-a-time interview with enforced choices and persisted rejected and accepted attempts.
 The executor does not run an interview or loop.
+
+## Exchange source requests without importing downstream assessment
+
+When another machinery identifies evidence it needs, keep the ownership boundary explicit. The
+requester decides what evidence is missing. Info Intake admits that exact request, obtains one or
+more immutable sources through its normal intake flow, and returns only their complete readable
+projections and audit ledgers. Info Intake must not decide whether the returned material proves a
+claim and must not emit alignment or gap-resolution verdicts in this handoff.
+
+Create the immutable request from a JSON specification containing exactly `schema_version`,
+`request_id`, `purpose`, `requested_evidence`, `related_unit_ids`, and `requester_path`:
+
+```text
+python3 scripts/source_handoff.py create-request \
+    --spec <request-spec.json> --output <new-source-request.json>
+```
+
+After the requested sources have complete readable projections, create the return from a JSON
+specification containing `schema_version` and a nonempty ordered `evidence_items` list. Each item
+contains exactly `item_id`, `immutable_source_path`, `readable_projection_path`,
+`intake_ledger_path`, and `qualification: readable_projection_complete`:
+
+```text
+python3 scripts/source_handoff.py create-return \
+    --request <source-request.json> --spec <return-spec.json> \
+    --output <new-source-return.json>
+```
+
+The code freshly verifies the request, every source and projection hash, UTF-8 readability, the
+complete hash-chained ledger, and that the ledger binds the exact request, source, and projection.
+Both artifacts are write-once. Reverify them before consumption with `verify-request` or
+`verify-return`. Changed requester bytes, request content, source bytes, projection bytes, ledger
+lineage, or duplicate evidence identities fail closed. The return package contains no semantic
+verdict fields; the requesting machinery owns the later sufficiency and alignment decisions.
 
 ## Resume to the next clarification boundary
 
@@ -547,6 +669,21 @@ the current readable projection.
 
 ## Current boundary
 
+The intake-wide qualification path now continues beyond the first operator answer. Code binds every
+prepared question to one exact obligation, preserves each text, file, or URL answer as a new
+immutable source plus readable projection, and presents each answer to the model through the
+code-controlled assessment interview. Only the declared `resolves_obligation` or
+`does_not_resolve_obligation` verdict can be recorded. Exact resolving assessments are admitted and
+closed by code; unresolved current gaps become the next ordered question round. Each successor
+round has its own directory and one indexed readable-state record containing the complete prior
+round, and the event that activates it ledger-binds that complete history. The operator launcher can
+therefore conduct question → answer → projection → assessment rounds until a terminal boundary,
+while still stopping at each actual operator or model turn. The terminal recomputes the current
+source set and accepts cumulative resolutions only when source, projection id and digest, method,
+qualification, unit, reason, and gap digest all match the current gap. It emits
+`first_layer_complete` only when no unmatched current gap remains; otherwise it opens the next
+round without rewriting any earlier source, projection, answer, assessment, or ledger event.
+
 Each `--resolve-gap` invocation applies at most the next unused canonical resolving assessment from
 any completed round to one unchanged relationship gap and then stops. Eligible assessed gaps have either a code-listed
 identity ambiguity or exactly one known and one missing endpoint. It does not automatically loop
@@ -589,8 +726,9 @@ immutable source, bind the exact next pending relationship obligation, preserve 
 outcome, and stop before the next obligation. Region-gap admission, semantic rewriting of an answer, and multi-evidence element
 admissions remain later units. Legacy
 gap resolution remains limited to an existing preserved single-gap answer bound to a relationship
-identity ambiguity. The projection layer currently accepts images, flat visible-page PDFs, and
-complete valid UTF-8 files; other non-image bytes fail closed. Its source-projection closure gate can prove whether every immutable source has
+identity ambiguity. The projection layer currently accepts images, flat visible-page PDFs,
+OOXML spreadsheets, and complete valid UTF-8 files; other non-image bytes fail closed. Spreadsheet
+projection is code-only and preserves every package part as represented or an explicit gap. Its source-projection closure gate can prove whether every immutable source has
 a readable-projection outcome, but that gate remains separate from semantic gap assessment and
 the remaining projection-combination contracts. Do not simulate those later units in prose or extend the script while
 running these proven stages.
@@ -606,3 +744,9 @@ running these proven stages.
 | `ready_for_projection_assessment` | 0 | The current immutable projection version is ready. Before clarification terminal, completeness remains unassessed; the terminal result includes the code-derived projection qualification. |
 | `ready_for_operator_interview` | 0 | A complete follow-up question round is preserved but no operator question has been presented. |
 | `source_projection_closure` | 0 | The read-only gate returned one validated projected, pending, or failed conversion outcome per immutable source. |
+| `source_collection_complete` | 0 | The operator finished the independent source set and code preserved one terminal projection outcome per source. |
+| `source_set_qualification_complete` | 0 | Code bound and adapter-qualified every collected source projection in collection order and stopped before semantic comparison or clarification. |
+| `qualification_admission_complete` | 0 | Code admitted the exact intake-wide qualification as either `first_layer_complete` or one immutable ordered `clarification_required` obligation queue. |
+| `ready_for_qualification_assessment` | 0 | Every answer in the active indexed qualification round is preserved as an immutable source and readable projection, ready for the code-controlled model verdict interview. |
+| `qualification_answer_assessment_complete` | 0 | One exact enum verdict and reason is preserved for every active-round answer and reconciled in question order. |
+| `first_layer_complete` | 0 | Every current source gap is either absent or matched by one cumulatively admitted resolution with exact source, projection, method, qualification, unit, reason, and gap identity. |

@@ -17,18 +17,32 @@
     "semantic_intake": {
       "status": "APPROVED",
       "decision_id": "discovery-bootstrap-semantic-intake-v1"
+    },
+    "full_suite_reconciliation_20260820": {
+      "decision_id": "discovery-bootstrap-full-suite-reconciliation-source-correction-20260820",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-08-20",
+      "reason": "bind the exact approved protected-correction sequence entry and current dependency manifest required by the canonical full-suite publish gate"
+    },
+    "main_integration_reconciliation_20260824": {
+      "decision_id": "discovery-bootstrap-main-integration-source-correction-20260824",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-08-24",
+      "reason": "bind the exact newer discovery bootstrap implementation retained by the explicitly approved Info Intake branch integration"
     }
   },
   "source": {
     "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_bootstrap.py",
     "implementation_sha256": "36290a2f0c42454ae8cf4fc199fc5dd4dd4a057383964f4a200a084c81a78ed1",
-    "implementation_approved_post_correction_sha256": "db7fb226f24b4ef2ba857a6a2c3912688f5a49f73fe084ded04659c43dbdbe90",
-    "implementation_source_correction_decision_id": "discovery-bootstrap-semantic-intake-v1",
+    "implementation_approved_post_correction_sha256": "7abc32614593198a3274df5c170ae546711163d9713c480faffd185ea2802e49",
+    "implementation_source_correction_decision_id": "discovery-bootstrap-main-integration-source-correction-20260824",
     "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/discovery-bootstrap/sequence.md",
     "sequence_sha256": "6fb482102d112029ddd0aff704c0b61b9f79586ba68c83b72780185947463dbc",
-    "sequence_approved_post_correction_sha256": "830ecd085a5647be91562ea13a9147aad872c32e1d47cfd49378db34d95ec6cb",
-    "sequence_source_correction_decision_id": "discovery-bootstrap-semantic-intake-v1",
-    "dependencies_sha256": "d12b3e99f4a5aa158e4dab16b6ede03bb191de4ee9fb4374263ebba452dad90a"
+    "sequence_approved_post_correction_sha256": "c894abf2f3763b5c7b9524afcddd4876375c774709217cffbfac5ffee603abca",
+    "sequence_source_correction_decision_id": "discovery-bootstrap-full-suite-reconciliation-source-correction-20260820",
+    "dependencies_sha256": "254ef3bcb319b416d7ff4e8ba50a72e13b21a2093eb399e4308ca47823ad6bf2"
   },
   "unit_budget": {
     "schema_version": 1,

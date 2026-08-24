@@ -7,7 +7,9 @@ import json
 import os
 import shutil
 import subprocess
+import threading
 import uuid
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from pathlib import Path
 from typing import Any, Mapping
 
@@ -96,6 +98,99 @@ class AcceptanceBindingProvider:
         )
 
 
+class AcceptancePublishedCommitIngestionServer:
+    """Hermetic MCP edge proving the publisher waits for exact memory visibility."""
+
+    def __init__(self) -> None:
+        outer = self
+
+        class Handler(BaseHTTPRequestHandler):
+            def log_message(self, _format: str, *_args: object) -> None:
+                return
+
+            def _send(self, status: int, payload: Mapping[str, Any] | None) -> None:
+                body = b"" if payload is None else json.dumps(payload).encode("utf-8")
+                self.send_response(status)
+                if payload is not None:
+                    self.send_header("Content-Type", "application/json")
+                self.send_header("Content-Length", str(len(body)))
+                self.send_header("Mcp-Session-Id", "owner-acceptance")
+                self.end_headers()
+                if body:
+                    self.wfile.write(body)
+
+            def do_POST(self) -> None:  # noqa: N802 - stdlib handler contract
+                length = int(self.headers.get("Content-Length", "0"))
+                request = json.loads(self.rfile.read(length) or b"{}")
+                if request.get("method") == "notifications/initialized":
+                    self._send(202, None)
+                    return
+                request_id = request.get("id")
+                if request.get("method") == "initialize":
+                    self._send(200, {
+                        "jsonrpc": "2.0", "id": request_id, "result": {},
+                    })
+                    return
+                params = request.get("params")
+                if request.get("method") != "tools/call" or not isinstance(params, dict):
+                    self._send(400, {
+                        "jsonrpc": "2.0", "id": request_id,
+                        "error": {"code": -32601, "message": "unsupported"},
+                    })
+                    return
+                name = params.get("name")
+                arguments = params.get("arguments")
+                if not isinstance(arguments, dict):
+                    arguments = {}
+                if name == "list_repositories":
+                    rows = []
+                    if outer.published_identity is not None:
+                        rows.append({
+                            "repository_key": outer.published_identity["repository_key"],
+                            "latest_branch": outer.published_identity["branch_name"],
+                            "latest_commit": outer.published_identity["commit_sha"],
+                            "last_ingestion_status": "success",
+                        })
+                    payload = {"status": "success", "data": {"repositories": rows}}
+                elif name == "run_repo_ingestion_workflow":
+                    outer.published_identity = {
+                        "repository_key": arguments.get("repository_key"),
+                        "branch_name": arguments.get("branch_name"),
+                        "commit_sha": arguments.get("commit_sha"),
+                    }
+                    payload = {
+                        "status": "submitted", "data": {"job_id": "acceptance-job"},
+                    }
+                elif name == "check_job_status" and outer.published_identity is not None:
+                    payload = {"status": "success", "data": {
+                        "job_id": "acceptance-job", "state_code": "completed",
+                        **outer.published_identity,
+                        "checkpoint_data": {"status": "success"},
+                    }}
+                else:
+                    payload = {"status": "failed", "data": {}}
+                self._send(200, {
+                    "jsonrpc": "2.0", "id": request_id,
+                    "result": {"content": [{
+                        "type": "text", "text": json.dumps(payload, sort_keys=True),
+                    }]},
+                })
+
+        self.published_identity: dict[str, Any] | None = None
+        self.server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
+        self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
+
+    def start(self) -> str:
+        self.thread.start()
+        host, port = self.server.server_address
+        return f"http://{host}:{port}/mcp/"
+
+    def close(self) -> None:
+        self.server.shutdown()
+        self.server.server_close()
+        self.thread.join(timeout=5)
+
+
 def _owner_id(owner: Mapping[str, Any]) -> str:
     value = owner.get("sequence_id", owner.get("owner_sequence_id"))
     if not isinstance(value, str) or not value:
@@ -107,15 +202,24 @@ def _ensure_git_repository(root: Path) -> str:
     repository = root / "git-repository"
     remote = root / "git-remote.git"
     source = repository / "scripts/prevention_owner_acceptance.py"
+    publish_tests = repository / ".publish-tests"
     if not (repository / ".git").is_dir():
         source.parent.mkdir(parents=True, exist_ok=True)
         source.write_text("# owner acceptance base\n", encoding="utf-8")
+        publish_tests.write_text(
+            "test -f scripts/prevention_owner_acceptance.py\n",
+            encoding="utf-8",
+        )
         subprocess.run(["git", "init", "-b", "main", str(repository)], check=True, capture_output=True)
         subprocess.run(["git", "-C", str(repository), "config", "user.email", "acceptance@example.invalid"], check=True)
         subprocess.run(["git", "-C", str(repository), "config", "user.name", "Owner Acceptance"], check=True)
         subprocess.run(["git", "init", "--bare", str(remote)], check=True, capture_output=True)
         subprocess.run(["git", "-C", str(repository), "remote", "add", "origin", str(remote)], check=True)
-        subprocess.run(["git", "-C", str(repository), "add", source.relative_to(repository).as_posix()], check=True)
+        subprocess.run([
+            "git", "-C", str(repository), "add",
+            source.relative_to(repository).as_posix(),
+            publish_tests.relative_to(repository).as_posix(),
+        ], check=True)
         subprocess.run(["git", "-C", str(repository), "commit", "-m", "owner acceptance base"], check=True, capture_output=True)
         subprocess.run(["git", "-C", str(repository), "push", "-u", "origin", "main"], check=True, capture_output=True)
         source.write_text(source.read_text(encoding="utf-8") + "# owner acceptance change\n", encoding="utf-8")
@@ -348,6 +452,7 @@ def _seed_discovery_promotion_correction(root: Path, profile: str) -> None:
         **os.environ,
         "MK_CLIENT_KIND": "codex",
         "CODEX_THREAD_ID": ACCEPTANCE_THREAD_ID,
+        "MK_DIRECTIVE_STATE_PATH": str(root / "directive-state.json"),
     }
     environment.pop("MK_CLIENT_SESSION_ID", None)
     environment.pop("CLAUDE_SESSION_ID", None)
@@ -392,7 +497,10 @@ def _seed_discovery_promotion_correction(root: Path, profile: str) -> None:
         subject_id = "discovery-0f54a98b-4b75-536b-b8d6-6b2d8c8ab98e"
     invoke([
         "python3", "scripts/sequence_guard.py", "activate", "--task-id", task_id,
-        "--root", str(mirror), *activate_source,
+        "--root", str(mirror),
+        "--directives-path", str(mirror / "working-agreement/DIRECTIVES.md"),
+        "--directive-state", str(root / "directive-state.json"),
+        *activate_source,
     ])
     started = invoke([
         "python3", "scripts/work_memory.py", "run-start", "--task-id", task_id,

@@ -47,6 +47,45 @@ def event(kind: str, **fields):
     }
 
 
+def test_repository_config_cannot_replace_the_running_memory_checkout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    worktree = tmp_path / "worktree"
+    main_checkout = tmp_path / "main"
+    worktree.mkdir()
+    main_checkout.mkdir()
+    config = tmp_path / "repositories.json"
+    config.write_text(json.dumps({
+        "memory-knowledge": str(main_checkout),
+        "external": str(tmp_path / "external"),
+    }), encoding="utf-8")
+    monkeypatch.setattr(work_memory, "ROOT", worktree)
+
+    roots = work_memory._repo_roots(str(config))
+
+    assert roots["memory-knowledge"] == worktree.resolve()
+    assert roots["external"] == (tmp_path / "external").resolve()
+    assert work_memory._repo_roots(snapshot={
+        "memory-knowledge": str(main_checkout),
+    })["memory-knowledge"] == main_checkout.resolve()
+
+
+def test_linked_worktree_uses_primary_checkout_for_operational_ledger(
+    tmp_path: Path,
+) -> None:
+    primary = tmp_path / "primary"
+    worktree = tmp_path / "linked"
+    gitdir = primary / ".git/worktrees/linked"
+    gitdir.mkdir(parents=True)
+    worktree.mkdir()
+    (worktree / ".git").write_text(
+        f"gitdir: {gitdir}\n", encoding="utf-8",
+    )
+    (gitdir / "commondir").write_text("../..\n", encoding="utf-8")
+
+    assert work_memory._repository_state_root(worktree) == primary.resolve()
+
+
 def test_resolve_bundle_maps_absolute_executable_to_declared_repository(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
@@ -4566,6 +4605,116 @@ def test_classification_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert operational["verdict"] == "operational"
 
 
+def test_publish_operation_routes_to_only_the_publish_sequence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The live publish intent previously collided with six generic `other` routes."""
+    from argparse import Namespace
+
+    rows = [{
+        "sequence_id": "commit-push-main",
+        "folder": "operations/sequences/commit-push-main/",
+        "operation_kinds": "publish",
+        "lineage_id": "publish-lineage",
+    }, {
+        "sequence_id": "discovery-bootstrap",
+        "folder": "operations/sequences/discovery-bootstrap/",
+        "operation_kinds": "publish",
+        "lineage_id": "bootstrap-lineage",
+    }]
+    rows.extend({
+        "sequence_id": sequence_id,
+        "folder": f"operations/sequences/{sequence_id}/",
+        "operation_kinds": "other",
+        "lineage_id": sequence_id,
+    } for sequence_id in (
+        "agent-heartbeat", "convergence-checkpoint-run",
+        "discovery-candidate-reconciliation", "goal-declaration",
+        "scoped-context-edit",
+    ))
+    monkeypatch.setattr(
+        work_memory, "registry_rows", lambda **_kwargs: (rows, "9" * 64),
+    )
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle",
+        lambda **kwargs: (
+            [], "b" * 64,
+            "publish-lineage"
+            if kwargs["subject_id"] == "commit-push-main"
+            else kwargs["subject_id"],
+        ),
+    )
+    monkeypatch.setattr(
+        work_memory, "load_ledger",
+        lambda path=work_memory.LEDGER: ([], "8" * 64),
+    )
+
+    work_memory.cmd_classify(Namespace(
+        task_id="publish-route", operation_kind="publish",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    selected = work_memory.cmd_select(Namespace(
+        task_id="publish-route", sequence_id=None, discovery_log=None,
+        fingerprint=None, verification_successor_of=None,
+        verifies_correction_id=None, repo_roots_file=None,
+    ))
+
+    assert selected["subject_id"] == "commit-push-main"
+    assert selected["selection_reason"] == "operation-kind-match"
+
+
+def test_automatic_selection_validates_only_the_chosen_owner_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from argparse import Namespace
+
+    rows = [{
+        "sequence_id": "wanted",
+        "folder": "operations/sequences/wanted/",
+        "operation_kinds": "package",
+        "lineage_id": "wanted",
+    }, {
+        "sequence_id": "unrelated",
+        "folder": "operations/sequences/unrelated/",
+        "operation_kinds": "other",
+        "lineage_id": "unrelated",
+    }]
+    calls: list[tuple[str | None, bool]] = []
+
+    def registry_rows(
+        *, selected_sequence_id=None, validate_owner_sources=True,
+    ):
+        calls.append((selected_sequence_id, validate_owner_sources))
+        if validate_owner_sources and selected_sequence_id is None:
+            raise work_memory.prevention_registry.RegistryError(
+                "executable-owner-source-hash-drift:unrelated",
+            )
+        return rows, "9" * 64
+
+    monkeypatch.setattr(work_memory, "registry_rows", registry_rows)
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle",
+        lambda **kwargs: ([], "b" * 64, kwargs["subject_id"]),
+    )
+    monkeypatch.setattr(
+        work_memory, "load_ledger",
+        lambda path=work_memory.LEDGER: ([], "8" * 64),
+    )
+    work_memory.cmd_classify(Namespace(
+        task_id="owner-isolation", operation_kind="package",
+        repeatable="yes", meaningful_steps=3,
+    ))
+
+    selected = work_memory.cmd_select(Namespace(
+        task_id="owner-isolation", sequence_id=None, discovery_log=None,
+        fingerprint=None, verification_successor_of=None,
+        verifies_correction_id=None, repo_roots_file=None,
+    ))
+
+    assert selected["subject_id"] == "wanted"
+    assert calls == [(None, False), ("wanted", True)]
+
+
 def test_selection_uses_verified_fingerprint_correction(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     from argparse import Namespace
 
@@ -5060,37 +5209,47 @@ def test_registry_and_manifest_coverage():
         assert data["lineage_id"] == row["lineage_id"]
 
 
-def test_discovery_bootstrap_is_selectable_for_missing_deploy_sequence(
+def test_discovery_bootstrap_is_selectable_for_every_governed_operation_kind(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
     from argparse import Namespace
 
-    rows, _ = work_memory.registry_rows()
+    rows = work_memory.prevention_registry.parse_markdown_projection(
+        work_memory.REGISTRY,
+    )
     bootstrap = next(
         row for row in rows if row["sequence_id"] == "discovery-bootstrap"
     )
-    assert "deploy" in bootstrap["operation_kinds"].split(",")
+    governed_kinds = work_memory.ALWAYS_OPERATIONAL | work_memory.CONDITIONAL_OPERATIONAL
+    assert set(bootstrap["operation_kinds"].split(",")) == governed_kinds
 
     monkeypatch.setattr(work_memory, "RECEIPT_ROOT", tmp_path / "receipts")
+    monkeypatch.setattr(
+        work_memory,
+        "registry_rows",
+        lambda **_kwargs: ([bootstrap], "9" * 64),
+    )
     monkeypatch.setattr(work_memory, "load_ledger", lambda: ([], "8" * 64))
     monkeypatch.setattr(
         work_memory,
         "resolve_bundle",
         lambda **kwargs: ([], "b" * 64, bootstrap["lineage_id"]),
     )
-    work_memory.cmd_classify(Namespace(
-        task_id="missing-deploy", operation_kind="deploy",
-        repeatable="yes", meaningful_steps=3,
-    ))
+    for operation_kind in sorted(governed_kinds):
+        task_id = f"missing-{operation_kind}"
+        work_memory.cmd_classify(Namespace(
+            task_id=task_id, operation_kind=operation_kind,
+            repeatable="yes", meaningful_steps=3,
+        ))
 
-    selected = work_memory.cmd_select(Namespace(
-        task_id="missing-deploy", sequence_id="discovery-bootstrap",
-        discovery_log=None, fingerprint=None, verification_successor_of=None,
-        verifies_correction_id=None, repo_roots_file=None,
-    ))
+        selected = work_memory.cmd_select(Namespace(
+            task_id=task_id, sequence_id="discovery-bootstrap",
+            discovery_log=None, fingerprint=None, verification_successor_of=None,
+            verifies_correction_id=None, repo_roots_file=None,
+        ))
 
-    assert selected["subject_id"] == "discovery-bootstrap"
-    assert selected["selection_reason"] == "explicit-override"
+        assert selected["subject_id"] == "discovery-bootstrap"
+        assert selected["selection_reason"] == "explicit-override"
 
 
 def test_no_retired_run_ledger_or_stale_activation_examples():
@@ -5473,11 +5632,22 @@ def test_environment_only_correction_validates_without_bundle_artifacts():
 
 
 def test_correction_naming_nothing_at_all_is_still_rejected():
-    """The relaxation is scoped: empty bundle artifacts are allowed ONLY alongside an environment
-    surface, never as a way to record a correction that changed nothing."""
+    """An empty correction must opt into external state and cannot imply it silently."""
     with pytest.raises(work_memory.WorkMemoryError, match="invalid-changed-artifacts"):
         work_memory._validate_event_values(_correction_event(
             changed_artifacts=[], changed_artifact_hashes=[],
+        ))
+
+
+def test_external_state_only_correction_requires_no_reusable_behavior_change():
+    work_memory._validate_event_values(_correction_event(
+        changed_artifacts=[], changed_artifact_hashes=[],
+        reusable_behavior_changed=False, external_state_only=True,
+    ))
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-correction-artifacts"):
+        work_memory._validate_event_values(_correction_event(
+            changed_artifacts=[], changed_artifact_hashes=[],
+            reusable_behavior_changed=True, external_state_only=True,
         ))
 
 
@@ -5495,6 +5665,198 @@ def test_environment_hash_must_be_a_real_digest():
             }],
             environment_artifact_hashes=["not-a-hash"],
         ))
+
+
+def test_environment_verification_must_match_the_bound_correction_hash():
+    events = corrected_successor_events()
+    start_a, _, correction, transition, _, _, start_b, verification = events[:8]
+    start_a["source_bundle_hash"] = start_b["source_bundle_hash"] = "a" * 64
+    start_b["source_bundle"] = []
+    correction["changed_artifacts"] = []
+    correction["changed_artifact_hashes"] = []
+    correction["environment_artifacts"] = [{
+        "repository_key": "host-environment",
+        "path": "/private/tmp/git-metadata-capability.json",
+    }]
+    correction["environment_artifact_hashes"] = ["1" * 64]
+    transition["old_bundle_hash"] = transition["new_bundle_hash"] = "a" * 64
+    transition["changed_artifacts"] = []
+    transition["changed_artifact_hashes"] = []
+    transition["environment_artifacts"] = correction["environment_artifacts"]
+    transition["environment_artifact_hashes"] = ["1" * 64]
+    verification["source_bundle_hash"] = "a" * 64
+    verification["changed_artifact_hashes"] = []
+    verification["environment_artifact_hashes"] = ["2" * 64]
+
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match="verification-environment-artifact-hash-mismatch",
+    ):
+        work_memory.validate_lifecycle(events)
+
+
+def test_publication_success_atomically_closes_environment_and_pre_run_corrections(
+    tmp_path: Path,
+):
+    environment = tmp_path / "git-metadata-capability.json"
+    environment.write_text('{"available":true}\n', encoding="utf-8")
+    environment_identity = {
+        "repository_key": "host-environment",
+        "path": str(environment.resolve()),
+    }
+    environment_hash = work_memory.sha256_bytes(environment.read_bytes())
+    task_id = "publish-corrected-scope"
+    claim = event(
+        "task_writer_claimed", task_id=task_id, writer_thread_id=WRITER_A,
+        ownership_generation=1,
+    )
+    state = {
+        "writer_thread_id": WRITER_A,
+        "ownership_generation": 1,
+        "ownership_event_id": claim["event_id"],
+    }
+    predecessor_run_id = str(uuid.uuid4())
+    successor_run_id = str(uuid.uuid4())
+    regular_blocker_id = "blk-" + "a" * 24
+    regular_occurrence_id = str(uuid.uuid4())
+    regular_correction_id = str(uuid.uuid4())
+    pre_run_blocker_id = "blk-" + "b" * 24
+    pre_run_occurrence_id = str(uuid.uuid4())
+    pre_run_correction_id = str(uuid.uuid4())
+    bundle_hash = "c" * 64
+    initial = [
+        claim,
+        event(
+            "run_started", run_id=predecessor_run_id,
+            subject_id="commit-push-main", lineage_id="publish-lineage",
+            mode="registered", operation_kind="publish", source_bundle=[],
+            source_bundle_hash=bundle_hash, classification_receipt_hash="d" * 64,
+            selection_receipt_hash="e" * 64,
+            started_at_utc="2026-01-01T00:00:00Z",
+            task_id=task_id,
+            **work_memory._ownership_receipt_fields(task_id, state),
+        ),
+        event(
+            "blocker_opened", run_id=predecessor_run_id,
+            blocker_id=regular_blocker_id, occurrence_id=regular_occurrence_id,
+            fingerprint="a" * 64, subject_id="commit-push-main",
+            lineage_id="publish-lineage", step_id="publish",
+            surface="host capability", symptom="index lock denied",
+            evidence="same command failed", impact="publish blocked",
+            boundary="host capability", status="open",
+        ),
+        event(
+            "correction_recorded", run_id=predecessor_run_id,
+            blocker_id=regular_blocker_id, occurrence_id=regular_occurrence_id,
+            correction_id=regular_correction_id, subject_id="commit-push-main",
+            lineage_id="publish-lineage", step_id="publish",
+            changed_artifacts=[], changed_artifact_hashes=[],
+            environment_artifacts=[environment_identity],
+            environment_artifact_hashes=[environment_hash],
+            reusable_behavior_changed=True,
+            solution="declare the Git metadata host capability",
+        ),
+        event(
+            "bundle_transition_recorded", run_id=predecessor_run_id,
+            lineage_id="publish-lineage", old_bundle_hash=bundle_hash,
+            new_bundle_hash=bundle_hash, transition_reason="correction",
+            correction_ids=[regular_correction_id], changed_artifacts=[],
+            changed_artifact_hashes=[], environment_artifacts=[environment_identity],
+            environment_artifact_hashes=[environment_hash],
+        ),
+        event(
+            "blocker_transitioned", run_id=predecessor_run_id,
+            blocker_id=regular_blocker_id, from_status="open",
+            to_status="fixed-awaiting-verification",
+        ),
+        event(
+            "run_closed", run_id=predecessor_run_id,
+            subject_id="commit-push-main", lineage_id="publish-lineage",
+            result="failed", completed_at_utc="2026-01-01T00:01:00Z",
+            correction_count=1, blocker_ids=[regular_blocker_id],
+            sequence_updated=True, verification_quality="none",
+        ),
+        event(
+            "pre_run_blocker_opened", task_id=task_id,
+            ownership_event_id=claim["event_id"], blocker_id=pre_run_blocker_id,
+            occurrence_id=pre_run_occurrence_id, fingerprint="b" * 64,
+            subject_id=task_id, lineage_id=task_id, step_id="activate",
+            surface="checkout identity", symptom="activation rejected",
+            evidence="same command failed before run", impact="no run",
+            boundary="checkout identity", status="open",
+        ),
+        event(
+            "pre_run_correction_recorded", task_id=task_id,
+            ownership_event_id=claim["event_id"], blocker_id=pre_run_blocker_id,
+            occurrence_id=pre_run_occurrence_id,
+            correction_id=pre_run_correction_id, step_id="activate",
+            changed_artifacts=[], changed_artifact_hashes=[],
+            environment_artifacts=[environment_identity],
+            environment_artifact_hashes=[environment_hash],
+            solution="share the checkout ledger root",
+            reusable_behavior_changed=True,
+        ),
+        event(
+            "pre_run_blocker_transitioned", task_id=task_id,
+            ownership_event_id=claim["event_id"], blocker_id=pre_run_blocker_id,
+            occurrence_id=pre_run_occurrence_id, from_status="open",
+            to_status="fixed-awaiting-verification",
+        ),
+        event(
+            "run_started", run_id=successor_run_id,
+            subject_id="commit-push-main", lineage_id="publish-lineage",
+            mode="registered", operation_kind="publish", source_bundle=[],
+            source_bundle_hash=bundle_hash, classification_receipt_hash="f" * 64,
+            selection_receipt_hash="0" * 64,
+            started_at_utc="2026-01-01T00:02:00Z",
+            predecessor_run_id=predecessor_run_id,
+            verifies_correction_ids=[regular_correction_id], task_id=task_id,
+            **work_memory._ownership_receipt_fields(task_id, state),
+        ),
+    ]
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None,
+        "events": initial[:8],
+    })
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None,
+        "events": initial[8:],
+    })
+
+    result = work_memory.cmd_verify_and_close(SimpleNamespace(
+        run_id=successor_run_id, outcome="passed", quality="same-path",
+        evidence="remote commit equals the local commit",
+        verification_command="scoped_git_publish --execute",
+        event_id=str(uuid.uuid4()),
+    ))
+
+    events, _ = work_memory.load_ledger()
+    statuses = {}
+    for item in events:
+        if item["event_type"] in {
+            "blocker_transitioned", "pre_run_blocker_transitioned",
+        }:
+            statuses[item["blocker_id"]] = item["to_status"]
+    regular_verification = next(
+        item for item in events
+        if item["event_id"] == result["event_id"]
+    )
+    pre_run_verification = next(
+        item for item in events
+        if item["event_type"] == "pre_run_verification_recorded"
+    )
+    assert statuses == {
+        regular_blocker_id: "closed", pre_run_blocker_id: "closed",
+    }
+    assert regular_verification["environment_artifact_hashes"] == [
+        environment_hash,
+    ]
+    assert pre_run_verification["environment_artifact_hashes"] == [
+        environment_hash,
+    ]
+    assert result["closed_blocker_ids"] == [
+        regular_blocker_id, pre_run_blocker_id,
+    ]
 
 
 def _transition_event(**overrides):
@@ -5525,6 +5887,20 @@ def test_environment_transition_cannot_hide_a_moved_bundle():
         work_memory.WorkMemoryError, match="environment-transition-moved-the-bundle",
     ):
         work_memory._validate_event_values(_transition_event(new_bundle_hash="d" * 64))
+
+
+def test_external_state_only_transition_requires_an_unchanged_bundle():
+    transition = _transition_event(
+        changed_artifacts=[], changed_artifact_hashes=[],
+        environment_artifacts=[], environment_artifact_hashes=[],
+        external_state_only=True,
+    )
+    work_memory._validate_event_values(transition)
+    transition["new_bundle_hash"] = "d" * 64
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="environment-transition-moved-the-bundle",
+    ):
+        work_memory._validate_event_values(transition)
 
 
 def test_bundle_transition_without_environment_still_requires_its_artifacts():

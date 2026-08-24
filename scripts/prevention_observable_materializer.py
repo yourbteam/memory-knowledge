@@ -16,13 +16,18 @@ from typing import Any, Mapping
 
 try:
     from scripts import prevention_contract_materializer
-    from scripts.prevention_contract import canonical_bytes, sha256_bytes
+    from scripts.prevention_contract import (
+        canonical_bytes, resolve_repository_source_path, sha256_bytes,
+    )
 except ModuleNotFoundError:  # direct script execution
     import prevention_contract_materializer
-    from prevention_contract import canonical_bytes, sha256_bytes
+    from prevention_contract import (
+        canonical_bytes, resolve_repository_source_path, sha256_bytes,
+    )
 
 
 ROOT = Path(__file__).resolve().parents[1]
+CANONICAL_ROOT = Path.home() / "memory-knowledge"
 OUTPUT = ROOT / "Tasks/prevention-system-completion/owner-observable-evidence.json"
 
 
@@ -171,7 +176,11 @@ SOURCE_TESTS: Mapping[str, tuple[str, ...]] = {
 
 
 def _source_row(path_text: str, anchors: tuple[str, ...]) -> dict[str, Any]:
-    path = Path(path_text)
+    path = resolve_repository_source_path(
+        path_text,
+        repository_root=ROOT,
+        canonical_repository_root=CANONICAL_ROOT,
+    )
     if not path.is_file():
         raise ObservableMaterializationError(f"observable-source-missing:{path}")
     raw = path.read_bytes()
@@ -182,14 +191,18 @@ def _source_row(path_text: str, anchors: tuple[str, ...]) -> dict[str, Any]:
             f"observable-source-anchor-missing:{path}:{missing[0]}"
         )
     return {
-        "path": str(path),
+        "path": path_text,
         "sha256": sha256_bytes(raw),
         "anchors": list(anchors),
     }
 
 
 def _test_row(path_text: str) -> dict[str, Any]:
-    path = Path(path_text)
+    path = resolve_repository_source_path(
+        path_text,
+        repository_root=ROOT,
+        canonical_repository_root=CANONICAL_ROOT,
+    )
     if not path.is_file():
         raise ObservableMaterializationError(f"observable-test-missing:{path}")
     raw = path.read_bytes()
@@ -204,7 +217,7 @@ def _test_row(path_text: str) -> dict[str, Any]:
     )
     if not tests:
         raise ObservableMaterializationError(f"observable-test-empty:{path}")
-    return {"path": str(path), "sha256": sha256_bytes(raw), "test_ids": tests}
+    return {"path": path_text, "sha256": sha256_bytes(raw), "test_ids": tests}
 
 
 def _fixture_specs(probes: tuple[str, ...]) -> list[dict[str, Any]]:
@@ -292,7 +305,7 @@ def materialize() -> dict[str, Any]:
         "schema_version": 1,
         "admission_effect": "PROVIDER_IMPLEMENTED_SOURCE_PATH_UNVERIFIED",
         "provider_implementation": _source_row(
-            str(ROOT / "scripts/prevention_source_probes.py"),
+            str(CANONICAL_ROOT / "scripts/prevention_source_probes.py"),
             (
                 "class ProductionSourceProbeBackend:",
                 "PROVIDER_FACTORIES:",

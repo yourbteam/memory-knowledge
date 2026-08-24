@@ -1,0 +1,765 @@
+{
+  "elements": [
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Net payout: Column AF For projections just get the avg off the current days and multiply that by the days in the payout period",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Net payout: Column AF For projections just get the avg off the current days and multiply that by the days in the payout period",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000001",
+          "claimed_content": "Net payout: Column AF For projections just get the avg off the current days and multiply that by the days in the payout period",
+          "crop_path": "endpoint-evidence/element-000001-required-recorded-participant-b312d9e49f39baa7.png",
+          "crop_sha256": "39b5045cdd5c77c071f43e6900b34ecb920667ecfa37445cac2577766dea3241",
+          "normalized_bounds": [
+            1,
+            41,
+            241,
+            218
+          ],
+          "pixel_bounds": [
+            1,
+            57,
+            446,
+            307
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000001",
+      "kind": "annotation callout",
+      "region": [
+        1,
+        41,
+        241,
+        218
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Net payout \u00b7 to date; we owe operators \u2212 operators owe us; $58,410.20; projected close \u2248 $114K",
+      "gap_reason": "",
+      "id": "element-000002",
+      "kind": "dashboard metric card",
+      "region": [
+        9,
+        164,
+        244,
+        298
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Live \u00b7 as of Aug 7, 2026",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Live \u00b7 as of Aug 7, 2026",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000003",
+          "claimed_content": "Live \u00b7 as of Aug 7, 2026",
+          "crop_path": "endpoint-evidence/element-000003-required-recorded-participant-a81d7c52a2349f88.png",
+          "crop_sha256": "583b4ea9ad0fe5cee381c5b74232a758cc7e13cf727f8a782971931cc70bade3",
+          "normalized_bounds": [
+            10,
+            137,
+            139,
+            147
+          ],
+          "pixel_bounds": [
+            18,
+            192,
+            257,
+            207
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000003",
+      "kind": "status timestamp",
+      "region": [
+        10,
+        137,
+        139,
+        147
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "This is the total amount we are sending out to operators so it adds up the positive numbers in column AF Then below it is the number of operators with a positive number in column AF The idea is that we see how much money will be send out of our bank account and to how many operators we are sending money.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "This is the total amount we are sending out to operators so it adds up the positive numbers in column AF Then below it is the number of operators with a positive number in column AF The idea is that we see how much money will be send out of our bank account and to how many operators we are sending money.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000004",
+          "claimed_content": "This is the total amount we are sending out to operators so it adds up the positive numbers in column AF Then below it is the number of operators with a positive number in column AF The idea is that we see how much money will be send out of our bank account and to how many operators we are sending money.",
+          "crop_path": "endpoint-evidence/element-000004-required-recorded-participant-d82011fea6055e1d.png",
+          "crop_sha256": "073af9a55dfe055cc403a42c2a2993a2532e77077ad1855926ca4c1c82ef6ad4",
+          "normalized_bounds": [
+            254,
+            2,
+            509,
+            228
+          ],
+          "pixel_bounds": [
+            469,
+            2,
+            941,
+            321
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000004",
+      "kind": "annotation callout",
+      "region": [
+        254,
+        2,
+        509,
+        228
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "We owe operators pay via ACH $61,240.75 4 operators",
+      "gap_reason": "",
+      "id": "element-000005",
+      "kind": "summary card",
+      "region": [
+        253,
+        169,
+        487,
+        297
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "Operators owe us invoice in QuickBooks $2,830.55 4 operators",
+      "gap_reason": "",
+      "id": "element-000006",
+      "kind": "summary card",
+      "region": [
+        496,
+        169,
+        731,
+        299
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "This is the total amount of money operators owe us. So we add up all the negative numbers in column AF. Then below that we put the number of operators that have a negative number. The idea here is that we see what the total we will be invoicing operators for and how many operators will get an invoice.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "This is the total amount of money operators owe us. So we add up all the negative numbers in column AF. Then below that we put the number of operators that have a negative number. The idea here is that we see what the total we will be invoicing operators for and how many operators will get an invoice.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000007",
+          "claimed_content": "This is the total amount of money operators owe us. So we add up all the negative numbers in column AF. Then below that we put the number of operators that have a negative number. The idea here is that we see what the total we will be invoicing operators for and how many operators will get an invoice.",
+          "crop_path": "endpoint-evidence/element-000007-required-recorded-participant-f3e29c2f0b0d8c95.png",
+          "crop_sha256": "ce697570716e3b79901dc11b41e70df84c8d1b58078168f136dee10619e1744f",
+          "normalized_bounds": [
+            521,
+            6,
+            800,
+            155
+          ],
+          "pixel_bounds": [
+            962,
+            8,
+            1478,
+            218
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000007",
+      "kind": "annotation callout",
+      "region": [
+        521,
+        6,
+        800,
+        155
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "Taggable revenue | Content $12,460.10 \u00b7 Service $6,445.30 | $18,905.40 | Add-on content $0 \u00b7 merch $0",
+      "gap_reason": "",
+      "id": "element-000008",
+      "kind": "summary metric card",
+      "region": [
+        740,
+        170,
+        975,
+        299
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "This is the breakdown of the total money we made | Content: BU | Service: BX | Total: BY | Add on just put $0 for now",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "This is the breakdown of the total money we made | Content: BU | Service: BX | Total: BY | Add on just put $0 for now",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000009",
+          "claimed_content": "This is the breakdown of the total money we made | Content: BU | Service: BX | Total: BY | Add on just put $0 for now",
+          "crop_path": "endpoint-evidence/element-000009-required-recorded-participant-adf0d8a19246bbc1.png",
+          "crop_sha256": "2dba219f8cb5794db2c6e34c0e0fe9e2a125e76bec91b4022dd7948e04d425bc",
+          "normalized_bounds": [
+            817,
+            14,
+            1000,
+            201
+          ],
+          "pixel_bounds": [
+            1508,
+            19,
+            1847,
+            283
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000009",
+      "kind": "annotation callout",
+      "region": [
+        817,
+        14,
+        1000,
+        201
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c01",
+      "content": "REPOSITORY; Payout reports; Company; All companies (period reports); Search by period, ref, or company; Export list; Showing all-operator period reports. Pick a company to\u2026",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "REPOSITORY; Payout reports; Company; All companies (period reports); Search by period, ref, or company; Export list; Showing all-operator period reports. Pick a company to\u2026",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000010",
+          "claimed_content": "REPOSITORY; Payout reports; Company; All companies (period reports); Search by period, ref, or company; Export list; Showing all-operator period reports. Pick a company to\u2026",
+          "crop_path": "endpoint-evidence/element-000010-required-recorded-participant-935600254ba2cdb1.png",
+          "crop_sha256": "037e4193c201a62654d2bc8da10a54358cee2ada8c928f9f0f9a601fa9f74b5d",
+          "normalized_bounds": [
+            9,
+            360,
+            300,
+            550
+          ],
+          "pixel_bounds": [
+            16,
+            506,
+            555,
+            774
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000010",
+      "kind": "payout reports repository section",
+      "region": [
+        9,
+        360,
+        300,
+        550
+      ],
+      "scan_region_id": "region-r02-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "This is just the total from the numbers in the payout report. The total net payout = Sum of all operators in column AF. WE owe is the sum of the positive numbers in AF. They owe is the sum of the negative numbers in AF. Taggable rev is the the sum of BY from all operators.",
+      "gap_reason": "",
+      "id": "element-000011",
+      "kind": "annotation callout with arrow",
+      "region": [
+        354,
+        326,
+        628,
+        552
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c04",
+      "content": "Open live period-to-date report \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Open live period-to-date report \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000012",
+          "claimed_content": "Open live period-to-date report \u2192",
+          "crop_path": "endpoint-evidence/element-000012-required-recorded-participant-f712aefed6d17e84.png",
+          "crop_sha256": "28dad7ff9c9163001b02ae346c3ad56e755770ca5c6b6f5f973467b4efa197e3",
+          "normalized_bounds": [
+            792,
+            310,
+            974,
+            342
+          ],
+          "pixel_bounds": [
+            1462,
+            435,
+            1799,
+            481
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000012",
+      "kind": "outlined action button",
+      "region": [
+        792,
+        310,
+        974,
+        342
+      ],
+      "scan_region_id": "region-r02-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "Jul 16 \u2013 31, 2026; PAYOUT-INTERNAL-2026-07B; $112,127.36 NET PAYOUT",
+      "gap_reason": "",
+      "id": "element-000013",
+      "kind": "payout period report card",
+      "region": [
+        35,
+        550,
+        300,
+        620
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "Jul 1 \u2013 15, 2026; PAYOUT-INTERNAL-2026-07A; $126,179.05 NET PAYOUT",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-INTERNAL-2026-07A; $126,179.05 NET PAYOUT",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000014",
+          "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-INTERNAL-2026-07A; $126,179.05 NET PAYOUT",
+          "crop_path": "endpoint-evidence/element-000014-required-recorded-participant-a6c31ec6249d275d.png",
+          "crop_sha256": "6f6ea1d19b4d7930a45da2afee633a4652543318df240256189a57ddf236872f",
+          "normalized_bounds": [
+            35,
+            630,
+            300,
+            699
+          ],
+          "pixel_bounds": [
+            64,
+            885,
+            555,
+            983
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000014",
+      "kind": "payout period report card",
+      "region": [
+        35,
+        630,
+        300,
+        699
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "Jun 16 \u2013 30, 2026; PAYOUT-INTERNAL-2026-06B; $104,880.12 NET PAYOUT",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Jun 16 \u2013 30, 2026; PAYOUT-INTERNAL-2026-06B; $104,880.12 NET PAYOUT",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000015",
+          "claimed_content": "Jun 16 \u2013 30, 2026; PAYOUT-INTERNAL-2026-06B; $104,880.12 NET PAYOUT",
+          "crop_path": "endpoint-evidence/element-000015-required-recorded-participant-832f773dc64e9c1e.png",
+          "crop_sha256": "8613fe6406fabc2e66cbf3d6a2d63ab2e68836790701f1b9e84e7b78972f0a92",
+          "normalized_bounds": [
+            35,
+            708,
+            300,
+            777
+          ],
+          "pixel_bounds": [
+            64,
+            995,
+            555,
+            1093
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000015",
+      "kind": "payout period report card",
+      "region": [
+        35,
+        708,
+        300,
+        777
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c02",
+      "content": "Jul 16 \u2013 31, 2026 | PAYOUT-INTERNAL-2026-07B | $112,127.36 NET PAYOUT | $116,951.65 WE OWE | $4,824.29 THEY OWE | $36,974.89 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192; Jul 1 \u2013 15, 2026 | PAYOUT-INTERNAL-2026-07A | $126,179.05 NET PAYOUT | $131,133.28 WE OWE | $4,954.23 THEY OWE | $39,210.44 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192; Jun 16 \u2013 30, 2026 | PAYOUT-INTERNAL-2026-06B | $104,880.12 NET PAYOUT | $108,540.90 WE OWE | $3,660.78 THEY OWE | $33,918.06 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+      "gap_reason": "",
+      "id": "element-000016",
+      "kind": "three-row financial metrics table",
+      "region": [
+        21,
+        500,
+        963,
+        788
+      ],
+      "scan_region_id": "region-r03-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "Jun 1 \u2013 15, 2026 | PAYOUT-INTERNAL-2026-06A | $98,540.77 | NET PAYOUT | $101,905.12 WE OWE | $3,364.35 THEY OWE | $31,470.88 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Jun 1 \u2013 15, 2026 | PAYOUT-INTERNAL-2026-06A | $98,540.77 | NET PAYOUT | $101,905.12 WE OWE | $3,364.35 THEY OWE | $31,470.88 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000017",
+          "claimed_content": "Jun 1 \u2013 15, 2026 | PAYOUT-INTERNAL-2026-06A | $98,540.77 | NET PAYOUT | $101,905.12 WE OWE | $3,364.35 THEY OWE | $31,470.88 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+          "crop_path": "endpoint-evidence/element-000017-required-recorded-participant-5dd751d6cb5a726c.png",
+          "crop_sha256": "94ea9e7d243a7816d55bced33e34025007bb4cd63e479b36fd78b37f40d34403",
+          "normalized_bounds": [
+            21,
+            787,
+            963,
+            858
+          ],
+          "pixel_bounds": [
+            38,
+            1106,
+            1779,
+            1207
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000017",
+      "kind": "payout report row",
+      "region": [
+        21,
+        787,
+        963,
+        858
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "May 16 \u2013 31, 2026 | PAYOUT-INTERNAL-2026-05B | $91,220.40 | NET PAYOUT | $94,388.15 WE OWE | $3,167.75 THEY OWE | $29,015.22 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "May 16 \u2013 31, 2026 | PAYOUT-INTERNAL-2026-05B | $91,220.40 | NET PAYOUT | $94,388.15 WE OWE | $3,167.75 THEY OWE | $29,015.22 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000018",
+          "claimed_content": "May 16 \u2013 31, 2026 | PAYOUT-INTERNAL-2026-05B | $91,220.40 | NET PAYOUT | $94,388.15 WE OWE | $3,167.75 THEY OWE | $29,015.22 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+          "crop_path": "endpoint-evidence/element-000018-required-recorded-participant-e12940c72181738e.png",
+          "crop_sha256": "9c0787b6670016591f6f69ee114c4aadbfe136ff62c91116e340515b05e2763b",
+          "normalized_bounds": [
+            21,
+            866,
+            963,
+            936
+          ],
+          "pixel_bounds": [
+            38,
+            1217,
+            1779,
+            1317
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000018",
+      "kind": "payout report row",
+      "region": [
+        21,
+        866,
+        963,
+        936
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "New reports file automatically at each period close. Click any report to open the full internal detail; \u2193 downloads the operator-facing PDF.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "New reports file automatically at each period close. Click any report to open the full internal detail; \u2193 downloads the operator-facing PDF.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000019",
+          "claimed_content": "New reports file automatically at each period close. Click any report to open the full internal detail; \u2193 downloads the operator-facing PDF.",
+          "crop_path": "endpoint-evidence/element-000019-required-participant-replacement-45546ebc61990e8b.png",
+          "crop_sha256": "8a9da39faba3ac4e046fb1601237501fa2f3064b91f074ee0fe40056986cec66",
+          "normalized_bounds": [
+            21,
+            948,
+            750,
+            970
+          ],
+          "pixel_bounds": [
+            38,
+            1332,
+            1386,
+            1364
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_participant_replacement"
+        },
+        "identity_continuity": {
+          "required_claim": "Click a row for full detail; \u2193 downloads the operator-facing PDF.",
+          "verdict": "same_required_source_unit"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000019",
+      "kind": "informational note",
+      "region": [
+        21,
+        948,
+        750,
+        970
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    }
+  ],
+  "relationships": [
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000009",
+      "description": "The annotation applies its payout-total formulas to the visible Jul 16\u201331, 2026 report row: net payout sums column AF, WE OWE sums positive AF values, THEY OWE sums negative AF values, and TAGGABLE REV sums column BY across operators.",
+      "from_id": "element-000011",
+      "gap_reason": "",
+      "id": "relationship-000009-correction-000001",
+      "kind": "annotation callout explaining payout report metrics",
+      "locked_identity_participants": {
+        "target": "element-000014"
+      },
+      "origin_point": [
+        490,
+        410
+      ],
+      "status": "readable",
+      "target_point": [
+        299,
+        550
+      ],
+      "to_id": "element-000013",
+      "verified_element_id": "element-000014",
+      "verified_obligation_id": "obligation-000012"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000011",
+      "description": "The calculation annotation explains the metrics on the visible Jul 16\u201331, 2026 payout report row: net payout is total AF, WE OWE is positive AF, THEY OWE is negative AF, and TAGGABLE REV is total BY across operators.",
+      "from_id": "element-000011",
+      "gap_reason": "",
+      "id": "relationship-000011-correction-000001",
+      "kind": "annotation explains the calculation and meaning of the payout report row metrics",
+      "locked_identity_participants": {
+        "target": "element-000017"
+      },
+      "origin_point": [
+        480,
+        450
+      ],
+      "status": "readable",
+      "target_point": [
+        299,
+        550
+      ],
+      "to_id": "element-000013",
+      "verified_element_id": "element-000017",
+      "verified_obligation_id": "obligation-000015"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000012",
+      "description": "The calculation annotation defines the visible Jul 16\u201331, 2026 row metrics: net payout totals AF, WE OWE totals positive AF, THEY OWE totals negative AF, and TAGGABLE REV totals BY across operators.",
+      "from_id": "element-000011",
+      "gap_reason": "",
+      "id": "relationship-000012-correction-000001",
+      "kind": "calculation definition for payout report metrics",
+      "locked_identity_participants": {
+        "target": "element-000018"
+      },
+      "origin_point": [
+        480,
+        430
+      ],
+      "status": "readable",
+      "target_point": [
+        299,
+        550
+      ],
+      "to_id": "element-000013",
+      "verified_element_id": "element-000018",
+      "verified_obligation_id": "obligation-000016"
+    }
+  ],
+  "schema_version": 1,
+  "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+}

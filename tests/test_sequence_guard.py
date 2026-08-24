@@ -350,6 +350,38 @@ def test_registered_receipts_activate_and_guard(receipt_flow, tmp_path: Path):
     ]) == 0
 
 
+def test_activate_rejects_selection_from_a_different_controller_checkout(
+    receipt_flow, tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    task_id, document, _, _ = receipt_flow
+    foreign_checkout = tmp_path / "foreign-checkout"
+    foreign_checkout.mkdir()
+    selection, _, _ = work_memory.load_receipt(task_id, "selection")
+    selection["repository_roots"] = {
+        "memory-knowledge": str(foreign_checkout),
+    }
+    work_memory.write_receipt(task_id, "selection", selection)
+    monkeypatch.setattr(
+        work_memory, "_repo_roots",
+        lambda path=None, snapshot=None: {
+            "memory-knowledge": Path(
+                (snapshot or {"memory-knowledge": str(tmp_path)})[
+                    "memory-knowledge"
+                ]
+            ).resolve(),
+        },
+    )
+
+    assert sequence_guard.main([
+        "activate", "--task-id", task_id,
+        "--sequence-doc", str(document),
+        "--state", str(tmp_path / "active.json"),
+    ]) == 4
+    assert "controller-checkout-mismatch" in capsys.readouterr().err
+    assert not (tmp_path / "active.json").exists()
+
+
 def test_guard_rejects_ungrounded_command(receipt_flow, tmp_path: Path):
     task_id, document, _, _ = receipt_flow; state = tmp_path / "active.json"
     sequence_guard.main(["activate", "--task-id", task_id, "--sequence-doc", str(document), "--state", str(state)])
@@ -623,6 +655,44 @@ def test_activate_still_requires_directive_read_state(receipt_flow, tmp_path: Pa
         sequence_guard.main([
             "activate", "--task-id", task_id, "--sequence-doc", str(document),
             "--directive-state", str(tmp_path / "missing.json"),
+        ])
+
+
+def test_activate_accepts_old_directive_receipt_when_bound_bytes_are_unchanged(
+    receipt_flow, tmp_path: Path,
+) -> None:
+    task_id, document, _, _ = receipt_flow
+    directive_state = sequence_guard.DEFAULT_DIRECTIVE_STATE_PATH
+    state = json.loads(directive_state.read_text(encoding="utf-8"))
+    state["readAtUtc"] = "2020-01-01T00:00:00Z"
+    directive_state.write_text(json.dumps(state), encoding="utf-8")
+
+    assert sequence_guard.main([
+        "activate", "--task-id", task_id,
+        "--sequence-doc", str(document),
+        "--state", str(tmp_path / "active.json"),
+    ]) == 0
+
+
+def test_activate_rejects_old_receipt_when_directive_bytes_changed(
+    receipt_flow, tmp_path: Path,
+) -> None:
+    task_id, document, _, _ = receipt_flow
+    directive_state = sequence_guard.DEFAULT_DIRECTIVE_STATE_PATH
+    state = json.loads(directive_state.read_text(encoding="utf-8"))
+    state["readAtUtc"] = "2020-01-01T00:00:00Z"
+    directive_state.write_text(json.dumps(state), encoding="utf-8")
+    sequence_guard.DEFAULT_DIRECTIVES_PATH.write_text(
+        "# Changed directives\n", encoding="utf-8",
+    )
+
+    with pytest.raises(
+        SystemExit, match="directive read state is stale because directives SHA changed",
+    ):
+        sequence_guard.main([
+            "activate", "--task-id", task_id,
+            "--sequence-doc", str(document),
+            "--state", str(tmp_path / "active.json"),
         ])
 
 

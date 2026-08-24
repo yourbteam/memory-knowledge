@@ -28,6 +28,7 @@ def _prepared_intake(
     argv = [
         "python3", "scripts/scoped_git_publish.py",
         "--repo", "/repo",
+        "--repository-key", "memory-knowledge",
         "--manifest", artifact_path,
         "--message", "Publish approved scope",
         "--branch", "main",
@@ -158,7 +159,17 @@ def test_no_argument_publish_dispatches_only_after_authorization(
             "publish",
             kwargs["manifest"].read_text(encoding="utf-8"),
             kwargs["execute"],
-        )) or {"ok": True, "mode": "execute"},
+        )) or {
+            "ok": True, "mode": "execute",
+            "commit": "a" * 40, "remote_commit": "a" * 40,
+        },
+    )
+    monkeypatch.setattr(
+        scoped_git_publish.published_commit_ingestion,
+        "run",
+        lambda **kwargs: {
+            "verified": True, "memoryCommit": kwargs["commit_sha"],
+        },
     )
 
     assert scoped_git_publish.main([]) == 0
@@ -166,9 +177,8 @@ def test_no_argument_publish_dispatches_only_after_authorization(
         ("authorize", scoped_git_publish.EFFECT_AUTHORIZATION_SPEC),
         ("publish", "included.txt\n", True),
     ]
-    assert json.loads(capsys.readouterr().out) == {
-        "mode": "execute",
-        "ok": True,
+    assert json.loads(capsys.readouterr().out)["memoryIngestion"] == {
+        "verified": True, "memoryCommit": "a" * 40,
     }
 
 
@@ -183,7 +193,13 @@ def publish_repo(tmp_path: Path) -> tuple[Path, Path]:
     git(repo, "remote", "add", "origin", str(remote))
     (repo / "included.txt").write_text("before\n")
     (repo / "excluded.txt").write_text("before\n")
-    git(repo, "add", "included.txt", "excluded.txt")
+    (repo / scoped_git_publish.TEST_DECLARATION).write_text(
+        "test -f included.txt\n", encoding="utf-8",
+    )
+    git(
+        repo, "add", "included.txt", "excluded.txt",
+        scoped_git_publish.TEST_DECLARATION,
+    )
     git(repo, "commit", "-m", "initial")
     git(repo, "push", "-u", "origin", "main")
     manifest = tmp_path / "scope.txt"
@@ -200,6 +216,23 @@ def test_dry_run_reports_scope_without_mutating_index(publish_repo: tuple[Path, 
     assert result["mode"] == "dry-run"
     assert result["paths"] == ["included.txt"]
     assert git(repo, "diff", "--cached", "--name-only") == ""
+
+
+def test_dry_run_rejects_repository_without_a_tracked_publish_test_hook(
+    publish_repo: tuple[Path, Path],
+) -> None:
+    repo, manifest = publish_repo
+    (repo / "included.txt").write_text("changed\n")
+    (repo / scoped_git_publish.TEST_DECLARATION).unlink()
+
+    with pytest.raises(
+        scoped_git_publish.PublishError,
+        match="tracked .publish-tests declaration is required",
+    ):
+        scoped_git_publish.publish(
+            repo=repo, manifest=manifest, message="", branch="main",
+            remote="origin", execute=False,
+        )
 
 
 def test_dry_run_accepts_the_contract_without_a_commit_message(
@@ -242,6 +275,9 @@ def test_execute_pushes_exact_scope_and_leaves_unrelated_worktree_change(
         repo=repo, manifest=manifest, message="fix: included", branch="main", remote="origin", execute=True
     )
     assert result["commit"] == git(repo, "rev-parse", "refs/remotes/origin/main")
+    assert result["tests"] == {
+        "ran": True, "command": "test -f included.txt", "passed": True,
+    }
     assert git(repo, "show", "--format=", "--name-only", "HEAD") == "included.txt"
     assert git(repo, "status", "--short") == "M excluded.txt"
     assert git(repo, "diff", "--cached", "--name-only") == ""
@@ -254,9 +290,17 @@ def test_prevention_publish_binds_commit_and_source_receipt_before_remote_effect
     repo, manifest = publish_repo
     (repo / "included.txt").write_text("prevention change\n")
     monkeypatch.setattr(prevention_source_receipt, "ROOT", tmp_path / "receipts")
+    monkeypatch.setattr(
+        scoped_git_publish.published_commit_ingestion,
+        "run",
+        lambda **kwargs: {
+            "verified": True, "memoryCommit": kwargs["commit_sha"],
+        },
+    )
 
     returncode = scoped_git_publish.main([
-        "--repo", str(repo), "--manifest", str(manifest),
+        "--repo", str(repo), "--repository-key", "memory-knowledge",
+        "--manifest", str(manifest),
         "--message", "fix: prevention", "--branch", "main",
         "--remote", "origin", "--execute",
         "--prevention-effect-id", "e" * 64,
@@ -276,6 +320,159 @@ def test_prevention_publish_binds_commit_and_source_receipt_before_remote_effect
     assert result["preventionSourceReceiptSha256"] == (
         prevention_source_receipt.receipt_sha256(receipt)
     )
+
+
+def test_successful_governed_publish_records_same_path_verification(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    run_id = "33333333-3333-4333-8333-333333333333"
+    commit = "a" * 40
+    paths = [f"generated/{index:03d}.json" for index in range(50)]
+    observed = {}
+    calls = []
+    monkeypatch.setenv(scoped_git_publish.SEQUENCE_RUN_ID_ENV, run_id)
+    monkeypatch.setattr(
+        scoped_git_publish,
+        "publish",
+        lambda **_kwargs: {
+            "ok": True,
+            "mode": "execute",
+            "branch": "main",
+            "remote": "origin",
+            "commit": commit,
+            "remote_commit": commit,
+            "paths": paths,
+        },
+    )
+    monkeypatch.setattr(
+        scoped_git_publish.published_commit_ingestion,
+        "run",
+        lambda **kwargs: calls.append(("ingestion", kwargs)) or {
+            "verified": True,
+            "memoryCommit": commit,
+        },
+    )
+    monkeypatch.setattr(
+        scoped_git_publish.work_memory,
+        "cmd_verify_and_close",
+        lambda args: calls.append(("ledger", vars(args))) or observed.update(vars(args)) or {
+            "event_id": "44444444-4444-4444-8444-444444444444",
+            "closed_blocker_ids": [],
+        },
+    )
+
+    assert scoped_git_publish.main([
+        "--repo", "/repos/memory",
+        "--repository-key", "memory-knowledge",
+        "--manifest", "/tmp/manifest.txt",
+        "--message", "Publish exact scope",
+        "--branch", "main",
+        "--remote", "origin",
+        "--execute",
+    ]) == 0
+
+    result = json.loads(capsys.readouterr().out)
+    assert observed["run_id"] == run_id
+    assert observed["outcome"] == "passed"
+    assert observed["quality"] == "same-path"
+    assert commit in observed["evidence"]
+    assert observed["verification_command"] == "scoped-git-publish:publish"
+    assert [name for name, _ in calls] == ["ingestion", "ledger"]
+    assert calls[0][1] == {
+        "repository_key": "memory-knowledge",
+        "branch_name": "main",
+        "commit_sha": commit,
+    }
+    assert result["memoryIngestion"]["memoryCommit"] == commit
+    assert result["workMemoryVerificationEventId"] == (
+        "44444444-4444-4444-8444-444444444444"
+    )
+    assert "paths" not in result
+    assert result["listSummaries"]["paths"]["count"] == 50
+
+
+def test_unverified_ingestion_blocks_success_ledger_after_remote_publish(
+    monkeypatch: pytest.MonkeyPatch,
+    capsys: pytest.CaptureFixture[str],
+) -> None:
+    commit = "b" * 40
+    monkeypatch.setattr(
+        scoped_git_publish,
+        "publish",
+        lambda **_kwargs: {
+            "ok": True,
+            "mode": "execute",
+            "commit": commit,
+            "remote_commit": commit,
+        },
+    )
+    monkeypatch.setattr(
+        scoped_git_publish.published_commit_ingestion,
+        "run",
+        lambda **_kwargs: (_ for _ in ()).throw(
+            scoped_git_publish.published_commit_ingestion.IngestionVerificationError(
+                "ingestion-job-state:failed"
+            )
+        ),
+    )
+    monkeypatch.setattr(
+        scoped_git_publish.work_memory,
+        "cmd_verify_and_close",
+        lambda _args: pytest.fail("unverified memory must not record publication success"),
+    )
+
+    assert scoped_git_publish.main([
+        "--repo", "/repos/memory",
+        "--repository-key", "memory-knowledge",
+        "--manifest", "/tmp/manifest.txt",
+        "--message", "Publish exact scope",
+        "--branch", "main",
+        "--remote", "origin",
+        "--execute",
+    ]) == 2
+
+    error = json.loads(capsys.readouterr().err)
+    assert commit in error["error"]
+    assert "memory ingestion is not verified" in error["error"]
+
+
+def test_closeout_bounds_large_path_sets_without_losing_complete_identity() -> None:
+    paths = [f"generated/path-{index:04d}.json" for index in range(1000)]
+    result = {
+        "ok": True,
+        "mode": "execute",
+        "repo": "/repos/memory",
+        "branch": "main",
+        "remote": "origin",
+        "commit": "a" * 40,
+        "remote_commit": "a" * 40,
+        "paths": paths,
+        "source_branch": {
+            "landed": False,
+            "unpublished_paths": paths,
+            "why": "the source branch carries out-of-scope work",
+        },
+    }
+
+    closeout = scoped_git_publish._bounded_closeout(result)
+    encoded = json.dumps(closeout, sort_keys=True)
+
+    assert len(encoded.encode()) < 5000
+    assert "paths" not in closeout
+    assert closeout["listSummaries"]["paths"] == {
+        "count": 1000,
+        "preview": paths[:scoped_git_publish.CLOSEOUT_LIST_LIMIT],
+        "sha256": scoped_git_publish.hashlib.sha256(
+            json.dumps(
+                paths, ensure_ascii=False, separators=(",", ":"),
+            ).encode("utf-8")
+        ).hexdigest(),
+        "truncated": True,
+    }
+    nested = closeout["source_branch"]
+    assert "unpublished_paths" not in nested
+    assert nested["listSummaries"]["unpublished_paths"]["count"] == 1000
 
 
 def test_preflight_rejects_existing_staged_work(publish_repo: tuple[Path, Path]) -> None:
@@ -309,7 +506,34 @@ def test_resume_push_publishes_existing_head(publish_repo: tuple[Path, Path]) ->
         repo=repo, branch="main", remote="origin", commit_sha=commit_sha
     )
     assert result["mode"] == "resume-push"
+    assert result["tests"]["passed"] is True
     assert git(repo, "rev-parse", "refs/remotes/origin/main") == commit_sha
+
+
+def test_resume_push_rejects_nonzero_declared_tests_before_remote_effect(
+    publish_repo: tuple[Path, Path],
+) -> None:
+    repo, _ = publish_repo
+    remote_before = git(repo, "rev-parse", "refs/remotes/origin/main")
+    (repo / "included.txt").write_text("local commit\n")
+    (repo / scoped_git_publish.TEST_DECLARATION).write_text(
+        "exit 9\n", encoding="utf-8",
+    )
+    git(repo, "add", "included.txt", scoped_git_publish.TEST_DECLARATION)
+    git(repo, "commit", "-m", "fix: local with failing proof")
+    commit_sha = git(repo, "rev-parse", "HEAD")
+
+    with pytest.raises(
+        scoped_git_publish.PublishError,
+        match="repository's own tests failed",
+    ):
+        scoped_git_publish.resume_push(
+            repo=repo, branch="main", remote="origin", commit_sha=commit_sha,
+        )
+
+    assert git(repo, "ls-remote", "--heads", "origin", "main").split()[0] == (
+        remote_before
+    )
 
 
 def remote_writer(repo: Path, tmp_path: Path) -> Path:
@@ -348,6 +572,7 @@ def test_integrate_remote_rebases_exact_scope_and_pushes(
     assert result["mode"] == "integrate-remote-and-resume"
     assert result["original_commit"] == original
     assert result["commit"] != original
+    assert result["tests"]["passed"] is True
     assert git(repo, "rev-parse", "HEAD^") == remote_advance
     assert git(repo, "rev-parse", "refs/remotes/origin/main") == result["commit"]
     assert (repo / "unrelated.tmp").read_text() == "preserve me\n"
@@ -429,6 +654,7 @@ def test_isolated_integration_preserves_dirty_source_and_pushes_overlay(
     )
 
     assert result["mode"] == "isolated-integrate-remote-and-resume"
+    assert result["tests"]["passed"] is True
     assert result["source_commit"] == source_commit
     # The branch lands on what was published. It used to keep source_commit — a commit existing
     # only here — and the next publish was rejected as non-fast-forward by a remote this
@@ -475,6 +701,7 @@ def test_isolated_reconcile_uses_verified_overlay_for_approved_conflict(
     )
 
     assert result["mode"] == "isolated-reconcile-remote-and-resume"
+    assert result["tests"]["passed"] is True
     assert result["conflict_paths"] == ["included.txt"]
     assert result["source_branch"]["landed"] is True
     assert git(repo, "rev-parse", "HEAD") == result["commit"]

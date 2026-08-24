@@ -27,6 +27,9 @@ start_intake = _load_sibling("info_intake_start", "start_intake.py")
 projection_runner = _load_sibling(
     "info_intake_projection_runner", "run_projection_with_codex.py"
 )
+terminal_archiver = _load_sibling(
+    "info_intake_terminal_archiver", "archive_terminal_run.py"
+)
 
 
 def _ask(
@@ -117,11 +120,13 @@ def _run_purpose_model(
         or not isinstance(work_items[0].get("command"), list)
     ):
         raise ValueError("the purpose stage lost its code-controlled model command")
-    executable = shutil.which("codex")
-    if executable is None:
-        raise ValueError("Codex CLI is unavailable")
-    argv = projection_runner.build_codex_argv(
-        executable, work, tuple(), work_items[0]["command"]
+    try:
+        client = projection_runner.active_model_client()
+        executable = projection_runner.resolve_model_executable(client)
+    except projection_runner.LaunchError as error:
+        raise ValueError(str(error)) from error
+    argv = projection_runner.build_model_argv(
+        client, executable, work, tuple(), work_items[0]["command"]
     )
     completed = run_fn(argv, check=False)
     return int(completed.returncode)
@@ -139,6 +144,225 @@ def _preserved_text(work: Path, name: str, *, required: bool) -> str | None:
         raise ValueError(f"the preserved intake source is unreadable: {name}") from error
 
 
+def _completed_intake_action(
+    result: dict[str, object],
+    *,
+    input_fn: Callable[[str], str],
+    output_fn: Callable[[str], None],
+) -> str | None:
+    if (
+        result.get("status")
+        not in {"first_layer_complete", "first_layer_complete_with_preserved_gaps"}
+        or result.get("stopped") != "effective_first_layer_terminal_recorded"
+    ):
+        return None
+    return _choose(
+        (
+            "The intake is complete with preserved gaps. What should happen next?"
+            if result.get("status") == "first_layer_complete_with_preserved_gaps"
+            else "The intake is complete. What should happen next?"
+        ),
+        ("return_result", "add_source"),
+        input_fn=input_fn,
+        output_fn=output_fn,
+    )
+
+
+def _conduct_source_collection_interview(
+    work: Path,
+    opening: str,
+    purpose: str,
+    result: dict[str, object],
+    *,
+    input_fn: Callable[[str], str],
+    output_fn: Callable[[str], None],
+) -> dict[str, object]:
+    terminal_stops = {
+        "first_projection_recorded",
+        "first_verbatim_projection_recorded",
+        "first_pdf_projection_recorded",
+        "first_pdf_projection_failed",
+        "first_spreadsheet_projection_recorded",
+        "first_spreadsheet_projection_failed",
+        "gap_resolution_applied",
+    }
+    if result.get("stopped") in terminal_stops:
+        result = start_intake.drive(
+            work, opening, purpose, begin_source_collection=True
+        )
+    while result.get("status") == "needs_operator":
+        question = result.get("question")
+        if not isinstance(question, dict) or not isinstance(question.get("id"), str):
+            raise ValueError("the source collection lost its code-controlled question")
+        question_id = str(question["id"])
+        if question_id.startswith("source-collection-decision-"):
+            action = _choose(
+                str(question["asks"]),
+                tuple(str(value) for value in question["allowed_values"]),
+                input_fn=input_fn,
+                output_fn=output_fn,
+            )
+            result = start_intake.drive(
+                work,
+                opening,
+                purpose,
+                source_collection_action=action,
+            )
+        elif question_id.startswith("source-collection-kind-"):
+            kind = _choose(
+                str(question["asks"]),
+                tuple(str(value) for value in question["allowed_values"]),
+                input_fn=input_fn,
+                output_fn=output_fn,
+            )
+            result = start_intake.drive(
+                work,
+                opening,
+                purpose,
+                source_collection_kind=kind,
+            )
+        elif question_id.startswith("independent-source-"):
+            answer_type = str(question.get("answer_type"))
+            supplied = _ask(
+                str(question["asks"]),
+                "One existing local file path."
+                if answer_type == "local_file"
+                else "One public HTTP(S) URL.",
+                "Provide only the independent source requested for this intake.",
+                input_fn=input_fn,
+                output_fn=output_fn,
+            )
+            result = (
+                start_intake.drive(work, opening, purpose, Path(supplied))
+                if answer_type == "local_file"
+                else start_intake.drive(
+                    work, opening, purpose, source_url=supplied
+                )
+            )
+        else:
+            raise ValueError(
+                f"unsupported source collection question: {question_id}"
+            )
+        failed = _blocked(result, output_fn)
+        if failed is not None:
+            raise ValueError(str(result.get("why", result.get("stopped"))))
+        if result.get("stopped") == "additional_source_frozen":
+            result = start_intake.drive(
+                work, opening, purpose, project_source=True
+            )
+            failed = _blocked(result, output_fn)
+            if failed is not None:
+                raise ValueError(str(result.get("why", result.get("stopped"))))
+        if result.get("stopped") in {
+            "additional_source_projection_recorded",
+            "additional_spreadsheet_projection_failed",
+        }:
+            result = start_intake.drive(work, opening, purpose)
+    return result
+
+
+def _conduct_qualification_answer_interview(
+    work: Path,
+    *,
+    input_fn: Callable[[str], str],
+    output_fn: Callable[[str], None],
+    model_run_fn: Callable[..., object],
+    projection_region_limit: int | None,
+    projection_relationship_limit: int | None,
+) -> int:
+    while True:
+        boundary = start_intake.run_clarification_boundary(work)
+        failed = _blocked(boundary, output_fn)
+        if failed is not None:
+            return failed
+        if boundary.get("boundary") == "qualification_answers_complete":
+            output_fn(json.dumps(boundary, indent=2, sort_keys=True))
+            return 0
+        if (
+            boundary.get("boundary") != "needs_operator_answer"
+            or boundary.get("stopped") not in {
+                "awaiting_qualification_clarification_answers",
+                "awaiting_qualification_followup_answers",
+            }
+        ):
+            returncode = projection_runner.drive_work(
+                work,
+                projection_region_limit=projection_region_limit,
+                projection_relationship_limit=projection_relationship_limit,
+                model_run_fn=model_run_fn,
+            )
+            if returncode == 4:
+                continue
+            return returncode
+        answered = start_intake.run_operator_turn(
+            work, input_fn=input_fn, output_fn=output_fn
+        )
+        failed = _blocked(answered, output_fn)
+        if failed is not None:
+            return failed
+        if answered.get("stopped") == "additional_source_frozen":
+            try:
+                opening = (work / "sources/source-000001.txt").read_text(
+                    encoding="utf-8"
+                )
+                purpose = (work / "sources/source-000002.txt").read_text(
+                    encoding="utf-8"
+                )
+            except OSError as error:
+                output_fn(json.dumps({
+                    "status": "blocked",
+                    "stopped": "qualification answer source unavailable",
+                    "why": str(error),
+                }, indent=2, sort_keys=True))
+                return 3
+            projected = start_intake.drive(
+                work, opening, purpose, project_source=True
+            )
+            failed = _blocked(projected, output_fn)
+            if failed is not None:
+                return failed
+            if projected.get("status") == "waiting_for_model":
+                returncode = projection_runner.drive_work(
+                    work,
+                    projection_region_limit=projection_region_limit,
+                    projection_relationship_limit=projection_relationship_limit,
+                    model_run_fn=model_run_fn,
+                )
+                if returncode not in {0, 4}:
+                    return returncode
+            elif projected.get("stopped") == "additional_source_projection_recorded":
+                preserved = start_intake.drive(work, opening, purpose)
+                failed = _blocked(preserved, output_fn)
+                if failed is not None:
+                    return failed
+
+
+def _resume_after_projection_boundary(
+    returncode: int,
+    work: Path,
+    opening: str,
+    purpose: str,
+    *,
+    input_fn: Callable[[str], str],
+    output_fn: Callable[[str], None],
+    model_run_fn: Callable[..., object],
+    projection_region_limit: int | None,
+    projection_relationship_limit: int | None,
+) -> int:
+    if returncode != 4:
+        return returncode
+    return _continue_intake(
+        work,
+        opening,
+        purpose,
+        input_fn=input_fn,
+        output_fn=output_fn,
+        model_run_fn=model_run_fn,
+        projection_region_limit=projection_region_limit,
+        projection_relationship_limit=projection_relationship_limit,
+    )
+
+
 def _continue_intake(
     work: Path,
     opening: str,
@@ -154,6 +378,19 @@ def _continue_intake(
     failed = _blocked(result, output_fn)
     if failed is not None:
         return failed
+    completed_action = _completed_intake_action(
+        result, input_fn=input_fn, output_fn=output_fn
+    )
+    if completed_action == "return_result":
+        output_fn(json.dumps(result, indent=2, sort_keys=True))
+        return 0
+    if completed_action == "add_source":
+        result = start_intake.drive(
+            work, opening, purpose, begin_source_collection=True
+        )
+        failed = _blocked(result, output_fn)
+        if failed is not None:
+            return failed
     question = result.get("question")
     if (
         result.get("status") == "needs_operator"
@@ -218,7 +455,22 @@ def _continue_intake(
         failed = _blocked(result, output_fn)
         if failed is not None:
             return failed
-    elif result.get("status") == "needs_operator":
+    elif (
+        result.get("status") == "needs_operator"
+        and result.get("stopped") != "awaiting_source_collection_decision"
+    ):
+        if result.get("stopped") in {
+            "awaiting_qualification_clarification_answers",
+            "awaiting_qualification_followup_answers",
+        }:
+            return _conduct_qualification_answer_interview(
+                work,
+                input_fn=input_fn,
+                output_fn=output_fn,
+                model_run_fn=model_run_fn,
+                projection_region_limit=projection_region_limit,
+                projection_relationship_limit=projection_relationship_limit,
+            )
         output_fn(json.dumps(result, indent=2, sort_keys=True))
         return 4
     if (
@@ -231,8 +483,94 @@ def _continue_intake(
         failed = _blocked(result, output_fn)
         if failed is not None:
             return failed
-    return projection_runner.drive_work(
+    if result.get("stopped") in {
+        "first_projection_recorded",
+        "first_verbatim_projection_recorded",
+        "first_pdf_projection_recorded",
+        "first_pdf_projection_failed",
+        "first_spreadsheet_projection_recorded",
+        "first_spreadsheet_projection_failed",
+        "additional_source_projection_recorded",
+        "additional_spreadsheet_projection_failed",
+        "gap_resolution_applied",
+        "awaiting_source_collection_decision",
+    }:
+        result = _conduct_source_collection_interview(
+            work,
+            opening,
+            purpose,
+            result,
+            input_fn=input_fn,
+            output_fn=output_fn,
+        )
+        if result.get("status") == "source_collection_complete":
+            result = start_intake.run_source_set_qualification(work)
+            failed = _blocked(result, output_fn)
+            if failed is not None:
+                return failed
+            result = start_intake.run_qualification_admission(work)
+            failed = _blocked(result, output_fn)
+            if failed is not None:
+                return failed
+            if result.get("route") == "clarification_required":
+                result = start_intake.request_qualification_question_round(work)
+                failed = _blocked(result, output_fn)
+                if failed is not None:
+                    return failed
+                returncode = projection_runner.drive_work(
+                    work,
+                    projection_region_limit=projection_region_limit,
+                    projection_relationship_limit=projection_relationship_limit,
+                    model_run_fn=model_run_fn,
+                )
+                if returncode != 4:
+                    return returncode
+                return _conduct_qualification_answer_interview(
+                    work,
+                    input_fn=input_fn,
+                    output_fn=output_fn,
+                    model_run_fn=model_run_fn,
+                    projection_region_limit=projection_region_limit,
+                    projection_relationship_limit=projection_relationship_limit,
+                )
+            result = start_intake.run_clarification_boundary(work)
+            failed = _blocked(result, output_fn)
+            if failed is not None:
+                return failed
+            output_fn(json.dumps(result, indent=2, sort_keys=True))
+            return 0
+        output_fn(json.dumps(result, indent=2, sort_keys=True))
+        if result.get("status") == "waiting_for_model":
+            return _resume_after_projection_boundary(
+                projection_runner.drive_work(
+                    work,
+                    projection_region_limit=projection_region_limit,
+                    projection_relationship_limit=projection_relationship_limit,
+                    model_run_fn=model_run_fn,
+                ),
+                work,
+                opening,
+                purpose,
+                input_fn=input_fn,
+                output_fn=output_fn,
+                model_run_fn=model_run_fn,
+                projection_region_limit=projection_region_limit,
+                projection_relationship_limit=projection_relationship_limit,
+            )
+        return 4
+    return _resume_after_projection_boundary(
+        projection_runner.drive_work(
+            work,
+            projection_region_limit=projection_region_limit,
+            projection_relationship_limit=projection_relationship_limit,
+            model_run_fn=model_run_fn,
+        ),
         work,
+        opening,
+        purpose,
+        input_fn=input_fn,
+        output_fn=output_fn,
+        model_run_fn=model_run_fn,
         projection_region_limit=projection_region_limit,
         projection_relationship_limit=projection_relationship_limit,
     )
@@ -243,6 +581,7 @@ def run(
     input_fn: Callable[[str], str] = input,
     output_fn: Callable[[str], None] = print,
     model_run_fn: Callable[..., object] = subprocess.run,
+    archive_root: Path = terminal_archiver.DEFAULT_ARCHIVE_ROOT,
 ) -> int:
     action = _choose(
         "What should this launcher do?",
@@ -300,7 +639,7 @@ def run(
             output_fn=output_fn,
         )
         purpose = None
-    return _continue_intake(
+    returncode = _continue_intake(
         work,
         opening,
         purpose,
@@ -310,6 +649,13 @@ def run(
         projection_region_limit=projection_region_limit,
         projection_relationship_limit=projection_relationship_limit,
     )
+    if returncode == 0:
+        archived = terminal_archiver.archive_if_terminal(
+            work, archive_root=archive_root
+        )
+        if archived is not None:
+            output_fn(json.dumps({"intake_archive": archived}, indent=2, sort_keys=True))
+    return returncode
 
 
 def main() -> int:

@@ -1,0 +1,2829 @@
+{
+  "elements": [
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "All of this section is for the current pay period. Either 1st-15th or the 16th - End of month. Add up the total net revenue for all locations (Column AF) Then for refunds if we owe them money we reduce payout amount by refund amount. If they owe us money we add the refund amount to what they owe us. We should show refunds as a negative number always and then the math just works. Just add the refunds to the total net payout amount.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "All of this section is for the current pay period. Either 1st-15th or the 16th - End of month. Add up the total net revenue for all locations (Column AF) Then for refunds if we owe them money we reduce payout amount by refund amount. If they owe us money we add the refund amount to what they owe us. We should show refunds as a negative number always and then the math just works. Just add the refunds to the total net payout amount.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000001",
+          "claimed_content": "All of this section is for the current pay period. Either 1st-15th or the 16th - End of month. Add up the total net revenue for all locations (Column AF) Then for refunds if we owe them money we reduce payout amount by refund amount. If they owe us money we add the refund amount to what they owe us. We should show refunds as a negative number always and then the math just works. Just add the refunds to the total net payout amount.",
+          "crop_path": "endpoint-evidence/element-000001-required-recorded-participant-09e44f40c264f6b3.png",
+          "crop_sha256": "9fd670744a7d7835df9b9a5704e08c35c54d193e4f3068e0b5a306865d33bcd8",
+          "normalized_bounds": [
+            1,
+            1,
+            212,
+            240
+          ],
+          "pixel_bounds": [
+            2,
+            1,
+            483,
+            311
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000001",
+      "kind": "annotation callout",
+      "region": [
+        1,
+        1,
+        212,
+        240
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Net payout \u00b7 to date; photo revenue \u2212 code fees \u2212 refunds; $54,308.60; +$54,620.35 photos \u00b7 \u2212$311.75 codes \u00b7 \u2212$0.00 refunds",
+      "gap_reason": "",
+      "id": "element-000002",
+      "kind": "payout summary card",
+      "region": [
+        203,
+        170,
+        394,
+        334
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "I am not sure how we will track photo vs video yet. For now lets make the top section package (Column F + Column K) vs non package (Column C + Column I) sales.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "I am not sure how we will track photo vs video yet. For now lets make the top section package (Column F + Column K) vs non package (Column C + Column I) sales.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000003",
+          "claimed_content": "I am not sure how we will track photo vs video yet. For now lets make the top section package (Column F + Column K) vs non package (Column C + Column I) sales.",
+          "crop_path": "endpoint-evidence/element-000003-required-recorded-participant-c87df53d45fa5222.png",
+          "crop_sha256": "d52d6ea4e97690c1616d6a553347d2e57bdcb7560272f665b4aca52d0623b270",
+          "normalized_bounds": [
+            289,
+            12,
+            465,
+            274
+          ],
+          "pixel_bounds": [
+            657,
+            15,
+            1059,
+            355
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000003",
+      "kind": "annotation callout with arrow",
+      "region": [
+        289,
+        12,
+        465,
+        274
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "Total paid transaction revenue: Column X; Total Paid Transactions: Column W",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Total paid transaction revenue: Column X; Total Paid Transactions: Column W",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000004",
+          "claimed_content": "Total paid transaction revenue: Column X; Total Paid Transactions: Column W",
+          "crop_path": "endpoint-evidence/element-000004-required-participant-replacement-033656980f3850ba.png",
+          "crop_sha256": "b0e4cc39aba96b2247f6cf12ea437160c0f3a8efb876a62ca7145e53783b7219",
+          "normalized_bounds": [
+            472,
+            12,
+            641,
+            275
+          ],
+          "pixel_bounds": [
+            1074,
+            15,
+            1459,
+            356
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_participant_replacement"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000004",
+      "kind": "annotation callout with arrow",
+      "region": [
+        472,
+        12,
+        641,
+        275
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "$54,620.35; 1,942 total transactions",
+      "gap_reason": "",
+      "id": "element-000005",
+      "kind": "content revenue summary card",
+      "region": [
+        402,
+        177,
+        550,
+        333
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "Amount owed = Column AD; # of codes used = column AC",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Amount owed = Column AD; # of codes used = column AC",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000006",
+          "claimed_content": "Amount owed = Column AD; # of codes used = column AC",
+          "crop_path": "endpoint-evidence/element-000006-required-recorded-participant-208d8b251a375efd.png",
+          "crop_sha256": "187e08aba5dbcc9b691626a896d2d21c748552d8a3c5acb6d92875c7d4bd4e3d",
+          "normalized_bounds": [
+            634,
+            17,
+            793,
+            129
+          ],
+          "pixel_bounds": [
+            1442,
+            21,
+            1805,
+            167
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000006",
+      "kind": "annotation callout",
+      "region": [
+        634,
+        17,
+        793,
+        129
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "Redemption code fees; charged me comped photo; -$311.75; 96 codes used",
+      "gap_reason": "",
+      "id": "element-000007",
+      "kind": "metric card",
+      "region": [
+        599,
+        177,
+        789,
+        333
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "We will need to integrate with Stripe to show the refunds amount and the # of refunded transactions in this box. For now just put a dash or make it so we can manually enter the amount. Dont put $0 bc I dont want them to think it was zero if there were some.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "We will need to integrate with Stripe to show the refunds amount and the # of refunded transactions in this box. For now just put a dash or make it so we can manually enter the amount. Dont put $0 bc I dont want them to think it was zero if there were some.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000008",
+          "claimed_content": "We will need to integrate with Stripe to show the refunds amount and the # of refunded transactions in this box. For now just put a dash or make it so we can manually enter the amount. Dont put $0 bc I dont want them to think it was zero if there were some.",
+          "crop_path": "endpoint-evidence/element-000008-required-recorded-participant-1c14cc3e3f3b5d2f.png",
+          "crop_sha256": "1af62f05e621674dfcd018e219e83c55964106c68352ea50cc2746abbc6a8244",
+          "normalized_bounds": [
+            808,
+            32,
+            981,
+            248
+          ],
+          "pixel_bounds": [
+            1839,
+            41,
+            2233,
+            321
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000008",
+      "kind": "annotation callout",
+      "region": [
+        808,
+        32,
+        981,
+        248
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "Refunds; reversed transactions; $0.00; this period",
+      "gap_reason": "",
+      "id": "element-000009",
+      "kind": "metric card",
+      "region": [
+        797,
+        177,
+        988,
+        334
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "3,763 PAID TXNS",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "3,763 PAID TXNS",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000010",
+          "claimed_content": "3,763 PAID TXNS",
+          "crop_path": "endpoint-evidence/element-000010-required-participant-replacement-250f03aaa4e6ec8f.png",
+          "crop_sha256": "7d00f133296445e6b122a7cd3850de19253f5a71488629c7a46fcc9278768780",
+          "normalized_bounds": [
+            356,
+            469,
+            391,
+            522
+          ],
+          "pixel_bounds": [
+            810,
+            605,
+            890,
+            675
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_participant_replacement"
+        },
+        "identity_continuity": {
+          "required_claim": "3,763 PAID TXNS",
+          "verdict": "same_required_source_unit"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000010",
+      "kind": "paid transactions metric",
+      "region": [
+        356,
+        469,
+        391,
+        522
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "$101,503.80 PHOTO REVENUE",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "$101,503.80 PHOTO REVENUE",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000011",
+          "claimed_content": "$101,503.80 PHOTO REVENUE",
+          "crop_path": "endpoint-evidence/element-000011-required-recorded-participant-59584e83d3e6d9e5.png",
+          "crop_sha256": "2159776f73e513bccf81bf48566bed26316798423f915b99ea732803ddc99219",
+          "normalized_bounds": [
+            435,
+            484,
+            489,
+            516
+          ],
+          "pixel_bounds": [
+            990,
+            625,
+            1113,
+            667
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000011",
+      "kind": "photo revenue metric",
+      "region": [
+        435,
+        484,
+        489,
+        516
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c03",
+      "content": "Just pull these numbers from the payout report to populate these. They are all calculated in the payout report. Paid txt: W Photo Rev: X Codes Used: AC Code Fees: AD Total net payout: AF + refunds",
+      "gap_reason": "",
+      "id": "element-000012",
+      "kind": "annotation callout",
+      "region": [
+        522,
+        336,
+        674,
+        480
+      ],
+      "scan_region_id": "region-r02-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c03",
+      "content": "179 CODES USED",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "179 CODES USED",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000013",
+          "claimed_content": "179 CODES USED",
+          "crop_path": "endpoint-evidence/element-000013-required-recorded-participant-3c6fee83ebdf3582.png",
+          "crop_sha256": "50e41889284b2d18f51f082062c32d6ed3f16bbc71b6dea6950a7e4e41d37b73",
+          "normalized_bounds": [
+            514,
+            484,
+            552,
+            516
+          ],
+          "pixel_bounds": [
+            1169,
+            625,
+            1257,
+            667
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000013",
+      "kind": "metric display",
+      "region": [
+        514,
+        484,
+        552,
+        516
+      ],
+      "scan_region_id": "region-r02-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c03",
+      "content": "-$581.75 CODE FEES",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "-$581.75 CODE FEES",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000014",
+          "claimed_content": "-$581.75 CODE FEES",
+          "crop_path": "endpoint-evidence/element-000014-required-recorded-participant-cbd254571027c74c.png",
+          "crop_sha256": "2bc94394ef99694c035e653a859e95b37b5f41fcf3c1bc117b1003a61bc8e549",
+          "normalized_bounds": [
+            594,
+            484,
+            632,
+            516
+          ],
+          "pixel_bounds": [
+            1351,
+            625,
+            1439,
+            667
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000014",
+      "kind": "metric display",
+      "region": [
+        594,
+        484,
+        632,
+        516
+      ],
+      "scan_region_id": "region-r02-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000015",
+          "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+          "crop_path": "endpoint-evidence/element-000015-required-recorded-participant-fc3bd74302bc0354.png",
+          "crop_sha256": "bf2df7d2540f967009324467a1224080e164e45aaa2f6745a118f0ab3fc14c9d",
+          "normalized_bounds": [
+            213,
+            557,
+            1000,
+            650
+          ],
+          "pixel_bounds": [
+            484,
+            719,
+            2276,
+            840
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000015",
+      "kind": "payout period card",
+      "region": [
+        213,
+        557,
+        1000,
+        650
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "Jun 16 \u2013 30, 2026; PAYOUT-GCR-2026-06B; Grand Canyon Resort; 3,540 PAID TXNS; $98,120.40 PHOTO REVENUE; 168 CODES USED; -$546.00 CODE FEES; PAYOUT TO OPERATOR; $97,574.40; \u2193 PDF; open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Jun 16 \u2013 30, 2026; PAYOUT-GCR-2026-06B; Grand Canyon Resort; 3,540 PAID TXNS; $98,120.40 PHOTO REVENUE; 168 CODES USED; -$546.00 CODE FEES; PAYOUT TO OPERATOR; $97,574.40; \u2193 PDF; open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000016",
+          "claimed_content": "Jun 16 \u2013 30, 2026; PAYOUT-GCR-2026-06B; Grand Canyon Resort; 3,540 PAID TXNS; $98,120.40 PHOTO REVENUE; 168 CODES USED; -$546.00 CODE FEES; PAYOUT TO OPERATOR; $97,574.40; \u2193 PDF; open \u2192",
+          "crop_path": "endpoint-evidence/element-000016-required-recorded-participant-0f246858dbe50bc3.png",
+          "crop_sha256": "b122e6eba3547a665aa4d4498f388497806b7d4b9cd297c79defcd2ac9e862df",
+          "normalized_bounds": [
+            213,
+            660,
+            1000,
+            755
+          ],
+          "pixel_bounds": [
+            484,
+            852,
+            2276,
+            976
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000016",
+      "kind": "payout period card",
+      "region": [
+        213,
+        660,
+        1000,
+        755
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c04",
+      "content": "$100,922.05 \u2193 PDF open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "$100,922.05 \u2193 PDF open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000017",
+          "claimed_content": "$100,922.05 \u2193 PDF open \u2192",
+          "crop_path": "endpoint-evidence/element-000017-required-recorded-participant-33ccb438535343af.png",
+          "crop_sha256": "47de220426075edd673aebbc0282a06fbd32d11026cc6dbc640cebc51b1d93d0",
+          "normalized_bounds": [
+            750,
+            500,
+            977,
+            547
+          ],
+          "pixel_bounds": [
+            1707,
+            646,
+            2224,
+            707
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000017",
+      "kind": "transaction record row",
+      "region": [
+        750,
+        500,
+        977,
+        547
+      ],
+      "scan_region_id": "region-r03-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c02",
+      "content": "\u2013 15, 2026; GCR-2026-06A; Canyon Resort; 3,320 PAID TXNS; $92,010.75 PHOTO REVENUE; 150 CODES USED; \u2212$487.50 CODE FEES; PAYOUT TO OPERATOR $91,523.25; \u2193 PDF; open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "\u2013 15, 2026; GCR-2026-06A; Canyon Resort; 3,320 PAID TXNS; $92,010.75 PHOTO REVENUE; 150 CODES USED; \u2212$487.50 CODE FEES; PAYOUT TO OPERATOR $91,523.25; \u2193 PDF; open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000018",
+          "claimed_content": "\u2013 15, 2026; GCR-2026-06A; Canyon Resort; 3,320 PAID TXNS; $92,010.75 PHOTO REVENUE; 150 CODES USED; \u2212$487.50 CODE FEES; PAYOUT TO OPERATOR $91,523.25; \u2193 PDF; open \u2192",
+          "crop_path": "endpoint-evidence/element-000018-required-recorded-participant-1c77a20d7197990f.png",
+          "crop_sha256": "fbd6a82e63fb3c8bfe05d3df56a60d5427a895c789d3b3329cfa7cd4ecb6f19e",
+          "normalized_bounds": [
+            0,
+            764,
+            1000,
+            868
+          ],
+          "pixel_bounds": [
+            0,
+            987,
+            2276,
+            1122
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000018",
+      "kind": "historical performance summary row",
+      "region": [
+        0,
+        764,
+        1000,
+        868
+      ],
+      "scan_region_id": "region-r04-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c02",
+      "content": "16 \u2013 31, 2026; GCR-2026-05B; Canyon Resort; 3,105 PAID TXNS; $86,440.20 PHOTO REVENUE; 141 CODES USED; \u2212$458.25 CODE FEES; PAYOUT TO OPERATOR $85,981.95; \u2193 PDF; open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "16 \u2013 31, 2026; GCR-2026-05B; Canyon Resort; 3,105 PAID TXNS; $86,440.20 PHOTO REVENUE; 141 CODES USED; \u2212$458.25 CODE FEES; PAYOUT TO OPERATOR $85,981.95; \u2193 PDF; open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000019",
+          "claimed_content": "16 \u2013 31, 2026; GCR-2026-05B; Canyon Resort; 3,105 PAID TXNS; $86,440.20 PHOTO REVENUE; 141 CODES USED; \u2212$458.25 CODE FEES; PAYOUT TO OPERATOR $85,981.95; \u2193 PDF; open \u2192",
+          "crop_path": "endpoint-evidence/element-000019-required-recorded-participant-abd699123a87e03f.png",
+          "crop_sha256": "a097ac75015df97c43dd7cb9e72100266e244de8e2d9a35b5640aec5684a9034",
+          "normalized_bounds": [
+            0,
+            867,
+            1000,
+            961
+          ],
+          "pixel_bounds": [
+            0,
+            1120,
+            2276,
+            1242
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000019",
+      "kind": "historical performance summary row",
+      "region": [
+        0,
+        867,
+        1000,
+        961
+      ],
+      "scan_region_id": "region-r04-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c02",
+      "content": "",
+      "gap_reason": "The text is clipped by the source at the left, right, and bottom edges, so the full sentence is not visible.",
+      "id": "element-000020",
+      "kind": "explanatory text",
+      "region": [
+        0,
+        974,
+        1000,
+        1000
+      ],
+      "scan_region_id": "region-r04-c02",
+      "status": "gap"
+    },
+    {
+      "capture_scope": "relationship_endpoint",
+      "content": "No\u2014do not connect anything to that heading; preserve the rejected candidate in the audit trail.",
+      "endpoint_verification": {
+        "claimed_content": "Payout reports",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000021",
+          "claimed_content": "Payout reports",
+          "crop_path": "endpoint-evidence/element-000021.png",
+          "crop_sha256": "a63724efcc684697e2f9b896e33c0818087e3a0f850cfa9f692a07662c9b1b48",
+          "normalized_bounds": [
+            203,
+            372,
+            275,
+            397
+          ],
+          "pixel_bounds": [
+            462,
+            480,
+            626,
+            513
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "relationship_endpoint"
+        },
+        "verdict": "does_not_contain_claimed_content"
+      },
+      "gap_reason": "",
+      "id": "element-000021",
+      "kind": "payout reports section heading",
+      "region": [
+        203,
+        372,
+        275,
+        397
+      ],
+      "resolution_audit": {
+        "accepted_assessment_sha256": "2f1fd296d79b5290d4c61aed15a32678359eb7968b649806902ba10e316cb5cd",
+        "admission_input_sha256": "1601153214c4a73db090c3e41b872b2555eb0b1fff774dfde1bdf9cf8b1f5bde",
+        "answer_projection_id": "projection-source-000005-v1",
+        "answer_projection_sha256": "9f49d1f43a9333d7d3ee8b28de15a2d6bd609b59cdabd098c79ac91c2f6aa63b",
+        "answer_source_id": "source-000005",
+        "answer_source_sha256": "9f49d1f43a9333d7d3ee8b28de15a2d6bd609b59cdabd098c79ac91c2f6aa63b",
+        "answer_text_sha256": "9f49d1f43a9333d7d3ee8b28de15a2d6bd609b59cdabd098c79ac91c2f6aa63b",
+        "assessment_position": 2,
+        "assessment_result_sha256": "f1b175cb4a0ef2baf88af121d5488908188430cabd2bfb857d90e2fa041530f2",
+        "assessment_round": 1,
+        "contract": 1,
+        "original_gap_record_sha256": "647ef24fb4917e8b9f230515a493fef9b6f73ebab5e9db08b3d20e26c54ab89e",
+        "parent_projection_id": "projection-source-000003-v1",
+        "parent_projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a"
+      },
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_correction_endpoint",
+      "content": "Jul 16 \u2013 31, 2026; PAYOUT-GCR-2026-07B; Grand Canyon Resort; 3,763 PAID TXNS; $101,503.80 PHOTO REVENUE; 179 CODES USED; -$581.75 CODE FEES; PAYOUT TO OPERATOR; $100,922.05; PDF; open",
+      "gap_reason": "",
+      "id": "correction-element-000001",
+      "kind": "payout period card",
+      "region": [
+        213,
+        452,
+        1000,
+        548
+      ],
+      "status": "readable"
+    }
+  ],
+  "projection_lineage": {
+    "invalidated_attempt": 4,
+    "locked_element_id": "element-000020",
+    "parent_projection_id": "projection-source-000003-v4",
+    "parent_projection_sha256": "89a40cb0e65005931bc61792b70db58fc972b1a8dd56ff9ba62ed14975600766",
+    "recovery": "dropped_locked_gap_participant",
+    "restored_gap_id": "relationship-000015"
+  },
+  "purpose_quote": "I want us to test the complete bundle of screenshots with annotations. The reference spreadsheet and codebase is the same, but the intake complete bundle has more screenshots.",
+  "reader": {
+    "harness": "Codex",
+    "model": "GPT-5"
+  },
+  "relationship_obligations": [
+    {
+      "element_id": "element-000001",
+      "id": "obligation-000001",
+      "relationship_id": "relationship-000001",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000002",
+      "id": "obligation-000002",
+      "relationship_id": "relationship-000001",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000003",
+      "id": "obligation-000003",
+      "relationship_id": "relationship-000002",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000004",
+      "id": "obligation-000004",
+      "relationship_id": "relationship-000003",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000005",
+      "id": "obligation-000005",
+      "relationship_id": "relationship-000002",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000006",
+      "id": "obligation-000006",
+      "relationship_id": "relationship-000004",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000007",
+      "id": "obligation-000007",
+      "relationship_id": "relationship-000004",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000008",
+      "id": "obligation-000008",
+      "relationship_id": "relationship-000005",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000009",
+      "id": "obligation-000009",
+      "relationship_id": "relationship-000005",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000010",
+      "id": "obligation-000010",
+      "relationship_id": "relationship-000006",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000011",
+      "id": "obligation-000011",
+      "relationship_id": "relationship-000007",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000012",
+      "id": "obligation-000012",
+      "relationship_id": "relationship-000006",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000013",
+      "id": "obligation-000013",
+      "relationship_id": "relationship-000008",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000014",
+      "id": "obligation-000014",
+      "relationship_id": "relationship-000009",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000015",
+      "id": "obligation-000015",
+      "relationship_id": "relationship-000010",
+      "resolution": "gap",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000016",
+      "id": "obligation-000016",
+      "relationship_id": "relationship-000011",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000017",
+      "id": "obligation-000017",
+      "relationship_id": "relationship-000012",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000018",
+      "id": "obligation-000018",
+      "relationship_id": "relationship-000013",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000019",
+      "id": "obligation-000019",
+      "relationship_id": "relationship-000014",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000020",
+      "id": "obligation-000020",
+      "relationship_id": "relationship-000015",
+      "resolution": "gap",
+      "status": "resolved"
+    }
+  ],
+  "relationships": [
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation defines the Net payout to date card for the current half-month pay period: sum Column AF across all locations and add refunds as negative amounts, so refunds owed to the operator reduce the payout and refunds owed by the operator increase what they owe.",
+      "from_id": "element-000001",
+      "gap_reason": "",
+      "id": "relationship-000001",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "The red callout\u2019s arrow visibly terminates on the orange \u201cNet payout \u00b7 to date\u201d summary card, and the card\u2019s displayed components match the instruction: photo revenue, negative code fees, and negative refunds combine into the net payout.",
+        "verdict": "supported"
+      },
+      "kind": "calculation instruction",
+      "locked_identity_participants": {
+        "origin": "element-000001"
+      },
+      "origin_point": [
+        100,
+        100
+      ],
+      "status": "readable",
+      "target_point": [
+        250,
+        250
+      ],
+      "to_id": "element-000002",
+      "verified_element_id": "element-000001",
+      "verified_obligation_id": "obligation-000001",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation directs the content revenue summary card to present package sales (Columns F + K) versus non-package sales (Columns C + I), while photo-versus-video tracking remains undecided.",
+      "from_id": "element-000003",
+      "gap_reason": "",
+      "id": "relationship-000002",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "A red diagonal arrow runs from the photo-versus-video tracking callout and visibly ends inside the green content-revenue summary card containing $54,620.35 and 1,942 total transactions.",
+        "verdict": "supported"
+      },
+      "kind": "annotation callout points to metric summary card",
+      "locked_identity_participants": {
+        "origin": "element-000003"
+      },
+      "origin_point": [
+        377,
+        100
+      ],
+      "status": "readable",
+      "target_point": [
+        456,
+        274
+      ],
+      "to_id": "element-000005",
+      "verified_element_id": "element-000003",
+      "verified_obligation_id": "obligation-000003",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The callout points to the content revenue summary card and establishes that its total paid transaction revenue comes from Column X and its total paid transactions count comes from Column W.",
+      "from_id": "element-000004",
+      "gap_reason": "",
+      "id": "relationship-000003",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "The callout\u2019s red arrow visibly points to the green card\u2019s revenue and total-transactions metrics, matching its explicit Column X revenue and Column W transaction mappings.",
+        "verdict": "supported"
+      },
+      "kind": "metric source mapping",
+      "locked_identity_participants": {
+        "origin": "element-000004"
+      },
+      "origin_point": [
+        550,
+        60
+      ],
+      "status": "readable",
+      "target_point": [
+        460,
+        300
+      ],
+      "to_id": "element-000005",
+      "verified_element_id": "element-000004",
+      "verified_obligation_id": "obligation-000004",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation maps Column AD to the amount owed/code-fees value and Column AC to the number of codes used shown on the Redemption code fees card.",
+      "from_id": "element-000006",
+      "gap_reason": "",
+      "id": "relationship-000004",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "The red arrow from the Column AD/AC callout visibly terminates on the red Redemption code fees card, which shows both an owed fee amount (-$311.75) and a codes-used count (96).",
+        "verdict": "supported"
+      },
+      "kind": "column-to-metric mapping",
+      "locked_identity_participants": {
+        "origin": "element-000006"
+      },
+      "origin_point": [
+        713,
+        73
+      ],
+      "status": "readable",
+      "target_point": [
+        694,
+        255
+      ],
+      "to_id": "element-000007",
+      "verified_element_id": "element-000006",
+      "verified_obligation_id": "obligation-000006",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation points to the Refunds metric card and specifies that it should show the Stripe-derived refund amount and refunded-transaction count, using a dash or manual entry until integration and never displaying $0 when the value is unknown.",
+      "from_id": "element-000008",
+      "gap_reason": "",
+      "id": "relationship-000005",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "The callout explicitly says \u201cin this box,\u201d and its red arrow visibly ends on the blue Refunds card showing reversed transactions and the current $0.00 placeholder.",
+        "verdict": "supported"
+      },
+      "kind": "annotation callout applies to metric card",
+      "locked_identity_participants": {
+        "origin": "element-000008"
+      },
+      "origin_point": [
+        894,
+        140
+      ],
+      "status": "readable",
+      "target_point": [
+        850,
+        280
+      ],
+      "to_id": "element-000009",
+      "verified_element_id": "element-000008",
+      "verified_obligation_id": "obligation-000008",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000006",
+      "correction_outcome": {
+        "action": "propose_replacement_endpoint",
+        "candidate_relationship_id": "relationship-000006-correction-000001",
+        "independent_visual_verification": {
+          "reader": {
+            "harness": "Codex CLI",
+            "model": "GPT-5 Codex"
+          },
+          "reason": "The red callout explicitly says \"Photo Rev: X\" and its arrow terminates at the payout-report row containing the visible \"$101,503.80 PHOTO REVENUE\" metric.",
+          "verdict": "supported"
+        },
+        "replacement_element": {
+          "created_by_correction": false,
+          "id": "element-000011"
+        },
+        "replacement_role": "target",
+        "replacement_source": "use_recorded_element"
+      },
+      "description": "The payout report's photo-revenue metric is populated from column X.",
+      "from_id": "element-000012",
+      "gap_reason": "",
+      "id": "relationship-000006",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "The callout lists mappings for several payout-report values and its arrow ends near the report row around the photo-revenue/codes-used area, not on the separately bounded \u201c3,763 PAID TXNS\u201d metric at the left.",
+        "verdict": "not_supported"
+      },
+      "kind": "data-source mapping",
+      "locked_identity_participants": {
+        "target": "element-000010"
+      },
+      "origin_point": [
+        600,
+        400
+      ],
+      "status": "readable",
+      "target_point": [
+        488,
+        485
+      ],
+      "to_id": "element-000011",
+      "verified_element_id": "element-000010",
+      "verified_obligation_id": "obligation-000010"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The payout report's Photo Rev value from column X populates the displayed photo revenue metric.",
+      "from_id": "element-000012",
+      "gap_reason": "",
+      "id": "relationship-000007",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "The callout explicitly maps \u201cPhoto Rev: X,\u201d and its arrow visibly points into the first payout-report row immediately beside the displayed \u201c$101,503.80 PHOTO REVENUE\u201d value.",
+        "verdict": "supported"
+      },
+      "kind": "source field mapping",
+      "locked_identity_participants": {
+        "target": "element-000011"
+      },
+      "origin_point": [
+        600,
+        400
+      ],
+      "status": "readable",
+      "target_point": [
+        462,
+        500
+      ],
+      "to_id": "element-000011",
+      "verified_element_id": "element-000011",
+      "verified_obligation_id": "obligation-000011",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The 179 CODES USED metric is populated from the payout report's Codes Used field in column AC.",
+      "from_id": "element-000012",
+      "gap_reason": "",
+      "id": "relationship-000008",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "The callout explicitly maps \u201cCodes Used: AC,\u201d and the arrowhead visibly lands immediately beside the first report row\u2019s \u201c179 CODES USED\u201d metric.",
+        "verdict": "supported"
+      },
+      "kind": "data-source field mapping",
+      "locked_identity_participants": {
+        "target": "element-000013"
+      },
+      "origin_point": [
+        600,
+        410
+      ],
+      "status": "readable",
+      "target_point": [
+        533,
+        500
+      ],
+      "to_id": "element-000013",
+      "verified_element_id": "element-000013",
+      "verified_obligation_id": "obligation-000013",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The payout report's CODE FEES metric, shown as -$581.75, is populated from Column AD.",
+      "from_id": "element-000012",
+      "gap_reason": "",
+      "id": "relationship-000009",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "The callout explicitly identifies \u201cCode Fees: AD,\u201d while the targeted payout-report row visibly contains the corresponding \u201c-$581.75 CODE FEES\u201d metric.",
+        "verdict": "supported"
+      },
+      "kind": "metric source mapping",
+      "locked_identity_participants": {
+        "target": "element-000014"
+      },
+      "origin_point": [
+        600,
+        400
+      ],
+      "status": "readable",
+      "target_point": [
+        613,
+        500
+      ],
+      "to_id": "element-000014",
+      "verified_element_id": "element-000014",
+      "verified_obligation_id": "obligation-000014",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "verifier_rejection_corrected_with_recorded_endpoints",
+      "description": "The Jul 16\u201331, 2026 payout-period card is the payout-report source whose calculated Paid transactions, Photo revenue, Codes used, Code fees, and Total net payout values populate the fields listed in the annotation.",
+      "from_id": "correction-element-000001",
+      "gap_reason": "",
+      "id": "relationship-000010",
+      "kind": "data population instruction",
+      "origin_point": [
+        500,
+        500
+      ],
+      "resolution_audit": {
+        "accepted_assessment_round": 1,
+        "accepted_assessment_sha256": "9634f1593a5e64b242bec825c72128864abe831208eb31bd01ce0d4634c68272",
+        "independent_verification_sha256": "ca1858d56f0e8cab7917797c942e0186f87d1323629bfbeeb5aadb96a873f06b",
+        "operator_answer_source_sha256": "fafde1a06539c01182d98bbe95cfe491601c817896deb1805b24966cf3082722",
+        "parent_projection_sha256": "b6b3b307838af974e40aac197fe68f6f63f74feea051c5f3254cb0adfbc14e45",
+        "resolution_result_sha256": "e7fc776571182af0c714ff02bcfc1029e9f181daffe96e0ab3636f1d9dfedd15"
+      },
+      "resolution_evidence": {
+        "accepted_assessment_sha256": "9634f1593a5e64b242bec825c72128864abe831208eb31bd01ce0d4634c68272",
+        "bound_gap_record_sha256": "96dc02e7798985872080eae0a3039e3ed6c3e18f0b56787ac3d393cc1fcdb76b",
+        "operator_answer_source_sha256": "fafde1a06539c01182d98bbe95cfe491601c817896deb1805b24966cf3082722",
+        "question_id": "gap-clarification-answer-000003",
+        "rejected_candidate_sha256": "1a306f21620120fdd98adf1db7f8c96330ec6b723215917c7c13540b652ddcea",
+        "rejected_verification_sha256": "3e7886c4707fba01e83e5bdb9a1d7e6f1a5862cd8bb5d8feb4b7f5ef1d2ba04d"
+      },
+      "resolution_of": "relationship-000010",
+      "status": "readable",
+      "target_point": [
+        600,
+        400
+      ],
+      "to_id": "element-000012"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000011",
+      "correction_outcome": {
+        "action": "propose_replacement_endpoint",
+        "candidate_relationship_id": "relationship-000011-correction-000001",
+        "independent_visual_verification": {
+          "reader": {
+            "harness": "Codex CLI",
+            "model": "GPT-5 Codex"
+          },
+          "reason": "The callout says these values should be pulled from the payout report, and its arrow points into the Jul 16\u201331, 2026 payout period card, which visibly contains all five named fields: paid transactions, photo revenue, codes used, code fees, and payout to operator.",
+          "verdict": "supported"
+        },
+        "replacement_element": {
+          "capture_scope": "relationship_correction_endpoint",
+          "content": "Jul 16 \u2013 31, 2026; PAYOUT-GCR-2026-07B; Grand Canyon Resort; 3,763 PAID TXNS; $101,503.80 PHOTO REVENUE; 179 CODES USED; -$581.75 CODE FEES; PAYOUT TO OPERATOR; $100,922.05; PDF; open",
+          "created_by_correction": true,
+          "gap_reason": "",
+          "id": "correction-element-000001",
+          "kind": "payout period card",
+          "region": [
+            213,
+            452,
+            1000,
+            548
+          ],
+          "status": "readable"
+        },
+        "replacement_role": "target",
+        "replacement_source": "record_visible_element"
+      },
+      "description": "The Jul 16\u201331, 2026 payout period card is populated from calculated payout-report fields: paid transactions from column W, photo revenue from X, codes used from AC, code fees from AD, and total net payout from AF plus refunds.",
+      "from_id": "element-000012",
+      "gap_reason": "",
+      "id": "relationship-000011",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "The callout\u2019s arrow visibly targets the top Jul 16\u201331, 2026 payout row; the proposed participant is the separate Jun 16\u201330, 2026 card several rows below, with no arrow terminating on it.",
+        "verdict": "not_supported"
+      },
+      "kind": "data source mapping",
+      "locked_identity_participants": {
+        "target": "element-000016"
+      },
+      "origin_point": [
+        600,
+        400
+      ],
+      "status": "readable",
+      "target_point": [
+        500,
+        485
+      ],
+      "to_id": "correction-element-000001",
+      "verified_element_id": "element-000016",
+      "verified_obligation_id": "obligation-000016"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000012",
+      "correction_outcome": {
+        "action": "propose_replacement_endpoint",
+        "candidate_relationship_id": "relationship-000012-correction-000001",
+        "independent_visual_verification": {
+          "reader": {
+            "harness": "Codex CLI",
+            "model": "GPT-5 Codex"
+          },
+          "reason": "The callout names \"Photo Rev: X\" as a payout-report-derived value, and the visible arrowhead lands at the first report row beside the $101,503.80 PHOTO REVENUE field.",
+          "verdict": "supported"
+        },
+        "replacement_element": {
+          "created_by_correction": false,
+          "id": "element-000011"
+        },
+        "replacement_role": "target",
+        "replacement_source": "use_recorded_element"
+      },
+      "description": "The first payout row's photo-revenue metric is populated from payout-report column X and displays $101,503.80.",
+      "from_id": "element-000012",
+      "gap_reason": "",
+      "id": "relationship-000012",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "The arrow terminates near the central metrics of the first payout row, not on the separately bounded far-right \u201c$100,922.05 / PDF / open\u201d controls; the callout also maps calculated values, not those controls as a transaction record.",
+        "verdict": "not_supported"
+      },
+      "kind": "data provenance relationship",
+      "locked_identity_participants": {
+        "target": "element-000017"
+      },
+      "origin_point": [
+        600,
+        400
+      ],
+      "status": "readable",
+      "target_point": [
+        488,
+        485
+      ],
+      "to_id": "element-000011",
+      "verified_element_id": "element-000017",
+      "verified_obligation_id": "obligation-000017"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000013",
+      "correction_outcome": {
+        "action": "propose_replacement_endpoint",
+        "candidate_relationship_id": "relationship-000013-correction-000001",
+        "independent_visual_verification": {
+          "reader": {
+            "harness": "Codex CLI",
+            "model": "GPT-5 Codex"
+          },
+          "reason": "The annotation states that the displayed values are pulled from the payout report and specifically maps Photo Rev to column X; the arrow points to the historical payout row's visible PHOTO REVENUE value.",
+          "verdict": "supported"
+        },
+        "replacement_element": {
+          "created_by_correction": false,
+          "id": "element-000011"
+        },
+        "replacement_role": "target",
+        "replacement_source": "use_recorded_element"
+      },
+      "description": "The top Jul 16\u201331 payout row's photo-revenue metric is populated from calculated payout-report column X.",
+      "from_id": "element-000012",
+      "gap_reason": "",
+      "id": "relationship-000013",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "The annotation arrow points only to the top Jul 16\u201331 payout row. The proposed historical Jun 1\u201315 summary is much farther down and has no visible connector from the callout.",
+        "verdict": "not_supported"
+      },
+      "kind": "historical payout summary derived from payout report fields",
+      "locked_identity_participants": {
+        "target": "element-000018"
+      },
+      "origin_point": [
+        600,
+        400
+      ],
+      "status": "readable",
+      "target_point": [
+        488,
+        485
+      ],
+      "to_id": "element-000011",
+      "verified_element_id": "element-000018",
+      "verified_obligation_id": "obligation-000018"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000014",
+      "correction_outcome": {
+        "action": "propose_replacement_endpoint",
+        "candidate_relationship_id": "relationship-000014-correction-000001",
+        "independent_visual_verification": {
+          "reader": {
+            "harness": "Codex CLI",
+            "model": "GPT-5 Codex"
+          },
+          "reason": "The callout explicitly instructs that the numbers be pulled from the payout report, lists \"Photo Rev: X,\" and points to the report row where the PHOTO REVENUE metric is displayed.",
+          "verdict": "supported"
+        },
+        "replacement_element": {
+          "created_by_correction": false,
+          "id": "element-000011"
+        },
+        "replacement_role": "target",
+        "replacement_source": "use_recorded_element"
+      },
+      "description": "The top Jul 16\u201331 payout row's photo-revenue metric is populated from payout-report column X.",
+      "from_id": "element-000012",
+      "gap_reason": "",
+      "id": "relationship-000014",
+      "independent_visual_verification": {
+        "reader": {
+          "harness": "Codex CLI PTY",
+          "model": "Codex (GPT-5)"
+        },
+        "reason": "The visible arrow ends at the top Jul 16\u201331 report row, whereas the proposed May 16\u201331 historical row is near the bottom of the screenshot and has no connector from the annotation.",
+        "verdict": "not_supported"
+      },
+      "kind": "populated from payout report",
+      "locked_identity_participants": {
+        "target": "element-000019"
+      },
+      "origin_point": [
+        600,
+        400
+      ],
+      "status": "readable",
+      "target_point": [
+        488,
+        485
+      ],
+      "to_id": "element-000011",
+      "verified_element_id": "element-000019",
+      "verified_obligation_id": "obligation-000019"
+    },
+    {
+      "description": "",
+      "from_id": "element-000020",
+      "gap_reason": "The explanatory sentence is clipped by the source at the left, right, and bottom edges, so its full text and the endpoint or relationship it identifies are not visible.",
+      "id": "relationship-000015",
+      "kind": "explanatory footer text",
+      "participant_id": "element-000020",
+      "status": "gap",
+      "to_id": null,
+      "verification_eligibility": {
+        "reason": "The explanatory sentence is clipped by the source at the left, right, and bottom edges, so its full text and the endpoint or relationship it identifies are not visible.",
+        "status": "not_applicable_existing_gap"
+      }
+    }
+  ],
+  "scan_regions": [
+    {
+      "bounds": [
+        0,
+        0,
+        250,
+        250
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000001",
+        "element-000002"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          0,
+          0,
+          250,
+          250
+        ],
+        "core_pixel_bounds": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "crop_path": "region-evidence/region-r01-c01.png",
+        "crop_sha256": "a7e4f7caa861afb43b8775c2c374d94c4e9833c79be77b9864b9084a7bd29a1e",
+        "evidence_normalized_bounds": [
+          0,
+          0,
+          300,
+          300
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r01-c01.ownership.png",
+        "guide_sha256": "b3eae38b92d3c991bff15f463d386a76312d0ba177c9398cb9d5f986fc27df7a",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          0,
+          0,
+          683,
+          388
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r01-c01",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        250,
+        0,
+        500,
+        250
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000003",
+        "element-000004",
+        "element-000005"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          250,
+          0,
+          500,
+          250
+        ],
+        "core_pixel_bounds": [
+          569,
+          0,
+          1138,
+          323
+        ],
+        "crop_path": "region-evidence/region-r01-c02.png",
+        "crop_sha256": "8d561474ffe80a3f220fb67573ffc0fa75d6df917cdf587a15bd2ceae875b251",
+        "evidence_normalized_bounds": [
+          250,
+          0,
+          550,
+          300
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r01-c02.ownership.png",
+        "guide_sha256": "2f21160e3c2feb1db681b7004adc8d4fae19df85e4a6930d93ba5a0e8993838d",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          569,
+          0,
+          1252,
+          388
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r01-c02",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        500,
+        0,
+        750,
+        250
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000006",
+        "element-000007"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          500,
+          0,
+          750,
+          250
+        ],
+        "core_pixel_bounds": [
+          1138,
+          0,
+          1707,
+          323
+        ],
+        "crop_path": "region-evidence/region-r01-c03.png",
+        "crop_sha256": "8e4342d9eb57c459ebaac4f1a6a8b017172bda805ab528e4a48c12910ca3c460",
+        "evidence_normalized_bounds": [
+          500,
+          0,
+          800,
+          300
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r01-c03.ownership.png",
+        "guide_sha256": "9ad04eb9ad4f2a63cf8f04275a6abcc2ea3d64983f0cd03fe1627b727dbcbd75",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          1138,
+          0,
+          1821,
+          388
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r01-c03",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        750,
+        0,
+        1000,
+        250
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000008",
+        "element-000009"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          750,
+          0,
+          1000,
+          250
+        ],
+        "core_pixel_bounds": [
+          1707,
+          0,
+          2276,
+          323
+        ],
+        "crop_path": "region-evidence/region-r01-c04.png",
+        "crop_sha256": "939d80d2b65e0cf6548289dc006428456e8c4bdfff2c94e339dc1eeefeaf9204",
+        "evidence_normalized_bounds": [
+          750,
+          0,
+          1000,
+          300
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r01-c04.ownership.png",
+        "guide_sha256": "5be3f4cd3808869051da62d137fc61a18cd7ddf3907b95f3f63592d14fd8ac7b",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          1707,
+          0,
+          2276,
+          388
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r01-c04",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        0,
+        250,
+        250,
+        500
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          0,
+          250,
+          250,
+          500
+        ],
+        "core_pixel_bounds": [
+          0,
+          323,
+          569,
+          646
+        ],
+        "crop_path": "region-evidence/region-r02-c01.png",
+        "crop_sha256": "cbccab33584b46c7b5f839b7c2595747b929da14fae84a28f15a981ea29ad242",
+        "evidence_normalized_bounds": [
+          0,
+          250,
+          300,
+          550
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r02-c01.ownership.png",
+        "guide_sha256": "d66b9d50db0666d08500c55d59f110d233cd9428afa5051188d46be802042307",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          0,
+          323,
+          683,
+          711
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r02-c01",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        250,
+        250,
+        500,
+        500
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000010",
+        "element-000011"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          250,
+          250,
+          500,
+          500
+        ],
+        "core_pixel_bounds": [
+          569,
+          323,
+          1138,
+          646
+        ],
+        "crop_path": "region-evidence/region-r02-c02.png",
+        "crop_sha256": "95c1317e4ac48becc8fb404b757ba62f85a671e50c4c0c17f537079622f42384",
+        "evidence_normalized_bounds": [
+          250,
+          250,
+          550,
+          550
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r02-c02.ownership.png",
+        "guide_sha256": "6578b96d61ceaf3de081f99e5e9137b16ac211d8dacf59fd45b8c00ef1b1d4b4",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          569,
+          323,
+          1252,
+          711
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r02-c02",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        500,
+        250,
+        750,
+        500
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000012",
+        "element-000013",
+        "element-000014"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          500,
+          250,
+          750,
+          500
+        ],
+        "core_pixel_bounds": [
+          1138,
+          323,
+          1707,
+          646
+        ],
+        "crop_path": "region-evidence/region-r02-c03.png",
+        "crop_sha256": "867105e5932e1bb614f7694ac578cd9f90c2574dd2a0f22be4d09548dfb77612",
+        "evidence_normalized_bounds": [
+          500,
+          250,
+          800,
+          550
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r02-c03.ownership.png",
+        "guide_sha256": "cfcf5c889bb40183f0d73c84dac666bc22dcb3c3d41026961da0e2792529b668",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          1138,
+          323,
+          1821,
+          711
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r02-c03",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        750,
+        250,
+        1000,
+        500
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [
+        {
+          "anchor": [
+            750,
+            500
+          ],
+          "candidate_kind": "transaction record row",
+          "crop_sha256": "0e5bf81e31ad5d984f08c178e5dfa3c23d76324f290a585d86b0183bb5e22b92",
+          "guide_sha256": "068be1469918e021a4cb37d90373236150a9b3cc098f26401efc4dee6257a079",
+          "obligation_id": "context-obligation-000001",
+          "owner_region_id": "region-r03-c04",
+          "reason": "context_only"
+        }
+      ],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          750,
+          250,
+          1000,
+          500
+        ],
+        "core_pixel_bounds": [
+          1707,
+          323,
+          2276,
+          646
+        ],
+        "crop_path": "region-evidence/region-r02-c04.png",
+        "crop_sha256": "0e5bf81e31ad5d984f08c178e5dfa3c23d76324f290a585d86b0183bb5e22b92",
+        "evidence_normalized_bounds": [
+          750,
+          250,
+          1000,
+          550
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r02-c04.ownership.png",
+        "guide_sha256": "068be1469918e021a4cb37d90373236150a9b3cc098f26401efc4dee6257a079",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          1707,
+          323,
+          2276,
+          711
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r02-c04",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        0,
+        500,
+        250,
+        750
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000015",
+        "element-000016"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          0,
+          500,
+          250,
+          750
+        ],
+        "core_pixel_bounds": [
+          0,
+          646,
+          569,
+          969
+        ],
+        "crop_path": "region-evidence/region-r03-c01.png",
+        "crop_sha256": "76ee137167e2021c7c09fcdf1ecec7159ae28ce873abdb012ac4ef21a342faee",
+        "evidence_normalized_bounds": [
+          0,
+          500,
+          300,
+          800
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r03-c01.ownership.png",
+        "guide_sha256": "ba9eb4d15b52fc192ff50328b4e87dcdd75a3815e9c99d29cc94be555be6f460",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          0,
+          646,
+          683,
+          1034
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r03-c01",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        250,
+        500,
+        500,
+        750
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          250,
+          500,
+          500,
+          750
+        ],
+        "core_pixel_bounds": [
+          569,
+          646,
+          1138,
+          969
+        ],
+        "crop_path": "region-evidence/region-r03-c02.png",
+        "crop_sha256": "81691fd20814d0d1aafce2198effd31f4b3c0dd7fbe77bfdccb68af7d09f8665",
+        "evidence_normalized_bounds": [
+          250,
+          500,
+          550,
+          800
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r03-c02.ownership.png",
+        "guide_sha256": "ff9c6941b4d75b5d008ecf18efbfa967458b9d9062190fae78950bd85fc90ff8",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          569,
+          646,
+          1252,
+          1034
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r03-c02",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        500,
+        500,
+        750,
+        750
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          500,
+          500,
+          750,
+          750
+        ],
+        "core_pixel_bounds": [
+          1138,
+          646,
+          1707,
+          969
+        ],
+        "crop_path": "region-evidence/region-r03-c03.png",
+        "crop_sha256": "ff238d370d99ae21975fdc424fb24ae0db04a964ca48ced8e78b121027e6293e",
+        "evidence_normalized_bounds": [
+          500,
+          500,
+          800,
+          800
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r03-c03.ownership.png",
+        "guide_sha256": "e22a1003e107bedaba6ef4d3f86746cf4e07195761c1f4ba2528356bbc1de2cd",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          1138,
+          646,
+          1821,
+          1034
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r03-c03",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        750,
+        500,
+        1000,
+        750
+      ],
+      "context_candidate_obligations": [
+        {
+          "anchor": [
+            750,
+            500
+          ],
+          "candidate_kind": "transaction record row",
+          "element_id": "element-000017",
+          "gap_reason": "",
+          "id": "context-obligation-000001",
+          "resolution": "element",
+          "source_region_id": "region-r02-c04",
+          "status": "resolved"
+        }
+      ],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000017"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          750,
+          500,
+          1000,
+          750
+        ],
+        "core_pixel_bounds": [
+          1707,
+          646,
+          2276,
+          969
+        ],
+        "crop_path": "region-evidence/region-r03-c04.png",
+        "crop_sha256": "69c2fd7cad31dca948f231dda43c1fb6d63b7e61d0624a2c735c3e2cf34d5500",
+        "evidence_normalized_bounds": [
+          750,
+          500,
+          1000,
+          800
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r03-c04.ownership.png",
+        "guide_sha256": "7776868f2d83c2caf1c62012120539e563e15711dd961e32d9c219ef05294681",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          1707,
+          646,
+          2276,
+          1034
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r03-c04",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        0,
+        750,
+        250,
+        1000
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          0,
+          750,
+          250,
+          1000
+        ],
+        "core_pixel_bounds": [
+          0,
+          969,
+          569,
+          1292
+        ],
+        "crop_path": "region-evidence/region-r04-c01.png",
+        "crop_sha256": "76f2bfadf6c285d42da12531e2b499cbe641ee1287e6b0e8fd9f230a85ee8555",
+        "evidence_normalized_bounds": [
+          0,
+          750,
+          300,
+          1000
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r04-c01.ownership.png",
+        "guide_sha256": "e3ace2e3114fcc36a7c62c35bfc1d3a844aa3cf005f8f7da92122692a8eb09bb",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          0,
+          969,
+          683,
+          1292
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r04-c01",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        250,
+        750,
+        500,
+        1000
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000018",
+        "element-000019",
+        "element-000020"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          250,
+          750,
+          500,
+          1000
+        ],
+        "core_pixel_bounds": [
+          569,
+          969,
+          1138,
+          1292
+        ],
+        "crop_path": "region-evidence/region-r04-c02.png",
+        "crop_sha256": "09a42a97c413f599caad49880e7070d41747117db13e418711b233b6ff737be2",
+        "evidence_normalized_bounds": [
+          250,
+          750,
+          550,
+          1000
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r04-c02.ownership.png",
+        "guide_sha256": "8d551afe327b90822ddb4df221eb0c22582406432d7c2d046ecc3eccbd12ae4c",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          569,
+          969,
+          1252,
+          1292
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r04-c02",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        500,
+        750,
+        750,
+        1000
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          500,
+          750,
+          750,
+          1000
+        ],
+        "core_pixel_bounds": [
+          1138,
+          969,
+          1707,
+          1292
+        ],
+        "crop_path": "region-evidence/region-r04-c03.png",
+        "crop_sha256": "199051c0650d0ef45202ae954df237130d625eadde7ca9d0495d3db4405d8f36",
+        "evidence_normalized_bounds": [
+          500,
+          750,
+          800,
+          1000
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r04-c03.ownership.png",
+        "guide_sha256": "8dafa2741109d3376c14d904d15be4c861a3368cbe4a5348a0a315a54de1c968",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          1138,
+          969,
+          1821,
+          1292
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r04-c03",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        750,
+        750,
+        1000,
+        1000
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          750,
+          750,
+          1000,
+          1000
+        ],
+        "core_pixel_bounds": [
+          1707,
+          969,
+          2276,
+          1292
+        ],
+        "crop_path": "region-evidence/region-r04-c04.png",
+        "crop_sha256": "c447bed0fdc68257ded3dc6843a46c6648d5136925b5c68637afe30cd5c675c5",
+        "evidence_normalized_bounds": [
+          750,
+          750,
+          1000,
+          1000
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r04-c04.ownership.png",
+        "guide_sha256": "c8c4a81e353776e3a677c6e9e24dced1b61a6dc4ca7b935d58c65515d5c37dbe",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          569,
+          323
+        ],
+        "pixel_bounds": [
+          1707,
+          969,
+          2276,
+          1292
+        ],
+        "source_pixel_size": [
+          2276,
+          1292
+        ],
+        "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+      },
+      "gap_reason": "",
+      "id": "region-r04-c04",
+      "status": "scanned"
+    }
+  ],
+  "schema_version": 13,
+  "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+}

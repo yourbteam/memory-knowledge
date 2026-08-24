@@ -1,0 +1,40 @@
+{
+  "candidate_sha256": "4efd7808c8f9df487d9b8d9669a1c28c8774323478daacabaa26eeb990c1eb36",
+  "reader": {
+    "harness": "Codex",
+    "model": "GPT-5 Codex"
+  },
+  "schema_version": 1,
+  "verdicts": [
+    {
+      "reason": "The red annotation callout explicitly says clicking refresh updates the Live Today and All Locations numbers, and its arrowhead visibly terminates on the Refresh button.",
+      "relationship_id": "relationship-000007-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout labeled \u201cColumn: AT 7 day Avg = Column AT avg over previous 7 days\u201d has a red arrow whose arrowhead visibly lands on the green 42% Conversion rate value.",
+      "relationship_id": "relationship-000008-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from the \u201cColumn: AE / guest count\u201d seven-day-average callout visibly terminates at the green 29.0% Capture rate value.",
+      "relationship_id": "relationship-000010-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The arrow from the callout stating the sum of Column AF for all locations for that day visibly points to the $13,060 net revenue figure in All Locations \u00b7 Today.",
+      "relationship_id": "relationship-000013-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout\u2019s red arrow visibly terminates in the donut center showing 62% and Skywalk, which is also the largest listed location share.",
+      "relationship_id": "relationship-000014-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The formula callout has a red arrow whose arrowhead visibly lands on the orange 18.2% Capture rate in the Performance Snapshot YTD panel.",
+      "relationship_id": "relationship-000019-correction-000001",
+      "verdict": "supported"
+    }
+  ]
+}

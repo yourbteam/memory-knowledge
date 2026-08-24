@@ -1,0 +1,95 @@
+{
+  "candidate_sha256": "ae9631220ac49d918f38b65df4f45adba098b4302c01e24262b0d8636e9c0f31",
+  "reader": {
+    "harness": "Codex",
+    "model": "GPT-5"
+  },
+  "schema_version": 1,
+  "verdicts": [
+    {
+      "reason": "The company selector showing \u201cGrand Canyon Resort\u201d is immediately followed on the same line by the visible annotation \u201cadmin only \u2013 operators land on their own company,\u201d with no intervening candidate element.",
+      "relationship_id": "relationship-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The Net payout card explicitly prints the formula \u201ccontent - code fees - refunds,\u201d and its $54,308.60 equals the visible Content revenue $54,620.35 less the visible $311.75 redemption-code fees and $0.00 refunds.",
+      "relationship_id": "relationship-000002",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red callout\u2019s arrow visibly ends inside the \u201cPayouts over time\u201d plot, directly on the plotted series area, and its text explicitly refers to \u201cThis chart.\u201d",
+      "relationship_id": "relationship-000003",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout\u2019s red arrow descends leftward and its arrowhead visibly lands on the upper edge of the green Content revenue metric card.",
+      "relationship_id": "relationship-000004",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The Net payout item is itself a metric card, not an annotation callout, and no visible arrow or callout runs from that orange card to the Redemption-code fees card; the only visible link is the payout formula\u2019s textual inclusion of code fees.",
+      "relationship_id": "relationship-000005",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The dark D7 tooltip is visibly overlaid within the Payouts over time panel and aligns with the red vertical hover guide at D7 while listing values for that chart\u2019s named series.",
+      "relationship_id": "relationship-000006",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout explicitly says \u201cFor refunds\u201d and its red arrow points downward into the blue Refunds metric card, with the arrowhead landing at that card\u2019s top edge.",
+      "relationship_id": "relationship-000007",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The add-ons placeholder callout has a red downward arrow whose arrowhead visibly lands on the upper-right area of the purple Content add-ons card.",
+      "relationship_id": "relationship-000008",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout\u2019s only visible arrowhead lands on the purple Content add-ons card to the left; it does not terminate on the separate dark Merch add-ons card.",
+      "relationship_id": "relationship-000009",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The callout says \u201cThis section\u201d and its red arrow visibly runs up-left to the Revenue Breakdown chart\u2019s legend/plot area, while the text describes plotted sales series, toggles, totals, and hover breakouts belonging to that chart.",
+      "relationship_id": "relationship-000010",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from the \u201cFor these\u2026\u201d callout points downward and its arrowhead lands at the CONTENT ADD-ONS table header/column area.",
+      "relationship_id": "relationship-000011",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The \u201ccodes used: AC\u201d callout has a red downward arrow whose arrowhead visibly lands on the CODES USED table header/column.",
+      "relationship_id": "relationship-000012",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The visible \u201cNet payout: AF\u201d item is a red annotation callout, not the line chart, and its arrow terminates specifically at the NET PAYOUT column; the proposed target combines NET PAYOUT with the separate OWED FOR CODES column and the whole summary table.",
+      "relationship_id": "relationship-000013",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The \u201cowed for codes: AD\u201d arrow lands specifically on the OWED FOR CODES column, whereas the proposed target spans that column, the separate NET PAYOUT column, and the financial summary table as a whole.",
+      "relationship_id": "relationship-000014",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The \u201cNet payout: AF\u201d arrow visibly terminates at the NET PAYOUT column alone, not at the combined OWED FOR CODES plus NET PAYOUT region or the entire financial summary table proposed as the target.",
+      "relationship_id": "relationship-000015",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The callout arrow lands specifically on the CONTENT REVENUE header/column, but the proposed target also includes the separate LOCATION column and represents the broader location performance table rather than the exact mapped field.",
+      "relationship_id": "relationship-000016",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The bottom instruction explicitly names the \u201cGenerate report\u201d action, and the only visible control with that exact label is the top-right \u201cGenerate report\u201d button.",
+      "relationship_id": "relationship-000017",
+      "verdict": "supported"
+    }
+  ]
+}

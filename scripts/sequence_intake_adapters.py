@@ -3,9 +3,11 @@
 
 from __future__ import annotations
 
-import hashlib
 import json
+import hashlib
 import os
+import re
+import shlex
 from collections.abc import Callable, Mapping
 from copy import deepcopy
 from datetime import datetime
@@ -14,8 +16,9 @@ from typing import Any
 from uuid import NAMESPACE_URL, UUID, uuid5
 
 try:
-    from scripts import local_multimodal_model_benchmark, script_intake
+    from scripts import goal_tracker, local_multimodal_model_benchmark, script_intake
 except ModuleNotFoundError:  # direct script execution
+    import goal_tracker  # type: ignore
     import local_multimodal_model_benchmark  # type: ignore
     import script_intake
 
@@ -62,19 +65,13 @@ CANONICAL_SEQUENCE_IDS = (
     "convergence-state-review-cycle",
     "greenfield-recreate-resume",
     "workflow-resume-from-phase-live-confirmation",
-    # Registered in SEQUENCES.md without a canonical entry here, which made
-    # build_intake_contracts fail closed for EVERY sequence, not just this one -- the
-    # launcher refused to build anything at all. It carries no adapter on purpose: the
-    # heartbeat is a background command the agent runs directly, so intake has nothing
-    # to prepare for it, and a None adapter records it as non-runnable rather than
-    # missing.
+    # The outer tool invocation must still run the shared controller in the background;
+    # this adapter prepares only fixed-template observation probes and never accepts raw
+    # shell from the caller.
     "agent-heartbeat",
-    # Same shape as `agent-heartbeat` above, and the same failure: registered in
-    # SEQUENCES.md on 2026-08-06 without a canonical entry here, so build_intake_contracts
-    # failed closed for EVERY sequence and the launcher would build nothing at all --
-    # which is how a goal-store commit stopped `commit-push-main` from publishing. It
-    # carries no adapter on purpose: a goal is declared and measured by running
-    # `goal_tracker.py` directly, so zero-input intake has nothing to prepare for it.
+    # Goal declaration retains its standalone zero-argument interview and also has a
+    # registered adapter below, so the shared controller can collect the same contract
+    # once and dispatch an approved answers artifact without a second interview.
     "goal-declaration",
     "local-multimodal-model-benchmark",
 )
@@ -105,21 +102,23 @@ COMMIT_PUSH_SPEC = {
         {
             "id": "operation",
             "prompt": "Commit and push operation",
-            "response_format": "One named operation.",
-            "example": "dry-run",
-            "constraints": "Choose the operation matching the approved Git effect.",
+            "response_format": "One selection number.",
+            "example": "1",
+            "constraints": "Choose the numbered operation matching the approved Git effect.",
             "type": "choice",
             "choices": list(COMMIT_PUSH_OPERATIONS),
+            "numbered_selection": True,
             "required": True,
         },
         {
             "id": "repository_key",
             "prompt": "Repository",
-            "response_format": "One registered repository name.",
-            "example": "memory-knowledge",
-            "constraints": "Choose exactly one repository from the registered values.",
+            "response_format": "One selection number.",
+            "example": "1",
+            "constraints": "Choose exactly one numbered repository.",
             "type": "choice",
             "choices": ["memory-knowledge"],
+            "numbered_selection": True,
             "required": True,
         },
         {
@@ -307,6 +306,97 @@ def _semantic_field(
         "type": field_type,
         **extra,
     }
+
+
+GOAL_DECLARATION_SPEC = {
+    "schema_version": script_intake.SCHEMA_VERSION,
+    "fields": [
+        _semantic_field(
+            "repository_key", "Repository whose goal is being declared",
+            "One selection number.", "1",
+            "Choose exactly one registered repository; do not type a path.",
+            "choice", choices=[], choices_from_repository_roots=True,
+            numbered_selection=True, required=True,
+        ),
+        *deepcopy(goal_tracker.GOAL_SPEC["fields"]),
+    ],
+}
+
+
+AGENT_HEARTBEAT_SPEC = {
+    "schema_version": script_intake.SCHEMA_VERSION,
+    "fields": [
+        _semantic_field(
+            "source_repository_key", "Heartbeat controller repository",
+            "One selection number.", "1",
+            "Choose the repository containing the checked-in heartbeat script.",
+            "choice", choices=["memory-knowledge"], numbered_selection=True,
+            required=True,
+        ),
+        _semantic_field(
+            "seconds", "Wait before the heartbeat completes",
+            "One whole number from 1 through 3600.", "270",
+            "Use a duration inside the reporting ceiling; 270 leaves turn time inside five minutes.",
+            "integer", default=270, minimum=1, maximum=3600,
+        ),
+        _semantic_field(
+            "label", "What this heartbeat is watching",
+            "One short plain-language label.", "feature 11 live drive",
+            "Name the run or operation; do not provide invocation syntax.",
+            "string", required=True,
+        ),
+        _semantic_field(
+            "probes", "State-producing probe",
+            "Answer one probe's numbered type and its bounded details at a time.",
+            "a file tail followed by container logs",
+            "No shell commands are accepted; code derives every command from the selected type.",
+            "object_list", required=True,
+            item_fields=[
+                _semantic_field(
+                    "type", "Probe type", "One selection number.", "1",
+                    "Choose the observation surface; raw shell is unavailable.",
+                    "choice", choices=[
+                        "file-metadata", "file-tail", "process-state", "container-logs",
+                    ], numbered_selection=True, required=True,
+                ),
+                _semantic_field(
+                    "path", "Observed file path", "One absolute or repository-relative path.",
+                    "/private/tmp/run/latest-result.json",
+                    "The path must remain under /private/tmp or a registered repository.",
+                    "path", required=True,
+                    when={"field": "type", "in": ["file-metadata", "file-tail"]},
+                ),
+                _semantic_field(
+                    "lines", "Maximum returned lines", "One whole number from 1 through 500.",
+                    "80", "Bound the reported content.", "integer",
+                    default=80, minimum=1, maximum=500,
+                    when={"field": "type", "in": ["file-tail", "container-logs"]},
+                ),
+                _semantic_field(
+                    "pattern", "Process identity text", "One literal process-name fragment.",
+                    "greenfield_drive_dag.py",
+                    "Code searches literally; shell syntax is not interpreted.",
+                    "string", required=True,
+                    when={"field": "type", "equals": "process-state"},
+                ),
+                _semantic_field(
+                    "container", "Container name", "One Docker container name.",
+                    "workflow-orch-local-sequence-check",
+                    "Letters, digits, period, underscore, and hyphen only.",
+                    "string", required=True,
+                    when={"field": "type", "equals": "container-logs"},
+                ),
+                _semantic_field(
+                    "lookback_seconds", "Container-log lookback",
+                    "One whole number from 1 through 86400.", "300",
+                    "Bound how far back the probe reads.", "integer",
+                    default=300, minimum=1, maximum=86400,
+                    when={"field": "type", "equals": "container-logs"},
+                ),
+            ],
+        ),
+    ],
+}
 
 
 LOCAL_IMAGE_SPEC = {
@@ -811,7 +901,7 @@ OFFLINE_SPECS = {
 
 OPERATION_KINDS = [
     "auth", "cleanup", "container", "database", "deploy", "image", "other",
-    "package", "read-only", "remote-operator", "single-build", "single-test",
+    "package", "publish", "read-only", "remote-operator", "single-build", "single-test",
     "workflow-drive",
 ]
 
@@ -2289,6 +2379,7 @@ def _prepare_commit_push(
     argv = [
         "python3", SCOPED_GIT_PUBLISH_SCRIPT,
         "--repo", repository,
+        "--repository-key", repository_key,
     ]
     artifacts: dict[str, dict[str, str]] = {}
     if operation in MANIFEST_OPERATIONS:
@@ -2338,7 +2429,41 @@ def _prepare_commit_push(
             "required": operation != "dry-run",
             "operation": operation,
         },
+        **({
+            "host_capabilities": ["repository-git-metadata-write"],
+        } if operation != "dry-run" else {}),
     }
+
+
+def promote_commit_push_dry_run(
+    prepared: Mapping[str, Any],
+) -> dict[str, Any]:
+    """Derive the authorized effect from the exact successful dry-run contract."""
+    authorization = prepared.get("authorization")
+    argv = prepared.get("argv")
+    if (
+        prepared.get("sequence_id") != "commit-push-main"
+        or prepared.get("profile") != "dry-run"
+        or not isinstance(argv, list)
+        or not argv
+        or "--execute" in argv
+        or not isinstance(authorization, Mapping)
+        or authorization.get("operation") != "dry-run"
+        or authorization.get("effectful") is not False
+    ):
+        raise AdapterError("prepared-dry-run-not-promotable")
+    promoted = deepcopy(dict(prepared))
+    promoted["profile"] = "publish"
+    promoted["argv"] = [*argv, "--execute"]
+    promoted["authorization"] = {
+        "effectful": True,
+        "required": True,
+        "operation": "publish",
+    }
+    promoted["host_capabilities"] = [
+        "repository-git-metadata-write",
+    ]
+    return promoted
 
 
 def _prepare_deploy(
@@ -3136,6 +3261,148 @@ def _prepare_discovery_promotion(
     )
     payload["artifacts"] = artifacts
     return payload
+
+
+def _prepare_goal_declaration(
+    answers: Mapping[str, Any],
+    artifact_paths: Mapping[str, str],
+    repository_roots: Mapping[str, str],
+) -> dict[str, Any]:
+    expected = {"repository_key", "statement", "set_by", "supersede_reason", "kpis"}
+    if set(answers) != expected:
+        raise AdapterError("answer-fields-do-not-match-goal-declaration")
+    repository_key, repository = _registered_repository(answers, repository_roots)
+    goal_answers = {key: deepcopy(answers[key]) for key in expected - {"repository_key"}}
+    try:
+        goal_tracker.validate_goal_answers(Path(repository), goal_answers)
+    except SystemExit as exc:
+        raise AdapterError(f"goal-declaration-invalid:{exc}") from exc
+    controller_root = repository_roots.get("memory-knowledge")
+    if not isinstance(controller_root, str) or not controller_root:
+        raise AdapterError("repository-key-unregistered:memory-knowledge")
+    artifact = _json_artifact(artifact_paths, "goal_answers", goal_answers)
+    payload = _script_payload(
+        sequence_id="goal-declaration",
+        profile="set",
+        argv=[
+            "python3",
+            str(Path(controller_root).expanduser().resolve() / "scripts/goal_tracker.py"),
+            "--repo", repository,
+            "set",
+            "--answers-file", artifact["path"],
+        ],
+        repository_key=repository_key,
+        repository_root=repository,
+        effectful=True,
+        operation="set",
+    )
+    payload["artifacts"] = {"goal_answers": artifact}
+    return payload
+
+
+def _heartbeat_probe_path(
+    value: Any,
+    repository: str,
+    repository_roots: Mapping[str, str],
+) -> Path:
+    if not isinstance(value, str) or not value.strip() or any(
+        character in value for character in ("\x00", "\n", "\r")
+    ):
+        raise AdapterError("agent-heartbeat-probe-path-invalid")
+    supplied = Path(value).expanduser()
+    path = supplied.resolve() if supplied.is_absolute() else (Path(repository) / supplied).resolve()
+    allowed_roots = {
+        Path("/private/tmp").resolve(),
+        *(Path(root).expanduser().resolve() for root in repository_roots.values()),
+    }
+    if not any(path.is_relative_to(root) for root in allowed_roots):
+        raise AdapterError("agent-heartbeat-probe-path-outside-trusted-roots")
+    return path
+
+
+def _heartbeat_literal(value: Any, field: str) -> str:
+    if not isinstance(value, str) or not value.strip() or any(
+        character in value for character in ("\x00", "\n", "\r")
+    ):
+        raise AdapterError(f"agent-heartbeat-{field}-invalid")
+    return value.strip()
+
+
+def _prepare_agent_heartbeat(
+    answers: Mapping[str, Any],
+    _artifact_paths: Mapping[str, str],
+    repository_roots: Mapping[str, str],
+) -> dict[str, Any]:
+    expected = {"source_repository_key", "seconds", "label", "probes"}
+    if set(answers) != expected:
+        raise AdapterError("answer-fields-do-not-match-agent-heartbeat")
+    repository_key, repository = _registered_repository(
+        answers, repository_roots, answer_key="source_repository_key",
+    )
+    if repository_key != "memory-knowledge":
+        raise AdapterError("agent-heartbeat-controller-repository-invalid")
+    seconds = answers.get("seconds")
+    if not isinstance(seconds, int) or isinstance(seconds, bool) or not 1 <= seconds <= 3600:
+        raise AdapterError("agent-heartbeat-seconds-invalid")
+    probes = answers.get("probes")
+    if not isinstance(probes, list) or not probes:
+        raise AdapterError("answer-required:probes")
+    commands: list[str] = []
+    for probe in probes:
+        if not isinstance(probe, Mapping):
+            raise AdapterError("agent-heartbeat-probe-invalid")
+        kind = probe.get("type")
+        if kind == "file-metadata" and set(probe) == {"type", "path"}:
+            path = _heartbeat_probe_path(probe["path"], repository, repository_roots)
+            commands.append(f"ls -la -- {shlex.quote(str(path))}")
+        elif kind == "file-tail" and set(probe) == {"type", "path", "lines"}:
+            lines = probe.get("lines")
+            if not isinstance(lines, int) or isinstance(lines, bool) or not 1 <= lines <= 500:
+                raise AdapterError("agent-heartbeat-lines-invalid")
+            path = _heartbeat_probe_path(probe["path"], repository, repository_roots)
+            commands.append(f"tail -n {lines} -- {shlex.quote(str(path))}")
+        elif kind == "process-state" and set(probe) == {"type", "pattern"}:
+            pattern = _heartbeat_literal(probe["pattern"], "process-pattern")
+            commands.append(
+                "ps -ax -o pid=,etime=,command= | grep -F -- "
+                f"{shlex.quote(pattern)} | grep -v '[g]rep -F'"
+            )
+        elif kind == "container-logs" and set(probe) == {
+            "type", "container", "lookback_seconds", "lines",
+        }:
+            container = _heartbeat_literal(probe["container"], "container")
+            if re.fullmatch(r"[A-Za-z0-9][A-Za-z0-9_.-]{0,127}", container) is None:
+                raise AdapterError("agent-heartbeat-container-invalid")
+            lookback = probe.get("lookback_seconds")
+            lines = probe.get("lines")
+            if (
+                not isinstance(lookback, int) or isinstance(lookback, bool)
+                or not 1 <= lookback <= 86400
+                or not isinstance(lines, int) or isinstance(lines, bool)
+                or not 1 <= lines <= 500
+            ):
+                raise AdapterError("agent-heartbeat-container-window-invalid")
+            commands.append(
+                f"docker logs --since {lookback}s {shlex.quote(container)} 2>&1 | tail -n {lines}"
+            )
+        else:
+            raise AdapterError("agent-heartbeat-probe-contract-invalid")
+    argv = [
+        "bash", str(Path(repository) / "scripts/agent_heartbeat.sh"),
+        "--seconds", str(seconds),
+        "--label", _heartbeat_literal(answers.get("label"), "label"),
+    ]
+    for command in commands:
+        argv.extend(["--probe", command])
+    return _script_payload(
+        sequence_id="agent-heartbeat",
+        profile="watch",
+        argv=argv,
+        repository_key=repository_key,
+        repository_root=repository,
+        effectful=True,
+        operation="watch",
+    )
 
 
 def _json_object_file(path_value: str, error: str) -> dict[str, Any]:
@@ -4257,6 +4524,8 @@ ADAPTER_REGISTRY: dict[str, Adapter | None] = {
     sequence_id: None for sequence_id in CANONICAL_SEQUENCE_IDS
 }
 ADAPTER_REGISTRY["commit-push-main"] = _prepare_commit_push
+ADAPTER_REGISTRY["goal-declaration"] = _prepare_goal_declaration
+ADAPTER_REGISTRY["agent-heartbeat"] = _prepare_agent_heartbeat
 for _deploy_sequence_id in DEPLOY_SEQUENCE_CONFIG:
     ADAPTER_REGISTRY[_deploy_sequence_id] = _deploy_adapter(_deploy_sequence_id)
 ADAPTER_REGISTRY["local-workflow-orch-image"] = _prepare_local_image
@@ -4314,6 +4583,8 @@ ADAPTER_REGISTRY[
 ] = _prepare_local_multimodal_benchmark
 INTAKE_SPECS = {
     "commit-push-main": COMMIT_PUSH_SPEC,
+    "goal-declaration": GOAL_DECLARATION_SPEC,
+    "agent-heartbeat": AGENT_HEARTBEAT_SPEC,
     **DEPLOY_SPECS,
     "local-workflow-orch-image": LOCAL_IMAGE_SPEC,
     "greenfield-full-drive": GREENFIELD_SPEC,
@@ -4344,6 +4615,7 @@ INTAKE_SPECS = {
 
 ARTIFACT_IDS: dict[str, tuple[str, ...]] = {
     "commit-push-main": ("approved_paths", "overlay_paths"),
+    "goal-declaration": ("goal_answers",),
     "discovery-promotion-lifecycle": ("changed_artifacts",),
     "convergence-state-review-cycle": ("request",),
     "discovery-bootstrap": ("spec",),
@@ -4380,7 +4652,10 @@ def intake_spec(
         if not choices:
             raise AdapterError("repository-registry-empty")
         repository_field["choices"] = choices
-        repository_field["example"] = choices[0]
+        repository_field["example"] = (
+            "1" if repository_field.get("numbered_selection", False)
+            else choices[0]
+        )
     return spec
 
 

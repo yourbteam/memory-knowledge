@@ -668,6 +668,7 @@ def test_pending_correction_ignores_explicitly_superseded_blocker(
 def test_correct_accepts_one_stable_artifact_manifest_argument(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(lifecycle.work_memory, "ROOT", tmp_path)
     path = discovery(tmp_path / "discovery.md")
     (tmp_path / "scripts").mkdir()
     (tmp_path / "tests").mkdir()
@@ -789,6 +790,7 @@ def test_registered_correction_forwards_repository_roots(
 def test_protected_correction_routes_through_activated_bootstrap(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    monkeypatch.setattr(lifecycle.work_memory, "ROOT", tmp_path)
     protected = tmp_path / "scripts/work_memory.py"
     protected.parent.mkdir()
     protected.write_text("# changed\n")

@@ -1,0 +1,35 @@
+{
+  "candidate_sha256": "50edc801fef095050a84a27c7d5914c2128ea75fef165b7e12f2603fe44ce4d3",
+  "reader": {
+    "harness": "Codex CLI",
+    "model": "GPT-5 Codex"
+  },
+  "schema_version": 1,
+  "verdicts": [
+    {
+      "reason": "The red callout explicitly says \"Photo Rev: X\" and its arrow terminates at the payout-report row containing the visible \"$101,503.80 PHOTO REVENUE\" metric.",
+      "relationship_id": "relationship-000006-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout says these values should be pulled from the payout report, and its arrow points into the Jul 16\u201331, 2026 payout period card, which visibly contains all five named fields: paid transactions, photo revenue, codes used, code fees, and payout to operator.",
+      "relationship_id": "relationship-000011-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout names \"Photo Rev: X\" as a payout-report-derived value, and the visible arrowhead lands at the first report row beside the $101,503.80 PHOTO REVENUE field.",
+      "relationship_id": "relationship-000012-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The annotation states that the displayed values are pulled from the payout report and specifically maps Photo Rev to column X; the arrow points to the historical payout row's visible PHOTO REVENUE value.",
+      "relationship_id": "relationship-000013-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout explicitly instructs that the numbers be pulled from the payout report, lists \"Photo Rev: X,\" and points to the report row where the PHOTO REVENUE metric is displayed.",
+      "relationship_id": "relationship-000014-correction-000001",
+      "verdict": "supported"
+    }
+  ]
+}

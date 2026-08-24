@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `59aaef822fb9b00506facf6288dcadfc33bd898c53617d19609702634b7e139c`
+Ledger-SHA256: `1332c1b951ab76fb1fe4b132fe2693dcae62e9523982b664796a7db2aa33ec8e`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -1440,6 +1440,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `blocker_catalog status transition`
 - Symptom: The required explicit transition to verified was rejected after a successful same-path verification event
 - Evidence: blocker_catalog.py transition returned {error: invalid-blocker-status-transition, ok: false} for blk-5f0381d736e14801b802be9c using verification event 98df96d3-92b6-4dbb-b5bd-477a1ba9d553
+
+## blk-1f23c5fd58831511742d3e86
+
+- Status: `open`
+- Subject: `publish-experiment-machinery-native-20260820`
+- Step: `select-worktree-publish-sequence`
+- Surface: `worktree prevention registry`
+- Symptom: The feature worktree cannot select the registered publish sequence because unrelated sequence-controller edits no longer match the recorded owner contract.
+- Evidence: Native worktree selection stopped with executable-owner-source-hash-drift:commit-push-main before activation or Git mutation.
 
 ## blk-1f2780e54e553406ea2d158f
 
@@ -9686,6 +9695,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `up-harness-strategy-quote-grounding`
 - Symptom: Live source run stopped because the strategy role returned a source quote absent from immutable corpus strings
 - Evidence: up-run-bfaaaeacfd36 compose-llm-strategy-brief failed with strategy_quote_grounding_invalid
+
+## blk-dafe50a46ef8898adf77c5da
+
+- Status: `open`
+- Subject: `publish-info-intake-machinery-to-main-20260818`
+- Step: `verify-published-sequence-selection`
+- Surface: `origin-main-prevention-registry`
+- Symptom: Fresh main would reject registered sequence selection after the shared intake adapter changed
+- Evidence: origin/main adapter hash is aca0fb34888d while commit-push-main owner approval remains 1fd8be9868a5
 
 ## blk-db7492776918c481f8ae5f15
 

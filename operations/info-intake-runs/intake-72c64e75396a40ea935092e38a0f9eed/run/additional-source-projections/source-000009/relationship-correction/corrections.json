@@ -1,0 +1,124 @@
+{
+  "candidate_sha256": "5be05b932b1baaf1be0b218b2ef9c50130f24ddcada7e81684eb3b34b2698991",
+  "corrections": [
+    {
+      "action": "preserve_gap",
+      "gap_reason": "The button visibly names \u201clive period-to-date report\u201d as its destination, but that report is not shown as a separate visible element, and no connector identifies the orange Net payout card as the endpoint.",
+      "original_relationship_id": "relationship-000008"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000009",
+        "description": "The annotation applies its payout-total formulas to the visible Jul 16\u201331, 2026 report row: net payout sums column AF, WE OWE sums positive AF values, THEY OWE sums negative AF values, and TAGGABLE REV sums column BY across operators.",
+        "from_id": "element-000011",
+        "gap_reason": "",
+        "id": "relationship-000009-correction-000001",
+        "kind": "annotation callout explaining payout report metrics",
+        "locked_identity_participants": {
+          "target": "element-000014"
+        },
+        "origin_point": [
+          490,
+          410
+        ],
+        "status": "readable",
+        "target_point": [
+          299,
+          550
+        ],
+        "to_id": "element-000013",
+        "verified_element_id": "element-000014",
+        "verified_obligation_id": "obligation-000012"
+      },
+      "original_relationship_id": "relationship-000009",
+      "replacement_element": {
+        "created_by_correction": false,
+        "id": "element-000013"
+      },
+      "replacement_role": "target",
+      "replacement_source": "use_recorded_element"
+    },
+    {
+      "action": "preserve_gap",
+      "gap_reason": "The red calculation annotation visibly terminates at the first Jul 16\u201331 report row, not the Jun 16\u201330 third row; the table\u2019s containment of that third row does not supply the claimed annotation-to-row connector.",
+      "original_relationship_id": "relationship-000010"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000011",
+        "description": "The calculation annotation explains the metrics on the visible Jul 16\u201331, 2026 payout report row: net payout is total AF, WE OWE is positive AF, THEY OWE is negative AF, and TAGGABLE REV is total BY across operators.",
+        "from_id": "element-000011",
+        "gap_reason": "",
+        "id": "relationship-000011-correction-000001",
+        "kind": "annotation explains the calculation and meaning of the payout report row metrics",
+        "locked_identity_participants": {
+          "target": "element-000017"
+        },
+        "origin_point": [
+          480,
+          450
+        ],
+        "status": "readable",
+        "target_point": [
+          299,
+          550
+        ],
+        "to_id": "element-000013",
+        "verified_element_id": "element-000017",
+        "verified_obligation_id": "obligation-000015"
+      },
+      "original_relationship_id": "relationship-000011",
+      "replacement_element": {
+        "created_by_correction": false,
+        "id": "element-000013"
+      },
+      "replacement_role": "target",
+      "replacement_source": "use_recorded_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000012",
+        "description": "The calculation annotation defines the visible Jul 16\u201331, 2026 row metrics: net payout totals AF, WE OWE totals positive AF, THEY OWE totals negative AF, and TAGGABLE REV totals BY across operators.",
+        "from_id": "element-000011",
+        "gap_reason": "",
+        "id": "relationship-000012-correction-000001",
+        "kind": "calculation definition for payout report metrics",
+        "locked_identity_participants": {
+          "target": "element-000018"
+        },
+        "origin_point": [
+          480,
+          430
+        ],
+        "status": "readable",
+        "target_point": [
+          299,
+          550
+        ],
+        "to_id": "element-000013",
+        "verified_element_id": "element-000018",
+        "verified_obligation_id": "obligation-000016"
+      },
+      "original_relationship_id": "relationship-000012",
+      "replacement_element": {
+        "created_by_correction": false,
+        "id": "element-000013"
+      },
+      "replacement_role": "target",
+      "replacement_source": "use_recorded_element"
+    }
+  ],
+  "corrector": {
+    "harness": "Codex CLI",
+    "model": "Codex"
+  },
+  "schema_version": 1,
+  "verification_candidate_sha256": "a31b2626c2e0c440bd96037db051240c767f69f75b97c9c8e61d82b93e04d567",
+  "verification_sha256": "5cf57c9dac471acbf2e62862605d18f169766c2aade9e7231d006cd1de67243d"
+}

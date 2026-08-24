@@ -535,6 +535,10 @@ def test_commit_dry_run_adapter_does_not_invent_a_publish_message(tmp_path: Path
 
     assert "--message" not in plan.argv
     assert "--execute" not in plan.argv
+    assert plan.argv[plan.argv.index("--repository-key") + 1] == "memory-knowledge"
+    assert plan.argv[plan.argv.index("--repo") + 1] == str(
+        Path(__file__).resolve().parents[2]
+    )
 
 
 def test_repository_provider_root_binds_every_manifest_member_to_dynamic_worktree(

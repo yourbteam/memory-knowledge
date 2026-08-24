@@ -1,0 +1,105 @@
+{
+  "candidate_sha256": "8c3b592c953b509f03486db667c78150625a968e543d26bae26f3d751b35e3ed",
+  "reader": {
+    "harness": "Codex",
+    "model": "OpenAI GPT-5"
+  },
+  "schema_version": 1,
+  "verdicts": [
+    {
+      "reason": "The red arrow from the callout visibly ends inside the leftmost orange Taggable revenue card, at its descriptive text/value area.",
+      "relationship_id": "relationship-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The arrowhead lands on the D7 plotted point around the middle of the chart, while the proposed destination bounds cover only the chart's left portion through roughly D3; the visible endpoint is outside those exact bounds.",
+      "relationship_id": "relationship-000002",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The red arrow descending from the Column AF callout visibly terminates within the blue Net paid to operators metric card.",
+      "relationship_id": "relationship-000003",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from the column X callout visibly descends into and ends within the green Paid to operators \u00b7 content card.",
+      "relationship_id": "relationship-000005",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The tooltip is visibly displayed directly above the highlighted D7 blue marker, centered on the same vertical D7 hover guide, and its header reads D7.",
+      "relationship_id": "relationship-000006",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The proposed source is the blue upper-line D7 marker, which color-matches the tooltip's blue Net paid to operators entry, not the purple Owed to us (invoices) entry.",
+      "relationship_id": "relationship-000007",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The red arrow from the column AD callout visibly descends into and terminates within the pink Invoiced codes used metric card.",
+      "relationship_id": "relationship-000008",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout explicitly says \u201cthese two boxes\u201d and is positioned over the adjacent Content add-ons and Merch add-ons cards; the proposed destination includes only the Merch add-ons card, so it omits one visible participant.",
+      "relationship_id": "relationship-000009",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The red arrow from the requested-changes callout visibly points up-left into the Revenue Breakout chart panel, landing within the plotted chart area covered by the proposed destination.",
+      "relationship_id": "relationship-000011",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The thick red arrow's left-pointing arrowhead visibly terminates at the blue circular marker on the upper line at D7.",
+      "relationship_id": "relationship-000012",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout's red arrow points left to the D7 marker at approximately x=461, but the proposed chart destination begins at x=500 and covers D9\u2013D15; the visible endpoint is outside those exact bounds.",
+      "relationship_id": "relationship-000013",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The BY OPERATOR heading sits immediately above the table whose first column lists the named operators and the All operators total, visibly labeling that table section.",
+      "relationship_id": "relationship-000014",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The arrowhead visibly lands within the Revenue Breakout panel on the orange Photo series, just above the $40k gridline.",
+      "relationship_id": "relationship-000015",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from \u201cTaggable total Rev: Column BY\u201d visibly points down-right to the TOTAL REVENUE WE MADE table column header.",
+      "relationship_id": "relationship-000016",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout's arrow terminates specifically at the WE SEND THEM column, whereas the proposed destination combines WE SEND THEM, THEY OWE US, and NET; those extra columns are not participants in this arrow mapping.",
+      "relationship_id": "relationship-000017",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The arrow terminates specifically at the THEY OWE US column, while the proposed destination also includes WE SEND THEM and NET; those additional columns are outside this exact mapping.",
+      "relationship_id": "relationship-000018",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The arrow terminates specifically at the NET column, but the proposed destination also encompasses WE SEND THEM and THEY OWE US; those extra columns are not exact participants in this mapping.",
+      "relationship_id": "relationship-000019",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The callout's red arrow points upward into the operator table's header area beside the OPERATOR column, visibly indicating where the requested refunds column should be added.",
+      "relationship_id": "relationship-000020",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The instruction explicitly begins \u201cClick Generate report\u201d and describes freezing the range, directly naming the visible Generate report button.",
+      "relationship_id": "relationship-000021",
+      "verdict": "supported"
+    }
+  ]
+}

@@ -1,0 +1,2 @@
+# Canonical repository proof executed by scoped_git_publish before every commit or push.
+scripts/run_pytest.sh -q

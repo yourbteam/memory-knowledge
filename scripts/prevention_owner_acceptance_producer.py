@@ -23,7 +23,8 @@ try:
     from scripts.prevention_journal import JournalOwnership, PreventionJournal
     from scripts.prevention_owner_acceptance_cases import load_case_registry
     from scripts.prevention_owner_acceptance_fixtures import (
-        ACCEPTANCE_THREAD_ID, AcceptanceBindingProvider, ensure_memory_mirror,
+        ACCEPTANCE_THREAD_ID, AcceptanceBindingProvider,
+        AcceptancePublishedCommitIngestionServer, ensure_memory_mirror,
         ensure_rolling_policy, intent_for,
     )
     from scripts.prevention_contract_materializer import materialize
@@ -41,7 +42,8 @@ except ModuleNotFoundError:  # direct script execution
     from prevention_journal import JournalOwnership, PreventionJournal
     from prevention_owner_acceptance_cases import load_case_registry
     from prevention_owner_acceptance_fixtures import (
-        ACCEPTANCE_THREAD_ID, AcceptanceBindingProvider, ensure_memory_mirror,
+        ACCEPTANCE_THREAD_ID, AcceptanceBindingProvider,
+        AcceptancePublishedCommitIngestionServer, ensure_memory_mirror,
         ensure_rolling_policy, intent_for,
     )
     from prevention_contract_materializer import materialize
@@ -49,6 +51,19 @@ except ModuleNotFoundError:  # direct script execution
 
 class ProducerError(RuntimeError):
     """A checked acceptance case could not execute through the real source path."""
+
+
+CANONICAL_MEMORY_ROOT = Path.home() / "memory-knowledge"
+
+
+def _memory_source_relative(path_text: str) -> Path | None:
+    path = Path(path_text)
+    for root in (prevention_registry.ROOT, CANONICAL_MEMORY_ROOT):
+        try:
+            return path.relative_to(root)
+        except ValueError:
+            continue
+    return None
 
 
 class AcceptanceBudgetProducer(prevention_budget.SourceOwnerBudgetProducer):
@@ -426,7 +441,22 @@ class RealSourceExecutor:
         executed = list(command)
         mirror = ensure_memory_mirror(self.root)
         source_path = executed[1] if len(executed) > 1 else ""
-        if source_path.startswith("/Users/kamenkamenov/memory-knowledge/scripts/"):
+        source_relative = _memory_source_relative(source_path)
+        if source_relative is not None and source_relative.parts[:1] == ("scripts",):
+            source = prevention_registry.ROOT / source_relative
+            if not source.is_file():
+                raise ProducerError(
+                    f"owner-source-entrypoint-unavailable:{source_path}"
+                )
+            mirrored_source = mirror / source_relative
+            mirrored_source.parent.mkdir(parents=True, exist_ok=True)
+            source_bytes = source.read_bytes()
+            mirrored_source.write_bytes(source_bytes)
+            if mirrored_source.read_bytes() != source_bytes:
+                raise ProducerError(
+                    f"owner-source-entrypoint-mirror-mismatch:{source_path}"
+                )
+            executed[1] = str(mirrored_source)
             if source_path.endswith("/discovery_promotion_lifecycle.py"):
                 executed[1] = str(mirror / "scripts/discovery_promotion_lifecycle.py")
             for flag in ("--root", "--repo"):
@@ -436,14 +466,19 @@ class RealSourceExecutor:
                 executed[executed.index("--repo") + 1] = str(
                     self.root / "git-repository"
                 )
-            current_root = "/Users/kamenkamenov/memory-knowledge/"
+            current_roots = (
+                str(prevention_registry.ROOT) + "/",
+                str(CANONICAL_MEMORY_ROOT) + "/",
+            )
             for index, value in enumerate(executed):
                 if index == 1:
                     continue
-                if value.startswith(current_root):
-                    candidate = mirror / value[len(current_root):]
-                    if candidate.exists():
-                        executed[index] = str(candidate)
+                for current_root in current_roots:
+                    if value.startswith(current_root):
+                        candidate = mirror / value[len(current_root):]
+                        if candidate.exists():
+                            executed[index] = str(candidate)
+                        break
         executed_command = tuple(executed)
         self.executed_commands.append(executed_command)
         environment = dict(os.environ)
@@ -465,7 +500,7 @@ class RealSourceExecutor:
         environment["MK_DIRECTIVE_STATE_PATH"] = str(
             self.root / "directive-state.json"
         )
-        source_root = "/Users/kamenkamenov/memory-knowledge"
+        source_root = str(prevention_registry.ROOT)
         existing_pythonpath = environment.get("PYTHONPATH")
         uses_memory_mirror_imports = source_path.endswith((
             "/discovery_promotion_lifecycle.py",
@@ -479,6 +514,9 @@ class RealSourceExecutor:
             pythonpath_parts.append(existing_pythonpath)
         environment["PYTHONPATH"] = os.pathsep.join(pythonpath_parts)
         environment["MK_PYTEST_PYTHON"] = source_root + "/.venv/bin/python"
+        environment["MK_PREVENTION_CANONICAL_ROOT"] = str(CANONICAL_MEMORY_ROOT)
+        environment["MK_PREVENTION_SOURCE_ROOT"] = source_root
+        environment.pop("MK_PREVENTION_SOURCE_ROOT_OWNER_IDS", None)
         if source_path.endswith("/claude_auth_refresh.sh"):
             fake_bin = self.root / "claude-auth-fake-bin"
             fake_bin.mkdir(parents=True, exist_ok=True)
@@ -890,20 +928,32 @@ print(json.dumps({
             docker.chmod(0o700)
             environment["PATH"] = str(fake_bin) + os.pathsep + environment["PATH"]
             environment["MAWF_OPERATOR_AUDIT"] = str(audit_path)
+        ingestion_server = None
+        if source_path.endswith("/scoped_git_publish.py"):
+            ingestion_server = AcceptancePublishedCommitIngestionServer()
+            environment["WORKFLOW_ORCH_MEMORY_KNOWLEDGE_URL"] = (
+                ingestion_server.start()
+            )
+            environment["MK_PUBLISH_INGESTION_POLL_SECONDS"] = "0"
+            environment["MK_PUBLISH_INGESTION_TIMEOUT_SECONDS"] = "5"
         execution_cwd = None
         if source_path.endswith("/local_workflow_orch_image_harness.py"):
             execution_cwd = str(Path(source_path).resolve().parents[1])
         try:
-            completed = subprocess.run(
-                list(executed_command), shell=False, check=False, text=True,
-                capture_output=True, env=environment, cwd=execution_cwd, timeout=60,
-            )
-        except subprocess.TimeoutExpired as exc:
-            completed = subprocess.CompletedProcess(
-                list(executed_command), 124,
-                stdout=exc.stdout or "",
-                stderr=(exc.stderr or "") + "owner-acceptance-source-timeout:60s\n",
-            )
+            try:
+                completed = subprocess.run(
+                    list(executed_command), shell=False, check=False, text=True,
+                    capture_output=True, env=environment, cwd=execution_cwd, timeout=60,
+                )
+            except subprocess.TimeoutExpired as exc:
+                completed = subprocess.CompletedProcess(
+                    list(executed_command), 124,
+                    stdout=exc.stdout or "",
+                    stderr=(exc.stderr or "") + "owner-acceptance-source-timeout:60s\n",
+                )
+        finally:
+            if ingestion_server is not None:
+                ingestion_server.close()
         result = prevention_owner_runtime.ExecutionResult(
             completed.returncode, completed.stdout, completed.stderr
         )

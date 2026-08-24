@@ -1,0 +1,1 @@
+The displayed pay-period interval is the source context for the payout-period card's data calculation. Jul 1–15 identifies the interval used for that row's relevant data points; Jul 16–31 is another displayed pay-period interval, not a distinct source element uniquely connected only to itself.

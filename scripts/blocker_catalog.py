@@ -152,7 +152,23 @@ def cmd_pre_run_correct(args: argparse.Namespace) -> dict[str, Any]:
     )
     if status not in {"open", "fixed-awaiting-verification"}:
         raise work_memory.WorkMemoryError("pre-run-blocker-not-open", 3)
-    artifacts, hashes = work_memory._artifact_hashes(args.changed_artifact)
+    declared_artifacts = args.changed_artifact or []
+    declared_environment = args.changed_environment_artifact or []
+    artifacts, hashes = work_memory._artifact_hashes(declared_artifacts)
+    environment_artifacts, environment_hashes = (
+        work_memory._environment_artifact_hashes(declared_environment)
+    )
+    if not artifacts and not environment_artifacts:
+        raise work_memory.WorkMemoryError(
+            "pre-run-correction-declares-no-artifact", 2,
+        )
+    environment_fields = (
+        {
+            "environment_artifacts": environment_artifacts,
+            "environment_artifact_hashes": environment_hashes,
+        }
+        if environment_artifacts else {}
+    )
     correction_id = args.correction_id or str(uuid.uuid4())
     superseded_ids = {
         item["supersedes_correction_id"] for item in events
@@ -185,7 +201,7 @@ def cmd_pre_run_correct(args: argparse.Namespace) -> dict[str, Any]:
         changed_artifacts=artifacts, changed_artifact_hashes=hashes,
         solution=args.solution,
         reusable_behavior_changed=args.reusable_behavior_changed == "yes",
-        **correction_fields,
+        **environment_fields, **correction_fields,
     )
     transition = None
     requested_events = [correction]
@@ -239,12 +255,20 @@ def cmd_pre_run_verify(args: argparse.Namespace) -> dict[str, Any]:
         raise work_memory.WorkMemoryError(
             "pre-run-correction-superseded", 3,
         )
-    current_artifacts, current_hashes = work_memory._artifact_hashes(
+    current_artifacts, current_hashes = work_memory._rehash_recorded_artifacts(
         correction["changed_artifacts"],
+    )
+    current_environment, current_environment_hashes = (
+        work_memory._rehash_recorded_environment_artifacts(
+            correction.get("environment_artifacts", []),
+        )
     )
     if (
         current_artifacts != correction["changed_artifacts"]
         or current_hashes != correction["changed_artifact_hashes"]
+        or current_environment != correction.get("environment_artifacts", [])
+        or current_environment_hashes
+        != correction.get("environment_artifact_hashes", [])
     ):
         raise work_memory.WorkMemoryError(
             "pre-run-correction-artifact-hash-mismatch", 3,
@@ -256,6 +280,14 @@ def cmd_pre_run_verify(args: argparse.Namespace) -> dict[str, Any]:
         correction_id=args.correction_id, verification_command=args.command,
         outcome="passed", quality="same-command", evidence=args.evidence,
         changed_artifact_hashes=correction["changed_artifact_hashes"],
+        **(
+            {
+                "environment_artifact_hashes": correction[
+                    "environment_artifact_hashes"
+                ],
+            }
+            if correction.get("environment_artifact_hashes") else {}
+        ),
     )
     result = work_memory.transact({
         "schema_version": 1, "expected_ledger_hash": None, "events": [verification],
@@ -404,7 +436,8 @@ def build_parser() -> argparse.ArgumentParser:
                  "solution"):
         pre_correct.add_argument(f"--{flag}", required=True)
     pre_correct.add_argument("--reusable-behavior-changed", required=True, choices=["yes", "no"])
-    pre_correct.add_argument("--changed-artifact", action="append", required=True)
+    pre_correct.add_argument("--changed-artifact", action="append")
+    pre_correct.add_argument("--changed-environment-artifact", action="append")
     pre_correct.add_argument("--correction-id"); pre_correct.add_argument("--event-id")
     pre_correct.add_argument("--transition-event-id")
     pre_correct.set_defaults(func=cmd_pre_run_correct)

@@ -4,8 +4,6 @@ description: |
   At the close of a substantive work session, capture the durable lessons learned into the
   brain as evidence-grade candidates, so knowledge accrues instead of evaporating. Fires when
   a session is wrapping up (task done, "that's all", end of a brainstorm/debug/build).
-author: Kamen / memory-knowledge
-version: 1.0.0
 ---
 
 # Auto-Capture (session-close)
@@ -34,20 +32,29 @@ Capture only **durable, reusable** lessons:
 Skip: task chatter, transient status, secrets, large code blocks, anything already stored.
 
 ## Process
-1. At session close, review the session for items meeting the capture criterion (typically 0–5).
-2. For each, call the `author_repo_note` MCP tool with:
-   - `repository_key` = the repo this session was about,
-   - `title` = a one-line summary,
-   - `body_text` = the lesson + its **why**,
-   - `verification_status="unverified"` (candidate), `confidence` ~0.4.
-3. If the repo isn't ingested into the brain (`author_repo_note` returns "no ingested revision"),
-   skip it and say so — don't fabricate.
-4. Report what was captured (titles), so the user can see and later promote/correct.
+1. At session close, review the session for items meeting the capture criterion (0–3).
+2. Run the managed script beside this file with a PTY:
+   `/Users/kamenkamenov/memory-knowledge/.venv/bin/python <this-skill-directory>/scripts/auto_capture.py --interview`
+3. The script asks for the repository key, then presents numbered menus for:
+   - capture nothing / capture durable lessons,
+   - content kind,
+   - evidence kind,
+   - add another evidence reference / finish,
+   - add another lesson / finish.
+4. When a menu is displayed, answer with exactly one displayed number. Use prose only for the
+   requested title, body, repository key, path, UUID, or revision. Never bypass the script by
+   hand-authoring `content_kind`, evidence `kind`, or continuation labels in an MCP call.
+5. The script maps numbers to canonical values and calls `author_repo_note` with
+   `verification_status="unverified"` and `confidence=0.4`.
+6. Report what the script captured. If the repository has no ingested revision, report that and
+   do not fabricate evidence.
 
 ## Output
 A short list of captured candidate notes (titles + repo), or "nothing durable to capture."
 
 ## Notes
 - Candidates are **not** directives. Promotion to a directive is human-gated ("lock it").
-- Codex has no session-end hook; this skill is how Codex (and Claude, as a fallback to the
-  automatic hook) performs session-close capture.
+- Automatic extraction uses the active installed client subscription boundary; it never calls a
+  public model API SDK. Codex and Claude answers pass through the same numbered parser.
+- Codex has no session-end hook; this mechanical interview is how Codex (and Claude, as a
+  fallback to the automatic hook) performs session-close capture.

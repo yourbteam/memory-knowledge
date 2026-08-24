@@ -6,22 +6,27 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
+import os
 import shutil
 import subprocess
 import sys
 import tempfile
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Iterable, Sequence
+from uuid import NAMESPACE_URL, uuid5
 
 try:
     from scripts import (
         prevention_source_receipt,
+        published_commit_ingestion,
         script_intake,
         sequence_intake_adapters,
         work_memory,
     )
 except ModuleNotFoundError:  # direct script execution
     import prevention_source_receipt
+    import published_commit_ingestion
     import script_intake
     import sequence_intake_adapters
     import work_memory
@@ -29,6 +34,142 @@ except ModuleNotFoundError:  # direct script execution
 
 class PublishError(RuntimeError):
     """A safe, operator-actionable publish failure."""
+
+
+SEQUENCE_RUN_ID_ENV = "MK_SEQUENCE_RUN_ID"
+CLOSEOUT_LIST_LIMIT = 12
+CLOSEOUT_TEXT_LIMIT = 2048
+
+
+def _canonical_value_sha256(value: object) -> str:
+    return hashlib.sha256(json.dumps(
+        value, ensure_ascii=False, separators=(",", ":"),
+    ).encode("utf-8")).hexdigest()
+
+
+def _bounded_preview(value: object) -> object:
+    encoded = json.dumps(
+        value, ensure_ascii=False, separators=(",", ":"),
+    )
+    if len(encoded) <= CLOSEOUT_TEXT_LIMIT:
+        return value
+    return {
+        "preview": encoded[:CLOSEOUT_TEXT_LIMIT],
+        "sha256": _canonical_value_sha256(value),
+        "truncated": True,
+    }
+
+
+def _bounded_closeout(payload: dict[str, object]) -> dict[str, object]:
+    """Keep operator closeout finite while retaining complete omitted-value identity."""
+    output: dict[str, object] = {}
+    list_summaries: dict[str, object] = {}
+    text_summaries: dict[str, object] = {}
+    for key, value in payload.items():
+        if isinstance(value, dict):
+            output[key] = _bounded_closeout(value)
+        elif (
+            isinstance(value, list)
+            and len(value) > CLOSEOUT_LIST_LIMIT
+        ):
+            list_summaries[key] = {
+                "count": len(value),
+                "preview": [
+                    _bounded_preview(item)
+                    for item in value[:CLOSEOUT_LIST_LIMIT]
+                ],
+                "sha256": _canonical_value_sha256(value),
+                "truncated": True,
+            }
+        elif isinstance(value, str) and len(value) > CLOSEOUT_TEXT_LIMIT:
+            output[key] = value[:CLOSEOUT_TEXT_LIMIT]
+            text_summaries[key] = {
+                "characters": len(value),
+                "sha256": _canonical_value_sha256(value),
+                "truncated": True,
+            }
+        else:
+            output[key] = value
+    if list_summaries:
+        output["listSummaries"] = list_summaries
+    if text_summaries:
+        output["textSummaries"] = text_summaries
+    return output
+
+
+def _record_publication_verification(
+    result: dict[str, object], *, profile: str, branch: str, remote: str,
+) -> dict[str, object]:
+    run_id = os.environ.get(SEQUENCE_RUN_ID_ENV)
+    if not run_id:
+        return result
+    commit = result.get("commit")
+    remote_commit = result.get("remote_commit")
+    if (
+        result.get("ok") is not True
+        or not isinstance(commit, str)
+        or remote_commit != commit
+    ):
+        raise PublishError("publication-success-is-not-remotely-verified")
+    event_id = str(uuid5(
+        NAMESPACE_URL,
+        f"memory-knowledge:publication:{run_id}:{profile}:{commit}",
+    ))
+    try:
+        recorded = work_memory.cmd_verify_and_close(SimpleNamespace(
+            run_id=run_id,
+            outcome="passed",
+            quality="same-path",
+            evidence=(
+                f"scoped-git-publish verified local commit {commit} equals "
+                f"{remote}/{branch} remote commit; profile={profile}"
+            ),
+            blocker_id=[],
+            correction_id=[],
+            verification_command=f"scoped-git-publish:{profile}",
+            event_id=event_id,
+        ))
+    except work_memory.WorkMemoryError as exc:
+        raise PublishError(
+            f"verified remote commit {commit}, but publication ledger rejected "
+            f"the success event: {exc.code}"
+        ) from exc
+    return {
+        **result,
+        "workMemoryVerificationEventId": recorded["event_id"],
+        "closedBlockerIds": recorded["closed_blocker_ids"],
+    }
+
+
+def _verify_published_commit_ingestion(
+    result: dict[str, object], *, repository_key: str, branch: str, remote: str,
+) -> dict[str, object]:
+    """Refuse closeout until the remotely verified commit is memory-visible."""
+
+    commit = result.get("commit")
+    if (
+        result.get("ok") is not True
+        or not isinstance(commit, str)
+        or result.get("remote_commit") != commit
+    ):
+        raise PublishError("memory-ingestion-requires-a-remotely-verified-commit")
+    try:
+        ingestion = published_commit_ingestion.run(
+            repository_key=repository_key,
+            branch_name=branch,
+            commit_sha=commit,
+        )
+    except published_commit_ingestion.IngestionVerificationError as exc:
+        raise PublishError(
+            f"remote commit {commit} is published at {remote}/{branch}, but memory "
+            f"ingestion is not verified: {exc}"
+        ) from exc
+    if ingestion.get("verified") is not True or ingestion.get("memoryCommit") != commit:
+        raise PublishError(
+            f"remote commit {commit} is published at {remote}/{branch}, but memory "
+            "ingestion returned no matching verification"
+        )
+    return {**result, "memoryIngestion": ingestion}
 
 
 EFFECT_AUTHORIZATION_SPEC = {
@@ -157,7 +298,39 @@ def _repo_test_command(repo: Path) -> list[str] | None:
     return None
 
 
-def _run_repo_tests(repo: Path) -> dict[str, object]:
+def _required_repo_test_command(
+    repo: Path, scope: Sequence[str],
+) -> list[str]:
+    declaration = repo / TEST_DECLARATION
+    tracked = not _git(
+        repo, "ls-files", "--error-unmatch", "--", TEST_DECLARATION,
+        check=False,
+    ).returncode
+    approved_new = TEST_DECLARATION in scope
+    if not declaration.is_file() or not (tracked or approved_new):
+        raise PublishError(
+            f"a tracked {TEST_DECLARATION} declaration is required before publish "
+            f"(a new declaration is allowed only inside the approved path scope)"
+        )
+    declaration_dirty = bool(_git(
+        repo, "status", "--porcelain=v1", "--untracked-files=all", "--",
+        TEST_DECLARATION,
+    ).stdout.strip())
+    if declaration_dirty and not approved_new:
+        raise PublishError(
+            f"modified {TEST_DECLARATION} must be inside the approved path scope"
+        )
+    command = _repo_test_command(repo)
+    if command is None:
+        raise PublishError(
+            f"{TEST_DECLARATION} must declare one non-comment test command"
+        )
+    return command
+
+
+def _run_repo_tests(
+    repo: Path, scope: Sequence[str],
+) -> dict[str, object]:
     """Run the repository's declared suite and refuse the publish if it fails.
 
     Why this is here rather than in a git hook: on 2026-08-05 a check was added that fails the
@@ -168,13 +341,11 @@ def _run_repo_tests(repo: Path) -> dict[str, object]:
     A local hook was the other candidate; it is skippable with --no-verify and absent from a
     fresh clone, and this publisher is the path every commit here actually takes.
 
-    A repository with no `.publish-tests` publishes as before, and the result says so, so an
-    ungated repository is visible rather than assumed safe.
+    Every repository must carry a tracked `.publish-tests` declaration. A new or modified
+    declaration is accepted only when it is itself inside the approved publish scope.
     """
 
-    command = _repo_test_command(repo)
-    if command is None:
-        return {"ran": False, "reason": f"no {TEST_DECLARATION} in {repo}"}
+    command = _required_repo_test_command(repo, scope)
     completed = subprocess.run(
         command, cwd=repo, capture_output=True, text=True, check=False
     )
@@ -434,6 +605,7 @@ def integrate_remote_and_resume(
             "local commit-stack scope mismatch after integration; "
             f"missing={sorted(expected - after)}; extra={sorted(after - expected)}"
         )
+    tests = _run_repo_tests(repo, paths)
     verified_remote = _push_and_verify(repo, branch, remote, integrated_head)
     return {
         "ok": True,
@@ -446,6 +618,7 @@ def integrate_remote_and_resume(
         "remote_commit": verified_remote,
         "merge_base": merge_base,
         "paths": paths,
+        "tests": tests,
     }
 
 
@@ -669,6 +842,7 @@ def isolated_reconcile_and_resume(
         reconciled = _git(isolated, "rev-parse", "HEAD").stdout.strip()
         if _changed_paths(isolated, remote_sha, reconciled) != staged:
             raise PublishError("reconciled commit differs from its validated staged scope")
+        tests = _run_repo_tests(isolated, scope_paths)
         verified_remote = _push_and_verify(isolated, branch, remote, reconciled)
 
     after_state = _source_state(repo, sorted(scope | overlay))
@@ -692,6 +866,7 @@ def isolated_reconcile_and_resume(
         "conflict_paths": sorted(overlaps & semantic_paths),
         "auto_merged_paths": auto_merged,
         "ledger_strategy": "remote-order-plus-local-unseen-event-id",
+        "tests": tests,
     }
 
 
@@ -709,6 +884,7 @@ def resume_push(*, repo: Path, branch: str, remote: str, commit_sha: str) -> dic
     head = _git(repo, "rev-parse", "HEAD").stdout.strip()
     if head != commit_sha:
         raise PublishError(f"resume commit is not HEAD: expected {commit_sha}, found {head}")
+    tests = _run_repo_tests(repo, [])
     remote_sha = _push_and_verify(repo, branch, remote, commit_sha)
     return {
         "ok": True,
@@ -718,6 +894,7 @@ def resume_push(*, repo: Path, branch: str, remote: str, commit_sha: str) -> dic
         "remote": remote,
         "commit": commit_sha,
         "remote_commit": remote_sha,
+        "tests": tests,
     }
 
 
@@ -728,6 +905,7 @@ def publish(
     if execute and not message.strip():
         raise PublishError("commit message must not be empty")
     paths = _preflight(repo, branch, remote, manifest)
+    test_command = _required_repo_test_command(repo, paths)
     if not execute:
         return {
             "ok": True,
@@ -736,13 +914,9 @@ def publish(
             "branch": branch,
             "remote": remote,
             "paths": paths,
-            "tests": (
-                {"would_run": _repo_test_command(repo)[-1]}
-                if _repo_test_command(repo)
-                else {"would_run": None, "reason": f"no {TEST_DECLARATION}"}
-            ),
+            "tests": {"would_run": test_command[-1]},
         }
-    tests = _run_repo_tests(repo)
+    tests = _run_repo_tests(repo, paths)
 
     committed = False
     commit_sha = ""
@@ -787,6 +961,7 @@ def publish(
 def build_parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--repo", required=True, type=Path)
+    parser.add_argument("--repository-key", required=True)
     parser.add_argument("--manifest", type=Path)
     parser.add_argument("--message")
     parser.add_argument("--branch", default="main")
@@ -1032,10 +1207,22 @@ def main(argv: Sequence[str] | None = None) -> int:
                 result["preventionSourceReceiptSha256"] = (
                     prevention_source_receipt.receipt_sha256(source_receipt)
                 )
-        print(json.dumps(result, sort_keys=True))
+        if profile != "dry-run":
+            result = _verify_published_commit_ingestion(
+                result,
+                repository_key=args.repository_key,
+                branch=args.branch,
+                remote=args.remote,
+            )
+            result = _record_publication_verification(
+                result, profile=profile, branch=args.branch, remote=args.remote,
+            )
+        print(json.dumps(_bounded_closeout(result), sort_keys=True))
         return 0
     except PublishError as exc:
-        print(json.dumps({"ok": False, "error": str(exc)}, sort_keys=True), file=sys.stderr)
+        print(json.dumps(_bounded_closeout({
+            "ok": False, "error": str(exc),
+        }), sort_keys=True), file=sys.stderr)
         return 2
 
 

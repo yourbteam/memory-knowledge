@@ -37,7 +37,7 @@
       "status": "APPROVED",
       "approved_by": "Kamen",
       "approved_at_utc": "2026-08-17T18:39:45Z",
-      "reason": "the registered API and media-worker deployment profiles now carry the documented local .NET SDK path into guarded dispatch, while the admin SPA remains unchanged"
+      "reason": "the registered API and media-worker deployment profiles carry the documented local .NET SDK path into guarded dispatch, while the admin SPA remains unchanged"
     },
     "sequence_intake_adapter_local_multimodal_benchmark_20260818": {
       "decision_id": "commit-push-main-local-multimodal-benchmark-intake-adapter-source-correction-20260818",
@@ -89,6 +89,27 @@
       "approved_by": "Kamen",
       "approved_at_utc": "2026-07-29",
       "reason": "adds the declared-client-facts answer the regeneration step needs so an omitted fact is reported unresolved rather than assumed"
+    },
+    "sequence_intake_adapter_current_source_20260820": {
+      "decision_id": "commit-push-main-current-intake-adapter-source-correction-20260820",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-08-20",
+      "reason": "bind the exact currently installed adapter source so registered commit/push selection can validate before the approved no-argument starter enters its interview"
+    },
+    "full_suite_reconciliation_20260820": {
+      "decision_id": "commit-push-main-full-suite-reconciliation-source-correction-20260820",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-08-20",
+      "reason": "bind the exact approved commit-push-main implementation, intake, adapter, and sequence sources so the canonical full-suite publish gate validates the branch being published"
+    },
+    "main_integration_reconciliation_20260824": {
+      "decision_id": "commit-push-main-main-integration-source-correction-20260824",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-08-24",
+      "reason": "bind the exact semantically reconciled adapter that combines the later Info Intake implementation with main's approved .NET deployment environment behavior, and the feature's newer zero-argument commit/push sequence document, during the explicitly approved branch integration"
     }
   },
   "authority_decisions_required": [],
@@ -251,23 +272,23 @@
   },
   "schema_version": 1,
   "source": {
-    "dependencies_sha256": "90f1b468d1fecf61fa0fa4ba0c739102939518d6977763e5bcc51544698ffb63",
-    "implementation_approved_post_correction_sha256": "0ab022696f75fe774f6929dab54c771a40269bdcd7cf05e8fa1ecf04709c0f46",
+    "dependencies_sha256": "97a4c14aa2ba20f626cbec78c232335035dae0dff546ed5036d6a18ca32dd119",
+    "implementation_approved_post_correction_sha256": "c1481e892caa1ea606c3fc6fcafbd9d3b5e2d5410d37c5903519e21259f56138",
     "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/scoped_git_publish.py",
     "implementation_sha256": "27912869dd33e97847aab13f26e00957888ec58f96832a263987d419bd4b3f45",
-    "implementation_source_correction_decision_id": "commit-push-main-source-branch-landing-source-correction-20260810",
-    "intake_approved_post_correction_sha256": "f4b599bedaede439d125de464374763d0346caed6328ccc06f0552b66b7639fd",
+    "implementation_source_correction_decision_id": "commit-push-main-full-suite-reconciliation-source-correction-20260820",
+    "intake_approved_post_correction_sha256": "30c7bb16106ade703e7226655b9c569711cb728e0cbe48bd7694c91862a7b5fc",
     "intake_path": "/Users/kamenkamenov/memory-knowledge/scripts/script_intake.py",
     "intake_sha256": "9955319d6c29bdf64025896e2bc9f4e1740866a88c3f0bfd1e0a3a042882b5cc",
-    "intake_source_correction_decision_id": "commit-push-main-goal-store-intake-source-correction-20260806",
-    "sequence_approved_post_correction_sha256": "daa618bf35ba1e74ecebc08df7934a45e5d10a7be1c3ad7d4df434ce0990a69f",
-    "sequence_intake_adapter_approved_post_correction_sha256": "aca0fb34888d23ea233ba105fd3b870a07f6eeee9f78d7be3c6b0e63eccdc376",
+    "intake_source_correction_decision_id": "commit-push-main-full-suite-reconciliation-source-correction-20260820",
+    "sequence_approved_post_correction_sha256": "5ac9666d52b6f205c5a69eba77628fc18edda76aa88358a90f1b89fe4438032a",
+    "sequence_intake_adapter_approved_post_correction_sha256": "35c8937346db57a1817d7f40b0101261ba4923c63b4a9e7e13a514b70c5ef092",
     "sequence_intake_adapter_path": "/Users/kamenkamenov/memory-knowledge/scripts/sequence_intake_adapters.py",
     "sequence_intake_adapter_sha256": "71d625802d503eef10ab67ca08446cead079d287dac08d4e30b8f394a0691f57",
-    "sequence_intake_adapter_source_correction_decision_id": "commit-push-main-local-multimodal-benchmark-intake-adapter-source-correction-20260818",
+    "sequence_intake_adapter_source_correction_decision_id": "commit-push-main-main-integration-source-correction-20260824",
     "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/commit-push-main/sequence.md",
     "sequence_sha256": "08706c31a48e96f58e2119fdbc16d9a79c72f22fa84f830d708cf7dca4e319dd",
-    "sequence_source_correction_decision_id": "commit-push-main-git-auth-boundary-20260723",
+    "sequence_source_correction_decision_id": "commit-push-main-main-integration-source-correction-20260824",
     "source_receipt_helper_path": "/Users/kamenkamenov/memory-knowledge/scripts/prevention_source_receipt.py",
     "source_receipt_helper_sha256": "e569ee5da7043681d9f432410417a620d4ebadc776cf5f6ed7992ac1aa81e2a8"
   },

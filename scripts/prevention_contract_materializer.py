@@ -11,10 +11,14 @@ from typing import Any, Mapping
 
 try:
     from scripts import prevention_owner_acceptance
-    from scripts.prevention_contract import canonical_bytes, sha256_bytes
+    from scripts.prevention_contract import (
+        canonical_bytes, resolve_repository_source_path, sha256_bytes,
+    )
 except ModuleNotFoundError:  # direct script execution
     import prevention_owner_acceptance
-    from prevention_contract import canonical_bytes, sha256_bytes
+    from prevention_contract import (
+        canonical_bytes, resolve_repository_source_path, sha256_bytes,
+    )
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -183,24 +187,18 @@ def _source_bindings(
         if not isinstance(path_value, str) or not isinstance(expected, str):
             raise MaterializationError("invalid-source-binding")
         path = Path(path_value)
-        read_path = path
-        if source_root is not None:
-            trusted_roots = proposal.get("trusted_roots")
-            canonical_root_value = (
-                trusted_roots.get("memory-knowledge")
-                if isinstance(trusted_roots, Mapping)
-                else None
-            )
-            if not isinstance(canonical_root_value, str):
-                raise MaterializationError("memory-knowledge-root-required")
-            canonical_root = Path(canonical_root_value)
-            try:
-                read_path = source_root / path.relative_to(canonical_root)
-            except ValueError:
-                pass
-        if not read_path.is_file():
-            raise MaterializationError(f"source-missing:{read_path}")
-        actual = sha256_bytes(read_path.read_bytes())
+        roots = proposal.get("trusted_roots")
+        canonical_root = roots.get("memory-knowledge") if isinstance(roots, Mapping) else None
+        if not isinstance(canonical_root, str):
+            raise MaterializationError("memory-knowledge-source-root-required")
+        resolved_path = resolve_repository_source_path(
+            path_value,
+            repository_root=source_root or ROOT,
+            canonical_repository_root=Path(canonical_root),
+        )
+        if not resolved_path.is_file():
+            raise MaterializationError(f"source-missing:{path}")
+        actual = sha256_bytes(resolved_path.read_bytes())
         binding = {"path": str(path), "sha256": actual}
         if actual != expected:
             approved_post = raw.get("approved_post_correction_sha256")

@@ -1,0 +1,1 @@
+It describes the selected operator's Payout reports history list and its date-range or report-number search behavior.

@@ -209,3 +209,48 @@ class TestTheIntakeCollectsAMultiLineFieldInsideAList:
             spec, input_fn=lambda _prompt: next(answers), output_fn=lambda _message: None
         )
         assert collected["kpis"][0]["producer"] == "scripts/producer.py"
+
+
+class TestGoalDeclarationControllerHandoff:
+    def test_default_set_invocation_still_runs_the_existing_interview(
+        self, repo, monkeypatch, capsys,
+    ):
+        monkeypatch.setattr(script_intake, "collect", lambda spec: _answers())
+
+        assert goal_tracker.main(["--repo", str(repo), "set"]) == 0
+
+        assert goal_tracker.current_goal(goal_tracker.load(repo))["statement"].startswith(
+            "make the harness reliable"
+        )
+        assert "goal g1 recorded" in capsys.readouterr().out
+
+    def test_controller_answers_file_requires_dispatch_and_preserves_the_same_contract(
+        self, repo, tmp_path, monkeypatch,
+    ):
+        artifact_root = tmp_path / "sequence-intake"
+        artifact_root.mkdir()
+        answers_file = artifact_root / "goal-answers.json"
+        answers_file.write_text(json.dumps(_answers()))
+        monkeypatch.setattr(
+            goal_tracker, "SEQUENCE_INTAKE_ARTIFACT_ROOT", artifact_root,
+        )
+
+        with pytest.raises(SystemExit, match="reserved for the authorized sequence controller"):
+            goal_tracker.main([
+                "--repo", str(repo), "set", "--answers-file", str(answers_file),
+            ])
+
+        monkeypatch.setenv(goal_tracker.SEQUENCE_INTAKE_DISPATCH_MARKER, "1")
+        assert goal_tracker.main([
+            "--repo", str(repo), "set", "--answers-file", str(answers_file),
+        ]) == 0
+        assert goal_tracker.current_goal(goal_tracker.load(repo))["id"] == "g1"
+
+    def test_goal_producer_cannot_escape_the_selected_repository(self, repo, tmp_path):
+        outside = tmp_path / "outside.py"
+        outside.write_text("print('{}')\n")
+        answers = _answers()
+        answers["kpis"][0]["producer"] = str(outside)
+
+        with pytest.raises(SystemExit, match="repository-relative"):
+            goal_tracker.set_goal(repo, answers)

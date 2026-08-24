@@ -1,0 +1,316 @@
+{
+  "candidate_sha256": "8c3b592c953b509f03486db667c78150625a968e543d26bae26f3d751b35e3ed",
+  "corrections": [
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000002",
+        "description": "The annotation callout points to the D7 plotted marker in the High-level payouts & revenue chart and explains that the chart shows the summary metrics above by day for the selected period, with each series individually toggleable.",
+        "from_id": "element-000021",
+        "gap_reason": "",
+        "id": "relationship-000002-correction-000001",
+        "kind": "annotation callout explains chart behavior",
+        "locked_identity_participants": {
+          "target": "element-000003"
+        },
+        "origin_point": [
+          650,
+          320
+        ],
+        "status": "readable",
+        "target_point": [
+          463,
+          273
+        ],
+        "to_id": "correction-element-000001",
+        "verified_element_id": "element-000003",
+        "verified_obligation_id": "obligation-000003"
+      },
+      "original_relationship_id": "relationship-000002",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "D7 plotted marker on the chart; the nearby tooltip is labeled D7",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000001",
+        "kind": "D7 plotted data point in the High-level payouts & revenue chart",
+        "region": [
+          455,
+          265,
+          470,
+          280
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000007",
+        "description": "The purple D7 marker corresponds to the tooltip's purple Owed to us (invoices) entry, which reports $9.5k for D7.",
+        "from_id": "correction-element-000002",
+        "gap_reason": "",
+        "id": "relationship-000007-correction-000001",
+        "kind": "chart tooltip series entry within a chart data tooltip",
+        "locked_identity_participants": {
+          "target": "element-000010"
+        },
+        "origin_point": [
+          463,
+          423
+        ],
+        "status": "readable",
+        "target_point": [
+          460,
+          219
+        ],
+        "to_id": "element-000010",
+        "verified_element_id": "element-000010",
+        "verified_obligation_id": "obligation-000010"
+      },
+      "original_relationship_id": "relationship-000007",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "Purple plotted marker aligned with D7; the hover tooltip identifies the purple series as Owed to us (invoices) and shows $9.5k",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000002",
+        "kind": "purple Owed to us chart data marker at D7",
+        "region": [
+          455,
+          416,
+          470,
+          430
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "origin",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000009",
+        "description": "The callout applies to both adjacent right-side summary cards: replace them with Taggable Content Revenue sourced from column BU and Taggable Service Fee Revenue sourced from column BX until additional products exist.",
+        "from_id": "element-000012",
+        "gap_reason": "",
+        "id": "relationship-000009-correction-000001",
+        "kind": "annotation callout specifies values and labels for two dashboard metric cards",
+        "locked_identity_participants": {
+          "origin": "element-000012"
+        },
+        "origin_point": [
+          792,
+          72
+        ],
+        "status": "readable",
+        "target_point": [
+          832,
+          123
+        ],
+        "to_id": "correction-element-000003",
+        "verified_element_id": "element-000012",
+        "verified_obligation_id": "obligation-000012"
+      },
+      "original_relationship_id": "relationship-000009",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "Content add-ons, add-on cents, $0, this period; Merch add-ons, prints / merch revenue, $0, this period",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000003",
+        "kind": "adjacent pair of right-side summary metric cards: Content add-ons and Merch add-ons",
+        "region": [
+          673,
+          69,
+          990,
+          177
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000013",
+        "description": "The annotation's red arrow points to the blue D7 data marker and explains that the chart plots the summary values above by day across the selected period, with each series toggleable.",
+        "from_id": "element-000021",
+        "gap_reason": "",
+        "id": "relationship-000013-correction-000001",
+        "kind": "annotation-to-chart behavior specification",
+        "locked_identity_participants": {
+          "target": "element-000022"
+        },
+        "origin_point": [
+          700,
+          325
+        ],
+        "status": "readable",
+        "target_point": [
+          461,
+          273
+        ],
+        "to_id": "element-000020",
+        "verified_element_id": "element-000022",
+        "verified_obligation_id": "obligation-000019"
+      },
+      "original_relationship_id": "relationship-000013",
+      "replacement_element": {
+        "created_by_correction": false,
+        "id": "element-000020"
+      },
+      "replacement_role": "target",
+      "replacement_source": "use_recorded_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000017",
+        "description": "The WE SEND THEM table column is populated from the sum of positive values in spreadsheet column AF.",
+        "from_id": "element-000027",
+        "gap_reason": "",
+        "id": "relationship-000017-correction-000001",
+        "kind": "calculation mapping",
+        "locked_identity_participants": {
+          "origin": "element-000027"
+        },
+        "origin_point": [
+          570,
+          755
+        ],
+        "status": "readable",
+        "target_point": [
+          570,
+          806
+        ],
+        "to_id": "correction-element-000004",
+        "verified_element_id": "element-000027",
+        "verified_obligation_id": "obligation-000024"
+      },
+      "original_relationship_id": "relationship-000017",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "WE SEND THEM; $1,284,905.20; $188,410.60; $22,140.75; $0.00; total $1,495,456.55",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000004",
+        "kind": "WE SEND THEM financial table column",
+        "region": [
+          500,
+          786,
+          650,
+          966
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000018",
+        "description": "The THEY OWE US table column is populated from the sum of negative values in spreadsheet column AF.",
+        "from_id": "element-000028",
+        "gap_reason": "",
+        "id": "relationship-000018-correction-000001",
+        "kind": "annotation callout points to table column",
+        "locked_identity_participants": {
+          "origin": "element-000028"
+        },
+        "origin_point": [
+          733,
+          757
+        ],
+        "status": "readable",
+        "target_point": [
+          730,
+          810
+        ],
+        "to_id": "correction-element-000005",
+        "verified_element_id": "element-000028",
+        "verified_obligation_id": "obligation-000025"
+      },
+      "original_relationship_id": "relationship-000018",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "THEY OWE US; $0.00; $0.00; $0.00; $28,905.10; total $28,905.10",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000005",
+        "kind": "THEY OWE US financial table column",
+        "region": [
+          650,
+          786,
+          780,
+          966
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000019",
+        "description": "The NET table column is populated from the sum of all values in spreadsheet column AF.",
+        "from_id": "element-000030",
+        "gap_reason": "",
+        "id": "relationship-000019-correction-000001",
+        "kind": "calculation mapping",
+        "locked_identity_participants": {
+          "origin": "element-000030"
+        },
+        "origin_point": [
+          888,
+          772
+        ],
+        "status": "readable",
+        "target_point": [
+          886,
+          810
+        ],
+        "to_id": "correction-element-000006",
+        "verified_element_id": "element-000030",
+        "verified_obligation_id": "obligation-000026"
+      },
+      "original_relationship_id": "relationship-000019",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "NET; PAYOUT $1,284,905.20; PAYOUT $188,410.60; PAYOUT $22,140.75; INVOICE $28,905.10; Net $1,466,551.45",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000006",
+        "kind": "NET financial table column",
+        "region": [
+          780,
+          786,
+          988,
+          966
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    }
+  ],
+  "corrector": {
+    "harness": "Codex CLI",
+    "model": "Codex"
+  },
+  "schema_version": 1,
+  "verification_candidate_sha256": "eebeb6550a78fbdeb792d7ba7810f4af9698da930bedb4350f8391694780db34",
+  "verification_sha256": "bf6cb23497ec842977b5fafbec1ef0ccd2e34d6e7ba27e4e65a905b9d15e6955"
+}

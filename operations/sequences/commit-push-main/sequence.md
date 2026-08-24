@@ -1,10 +1,17 @@
-# commit-push-main
+# Minimal commit and push
 
 <!-- BEGIN SEMANTIC INTAKE ENTRYPOINT -->
 ## Operator entry point
 
-After selecting and activating this registered sequence, launch the shared controller with no
-arguments:
+For a new commit/push task, launch the dedicated controller with no arguments:
+
+```bash
+python3 scripts/commit_push_main_launch.py
+```
+
+It owns classification, exact `commit-push-main` selection, activation, run start, and handoff to
+the numbered semantic interview. For a commit/push task that is already selected and activated,
+continue through the shared zero-argument handoff:
 
 ```bash
 python3 scripts/sequence_intake_launch.py
@@ -18,64 +25,74 @@ Any argument-bearing commands below are machine-compatibility and verification e
 deterministic adapter. Operators and agents must not construct or invoke those forms directly.
 <!-- END SEMANTIC INTAKE ENTRYPOINT -->
 
-## Use When
+Stable sequence id: `commit-push-main`.
 
-Commit and push an explicitly approved file scope while preserving unrelated working-tree changes.
+## Operator entry point
+
+Run the dedicated controller with no arguments:
+
+```bash
+python3 scripts/commit_push_main_launch.py
+```
+
+Launch a requested commit-and-push operation with host permission to write the repository's Git
+common directory and reach its configured remote. Dry runs do not need that permission. The host
+grant never replaces the controller's exact prepared-operation display and numbered authorization.
+
+The controller displays numbered choices for the operation, repository, and changed paths. It
+collects one focused verification command, mechanically routes every pytest form through the
+selected repository's executable `scripts/run_pytest.sh` wrapper, shows the normalized prepared
+operation, and requires a separate numbered authorization before any commit or push. An unmanaged
+host Python can therefore never become the pytest runtime.
 
 ## Outcome
 
-Commit and push an explicitly approved file scope while preserving unrelated working-tree changes
+Publish exactly the selected paths while leaving every unrelated working-tree change untouched.
+The sequence succeeds only after a fresh remote checkout reports the exact local commit.
 
-## Required Inputs
+## Boundaries
 
-- A local Git worktree root, expected branch, and configured push remote.
-- A UTF-8 manifest containing one approved repository-relative file path per line; directories and path escapes are rejected.
-- A non-empty commit message approved for the change being published.
-- An empty Git index before the sequence starts; unrelated unstaged and untracked work may remain.
-- Working Git push authentication and network access. No token values are printed or accepted as arguments.
-- GitHub CLI authentication is not a prerequisite and `gh auth status` must not gate this sequence.
-  The CLI may run in a sandbox that cannot access the operator's keyring, while the guarded Git
-  push uses a different credential path. Only the actual `git push` result from the deterministic
-  publish or resume operation is authoritative for Git remote authentication.
-- Explicit authorization to commit and push the named repository, branch, remote, and manifest scope.
+1. **Exact manifest** — selected repository-relative files form the complete staging scope;
+   duplicate, missing, unchanged, absolute, and escaping entries are rejected. Tracked deletions
+   are valid.
+2. **Relevant verification** — the exact operator-supplied argument array runs from the selected
+   worktree after the manifest has passed mechanical staging checks. Every non-zero exit blocks
+   before commit.
+3. **Exact commit** — the staged paths and resulting commit must equal the manifest. Unrelated
+   tracked and untracked work remains local.
+4. **Push** — Git pushes that one commit to the selected remote and branch. A non-zero push is a
+   failure. GitHub CLI authentication is not a prerequisite and `gh auth status` must not gate this sequence.
+   Only the actual `git push` result from the deterministic publish or resume operation is authoritative for
+   Git remote authentication.
+5. **Remote confirmation** — a fresh, shallow, no-checkout clone must report the same commit SHA.
 
-## Commands
+## Failure handling
 
-| step | command or action | result | correction or note |
-| --- | --- | --- | --- |
-| prepare-manifest | Create a UTF-8 manifest with one approved repository-relative file path per line. | verified | The manifest is the complete staging boundary; never substitute git add -A or a directory path. |
-| dry-run | python3 scripts/scoped_git_publish.py --repo <repo> --manifest <manifest> --message <message> --branch <branch> --remote <remote> | verified | Preflight the repository, branch, remote, empty index, manifest paths, and changed-file scope without changing Git state. |
-| publish | python3 scripts/scoped_git_publish.py --repo <repo> --manifest <manifest> --message <message> --branch <branch> --remote <remote> --execute | verified | Stage exactly the manifest, reject any staged mismatch or whitespace error, commit, push, and verify the remote branch SHA. |
-| resume-push | python3 scripts/scoped_git_publish.py --repo <repo> --branch <branch> --remote <remote> --resume-commit <commit> | verified | After an auth, network, or remote-side push failure, push only the already-created HEAD commit and verify its remote SHA. |
-| integrate-remote-and-resume | python3 scripts/scoped_git_publish.py --repo <repo> --manifest <manifest> --branch <branch> --remote <remote> --resume-commit <commit> --integrate-remote | verified | After a non-fast-forward rejection, fetch the named remote branch, require the complete local commit stack to equal the manifest scope, transactionally rebase it, revalidate the post-rebase scope, push without force, and verify the remote SHA. |
-| isolated-integrate-and-resume | python3 scripts/scoped_git_publish.py --repo <repo> --manifest <manifest> --overlay-manifest <overlay-manifest> --message <message> --branch <branch> --remote <remote> --resume-commit <commit> --isolated-integrate-remote | verified | When unrelated tracked work makes the source worktree unsafe to rebase, clone the preserved commit into a temporary workspace, copy only the approved overlay, commit it, run the same exact-scope integration, push, and leave the source worktree byte-for-byte untouched. |
-| isolated-reconcile-and-resume | python3 scripts/scoped_git_publish.py --repo <repo> --manifest <manifest> --overlay-manifest <overlay-manifest> --ledger-path operations/work-memory/events.jsonl --generated-view-path operations/blockers/BLOCKERS.md --message <message> --branch <branch> --remote <remote> --resume-commit <commit> --isolated-reconcile-remote | verified | When isolated rebase reports semantic conflicts, start from remote HEAD, deterministically three-way merge clean same-path edits, fail on actual content conflicts without an explicit rule, take verified overlay files from the untouched source worktree, merge the append-only ledger through the canonical work-memory writer by immutable event ID, regenerate the blocker view, create one scoped commit, push without force, and verify both remote SHA and unchanged source state. |
-| verify-automation | uv run pytest tests/test_work_memory.py tests/test_blocker_catalog.py tests/test_scoped_git_publish.py tests/test_sequence_discovery_log.py tests/test_sequence_promote.py | passed | All 71 focused tests passed, including canonical sole-writer enforcement, append-only ledger union, bounded persisted-ledger compatibility, strict new-event validation, durable repository-root snapshots, clean three-way same-path merging, real semantic-conflict overlays, lifecycle promotion, and dirty-source preservation. |
-
-## Failure Handling
-
-- A dry-run failure changes no Git state. Correct the reported branch, remote, manifest, or pre-existing staged work, then rerun dry-run.
-- Before a commit exists, any execution failure unstages only the manifest paths and preserves all working-tree content.
-- After a commit exists, a push or remote-verification failure leaves that commit at HEAD and prints the exact `--resume-commit` value. Repair authentication, network, or remote policy and run the documented resume command; do not create a duplicate commit.
-- A non-fast-forward rejection uses `integrate-remote-and-resume`; never hand-run pull/rebase and never force-push.
-- The integration mode requires a clean tracked worktree and empty index, preserves unrelated untracked files, and rejects any pre- or post-rebase scope mismatch.
-- When unrelated tracked changes exist, use the isolated mode with a full publish manifest and an overlay manifest that is a strict subset. It never stashes, resets, or rebases the source worktree.
-- A rebase conflict is aborted automatically and the original HEAD is verified restored. Catalog that conflict and open a guarded discovery successor for its concrete semantic resolution; do not resolve it from memory.
-- A catalogued semantic conflict uses `isolated-reconcile-and-resume` only with a full publish manifest and explicit overlay manifest. Same-path edits first receive a deterministic three-way file merge; a clean result is accepted, while a real content conflict fails closed unless covered by an overlay or the named ledger/derived-view rule.
-- Ledger event IDs are immutable. An identical event is deduplicated, a source-only event is appended in source order, and the operation stops if the same event ID has different canonical content.
-- The Git helper never writes the ledger directly. It calls the canonical work-memory merge command, which validates the complete lifecycle and regenerates the derived blocker view atomically.
-- Each input ledger must validate independently before union. Historical events accepted by the persisted-ledger compatibility rule remain historical after import; the same shape submitted as a newly authored event is still rejected by the strict lifecycle contract.
-- If remote SHA verification differs from local HEAD, stop and preserve the local commit as evidence. Do not report success or start another publish.
-- Catalog every failure before correction or retry. Never print credentials or infer invalid
-  authentication from `gh auth status`, a sandbox connectivity error, or any other probe that does
-  not exercise the guarded Git remote operation.
+- Dry run uses a temporary Git index and object database, runs the same staging and verification
+  boundaries without leaking that temporary Git environment into the verification command, and
+  leaves the real object database, index, HEAD, and remote unchanged.
+- Before commit, a failure unstages only the manifest and preserves all working-tree content.
+- After commit, a push or confirmation failure preserves the single local commit at HEAD and
+  reports that fact. It never creates another commit automatically and never force-pushes.
+- The sequence does not classify, select, activate, ingest, write a lifecycle ledger, regenerate
+  proof artifacts, or make Git success depend on any of those systems.
+- A real publish must be launched with Git-common-directory write and remote-network permission;
+  an `index.lock` denial from a read-only host is an invocation-contract failure, not a reason to
+  reconstruct the Git steps manually.
 
 ## Verification
 
-- Historical live path: the manually discovered scoped publish committed 45 approved files as `51b0bee540503b46a757d977ece06b61585a2a72` to `mcp-agents-workflow` `origin/main`, while ten excluded paths remained local and unstaged.
-- Reusable path: `tests/test_scoped_git_publish.py` exercises dry-run, exact-scope commit and push to a real local bare Git remote, unrelated-worktree preservation, dirty-index rejection, path-escape rejection, and failed-push resume through the production script entry points.
+```bash
+scripts/run_pytest.sh -q \
+  tests/test_publish_boundary_probes.py \
+  tests/test_minimal_git_publish.py \
+  tests/test_minimal_commit_push_main_launch.py
+```
 
-Pass signal: The script returns ok:true with local commit equal to remote_commit, and unrelated unstaged work remains untouched.
+The standalone probes prove every boundary both ways. The production tests exercise dry-run
+isolation, exact commits, non-zero verification, tracked deletion, failed-push containment, remote
+confirmation refusal, numbered authorization, and a complete no-argument interview that publishes
+to a disposable bare remote.
 
-Promoted from `2026-07-15-commit-push-main`. The prior discovery evidence is historical; run a fresh
-registered same-path verification before treating it as current-bundle proof.
+Pass signal: the final JSON says `ok: true`, `commit` equals `remote_commit`, the committed path set
+equals the selected manifest, and unrelated changes remain unstaged.

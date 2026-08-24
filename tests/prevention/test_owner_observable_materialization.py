@@ -11,7 +11,9 @@ from scripts import (
     prevention_contract_materializer,
     prevention_observable_materializer,
 )
-from scripts.prevention_contract import canonical_bytes, sha256_bytes
+from scripts.prevention_contract import (
+    canonical_bytes, resolve_repository_source_path, sha256_bytes,
+)
 
 
 def test_observable_evidence_is_byte_stable_source_bound_and_complete():
@@ -19,7 +21,11 @@ def test_observable_evidence_is_byte_stable_source_bound_and_complete():
     assert prevention_observable_materializer.OUTPUT.read_bytes() == canonical_bytes(document)
     assert document["admission_effect"] == "PROVIDER_IMPLEMENTED_SOURCE_PATH_UNVERIFIED"
     provider = document["provider_implementation"]
-    assert sha256_bytes(Path(provider["path"]).read_bytes()) == provider["sha256"]
+    assert sha256_bytes(resolve_repository_source_path(
+        provider["path"],
+        repository_root=prevention_observable_materializer.ROOT,
+        canonical_repository_root=prevention_observable_materializer.CANONICAL_ROOT,
+    ).read_bytes()) == provider["sha256"]
     assert len(document["owners"]) == 10
     assert sum(len(owner["profiles"]) for owner in document["owners"]) == 44
 
@@ -29,13 +35,21 @@ def test_observable_evidence_is_byte_stable_source_bound_and_complete():
         assert sha256_bytes(canonical_bytes(payload)) == stored
         assert owner["sources"]
         for source in owner["sources"]:
-            path = Path(source["path"])
+            path = resolve_repository_source_path(
+                source["path"],
+                repository_root=prevention_observable_materializer.ROOT,
+                canonical_repository_root=prevention_observable_materializer.CANONICAL_ROOT,
+            )
             assert path.is_file()
             assert sha256_bytes(path.read_bytes()) == source["sha256"]
             text = path.read_text(encoding="utf-8")
             assert all(anchor in text for anchor in source["anchors"])
         for source_test in owner["source_tests"]:
-            path = Path(source_test["path"])
+            path = resolve_repository_source_path(
+                source_test["path"],
+                repository_root=prevention_observable_materializer.ROOT,
+                canonical_repository_root=prevention_observable_materializer.CANONICAL_ROOT,
+            )
             assert path.is_file()
             assert sha256_bytes(path.read_bytes()) == source_test["sha256"]
             assert source_test["test_ids"]

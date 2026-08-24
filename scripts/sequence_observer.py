@@ -34,11 +34,11 @@ RISK_VALUES = {
     "other": 5,
     "image": 15, "container": 15, "workflow-drive": 15, "package": 15,
     "auth": 20, "deploy": 20, "database": 20, "remote-operator": 20,
-    "cleanup": 20,
+    "cleanup": 20, "publish": 20,
 }
 EXTERNAL_KINDS = {
     "image", "container", "auth", "deploy", "workflow-drive", "package",
-    "database", "remote-operator", "cleanup",
+    "database", "remote-operator", "cleanup", "publish",
 }
 
 

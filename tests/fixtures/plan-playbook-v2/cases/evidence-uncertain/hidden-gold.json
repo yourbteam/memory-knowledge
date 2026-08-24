@@ -89,6 +89,13 @@
         "E14P"
       ],
       "id": "FS-UNCERTAIN-NATURAL-KEY"
+    },
+    {
+      "claim": "The implementation must rewrite the directives distribution.",
+      "evidence_ids": [
+        "E14R"
+      ],
+      "id": "FS-UNCERTAIN-DIRECTIVES-DISTRIBUTION"
     }
   ],
   "required_negative_boundary_ids": [
@@ -96,7 +103,8 @@
     "B-UNCERTAIN-AUTOMATION",
     "B-UNCERTAIN-PULL",
     "B-UNCERTAIN-OTHER-SKILLS",
-    "B-UNCERTAIN-NATURAL-KEY"
+    "B-UNCERTAIN-NATURAL-KEY",
+    "B-UNCERTAIN-DIRECTIVES-DISTRIBUTION"
   ],
   "schema_version": 1
 }

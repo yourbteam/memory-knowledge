@@ -152,6 +152,67 @@ def test_pre_run_commands_record_correction_verification_and_close(monkeypatch):
     assert events[-1]["remaining_work"] == "none"
 
 
+def test_pre_run_correction_accepts_an_environment_surface_without_bundle_drift(
+    monkeypatch,
+):
+    task_id = "environment-blocked-task"
+    ownership_event_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "e" * 24
+    occurrence_id = str(uuid.uuid4())
+    events = [
+        {
+            "event_type": "task_writer_claimed",
+            "event_id": ownership_event_id,
+            "task_id": task_id,
+            "writer_thread_id": str(uuid.uuid4()),
+            "ownership_generation": 1,
+        },
+        {
+            "event_type": "pre_run_blocker_opened",
+            "task_id": task_id,
+            "ownership_event_id": ownership_event_id,
+            "blocker_id": blocker_id,
+            "occurrence_id": occurrence_id,
+            "step_id": "activate",
+        },
+    ]
+    captured = {}
+    monkeypatch.setattr(
+        blocker_catalog.work_memory, "load_ledger",
+        lambda: (events, "0" * 64),
+    )
+    monkeypatch.setattr(
+        blocker_catalog.work_memory, "_artifact_hashes",
+        lambda _paths: ([], []),
+    )
+    identity = {
+        "repository_key": "host-environment", "path": "/host/git-capability.json",
+    }
+    monkeypatch.setattr(
+        blocker_catalog.work_memory, "_environment_artifact_hashes",
+        lambda _paths: ([identity], ["f" * 64]),
+    )
+    monkeypatch.setattr(
+        blocker_catalog.work_memory, "transact",
+        lambda request: captured.setdefault("request", request) or {"ok": True},
+    )
+    args = blocker_catalog.build_parser().parse_args([
+        "pre-run-correct", "--task-id", task_id,
+        "--ownership-event-id", ownership_event_id,
+        "--blocker-id", blocker_id, "--occurrence-id", occurrence_id,
+        "--changed-environment-artifact", "/host/git-capability.json",
+        "--solution", "declare the capability",
+        "--reusable-behavior-changed", "yes",
+    ])
+
+    args.func(args)
+
+    correction = captured["request"]["events"][0]
+    assert correction["changed_artifacts"] == []
+    assert correction["environment_artifacts"] == [identity]
+    assert correction["environment_artifact_hashes"] == ["f" * 64]
+
+
 def test_pre_run_correction_can_supersede_stale_awaiting_artifact_binding(
     monkeypatch,
 ):

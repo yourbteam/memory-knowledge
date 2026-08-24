@@ -36,6 +36,31 @@ Any argument-bearing commands below are machine-compatibility and verification e
 deterministic adapter. Operators and agents must not construct or invoke those forms directly.
 {END}
 """
+COMMIT_PUSH_BLOCK = f"""{BEGIN}
+## Operator entry point
+
+For a new commit/push task, launch the dedicated controller with no arguments:
+
+```bash
+python3 scripts/commit_push_main_launch.py
+```
+
+It owns classification, exact `commit-push-main` selection, activation, run start, and handoff to
+the numbered semantic interview. For a commit/push task that is already selected and activated,
+continue through the shared zero-argument handoff:
+
+```bash
+python3 scripts/sequence_intake_launch.py
+```
+
+Answer only the semantic questions shown. Every question includes its response format, an example,
+and constraints. The controller derives JSON, files, environment, flags, and argv; displays the
+exact prepared operation; and requires a separate yes/no authorization before guarded dispatch.
+
+Any argument-bearing commands below are machine-compatibility and verification evidence for the
+deterministic adapter. Operators and agents must not construct or invoke those forms directly.
+{END}
+"""
 SHARED_DEPENDENCIES = (
     "scripts/script_intake.py",
     "scripts/sequence_intake_adapters.py",
@@ -47,7 +72,8 @@ class ProjectionError(ValueError):
     """A registered runbook cannot receive the canonical projection."""
 
 
-def project(document: str) -> str:
+def project(document: str, *, sequence_id: str | None = None) -> str:
+    block = COMMIT_PUSH_BLOCK if sequence_id == "commit-push-main" else BLOCK
     if BEGIN in document or END in document:
         if document.count(BEGIN) != 1 or document.count(END) != 1:
             raise ProjectionError("semantic-intake-marker-invalid")
@@ -56,11 +82,11 @@ def project(document: str) -> str:
         suffix = document[finish:]
         if suffix.startswith("\n"):
             suffix = suffix[1:]
-        return document[:start] + BLOCK + suffix
+        return document[:start] + block + suffix
     lines = document.splitlines(keepends=True)
     if not lines or not lines[0].startswith("# "):
         raise ProjectionError("sequence-title-required")
-    return lines[0] + "\n" + BLOCK + "\n" + "".join(lines[1:]).lstrip("\n")
+    return lines[0] + "\n" + block + "\n" + "".join(lines[1:]).lstrip("\n")
 
 
 def documents() -> list[Path]:
@@ -80,7 +106,7 @@ def run(*, check: bool) -> int:
     drift: list[str] = []
     for path in documents():
         current = path.read_text(encoding="utf-8")
-        expected = project(current)
+        expected = project(current, sequence_id=path.parent.name)
         if current != expected:
             if check:
                 drift.append(str(path.relative_to(ROOT)))

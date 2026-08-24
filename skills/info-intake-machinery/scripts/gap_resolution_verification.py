@@ -171,13 +171,19 @@ def _participant(
         raise ResolutionVerificationError(
             f"resolution-verification-{role}-element-{element_id}-missing"
         )
-    return {
+    result = {
         "element_id": element_id,
         "point": relationship["origin_point" if role == "from" else "target_point"],
         "bounds": element.get("region"),
         "kind": element.get("kind"),
         "content": element.get("content"),
     }
+    if element.get("status") == "gap":
+        result.update({
+            "status": "gap",
+            "gap_reason": element.get("gap_reason"),
+        })
+    return result
 
 
 def _question(
@@ -213,10 +219,17 @@ def _question(
     }
     if not state["verdict"]:
         gap_record = clarification.get("gap", {}).get("record", {})
+        preserved_gap_endpoint = any(
+            participant.get("status") == "gap"
+            for participant in evidence["proposed_relationship"].values()
+            if isinstance(participant, dict)
+        )
         verdict_prompt = (
             "Does the preserved operator answer select the proposed ambiguous participant, and does the frozen image visibly support the complete proposed relationship?"
             if isinstance(gap_record, dict)
             and isinstance(gap_record.get("binding_issue"), dict)
+            else "Does the preserved operator answer establish the proposed relationship while the explicitly unreadable participant remains represented as a gap, and does the frozen image support the exact visible participant?"
+            if preserved_gap_endpoint
             else "Does the preserved operator answer support the locked known participant, and does the frozen image visibly support the exact missing participant and complete proposed relationship?"
         )
         return {

@@ -20,6 +20,10 @@
     {
       "boundary_id": "B-UNCERTAIN-NATURAL-KEY",
       "statement": "The deferred natural-key/RowId business-key loader fix remains a separate track."
+    },
+    {
+      "boundary_id": "B-UNCERTAIN-DIRECTIVES-DISTRIBUTION",
+      "statement": "Rewriting the directives distribution is out of scope because it is already live and working."
     }
   ],
   "obligation_ids": [

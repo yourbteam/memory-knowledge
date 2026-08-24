@@ -799,6 +799,7 @@ def _run_live_rolling(
                 "--step", "execute-rolling", "--command", shlex.join(command),
                 "--source", "sequence_doc", "--source-ref", str(document),
                 "--task-id", task_id, "--root", str(root),
+                *discovery_promotion_lifecycle._directive_guard_args(root),
             ],
             root=root,
         )

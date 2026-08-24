@@ -1,0 +1,110 @@
+{
+  "candidate_sha256": "5e97bbbe5282cecfd40730a6e07314b9d2afe7b01eca3b0ca8c7096ca9fd7076",
+  "reader": {
+    "harness": "Codex CLI PTY",
+    "model": "Codex GPT-5"
+  },
+  "schema_version": 1,
+  "verdicts": [
+    {
+      "reason": "The red annotation callout explicitly states \u201cNPR = column BY; Total txts = Column AE,\u201d and its arrow visibly terminates on the Net Platform Revenue today (NPR) KPI card.",
+      "relationship_id": "relationship-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout describes the chart\u2019s calculated values and popup mappings, and its red arrow visibly points into the Company performance chart plot area.",
+      "relationship_id": "relationship-000002",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red callout says the average for all operators is in column BR and its arrow visibly ends on the Avg conversion rate card showing 63%.",
+      "relationship_id": "relationship-000003",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout explicitly requests changing the metric to locations online today, defines positive column AU values and idle locations, and its arrow visibly ends on the Operators online today card.",
+      "relationship_id": "relationship-000004",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout discusses the chart values and popup contents, while its arrowhead visibly lands within the time-series plot near the gray dashed line.",
+      "relationship_id": "relationship-000005",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout explicitly requests a unique-users metric sourced from column AH, and its red arrow visibly terminates on the Total users/day KPI card.",
+      "relationship_id": "relationship-000006",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout visibly specifies replacing the product breakout with content and service-fee revenue components (BU, BX, BY), and its arrow ends on the Taggable net revenue card.",
+      "relationship_id": "relationship-000007",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The annotation states \u201cNet total for all operators in column AF,\u201d and its upward red arrow visibly terminates at the $358,760 Net payout owed to operators card.",
+      "relationship_id": "relationship-000008",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout states \u201cColumn N+T for the current pay period to date,\u201d and its red arrow visibly points to the Total revenue collected summary card.",
+      "relationship_id": "relationship-000009",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The annotation says to sum all negative values in column AF, and its arrow visibly points upward to the $4,954 Redemption-code liability card.",
+      "relationship_id": "relationship-000010",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The Customers metrics are visibly grouped immediately beneath and within the same bordered panel headed \u201cSupport \u2014 17 OPEN.\u201d",
+      "relationship_id": "relationship-000011",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout says the ticketing system/plugin is for \u201cthis section,\u201d and its red arrow visibly points to the Operators section at its header/top boundary.",
+      "relationship_id": "relationship-000013",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The outlined \u201cOpen support \u2192\u201d button is visibly placed in the same panel header row as \u201cSupport \u2014 17 OPEN,\u201d and its label names that destination.",
+      "relationship_id": "relationship-000014",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The \u201c12 open\u201d badge is visibly aligned on the same row as the Customers heading and above the customer-specific status metrics within that group.",
+      "relationship_id": "relationship-000015",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The arrow visibly terminates at the \u201cNPR \u00b7 TAGGABLE\u201d column/header area, not at the entire Top 10 operators list card proposed as the target participant.",
+      "relationship_id": "relationship-000016",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The callout and arrow visibly address the separate \u201cSystem issues & problems\u201d panel and its issue rows, whereas the proposed target\u2019s readable content is the Top 10 operators table.",
+      "relationship_id": "relationship-000017",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The \u201cOpen \u2192\u201d button is visibly in the header of the System issues & problems panel, not associated with the proposed Top 10 operators table target.",
+      "relationship_id": "relationship-000018",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The annotation states that the operator value is the sum of column AF across all locations, and its arrow visibly terminates at the OPERATOR NET table column/header.",
+      "relationship_id": "relationship-000019",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout explicitly says this should be inactive locations and defines the 72-hour/column-AU inclusion rule; its arrow visibly points into the Inactive operators status card and listed locations.",
+      "relationship_id": "relationship-000020",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout says to sum column BY for all operator locations, and its arrow visibly points to the highlighted NPR \u00b7 TAGGABLE column containing the listed dollar values.",
+      "relationship_id": "relationship-000022",
+      "verdict": "supported"
+    }
+  ]
+}

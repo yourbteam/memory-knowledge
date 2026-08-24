@@ -18,7 +18,7 @@ EFFECT_CLASSES = {
 VOLATILITY_KINDS = {"task_id", "run_id", "event_id", "receipt_path", "timestamp"}
 OPERATION_KINDS = {
     "image", "container", "auth", "deploy", "workflow-drive", "package",
-    "database", "remote-operator", "cleanup", "other", "read-only",
+    "database", "remote-operator", "cleanup", "publish", "other", "read-only",
     "single-test", "single-build",
 }
 IDENTITY_KEYS = {
