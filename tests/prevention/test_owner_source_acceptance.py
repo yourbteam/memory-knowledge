@@ -444,6 +444,19 @@ def test_checkpoint_acceptance_uses_materialized_child_contracts_in_memory(
     assert result["result"]["status"] == "TERMINAL"
 
 
+def test_commit_push_acceptance_mirrors_exact_entrypoint_and_is_terminal():
+    result = prevention_owner_acceptance_producer.execute_case(
+        "commit-push-main", "dry-run", scenario="positive",
+    )
+
+    assert result["result"]["status"] == "TERMINAL"
+    assert result["commands"][0][1].endswith("/scripts/scoped_git_publish.py")
+    assert result["executed_commands"][0][1].endswith(
+        "/memory-knowledge/scripts/scoped_git_publish.py"
+    )
+    assert "prevention-owner-acceptance-" in result["executed_commands"][0][1]
+
+
 def test_credential_acceptance_all_is_hermetic_and_terminal():
     result = prevention_owner_acceptance_producer.execute_case(
         "claude-auth-token-refresh", "all", scenario="positive",
@@ -486,10 +499,10 @@ def test_discovery_reconciliation_drive_is_hermetic_and_terminal():
     )
 
     assert result["result"]["status"] == "TERMINAL"
-    assert result["executed_commands"][0][1] == (
-        "/Users/kamenkamenov/memory-knowledge/scripts/"
-        "discovery_candidate_reconciliation.py"
+    assert result["executed_commands"][0][1].endswith(
+        "/memory-knowledge/scripts/discovery_candidate_reconciliation.py"
     )
+    assert "prevention-owner-acceptance-" in result["executed_commands"][0][1]
 
 
 def test_discovery_promotion_correction_fixture_is_hermetic_and_terminal():

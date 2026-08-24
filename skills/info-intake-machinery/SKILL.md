@@ -35,6 +35,13 @@ outcomes preserved in the immutable projection journal.
 The stage commands below remain the deterministic replay and diagnostic interface used by that
 launcher.
 
+Before the zero-input launcher returns success for a terminal intake, it copies the complete work
+directory byte-for-byte into `operations/info-intake-runs/<intake-id>/run/` and writes a
+hash-bound `archive-manifest.json` beside it. Publication is atomic and append-only: an identical
+replay reuses the verified archive, while a partial, changed, or colliding archive fails closed.
+Archival never deletes temporary work. It is a local repository effect only; committing or pushing
+the archive still requires explicit operator approval.
+
 Run:
 
 ```text
@@ -473,6 +480,40 @@ This gate does not formulate questions, run interviews, or alter the projection.
 Any model work started by this dispatcher remains accepted only through its code-controlled,
 one-question-at-a-time interview with enforced choices and persisted rejected and accepted attempts.
 The executor does not run an interview or loop.
+
+## Exchange source requests without importing downstream assessment
+
+When another machinery identifies evidence it needs, keep the ownership boundary explicit. The
+requester decides what evidence is missing. Info Intake admits that exact request, obtains one or
+more immutable sources through its normal intake flow, and returns only their complete readable
+projections and audit ledgers. Info Intake must not decide whether the returned material proves a
+claim and must not emit alignment or gap-resolution verdicts in this handoff.
+
+Create the immutable request from a JSON specification containing exactly `schema_version`,
+`request_id`, `purpose`, `requested_evidence`, `related_unit_ids`, and `requester_path`:
+
+```text
+python3 scripts/source_handoff.py create-request \
+    --spec <request-spec.json> --output <new-source-request.json>
+```
+
+After the requested sources have complete readable projections, create the return from a JSON
+specification containing `schema_version` and a nonempty ordered `evidence_items` list. Each item
+contains exactly `item_id`, `immutable_source_path`, `readable_projection_path`,
+`intake_ledger_path`, and `qualification: readable_projection_complete`:
+
+```text
+python3 scripts/source_handoff.py create-return \
+    --request <source-request.json> --spec <return-spec.json> \
+    --output <new-source-return.json>
+```
+
+The code freshly verifies the request, every source and projection hash, UTF-8 readability, the
+complete hash-chained ledger, and that the ledger binds the exact request, source, and projection.
+Both artifacts are write-once. Reverify them before consumption with `verify-request` or
+`verify-return`. Changed requester bytes, request content, source bytes, projection bytes, ledger
+lineage, or duplicate evidence identities fail closed. The return package contains no semantic
+verdict fields; the requesting machinery owns the later sufficiency and alignment decisions.
 
 ## Resume to the next clarification boundary
 

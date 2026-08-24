@@ -32,6 +32,13 @@
     "sequence_debt_adoption_20260724": {
       "decision_id": "discovery-promotion-lifecycle-head-sequence-doc-adoption-20260724",
       "status": "APPROVED"
+    },
+    "full_suite_reconciliation_20260820": {
+      "decision_id": "discovery-promotion-lifecycle-full-suite-reconciliation-source-correction-20260820",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-08-20",
+      "reason": "bind the exact approved discovery-promotion implementation and dependency manifest required by the canonical full-suite publish gate"
     }
   },
   "authority_decisions_required": [],
@@ -220,11 +227,11 @@
   "proposal_status": "APPROVED",
   "schema_version": 1,
   "source": {
-    "dependencies_sha256": "7071ad598599d98fbf8809fcab1f8ed4b950882932df4b59d832b6e13a5dbc2e",
-    "implementation_approved_post_correction_sha256": "c081fc06fd37389edce2eedd5662b4f33f9a082231f2ddbef6d65f4afd9ba4c9",
+    "dependencies_sha256": "f231b6d14188840644e09ea3e87ddb7364aa5c7c8f932b8d748c47da1c32afe2",
+    "implementation_approved_post_correction_sha256": "59a7d4ddc83921c45880ad10d822d3cd2e1949842667627024df9cef86ca721b",
     "implementation_path": "/Users/kamenkamenov/memory-knowledge/scripts/discovery_promotion_lifecycle.py",
     "implementation_sha256": "312fb94fbf3fd572604166501301aa1755c3c932d49f81f1bc4a8ba7018b8fda",
-    "implementation_source_correction_decision_id": "discovery-promotion-registered-successor-task-20260723",
+    "implementation_source_correction_decision_id": "discovery-promotion-lifecycle-full-suite-reconciliation-source-correction-20260820",
     "sequence_approved_post_correction_sha256": "2eba1c190dc4422b16aae2f7f4445f5163c3ccc13f86b59a960723d3b2d8c7c1",
     "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/discovery-promotion-lifecycle/sequence.md",
     "sequence_sha256": "b796be13ab97243dcd973640639c549e42a9259604c65dd10b264fb7e408d8f2",

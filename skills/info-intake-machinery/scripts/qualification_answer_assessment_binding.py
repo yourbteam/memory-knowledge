@@ -43,9 +43,21 @@ def bind(
         obligation = question.get("answers_obligation")
         source = answer.get("source")
         projection = answer.get("projection")
+        submission = answer.get("submission")
         if not all(isinstance(item, dict) for item in (obligation, source, projection)):
             issues.append(
                 f"answer {position} evidence received {answer!r}; provide its exact obligation, source, and projection"
+            )
+            continue
+        if (
+            not isinstance(submission, dict)
+            or submission.get("channel")
+            not in {"operator_text", "local_file", "url", "preserve_gap"}
+            or not isinstance(submission.get("value"), str)
+            or not submission["value"].strip()
+        ):
+            issues.append(
+                f"answer {position} submission received {submission!r}; preserve its exact admitted channel and value"
             )
             continue
         assert isinstance(obligation, dict)
@@ -108,6 +120,7 @@ def bind(
                     "path": projection_path_value,
                     "sha256": projection["sha256"],
                 },
+                "submission": submission,
                 "readable_projection": readable_projection,
             }
         )

@@ -174,7 +174,7 @@ def _suggest(row: dict[str, Any]) -> tuple[str, str]:
 
 def audit(root: Path) -> dict[str, Any]:
     events, ledger_hash = work_memory.load_ledger(
-        root / work_memory.LEDGER.relative_to(work_memory.ROOT),
+        root / work_memory.LEDGER_RELATIVE_PATH,
     )
     projection = _active_projection(events)
     candidates: list[dict[str, Any]] = []
@@ -216,7 +216,7 @@ def _facts(row: dict[str, Any]) -> dict[str, Any]:
 
 
 def _ledger_path(root: Path) -> Path:
-    return root / work_memory.LEDGER.relative_to(work_memory.ROOT)
+    return root / work_memory.LEDGER_RELATIVE_PATH
 
 
 def validate_manifest(

@@ -19,8 +19,8 @@ except ModuleNotFoundError:  # direct script execution
     import prevention_source_receipt
     import work_memory
 
-LEDGER_PATH = work_memory.LEDGER.relative_to(work_memory.ROOT)
-BLOCKER_VIEW_PATH = work_memory.BLOCKER_VIEW.relative_to(work_memory.ROOT)
+LEDGER_PATH = work_memory.LEDGER_RELATIVE_PATH
+BLOCKER_VIEW_PATH = work_memory.BLOCKER_VIEW_RELATIVE_PATH
 PASS_SIGNAL = "CONVERGENCE CHECKPOINT APPLIED"
 
 

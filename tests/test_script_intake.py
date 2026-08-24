@@ -67,6 +67,41 @@ def test_collect_retries_invalid_choice_without_advancing():
     assert messages == ["Invalid answer: choose one of: read, check."]
 
 
+def test_numbered_selection_lists_options_maps_number_and_rejects_prose():
+    spec = {
+        "schema_version": 1,
+        "fields": [{
+            "id": "action",
+            "prompt": "Action",
+            "response_format": "One selection number.",
+            "example": "1",
+            "constraints": "Choose one numbered action.",
+            "type": "choice",
+            "choices": ["read", "check"],
+            "numbered_selection": True,
+            "required": True,
+        }],
+    }
+    prompts = []
+    messages = []
+    answers = iter(["read", "3", "2"])
+
+    result = script_intake.collect(
+        spec,
+        input_fn=lambda prompt: prompts.append(prompt) or next(answers),
+        output_fn=messages.append,
+    )
+
+    assert result == {"action": "check"}
+    assert "Selection options:\n1. read\n2. check" in prompts[0]
+    assert "Choose one selection number." in prompts[0]
+    assert "Allowed values:" not in prompts[0]
+    assert messages == [
+        "Invalid answer: choose a selection number from 1 to 2.",
+        "Invalid answer: choose a selection number from 1 to 2.",
+    ]
+
+
 def test_collect_reports_invalid_integer_and_retries():
     messages = []
 

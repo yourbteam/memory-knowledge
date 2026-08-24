@@ -10,10 +10,14 @@ from typing import Any, Mapping
 
 try:
     from scripts import prevention_owner_acceptance
-    from scripts.prevention_contract import canonical_bytes, sha256_bytes
+    from scripts.prevention_contract import (
+        canonical_bytes, resolve_repository_source_path, sha256_bytes,
+    )
 except ModuleNotFoundError:  # direct script execution
     import prevention_owner_acceptance
-    from prevention_contract import canonical_bytes, sha256_bytes
+    from prevention_contract import (
+        canonical_bytes, resolve_repository_source_path, sha256_bytes,
+    )
 
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -180,9 +184,18 @@ def _source_bindings(proposal: Mapping[str, Any]) -> list[dict[str, str]]:
         if not isinstance(path_value, str) or not isinstance(expected, str):
             raise MaterializationError("invalid-source-binding")
         path = Path(path_value)
-        if not path.is_file():
+        roots = proposal.get("trusted_roots")
+        canonical_root = roots.get("memory-knowledge") if isinstance(roots, Mapping) else None
+        if not isinstance(canonical_root, str):
+            raise MaterializationError("memory-knowledge-source-root-required")
+        resolved_path = resolve_repository_source_path(
+            path_value,
+            repository_root=ROOT,
+            canonical_repository_root=Path(canonical_root),
+        )
+        if not resolved_path.is_file():
             raise MaterializationError(f"source-missing:{path}")
-        actual = sha256_bytes(path.read_bytes())
+        actual = sha256_bytes(resolved_path.read_bytes())
         binding = {"path": str(path), "sha256": actual}
         if actual != expected:
             approved_post = raw.get("approved_post_correction_sha256")

@@ -921,6 +921,8 @@ def test_verification_failure_is_cataloged_with_exact_run_identity(
 def test_registered_activation_uses_selected_document_identity(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
+    directive_state = tmp_path / "directive-state.json"
+    monkeypatch.setenv("MK_DIRECTIVE_STATE_PATH", str(directive_state))
     commands = []
 
     def run(command, *, root):
@@ -939,6 +941,41 @@ def test_registered_activation_uses_selected_document_identity(
     activate = next(command for command in commands if "activate" in command)
     assert "--sequence-doc" in activate
     assert "--sequence-id" not in activate
+    assert activate[activate.index("--directives-path") + 1] == str(
+        tmp_path / "working-agreement/DIRECTIVES.md"
+    )
+    assert activate[activate.index("--directive-state") + 1] == str(
+        directive_state
+    )
+
+
+def test_verification_guard_uses_selected_root_directive_context(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    directive_state = tmp_path / "directive-state.json"
+    monkeypatch.setenv("MK_DIRECTIVE_STATE_PATH", str(directive_state))
+    commands = []
+    monkeypatch.setattr(
+        lifecycle, "_json_command",
+        lambda command, *, root: commands.append(command) or {"ok": True},
+    )
+    monkeypatch.setattr(
+        lifecycle.subprocess, "run",
+        lambda *args, **kwargs: type("Completed", (), {"returncode": 0})(),
+    )
+
+    lifecycle._guard_and_verify(
+        task_id="task", root=tmp_path, document=tmp_path / "discovery.md",
+        source="discovery_log", command="python3 scripts/verify.py",
+    )
+
+    guard = commands[0]
+    assert guard[guard.index("--directives-path") + 1] == str(
+        tmp_path / "working-agreement/DIRECTIVES.md"
+    )
+    assert guard[guard.index("--directive-state") + 1] == str(
+        directive_state
+    )
 
 
 def test_classification_uses_the_target_operation_kind(

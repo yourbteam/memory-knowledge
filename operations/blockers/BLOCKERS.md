@@ -1,6 +1,6 @@
 # Work Blockers
 
-Ledger-SHA256: `632b21ad8478978732bec846c33541e44819452517ab4a3783b0e1a1dd60929f`
+Ledger-SHA256: `208cf6a2372b47dedea76ef06675b69d0a2f1c15024e07ab35a1927cc600f05f`
 
 This file is generated from `operations/work-memory/events.jsonl`.
 
@@ -411,6 +411,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: sequence-guard-rejected-workdir-command
 - Evidence: argparse-required-step-and-source-ref
 
+## blk-0908b529e5d40fcfc11e25e7
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `replay-refinement-event-for-stored-contract`
+- Surface: `info-intake-projection-capability-activation`
+- Symptom: The real model completes the constrained refinement interview, but replay rejects the resulting append-only refinement event.
+- Evidence: The model chose refine_spatial_identity, element-000005, distinct_unit, and bounds [378,166,426,175]; the controller then failed with relationship-spatial-identity-refinement-invalid:1733 because event replay still requires contract 13.
+
 ## blk-094b26c45a6edd0ca8bf1fd6
 
 - Status: `superseded`
@@ -545,6 +554,24 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/sequence_guard.py`
 - Symptom: guarded-critic-launch-rejected-because-directive-read-receipt-exceeded-max-age
 - Evidence: sequence-guard-returned-directive-read-state-is-stale
+
+## blk-0add6c75f4c1139b0a946f13
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `protected-correction-intake`
+- Surface: `cross-subject-registered-correction`
+- Symptom: A registered correction interview names the benchmark subject and failed benchmark task, but the consumer searches that task using the discovery-promotion-lifecycle subject and finds no active run.
+- Evidence: The live correction run 2fddc0b4-0ce8-4395-bce9-36097b616faa returned active-correction-run-ambiguous after collecting subject local-multimodal-model-benchmark and failed task gemma4-26b-mlx-annotation-map-benchmark-20260816.
+
+## blk-0aeddc89f48b18236e4b0121
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `run-info-intake-canary`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: The real launcher stops at interview-question-invalid:1317 before any model call.
+- Evidence: Journal sequence 1317 is the exact contract-12 element_ownership question offering owned_by_active_core or context_only. Contract 13 now emits only owned_by_active_core when evidence contains no context, so replay compares the immutable old question to the new shape and rejects it. The journal later contains context_ownership_reclassified, proving the old impossible context answer was already corrected append-only.
 
 ## blk-0af1c50b1031aeb6891a0bba
 
@@ -1386,6 +1413,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `blocker_catalog status transition`
 - Symptom: The required explicit transition to verified was rejected after a successful same-path verification event
 - Evidence: blocker_catalog.py transition returned {error: invalid-blocker-status-transition, ok: false} for blk-5f0381d736e14801b802be9c using verification event 98df96d3-92b6-4dbb-b5bd-477a1ba9d553
+
+## blk-1f23c5fd58831511742d3e86
+
+- Status: `open`
+- Subject: `publish-experiment-machinery-native-20260820`
+- Step: `select-worktree-publish-sequence`
+- Surface: `worktree prevention registry`
+- Symptom: The feature worktree cannot select the registered publish sequence because unrelated sequence-controller edits no longer match the recorded owner contract.
+- Evidence: Native worktree selection stopped with executable-owner-source-hash-drift:commit-push-main before activation or Git mutation.
 
 ## blk-1f2780e54e553406ea2d158f
 
@@ -2340,6 +2376,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-intake-discovery-bootstrap-contract`
 - Symptom: The prepared discovery bundle hashes the zero-input launcher but has no interview field for the machinery files that launcher executes
 - Evidence: Prepared spec dependencies contains only run_projection_with_codex.py; _bootstrap_steps derives dependencies exclusively from executable step scripts
+
+## blk-38bbf84019646d941bc7d97e
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `obligation-000032-focused-recapture`
+- Surface: `skills/info-intake-machinery/scripts/start_intake.py`
+- Symptom: After rejecting the false stored participant, two fresh full-source recapture passes guessed unrelated percentage values at the unchanged narrow bounds.
+- Evidence: Exact crop rejected replacement claims 18.2% and 29.0%; both full-source passes reused [612,336,649,348] while the crop contains neither claim.
 
 ## blk-39494a0191d7b83317b5aaff
 
@@ -3414,6 +3459,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The authenticated correction launcher returned PermissionError before recording the five-file correction.
 - Evidence: The active filesystem profile grants memory-knowledge read access but not write access; the launcher must append correction lifecycle events there.
 
+## blk-51854eba359f351c1629dad9
+
+- Status: `open`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `protected-correction-intake`
+- Surface: `sequence-intake-correction-authentication`
+- Symptom: A current-bundle correction task can collect the failed task identity but the shared launcher authenticates only blockers on the current task, while the failed task launcher rejects the intended correction before asking questions because its source bundle has necessarily drifted.
+- Evidence: The live launcher for task local-multimodal-model-benchmark-promotion-correction-20260816 returned active-correction-blocker-missing after all semantic answers; sequence_intake_launch.py verifies bundle freshness before it knows the selected profile, then _prepare_correction_bootstrap requires the blocker to belong to that same active task.
+
 ## blk-5196349da223a4c119dd21ea
 
 - Status: `non-gap`
@@ -3422,6 +3476,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-checked-exec-runtime`
 - Symptom: The full Planner v2 test execution stopped after partial pytest output and left a durable execution claim with no execution_returned event.
 - Evidence: Execution 1649080b-25af-564f-b282-8d56f45058f1 is claimed in operations/work-memory/events.jsonl; no matching return exists, and a privileged process inspection found no run_pytest, pytest, or sequence_checked_exec process alive.
+
+## blk-51a0cdcd9fc2c235ad1f2144
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `run-info-intake-canary`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: The live run commits a relationship gap even though the frozen source visibly contains the full annotation and metric.
+- Evidence: After readable relationship rejection identifies participant origin with reason recorded_element_not_readable, answer record_visible_endpoint stores the draft but starts capture_scope relationship_endpoint. The prompt therefore instructs the model to record the other endpoint; journal 3626-3652 re-records element-000032, then 3657-3660 gaps the still-unreadable origin.
 
 ## blk-51b1de3620f40a21ed38e2dd
 
@@ -3467,6 +3530,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `git-clone-source`
 - Symptom: The first post-push clone landed on deccde83 instead of the published corrective SHA.
 - Evidence: git clone /Users/kamenkamenov/memory-knowledge produced HEAD deccde83 and origin=/Users/kamenkamenov/memory-knowledge; no tests were run from it.
+
+## blk-525a218f10e7f48afc10265c
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `project-next-three-relationship-obligations`
+- Surface: `info-intake-spatial-binding`
+- Symptom: Relationship binding narrowed complete recorded element bounds to manufacture unique point containment; the third arrow then remained a gap.
+- Evidence: Real journal sequences 2331, 2370, 2413, and 2460 refined elements 20, 18, 13, and 22; selector bounds changed from [722,54,832,99] to [811,58,819,99]; obligation 22 resolved as a required_element_not_bound gap.
 
 ## blk-538209598c5346c2fa63b43b
 
@@ -3634,6 +3706,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The real selector cannot load the registered owner registry, so no selection receipt or run can exist.
 - Evidence: python3 scripts/work_memory.py select --task-id plan-playbook-source-snapshot-recursion failed with executable-owner-source-hash-drift:greenfield-full-drive; actual greenfield_program_state.py SHA b1cf090ddb752619eb77fd1179a4ca954af75ee94169caca4ff82c9bc8a6a9b2 differs from generated binding a2e3aba19517d94f2014a55e477297c5124e31eb77eb0869b28c1b4758af7ce8.
 
+## blk-5819e62c7bd875e1a42da2be
+
+- Status: `open`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `protected-correction-intake`
+- Surface: `sequence-intake-contract`
+- Symptom: The code-controlled correction interview rejects the updated promotion controller because its generated intake fingerprint still names the pre-fix hash.
+- Evidence: The no-argument shared launcher returned intake-contracts-stale:intake-contract-drift:discovery-promotion-lifecycle immediately after the approved controller change.
+
 ## blk-585b09207361d374d81e6ee3
 
 - Status: `closed`
@@ -3651,6 +3732,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `full-repository-tests`
 - Symptom: full-suite-825-passed-2-failed
 - Evidence: status-helper-strips-leading-space-and-promotion-test-double-rejects-repo-roots-file-keyword
+
+## blk-58a58c00c039107d430f9fb5
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `projection-replay-pending-supersession`
+- Surface: `info-intake projection replay continuation`
+- Symptom: After replay interprets the preserved negative context verdict, the launcher stops before entering the existing participant replacement interview.
+- Evidence: The same-path resume exited 3 with interview-stage-unsupported:element_supersession_pending immediately after replay.
 
 ## blk-58bb11dbc0aa0399540187fd
 
@@ -3725,6 +3815,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/sequence_guard.py:_control_plane_tokens`
 - Symptom: A controller argv value containing the exact obligation ID Update `src/memory_knowledge/db/health.py`. is rejected as invalid-guarded-command before shell-free dispatch.
 - Evidence: scripts/sequence_guard.py lines 186-188 reject any backtick in the serialized command; sequence_checked_exec dispatches a structured argv array with shell=False, so the literal data character is not executable shell syntax.
+
+## blk-59d3dac6f35b197082443487
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `relationship-endpoint-recapture-feedback`
+- Surface: `info-intake relationship endpoint recapture interview`
+- Symptom: Fresh endpoint capture models alternated between the label/value and value/trend portions of $41,004 but never enclosed all claimed text together.
+- Evidence: Three append-only candidates were rejected as requiring context: element-000067, element-000068, and element-000069; their crops show complementary missing portions, while each fresh capture prompt omitted the prior failed bounds and crops.
 
 ## blk-5a2c8846b801b89eb6f5c84c
 
@@ -3861,6 +3960,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Fresh planner draft could not be recorded because the verification ledger target resolved to a nonexistent repository-root plan.md.
 - Evidence: Trace: contained_file searched /Users/kamenkamenov/agentic-trading/plan.md; actual plan is Tasks/research-playbook-real-validation-s1-recovery/plan.md.
 
+## blk-5c4cdb478648987462244513
+
+- Status: `fixed-awaiting-verification`
+- Subject: `local-multimodal-model-benchmark`
+- Step: `semantic-intake`
+- Surface: `local-multimodal-model-benchmark-intake-contract`
+- Symptom: The newly promoted registered benchmark cannot open its public interview because the generated intake fingerprint still reflects its pre-promotion identity.
+- Evidence: The live no-argument launcher for run 1cb50395-f7e8-4154-9293-96f5e8618f06 returned intake-contracts-stale:intake-contract-drift:local-multimodal-model-benchmark before any model pull or source processing.
+
 ## blk-5c4f1036ff22b246fa80563a
 
 - Status: `superseded`
@@ -3960,6 +4068,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The guard rejected the exact authorized read command because it was not yet present in the discovery document
 - Evidence: sequence_guard.py returned command-not-grounded-in-selected-document for the explicit rg command despite source=tool_help
 
+## blk-5da38233280b018098bd3e75
+
+- Status: `closed`
+- Subject: `discovery-bootstrap`
+- Step: `dispatch-preflight`
+- Surface: `sequence-intake-launch`
+- Symptom: The authorized discovery bootstrap stopped before dispatch because the directive-read receipt names the main checkout instead of this worktree.
+- Evidence: Recorded path /Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md; required path /Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/working-agreement/DIRECTIVES.md.
+
 ## blk-5da5979f4950e29f57aba3ce
 
 - Status: `open`
@@ -3970,6 +4087,33 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Evidence: HEAD already requires reopen_completed_phase in scripts/sequence_intake_adapters.py while the HEAD test fixture omits it.
 - Classification: `incidental-system-defect`
 - Downstream owner: `memory-knowledge-maintenance`
+
+## blk-5de1c7df6520e0d9fcc61c45
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `project-next-three-relationship-obligations`
+- Surface: `info-intake-required-participant-resume-binding`
+- Symptom: The launcher labeled obligation 000023 before migration reopened 000022, and the model then recorded another gap that omitted required element 000022.
+- Evidence: Same-path verification event 5f83651c-aafe-4f65-bb2f-72a87770f5e0; real journal sequences 2531-2538 select elements 000017 and 000019 while binding_issue requires 000022.
+
+## blk-5e2d9003348d7eb3375b0f82
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `run-info-intake-canary`
+- Surface: `skills/info-intake-machinery/scripts/run_projection_with_codex.py`
+- Symptom: The inner projection interview rejected an unreadable participant, but the outer relationship-limited launcher returned success and counted the accepted final text answer as one completed relationship.
+- Evidence: Live launcher output contains inner terminal projection interview failed/readable-relationship-rejected-endpoint followed by outer projection_relationship_limit_reached with projection_relationships_completed=1; journal ends at accepted relationship_description without a committed relationship state.
+
+## blk-5e46d6fdb1bebc9c7b8d5012
+
+- Status: `closed`
+- Subject: `info-intake-obligation-40-20260815`
+- Step: `select-verification-successor`
+- Surface: `scripts/work_memory.py`
+- Symptom: Selecting the verification successor rejects with successor-correction-not-awaiting-verification even though the new correction is fixed-awaiting-verification.
+- Evidence: The predecessor inherited correction aa7e8f08, whose blocker was verified and closed, then recorded correction 7b4139f5 for a second blocker. _successor_selection_request combines inherited and transition correction IDs, removes only superseded IDs, and requires every remaining blocker to be fixed-awaiting-verification; the closed inherited correction therefore rejects the successor.
 
 ## blk-5e5921daa66d3f06148dbcf5
 
@@ -4639,6 +4783,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Three live runs lost the final composition to a timeout while the harness was configured for 1800 seconds. The adapter that calls the model has its own limit defaulting to 300 seconds and fires first.
 - Evidence: up-run-c33b31a2f47c and up-run-0f7a32e40bf2 activity: timed out after 300 seconds with UP_HARNESS_AGENT_TIMEOUT_SECONDS set to 1800
 
+## blk-6db96143e1e09956e1f73442
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `run-first-relationship`
+- Surface: `projection-relationship-replay`
+- Symptom: The real relationship interview crashes during replay and exact resume with KeyError origin_id before any relationship outcome is persisted.
+- Evidence: Live start_intake relationship-bound run and its exact replay both fail at projection_interview.py _bind_relationship_point while reading current origin_id; launcher returns zero new relationship outcomes.
+
 ## blk-6dcd7e0b50b4ec0e63f558f4
 
 - Status: `fixed-awaiting-verification`
@@ -5291,6 +5444,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Discovery helper rejects stored rg commands whose quoted regex contains pipe alternation
 - Evidence: append-step returned invalid-command-row for both memory search and report-label trace after shell quoting was corrected
 
+## blk-7ef63de8e0c16affeab6aea8
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `run-info-intake-canary`
+- Surface: `projection-relationship-gap-contract`
+- Symptom: The next resume invalidated the prior chart gap and reopened its obligation, so the controller returned to the chart instead of processing the approved weekly net-payout relationship.
+- Evidence: Journal event required_participant_gap_migrated invalidated relationship-000042 because it omitted element-000049; replay reports 56 of 62 resolved with obligation-000047 pending before obligation-000048.
+
 ## blk-7ef902fbda6f5dc4d7dde572
 
 - Status: `open`
@@ -5299,6 +5461,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `working-agreement-projection`
 - Symptom: Local authoritative AGENTS projection omits the locked July-13 G0 first-text and pending-read rules present on fetched origin/main
 - Evidence: git diff origin/main -- AGENTS.md shows remote G0 amendment removed locally while local adds G17-G27 repairs
+
+## blk-7f0e11c4e66e4838253b8982
+
+- Status: `verified`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `sequence-intake-launch`
+- Surface: `discovery-sequence-launcher`
+- Symptom: The zero-input launcher rejects the active discovery selection before presenting the recorded intake operation.
+- Evidence: python3 scripts/sequence_intake_launch.py returned exit 2 with active-selection-is-not-registered; the same fingerprint occurred during the immediately preceding real-dashboard discovery run.
 
 ## blk-7f61aafc54c93e5d1373abcb
 
@@ -5380,6 +5551,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `convergence-state-stage-ledger`
 - Symptom: Cycle 25 stage-result cannot be recorded because convergence state knows gaps only through GAP-021 while the audit has reached GAP-067.
 - Evidence: record-stage returned stage assigns unknown gaps; state stages contain research-doc-gap attempt 1 and doc-gap-closure attempts 1-12 only, while the audit documents Cycles 13-25.
+
+## blk-819d8496cddaf6ffe397d2f9
+
+- Status: `closed`
+- Subject: `info-intake-obligation-48-20260816`
+- Step: `obligation-000053`
+- Surface: `info-intake-required-participant-replacement`
+- Symptom: A rejected required participant was recaptured as a different nearby dashboard metric and the final obligation was falsely resolved.
+- Evidence: Live obligation-000053 changed element-000055 from the rejected 364-transactions-today unit at bounds [185,135,267,153] to NET REVENUE TODAY ,100 at [184,102,280,164]; exact-crop verification proved only that the new text existed inside the new crop, after which relationship resolution linked Column:AF instead of the obligated Column:AE unit.
 
 ## blk-822f5912321b9e00df07c17c
 
@@ -5534,6 +5714,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: record-attempt-help-path-failed-and-first-catalog-open-used-wrong-subject
 - Evidence: run-receipt-binds-subject-discovery-683fb3d9-702b-55ff-945f-35c9f667e439-and-rg-locates-controller-at-skills/research-playbook-v2/scripts/research_package.py
 
+## blk-87609b8f68e7e630f799def4
+
+- Status: `open`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `qualify-discovery`
+- Surface: `discovery-promotion-lifecycle-child-activation`
+- Symptom: The promotion controller cannot start the first qualification run in this worktree because its child sequence guard silently expects the main-checkout directives path.
+- Evidence: The guarded drive passed --root for the worktree, but _select_and_start omitted --directives-path and --directive-state; sequence_guard therefore used directive_guard.DEFAULT_DIRECTIVES_PATH and rejected the worktree-bound receipt.
+
 ## blk-8761d74a5086ef2219495eea
 
 - Status: `non-gap`
@@ -5605,6 +5794,24 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `work_memory.cmd_select`
 - Symptom: explicit-discovery-selection-cannot-start-while-generated-owner-contracts-are-stale
 - Evidence: successor-selection-failed-with-executable-owner-proposal-hash-drift-before-resolving-the-explicit-discovery-log
+
+## blk-89065856cf7b349f750aa492
+
+- Status: `superseded`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `correction-artifact-selection`
+- Surface: `work-memory-correction`
+- Symptom: Two correction-record submissions declared files outside the exact selected-bundle drift set.
+- Evidence: The bundle resolver reports exactly three drifted dependency files: projection_interview.py, run_projection_with_codex.py, and start_intake.py.
+
+## blk-8967f3f1bad1da9879db27fb
+
+- Status: `fixed-awaiting-verification`
+- Subject: `info-intake-obligation-39-20260815`
+- Step: `projection-endpoint-context-retry`
+- Surface: `info-intake projection relationship endpoint context`
+- Symptom: The machinery repeatedly requests nearly identical wider crops but still cannot verify the missing $41,004 relationship endpoint.
+- Evidence: Five append-only context selection and verification attempts chose similar bounds and returned requires_visible_context or does_not_contain_claimed_content without adding an obligation outcome.
 
 ## blk-8993d8c4248483be1f967a45
 
@@ -5849,6 +6056,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Two attempt lifecycle tests fail before exercising lifecycle behavior because their helper constructs the obsolete one-row prepared-run shape.
 - Evidence: Focused pytest: load_prepared_run rejects attempt_run state with one r1 row instead of the exact 13-row prepared-run contract.
 
+## blk-8f95a008ab23b4fe598709b8
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `work-memory-failed-verification-reopen`
+- Surface: `scripts/work_memory.py`
+- Symptom: A same-path failed verification leaves the blocker fixed-awaiting-verification; correct rejects it as nonopen and recover rejects it as non-legacy.
+- Evidence: verification event f70e3f4d-b737-48ff-a14a-a667550f1700 recorded outcome failed; subsequent correct returned correction-for-nonopen-blocker and recover returned recovery-source-not-legacy-stranded.
+
 ## blk-8fc877f67a2676b4b30a7d49
 
 - Status: `open`
@@ -5931,6 +6147,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `independent-findings-verifier-runtime`
 - Symptom: findings-verifier-remains-nonterminal-after-90-and-120-second-waits
 - Evidence: agent-019f7433-returned-empty-timeout-status-twice
+
+## blk-91adf8d5544e2f227360573c
+
+- Status: `open`
+- Subject: `publish-info-intake-machinery-to-main-20260818`
+- Step: `select-commit-push-main`
+- Surface: `prevention-registry`
+- Symptom: Registered commit-push-main sequence cannot be selected from the source branch
+- Evidence: work_memory select rejected commit-push-main because its executable owner source hash drifted
 
 ## blk-91b24d910bcd5a622a9665c7
 
@@ -6213,6 +6438,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The launcher rejects a valid saved dashboard intake paused at needs_operator_answer before presenting its question
 - Evidence: Real launcher exited 3 with the intake is not waiting for a supported visual model stage while clarification-boundary returns the preserved relationship-000029 question
 
+## blk-972af1cfffb85d46f0563e16
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `relationship-endpoint-context-verdict`
+- Surface: `info-intake new relationship endpoint verification`
+- Symptom: The newly recorded $41,004 endpoint verifier selected requires_visible_context, but the controller rejected its own allowed enum value.
+- Evidence: Same-path run created element-000067, attached its exact crop, accepted requires_visible_context as an allowed answer, then exited 3 with endpoint-crop-verdict-invalid.
+
 ## blk-9798c774d7e27c0b0a787feb
 
 - Status: `non-gap`
@@ -6257,6 +6491,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `united-partners local test runtime`
 - Symptom: Both system and bundled Python reject python -m pytest because pytest is not installed.
 - Evidence: python3 -m pytest and bundled-python -m pytest both exited immediately with No module named pytest.
+
+## blk-98ef43cba954a985ffb96275
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `projection-relationship-endpoint-reuse`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: After fresh crop verification rejected element-000062, the next resume allowed use_recorded_endpoint and finalized a readable supported relationship through that gap.
+- Evidence: Live journal sequences 2787-2788 rejected the crop; sequences 2816 onward reused element-000062 and completed obligation-000027.
 
 ## blk-98f655e29f9b4045fe26d126
 
@@ -6349,6 +6592,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `sequence-discovery-log`
 - Symptom: Nested single-quoted rg patterns broke the discovery-log append command
 - Evidence: Only acceptance, solution-build, and verifier steps were recorded; no verification command executed
+
+## blk-9b8940c13531319e2bdc098e
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `replay-spatial-identity-capability`
+- Surface: `info-intake-projection-interview-schema-evolution`
+- Symptom: The real intake replay stops before the model because a historical relationship-binding question now has a different allowed-choice list.
+- Evidence: The launcher exited 3 with interview-question-invalid:1413; the current implementation adds refine_spatial_identity to relationship_binding_resolution before replay reaches the unchanged historical question.
 
 ## blk-9bc120dd8177a0fccb4b2809
 
@@ -6701,6 +6953,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The authorized answer-25 evidence correction cannot be applied because its captured Phase 20 source range begins after the end of the persisted draft markdown.
 - Evidence: candidate6 span 5ab3c47a5231bc3a6a49027f6290042957fb7e581dedaab405f5fb0a2772adbd range=[73802,74008], exact_text length=206; attempt.payload.markdown length=40512; slice is empty; same ValueError reproduced twice.
 
+## blk-a456a2778e21e2c8710ffb01
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `obligation-000032-contract12-activation`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: The real contract-12 intake bypassed the new stored-participant crop gate and appended a false relationship for obligation-000032.
+- Evidence: Live launcher completed obligation-000032 without asking required_participant_crop_verdict; journal appended the .16 Avg revenue / visitor relationship.
+
 ## blk-a46813d69df2047c5f782664
 
 - Status: `closed`
@@ -6998,6 +7259,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Fresh coverage and satisfaction lens agents cannot be created even after completed agents release active slots.
 - Evidence: collaboration.spawn_agent returns agent thread limit reached; available collaboration tools expose interrupt but no close, delete, or release operation.
 
+## blk-aa1e959f62aedb88c5486469
+
+- Status: `closed`
+- Subject: `discovery-bootstrap`
+- Step: `protected-correction-grounding`
+- Surface: `discovery-bootstrap-sequence-contract`
+- Symptom: The sealed correction is rejected because the selected discovery-bootstrap sequence declares only its normal shared launcher and omits its protected correction command.
+- Evidence: The exact launcher returned bootstrap-command-not-grounded; operations/sequences/discovery-bootstrap/sequence.md contains no work_memory_bootstrap_launcher.py correct row while the bootstrap guard requires that literal command.
+
 ## blk-aa358c52c5dceacb935be8a4
 
 - Status: `closed`
@@ -7114,6 +7384,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `greenfield-owner-acceptance`
 - Symptom: exact-greenfield-shell-cannot-complete-real-checked-in-harness-path
 - Evidence: greenfield_full_drive.sh-seed-git-auth-omits-required-repository-key-local-harness-argparse-requires-it-and-fake-uv-prevented-real-harness-execution
+
+## blk-ad747b4b501548b0706eb098
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `projection-relationship-endpoint-capture`
+- Surface: `info-intake-projection`
+- Symptom: The machinery recorded the $22.25 avg-per-transaction endpoint over the River Runners legend row instead of its visible dashboard position.
+- Evidence: The live journal records element-000061 as $22.25 with bounds [363,416,407,442], overlapping element-000030 River Runners [291,425,422,437], while the source visibly places $22.25 near normalized y 337.
 
 ## blk-ad923f3eea2c6e9dbe1a38d5
 
@@ -7576,6 +7855,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The registered python3 launcher exits before creating intake state because system Python lacks Pillow.
 - Evidence: python3 skills/info-intake-machinery/scripts/run_intake.py exited 1 while importing projection_interview.py: from PIL import Image.
 
+## blk-b739adb9b1b8986e07948fd4
+
+- Status: `superseded`
+- Subject: `discovery-bootstrap`
+- Step: `bootstrap-discovery`
+- Surface: `directive-read-state`
+- Symptom: Discovery dispatch stopped before the intake canary started.
+- Evidence: The launcher recorded /Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md but required /Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge/working-agreement/DIRECTIVES.md.
+
 ## blk-b7844825bd3857c3ce4176e3
 
 - Status: `non-gap`
@@ -7656,6 +7944,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `research_package.record-attempt`
 - Symptom: Both core attempt records were rejected because inline close-evidence labels were interpreted as file paths.
 - Evidence: Controller returned cannot read JSON from <label> for both invocations and verdict BLOCKED.
+
+## blk-b8819c29d691d7c5259844d3
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `projection-relationship-endpoint-supersession`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: A same-unit replacement changed rejected element-000062 to readable bounds/content while preserving its rejected crop verdict, then recapture repeated instead of verifying the replacement crop.
+- Evidence: Live journal sequences 2864-2879 superseded the rejected endpoint without a new crop verdict; sequences 2888-2899 began the same replacement again. Run stopped with exit 130 to avoid a loop.
 
 ## blk-b88f9146dd8fe5e2658b74f7
 
@@ -8462,6 +8759,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: package-cleanliness correction cannot be recorded using directory artifacts
 - Evidence: work_memory.py correct accepts only existing files and rejected the skill directories
 
+## blk-cda87320d41cebfd769c8f68
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `relationship-endpoint-semantic-unit`
+- Surface: `info-intake relationship endpoint identity`
+- Symptom: The recapture model expanded from the specific $41,004 target to the entire Period Summary section.
+- Evidence: The preserved candidate used bounds [172,516,840,654] and claimed Period Summary, earned-to-date, projected close, next payout, last-period total, and View payouts even though the visible arrow terminates at $41,004.
+
 ## blk-cdd3d782bc92570e74849cbe
 
 - Status: `closed`
@@ -8680,6 +8986,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The selector rejected a discovery log stored outside the canonical repository
 - Evidence: ValueError: temporary discovery log is not below /Users/kamenkamenov/memory-knowledge
 
+## blk-d173a8b90b8d8ee96529228c
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `projection-rejected-endpoint-recovery`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: The recovery gate accepted only a pending same-unit target question, while the interrupted live journal had advanced to a pending merge-top question.
+- Evidence: Successor run e0963ad3-fdf3-4798-8793-6312ca38bbcd stopped before model execution with rejected-endpoint-collision-activation-question-pending; journal tail ends at element_merge_top sequence 2903.
+
 ## blk-d1b062d2207b8108d126a859
 
 - Status: `superseded`
@@ -8896,6 +9211,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The launcher authenticates a receipt to a caller-selected hook command instead of a hash-bound authoritative controller.
 - Evidence: Independent review traced hook_command from caller input through admission and subsequent hook forwarding; production has no authoritative consume_controller_admission call.
 
+## blk-d68751e23adfe410aec6f182
+
+- Status: `closed`
+- Subject: `info-intake-first-relationship-20260814`
+- Step: `activate-discovery-sequence`
+- Surface: `sequence-guard-directive-read-receipt`
+- Symptom: Sequence activation rejects the canonical directive read after the canonical file was read.
+- Evidence: activate reports worktree DIRECTIVES.md receipt but requires /Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md; repeated twice.
+
 ## blk-d6abeb40ab68cf1d47f8c876
 
 - Status: `closed`
@@ -8997,6 +9321,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: blocker catalog rejected an attempted write to a closed verification run
 - Evidence: catalog returned event-after-terminal for run a26a9b4f-052c-4623-9d8e-78c83b6378d9
 
+## blk-d92a59bab841ed031010f8d0
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `projection-relationship-participant-validation`
+- Surface: `info-intake-readable-projection`
+- Symptom: The PROJECTED CLOSE relationship was recorded as readable even though its explanation participant was already an explicit unreadable gap.
+- Evidence: The live journal recorded element-000028 status gap, then accepted relationship_visual_verdict supported and relationship_status readable for obligation-000040.
+
 ## blk-d93b7251f6b12eac3bb1e17c
 
 - Status: `superseded`
@@ -9069,6 +9402,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The full work-memory test file reaches its registry integration test and detects the deliberately not-yet-rematerialized MAWF executable contract.
 - Evidence: 101 work-memory tests passed; only test_registry_and_manifest_coverage failed with executable-owner-proposal-hash-drift:mawf-playbook-blocker-reentry after the approved proposal hash update.
 
+## blk-da984ff0fab9d61c6d453dea
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `obligation-000033-contextual-endpoint-grounding`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: A 9x9 crop containing only a red chart dot was accepted as complete proof of the claim 'June monthly line-chart data point'.
+- Evidence: Stored crop endpoint-evidence/element-000034-required-recorded-participant-3dcf03e6cbd6d8ea.png contains only the dot; the month identity is established by surrounding chart context outside the crop, yet the recorded endpoint verdict is supported.
+
 ## blk-daf0aa9433d421eb3efb1c5a
 
 - Status: `fixed-awaiting-verification`
@@ -9077,6 +9419,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `up-harness-strategy-quote-grounding`
 - Symptom: Live source run stopped because the strategy role returned a source quote absent from immutable corpus strings
 - Evidence: up-run-bfaaaeacfd36 compose-llm-strategy-brief failed with strategy_quote_grounding_invalid
+
+## blk-dafe50a46ef8898adf77c5da
+
+- Status: `open`
+- Subject: `publish-info-intake-machinery-to-main-20260818`
+- Step: `verify-published-sequence-selection`
+- Surface: `origin-main-prevention-registry`
+- Symptom: Fresh main would reject registered sequence selection after the shared intake adapter changed
+- Evidence: origin/main adapter hash is aca0fb34888d while commit-push-main owner approval remains 1fd8be9868a5
 
 ## blk-db7492776918c481f8ae5f15
 
@@ -9122,6 +9473,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `discovery-promotion-lifecycle`
 - Symptom: The public typed promotion drive computed successor-verification then generated a discovery-mode successor selection, which work_memory.py rejected with registered-successor-required.
 - Evidence: sequence_intake_launch.py prepared the registered lifecycle drive; discovery_promotion_lifecycle.py invoked work_memory.py select --discovery-log --verification-successor-of d56b... --verifies-correction-id e141... and exited 3.
+
+## blk-dbcc89813e4f06203c480f1a
+
+- Status: `fixed-awaiting-verification`
+- Subject: `local-multimodal-model-benchmark`
+- Step: `registered-benchmark-intake`
+- Surface: `scripts/sequence_intake_launch.py:_artifact_paths`
+- Symptom: Registered benchmark launcher exits before interview when resolving benchmark_spec artifact path.
+- Evidence: Live registered no-arg launcher for run 99fdba62-d49b-432e-937f-51fea26bb973 raised KeyError benchmark_spec at sequence_intake_launch.py line 94.
 
 ## blk-dbeb6ea6e72249df151bcb7f
 
@@ -9348,6 +9708,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: run_projection_with_codex exits before launching the intake interview because Codex cannot write state_5.sqlite
 - Evidence: Codex reported attempt to write a readonly database and failed to initialize the in-process app-server client
 
+## blk-e10d1aba26c307644dd5ccff
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `activate-refinement-for-stored-contract`
+- Surface: `info-intake-projection-capability-activation`
+- Symptom: The successor replays successfully but still offers the old binding choices and preserves another gap because the existing intake never receives the capability event.
+- Evidence: ledger entry 8 stores interview_contract 12; the journal has no spatial_identity_refinement_enabled event; relationship_binding_resolution at sequence 1718 omits refine_spatial_identity.
+
 ## blk-e10fb7734e48f031e02bd999
 
 - Status: `non-gap`
@@ -9411,6 +9780,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: The guarded task-package search never reached rg because zsh expanded an unquoted bracket expression.
 - Evidence: Command exited before rg with zsh: no matches found: C0[1-9].
 
+## blk-e350f1cc8615151f3271274c
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `run-info-intake-canary`
+- Surface: `skills/info-intake-machinery/scripts/run_projection_with_codex.py`
+- Symptom: After an exact endpoint crop is accepted, the zero-input launcher exits 3 with the intake did not advance after a model stage instead of continuing to relationship binding.
+- Evidence: The journal advanced from sequence 2948 to 2964 and persisted element-000066 plus contains_claimed_content, but the launcher stage key contains only intake-state hash, attachment paths, and command; those return to the same source-bound command used before endpoint verification.
+
 ## blk-e35934c5c17ba97a43150383
 
 - Status: `closed`
@@ -9419,6 +9797,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `scripts/prevention_contract_materializer.py`
 - Symptom: The dedicated convergence bundle needs a durable correction receipt for materialized predicate schemas and trusted per-path repository roots.
 - Evidence: Historical blocker blk-feb849a07c507f46f87b50b0 recorded the defect; current materializer, adapters, registry, and tests contain the reviewed correction.
+
+## blk-e3884108b1635c4c056294db
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `projection-relationship-endpoint-producer-context`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: Two consecutive fresh model captures treated the already-recorded required annotation as the endpoint: one copied its text into correct metric bounds and one recaptured its bounds.
+- Evidence: Live endpoint crops element-000063 and element-000064 were independently rejected; the second verifier explicitly reported that the crop contained the red description rather than $22.25 avg / transaction.
 
 ## blk-e38a50983ed6920f64ee03d3
 
@@ -9509,6 +9896,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `tests/fixtures/plan-playbook-v2/fixture-authority.json`
 - Symptom: Six focused evaluator tests stop before matrix preparation because the reviewed fixture authority binds an obsolete working-agreement tree digest.
 - Evidence: Focused suite: 197 passed, 6 failed; every failure originates at implementation_root_snapshots with IMPLEMENTATION_ROOT_MISMATCH for working-agreement.
+
+## blk-e58ffd3acf66b54da65994df
+
+- Status: `closed`
+- Subject: `local-multimodal-model-benchmark`
+- Step: `run-benchmark`
+- Surface: `scripts/local_multimodal_model_benchmark.py:OllamaClient.chat`
+- Symptom: Nano generated no final benchmark answer after using the entire configured context.
+- Evidence: The real result recorded done_reason length, 32060 generated tokens plus 708 prompt tokens at a 32768 context, and empty message content; Ollama documents separate message.thinking output and default thinking for supported models.
 
 ## blk-e5d7ebfe4777d398830ddf6f
 
@@ -9728,6 +10124,17 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: One claim-classes issue cannot bind to its audited span, so the atomic correction pass abandons all seven captured Phase 20 content findings.
 - Evidence: Captured up-run-ae5e50ed5395 attempt fed8fd74 has seven inventory issues; the real ownership reconstruction binds six and reports only public_claim_inventory_claim_classes_invalid:147 as inventory_issue_row_missing. bind_owned_strategy_inventory_issues handles unmarked and claim-id-invalid families but not claim-classes-invalid emitted by public_claim_inventory.py.
 
+## blk-eb829ec997212ab041f1168f
+
+- Status: `open`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `prove-new-participant-reconciliation`
+- Surface: `info-intake-relationship-endpoint-binding`
+- Symptom: The new relationship could not bind its callout origin to one unique element because an older recorded endpoint fully overlaps it.
+- Evidence: element-000053 bounds [184,98,571,175] fully contain element-000005 bounds [319,109,412,173]; the model recorded an explicit endpoint-binding gap and the loader advanced only to obligation-000006.
+- Classification: `incidental-system-defect`
+- Downstream owner: `info-intake-spatial-element-supersession-atom`
+
 ## blk-eb82de7d2bf8d55a62fe8034
 
 - Status: `closed`
@@ -9845,6 +10252,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Post-edit command guarding stopped because the cached directive SHA no longer matched the newly edited authority file.
 - Evidence: sequence_guard returned: directive read state is stale because directives SHA changed.
 
+## blk-ef074fc698f691d13590be78
+
+- Status: `closed`
+- Subject: `discovery-bootstrap`
+- Step: `protected-correction-recording`
+- Surface: `work-memory-bootstrap-launcher`
+- Symptom: The protected correction path cannot record the absolute directive-state artifact that was corrected.
+- Evidence: work_memory_bootstrap.py correct exposes only --changed-artifact and forwards no changed_environment_artifact; direct work_memory correction would bypass the sealed protected-controller path.
+
 ## blk-ef99e223739253175cae764f
 
 - Status: `closed`
@@ -9907,6 +10323,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `tests/test_sequence_observer_end_to_end.py`
 - Symptom: full-suite-stops-during-e2e-test-collection
 - Evidence: module-not-found-test-sequence-observer-before-any-test-executed
+
+## blk-f1462162dd972ec2ed60bb05
+
+- Status: `closed`
+- Subject: `info-intake-obligation-27-20260815`
+- Step: `obligation-000032-existing-participant-grounding`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: Stored readable participant element-000033 can be reused although its content conflicts with the immutable source crop.
+- Evidence: Replay-selected obligation-000032 names element-000033 as .16 Avg revenue / visitor; immutable source shows .16 is Avg revenue / transaction.
 
 ## blk-f1a0eb4cedf8520c60a7cec7
 
@@ -10247,6 +10672,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: Five memory-owner sources currently echo effect/preparation identity only in their terminal JSON instead of persisting it before mutation.
 - Evidence: rg shows convergence_state_review_cycle.py, discovery_promotion_lifecycle.py, convergence_checkpoint_run.py, scoped_git_publish.py, and discovery_candidate_reconciliation.py reference prevention identity only in final result-envelope assembly; no source-owned pre-mutation receipt or mutation identity is written.
 
+## blk-f8853365e26f1f83622610db
+
+- Status: `open`
+- Subject: `qwen3-vl-regional-machinery-validation-20260816`
+- Step: `inspect-real-intake-boundary`
+- Surface: `info-intake validation preflight`
+- Symptom: The read-only clarification diagnostic failed before loading the intake machinery.
+- Evidence: Three candidate intake diagnostics were invoked with python3 and each failed importing PIL before intake state access.
+
 ## blk-f8bd03644289193baae2ebef
 
 - Status: `open`
@@ -10391,6 +10825,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Symptom: A valid package-less research entry cannot be consumed through the frozen blocker schema.
 - Evidence: Focused test reads blocker.reason=RESEARCH_REQUIRED; controller state omits reason.
 
+## blk-fbae1fbaae23627e0fa5d458
+
+- Status: `fixed-awaiting-verification`
+- Subject: `discovery-promotion-lifecycle`
+- Step: `protected-correction-dispatch`
+- Surface: `sequence-intake-correction-directive-context`
+- Symptom: The public correction interview prepared the exact failed task, run, blocker, and artifacts, but the sealed bootstrap used its main-checkout default directives path and rejected the active worktree receipt.
+- Evidence: The live dispatch from run 47913993-dd42-4279-bd4c-e1cb828f87d5 printed that the directive state was recorded for /Users/kamenkamenov/.codex/worktrees/c57b/memory-knowledge while it expected /Users/kamenkamenov/memory-knowledge.
+
 ## blk-fbf6dd86c948d16fcb580969
 
 - Status: `non-gap`
@@ -10435,6 +10878,15 @@ This file is generated from `operations/work-memory/events.jsonl`.
 - Surface: `info-intake-launcher`
 - Symptom: The saved dashboard model records its follow-up question and the launcher exits before code presents that question to the operator
 - Evidence: Real run ended status ready_for_operator_interview with one recorded round-2 question; no needs_operator_answer boundary was returned
+
+## blk-fc72e6c696750fa16f409b86
+
+- Status: `closed`
+- Subject: `discovery-3d2f9b01-7d10-5cbf-9319-94598d025383`
+- Step: `obligation-000032-versioned-recapture-evidence`
+- Surface: `skills/info-intake-machinery/scripts/projection_interview.py`
+- Symptom: The focused pass found Avg revenue / transaction: .16 with new bounds, but exact-crop preparation stopped with endpoint-evidence-changed.
+- Evidence: Earlier rejected replacement crops and the new corrected replacement both map to endpoint-evidence/element-000033-required-participant-replacement.png despite different claims and bounds.
 
 ## blk-fc936665cd16f103c264cd74
 

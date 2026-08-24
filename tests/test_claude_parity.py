@@ -68,10 +68,13 @@ def test_working_agreement_routes_write_code_to_pdi():
     assert re.search(r"Write code:.*prototype-driven-implementation", text)
 
 
-def test_sequence_runner_instructs_zero_argument_intake():
+def test_sequence_runner_dispatches_by_persisted_selection_mode():
     text = (SKILLS / "sequence-runner" / "SKILL.md").read_text()
-    assert "sequence_intake_launch.py" in text
-    assert "no arguments" in text
+    workflow = text.split("## Workflow", 1)[1].split("## Selection Rules", 1)[0]
+    assert "Dispatch from the verified mode in the persisted selection receipt" in workflow
+    assert "`registered`: launch `python3 scripts/sequence_intake_launch.py` with no arguments" in workflow
+    assert "`discovery`: do not invoke the registered-only intake launcher" in workflow
+    assert "Guard and run the exact\n     command already recorded in the selected discovery log" in workflow
 
 
 def test_self_contained_machinery_is_managed_and_bypasses_sequence_discovery():

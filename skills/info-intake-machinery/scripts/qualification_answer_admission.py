@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 
-ALLOWED_CHANNELS = {"operator_text", "local_file", "url"}
+ALLOWED_CHANNELS = {"operator_text", "local_file", "url", "preserve_gap"}
 
 
 def admit(
@@ -38,12 +38,16 @@ def admit(
             f"question {question_id!r} evidence digest received {evidence_sha256!r}; "
             "provide the exact 64-character evidence digest"
         )
-    if channel != expected:
+    if channel != expected and channel != "preserve_gap":
         issues.append(f"question {question_id!r} channel received {channel!r}; provide exactly {expected!r}")
     if not isinstance(value, str) or not value.strip():
         issues.append(f"question {question_id!r} value received {value!r}; provide one nonempty {expected!r} answer")
     if expected == "url" and isinstance(value, str) and value.strip() and not value.startswith(("http://", "https://")):
         issues.append(f"question {question_id!r} URL received {value!r}; provide one public HTTP(S) URL")
+    if channel == "preserve_gap" and value != "preserve_gap":
+        issues.append(
+            f"question {question_id!r} preserved-gap value received {value!r}; provide exactly 'preserve_gap'"
+        )
     if issues:
         return {"accepted": False, "why": "; ".join(issues)}
     assert isinstance(question_id, str)
@@ -56,6 +60,6 @@ def admit(
         "question_id": question_id,
         "obligation_id": obligation["id"],
         "evidence_sha256": evidence_sha256,
-        "channel": expected,
+        "channel": channel,
         "value": value,
     }

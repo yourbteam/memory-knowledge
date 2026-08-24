@@ -68,6 +68,15 @@ def admit(binding: object, assessment: object) -> dict[str, object]:
         issues.append(
             f"reason received {reason!r}; provide the preserved assessment reason"
         )
+    submission = binding.get("submission")
+    preserves_gap = submission == {
+        "channel": "preserve_gap",
+        "value": "preserve_gap",
+    }
+    if preserves_gap and verdict == "resolves_obligation":
+        issues.append(
+            "a preserve_gap submission cannot resolve the missing information; assess it as does_not_resolve_obligation"
+        )
     if issues:
         return {"accepted": False, "why": "; ".join(issues)}
     return {
@@ -75,7 +84,11 @@ def admit(binding: object, assessment: object) -> dict[str, object]:
         "route": (
             "resolution_admitted"
             if verdict == "resolves_obligation"
-            else "follow_up_required"
+            else (
+                "gap_preservation_admitted"
+                if preserves_gap
+                else "follow_up_required"
+            )
         ),
         **expected,
         "verdict": verdict,
@@ -113,10 +126,17 @@ def admit_all(bindings: object, assessments: object) -> dict[str, object]:
     follow_ups = [
         item for item in outcomes if item.get("route") == "follow_up_required"
     ]
+    preserved_gaps = [
+        item
+        for item in outcomes
+        if item.get("route") == "gap_preservation_admitted"
+    ]
     return {
         "complete": True,
         "resolution_count": len(resolutions),
+        "preserved_gap_count": len(preserved_gaps),
         "follow_up_count": len(follow_ups),
         "resolutions": resolutions,
+        "preserved_gaps": preserved_gaps,
         "follow_ups": follow_ups,
     }

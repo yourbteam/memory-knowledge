@@ -15,14 +15,14 @@ try:
     from scripts import sequence_candidate_contract, work_memory
     from scripts.prevention_contract import (
         ActionIntent, BindingKind, BindingReceipt, ParameterTag, canonical_bytes,
-        sha256_bytes,
+        resolve_repository_source_path, sha256_bytes,
     )
 except ModuleNotFoundError:  # direct script execution
     import sequence_candidate_contract
     import work_memory
     from prevention_contract import (
         ActionIntent, BindingKind, BindingReceipt, ParameterTag, canonical_bytes,
-        sha256_bytes,
+        resolve_repository_source_path, sha256_bytes,
     )
 
 
@@ -31,6 +31,8 @@ class AdapterError(ValueError):
 
 
 _POLICY_EVIDENCE_KEY = secrets.token_bytes(32)
+ROOT = Path(__file__).resolve().parents[1]
+CANONICAL_ROOT = Path.home() / "memory-knowledge"
 
 
 @dataclass(frozen=True)
@@ -403,7 +405,11 @@ def _source_observable_evidence_for_owner(
     if not isinstance(provider, Mapping) or not isinstance(provider.get("path"), str):
         raise AdapterError("source-observable-provider-binding-invalid")
     try:
-        provider_bytes = Path(provider["path"]).read_bytes()
+        provider_bytes = resolve_repository_source_path(
+            provider["path"],
+            repository_root=ROOT,
+            canonical_repository_root=CANONICAL_ROOT,
+        ).read_bytes()
     except OSError as exc:
         raise AdapterError("source-observable-provider-unavailable") from exc
     if sha256_bytes(provider_bytes) != provider.get("sha256"):
@@ -423,7 +429,11 @@ def _source_observable_evidence_for_owner(
     for source in owner.get("sources", []):
         if not isinstance(source, Mapping) or not isinstance(source.get("path"), str):
             raise AdapterError("source-observable-source-binding-invalid")
-        path = Path(source["path"])
+        path = resolve_repository_source_path(
+            source["path"],
+            repository_root=ROOT,
+            canonical_repository_root=CANONICAL_ROOT,
+        )
         try:
             raw = path.read_bytes()
         except OSError as exc:
@@ -1342,7 +1352,7 @@ def _field_value(values: Mapping[str, Any], path: str) -> Any:
 def _resolved_predicate(producer: str, field: str, values: Mapping[str, Any]) -> bool:
     value = _field_value(values, field)
     if producer == "work-memory-ledger-membership-v1":
-        ledger_path = work_memory.LEDGER.relative_to(work_memory.ROOT).as_posix()
+        ledger_path = work_memory.LEDGER_RELATIVE_PATH.as_posix()
         return isinstance(value, list) and ledger_path in value
     if producer == "protected-artifact-detector-v1":
         return isinstance(value, list) and any(
@@ -1923,6 +1933,12 @@ def build_invocation(
         values["validate_fresh"] = mode == "validate-fresh"
         values["no_fresh"] = values.get("fresh") is False
     argv = list(BASE_ARGV[sequence_id])
+    if len(argv) > 1:
+        argv[1] = str(resolve_repository_source_path(
+            argv[1],
+            repository_root=ROOT,
+            canonical_repository_root=CANONICAL_ROOT,
+        ))
     if sequence_id == "convergence-checkpoint-run":
         argv.extend((
             "--child-intent-json",
@@ -1932,9 +1948,18 @@ def build_invocation(
                 separators=(",", ":"),
             ),
         ))
+    if sequence_id == "commit-push-main":
+        repository_key = resolved.values.get("repository_key")
+        if not isinstance(repository_key, str) or not repository_key:
+            raise AdapterError("commit-push-main-repository-key-invalid")
+        argv.extend(("--repository-key", repository_key))
     if sequence_id == "discovery-candidate-reconciliation":
         if "root" in values:
-            argv.extend(("--root", str(values["root"])))
+            argv.extend(("--root", str(resolve_repository_source_path(
+                str(values["root"]),
+                repository_root=ROOT,
+                canonical_repository_root=CANONICAL_ROOT,
+            ))))
         argv.append(str(values["command"]))
     elif sequence_id in POSITIONAL_COMMAND:
         argv.append(str(values["command"]))

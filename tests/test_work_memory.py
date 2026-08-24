@@ -47,6 +47,45 @@ def event(kind: str, **fields):
     }
 
 
+def test_repository_config_cannot_replace_the_running_memory_checkout(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    worktree = tmp_path / "worktree"
+    main_checkout = tmp_path / "main"
+    worktree.mkdir()
+    main_checkout.mkdir()
+    config = tmp_path / "repositories.json"
+    config.write_text(json.dumps({
+        "memory-knowledge": str(main_checkout),
+        "external": str(tmp_path / "external"),
+    }), encoding="utf-8")
+    monkeypatch.setattr(work_memory, "ROOT", worktree)
+
+    roots = work_memory._repo_roots(str(config))
+
+    assert roots["memory-knowledge"] == worktree.resolve()
+    assert roots["external"] == (tmp_path / "external").resolve()
+    assert work_memory._repo_roots(snapshot={
+        "memory-knowledge": str(main_checkout),
+    })["memory-knowledge"] == main_checkout.resolve()
+
+
+def test_linked_worktree_uses_primary_checkout_for_operational_ledger(
+    tmp_path: Path,
+) -> None:
+    primary = tmp_path / "primary"
+    worktree = tmp_path / "linked"
+    gitdir = primary / ".git/worktrees/linked"
+    gitdir.mkdir(parents=True)
+    worktree.mkdir()
+    (worktree / ".git").write_text(
+        f"gitdir: {gitdir}\n", encoding="utf-8",
+    )
+    (gitdir / "commondir").write_text("../..\n", encoding="utf-8")
+
+    assert work_memory._repository_state_root(worktree) == primary.resolve()
+
+
 def test_resolve_bundle_maps_absolute_executable_to_declared_repository(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
@@ -1620,6 +1659,385 @@ def test_finalize_correction_preserves_existing_verification_quality(
     close = captured["request"]["events"][-1]
     assert close["event_type"] == "run_closed"
     assert close["verification_quality"] == "same-path"
+
+
+def test_failed_successor_verification_can_record_a_superseding_correction(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Reproduce the live fixed-blocker dead end after failed same-path verification."""
+    sequence = tmp_path / "operations/sequences/example/sequence.md"
+    sequence.parent.mkdir(parents=True)
+    sequence.write_text("# example\n")
+    artifact = tmp_path / "scripts/fix.py"
+    artifact.parent.mkdir()
+    artifact.write_text("revision = 2\n")
+    predecessor_run_id = str(uuid.uuid4())
+    verification_run_id = str(uuid.uuid4())
+    retry_run_id = str(uuid.uuid4())
+    occurrence_id = str(uuid.uuid4())
+    prior_correction_id = str(uuid.uuid4())
+    replacement_correction_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "4" * 24
+    old_bundle = [
+        {
+            "repository_key": "memory-knowledge",
+            "path": "operations/sequences/example/sequence.md", "sha256": "a" * 64,
+        },
+        {
+            "repository_key": "memory-knowledge",
+            "path": "scripts/fix.py", "sha256": "b" * 64,
+        },
+        {
+            "repository_key": "memory-knowledge",
+            "path": "scripts/control.py", "sha256": "8" * 64,
+        },
+    ]
+    corrected_bundle = [
+        old_bundle[0], {**old_bundle[1], "sha256": "c" * 64}, old_bundle[2],
+    ]
+    retry_bundle = [
+        corrected_bundle[0], corrected_bundle[1],
+        {**corrected_bundle[2], "sha256": "9" * 64},
+    ]
+    failed_verification = event(
+        "verification_recorded", run_id=verification_run_id, subject_id="example",
+        lineage_id="lineage", source_bundle_hash="1" * 64, outcome="failed",
+        quality="same-path", evidence="same path exposed an incomplete correction",
+        blocker_ids=[blocker_id], correction_ids=[prior_correction_id],
+        changed_artifact_hashes=["c" * 64],
+    )
+    rows = [
+        event(
+            "run_started", run_id=predecessor_run_id, subject_id="example",
+            lineage_id="lineage", mode="registered", operation_kind="workflow-drive",
+            source_bundle=old_bundle, source_bundle_hash="d" * 64,
+            classification_receipt_hash="e" * 64, selection_receipt_hash="f" * 64,
+            started_at_utc="2026-01-01T00:00:00Z",
+        ),
+        event(
+            "blocker_opened", run_id=predecessor_run_id, blocker_id=blocker_id,
+            occurrence_id=occurrence_id, fingerprint="4" * 64, subject_id="example",
+            lineage_id="lineage", step_id="review", surface="lifecycle", symptom="gap",
+            evidence="captured live failure", impact="blocked",
+            boundary="failed successor correction", status="open",
+        ),
+        event(
+            "correction_recorded", run_id=predecessor_run_id, blocker_id=blocker_id,
+            occurrence_id=occurrence_id, correction_id=prior_correction_id,
+            subject_id="example", lineage_id="lineage", step_id="review",
+            changed_artifacts=["scripts/fix.py"], changed_artifact_hashes=["c" * 64],
+            reusable_behavior_changed=True, solution="first correction",
+        ),
+        event(
+            "bundle_transition_recorded", run_id=predecessor_run_id,
+            lineage_id="lineage", old_bundle_hash="d" * 64, new_bundle_hash="1" * 64,
+            transition_reason="correction", correction_ids=[prior_correction_id],
+            changed_artifacts=["scripts/fix.py"], changed_artifact_hashes=["c" * 64],
+        ),
+        event(
+            "blocker_transitioned", run_id=predecessor_run_id, blocker_id=blocker_id,
+            from_status="open", to_status="fixed-awaiting-verification",
+        ),
+        event(
+            "run_closed", run_id=predecessor_run_id, subject_id="example",
+            lineage_id="lineage", result="failed", completed_at_utc="2026-01-01T00:01:00Z",
+            correction_count=1, blocker_ids=[blocker_id], sequence_updated=True,
+            verification_quality="none",
+        ),
+        event(
+            "run_started", run_id=verification_run_id,
+            predecessor_run_id=predecessor_run_id,
+            subject_id="example", lineage_id="lineage", mode="registered",
+            operation_kind="workflow-drive", source_bundle=corrected_bundle,
+            source_bundle_hash="1" * 64, classification_receipt_hash="2" * 64,
+            selection_receipt_hash="3" * 64, started_at_utc="2026-01-01T00:02:00Z",
+            verifies_correction_ids=[prior_correction_id],
+        ),
+        failed_verification,
+        event(
+            "run_closed", run_id=verification_run_id, subject_id="example",
+            lineage_id="lineage", result="failed", completed_at_utc="2026-01-01T00:03:00Z",
+            correction_count=0, blocker_ids=[], sequence_updated=False,
+            verification_quality="same-path",
+        ),
+        event(
+            "run_started", run_id=retry_run_id, predecessor_run_id=verification_run_id,
+            subject_id="example", lineage_id="lineage", mode="registered",
+            operation_kind="workflow-drive", source_bundle=retry_bundle,
+            source_bundle_hash="2" * 64, classification_receipt_hash="6" * 64,
+            selection_receipt_hash="7" * 64, started_at_utc="2026-01-01T00:04:00Z",
+            verifies_correction_ids=[prior_correction_id],
+        ),
+    ]
+    new_bundle = [retry_bundle[0], {
+        **retry_bundle[1], "sha256": work_memory.sha256_bytes(artifact.read_bytes()),
+    }, retry_bundle[2]]
+    current = list(rows)
+    raw = b"".join(work_memory.canonical_bytes(item) for item in rows)
+    unsupported_reopen = event(
+        "blocker_transitioned", run_id=retry_run_id, blocker_id=blocker_id,
+        from_status="fixed-awaiting-verification", to_status="open",
+        reopen_evidence="arbitrary text is not proof",
+    )
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="reopen-verification-required",
+    ):
+        work_memory.stage_event_batch(
+            raw,
+            {"schema_version": 1, "expected_ledger_hash": None, "events": [unsupported_reopen]},
+        )
+    passed_verification = {
+        **failed_verification, "outcome": "passed",
+    }
+    wrong_outcome_reopen = event(
+        "blocker_transitioned", run_id=retry_run_id, blocker_id=blocker_id,
+        from_status="fixed-awaiting-verification", to_status="open",
+        verification_event_id=passed_verification["event_id"],
+        reopen_evidence="a passed verification cannot reopen",
+    )
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="invalid-failed-verification-reopen",
+    ):
+        work_memory.stage_event_batch(
+            b"".join(work_memory.canonical_bytes(
+                passed_verification if item is failed_verification else item
+            ) for item in rows), {
+                "schema_version": 1, "expected_ledger_hash": None,
+                "events": [wrong_outcome_reopen],
+            },
+        )
+    changed_product_rows = [
+        {
+            **item,
+            "source_bundle": [
+                item["source_bundle"][0],
+                {**item["source_bundle"][1], "sha256": "f" * 64},
+                item["source_bundle"][2],
+            ],
+            "source_bundle_hash": "3" * 64,
+        }
+        if item["event_type"] == "run_started" and item["run_id"] == retry_run_id
+        else item
+        for item in rows
+    ]
+    changed_product_reopen = {
+        **wrong_outcome_reopen,
+        "event_id": str(uuid.uuid4()),
+        "verification_event_id": failed_verification["event_id"],
+    }
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="invalid-failed-verification-reopen",
+    ):
+        work_memory.stage_event_batch(
+            b"".join(work_memory.canonical_bytes(item) for item in changed_product_rows), {
+                "schema_version": 1, "expected_ledger_hash": None,
+                "events": [changed_product_reopen],
+            },
+        )
+    nonancestor_reopen = {
+        **wrong_outcome_reopen,
+        "event_id": str(uuid.uuid4()),
+        "verification_event_id": failed_verification["event_id"],
+    }
+    nonancestor_rows = [
+        {**item, "predecessor_run_id": predecessor_run_id}
+        if item["event_type"] == "run_started" and item["run_id"] == retry_run_id
+        else item
+        for item in rows
+    ]
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="invalid-failed-verification-reopen",
+    ):
+        work_memory.stage_event_batch(
+            b"".join(work_memory.canonical_bytes(item) for item in nonancestor_rows), {
+                "schema_version": 1, "expected_ledger_hash": None,
+                "events": [nonancestor_reopen],
+            },
+        )
+    proxy_verification = {
+        **failed_verification, "quality": "proxy",
+    }
+    wrong_quality_reopen = {
+        **wrong_outcome_reopen,
+        "event_id": str(uuid.uuid4()),
+        "verification_event_id": proxy_verification["event_id"],
+    }
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="invalid-failed-verification-reopen",
+    ):
+        proxy_rows = [
+            proxy_verification if item is failed_verification else (
+                {**item, "verification_quality": "proxy"}
+                if item["event_type"] == "run_closed"
+                and item["run_id"] == verification_run_id else item
+            )
+            for item in rows
+        ]
+        work_memory.stage_event_batch(
+            b"".join(work_memory.canonical_bytes(
+                proxy_verification if item is failed_verification else item
+            ) for item in proxy_rows), {
+                "schema_version": 1, "expected_ledger_hash": None,
+                "events": [wrong_quality_reopen],
+            },
+        )
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: (current, "4" * 64))
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle", lambda **kwargs: (new_bundle, "5" * 64, "lineage"),
+    )
+
+    def transact(request):
+        raw = b"".join(work_memory.canonical_bytes(item) for item in current)
+        ledger, _, result = work_memory.stage_event_batch(raw, request)
+        current[:] = work_memory.parse_ledger_bytes(ledger)
+        return result
+
+    monkeypatch.setattr(work_memory, "transact", transact)
+    args = SimpleNamespace(
+        run_id=retry_run_id, blocker_id=blocker_id, occurrence_id=occurrence_id,
+        step_id="review", changed_artifact=[str(artifact)], solution="replacement correction",
+        reusable_behavior_changed="yes", supersedes_correction_id=[prior_correction_id],
+        correction_id=replacement_correction_id, event_id=None, transition_event_id=None,
+        repo_roots_file=None, finalize_failed_run=True,
+    )
+
+    work_memory.cmd_correct(args)
+    replayed = work_memory.cmd_correct(args)
+
+    replacement = next(
+        item for item in current
+        if item.get("correction_id") == replacement_correction_id
+    )
+    assert replacement["supersedes_correction_id"] == prior_correction_id
+    blocker_transitions = [
+        item for item in current
+        if item["event_type"] == "blocker_transitioned"
+        and item["blocker_id"] == blocker_id
+    ]
+    assert [(item["from_status"], item["to_status"]) for item in blocker_transitions] == [
+        ("open", "fixed-awaiting-verification"),
+        ("fixed-awaiting-verification", "open"),
+        ("open", "fixed-awaiting-verification"),
+    ]
+    reopen = blocker_transitions[1]
+    assert reopen["verification_event_id"] == failed_verification["event_id"]
+    assert "reopen_evidence" in reopen
+    assert "recovery_evidence" not in reopen
+    assert current[-1]["event_type"] == "run_closed"
+    assert current[-1]["result"] == "failed"
+    assert replayed["already_recorded"] is True
+
+
+def test_active_successor_can_correct_immediately_after_its_failed_verification(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sequence = tmp_path / "operations/sequences/example/sequence.md"
+    sequence.parent.mkdir(parents=True)
+    sequence.write_text("# example\n")
+    artifact = tmp_path / "scripts/fix.py"
+    artifact.parent.mkdir()
+    artifact.write_text("revision = 2\n")
+    predecessor_run_id, active_run_id = str(uuid.uuid4()), str(uuid.uuid4())
+    occurrence_id, prior_correction_id = str(uuid.uuid4()), str(uuid.uuid4())
+    replacement_correction_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "5" * 24
+    old_bundle = [
+        {"repository_key": "memory-knowledge", "path": "operations/sequences/example/sequence.md", "sha256": "a" * 64},
+        {"repository_key": "memory-knowledge", "path": "scripts/fix.py", "sha256": "b" * 64},
+    ]
+    corrected_bundle = [old_bundle[0], {**old_bundle[1], "sha256": "c" * 64}]
+    failed_verification = event(
+        "verification_recorded", run_id=active_run_id, subject_id="example",
+        lineage_id="lineage", source_bundle_hash="1" * 64, outcome="failed",
+        quality="same-path", evidence="active verification exposed an incomplete correction",
+        blocker_ids=[blocker_id], correction_ids=[prior_correction_id],
+        changed_artifact_hashes=["c" * 64],
+    )
+    current = [
+        event(
+            "run_started", run_id=predecessor_run_id, subject_id="example",
+            lineage_id="lineage", mode="registered", operation_kind="workflow-drive",
+            source_bundle=old_bundle, source_bundle_hash="d" * 64,
+            classification_receipt_hash="e" * 64, selection_receipt_hash="f" * 64,
+            started_at_utc="2026-01-01T00:00:00Z",
+        ),
+        event(
+            "blocker_opened", run_id=predecessor_run_id, blocker_id=blocker_id,
+            occurrence_id=occurrence_id, fingerprint="5" * 64, subject_id="example",
+            lineage_id="lineage", step_id="review", surface="lifecycle", symptom="gap",
+            evidence="captured active-run failure", impact="blocked",
+            boundary="failed successor correction", status="open",
+        ),
+        event(
+            "correction_recorded", run_id=predecessor_run_id, blocker_id=blocker_id,
+            occurrence_id=occurrence_id, correction_id=prior_correction_id,
+            subject_id="example", lineage_id="lineage", step_id="review",
+            changed_artifacts=["scripts/fix.py"], changed_artifact_hashes=["c" * 64],
+            reusable_behavior_changed=True, solution="first correction",
+        ),
+        event(
+            "bundle_transition_recorded", run_id=predecessor_run_id,
+            lineage_id="lineage", old_bundle_hash="d" * 64, new_bundle_hash="1" * 64,
+            transition_reason="correction", correction_ids=[prior_correction_id],
+            changed_artifacts=["scripts/fix.py"], changed_artifact_hashes=["c" * 64],
+        ),
+        event(
+            "blocker_transitioned", run_id=predecessor_run_id, blocker_id=blocker_id,
+            from_status="open", to_status="fixed-awaiting-verification",
+        ),
+        event(
+            "run_closed", run_id=predecessor_run_id, subject_id="example",
+            lineage_id="lineage", result="failed", completed_at_utc="2026-01-01T00:01:00Z",
+            correction_count=1, blocker_ids=[blocker_id], sequence_updated=True,
+            verification_quality="none",
+        ),
+        event(
+            "run_started", run_id=active_run_id, predecessor_run_id=predecessor_run_id,
+            subject_id="example", lineage_id="lineage", mode="registered",
+            operation_kind="workflow-drive", source_bundle=corrected_bundle,
+            source_bundle_hash="1" * 64, classification_receipt_hash="2" * 64,
+            selection_receipt_hash="3" * 64, started_at_utc="2026-01-01T00:02:00Z",
+            verifies_correction_ids=[prior_correction_id],
+        ),
+        failed_verification,
+    ]
+    new_bundle = [corrected_bundle[0], {
+        **corrected_bundle[1], "sha256": work_memory.sha256_bytes(artifact.read_bytes()),
+    }]
+    calls = []
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: (current, "4" * 64))
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle", lambda **kwargs: (new_bundle, "5" * 64, "lineage"),
+    )
+
+    def transact(request):
+        calls.append(request)
+        raw = b"".join(work_memory.canonical_bytes(item) for item in current)
+        ledger, _, result = work_memory.stage_event_batch(raw, request)
+        current[:] = work_memory.parse_ledger_bytes(ledger)
+        return result
+
+    monkeypatch.setattr(work_memory, "transact", transact)
+    args = SimpleNamespace(
+        run_id=active_run_id, blocker_id=blocker_id, occurrence_id=occurrence_id,
+        step_id="review", changed_artifact=[str(artifact)], solution="replacement correction",
+        reusable_behavior_changed="yes", supersedes_correction_id=[prior_correction_id],
+        correction_id=replacement_correction_id, event_id=None, transition_event_id=None,
+        repo_roots_file=None, finalize_failed_run=True,
+    )
+
+    work_memory.cmd_correct(args)
+
+    batch = calls[0]["events"]
+    assert [(item["from_status"], item["to_status"]) for item in batch
+            if item["event_type"] == "blocker_transitioned"] == [
+        ("fixed-awaiting-verification", "open"),
+        ("open", "fixed-awaiting-verification"),
+    ]
+    assert batch[0]["verification_event_id"] == failed_verification["event_id"]
+    assert current[-1]["event_type"] == "run_closed"
 
 
 def test_correction_rejects_manifest_that_does_not_exhaust_bundle_drift(
@@ -3237,6 +3655,75 @@ def test_successor_request_carries_inherited_and_new_corrections_cumulatively():
     ]
 
 
+def test_successor_request_excludes_an_inherited_correction_already_closed():
+    events = corrected_successor_events()[:10]
+    first_correction_id = events[2]["correction_id"]
+    second_start = events[6]
+    second_start.update({
+        "task_id": "predecessor-task",
+        "repository_roots": {
+            "memory-knowledge": "/repos/memory",
+            "united-partners": "/repos/up",
+        },
+    })
+    second_blocker_id = "blk-" + "2" * 24
+    second_occurrence_id = str(uuid.uuid4())
+    second_correction_id = str(uuid.uuid4())
+    events.extend([
+        event(
+            "blocker_opened", run_id=second_start["run_id"],
+            blocker_id=second_blocker_id,
+            occurrence_id=second_occurrence_id, fingerprint="2" * 64,
+            subject_id=second_start["subject_id"],
+            lineage_id=second_start["lineage_id"], step_id="controller",
+            surface="sequence", symptom="blocked", evidence="captured",
+            impact="cannot continue", boundary="sequence contract",
+            status="open",
+        ),
+        event(
+            "correction_recorded", run_id=second_start["run_id"],
+            blocker_id=second_blocker_id,
+            occurrence_id=second_occurrence_id,
+            correction_id=second_correction_id,
+            subject_id=second_start["subject_id"],
+            lineage_id=second_start["lineage_id"], step_id="controller",
+            changed_artifacts=["scripts/work_memory.py"],
+            changed_artifact_hashes=["2" * 64],
+            reusable_behavior_changed=True,
+            solution="fix successor selection",
+        ),
+        event(
+            "bundle_transition_recorded", run_id=second_start["run_id"],
+            lineage_id=second_start["lineage_id"],
+            old_bundle_hash=second_start["source_bundle_hash"],
+            new_bundle_hash="c" * 64, transition_reason="correction",
+            correction_ids=[first_correction_id, second_correction_id],
+            changed_artifacts=["scripts/work_memory.py"],
+            changed_artifact_hashes=["2" * 64],
+        ),
+        event(
+            "blocker_transitioned", run_id=second_start["run_id"],
+            blocker_id=second_blocker_id, from_status="open",
+            to_status="fixed-awaiting-verification",
+        ),
+        event(
+            "run_closed", run_id=second_start["run_id"],
+            subject_id=second_start["subject_id"],
+            lineage_id=second_start["lineage_id"], result="failed",
+            completed_at_utc="2026-01-01T00:04:00Z",
+            correction_count=1,
+            blocker_ids=[events[1]["blocker_id"], second_blocker_id],
+            sequence_updated=True, verification_quality="same-path",
+        ),
+    ])
+
+    request = work_memory._successor_selection_request(
+        events, second_start["run_id"],
+    )
+
+    assert request["verifies_correction_ids"] == [second_correction_id]
+
+
 def test_effective_correction_bundle_seeds_successor_inherited_corrections():
     inherited_correction_id = str(uuid.uuid4())
     start = event(
@@ -4118,6 +4605,118 @@ def test_classification_boundary(tmp_path: Path, monkeypatch: pytest.MonkeyPatch
     assert operational["verdict"] == "operational"
 
 
+def test_publish_operation_routes_to_only_the_publish_sequence(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """The live publish intent previously collided with six generic `other` routes."""
+    from argparse import Namespace
+
+    rows = [{
+        "sequence_id": "commit-push-main",
+        "folder": "operations/sequences/commit-push-main/",
+        "operation_kinds": "publish",
+        "lineage_id": "publish-lineage",
+    }]
+    rows.extend({
+        "sequence_id": sequence_id,
+        "folder": f"operations/sequences/{sequence_id}/",
+        "operation_kinds": "other",
+        "lineage_id": sequence_id,
+    } for sequence_id in (
+        "agent-heartbeat", "convergence-checkpoint-run",
+        "discovery-candidate-reconciliation", "goal-declaration",
+        "scoped-context-edit",
+    ))
+    monkeypatch.setattr(
+        work_memory, "registry_rows", lambda **_kwargs: (rows, "9" * 64),
+    )
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle",
+        lambda **kwargs: (
+            [], "b" * 64,
+            "publish-lineage"
+            if kwargs["subject_id"] == "commit-push-main"
+            else kwargs["subject_id"],
+        ),
+    )
+    monkeypatch.setattr(
+        work_memory, "load_ledger",
+        lambda path=work_memory.LEDGER: ([], "8" * 64),
+    )
+
+    work_memory.cmd_classify(Namespace(
+        task_id="publish-route", operation_kind="publish",
+        repeatable="yes", meaningful_steps=3,
+    ))
+    selected = work_memory.cmd_select(Namespace(
+        task_id="publish-route", sequence_id=None, discovery_log=None,
+        fingerprint=None, verification_successor_of=None,
+        verifies_correction_id=None, repo_roots_file=None,
+    ))
+
+    assert selected["subject_id"] == "commit-push-main"
+    assert selected["selection_reason"] == "operation-kind-match"
+    projected = work_memory.prevention_registry.parse_markdown_projection(
+        work_memory.REGISTRY,
+    )
+    assert [
+        row["sequence_id"] for row in projected
+        if "publish" in row["operation_kinds"].split(",")
+    ] == ["commit-push-main"]
+
+
+def test_automatic_selection_validates_only_the_chosen_owner_source(
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    from argparse import Namespace
+
+    rows = [{
+        "sequence_id": "wanted",
+        "folder": "operations/sequences/wanted/",
+        "operation_kinds": "package",
+        "lineage_id": "wanted",
+    }, {
+        "sequence_id": "unrelated",
+        "folder": "operations/sequences/unrelated/",
+        "operation_kinds": "other",
+        "lineage_id": "unrelated",
+    }]
+    calls: list[tuple[str | None, bool]] = []
+
+    def registry_rows(
+        *, selected_sequence_id=None, validate_owner_sources=True,
+    ):
+        calls.append((selected_sequence_id, validate_owner_sources))
+        if validate_owner_sources and selected_sequence_id is None:
+            raise work_memory.prevention_registry.RegistryError(
+                "executable-owner-source-hash-drift:unrelated",
+            )
+        return rows, "9" * 64
+
+    monkeypatch.setattr(work_memory, "registry_rows", registry_rows)
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle",
+        lambda **kwargs: ([], "b" * 64, kwargs["subject_id"]),
+    )
+    monkeypatch.setattr(
+        work_memory, "load_ledger",
+        lambda path=work_memory.LEDGER: ([], "8" * 64),
+    )
+    work_memory.cmd_classify(Namespace(
+        task_id="owner-isolation", operation_kind="package",
+        repeatable="yes", meaningful_steps=3,
+    ))
+
+    selected = work_memory.cmd_select(Namespace(
+        task_id="owner-isolation", sequence_id=None, discovery_log=None,
+        fingerprint=None, verification_successor_of=None,
+        verifies_correction_id=None, repo_roots_file=None,
+    ))
+
+    assert selected["subject_id"] == "wanted"
+    assert calls == [(None, False), ("wanted", True)]
+
+
 def test_selection_uses_verified_fingerprint_correction(tmp_path: Path, monkeypatch: pytest.MonkeyPatch):
     from argparse import Namespace
 
@@ -4612,37 +5211,47 @@ def test_registry_and_manifest_coverage():
         assert data["lineage_id"] == row["lineage_id"]
 
 
-def test_discovery_bootstrap_is_selectable_for_missing_deploy_sequence(
+def test_discovery_bootstrap_is_selectable_for_every_governed_operation_kind(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ):
     from argparse import Namespace
 
-    rows, _ = work_memory.registry_rows()
+    rows = work_memory.prevention_registry.parse_markdown_projection(
+        work_memory.REGISTRY,
+    )
     bootstrap = next(
         row for row in rows if row["sequence_id"] == "discovery-bootstrap"
     )
-    assert "deploy" in bootstrap["operation_kinds"].split(",")
+    governed_kinds = work_memory.ALWAYS_OPERATIONAL | work_memory.CONDITIONAL_OPERATIONAL
+    assert set(bootstrap["operation_kinds"].split(",")) == governed_kinds
 
     monkeypatch.setattr(work_memory, "RECEIPT_ROOT", tmp_path / "receipts")
+    monkeypatch.setattr(
+        work_memory,
+        "registry_rows",
+        lambda **_kwargs: ([bootstrap], "9" * 64),
+    )
     monkeypatch.setattr(work_memory, "load_ledger", lambda: ([], "8" * 64))
     monkeypatch.setattr(
         work_memory,
         "resolve_bundle",
         lambda **kwargs: ([], "b" * 64, bootstrap["lineage_id"]),
     )
-    work_memory.cmd_classify(Namespace(
-        task_id="missing-deploy", operation_kind="deploy",
-        repeatable="yes", meaningful_steps=3,
-    ))
+    for operation_kind in sorted(governed_kinds):
+        task_id = f"missing-{operation_kind}"
+        work_memory.cmd_classify(Namespace(
+            task_id=task_id, operation_kind=operation_kind,
+            repeatable="yes", meaningful_steps=3,
+        ))
 
-    selected = work_memory.cmd_select(Namespace(
-        task_id="missing-deploy", sequence_id="discovery-bootstrap",
-        discovery_log=None, fingerprint=None, verification_successor_of=None,
-        verifies_correction_id=None, repo_roots_file=None,
-    ))
+        selected = work_memory.cmd_select(Namespace(
+            task_id=task_id, sequence_id="discovery-bootstrap",
+            discovery_log=None, fingerprint=None, verification_successor_of=None,
+            verifies_correction_id=None, repo_roots_file=None,
+        ))
 
-    assert selected["subject_id"] == "discovery-bootstrap"
-    assert selected["selection_reason"] == "explicit-override"
+        assert selected["subject_id"] == "discovery-bootstrap"
+        assert selected["selection_reason"] == "explicit-override"
 
 
 def test_no_retired_run_ledger_or_stale_activation_examples():
@@ -4903,6 +5512,117 @@ def _correction_event(**overrides):
     return base
 
 
+def test_cmd_correct_records_absolute_host_environment_artifact(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    root = tmp_path / "repo"
+    sequence = root / "operations/sequences/example/sequence.md"
+    sequence.parent.mkdir(parents=True)
+    sequence.write_text("# example\n")
+    environment = tmp_path / "directive-read-state.json"
+    environment.write_text('{"directivesPath":"worktree"}\n')
+    run_id = str(uuid.uuid4())
+    occurrence_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "e" * 24
+    bundle = [{
+        "repository_key": "memory-knowledge",
+        "path": "operations/sequences/example/sequence.md",
+        "sha256": work_memory.sha256_bytes(sequence.read_bytes()),
+    }]
+    bundle_hash = work_memory.sha256_bytes(work_memory.canonical_bytes(bundle))
+    current = [
+        event(
+            "run_started", run_id=run_id, subject_id="example",
+            lineage_id="lineage", mode="registered",
+            operation_kind="workflow-drive", source_bundle=bundle,
+            source_bundle_hash=bundle_hash,
+            classification_receipt_hash="b" * 64,
+            selection_receipt_hash="c" * 64,
+            started_at_utc="2026-01-01T00:00:00Z",
+        ),
+        event(
+            "blocker_opened", run_id=run_id, blocker_id=blocker_id,
+            occurrence_id=occurrence_id, fingerprint="e" * 64,
+            subject_id="example", lineage_id="lineage",
+            step_id="dispatch-preflight", surface="launcher",
+            symptom="wrong directive receipt", evidence="path mismatch",
+            impact="blocked", boundary="host state", status="open",
+        ),
+    ]
+    monkeypatch.setattr(work_memory, "ROOT", root)
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: (current, "a" * 64))
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle",
+        lambda **kwargs: (bundle, bundle_hash, "lineage"),
+    )
+    captured: list[dict] = []
+
+    def transact(request):
+        captured.append(request)
+        raw = b"".join(work_memory.canonical_bytes(item) for item in current)
+        ledger, _, result = work_memory.stage_event_batch(raw, request)
+        current[:] = work_memory.parse_ledger_bytes(ledger)
+        return result
+
+    monkeypatch.setattr(work_memory, "transact", transact)
+
+    result = work_memory.cmd_correct(SimpleNamespace(
+        run_id=run_id, blocker_id=blocker_id, occurrence_id=occurrence_id,
+        step_id="dispatch-preflight", changed_artifact=[],
+        changed_environment_artifact=[str(environment)],
+        solution="Rebound the directive receipt to the active worktree.",
+        reusable_behavior_changed="no", supersedes_correction_id=None,
+        correction_id=str(uuid.uuid4()), event_id=None,
+        transition_event_id=None, repo_roots_file=None,
+        finalize_failed_run=True,
+    ))
+
+    correction, transition = captured[0]["events"][:2]
+    expected_identity = {
+        "repository_key": "host-environment",
+        "path": str(environment.resolve()),
+    }
+    assert correction["changed_artifacts"] == []
+    assert correction["environment_artifacts"] == [expected_identity]
+    assert correction["environment_artifact_hashes"] == [
+        work_memory.sha256_bytes(environment.read_bytes())
+    ]
+    assert transition["old_bundle_hash"] == transition["new_bundle_hash"]
+    assert transition["environment_artifacts"] == [expected_identity]
+    assert result["new_bundle_hash"] == bundle_hash
+
+
+def test_environment_artifact_inside_repository_keeps_bundle_identity(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    artifact = tmp_path / "config/runtime.json"
+    artifact.parent.mkdir()
+    artifact.write_text("{}\n")
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+
+    identities, hashes = work_memory._environment_artifact_hashes([str(artifact)])
+
+    assert identities == ["config/runtime.json"]
+    assert hashes == [work_memory.sha256_bytes(artifact.read_bytes())]
+
+
+def test_environment_artifact_rejects_relative_and_missing_paths(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match="environment-artifact-path-not-absolute",
+    ):
+        work_memory._environment_artifact_hashes(["relative-state.json"])
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="changed-artifact-not-found",
+    ):
+        work_memory._environment_artifact_hashes([
+            str(tmp_path.parent / "missing-state.json"),
+        ])
+
+
 def test_environment_only_correction_validates_without_bundle_artifacts():
     work_memory._validate_event_values(_correction_event(
         changed_artifacts=[], changed_artifact_hashes=[],
@@ -4914,11 +5634,22 @@ def test_environment_only_correction_validates_without_bundle_artifacts():
 
 
 def test_correction_naming_nothing_at_all_is_still_rejected():
-    """The relaxation is scoped: empty bundle artifacts are allowed ONLY alongside an environment
-    surface, never as a way to record a correction that changed nothing."""
+    """An empty correction must opt into external state and cannot imply it silently."""
     with pytest.raises(work_memory.WorkMemoryError, match="invalid-changed-artifacts"):
         work_memory._validate_event_values(_correction_event(
             changed_artifacts=[], changed_artifact_hashes=[],
+        ))
+
+
+def test_external_state_only_correction_requires_no_reusable_behavior_change():
+    work_memory._validate_event_values(_correction_event(
+        changed_artifacts=[], changed_artifact_hashes=[],
+        reusable_behavior_changed=False, external_state_only=True,
+    ))
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-correction-artifacts"):
+        work_memory._validate_event_values(_correction_event(
+            changed_artifacts=[], changed_artifact_hashes=[],
+            reusable_behavior_changed=True, external_state_only=True,
         ))
 
 
@@ -4936,6 +5667,198 @@ def test_environment_hash_must_be_a_real_digest():
             }],
             environment_artifact_hashes=["not-a-hash"],
         ))
+
+
+def test_environment_verification_must_match_the_bound_correction_hash():
+    events = corrected_successor_events()
+    start_a, _, correction, transition, _, _, start_b, verification = events[:8]
+    start_a["source_bundle_hash"] = start_b["source_bundle_hash"] = "a" * 64
+    start_b["source_bundle"] = []
+    correction["changed_artifacts"] = []
+    correction["changed_artifact_hashes"] = []
+    correction["environment_artifacts"] = [{
+        "repository_key": "host-environment",
+        "path": "/private/tmp/git-metadata-capability.json",
+    }]
+    correction["environment_artifact_hashes"] = ["1" * 64]
+    transition["old_bundle_hash"] = transition["new_bundle_hash"] = "a" * 64
+    transition["changed_artifacts"] = []
+    transition["changed_artifact_hashes"] = []
+    transition["environment_artifacts"] = correction["environment_artifacts"]
+    transition["environment_artifact_hashes"] = ["1" * 64]
+    verification["source_bundle_hash"] = "a" * 64
+    verification["changed_artifact_hashes"] = []
+    verification["environment_artifact_hashes"] = ["2" * 64]
+
+    with pytest.raises(
+        work_memory.WorkMemoryError,
+        match="verification-environment-artifact-hash-mismatch",
+    ):
+        work_memory.validate_lifecycle(events)
+
+
+def test_publication_success_atomically_closes_environment_and_pre_run_corrections(
+    tmp_path: Path,
+):
+    environment = tmp_path / "git-metadata-capability.json"
+    environment.write_text('{"available":true}\n', encoding="utf-8")
+    environment_identity = {
+        "repository_key": "host-environment",
+        "path": str(environment.resolve()),
+    }
+    environment_hash = work_memory.sha256_bytes(environment.read_bytes())
+    task_id = "publish-corrected-scope"
+    claim = event(
+        "task_writer_claimed", task_id=task_id, writer_thread_id=WRITER_A,
+        ownership_generation=1,
+    )
+    state = {
+        "writer_thread_id": WRITER_A,
+        "ownership_generation": 1,
+        "ownership_event_id": claim["event_id"],
+    }
+    predecessor_run_id = str(uuid.uuid4())
+    successor_run_id = str(uuid.uuid4())
+    regular_blocker_id = "blk-" + "a" * 24
+    regular_occurrence_id = str(uuid.uuid4())
+    regular_correction_id = str(uuid.uuid4())
+    pre_run_blocker_id = "blk-" + "b" * 24
+    pre_run_occurrence_id = str(uuid.uuid4())
+    pre_run_correction_id = str(uuid.uuid4())
+    bundle_hash = "c" * 64
+    initial = [
+        claim,
+        event(
+            "run_started", run_id=predecessor_run_id,
+            subject_id="commit-push-main", lineage_id="publish-lineage",
+            mode="registered", operation_kind="publish", source_bundle=[],
+            source_bundle_hash=bundle_hash, classification_receipt_hash="d" * 64,
+            selection_receipt_hash="e" * 64,
+            started_at_utc="2026-01-01T00:00:00Z",
+            task_id=task_id,
+            **work_memory._ownership_receipt_fields(task_id, state),
+        ),
+        event(
+            "blocker_opened", run_id=predecessor_run_id,
+            blocker_id=regular_blocker_id, occurrence_id=regular_occurrence_id,
+            fingerprint="a" * 64, subject_id="commit-push-main",
+            lineage_id="publish-lineage", step_id="publish",
+            surface="host capability", symptom="index lock denied",
+            evidence="same command failed", impact="publish blocked",
+            boundary="host capability", status="open",
+        ),
+        event(
+            "correction_recorded", run_id=predecessor_run_id,
+            blocker_id=regular_blocker_id, occurrence_id=regular_occurrence_id,
+            correction_id=regular_correction_id, subject_id="commit-push-main",
+            lineage_id="publish-lineage", step_id="publish",
+            changed_artifacts=[], changed_artifact_hashes=[],
+            environment_artifacts=[environment_identity],
+            environment_artifact_hashes=[environment_hash],
+            reusable_behavior_changed=True,
+            solution="declare the Git metadata host capability",
+        ),
+        event(
+            "bundle_transition_recorded", run_id=predecessor_run_id,
+            lineage_id="publish-lineage", old_bundle_hash=bundle_hash,
+            new_bundle_hash=bundle_hash, transition_reason="correction",
+            correction_ids=[regular_correction_id], changed_artifacts=[],
+            changed_artifact_hashes=[], environment_artifacts=[environment_identity],
+            environment_artifact_hashes=[environment_hash],
+        ),
+        event(
+            "blocker_transitioned", run_id=predecessor_run_id,
+            blocker_id=regular_blocker_id, from_status="open",
+            to_status="fixed-awaiting-verification",
+        ),
+        event(
+            "run_closed", run_id=predecessor_run_id,
+            subject_id="commit-push-main", lineage_id="publish-lineage",
+            result="failed", completed_at_utc="2026-01-01T00:01:00Z",
+            correction_count=1, blocker_ids=[regular_blocker_id],
+            sequence_updated=True, verification_quality="none",
+        ),
+        event(
+            "pre_run_blocker_opened", task_id=task_id,
+            ownership_event_id=claim["event_id"], blocker_id=pre_run_blocker_id,
+            occurrence_id=pre_run_occurrence_id, fingerprint="b" * 64,
+            subject_id=task_id, lineage_id=task_id, step_id="activate",
+            surface="checkout identity", symptom="activation rejected",
+            evidence="same command failed before run", impact="no run",
+            boundary="checkout identity", status="open",
+        ),
+        event(
+            "pre_run_correction_recorded", task_id=task_id,
+            ownership_event_id=claim["event_id"], blocker_id=pre_run_blocker_id,
+            occurrence_id=pre_run_occurrence_id,
+            correction_id=pre_run_correction_id, step_id="activate",
+            changed_artifacts=[], changed_artifact_hashes=[],
+            environment_artifacts=[environment_identity],
+            environment_artifact_hashes=[environment_hash],
+            solution="share the checkout ledger root",
+            reusable_behavior_changed=True,
+        ),
+        event(
+            "pre_run_blocker_transitioned", task_id=task_id,
+            ownership_event_id=claim["event_id"], blocker_id=pre_run_blocker_id,
+            occurrence_id=pre_run_occurrence_id, from_status="open",
+            to_status="fixed-awaiting-verification",
+        ),
+        event(
+            "run_started", run_id=successor_run_id,
+            subject_id="commit-push-main", lineage_id="publish-lineage",
+            mode="registered", operation_kind="publish", source_bundle=[],
+            source_bundle_hash=bundle_hash, classification_receipt_hash="f" * 64,
+            selection_receipt_hash="0" * 64,
+            started_at_utc="2026-01-01T00:02:00Z",
+            predecessor_run_id=predecessor_run_id,
+            verifies_correction_ids=[regular_correction_id], task_id=task_id,
+            **work_memory._ownership_receipt_fields(task_id, state),
+        ),
+    ]
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None,
+        "events": initial[:8],
+    })
+    work_memory.transact({
+        "schema_version": 1, "expected_ledger_hash": None,
+        "events": initial[8:],
+    })
+
+    result = work_memory.cmd_verify_and_close(SimpleNamespace(
+        run_id=successor_run_id, outcome="passed", quality="same-path",
+        evidence="remote commit equals the local commit",
+        verification_command="scoped_git_publish --execute",
+        event_id=str(uuid.uuid4()),
+    ))
+
+    events, _ = work_memory.load_ledger()
+    statuses = {}
+    for item in events:
+        if item["event_type"] in {
+            "blocker_transitioned", "pre_run_blocker_transitioned",
+        }:
+            statuses[item["blocker_id"]] = item["to_status"]
+    regular_verification = next(
+        item for item in events
+        if item["event_id"] == result["event_id"]
+    )
+    pre_run_verification = next(
+        item for item in events
+        if item["event_type"] == "pre_run_verification_recorded"
+    )
+    assert statuses == {
+        regular_blocker_id: "closed", pre_run_blocker_id: "closed",
+    }
+    assert regular_verification["environment_artifact_hashes"] == [
+        environment_hash,
+    ]
+    assert pre_run_verification["environment_artifact_hashes"] == [
+        environment_hash,
+    ]
+    assert result["closed_blocker_ids"] == [
+        regular_blocker_id, pre_run_blocker_id,
+    ]
 
 
 def _transition_event(**overrides):
@@ -4966,6 +5889,20 @@ def test_environment_transition_cannot_hide_a_moved_bundle():
         work_memory.WorkMemoryError, match="environment-transition-moved-the-bundle",
     ):
         work_memory._validate_event_values(_transition_event(new_bundle_hash="d" * 64))
+
+
+def test_external_state_only_transition_requires_an_unchanged_bundle():
+    transition = _transition_event(
+        changed_artifacts=[], changed_artifact_hashes=[],
+        environment_artifacts=[], environment_artifact_hashes=[],
+        external_state_only=True,
+    )
+    work_memory._validate_event_values(transition)
+    transition["new_bundle_hash"] = "d" * 64
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="environment-transition-moved-the-bundle",
+    ):
+        work_memory._validate_event_values(transition)
 
 
 def test_bundle_transition_without_environment_still_requires_its_artifacts():

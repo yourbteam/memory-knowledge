@@ -17,7 +17,9 @@ except ModuleNotFoundError:  # direct script execution
     import script_intake
 
 
-DEFAULT_DIRECTIVES_PATH = Path("/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md")
+DEFAULT_DIRECTIVES_PATH = (
+    Path(__file__).resolve().parents[1] / "working-agreement/DIRECTIVES.md"
+)
 DEFAULT_STATE_PATH = Path("/private/tmp/workflow-orch-directive-guard.json")
 DEFAULT_MAX_AGE_MINUTES = 1440
 SCHEMA_VERSION = 1
@@ -48,7 +50,7 @@ INTAKE_SPEC = {
             "id": "directives_path",
             "prompt": "Canonical directives path",
             "response_format": "One filesystem path as plain text.",
-            "example": "/Users/kamenkamenov/memory-knowledge/working-agreement/DIRECTIVES.md",
+            "example": str(DEFAULT_DIRECTIVES_PATH),
             "constraints": "Press Enter for the displayed default; do not add quotes.",
             "type": "path",
             "default": str(DEFAULT_DIRECTIVES_PATH),
@@ -149,9 +151,9 @@ def check_directive_read_state(
     *,
     directives_path: Path,
     state_path: Path,
-    max_age_minutes: int = DEFAULT_MAX_AGE_MINUTES,
+    max_age_minutes: int | None = DEFAULT_MAX_AGE_MINUTES,
 ) -> dict[str, Any]:
-    if max_age_minutes <= 0:
+    if max_age_minutes is not None and max_age_minutes <= 0:
         raise SystemExit("directive max age minutes must be greater than zero")
     state = _load_state(state_path)
     if state.get("schemaVersion") != SCHEMA_VERSION:
@@ -166,7 +168,10 @@ def check_directive_read_state(
     if stored_sha != current_sha:
         raise SystemExit("directive read state is stale because directives SHA changed")
     read_at = _parse_utc(str(state.get("readAtUtc") or ""), label="readAtUtc")
-    if read_at + timedelta(minutes=max_age_minutes) < _utc_now():
+    if (
+        max_age_minutes is not None
+        and read_at + timedelta(minutes=max_age_minutes) < _utc_now()
+    ):
         raise SystemExit("directive read state is stale because it exceeded max age")
     return {
         "schemaVersion": SCHEMA_VERSION,

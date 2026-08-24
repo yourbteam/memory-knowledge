@@ -23,6 +23,31 @@ class ContractError(ValueError):
     """Raised when persisted or caller-supplied prevention data is non-canonical."""
 
 
+def resolve_repository_source_path(
+    path_value: str,
+    *,
+    repository_root: Path,
+    canonical_repository_root: Path,
+) -> Path:
+    """Resolve a canonical repository source identity in the active checkout.
+
+    Owner contracts intentionally persist stable absolute source identities.  A linked
+    worktree must validate and execute the same repository-relative source from its own
+    checkout, not whichever bytes happen to exist in the primary checkout.
+    """
+
+    path = Path(path_value)
+    if not path.is_absolute():
+        if ".." in path.parts:
+            raise ContractError("repository-source-parent-traversal")
+        return repository_root / path
+    try:
+        relative = path.relative_to(canonical_repository_root)
+    except ValueError:
+        return path
+    return repository_root / relative
+
+
 class ActionClass(StrEnum):
     BASH = "BASH"
     APPLY_PATCH = "APPLY_PATCH"

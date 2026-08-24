@@ -6,6 +6,7 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import re
 import shlex
 import subprocess
 import sys
@@ -64,12 +65,61 @@ DISPATCH_SPEC = {
 
 DISPATCH_MARKER = "SEQUENCE_INTAKE_DISPATCHED"
 DISPATCH_RECEIPT = "SEQUENCE_INTAKE_DISPATCH_RECEIPT"
+HOST_CAPABILITIES_ENV = "MK_HOST_CAPABILITIES"
+PREPARED_RECEIPT_NAME = "prepared-intake"
+SEQUENCE_RUN_ID_ENV = "MK_SEQUENCE_RUN_ID"
 WORKFLOW_RESUME_SEQUENCE = "workflow-resume-from-phase-live-confirmation"
 DIRECTIVES_PATH = Path(__file__).resolve().parents[1] / "working-agreement/DIRECTIVES.md"
 
 
 class SequenceLaunchError(ValueError):
     """The active sequence cannot be prepared safely."""
+
+
+def _require_host_capabilities(prepared: Mapping[str, Any]) -> None:
+    """Fail before effects when the host has not attested required access."""
+    required = prepared.get("host_capabilities", [])
+    if (
+        not isinstance(required, list)
+        or not all(isinstance(item, str) and item for item in required)
+        or len(required) != len(set(required))
+    ):
+        raise SequenceLaunchError("prepared-host-capabilities-invalid")
+    supplied = {
+        item.strip()
+        for item in os.environ.get(HOST_CAPABILITIES_ENV, "").split(",")
+        if item.strip()
+    }
+    missing = sorted(set(required) - supplied)
+    if missing:
+        raise SequenceLaunchError(
+            "host-capability-required:" + ",".join(missing)
+        )
+
+
+def _active_publication_run_id(
+    task_id: str, prepared: Mapping[str, Any],
+) -> str | None:
+    if (
+        prepared.get("sequence_id") != "commit-push-main"
+        or prepared.get("profile") == "dry-run"
+    ):
+        return None
+    events, _ = work_memory.load_ledger()
+    terminal = {
+        event["run_id"] for event in events
+        if event.get("event_type") in {"run_closed", "run_abandoned"}
+    }
+    active = [
+        event for event in events
+        if event.get("event_type") == "run_started"
+        and event.get("task_id") == task_id
+        and event.get("subject_id") == "commit-push-main"
+        and event.get("run_id") not in terminal
+    ]
+    if len(active) != 1:
+        raise SequenceLaunchError("publication-active-run-required")
+    return active[0]["run_id"]
 
 
 def _repository_roots(selection: Mapping[str, Any]) -> dict[str, str]:
@@ -81,6 +131,19 @@ def _repository_roots(selection: Mapping[str, Any]) -> dict[str, str]:
     return {key: str(path.resolve()) for key, path in roots.items()}
 
 
+def _sequence_name(selection: Mapping[str, Any], sequence_id: str) -> str:
+    """Read the operator-facing name while retaining the stable ledger identity."""
+    document = selection.get("document")
+    if not isinstance(document, str):
+        return sequence_id
+    try:
+        first_line = Path(document).read_text(encoding="utf-8").splitlines()[0]
+    except (OSError, IndexError, UnicodeError):
+        return sequence_id
+    match = re.fullmatch(r"#\s+(.+?)\s*", first_line)
+    return match.group(1) if match else sequence_id
+
+
 def _artifact_paths(task_id: str, sequence_id: str) -> dict[str, str]:
     root = Path("/private/tmp/sequence-intake", task_id, sequence_id)
     suffixes = {
@@ -89,6 +152,8 @@ def _artifact_paths(task_id: str, sequence_id: str) -> dict[str, str]:
         "changed_artifacts": ".json",
         "request": ".json",
         "spec": ".json",
+        "benchmark_spec": ".json",
+        "goal_answers": ".json",
     }
     return {
         artifact_id: str(root / f"{artifact_id}{suffixes[artifact_id]}")
@@ -127,6 +192,8 @@ def _active_selection_for_intake(
         "mode": selection["mode"],
         "subject_id": selection["subject_id"],
         "selection": selection,
+        "selection_receipt_hash": selection_hash,
+        "source_bundle_hash": selection["source_bundle_hash"],
         "stale_registry_receipt": True,
     }
 
@@ -171,9 +238,179 @@ def prepare_active_sequence(
         "schema_version": 1,
         "task_id": task_id,
         "sequence_id": sequence_id,
+        "sequence_name": _sequence_name(selection, sequence_id),
         "dispatch_status": "PREPARED_NOT_AUTHORIZED",
         "prepared": prepared,
     }
+
+
+def _prepared_receipt_binding(
+    verified: Mapping[str, Any],
+) -> dict[str, Any] | None:
+    selection = verified.get("selection")
+    if not isinstance(selection, Mapping):
+        return None
+    keys = (
+        "writer_thread_id", "writer_id", "writer_client_kind",
+        "writer_session_id", "ownership_generation", "ownership_event_id",
+        "ownership_sha256",
+    )
+    ownership = {key: selection[key] for key in keys if key in selection}
+    binding = {
+        "selection_receipt_hash": verified.get("selection_receipt_hash"),
+        "source_bundle_hash": verified.get("source_bundle_hash"),
+        "expires_at_utc": selection.get("expires_at_utc"),
+        **ownership,
+    }
+    if any(not binding.get(key) for key in (
+        "selection_receipt_hash", "source_bundle_hash", "expires_at_utc",
+        "ownership_generation", "ownership_event_id", "ownership_sha256",
+    )) or not ({"writer_thread_id"} <= ownership.keys() or {
+        "writer_id", "writer_client_kind", "writer_session_id",
+    } <= ownership.keys()):
+        return None
+    return binding
+
+
+def _persist_prepared_result(
+    result: Mapping[str, Any], verified: Mapping[str, Any], *,
+    dispatch_stage: str, intake_reused: bool,
+) -> dict[str, Any]:
+    binding = _prepared_receipt_binding(verified)
+    output = dict(result)
+    output["intake_reused"] = intake_reused
+    if binding is None:
+        return output
+    payload = {
+        "schema_version": 1,
+        "task_id": result["task_id"],
+        "sequence_id": result["sequence_id"],
+        "dispatch_stage": dispatch_stage,
+        "prepared": result["prepared"],
+        **binding,
+    }
+    path, digest = work_memory.write_receipt(
+        result["task_id"], PREPARED_RECEIPT_NAME, payload,
+    )
+    output["prepared_receipt"] = {
+        "path": str(path),
+        "sha256": digest,
+        "dispatch_stage": dispatch_stage,
+    }
+    return output
+
+
+def _load_or_prepare_active_sequence(
+    task_id: str,
+    *,
+    expected_sequence_id: str | None = None,
+    input_fn: Callable[[str], str] | None = None,
+    output_fn: Callable[[str], None] | None = None,
+) -> dict[str, Any]:
+    active_path = work_memory.receipt_path(task_id, "active")
+    verified = _active_selection_for_intake(task_id, active_path)
+    sequence_id = verified["subject_id"]
+    if expected_sequence_id is not None and sequence_id != expected_sequence_id:
+        raise SequenceLaunchError(
+            "active-sequence-does-not-match-entrypoint:"
+            f"{expected_sequence_id}:{sequence_id}"
+        )
+    binding = _prepared_receipt_binding(verified)
+    receipt = None
+    receipt_hash = None
+    prepared_path = None
+    if binding is not None:
+        try:
+            receipt, receipt_hash, prepared_path = work_memory.load_receipt(
+                task_id, PREPARED_RECEIPT_NAME,
+            )
+        except work_memory.WorkMemoryError as exc:
+            if exc.code != f"missing-{PREPARED_RECEIPT_NAME}-receipt":
+                raise
+    if receipt is not None:
+        expected = {
+            "schema_version": 1,
+            "task_id": task_id,
+            "sequence_id": sequence_id,
+            **binding,
+        }
+        if any(receipt.get(key) != value for key, value in expected.items()):
+            receipt = None
+        elif receipt.get("dispatch_stage") == "completed":
+            receipt = None
+        elif not isinstance(receipt.get("prepared"), Mapping):
+            raise SequenceLaunchError("prepared-intake-receipt-invalid")
+    if receipt is not None:
+        prepared = dict(receipt["prepared"])
+        stage = receipt["dispatch_stage"]
+        result = {
+            "schema_version": 1,
+            "task_id": task_id,
+            "sequence_id": sequence_id,
+            "sequence_name": _sequence_name(verified["selection"], sequence_id),
+            "dispatch_status": "PREPARED_NOT_AUTHORIZED",
+            "prepared": prepared,
+            "intake_reused": True,
+            "prepared_receipt": {
+                "path": str(prepared_path),
+                "sha256": receipt_hash,
+                "dispatch_stage": stage,
+            },
+        }
+        if stage == "dry-run-passed":
+            result["prepared"] = (
+                sequence_intake_adapters.promote_commit_push_dry_run(prepared)
+            )
+            return _persist_prepared_result(
+                result, verified,
+                dispatch_stage="effect-pending",
+                intake_reused=True,
+            )
+        if stage not in {"prepared", "effect-pending"}:
+            raise SequenceLaunchError("prepared-intake-stage-invalid")
+        return result
+    fresh = prepare_active_sequence(
+        task_id,
+        expected_sequence_id=expected_sequence_id,
+        input_fn=input_fn,
+        output_fn=output_fn,
+    )
+    current = _active_selection_for_intake(task_id, active_path)
+    if current["subject_id"] != fresh["sequence_id"]:
+        raise SequenceLaunchError("active-selection-changed-during-intake")
+    return _persist_prepared_result(
+        fresh, current,
+        dispatch_stage="prepared",
+        intake_reused=False,
+    )
+
+
+def _record_prepared_dispatch(
+    result: Mapping[str, Any], returncode: int,
+) -> None:
+    metadata = result.get("prepared_receipt")
+    if returncode != 0 or not isinstance(metadata, Mapping):
+        return
+    task_id = result["task_id"]
+    receipt, digest, _ = work_memory.load_receipt(
+        task_id, PREPARED_RECEIPT_NAME,
+    )
+    if digest != metadata.get("sha256"):
+        raise SequenceLaunchError("prepared-intake-receipt-changed")
+    prepared = result.get("prepared")
+    if receipt.get("prepared") != prepared:
+        raise SequenceLaunchError("prepared-intake-payload-changed")
+    stage = (
+        "dry-run-passed"
+        if result.get("sequence_id") == "commit-push-main"
+        and isinstance(prepared, Mapping)
+        and prepared.get("profile") == "dry-run"
+        else "completed"
+    )
+    work_memory.write_receipt(
+        task_id, PREPARED_RECEIPT_NAME,
+        {**receipt, "dispatch_stage": stage},
+    )
 
 
 def _with_controller_preflight(
@@ -251,6 +488,12 @@ def _prepare_correction_bootstrap(
         or not isinstance(artifacts.get("changed_artifacts"), Mapping)
     ):
         raise SequenceLaunchError("prepared-correction-invalid")
+    target_task_id = _required_argv_value(argv, "--task-id")
+    target_subject_id = (
+        _required_argv_value(argv, "--subject-id")
+        if prepared.get("profile") == "correct-registered"
+        else None
+    )
     events, _ = work_memory.load_ledger()
     terminal_run_ids = {
         event["run_id"]
@@ -261,23 +504,27 @@ def _prepare_correction_bootstrap(
         event for event in events
         if (
             event.get("event_type") == "run_started"
-            and event.get("task_id") == task_id
-            and event.get("subject_id") == selection.get("subject_id")
-            and event.get("lineage_id") == selection.get("lineage_id")
+            and event.get("task_id") == target_task_id
+            and (
+                target_subject_id is None
+                or event.get("subject_id") == target_subject_id
+            )
             and event["run_id"] not in terminal_run_ids
         )
     ]
     if len(starts) != 1:
         raise SequenceLaunchError("active-correction-run-ambiguous")
     run_id = starts[0]["run_id"]
+    target_subject_id = starts[0]["subject_id"]
+    target_lineage_id = starts[0]["lineage_id"]
     blockers: dict[str, dict[str, Any]] = {}
     for event in events:
         blocker_id = event.get("blocker_id")
         kind = event.get("event_type")
         if kind == "blocker_opened":
             if (
-                event.get("subject_id") != selection.get("subject_id")
-                or event.get("lineage_id") != selection.get("lineage_id")
+                event.get("subject_id") != target_subject_id
+                or event.get("lineage_id") != target_lineage_id
             ):
                 continue
             blockers[blocker_id] = {
@@ -322,8 +569,7 @@ def _prepare_correction_bootstrap(
         ))
     solution = _required_argv_value(argv, "--solution")
     reusable = _required_argv_value(argv, "--reusable-behavior-changed")
-    supplied_task = _required_argv_value(argv, "--task-id")
-    if supplied_task != task_id or reusable not in {"yes", "no"}:
+    if reusable not in {"yes", "no"}:
         raise SequenceLaunchError("prepared-correction-context-mismatch")
     supersedes = [
         argv[index + 1]
@@ -331,11 +577,19 @@ def _prepare_correction_bootstrap(
         if token == "--supersedes-correction-id"
     ]
     repository_root = Path(repository_roots["memory-knowledge"])
+    directive_state = Path(os.environ.get(
+        "MK_DIRECTIVE_STATE_PATH",
+        str(sequence_guard.DEFAULT_DIRECTIVE_STATE_PATH),
+    )).resolve()
     bootstrap_argv = [
         "python3",
         str(repository_root / "scripts/work_memory_bootstrap_launcher.py"),
         "correct",
-        "--task-id", task_id,
+        "--task-id", target_task_id,
+        "--directives-path", str(
+            repository_root / "working-agreement/DIRECTIVES.md"
+        ),
+        "--directive-state", str(directive_state),
         "--run-id", run_id,
         "--blocker-id", primary_id,
     ]
@@ -467,7 +721,7 @@ def _guard_prepared(task_id: str, prepared: Mapping[str, Any]) -> None:
             or len(argv) < 3
             or Path(argv[1]).name != "work_memory_bootstrap_launcher.py"
             or argv[2] != "correct"
-            or _required_argv_value(argv, "--task-id") != task_id
+            or not _required_argv_value(argv, "--task-id")
             or "--changed-artifacts-file" in argv
             or "--changed-artifact" not in argv
             or not isinstance(artifact, Mapping)
@@ -636,6 +890,8 @@ def _dispatch_prepared(task_id: str, prepared: Mapping[str, Any]) -> int:
         or not isinstance(repository.get("root"), str)
     ):
         raise SequenceLaunchError("prepared-dispatch-invalid")
+    _require_host_capabilities(prepared)
+    publication_run_id = _active_publication_run_id(task_id, prepared)
     if (
         prepared.get("sequence_id")
         == WORKFLOW_RESUME_SEQUENCE
@@ -651,7 +907,14 @@ def _dispatch_prepared(task_id: str, prepared: Mapping[str, Any]) -> int:
         for key, value in additions.items()
     ):
         raise SequenceLaunchError("prepared-environment-invalid")
+    if {
+        DISPATCH_MARKER, DISPATCH_RECEIPT, HOST_CAPABILITIES_ENV,
+        SEQUENCE_RUN_ID_ENV,
+    } & set(additions):
+        raise SequenceLaunchError("prepared-environment-reserved")
     environment.update(additions)
+    if publication_run_id is not None:
+        environment[SEQUENCE_RUN_ID_ENV] = publication_run_id
     if (
         prepared.get("sequence_id")
         == WORKFLOW_RESUME_SEQUENCE
@@ -699,12 +962,36 @@ def _task_and_preparation(
     task = script_intake.collect(
         TASK_SPEC, input_fn=input_fn, output_fn=output_fn,
     )
-    return prepare_active_sequence(
+    active_path = work_memory.receipt_path(task["task_id"], "active")
+    verified = _active_selection_for_intake(task["task_id"], active_path)
+    sequence_id = verified["subject_id"]
+    if expected_sequence_id is not None and sequence_id != expected_sequence_id:
+        raise SequenceLaunchError(
+            "active-sequence-does-not-match-entrypoint:"
+            f"{expected_sequence_id}:{sequence_id}"
+        )
+    _require_current_intake_contract(sequence_id)
+    return _load_or_prepare_active_sequence(
         task["task_id"],
         expected_sequence_id=expected_sequence_id,
         input_fn=input_fn,
         output_fn=output_fn,
     )
+
+
+def _require_current_intake_contract(sequence_id: str) -> None:
+    contract_drift = sequence_intake_adapters.check_intake_contracts(work_memory.ROOT)
+    selected_drift = [
+        error for error in contract_drift
+        if error == f"intake-contract-drift:{sequence_id}"
+        or error.startswith("intake-contracts-missing:")
+        or error.startswith("intake-contracts-unreadable:")
+        or error == "intake-contract-drift:document-level"
+    ]
+    if selected_drift:
+        raise SequenceLaunchError(
+            "intake-contracts-stale:" + ";".join(selected_drift[:5])
+        )
 
 
 def _main(
@@ -721,11 +1008,6 @@ def _main(
         }, sort_keys=True), file=sys.stderr)
         return 2
     try:
-        contract_drift = sequence_intake_adapters.check_intake_contracts(work_memory.ROOT)
-        if contract_drift:
-            raise SequenceLaunchError(
-                "intake-contracts-stale:" + ";".join(contract_drift[:5])
-            )
         result = _task_and_preparation(
             expected_sequence_id=expected_sequence_id,
             input_fn=input_fn,
@@ -778,20 +1060,30 @@ def main(
 def _interactive_dispatch(
     *,
     expected_sequence_id: str | None,
+    task_id: str | None = None,
     input_fn: Callable[[str], str] | None = None,
     output_fn: Callable[[str], None] | None = None,
 ) -> int:
     try:
-        contract_drift = sequence_intake_adapters.check_intake_contracts(work_memory.ROOT)
-        if contract_drift:
-            raise SequenceLaunchError(
-                "intake-contracts-stale:" + ";".join(contract_drift[:5])
+        if task_id is None:
+            result = _task_and_preparation(
+                expected_sequence_id=expected_sequence_id,
+                input_fn=input_fn,
+                output_fn=output_fn,
             )
-        result = _task_and_preparation(
-            expected_sequence_id=expected_sequence_id,
-            input_fn=input_fn,
-            output_fn=output_fn,
-        )
+        else:
+            if expected_sequence_id is None:
+                active_path = work_memory.receipt_path(task_id, "active")
+                expected_sequence_id = _active_selection_for_intake(
+                    task_id, active_path,
+                )["subject_id"]
+            _require_current_intake_contract(expected_sequence_id)
+            result = _load_or_prepare_active_sequence(
+                task_id,
+                expected_sequence_id=expected_sequence_id,
+                input_fn=input_fn,
+                output_fn=output_fn,
+            )
         print(json.dumps({
             "ok": True,
             **result,
@@ -807,9 +1099,11 @@ def _interactive_dispatch(
                 "dispatch_status": "DECLINED",
             }, sort_keys=True))
             return 0
-        return _dispatch_prepared(
+        returncode = _dispatch_prepared(
             result["task_id"], result["prepared"],
         )
+        _record_prepared_dispatch(result, returncode)
+        return returncode
     except (
         SequenceLaunchError,
         script_intake.IntakeCancelled,
@@ -846,6 +1140,26 @@ def main_for_sequence(
         )
     return _interactive_dispatch(
         expected_sequence_id=sequence_id,
+        input_fn=input_fn,
+        output_fn=output_fn,
+    )
+
+
+def main_for_active_task(
+    sequence_id: str,
+    task_id: str,
+    *,
+    input_fn: Callable[[str], str] | None = None,
+    output_fn: Callable[[str], None] | None = None,
+) -> int:
+    """Enter a registered interview using the controller-owned task identity."""
+    if sequence_id not in sequence_intake_adapters.ADAPTER_REGISTRY:
+        raise SequenceLaunchError(f"sequence-not-registered:{sequence_id}")
+    if not task_id:
+        raise SequenceLaunchError("active-task-id-required")
+    return _interactive_dispatch(
+        expected_sequence_id=sequence_id,
+        task_id=task_id,
         input_fn=input_fn,
         output_fn=output_fn,
     )

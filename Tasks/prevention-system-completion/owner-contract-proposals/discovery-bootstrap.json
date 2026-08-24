@@ -17,6 +17,13 @@
     "semantic_intake": {
       "status": "APPROVED",
       "decision_id": "discovery-bootstrap-semantic-intake-v1"
+    },
+    "full_suite_reconciliation_20260820": {
+      "decision_id": "discovery-bootstrap-full-suite-reconciliation-source-correction-20260820",
+      "status": "APPROVED",
+      "approved_by": "Kamen",
+      "approved_at_utc": "2026-08-20",
+      "reason": "bind the exact approved protected-correction sequence entry and current dependency manifest required by the canonical full-suite publish gate"
     }
   },
   "source": {
@@ -26,9 +33,9 @@
     "implementation_source_correction_decision_id": "discovery-bootstrap-semantic-intake-v1",
     "sequence_path": "/Users/kamenkamenov/memory-knowledge/operations/sequences/discovery-bootstrap/sequence.md",
     "sequence_sha256": "6fb482102d112029ddd0aff704c0b61b9f79586ba68c83b72780185947463dbc",
-    "sequence_approved_post_correction_sha256": "830ecd085a5647be91562ea13a9147aad872c32e1d47cfd49378db34d95ec6cb",
-    "sequence_source_correction_decision_id": "discovery-bootstrap-semantic-intake-v1",
-    "dependencies_sha256": "d12b3e99f4a5aa158e4dab16b6ede03bb191de4ee9fb4374263ebba452dad90a"
+    "sequence_approved_post_correction_sha256": "c894abf2f3763b5c7b9524afcddd4876375c774709217cffbfac5ffee603abca",
+    "sequence_source_correction_decision_id": "discovery-bootstrap-full-suite-reconciliation-source-correction-20260820",
+    "dependencies_sha256": "254ef3bcb319b416d7ff4e8ba50a72e13b21a2093eb399e4308ca47823ad6bf2"
   },
   "unit_budget": {
     "schema_version": 1,

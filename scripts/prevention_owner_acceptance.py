@@ -9,12 +9,17 @@ from pathlib import Path
 from typing import Any, Mapping, Sequence
 
 try:
-    from scripts.prevention_contract import canonical_bytes, sha256_bytes
+    from scripts.prevention_contract import (
+        canonical_bytes, resolve_repository_source_path, sha256_bytes,
+    )
 except ModuleNotFoundError:  # direct script execution
-    from prevention_contract import canonical_bytes, sha256_bytes
+    from prevention_contract import (
+        canonical_bytes, resolve_repository_source_path, sha256_bytes,
+    )
 
 
 ROOT = Path(__file__).resolve().parents[1]
+CANONICAL_ROOT = Path.home() / "memory-knowledge"
 OUTPUT = ROOT / "Tasks/prevention-system-completion/owner-source-verification.json"
 TRACE_DIR = ROOT / "Tasks/prevention-system-completion/owner-acceptance-artifacts"
 CONTRACTS = ROOT / "Tasks/prevention-system-completion/owner-executable-contracts.json"
@@ -68,7 +73,11 @@ def _read_object(path: Path, label: str) -> dict[str, Any]:
 def _binding_current(binding: Any) -> bool:
     if not _binding_shape_valid(binding):
         return False
-    path = Path(str(binding["path"]))
+    path = resolve_repository_source_path(
+        str(binding["path"]),
+        repository_root=ROOT,
+        canonical_repository_root=CANONICAL_ROOT,
+    )
     return path.is_file() and sha256_bytes(path.read_bytes()) == binding["sha256"]
 
 
@@ -247,7 +256,15 @@ def _load_trace(
     ):
         raise AcceptanceError("owner-proof-binding-invalid")
     required_tests = {str(PRODUCER_PATH), str(FIXTURES_PATH)}
-    if {str(row["path"]) for row in test_bindings} != required_tests:
+    resolved_tests = {
+        str(resolve_repository_source_path(
+            str(row["path"]),
+            repository_root=ROOT,
+            canonical_repository_root=CANONICAL_ROOT,
+        ))
+        for row in test_bindings
+    }
+    if resolved_tests != required_tests:
         raise AcceptanceError("owner-proof-producer-binding-invalid")
     if require_current_bindings and any(
         not _binding_current(row) for row in [*source_bindings, *test_bindings]
@@ -511,7 +528,14 @@ def _trace_matches_current_contract(
         and len(trace["source_bindings"]) == len(expected_sources)
         and actual_sources == expected_sources
         and len(test_bindings) == len(expected_tests)
-        and {item["path"] for item in test_bindings} == expected_tests
+        and {
+            str(resolve_repository_source_path(
+                str(item["path"]),
+                repository_root=ROOT,
+                canonical_repository_root=CANONICAL_ROOT,
+            ))
+            for item in test_bindings
+        } == expected_tests
         and all(_binding_current(item) for item in test_bindings)
     )
 

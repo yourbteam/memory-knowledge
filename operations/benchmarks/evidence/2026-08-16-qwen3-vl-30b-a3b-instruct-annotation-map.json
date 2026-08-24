@@ -1,0 +1,684 @@
+{
+  "cases": [
+    {
+      "done": true,
+      "done_reason": "stop",
+      "id": "dashboard-annotation-map",
+      "metrics": {
+        "eval_count": 6366,
+        "eval_duration_ns": 83218998000,
+        "load_duration_ns": 2173835083,
+        "prompt_eval_count": 4986,
+        "prompt_eval_duration_ns": 6234253000,
+        "total_duration_ns": 91755710083,
+        "wall_seconds": 91.759078
+      },
+      "prompt": "You receive two images of the same dashboard. Image 1 contains red annotation boxes and arrows; image 2 is the clean reference.\nExtract every red annotation from image 1, scanning the whole source from top to bottom.\nFor each annotation, transcribe the annotation text as exactly as visible and identify the specific dashboard element at the arrowhead, not the enclosing section.\nUse image 2 to confirm the target element's visible text and report its normalized x, y, width, and height from 0 to 1 relative to the clean image.\nDo not invent unreadable text or uncertain targets. Record readability, target identification status, confidence, and an unresolved reason when needed.\nPut every unresolved ambiguity in unresolved_items with the follow-up information needed.\nCoverage matters: include every red callout, including those around charts and lower-page content.",
+      "prompt_sha256": "c018df35776af358acbd216a2e5c953b76fe1ee98bb96ea33c22e56d7eb9dfdd",
+      "response_json": {
+        "annotations": [
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "Column: AF\n% = 300/364",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the '300 paid in cash (82%)' value within the 'transactions today' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.14,
+                "width": 0.25,
+                "x": 0.16,
+                "y": 0.18
+              },
+              "visible_text": "300 paid in cash (82%)"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Column: AF' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 300 or the entire 'paid in cash (82%)' metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "Column: AE\n% = 64/364",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the '64 codes (18%)' value within the 'transactions today' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.14,
+                "width": 0.25,
+                "x": 0.16,
+                "y": 0.23
+              },
+              "visible_text": "64 codes (18%)"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Column: AE' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 64 or the entire 'codes (18%)' metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "Column: C + Column: I\n% = 250/364",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the '250 non-package (69%)' value within the 'transactions today' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.14,
+                "width": 0.25,
+                "x": 0.38,
+                "y": 0.18
+              },
+              "visible_text": "250 non-package (69%)"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Column: C + Column: I' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 250 or the entire 'non-package (69%)' metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "Column: F + Column: K\n% = 114/364",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the '114 package (31%)' value within the 'transactions today' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.14,
+                "width": 0.25,
+                "x": 0.38,
+                "y": 0.23
+              },
+              "visible_text": "114 package (31%)"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Column: F + Column: K' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 114 or the entire 'package (31%)' metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "The sum of Column: AF for all locations for the current day. All the data in this section should refresh as well when they click the refresh button in the live today section.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the '$13,060 net revenue today' value in the 'All Locations - Today' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.2,
+                "width": 0.25,
+                "x": 0.16,
+                "y": 0.3
+              },
+              "visible_text": "$13,060\nnet revenue today"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Column: AF' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 13,060 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "The sum of Column: AE for all the locations for that day.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the '587 transactions today' value in the 'All Locations - Today' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.2,
+                "width": 0.25,
+                "x": 0.31,
+                "y": 0.3
+              },
+              "visible_text": "587\ntransactions today"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Column: AE' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 587 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "This displays the location which represents the highest share of the days revenue earned",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the '62%' value in the donut chart, which is labeled 'Skywalk'.",
+            "target_element": {
+              "element_kind": "chart",
+              "normalized_region": {
+                "height": 0.3,
+                "width": 0.25,
+                "x": 0.16,
+                "y": 0.37
+              },
+              "visible_text": "62%\nSkywalk"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Column: AF' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 62 or the entire chart."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "Column AF for each location is the total net revenue. Then divide the location revenue (AF) by the sum of all locations revenue (AF) to get the % of revenue. total transactions for each location is column: AE",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the list of locations and their performance metrics below the donut chart.",
+            "target_element": {
+              "element_kind": "chart",
+              "normalized_region": {
+                "height": 0.3,
+                "width": 0.25,
+                "x": 0.16,
+                "y": 0.4
+              },
+              "visible_text": "Skywalk $8,100 - 62% (364 txns)\nGuano Point $1,830 - 14% (82 txns)\nQuartermaster $1,440 - 11% (64 txns)\nRiver Runners $1,040 - 8% (47 txns)\nZipline $650 - 5% (30 txns)"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Column AF' and 'column: AE' are labels, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to a specific number or the entire list."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "The sum of Column: X divided by the sum of column: W for all locations",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the '$22.25 avg / transaction' value in the 'All Locations - Today' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.2,
+                "width": 0.25,
+                "x": 0.46,
+                "y": 0.3
+              },
+              "visible_text": "$22.25\navg / transaction"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Column: X' and 'column: W' are labels, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 22.25 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "When they click refresh this updates all the numbers in the live today and the All locations sections to show the current data.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'Refresh' button at the top of the dashboard.",
+            "target_element": {
+              "element_kind": "button",
+              "normalized_region": {
+                "height": 0.05,
+                "width": 0.12,
+                "x": 0.46,
+                "y": 0.03
+              },
+              "visible_text": "Refresh"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'When they click refresh...' is a description of the button's function, not its visible text. The target is ambiguous because it could be interpreted as pointing to the icon or the entire button."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "All data in the \"Live Today\" section is for the selected location only.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'CHOOSE LOCATION' dropdown menu at the top right of the dashboard, which currently shows 'Skywalk'.",
+            "target_element": {
+              "element_kind": "button",
+              "normalized_region": {
+                "height": 0.05,
+                "width": 0.21,
+                "x": 0.84,
+                "y": 0.03
+              },
+              "visible_text": "CHOOSE LOCATION\nSkywalk"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'All data in the \"Live Today\" section...' is a description of the dropdown's function, not its visible text. The target is ambiguous because it could be interpreted as pointing to the label or the entire button."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "Column: AT\n7 day Avg = Column AT avg over previous 7 days.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'Capture rate' value of '29.0%' in the 'Today's performance' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.14,
+                "width": 0.35,
+                "x": 0.78,
+                "y": 0.2
+              },
+              "visible_text": "Capture rate\n29.0%\n7-day avg 27.5%"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Column: AT' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 29.0 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "Column: AE / guest count\n7 day avg = avg of previous 7 day capture rate avg",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'Conversion rate' value of '42%' in the 'Today's performance' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.14,
+                "width": 0.35,
+                "x": 0.63,
+                "y": 0.2
+              },
+              "visible_text": "Conversion rate\n42%\n7-day avg 40%"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Column: AE' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 42 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "The sum of column: X for all locations YTD divided by The sum of column W for all locations for the YTD",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'Avg revenue / transaction' value of '$20.16' in the 'Performance Snapshot YTD' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.14,
+                "width": 0.35,
+                "x": 0.63,
+                "y": 0.3
+              },
+              "visible_text": "Avg revenue / transaction\n$20.16"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'column: X' and 'column W' are labels, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 20.16 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "The sum of X YTD divided by guest count YTD",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'Avg revenue / visitor' value of '$3.67' in the 'Performance Snapshot YTD' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.14,
+                "width": 0.35,
+                "x": 0.82,
+                "y": 0.3
+              },
+              "visible_text": "Avg revenue / visitor\n$3.67"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'X YTD' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 3.67 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "The average of column: AT YTD",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'Conversion rate' value of '42%' in the 'Performance Snapshot YTD' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.14,
+                "width": 0.35,
+                "x": 0.82,
+                "y": 0.36
+              },
+              "visible_text": "Conversion rate\n42%"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'column: AT' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 42 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "The sum of column: AE YTD divided by the sum of guest count YTD",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'Capture rate' value of '18.2%' in the 'Performance Snapshot YTD' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.14,
+                "width": 0.35,
+                "x": 0.63,
+                "y": 0.36
+              },
+              "visible_text": "Capture rate\n18.2%"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'column: AE YTD' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 18.2 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "The points on this chart plot the capture rate and conversion rate for each month. So you would make the same calculations with the formulas above but for jus the days in each months result and display it.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'CAPTURE VS CONVERSION - BY MONTH' line chart.",
+            "target_element": {
+              "element_kind": "chart",
+              "normalized_region": {
+                "height": 0.2,
+                "width": 0.65,
+                "x": 0.47,
+                "y": 0.4
+              },
+              "visible_text": "CAPTURE VS CONVERSION - BY MONTH"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'The points on this chart...' is a description of the chart's function, not its visible text. The target is ambiguous because it could be interpreted as pointing to the title or the entire chart."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "Everything in the payout section is adding up the days in the current pay period. We payout on the 1st and the 16th. The pay periods are the 1-15h of a month and the 16th through the last day of the month. This sections shows you the number for the sum of the days so far in the current pay period.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'Earned to Date' value of '$41,004' in the 'Pay Period Summary' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.2,
+                "width": 0.35,
+                "x": 0.16,
+                "y": 0.57
+              },
+              "visible_text": "$41,004\nEARNED TO DATE"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Everything in the payout section...' is a description of the section's function, not its visible text. The target is ambiguous because it could be interpreted as pointing to the number 41,004 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "The sum of Column: AF for the current pay period.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'Projected Close' value of '$48,000' in the 'Pay Period Summary' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.2,
+                "width": 0.35,
+                "x": 0.31,
+                "y": 0.57
+              },
+              "visible_text": "$48,000\nPROJECTED CLOSE"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Column: AF' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 48,000 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "The day when the next payout will be made which will either be the 1st of the next month or the 16th of the current month.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'Next Payout' value of 'May 16 · ACH' in the 'Pay Period Summary' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.2,
+                "width": 0.35,
+                "x": 0.47,
+                "y": 0.57
+              },
+              "visible_text": "May 16 · ACH\nNEXT PAYOUT"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'The day when the next payout...' is a description of the element's function, not its visible text. The target is ambiguous because it could be interpreted as pointing to the date or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "The total payout for the previous pay period. Can pull this from payout report or do calculation: Sum of AF for all locations for the previous pay period date range.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'Last Period Total' value of '$34,700' in the 'Pay Period Summary' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.2,
+                "width": 0.35,
+                "x": 0.63,
+                "y": 0.57
+              },
+              "visible_text": "$34,700\nLAST PERIOD TOTAL"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Sum of AF for all locations...' is a description of the calculation, not its visible text. The target is ambiguous because it could be interpreted as pointing to the number 34,700 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "Take the earned to date number (Sum of column AF for the current pay period) and divide it by the current number of days earned in that period to get a per day average. Then multiply that per day average by the total number of days in that pay period to get the projected close.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the 'Net Revenue to You' line chart, which shows the year-to-date revenue.",
+            "target_element": {
+              "element_kind": "chart",
+              "normalized_region": {
+                "height": 0.3,
+                "width": 0.85,
+                "x": 0.16,
+                "y": 0.67
+              },
+              "visible_text": "Net Revenue to You\nYear to date - hover a point for the location breakout"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'Take the earned to date number...' is a description of the calculation, not its visible text. The target is ambiguous because it could be interpreted as pointing to the title or the entire chart."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "The sum of AF for all locations for the period selected in the top right of the chart. Either previous 7, 30, 90 days or YTD.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the '$1,632,289 TOTAL PAID TO YOU - YEAR TO DATE' value in the 'Net Revenue to You' section.",
+            "target_element": {
+              "element_kind": "metric",
+              "normalized_region": {
+                "height": 0.14,
+                "width": 0.35,
+                "x": 0.47,
+                "y": 0.68
+              },
+              "visible_text": "$1,632,289\nTOTAL PAID TO YOU - YEAR TO DATE"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'The sum of AF for all locations...' is a description of the calculation, not its visible text. The target is ambiguous because it could be interpreted as pointing to the number 1,632,289 or the entire metric."
+          },
+          {
+            "annotation_readability": "readable",
+            "annotation_text": "This box shows the Net payout by week. The top is Total Net Payout for all locations for that week: the sum of column AF for all locations for that week. Then the breakout below is Column AF for each location for that week.",
+            "confidence": "high",
+            "relationship_description": "The annotation points to the data point on the 'Net Revenue to You' chart, which shows a hover-over breakdown of revenue by location.",
+            "target_element": {
+              "element_kind": "chart",
+              "normalized_region": {
+                "height": 0.14,
+                "width": 0.25,
+                "x": 0.38,
+                "y": 0.7
+              },
+              "visible_text": "$48,497\nnet paid to you - by location\nSkywalk $30,079\nGuano Point $6,796\nQuartermaster $5,347\nRiver Runners $3,862\nZipline $2,414"
+            },
+            "target_identification": "ambiguous",
+            "unresolved_reason": "The annotation text 'This box shows the Net payout by week...' is a description of the element's function, not its visible text. The target is ambiguous because it could be interpreted as pointing to the title or the entire breakdown."
+          }
+        ],
+        "overall_source_readability": "partial",
+        "summary": "The provided source contains 20 red annotation boxes with descriptive text. Each box points to a specific element on a financial dashboard, explaining its calculation or purpose using labels like 'Column: AF' and 'Column: AE'. The annotations are generally readable but contain significant ambiguity because they use external labels (e.g., 'Column: AF') rather than the visible text of the target elements themselves. This makes it impossible to definitively identify the exact element being described without additional context, as each label could refer to a number, a metric, or an entire section. The annotations cover various parts of the dashboard, including live revenue data, performance metrics, and payout summaries.",
+        "unresolved_items": [
+          {
+            "needed_follow_up": "The annotation text 'Column: AF' is used as a label for multiple different elements on the page (e.g., $8,100, 364 transactions). To resolve this ambiguity, we need to know which specific element each instance of 'Column: AF' refers to. For example, does it refer to the total revenue number or the transaction count? This requires clarification from the source document's author.",
+            "reason": "The annotation text uses a label ('Column: AF') that is not visible on the dashboard and could be interpreted as referring to multiple different metrics (e.g., $8,100 vs. 364). Without knowing which specific metric the label refers to in each context, it's impossible to accurately identify the target element.",
+            "source_description": "The annotation text 'Column: AF' is used for several different values on the dashboard, such as '$8,100', '364 transactions', and '$13,060'. The label itself is not visible in the image."
+          }
+        ]
+      },
+      "response_raw": "{\n  \"annotations\": [\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"Column: AF\\n% = 300/364\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the '300 paid in cash (82%)' value within the 'transactions today' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.14,\n          \"width\": 0.25,\n          \"x\": 0.16,\n          \"y\": 0.18\n        },\n        \"visible_text\": \"300 paid in cash (82%)\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Column: AF' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 300 or the entire 'paid in cash (82%)' metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"Column: AE\\n% = 64/364\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the '64 codes (18%)' value within the 'transactions today' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.14,\n          \"width\": 0.25,\n          \"x\": 0.16,\n          \"y\": 0.23\n        },\n        \"visible_text\": \"64 codes (18%)\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Column: AE' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 64 or the entire 'codes (18%)' metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"Column: C + Column: I\\n% = 250/364\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the '250 non-package (69%)' value within the 'transactions today' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.14,\n          \"width\": 0.25,\n          \"x\": 0.38,\n          \"y\": 0.18\n        },\n        \"visible_text\": \"250 non-package (69%)\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Column: C + Column: I' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 250 or the entire 'non-package (69%)' metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"Column: F + Column: K\\n% = 114/364\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the '114 package (31%)' value within the 'transactions today' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.14,\n          \"width\": 0.25,\n          \"x\": 0.38,\n          \"y\": 0.23\n        },\n        \"visible_text\": \"114 package (31%)\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Column: F + Column: K' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 114 or the entire 'package (31%)' metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"The sum of Column: AF for all locations for the current day. All the data in this section should refresh as well when they click the refresh button in the live today section.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the '$13,060 net revenue today' value in the 'All Locations - Today' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.2,\n          \"width\": 0.25,\n          \"x\": 0.16,\n          \"y\": 0.3\n        },\n        \"visible_text\": \"$13,060\\nnet revenue today\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Column: AF' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 13,060 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"The sum of Column: AE for all the locations for that day.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the '587 transactions today' value in the 'All Locations - Today' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.2,\n          \"width\": 0.25,\n          \"x\": 0.31,\n          \"y\": 0.3\n        },\n        \"visible_text\": \"587\\ntransactions today\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Column: AE' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 587 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"This displays the location which represents the highest share of the days revenue earned\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the '62%' value in the donut chart, which is labeled 'Skywalk'.\",\n      \"target_element\": {\n        \"element_kind\": \"chart\",\n        \"normalized_region\": {\n          \"height\": 0.3,\n          \"width\": 0.25,\n          \"x\": 0.16,\n          \"y\": 0.37\n        },\n        \"visible_text\": \"62%\\nSkywalk\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Column: AF' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 62 or the entire chart.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"Column AF for each location is the total net revenue. Then divide the location revenue (AF) by the sum of all locations revenue (AF) to get the % of revenue. total transactions for each location is column: AE\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the list of locations and their performance metrics below the donut chart.\",\n      \"target_element\": {\n        \"element_kind\": \"chart\",\n        \"normalized_region\": {\n          \"height\": 0.3,\n          \"width\": 0.25,\n          \"x\": 0.16,\n          \"y\": 0.4\n        },\n        \"visible_text\": \"Skywalk $8,100 - 62% (364 txns)\\nGuano Point $1,830 - 14% (82 txns)\\nQuartermaster $1,440 - 11% (64 txns)\\nRiver Runners $1,040 - 8% (47 txns)\\nZipline $650 - 5% (30 txns)\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Column AF' and 'column: AE' are labels, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to a specific number or the entire list.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"The sum of Column: X divided by the sum of column: W for all locations\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the '$22.25 avg / transaction' value in the 'All Locations - Today' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.2,\n          \"width\": 0.25,\n          \"x\": 0.46,\n          \"y\": 0.3\n        },\n        \"visible_text\": \"$22.25\\navg / transaction\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Column: X' and 'column: W' are labels, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 22.25 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"When they click refresh this updates all the numbers in the live today and the All locations sections to show the current data.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'Refresh' button at the top of the dashboard.\",\n      \"target_element\": {\n        \"element_kind\": \"button\",\n        \"normalized_region\": {\n          \"height\": 0.05,\n          \"width\": 0.12,\n          \"x\": 0.46,\n          \"y\": 0.03\n        },\n        \"visible_text\": \"Refresh\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'When they click refresh...' is a description of the button's function, not its visible text. The target is ambiguous because it could be interpreted as pointing to the icon or the entire button.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"All data in the \\\"Live Today\\\" section is for the selected location only.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'CHOOSE LOCATION' dropdown menu at the top right of the dashboard, which currently shows 'Skywalk'.\",\n      \"target_element\": {\n        \"element_kind\": \"button\",\n        \"normalized_region\": {\n          \"height\": 0.05,\n          \"width\": 0.21,\n          \"x\": 0.84,\n          \"y\": 0.03\n        },\n        \"visible_text\": \"CHOOSE LOCATION\\nSkywalk\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'All data in the \\\"Live Today\\\" section...' is a description of the dropdown's function, not its visible text. The target is ambiguous because it could be interpreted as pointing to the label or the entire button.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"Column: AT\\n7 day Avg = Column AT avg over previous 7 days.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'Capture rate' value of '29.0%' in the 'Today's performance' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.14,\n          \"width\": 0.35,\n          \"x\": 0.78,\n          \"y\": 0.2\n        },\n        \"visible_text\": \"Capture rate\\n29.0%\\n7-day avg 27.5%\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Column: AT' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 29.0 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"Column: AE / guest count\\n7 day avg = avg of previous 7 day capture rate avg\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'Conversion rate' value of '42%' in the 'Today's performance' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.14,\n          \"width\": 0.35,\n          \"x\": 0.63,\n          \"y\": 0.2\n        },\n        \"visible_text\": \"Conversion rate\\n42%\\n7-day avg 40%\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Column: AE' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 42 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"The sum of column: X for all locations YTD divided by The sum of column W for all locations for the YTD\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'Avg revenue / transaction' value of '$20.16' in the 'Performance Snapshot YTD' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.14,\n          \"width\": 0.35,\n          \"x\": 0.63,\n          \"y\": 0.3\n        },\n        \"visible_text\": \"Avg revenue / transaction\\n$20.16\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'column: X' and 'column W' are labels, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 20.16 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"The sum of X YTD divided by guest count YTD\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'Avg revenue / visitor' value of '$3.67' in the 'Performance Snapshot YTD' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.14,\n          \"width\": 0.35,\n          \"x\": 0.82,\n          \"y\": 0.3\n        },\n        \"visible_text\": \"Avg revenue / visitor\\n$3.67\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'X YTD' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 3.67 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"The average of column: AT YTD\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'Conversion rate' value of '42%' in the 'Performance Snapshot YTD' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.14,\n          \"width\": 0.35,\n          \"x\": 0.82,\n          \"y\": 0.36\n        },\n        \"visible_text\": \"Conversion rate\\n42%\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'column: AT' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 42 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"The sum of column: AE YTD divided by the sum of guest count YTD\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'Capture rate' value of '18.2%' in the 'Performance Snapshot YTD' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.14,\n          \"width\": 0.35,\n          \"x\": 0.63,\n          \"y\": 0.36\n        },\n        \"visible_text\": \"Capture rate\\n18.2%\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'column: AE YTD' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 18.2 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"The points on this chart plot the capture rate and conversion rate for each month. So you would make the same calculations with the formulas above but for jus the days in each months result and display it.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'CAPTURE VS CONVERSION - BY MONTH' line chart.\",\n      \"target_element\": {\n        \"element_kind\": \"chart\",\n        \"normalized_region\": {\n          \"height\": 0.2,\n          \"width\": 0.65,\n          \"x\": 0.47,\n          \"y\": 0.4\n        },\n        \"visible_text\": \"CAPTURE VS CONVERSION - BY MONTH\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'The points on this chart...' is a description of the chart's function, not its visible text. The target is ambiguous because it could be interpreted as pointing to the title or the entire chart.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"Everything in the payout section is adding up the days in the current pay period. We payout on the 1st and the 16th. The pay periods are the 1-15h of a month and the 16th through the last day of the month. This sections shows you the number for the sum of the days so far in the current pay period.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'Earned to Date' value of '$41,004' in the 'Pay Period Summary' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.2,\n          \"width\": 0.35,\n          \"x\": 0.16,\n          \"y\": 0.57\n        },\n        \"visible_text\": \"$41,004\\nEARNED TO DATE\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Everything in the payout section...' is a description of the section's function, not its visible text. The target is ambiguous because it could be interpreted as pointing to the number 41,004 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"The sum of Column: AF for the current pay period.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'Projected Close' value of '$48,000' in the 'Pay Period Summary' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.2,\n          \"width\": 0.35,\n          \"x\": 0.31,\n          \"y\": 0.57\n        },\n        \"visible_text\": \"$48,000\\nPROJECTED CLOSE\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Column: AF' is a label, not the visible text of the element itself. The target is ambiguous because it could be interpreted as pointing to the number 48,000 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"The day when the next payout will be made which will either be the 1st of the next month or the 16th of the current month.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'Next Payout' value of 'May 16 · ACH' in the 'Pay Period Summary' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.2,\n          \"width\": 0.35,\n          \"x\": 0.47,\n          \"y\": 0.57\n        },\n        \"visible_text\": \"May 16 · ACH\\nNEXT PAYOUT\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'The day when the next payout...' is a description of the element's function, not its visible text. The target is ambiguous because it could be interpreted as pointing to the date or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"The total payout for the previous pay period. Can pull this from payout report or do calculation: Sum of AF for all locations for the previous pay period date range.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'Last Period Total' value of '$34,700' in the 'Pay Period Summary' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.2,\n          \"width\": 0.35,\n          \"x\": 0.63,\n          \"y\": 0.57\n        },\n        \"visible_text\": \"$34,700\\nLAST PERIOD TOTAL\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Sum of AF for all locations...' is a description of the calculation, not its visible text. The target is ambiguous because it could be interpreted as pointing to the number 34,700 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"Take the earned to date number (Sum of column AF for the current pay period) and divide it by the current number of days earned in that period to get a per day average. Then multiply that per day average by the total number of days in that pay period to get the projected close.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the 'Net Revenue to You' line chart, which shows the year-to-date revenue.\",\n      \"target_element\": {\n        \"element_kind\": \"chart\",\n        \"normalized_region\": {\n          \"height\": 0.3,\n          \"width\": 0.85,\n          \"x\": 0.16,\n          \"y\": 0.67\n        },\n        \"visible_text\": \"Net Revenue to You\\nYear to date - hover a point for the location breakout\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'Take the earned to date number...' is a description of the calculation, not its visible text. The target is ambiguous because it could be interpreted as pointing to the title or the entire chart.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"The sum of AF for all locations for the period selected in the top right of the chart. Either previous 7, 30, 90 days or YTD.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the '$1,632,289 TOTAL PAID TO YOU - YEAR TO DATE' value in the 'Net Revenue to You' section.\",\n      \"target_element\": {\n        \"element_kind\": \"metric\",\n        \"normalized_region\": {\n          \"height\": 0.14,\n          \"width\": 0.35,\n          \"x\": 0.47,\n          \"y\": 0.68\n        },\n        \"visible_text\": \"$1,632,289\\nTOTAL PAID TO YOU - YEAR TO DATE\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'The sum of AF for all locations...' is a description of the calculation, not its visible text. The target is ambiguous because it could be interpreted as pointing to the number 1,632,289 or the entire metric.\"\n    },\n    {\n      \"annotation_readability\": \"readable\",\n      \"annotation_text\": \"This box shows the Net payout by week. The top is Total Net Payout for all locations for that week: the sum of column AF for all locations for that week. Then the breakout below is Column AF for each location for that week.\",\n      \"confidence\": \"high\",\n      \"relationship_description\": \"The annotation points to the data point on the 'Net Revenue to You' chart, which shows a hover-over breakdown of revenue by location.\",\n      \"target_element\": {\n        \"element_kind\": \"chart\",\n        \"normalized_region\": {\n          \"height\": 0.14,\n          \"width\": 0.25,\n          \"x\": 0.38,\n          \"y\": 0.7\n        },\n        \"visible_text\": \"$48,497\\nnet paid to you - by location\\nSkywalk $30,079\\nGuano Point $6,796\\nQuartermaster $5,347\\nRiver Runners $3,862\\nZipline $2,414\"\n      },\n      \"target_identification\": \"ambiguous\",\n      \"unresolved_reason\": \"The annotation text 'This box shows the Net payout by week...' is a description of the element's function, not its visible text. The target is ambiguous because it could be interpreted as pointing to the title or the entire breakdown.\"\n    }\n  ],\n  \"overall_source_readability\": \"partial\",\n  \"summary\": \"The provided source contains 20 red annotation boxes with descriptive text. Each box points to a specific element on a financial dashboard, explaining its calculation or purpose using labels like 'Column: AF' and 'Column: AE'. The annotations are generally readable but contain significant ambiguity because they use external labels (e.g., 'Column: AF') rather than the visible text of the target elements themselves. This makes it impossible to definitively identify the exact element being described without additional context, as each label could refer to a number, a metric, or an entire section. The annotations cover various parts of the dashboard, including live revenue data, performance metrics, and payout summaries.\",\n  \"unresolved_items\": [\n    {\n      \"needed_follow_up\": \"The annotation text 'Column: AF' is used as a label for multiple different elements on the page (e.g., $8,100, 364 transactions). To resolve this ambiguity, we need to know which specific element each instance of 'Column: AF' refers to. For example, does it refer to the total revenue number or the transaction count? This requires clarification from the source document's author.\",\n      \"reason\": \"The annotation text uses a label ('Column: AF') that is not visible on the dashboard and could be interpreted as referring to multiple different metrics (e.g., $8,100 vs. 364). Without knowing which specific metric the label refers to in each context, it's impossible to accurately identify the target element.\",\n      \"source_description\": \"The annotation text 'Column: AF' is used for several different values on the dashboard, such as '$8,100', '364 transactions', and '$13,060'. The label itself is not visible in the image.\"\n    }\n  ]\n}",
+      "response_schema": {
+        "additionalProperties": false,
+        "properties": {
+          "annotations": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "annotation_readability": {
+                  "enum": [
+                    "readable",
+                    "partially_readable",
+                    "unreadable"
+                  ],
+                  "type": "string"
+                },
+                "annotation_text": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "confidence": {
+                  "enum": [
+                    "high",
+                    "medium",
+                    "low"
+                  ],
+                  "type": "string"
+                },
+                "relationship_description": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "target_element": {
+                  "additionalProperties": false,
+                  "properties": {
+                    "element_kind": {
+                      "enum": [
+                        "metric",
+                        "label",
+                        "button",
+                        "selector",
+                        "chart",
+                        "chart-point",
+                        "chart-series",
+                        "section",
+                        "status",
+                        "date",
+                        "other"
+                      ],
+                      "type": "string"
+                    },
+                    "normalized_region": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "height": {
+                          "type": "number"
+                        },
+                        "width": {
+                          "type": "number"
+                        },
+                        "x": {
+                          "type": "number"
+                        },
+                        "y": {
+                          "type": "number"
+                        }
+                      },
+                      "required": [
+                        "x",
+                        "y",
+                        "width",
+                        "height"
+                      ],
+                      "type": "object"
+                    },
+                    "visible_text": {
+                      "type": "string"
+                    }
+                  },
+                  "required": [
+                    "visible_text",
+                    "element_kind",
+                    "normalized_region"
+                  ],
+                  "type": "object"
+                },
+                "target_identification": {
+                  "enum": [
+                    "specific",
+                    "ambiguous",
+                    "not_identified"
+                  ],
+                  "type": "string"
+                },
+                "unresolved_reason": {
+                  "type": "string"
+                }
+              },
+              "required": [
+                "annotation_text",
+                "annotation_readability",
+                "target_element",
+                "target_identification",
+                "relationship_description",
+                "confidence",
+                "unresolved_reason"
+              ],
+              "type": "object"
+            },
+            "minItems": 1,
+            "type": "array"
+          },
+          "overall_source_readability": {
+            "enum": [
+              "complete",
+              "partial",
+              "insufficient"
+            ],
+            "type": "string"
+          },
+          "summary": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "unresolved_items": {
+            "items": {
+              "additionalProperties": false,
+              "properties": {
+                "needed_follow_up": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "reason": {
+                  "minLength": 1,
+                  "type": "string"
+                },
+                "source_description": {
+                  "minLength": 1,
+                  "type": "string"
+                }
+              },
+              "required": [
+                "source_description",
+                "reason",
+                "needed_follow_up"
+              ],
+              "type": "object"
+            },
+            "type": "array"
+          }
+        },
+        "required": [
+          "annotations",
+          "unresolved_items",
+          "overall_source_readability",
+          "summary"
+        ],
+        "type": "object"
+      },
+      "response_sha256": "a18609f97ce08dbc9000b85a806b0d9703165816677ca26b9190785cfbf55af9",
+      "source_files": [
+        {
+          "path": "/Users/kamenkamenov/Downloads/Operator Dashboard formula explanation.jpg",
+          "sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "size_bytes": 879014
+        },
+        {
+          "path": "/Users/kamenkamenov/Desktop/Screenshot 2026-08-12 at 15.44.10.png",
+          "sha256": "3a1cab37709765fa2b05eed990791514b180d344421267821b4f95d4ddf31d88",
+          "size_bytes": 340866
+        }
+      ]
+    }
+  ],
+  "endpoint": "http://127.0.0.1:11434",
+  "finished_at_utc": "2026-08-16T16:03:25.178972Z",
+  "model": "qwen3-vl:30b-a3b-instruct",
+  "models_after": [
+    "gemma4:26b-mlx",
+    "nemotron3:33b",
+    "qwen2.5:32b",
+    "qwen3-vl:30b-a3b-instruct"
+  ],
+  "models_before": [
+    "gemma4:26b-mlx",
+    "nemotron3:33b",
+    "qwen2.5:32b"
+  ],
+  "ollama_version": "0.31.1",
+  "options": {
+    "num_ctx": 32768,
+    "temperature": 0
+  },
+  "pull_if_missing": true,
+  "pulled_model": true,
+  "schema_version": 1,
+  "spec": {
+    "path": "/private/tmp/sequence-intake/qwen3-vl-30b-dashboard-benchmark-20260816/local-multimodal-model-benchmark/benchmark_spec.json",
+    "sha256": "38cb36c929a2f7aa1881f2e899e479c89357a27dc18e8e2fd6c6b1403ac54ba7"
+  },
+  "started_at_utc": "2026-08-16T15:51:56.170189Z",
+  "status": "passed",
+  "think": false
+}

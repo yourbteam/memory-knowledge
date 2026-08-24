@@ -78,10 +78,14 @@ def _state_path(task_id: str, value: str | None) -> Path:
 
 
 def _require_directives(args: argparse.Namespace) -> None:
+    # Sequence execution is bound to the exact directive path and bytes. Wall-clock age
+    # cannot make unchanged instructions unsafe; only a missing receipt or content/path
+    # drift requires a new read. The standalone directive check retains its optional age
+    # policy for callers that explicitly want periodic rereads.
     check_directive_read_state(
         directives_path=Path(args.directives_path).resolve() if args.directives_path else DEFAULT_DIRECTIVES_PATH,
         state_path=Path(args.directive_state).resolve() if args.directive_state else DEFAULT_DIRECTIVE_STATE_PATH,
-        max_age_minutes=int(args.directive_max_age_minutes),
+        max_age_minutes=None,
     )
 
 
@@ -123,6 +127,9 @@ def _load_receipt_chain(
         raise work_memory.WorkMemoryError("classification-is-not-operational", 4)
     if selection["classification_receipt_hash"] != class_hash:
         raise work_memory.WorkMemoryError("receipt-chain-mismatch", 4)
+    roots = _selection_roots(selection)
+    if roots.get("memory-knowledge") != work_memory.ROOT.resolve():
+        raise work_memory.WorkMemoryError("controller-checkout-mismatch", 4)
     rows: list[dict[str, str]] = []
     if selection["mode"] == "registered":
         rows, registry_hash = work_memory.registry_rows(

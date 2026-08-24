@@ -90,6 +90,16 @@ def _v2_spec() -> dict[str, object]:
     }
 
 
+def test_registered_sequence_declares_protected_correction_launcher() -> None:
+    sequence = (
+        Path(__file__).parents[1]
+        / "operations/sequences/discovery-bootstrap/sequence.md"
+    ).read_text(encoding="utf-8")
+
+    assert "python3 scripts/work_memory_bootstrap_launcher.py correct" in sequence
+    assert "--changed-environment-artifact <absolute-host-path>" in sequence
+
+
 def test_normalize_spec_rejects_unknown_keys_and_secret_shapes() -> None:
     with pytest.raises(work_memory.WorkMemoryError, match="invalid-bootstrap-spec-shape"):
         discovery_bootstrap.normalize_spec({**_spec(), "unknown": True})
