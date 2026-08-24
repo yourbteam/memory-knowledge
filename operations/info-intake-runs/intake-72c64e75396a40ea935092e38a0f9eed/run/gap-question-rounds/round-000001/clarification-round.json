@@ -1,0 +1,265 @@
+{
+  "gaps": [
+    {
+      "collection": "elements",
+      "id": "element-000020",
+      "kind": "element",
+      "projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a",
+      "record": {
+        "capture_scope": "region-r04-c02",
+        "content": "",
+        "gap_reason": "The text is clipped by the source at the left, right, and bottom edges, so the full sentence is not visible.",
+        "id": "element-000020",
+        "kind": "explanatory text",
+        "region": [
+          0,
+          974,
+          1000,
+          1000
+        ],
+        "scan_region_id": "region-r04-c02",
+        "status": "gap"
+      },
+      "record_sha256": "4a7d78fab7f0147d2068ed6056041e967b126f69dcdf79b05c58e54f0abbe983",
+      "recorded_context": []
+    },
+    {
+      "collection": "elements",
+      "id": "element-000021",
+      "kind": "element",
+      "projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a",
+      "record": {
+        "capture_scope": "relationship_endpoint",
+        "content": "",
+        "endpoint_verification": {
+          "claimed_content": "Payout reports",
+          "evidence": {
+            "adapter": {
+              "name": "pillow_exif_transpose_png_exact_element_crop",
+              "version": 1
+            },
+            "candidate_id": "element-000021",
+            "claimed_content": "Payout reports",
+            "crop_path": "endpoint-evidence/element-000021.png",
+            "crop_sha256": "a63724efcc684697e2f9b896e33c0818087e3a0f850cfa9f692a07662c9b1b48",
+            "normalized_bounds": [
+              203,
+              372,
+              275,
+              397
+            ],
+            "pixel_bounds": [
+              462,
+              480,
+              626,
+              513
+            ],
+            "source_pixel_size": [
+              2276,
+              1292
+            ],
+            "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+            "verification_scope": "relationship_endpoint"
+          },
+          "verdict": "does_not_contain_claimed_content"
+        },
+        "gap_reason": "The claimed content is not visible inside the claimed source bounds.",
+        "id": "element-000021",
+        "kind": "payout reports section heading",
+        "region": [
+          203,
+          372,
+          275,
+          397
+        ],
+        "status": "gap"
+      },
+      "record_sha256": "647ef24fb4917e8b9f230515a493fef9b6f73ebab5e9db08b3d20e26c54ab89e",
+      "recorded_context": []
+    },
+    {
+      "collection": "relationships",
+      "id": "relationship-000010",
+      "kind": "relationship",
+      "projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a",
+      "record": {
+        "binding_issue": {
+          "matching_element_ids": [
+            "element-000015"
+          ],
+          "participant": "origin",
+          "point": [
+            600,
+            600
+          ],
+          "reason": "same_element_as_other_participant"
+        },
+        "binding_method": "coordinate_unique_containment",
+        "description": "",
+        "from_id": null,
+        "gap_reason": "No distinct second endpoint is visibly connected to this payout-period card; its PDF and open actions are part of the same recorded card, and the nearby annotation arrow points to the preceding row rather than this Jul 1\u201315 row.",
+        "id": "relationship-000010",
+        "kind": "data population instruction",
+        "origin_point": [
+          600,
+          600
+        ],
+        "status": "gap",
+        "target_point": [
+          600,
+          600
+        ],
+        "to_id": "element-000015",
+        "verification_eligibility": {
+          "reason": "No distinct second endpoint is visibly connected to this payout-period card; its PDF and open actions are part of the same recorded card, and the nearby annotation arrow points to the preceding row rather than this Jul 1\u201315 row.",
+          "status": "not_applicable_existing_gap"
+        }
+      },
+      "record_sha256": "96dc02e7798985872080eae0a3039e3ed6c3e18f0b56787ac3d393cc1fcdb76b",
+      "recorded_context": [
+        {
+          "capture_scope": "region-r03-c01",
+          "content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+          "endpoint_verification": {
+            "claim_scope": "crop_complete_v2",
+            "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+            "evidence": {
+              "adapter": {
+                "name": "pillow_exif_transpose_png_exact_element_crop",
+                "version": 1
+              },
+              "candidate_id": "element-000015",
+              "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+              "crop_path": "endpoint-evidence/element-000015-required-recorded-participant-fc3bd74302bc0354.png",
+              "crop_sha256": "bf2df7d2540f967009324467a1224080e164e45aaa2f6745a118f0ab3fc14c9d",
+              "normalized_bounds": [
+                213,
+                557,
+                1000,
+                650
+              ],
+              "pixel_bounds": [
+                484,
+                719,
+                2276,
+                840
+              ],
+              "source_pixel_size": [
+                2276,
+                1292
+              ],
+              "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+              "verification_scope": "required_recorded_participant"
+            },
+            "verdict": "supported"
+          },
+          "gap_reason": "",
+          "id": "element-000015",
+          "kind": "payout period card",
+          "region": [
+            213,
+            557,
+            1000,
+            650
+          ],
+          "scan_region_id": "region-r03-c01",
+          "status": "readable"
+        }
+      ]
+    },
+    {
+      "collection": "relationships",
+      "id": "relationship-000015",
+      "kind": "relationship",
+      "projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a",
+      "record": {
+        "description": "",
+        "from_id": "element-000020",
+        "gap_reason": "The explanatory sentence is clipped by the source at the left, right, and bottom edges, so its full text and the endpoint or relationship it identifies are not visible.",
+        "id": "relationship-000015",
+        "kind": "explanatory footer text",
+        "participant_id": "element-000020",
+        "status": "gap",
+        "to_id": null,
+        "verification_eligibility": {
+          "reason": "The explanatory sentence is clipped by the source at the left, right, and bottom edges, so its full text and the endpoint or relationship it identifies are not visible.",
+          "status": "not_applicable_existing_gap"
+        }
+      },
+      "record_sha256": "753bfc6c2e32add7c8610c46ee606a2611632bfe5cb04bb63c2d66f65baf7446",
+      "recorded_context": [
+        {
+          "capture_scope": "region-r04-c02",
+          "content": "",
+          "gap_reason": "The text is clipped by the source at the left, right, and bottom edges, so the full sentence is not visible.",
+          "id": "element-000020",
+          "kind": "explanatory text",
+          "region": [
+            0,
+            974,
+            1000,
+            1000
+          ],
+          "scan_region_id": "region-r04-c02",
+          "status": "gap"
+        }
+      ]
+    }
+  ],
+  "projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a",
+  "questioner": {
+    "harness": "start_intake.py --run-gap-clarification in the Codex PTY harness",
+    "model": "Codex (GPT-5)"
+  },
+  "questions": [
+    {
+      "answer_type": "operator_text",
+      "answers_gap": {
+        "collection": "elements",
+        "id": "element-000020",
+        "kind": "element",
+        "projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a",
+        "record_sha256": "4a7d78fab7f0147d2068ed6056041e967b126f69dcdf79b05c58e54f0abbe983"
+      },
+      "asks": "What is the complete explanatory text beginning \u201cThis is the selected operator\u2019s own history\u201d that is clipped at the bottom of the screenshot?",
+      "id": "gap-clarification-answer-000001"
+    },
+    {
+      "answer_type": "operator_text",
+      "answers_gap": {
+        "collection": "elements",
+        "id": "element-000021",
+        "kind": "element",
+        "projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a",
+        "record_sha256": "647ef24fb4917e8b9f230515a493fef9b6f73ebab5e9db08b3d20e26c54ab89e"
+      },
+      "asks": "Should this relationship endpoint target the visible \u201cPayout reports\u201d heading below \u201cREPOSITORY,\u201d rather than the currently claimed bounds?",
+      "id": "gap-clarification-answer-000002"
+    },
+    {
+      "answer_type": "operator_text",
+      "answers_gap": {
+        "collection": "relationships",
+        "id": "relationship-000010",
+        "kind": "relationship",
+        "projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a",
+        "record_sha256": "96dc02e7798985872080eae0a3039e3ed6c3e18f0b56787ac3d393cc1fcdb76b"
+      },
+      "asks": "What distinct source element, if any, should the data-population instruction connect to the Jul 1\u201315, 2026 payout-period card?",
+      "id": "gap-clarification-answer-000003"
+    },
+    {
+      "answer_type": "operator_text",
+      "answers_gap": {
+        "collection": "relationships",
+        "id": "relationship-000015",
+        "kind": "relationship",
+        "projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a",
+        "record_sha256": "753bfc6c2e32add7c8610c46ee606a2611632bfe5cb04bb63c2d66f65baf7446"
+      },
+      "asks": "What UI element or behavior is the clipped footer sentence intended to describe or connect to?",
+      "id": "gap-clarification-answer-000004"
+    }
+  ],
+  "schema_version": 4
+}

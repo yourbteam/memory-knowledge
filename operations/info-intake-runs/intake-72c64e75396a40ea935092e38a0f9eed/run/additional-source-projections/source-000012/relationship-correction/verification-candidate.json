@@ -1,0 +1,1410 @@
+{
+  "elements": [
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Column BY for all operators",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Column BY for all operators",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000001",
+          "claimed_content": "Column BY for all operators",
+          "crop_path": "endpoint-evidence/element-000001-required-recorded-participant-c4e7c3bef9b774ba.png",
+          "crop_sha256": "3d04399fcdbb4699911d857d00730b6865d27d1c41b73c073ccc0de2d1efe1ed",
+          "normalized_bounds": [
+            1,
+            11,
+            156,
+            111
+          ],
+          "pixel_bounds": [
+            1,
+            23,
+            287,
+            234
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000001",
+      "kind": "annotation callout",
+      "region": [
+        1,
+        11,
+        156,
+        111
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Taggable revenue; total we made this period; $36,975; content + service + add-ons + merch",
+      "gap_reason": "",
+      "id": "element-000002",
+      "kind": "dashboard metric card",
+      "region": [
+        19,
+        69,
+        173,
+        178
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "High-level payouts & revenue; check a series to add/remove \u00b7 hover for values; Taggable revenue; Net paid to operators; y-axis labels $286k, $214k, $142k, $70k, \u2212$2.0k; x-axis labels D1 and D3; four visible colored line series with point markers",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "High-level payouts & revenue; check a series to add/remove \u00b7 hover for values; Taggable revenue; Net paid to operators; y-axis labels $286k, $214k, $142k, $70k, \u2212$2.0k; x-axis labels D1 and D3; four visible colored line series with point markers",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000003",
+          "claimed_content": "High-level payouts & revenue; check a series to add/remove \u00b7 hover for values; Taggable revenue; Net paid to operators; y-axis labels $286k, $214k, $142k, $70k, \u2212$2.0k; x-axis labels D1 and D3; four visible colored line series with point markers",
+          "crop_path": "endpoint-evidence/element-000003-required-recorded-participant-d34b656d82111af2.png",
+          "crop_sha256": "d30b5bd3a3cf9a7639f8e0bc648eee7047bd49fad301e4467ed47a5062175149",
+          "normalized_bounds": [
+            19,
+            187,
+            300,
+            463
+          ],
+          "pixel_bounds": [
+            34,
+            393,
+            552,
+            976
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000003",
+      "kind": "chart panel",
+      "region": [
+        19,
+        187,
+        300,
+        463
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Column AF for all operators",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Column AF for all operators",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000004",
+          "claimed_content": "Column AF for all operators",
+          "crop_path": "endpoint-evidence/element-000004-required-participant-replacement-c9b386c4a579aba2.png",
+          "crop_sha256": "cac9d20b37d903d8c0eeaf709f8c6e1842432471940defb422534e844463ffa6",
+          "normalized_bounds": [
+            174,
+            18,
+            323,
+            118
+          ],
+          "pixel_bounds": [
+            319,
+            37,
+            594,
+            249
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_participant_replacement"
+        },
+        "identity_continuity": {
+          "required_claim": "Column AF for all operators",
+          "verdict": "same_required_source_unit"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000004",
+      "kind": "annotation callout",
+      "region": [
+        174,
+        18,
+        323,
+        118
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Net paid to operators; total sent via (ACH); $112,127; after fees & invoices",
+      "gap_reason": "",
+      "id": "element-000005",
+      "kind": "dashboard metric card",
+      "region": [
+        182,
+        69,
+        300,
+        178
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "",
+      "gap_reason": "The annotation callout occludes part of the date selector text.",
+      "id": "element-000006",
+      "kind": "date selector",
+      "region": [
+        52,
+        5,
+        249,
+        34
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "gap"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "Paid to operators \u00b7 content; their share of photo/video sales; $100,922; content-sale payouts",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Paid to operators \u00b7 content; their share of photo/video sales; $100,922; content-sale payouts",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000007",
+          "claimed_content": "Paid to operators \u00b7 content; their share of photo/video sales; $100,922; content-sale payouts",
+          "crop_path": "endpoint-evidence/element-000007-required-recorded-participant-04a686f7c2e610eb.png",
+          "crop_sha256": "29d25840943d0acb970e75a51c11f29d0e2c74abfcc636d6ba40f9a02c3eed2a",
+          "normalized_bounds": [
+            346,
+            69,
+            499,
+            178
+          ],
+          "pixel_bounds": [
+            635,
+            145,
+            918,
+            375
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000007",
+      "kind": "KPI summary card",
+      "region": [
+        346,
+        69,
+        499,
+        178
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "column X for all operators",
+      "gap_reason": "",
+      "id": "element-000008",
+      "kind": "annotation callout",
+      "region": [
+        333,
+        14,
+        484,
+        121
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "D7; Taggable revenue $81k; Net paid to operators $266k; Owed to us (invoices) $9.5k; Refunds -$1.4k",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "D7; Taggable revenue $81k; Net paid to operators $266k; Owed to us (invoices) $9.5k; Refunds -$1.4k",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000009",
+          "claimed_content": "D7; Taggable revenue $81k; Net paid to operators $266k; Owed to us (invoices) $9.5k; Refunds -$1.4k",
+          "crop_path": "endpoint-evidence/element-000009-required-recorded-participant-cf7ff998858b08ea.png",
+          "crop_sha256": "d6abe7a839a0d24afa4233dc4e2ec9bf2f78a6827b7bd7a5c858dffdf2d62b1d",
+          "normalized_bounds": [
+            382,
+            165,
+            540,
+            248
+          ],
+          "pixel_bounds": [
+            702,
+            347,
+            993,
+            523
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000009",
+      "kind": "chart data tooltip",
+      "region": [
+        382,
+        165,
+        540,
+        248
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "Owed to us (invoices) $9.5k",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Owed to us (invoices) $9.5k",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000010",
+          "claimed_content": "Owed to us (invoices) $9.5k",
+          "crop_path": "endpoint-evidence/element-000010-required-participant-replacement-4c4277b6ce444e58.png",
+          "crop_sha256": "99065d4cd9c5838e7fefe635fd267d8a24616d6552150fd43dc033841c665cd3",
+          "normalized_bounds": [
+            390,
+            212,
+            530,
+            226
+          ],
+          "pixel_bounds": [
+            716,
+            446,
+            975,
+            476
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_participant_replacement"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000010",
+      "kind": "chart tooltip series entry",
+      "region": [
+        390,
+        212,
+        530,
+        226
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "column AD for all operators",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "column AD for all operators",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000011",
+          "claimed_content": "column AD for all operators",
+          "crop_path": "endpoint-evidence/element-000011-required-recorded-participant-8065bb77b23b51da.png",
+          "crop_sha256": "405bf9bbb742aa047ffdd6f51334677b2e741b2b3bced69615de6d8cfbb588d6",
+          "normalized_bounds": [
+            500,
+            10,
+            643,
+            123
+          ],
+          "pixel_bounds": [
+            919,
+            21,
+            1182,
+            260
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000011",
+      "kind": "annotation callout",
+      "region": [
+        500,
+        10,
+        643,
+        123
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "Until we have the additional products lets make these two boxes show Taggable Content Revenue and the other one show Taggable Service Fee Revenue. Tag Content Rev: BU; Tag Service Fee Rev: BX",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "[left-clipped] we have the additional [left-clipped]ducts lets make these boxes show Taggable [left-clipped]ntent Revenue and the [left-clipped]er one show Taggable [left-clipped]rvice Fee Revenue. [left-clipped]ag Content Rev: BU [left-clipped] Service Fee Rev: BX",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000012",
+          "claimed_content": "[left-clipped] we have the additional [left-clipped]ducts lets make these boxes show Taggable [left-clipped]ntent Revenue and the [left-clipped]er one show Taggable [left-clipped]rvice Fee Revenue. [left-clipped]ag Content Rev: BU [left-clipped] Service Fee Rev: BX",
+          "crop_path": "endpoint-evidence/element-000012-required-recorded-participant-300de537eb8231be.png",
+          "crop_sha256": "5dbc09f925f16c8faa34a021e6c1cdc694107c70090ee2558534aac7054c533a",
+          "normalized_bounds": [
+            725,
+            12,
+            859,
+            133
+          ],
+          "pixel_bounds": [
+            1332,
+            25,
+            1579,
+            281
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000012",
+      "kind": "annotation callout",
+      "region": [
+        725,
+        12,
+        859,
+        133
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "Invoiced codes used; redemption-code fees billed; $4,666; what operators owe us",
+      "gap_reason": "",
+      "id": "element-000013",
+      "kind": "metric card",
+      "region": [
+        509,
+        69,
+        662,
+        178
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "",
+      "gap_reason": "The metric card is clipped by the right edge of the source crop, cutting off its title and subtitle.",
+      "id": "element-000014",
+      "kind": "metric card",
+      "region": [
+        672,
+        69,
+        800,
+        178
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "gap"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "\u2193 Generate report",
+      "gap_reason": "",
+      "id": "element-000015",
+      "kind": "button",
+      "region": [
+        886,
+        45,
+        989,
+        70
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "[left portion obscured]erch add-ons; [left portion obscured]ints / merch revenue; $0; this period",
+      "gap_reason": "",
+      "id": "element-000016",
+      "kind": "summary card",
+      "region": [
+        835,
+        83,
+        989,
+        213
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "Compare previous period (unchecked)",
+      "gap_reason": "",
+      "id": "element-000017",
+      "kind": "checkbox control",
+      "region": [
+        842,
+        240,
+        975,
+        252
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c01",
+      "content": "Revenue Breakout; dropdown: What Taggable made; checked series: Photo, Video, Content add-ons. Line chart y-axis labels $53k, $40k, $27k, $13k, $0; x-axis labels D1 and D3. Photo is about $42k at D1 and just under $40k at D3 before rising; Video is about $4k and nearly flat with a slight rise; Content add-ons remains at $0.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Revenue Breakout; dropdown: What Taggable made; checked series: Photo, Video, Content add-ons. Line chart y-axis labels $53k, $40k, $27k, $13k, $0; x-axis labels D1 and D3. Photo is about $42k at D1 and just under $40k at D3 before rising; Video is about $4k and nearly flat with a slight rise; Content add-ons remains at $0.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000018",
+          "claimed_content": "Revenue Breakout; dropdown: What Taggable made; checked series: Photo, Video, Content add-ons. Line chart y-axis labels $53k, $40k, $27k, $13k, $0; x-axis labels D1 and D3. Photo is about $42k at D1 and just under $40k at D3 before rising; Video is about $4k and nearly flat with a slight rise; Content add-ons remains at $0.",
+          "crop_path": "endpoint-evidence/element-000018-required-recorded-participant-d2785a51f220156c.png",
+          "crop_sha256": "e8031d90fba8b53061c62b108bacecf5e4c7c614133f60d4cff98bb7041e36fb",
+          "normalized_bounds": [
+            19,
+            472,
+            300,
+            742
+          ],
+          "pixel_bounds": [
+            34,
+            994,
+            552,
+            1563
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000018",
+      "kind": "chart panel",
+      "region": [
+        19,
+        472,
+        300,
+        742
+      ],
+      "scan_region_id": "region-r02-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "A thick red arrow points left toward the blue line's data point at D7.",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "A thick red arrow points left toward the blue line's data point at D7.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000019",
+          "claimed_content": "A thick red arrow points left toward the blue line's data point at D7.",
+          "crop_path": "endpoint-evidence/element-000019-required-participant-context-3a8fcfa6514b59fe.png",
+          "crop_sha256": "ad2e045bacc6f45e6c402863e6b9904bf6a2f32c03a67295a9cf361f88b70a80",
+          "normalized_bounds": [
+            375,
+            160,
+            555,
+            450
+          ],
+          "pixel_bounds": [
+            689,
+            336,
+            1021,
+            948
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_participant_context"
+        },
+        "selector_region": [
+          478,
+          261,
+          550,
+          289
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000019",
+      "kind": "red arrow annotation",
+      "region": [
+        478,
+        261,
+        550,
+        289
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "A blue circular data marker lies on the upper blue line at D7.",
+      "gap_reason": "",
+      "id": "element-000020",
+      "kind": "line-chart data point",
+      "region": [
+        458,
+        271,
+        464,
+        276
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c03",
+      "content": "This just populates the numbers from above on a daily basis over the time period selected. Can toggle on and off each one.",
+      "gap_reason": "",
+      "id": "element-000021",
+      "kind": "annotation callout",
+      "region": [
+        575,
+        293,
+        798,
+        359
+      ],
+      "scan_region_id": "region-r02-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c03",
+      "content": "A multi-series daily line chart with blue, coral, purple, and red lines; visible x-axis labels include D9, D11, D13, and D15. All four series decline toward D15, with the blue series showing the steepest drop.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "A multi-series daily line chart with blue, coral, purple, and red lines; visible x-axis labels include D9, D11, D13, and D15. All four series decline toward D15, with the blue series showing the steepest drop.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000022",
+          "claimed_content": "A multi-series daily line chart with blue, coral, purple, and red lines; visible x-axis labels include D9, D11, D13, and D15. All four series decline toward D15, with the blue series showing the steepest drop.",
+          "crop_path": "endpoint-evidence/element-000022-required-recorded-participant-b42bd0c184e3cff9.png",
+          "crop_sha256": "a81e18d3c7a09641c648fbb5406c068a696998bbbdb9f60af59253257f656950",
+          "normalized_bounds": [
+            500,
+            250,
+            989,
+            470
+          ],
+          "pixel_bounds": [
+            919,
+            526,
+            1818,
+            990
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000022",
+      "kind": "multi-series line chart",
+      "region": [
+        500,
+        250,
+        989,
+        470
+      ],
+      "scan_region_id": "region-r02-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "BY OPERATOR; This period \u00b7 Aug 1\u201315, 2026; recalculated for the selected range",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "BY OPERATOR; This period \u00b7 Aug 1\u201315, 2026; recalculated for the selected range",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000023",
+          "claimed_content": "BY OPERATOR; This period \u00b7 Aug 1\u201315, 2026; recalculated for the selected range",
+          "crop_path": "endpoint-evidence/element-000023-required-recorded-participant-3c9035fb4ef76509.png",
+          "crop_sha256": "6f29f5ad237ade965170a519df12117d0367d393771ff8a94058ce67957c26d5",
+          "normalized_bounds": [
+            19,
+            745,
+            214,
+            783
+          ],
+          "pixel_bounds": [
+            34,
+            1568,
+            394,
+            1649
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000023",
+      "kind": "section heading",
+      "region": [
+        19,
+        745,
+        214,
+        783
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "Large red arrow annotation pointing leftward and slightly upward at the rising orange Photo series line above the $40k gridline.",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "Large red arrow annotation pointing leftward and slightly upward at the rising orange Photo series line above the $40k gridline.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000024",
+          "claimed_content": "Large red arrow annotation pointing leftward and slightly upward at the rising orange Photo series line above the $40k gridline.",
+          "crop_path": "endpoint-evidence/element-000024-required-participant-context-30a40368fe9a4484.png",
+          "crop_sha256": "bf2f2b9e87375373d24628cdc0079d06c7d82f5a639329d234132ae40c55e66d",
+          "normalized_bounds": [
+            20,
+            465,
+            700,
+            730
+          ],
+          "pixel_bounds": [
+            36,
+            979,
+            1287,
+            1538
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_participant_context"
+        },
+        "selector_region": [
+          233,
+          545,
+          300,
+          568
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000024",
+      "kind": "arrow annotation",
+      "region": [
+        233,
+        545,
+        300,
+        568
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c02",
+      "content": "This will be different than this. Since we dont have this breakout yet of products I want to just make this two things: Content Revenue and Service fee revenue. The chart will plot how much taggable made from each on a daily basis over the time period selected. There will be a pop up that shows the total Taggable revenue at the top if both are selected, then the breakout below. Taggable Content Revenue: BU. Taggable Service Fee Revenue: BX.",
+      "gap_reason": "",
+      "id": "element-000025",
+      "kind": "annotation callout",
+      "region": [
+        380,
+        579,
+        726,
+        668
+      ],
+      "scan_region_id": "region-r03-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c02",
+      "content": "Taggable total Rev: Column BY",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Taggable total Rev: Column BY",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000026",
+          "claimed_content": "Taggable total Rev: Column BY",
+          "crop_path": "endpoint-evidence/element-000026-required-recorded-participant-79d7682183a843c3.png",
+          "crop_sha256": "ec20bf068c15709af4b430e49c274b58e0cadf54df722bcfea6faa1362cd9872",
+          "normalized_bounds": [
+            266,
+            724,
+            458,
+            804
+          ],
+          "pixel_bounds": [
+            488,
+            1524,
+            842,
+            1694
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000026",
+      "kind": "annotation callout",
+      "region": [
+        266,
+        724,
+        458,
+        804
+      ],
+      "scan_region_id": "region-r03-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c03",
+      "content": "The sum of the positive numbers in column AF",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "The sum of the positive numbers in column AF",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000027",
+          "claimed_content": "The sum of the positive numbers in column AF",
+          "crop_path": "endpoint-evidence/element-000027-required-recorded-participant-32e87e06f5b2660c.png",
+          "crop_sha256": "8edad445f82d57d24fa98ea45c6f1d9e9cc3afcd3cb75eaece93b229992e2458",
+          "normalized_bounds": [
+            500,
+            725,
+            640,
+            785
+          ],
+          "pixel_bounds": [
+            919,
+            1526,
+            1177,
+            1654
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000027",
+      "kind": "red annotation callout",
+      "region": [
+        500,
+        725,
+        640,
+        785
+      ],
+      "scan_region_id": "region-r03-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c03",
+      "content": "the sum of the negative numbers in column AF",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "the sum of the negative numbers in column AF",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000028",
+          "claimed_content": "the sum of the negative numbers in column AF",
+          "crop_path": "endpoint-evidence/element-000028-required-recorded-participant-24649c87579ee6f0.png",
+          "crop_sha256": "cbbcbdde47e9668b1243c64cfbce4ba12537e2e71a8a4a5aa9b93381cf76df37",
+          "normalized_bounds": [
+            666,
+            729,
+            800,
+            785
+          ],
+          "pixel_bounds": [
+            1224,
+            1535,
+            1471,
+            1654
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000028",
+      "kind": "red annotation callout",
+      "region": [
+        666,
+        729,
+        800,
+        785
+      ],
+      "scan_region_id": "region-r03-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c04",
+      "content": "A multi-series line chart with x-axis labels D13 and D15; an orange series declines steeply toward D15, while purple, green, and blue series remain clustered near the baseline and also decline slightly toward D15.",
+      "gap_reason": "",
+      "id": "element-000029",
+      "kind": "multi-series line chart",
+      "region": [
+        750,
+        500,
+        988,
+        755
+      ],
+      "scan_region_id": "region-r03-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c04",
+      "content": "the sum of all numbers in column AF",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "the sum of all numbers in column AF",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000030",
+          "claimed_content": "the sum of all numbers in column AF",
+          "crop_path": "endpoint-evidence/element-000030-required-recorded-participant-bdbcf969b814bf2c.png",
+          "crop_sha256": "de4eaa8a9a7e73bd07abb5e53b6c9299c16f3e827970ce023c6f65f1af39b503",
+          "normalized_bounds": [
+            813,
+            729,
+            963,
+            815
+          ],
+          "pixel_bounds": [
+            1494,
+            1535,
+            1770,
+            1717
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000030",
+      "kind": "red annotation callout",
+      "region": [
+        813,
+        729,
+        963,
+        815
+      ],
+      "scan_region_id": "region-r03-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "we will need to add a refunds column here too and populate that. For now if we can type in the number manually that would be fine.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "we will need to add a refunds column here too and populate that. For now if we can type in the number manually that would be fine.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000031",
+          "claimed_content": "we will need to add a refunds column here too and populate that. For now if we can type in the number manually that would be fine.",
+          "crop_path": "endpoint-evidence/element-000031-required-recorded-participant-4994aec1c2f3e8a7.png",
+          "crop_sha256": "38761dce10085588776eb06e08c6f13ab608b55c98c75c6cdbd266d46c8514ec",
+          "normalized_bounds": [
+            164,
+            808,
+            304,
+            924
+          ],
+          "pixel_bounds": [
+            301,
+            1701,
+            559,
+            1946
+          ],
+          "source_pixel_size": [
+            1838,
+            2106
+          ],
+          "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000031",
+      "kind": "annotation callout requesting a refunds column in the operator table",
+      "region": [
+        164,
+        808,
+        304,
+        924
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "OPERATOR; Grand Canyon Resort; HFS; Maverick Helicopters; Xtreme Xperience; All operators",
+      "gap_reason": "",
+      "id": "element-000032",
+      "kind": "operator selection table",
+      "region": [
+        28,
+        786,
+        300,
+        965
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "Click Generate report to freeze this range into a saved internal report (same layout as the finalized reports).",
+      "gap_reason": "",
+      "id": "element-000033",
+      "kind": "report generation instruction",
+      "region": [
+        27,
+        970,
+        991,
+        987
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c02",
+      "content": "TOTAL REVENUE WE MADE; $302,140.55; $41,220.80; $16,905.25; $63,110.40; $540,220.00",
+      "gap_reason": "",
+      "id": "element-000034",
+      "kind": "table column",
+      "region": [
+        345,
+        799,
+        499,
+        966
+      ],
+      "scan_region_id": "region-r04-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c03",
+      "content": "",
+      "gap_reason": "The text is clipped by the left crop boundary, leaving only the trailing fragment \u201ce finalized reports).\u201d visible.",
+      "id": "element-000035",
+      "kind": "instruction text",
+      "region": [
+        500,
+        750,
+        750,
+        990
+      ],
+      "scan_region_id": "region-r04-c03",
+      "status": "gap"
+    },
+    {
+      "capture_scope": "region-r04-c03",
+      "content": "WE SEND THEM | THEY OWE US | NET; $1,284,905.20 | $0.00 | PAYOUT $1,284,905.20; $188,410.60 | $0.00 | PAYOUT $188,410.60; $22,140.75 | $0.00 | PAYOUT $22,140.75; $0.00 | $28,905.10 | INVOICE $28,905.10; totals: $1,495,456.55 | $28,905.10 | Net $1,466,551.45",
+      "gap_reason": "",
+      "id": "element-000036",
+      "kind": "two-column financial summary table",
+      "region": [
+        500,
+        786,
+        988,
+        989
+      ],
+      "scan_region_id": "region-r04-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_correction_endpoint",
+      "content": "D7 plotted marker on the chart; the nearby tooltip is labeled D7",
+      "gap_reason": "",
+      "id": "correction-element-000001",
+      "kind": "D7 plotted data point in the High-level payouts & revenue chart",
+      "region": [
+        455,
+        265,
+        470,
+        280
+      ],
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_correction_endpoint",
+      "content": "Purple plotted marker aligned with D7; the hover tooltip identifies the purple series as Owed to us (invoices) and shows $9.5k",
+      "gap_reason": "",
+      "id": "correction-element-000002",
+      "kind": "purple Owed to us chart data marker at D7",
+      "region": [
+        455,
+        416,
+        470,
+        430
+      ],
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_correction_endpoint",
+      "content": "Content add-ons, add-on cents, $0, this period; Merch add-ons, prints / merch revenue, $0, this period",
+      "gap_reason": "",
+      "id": "correction-element-000003",
+      "kind": "adjacent pair of right-side summary metric cards: Content add-ons and Merch add-ons",
+      "region": [
+        673,
+        69,
+        990,
+        177
+      ],
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_correction_endpoint",
+      "content": "WE SEND THEM; $1,284,905.20; $188,410.60; $22,140.75; $0.00; total $1,495,456.55",
+      "gap_reason": "",
+      "id": "correction-element-000004",
+      "kind": "WE SEND THEM financial table column",
+      "region": [
+        500,
+        786,
+        650,
+        966
+      ],
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_correction_endpoint",
+      "content": "THEY OWE US; $0.00; $0.00; $0.00; $28,905.10; total $28,905.10",
+      "gap_reason": "",
+      "id": "correction-element-000005",
+      "kind": "THEY OWE US financial table column",
+      "region": [
+        650,
+        786,
+        780,
+        966
+      ],
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_correction_endpoint",
+      "content": "NET; PAYOUT $1,284,905.20; PAYOUT $188,410.60; PAYOUT $22,140.75; INVOICE $28,905.10; Net $1,466,551.45",
+      "gap_reason": "",
+      "id": "correction-element-000006",
+      "kind": "NET financial table column",
+      "region": [
+        780,
+        786,
+        988,
+        966
+      ],
+      "status": "readable"
+    }
+  ],
+  "relationships": [
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000002",
+      "description": "The annotation callout points to the D7 plotted marker in the High-level payouts & revenue chart and explains that the chart shows the summary metrics above by day for the selected period, with each series individually toggleable.",
+      "from_id": "element-000021",
+      "gap_reason": "",
+      "id": "relationship-000002-correction-000001",
+      "kind": "annotation callout explains chart behavior",
+      "locked_identity_participants": {
+        "target": "element-000003"
+      },
+      "origin_point": [
+        650,
+        320
+      ],
+      "status": "readable",
+      "target_point": [
+        463,
+        273
+      ],
+      "to_id": "correction-element-000001",
+      "verified_element_id": "element-000003",
+      "verified_obligation_id": "obligation-000003"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000007",
+      "description": "The purple D7 marker corresponds to the tooltip's purple Owed to us (invoices) entry, which reports $9.5k for D7.",
+      "from_id": "correction-element-000002",
+      "gap_reason": "",
+      "id": "relationship-000007-correction-000001",
+      "kind": "chart tooltip series entry within a chart data tooltip",
+      "locked_identity_participants": {
+        "target": "element-000010"
+      },
+      "origin_point": [
+        463,
+        423
+      ],
+      "status": "readable",
+      "target_point": [
+        460,
+        219
+      ],
+      "to_id": "element-000010",
+      "verified_element_id": "element-000010",
+      "verified_obligation_id": "obligation-000010"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000009",
+      "description": "The callout applies to both adjacent right-side summary cards: replace them with Taggable Content Revenue sourced from column BU and Taggable Service Fee Revenue sourced from column BX until additional products exist.",
+      "from_id": "element-000012",
+      "gap_reason": "",
+      "id": "relationship-000009-correction-000001",
+      "kind": "annotation callout specifies values and labels for two dashboard metric cards",
+      "locked_identity_participants": {
+        "origin": "element-000012"
+      },
+      "origin_point": [
+        792,
+        72
+      ],
+      "status": "readable",
+      "target_point": [
+        832,
+        123
+      ],
+      "to_id": "correction-element-000003",
+      "verified_element_id": "element-000012",
+      "verified_obligation_id": "obligation-000012"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000013",
+      "description": "The annotation's red arrow points to the blue D7 data marker and explains that the chart plots the summary values above by day across the selected period, with each series toggleable.",
+      "from_id": "element-000021",
+      "gap_reason": "",
+      "id": "relationship-000013-correction-000001",
+      "kind": "annotation-to-chart behavior specification",
+      "locked_identity_participants": {
+        "target": "element-000022"
+      },
+      "origin_point": [
+        700,
+        325
+      ],
+      "status": "readable",
+      "target_point": [
+        461,
+        273
+      ],
+      "to_id": "element-000020",
+      "verified_element_id": "element-000022",
+      "verified_obligation_id": "obligation-000019"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000017",
+      "description": "The WE SEND THEM table column is populated from the sum of positive values in spreadsheet column AF.",
+      "from_id": "element-000027",
+      "gap_reason": "",
+      "id": "relationship-000017-correction-000001",
+      "kind": "calculation mapping",
+      "locked_identity_participants": {
+        "origin": "element-000027"
+      },
+      "origin_point": [
+        570,
+        755
+      ],
+      "status": "readable",
+      "target_point": [
+        570,
+        806
+      ],
+      "to_id": "correction-element-000004",
+      "verified_element_id": "element-000027",
+      "verified_obligation_id": "obligation-000024"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000018",
+      "description": "The THEY OWE US table column is populated from the sum of negative values in spreadsheet column AF.",
+      "from_id": "element-000028",
+      "gap_reason": "",
+      "id": "relationship-000018-correction-000001",
+      "kind": "annotation callout points to table column",
+      "locked_identity_participants": {
+        "origin": "element-000028"
+      },
+      "origin_point": [
+        733,
+        757
+      ],
+      "status": "readable",
+      "target_point": [
+        730,
+        810
+      ],
+      "to_id": "correction-element-000005",
+      "verified_element_id": "element-000028",
+      "verified_obligation_id": "obligation-000025"
+    },
+    {
+      "binding_method": "correction_selected_identity_and_containment",
+      "correction_of": "relationship-000019",
+      "description": "The NET table column is populated from the sum of all values in spreadsheet column AF.",
+      "from_id": "element-000030",
+      "gap_reason": "",
+      "id": "relationship-000019-correction-000001",
+      "kind": "calculation mapping",
+      "locked_identity_participants": {
+        "origin": "element-000030"
+      },
+      "origin_point": [
+        888,
+        772
+      ],
+      "status": "readable",
+      "target_point": [
+        886,
+        810
+      ],
+      "to_id": "correction-element-000006",
+      "verified_element_id": "element-000030",
+      "verified_obligation_id": "obligation-000026"
+    }
+  ],
+  "schema_version": 1,
+  "source_sha256": "c4ee0821a5d9a580ee8a6d341ae6e843dd44127c2bcce98a2fd967b1e2ffed81"
+}

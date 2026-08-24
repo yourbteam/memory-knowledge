@@ -1,0 +1,16 @@
+{
+  "accepted_assessment_sha256": "b1961aa1b8485c318642f55e1c75d154541ca648fd552eff08cd216fd4366c39",
+  "clarification_sha256": "2daf2a91b500509f927d545b8c453488dca1a9f2567058d44d93333057cfbc32",
+  "gap_id": "relationship-000015",
+  "operator_answer_projection_sha256": "0769e7917a4fc9f98e8ec237ee31e289044c71c86e10835113beaffbb2ff2bb7",
+  "operator_answer_source_sha256": "0769e7917a4fc9f98e8ec237ee31e289044c71c86e10835113beaffbb2ff2bb7",
+  "projection_sha256": "6cec066d03b498935dc3cdc9dc3273db217f1f1f496b0de0544f40c70d379cc9",
+  "reader": {
+    "harness": "Codex",
+    "model": "GPT-5.6 Codex"
+  },
+  "reason": "It names both the intended UI target\u2014the selected operator\u2019s Payout reports history list\u2014and the behavior being described: searching that history by date range or report number.",
+  "schema_version": 1,
+  "verdict": "resolves_gap",
+  "verification_candidate_sha256": "3e08db9a173cffea33fd3c764093a7242e9d9d675b7c583c29eb83141858dad6"
+}

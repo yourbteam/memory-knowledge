@@ -1,0 +1,876 @@
+{
+  "elements": [
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "All of this section is for the current pay period. Either 1st-15th or the 16th - End of month. Add up the total net revenue for all locations (Column AF) Then for refunds if we owe them money we reduce payout amount by refund amount. If they owe us money we add the refund amount to what they owe us. We should show refunds as a negative number always and then the math just works. Just add the refunds to the total net payout amount.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "All of this section is for the current pay period. Either 1st-15th or the 16th - End of month. Add up the total net revenue for all locations (Column AF) Then for refunds if we owe them money we reduce payout amount by refund amount. If they owe us money we add the refund amount to what they owe us. We should show refunds as a negative number always and then the math just works. Just add the refunds to the total net payout amount.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000001",
+          "claimed_content": "All of this section is for the current pay period. Either 1st-15th or the 16th - End of month. Add up the total net revenue for all locations (Column AF) Then for refunds if we owe them money we reduce payout amount by refund amount. If they owe us money we add the refund amount to what they owe us. We should show refunds as a negative number always and then the math just works. Just add the refunds to the total net payout amount.",
+          "crop_path": "endpoint-evidence/element-000001-required-recorded-participant-09e44f40c264f6b3.png",
+          "crop_sha256": "9fd670744a7d7835df9b9a5704e08c35c54d193e4f3068e0b5a306865d33bcd8",
+          "normalized_bounds": [
+            1,
+            1,
+            212,
+            240
+          ],
+          "pixel_bounds": [
+            2,
+            1,
+            483,
+            311
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000001",
+      "kind": "annotation callout",
+      "region": [
+        1,
+        1,
+        212,
+        240
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Net payout \u00b7 to date; photo revenue \u2212 code fees \u2212 refunds; $54,308.60; +$54,620.35 photos \u00b7 \u2212$311.75 codes \u00b7 \u2212$0.00 refunds",
+      "gap_reason": "",
+      "id": "element-000002",
+      "kind": "payout summary card",
+      "region": [
+        203,
+        170,
+        394,
+        334
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "I am not sure how we will track photo vs video yet. For now lets make the top section package (Column F + Column K) vs non package (Column C + Column I) sales.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "I am not sure how we will track photo vs video yet. For now lets make the top section package (Column F + Column K) vs non package (Column C + Column I) sales.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000003",
+          "claimed_content": "I am not sure how we will track photo vs video yet. For now lets make the top section package (Column F + Column K) vs non package (Column C + Column I) sales.",
+          "crop_path": "endpoint-evidence/element-000003-required-recorded-participant-c87df53d45fa5222.png",
+          "crop_sha256": "d52d6ea4e97690c1616d6a553347d2e57bdcb7560272f665b4aca52d0623b270",
+          "normalized_bounds": [
+            289,
+            12,
+            465,
+            274
+          ],
+          "pixel_bounds": [
+            657,
+            15,
+            1059,
+            355
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000003",
+      "kind": "annotation callout with arrow",
+      "region": [
+        289,
+        12,
+        465,
+        274
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "Total paid transaction revenue: Column X; Total Paid Transactions: Column W",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Total paid transaction revenue: Column X; Total Paid Transactions: Column W",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000004",
+          "claimed_content": "Total paid transaction revenue: Column X; Total Paid Transactions: Column W",
+          "crop_path": "endpoint-evidence/element-000004-required-participant-replacement-033656980f3850ba.png",
+          "crop_sha256": "b0e4cc39aba96b2247f6cf12ea437160c0f3a8efb876a62ca7145e53783b7219",
+          "normalized_bounds": [
+            472,
+            12,
+            641,
+            275
+          ],
+          "pixel_bounds": [
+            1074,
+            15,
+            1459,
+            356
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_participant_replacement"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000004",
+      "kind": "annotation callout with arrow",
+      "region": [
+        472,
+        12,
+        641,
+        275
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "$54,620.35; 1,942 total transactions",
+      "gap_reason": "",
+      "id": "element-000005",
+      "kind": "content revenue summary card",
+      "region": [
+        402,
+        177,
+        550,
+        333
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "Amount owed = Column AD; # of codes used = column AC",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Amount owed = Column AD; # of codes used = column AC",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000006",
+          "claimed_content": "Amount owed = Column AD; # of codes used = column AC",
+          "crop_path": "endpoint-evidence/element-000006-required-recorded-participant-208d8b251a375efd.png",
+          "crop_sha256": "187e08aba5dbcc9b691626a896d2d21c748552d8a3c5acb6d92875c7d4bd4e3d",
+          "normalized_bounds": [
+            634,
+            17,
+            793,
+            129
+          ],
+          "pixel_bounds": [
+            1442,
+            21,
+            1805,
+            167
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000006",
+      "kind": "annotation callout",
+      "region": [
+        634,
+        17,
+        793,
+        129
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "Redemption code fees; charged me comped photo; -$311.75; 96 codes used",
+      "gap_reason": "",
+      "id": "element-000007",
+      "kind": "metric card",
+      "region": [
+        599,
+        177,
+        789,
+        333
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "We will need to integrate with Stripe to show the refunds amount and the # of refunded transactions in this box. For now just put a dash or make it so we can manually enter the amount. Dont put $0 bc I dont want them to think it was zero if there were some.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "We will need to integrate with Stripe to show the refunds amount and the # of refunded transactions in this box. For now just put a dash or make it so we can manually enter the amount. Dont put $0 bc I dont want them to think it was zero if there were some.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000008",
+          "claimed_content": "We will need to integrate with Stripe to show the refunds amount and the # of refunded transactions in this box. For now just put a dash or make it so we can manually enter the amount. Dont put $0 bc I dont want them to think it was zero if there were some.",
+          "crop_path": "endpoint-evidence/element-000008-required-recorded-participant-1c14cc3e3f3b5d2f.png",
+          "crop_sha256": "1af62f05e621674dfcd018e219e83c55964106c68352ea50cc2746abbc6a8244",
+          "normalized_bounds": [
+            808,
+            32,
+            981,
+            248
+          ],
+          "pixel_bounds": [
+            1839,
+            41,
+            2233,
+            321
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000008",
+      "kind": "annotation callout",
+      "region": [
+        808,
+        32,
+        981,
+        248
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "Refunds; reversed transactions; $0.00; this period",
+      "gap_reason": "",
+      "id": "element-000009",
+      "kind": "metric card",
+      "region": [
+        797,
+        177,
+        988,
+        334
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "3,763 PAID TXNS",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "3,763 PAID TXNS",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000010",
+          "claimed_content": "3,763 PAID TXNS",
+          "crop_path": "endpoint-evidence/element-000010-required-participant-replacement-250f03aaa4e6ec8f.png",
+          "crop_sha256": "7d00f133296445e6b122a7cd3850de19253f5a71488629c7a46fcc9278768780",
+          "normalized_bounds": [
+            356,
+            469,
+            391,
+            522
+          ],
+          "pixel_bounds": [
+            810,
+            605,
+            890,
+            675
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_participant_replacement"
+        },
+        "identity_continuity": {
+          "required_claim": "3,763 PAID TXNS",
+          "verdict": "same_required_source_unit"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000010",
+      "kind": "paid transactions metric",
+      "region": [
+        356,
+        469,
+        391,
+        522
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "$101,503.80 PHOTO REVENUE",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "$101,503.80 PHOTO REVENUE",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000011",
+          "claimed_content": "$101,503.80 PHOTO REVENUE",
+          "crop_path": "endpoint-evidence/element-000011-required-recorded-participant-59584e83d3e6d9e5.png",
+          "crop_sha256": "2159776f73e513bccf81bf48566bed26316798423f915b99ea732803ddc99219",
+          "normalized_bounds": [
+            435,
+            484,
+            489,
+            516
+          ],
+          "pixel_bounds": [
+            990,
+            625,
+            1113,
+            667
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000011",
+      "kind": "photo revenue metric",
+      "region": [
+        435,
+        484,
+        489,
+        516
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c03",
+      "content": "Just pull these numbers from the payout report to populate these. They are all calculated in the payout report. Paid txt: W Photo Rev: X Codes Used: AC Code Fees: AD Total net payout: AF + refunds",
+      "gap_reason": "",
+      "id": "element-000012",
+      "kind": "annotation callout",
+      "region": [
+        522,
+        336,
+        674,
+        480
+      ],
+      "scan_region_id": "region-r02-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c03",
+      "content": "179 CODES USED",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "179 CODES USED",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000013",
+          "claimed_content": "179 CODES USED",
+          "crop_path": "endpoint-evidence/element-000013-required-recorded-participant-3c6fee83ebdf3582.png",
+          "crop_sha256": "50e41889284b2d18f51f082062c32d6ed3f16bbc71b6dea6950a7e4e41d37b73",
+          "normalized_bounds": [
+            514,
+            484,
+            552,
+            516
+          ],
+          "pixel_bounds": [
+            1169,
+            625,
+            1257,
+            667
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000013",
+      "kind": "metric display",
+      "region": [
+        514,
+        484,
+        552,
+        516
+      ],
+      "scan_region_id": "region-r02-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c03",
+      "content": "-$581.75 CODE FEES",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "-$581.75 CODE FEES",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000014",
+          "claimed_content": "-$581.75 CODE FEES",
+          "crop_path": "endpoint-evidence/element-000014-required-recorded-participant-cbd254571027c74c.png",
+          "crop_sha256": "2bc94394ef99694c035e653a859e95b37b5f41fcf3c1bc117b1003a61bc8e549",
+          "normalized_bounds": [
+            594,
+            484,
+            632,
+            516
+          ],
+          "pixel_bounds": [
+            1351,
+            625,
+            1439,
+            667
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000014",
+      "kind": "metric display",
+      "region": [
+        594,
+        484,
+        632,
+        516
+      ],
+      "scan_region_id": "region-r02-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000015",
+          "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+          "crop_path": "endpoint-evidence/element-000015-required-recorded-participant-fc3bd74302bc0354.png",
+          "crop_sha256": "bf2df7d2540f967009324467a1224080e164e45aaa2f6745a118f0ab3fc14c9d",
+          "normalized_bounds": [
+            213,
+            557,
+            1000,
+            650
+          ],
+          "pixel_bounds": [
+            484,
+            719,
+            2276,
+            840
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000015",
+      "kind": "payout period card",
+      "region": [
+        213,
+        557,
+        1000,
+        650
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "Jun 16 \u2013 30, 2026; PAYOUT-GCR-2026-06B; Grand Canyon Resort; 3,540 PAID TXNS; $98,120.40 PHOTO REVENUE; 168 CODES USED; -$546.00 CODE FEES; PAYOUT TO OPERATOR; $97,574.40; \u2193 PDF; open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Jun 16 \u2013 30, 2026; PAYOUT-GCR-2026-06B; Grand Canyon Resort; 3,540 PAID TXNS; $98,120.40 PHOTO REVENUE; 168 CODES USED; -$546.00 CODE FEES; PAYOUT TO OPERATOR; $97,574.40; \u2193 PDF; open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000016",
+          "claimed_content": "Jun 16 \u2013 30, 2026; PAYOUT-GCR-2026-06B; Grand Canyon Resort; 3,540 PAID TXNS; $98,120.40 PHOTO REVENUE; 168 CODES USED; -$546.00 CODE FEES; PAYOUT TO OPERATOR; $97,574.40; \u2193 PDF; open \u2192",
+          "crop_path": "endpoint-evidence/element-000016-required-recorded-participant-0f246858dbe50bc3.png",
+          "crop_sha256": "b122e6eba3547a665aa4d4498f388497806b7d4b9cd297c79defcd2ac9e862df",
+          "normalized_bounds": [
+            213,
+            660,
+            1000,
+            755
+          ],
+          "pixel_bounds": [
+            484,
+            852,
+            2276,
+            976
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000016",
+      "kind": "payout period card",
+      "region": [
+        213,
+        660,
+        1000,
+        755
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c04",
+      "content": "$100,922.05 \u2193 PDF open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "$100,922.05 \u2193 PDF open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000017",
+          "claimed_content": "$100,922.05 \u2193 PDF open \u2192",
+          "crop_path": "endpoint-evidence/element-000017-required-recorded-participant-33ccb438535343af.png",
+          "crop_sha256": "47de220426075edd673aebbc0282a06fbd32d11026cc6dbc640cebc51b1d93d0",
+          "normalized_bounds": [
+            750,
+            500,
+            977,
+            547
+          ],
+          "pixel_bounds": [
+            1707,
+            646,
+            2224,
+            707
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000017",
+      "kind": "transaction record row",
+      "region": [
+        750,
+        500,
+        977,
+        547
+      ],
+      "scan_region_id": "region-r03-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c02",
+      "content": "\u2013 15, 2026; GCR-2026-06A; Canyon Resort; 3,320 PAID TXNS; $92,010.75 PHOTO REVENUE; 150 CODES USED; \u2212$487.50 CODE FEES; PAYOUT TO OPERATOR $91,523.25; \u2193 PDF; open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "\u2013 15, 2026; GCR-2026-06A; Canyon Resort; 3,320 PAID TXNS; $92,010.75 PHOTO REVENUE; 150 CODES USED; \u2212$487.50 CODE FEES; PAYOUT TO OPERATOR $91,523.25; \u2193 PDF; open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000018",
+          "claimed_content": "\u2013 15, 2026; GCR-2026-06A; Canyon Resort; 3,320 PAID TXNS; $92,010.75 PHOTO REVENUE; 150 CODES USED; \u2212$487.50 CODE FEES; PAYOUT TO OPERATOR $91,523.25; \u2193 PDF; open \u2192",
+          "crop_path": "endpoint-evidence/element-000018-required-recorded-participant-1c77a20d7197990f.png",
+          "crop_sha256": "fbd6a82e63fb3c8bfe05d3df56a60d5427a895c789d3b3329cfa7cd4ecb6f19e",
+          "normalized_bounds": [
+            0,
+            764,
+            1000,
+            868
+          ],
+          "pixel_bounds": [
+            0,
+            987,
+            2276,
+            1122
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000018",
+      "kind": "historical performance summary row",
+      "region": [
+        0,
+        764,
+        1000,
+        868
+      ],
+      "scan_region_id": "region-r04-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c02",
+      "content": "16 \u2013 31, 2026; GCR-2026-05B; Canyon Resort; 3,105 PAID TXNS; $86,440.20 PHOTO REVENUE; 141 CODES USED; \u2212$458.25 CODE FEES; PAYOUT TO OPERATOR $85,981.95; \u2193 PDF; open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "16 \u2013 31, 2026; GCR-2026-05B; Canyon Resort; 3,105 PAID TXNS; $86,440.20 PHOTO REVENUE; 141 CODES USED; \u2212$458.25 CODE FEES; PAYOUT TO OPERATOR $85,981.95; \u2193 PDF; open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000019",
+          "claimed_content": "16 \u2013 31, 2026; GCR-2026-05B; Canyon Resort; 3,105 PAID TXNS; $86,440.20 PHOTO REVENUE; 141 CODES USED; \u2212$458.25 CODE FEES; PAYOUT TO OPERATOR $85,981.95; \u2193 PDF; open \u2192",
+          "crop_path": "endpoint-evidence/element-000019-required-recorded-participant-abd699123a87e03f.png",
+          "crop_sha256": "a097ac75015df97c43dd7cb9e72100266e244de8e2d9a35b5640aec5684a9034",
+          "normalized_bounds": [
+            0,
+            867,
+            1000,
+            961
+          ],
+          "pixel_bounds": [
+            0,
+            1120,
+            2276,
+            1242
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000019",
+      "kind": "historical performance summary row",
+      "region": [
+        0,
+        867,
+        1000,
+        961
+      ],
+      "scan_region_id": "region-r04-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c02",
+      "content": "",
+      "gap_reason": "The text is clipped by the source at the left, right, and bottom edges, so the full sentence is not visible.",
+      "id": "element-000020",
+      "kind": "explanatory text",
+      "region": [
+        0,
+        974,
+        1000,
+        1000
+      ],
+      "scan_region_id": "region-r04-c02",
+      "status": "gap"
+    },
+    {
+      "capture_scope": "relationship_endpoint",
+      "content": "No\u2014do not connect anything to that heading; preserve the rejected candidate in the audit trail.",
+      "endpoint_verification": {
+        "claimed_content": "Payout reports",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000021",
+          "claimed_content": "Payout reports",
+          "crop_path": "endpoint-evidence/element-000021.png",
+          "crop_sha256": "a63724efcc684697e2f9b896e33c0818087e3a0f850cfa9f692a07662c9b1b48",
+          "normalized_bounds": [
+            203,
+            372,
+            275,
+            397
+          ],
+          "pixel_bounds": [
+            462,
+            480,
+            626,
+            513
+          ],
+          "source_pixel_size": [
+            2276,
+            1292
+          ],
+          "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+          "verification_scope": "relationship_endpoint"
+        },
+        "verdict": "does_not_contain_claimed_content"
+      },
+      "gap_reason": "",
+      "id": "element-000021",
+      "kind": "payout reports section heading",
+      "region": [
+        203,
+        372,
+        275,
+        397
+      ],
+      "resolution_audit": {
+        "accepted_assessment_sha256": "2f1fd296d79b5290d4c61aed15a32678359eb7968b649806902ba10e316cb5cd",
+        "admission_input_sha256": "1601153214c4a73db090c3e41b872b2555eb0b1fff774dfde1bdf9cf8b1f5bde",
+        "answer_projection_id": "projection-source-000005-v1",
+        "answer_projection_sha256": "9f49d1f43a9333d7d3ee8b28de15a2d6bd609b59cdabd098c79ac91c2f6aa63b",
+        "answer_source_id": "source-000005",
+        "answer_source_sha256": "9f49d1f43a9333d7d3ee8b28de15a2d6bd609b59cdabd098c79ac91c2f6aa63b",
+        "answer_text_sha256": "9f49d1f43a9333d7d3ee8b28de15a2d6bd609b59cdabd098c79ac91c2f6aa63b",
+        "assessment_position": 2,
+        "assessment_result_sha256": "f1b175cb4a0ef2baf88af121d5488908188430cabd2bfb857d90e2fa041530f2",
+        "assessment_round": 1,
+        "contract": 1,
+        "original_gap_record_sha256": "647ef24fb4917e8b9f230515a493fef9b6f73ebab5e9db08b3d20e26c54ab89e",
+        "parent_projection_id": "projection-source-000003-v1",
+        "parent_projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a"
+      },
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_correction_endpoint",
+      "content": "Jul 16 \u2013 31, 2026; PAYOUT-GCR-2026-07B; Grand Canyon Resort; 3,763 PAID TXNS; $101,503.80 PHOTO REVENUE; 179 CODES USED; -$581.75 CODE FEES; PAYOUT TO OPERATOR; $100,922.05; PDF; open",
+      "gap_reason": "",
+      "id": "correction-element-000001",
+      "kind": "payout period card",
+      "region": [
+        213,
+        452,
+        1000,
+        548
+      ],
+      "status": "readable"
+    }
+  ],
+  "operator_answer_source_sha256": "fafde1a06539c01182d98bbe95cfe491601c817896deb1805b24966cf3082722",
+  "relationships": [
+    {
+      "binding_method": "operator_answer_selected_identity_and_containment",
+      "description": "The Jul 1\u201315, 2026 pay-period interval is the source context for the payout-period card\u2019s data calculation and the data points displayed in that row.",
+      "from_id": "element-000015",
+      "gap_reason": "",
+      "id": "relationship-000010-resolution-000001",
+      "kind": "data population instruction",
+      "origin_point": [
+        600,
+        600
+      ],
+      "resolution_evidence": {
+        "accepted_assessment_sha256": "9634f1593a5e64b242bec825c72128864abe831208eb31bd01ce0d4634c68272",
+        "bound_gap_record_sha256": "96dc02e7798985872080eae0a3039e3ed6c3e18f0b56787ac3d393cc1fcdb76b",
+        "operator_answer_source_sha256": "fafde1a06539c01182d98bbe95cfe491601c817896deb1805b24966cf3082722",
+        "question_id": "gap-clarification-answer-000003"
+      },
+      "resolution_of": "relationship-000010",
+      "status": "readable",
+      "target_point": [
+        600,
+        600
+      ],
+      "to_id": "element-000015"
+    }
+  ],
+  "schema_version": 1,
+  "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f"
+}

@@ -27,6 +27,9 @@ start_intake = _load_sibling("info_intake_start", "start_intake.py")
 projection_runner = _load_sibling(
     "info_intake_projection_runner", "run_projection_with_codex.py"
 )
+terminal_archiver = _load_sibling(
+    "info_intake_terminal_archiver", "archive_terminal_run.py"
+)
 
 
 def _ask(
@@ -148,12 +151,17 @@ def _completed_intake_action(
     output_fn: Callable[[str], None],
 ) -> str | None:
     if (
-        result.get("status") != "first_layer_complete"
+        result.get("status")
+        not in {"first_layer_complete", "first_layer_complete_with_preserved_gaps"}
         or result.get("stopped") != "effective_first_layer_terminal_recorded"
     ):
         return None
     return _choose(
-        "The intake is complete. What should happen next?",
+        (
+            "The intake is complete with preserved gaps. What should happen next?"
+            if result.get("status") == "first_layer_complete_with_preserved_gaps"
+            else "The intake is complete. What should happen next?"
+        ),
         ("return_result", "add_source"),
         input_fn=input_fn,
         output_fn=output_fn,
@@ -573,6 +581,7 @@ def run(
     input_fn: Callable[[str], str] = input,
     output_fn: Callable[[str], None] = print,
     model_run_fn: Callable[..., object] = subprocess.run,
+    archive_root: Path = terminal_archiver.DEFAULT_ARCHIVE_ROOT,
 ) -> int:
     action = _choose(
         "What should this launcher do?",
@@ -630,7 +639,7 @@ def run(
             output_fn=output_fn,
         )
         purpose = None
-    return _continue_intake(
+    returncode = _continue_intake(
         work,
         opening,
         purpose,
@@ -640,6 +649,13 @@ def run(
         projection_region_limit=projection_region_limit,
         projection_relationship_limit=projection_relationship_limit,
     )
+    if returncode == 0:
+        archived = terminal_archiver.archive_if_terminal(
+            work, archive_root=archive_root
+        )
+        if archived is not None:
+            output_fn(json.dumps({"intake_archive": archived}, indent=2, sort_keys=True))
+    return returncode
 
 
 def main() -> int:

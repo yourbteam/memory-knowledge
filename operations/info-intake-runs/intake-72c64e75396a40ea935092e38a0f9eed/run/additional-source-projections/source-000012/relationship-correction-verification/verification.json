@@ -1,0 +1,45 @@
+{
+  "candidate_sha256": "eebeb6550a78fbdeb792d7ba7810f4af9698da930bedb4350f8391694780db34",
+  "reader": {
+    "harness": "Codex",
+    "model": "GPT-5"
+  },
+  "schema_version": 1,
+  "verdicts": [
+    {
+      "reason": "The red arrow from the callout visibly terminates at the blue D7 plotted marker on the High-level payouts & revenue chart, alongside the D7 vertical guide and tooltip.",
+      "relationship_id": "relationship-000002-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The D7 tooltip visibly contains the purple series entry \u201cOwed to us (invoices) $9.5k,\u201d and the purple plotted marker is aligned at D7 under that active tooltip.",
+      "relationship_id": "relationship-000007-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout is positioned directly over the two adjacent right-side cards and explicitly refers to \u201cthese two boxes\u201d; the visible pair beneath it is Content add-ons and Merch add-ons.",
+      "relationship_id": "relationship-000009-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout\u2019s red arrow visibly points to the blue circular marker on the upper line at D7, matching its description of daily chart values and toggled series.",
+      "relationship_id": "relationship-000013-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow descending from \u201cThe sum of the positive numbers in column AF\u201d visibly terminates at the WE SEND THEM column header, whose listed values and total are shown directly below.",
+      "relationship_id": "relationship-000017-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout\u2019s downward red arrow visibly terminates at the THEY OWE US column, which shows the negative-side amounts and the $28,905.10 total.",
+      "relationship_id": "relationship-000018-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout\u2019s red arrow visibly terminates at the NET column header, with payout/invoice results and the final Net $1,466,551.45 displayed beneath it.",
+      "relationship_id": "relationship-000019-correction-000001",
+      "verdict": "supported"
+    }
+  ]
+}

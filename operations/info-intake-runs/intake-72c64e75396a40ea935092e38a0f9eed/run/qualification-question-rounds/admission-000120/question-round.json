@@ -1,0 +1,566 @@
+{
+  "qualification_admission_sha256": "d6329994f9699967552308df4cfa9c4cf541bcb4f7075c266df14ad3cbb1de9e",
+  "questions": [
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 1,
+        "gap_sha256": "c990f2b3df7ef47eca398fee32ae305bb0bf1e909ade696bef1edad581952434",
+        "id": "clarification-obligation-000001",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000003-v6",
+        "projection_sha256": "e5fe90e4891bdf0f61aad7b50229c99aedfd9cce9a4730e239b753f525973b1d",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000003",
+        "source_position": 3,
+        "unit": "element-000020"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for element-000020 in source-000003?",
+      "evidence_sha256": "9dc9970f448ea7aadaf7682403edada3143196ee3d03154d46e412bb50921407",
+      "id": "qualification-clarification-answer-000001"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 1,
+        "gap_sha256": "738cbeea12c1441cfce2afe952a33bf607b263681dc552a0f3c9d91c07b144a8",
+        "id": "clarification-obligation-000002",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000009-v1",
+        "projection_sha256": "c38af8822bcda567488101fc16d83d909a0a6bdaa6800c2fca67a6aa14e3da43",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000009",
+        "source_position": 9,
+        "unit": "relationship-000007"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000007 in source-000009?",
+      "evidence_sha256": "e93ff1b4a6247dea6550cebd21b4db7c1d7a6198b2f9fd5c435abc9b0740a86e",
+      "id": "qualification-clarification-answer-000002"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 2,
+        "gap_sha256": "a281b924f22e31a126de9d6c761688bff7d6c764d13d1712144f845d51a7fa5f",
+        "id": "clarification-obligation-000003",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000009-v1",
+        "projection_sha256": "c38af8822bcda567488101fc16d83d909a0a6bdaa6800c2fca67a6aa14e3da43",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000009",
+        "source_position": 9,
+        "unit": "relationship-000008"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000008 in source-000009?",
+      "evidence_sha256": "0e7114955b70f86360ae51b95f8f8e389a5210fae3225733a20dce5df4f6de01",
+      "id": "qualification-clarification-answer-000003"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 3,
+        "gap_sha256": "ef53ce098be32bf865008bfbac57b9fca1411517c84a197cfcd73f05137373f0",
+        "id": "clarification-obligation-000004",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000009-v1",
+        "projection_sha256": "c38af8822bcda567488101fc16d83d909a0a6bdaa6800c2fca67a6aa14e3da43",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000009",
+        "source_position": 9,
+        "unit": "relationship-000010"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000010 in source-000009?",
+      "evidence_sha256": "af3612a485708b863902ea5cb61f50dbe45160c4a42f91b014c65baffd97ce8a",
+      "id": "qualification-clarification-answer-000004"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 1,
+        "gap_sha256": "b7fa4bb28868bee0de7b8b13015f74f3ca9cfff9c5a7bb5c9e3ea05661d87573",
+        "id": "clarification-obligation-000005",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000010-v1",
+        "projection_sha256": "eee2896c72da6314e2c7a050381d5e9a2d8e5c7b9c22b51dfc015cf6860aaa23",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000010",
+        "source_position": 10,
+        "unit": "relationship-000005"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000005 in source-000010?",
+      "evidence_sha256": "652c75f271bf529bfafb6af5ca9ef73b77b61810bbabd74b6527c2419c763b84",
+      "id": "qualification-clarification-answer-000005"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 2,
+        "gap_sha256": "067c55f96975962be6c7f70b3ad548ae249863c1856809b3db539a530933e677",
+        "id": "clarification-obligation-000006",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000010-v1",
+        "projection_sha256": "eee2896c72da6314e2c7a050381d5e9a2d8e5c7b9c22b51dfc015cf6860aaa23",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000010",
+        "source_position": 10,
+        "unit": "relationship-000018"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000018 in source-000010?",
+      "evidence_sha256": "fba417023980e7ca9713e0817dba077c2e7f7a4f1ee329e12ed14da19c0a2f01",
+      "id": "qualification-clarification-answer-000006"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 1,
+        "gap_sha256": "f065b7e256b258ff1c18daaa87a664eb3eebbd218ad8a36076eb52c023684f49",
+        "id": "clarification-obligation-000007",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000011-v1",
+        "projection_sha256": "a224562292369aa535f49721ea8a1d2a34a7c420eb932685edfbcee3eb1c355f",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000011",
+        "source_position": 11,
+        "unit": "element-000017"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for element-000017 in source-000011?",
+      "evidence_sha256": "6932783ab3245be8ff0843a89b7206822a6b8f8d07e58b3cba5d8645cca4c7cd",
+      "id": "qualification-clarification-answer-000007"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 2,
+        "gap_sha256": "ab4ee26e4a44e4302421a27ebfaaf05955f00324bf3d1fcf840bb1452668b1fd",
+        "id": "clarification-obligation-000008",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000011-v1",
+        "projection_sha256": "a224562292369aa535f49721ea8a1d2a34a7c420eb932685edfbcee3eb1c355f",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000011",
+        "source_position": 11,
+        "unit": "element-000027"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for element-000027 in source-000011?",
+      "evidence_sha256": "a27bbd148221106bad295743e08cf2445a5f290bfd259d3b96268652618c53e1",
+      "id": "qualification-clarification-answer-000008"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 3,
+        "gap_sha256": "263a16e5f56610be002e5c98ccfaeb9fba93fa2b3efb08b21a065a0cd5488a14",
+        "id": "clarification-obligation-000009",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000011-v1",
+        "projection_sha256": "a224562292369aa535f49721ea8a1d2a34a7c420eb932685edfbcee3eb1c355f",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000011",
+        "source_position": 11,
+        "unit": "element-000043"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for element-000043 in source-000011?",
+      "evidence_sha256": "2e2a2d4c0eaf82de7a5cb62badc6287352509915998e7e579c94413ae39b7edc",
+      "id": "qualification-clarification-answer-000009"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 4,
+        "gap_sha256": "d810200f807cbf5903b90e0de0de73ef632cafd892eaf1464474ec82f4d39e95",
+        "id": "clarification-obligation-000010",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000011-v1",
+        "projection_sha256": "a224562292369aa535f49721ea8a1d2a34a7c420eb932685edfbcee3eb1c355f",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000011",
+        "source_position": 11,
+        "unit": "element-000053"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for element-000053 in source-000011?",
+      "evidence_sha256": "7f9452dfd7f97fabca4d5e4293839e09f1891c26203481a8c8c5fd52cd6d7a5b",
+      "id": "qualification-clarification-answer-000010"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 5,
+        "gap_sha256": "1e18830154b3a6598ab5e642c30b7edc938ffc0e77fd6a5cae739564c219277e",
+        "id": "clarification-obligation-000011",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000011-v1",
+        "projection_sha256": "a224562292369aa535f49721ea8a1d2a34a7c420eb932685edfbcee3eb1c355f",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000011",
+        "source_position": 11,
+        "unit": "element-000058"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for element-000058 in source-000011?",
+      "evidence_sha256": "8c84c33bd925dd764ecc7a71ab917cdd389371e7a84a7b5a86148a0d8f904f56",
+      "id": "qualification-clarification-answer-000011"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 6,
+        "gap_sha256": "581f17424dc230e255fa72c27f7246c4f890a8d5aba5722c0319e49c4ce091d3",
+        "id": "clarification-obligation-000012",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000011-v1",
+        "projection_sha256": "a224562292369aa535f49721ea8a1d2a34a7c420eb932685edfbcee3eb1c355f",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000011",
+        "source_position": 11,
+        "unit": "relationship-000012"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000012 in source-000011?",
+      "evidence_sha256": "496adc59204994a5abfcb00248f35459dcd3a50512a9058ed1d176f61924037b",
+      "id": "qualification-clarification-answer-000012"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 7,
+        "gap_sha256": "7a0ac7ffdf9186a58de1c204f4579a9e7cbc18fb58e5bf03a12026d4810345a4",
+        "id": "clarification-obligation-000013",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000011-v1",
+        "projection_sha256": "a224562292369aa535f49721ea8a1d2a34a7c420eb932685edfbcee3eb1c355f",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000011",
+        "source_position": 11,
+        "unit": "relationship-000017"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000017 in source-000011?",
+      "evidence_sha256": "e9983d4d534bc403456775d4447bd7d83bc3df84543453445f974dec6d92b99c",
+      "id": "qualification-clarification-answer-000013"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 8,
+        "gap_sha256": "68b10abc6a63b6885cb31ed8537653dc14fc199b76eeda90a935672793ceaa27",
+        "id": "clarification-obligation-000014",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000011-v1",
+        "projection_sha256": "a224562292369aa535f49721ea8a1d2a34a7c420eb932685edfbcee3eb1c355f",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000011",
+        "source_position": 11,
+        "unit": "relationship-000018"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000018 in source-000011?",
+      "evidence_sha256": "ea856e6db40356d4775d4ed51303f12a7783c04792d039439b1b4205695e13ed",
+      "id": "qualification-clarification-answer-000014"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 9,
+        "gap_sha256": "63c62c99bec61948d70eb5fc40f483eefd2e5163773c2fee789fe77b40e4dc0e",
+        "id": "clarification-obligation-000015",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000011-v1",
+        "projection_sha256": "a224562292369aa535f49721ea8a1d2a34a7c420eb932685edfbcee3eb1c355f",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000011",
+        "source_position": 11,
+        "unit": "relationship-000027"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000027 in source-000011?",
+      "evidence_sha256": "5695455f286bea3f577ef6fd9c3858e1b37e7b4538873c7696e0a5aa1fafa36c",
+      "id": "qualification-clarification-answer-000015"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 10,
+        "gap_sha256": "1ba6a4b57767a1c8195554a1cfc8252f0a78c7b187df5650ea24e7917709c5d3",
+        "id": "clarification-obligation-000016",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000011-v1",
+        "projection_sha256": "a224562292369aa535f49721ea8a1d2a34a7c420eb932685edfbcee3eb1c355f",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000011",
+        "source_position": 11,
+        "unit": "relationship-000029"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000029 in source-000011?",
+      "evidence_sha256": "39b719edeba11512f2c6dbc07ca54a44408faf28ea904d01f6cd2b47752dd5e2",
+      "id": "qualification-clarification-answer-000016"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 11,
+        "gap_sha256": "f16d2c73484e5a8d417fc9d130aea84fe0b93a3a3018c7b1d21c1ca02b21edf2",
+        "id": "clarification-obligation-000017",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000011-v1",
+        "projection_sha256": "a224562292369aa535f49721ea8a1d2a34a7c420eb932685edfbcee3eb1c355f",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000011",
+        "source_position": 11,
+        "unit": "relationship-000034"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000034 in source-000011?",
+      "evidence_sha256": "56a746a41f31b3ebab8355f98b994844c60ba65f524bd6d2149ab8ada94803d8",
+      "id": "qualification-clarification-answer-000017"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 1,
+        "gap_sha256": "9bba64c5c689cabfec366c466ceeeb435dcfa434dea4f988170d0c733c0af9c8",
+        "id": "clarification-obligation-000018",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000012-v1",
+        "projection_sha256": "4c9e6afa90655c8311f94df11150bd7c5745cc64b769a1c37f01525813801fe2",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000012",
+        "source_position": 12,
+        "unit": "element-000006"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for element-000006 in source-000012?",
+      "evidence_sha256": "b552c9a609831059d9342ba1bef09f91999936ac38b2d73c3e58afd0f53f80f8",
+      "id": "qualification-clarification-answer-000018"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 2,
+        "gap_sha256": "60c0c9a0df3a6c764dace607818ec7249edc2dc3caea332117a55811c07c9a0a",
+        "id": "clarification-obligation-000019",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000012-v1",
+        "projection_sha256": "4c9e6afa90655c8311f94df11150bd7c5745cc64b769a1c37f01525813801fe2",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000012",
+        "source_position": 12,
+        "unit": "element-000014"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for element-000014 in source-000012?",
+      "evidence_sha256": "ef2c18a1a7bd0b2b499c9ac2805b080192314a7947e79beef5d98c54ffc2d923",
+      "id": "qualification-clarification-answer-000019"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 3,
+        "gap_sha256": "490fd832754a6abecbd0823955f962872f2440ee47fbdfb1201e6e57b2fec7ad",
+        "id": "clarification-obligation-000020",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000012-v1",
+        "projection_sha256": "4c9e6afa90655c8311f94df11150bd7c5745cc64b769a1c37f01525813801fe2",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000012",
+        "source_position": 12,
+        "unit": "element-000035"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for element-000035 in source-000012?",
+      "evidence_sha256": "50007c4085216be166853234a2ada4402fba5fd81e0d02528d761cdac39f9315",
+      "id": "qualification-clarification-answer-000020"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 4,
+        "gap_sha256": "4b2ef32b08cef5d440db71ff91fa54a86808b39a8667e709873f43faf7be180c",
+        "id": "clarification-obligation-000021",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000012-v1",
+        "projection_sha256": "4c9e6afa90655c8311f94df11150bd7c5745cc64b769a1c37f01525813801fe2",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000012",
+        "source_position": 12,
+        "unit": "relationship-000004"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000004 in source-000012?",
+      "evidence_sha256": "815fab67344d040d601decbb3103fe948cf9aa681b2e5f227cdfaf3a467a9995",
+      "id": "qualification-clarification-answer-000021"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 5,
+        "gap_sha256": "ee25b2884ef05f8b730b680fccdd0c6adf291d5705b2d1ff11c733847eea0855",
+        "id": "clarification-obligation-000022",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000012-v1",
+        "projection_sha256": "4c9e6afa90655c8311f94df11150bd7c5745cc64b769a1c37f01525813801fe2",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000012",
+        "source_position": 12,
+        "unit": "relationship-000010"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000010 in source-000012?",
+      "evidence_sha256": "74706229abe2e44624cfe88eb7fcef6c753a18aed9fc11918dc0b28c30c2f8c5",
+      "id": "qualification-clarification-answer-000022"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 1,
+        "gap_sha256": "c306d73c4727235700cd48c27dfc3d89f3060f7b1e73e4d3c67af79eee3e7aea",
+        "id": "clarification-obligation-000023",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000013-v1",
+        "projection_sha256": "491c4529436d65e0cae47a40d93439761ea0eff37a39858809bc9ddc8b019910",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000013",
+        "source_position": 13,
+        "unit": "element-000004"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for element-000004 in source-000013?",
+      "evidence_sha256": "3581f630e97b70e2aa92d97a86182dec156d543267b1aa4b33ca3fd7297bffb0",
+      "id": "qualification-clarification-answer-000023"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 2,
+        "gap_sha256": "fadf97db9808d78c2b6bc70a613c493b5ea6b7e89ca820e4b22af4e826f42d84",
+        "id": "clarification-obligation-000024",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000013-v1",
+        "projection_sha256": "491c4529436d65e0cae47a40d93439761ea0eff37a39858809bc9ddc8b019910",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000013",
+        "source_position": 13,
+        "unit": "element-000023"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for element-000023 in source-000013?",
+      "evidence_sha256": "bf4392e412236ae9603a3ce34e59328ea6f88eca9a7c730c190184c28b4480f3",
+      "id": "qualification-clarification-answer-000024"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 3,
+        "gap_sha256": "76f616ae264f1b0271874af6b56f57912f104b23b912d0f96a2597cb6a17c80b",
+        "id": "clarification-obligation-000025",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000013-v1",
+        "projection_sha256": "491c4529436d65e0cae47a40d93439761ea0eff37a39858809bc9ddc8b019910",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000013",
+        "source_position": 13,
+        "unit": "element-000037"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for element-000037 in source-000013?",
+      "evidence_sha256": "782ff556e854aac23d8529d72b69bf46c049f54a5f73d919074b32c1285465c7",
+      "id": "qualification-clarification-answer-000025"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 4,
+        "gap_sha256": "30f203cd52260e123194ea5f50840be1efbef6cbf51a46ed4b2b589aa36d2886",
+        "id": "clarification-obligation-000026",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000013-v1",
+        "projection_sha256": "491c4529436d65e0cae47a40d93439761ea0eff37a39858809bc9ddc8b019910",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000013",
+        "source_position": 13,
+        "unit": "relationship-000012"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000012 in source-000013?",
+      "evidence_sha256": "c488d2eed6ad172c48eacf73ebf3098a3b9196ee7d14d646c10ab4bdc605a155",
+      "id": "qualification-clarification-answer-000026"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 5,
+        "gap_sha256": "3a92e2f3998805b8350b5ad887108f9f8e4594959aa8ebb26be760d73f35a2da",
+        "id": "clarification-obligation-000027",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000013-v1",
+        "projection_sha256": "491c4529436d65e0cae47a40d93439761ea0eff37a39858809bc9ddc8b019910",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000013",
+        "source_position": 13,
+        "unit": "relationship-000017"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000017 in source-000013?",
+      "evidence_sha256": "af36ab296e11e0f7f9a99eaedbaf7308b1b0e7c859bc45fc74e664eb17661ea7",
+      "id": "qualification-clarification-answer-000027"
+    },
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 6,
+        "gap_sha256": "e3797b46854680272018e15608b489c2c1fe70019253384d5d2b420bc792806f",
+        "id": "clarification-obligation-000028",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000013-v1",
+        "projection_sha256": "491c4529436d65e0cae47a40d93439761ea0eff37a39858809bc9ddc8b019910",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "de38f28cc84272ba1a599eaf3d9976afe88e973e669d39480eede49bc251e36d",
+        "reason": "visual projection gap",
+        "source_id": "source-000013",
+        "source_position": 13,
+        "unit": "relationship-000021"
+      },
+      "asks": "Which local screenshot file supplies the missing visual-spatial information for relationship-000021 in source-000013?",
+      "evidence_sha256": "9a5a28203aca7f224477cd52e4047e8a1146e6780d1e4bcbb5f73ea8948ecca2",
+      "id": "qualification-clarification-answer-000028"
+    }
+  ],
+  "schema_version": 1
+}

@@ -1,0 +1,249 @@
+{
+  "accepted_assessment": {
+    "answer_projection": {
+      "id": "projection-source-000006-v1",
+      "sha256": "fafde1a06539c01182d98bbe95cfe491601c817896deb1805b24966cf3082722"
+    },
+    "answer_source": {
+      "id": "source-000006",
+      "sha256": "fafde1a06539c01182d98bbe95cfe491601c817896deb1805b24966cf3082722"
+    },
+    "gap": {
+      "collection": "relationships",
+      "id": "relationship-000010",
+      "kind": "relationship",
+      "projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a",
+      "record_sha256": "96dc02e7798985872080eae0a3039e3ed6c3e18f0b56787ac3d393cc1fcdb76b"
+    },
+    "position": 3,
+    "question_id": "gap-clarification-answer-000003",
+    "reason": "It identifies the displayed Jul 1\u201315 pay-period interval as the source context for that row\u2019s calculation and clarifies that Jul 16\u201331 is merely another interval, eliminating the unsupported self-connection or need for another distinct endpoint.",
+    "verdict": "resolves_gap"
+  },
+  "assessment_gap": {
+    "collection": "relationships",
+    "id": "relationship-000010",
+    "kind": "relationship",
+    "projection_sha256": "b5c1374de106f1f273403ebbd13aebc92b694b86aaed637b6dc6d8d8294a2c8a",
+    "record": {
+      "binding_issue": {
+        "matching_element_ids": [
+          "element-000015"
+        ],
+        "participant": "origin",
+        "point": [
+          600,
+          600
+        ],
+        "reason": "same_element_as_other_participant"
+      },
+      "binding_method": "coordinate_unique_containment",
+      "description": "",
+      "from_id": null,
+      "gap_reason": "No distinct second endpoint is visibly connected to this payout-period card; its PDF and open actions are part of the same recorded card, and the nearby annotation arrow points to the preceding row rather than this Jul 1\u201315 row.",
+      "id": "relationship-000010",
+      "kind": "data population instruction",
+      "origin_point": [
+        600,
+        600
+      ],
+      "status": "gap",
+      "target_point": [
+        600,
+        600
+      ],
+      "to_id": "element-000015",
+      "verification_eligibility": {
+        "reason": "No distinct second endpoint is visibly connected to this payout-period card; its PDF and open actions are part of the same recorded card, and the nearby annotation arrow points to the preceding row rather than this Jul 1\u201315 row.",
+        "status": "not_applicable_existing_gap"
+      }
+    },
+    "record_sha256": "96dc02e7798985872080eae0a3039e3ed6c3e18f0b56787ac3d393cc1fcdb76b",
+    "recorded_context": [
+      {
+        "capture_scope": "region-r03-c01",
+        "content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+        "endpoint_verification": {
+          "claim_scope": "crop_complete_v2",
+          "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+          "evidence": {
+            "adapter": {
+              "name": "pillow_exif_transpose_png_exact_element_crop",
+              "version": 1
+            },
+            "candidate_id": "element-000015",
+            "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+            "crop_path": "endpoint-evidence/element-000015-required-recorded-participant-fc3bd74302bc0354.png",
+            "crop_sha256": "bf2df7d2540f967009324467a1224080e164e45aaa2f6745a118f0ab3fc14c9d",
+            "normalized_bounds": [
+              213,
+              557,
+              1000,
+              650
+            ],
+            "pixel_bounds": [
+              484,
+              719,
+              2276,
+              840
+            ],
+            "source_pixel_size": [
+              2276,
+              1292
+            ],
+            "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+            "verification_scope": "required_recorded_participant"
+          },
+          "verdict": "supported"
+        },
+        "gap_reason": "",
+        "id": "element-000015",
+        "kind": "payout period card",
+        "region": [
+          213,
+          557,
+          1000,
+          650
+        ],
+        "scan_region_id": "region-r03-c01",
+        "status": "readable"
+      }
+    ]
+  },
+  "gap": {
+    "collection": "relationships",
+    "id": "relationship-000010",
+    "kind": "relationship",
+    "projection_sha256": "b6b3b307838af974e40aac197fe68f6f63f74feea051c5f3254cb0adfbc14e45",
+    "record": {
+      "binding_issue": {
+        "matching_element_ids": [
+          "element-000015"
+        ],
+        "participant": "origin",
+        "point": [
+          600,
+          600
+        ],
+        "reason": "same_element_as_other_participant"
+      },
+      "binding_method": "coordinate_unique_containment",
+      "description": "",
+      "from_id": null,
+      "gap_reason": "No distinct second endpoint is visibly connected to this payout-period card; its PDF and open actions are part of the same recorded card, and the nearby annotation arrow points to the preceding row rather than this Jul 1\u201315 row.",
+      "id": "relationship-000010",
+      "kind": "data population instruction",
+      "origin_point": [
+        600,
+        600
+      ],
+      "status": "gap",
+      "target_point": [
+        600,
+        600
+      ],
+      "to_id": "element-000015",
+      "verification_eligibility": {
+        "reason": "No distinct second endpoint is visibly connected to this payout-period card; its PDF and open actions are part of the same recorded card, and the nearby annotation arrow points to the preceding row rather than this Jul 1\u201315 row.",
+        "status": "not_applicable_existing_gap"
+      }
+    },
+    "record_sha256": "96dc02e7798985872080eae0a3039e3ed6c3e18f0b56787ac3d393cc1fcdb76b",
+    "recorded_context": [
+      {
+        "capture_scope": "region-r03-c01",
+        "content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+        "endpoint_verification": {
+          "claim_scope": "crop_complete_v2",
+          "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+          "evidence": {
+            "adapter": {
+              "name": "pillow_exif_transpose_png_exact_element_crop",
+              "version": 1
+            },
+            "candidate_id": "element-000015",
+            "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-GCR-2026-07A; Grand Canyon Resort; 4,010 PAID TXNS; $112,340.10 PHOTO REVENUE; 205 CODES USED; -$666.25 CODE FEES; PAYOUT TO OPERATOR; $111,673.85; \u2193 PDF; open \u2192",
+            "crop_path": "endpoint-evidence/element-000015-required-recorded-participant-fc3bd74302bc0354.png",
+            "crop_sha256": "bf2df7d2540f967009324467a1224080e164e45aaa2f6745a118f0ab3fc14c9d",
+            "normalized_bounds": [
+              213,
+              557,
+              1000,
+              650
+            ],
+            "pixel_bounds": [
+              484,
+              719,
+              2276,
+              840
+            ],
+            "source_pixel_size": [
+              2276,
+              1292
+            ],
+            "source_sha256": "c0e72de999ac04ab24c5a504b729b3f3363490fafeab9684f668ad331c9cf52f",
+            "verification_scope": "required_recorded_participant"
+          },
+          "verdict": "supported"
+        },
+        "gap_reason": "",
+        "id": "element-000015",
+        "kind": "payout period card",
+        "region": [
+          213,
+          557,
+          1000,
+          650
+        ],
+        "scan_region_id": "region-r03-c01",
+        "status": "readable"
+      }
+    ]
+  },
+  "prior_rejection": {
+    "attempt": 1,
+    "candidate_sha256": "1a306f21620120fdd98adf1db7f8c96330ec6b723215917c7c13540b652ddcea",
+    "rejected_relationship": {
+      "binding_method": "operator_answer_selected_identity_and_containment",
+      "description": "The Jul 1\u201315, 2026 pay-period interval is the source context for the payout-period card\u2019s data calculation and the data points displayed in that row.",
+      "from_id": "element-000015",
+      "gap_reason": "",
+      "id": "relationship-000010-resolution-000001",
+      "kind": "data population instruction",
+      "origin_point": [
+        600,
+        600
+      ],
+      "resolution_evidence": {
+        "accepted_assessment_sha256": "9634f1593a5e64b242bec825c72128864abe831208eb31bd01ce0d4634c68272",
+        "bound_gap_record_sha256": "96dc02e7798985872080eae0a3039e3ed6c3e18f0b56787ac3d393cc1fcdb76b",
+        "operator_answer_source_sha256": "fafde1a06539c01182d98bbe95cfe491601c817896deb1805b24966cf3082722",
+        "question_id": "gap-clarification-answer-000003"
+      },
+      "resolution_of": "relationship-000010",
+      "status": "readable",
+      "target_point": [
+        600,
+        600
+      ],
+      "to_id": "element-000015"
+    },
+    "resolution_result_sha256": "40b1ec892d9d9ba3cdc78e3d7b8b593f9c968ece26e12c597b2f3f9718746217",
+    "verification_reason": "The preserved answer says the pay-period interval is source context and mentions both Jul 1\u201315 and Jul 16\u201331; it does not select a distinct ambiguous participant. In the frozen image, the red note says to pull Paid tx, Photo Rev, Codes Used, Code Fees, and Total net payout from the payout report, and its arrow visibly lands by the Jul 16\u201331 report row. No visible arrow or text establishes a Jul 1\u201315 payout-card-to-itself relationship, so the complete proposed relationship is not supported.",
+    "verification_result_sha256": "3e7886c4707fba01e83e5bdb9a1d7e6f1a5862cd8bb5d8feb4b7f5ef1d2ba04d",
+    "verification_verdict": "not_supported"
+  },
+  "question": {
+    "answer_type": "operator_text",
+    "answers_gap": {
+      "collection": "relationships",
+      "id": "relationship-000010",
+      "kind": "relationship",
+      "projection_sha256": "b6b3b307838af974e40aac197fe68f6f63f74feea051c5f3254cb0adfbc14e45",
+      "record_sha256": "96dc02e7798985872080eae0a3039e3ed6c3e18f0b56787ac3d393cc1fcdb76b"
+    },
+    "asks": "What distinct source element, if any, should the data-population instruction connect to the Jul 1\u201315, 2026 payout-period card?",
+    "id": "gap-clarification-answer-000003"
+  },
+  "schema_version": 1
+}

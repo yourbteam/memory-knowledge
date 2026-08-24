@@ -1,0 +1,70 @@
+{
+  "candidate_sha256": "5be05b932b1baaf1be0b218b2ef9c50130f24ddcada7e81684eb3b34b2698991",
+  "reader": {
+    "harness": "Codex CLI",
+    "model": "Codex (GPT-5)"
+  },
+  "schema_version": 1,
+  "verdicts": [
+    {
+      "reason": "A red arrow visibly runs from the \u201cNet payout: Column AF\u201d annotation callout and its arrowhead lands on the orange \u201cNet payout \u00b7 to date\u201d metric card.",
+      "relationship_id": "relationship-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The \u201cLive \u00b7 as of Aug 7, 2026\u201d timestamp is visibly positioned immediately above the dashboard metric row, and the first card is explicitly labeled \u201cNet payout \u00b7 to date,\u201d tying its displayed value to that live as-of date.",
+      "relationship_id": "relationship-000002",
+      "verdict": "supported"
+    },
+    {
+      "reason": "A red arrow descends from the callout and its arrowhead lands inside the pink \u201cWe owe operators\u201d card, near the displayed total and operator count described by the callout.",
+      "relationship_id": "relationship-000003",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout\u2019s red arrow points directly into the blue \u201cOperators owe us\u201d card, whose amount and \u201c4 operators\u201d count visibly match the two outputs the annotation describes.",
+      "relationship_id": "relationship-000004",
+      "verdict": "supported"
+    },
+    {
+      "reason": "A red arrow from the breakdown callout lands on the green \u201cTaggable revenue\u201d card, which visibly contains the Content, Service, total, and zero-valued add-on fields named in the callout.",
+      "relationship_id": "relationship-000005",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The Jul 16\u201331, 2026 report card is visibly the first row inside the bordered list directly beneath the \u201cPayout reports\u201d repository controls and explanatory listing text.",
+      "relationship_id": "relationship-000006",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The button text identifies a live period-to-date report as its destination, but no visible connector or other source evidence makes the orange Net payout card itself the exact navigation endpoint.",
+      "relationship_id": "relationship-000008",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The annotation\u2019s red arrowhead lands at the top/first report row for Jul 16\u201331, 2026, while the proposed destination is the lower Jul 1\u201315, 2026 row; the visible connector does not terminate on that proposed card.",
+      "relationship_id": "relationship-000009",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The proposed source is the three-row report table itself, not the red calculation annotation. The Jun 16\u201330 card is visibly contained as its third row, but no visible calculation-annotation connector runs from that table participant to the row.",
+      "relationship_id": "relationship-000010",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The red arrow from the calculation callout ends near the first Jul 16\u201331 report row, far above the Jun 1\u201315 row; no visible connector terminates on the proposed row.",
+      "relationship_id": "relationship-000011",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The callout\u2019s arrowhead is visibly located at the first report row near the top of the list, not at the much lower May 16\u201331 row, so the proposed exact endpoint is not shown.",
+      "relationship_id": "relationship-000012",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The note sits directly beneath the report list and explicitly says \u201cany report\u201d; the May 16\u201331 row visibly includes both the \u201c\u2193 PDF\u201d and \u201copen \u2192\u201d actions described by that note.",
+      "relationship_id": "relationship-000013",
+      "verdict": "supported"
+    }
+  ]
+}

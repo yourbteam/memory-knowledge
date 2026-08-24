@@ -1,0 +1,4915 @@
+{
+  "elements": [
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Column:AF",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Column:AF",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000001",
+          "claimed_content": "Column:AF",
+          "crop_path": "endpoint-evidence/element-000001-required-recorded-participant-3b86587025e97cf9.png",
+          "crop_sha256": "e382d89ab1fbc7808421720c5d8a2d2a586050fd5201eae591977b2fa8aafb71",
+          "normalized_bounds": [
+            32,
+            44,
+            186,
+            139
+          ],
+          "pixel_bounds": [
+            56,
+            71,
+            331,
+            226
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000001",
+      "kind": "annotation callout",
+      "region": [
+        32,
+        44,
+        186,
+        139
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Column: W",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Column: W",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000002",
+          "claimed_content": "Column: W",
+          "crop_path": "endpoint-evidence/element-000002-required-recorded-participant-e5ef7635e6c0945e.png",
+          "crop_sha256": "44ef2a06d5283ababfeda50c92d50e6b929fcfb203d9411d426c312b0c4ffb4d",
+          "normalized_bounds": [
+            32,
+            112,
+            274,
+            203
+          ],
+          "pixel_bounds": [
+            56,
+            181,
+            488,
+            330
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000002",
+      "kind": "annotation callout",
+      "region": [
+        32,
+        112,
+        274,
+        203
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Column: AE",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Column: AE",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000003",
+          "claimed_content": "Column: AE",
+          "crop_path": "endpoint-evidence/element-000003-required-recorded-participant-d7c13c3f10a1518f.png",
+          "crop_sha256": "ee183d317adae59d98760213541d0abc3e4a6091635ab90e58febe44b1abe611",
+          "normalized_bounds": [
+            50,
+            164,
+            197,
+            222
+          ],
+          "pixel_bounds": [
+            88,
+            266,
+            351,
+            361
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000003",
+      "kind": "annotation callout",
+      "region": [
+        50,
+        164,
+        197,
+        222
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Column: AC; % = 64/364",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Column: AC; % = 64/364",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000004",
+          "claimed_content": "Column: AC; % = 64/364",
+          "crop_path": "endpoint-evidence/element-000004-required-recorded-participant-22d14e8146fa7e4d.png",
+          "crop_sha256": "3f2ebcd8273e6caf3d624002ad887d7aafc7b94a3d9f7ead8f7e4d036d107d94",
+          "normalized_bounds": [
+            40,
+            245,
+            274,
+            288
+          ],
+          "pixel_bounds": [
+            71,
+            397,
+            488,
+            468
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000004",
+      "kind": "annotation callout",
+      "region": [
+        40,
+        245,
+        274,
+        288
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "$8,100",
+      "gap_reason": "",
+      "id": "element-000005",
+      "kind": "dashboard metric",
+      "region": [
+        193,
+        128,
+        277,
+        151
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "364",
+      "gap_reason": "",
+      "id": "element-000006",
+      "kind": "dashboard metric",
+      "region": [
+        197,
+        203,
+        253,
+        229
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "Column: F + Column: K %= 114/364",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Column: F + Column: K %= 114/364",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000007",
+          "claimed_content": "Column: F + Column: K %= 114/364",
+          "crop_path": "endpoint-evidence/element-000007-required-recorded-participant-f887f358eb4ae203.png",
+          "crop_sha256": "88f8572ab1c201dd2a6a956e18b668ce20b43c55bc13837e8ea239e4a186df77",
+          "normalized_bounds": [
+            319,
+            112,
+            412,
+            173
+          ],
+          "pixel_bounds": [
+            567,
+            181,
+            733,
+            281
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000007",
+      "kind": "annotation callout",
+      "region": [
+        319,
+        112,
+        412,
+        173
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "114 package (31%)",
+      "gap_reason": "",
+      "id": "element-000008",
+      "kind": "summary metric",
+      "region": [
+        424,
+        232,
+        512,
+        251
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "Column: C + Column: I %= 250/364",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Column: C + Column: I %= 250/364",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000009",
+          "claimed_content": "Column: C + Column: I %= 250/364",
+          "crop_path": "endpoint-evidence/element-000009-required-recorded-participant-b138ff31cf8df18d.png",
+          "crop_sha256": "d02c3a94456a20a3d5753e12f58e1126b398f9195b2e6f0049a8ba47afd08107",
+          "normalized_bounds": [
+            482,
+            112,
+            575,
+            173
+          ],
+          "pixel_bounds": [
+            856,
+            181,
+            1023,
+            281
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000009",
+      "kind": "annotation callout",
+      "region": [
+        482,
+        112,
+        575,
+        173
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "When they click refresh this updates all the numbers in the live today and the All locations sections to show the current data.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "When they click refresh this updates all the numbers in the live today and the All locations sections to show the current data.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000010",
+          "claimed_content": "When they click refresh this updates all the numbers in the live today and the All locations sections to show the current data.",
+          "crop_path": "endpoint-evidence/element-000010-required-recorded-participant-1ef95b501a93c3b3.png",
+          "crop_sha256": "9d60dff1fce916aaa2febbd73f7fa6f6b85296a154405b94d38653a6bad7bcfa",
+          "normalized_bounds": [
+            517,
+            1,
+            708,
+            66
+          ],
+          "pixel_bounds": [
+            919,
+            1,
+            1259,
+            108
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000010",
+      "kind": "annotation callout",
+      "region": [
+        517,
+        1,
+        708,
+        66
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "CHOOSE LOCATION \u2014 Skywalk",
+      "gap_reason": "",
+      "id": "element-000011",
+      "kind": "location selector",
+      "region": [
+        656,
+        75,
+        800,
+        92
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "Guest count today; 1256; Calculate; Publish; Today's performance; Conversion rate 42% (7-day avg 40%); Capture rate 29.0% (7-day avg 27.5%).",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Guest count today; 1256; Calculate; Publish; Today's performance; Conversion rate 42% (7-day avg 40%); Capture rate 29.0% (7-day avg 27.5%).",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000012",
+          "claimed_content": "Guest count today; 1256; Calculate; Publish; Today's performance; Conversion rate 42% (7-day avg 40%); Capture rate 29.0% (7-day avg 27.5%).",
+          "crop_path": "endpoint-evidence/element-000012-required-recorded-participant-0e89947c788e21c0.png",
+          "crop_sha256": "638038c9679d59312d80abf32bbabd483c0221d70960b9ad0873162fcc3cd0ad",
+          "normalized_bounds": [
+            580,
+            102,
+            800,
+            280
+          ],
+          "pixel_bounds": [
+            1031,
+            165,
+            1423,
+            455
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000012",
+      "kind": "dashboard panel",
+      "region": [
+        580,
+        102,
+        800,
+        280
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "All data in the \"Live Today\" section is for the selected location only.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "All data in the \"Live Today\" section is for the selected location only.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000013",
+          "claimed_content": "All data in the \"Live Today\" section is for the selected location only.",
+          "crop_path": "endpoint-evidence/element-000013-required-recorded-participant-f0ec7033c2f34729.png",
+          "crop_sha256": "083e7f498440d41d40c8289c369d9f435c1b19f1249a796bd36d41069530d187",
+          "normalized_bounds": [
+            840,
+            31,
+            983,
+            76
+          ],
+          "pixel_bounds": [
+            1493,
+            50,
+            1748,
+            124
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000013",
+      "kind": "annotation callout",
+      "region": [
+        840,
+        31,
+        983,
+        76
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "Column: AT 7 day Avg = Column AT avg over previous 7 days.",
+      "gap_reason": "",
+      "id": "element-000014",
+      "kind": "annotation callout",
+      "region": [
+        813,
+        100,
+        970,
+        163
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "Column: AE / guest count 7 day avg = avg of previous 7 day capture rate avg",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Column: AE / guest count 7 day avg = avg of previous 7 day capture rate avg",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000015",
+          "claimed_content": "Column: AE / guest count 7 day avg = avg of previous 7 day capture rate avg",
+          "crop_path": "endpoint-evidence/element-000015-required-recorded-participant-37a357124abc8531.png",
+          "crop_sha256": "505154b7f7f0469954bbe57cd133ca757c9dbcfc7949216ad6b10b1402d12d96",
+          "normalized_bounds": [
+            846,
+            181,
+            999,
+            229
+          ],
+          "pixel_bounds": [
+            1504,
+            293,
+            1777,
+            372
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000015",
+      "kind": "annotation callout",
+      "region": [
+        846,
+        181,
+        999,
+        229
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c01",
+      "content": "Column: AC; %= 64/364",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Column: AC; %= 64/364",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000016",
+          "claimed_content": "Column: AC; %= 64/364",
+          "crop_path": "endpoint-evidence/element-000016-required-participant-replacement-4d5910cb883bbe71.png",
+          "crop_sha256": "4d77a31b22098e14742e22558e52bbd7820576cce212bcdb8989abddad609765",
+          "normalized_bounds": [
+            40,
+            239,
+            136,
+            282
+          ],
+          "pixel_bounds": [
+            71,
+            387,
+            242,
+            458
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_participant_replacement"
+        },
+        "identity_continuity": {
+          "required_claim": "Column: AC",
+          "verdict": "same_required_source_unit"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000016",
+      "kind": "annotation callout",
+      "region": [
+        40,
+        239,
+        136,
+        282
+      ],
+      "scan_region_id": "region-r02-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c01",
+      "content": "",
+      "endpoint_verification": {
+        "claimed_content": "The sum of Column AE for all locations for the current day. All the data in this section should refresh as well when they click the refresh button in the live today section.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000017",
+          "claimed_content": "The sum of Column AE for all locations for the current day. All the data in this section should refresh as well when they click the refresh button in the live today section.",
+          "crop_path": "endpoint-evidence/element-000017-required-recorded-participant-53c1637c5a6e808b.png",
+          "crop_sha256": "e741e9952bf13b54fdf179165f1ff6215e7f711550728af8ca372f360f4a539d",
+          "normalized_bounds": [
+            1,
+            337,
+            132,
+            395
+          ],
+          "pixel_bounds": [
+            1,
+            546,
+            235,
+            642
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "does_not_contain_claimed_content"
+      },
+      "gap_reason": "The claimed content is not visible inside the claimed source bounds.",
+      "id": "element-000017",
+      "kind": "annotation callout",
+      "region": [
+        1,
+        337,
+        132,
+        395
+      ],
+      "scan_region_id": "region-r02-c01",
+      "status": "gap"
+    },
+    {
+      "capture_scope": "region-r02-c01",
+      "content": "The sum of Column: AF for all the locations for that day.",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "The sum of Column: AF for all the locations for that day.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000018",
+          "claimed_content": "The sum of Column: AF for all the locations for that day.",
+          "crop_path": "endpoint-evidence/element-000018-required-participant-context-5c1203a38569fc9d.png",
+          "crop_sha256": "94556480d1b1e0453f9a854a452cdbb49f311977d7112ea1c49d007dd8f43b54",
+          "normalized_bounds": [
+            0,
+            298,
+            285,
+            450
+          ],
+          "pixel_bounds": [
+            0,
+            483,
+            507,
+            731
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_participant_context"
+        },
+        "selector_region": [
+          6,
+          400,
+          116,
+          436
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000018",
+      "kind": "annotation callout",
+      "region": [
+        6,
+        400,
+        116,
+        436
+      ],
+      "scan_region_id": "region-r02-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c01",
+      "content": "This displays the location which represents the highest share of the days revenue earned",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "This displays the location which represents the highest share of the days revenue earned",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000019",
+          "claimed_content": "This displays the location which represents the highest share of the days revenue earned",
+          "crop_path": "endpoint-evidence/element-000019-required-participant-context-c5f6abedc58dd107.png",
+          "crop_sha256": "540c72724737af06494f43d8c9fa03c6b0f32a71773c54823c823a4bdea6c625",
+          "normalized_bounds": [
+            0,
+            280,
+            470,
+            520
+          ],
+          "pixel_bounds": [
+            0,
+            454,
+            836,
+            844
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_participant_context"
+        },
+        "selector_region": [
+          11,
+          442,
+          122,
+          484
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000019",
+      "kind": "annotation callout",
+      "region": [
+        11,
+        442,
+        122,
+        484
+      ],
+      "scan_region_id": "region-r02-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c01",
+      "content": "Column AF for each location is the total net revenue. Then divide the location revenue (AF) by the sum of all locations revenue (AF) to get the % of revenue. total transactions for each location is column AE",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Column AF for each location is the total net revenue. Then divide the location revenue (AF) by the sum of all locations revenue (AF) to get the % of revenue. total transactions for each location is column AE",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000020",
+          "claimed_content": "Column AF for each location is the total net revenue. Then divide the location revenue (AF) by the sum of all locations revenue (AF) to get the % of revenue. total transactions for each location is column AE",
+          "crop_path": "endpoint-evidence/element-000020-required-recorded-participant-4b97f9eaf6e71bd3.png",
+          "crop_sha256": "14fa6e9af28cebc5dd611514b7429915998ae40ad04e30fac9f7d7cd7c9a168f",
+          "normalized_bounds": [
+            6,
+            490,
+            250,
+            550
+          ],
+          "pixel_bounds": [
+            10,
+            795,
+            445,
+            893
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000020",
+      "kind": "annotation callout",
+      "region": [
+        6,
+        490,
+        250,
+        550
+      ],
+      "scan_region_id": "region-r02-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c01",
+      "content": "All Locations \u00b7 Today; $13,060 net revenue; 587 transactions; 62% Skywalk; multicolor donut chart and legend.",
+      "gap_reason": "",
+      "id": "element-000021",
+      "kind": "dashboard summary panel",
+      "region": [
+        144,
+        342,
+        250,
+        535
+      ],
+      "scan_region_id": "region-r02-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "Sum of Column: X divided by the sum of column: W for all locations",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Sum of Column: X divided by the sum of column: W for all locations",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000022",
+          "claimed_content": "Sum of Column: X divided by the sum of column: W for all locations",
+          "crop_path": "endpoint-evidence/element-000022-required-recorded-participant-200619f50dc714b1.png",
+          "crop_sha256": "98e4d77c6cc512cbb4eac0237dd2477c95310561f68a4e689d31ae592f300b49",
+          "normalized_bounds": [
+            312,
+            266,
+            413,
+            314
+          ],
+          "pixel_bounds": [
+            554,
+            431,
+            735,
+            510
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000022",
+      "kind": "annotation callout",
+      "region": [
+        312,
+        266,
+        413,
+        314
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "$22.25 avg / transaction",
+      "gap_reason": "",
+      "id": "element-000023",
+      "kind": "metric value with label",
+      "region": [
+        361,
+        326,
+        406,
+        357
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "Skywalk $8,100 \u2013 62% (364 txns); Guano Point $1,830 \u2013 14% (82 txns); Quartermaster $1,440 \u2013 11% (64 txns); River Runners $1,040 \u2013 8% (47 txns); Zipline $650 \u2013 5% (30 txns)",
+      "gap_reason": "",
+      "id": "element-000024",
+      "kind": "legend list",
+      "region": [
+        291,
+        373,
+        443,
+        474
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "587 transactions today",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "587 transactions today",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000025",
+          "claimed_content": "587 transactions today",
+          "crop_path": "endpoint-evidence/element-000025-required-recorded-participant-8b020d26a8bf27d2.png",
+          "crop_sha256": "8de29c7236a0f186ac1c6484f65dc3f9d76af77f04be65a670abe70936fe795e",
+          "normalized_bounds": [
+            274,
+            332,
+            334,
+            358
+          ],
+          "pixel_bounds": [
+            487,
+            538,
+            594,
+            582
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000025",
+      "kind": "metric value with label",
+      "region": [
+        274,
+        332,
+        334,
+        358
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "\u2022 LIVE",
+      "gap_reason": "",
+      "id": "element-000026",
+      "kind": "status badge",
+      "region": [
+        419,
+        310,
+        449,
+        322
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c03",
+      "content": "",
+      "endpoint_verification": {
+        "claimed_content": "$20.16 \u2014 Avg revenue / visitor",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000027",
+          "claimed_content": "$20.16 \u2014 Avg revenue / visitor",
+          "crop_path": "endpoint-evidence/element-000027-required-participant-context-aa98ff4c5bbc7555.png",
+          "crop_sha256": "6660737365b0368ef0a20f5f426fbf810af195b42b8c0102a4033bc9dc2f33d0",
+          "normalized_bounds": [
+            475,
+            299,
+            832,
+            365
+          ],
+          "pixel_bounds": [
+            844,
+            485,
+            1480,
+            593
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_participant_context"
+        },
+        "selector_region": [
+          612,
+          336,
+          713,
+          349
+        ],
+        "verdict": "does_not_contain_claimed_content"
+      },
+      "gap_reason": "The claimed content is not visible inside the claimed source bounds.",
+      "id": "element-000027",
+      "kind": "KPI metric",
+      "region": [
+        612,
+        336,
+        713,
+        349
+      ],
+      "scan_region_id": "region-r02-c03",
+      "status": "gap"
+    },
+    {
+      "capture_scope": "region-r02-c03",
+      "content": "18.2% \u2014 Conversion rate",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "18.2% \u2014 Conversion rate",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000028",
+          "claimed_content": "18.2% \u2014 Conversion rate",
+          "crop_path": "endpoint-evidence/element-000028-required-participant-replacement-400bf0f4d1198b8e.png",
+          "crop_sha256": "3d875e13e24b83e53f41b6fda16e5b6fdace0e8d3c7b11bbbadcc691d31589ec",
+          "normalized_bounds": [
+            610,
+            349,
+            716,
+            372
+          ],
+          "pixel_bounds": [
+            1084,
+            566,
+            1274,
+            604
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_participant_replacement"
+        },
+        "identity_continuity": {
+          "required_claim": "18.2% \u2014 Conversion rate",
+          "verdict": "same_required_source_unit"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000028",
+      "kind": "KPI metric",
+      "region": [
+        610,
+        349,
+        716,
+        372
+      ],
+      "scan_region_id": "region-r02-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c03",
+      "content": "RE VS CONVERSION \u00b7 BY MONTH; Mar, Apr, May, Jun, Jul",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "RE VS CONVERSION \u00b7 BY MONTH; Mar, Apr, May, Jun, Jul",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000029",
+          "claimed_content": "RE VS CONVERSION \u00b7 BY MONTH; Mar, Apr, May, Jun, Jul",
+          "crop_path": "endpoint-evidence/element-000029-required-recorded-participant-1b5f701e8ea0f75b.png",
+          "crop_sha256": "8fe72a8fb8da6396b162fdf097b60373b12ec91efabcd51061e496ba5d085c6c",
+          "normalized_bounds": [
+            500,
+            407,
+            800,
+            528
+          ],
+          "pixel_bounds": [
+            889,
+            660,
+            1423,
+            857
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000029",
+      "kind": "line chart",
+      "region": [
+        500,
+        407,
+        800,
+        528
+      ],
+      "scan_region_id": "region-r02-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c04",
+      "content": "The sum of column: AE YTD divided by The sum of guest count YTD",
+      "gap_reason": "",
+      "id": "element-000030",
+      "kind": "status message",
+      "region": [
+        750,
+        384,
+        846,
+        427
+      ],
+      "scan_region_id": "region-r02-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c04",
+      "content": "The sum of column: X for all locations YTD divided by The sum of column W for all locations for the YTD",
+      "gap_reason": "",
+      "id": "element-000031",
+      "kind": "annotation callout",
+      "region": [
+        750,
+        266,
+        1000,
+        313
+      ],
+      "scan_region_id": "region-r02-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c04",
+      "content": "The sum of X YTD divided by guest count YTD",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "The sum of X YTD divided by guest count YTD",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000032",
+          "claimed_content": "The sum of X YTD divided by guest count YTD",
+          "crop_path": "endpoint-evidence/element-000032-required-recorded-participant-5fe6aa963f496b99.png",
+          "crop_sha256": "c29bae3b1fc7278b5c5c8c512430498c6238736b84db95c6b9bb4b088024a681",
+          "normalized_bounds": [
+            863,
+            320,
+            994,
+            363
+          ],
+          "pixel_bounds": [
+            1534,
+            519,
+            1768,
+            590
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000032",
+      "kind": "annotation callout",
+      "region": [
+        863,
+        320,
+        994,
+        363
+      ],
+      "scan_region_id": "region-r02-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c04",
+      "content": "The average of column: AT",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "The average of column: AT",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000033",
+          "claimed_content": "The average of column: AT",
+          "crop_path": "endpoint-evidence/element-000033-required-recorded-participant-9ca68f3058184bfb.png",
+          "crop_sha256": "be554517af3eedca1ad062e0cc8c294c50695b63c952c5794c13d740b686565a",
+          "normalized_bounds": [
+            863,
+            373,
+            994,
+            410
+          ],
+          "pixel_bounds": [
+            1534,
+            605,
+            1768,
+            666
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000033",
+      "kind": "annotation callout",
+      "region": [
+        863,
+        373,
+        994,
+        410
+      ],
+      "scan_region_id": "region-r02-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c04",
+      "content": "The points on this chart plot the capture rate and conversion rate for each month. So you would make the same calculations with the formulas above but for just the days in each month. So you get each month's result and display it.",
+      "gap_reason": "",
+      "id": "element-000034",
+      "kind": "annotation callout",
+      "region": [
+        843,
+        445,
+        990,
+        527
+      ],
+      "scan_region_id": "region-r02-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c04",
+      "content": "$3.67",
+      "gap_reason": "",
+      "id": "element-000035",
+      "kind": "metric value",
+      "region": [
+        801,
+        336,
+        833,
+        352
+      ],
+      "scan_region_id": "region-r02-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c04",
+      "content": "42%",
+      "gap_reason": "",
+      "id": "element-000036",
+      "kind": "metric value",
+      "region": [
+        812,
+        365,
+        833,
+        377
+      ],
+      "scan_region_id": "region-r02-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "The sum of Column: AF for the current pay period.",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "The sum of Column: AF for the current pay period.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000037",
+          "claimed_content": "The sum of Column: AF for the current pay period.",
+          "crop_path": "endpoint-evidence/element-000037-required-participant-context-89c3847135504e65.png",
+          "crop_sha256": "a947df73d0c04a54022638d06d92954944476ae3621e3ee10cd7aa26ee99a8b5",
+          "normalized_bounds": [
+            10,
+            550,
+            430,
+            681
+          ],
+          "pixel_bounds": [
+            17,
+            892,
+            765,
+            1106
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_participant_context"
+        },
+        "selector_region": [
+          10,
+          603,
+          260,
+          681
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000037",
+      "kind": "annotation callout",
+      "region": [
+        10,
+        603,
+        260,
+        681
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c02",
+      "content": "PROJECTED CLOSE $48,000",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "PROJECTED CLOSE $48,000",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000038",
+          "claimed_content": "PROJECTED CLOSE $48,000",
+          "crop_path": "endpoint-evidence/element-000038-required-recorded-participant-44ac2dbc0a725f4a.png",
+          "crop_sha256": "c90e7b110cd59cd29656909633b9ab81463d585a74c1ae8b4d49906a560977c3",
+          "normalized_bounds": [
+            357,
+            587,
+            420,
+            613
+          ],
+          "pixel_bounds": [
+            634,
+            952,
+            747,
+            995
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000038",
+      "kind": "Projected Close metric",
+      "region": [
+        357,
+        587,
+        420,
+        613
+      ],
+      "scan_region_id": "region-r03-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c02",
+      "content": "The total payout for the previous pay period. Can pull this from payout report or do calculation: Sum of AF for all locations for the previous pay period date range.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "The total payout for the previous pay period. Can pull this from payout report or do calculation: Sum of AF for all locations for the previous pay period date range.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000039",
+          "claimed_content": "The total payout for the previous pay period. Can pull this from payout report or do calculation: Sum of AF for all locations for the previous pay period date range.",
+          "crop_path": "endpoint-evidence/element-000039-required-recorded-participant-d0a0b290b962cdd8.png",
+          "crop_sha256": "59f3c3a79d75cedc20e5abd6d00d70234fa4837397e492d6ae8f4c5b779e2fc2",
+          "normalized_bounds": [
+            376,
+            500,
+            1000,
+            651
+          ],
+          "pixel_bounds": [
+            668,
+            811,
+            1778,
+            1057
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000039",
+      "kind": "Annotation callout",
+      "region": [
+        376,
+        500,
+        1000,
+        651
+      ],
+      "scan_region_id": "region-r03-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c03",
+      "content": "The day when the next payout will be made which will either be the 1st of the next month or the 16th of the current month.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "The day when the next payout will be made which will either be the 1st of the next month or the 16th of the current month.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000040",
+          "claimed_content": "The day when the next payout will be made which will either be the 1st of the next month or the 16th of the current month.",
+          "crop_path": "endpoint-evidence/element-000040-required-recorded-participant-132b8ba4de741a65.png",
+          "crop_sha256": "c7a1bbce591cac112f2406625cb64e848efb3b46bdf9ca41ab94c6618e86d2f6",
+          "normalized_bounds": [
+            582,
+            526,
+            701,
+            584
+          ],
+          "pixel_bounds": [
+            1034,
+            853,
+            1247,
+            948
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000040",
+      "kind": "Annotation callout",
+      "region": [
+        582,
+        526,
+        701,
+        584
+      ],
+      "scan_region_id": "region-r03-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c03",
+      "content": "NEXT PAYOUT; May 16 \u00b7 ACH",
+      "gap_reason": "",
+      "id": "element-000041",
+      "kind": "Metric display",
+      "region": [
+        514,
+        589,
+        579,
+        616
+      ],
+      "scan_region_id": "region-r03-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c03",
+      "content": "LAST PERIOD TOTAL; $34,700",
+      "gap_reason": "",
+      "id": "element-000042",
+      "kind": "Metric display",
+      "region": [
+        689,
+        589,
+        761,
+        616
+      ],
+      "scan_region_id": "region-r03-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c03",
+      "content": "",
+      "gap_reason": "The selector is clipped by the right edge of the visible crop, so its complete set of options cannot be confirmed.",
+      "id": "element-000043",
+      "kind": "Time-range selector",
+      "region": [
+        721,
+        671,
+        800,
+        691
+      ],
+      "scan_region_id": "region-r03-c03",
+      "status": "gap"
+    },
+    {
+      "capture_scope": "region-r03-c03",
+      "content": "$1,632,289; TOTAL PAID TO YOU \u00b7 YEAR TO DATE",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "$1,632,289; TOTAL PAID TO YOU \u00b7 YEAR TO DATE",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000044",
+          "claimed_content": "$1,632,289; TOTAL PAID TO YOU \u00b7 YEAR TO DATE",
+          "crop_path": "endpoint-evidence/element-000044-required-recorded-participant-9fbd5494eeb85b17.png",
+          "crop_sha256": "55fc003ecf872b4725d55d7496e8e65f3764a0d4495e0635f6719dd1c191e0a3",
+          "normalized_bounds": [
+            469,
+            657,
+            577,
+            695
+          ],
+          "pixel_bounds": [
+            833,
+            1066,
+            1026,
+            1128
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000044",
+      "kind": "Metric display",
+      "region": [
+        469,
+        657,
+        577,
+        695
+      ],
+      "scan_region_id": "region-r03-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c04",
+      "content": "The sum of AF for all locations for the period selected in the top right of the chart. Either previous 7, 30, 90 days or YTD.",
+      "gap_reason": "",
+      "id": "element-000045",
+      "kind": "annotation callout for the chart period total",
+      "region": [
+        800,
+        705,
+        995,
+        770
+      ],
+      "scan_region_id": "region-r03-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "Action Items",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Action Items",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000046",
+          "claimed_content": "Action Items",
+          "crop_path": "endpoint-evidence/element-000046-required-recorded-participant-baa542427e35dc62.png",
+          "crop_sha256": "cc6becde6ce65a7af146ce003c5edc64c3a1f712161cad7a3d83233b18eec973",
+          "normalized_bounds": [
+            184,
+            986,
+            255,
+            1000
+          ],
+          "pixel_bounds": [
+            327,
+            1600,
+            454,
+            1623
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000046",
+      "kind": "section header",
+      "region": [
+        184,
+        986,
+        255,
+        1000
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "$59k; $40k; $20k; $0k; Oct 15",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "$59k; $40k; $20k; $0k; Oct 15",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000047",
+          "claimed_content": "$59k; $40k; $20k; $0k; Oct 15",
+          "crop_path": "endpoint-evidence/element-000047-required-recorded-participant-176f139ee699ed04.png",
+          "crop_sha256": "c8a9e3ece57722942ce94eb82fbd64ef73fadccd9d4505c8c360f592b4c590d3",
+          "normalized_bounds": [
+            202,
+            761,
+            244,
+            948
+          ],
+          "pixel_bounds": [
+            359,
+            1235,
+            434,
+            1539
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000047",
+      "kind": "chart axis labels",
+      "region": [
+        202,
+        761,
+        244,
+        948
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "Red line rises from about $30k to about $38k, briefly declines, then climbs to a higher peak around Jan 7, dips slightly, and rises again toward Feb 4; the filled area extends beneath the line.",
+      "gap_reason": "",
+      "id": "element-000048",
+      "kind": "line chart data series",
+      "region": [
+        230,
+        789,
+        550,
+        922
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c02",
+      "content": "$48,497; net paid to you \u00b7 by location; Skywalk $30,079; Guano Point $6,796; Quartermaster $5,347; River Runners $3,862; Zipline $2,414",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "$48,497; net paid to you \u00b7 by location; Skywalk $30,079; Guano Point $6,796; Quartermaster $5,347; River Runners $3,862; Zipline $2,414",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000049",
+          "claimed_content": "$48,497; net paid to you \u00b7 by location; Skywalk $30,079; Guano Point $6,796; Quartermaster $5,347; River Runners $3,862; Zipline $2,414",
+          "crop_path": "endpoint-evidence/element-000049-required-recorded-participant-92619a784ef0edb6.png",
+          "crop_sha256": "c0bbeb15b72efb80a409f42fd828ea8159c43be8d7fefc44fae5ed58d04f98a6",
+          "normalized_bounds": [
+            444,
+            798,
+            545,
+            900
+          ],
+          "pixel_bounds": [
+            789,
+            1295,
+            970,
+            1461
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000049",
+      "kind": "chart tooltip card",
+      "region": [
+        444,
+        798,
+        545,
+        900
+      ],
+      "scan_region_id": "region-r04-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c02",
+      "content": "Nov 12; Dec 10; Jan 7; Feb 4; Mar 4; Apr 1; Apr 29",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Nov 12; Dec 10; Jan 7; Feb 4; Mar 4; Apr 1; Apr 29",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000050",
+          "claimed_content": "Nov 12; Dec 10; Jan 7; Feb 4; Mar 4; Apr 1; Apr 29",
+          "crop_path": "endpoint-evidence/element-000050-required-recorded-participant-344e65ed6a88d794.png",
+          "crop_sha256": "35db1bffc62c0392599a961146217ceebb5342ff8d23edb53ed7181cb15b2d01",
+          "normalized_bounds": [
+            289,
+            936,
+            776,
+            946
+          ],
+          "pixel_bounds": [
+            513,
+            1519,
+            1380,
+            1536
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000050",
+      "kind": "x-axis date tick labels",
+      "region": [
+        289,
+        936,
+        776,
+        946
+      ],
+      "scan_region_id": "region-r04-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c02",
+      "content": "Red dashed vertical guide aligned with the hovered chart position near Jan 7.",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "Red dashed vertical guide aligned with the hovered chart position near Jan 7.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000051",
+          "claimed_content": "Red dashed vertical guide aligned with the hovered chart position near Jan 7.",
+          "crop_path": "endpoint-evidence/element-000051-required-participant-context-69d2c02cd2e691d3.png",
+          "crop_sha256": "639f3636d1766a3ca95a26cbed6c4af8f3bc874ae727fcef50bde090c28d6147",
+          "normalized_bounds": [
+            400,
+            750,
+            570,
+            940
+          ],
+          "pixel_bounds": [
+            711,
+            1217,
+            1014,
+            1526
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_participant_context"
+        },
+        "selector_region": [
+          438,
+          793,
+          440,
+          922
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000051",
+      "kind": "vertical hover guide line",
+      "region": [
+        438,
+        793,
+        440,
+        922
+      ],
+      "scan_region_id": "region-r04-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c03",
+      "content": "This box shows the Net payout by week. The top is Total Net Payout for all locations for that week: the sum of Column AF for all locations for that week. Then the breakout below is Column AF for each location for that week.",
+      "gap_reason": "",
+      "id": "element-000052",
+      "kind": "annotation callout with arrow",
+      "region": [
+        547,
+        796,
+        960,
+        886
+      ],
+      "scan_region_id": "region-r04-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c04",
+      "content": "",
+      "gap_reason": "Only a partial edge and x-axis fragment of the chart panel are visible; most of the panel lies outside this crop and the visible area is obscured by annotation callouts.",
+      "id": "element-000053",
+      "kind": "chart panel",
+      "region": [
+        750,
+        750,
+        841,
+        966
+      ],
+      "scan_region_id": "region-r04-c04",
+      "status": "gap"
+    },
+    {
+      "capture_scope": "relationship_endpoint",
+      "content": "300",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "300",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000054",
+          "claimed_content": "300",
+          "crop_path": "endpoint-evidence/element-000054-relationship-endpoint-context-003a7d6f7390480f.png",
+          "crop_sha256": "d48f922524efb3476b65227a017a6ea6f6c185f8ec82c3f7e2cd3899c17c782f",
+          "normalized_bounds": [
+            32,
+            112,
+            410,
+            270
+          ],
+          "pixel_bounds": [
+            56,
+            181,
+            729,
+            439
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "relationship_endpoint_context"
+        },
+        "selector_evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000054",
+          "claimed_content": "300",
+          "crop_path": "endpoint-evidence/element-000054.png",
+          "crop_sha256": "52170b2d4376c8958b2d8da683e0a7bf5736083ceda509465ac69106d9241ba2",
+          "normalized_bounds": [
+            272,
+            201,
+            298,
+            221
+          ],
+          "pixel_bounds": [
+            483,
+            326,
+            530,
+            359
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "relationship_endpoint"
+        },
+        "selector_region": [
+          272,
+          201,
+          298,
+          221
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000054",
+      "kind": "metric value",
+      "region": [
+        272,
+        201,
+        298,
+        221
+      ],
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_endpoint",
+      "content": "64",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "64",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000055",
+          "claimed_content": "64",
+          "crop_path": "endpoint-evidence/element-000055-relationship-endpoint-context-6f22eb5874d10852.png",
+          "crop_sha256": "a00e6a67cc9d3ff5a47106e664a55d773934d845dde5e3812cb414f2cddfa13b",
+          "normalized_bounds": [
+            180,
+            180,
+            390,
+            260
+          ],
+          "pixel_bounds": [
+            320,
+            292,
+            694,
+            422
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "relationship_endpoint_context"
+        },
+        "selector_evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000055",
+          "claimed_content": "64",
+          "crop_path": "endpoint-evidence/element-000055.png",
+          "crop_sha256": "30ae9a5ab58ef4ade3fba010fd2b3a51501c49d7d987ae31ee4e06ba3b3ad37f",
+          "normalized_bounds": [
+            275,
+            229,
+            293,
+            244
+          ],
+          "pixel_bounds": [
+            488,
+            371,
+            521,
+            397
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "relationship_endpoint"
+        },
+        "selector_region": [
+          275,
+          229,
+          293,
+          244
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000055",
+      "kind": "metric value",
+      "region": [
+        275,
+        229,
+        293,
+        244
+      ],
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_endpoint",
+      "content": "250 non-package (69%)",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "250 non-package (69%)",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000056",
+          "claimed_content": "250 non-package (69%)",
+          "crop_path": "endpoint-evidence/element-000056.png",
+          "crop_sha256": "04cbf478933ef5fa9835db24bee9dda6d9bf47a1252d00ce0943b6639a5f8b3d",
+          "normalized_bounds": [
+            423,
+            201,
+            535,
+            222
+          ],
+          "pixel_bounds": [
+            752,
+            326,
+            952,
+            361
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "relationship_endpoint"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000056",
+      "kind": "summary metric",
+      "region": [
+        423,
+        201,
+        535,
+        222
+      ],
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_endpoint",
+      "content": "The sum of Column: AE for all the locations for that day.",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "The sum of Column: AE for all the locations for that day.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000057",
+          "claimed_content": "The sum of Column: AE for all the locations for that day.",
+          "crop_path": "endpoint-evidence/element-000057-relationship-endpoint-context-eefffbdf5a3b77b8.png",
+          "crop_sha256": "3d968099bd4c73ad9b0c9a2242365da5296843df403256e7a55888e35e7e7cda",
+          "normalized_bounds": [
+            0,
+            275,
+            450,
+            400
+          ],
+          "pixel_bounds": [
+            0,
+            446,
+            801,
+            650
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "relationship_endpoint_context"
+        },
+        "selector_evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000057",
+          "claimed_content": "The sum of Column: AE for all the locations for that day.",
+          "crop_path": "endpoint-evidence/element-000057.png",
+          "crop_sha256": "dfa81b85c13d9a6bd14cb02bbc5f9eb5b20a990396f2cd50e7a063da9512e140",
+          "normalized_bounds": [
+            1,
+            337,
+            159,
+            395
+          ],
+          "pixel_bounds": [
+            1,
+            546,
+            283,
+            642
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "relationship_endpoint"
+        },
+        "selector_region": [
+          1,
+          337,
+          159,
+          395
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000057",
+      "kind": "annotation callout",
+      "region": [
+        1,
+        337,
+        159,
+        395
+      ],
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_endpoint",
+      "content": "",
+      "gap_reason": "The visible source does not contain the preserved value-label pair: $20.16 is labeled \u201cAvg revenue / transaction,\u201d while \u201cAvg revenue / visitor\u201d is paired with $3.67.",
+      "id": "element-000058",
+      "kind": "KPI metric",
+      "region": [
+        478,
+        327,
+        649,
+        346
+      ],
+      "status": "gap"
+    },
+    {
+      "capture_scope": "relationship_endpoint",
+      "content": "$41,004",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "$41,004",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000059",
+          "claimed_content": "$41,004",
+          "crop_path": "endpoint-evidence/element-000059-relationship-endpoint-context-9d211d3832a1f0ce.png",
+          "crop_sha256": "c34885ef5791f315fe58a615111e6051f78ff619f4988e1004aea3ce2a82569d",
+          "normalized_bounds": [
+            10,
+            526,
+            420,
+            715
+          ],
+          "pixel_bounds": [
+            17,
+            853,
+            747,
+            1161
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "relationship_endpoint_context"
+        },
+        "selector_evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000059",
+          "claimed_content": "$41,004",
+          "crop_path": "endpoint-evidence/element-000059.png",
+          "crop_sha256": "c98b9a71a56c10c4386862c690d838fe3f11412f42f21609bfdb18082c749a5c",
+          "normalized_bounds": [
+            184,
+            587,
+            250,
+            613
+          ],
+          "pixel_bounds": [
+            327,
+            952,
+            445,
+            995
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "relationship_endpoint"
+        },
+        "selector_region": [
+          184,
+          587,
+          250,
+          613
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000059",
+      "kind": "metric value",
+      "region": [
+        184,
+        587,
+        250,
+        613
+      ],
+      "status": "readable"
+    },
+    {
+      "capture_scope": "relationship_endpoint",
+      "content": "Take the earned to date number (Sum of column AF for the current pay period) and divide it by the current number of days earned in that period to get a per day average. Then multiply that per day average by the total number of days in that pay period to get the projected close.",
+      "endpoint_verification": {
+        "claim_scope": "selector_with_context_v3",
+        "claimed_content": "Take the earned to date number (Sum of column AF for the current pay period) and divide it by the current number of days earned in that period to get a per day average. Then multiply that per day average by the total number of days in that pay period to get the projected close.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000060",
+          "claimed_content": "Take the earned to date number (Sum of column AF for the current pay period) and divide it by the current number of days earned in that period to get a per day average. Then multiply that per day average by the total number of days in that pay period to get the projected close.",
+          "crop_path": "endpoint-evidence/element-000060-relationship-endpoint-context-e8023253350a8473.png",
+          "crop_sha256": "5c609202a1caf3077460d777033c873a601a91c1f20e30d6fffdd544fe183b22",
+          "normalized_bounds": [
+            170,
+            500,
+            840,
+            640
+          ],
+          "pixel_bounds": [
+            302,
+            811,
+            1494,
+            1039
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "relationship_endpoint_context"
+        },
+        "selector_evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000060",
+          "claimed_content": "Take the earned to date number (Sum of column AF for the current pay period) and divide it by the current number of days earned in that period to get a per day average. Then multiply that per day average by the total number of days in that pay period to get the projected close.",
+          "crop_path": "endpoint-evidence/element-000060.png",
+          "crop_sha256": "9e66b34959aac8ac29738a44856088ee645b4b6543d5b9c330ff834b6ce3c364",
+          "normalized_bounds": [
+            376,
+            500,
+            697,
+            594
+          ],
+          "pixel_bounds": [
+            668,
+            811,
+            1240,
+            965
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "relationship_endpoint"
+        },
+        "selector_region": [
+          376,
+          500,
+          697,
+          594
+        ],
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000060",
+      "kind": "annotation callout",
+      "region": [
+        376,
+        500,
+        697,
+        594
+      ],
+      "status": "readable"
+    }
+  ],
+  "purpose_quote": "I want us to test the complete bundle of screenshots with annotations. The reference spreadsheet and codebase is the same, but the intake complete bundle has more screenshots.",
+  "reader": {
+    "harness": "Codex",
+    "model": "GPT-5"
+  },
+  "relationship_obligations": [
+    {
+      "element_id": "element-000001",
+      "id": "obligation-000001",
+      "relationship_id": "relationship-000001",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000002",
+      "id": "obligation-000002",
+      "relationship_id": "relationship-000002",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000003",
+      "id": "obligation-000003",
+      "relationship_id": "relationship-000003",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000004",
+      "id": "obligation-000004",
+      "relationship_id": "relationship-000004",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000005",
+      "id": "obligation-000005",
+      "relationship_id": "relationship-000001",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000006",
+      "id": "obligation-000006",
+      "relationship_id": "relationship-000003",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000007",
+      "id": "obligation-000007",
+      "relationship_id": "relationship-000005",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000008",
+      "id": "obligation-000008",
+      "relationship_id": "relationship-000005",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000009",
+      "id": "obligation-000009",
+      "relationship_id": "relationship-000006",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000010",
+      "id": "obligation-000010",
+      "relationship_id": "relationship-000007",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000012",
+      "id": "obligation-000011",
+      "relationship_id": "relationship-000008",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000013",
+      "id": "obligation-000012",
+      "relationship_id": "relationship-000009",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000014",
+      "id": "obligation-000013",
+      "relationship_id": "relationship-000008",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000015",
+      "id": "obligation-000014",
+      "relationship_id": "relationship-000010",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000016",
+      "id": "obligation-000015",
+      "relationship_id": "relationship-000011",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000017",
+      "id": "obligation-000016",
+      "relationship_id": "relationship-000012",
+      "resolution": "gap",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000018",
+      "id": "obligation-000017",
+      "relationship_id": "relationship-000013",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000019",
+      "id": "obligation-000018",
+      "relationship_id": "relationship-000014",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000020",
+      "id": "obligation-000019",
+      "relationship_id": "relationship-000015",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000022",
+      "id": "obligation-000020",
+      "relationship_id": "relationship-000016",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000023",
+      "id": "obligation-000021",
+      "relationship_id": "relationship-000016",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000025",
+      "id": "obligation-000022",
+      "relationship_id": "relationship-000017",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000027",
+      "id": "obligation-000023",
+      "relationship_id": "relationship-000018",
+      "resolution": "gap",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000028",
+      "id": "obligation-000024",
+      "relationship_id": "relationship-000019",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000029",
+      "id": "obligation-000025",
+      "relationship_id": "relationship-000020",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000030",
+      "id": "obligation-000026",
+      "relationship_id": "relationship-000019",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000032",
+      "id": "obligation-000027",
+      "relationship_id": "relationship-000021",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000033",
+      "id": "obligation-000028",
+      "relationship_id": "relationship-000022",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000034",
+      "id": "obligation-000029",
+      "relationship_id": "relationship-000020",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000035",
+      "id": "obligation-000030",
+      "relationship_id": "relationship-000021",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000036",
+      "id": "obligation-000031",
+      "relationship_id": "relationship-000022",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000037",
+      "id": "obligation-000032",
+      "relationship_id": "relationship-000023",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000038",
+      "id": "obligation-000033",
+      "relationship_id": "relationship-000024",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000039",
+      "id": "obligation-000034",
+      "relationship_id": "relationship-000025",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000040",
+      "id": "obligation-000035",
+      "relationship_id": "relationship-000026",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000041",
+      "id": "obligation-000036",
+      "relationship_id": "relationship-000026",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000042",
+      "id": "obligation-000037",
+      "relationship_id": "relationship-000025",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000043",
+      "id": "obligation-000038",
+      "relationship_id": "relationship-000027",
+      "resolution": "gap",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000044",
+      "id": "obligation-000039",
+      "relationship_id": "relationship-000028",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000045",
+      "id": "obligation-000040",
+      "relationship_id": "relationship-000028",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000046",
+      "id": "obligation-000041",
+      "relationship_id": "relationship-000029",
+      "resolution": "gap",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000047",
+      "id": "obligation-000042",
+      "relationship_id": "relationship-000030",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000048",
+      "id": "obligation-000043",
+      "relationship_id": "relationship-000030",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000049",
+      "id": "obligation-000044",
+      "relationship_id": "relationship-000031",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000050",
+      "id": "obligation-000045",
+      "relationship_id": "relationship-000032",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000051",
+      "id": "obligation-000046",
+      "relationship_id": "relationship-000033",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000052",
+      "id": "obligation-000047",
+      "relationship_id": "relationship-000031",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000053",
+      "id": "obligation-000048",
+      "relationship_id": "relationship-000034",
+      "resolution": "gap",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000054",
+      "id": "obligation-000049",
+      "relationship_id": "relationship-000002",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000055",
+      "id": "obligation-000050",
+      "relationship_id": "relationship-000004",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000056",
+      "id": "obligation-000051",
+      "relationship_id": "relationship-000006",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000057",
+      "id": "obligation-000052",
+      "relationship_id": "relationship-000035",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000059",
+      "id": "obligation-000053",
+      "relationship_id": "relationship-000023",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000060",
+      "id": "obligation-000054",
+      "relationship_id": "relationship-000024",
+      "resolution": "relationship",
+      "status": "resolved"
+    }
+  ],
+  "relationships": [
+    {
+      "binding_method": "required_identity_and_selected_identity_containment",
+      "description": "The Column AF callout points to the $8,100 Net Revenue Today metric, establishing Column AF as the source for that displayed value.",
+      "from_id": "element-000001",
+      "gap_reason": "",
+      "id": "relationship-000001",
+      "kind": "annotation arrow linking a source column to a dashboard metric",
+      "locked_identity_participants": {
+        "origin": "element-000001"
+      },
+      "origin_point": [
+        100,
+        80
+      ],
+      "status": "readable",
+      "target_point": [
+        220,
+        140
+      ],
+      "to_id": "element-000005",
+      "verified_element_id": "element-000001",
+      "verified_obligation_id": "obligation-000001",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The Column W annotation points to the displayed value 300 for paid in cash; its percentage is shown as 300 divided by 364.",
+      "from_id": "element-000002",
+      "gap_reason": "",
+      "id": "relationship-000002",
+      "kind": "calculation input mapping",
+      "locked_identity_participants": {
+        "origin": "element-000002"
+      },
+      "origin_point": [
+        150,
+        150
+      ],
+      "status": "readable",
+      "target_point": [
+        285,
+        211
+      ],
+      "to_id": "element-000054",
+      "verified_element_id": "element-000002",
+      "verified_obligation_id": "obligation-000002",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The Column AE annotation points to the 364 transactions-today value, establishing Column AE as the source for that displayed transaction count.",
+      "from_id": "element-000003",
+      "gap_reason": "",
+      "id": "relationship-000003",
+      "kind": "annotation callout points to the dashboard metric it identifies",
+      "locked_identity_participants": {
+        "origin": "element-000003"
+      },
+      "origin_point": [
+        123,
+        193
+      ],
+      "status": "readable",
+      "target_point": [
+        225,
+        216
+      ],
+      "to_id": "element-000006",
+      "verified_element_id": "element-000003",
+      "verified_obligation_id": "obligation-000003",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation identifies the displayed 64 codes value as Column AC and states that its percentage is calculated as 64 divided by 364.",
+      "from_id": "element-000004",
+      "gap_reason": "",
+      "id": "relationship-000004",
+      "kind": "calculation annotation to displayed metric",
+      "locked_identity_participants": {
+        "origin": "element-000004"
+      },
+      "origin_point": [
+        150,
+        265
+      ],
+      "status": "readable",
+      "target_point": [
+        284,
+        236
+      ],
+      "to_id": "element-000055",
+      "verified_element_id": "element-000004",
+      "verified_obligation_id": "obligation-000004",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation points to the package summary and establishes that Columns F plus K produce the displayed count of 114, with 114 divided by 364 producing the displayed 31%.",
+      "from_id": "element-000007",
+      "gap_reason": "",
+      "id": "relationship-000005",
+      "kind": "calculation formula for a displayed package count and percentage",
+      "locked_identity_participants": {
+        "origin": "element-000007"
+      },
+      "origin_point": [
+        365,
+        142
+      ],
+      "status": "readable",
+      "target_point": [
+        468,
+        241
+      ],
+      "to_id": "element-000008",
+      "verified_element_id": "element-000007",
+      "verified_obligation_id": "obligation-000007",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation points to the non-package summary and establishes that Columns C plus I produce 250 non-package transactions, with 250 divided by 364 displayed as 69%.",
+      "from_id": "element-000009",
+      "gap_reason": "",
+      "id": "relationship-000006",
+      "kind": "calculation formula to displayed result",
+      "locked_identity_participants": {
+        "origin": "element-000009"
+      },
+      "origin_point": [
+        528,
+        142
+      ],
+      "status": "readable",
+      "target_point": [
+        480,
+        211
+      ],
+      "to_id": "element-000056",
+      "verified_element_id": "element-000009",
+      "verified_obligation_id": "obligation-000009",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "Clicking Refresh updates the All Locations Today section's displayed numbers to the current data; the callout also states that Live Today is refreshed.",
+      "from_id": "element-000010",
+      "gap_reason": "",
+      "id": "relationship-000007",
+      "kind": "refresh action updates displayed section data",
+      "locked_identity_participants": {
+        "origin": "element-000010"
+      },
+      "origin_point": [
+        612,
+        33
+      ],
+      "status": "readable",
+      "target_point": [
+        200,
+        440
+      ],
+      "to_id": "element-000021",
+      "verified_element_id": "element-000010",
+      "verified_obligation_id": "obligation-000010",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation establishes that the Conversion rate card's 7-day average is calculated as the average of Column AT over the previous seven days.",
+      "from_id": "element-000014",
+      "gap_reason": "",
+      "id": "relationship-000008",
+      "kind": "calculation-and-display dependency",
+      "locked_identity_participants": {
+        "target": "element-000012"
+      },
+      "origin_point": [
+        890,
+        130
+      ],
+      "status": "readable",
+      "target_point": [
+        700,
+        200
+      ],
+      "to_id": "element-000012",
+      "verified_element_id": "element-000012",
+      "verified_obligation_id": "obligation-000011",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation points to the location selector and establishes that every value in the Live Today section is scoped only to the selected location, shown as Skywalk.",
+      "from_id": "element-000013",
+      "gap_reason": "",
+      "id": "relationship-000009",
+      "kind": "selected-location scope dependency",
+      "locked_identity_participants": {
+        "origin": "element-000013"
+      },
+      "origin_point": [
+        910,
+        53
+      ],
+      "status": "readable",
+      "target_point": [
+        750,
+        83
+      ],
+      "to_id": "element-000011",
+      "verified_element_id": "element-000013",
+      "verified_obligation_id": "obligation-000012",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation establishes that the Capture rate 7-day average is calculated from Column AE divided by guest count, averaged over the previous seven days.",
+      "from_id": "element-000015",
+      "gap_reason": "",
+      "id": "relationship-000010",
+      "kind": "calculation formula",
+      "locked_identity_participants": {
+        "origin": "element-000015"
+      },
+      "origin_point": [
+        922,
+        205
+      ],
+      "status": "readable",
+      "target_point": [
+        760,
+        220
+      ],
+      "to_id": "element-000012",
+      "verified_element_id": "element-000015",
+      "verified_obligation_id": "obligation-000014",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The Column AC annotation points to the displayed 64 codes metric and states that its percentage is calculated as 64 divided by 364.",
+      "from_id": "element-000016",
+      "gap_reason": "",
+      "id": "relationship-000011",
+      "kind": "formula annotation to displayed metric",
+      "locked_identity_participants": {
+        "origin": "element-000016"
+      },
+      "origin_point": [
+        88,
+        260
+      ],
+      "status": "readable",
+      "target_point": [
+        284,
+        236
+      ],
+      "to_id": "element-000055",
+      "verified_element_id": "element-000016",
+      "verified_obligation_id": "obligation-000015",
+      "visual_verification": "supported"
+    },
+    {
+      "description": "",
+      "from_id": null,
+      "gap_reason": "The preserved required identity \"The sum of Column AE for all locations for the current day. All the data in this section should refresh as well when they click the refresh button in the live today section.\" was not established because the proposed visible unit \"The sum of Column AF for all locations for the current day. All the data in this section should refresh as well when they click the refresh button in the live today section.\" was verified as a different source unit.",
+      "id": "relationship-000012",
+      "identity_mismatch": {
+        "endpoint_crop_evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000017",
+          "claimed_content": "The sum of Column AF for all locations for the current day. All the data in this section should refresh as well when they click the refresh button in the live today section.",
+          "crop_path": "endpoint-evidence/element-000017-required-participant-replacement-7c7b957d9c3698a0.png",
+          "crop_sha256": "bc2949327a3ee9727829e4599405f07a4dc2f63d9aa5fc50bac4500d86875c98",
+          "normalized_bounds": [
+            0,
+            260,
+            159,
+            357
+          ],
+          "pixel_bounds": [
+            0,
+            421,
+            283,
+            580
+          ],
+          "source_pixel_size": [
+            1778,
+            1623
+          ],
+          "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6",
+          "verification_scope": "required_participant_replacement"
+        },
+        "proposed_bounds": [
+          0,
+          260,
+          159,
+          357
+        ],
+        "proposed_content": "The sum of Column AF for all locations for the current day. All the data in this section should refresh as well when they click the refresh button in the live today section.",
+        "proposed_kind": "annotation callout",
+        "required_claim": "The sum of Column AE for all locations for the current day. All the data in this section should refresh as well when they click the refresh button in the live today section.",
+        "verdict": "different_source_unit"
+      },
+      "kind": "required participant relationship",
+      "participant_id": "element-000017",
+      "status": "gap",
+      "to_id": null
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation establishes that the All Locations Today net revenue value of $13,060 is the sum of Column AF across all locations for that day.",
+      "from_id": "element-000018",
+      "gap_reason": "",
+      "id": "relationship-000013",
+      "kind": "metric derivation",
+      "locked_identity_participants": {
+        "origin": "element-000018"
+      },
+      "origin_point": [
+        60,
+        418
+      ],
+      "status": "readable",
+      "target_point": [
+        190,
+        350
+      ],
+      "to_id": "element-000021",
+      "verified_element_id": "element-000018",
+      "verified_obligation_id": "obligation-000017",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The callout identifies the donut's center result, \u201c62% Skywalk,\u201d as the location with the highest share of revenue earned that day.",
+      "from_id": "element-000019",
+      "gap_reason": "",
+      "id": "relationship-000014",
+      "kind": "annotation callout points to the highest-share location in the daily revenue-share donut chart",
+      "locked_identity_participants": {
+        "origin": "element-000019"
+      },
+      "origin_point": [
+        66,
+        463
+      ],
+      "status": "readable",
+      "target_point": [
+        219,
+        416
+      ],
+      "to_id": "element-000021",
+      "verified_element_id": "element-000019",
+      "verified_obligation_id": "obligation-000018",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation establishes that each legend row uses Column AF as that location's net revenue, divides it by total Column AF across all locations for the revenue-share percentage, and uses Column AE as that location's transaction count.",
+      "from_id": "element-000020",
+      "gap_reason": "",
+      "id": "relationship-000015",
+      "kind": "calculation specification",
+      "locked_identity_participants": {
+        "origin": "element-000020"
+      },
+      "origin_point": [
+        128,
+        520
+      ],
+      "status": "readable",
+      "target_point": [
+        350,
+        425
+      ],
+      "to_id": "element-000024",
+      "verified_element_id": "element-000020",
+      "verified_obligation_id": "obligation-000019",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation establishes that the All Locations Today average per transaction ($22.25) is calculated as the sum of Column X divided by the sum of Column W for all locations.",
+      "from_id": "element-000022",
+      "gap_reason": "",
+      "id": "relationship-000016",
+      "kind": "calculation formula",
+      "locked_identity_participants": {
+        "origin": "element-000022"
+      },
+      "origin_point": [
+        360,
+        290
+      ],
+      "status": "readable",
+      "target_point": [
+        385,
+        344
+      ],
+      "to_id": "element-000023",
+      "verified_element_id": "element-000022",
+      "verified_obligation_id": "obligation-000020",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "587 transactions today is the all-locations transaction count used as the denominator in calculating the displayed $22.25 average per transaction.",
+      "from_id": "element-000023",
+      "gap_reason": "",
+      "id": "relationship-000017",
+      "kind": "metric derivation",
+      "locked_identity_participants": {
+        "target": "element-000025"
+      },
+      "origin_point": [
+        383,
+        342
+      ],
+      "status": "readable",
+      "target_point": [
+        304,
+        345
+      ],
+      "to_id": "element-000025",
+      "verified_element_id": "element-000025",
+      "verified_obligation_id": "obligation-000022",
+      "visual_verification": "supported"
+    },
+    {
+      "description": "",
+      "from_id": null,
+      "gap_reason": "The source visibly contradicts the preserved target identity: $20.16 belongs to \u201cAvg revenue / transaction,\u201d and the separate \u201cAvg revenue / visitor\u201d target has value $3.67, so the claimed endpoint and relationship cannot be recorded faithfully.",
+      "id": "relationship-000018",
+      "kind": "value-label pairing",
+      "participant_id": "element-000027",
+      "status": "gap",
+      "to_id": "element-000027"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The 18.2% YTD conversion rate is calculated as the sum of Column AE YTD divided by the sum of guest count YTD.",
+      "from_id": "element-000030",
+      "gap_reason": "",
+      "id": "relationship-000019",
+      "kind": "calculated KPI formula",
+      "locked_identity_participants": {
+        "target": "element-000028"
+      },
+      "origin_point": [
+        800,
+        405
+      ],
+      "status": "readable",
+      "target_point": [
+        660,
+        360
+      ],
+      "to_id": "element-000028",
+      "verified_element_id": "element-000028",
+      "verified_obligation_id": "obligation-000024",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation callout points to the line chart and establishes that its monthly points display capture rate and conversion rate, calculated for the days in each month.",
+      "from_id": "element-000034",
+      "gap_reason": "",
+      "id": "relationship-000020",
+      "kind": "monthly capture-rate and conversion-rate series",
+      "locked_identity_participants": {
+        "target": "element-000029"
+      },
+      "origin_point": [
+        880,
+        480
+      ],
+      "status": "readable",
+      "target_point": [
+        730,
+        450
+      ],
+      "to_id": "element-000029",
+      "verified_element_id": "element-000029",
+      "verified_obligation_id": "obligation-000025",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation establishes that the $3.67 Avg revenue / visitor KPI is calculated as the sum of Column X year to date divided by guest count year to date.",
+      "from_id": "element-000032",
+      "gap_reason": "",
+      "id": "relationship-000021",
+      "kind": "ratio formula for a year-to-date KPI",
+      "locked_identity_participants": {
+        "origin": "element-000032"
+      },
+      "origin_point": [
+        928,
+        341
+      ],
+      "status": "readable",
+      "target_point": [
+        817,
+        344
+      ],
+      "to_id": "element-000035",
+      "verified_element_id": "element-000032",
+      "verified_obligation_id": "obligation-000027",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation establishes that the 42% Conversion rate in the Performance Snapshot YTD is the average of column AT YTD.",
+      "from_id": "element-000033",
+      "gap_reason": "",
+      "id": "relationship-000022",
+      "kind": "defines the calculation for",
+      "locked_identity_participants": {
+        "origin": "element-000033"
+      },
+      "origin_point": [
+        928,
+        391
+      ],
+      "status": "readable",
+      "target_point": [
+        822,
+        371
+      ],
+      "to_id": "element-000036",
+      "verified_element_id": "element-000033",
+      "verified_obligation_id": "obligation-000028",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation defines the Earned to Date value of $41,004 as the sum of Column AF for the current pay period.",
+      "from_id": "element-000037",
+      "gap_reason": "",
+      "id": "relationship-000023",
+      "kind": "calculation definition",
+      "locked_identity_participants": {
+        "origin": "element-000037"
+      },
+      "origin_point": [
+        100,
+        640
+      ],
+      "status": "readable",
+      "target_point": [
+        210,
+        600
+      ],
+      "to_id": "element-000059",
+      "verified_element_id": "element-000037",
+      "verified_obligation_id": "obligation-000032",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_selected_identity_containment",
+      "description": "The Projected Close is derived by dividing the current pay period's earned-to-date amount by the number of elapsed earning days, then multiplying that daily average by the total days in the pay period.",
+      "from_id": "element-000060",
+      "gap_reason": "",
+      "id": "relationship-000024",
+      "kind": "calculated from",
+      "locked_identity_participants": {
+        "target": "element-000038"
+      },
+      "origin_point": [
+        536,
+        547
+      ],
+      "status": "readable",
+      "target_point": [
+        388,
+        600
+      ],
+      "to_id": "element-000038",
+      "verified_element_id": "element-000038",
+      "verified_obligation_id": "obligation-000033",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_selected_identity_containment",
+      "description": "The annotation establishes that LAST PERIOD TOTAL ($34,700) is the total payout for the previous pay period, obtained from the payout report or calculated as the sum of Column AF across all locations over the previous pay-period date range.",
+      "from_id": "element-000039",
+      "gap_reason": "",
+      "id": "relationship-000025",
+      "kind": "calculation rule for displayed metric",
+      "locked_identity_participants": {
+        "origin": "element-000039"
+      },
+      "origin_point": [
+        900,
+        575
+      ],
+      "status": "readable",
+      "target_point": [
+        725,
+        602
+      ],
+      "to_id": "element-000042",
+      "verified_element_id": "element-000039",
+      "verified_obligation_id": "obligation-000034",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_selected_identity_containment",
+      "description": "The annotation establishes that the NEXT PAYOUT date shown in the metric is the next applicable payout day: either the 16th of the current month or the 1st of the next month.",
+      "from_id": "element-000040",
+      "gap_reason": "",
+      "id": "relationship-000026",
+      "kind": "Business-rule annotation points to the next-payout metric display.",
+      "locked_identity_participants": {
+        "origin": "element-000040"
+      },
+      "origin_point": [
+        640,
+        555
+      ],
+      "status": "readable",
+      "target_point": [
+        545,
+        602
+      ],
+      "to_id": "element-000041",
+      "verified_element_id": "element-000040",
+      "verified_obligation_id": "obligation-000035",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_issue": {
+        "matching_element_ids": [],
+        "participant": "origin",
+        "point": [
+          760,
+          681
+        ],
+        "reason": "recorded_element_not_readable"
+      },
+      "binding_method": "coordinate_unique_containment",
+      "description": "",
+      "from_id": "element-000043",
+      "gap_reason": "The obligated time-range selector is recorded as a gap because its right edge is clipped, so it cannot serve as a valid readable relationship endpoint.",
+      "id": "relationship-000027",
+      "kind": "Time-range filter controls displayed period total",
+      "origin_point": [
+        760,
+        681
+      ],
+      "status": "gap",
+      "target_point": [
+        530,
+        675
+      ],
+      "to_id": "element-000044"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation establishes that the displayed total paid to you is the sum of Column AF for all locations over the chart's selected period; with YTD selected, the displayed $1,632,289 is the year-to-date total.",
+      "from_id": "element-000045",
+      "gap_reason": "",
+      "id": "relationship-000028",
+      "kind": "calculation basis",
+      "locked_identity_participants": {
+        "target": "element-000044"
+      },
+      "origin_point": [
+        850,
+        740
+      ],
+      "status": "readable",
+      "target_point": [
+        570,
+        681
+      ],
+      "to_id": "element-000044",
+      "verified_element_id": "element-000044",
+      "verified_obligation_id": "obligation-000039",
+      "visual_verification": "supported"
+    },
+    {
+      "description": "",
+      "from_id": "element-000046",
+      "gap_reason": "The screenshot is cropped at the bottom immediately below the Action Items header, so the section's action item entries and their relationship to the header are not visible.",
+      "id": "relationship-000029",
+      "kind": "action item entries",
+      "participant_id": "element-000046",
+      "status": "gap",
+      "to_id": null
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The dollar-value y-axis labels and the Oct 15 x-axis label provide the visible scale and date reference for the adjacent net payout line and filled area chart.",
+      "from_id": "element-000047",
+      "gap_reason": "",
+      "id": "relationship-000030",
+      "kind": "axis labels scale and date the net payout line chart",
+      "locked_identity_participants": {
+        "origin": "element-000047"
+      },
+      "origin_point": [
+        223,
+        854
+      ],
+      "status": "readable",
+      "target_point": [
+        390,
+        855
+      ],
+      "to_id": "element-000048",
+      "verified_element_id": "element-000047",
+      "verified_obligation_id": "obligation-000042",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation arrow identifies the tooltip as the weekly net payout card: $48,497 is the total for all locations for that week, with the amounts below showing each location's Column AF contribution.",
+      "from_id": "element-000052",
+      "gap_reason": "",
+      "id": "relationship-000031",
+      "kind": "weekly net payout by-location breakdown",
+      "locked_identity_participants": {
+        "target": "element-000049"
+      },
+      "origin_point": [
+        750,
+        840
+      ],
+      "status": "readable",
+      "target_point": [
+        495,
+        849
+      ],
+      "to_id": "element-000049",
+      "verified_element_id": "element-000049",
+      "verified_obligation_id": "obligation-000044",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The date tick labels define the horizontal time positions for the red Net Revenue to You line-chart data series.",
+      "from_id": "element-000050",
+      "gap_reason": "",
+      "id": "relationship-000032",
+      "kind": "horizontal time-axis labels for the chart data series",
+      "locked_identity_participants": {
+        "origin": "element-000050"
+      },
+      "origin_point": [
+        532,
+        941
+      ],
+      "status": "readable",
+      "target_point": [
+        400,
+        850
+      ],
+      "to_id": "element-000048",
+      "verified_element_id": "element-000050",
+      "verified_obligation_id": "obligation-000045",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_selected_identity_containment",
+      "description": "The red dashed vertical guide marks the hovered chart position near Jan 7, and the adjacent tooltip displays the net payout total and per-location values for that position.",
+      "from_id": "element-000051",
+      "gap_reason": "",
+      "id": "relationship-000033",
+      "kind": "hover position indicator",
+      "locked_identity_participants": {
+        "origin": "element-000051"
+      },
+      "origin_point": [
+        439,
+        850
+      ],
+      "status": "readable",
+      "target_point": [
+        490,
+        850
+      ],
+      "to_id": "element-000049",
+      "verified_element_id": "element-000051",
+      "verified_obligation_id": "obligation-000046",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_issue": {
+        "matching_element_ids": [],
+        "participant": "target",
+        "point": [
+          800,
+          850
+        ],
+        "reason": "recorded_element_not_readable"
+      },
+      "binding_method": "coordinate_unique_containment",
+      "description": "",
+      "from_id": "element-000052",
+      "gap_reason": "The required chart-panel endpoint is recorded as a gap: only a partial edge and x-axis fragment are visible, while most of the panel is outside the crop or obscured by annotation callouts, so the relationship cannot be bound to two readable recorded elements.",
+      "id": "relationship-000034",
+      "kind": "annotation arrow linkage",
+      "origin_point": [
+        850,
+        830
+      ],
+      "status": "gap",
+      "target_point": [
+        800,
+        850
+      ],
+      "to_id": "element-000053"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation points to \u201c587 transactions today,\u201d establishing that the all-locations daily transaction total is the sum of Column AE across all locations for that day.",
+      "from_id": "element-000057",
+      "gap_reason": "",
+      "id": "relationship-000035",
+      "kind": "daily total aggregation",
+      "locked_identity_participants": {
+        "origin": "element-000057"
+      },
+      "origin_point": [
+        80,
+        366
+      ],
+      "status": "readable",
+      "target_point": [
+        304,
+        345
+      ],
+      "to_id": "element-000025",
+      "verified_element_id": "element-000057",
+      "verified_obligation_id": "obligation-000052",
+      "visual_verification": "supported"
+    }
+  ],
+  "scan_regions": [
+    {
+      "bounds": [
+        0,
+        0,
+        250,
+        250
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000001",
+        "element-000002",
+        "element-000003",
+        "element-000004",
+        "element-000005",
+        "element-000006"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          0,
+          0,
+          250,
+          250
+        ],
+        "core_pixel_bounds": [
+          0,
+          0,
+          445,
+          406
+        ],
+        "crop_path": "region-evidence/region-r01-c01.png",
+        "crop_sha256": "0399487d28aed152489171f39fe2214ef8987f822b350ae93df9a43f4270a471",
+        "evidence_normalized_bounds": [
+          0,
+          0,
+          300,
+          300
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r01-c01.ownership.png",
+        "guide_sha256": "e61ef4e1005be15566f13818db54273148f594e4ada1f46f185677e62d17fa9a",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          406
+        ],
+        "pixel_bounds": [
+          0,
+          0,
+          534,
+          487
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r01-c01",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        250,
+        0,
+        500,
+        250
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000007",
+        "element-000008",
+        "element-000009"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          250,
+          0,
+          500,
+          250
+        ],
+        "core_pixel_bounds": [
+          444,
+          0,
+          889,
+          406
+        ],
+        "crop_path": "region-evidence/region-r01-c02.png",
+        "crop_sha256": "a4d2842640fdacce7cd73a9501072c520f95657a5730b3a4a79a27de49e44252",
+        "evidence_normalized_bounds": [
+          250,
+          0,
+          550,
+          300
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r01-c02.ownership.png",
+        "guide_sha256": "5783ea34a07fd2d0628f984f59f8e532ec2dfee7efeda72f0270be5c8593dfb0",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          406
+        ],
+        "pixel_bounds": [
+          444,
+          0,
+          978,
+          487
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r01-c02",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        500,
+        0,
+        750,
+        250
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000010",
+        "element-000011",
+        "element-000012"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          500,
+          0,
+          750,
+          250
+        ],
+        "core_pixel_bounds": [
+          889,
+          0,
+          1334,
+          406
+        ],
+        "crop_path": "region-evidence/region-r01-c03.png",
+        "crop_sha256": "58639bfcd8d430ae7edbd1028308e6f3c8009836915a3a5e6b0fa3fd403f6a31",
+        "evidence_normalized_bounds": [
+          500,
+          0,
+          800,
+          300
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r01-c03.ownership.png",
+        "guide_sha256": "da1d6a0b7615586adce3762f2e0bcc79afb81afa1883e159a4fe6a93fbed353f",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          406
+        ],
+        "pixel_bounds": [
+          889,
+          0,
+          1423,
+          487
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r01-c03",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        750,
+        0,
+        1000,
+        250
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000013",
+        "element-000014",
+        "element-000015"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          750,
+          0,
+          1000,
+          250
+        ],
+        "core_pixel_bounds": [
+          1333,
+          0,
+          1778,
+          406
+        ],
+        "crop_path": "region-evidence/region-r01-c04.png",
+        "crop_sha256": "24a05a426340cd488de8f8754bb1ed36e1a850f0f5550e9136549e607ccd7cd5",
+        "evidence_normalized_bounds": [
+          750,
+          0,
+          1000,
+          300
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r01-c04.ownership.png",
+        "guide_sha256": "c6a7a5458de2c3fda373c8284daf90cd2149f49eaf5095231d07b5f6a70ab3c6",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          406
+        ],
+        "pixel_bounds": [
+          1333,
+          0,
+          1778,
+          487
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r01-c04",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        0,
+        250,
+        250,
+        500
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000016",
+        "element-000017",
+        "element-000018",
+        "element-000019",
+        "element-000020",
+        "element-000021"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          0,
+          250,
+          250,
+          500
+        ],
+        "core_pixel_bounds": [
+          0,
+          405,
+          445,
+          812
+        ],
+        "crop_path": "region-evidence/region-r02-c01.png",
+        "crop_sha256": "3834f4e09bfb79efc71c5f955f5d86c665ff91a03b51801d622fe223d525c081",
+        "evidence_normalized_bounds": [
+          0,
+          250,
+          300,
+          550
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r02-c01.ownership.png",
+        "guide_sha256": "da90bba4c6c2673b52d4419496e6e28d6248cfed0c174a0fa92ac850e35ff8ca",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          407
+        ],
+        "pixel_bounds": [
+          0,
+          405,
+          534,
+          893
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r02-c01",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        250,
+        250,
+        500,
+        500
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000022",
+        "element-000023",
+        "element-000024",
+        "element-000025",
+        "element-000026"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          250,
+          250,
+          500,
+          500
+        ],
+        "core_pixel_bounds": [
+          444,
+          405,
+          889,
+          812
+        ],
+        "crop_path": "region-evidence/region-r02-c02.png",
+        "crop_sha256": "792a610b3fc43543b821c0f885b15a13bc1dc616d88ad85cbfe1e3b76f03695e",
+        "evidence_normalized_bounds": [
+          250,
+          250,
+          550,
+          550
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r02-c02.ownership.png",
+        "guide_sha256": "7d7824b09ee8371f4da04e1d36ad5b007a1d443aa8ec03655a33fb472539575b",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          407
+        ],
+        "pixel_bounds": [
+          444,
+          405,
+          978,
+          893
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r02-c02",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        500,
+        250,
+        750,
+        500
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [
+        {
+          "anchor": [
+            752,
+            385
+          ],
+          "candidate_kind": "status message",
+          "crop_sha256": "616ab103c90be1af39a81b469fb85beda6dfa8272aff7be48adc435c71eedfd2",
+          "guide_sha256": "70833a5ca3e8834350e23cad465c2dac4c83b155596a94e6fc9474c0a54b0977",
+          "obligation_id": "context-obligation-000001",
+          "owner_region_id": "region-r02-c04",
+          "reason": "context_only"
+        }
+      ],
+      "element_ids": [
+        "element-000027",
+        "element-000028",
+        "element-000029"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          500,
+          250,
+          750,
+          500
+        ],
+        "core_pixel_bounds": [
+          889,
+          405,
+          1334,
+          812
+        ],
+        "crop_path": "region-evidence/region-r02-c03.png",
+        "crop_sha256": "616ab103c90be1af39a81b469fb85beda6dfa8272aff7be48adc435c71eedfd2",
+        "evidence_normalized_bounds": [
+          500,
+          250,
+          800,
+          550
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r02-c03.ownership.png",
+        "guide_sha256": "70833a5ca3e8834350e23cad465c2dac4c83b155596a94e6fc9474c0a54b0977",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          407
+        ],
+        "pixel_bounds": [
+          889,
+          405,
+          1423,
+          893
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r02-c03",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        750,
+        250,
+        1000,
+        500
+      ],
+      "context_candidate_obligations": [
+        {
+          "anchor": [
+            752,
+            385
+          ],
+          "candidate_kind": "status message",
+          "element_id": "element-000030",
+          "gap_reason": "",
+          "id": "context-obligation-000001",
+          "resolution": "element",
+          "source_region_id": "region-r02-c03",
+          "status": "resolved"
+        }
+      ],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000030",
+        "element-000031",
+        "element-000032",
+        "element-000033",
+        "element-000034",
+        "element-000035",
+        "element-000036"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          750,
+          250,
+          1000,
+          500
+        ],
+        "core_pixel_bounds": [
+          1333,
+          405,
+          1778,
+          812
+        ],
+        "crop_path": "region-evidence/region-r02-c04.png",
+        "crop_sha256": "4554ba4490c33e7e2d317ca70ef2dc16669e8580db231a893b9444593f8c8a4d",
+        "evidence_normalized_bounds": [
+          750,
+          250,
+          1000,
+          550
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r02-c04.ownership.png",
+        "guide_sha256": "3efcb75e38508ab5f22b7217326512c6d11f6654a8c9e3ffadefcbf4200636b1",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          407
+        ],
+        "pixel_bounds": [
+          1333,
+          405,
+          1778,
+          893
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r02-c04",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        0,
+        500,
+        250,
+        750
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000037"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          0,
+          500,
+          250,
+          750
+        ],
+        "core_pixel_bounds": [
+          0,
+          811,
+          445,
+          1218
+        ],
+        "crop_path": "region-evidence/region-r03-c01.png",
+        "crop_sha256": "0e7686e88ab9ebd702d7171d32d926a8392a487791955d9c1219dab157c89413",
+        "evidence_normalized_bounds": [
+          0,
+          500,
+          300,
+          800
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r03-c01.ownership.png",
+        "guide_sha256": "c96b09463f684b526abc7709a528644725dc5fc05418c2ef9480ba5a652ba551",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          407
+        ],
+        "pixel_bounds": [
+          0,
+          811,
+          534,
+          1299
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r03-c01",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        250,
+        500,
+        500,
+        750
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [
+        {
+          "anchor": [
+            500,
+            535
+          ],
+          "candidate_kind": "Dashboard summary panel",
+          "crop_sha256": "6f75aef203096ef562ce758c8e7fa0e9bae85df2177f11b1c8cb8b0fe59b1f5f",
+          "guide_sha256": "1b0848959c08f16652b4ce8151b7163192b5d29b2e609ab260cbe29edb0b59fe",
+          "obligation_id": "context-obligation-000002",
+          "owner_region_id": "region-r03-c03",
+          "reason": "context_only"
+        }
+      ],
+      "element_ids": [
+        "element-000038",
+        "element-000039"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          250,
+          500,
+          500,
+          750
+        ],
+        "core_pixel_bounds": [
+          444,
+          811,
+          889,
+          1218
+        ],
+        "crop_path": "region-evidence/region-r03-c02.png",
+        "crop_sha256": "6f75aef203096ef562ce758c8e7fa0e9bae85df2177f11b1c8cb8b0fe59b1f5f",
+        "evidence_normalized_bounds": [
+          250,
+          500,
+          550,
+          800
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r03-c02.ownership.png",
+        "guide_sha256": "1b0848959c08f16652b4ce8151b7163192b5d29b2e609ab260cbe29edb0b59fe",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          407
+        ],
+        "pixel_bounds": [
+          444,
+          811,
+          978,
+          1299
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r03-c02",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        500,
+        500,
+        750,
+        750
+      ],
+      "context_candidate_obligations": [
+        {
+          "anchor": [
+            500,
+            535
+          ],
+          "candidate_kind": "Dashboard summary panel",
+          "element_id": "element-000039",
+          "gap_reason": "",
+          "id": "context-obligation-000002",
+          "resolution": "element",
+          "source_region_id": "region-r03-c02",
+          "status": "resolved"
+        }
+      ],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000040",
+        "element-000041",
+        "element-000042",
+        "element-000043",
+        "element-000044"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          500,
+          500,
+          750,
+          750
+        ],
+        "core_pixel_bounds": [
+          889,
+          811,
+          1334,
+          1218
+        ],
+        "crop_path": "region-evidence/region-r03-c03.png",
+        "crop_sha256": "e7a244f87fbccb4a718eb4efa34deb7ab956bfe07aa08ced42adda434912372d",
+        "evidence_normalized_bounds": [
+          500,
+          500,
+          800,
+          800
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r03-c03.ownership.png",
+        "guide_sha256": "60d2a623b217cdf79fb39c940824643ef25aa79f43a0778552071430e93ab617",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          407
+        ],
+        "pixel_bounds": [
+          889,
+          811,
+          1423,
+          1299
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r03-c03",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        750,
+        500,
+        1000,
+        750
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000045"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          750,
+          500,
+          1000,
+          750
+        ],
+        "core_pixel_bounds": [
+          1333,
+          811,
+          1778,
+          1218
+        ],
+        "crop_path": "region-evidence/region-r03-c04.png",
+        "crop_sha256": "d1087b80b878fbbae0859f4c22b7d00b89824850ab5dc6aa30071bb9a1053704",
+        "evidence_normalized_bounds": [
+          750,
+          500,
+          1000,
+          800
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r03-c04.ownership.png",
+        "guide_sha256": "b39bdc9fa9118cf1f875df2bb8a6f98a3f6bc56bfda95792018c1069cf351e49",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          407
+        ],
+        "pixel_bounds": [
+          1333,
+          811,
+          1778,
+          1299
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r03-c04",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        0,
+        750,
+        250,
+        1000
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000046",
+        "element-000047",
+        "element-000048"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          0,
+          750,
+          250,
+          1000
+        ],
+        "core_pixel_bounds": [
+          0,
+          1217,
+          445,
+          1623
+        ],
+        "crop_path": "region-evidence/region-r04-c01.png",
+        "crop_sha256": "da132495f1ec233175ac3321ad788777212ad47375ac8e8e309b1c2f734ee434",
+        "evidence_normalized_bounds": [
+          0,
+          750,
+          300,
+          1000
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r04-c01.ownership.png",
+        "guide_sha256": "9c7d92fa3c7bc4ff35c6819f4089582f4f08d964837bc8cde48235b6a9728956",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          406
+        ],
+        "pixel_bounds": [
+          0,
+          1217,
+          534,
+          1623
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r04-c01",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        250,
+        750,
+        500,
+        1000
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000049",
+        "element-000050",
+        "element-000051"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          250,
+          750,
+          500,
+          1000
+        ],
+        "core_pixel_bounds": [
+          444,
+          1217,
+          889,
+          1623
+        ],
+        "crop_path": "region-evidence/region-r04-c02.png",
+        "crop_sha256": "6c66e1716a25dcbc31d47d6125cc205295392d8a305444b0c96ffce9d90e6d26",
+        "evidence_normalized_bounds": [
+          250,
+          750,
+          550,
+          1000
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r04-c02.ownership.png",
+        "guide_sha256": "846a661f079cfc8944915db93a1aed176dea70b8723640325e9b0f3a3015ba10",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          406
+        ],
+        "pixel_bounds": [
+          444,
+          1217,
+          978,
+          1623
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r04-c02",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        500,
+        750,
+        750,
+        1000
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000052"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          500,
+          750,
+          750,
+          1000
+        ],
+        "core_pixel_bounds": [
+          889,
+          1217,
+          1334,
+          1623
+        ],
+        "crop_path": "region-evidence/region-r04-c03.png",
+        "crop_sha256": "b22b568311f285a1227461b360b1655a7bbd49fb2d5d3a79fc5c37404c736041",
+        "evidence_normalized_bounds": [
+          500,
+          750,
+          800,
+          1000
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r04-c03.ownership.png",
+        "guide_sha256": "535795776130cc36f48c68a6456acce80f35b53c4c4521c6b124b4bb5b22edc1",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          406
+        ],
+        "pixel_bounds": [
+          889,
+          1217,
+          1423,
+          1623
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r04-c03",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        750,
+        750,
+        1000,
+        1000
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000053"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          750,
+          750,
+          1000,
+          1000
+        ],
+        "core_pixel_bounds": [
+          1333,
+          1217,
+          1778,
+          1623
+        ],
+        "crop_path": "region-evidence/region-r04-c04.png",
+        "crop_sha256": "55c2c04df96f74658e1bf3432e067d378e96a0456561aa3b3642fe79779d48e7",
+        "evidence_normalized_bounds": [
+          750,
+          750,
+          1000,
+          1000
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r04-c04.ownership.png",
+        "guide_sha256": "839070b9ad0e9f59027b58abbb2f97f0069d36aebda558f86cc66d6ba66dc51e",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          445,
+          406
+        ],
+        "pixel_bounds": [
+          1333,
+          1217,
+          1778,
+          1623
+        ],
+        "source_pixel_size": [
+          1778,
+          1623
+        ],
+        "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+      },
+      "gap_reason": "",
+      "id": "region-r04-c04",
+      "status": "scanned"
+    }
+  ],
+  "schema_version": 13,
+  "source_sha256": "6f2b3485f19b5d93ef226a393cea4088431ce3c29a87c33cb6a41dae3b1ea3b6"
+}

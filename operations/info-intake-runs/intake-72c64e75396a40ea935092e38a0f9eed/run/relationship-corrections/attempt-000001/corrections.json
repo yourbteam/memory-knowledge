@@ -1,0 +1,193 @@
+{
+  "candidate_sha256": "f0bce7f191e41d222933f513b2c18c77a8e5809965764450bbf6b503e8502765",
+  "corrections": [
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000006",
+        "description": "The payout report's photo-revenue metric is populated from column X.",
+        "from_id": "element-000012",
+        "gap_reason": "",
+        "id": "relationship-000006-correction-000001",
+        "kind": "data-source mapping",
+        "locked_identity_participants": {
+          "target": "element-000010"
+        },
+        "origin_point": [
+          600,
+          400
+        ],
+        "status": "readable",
+        "target_point": [
+          488,
+          485
+        ],
+        "to_id": "element-000011",
+        "verified_element_id": "element-000010",
+        "verified_obligation_id": "obligation-000010"
+      },
+      "original_relationship_id": "relationship-000006",
+      "replacement_element": {
+        "created_by_correction": false,
+        "id": "element-000011"
+      },
+      "replacement_role": "target",
+      "replacement_source": "use_recorded_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000011",
+        "description": "The Jul 16\u201331, 2026 payout period card is populated from calculated payout-report fields: paid transactions from column W, photo revenue from X, codes used from AC, code fees from AD, and total net payout from AF plus refunds.",
+        "from_id": "element-000012",
+        "gap_reason": "",
+        "id": "relationship-000011-correction-000001",
+        "kind": "data source mapping",
+        "locked_identity_participants": {
+          "target": "element-000016"
+        },
+        "origin_point": [
+          600,
+          400
+        ],
+        "status": "readable",
+        "target_point": [
+          500,
+          485
+        ],
+        "to_id": "correction-element-000001",
+        "verified_element_id": "element-000016",
+        "verified_obligation_id": "obligation-000016"
+      },
+      "original_relationship_id": "relationship-000011",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "Jul 16 \u2013 31, 2026; PAYOUT-GCR-2026-07B; Grand Canyon Resort; 3,763 PAID TXNS; $101,503.80 PHOTO REVENUE; 179 CODES USED; -$581.75 CODE FEES; PAYOUT TO OPERATOR; $100,922.05; PDF; open",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000001",
+        "kind": "payout period card",
+        "region": [
+          213,
+          452,
+          1000,
+          548
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000012",
+        "description": "The first payout row's photo-revenue metric is populated from payout-report column X and displays $101,503.80.",
+        "from_id": "element-000012",
+        "gap_reason": "",
+        "id": "relationship-000012-correction-000001",
+        "kind": "data provenance relationship",
+        "locked_identity_participants": {
+          "target": "element-000017"
+        },
+        "origin_point": [
+          600,
+          400
+        ],
+        "status": "readable",
+        "target_point": [
+          488,
+          485
+        ],
+        "to_id": "element-000011",
+        "verified_element_id": "element-000017",
+        "verified_obligation_id": "obligation-000017"
+      },
+      "original_relationship_id": "relationship-000012",
+      "replacement_element": {
+        "created_by_correction": false,
+        "id": "element-000011"
+      },
+      "replacement_role": "target",
+      "replacement_source": "use_recorded_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000013",
+        "description": "The top Jul 16\u201331 payout row's photo-revenue metric is populated from calculated payout-report column X.",
+        "from_id": "element-000012",
+        "gap_reason": "",
+        "id": "relationship-000013-correction-000001",
+        "kind": "historical payout summary derived from payout report fields",
+        "locked_identity_participants": {
+          "target": "element-000018"
+        },
+        "origin_point": [
+          600,
+          400
+        ],
+        "status": "readable",
+        "target_point": [
+          488,
+          485
+        ],
+        "to_id": "element-000011",
+        "verified_element_id": "element-000018",
+        "verified_obligation_id": "obligation-000018"
+      },
+      "original_relationship_id": "relationship-000013",
+      "replacement_element": {
+        "created_by_correction": false,
+        "id": "element-000011"
+      },
+      "replacement_role": "target",
+      "replacement_source": "use_recorded_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000014",
+        "description": "The top Jul 16\u201331 payout row's photo-revenue metric is populated from payout-report column X.",
+        "from_id": "element-000012",
+        "gap_reason": "",
+        "id": "relationship-000014-correction-000001",
+        "kind": "populated from payout report",
+        "locked_identity_participants": {
+          "target": "element-000019"
+        },
+        "origin_point": [
+          600,
+          400
+        ],
+        "status": "readable",
+        "target_point": [
+          488,
+          485
+        ],
+        "to_id": "element-000011",
+        "verified_element_id": "element-000019",
+        "verified_obligation_id": "obligation-000019"
+      },
+      "original_relationship_id": "relationship-000014",
+      "replacement_element": {
+        "created_by_correction": false,
+        "id": "element-000011"
+      },
+      "replacement_role": "target",
+      "replacement_source": "use_recorded_element"
+    }
+  ],
+  "corrector": {
+    "harness": "Codex CLI",
+    "model": "Codex"
+  },
+  "schema_version": 1,
+  "verification_candidate_sha256": "50edc801fef095050a84a27c7d5914c2128ea75fef165b7e12f2603fe44ce4d3",
+  "verification_sha256": "a6cc63dc40c0152863de941466c12d3c8efe50dbfb1744b2e1cc033b9ed7df1c"
+}

@@ -1,0 +1,35 @@
+{
+  "candidate_sha256": "3807af93ec6b9d25fe366cc856c14321ef819b52d29e41227952e5216d1aa1ec",
+  "reader": {
+    "harness": "Codex",
+    "model": "GPT-5 Codex"
+  },
+  "schema_version": 1,
+  "verdicts": [
+    {
+      "reason": "The red arrow from the callout visibly terminates on the purple Content add-ons metric summary card.",
+      "relationship_id": "relationship-000009-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout's red arrow visibly ends at the NET PAYOUT column header within the proposed financial summary table.",
+      "relationship_id": "relationship-000013-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from the 'owed for codes: AD' callout visibly terminates at the OWED FOR CODES table-column header.",
+      "relationship_id": "relationship-000014-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The red arrow from the 'Net payout: AF' callout visibly terminates at the NET PAYOUT table-column header.",
+      "relationship_id": "relationship-000015-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout's red arrow visibly terminates at the CONTENT REVENUE table column, which displays both revenue values and transaction counts.",
+      "relationship_id": "relationship-000016-correction-000001",
+      "verdict": "supported"
+    }
+  ]
+}

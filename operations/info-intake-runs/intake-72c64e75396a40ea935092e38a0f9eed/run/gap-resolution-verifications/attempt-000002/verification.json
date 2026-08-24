@@ -1,0 +1,13 @@
+{
+  "candidate_sha256": "b870f56aed6dca224ce8d1aaccad7b46d5b09823ba55ba254fb00fd3d95f3576",
+  "clarification_sha256": "277ebc0e94e03a41448c575eec4c7d6026ef920e727f768e6a926e793888cf37",
+  "operator_answer_source_sha256": "fafde1a06539c01182d98bbe95cfe491601c817896deb1805b24966cf3082722",
+  "reader": {
+    "harness": "Codex CLI",
+    "model": "Codex (GPT-5)"
+  },
+  "reason": "The preserved answer says the displayed pay-period interval is the source context for the payout-period card's calculation and identifies Jul 16\u201331 as another displayed pay-period interval. In the frozen image, the red callout reading \u201cJust pull these numbers from the payout report\u2026\u201d names Paid tx: W, Photo Rev: X, Codes Used: AC, Code Fees: AD, and Total net payout: AF + refunds; its arrow visibly terminates at the first payout-report row, Jul 16\u201331, 2026. That row visibly contains 3,763 paid txns, $101,503.80 photo revenue, 179 codes used, -$581.75 code fees, and $100,922.05 payout to operator, matching every field named by the proposed relationship.",
+  "resolution_sha256": "e7fc776571182af0c714ff02bcfc1029e9f181daffe96e0ab3636f1d9dfedd15",
+  "schema_version": 1,
+  "verdict": "supported"
+}

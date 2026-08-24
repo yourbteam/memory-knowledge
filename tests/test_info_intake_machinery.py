@@ -69,6 +69,15 @@ INTAKE_RUNNER_SPEC = importlib.util.spec_from_file_location(
 assert INTAKE_RUNNER_SPEC and INTAKE_RUNNER_SPEC.loader
 INTAKE_RUNNER = importlib.util.module_from_spec(INTAKE_RUNNER_SPEC)
 INTAKE_RUNNER_SPEC.loader.exec_module(INTAKE_RUNNER)
+ARCHIVE_SCRIPT = (
+    ROOT / "skills" / "info-intake-machinery" / "scripts" / "archive_terminal_run.py"
+)
+ARCHIVE_SPEC = importlib.util.spec_from_file_location(
+    "archive_terminal_run", ARCHIVE_SCRIPT
+)
+assert ARCHIVE_SPEC and ARCHIVE_SPEC.loader
+ARCHIVE_TERMINAL_RUN = importlib.util.module_from_spec(ARCHIVE_SPEC)
+ARCHIVE_SPEC.loader.exec_module(ARCHIVE_TERMINAL_RUN)
 CORRECTION_SCRIPT = (
     ROOT / "skills" / "info-intake-machinery" / "scripts" / "relationship_correction.py"
 )
@@ -13239,6 +13248,142 @@ def test_completed_intake_launcher_uses_code_controlled_choice() -> None:
         input_fn=lambda _prompt: pytest.fail("nonterminal state must not ask"),
         output_fn=messages.append,
     ) is None
+
+
+def test_completed_intake_archive_preserves_every_byte_and_replays(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_readable_text_to_terminal(work, tmp_path / "generator.py")
+    evidence = work / "nested" / "model-evidence.bin"
+    evidence.parent.mkdir()
+    evidence.write_bytes(b"model evidence\x00with exact bytes")
+    source_before = {
+        path.relative_to(work).as_posix(): path.read_bytes()
+        for path in work.rglob("*")
+        if path.is_file()
+    }
+    archive_root = tmp_path / "archives"
+
+    created = ARCHIVE_TERMINAL_RUN.archive_terminal_run(
+        work, archive_root=archive_root
+    )
+    replayed = ARCHIVE_TERMINAL_RUN.archive_terminal_run(
+        work, archive_root=archive_root
+    )
+    archived = Path(str(created["archive"])) / "run"
+    archived_bytes = {
+        path.relative_to(archived).as_posix(): path.read_bytes()
+        for path in archived.rglob("*")
+        if path.is_file()
+    }
+
+    assert created["status"] == "archive_created"
+    assert replayed == {**created, "status": "archive_reused"}
+    assert archived_bytes == source_before
+    assert created["file_count"] == len(source_before)
+    assert {
+        path.relative_to(work).as_posix(): path.read_bytes()
+        for path in work.rglob("*")
+        if path.is_file()
+    } == source_before
+
+
+def test_completed_intake_archive_refuses_changed_existing_bytes(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_readable_text_to_terminal(work, tmp_path / "generator.py")
+    archive_root = tmp_path / "archives"
+    created = ARCHIVE_TERMINAL_RUN.archive_terminal_run(
+        work, archive_root=archive_root
+    )
+    archived_ledger = Path(str(created["archive"])) / "run" / "ledger.jsonl"
+    archived_ledger.write_bytes(archived_ledger.read_bytes() + b"tampered\n")
+
+    with pytest.raises(
+        ARCHIVE_TERMINAL_RUN.ArchiveError,
+        match="existing archive bytes no longer match",
+    ):
+        ARCHIVE_TERMINAL_RUN.archive_terminal_run(
+            work, archive_root=archive_root
+        )
+
+
+def test_completed_intake_archive_refuses_recursive_destination(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_readable_text_to_terminal(work, tmp_path / "generator.py")
+
+    with pytest.raises(
+        ARCHIVE_TERMINAL_RUN.ArchiveError,
+        match="archive root must be outside",
+    ):
+        ARCHIVE_TERMINAL_RUN.archive_terminal_run(
+            work, archive_root=work / "archives"
+        )
+
+
+def test_zero_input_launcher_archives_terminal_before_success(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_readable_text_to_terminal(work, tmp_path / "generator.py")
+    archive_root = tmp_path / "archives"
+    answers = iter([
+        "resume",
+        str(work),
+        "next_external_boundary",
+        "return_result",
+    ])
+    messages: list[str] = []
+
+    returncode = INTAKE_RUNNER.run(
+        input_fn=lambda _prompt: next(answers),
+        output_fn=messages.append,
+        model_run_fn=lambda *_args, **_kwargs: pytest.fail("model must not run"),
+        archive_root=archive_root,
+    )
+    state = json.loads((work / "intake-state.json").read_text(encoding="utf-8"))
+    target = archive_root / str(state["intake_id"])
+
+    assert returncode == 0
+    assert (target / "archive-manifest.json").is_file()
+    assert (target / "run" / "ledger.jsonl").read_bytes() == (
+        work / "ledger.jsonl"
+    ).read_bytes()
+    assert any('"status": "archive_created"' in message for message in messages)
+
+
+def test_zero_input_launcher_refuses_tampered_terminal_archive(
+    tmp_path: Path,
+) -> None:
+    work = tmp_path / "intake"
+    _advance_readable_text_to_terminal(work, tmp_path / "generator.py")
+    archive_root = tmp_path / "archives"
+    created = ARCHIVE_TERMINAL_RUN.archive_terminal_run(
+        work, archive_root=archive_root
+    )
+    archived_state = Path(str(created["archive"])) / "run" / "intake-state.json"
+    archived_state.write_bytes(archived_state.read_bytes() + b"tampered\n")
+    answers = iter([
+        "resume",
+        str(work),
+        "next_external_boundary",
+        "return_result",
+    ])
+
+    with pytest.raises(
+        INTAKE_RUNNER.terminal_archiver.ArchiveError,
+        match="existing archive bytes no longer match",
+    ):
+        INTAKE_RUNNER.run(
+            input_fn=lambda _prompt: next(answers),
+            output_fn=lambda _message: None,
+            model_run_fn=lambda *_args, **_kwargs: pytest.fail("model must not run"),
+            archive_root=archive_root,
+        )
 
 
 def test_completed_intake_launcher_adds_source_and_reaches_new_terminal(

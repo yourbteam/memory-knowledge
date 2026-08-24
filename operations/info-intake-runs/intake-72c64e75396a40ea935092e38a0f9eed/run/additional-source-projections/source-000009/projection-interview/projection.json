@@ -1,0 +1,2419 @@
+{
+  "elements": [
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Net payout: Column AF For projections just get the avg off the current days and multiply that by the days in the payout period",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Net payout: Column AF For projections just get the avg off the current days and multiply that by the days in the payout period",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000001",
+          "claimed_content": "Net payout: Column AF For projections just get the avg off the current days and multiply that by the days in the payout period",
+          "crop_path": "endpoint-evidence/element-000001-required-recorded-participant-b312d9e49f39baa7.png",
+          "crop_sha256": "39b5045cdd5c77c071f43e6900b34ecb920667ecfa37445cac2577766dea3241",
+          "normalized_bounds": [
+            1,
+            41,
+            241,
+            218
+          ],
+          "pixel_bounds": [
+            1,
+            57,
+            446,
+            307
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000001",
+      "kind": "annotation callout",
+      "region": [
+        1,
+        41,
+        241,
+        218
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Net payout \u00b7 to date; we owe operators \u2212 operators owe us; $58,410.20; projected close \u2248 $114K",
+      "gap_reason": "",
+      "id": "element-000002",
+      "kind": "dashboard metric card",
+      "region": [
+        9,
+        164,
+        244,
+        298
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c01",
+      "content": "Live \u00b7 as of Aug 7, 2026",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Live \u00b7 as of Aug 7, 2026",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000003",
+          "claimed_content": "Live \u00b7 as of Aug 7, 2026",
+          "crop_path": "endpoint-evidence/element-000003-required-recorded-participant-a81d7c52a2349f88.png",
+          "crop_sha256": "583b4ea9ad0fe5cee381c5b74232a758cc7e13cf727f8a782971931cc70bade3",
+          "normalized_bounds": [
+            10,
+            137,
+            139,
+            147
+          ],
+          "pixel_bounds": [
+            18,
+            192,
+            257,
+            207
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000003",
+      "kind": "status timestamp",
+      "region": [
+        10,
+        137,
+        139,
+        147
+      ],
+      "scan_region_id": "region-r01-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "This is the total amount we are sending out to operators so it adds up the positive numbers in column AF Then below it is the number of operators with a positive number in column AF The idea is that we see how much money will be send out of our bank account and to how many operators we are sending money.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "This is the total amount we are sending out to operators so it adds up the positive numbers in column AF Then below it is the number of operators with a positive number in column AF The idea is that we see how much money will be send out of our bank account and to how many operators we are sending money.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000004",
+          "claimed_content": "This is the total amount we are sending out to operators so it adds up the positive numbers in column AF Then below it is the number of operators with a positive number in column AF The idea is that we see how much money will be send out of our bank account and to how many operators we are sending money.",
+          "crop_path": "endpoint-evidence/element-000004-required-recorded-participant-d82011fea6055e1d.png",
+          "crop_sha256": "073af9a55dfe055cc403a42c2a2993a2532e77077ad1855926ca4c1c82ef6ad4",
+          "normalized_bounds": [
+            254,
+            2,
+            509,
+            228
+          ],
+          "pixel_bounds": [
+            469,
+            2,
+            941,
+            321
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000004",
+      "kind": "annotation callout",
+      "region": [
+        254,
+        2,
+        509,
+        228
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "We owe operators pay via ACH $61,240.75 4 operators",
+      "gap_reason": "",
+      "id": "element-000005",
+      "kind": "summary card",
+      "region": [
+        253,
+        169,
+        487,
+        297
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c02",
+      "content": "Operators owe us invoice in QuickBooks $2,830.55 4 operators",
+      "gap_reason": "",
+      "id": "element-000006",
+      "kind": "summary card",
+      "region": [
+        496,
+        169,
+        731,
+        299
+      ],
+      "scan_region_id": "region-r01-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "This is the total amount of money operators owe us. So we add up all the negative numbers in column AF. Then below that we put the number of operators that have a negative number. The idea here is that we see what the total we will be invoicing operators for and how many operators will get an invoice.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "This is the total amount of money operators owe us. So we add up all the negative numbers in column AF. Then below that we put the number of operators that have a negative number. The idea here is that we see what the total we will be invoicing operators for and how many operators will get an invoice.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000007",
+          "claimed_content": "This is the total amount of money operators owe us. So we add up all the negative numbers in column AF. Then below that we put the number of operators that have a negative number. The idea here is that we see what the total we will be invoicing operators for and how many operators will get an invoice.",
+          "crop_path": "endpoint-evidence/element-000007-required-recorded-participant-f3e29c2f0b0d8c95.png",
+          "crop_sha256": "ce697570716e3b79901dc11b41e70df84c8d1b58078168f136dee10619e1744f",
+          "normalized_bounds": [
+            521,
+            6,
+            800,
+            155
+          ],
+          "pixel_bounds": [
+            962,
+            8,
+            1478,
+            218
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000007",
+      "kind": "annotation callout",
+      "region": [
+        521,
+        6,
+        800,
+        155
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c03",
+      "content": "Taggable revenue | Content $12,460.10 \u00b7 Service $6,445.30 | $18,905.40 | Add-on content $0 \u00b7 merch $0",
+      "gap_reason": "",
+      "id": "element-000008",
+      "kind": "summary metric card",
+      "region": [
+        740,
+        170,
+        975,
+        299
+      ],
+      "scan_region_id": "region-r01-c03",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r01-c04",
+      "content": "This is the breakdown of the total money we made | Content: BU | Service: BX | Total: BY | Add on just put $0 for now",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "This is the breakdown of the total money we made | Content: BU | Service: BX | Total: BY | Add on just put $0 for now",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000009",
+          "claimed_content": "This is the breakdown of the total money we made | Content: BU | Service: BX | Total: BY | Add on just put $0 for now",
+          "crop_path": "endpoint-evidence/element-000009-required-recorded-participant-adf0d8a19246bbc1.png",
+          "crop_sha256": "2dba219f8cb5794db2c6e34c0e0fe9e2a125e76bec91b4022dd7948e04d425bc",
+          "normalized_bounds": [
+            817,
+            14,
+            1000,
+            201
+          ],
+          "pixel_bounds": [
+            1508,
+            19,
+            1847,
+            283
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000009",
+      "kind": "annotation callout",
+      "region": [
+        817,
+        14,
+        1000,
+        201
+      ],
+      "scan_region_id": "region-r01-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c01",
+      "content": "REPOSITORY; Payout reports; Company; All companies (period reports); Search by period, ref, or company; Export list; Showing all-operator period reports. Pick a company to\u2026",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "REPOSITORY; Payout reports; Company; All companies (period reports); Search by period, ref, or company; Export list; Showing all-operator period reports. Pick a company to\u2026",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000010",
+          "claimed_content": "REPOSITORY; Payout reports; Company; All companies (period reports); Search by period, ref, or company; Export list; Showing all-operator period reports. Pick a company to\u2026",
+          "crop_path": "endpoint-evidence/element-000010-required-recorded-participant-935600254ba2cdb1.png",
+          "crop_sha256": "037e4193c201a62654d2bc8da10a54358cee2ada8c928f9f0f9a601fa9f74b5d",
+          "normalized_bounds": [
+            9,
+            360,
+            300,
+            550
+          ],
+          "pixel_bounds": [
+            16,
+            506,
+            555,
+            774
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000010",
+      "kind": "payout reports repository section",
+      "region": [
+        9,
+        360,
+        300,
+        550
+      ],
+      "scan_region_id": "region-r02-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c02",
+      "content": "This is just the total from the numbers in the payout report. The total net payout = Sum of all operators in column AF. WE owe is the sum of the positive numbers in AF. They owe is the sum of the negative numbers in AF. Taggable rev is the the sum of BY from all operators.",
+      "gap_reason": "",
+      "id": "element-000011",
+      "kind": "annotation callout with arrow",
+      "region": [
+        354,
+        326,
+        628,
+        552
+      ],
+      "scan_region_id": "region-r02-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r02-c04",
+      "content": "Open live period-to-date report \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Open live period-to-date report \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000012",
+          "claimed_content": "Open live period-to-date report \u2192",
+          "crop_path": "endpoint-evidence/element-000012-required-recorded-participant-f712aefed6d17e84.png",
+          "crop_sha256": "28dad7ff9c9163001b02ae346c3ad56e755770ca5c6b6f5f973467b4efa197e3",
+          "normalized_bounds": [
+            792,
+            310,
+            974,
+            342
+          ],
+          "pixel_bounds": [
+            1462,
+            435,
+            1799,
+            481
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000012",
+      "kind": "outlined action button",
+      "region": [
+        792,
+        310,
+        974,
+        342
+      ],
+      "scan_region_id": "region-r02-c04",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "Jul 16 \u2013 31, 2026; PAYOUT-INTERNAL-2026-07B; $112,127.36 NET PAYOUT",
+      "gap_reason": "",
+      "id": "element-000013",
+      "kind": "payout period report card",
+      "region": [
+        35,
+        550,
+        300,
+        620
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "Jul 1 \u2013 15, 2026; PAYOUT-INTERNAL-2026-07A; $126,179.05 NET PAYOUT",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-INTERNAL-2026-07A; $126,179.05 NET PAYOUT",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000014",
+          "claimed_content": "Jul 1 \u2013 15, 2026; PAYOUT-INTERNAL-2026-07A; $126,179.05 NET PAYOUT",
+          "crop_path": "endpoint-evidence/element-000014-required-recorded-participant-a6c31ec6249d275d.png",
+          "crop_sha256": "6f6ea1d19b4d7930a45da2afee633a4652543318df240256189a57ddf236872f",
+          "normalized_bounds": [
+            35,
+            630,
+            300,
+            699
+          ],
+          "pixel_bounds": [
+            64,
+            885,
+            555,
+            983
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000014",
+      "kind": "payout period report card",
+      "region": [
+        35,
+        630,
+        300,
+        699
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c01",
+      "content": "Jun 16 \u2013 30, 2026; PAYOUT-INTERNAL-2026-06B; $104,880.12 NET PAYOUT",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Jun 16 \u2013 30, 2026; PAYOUT-INTERNAL-2026-06B; $104,880.12 NET PAYOUT",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000015",
+          "claimed_content": "Jun 16 \u2013 30, 2026; PAYOUT-INTERNAL-2026-06B; $104,880.12 NET PAYOUT",
+          "crop_path": "endpoint-evidence/element-000015-required-recorded-participant-832f773dc64e9c1e.png",
+          "crop_sha256": "8613fe6406fabc2e66cbf3d6a2d63ab2e68836790701f1b9e84e7b78972f0a92",
+          "normalized_bounds": [
+            35,
+            708,
+            300,
+            777
+          ],
+          "pixel_bounds": [
+            64,
+            995,
+            555,
+            1093
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000015",
+      "kind": "payout period report card",
+      "region": [
+        35,
+        708,
+        300,
+        777
+      ],
+      "scan_region_id": "region-r03-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r03-c02",
+      "content": "Jul 16 \u2013 31, 2026 | PAYOUT-INTERNAL-2026-07B | $112,127.36 NET PAYOUT | $116,951.65 WE OWE | $4,824.29 THEY OWE | $36,974.89 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192; Jul 1 \u2013 15, 2026 | PAYOUT-INTERNAL-2026-07A | $126,179.05 NET PAYOUT | $131,133.28 WE OWE | $4,954.23 THEY OWE | $39,210.44 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192; Jun 16 \u2013 30, 2026 | PAYOUT-INTERNAL-2026-06B | $104,880.12 NET PAYOUT | $108,540.90 WE OWE | $3,660.78 THEY OWE | $33,918.06 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+      "gap_reason": "",
+      "id": "element-000016",
+      "kind": "three-row financial metrics table",
+      "region": [
+        21,
+        500,
+        963,
+        788
+      ],
+      "scan_region_id": "region-r03-c02",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "Jun 1 \u2013 15, 2026 | PAYOUT-INTERNAL-2026-06A | $98,540.77 | NET PAYOUT | $101,905.12 WE OWE | $3,364.35 THEY OWE | $31,470.88 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "Jun 1 \u2013 15, 2026 | PAYOUT-INTERNAL-2026-06A | $98,540.77 | NET PAYOUT | $101,905.12 WE OWE | $3,364.35 THEY OWE | $31,470.88 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000017",
+          "claimed_content": "Jun 1 \u2013 15, 2026 | PAYOUT-INTERNAL-2026-06A | $98,540.77 | NET PAYOUT | $101,905.12 WE OWE | $3,364.35 THEY OWE | $31,470.88 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+          "crop_path": "endpoint-evidence/element-000017-required-recorded-participant-5dd751d6cb5a726c.png",
+          "crop_sha256": "94ea9e7d243a7816d55bced33e34025007bb4cd63e479b36fd78b37f40d34403",
+          "normalized_bounds": [
+            21,
+            787,
+            963,
+            858
+          ],
+          "pixel_bounds": [
+            38,
+            1106,
+            1779,
+            1207
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000017",
+      "kind": "payout report row",
+      "region": [
+        21,
+        787,
+        963,
+        858
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "May 16 \u2013 31, 2026 | PAYOUT-INTERNAL-2026-05B | $91,220.40 | NET PAYOUT | $94,388.15 WE OWE | $3,167.75 THEY OWE | $29,015.22 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "May 16 \u2013 31, 2026 | PAYOUT-INTERNAL-2026-05B | $91,220.40 | NET PAYOUT | $94,388.15 WE OWE | $3,167.75 THEY OWE | $29,015.22 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000018",
+          "claimed_content": "May 16 \u2013 31, 2026 | PAYOUT-INTERNAL-2026-05B | $91,220.40 | NET PAYOUT | $94,388.15 WE OWE | $3,167.75 THEY OWE | $29,015.22 TAGGABLE REV | FINALIZED \u00b7 SENT | \u2193 PDF | open \u2192",
+          "crop_path": "endpoint-evidence/element-000018-required-recorded-participant-e12940c72181738e.png",
+          "crop_sha256": "9c0787b6670016591f6f69ee114c4aadbfe136ff62c91116e340515b05e2763b",
+          "normalized_bounds": [
+            21,
+            866,
+            963,
+            936
+          ],
+          "pixel_bounds": [
+            38,
+            1217,
+            1779,
+            1317
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_recorded_participant"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000018",
+      "kind": "payout report row",
+      "region": [
+        21,
+        866,
+        963,
+        936
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    },
+    {
+      "capture_scope": "region-r04-c01",
+      "content": "New reports file automatically at each period close. Click any report to open the full internal detail; \u2193 downloads the operator-facing PDF.",
+      "endpoint_verification": {
+        "claim_scope": "crop_complete_v2",
+        "claimed_content": "New reports file automatically at each period close. Click any report to open the full internal detail; \u2193 downloads the operator-facing PDF.",
+        "evidence": {
+          "adapter": {
+            "name": "pillow_exif_transpose_png_exact_element_crop",
+            "version": 1
+          },
+          "candidate_id": "element-000019",
+          "claimed_content": "New reports file automatically at each period close. Click any report to open the full internal detail; \u2193 downloads the operator-facing PDF.",
+          "crop_path": "endpoint-evidence/element-000019-required-participant-replacement-45546ebc61990e8b.png",
+          "crop_sha256": "8a9da39faba3ac4e046fb1601237501fa2f3064b91f074ee0fe40056986cec66",
+          "normalized_bounds": [
+            21,
+            948,
+            750,
+            970
+          ],
+          "pixel_bounds": [
+            38,
+            1332,
+            1386,
+            1364
+          ],
+          "source_pixel_size": [
+            1847,
+            1406
+          ],
+          "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48",
+          "verification_scope": "required_participant_replacement"
+        },
+        "identity_continuity": {
+          "required_claim": "Click a row for full detail; \u2193 downloads the operator-facing PDF.",
+          "verdict": "same_required_source_unit"
+        },
+        "verdict": "supported"
+      },
+      "gap_reason": "",
+      "id": "element-000019",
+      "kind": "informational note",
+      "region": [
+        21,
+        948,
+        750,
+        970
+      ],
+      "scan_region_id": "region-r04-c01",
+      "status": "readable"
+    }
+  ],
+  "purpose_quote": "I want us to test the complete bundle of screenshots with annotations. The reference spreadsheet and codebase is the same, but the intake complete bundle has more screenshots.",
+  "reader": {
+    "harness": "Codex",
+    "model": "GPT-5"
+  },
+  "relationship_obligations": [
+    {
+      "element_id": "element-000001",
+      "id": "obligation-000001",
+      "relationship_id": "relationship-000001",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000002",
+      "id": "obligation-000002",
+      "relationship_id": "relationship-000001",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000003",
+      "id": "obligation-000003",
+      "relationship_id": "relationship-000002",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000004",
+      "id": "obligation-000004",
+      "relationship_id": "relationship-000003",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000005",
+      "id": "obligation-000005",
+      "relationship_id": "relationship-000003",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000007",
+      "id": "obligation-000006",
+      "relationship_id": "relationship-000004",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000009",
+      "id": "obligation-000007",
+      "relationship_id": "relationship-000005",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000010",
+      "id": "obligation-000008",
+      "relationship_id": "relationship-000006",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000011",
+      "id": "obligation-000009",
+      "relationship_id": "relationship-000007",
+      "resolution": "gap",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000012",
+      "id": "obligation-000010",
+      "relationship_id": "relationship-000008",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000013",
+      "id": "obligation-000011",
+      "relationship_id": "relationship-000006",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000014",
+      "id": "obligation-000012",
+      "relationship_id": "relationship-000009",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000015",
+      "id": "obligation-000013",
+      "relationship_id": "relationship-000010",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000016",
+      "id": "obligation-000014",
+      "relationship_id": "relationship-000010",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000017",
+      "id": "obligation-000015",
+      "relationship_id": "relationship-000011",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000018",
+      "id": "obligation-000016",
+      "relationship_id": "relationship-000012",
+      "resolution": "relationship",
+      "status": "resolved"
+    },
+    {
+      "element_id": "element-000019",
+      "id": "obligation-000017",
+      "relationship_id": "relationship-000013",
+      "resolution": "relationship",
+      "status": "resolved"
+    }
+  ],
+  "relationships": [
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation callout points to the Net payout to-date card and establishes that net payout comes from column AF; its projected close is calculated by averaging the current days and multiplying by the number of days in the payout period.",
+      "from_id": "element-000001",
+      "gap_reason": "",
+      "id": "relationship-000001",
+      "kind": "annotation callout explains the calculation and projection of a dashboard metric card",
+      "locked_identity_participants": {
+        "origin": "element-000001"
+      },
+      "origin_point": [
+        121,
+        130
+      ],
+      "status": "readable",
+      "target_point": [
+        126,
+        231
+      ],
+      "to_id": "element-000002",
+      "verified_element_id": "element-000001",
+      "verified_obligation_id": "obligation-000001",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The status line establishes that the net payout to-date dashboard metric is live as of Aug 7, 2026.",
+      "from_id": "element-000003",
+      "gap_reason": "",
+      "id": "relationship-000002",
+      "kind": "status timestamp for the live dashboard summary",
+      "locked_identity_participants": {
+        "origin": "element-000003"
+      },
+      "origin_point": [
+        70,
+        142
+      ],
+      "status": "readable",
+      "target_point": [
+        120,
+        230
+      ],
+      "to_id": "element-000002",
+      "verified_element_id": "element-000003",
+      "verified_obligation_id": "obligation-000003",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation callout's red arrow points to the 'We owe operators' summary card, establishing that the card totals positive values in column AF and shows the count of operators receiving ACH payments.",
+      "from_id": "element-000004",
+      "gap_reason": "",
+      "id": "relationship-000003",
+      "kind": "annotation callout points to summary card",
+      "locked_identity_participants": {
+        "origin": "element-000004"
+      },
+      "origin_point": [
+        381,
+        115
+      ],
+      "status": "readable",
+      "target_point": [
+        370,
+        233
+      ],
+      "to_id": "element-000005",
+      "verified_element_id": "element-000004",
+      "verified_obligation_id": "obligation-000004",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation specifies that the Operators owe us summary card totals the negative values in column AF, displays the total amount to invoice, and shows the count of operators with negative values who will receive invoices.",
+      "from_id": "element-000007",
+      "gap_reason": "",
+      "id": "relationship-000004",
+      "kind": "calculation and display specification",
+      "locked_identity_participants": {
+        "origin": "element-000007"
+      },
+      "origin_point": [
+        660,
+        80
+      ],
+      "status": "readable",
+      "target_point": [
+        615,
+        234
+      ],
+      "to_id": "element-000006",
+      "verified_element_id": "element-000007",
+      "verified_obligation_id": "obligation-000006",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation defines the Taggable revenue card as the breakdown of total money made: Content comes from column BU, Service from BX, Total from BY, and Add-on is $0 for now.",
+      "from_id": "element-000009",
+      "gap_reason": "",
+      "id": "relationship-000005",
+      "kind": "calculation breakdown and field mapping",
+      "locked_identity_participants": {
+        "origin": "element-000009"
+      },
+      "origin_point": [
+        900,
+        100
+      ],
+      "status": "readable",
+      "target_point": [
+        850,
+        230
+      ],
+      "to_id": "element-000008",
+      "verified_element_id": "element-000009",
+      "verified_obligation_id": "obligation-000007",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The Payout reports repository section visibly lists the Jul 16\u201331, 2026 payout period report card as one of its all-operator period reports.",
+      "from_id": "element-000010",
+      "gap_reason": "",
+      "id": "relationship-000006",
+      "kind": "lists payout period reports",
+      "locked_identity_participants": {
+        "origin": "element-000010"
+      },
+      "origin_point": [
+        150,
+        450
+      ],
+      "status": "readable",
+      "target_point": [
+        150,
+        585
+      ],
+      "to_id": "element-000013",
+      "verified_element_id": "element-000010",
+      "verified_obligation_id": "obligation-000008",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_issue": {
+        "matching_element_ids": [],
+        "participant": "origin",
+        "point": [
+          500,
+          450
+        ],
+        "reason": "recorded_element_not_readable"
+      },
+      "binding_method": "coordinate_unique_containment",
+      "description": "",
+      "from_id": "element-000011",
+      "gap_reason": "The origin annotation callout is recorded as a gap because its text is cut off at the source boundary, so it cannot serve as a valid readable recorded endpoint even though the arrow is visible.",
+      "id": "relationship-000007",
+      "kind": "annotation arrow",
+      "origin_point": [
+        500,
+        450
+      ],
+      "status": "gap",
+      "target_point": [
+        370,
+        570
+      ],
+      "to_id": "element-000016"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The outlined action button opens the live period-to-date payout report represented by the Net payout to date dashboard card.",
+      "from_id": "element-000012",
+      "gap_reason": "",
+      "id": "relationship-000008",
+      "kind": "navigation link to the live period-to-date report",
+      "locked_identity_participants": {
+        "origin": "element-000012"
+      },
+      "origin_point": [
+        883,
+        326
+      ],
+      "status": "readable",
+      "target_point": [
+        126,
+        231
+      ],
+      "to_id": "element-000002",
+      "verified_element_id": "element-000012",
+      "verified_obligation_id": "obligation-000010",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation callout points to the payout report row and establishes how its totals are calculated: net payout is the sum of column AF, WE OWE is the sum of positive AF values, THEY OWE is the sum of negative AF values, and TAGGABLE REV is the sum of column BY across all operators.",
+      "from_id": "element-000011",
+      "gap_reason": "",
+      "id": "relationship-000009",
+      "kind": "annotation callout explaining payout report metrics",
+      "locked_identity_participants": {
+        "target": "element-000014"
+      },
+      "origin_point": [
+        490,
+        410
+      ],
+      "status": "readable",
+      "target_point": [
+        150,
+        665
+      ],
+      "to_id": "element-000014",
+      "verified_element_id": "element-000014",
+      "verified_obligation_id": "obligation-000012",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_selected_identity_containment",
+      "description": "The three-row financial metrics table contains the Jun 16\u201330, 2026 payout report card and its displayed net payout of $104,880.12.",
+      "from_id": "element-000016",
+      "gap_reason": "",
+      "id": "relationship-000010",
+      "kind": "calculation annotation applies to payout period report card",
+      "locked_identity_participants": {
+        "target": "element-000015"
+      },
+      "origin_point": [
+        500,
+        742
+      ],
+      "status": "readable",
+      "target_point": [
+        167,
+        742
+      ],
+      "to_id": "element-000015",
+      "verified_element_id": "element-000015",
+      "verified_obligation_id": "obligation-000013",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation establishes that each payout report row summarizes operator data: net payout is the sum of column AF, WE OWE is the sum of positive AF values, THEY OWE is the sum of negative AF values, and TAGGABLE REV is the sum of column BY.",
+      "from_id": "element-000011",
+      "gap_reason": "",
+      "id": "relationship-000011",
+      "kind": "annotation explains the calculation and meaning of the payout report row metrics",
+      "locked_identity_participants": {
+        "target": "element-000017"
+      },
+      "origin_point": [
+        480,
+        450
+      ],
+      "status": "readable",
+      "target_point": [
+        366,
+        800
+      ],
+      "to_id": "element-000017",
+      "verified_element_id": "element-000017",
+      "verified_obligation_id": "obligation-000015",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The annotation establishes that each payout report row summarizes the payout report: net payout is the sum of all operators in column AF, WE OWE is the sum of positive AF values, THEY OWE is the sum of negative AF values, and TAGGABLE REV is the sum of column BY across all operators.",
+      "from_id": "element-000011",
+      "gap_reason": "",
+      "id": "relationship-000012",
+      "kind": "calculation definition for payout report metrics",
+      "locked_identity_participants": {
+        "target": "element-000018"
+      },
+      "origin_point": [
+        480,
+        430
+      ],
+      "status": "readable",
+      "target_point": [
+        500,
+        900
+      ],
+      "to_id": "element-000018",
+      "verified_element_id": "element-000018",
+      "verified_obligation_id": "obligation-000016",
+      "visual_verification": "supported"
+    },
+    {
+      "binding_method": "required_identity_and_coordinate_containment",
+      "description": "The informational note establishes that payout report rows are created automatically at each period close, that clicking a report row opens its full internal detail, and that the row's downward-arrow PDF action downloads the operator-facing PDF.",
+      "from_id": "element-000019",
+      "gap_reason": "",
+      "id": "relationship-000013",
+      "kind": "report lifecycle and row action explanation",
+      "locked_identity_participants": {
+        "origin": "element-000019"
+      },
+      "origin_point": [
+        400,
+        959
+      ],
+      "status": "readable",
+      "target_point": [
+        900,
+        900
+      ],
+      "to_id": "element-000018",
+      "verified_element_id": "element-000019",
+      "verified_obligation_id": "obligation-000017",
+      "visual_verification": "supported"
+    }
+  ],
+  "scan_regions": [
+    {
+      "bounds": [
+        0,
+        0,
+        250,
+        250
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000001",
+        "element-000002",
+        "element-000003"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          0,
+          0,
+          250,
+          250
+        ],
+        "core_pixel_bounds": [
+          0,
+          0,
+          462,
+          352
+        ],
+        "crop_path": "region-evidence/region-r01-c01.png",
+        "crop_sha256": "f4c205cf72ae9b73f71b080c87c6391763793e6b32aa9dec7d7ebc055fc699a7",
+        "evidence_normalized_bounds": [
+          0,
+          0,
+          300,
+          300
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r01-c01.ownership.png",
+        "guide_sha256": "250c48d6c781f957cb89dea52aa314ad7a90653145a50bdcddad50dbe76e90b1",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          462,
+          352
+        ],
+        "pixel_bounds": [
+          0,
+          0,
+          555,
+          422
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r01-c01",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        250,
+        0,
+        500,
+        250
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000004",
+        "element-000005",
+        "element-000006"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          250,
+          0,
+          500,
+          250
+        ],
+        "core_pixel_bounds": [
+          461,
+          0,
+          924,
+          352
+        ],
+        "crop_path": "region-evidence/region-r01-c02.png",
+        "crop_sha256": "ded426585c0f8de5fd5a20be3ee961c3e0508441691f51b556b727c96bef872a",
+        "evidence_normalized_bounds": [
+          250,
+          0,
+          550,
+          300
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r01-c02.ownership.png",
+        "guide_sha256": "1fe34c6f2c43ede21710351c2da3e9e9c81e66b1dbadbdc1a4f74b567bf2e999",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          463,
+          352
+        ],
+        "pixel_bounds": [
+          461,
+          0,
+          1016,
+          422
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r01-c02",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        500,
+        0,
+        750,
+        250
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000007",
+        "element-000008"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          500,
+          0,
+          750,
+          250
+        ],
+        "core_pixel_bounds": [
+          923,
+          0,
+          1386,
+          352
+        ],
+        "crop_path": "region-evidence/region-r01-c03.png",
+        "crop_sha256": "01fad374947e52d7e0940808499af414bcbd9814f7dcffc562582e4f53c65fb2",
+        "evidence_normalized_bounds": [
+          500,
+          0,
+          800,
+          300
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r01-c03.ownership.png",
+        "guide_sha256": "57a7a5b939c1913f9e6e36898ab3529a9e97b79acbca9c5cfd7358ad06128810",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          463,
+          352
+        ],
+        "pixel_bounds": [
+          923,
+          0,
+          1478,
+          422
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r01-c03",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        750,
+        0,
+        1000,
+        250
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000009"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          750,
+          0,
+          1000,
+          250
+        ],
+        "core_pixel_bounds": [
+          1385,
+          0,
+          1847,
+          352
+        ],
+        "crop_path": "region-evidence/region-r01-c04.png",
+        "crop_sha256": "8529a25ca4160c62c9cf4c535b064cd9aab5464635bcfcbe0f4412b5e47807a5",
+        "evidence_normalized_bounds": [
+          750,
+          0,
+          1000,
+          300
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r01-c04.ownership.png",
+        "guide_sha256": "1ffc98138b77760a39522aa44d9a380fafeec888d17d611c9a90aceef7aedf7d",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          462,
+          352
+        ],
+        "pixel_bounds": [
+          1385,
+          0,
+          1847,
+          422
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r01-c04",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        0,
+        250,
+        250,
+        500
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000010"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          0,
+          250,
+          250,
+          500
+        ],
+        "core_pixel_bounds": [
+          0,
+          351,
+          462,
+          703
+        ],
+        "crop_path": "region-evidence/region-r02-c01.png",
+        "crop_sha256": "b8dec21a3f339679af6b3413afe9f413f9eab5904105b9b7c81991725a5955c9",
+        "evidence_normalized_bounds": [
+          0,
+          250,
+          300,
+          550
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r02-c01.ownership.png",
+        "guide_sha256": "bb789ed8cef3e0053bff6708c56b1461df732d8ca3fab99d1d74ee64ec929a73",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          462,
+          352
+        ],
+        "pixel_bounds": [
+          0,
+          351,
+          555,
+          774
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r02-c01",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        250,
+        250,
+        500,
+        500
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000011"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          250,
+          250,
+          500,
+          500
+        ],
+        "core_pixel_bounds": [
+          461,
+          351,
+          924,
+          703
+        ],
+        "crop_path": "region-evidence/region-r02-c02.png",
+        "crop_sha256": "f3c20e20cebb21c82b0c1167156b95bbb55c8a43b7993e615ab5c86d01d0cb89",
+        "evidence_normalized_bounds": [
+          250,
+          250,
+          550,
+          550
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r02-c02.ownership.png",
+        "guide_sha256": "62dbaf6cdcccd739bfc42d244b3374242577e6283c7234b30bafa3a4d2ecefc8",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          463,
+          352
+        ],
+        "pixel_bounds": [
+          461,
+          351,
+          1016,
+          774
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r02-c02",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        500,
+        250,
+        750,
+        500
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [
+        {
+          "anchor": [
+            500,
+            501
+          ],
+          "candidate_kind": "instruction callout panel",
+          "crop_sha256": "9989e3656da518d41178f2ae84d3f7aec0e9926a543b1fcdd7e58297e7a00fa7",
+          "guide_sha256": "78b45ff1c8a93fc4d092fcc897e61120dcc79549be642de1f61972cec10e6e1a",
+          "obligation_id": "context-obligation-000001",
+          "owner_region_id": "region-r03-c03",
+          "reason": "context_only"
+        }
+      ],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          500,
+          250,
+          750,
+          500
+        ],
+        "core_pixel_bounds": [
+          923,
+          351,
+          1386,
+          703
+        ],
+        "crop_path": "region-evidence/region-r02-c03.png",
+        "crop_sha256": "9989e3656da518d41178f2ae84d3f7aec0e9926a543b1fcdd7e58297e7a00fa7",
+        "evidence_normalized_bounds": [
+          500,
+          250,
+          800,
+          550
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r02-c03.ownership.png",
+        "guide_sha256": "78b45ff1c8a93fc4d092fcc897e61120dcc79549be642de1f61972cec10e6e1a",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          463,
+          352
+        ],
+        "pixel_bounds": [
+          923,
+          351,
+          1478,
+          774
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r02-c03",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        750,
+        250,
+        1000,
+        500
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000012"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          750,
+          250,
+          1000,
+          500
+        ],
+        "core_pixel_bounds": [
+          1385,
+          351,
+          1847,
+          703
+        ],
+        "crop_path": "region-evidence/region-r02-c04.png",
+        "crop_sha256": "3b3e986d60ddedc24411deaf63d32f55117e81ee85e6e3480c7891251af4d0f3",
+        "evidence_normalized_bounds": [
+          750,
+          250,
+          1000,
+          550
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r02-c04.ownership.png",
+        "guide_sha256": "f54ddd7f41148b0a89efeda75051c33b962487a007add70e11576bb062bc25a2",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          462,
+          352
+        ],
+        "pixel_bounds": [
+          1385,
+          351,
+          1847,
+          774
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r02-c04",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        0,
+        500,
+        250,
+        750
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000013",
+        "element-000014",
+        "element-000015"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          0,
+          500,
+          250,
+          750
+        ],
+        "core_pixel_bounds": [
+          0,
+          703,
+          462,
+          1055
+        ],
+        "crop_path": "region-evidence/region-r03-c01.png",
+        "crop_sha256": "ab51031ce075931cf02b7f38e347a116f803f53487acf4bff77074a0af33a348",
+        "evidence_normalized_bounds": [
+          0,
+          500,
+          300,
+          800
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r03-c01.ownership.png",
+        "guide_sha256": "bbca449d5151726679a7c753e4c270ce7b9d0abfd79db58b7afce80e458423de",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          462,
+          352
+        ],
+        "pixel_bounds": [
+          0,
+          703,
+          555,
+          1125
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r03-c01",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        250,
+        500,
+        500,
+        750
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000016"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          250,
+          500,
+          500,
+          750
+        ],
+        "core_pixel_bounds": [
+          461,
+          703,
+          924,
+          1055
+        ],
+        "crop_path": "region-evidence/region-r03-c02.png",
+        "crop_sha256": "b75c397ad62588e0a855f6db2462629946d50d719cf8a757e35e0c59116f44bc",
+        "evidence_normalized_bounds": [
+          250,
+          500,
+          550,
+          800
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r03-c02.ownership.png",
+        "guide_sha256": "2b2b25c8fff23ca51b87b94969faae98d1e1752eccdfe1e42ded001e469fee77",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          463,
+          352
+        ],
+        "pixel_bounds": [
+          461,
+          703,
+          1016,
+          1125
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r03-c02",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        500,
+        500,
+        750,
+        750
+      ],
+      "context_candidate_obligations": [
+        {
+          "anchor": [
+            500,
+            501
+          ],
+          "candidate_kind": "instruction callout panel",
+          "element_id": "element-000016",
+          "gap_reason": "",
+          "id": "context-obligation-000001",
+          "resolution": "element",
+          "source_region_id": "region-r02-c03",
+          "status": "resolved"
+        }
+      ],
+      "deferred_context_candidates": [],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          500,
+          500,
+          750,
+          750
+        ],
+        "core_pixel_bounds": [
+          923,
+          703,
+          1386,
+          1055
+        ],
+        "crop_path": "region-evidence/region-r03-c03.png",
+        "crop_sha256": "25e23bf90327323a95e2a8e598c4346a98a9d93d722c6cdddf08894aaaecfe67",
+        "evidence_normalized_bounds": [
+          500,
+          500,
+          800,
+          800
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r03-c03.ownership.png",
+        "guide_sha256": "15bc823a3ffe42cd2a435dbd7707e25f440c4a29281b6238db5d3ea283f0f7c5",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          463,
+          352
+        ],
+        "pixel_bounds": [
+          923,
+          703,
+          1478,
+          1125
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r03-c03",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        750,
+        500,
+        1000,
+        750
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          750,
+          500,
+          1000,
+          750
+        ],
+        "core_pixel_bounds": [
+          1385,
+          703,
+          1847,
+          1055
+        ],
+        "crop_path": "region-evidence/region-r03-c04.png",
+        "crop_sha256": "d227d94f822ec28691a94c75ed2f4701e7c8e21d71a1ea04c820475d32c7c10c",
+        "evidence_normalized_bounds": [
+          750,
+          500,
+          1000,
+          800
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r03-c04.ownership.png",
+        "guide_sha256": "43dae054db1c4cdf37716fa022a8e5aea16491e8329f153f3176b453cf0e4f02",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          462,
+          352
+        ],
+        "pixel_bounds": [
+          1385,
+          703,
+          1847,
+          1125
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r03-c04",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        0,
+        750,
+        250,
+        1000
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [
+        "element-000017",
+        "element-000018",
+        "element-000019"
+      ],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          0,
+          750,
+          250,
+          1000
+        ],
+        "core_pixel_bounds": [
+          0,
+          1054,
+          462,
+          1406
+        ],
+        "crop_path": "region-evidence/region-r04-c01.png",
+        "crop_sha256": "11cb230b2bcf717811edcd896f8239ed16b7215dd622e76328cd8cbb2169d877",
+        "evidence_normalized_bounds": [
+          0,
+          750,
+          300,
+          1000
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r04-c01.ownership.png",
+        "guide_sha256": "2e618aaba39f3c76eb37f3bf210d300565d9d9980c46841d2d10651b1467cadc",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          462,
+          352
+        ],
+        "pixel_bounds": [
+          0,
+          1054,
+          555,
+          1406
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r04-c01",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        250,
+        750,
+        500,
+        1000
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          250,
+          750,
+          500,
+          1000
+        ],
+        "core_pixel_bounds": [
+          461,
+          1054,
+          924,
+          1406
+        ],
+        "crop_path": "region-evidence/region-r04-c02.png",
+        "crop_sha256": "afcaca911b49fefd53f25ed611fd0e3c74a502aa4308fb211fce34c0906daf5a",
+        "evidence_normalized_bounds": [
+          250,
+          750,
+          550,
+          1000
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r04-c02.ownership.png",
+        "guide_sha256": "57f7496f17fc7dbc8290ae60581c333e16e48f27c9db2b107e6be3b56f71865e",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          463,
+          352
+        ],
+        "pixel_bounds": [
+          461,
+          1054,
+          1016,
+          1406
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r04-c02",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        500,
+        750,
+        750,
+        1000
+      ],
+      "context_candidate_obligations": [],
+      "deferred_context_candidates": [
+        {
+          "anchor": [
+            758,
+            814
+          ],
+          "candidate_kind": "numeric data value",
+          "crop_sha256": "acc5666efda6804078d19ccc7d5fc13231ce8775016efca6f79b03971836a81e",
+          "guide_sha256": "cdd6afd697eb182ecd4d10f0c56b76f8184639bc989bd594dd6a5723c6faf359",
+          "obligation_id": "context-obligation-000002",
+          "owner_region_id": "region-r04-c04",
+          "reason": "context_only"
+        }
+      ],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          500,
+          750,
+          750,
+          1000
+        ],
+        "core_pixel_bounds": [
+          923,
+          1054,
+          1386,
+          1406
+        ],
+        "crop_path": "region-evidence/region-r04-c03.png",
+        "crop_sha256": "acc5666efda6804078d19ccc7d5fc13231ce8775016efca6f79b03971836a81e",
+        "evidence_normalized_bounds": [
+          500,
+          750,
+          800,
+          1000
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r04-c03.ownership.png",
+        "guide_sha256": "cdd6afd697eb182ecd4d10f0c56b76f8184639bc989bd594dd6a5723c6faf359",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          463,
+          352
+        ],
+        "pixel_bounds": [
+          923,
+          1054,
+          1478,
+          1406
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r04-c03",
+      "status": "scanned"
+    },
+    {
+      "bounds": [
+        750,
+        750,
+        1000,
+        1000
+      ],
+      "context_candidate_obligations": [
+        {
+          "anchor": [
+            758,
+            814
+          ],
+          "candidate_kind": "numeric data value",
+          "element_id": "element-000017",
+          "gap_reason": "",
+          "id": "context-obligation-000002",
+          "resolution": "element",
+          "source_region_id": "region-r04-c03",
+          "status": "resolved"
+        }
+      ],
+      "deferred_context_candidates": [],
+      "element_ids": [],
+      "evidence": {
+        "adapter": {
+          "name": "pillow_exif_transpose_png_context_crop",
+          "version": 1
+        },
+        "core_normalized_bounds": [
+          750,
+          750,
+          1000,
+          1000
+        ],
+        "core_pixel_bounds": [
+          1385,
+          1054,
+          1847,
+          1406
+        ],
+        "crop_path": "region-evidence/region-r04-c04.png",
+        "crop_sha256": "027150f5700fdde6b3a8f8deded84c0878eb4a80a73cf00dad2a577c019ebd88",
+        "evidence_normalized_bounds": [
+          750,
+          750,
+          1000,
+          1000
+        ],
+        "guide_adapter": {
+          "context_overlay_rgba": [
+            0,
+            0,
+            0,
+            128
+          ],
+          "name": "pillow_owned_core_context_guide",
+          "owned_outline_rgba": [
+            0,
+            255,
+            0,
+            255
+          ],
+          "version": 1
+        },
+        "guide_path": "region-evidence/region-r04-c04.ownership.png",
+        "guide_sha256": "b99c45a29fdec7721fa108f6a156e4c1fe361cc9e95fecb03606cea67920462b",
+        "ownership_core_in_crop_pixels": [
+          0,
+          0,
+          462,
+          352
+        ],
+        "pixel_bounds": [
+          1385,
+          1054,
+          1847,
+          1406
+        ],
+        "source_pixel_size": [
+          1847,
+          1406
+        ],
+        "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+      },
+      "gap_reason": "",
+      "id": "region-r04-c04",
+      "status": "scanned"
+    }
+  ],
+  "schema_version": 13,
+  "source_sha256": "ba0e25899144b856f46a29575c70df116fb72f1b6dcd531ef059422b6db3cb48"
+}

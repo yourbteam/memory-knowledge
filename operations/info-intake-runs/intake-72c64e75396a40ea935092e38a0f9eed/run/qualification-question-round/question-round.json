@@ -1,0 +1,26 @@
+{
+  "qualification_admission_sha256": "116b86c37f5a697f84bfabd1e52e4a6569173079b8f8b19a78539d542de7ddf3",
+  "questions": [
+    {
+      "answer_type": "local_file",
+      "answers_obligation": {
+        "gap_position": 1,
+        "gap_sha256": "c990f2b3df7ef47eca398fee32ae305bb0bf1e909ade696bef1edad581952434",
+        "id": "clarification-obligation-000001",
+        "method": "visual_spatial_v1",
+        "projection_id": "projection-source-000003-v6",
+        "projection_sha256": "e5fe90e4891bdf0f61aad7b50229c99aedfd9cce9a4730e239b753f525973b1d",
+        "qualification": "readable_projection_incomplete",
+        "qualification_event_sha256": "3336dea26ec15bb5199d1c86fbd8d1e885ef4bb73af62c785c8cca366a197d87",
+        "reason": "visual projection gap",
+        "source_id": "source-000003",
+        "source_position": 3,
+        "unit": "element-000020"
+      },
+      "asks": "Which local file contains the missing visual information for element-000020 in source-000003?",
+      "evidence_sha256": "6bfd37e87c7aaeee3fb7413045e14caee2cc86b828cbfff624f217d8fcf33ffb",
+      "id": "qualification-clarification-answer-000001"
+    }
+  ],
+  "schema_version": 1
+}

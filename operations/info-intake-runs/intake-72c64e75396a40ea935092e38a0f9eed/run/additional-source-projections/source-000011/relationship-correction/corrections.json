@@ -1,0 +1,287 @@
+{
+  "candidate_sha256": "7464ea08f3565b95274db048505caf56e96f47897696b87bff617762a797de22",
+  "corrections": [
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000007",
+        "description": "The annotation identifies the Refresh button as the control that updates the Live Today and All Locations Today numbers to current data.",
+        "from_id": "element-000010",
+        "gap_reason": "",
+        "id": "relationship-000007-correction-000001",
+        "kind": "refresh action updates displayed section data",
+        "locked_identity_participants": {
+          "origin": "element-000010"
+        },
+        "origin_point": [
+          612,
+          33
+        ],
+        "status": "readable",
+        "target_point": [
+          532,
+          65
+        ],
+        "to_id": "correction-element-000001",
+        "verified_element_id": "element-000010",
+        "verified_obligation_id": "obligation-000010"
+      },
+      "original_relationship_id": "relationship-000007",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "Refresh",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000001",
+        "kind": "Refresh button",
+        "region": [
+          463,
+          64,
+          533,
+          92
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000008",
+        "description": "The annotation points specifically to the displayed 42% Conversion rate value and states that its 7-day average is the average of Column AT over the previous seven days.",
+        "from_id": "element-000014",
+        "gap_reason": "",
+        "id": "relationship-000008-correction-000001",
+        "kind": "calculation-and-display dependency",
+        "locked_identity_participants": {
+          "target": "element-000012"
+        },
+        "origin_point": [
+          890,
+          130
+        ],
+        "status": "readable",
+        "target_point": [
+          675,
+          219
+        ],
+        "to_id": "correction-element-000002",
+        "verified_element_id": "element-000012",
+        "verified_obligation_id": "obligation-000011"
+      },
+      "original_relationship_id": "relationship-000008",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "42%",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000002",
+        "kind": "Conversion rate value",
+        "region": [
+          618,
+          218,
+          676,
+          239
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000010",
+        "description": "The annotation points specifically to the displayed 29.0% Capture rate value and states that its 7-day average is Column AE divided by guest count, averaged over the previous seven days.",
+        "from_id": "element-000015",
+        "gap_reason": "",
+        "id": "relationship-000010-correction-000001",
+        "kind": "calculation formula",
+        "locked_identity_participants": {
+          "origin": "element-000015"
+        },
+        "origin_point": [
+          922,
+          205
+        ],
+        "status": "readable",
+        "target_point": [
+          796,
+          223
+        ],
+        "to_id": "correction-element-000003",
+        "verified_element_id": "element-000015",
+        "verified_obligation_id": "obligation-000014"
+      },
+      "original_relationship_id": "relationship-000010",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "29.0%",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000003",
+        "kind": "Capture rate value",
+        "region": [
+          732,
+          218,
+          797,
+          239
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000013",
+        "description": "The annotation points specifically to the displayed $13,060 All Locations Today net revenue value and states that it is the sum of Column AF across all locations for the current day.",
+        "from_id": "element-000018",
+        "gap_reason": "",
+        "id": "relationship-000013-correction-000001",
+        "kind": "metric derivation",
+        "locked_identity_participants": {
+          "origin": "element-000018"
+        },
+        "origin_point": [
+          60,
+          418
+        ],
+        "status": "readable",
+        "target_point": [
+          185,
+          330
+        ],
+        "to_id": "correction-element-000004",
+        "verified_element_id": "element-000018",
+        "verified_obligation_id": "obligation-000017"
+      },
+      "original_relationship_id": "relationship-000013",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "$13,060",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000004",
+        "kind": "All Locations Today net revenue value",
+        "region": [
+          184,
+          324,
+          237,
+          340
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000014",
+        "description": "The annotation points specifically to the donut chart center result, 62% Skywalk, identifying Skywalk as the location with the highest share of revenue earned that day.",
+        "from_id": "element-000019",
+        "gap_reason": "",
+        "id": "relationship-000014-correction-000001",
+        "kind": "annotation callout points to the highest-share location in the daily revenue-share donut chart",
+        "locked_identity_participants": {
+          "origin": "element-000019"
+        },
+        "origin_point": [
+          66,
+          463
+        ],
+        "status": "readable",
+        "target_point": [
+          212,
+          407
+        ],
+        "to_id": "correction-element-000005",
+        "verified_element_id": "element-000019",
+        "verified_obligation_id": "obligation-000018"
+      },
+      "original_relationship_id": "relationship-000014",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "62% Skywalk",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000005",
+        "kind": "Donut chart center result",
+        "region": [
+          209,
+          398,
+          256,
+          423
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "preserve_gap",
+      "gap_reason": "The screenshot shows $22.25 avg / transaction and 587 transactions today as separate neighboring metrics, with no visible arrow or connector establishing a relationship between them.",
+      "original_relationship_id": "relationship-000017"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000019",
+        "description": "The annotation points to the 18.2% YTD Capture rate value and states that it is calculated as the sum of Column AE YTD divided by the sum of guest count YTD.",
+        "from_id": "element-000030",
+        "gap_reason": "",
+        "id": "relationship-000019-correction-000001",
+        "kind": "calculated KPI formula",
+        "locked_identity_participants": {
+          "target": "element-000028"
+        },
+        "origin_point": [
+          800,
+          405
+        ],
+        "status": "readable",
+        "target_point": [
+          650,
+          361
+        ],
+        "to_id": "correction-element-000006",
+        "verified_element_id": "element-000028",
+        "verified_obligation_id": "obligation-000024"
+      },
+      "original_relationship_id": "relationship-000019",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "18.2%",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000006",
+        "kind": "YTD Capture rate value",
+        "region": [
+          613,
+          350,
+          658,
+          370
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    }
+  ],
+  "corrector": {
+    "harness": "Codex CLI",
+    "model": "Codex (GPT-5)"
+  },
+  "schema_version": 1,
+  "verification_candidate_sha256": "4efd7808c8f9df487d9b8d9669a1c28c8774323478daacabaa26eeb990c1eb36",
+  "verification_sha256": "b229fa40db23df050b7cf1075fb9fbe601cf04897b42e5041711f6ca0d8924ed"
+}

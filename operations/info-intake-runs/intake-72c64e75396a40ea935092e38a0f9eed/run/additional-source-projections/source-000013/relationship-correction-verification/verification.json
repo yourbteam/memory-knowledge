@@ -1,0 +1,25 @@
+{
+  "candidate_sha256": "85bb4a793b4162b7c3d1156d8b0197029b6ce69bcbe3c835a6d3f6d9b2a120ac",
+  "reader": {
+    "harness": "Codex interactive PTY harness",
+    "model": "GPT-5 Codex"
+  },
+  "schema_version": 1,
+  "verdicts": [
+    {
+      "reason": "The red callout labeled \u201cThe sum of column BY for all locations of the operator\u201d has a red arrow whose arrowhead lands on the visible \u201cNPR \u00b7 TAGGABLE\u201d table column header.",
+      "relationship_id": "relationship-000016-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout\u2019s red arrow extends leftward and its arrowhead lands beside the \u201cPayment webhook delayed\u201d issue row; it does not terminate at the \u201cOpen \u2192\u201d button above and to the right.",
+      "relationship_id": "relationship-000017-correction-000001",
+      "verdict": "not_supported"
+    },
+    {
+      "reason": "The \u201cOpen \u2192\u201d action button is visibly positioned in the header area of the \u201cSystem issues & problems\u201d panel, directly associated with that panel and its listed issues.",
+      "relationship_id": "relationship-000018-correction-000001",
+      "verdict": "supported"
+    }
+  ]
+}

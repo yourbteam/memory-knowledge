@@ -1,0 +1,25 @@
+{
+  "candidate_sha256": "a31b2626c2e0c440bd96037db051240c767f69f75b97c9c8e61d82b93e04d567",
+  "reader": {
+    "harness": "Codex",
+    "model": "GPT-5"
+  },
+  "schema_version": 1,
+  "verdicts": [
+    {
+      "reason": "The red arrow from the annotation callout visibly terminates at the first payout report card, adjacent to its $112,127.36 NET PAYOUT metric.",
+      "relationship_id": "relationship-000009-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The callout text explicitly defines NET PAYOUT, WE OWE, THEY OWE, and TAGGABLE REV calculations, and its arrow points to the payout report row where those metrics are displayed.",
+      "relationship_id": "relationship-000011-correction-000001",
+      "verdict": "supported"
+    },
+    {
+      "reason": "The annotation visibly states each calculation definition and its arrow terminates on the first payout period report card containing the corresponding row metrics.",
+      "relationship_id": "relationship-000012-correction-000001",
+      "verdict": "supported"
+    }
+  ]
+}

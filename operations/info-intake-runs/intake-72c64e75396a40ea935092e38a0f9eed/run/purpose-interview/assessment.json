@@ -1,0 +1,11 @@
+{
+  "clarifying_question": "",
+  "quote": "I want us to test the complete bundle of screenshots with annotations. The reference spreadsheet and codebase is the same, but the intake complete bundle has more screenshots.",
+  "reader": {
+    "harness": "Codex",
+    "model": "GPT-5"
+  },
+  "reason": "The purpose identifies the information to test as the complete bundle of screenshots with annotations, and it preserves the relationship to the same reference spreadsheet and codebase while distinguishing this intake bundle by its additional screenshots.",
+  "schema_version": 1,
+  "sufficient": "yes"
+}

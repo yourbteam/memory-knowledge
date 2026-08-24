@@ -1,0 +1,220 @@
+{
+  "candidate_sha256": "ae9631220ac49d918f38b65df4f45adba098b4302c01e24262b0d8636e9c0f31",
+  "corrections": [
+    {
+      "action": "preserve_gap",
+      "gap_reason": "The visible source shows no annotation callout or arrow connecting the orange Net payout card to the Redemption-code fees card; only the Net payout card's own formula text mentions code fees.",
+      "original_relationship_id": "relationship-000005"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000009",
+        "description": "The add-ons annotation directs the Content add-ons summary card to show NA or a similar placeholder until add-ons are live.",
+        "from_id": "element-000013",
+        "gap_reason": "",
+        "id": "relationship-000009-correction-000001",
+        "kind": "placeholder-state instruction for metric summary card",
+        "locked_identity_participants": {
+          "target": "element-000014"
+        },
+        "origin_point": [
+          824,
+          79
+        ],
+        "status": "readable",
+        "target_point": [
+          790,
+          120
+        ],
+        "to_id": "element-000012",
+        "verified_element_id": "element-000014",
+        "verified_obligation_id": "obligation-000013"
+      },
+      "original_relationship_id": "relationship-000009",
+      "replacement_element": {
+        "created_by_correction": false,
+        "id": "element-000012"
+      },
+      "replacement_role": "target",
+      "replacement_source": "use_recorded_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000013",
+        "description": "The red \"Net payout: AF\" annotation points specifically to the NET PAYOUT column, identifying spreadsheet column AF as the source for those values.",
+        "from_id": "element-000024",
+        "gap_reason": "",
+        "id": "relationship-000013-correction-000001",
+        "kind": "annotation callout points to table column",
+        "locked_identity_participants": {
+          "origin": "element-000022"
+        },
+        "origin_point": [
+          925,
+          765
+        ],
+        "status": "readable",
+        "target_point": [
+          930,
+          930
+        ],
+        "to_id": "element-000033",
+        "verified_element_id": "element-000022",
+        "verified_obligation_id": "obligation-000018"
+      },
+      "original_relationship_id": "relationship-000013",
+      "replacement_element": {
+        "created_by_correction": false,
+        "id": "element-000024"
+      },
+      "replacement_role": "origin",
+      "replacement_source": "use_recorded_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000014",
+        "description": "The \"owed for codes: AD\" annotation maps spreadsheet column AD specifically to the OWED FOR CODES table column.",
+        "from_id": "element-000023",
+        "gap_reason": "",
+        "id": "relationship-000014-correction-000001",
+        "kind": "source-field mapping",
+        "locked_identity_participants": {
+          "origin": "element-000023"
+        },
+        "origin_point": [
+          806,
+          769
+        ],
+        "status": "readable",
+        "target_point": [
+          810,
+          815
+        ],
+        "to_id": "correction-element-000001",
+        "verified_element_id": "element-000023",
+        "verified_obligation_id": "obligation-000019"
+      },
+      "original_relationship_id": "relationship-000014",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "OWED FOR CODES; -$3,910.25; $0.00; -$3,910.25",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000001",
+        "kind": "table column",
+        "region": [
+          750,
+          796,
+          872,
+          952
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000015",
+        "description": "The \"Net payout: AF\" annotation maps spreadsheet column AF specifically to the NET PAYOUT table column.",
+        "from_id": "element-000024",
+        "gap_reason": "",
+        "id": "relationship-000015-correction-000001",
+        "kind": "field-to-source-column mapping",
+        "locked_identity_participants": {
+          "origin": "element-000024"
+        },
+        "origin_point": [
+          930,
+          765
+        ],
+        "status": "readable",
+        "target_point": [
+          934,
+          815
+        ],
+        "to_id": "correction-element-000002",
+        "verified_element_id": "element-000024",
+        "verified_obligation_id": "obligation-000020"
+      },
+      "original_relationship_id": "relationship-000015",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "NET PAYOUT; $686,330.25; $25,110.00; $711,440.25",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000002",
+        "kind": "table column",
+        "region": [
+          872,
+          796,
+          988,
+          952
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000016",
+        "description": "The annotation maps content revenue to spreadsheet column X and content transaction counts to column W specifically for the CONTENT REVENUE table column.",
+        "from_id": "element-000025",
+        "gap_reason": "",
+        "id": "relationship-000016-correction-000001",
+        "kind": "spreadsheet-column-to-report-field mapping",
+        "locked_identity_participants": {
+          "origin": "element-000025"
+        },
+        "origin_point": [
+          236,
+          778
+        ],
+        "status": "readable",
+        "target_point": [
+          290,
+          815
+        ],
+        "to_id": "correction-element-000003",
+        "verified_element_id": "element-000025",
+        "verified_obligation_id": "obligation-000021"
+      },
+      "original_relationship_id": "relationship-000016",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "CONTENT REVENUE; $681,240.50 with 28,410 txns; $25,110.00 with 1,120 txns; $706,350.50 with 29,530 txns",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000003",
+        "kind": "table column",
+        "region": [
+          200,
+          796,
+          351,
+          952
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    }
+  ],
+  "corrector": {
+    "harness": "Codex",
+    "model": "GPT-5"
+  },
+  "schema_version": 1,
+  "verification_candidate_sha256": "3807af93ec6b9d25fe366cc856c14321ef819b52d29e41227952e5216d1aa1ec",
+  "verification_sha256": "05e4c07d6abe94f69d6edfdb762187ebeae3c94c15c78040765764eb30933140"
+}

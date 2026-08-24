@@ -1,0 +1,136 @@
+{
+  "candidate_sha256": "5e97bbbe5282cecfd40730a6e07314b9d2afe7b01eca3b0ca8c7096ca9fd7076",
+  "corrections": [
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000016",
+        "description": "The annotation specifies that each operator's NPR \u00b7 TAGGABLE table value is the sum of column BY across all of that operator's locations.",
+        "from_id": "element-000029",
+        "gap_reason": "",
+        "id": "relationship-000016-correction-000001",
+        "kind": "annotation callout specifies the data source for a table metric",
+        "locked_identity_participants": {
+          "target": "element-000028"
+        },
+        "origin_point": [
+          350,
+          735
+        ],
+        "status": "readable",
+        "target_point": [
+          471,
+          715
+        ],
+        "to_id": "correction-element-000001",
+        "verified_element_id": "element-000028",
+        "verified_obligation_id": "obligation-000024"
+      },
+      "original_relationship_id": "relationship-000016",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "NPR \u00b7 TAGGABLE",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000001",
+        "kind": "table metric column header",
+        "region": [
+          370,
+          704,
+          578,
+          722
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000017",
+        "description": "The annotation requires the System issues & problems section to surface alerts for server outages or broken product systems, including the capture app, kiosk app, back-end processing, and operator portal.",
+        "from_id": "element-000031",
+        "gap_reason": "",
+        "id": "relationship-000017-correction-000001",
+        "kind": "annotation callout specifies the System issues & problems section",
+        "locked_identity_participants": {
+          "origin": "element-000031"
+        },
+        "origin_point": [
+          350,
+          590
+        ],
+        "status": "readable",
+        "target_point": [
+          445,
+          543
+        ],
+        "to_id": "element-000032",
+        "verified_element_id": "element-000031",
+        "verified_obligation_id": "obligation-000027"
+      },
+      "original_relationship_id": "relationship-000017",
+      "replacement_element": {
+        "created_by_correction": false,
+        "id": "element-000032"
+      },
+      "replacement_role": "target",
+      "replacement_source": "use_recorded_element"
+    },
+    {
+      "action": "propose_replacement_endpoint",
+      "corrected_relationship": {
+        "binding_method": "correction_selected_identity_and_containment",
+        "correction_of": "relationship-000018",
+        "description": "The Open action in the System issues & problems panel provides access to that panel's issue details.",
+        "from_id": "element-000032",
+        "gap_reason": "",
+        "id": "relationship-000018-correction-000001",
+        "kind": "opens related details",
+        "locked_identity_participants": {
+          "origin": "element-000032"
+        },
+        "origin_point": [
+          446,
+          543
+        ],
+        "status": "readable",
+        "target_point": [
+          445,
+          543
+        ],
+        "to_id": "correction-element-000002",
+        "verified_element_id": "element-000032",
+        "verified_obligation_id": "obligation-000028"
+      },
+      "original_relationship_id": "relationship-000018",
+      "replacement_element": {
+        "capture_scope": "relationship_correction_endpoint",
+        "content": "System issues & problems; Payment webhook delayed; Smoky Mountain Zip \u2014 low Wi-Fi; Indy Speedway \u2014 6 failed uploads",
+        "created_by_correction": true,
+        "gap_reason": "",
+        "id": "correction-element-000002",
+        "kind": "System issues and problems panel",
+        "region": [
+          11,
+          527,
+          491,
+          648
+        ],
+        "status": "readable"
+      },
+      "replacement_role": "target",
+      "replacement_source": "record_visible_element"
+    }
+  ],
+  "corrector": {
+    "harness": "Codex CLI",
+    "model": "GPT-5 Codex"
+  },
+  "schema_version": 1,
+  "verification_candidate_sha256": "85bb4a793b4162b7c3d1156d8b0197029b6ce69bcbe3c835a6d3f6d9b2a120ac",
+  "verification_sha256": "ee93f75ac3d76d49b10a2a2d27b0d04be6c4eeeffb9d3d6d186c9e66895b3582"
+}
