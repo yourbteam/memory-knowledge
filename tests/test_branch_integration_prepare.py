@@ -46,6 +46,8 @@ def test_prepare_integration_preserves_source_and_exposes_conflicts(
     tmp_path: Path,
 ) -> None:
     repo, _remote = _repository(tmp_path)
+    (repo / "unrelated-untracked.txt").write_text("preserve me\n", encoding="utf-8")
+    before_status = _git(repo, "status", "--porcelain")
 
     result = prepare.prepare_integration(
         repo=repo,
@@ -57,7 +59,8 @@ def test_prepare_integration_preserves_source_and_exposes_conflicts(
     assert result["status"] == "conflicts-ready"
     assert result["conflicts"] == ["shared.txt"]
     assert _git(repo, "branch", "--show-current") == "codex/topic"
-    assert _git(repo, "status", "--porcelain") == ""
+    assert _git(repo, "status", "--porcelain") == before_status
+    assert (repo / "unrelated-untracked.txt").read_text(encoding="utf-8") == "preserve me\n"
     worktree = Path(str(result["integration_worktree"]))
     assert _git(worktree, "branch", "--show-current") == "codex/integrate-topic"
     assert "UU shared.txt" in _git(worktree, "status", "--short")

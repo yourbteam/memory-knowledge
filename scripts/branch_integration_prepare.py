@@ -119,8 +119,6 @@ def prepare_integration(
     *, repo: Path, source: str, remote: str, target: str,
 ) -> dict[str, object]:
     repo = repo.resolve()
-    if _git(repo, "status", "--porcelain").stdout.strip():
-        raise IntegrationError("source worktree must be clean")
     if source not in _branches(repo):
         raise IntegrationError(f"source branch does not exist locally: {source}")
     if remote not in _remotes(repo):
