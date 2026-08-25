@@ -143,6 +143,25 @@
         "claude"
       ]
     },
+    "info-intake-machinery": {
+      "canonical_tree_sha256": "0b6fdd8f7b460e75b23067578344d595df1a81cd916cb49cac569a572643ecf6",
+      "disposition": "GENERATED_CLIENT_PROJECTION",
+      "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
+      "generator": "machinery-client-model-v1",
+      "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
+      "projected_tree_sha256": null,
+      "projected_tree_sha256_by_client": {
+        "claude": "f9810b3082a4e6cdbafaa4ae24bbf43b528a2eef9df1c344dee5fbdc52cca973",
+        "codex": "8d9dc0c02f12551f4b6abc77a59207c54c7700d1e5e29a336009d5623530bf43"
+      },
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
     "phase-categorization-foundry": {
       "canonical_tree_sha256": "c3b261e89669a814719ccda58ecf3620c7b5e8b1e5915a0db8fa5453f36021c4",
       "disposition": "SHARED_IDENTICAL",
