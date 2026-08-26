@@ -170,7 +170,11 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
                        # host registry) rather than a file in the sequence's own dependency bundle.
                        # Those surfaces can never drift-match the bundle, so they are recorded and
                        # hashed separately instead of being forced through the bundle drift gate.
-                       "environment_artifacts", "environment_artifact_hashes"},
+                       "environment_artifacts", "environment_artifact_hashes",
+                       # Some remote state changes have no local file to hash. They are permitted
+                       # only when reusable behavior did not change and still require a fresh
+                       # same-path successor verification.
+                       "external_state_only"},
     ),
     "correction_preservation_recorded": (
         {"target_task_id", "preserved_task_id", "subject_id", "lineage_id",
@@ -189,7 +193,7 @@ EVENT_FIELDS: dict[str, tuple[set[str], set[str]]] = {
          # An environment-surface correction changes no bundle file, so the bundle hash does not
          # move. The transition is still recorded (every downstream consumer links a correction to
          # its transition) but names the environment surface instead of a bundle change.
-         "environment_artifacts", "environment_artifact_hashes"},
+         "environment_artifacts", "environment_artifact_hashes", "external_state_only"},
     ),
     "verification_recorded": (
         {"run_id", "subject_id", "lineage_id", "source_bundle_hash", "outcome", "quality",
@@ -1069,18 +1073,24 @@ def _validate_event_values(event: dict[str, Any]) -> None:
         # still validates unchanged.
         environment = _optional_list(event, "environment_artifacts")
         environment_hashes = _optional_list(event, "environment_artifact_hashes")
-        # changed_artifacts may be empty ONLY for an environment-surface correction; a correction
-        # that names nothing at all stays rejected.
+        reusable_changed = event["reusable_behavior_changed"]
+        external_state_only = event.get("external_state_only", False)
+        if not isinstance(reusable_changed, bool) or not isinstance(external_state_only, bool):
+            raise WorkMemoryError("invalid-correction-artifacts", 2)
+        # changed_artifacts may be empty for a hashed environment surface or for an explicitly
+        # external-state-only correction. The latter is valid only when reusable behavior did not
+        # change; its truth is decided by a fresh same-path successor.
         artifacts = _require_list(
-            event, "changed_artifacts", nonempty=not environment,
+            event, "changed_artifacts", nonempty=not environment and not external_state_only,
         )
         hashes = _require_list(
-            event, "changed_artifact_hashes", nonempty=not environment,
+            event, "changed_artifact_hashes", nonempty=not environment and not external_state_only,
         )
         if (
             len(artifacts) != len(hashes)
             or len(environment) != len(environment_hashes)
-            or not isinstance(event["reusable_behavior_changed"], bool)
+            or external_state_only != (not artifacts and not environment)
+            or (external_state_only and reusable_changed)
         ):
             raise WorkMemoryError("invalid-correction-artifacts", 2)
         for artifact in artifacts:
@@ -1171,21 +1181,25 @@ def _validate_event_values(event: dict[str, Any]) -> None:
             ids = _require_list(event, "correction_ids", nonempty=True)
             environment = _optional_list(event, "environment_artifacts")
             environment_hashes = _optional_list(event, "environment_artifact_hashes")
-            # Bundle artifacts may be empty ONLY for an environment-surface correction, and then
-            # the bundle must genuinely be unchanged. A bundle that moved must still name its files.
+            external_state_only = event.get("external_state_only", False)
+            if not isinstance(external_state_only, bool):
+                raise WorkMemoryError("invalid-correction-transition", 2)
+            # Bundle artifacts may be empty for a hashed environment surface or an explicitly
+            # external-state-only correction. In both cases the bundle must remain unchanged.
             arts = _require_list(
-                event, "changed_artifacts", nonempty=not environment,
+                event, "changed_artifacts", nonempty=not environment and not external_state_only,
             )
             hashes = _require_list(
-                event, "changed_artifact_hashes", nonempty=not environment,
+                event, "changed_artifact_hashes", nonempty=not environment and not external_state_only,
             )
             if (
                 not ids
                 or len(arts) != len(hashes)
                 or len(environment) != len(environment_hashes)
+                or external_state_only != (not arts and not environment)
             ):
                 raise WorkMemoryError("invalid-correction-transition", 2)
-            if environment and not arts and event["old_bundle_hash"] != event["new_bundle_hash"]:
+            if (environment or external_state_only) and not arts and event["old_bundle_hash"] != event["new_bundle_hash"]:
                 raise WorkMemoryError("environment-transition-moved-the-bundle", 2)
             for artifact in (*arts, *environment):
                 _artifact_identity(artifact)
@@ -1216,11 +1230,9 @@ def _validate_event_values(event: dict[str, Any]) -> None:
             and not attested
             and event["quality"] == "same-path"
         )
-        correction_proof = (
-            bool(blockers) == bool(corrections)
-            and bool(corrections) == attested
-        )
-        if not investigation_proof and not correction_proof:
+        clean_proof = not blockers and not corrections and not attested
+        correction_proof = len(blockers) == len(corrections) and bool(corrections)
+        if not clean_proof and not investigation_proof and not correction_proof:
             raise WorkMemoryError("incomplete-verification-binding", 2)
     elif kind == "blocker_transitioned":
         target = event["to_status"]
@@ -1240,6 +1252,8 @@ def _validate_event_values(event: dict[str, Any]) -> None:
             if len(reopen_fields) != 1:
                 raise WorkMemoryError("invalid-blocker-transition-fields", 2)
             expected_optional[target] = reopen_fields
+            if "verification_event_id" in optional_present:
+                expected_optional[target].add("verification_event_id")
         if "reconciliation_basis_event_id" in optional_present:
             if target not in {"verified", "closed"}:
                 raise WorkMemoryError("invalid-blocker-transition-fields", 2)
@@ -2188,9 +2202,15 @@ def validate_lifecycle(
                 else:
                     legacy_stranded_fixed_sources[event["blocker_id"]] = event["event_id"]
             if current == "fixed-awaiting-verification" and event["to_status"] == "open":
-                if event["blocker_id"] not in legacy_stranded_fixed_sources:
+                verification_failed_reopen = (
+                    "verification_event_id" in event and "reopen_evidence" in event
+                )
+                if (
+                    event["blocker_id"] not in legacy_stranded_fixed_sources
+                    and not verification_failed_reopen
+                ):
                     raise WorkMemoryError("recovery-source-not-legacy-stranded", 3)
-                del legacy_stranded_fixed_sources[event["blocker_id"]]
+                legacy_stranded_fixed_sources.pop(event["blocker_id"], None)
             if current == "fixed-awaiting-verification" and event["to_status"] == "superseded":
                 candidates = {
                     item["correction_id"]
@@ -2205,7 +2225,15 @@ def validate_lifecycle(
                 if not candidates or not candidates <= superseded:
                     raise WorkMemoryError("blocker-correction-not-superseded", 3)
             verification_id = event.get("verification_event_id")
-            if verification_id:
+            if verification_id and event["to_status"] == "open":
+                failed = verifications.get(verification_id)
+                if (
+                    not failed
+                    or failed["outcome"] == "passed"
+                    or event["blocker_id"] not in failed["blocker_ids"]
+                ):
+                    raise WorkMemoryError("invalid-transition-verification", 3)
+            elif verification_id:
                 verification = verifications.get(verification_id)
                 reconciliation_basis = event.get("reconciliation_basis_event_id")
                 is_reconciliation = reconciliation_basis is not None
@@ -4726,6 +4754,10 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         }
         if environment_artifacts else {}
     )
+    external_state_only = not artifacts and not environment_artifacts
+    external_state_fields: dict[str, Any] = (
+        {"external_state_only": True} if external_state_only else {}
+    )
     correction_id = (
         require_uuid(args.correction_id, "correction-id")
         if args.correction_id else str(uuid.uuid4())
@@ -4773,6 +4805,7 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
             "changed_artifacts": artifacts,
             "changed_artifact_hashes": hashes,
             **environment_fields,
+            **external_state_fields,
             "solution": args.solution,
             "reusable_behavior_changed": args.reusable_behavior_changed == "yes",
         }
@@ -5054,7 +5087,7 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
     environment_keys = {_artifact_identity(item) for item in environment_artifacts}
     if environment_keys & bundle_keys:
         raise WorkMemoryError("environment-artifact-is-bundle-dependency", 3)
-    if not artifact_keys and not environment_keys:
+    if external_state_only and args.reusable_behavior_changed == "yes":
         raise WorkMemoryError("correction-declares-no-artifact", 3)
     supersession_fields: dict[str, Any] = {}
     if len(supersedes) == 1:
@@ -5079,7 +5112,8 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         occurrence_id=args.occurrence_id, correction_id=correction_id, subject_id=start["subject_id"],
         lineage_id=start["lineage_id"], step_id=args.step_id, changed_artifacts=artifacts,
         changed_artifact_hashes=hashes, reusable_behavior_changed=args.reusable_behavior_changed == "yes",
-        solution=args.solution, **environment_fields, **supersession_fields,
+        solution=args.solution, **environment_fields, **external_state_fields,
+        **supersession_fields,
     )
     co_corrections = [
         _event(
@@ -5090,7 +5124,8 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
             step_id=blocker_contexts[blocker_id]["opened"]["step_id"],
             changed_artifacts=artifacts, changed_artifact_hashes=hashes,
             reusable_behavior_changed=args.reusable_behavior_changed == "yes",
-            solution=args.solution, **environment_fields, primary_correction_id=correction_id,
+            solution=args.solution, **environment_fields, **external_state_fields,
+            primary_correction_id=correction_id,
             **(
                 {"supersedes_correction_id": co_supersedes[blocker_id]}
                 if blocker_id in co_supersedes else {}
@@ -5106,7 +5141,7 @@ def cmd_correct(args: argparse.Namespace) -> dict[str, Any]:
         "bundle_transition_recorded", args.transition_event_id, lineage_id=start["lineage_id"],
         old_bundle_hash=effective_hash, new_bundle_hash=new_hash, transition_reason="correction",
         run_id=args.run_id, correction_ids=correction_ids, changed_artifacts=artifacts,
-        changed_artifact_hashes=hashes, **environment_fields,
+        changed_artifact_hashes=hashes, **environment_fields, **external_state_fields,
     )
     batch = [correction, *co_corrections, transition]
     if args.finalize_failed_run:

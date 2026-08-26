@@ -71,11 +71,24 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
     policy = spec["clients"].get(client)
     if policy is None:
         raise RuntimeError(f"generator {generator} has no {client} policy")
+    policy_fields = {
+        "display_name", "required_runtime", "forbidden_runtime",
+        "recommended_reader_command",
+    }
+    if set(policy) != policy_fields or any(
+        not isinstance(policy[field], str) or not policy[field].strip()
+        for field in policy_fields
+    ):
+        raise RuntimeError(
+            f"generator {generator} {client} policy must contain exactly "
+            f"{sorted(policy_fields)} as non-empty strings"
+        )
     installed_policy = {
         "schema_version": 1,
         "client": client,
         "required_runtime": policy["required_runtime"],
         "forbidden_runtime": policy["forbidden_runtime"],
+        "recommended_reader_command": policy["recommended_reader_command"],
         "fail_closed": True,
     }
     (destination / "client-model-policy.json").write_text(
@@ -87,7 +100,8 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
         f"This is the **{policy['display_name']}** projection. Every model-backed builder, "
         "reader, checker, and requirements-enumeration agent started or handed back by this "
         f"machinery must use this client. Reader commands must resolve to "
-        f"`{policy['required_runtime']}`; reject `{policy['forbidden_runtime']}` before launch. "
+        f"`{policy['recommended_reader_command']}`; reject "
+        f"`{policy['forbidden_runtime']}` before launch. "
         "If the invoking client or reader runtime cannot be verified, stop without starting the "
         "worker. This boundary controls model selection only; all machinery behavior and outputs "
         "remain governed by the shared skill.\n"

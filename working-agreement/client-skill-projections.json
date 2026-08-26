@@ -76,15 +76,15 @@
       ]
     },
     "description-machinery": {
-      "canonical_tree_sha256": "3aff98c694e8d4923d667589463d7e6348394dbad410bf5ef20a941b04ae9736",
+      "canonical_tree_sha256": "0479f9e5ad2c15c8b48d3b92a327dd33020a6dc8a42be73f042f2d6f52800652",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
       "generator": "machinery-client-model-v1",
-      "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
+      "generator_sha256": "f68abc5afca283b7e24710983af8b34026120ad10a7277c875448d6b0728f483",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "d967d0099b769506212475c418783c4428695f469e362ffb2a9b7b92e6a68c9f",
-        "codex": "b77c275af5caeebef66e43e95b0300bfa63f812e1223d00a9599de4681fccdfe"
+        "claude": "34381491d5a091e4b67e8dd8a8021e46e1010dc3e236fec9e412653e98967e29",
+        "codex": "cb8bf95a2591c5cd782806586c54c62ede30848ff57e4f49b8050e0742f5e2c6"
       },
       "scenario_groups": [
         "CAP-PDI"
@@ -109,16 +109,31 @@
         "claude"
       ]
     },
+    "experiment-machinery": {
+      "canonical_tree_sha256": "39bd019a5903d062e8f5ec5cbaead2aeb423cf0c481ebe9605516e9524825340",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "39bd019a5903d062e8f5ec5cbaead2aeb423cf0c481ebe9605516e9524825340",
+      "scenario_groups": [
+        "CAP-SHARED"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
     "implementation-machine": {
-      "canonical_tree_sha256": "6981f4384234b5fe8d7fc07f046afbb8d372c1ebfe9c967a3b7be5b2ea605fb0",
+      "canonical_tree_sha256": "ff8508915757e90c24d3f75c3f013d83f2e7023673e86fd185c342a47bcc194c",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
       "generator": "machinery-client-model-v1",
-      "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
+      "generator_sha256": "f68abc5afca283b7e24710983af8b34026120ad10a7277c875448d6b0728f483",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "9cd365c649e34ceb054ebb0db1c8bd5e5630879211c70bf0e0c2232cd282569a",
-        "codex": "abd07a5335cf8a4db1e74928a2ccbcf6517eba58f91880fcc1342523d3fd82ee"
+        "claude": "72551d841766ecfdf4b40c650d3a1bd3abb0dfefc245f4930a5a12e9a25345a3",
+        "codex": "2ecfa41c4b3f3163e3c743c92a20b59e9d36e29e090c879f09779898c70ec51c"
       },
       "scenario_groups": [
         "CAP-PDI"
@@ -294,18 +309,37 @@
       ]
     },
     "requirements-machine": {
-      "canonical_tree_sha256": "eb3ccfc8c879f895a9db4fc782d01926c62ca200d7e785273ccbe323596b15c5",
+      "canonical_tree_sha256": "125d2775222cfc8a6a924b4dd7e95f9949ad3c4a15c8878f9f5e9c8cf48983f8",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
       "generator": "machinery-client-model-v1",
-      "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
+      "generator_sha256": "f68abc5afca283b7e24710983af8b34026120ad10a7277c875448d6b0728f483",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "3f0f431bfd2cb35d95a86eb584909cafec97f0e6e36fe6d22f4fb56784f57c58",
-        "codex": "4fe2f7be55de0b36876230bc22780319cabe5e5079a297bee4b967d10a78e2e1"
+        "claude": "68060391c59a485cfe77477be7eae01c59f236b18a3e20d8880a9606e870ef31",
+        "codex": "9688d63041e74f4c91a2ac3ddebb7a28bffe4f687f0dfcba234ea27eda9bf8f4"
       },
       "scenario_groups": [
         "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
+    "requirements-machinery": {
+      "canonical_tree_sha256": "9143bc622a4f835066f5f55c3a4b1ae123a02f2bb5f80ec12a96e4e217481585",
+      "disposition": "GENERATED_CLIENT_PROJECTION",
+      "divergence_reason": "The invoking client owns the exact reader runtime policy while the coverage and requirements behavior remains shared.",
+      "generator": "machinery-client-model-v1",
+      "generator_sha256": "f68abc5afca283b7e24710983af8b34026120ad10a7277c875448d6b0728f483",
+      "projected_tree_sha256": null,
+      "projected_tree_sha256_by_client": {
+        "claude": "ba9e8af57fcac8db9ea736d37ed298f818375bd211eb91d69eeb96be840cfbcc",
+        "codex": "98684ffd2ffd9f91edb82897000fec3b0e580ee4e451ef7e68076e9e52b0f172"
+      },
+      "scenario_groups": [
+        "CAP-SHARED"
       ],
       "targets": [
         "codex",

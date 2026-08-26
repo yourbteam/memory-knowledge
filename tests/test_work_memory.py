@@ -609,6 +609,67 @@ def corrected_successor_events():
             start_b, verification, verified, closed, close_b]
 
 
+def test_finalize_external_state_only_correction_closes_for_successor(
+    tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    sequence = tmp_path / "operations/sequences/example/sequence.md"
+    sequence.parent.mkdir(parents=True)
+    sequence.write_text("# example\n")
+    run_id = str(uuid.uuid4())
+    occurrence_id = str(uuid.uuid4())
+    blocker_id = "blk-" + "6" * 24
+    bundle = [{
+        "repository_key": "memory-knowledge",
+        "path": "operations/sequences/example/sequence.md", "sha256": "a" * 64,
+    }]
+    current = [
+        event(
+            "run_started", run_id=run_id, subject_id="example", lineage_id="lineage",
+            mode="registered", operation_kind="auth", source_bundle=bundle,
+            source_bundle_hash="a" * 64, classification_receipt_hash="b" * 64,
+            selection_receipt_hash="c" * 64, started_at_utc="2026-01-01T00:00:00Z",
+        ),
+        event(
+            "blocker_opened", run_id=run_id, blocker_id=blocker_id,
+            occurrence_id=occurrence_id, fingerprint="6" * 64, subject_id="example",
+            lineage_id="lineage", step_id="sign-in", surface="remote-auth",
+            symptom="sign-in required", evidence="provider refused access",
+            impact="blocked", boundary="account state", status="open",
+        ),
+    ]
+    monkeypatch.setattr(work_memory, "ROOT", tmp_path)
+    monkeypatch.setattr(work_memory, "load_ledger", lambda: (current, "d" * 64))
+    monkeypatch.setattr(
+        work_memory, "resolve_bundle", lambda **kwargs: (bundle, "a" * 64, "lineage"),
+    )
+
+    def transact(request):
+        raw = b"".join(work_memory.canonical_bytes(item) for item in current)
+        ledger, _, result = work_memory.stage_event_batch(raw, request)
+        current[:] = work_memory.parse_ledger_bytes(ledger)
+        return result
+
+    monkeypatch.setattr(work_memory, "transact", transact)
+    result = work_memory.cmd_correct(SimpleNamespace(
+        run_id=run_id, blocker_id=blocker_id, occurrence_id=occurrence_id,
+        step_id="sign-in", changed_artifact=[], changed_environment_artifact=[],
+        solution="User completed provider sign-in.", reusable_behavior_changed="no",
+        supersedes_correction_id=None, correction_id=None, event_id=None,
+        transition_event_id=None, repo_roots_file=None, finalize_failed_run=True,
+    ))
+
+    correction = next(item for item in current if item["event_type"] == "correction_recorded")
+    transition = next(
+        item for item in current if item["event_type"] == "bundle_transition_recorded"
+    )
+    assert result["new_bundle_hash"] == "a" * 64
+    assert correction["external_state_only"] is True
+    assert correction["reusable_behavior_changed"] is False
+    assert transition["external_state_only"] is True
+    assert current[-2]["to_status"] == "fixed-awaiting-verification"
+    assert current[-1]["event_type"] == "run_closed"
+
+
 def test_finalize_correction_is_one_atomic_idempotent_transaction(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch,
 ) -> None:
@@ -2061,6 +2122,53 @@ def test_normally_corrected_fixed_blocker_cannot_recover_with_evidence():
     with pytest.raises(work_memory.WorkMemoryError, match="recovery-source-not-legacy-stranded"):
         work_memory.stage_event_batch(
             b"", {"schema_version": 1, "expected_ledger_hash": None, "events": events}
+        )
+
+
+def test_failed_same_path_verification_reopens_corrected_blocker():
+    events = corrected_successor_events()
+    failed = {
+        **events[7],
+        "event_id": str(uuid.uuid4()),
+        "outcome": "failed",
+        "evidence": "the same path still fails",
+    }
+    reopen = event(
+        "blocker_transitioned", run_id=events[6]["run_id"],
+        blocker_id=events[1]["blocker_id"],
+        from_status="fixed-awaiting-verification", to_status="open",
+        verification_event_id=failed["event_id"],
+        reopen_evidence="failed same-path verification requires a superseding correction",
+    )
+
+    ledger, _, _ = work_memory.stage_event_batch(
+        b"", {
+            "schema_version": 1,
+            "expected_ledger_hash": None,
+            "events": [*events[:7], failed, reopen],
+        },
+    )
+
+    assert work_memory.parse_ledger_bytes(ledger)[-1] == reopen
+
+
+def test_passed_verification_cannot_be_used_to_reopen_corrected_blocker():
+    events = corrected_successor_events()
+    reopen = event(
+        "blocker_transitioned", run_id=events[6]["run_id"],
+        blocker_id=events[1]["blocker_id"],
+        from_status="fixed-awaiting-verification", to_status="open",
+        verification_event_id=events[7]["event_id"],
+        reopen_evidence="a passed verification cannot justify reopening",
+    )
+
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-transition-verification"):
+        work_memory.stage_event_batch(
+            b"", {
+                "schema_version": 1,
+                "expected_ledger_hash": None,
+                "events": [*events[:8], reopen],
+            },
         )
 
 
@@ -4857,12 +4965,33 @@ def test_environment_only_correction_validates_without_bundle_artifacts():
 
 
 def test_correction_naming_nothing_at_all_is_still_rejected():
-    """The relaxation is scoped: empty bundle artifacts are allowed ONLY alongside an environment
-    surface, never as a way to record a correction that changed nothing."""
+    """An empty correction must opt into external state and must not claim reusable drift."""
     with pytest.raises(work_memory.WorkMemoryError, match="invalid-changed-artifacts"):
         work_memory._validate_event_values(_correction_event(
             changed_artifacts=[], changed_artifact_hashes=[],
         ))
+
+
+def test_external_state_only_correction_requires_no_reusable_behavior_change():
+    work_memory._validate_event_values(_correction_event(
+        changed_artifacts=[], changed_artifact_hashes=[],
+        reusable_behavior_changed=False, external_state_only=True,
+    ))
+    with pytest.raises(work_memory.WorkMemoryError, match="invalid-correction-artifacts"):
+        work_memory._validate_event_values(_correction_event(
+            changed_artifacts=[], changed_artifact_hashes=[],
+            reusable_behavior_changed=True, external_state_only=True,
+        ))
+
+
+def test_external_state_only_verification_binds_without_artifact_hashes():
+    work_memory._validate_event_values(event(
+        "verification_recorded", run_id=str(uuid.uuid4()), subject_id="sequence",
+        lineage_id="lineage", source_bundle_hash="a" * 64,
+        outcome="passed", quality="same-path", evidence="same path passed",
+        blocker_ids=["blk-" + "1" * 24], correction_ids=[str(uuid.uuid4())],
+        changed_artifact_hashes=[],
+    ))
 
 
 def test_historical_correction_without_the_field_still_validates():
@@ -4909,6 +5038,20 @@ def test_environment_transition_cannot_hide_a_moved_bundle():
         work_memory.WorkMemoryError, match="environment-transition-moved-the-bundle",
     ):
         work_memory._validate_event_values(_transition_event(new_bundle_hash="d" * 64))
+
+
+def test_external_state_only_transition_requires_an_unchanged_bundle():
+    transition = _transition_event(
+        changed_artifacts=[], changed_artifact_hashes=[],
+        environment_artifacts=[], environment_artifact_hashes=[],
+        external_state_only=True,
+    )
+    work_memory._validate_event_values(transition)
+    transition["new_bundle_hash"] = "d" * 64
+    with pytest.raises(
+        work_memory.WorkMemoryError, match="environment-transition-moved-the-bundle",
+    ):
+        work_memory._validate_event_values(transition)
 
 
 def test_bundle_transition_without_environment_still_requires_its_artifacts():

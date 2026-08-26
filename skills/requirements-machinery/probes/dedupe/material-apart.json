@@ -1,0 +1,77 @@
+{
+ "note": "Only the ten entries the five verified must-stay-apart pairs touch, remapped. A different, smaller input than the success case, so its reader work is its own — round 1 reused the full 28 here and duplicated 244 calls for nothing.",
+ "entries": [
+  {
+   "piece": "p-0009",
+   "settled": true,
+   "text": "Deliverable Approved One-Page Client Intake Brief + Approved Measurement Brief Document format Word/PDF: the one-page brief (Client & context; Organizational objective; Reputation problem/opportunity; Priority audiences; Desired change; Stakeholders & alignment; Constraints & guardrails; Assets & access; Success & measurement; Scope & logistics) + one-page Measurement Brief. Both PDF-locked with written approval recorded. Google Drive."
+  },
+  {
+   "piece": "p-0017",
+   "settled": true,
+   "text": "Frameworks & tools The AMEC chain (Organizational objectives → Communication objectives → Inputs → Activities → Outputs → Outtakes → Outcomes → Impact) with the vertical rule. The Measurement Brief (approved at Step 3). The KPI ladder (measures on ≥ 3 levels, incl. one outtake/outcome); Quality Coverage Rate (replaces clip counts); engagement quality; disciplined SOV. KPI modules by campaign type (corporate reputation, employer branding, crisis in scope). PESO measurement chain. Reporting cadence: baseline before launch; daily/weekly during; one-page executive scorecard after. Attribution wording auto-matched to confidence (generated / contributed to / coincided with)."
+  },
+  {
+   "piece": "p-0023",
+   "settled": true,
+   "text": "Language requirements — every document, no exceptions Every document we deliver must be simple, professional and understandable — in its wording and as a whole text."
+  },
+  {
+   "piece": "p-0080",
+   "settled": true,
+   "text": "Enforced by the Review Board. The Adversarial Review Board's CFO persona attacks any KPI without a baseline/target/benchmark, and the Journalist persona attacks any impact claim that outruns its evidence — so this framework is not advisory, it is adjudicated."
+  },
+  {
+   "piece": "p-0081",
+   "settled": true,
+   "text": "Every activity must connect vertically to an objective. If a metric cannot be connected to an audience or organizational objective, it belongs in the appendix — not the executive scorecard."
+  },
+  {
+   "piece": "p-0082",
+   "settled": true,
+   "text": "Use no more than: one organizational objective · three communication objectives · five executive KPIs."
+  },
+  {
+   "piece": "p-0083",
+   "settled": true,
+   "text": "The KPI ladder Each campaign must have measures on at least three levels, including one outtake or outcome measure."
+  },
+  {
+   "piece": "p-0087",
+   "settled": true,
+   "text": "Governance inside United Partners Role Accountability Client lead Approves organizational objective, business data and success criteria Account director Owns the measurement brief and client alignment Strategy / Insights lead Establishes baseline, KPI definitions, methodology and interpretation Channel leads Implement tagging, collect data and optimize activity Analyst Maintains data quality, dashboard and evaluation Campaign lead Turns weekly findings into execution decisions Three checkpoints ● Measurement gate: brief cannot be approved without baseline, target, source and owner."
+  },
+  {
+   "piece": "p-0088",
+   "settled": false,
+   "text": "● Always show baseline, target, result and trend together."
+  },
+  {
+   "piece": "p-0088",
+   "settled": false,
+   "text": "● Preserve definitions, query logic and tagging conventions so results are repeatable."
+  }
+ ],
+ "must_stay_apart": [
+  [
+   6,
+   7
+  ],
+  [
+   3,
+   5
+  ],
+  [
+   9,
+   10
+  ],
+  [
+   1,
+   2
+  ],
+  [
+   4,
+   8
+  ]
+ ]
+}

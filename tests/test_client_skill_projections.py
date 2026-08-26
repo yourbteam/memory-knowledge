@@ -99,6 +99,7 @@ class ProjectionManifestTests(unittest.TestCase):
                 self.assertEqual(policy["client"], client)
                 self.assertEqual(policy["required_runtime"], required)
                 self.assertEqual(policy["forbidden_runtime"], forbidden)
+                self.assertEqual(policy["recommended_reader_command"], required)
                 self.assertTrue(policy["fail_closed"])
                 instructions = (staging / "implementation-machine" / "SKILL.md").read_text()
                 self.assertIn(f"must resolve to `{required}`", instructions)
@@ -212,6 +213,32 @@ class ProjectionManifestTests(unittest.TestCase):
         result = run_tool("check", "--client", "claude")
         payload_errors = [line for line in result.stdout.splitlines() if line.startswith("ERROR")]
         self.assertEqual(payload_errors, [], result.stdout)
+
+    def test_repository_requirements_projection_accepts_each_required_reader_before_state(self):
+        with TemporaryDirectory(dir=REPO / "Tasks") as td:
+            base = Path(td)
+            for client, reader_command in (("codex", "codex exec"), ("claude", "claude -p")):
+                staging = base / f"staging-{client}"
+                built = run_tool("build", "--client", client, "--staging-root", str(staging))
+                self.assertEqual(built.returncode, 0, built.stdout + built.stderr)
+                result = subprocess.run(
+                    [
+                        sys.executable,
+                        str(staging / "requirements-machinery" / "scripts" / "cover.py"),
+                        "relevance",
+                        "--work",
+                        str(base / f"missing-state-{client}"),
+                        "--target",
+                        "fixture target",
+                        "--reader-command",
+                        reader_command,
+                    ],
+                    capture_output=True,
+                    text=True,
+                )
+                self.assertEqual(result.returncode, 3, result.stdout + result.stderr)
+                self.assertIn("no register", result.stderr)
+                self.assertNotIn("invalid client model policy", result.stderr)
 
 
 if __name__ == "__main__":

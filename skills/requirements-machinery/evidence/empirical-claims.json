@@ -1,0 +1,377 @@
+{
+  "claim_detection": "\\b(?:won (?:a |the |on )|chosen by comparison|champion of|promoted(?: by| merge| dedupe)|proved|proven (?:rather than assumed|clean)|measured (?:on|before|over|and rejected|size|without)|comparison (?:against|had already shown)|experiment machinery compared|shape that won)\\b",
+  "claims": [
+    {
+      "disposition": "unverified",
+      "id": "EC-13d47bad72cbff28",
+      "line": 203,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "SKILL.md",
+      "text": "- **How the document is cut** \u2014 by page, at headings, or by block. Page won on both declared",
+      "text_sha256": "1434e89a520e77d0680f094eb3ec85fea3511d8e6acd16bd1dfdc1abd9e118a8"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-ba757d713e240bda",
+      "line": 218,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "SKILL.md",
+      "text": "**One thing grounding does not do, proven rather than assumed.** It shows a claim is made of the",
+      "text_sha256": "b8dd1ad09118b9d3026db39a0f9451db92d03fca98d05bc1741ac56fa53cbdb4"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-c3945b3d001bdd0f",
+      "line": 3,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/dedupe/list-ask/approach.py",
+      "text": "The shape that won the checkability comparison: the judgement is noisy, so only what three",
+      "text_sha256": "861d58fa11fb4ce005e1e8f16dbcd999015d857a026226a97440ac25c19016d8"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-657af795af5e6885",
+      "line": 32,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/dedupe/shared-rule-ask/approach.py",
+      "text": "\"\"\"The shingle rule, verbatim from the round-1 control: free and proven clean.\"\"\"",
+      "text_sha256": "b2ac23189f883733ff6ebaaf26981fa1b7a2aea450e402dafd5c6d6944eb7c71"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-447cd6f060e477c5",
+      "line": 3,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/_reflow_shared.py",
+      "text": "Measured on the fourteen pieces: cutting on the newline left 93 of 135 units ending mid-sentence;",
+      "text_sha256": "7556d57a06016f4ce8d591dd07249a3893008b929442287bfd0a5f41fca2aaa6"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-611a066cf97391ca",
+      "line": 92,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/_run.py",
+      "text": "# Burial measured without the anchors. Every frozen pick is a reader saying \"this is an",
+      "text_sha256": "8c5ca94d5f36bbdf617fddd668a57412db3a24f2eba37666123d163e9ebd4df3"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-ab1bcba2d0ff57c2",
+      "line": 3,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/at-most-double/reflow.py",
+      "text": "Measured on the fourteen pieces: cutting on the newline left 93 of 135 units ending mid-sentence;",
+      "text_sha256": "7556d57a06016f4ce8d591dd07249a3893008b929442287bfd0a5f41fca2aaa6"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-fea849061293604f",
+      "line": 92,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/at-most-double/run.py",
+      "text": "# Burial measured without the anchors. Every frozen pick is a reader saying \"this is an",
+      "text_sha256": "8c5ca94d5f36bbdf617fddd668a57412db3a24f2eba37666123d163e9ebd4df3"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-d7c646c022a2c079",
+      "line": 3,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/no-completion/reflow.py",
+      "text": "Measured on the fourteen pieces: cutting on the newline left 93 of 135 units ending mid-sentence;",
+      "text_sha256": "7556d57a06016f4ce8d591dd07249a3893008b929442287bfd0a5f41fca2aaa6"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-372749834d3a6167",
+      "line": 92,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/no-completion/run.py",
+      "text": "# Burial measured without the anchors. Every frozen pick is a reader saying \"this is an",
+      "text_sha256": "8c5ca94d5f36bbdf617fddd668a57412db3a24f2eba37666123d163e9ebd4df3"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-092f90b49d160ebe",
+      "line": 4,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/no-narrow-line/approach.py",
+      "text": "run is a table cell or a column, not a wrap. Measured on the pieces: the table blocks that swallowed",
+      "text_sha256": "a95901012b0e39b92ac3ccf256b50fc1a8e26a6c1eefb3bb576886037fd91403"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-11fc701d96365586",
+      "line": 3,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/no-narrow-line/reflow.py",
+      "text": "Measured on the fourteen pieces: cutting on the newline left 93 of 135 units ending mid-sentence;",
+      "text_sha256": "7556d57a06016f4ce8d591dd07249a3893008b929442287bfd0a5f41fca2aaa6"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-6500668a675d7a51",
+      "line": 92,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/no-narrow-line/run.py",
+      "text": "# Burial measured without the anchors. Every frozen pick is a reader saying \"this is an",
+      "text_sha256": "8c5ca94d5f36bbdf617fddd668a57412db3a24f2eba37666123d163e9ebd4df3"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-57dfe1620b77bb01",
+      "line": 8,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/offered-only/cuts.py",
+      "text": "Measured on six admitted pages, units ending mid-sentence:",
+      "text_sha256": "caf68e410e4aa072d5a6caebe47f1d4e26bc2b9a28b42ab70e7b85d1371ebd98"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-d9907d0bd3179b4f",
+      "line": 87,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/offered-only/cuts.py",
+      "text": "offset that recurs down the page, far enough from the last column to hold a cell. Measured on",
+      "text_sha256": "4511f28a49e9f43e9c8f895adb72d755077310c0ceaf1c2c94ef604f38b079ab"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-db9543bfc719297e",
+      "line": 3,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/offered-only/reflow.py",
+      "text": "Measured on the fourteen pieces: cutting on the newline left 93 of 135 units ending mid-sentence;",
+      "text_sha256": "7556d57a06016f4ce8d591dd07249a3893008b929442287bfd0a5f41fca2aaa6"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-86c5e15ac7565381",
+      "line": 92,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/offered-only/run.py",
+      "text": "# Burial measured without the anchors. Every frozen pick is a reader saying \"this is an",
+      "text_sha256": "8c5ca94d5f36bbdf617fddd668a57412db3a24f2eba37666123d163e9ebd4df3"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-2a3deac5ba3f348e",
+      "line": 3,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/sentence-run/reflow.py",
+      "text": "Measured on the fourteen pieces: cutting on the newline left 93 of 135 units ending mid-sentence;",
+      "text_sha256": "7556d57a06016f4ce8d591dd07249a3893008b929442287bfd0a5f41fca2aaa6"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-8f0ce0501543ae74",
+      "line": 92,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/sentence-run/run.py",
+      "text": "# Burial measured without the anchors. Every frozen pick is a reader saying \"this is an",
+      "text_sha256": "8c5ca94d5f36bbdf617fddd668a57412db3a24f2eba37666123d163e9ebd4df3"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-cb1f4bd5230d69d0",
+      "line": 3,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/sentence-terminated/reflow.py",
+      "text": "Measured on the fourteen pieces: cutting on the newline left 93 of 135 units ending mid-sentence;",
+      "text_sha256": "7556d57a06016f4ce8d591dd07249a3893008b929442287bfd0a5f41fca2aaa6"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-fac2d79292735e8f",
+      "line": 92,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "probes/merge/sentence-terminated/run.py",
+      "text": "# Burial measured without the anchors. Every frozen pick is a reader saying \"this is an",
+      "text_sha256": "8c5ca94d5f36bbdf617fddd668a57412db3a24f2eba37666123d163e9ebd4df3"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-0211ee5452787c26",
+      "line": 467,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/cover.py",
+      "text": "# page, and the page reads as empty when it is not. Measured on the fourteen: five of thirteen,",
+      "text_sha256": "a05ed56c979b64db3b6c04f762824eff5ef13ad5382a2305ab870770f6f03bd8"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-8f7eea8be801a36a",
+      "line": 495,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/cover.py",
+      "text": "Runs the promoted dedupe rule (dedupe.py \u2014 atom-5-dedupe round 2's champion) over every entry",
+      "text_sha256": "6e9d15746edcb92013f4e7230b172dd7e3699c171678c209e02963d538a5d072"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-3422c74c459109ba",
+      "line": 627,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/cover.py",
+      "text": "# survives \u2014 the shape that won the checkable comparison; what every ask leaves out is",
+      "text_sha256": "9f1306555406e83f439ece741d2ad9f8682e9f9270845fff522641f55551ed86"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-ae4a0fee23a56b06",
+      "line": 634,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/cover.py",
+      "text": "# reworded pair. The promoted dedupe runs again \u2014 but ONLY over the extracted rules, never",
+      "text_sha256": "d866147c5497ce771477a07218ddee9b15d20b1c1e713f45249f216986581489"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-795c625ba4b41cf2",
+      "line": 709,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/cover.py",
+      "text": "# \u2014 the same gray band the promoted dedupe uses, because a judgement the asks disagree on is",
+      "text_sha256": "b80982ac3711412d675241026adc455c7b373a11eedef9edab6577dce22b3f87"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-d31ce87e15224b28",
+      "line": 4,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/dedupe.py",
+      "text": "Champion of atom-5-dedupe round 2 (Tasks/intake-to-requirements-machinery/atom-5-dedupe), promoted",
+      "text_sha256": "3f9852b6c16484bd114bc5c37445b6799c4c600181e16a7ff02e4636ea5e886d"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-f2ad76a3350731bf",
+      "line": 3,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/distill.py",
+      "text": "Atom 6. The scissors atoms proved every input verbatim; this is the first step allowed to write.",
+      "text_sha256": "6593175e5d2aace84e7b820f217469be42f37b232a748e71f954e0f94e1b230b"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-0fa4c2cc080ffa7a",
+      "line": 90,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/distill.py",
+      "text": "# stems \u2014 the floor measured size, never whether the retry added anything.",
+      "text_sha256": "a19658ee793ac7110f502fea9aa96e84edc70416c6c15074272f024288e2a92c"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-63581a29ea46bc02",
+      "line": 3,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/obligations.py",
+      "text": "Chosen by comparison against three alternatives on four pieces the relevance pass admitted and four",
+      "text_sha256": "81b3d9de4caa7d18ab2c5ac6ef3898a07623c8822b851d5f0cd5e1fc44f80d09"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-d5f3140015f11a74",
+      "line": 86,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/obligations.py",
+      "text": "a whole page. Measured on the ten admitted pages: cutting by line left 17 of 22 obligations",
+      "text_sha256": "e17829f615a5cd8b4d9f0636deaa147c54ac740e54e1daba25802d21291e6876"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-2a05e606b7a4ae2d",
+      "line": 106,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/obligations.py",
+      "text": "# 1,913 characters \u2014 77% of its page \u2014 and the merged result was the page back. Measured over",
+      "text_sha256": "609c4ead0d106736ff93f8765324ac9aa2bbb8fbfe76deec91b8a58f2d732e1c"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-b15e5f01f54870a2",
+      "line": 124,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/obligations.py",
+      "text": "# empty. Naming the quote inside the ask instead was measured and rejected: page 23 swung",
+      "text_sha256": "51b6bcb130a64744d3a8bfab694428fbd85a7a17d7bb1b6805d982edb9fe3c02"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-3cd8c4640eee3c3b",
+      "line": 8,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/reflow.py",
+      "text": "Measured on six admitted pages, units ending mid-sentence:",
+      "text_sha256": "caf68e410e4aa072d5a6caebe47f1d4e26bc2b9a28b42ab70e7b85d1371ebd98"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-a4dbccc1cb6a9c28",
+      "line": 87,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/reflow.py",
+      "text": "offset that recurs down the page, far enough from the last column to hold a cell. Measured on",
+      "text_sha256": "4511f28a49e9f43e9c8f895adb72d755077310c0ceaf1c2c94ef604f38b079ab"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-2996a234550ca48d",
+      "line": 162,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/reflow.py",
+      "text": "statement and started absorbing the table around it. The experiment machinery compared six",
+      "text_sha256": "137bab99c161b264a76c70c84f5e22da76b499e5d829091f6a75764966b71b01"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-944b28fcbc9abbf8",
+      "line": 165,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/reflow.py",
+      "text": "unbounded rule's 16,261). Champion of atom-4-merge, promoted by the owner on 2026-08-23.",
+      "text_sha256": "3d700fce4d69e98519ef664470cf3cd01f8234bc118dabab93041f4e4c84b1dc"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-c40b943bb8b47bb4",
+      "line": 3,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/relevance.py",
+      "text": "The way of asking here won a comparison against a plainer one on two cases \u2014 the real library and",
+      "text_sha256": "80e40772848f9489fe23ddcb9ca4c2b85e75d87cf1d2fc79ca19e115c8b81f42"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-4e83c04724fc1e09",
+      "line": 9,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/relevance.py",
+      "text": "One thing this does not do, proven rather than assumed: grounding does not establish that a page",
+      "text_sha256": "48e3098df4269a5feab70f433e1b8450e51f5788464cfbbbbf86205b03c92bbc"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-f814c7253511ae08",
+      "line": 8,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/rules.py",
+      "text": "Measured before building (prototype 0 on the 27 real pairs): code's span-expansion returns a",
+      "text_sha256": "a66bb13855d2d5f9a97a5e4c44b04a38e2a619bb26cf5c97184e070f8b689a5e"
+    },
+    {
+      "disposition": "unverified",
+      "id": "EC-107e5118a36ff886",
+      "line": 79,
+      "reason": "Historical raw outputs and environment identity are absent; no replayable evidence is claimed.",
+      "source": "scripts/rules.py",
+      "text": "completion the promoted merge rule performs for picks, aimed at the extraction.\"\"\"",
+      "text_sha256": "2dcc6231daa09756a6654f9976fa5bc8309cde2c4ecabea70b38d8e69471f583"
+    }
+  ],
+  "claims_fingerprint": "7b2769482e788c2a4444ab4e678b47abf9cbfd4e94bec430091fc4f87222d6be",
+  "manifest_sha256": "7f37008f4a8c9854d4a828dd8cd22614618e6fb134caeb8af321aec8b1f2a756",
+  "schema_version": 1
+}
