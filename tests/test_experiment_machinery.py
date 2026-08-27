@@ -526,3 +526,54 @@ def test_hung_evaluator_is_terminated_with_terminal_summary_and_evidence(
         "evaluator_timed_out",
         "evaluation_completed",
     ]
+
+
+def test_complete_probe_runner_prevents_parent_and_child_bytecode(tmp_path: Path) -> None:
+    import shutil
+
+    source = ROOT / "skills" / "experiment-machinery" / "scripts"
+    scripts = tmp_path / "scripts"
+    shutil.copytree(source, scripts)
+    wrapper = tmp_path / "exercise.py"
+    wrapper.write_text(
+        "import os, runpy, subprocess, sys\n"
+        "from pathlib import Path\n"
+        "scripts = Path(sys.argv[1])\n"
+        "os.environ.pop('PYTHONDONTWRITEBYTECODE', None)\n"
+        "sys.path.insert(0, str(scripts))\n"
+        "runpy.run_path(str(scripts / 'development_probe_run.py'), run_name='probe_import')\n"
+        "child = subprocess.run([sys.executable, '-c', 'import development_probe_manifest'], cwd=scripts)\n"
+        "raise SystemExit(child.returncode)\n"
+    )
+    env = os.environ.copy()
+    env.pop("PYTHONDONTWRITEBYTECODE", None)
+
+    completed = subprocess.run(
+        [sys.executable, str(wrapper), str(scripts)], env=env, capture_output=True, text=True
+    )
+
+    assert completed.returncode == 0, completed.stderr
+    assert list(scripts.rglob("__pycache__")) == []
+
+
+def test_every_public_entrypoint_prevents_source_bytecode(tmp_path: Path) -> None:
+    import shutil
+
+    source = ROOT / "skills" / "experiment-machinery" / "scripts"
+    scripts = tmp_path / "scripts"
+    shutil.copytree(source, scripts)
+    env = os.environ.copy()
+    env.pop("PYTHONDONTWRITEBYTECODE", None)
+    entrypoints = sorted(path for path in scripts.glob("*.py") if "if __name__" in path.read_text())
+
+    for entrypoint in entrypoints:
+        completed = subprocess.run(
+            [sys.executable, str(entrypoint), "--help"],
+            cwd=scripts,
+            env=env,
+            capture_output=True,
+            text=True,
+        )
+        assert completed.returncode == 0, f"{entrypoint.name}: {completed.stderr}"
+
+    assert list(scripts.rglob("__pycache__")) == []

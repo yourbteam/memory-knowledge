@@ -15,6 +15,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path, PurePath
 from typing import Any
 
+sys.dont_write_bytecode = True
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+
 from development_probe_compose import verify_assembly
 
 CONTRACT = 1

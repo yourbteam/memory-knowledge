@@ -15,6 +15,9 @@ from collections import Counter
 from pathlib import Path
 from typing import Any
 
+sys.dont_write_bytecode = True
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+
 from development_probe_candidate import CandidateError, _snapshot_source
 from development_probe_compose import CompositionError, verify_assembly
 from development_probe_final_validation import FinalValidationError, _assessment_contract

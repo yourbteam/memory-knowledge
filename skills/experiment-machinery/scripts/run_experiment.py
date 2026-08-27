@@ -18,6 +18,9 @@ from datetime import UTC, datetime
 from pathlib import Path
 from typing import Any
 
+sys.dont_write_bytecode = True
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+
 CONTRACT = 1
 SPEC_CONTRACT = 4
 _IDENTITY = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")

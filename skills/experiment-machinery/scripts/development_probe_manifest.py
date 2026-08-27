@@ -6,10 +6,14 @@ from __future__ import annotations
 import argparse
 import copy
 import json
+import os
 import re
 import sys
 from pathlib import Path, PurePosixPath
 from typing import Any
+
+sys.dont_write_bytecode = True
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
 
 CONTRACT = 1
 IDENTITY = re.compile(r"^[a-z0-9]+(?:-[a-z0-9]+)*$")

@@ -13,6 +13,9 @@ from concurrent.futures import ThreadPoolExecutor, as_completed
 from pathlib import Path
 from typing import Any
 
+sys.dont_write_bytecode = True
+os.environ["PYTHONDONTWRITEBYTECODE"] = "1"
+
 from development_probe_manifest import ManifestError, validate_manifest
 
 CONTRACT = 1
