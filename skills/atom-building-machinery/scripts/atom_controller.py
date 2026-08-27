@@ -28,6 +28,24 @@ REQUEST_FIELDS = {
     "captured_cases",
 }
 CASE_FIELDS = {"case_id", "source_ref", "sha256", "kind", "expected_outcome"}
+EVIDENCE_FIELDS = {"case_id", "path", "sha256"}
+FILE_REFERENCE_FIELDS = {"path", "sha256"}
+BASELINE_FIELDS = {"schema_version", "atomic_step_id", "repository_root", "allowed_paths", "files"}
+SNAPSHOT_FILE_FIELDS = {"path", "sha256", "size", "mode"}
+CHANGE_SURFACE_FIELDS = {
+    "schema_version",
+    "atomic_step_id",
+    "repository_root",
+    "baseline_sha256",
+    "changes",
+}
+REVIEW_FIELDS = {
+    "schema_version",
+    "status",
+    "verdict",
+    "change_surface_sha256",
+    "blocking_findings",
+}
 FINAL_FIELDS = {
     "schema_version",
     "status",
@@ -37,7 +55,9 @@ FINAL_FIELDS = {
     "cases",
     "promotion_applied",
 }
-FINAL_CASE_FIELDS = {"case_id", "verdict", "reason", "evidence_pointers"}
+EXPERIMENT_CASE_FIELDS = {"case_id", "verdict", "reason", "evidence_pointers"}
+VALIDATION_CASE_FIELDS = {"case_id", "verdict", "reason", "evidence"}
+CASE_EVIDENCE_FIELDS = {"case_id", "evidence"}
 SUMMARY_FIELDS = {
     "schema_version",
     "status",
@@ -59,7 +79,7 @@ STAGE_FIELDS = {
     "result_sha256",
     "promotion_applied",
 }
-PROMOTION_FIELDS = {
+LEGACY_PROMOTION_FIELDS = {
     "schema_version",
     "status",
     "atomic_step_id",
@@ -67,8 +87,9 @@ PROMOTION_FIELDS = {
     "experiment_event_sha256",
     "experiment_assembly_sha256",
     "changed_paths",
-    "evidence_pointers",
+    "evidence",
 }
+PROMOTION_FIELDS = LEGACY_PROMOTION_FIELDS | {"change_surface", "review"}
 VALIDATION_FIELDS = {
     "schema_version",
     "status",
@@ -84,18 +105,21 @@ EXPERIMENT_EVENT_FIELDS = {
     "assembly_sha256",
     "verdict",
 }
-PROMOTION_EVENT_FIELDS = {
+LEGACY_PROMOTION_EVENT_FIELDS = {
     "receipt_path",
     "receipt_sha256",
     "experiment_event_sha256",
     "assembly_sha256",
     "changed_paths",
+    "evidence",
 }
+PROMOTION_EVENT_FIELDS = LEGACY_PROMOTION_EVENT_FIELDS | {"change_surface", "review"}
 VALIDATION_EVENT_FIELDS = {
     "receipt_path",
     "receipt_sha256",
     "promotion_event_sha256",
     "verdict",
+    "case_evidence",
 }
 
 
@@ -163,11 +187,246 @@ def _strings(value: object, label: str, stage: str, *, nonempty: bool = True) ->
     return result
 
 
+def _evidence(
+    value: object,
+    label: str,
+    stage: str,
+    case_ids: set[str],
+    *,
+    base: Path | None = None,
+    required_case_id: str | None = None,
+) -> list[dict[str, str]]:
+    if type(value) is not list or not value:
+        raise AtomError(stage, f"{label} is {value!r}; provide one nonempty ordered evidence list")
+    normalized = []
+    identities = []
+    for index, raw in enumerate(value):
+        item_label = f"{label}[{index}]"
+        item = _exact(raw, item_label, EVIDENCE_FIELDS, stage)
+        case_id = _nonempty(item["case_id"], f"{item_label}.case_id", stage)
+        if case_id not in case_ids:
+            raise AtomError(stage, f"{item_label}.case_id is {case_id!r}; require one declared captured case")
+        if required_case_id is not None and case_id != required_case_id:
+            raise AtomError(stage, f"{item_label}.case_id is {case_id!r}; require {required_case_id!r}")
+        path_text = _nonempty(item["path"], f"{item_label}.path", stage)
+        path = Path(path_text)
+        if not path.is_absolute():
+            if base is None:
+                raise AtomError(stage, f"{item_label}.path is relative; restore the recorded absolute evidence path")
+            path = base / path
+        path = path.absolute()
+        expected = _sha(item["sha256"], f"{item_label}.sha256", stage)
+        if path.is_symlink() or not path.is_file():
+            raise AtomError(stage, f"{label} is unavailable or linked at {path}; provide the recorded regular file")
+        actual = _digest(path.read_bytes())
+        if actual != expected:
+            raise AtomError(stage, f"{label} has SHA-256 {actual} at {path}; require recorded {expected}")
+        identity = (case_id, str(path))
+        if identity in identities:
+            raise AtomError(stage, f"{label} repeats case {case_id!r} path {str(path)!r}; keep each proof once")
+        identities.append(identity)
+        normalized.append({"case_id": case_id, "path": str(path), "sha256": expected})
+    return normalized
+
+
+def _case_evidence(
+    value: object,
+    label: str,
+    stage: str,
+    declared_case_ids: list[str],
+) -> list[dict[str, object]]:
+    if type(value) is not list:
+        raise AtomError(stage, f"{label} is not one ordered list")
+    normalized = []
+    observed = []
+    case_ids = set(declared_case_ids)
+    for index, raw in enumerate(value):
+        item = _exact(raw, f"{label}[{index}]", CASE_EVIDENCE_FIELDS, stage)
+        case_id = _nonempty(item["case_id"], f"{label}[{index}].case_id", stage)
+        observed.append(case_id)
+        normalized.append(
+            {
+                "case_id": case_id,
+                "evidence": _evidence(
+                    item["evidence"],
+                    f"{label}[{index}].evidence",
+                    stage,
+                    case_ids,
+                    required_case_id=case_id,
+                ),
+            }
+        )
+    if observed != declared_case_ids:
+        raise AtomError(stage, f"{label} cases are {observed!r}; require exact order {declared_case_ids!r}")
+    return normalized
+
+
 def _relative_path(value: str, label: str, stage: str) -> str:
     path = Path(value)
     if path.is_absolute() or value in {"", "."} or ".." in path.parts:
         raise AtomError(stage, f"{label} is {value!r}; provide one safe repository-relative path")
     return path.as_posix().rstrip("/")
+
+
+def _snapshot(repository_root: Path, allowed_paths: list[str], stage: str) -> list[dict[str, object]]:
+    files: dict[str, dict[str, object]] = {}
+    for boundary in allowed_paths:
+        target = repository_root / boundary
+        if not target.exists():
+            continue
+        if target.is_symlink():
+            raise AtomError(stage, f"allowed path {boundary!r} is linked; require repository-owned regular files")
+        if target.is_file():
+            candidates = [target]
+        elif target.is_dir():
+            candidates = sorted(target.rglob("*"))
+        else:
+            raise AtomError(stage, f"allowed path {boundary!r} has an unsupported file type")
+        for candidate in candidates:
+            relative = candidate.relative_to(repository_root).as_posix()
+            if candidate.is_symlink():
+                raise AtomError(stage, f"allowed path contains linked entry {relative!r}; require regular files")
+            if candidate.is_dir():
+                continue
+            if not candidate.is_file():
+                raise AtomError(stage, f"allowed path contains unsupported entry {relative!r}")
+            payload = candidate.read_bytes()
+            files[relative] = {
+                "path": relative,
+                "sha256": _digest(payload),
+                "size": len(payload),
+                "mode": candidate.stat().st_mode & 0o777,
+            }
+    return [files[path] for path in sorted(files)]
+
+
+def _baseline_document(request: dict[str, Any], repository_root: Path) -> dict[str, object]:
+    return {
+        "schema_version": CONTRACT,
+        "atomic_step_id": request["atomic_step_id"],
+        "repository_root": str(repository_root),
+        "allowed_paths": request["allowed_paths"],
+        "files": _snapshot(repository_root, request["allowed_paths"], "start"),
+    }
+
+
+def _validate_snapshot_files(value: object, label: str, stage: str) -> list[dict[str, object]]:
+    if type(value) is not list:
+        raise AtomError(stage, f"{label} is not one ordered list")
+    normalized = []
+    paths = []
+    for index, raw in enumerate(value):
+        item = _exact(raw, f"{label}[{index}]", SNAPSHOT_FILE_FIELDS, stage)
+        path = _relative_path(_nonempty(item["path"], f"{label}[{index}].path", stage), f"{label}[{index}].path", stage)
+        sha256 = _sha(item["sha256"], f"{label}[{index}].sha256", stage)
+        size = item["size"]
+        if type(size) is not int or size < 0:
+            raise AtomError(stage, f"{label}[{index}].size is {size!r}; provide one nonnegative integer")
+        mode = item["mode"]
+        if type(mode) is not int or not 0 <= mode <= 0o777:
+            raise AtomError(stage, f"{label}[{index}].mode is {mode!r}; provide one permission-mode integer")
+        paths.append(path)
+        normalized.append({"path": path, "sha256": sha256, "size": size, "mode": mode})
+    if paths != sorted(set(paths)):
+        raise AtomError(stage, f"{label} paths are not unique lexical order; restore the controller-written snapshot")
+    return normalized
+
+
+def _baseline(run: Path, request: dict[str, Any]) -> tuple[dict[str, Any], str] | None:
+    records, _ = _read_ledger(run)
+    root = records[0]["payload"]
+    legacy_fields = {"atomic_step_id", "request_sha256"}
+    current_fields = legacy_fields | {"baseline_sha256", "repository_root"}
+    if set(root) == legacy_fields:
+        return None
+    root = _exact(root, "atom-started payload", current_fields, "load-run")
+    baseline_path = run / "inputs" / "change-baseline.json"
+    _unchanged(baseline_path, root["baseline_sha256"], "recorded change baseline")
+    value = _exact(_load(baseline_path, "recorded change baseline", "load-run"), "change baseline", BASELINE_FIELDS, "load-run")
+    if value["schema_version"] != CONTRACT or type(value["schema_version"]) is not int:
+        raise AtomError("load-run", f"change baseline schema_version is {value['schema_version']!r}; require integer 1")
+    if value["atomic_step_id"] != request["atomic_step_id"]:
+        raise AtomError("load-run", "change baseline atomic_step_id differs from the preserved atom request")
+    repository_root = _nonempty(value["repository_root"], "change baseline repository_root", "load-run")
+    if repository_root != root["repository_root"] or not Path(repository_root).is_absolute():
+        raise AtomError("load-run", "change baseline repository_root differs from the atom-started boundary")
+    if value["allowed_paths"] != request["allowed_paths"]:
+        raise AtomError("load-run", "change baseline allowed_paths differ from the preserved atom request")
+    value["files"] = _validate_snapshot_files(value["files"], "change baseline files", "load-run")
+    return value, root["baseline_sha256"]
+
+
+def _derive_change_surface(run: Path, request: dict[str, Any]) -> dict[str, object]:
+    context = _baseline(run, request)
+    if context is None:
+        raise AtomError("change-surface", "this run predates change baselines; start a fresh run with the upgraded controller")
+    baseline, baseline_sha256 = context
+    repository_root = Path(baseline["repository_root"])
+    current = _snapshot(repository_root, request["allowed_paths"], "change-surface")
+    before = {item["path"]: item for item in baseline["files"]}
+    after = {item["path"]: item for item in current}
+    changes = []
+    for path in sorted(set(before) | set(after)):
+        prior = before.get(path)
+        present = after.get(path)
+        if (
+            prior is not None
+            and present is not None
+            and prior["sha256"] == present["sha256"]
+            and prior["mode"] == present["mode"]
+        ):
+            continue
+        kind = "added" if prior is None else "deleted" if present is None else "changed"
+        changes.append(
+            {
+                "path": path,
+                "kind": kind,
+                "before_sha256": None if prior is None else prior["sha256"],
+                "after_sha256": None if present is None else present["sha256"],
+                "before_mode": None if prior is None else prior["mode"],
+                "after_mode": None if present is None else present["mode"],
+            }
+        )
+    return {
+        "schema_version": CONTRACT,
+        "atomic_step_id": request["atomic_step_id"],
+        "repository_root": str(repository_root),
+        "baseline_sha256": baseline_sha256,
+        "changes": changes,
+    }
+
+
+def _file_reference(value: object, label: str, stage: str, *, base: Path | None = None) -> dict[str, str]:
+    item = _exact(value, label, FILE_REFERENCE_FIELDS, stage)
+    path_text = _nonempty(item["path"], f"{label}.path", stage)
+    path = Path(path_text)
+    if not path.is_absolute():
+        if base is None:
+            raise AtomError(stage, f"{label}.path is relative; restore the recorded absolute path")
+        path = base / path
+    path = path.absolute()
+    expected = _sha(item["sha256"], f"{label}.sha256", stage)
+    if path.is_symlink() or not path.is_file():
+        raise AtomError(stage, f"{label} is unavailable or linked at {path}; provide the recorded regular file")
+    actual = _digest(path.read_bytes())
+    if actual != expected:
+        raise AtomError(stage, f"{label} has SHA-256 {actual} at {path}; require recorded {expected}")
+    return {"path": str(path), "sha256": expected}
+
+
+def _validate_review(path: Path, surface_sha256: str, label: str, stage: str) -> None:
+    review = _exact(_load(path, label, stage), label, REVIEW_FIELDS, stage)
+    if review["schema_version"] != CONTRACT or type(review["schema_version"]) is not int:
+        raise AtomError(stage, f"{label} schema_version is {review['schema_version']!r}; require integer 1")
+    if review["status"] != "completed" or review["verdict"] != "passed":
+        raise AtomError(stage, f"{label} status/verdict is {review['status']!r}/{review['verdict']!r}; require completed/passed")
+    if review["change_surface_sha256"] != surface_sha256:
+        raise AtomError(
+            stage,
+            f"{label} change_surface_sha256 is {review['change_surface_sha256']!r}; require {surface_sha256!r}",
+        )
+    if review["blocking_findings"] != []:
+        raise AtomError(stage, f"{label} blocking_findings is {review['blocking_findings']!r}; resolve every finding")
 
 
 def _validate_request(value: object) -> dict[str, Any]:
@@ -274,12 +533,11 @@ def _append(run: Path, event: str, payload: dict[str, Any]) -> str:
 def _request(run: Path) -> dict[str, Any]:
     value = _validate_request(_load(run / "inputs" / "atom-request.json", "stored atom request", "load-run"))
     records, _ = _read_ledger(run)
-    root = _exact(
-        records[0]["payload"],
-        "atom-started payload",
-        {"atomic_step_id", "request_sha256"},
-        "load-run",
-    )
+    root = records[0]["payload"]
+    legacy_fields = {"atomic_step_id", "request_sha256"}
+    current_fields = legacy_fields | {"baseline_sha256", "repository_root"}
+    if frozenset(root) not in {frozenset(legacy_fields), frozenset(current_fields)}:
+        _exact(root, "atom-started payload", current_fields, "load-run")
     if root["atomic_step_id"] != value["atomic_step_id"]:
         raise AtomError(
             "load-run",
@@ -290,6 +548,7 @@ def _request(run: Path) -> dict[str, Any]:
     actual = _digest((run / "inputs" / "atom-request.json").read_bytes())
     if actual != expected:
         raise AtomError("load-run", f"stored atom request has SHA-256 {actual}; require recorded {expected}")
+    _baseline(run, value)
     return value
 
 
@@ -308,7 +567,8 @@ def _state(run: Path) -> dict[str, Any]:
     request = _request(run)
     records, hashes = _read_ledger(run)
     stage = "experiment"
-    next_skill = "experiment-machinery"
+    next_skill = "prototype-driven-implementation"
+    required_capability = "experiment-machinery"
     current_experiment = None
     current_promotion = None
     for record, event_sha256 in zip(records[1:], hashes[1:]):
@@ -334,24 +594,44 @@ def _state(run: Path) -> dict[str, Any]:
             if payload["verdict"] == "passed":
                 stage = "promotion"
                 next_skill = "prototype-driven-implementation"
+                required_capability = "promotion"
                 current_experiment = {**payload, "event_sha256": event_sha256}
                 current_promotion = None
             else:
                 stage = "experiment"
-                next_skill = "experiment-machinery"
+                next_skill = "prototype-driven-implementation"
+                required_capability = "experiment-machinery"
                 current_experiment = None
                 current_promotion = None
         elif record["event"] == "promotion-recorded":
             if stage != "promotion" or current_experiment is None:
                 raise AtomError("load-run", f"promotion-recorded appears during {stage!r}; restore the valid event order")
-            payload = _exact(record["payload"], "promotion-recorded payload", PROMOTION_EVENT_FIELDS, "load-run")
+            baseline = _baseline(run, request)
+            event_fields = LEGACY_PROMOTION_EVENT_FIELDS if baseline is None else PROMOTION_EVENT_FIELDS
+            payload = _exact(record["payload"], "promotion-recorded payload", event_fields, "load-run")
             _unchanged(payload["receipt_path"], payload["receipt_sha256"], "recorded promotion receipt")
             if payload["experiment_event_sha256"] != current_experiment["event_sha256"]:
                 raise AtomError("load-run", "promotion receipt is not bound to the current passed experiment event")
             if payload["assembly_sha256"] != current_experiment["assembly_sha256"]:
                 raise AtomError("load-run", "promotion receipt is not bound to the current proven assembly")
+            _evidence(
+                payload["evidence"],
+                "recorded promotion evidence",
+                "load-run",
+                {case["case_id"] for case in request["captured_cases"]},
+            )
+            if baseline is not None:
+                surface = _file_reference(payload["change_surface"], "recorded promotion change surface", "load-run")
+                review = _file_reference(payload["review"], "recorded promotion review", "load-run")
+                _validate_review(
+                    Path(review["path"]),
+                    surface["sha256"],
+                    "recorded promotion review",
+                    "load-run",
+                )
             stage = "validation"
-            next_skill = "atom-building-machinery"
+            next_skill = "prototype-driven-implementation"
+            required_capability = "real-path-validation"
             current_promotion = {**payload, "event_sha256": event_sha256}
         elif record["event"] == "validation-recorded":
             if stage != "validation" or current_promotion is None:
@@ -362,12 +642,20 @@ def _state(run: Path) -> dict[str, Any]:
                 raise AtomError("load-run", "validation receipt is not bound to the current promotion event")
             if payload["verdict"] not in {"passed", "failed"}:
                 raise AtomError("load-run", f"validation verdict is {payload['verdict']!r}; restore 'passed' or 'failed'")
+            _case_evidence(
+                payload["case_evidence"],
+                "recorded validation evidence",
+                "load-run",
+                [case["case_id"] for case in request["captured_cases"]],
+            )
             if payload["verdict"] == "passed":
                 stage = "complete"
                 next_skill = None
+                required_capability = None
             else:
                 stage = "experiment"
-                next_skill = "experiment-machinery"
+                next_skill = "prototype-driven-implementation"
+                required_capability = "experiment-machinery"
                 current_experiment = None
                 current_promotion = None
         else:
@@ -377,6 +665,7 @@ def _state(run: Path) -> dict[str, Any]:
         "atomic_step_id": request["atomic_step_id"],
         "stage": stage,
         "next_skill": next_skill,
+        "required_capability": required_capability,
         "event_count": len(records),
         "latest_event_sha256": hashes[-1],
         "current_experiment": current_experiment,
@@ -390,16 +679,38 @@ def start(request_path: Path, run: Path) -> dict[str, Any]:
     if run.exists() and (not run.is_dir() or any(run.iterdir())):
         raise AtomError("start", f"run directory must be new or empty: {run}")
     request = _validate_request(_load(request_path, "atom request", "validate-request"))
+    repository_root = Path.cwd().resolve()
+    baseline = _baseline_document(request, repository_root)
     run.mkdir(parents=True, exist_ok=True)
     request_sha256 = _write_new(run / "inputs" / "atom-request.json", _document(request))
+    baseline_sha256 = _write_new(run / "inputs" / "change-baseline.json", _document(baseline))
     first = {
         "sequence": 1,
         "event": "atom-started",
         "previous_event_sha256": None,
-        "payload": {"atomic_step_id": request["atomic_step_id"], "request_sha256": request_sha256},
+        "payload": {
+            "atomic_step_id": request["atomic_step_id"],
+            "request_sha256": request_sha256,
+            "baseline_sha256": baseline_sha256,
+            "repository_root": str(repository_root),
+        },
     }
     _write_new(run / "ledger.jsonl", json.dumps(first, sort_keys=True, separators=(",", ":")).encode("utf-8") + b"\n")
     return _state(run)
+
+
+def change_surface(run: Path, output: Path) -> dict[str, Any]:
+    run = run.absolute()
+    output = output.absolute()
+    request = _request(run)
+    surface = _derive_change_surface(run, request)
+    sha256 = _write_new(output, _document(surface))
+    return {
+        "schema_version": CONTRACT,
+        "atomic_step_id": request["atomic_step_id"],
+        "change_surface": {"path": str(output), "sha256": sha256},
+        "changed_paths": [item["path"] for item in surface["changes"]],
+    }
 
 
 def _validate_stage_receipts(value: object) -> None:
@@ -524,7 +835,7 @@ def record_experiment(run: Path, experiment: Path) -> dict[str, Any]:
     declared_ids = [item["case_id"] for item in request["captured_cases"]]
     observed_ids = []
     for index, raw in enumerate(cases):
-        case = _exact(raw, f"final verdict cases[{index}]", FINAL_CASE_FIELDS, "record-experiment")
+        case = _exact(raw, f"final verdict cases[{index}]", EXPERIMENT_CASE_FIELDS, "record-experiment")
         observed_ids.append(case["case_id"])
         if case["verdict"] not in CASE_VERDICTS:
             problems.append(f"case {case['case_id']!r} verdict must be one of {sorted(CASE_VERDICTS)!r}")
@@ -557,8 +868,15 @@ def record_promotion(run: Path, receipt_path: Path) -> dict[str, Any]:
     if state["stage"] != "promotion":
         raise AtomError("record-promotion", f"current stage is {state['stage']!r}; require 'promotion'")
     request = _request(run)
+    baseline = _baseline(run, request)
     receipt_path = receipt_path.absolute()
-    receipt = _exact(_load(receipt_path, "promotion receipt", "record-promotion"), "promotion receipt", PROMOTION_FIELDS, "record-promotion")
+    receipt_fields = LEGACY_PROMOTION_FIELDS if baseline is None else PROMOTION_FIELDS
+    receipt = _exact(
+        _load(receipt_path, "promotion receipt", "record-promotion"),
+        "promotion receipt",
+        receipt_fields,
+        "record-promotion",
+    )
     current = state["current_experiment"]
     problems = []
     if receipt["schema_version"] != CONTRACT or type(receipt["schema_version"]) is not int:
@@ -578,7 +896,43 @@ def record_promotion(run: Path, receipt_path: Path) -> dict[str, Any]:
     outside = [item for item in normalized if not _within(item, request["allowed_paths"])]
     if outside:
         problems.append(f"changed_paths {outside!r} fall outside allowed_paths {request['allowed_paths']!r}")
-    _strings(receipt["evidence_pointers"], "evidence_pointers", "record-promotion")
+    evidence = _evidence(
+        receipt["evidence"],
+        "evidence",
+        "record-promotion",
+        {case["case_id"] for case in request["captured_cases"]},
+        base=receipt_path.parent,
+    )
+    surface = None
+    review = None
+    if baseline is not None:
+        surface = _file_reference(
+            receipt["change_surface"],
+            "change surface",
+            "record-promotion",
+            base=receipt_path.parent,
+        )
+        recorded_surface = _exact(
+            _load(Path(surface["path"]), "change surface", "record-promotion"),
+            "change surface",
+            CHANGE_SURFACE_FIELDS,
+            "record-promotion",
+        )
+        actual_surface = _derive_change_surface(run, request)
+        if recorded_surface != actual_surface:
+            problems.append("change surface is stale or substituted; regenerate it from the current allowed paths")
+        actual_paths = [item["path"] for item in actual_surface["changes"]]
+        if normalized != actual_paths:
+            problems.append(
+                f"changed_paths are {normalized!r}; require exact derived change surface {actual_paths!r}"
+            )
+        review = _file_reference(
+            receipt["review"],
+            "review",
+            "record-promotion",
+            base=receipt_path.parent,
+        )
+        _validate_review(Path(review["path"]), surface["sha256"], "review", "record-promotion")
     if problems:
         raise AtomError("record-promotion", "; ".join(problems))
     payload = {
@@ -587,7 +941,11 @@ def record_promotion(run: Path, receipt_path: Path) -> dict[str, Any]:
         "experiment_event_sha256": current["event_sha256"],
         "assembly_sha256": current["assembly_sha256"],
         "changed_paths": normalized,
+        "evidence": evidence,
     }
+    if surface is not None and review is not None:
+        payload["change_surface"] = surface
+        payload["review"] = review
     _append(run, "promotion-recorded", payload)
     return _state(run)
 
@@ -617,15 +975,29 @@ def record_validation(run: Path, receipt_path: Path) -> dict[str, Any]:
     declared_ids = [item["case_id"] for item in request["captured_cases"]]
     observed_ids = []
     statuses = []
+    case_evidence = []
+    declared_case_set = set(declared_ids)
     for index, raw in enumerate(cases):
-        case = _exact(raw, f"cases[{index}]", FINAL_CASE_FIELDS, "record-validation")
+        case = _exact(raw, f"cases[{index}]", VALIDATION_CASE_FIELDS, "record-validation")
         case_id = _nonempty(case["case_id"], f"cases[{index}].case_id", "record-validation")
         observed_ids.append(case_id)
         if case["verdict"] not in CASE_VERDICTS:
             problems.append(f"case {case_id!r} verdict must be one of {sorted(CASE_VERDICTS)!r}")
         statuses.append(case["verdict"])
         _nonempty(case["reason"], f"case {case_id!r} reason", "record-validation")
-        _strings(case["evidence_pointers"], f"case {case_id!r} evidence_pointers", "record-validation")
+        case_evidence.append(
+            {
+                "case_id": case_id,
+                "evidence": _evidence(
+                    case["evidence"],
+                    f"case {case_id!r} evidence",
+                    "record-validation",
+                    declared_case_set,
+                    base=receipt_path.parent,
+                    required_case_id=case_id,
+                ),
+            }
+        )
     if observed_ids != declared_ids:
         problems.append(f"cases are {observed_ids!r}; require exact order {declared_ids!r}")
     if problems:
@@ -636,6 +1008,7 @@ def record_validation(run: Path, receipt_path: Path) -> dict[str, Any]:
         "receipt_sha256": _digest(receipt_path.read_bytes()),
         "promotion_event_sha256": promotion["event_sha256"],
         "verdict": verdict,
+        "case_evidence": case_evidence,
     }
     _append(run, "validation-recorded", payload)
     return _state(run)
@@ -646,7 +1019,7 @@ def authorize_next(run: Path) -> dict[str, Any]:
     if state["stage"] != "complete":
         raise AtomError(
             "authorize-next",
-            f"current stage is {state['stage']!r}; finish the reported next_skill before selecting another atom",
+            f"current stage is {state['stage']!r}; finish the reported required_capability before selecting another atom",
         )
     return {
         "schema_version": CONTRACT,
@@ -664,6 +1037,9 @@ def main() -> int:
     start_parser.add_argument("run", type=Path)
     status_parser = commands.add_parser("status")
     status_parser.add_argument("run", type=Path)
+    surface_parser = commands.add_parser("change-surface")
+    surface_parser.add_argument("run", type=Path)
+    surface_parser.add_argument("output", type=Path)
     experiment_parser = commands.add_parser("record-experiment")
     experiment_parser.add_argument("run", type=Path)
     experiment_parser.add_argument("experiment", type=Path)
@@ -681,6 +1057,8 @@ def main() -> int:
             result = start(args.request, args.run)
         elif args.command == "status":
             result = _state(args.run.absolute())
+        elif args.command == "change-surface":
+            result = change_surface(args.run, args.output)
         elif args.command == "record-experiment":
             result = record_experiment(args.run, args.experiment)
         elif args.command == "record-promotion":

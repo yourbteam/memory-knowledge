@@ -56,6 +56,15 @@ existing task artifact or plan mechanism when one exists. This skill is the cont
 create a second task-specific controller, installer, or supporting documentation merely to run the
 loop.
 
+## Use the atomic capability protocol when required
+
+When an approved implementation is one atom built through Development-Probe experiments, invoke
+`$atom-building-machinery` as PDI's bounded protocol. PDI retains the approved envelope, adaptive
+prototype loop, promotion decision, and completion responsibility throughout. Read the protocol's
+`required_capability` and perform only that capability: Experiment Machinery comparison,
+promotion, or real-path validation. Do not interpret `required_capability` as a lifecycle handoff;
+every incomplete atom state returns `next_skill: prototype-driven-implementation`.
+
 ## Pull bounded playbook support
 
 The standalone playbooks remain authoritative for standalone Research, Plan, Write-code, and

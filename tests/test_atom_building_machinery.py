@@ -20,9 +20,10 @@ def write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n")
 
 
-def invoke(*args: object) -> subprocess.CompletedProcess[str]:
+def invoke(*args: object, cwd: Path | None = None) -> subprocess.CompletedProcess[str]:
     return subprocess.run(
         [sys.executable, str(CONTROLLER), *(str(arg) for arg in args)],
+        cwd=cwd,
         text=True,
         capture_output=True,
         check=False,
@@ -126,10 +127,14 @@ def experiment(
 def start(tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]) -> Path:
     request_path = tmp_path / "request.json"
     run = tmp_path / "run"
+    write_json(tmp_path / "src" / "records" / "save.py", {"version": "baseline"})
+    write_json(tmp_path / "tests" / "records" / "test_save.py", {"version": "baseline"})
     write_json(request_path, request(assembly_fixture[1]))
-    result = invoke("start", request_path, run)
+    result = invoke("start", request_path, run, cwd=tmp_path)
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout)["next_skill"] == "experiment-machinery"
+    state = json.loads(result.stdout)
+    assert state["next_skill"] == "prototype-driven-implementation"
+    assert state["required_capability"] == "experiment-machinery"
     return run
 
 
@@ -139,8 +144,36 @@ def read_state(run: Path) -> dict[str, object]:
     return json.loads(result.stdout)
 
 
-def promotion_receipt(path: Path, state: dict[str, object]) -> None:
+def evidence(path: Path, case_id: str) -> dict[str, str]:
+    write_json(path, {"case_id": case_id, "observed": "expected operator-path result"})
+    return {
+        "case_id": case_id,
+        "path": str(path),
+        "sha256": hashlib.sha256(path.read_bytes()).hexdigest(),
+    }
+
+
+def promotion_receipt(path: Path, run: Path, state: dict[str, object]) -> None:
     current = state["current_experiment"]
+    root = run.parent
+    write_json(root / "src" / "records" / "save.py", {"version": "promoted"})
+    write_json(root / "tests" / "records" / "test_save.py", {"version": "promoted"})
+    surface_path = path.parent / "change-surface.json"
+    if not surface_path.exists():
+        surfaced = invoke("change-surface", run, surface_path)
+        assert surfaced.returncode == 0, surfaced.stderr
+    surface_sha256 = hashlib.sha256(surface_path.read_bytes()).hexdigest()
+    review_path = path.parent / "final-review.json"
+    write_json(
+        review_path,
+        {
+            "schema_version": 1,
+            "status": "completed",
+            "verdict": "passed",
+            "change_surface_sha256": surface_sha256,
+            "blocking_findings": [],
+        },
+    )
     write_json(
         path,
         {
@@ -151,7 +184,18 @@ def promotion_receipt(path: Path, state: dict[str, object]) -> None:
             "experiment_event_sha256": current["event_sha256"],
             "experiment_assembly_sha256": current["assembly_sha256"],
             "changed_paths": ["src/records/save.py", "tests/records/test_save.py"],
-            "evidence_pointers": ["pytest: tests/records/test_save.py"],
+            "change_surface": {
+                "path": str(surface_path),
+                "sha256": surface_sha256,
+            },
+            "review": {
+                "path": str(review_path),
+                "sha256": hashlib.sha256(review_path.read_bytes()).hexdigest(),
+            },
+            "evidence": [
+                evidence(path.parent / "promotion-evidence" / f"{case_id}.json", case_id)
+                for case_id in ("works", "refuses")
+            ],
         },
     )
 
@@ -169,7 +213,9 @@ def validation_receipt(path: Path, state: dict[str, object], verdict: str = "sat
                     "case_id": case_id,
                     "verdict": verdict,
                     "reason": "The real operator path produced the expected result.",
-                    "evidence_pointers": [f"real-path/{case_id}.json"],
+                    "evidence": [
+                        evidence(path.parent / "real-path" / f"{case_id}.json", case_id)
+                    ],
                 }
                 for case_id in ("works", "refuses")
             ],
@@ -187,23 +233,96 @@ def test_complete_journey_authorizes_next_atom(
     assert result.returncode == 0, result.stderr
     state = json.loads(result.stdout)
     assert state["stage"] == "promotion"
+    assert state["next_skill"] == "prototype-driven-implementation"
+    assert state["required_capability"] == "promotion"
 
     promotion_path = tmp_path / "promotion.json"
-    promotion_receipt(promotion_path, state)
+    promotion_receipt(promotion_path, run, state)
     result = invoke("record-promotion", run, promotion_path)
     assert result.returncode == 0, result.stderr
     state = json.loads(result.stdout)
     assert state["stage"] == "validation"
+    assert state["next_skill"] == "prototype-driven-implementation"
+    assert state["required_capability"] == "real-path-validation"
 
     validation_path = tmp_path / "validation.json"
     validation_receipt(validation_path, state)
     result = invoke("record-validation", run, validation_path)
     assert result.returncode == 0, result.stderr
-    assert json.loads(result.stdout)["stage"] == "complete"
+    completed = json.loads(result.stdout)
+    assert completed["stage"] == "complete"
+    assert completed["next_skill"] is None
+    assert completed["required_capability"] is None
 
     result = invoke("authorize-next", run)
     assert result.returncode == 0, result.stderr
     assert json.loads(result.stdout)["authorized"] is True
+
+
+def test_missing_or_mismatched_promotion_evidence_cannot_advance(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    experiment_path = tmp_path / "experiment"
+    experiment(experiment_path, assembly_fixture)
+    state = json.loads(invoke("record-experiment", run, experiment_path).stdout)
+    promotion_path = tmp_path / "promotion.json"
+    promotion_receipt(promotion_path, run, state)
+    receipt = json.loads(promotion_path.read_text())
+
+    Path(receipt["evidence"][0]["path"]).unlink()
+    missing = invoke("record-promotion", run, promotion_path)
+    assert missing.returncode == 2
+    assert "evidence is unavailable or linked" in missing.stderr
+
+    promotion_receipt(promotion_path, run, state)
+    receipt = json.loads(promotion_path.read_text())
+    receipt["evidence"][0]["sha256"] = "0" * 64
+    write_json(promotion_path, receipt)
+    mismatched = invoke("record-promotion", run, promotion_path)
+    assert mismatched.returncode == 2
+    assert "evidence has SHA-256" in mismatched.stderr
+
+
+def test_tampered_case_evidence_blocks_completed_run_resume(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    experiment_path = tmp_path / "experiment"
+    experiment(experiment_path, assembly_fixture)
+    state = json.loads(invoke("record-experiment", run, experiment_path).stdout)
+    promotion_path = tmp_path / "promotion.json"
+    promotion_receipt(promotion_path, run, state)
+    state = json.loads(invoke("record-promotion", run, promotion_path).stdout)
+    validation_path = tmp_path / "validation.json"
+    validation_receipt(validation_path, state)
+    assert invoke("record-validation", run, validation_path).returncode == 0
+
+    receipt = json.loads(validation_path.read_text())
+    Path(receipt["cases"][0]["evidence"][0]["path"]).write_text("changed\n")
+    result = invoke("authorize-next", run)
+    assert result.returncode == 2
+    assert "recorded validation evidence" in result.stderr
+    assert "has SHA-256" in result.stderr
+
+
+def test_tampered_promotion_evidence_blocks_validation_resume(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    experiment_path = tmp_path / "experiment"
+    experiment(experiment_path, assembly_fixture)
+    state = json.loads(invoke("record-experiment", run, experiment_path).stdout)
+    promotion_path = tmp_path / "promotion.json"
+    promotion_receipt(promotion_path, run, state)
+    assert invoke("record-promotion", run, promotion_path).returncode == 0
+
+    receipt = json.loads(promotion_path.read_text())
+    Path(receipt["evidence"][0]["path"]).write_text("changed\n")
+    result = invoke("status", run)
+    assert result.returncode == 2
+    assert "recorded promotion evidence" in result.stderr
+    assert "has SHA-256" in result.stderr
 
 
 def test_refuses_premature_promotion_completion_and_next_atom(
@@ -218,7 +337,7 @@ def test_refuses_premature_promotion_completion_and_next_atom(
     assert promotion.returncode == validation.returncode == next_atom.returncode == 2
     assert "require 'promotion'" in promotion.stderr
     assert "require 'validation'" in validation.stderr
-    assert "finish the reported next_skill" in next_atom.stderr
+    assert "finish the reported required_capability" in next_atom.stderr
 
 
 def test_failed_experiment_is_preserved_and_routes_back_to_experiment(
@@ -231,7 +350,8 @@ def test_failed_experiment_is_preserved_and_routes_back_to_experiment(
     assert result.returncode == 0, result.stderr
     state = json.loads(result.stdout)
     assert state["stage"] == "experiment"
-    assert state["next_skill"] == "experiment-machinery"
+    assert state["next_skill"] == "prototype-driven-implementation"
+    assert state["required_capability"] == "experiment-machinery"
     assert state["event_count"] == 2
 
 
@@ -261,7 +381,7 @@ def test_failed_real_path_routes_back_to_experiment(
     result = invoke("record-experiment", run, experiment_path)
     state = json.loads(result.stdout)
     promotion_path = tmp_path / "promotion.json"
-    promotion_receipt(promotion_path, state)
+    promotion_receipt(promotion_path, run, state)
     result = invoke("record-promotion", run, promotion_path)
     state = json.loads(result.stdout)
     validation_path = tmp_path / "validation.json"
@@ -270,7 +390,8 @@ def test_failed_real_path_routes_back_to_experiment(
     assert result.returncode == 0, result.stderr
     state = json.loads(result.stdout)
     assert state["stage"] == "experiment"
-    assert state["next_skill"] == "experiment-machinery"
+    assert state["next_skill"] == "prototype-driven-implementation"
+    assert state["required_capability"] == "experiment-machinery"
 
 
 def test_tampered_ledger_is_refused(
@@ -292,7 +413,7 @@ def test_overwritten_receipt_blocks_completed_run_resume(
     experiment(experiment_path, assembly_fixture)
     state = json.loads(invoke("record-experiment", run, experiment_path).stdout)
     promotion_path = tmp_path / "promotion.json"
-    promotion_receipt(promotion_path, state)
+    promotion_receipt(promotion_path, run, state)
     state = json.loads(invoke("record-promotion", run, promotion_path).stdout)
     validation_path = tmp_path / "validation.json"
     validation_receipt(validation_path, state)
@@ -319,3 +440,111 @@ def test_replaced_assembly_blocks_promotion_resume(
 
     assert result.returncode == 2
     assert "Experiment Machinery refused the recorded assembly" in result.stderr
+
+
+def test_change_surface_excludes_unchanged_preexisting_allowed_files(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    write_json(tmp_path / "src" / "records" / "save.py", {"version": "promoted"})
+    surface_path = tmp_path / "surface.json"
+
+    result = invoke("change-surface", run, surface_path)
+
+    assert result.returncode == 0, result.stderr
+    surface = json.loads(surface_path.read_text())
+    assert [item["path"] for item in surface["changes"]] == ["src/records/save.py"]
+    assert surface["changes"][0]["kind"] == "changed"
+
+
+def test_change_surface_includes_permission_only_changes(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    changed = tmp_path / "src" / "records" / "save.py"
+    changed.chmod(0o755)
+    surface_path = tmp_path / "surface.json"
+
+    result = invoke("change-surface", run, surface_path)
+
+    assert result.returncode == 0, result.stderr
+    change = json.loads(surface_path.read_text())["changes"][0]
+    assert change["path"] == "src/records/save.py"
+    assert change["before_sha256"] == change["after_sha256"]
+    assert change["before_mode"] != change["after_mode"]
+
+
+def test_promotion_refuses_changed_paths_that_differ_from_actual_surface(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    experiment_path = tmp_path / "experiment"
+    experiment(experiment_path, assembly_fixture)
+    state = json.loads(invoke("record-experiment", run, experiment_path).stdout)
+    promotion_path = tmp_path / "promotion.json"
+    promotion_receipt(promotion_path, run, state)
+    receipt = json.loads(promotion_path.read_text())
+    receipt["changed_paths"][1] = "tests/records/invented.py"
+    write_json(promotion_path, receipt)
+
+    result = invoke("record-promotion", run, promotion_path)
+
+    assert result.returncode == 2
+    assert "changed_paths" in result.stderr
+    assert "exact derived change surface" in result.stderr
+
+
+def test_promotion_requires_present_current_untampered_review(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    experiment_path = tmp_path / "experiment"
+    experiment(experiment_path, assembly_fixture)
+    state = json.loads(invoke("record-experiment", run, experiment_path).stdout)
+    promotion_path = tmp_path / "promotion.json"
+    promotion_receipt(promotion_path, run, state)
+    receipt = json.loads(promotion_path.read_text())
+    review_path = Path(receipt["review"]["path"])
+
+    review_path.unlink()
+    missing = invoke("record-promotion", run, promotion_path)
+    assert missing.returncode == 2
+    assert "review is unavailable or linked" in missing.stderr
+
+    promotion_receipt(promotion_path, run, state)
+    receipt = json.loads(promotion_path.read_text())
+    review_path = Path(receipt["review"]["path"])
+    review = json.loads(review_path.read_text())
+    review["change_surface_sha256"] = "0" * 64
+    write_json(review_path, review)
+    receipt["review"]["sha256"] = hashlib.sha256(review_path.read_bytes()).hexdigest()
+    write_json(promotion_path, receipt)
+    stale = invoke("record-promotion", run, promotion_path)
+    assert stale.returncode == 2
+    assert "review change_surface_sha256" in stale.stderr
+
+    promotion_receipt(promotion_path, run, state)
+    receipt = json.loads(promotion_path.read_text())
+    Path(receipt["review"]["path"]).write_text("tampered\n")
+    tampered = invoke("record-promotion", run, promotion_path)
+    assert tampered.returncode == 2
+    assert "review has SHA-256" in tampered.stderr
+
+
+def test_tampered_review_blocks_promotion_resume(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    experiment_path = tmp_path / "experiment"
+    experiment(experiment_path, assembly_fixture)
+    state = json.loads(invoke("record-experiment", run, experiment_path).stdout)
+    promotion_path = tmp_path / "promotion.json"
+    promotion_receipt(promotion_path, run, state)
+    assert invoke("record-promotion", run, promotion_path).returncode == 0
+    receipt = json.loads(promotion_path.read_text())
+    Path(receipt["review"]["path"]).write_text("tampered\n")
+
+    result = invoke("status", run)
+
+    assert result.returncode == 2
+    assert "recorded promotion review has SHA-256" in result.stderr
