@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -127,7 +128,7 @@ Path(sys.argv[2]).write_text(json.dumps({"schema_version": 1, "scores": scores},
     spec.write_text(
         json.dumps(
             {
-                "schema_version": 3,
+                "schema_version": 4,
                 "experiment_id": "intake-purpose-assessment",
                 "hypothesis": (
                     "The unchanged Intake purpose phase can compare isolated setups from one "
@@ -146,6 +147,10 @@ Path(sys.argv[2]).write_text(json.dumps({"schema_version": 1, "scores": scores},
                 "frozen_input": {
                     "path": frozen.name,
                     "sha256": input_sha256 or _digest(frozen),
+                },
+                "execution_limits": {
+                    "variant_timeout_ms": 5000,
+                    "evaluator_timeout_ms": 5000,
                 },
                 "variants": [
                     {
@@ -354,10 +359,15 @@ def _independent_scoring_spec(tmp_path: Path) -> tuple[Path, Path]:
         """from __future__ import annotations
 import json
 import os
+import time
 from pathlib import Path
 
 variant = json.loads(Path(os.environ["EXPERIMENT_VARIANT_PATH"]).read_text(encoding="utf-8"))
 configuration = variant["configuration"]
+print("candidate-started", flush=True)
+if configuration.get("hang"):
+    while True:
+        time.sleep(1)
 result = {
     "schema_version": 1,
     "variant_id": variant["variant_id"],
@@ -387,7 +397,7 @@ Path(sys.argv[2]).write_text(json.dumps({"schema_version": 1, "scores": scores},
         encoding="utf-8",
     )
     spec = {
-        "schema_version": 3,
+        "schema_version": 4,
         "experiment_id": "independent-self-score",
         "hypothesis": "Candidate claims cannot determine the winner.",
         "target": {
@@ -397,6 +407,10 @@ Path(sys.argv[2]).write_text(json.dumps({"schema_version": 1, "scores": scores},
             "entrypoint": "entry.py",
         },
         "frozen_input": {"path": str(frozen), "sha256": _digest(frozen)},
+        "execution_limits": {
+            "variant_timeout_ms": 5000,
+            "evaluator_timeout_ms": 5000,
+        },
         "variants": [
             {
                 "id": "control",
@@ -453,3 +467,62 @@ def test_changed_evaluator_is_refused_before_variant_execution(tmp_path: Path) -
     assert completed.returncode == 2
     assert "evaluation.evaluator.adapter changed" in completed.stderr
     assert not output.exists()
+
+
+def test_hung_variant_is_terminated_and_preserved_without_blocking_a_champion(
+    tmp_path: Path,
+) -> None:
+    spec_path, _ = _independent_scoring_spec(tmp_path)
+    spec = json.loads(spec_path.read_text(encoding="utf-8"))
+    spec["execution_limits"]["variant_timeout_ms"] = 100
+    spec["variants"][0]["configuration"]["hang"] = True
+    spec_path.write_text(json.dumps(spec, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    output = tmp_path / "run"
+
+    started = time.monotonic()
+    completed = _run(spec_path, output)
+
+    assert completed.returncode == 0, completed.stderr
+    assert time.monotonic() - started < 2
+    summary = json.loads((output / "summary.json").read_text(encoding="utf-8"))
+    control = next(item for item in summary["variants"] if item["variant_id"] == "control")
+    assert control["timed_out"] is True
+    assert control["eligible"] is False
+    assert control["status"] == "failed"
+    assert summary["champion"] == "inflated"
+    assert "candidate-started" in (output / "variants" / "control" / "stdout.txt").read_text()
+    assert any(
+        record["event"] == "variant_finished" and record["timed_out"] is True
+        for record in _records(output / "ledger.jsonl")
+    )
+
+
+def test_hung_evaluator_is_terminated_with_terminal_summary_and_evidence(
+    tmp_path: Path,
+) -> None:
+    spec_path, evaluator = _independent_scoring_spec(tmp_path)
+    evaluator.write_text(
+        "import time\nprint('evaluator-started', flush=True)\nwhile True:\n    time.sleep(1)\n",
+        encoding="utf-8",
+    )
+    spec = json.loads(spec_path.read_text(encoding="utf-8"))
+    spec["execution_limits"]["evaluator_timeout_ms"] = 100
+    spec["evaluation"]["evaluator"]["adapter"]["sha256"] = _digest(evaluator)
+    spec_path.write_text(json.dumps(spec, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    output = tmp_path / "run"
+
+    started = time.monotonic()
+    completed = _run(spec_path, output)
+
+    assert completed.returncode == 3, completed.stderr
+    assert time.monotonic() - started < 2
+    summary = json.loads((output / "summary.json").read_text(encoding="utf-8"))
+    assert summary["status"] == "evaluator-timeout"
+    assert summary["champion"] is None
+    assert summary["evaluation_error"]["kind"] == "timeout"
+    assert (output / "evaluation" / "timeout.json").is_file()
+    assert "evaluator-started" in (output / "evaluation" / "stdout.txt").read_text()
+    assert [record["event"] for record in _records(output / "ledger.jsonl")][-2:] == [
+        "evaluator_timed_out",
+        "evaluation_completed",
+    ]

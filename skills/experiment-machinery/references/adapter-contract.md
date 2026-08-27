@@ -10,7 +10,7 @@ The runner accepts one JSON object:
 
 ```json
 {
-  "schema_version": 3,
+  "schema_version": 4,
   "experiment_id": "one-stable-id",
   "hypothesis": "One falsifiable sentence.",
   "target": {
@@ -20,6 +20,10 @@ The runner accepts one JSON object:
     "entrypoint": "scripts/phase_entry.py"
   },
   "frozen_input": {"path": "input.json", "sha256": "64 lowercase hex characters"},
+  "execution_limits": {
+    "variant_timeout_ms": 1800000,
+    "evaluator_timeout_ms": 600000
+  },
   "variants": [
     {
       "id": "control",

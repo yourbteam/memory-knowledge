@@ -1037,7 +1037,7 @@ def test_two_real_bundles_run_as_one_experiment_and_undeclared_case_is_refused(
         bundles[approach_id] = bundle
 
     spec = {
-        "schema_version": 3,
+        "schema_version": 4,
         "experiment_id": "candidate-bundle-real-comparison",
         "hypothesis": "Both immutable candidates run and the declared quality metric selects variation.",
         "target": {
@@ -1052,6 +1052,10 @@ def test_two_real_bundles_run_as_one_experiment_and_undeclared_case_is_refused(
         "frozen_input": {
             "path": json.loads(manifest.read_text())["atomic_step"]["captured_cases"][0]["source"],
             "sha256": json.loads(manifest.read_text())["atomic_step"]["captured_cases"][0]["sha256"],
+        },
+        "execution_limits": {
+            "variant_timeout_ms": 5000,
+            "evaluator_timeout_ms": 5000,
         },
         "variants": [
             {
@@ -1153,6 +1157,12 @@ def test_launcher_runs_every_approach_and_preserves_exact_recommendation(
     summary = json.loads((output / "experiment" / "summary.json").read_text())
     assert summary["champion"] == "variation-2"
     assert all(row["eligible"] for row in summary["variants"])
+    experiment_spec = json.loads((output / "experiment.json").read_text())
+    assert experiment_spec["schema_version"] == 4
+    assert experiment_spec["execution_limits"] == {
+        "variant_timeout_ms": 1_800_000,
+        "evaluator_timeout_ms": 600_000,
+    }
     assert json.loads((output / "launch-summary.json").read_text())["status"] == "completed"
 
     repeated = _launch(request_path, output)

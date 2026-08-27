@@ -137,6 +137,11 @@ valid. The rank-one champion must map to exactly one bundle whose probe, case me
 digest still match. Failure at any boundary writes `launch-summary.json`, retains existing build or
 experiment evidence, and writes no recommendation. `promotion_applied` is always false.
 
+The launcher freezes separate generic-runner limits for its generated experiment: 30 minutes per
+variant and 10 minutes for the independent evaluator. These controller-owned limits are copied into
+the immutable experiment specification, so a Development-Probe run cannot wait forever while its
+existing request shape remains stable.
+
 ## Run one mini-probe across all declared cases
 
 Remove `case_id` from the single-case request and run:

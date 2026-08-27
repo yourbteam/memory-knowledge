@@ -17,6 +17,10 @@ from development_probe_manifest import ManifestError, validate_manifest
 
 CONTRACT = 1
 MAX_BUILD_WORKERS = 4
+DEVELOPMENT_PROBE_EXECUTION_LIMITS = {
+    "variant_timeout_ms": 1_800_000,
+    "evaluator_timeout_ms": 600_000,
+}
 
 
 class LaunchError(RuntimeError):
@@ -453,7 +457,7 @@ def _run_experiment(
     candidate = scripts / "development_probe_candidate.py"
     experiment_id = _experiment_id(manifest, probe["id"], case["id"], mappings)
     spec = {
-        "schema_version": 3,
+        "schema_version": 4,
         "experiment_id": experiment_id,
         "hypothesis": (
             f"Every approach declared by mini-probe {probe['id']!r} can run against "
@@ -469,6 +473,7 @@ def _run_experiment(
             "entrypoint": candidate.name,
         },
         "frozen_input": {"path": str(case_path), "sha256": case["sha256"]},
+        "execution_limits": DEVELOPMENT_PROBE_EXECUTION_LIMITS,
         "variants": [
             {
                 "id": item["variant_id"],
@@ -672,7 +677,13 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
         mappings = _variant_map(results)
         evaluator = _normalize_evaluator(request["evaluator"], request_path.parent)
         summary = _run_experiment(
-            output, manifest, probe, case, case_path, mappings, evaluator
+            output,
+            manifest,
+            probe,
+            case,
+            case_path,
+            mappings,
+            evaluator,
         )
         recommendation = _bind_recommendation(
             output, manifest, probe_id, case_id, summary, mappings

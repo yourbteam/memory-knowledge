@@ -150,8 +150,9 @@ once in the same declared order.
 ## Run one experiment
 
 1. Freeze one hypothesis, target machinery and phase, exact input file, constants, control,
-   variations, ordered ranking metrics, every variant adapter, and one independent evaluation
-   adapter in one JSON specification. Bind every adapter by path and SHA-256. Do not edit the
+   variations, ordered ranking metrics, every variant adapter, one independent evaluation
+   adapter, and separate positive millisecond deadlines for variants and the evaluator in one
+   version 4 JSON specification. Bind every adapter by path and SHA-256. Do not edit the
    specification after execution begins. Generate the target source-tree hash mechanically:
 
    ```bash
@@ -182,6 +183,10 @@ once in the same declared order.
 - Variant commands are argument arrays, never shell strings.
 - The parent runner alone writes the experiment ledger. Variant processes write only inside their
   assigned directory.
+- Every variant and evaluator process is started in its own process group and must finish within
+  the frozen `execution_limits`. An overrun is terminated, its partial stdout and stderr are
+  preserved, and the ledger plus terminal summary record the timeout. A timed-out variant is
+  ineligible; a timed-out evaluator produces no champion.
 - Candidate adapters report outcomes and may preserve claimed metrics for audit, but claimed
   metrics never participate in ranking. The one frozen independent evaluator receives all
   eligible outcomes in one code-owned request and must return one exact finite score set per

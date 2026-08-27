@@ -9,6 +9,7 @@ import json
 import math
 import os
 import re
+import signal
 import shutil
 import subprocess
 import sys
@@ -18,13 +19,22 @@ from pathlib import Path
 from typing import Any
 
 CONTRACT = 1
-SPEC_CONTRACT = 3
+SPEC_CONTRACT = 4
 _IDENTITY = re.compile(r"^[a-z0-9][a-z0-9-]{0,63}$")
 _SHA256 = re.compile(r"^[0-9a-f]{64}$")
 
 
 class ExperimentError(RuntimeError):
     """Raised when an experiment boundary is invalid."""
+
+
+class EvaluatorTimeout(ExperimentError):
+    """Raised after evaluator deadline evidence has been preserved."""
+
+    def __init__(self, timeout_ms: int, evidence_sha256: str) -> None:
+        super().__init__(f"independent evaluator exceeded its declared {timeout_ms} ms deadline")
+        self.timeout_ms = timeout_ms
+        self.evidence_sha256 = evidence_sha256
 
 
 def _canonical(value: object) -> bytes:
@@ -105,6 +115,12 @@ def _require_identity(value: object, label: str) -> str:
         raise ExperimentError(
             f"{label} must use 1-64 lowercase letters, digits, or hyphens and start alphanumeric"
         )
+    return value
+
+
+def _require_timeout_ms(value: object, label: str) -> int:
+    if type(value) is not int or value < 1 or value > 86_400_000:
+        raise ExperimentError(f"{label} must be an integer from 1 through 86400000")
     return value
 
 
@@ -223,6 +239,7 @@ def _validate_spec(
             "hypothesis",
             "target",
             "frozen_input",
+            "execution_limits",
             "variants",
             "evaluation",
         },
@@ -236,6 +253,17 @@ def _validate_spec(
     _require_identity(spec["experiment_id"], "experiment_id")
     if not isinstance(spec["hypothesis"], str) or not spec["hypothesis"].strip():
         raise ExperimentError("hypothesis must be a non-empty string")
+
+    execution_limits = spec["execution_limits"]
+    if not isinstance(execution_limits, dict):
+        raise ExperimentError("execution_limits must be an object")
+    _require_exact_keys(
+        execution_limits,
+        {"variant_timeout_ms", "evaluator_timeout_ms"},
+        "execution_limits",
+    )
+    _require_timeout_ms(execution_limits["variant_timeout_ms"], "execution_limits.variant_timeout_ms")
+    _require_timeout_ms(execution_limits["evaluator_timeout_ms"], "execution_limits.evaluator_timeout_ms")
 
     target = spec["target"]
     if not isinstance(target, dict):
@@ -495,6 +523,26 @@ def _read_variant_result(
     }
 
 
+def _signal_process_group(process: Any, selected_signal: signal.Signals) -> None:
+    try:
+        os.killpg(process.pid, selected_signal)
+    except (ProcessLookupError, PermissionError):
+        if process.returncode is None:
+            if selected_signal == signal.SIGTERM:
+                process.terminate()
+            else:
+                process.kill()
+
+
+async def _stop_async_process(process: Any) -> None:
+    _signal_process_group(process, signal.SIGTERM)
+    try:
+        await asyncio.wait_for(process.wait(), timeout=0.25)
+    except TimeoutError:
+        _signal_process_group(process, signal.SIGKILL)
+        await process.wait()
+
+
 async def _execute(
     spec: dict[str, Any],
     output: Path,
@@ -578,6 +626,7 @@ async def _execute(
                 env=env,
                 stdout=asyncio.subprocess.PIPE,
                 stderr=asyncio.subprocess.PIPE,
+                start_new_session=True,
             )
         except OSError as error:
             raise ExperimentError(
@@ -598,6 +647,7 @@ async def _execute(
                 "adapter_snapshot_sha256": _digest_file(adapter_snapshot),
                 "adapter_snapshot_path": str(adapter_snapshot.relative_to(output)),
                 "process_id": process.pid,
+                "timeout_ms": spec["execution_limits"]["variant_timeout_ms"],
             },
         )
         handles.append(
@@ -630,7 +680,23 @@ async def _execute(
             adapter,
             adapter_snapshot,
         ) = handle
-        stdout, stderr = await process.communicate()
+        stdout_task = asyncio.create_task(process.stdout.read())
+        stderr_task = asyncio.create_task(process.stderr.read())
+        timed_out = False
+        elapsed_seconds = (time.monotonic_ns() - started_ns) / 1_000_000_000
+        remaining_seconds = max(
+            0.0,
+            spec["execution_limits"]["variant_timeout_ms"] / 1000 - elapsed_seconds,
+        )
+        try:
+            if process.returncode is None:
+                await asyncio.wait_for(process.wait(), timeout=remaining_seconds)
+            else:
+                await process.wait()
+        except TimeoutError:
+            timed_out = True
+            await _stop_async_process(process)
+        stdout, stderr = await asyncio.gather(stdout_task, stderr_task)
         duration_ms = (time.monotonic_ns() - started_ns) // 1_000_000
         work = input_path.parent
         (work / "stdout.txt").write_bytes(stdout)
@@ -646,6 +712,14 @@ async def _execute(
             target_path,
             target_sha256,
         )
+        if timed_out:
+            record["status"] = "failed"
+            record["eligible"] = False
+            record["error"] = (
+                f"variant exceeded its declared "
+                f"{spec['execution_limits']['variant_timeout_ms']} ms deadline"
+            )
+            record["integrity_errors"].append(record["error"])
         if _digest_file(adapter["path"]) != adapter["sha256"]:
             record["integrity_errors"].append(
                 f"adapter changed during variant {variant['id']!r}"
@@ -661,6 +735,8 @@ async def _execute(
             {
                 "exit_code": int(process.returncode),
                 "duration_ms": duration_ms,
+                "timeout_ms": spec["execution_limits"]["variant_timeout_ms"],
+                "timed_out": timed_out,
                 "stdout_sha256": _digest_bytes(stdout),
                 "stderr_sha256": _digest_bytes(stderr),
                 "telemetry_sha256": _digest_file(telemetry) if telemetry.is_file() else None,
@@ -686,6 +762,8 @@ async def _execute(
                         "reported_metrics",
                         "exit_code",
                         "duration_ms",
+                        "timeout_ms",
+                        "timed_out",
                         "result_sha256",
                         "telemetry_sha256",
                         "stdout_sha256",
@@ -753,14 +831,61 @@ def _invoke_evaluator(
             "evaluator_sha256": evaluator["adapter"]["sha256"],
             "request_sha256": request_sha256,
             "candidate_ids": [row["variant_id"] for row in eligible],
+            "timeout_ms": spec["execution_limits"]["evaluator_timeout_ms"],
         },
     )
     try:
-        completed = subprocess.run(command, text=True, capture_output=True, check=False)
+        process = subprocess.Popen(
+            command,
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            start_new_session=True,
+        )
     except OSError as error:
         raise ExperimentError(f"independent evaluator could not start: {error}") from error
-    _write_exclusive_bytes(evaluation_root / "stdout.txt", completed.stdout.encode("utf-8"))
-    _write_exclusive_bytes(evaluation_root / "stderr.txt", completed.stderr.encode("utf-8"))
+    timed_out = False
+    try:
+        stdout, stderr = process.communicate(
+            timeout=spec["execution_limits"]["evaluator_timeout_ms"] / 1000
+        )
+    except subprocess.TimeoutExpired:
+        timed_out = True
+        _signal_process_group(process, signal.SIGTERM)
+        try:
+            stdout, stderr = process.communicate(timeout=0.25)
+        except subprocess.TimeoutExpired:
+            _signal_process_group(process, signal.SIGKILL)
+            stdout, stderr = process.communicate()
+    stdout_sha256 = _write_exclusive_bytes(
+        evaluation_root / "stdout.txt", stdout.encode("utf-8")
+    )
+    stderr_sha256 = _write_exclusive_bytes(
+        evaluation_root / "stderr.txt", stderr.encode("utf-8")
+    )
+    if timed_out:
+        timeout_evidence = {
+            "schema_version": CONTRACT,
+            "status": "timed-out",
+            "timeout_ms": spec["execution_limits"]["evaluator_timeout_ms"],
+            "exit_code": process.returncode,
+            "stdout_sha256": stdout_sha256,
+            "stderr_sha256": stderr_sha256,
+        }
+        evidence_sha256 = _write_exclusive_json(
+            evaluation_root / "timeout.json", timeout_evidence
+        )
+        ledger.append(
+            "evaluator_timed_out",
+            {
+                "experiment_id": spec["experiment_id"],
+                **timeout_evidence,
+                "evidence_sha256": evidence_sha256,
+            },
+        )
+        raise EvaluatorTimeout(
+            spec["execution_limits"]["evaluator_timeout_ms"], evidence_sha256
+        )
     adapter = evaluator["adapter"]
     if _digest_file(adapter["path"]) != adapter["sha256"]:
         raise ExperimentError("independent evaluator changed during evaluation; no ranking was produced")
@@ -773,10 +898,10 @@ def _invoke_evaluator(
                     f"variant {candidate['variant_id']!r} changed {evidence['id']} evidence "
                     "during evaluation; no ranking was produced"
                 )
-    if completed.returncode != 0:
+    if process.returncode != 0:
         raise ExperimentError(
-            f"independent evaluator exited {completed.returncode}: "
-            f"{completed.stderr.strip() or 'no diagnostic'}"
+            f"independent evaluator exited {process.returncode}: "
+            f"{stderr.strip() or 'no diagnostic'}"
         )
     response, _ = _load_object(response_path, "independent evaluator response")
     _require_exact_keys(response, {"schema_version", "scores"}, "evaluator response")
@@ -889,6 +1014,7 @@ async def run(spec_path: Path, output: Path) -> dict[str, Any]:
             "target_source_sha256": target_sha256,
             "frozen_input_sha256": input_sha256,
             "specification_sha256": _digest_file(spec_copy),
+            "execution_limits": spec["execution_limits"],
             "evaluation": spec["evaluation"],
             "variant_ids": [variant["id"] for variant in spec["variants"]],
             "variant_adapters": [
@@ -920,12 +1046,31 @@ async def run(spec_path: Path, output: Path) -> dict[str, Any]:
             "independent evaluator changed before scoring; no experiment recommendation was produced"
         )
     eligible = [row for row in results if row["eligible"]]
-    scores = (
-        _invoke_evaluator(spec, results, output, evaluator, evaluator_snapshot, ledger)
-        if eligible
-        else {}
+    evaluation_error = None
+    try:
+        scores = (
+            _invoke_evaluator(spec, results, output, evaluator, evaluator_snapshot, ledger)
+            if eligible
+            else {}
+        )
+    except EvaluatorTimeout as error:
+        scores = {}
+        evaluation_error = {
+            "kind": "timeout",
+            "message": str(error),
+            "timeout_ms": error.timeout_ms,
+            "evidence_sha256": error.evidence_sha256,
+        }
+    champion, ranking = (
+        _evaluate(spec, results, scores)
+        if evaluation_error is None
+        else (None, [])
     )
-    champion, ranking = _evaluate(spec, results, scores)
+    status = (
+        "evaluator-timeout"
+        if evaluation_error is not None
+        else ("completed" if champion is not None else "no-eligible-variant")
+    )
     summary = {
         "schema_version": CONTRACT,
         "experiment_id": spec["experiment_id"],
@@ -933,8 +1078,10 @@ async def run(spec_path: Path, output: Path) -> dict[str, Any]:
         "target": spec["target"],
         "target_source_sha256": target_sha256,
         "frozen_input_sha256": input_sha256,
+        "execution_limits": spec["execution_limits"],
         "evaluation": spec["evaluation"],
-        "status": "completed" if champion is not None else "no-eligible-variant",
+        "status": status,
+        "evaluation_error": evaluation_error,
         "champion": champion,
         "ranking": ranking,
         "variants": results,
@@ -946,6 +1093,7 @@ async def run(spec_path: Path, output: Path) -> dict[str, Any]:
         {
             "experiment_id": spec["experiment_id"],
             "champion": champion,
+            "status": status,
             "eligible_variant_ids": [row["variant_id"] for row in ranking],
             "summary_sha256": summary_sha256,
             "promotion_applied": False,
