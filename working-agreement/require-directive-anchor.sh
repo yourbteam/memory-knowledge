@@ -16,8 +16,12 @@ set -uo pipefail
 
 payload="$(cat)" || exit 0
 
+# A helper run has no channel to Kamen, so a gate written about him cannot be satisfied from
+# inside one. Stand down there; see is-helper-transcript.sh.
+printf '%s' "$payload" | "$(dirname "$0")/is-helper-transcript.sh" && exit 0
+
 python3 - "$payload" <<'PY'
-import json, re, sys
+import json, os, re, subprocess, sys
 
 # `why=` and `serves=` were added on 2026-08-06. Kamen, after a day in which five real fixes
 # left the goal's number exactly where it started: "Before you do something and after you have
@@ -53,7 +57,7 @@ def tool_uses(entry):
     if entry.get("type") != "assistant" or not isinstance(content, list):
         return []
     return [
-        (block.get("name"), block.get("input") or {})
+        (block.get("name"), block.get("input") or {}, str(block.get("id") or ""))
         for block in content
         if isinstance(block, dict) and block.get("type") == "tool_use"
     ]
@@ -114,6 +118,8 @@ for raw in lines:
 # direction claims are checked against these rather than trusted.
 loaded = {}
 last_reset = -1
+launched_ids = set()
+finished_ids = set()
 edits_this_turn = []
 actions_this_turn = []
 edits_before = {}
@@ -129,15 +135,39 @@ for index, entry in enumerate(entries):
             edits_before.setdefault(path, index)
         edits_this_turn = []
         actions_this_turn = []
-    for name, payload in tool_uses(entry):
+    for name, payload, block_id in tool_uses(entry):
         if name == "Skill" and isinstance(payload.get("skill"), str):
             loaded[payload["skill"]] = index
         elif name in {"Edit", "Write", "NotebookEdit"}:
-            edits_this_turn.append(payload.get("file_path") or "?")
-            actions_this_turn.append("edit")
-        elif name == "Bash":
-            # A launched process is the only other thing that outlives the turn.
-            actions_this_turn.append("background run")
+            path = str(payload.get("file_path") or "?")
+            # A scratchpad file is not product code. The envelope exists to bound what lands in
+            # a repository; counting an answer sheet written to the session's temp directory as
+            # a product edit refused two correct turns on 2026-08-06, both of which were asking
+            # for the envelope the gate said was missing.
+            if "/scratchpad/" not in path and not path.startswith("/tmp/"):
+                edits_this_turn.append(path)
+                actions_this_turn.append("edit")
+        elif name == "Bash" and payload.get("run_in_background"):
+            # A launched process is the only other thing that outlives the turn -- but the
+            # heartbeat is not the work, it is the timer that asks about the work. Counting it
+            # let "rewriting them now, then resuming the run" end a turn in which nothing was
+            # rewritten and nothing resumed. Kamen, 2026-08-06: "is this just prose or you
+            # actually started working on it ... this wastes 40% of my day because you just stop
+            # working." A foreground command does not outlive the turn either; a turn whose only
+            # actions were reads has investigated, not advanced.
+            if "agent_heartbeat" not in str(payload.get("command") or ""):
+                actions_this_turn.append("background run")
+                if block_id:
+                    launched_ids.add(block_id)
+    # A completion notice for a background launch. Everything still launched and not yet
+    # finished is work in flight, whichever turn started it: a live drive runs for hours, and
+    # the turns that report on it while it runs were being refused as idle. Kamen, 2026-08-06,
+    # three times in one hour on exactly that.
+    text_blob = json.dumps(entry.get("message") or {})
+    for finished in re.findall(r"<tool-use-id>([^<]+)</tool-use-id>", text_blob):
+        finished_ids.add(finished)
+    for finished in re.findall(r"tool-use-id&gt;([^&]+)&lt;", text_blob):
+        finished_ids.add(finished)
 
 # A file this turn edits that an earlier turn already edited is, on its face, not the
 # first issue of its kind — the router requires direction-check before Write-code takes
@@ -173,26 +203,49 @@ if text_index < last_user:
 first = next((line.strip() for line in text.splitlines() if line.strip()), "")
 missing = [field for field in REQUIRED if field not in first]
 
-# G0 requires the anchor to be the TURN'S first text. A later text block is mid-turn
-# narration, and judging it as though it were the reply refused correct turns twice on
-# 2026-07-28. So: the turn must open with an anchor, and the per-message checks below
-# apply to the newest text only when that text is itself anchored.
-turn_opener = next(
-    (
-        reply_text(entries[index])
-        for index in range(last_user + 1, len(entries))
-        if reply_text(entries[index])
-    ),
-    None,
-)
-opener_line = next(
-    (line.strip() for line in (turn_opener or "").splitlines() if line.strip()), ""
-)
+
+def envelope_mismatch(anchor, cwd):
+    """What the repository's own envelope store says about this anchor's quoted outcome.
+
+    Until 2026-08-06 this gate checked that `envelope=` was present, and that it did not say
+    `none` while files were edited. It never checked what it SAID. Two transcripts differing
+    only in the quoted outcome -- one Kamen approved, one nobody ever saw -- both ended the
+    turn cleanly, which is what makes the field decoration. Kamen: "the way you report
+    envelope". The store is now the authority; the anchor is compared against it.
+
+    Silent when the repository keeps no goal store, and silent on any internal failure: a
+    defect here must never trap a session.
+    """
+    if not cwd or not os.path.isfile(os.path.join(cwd, ".goal", "goal.json")):
+        return None
+    tracker = os.path.expanduser("~/memory-knowledge/scripts/goal_tracker.py")
+    if not os.path.isfile(tracker):
+        return None
+    try:
+        done = subprocess.run(
+            [sys.executable, tracker, "--repo", cwd, "envelope", "check", "--anchor", anchor],
+            capture_output=True, text=True, timeout=20,
+        )
+    except Exception:
+        return None
+    if done.returncode != 2:
+        return None
+    return (done.stderr or "").strip() or None
+
+# The anchor is judged on the turn's FINAL reply — the message Kamen actually reads.
+# Until 2026-08-27 this gate demanded it on the turn's FIRST text instead: every short
+# progress note between tool calls, and every turn restarted by a background-task
+# notification, made the first text a status line, so an anchored final reply was blocked
+# and re-sent whole. One session recorded 232 such blocks — each one a duplicated message,
+# a ~250-word lecture, and a full-context regeneration, none of which changed what Kamen
+# read. The first-text rule also had a hole the swap closes: an anchored mid-turn note
+# beside an unanchored final reply passed (fixture B, exit 0 pre-fix). Kamen approved the
+# change, 2026-08-27.
+envelope_problem = envelope_mismatch(first, event.get("cwd")) if first.startswith("directives=") else None
+
 problem = None
-if not opener_line.startswith("directives="):
-    problem = "the turn does not open with the directive anchor"
-elif not first.startswith("directives="):
-    raise SystemExit(0)
+if not first.startswith("directives="):
+    problem = "the reply does not open with the directive anchor"
 elif missing:
     problem = "the anchor is missing: " + ", ".join(f.rstrip("=") for f in missing)
 else:
@@ -236,12 +289,16 @@ else:
             + ", ".join(sorted(set(edits_this_turn))[:3])
             + ". Freeze an envelope before editing"
         )
+    elif envelope_problem:
+        problem = envelope_problem
     elif not named and edits_this_turn:
         problem = (
             "the anchor says no controller is running, but this turn edited "
             + ", ".join(sorted(set(edits_this_turn))[:3])
         )
-    elif re.search(r"ask=none", first) and not actions_this_turn:
+    elif re.search(r"ask=none", first) and not actions_this_turn and not (
+        launched_ids - finished_ids
+    ):
         # G31: a turn that asks for nothing must leave work in flight. The turn ends
         # where the message ends, so a closing sentence like "starting it now" is a
         # promise about a turn that has not begun -- and only Kamen can begin it. On
