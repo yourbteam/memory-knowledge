@@ -124,6 +124,7 @@ def _fixture(root: Path) -> tuple[Path, Path, Path, Path]:
                 "practical_value": "The approach can enter Experiment Machinery.",
                 "work_type": "code",
                 "work_type_reason": "Identity and execution are deterministic.",
+                "allowed_paths": ["adapter.py"],
                 "inputs": [{"case_id": "works"}, {"case_id": "refuses"}],
                 "approaches": [
                     {
@@ -478,6 +479,9 @@ def _composition_fixture(
                 "practical_value": f"The {probe_id} contribution is independently proven.",
                 "work_type": "code",
                 "work_type_reason": "The result is deterministic source code.",
+                "allowed_paths": [
+                    "feature_a.py" if probe_id == "runner" else "feature_b.py"
+                ],
                 "inputs": [{"case_id": "works"}, {"case_id": "refuses"}],
                 "approaches": [
                     {
@@ -869,6 +873,9 @@ def test_build_is_write_once_and_verify_refuses_changed_candidate_source(tmp_pat
         "source",
     }
     assert all((path.stat().st_mode & 0o222) == 0 for path in bundle.rglob("*"))
+    bundle_record = json.loads((bundle / "bundle.json").read_text())
+    assert bundle_record["source"]["changed_paths"] == ["adapter.py"]
+    assert bundle_record["source"]["baseline_files"]
 
     verified = subprocess.run(
         [sys.executable, str(CANDIDATE), "verify", str(bundle)],
@@ -900,6 +907,56 @@ def test_build_is_write_once_and_verify_refuses_changed_candidate_source(tmp_pat
     )
     assert changed.returncode == 2
     assert "changed" in changed.stderr
+
+
+def test_build_refuses_every_changed_path_outside_probe_scope(tmp_path: Path) -> None:
+    manifest, baseline, control, _ = _fixture(tmp_path)
+    (control / "outside.txt").write_text("first unrelated change\n", encoding="utf-8")
+    (control / "second.txt").write_text("second unrelated change\n", encoding="utf-8")
+
+    completed = _build(
+        _request(manifest, baseline, control, "control"),
+        tmp_path / "outside-request.json",
+        tmp_path / "outside-bundle",
+    )
+
+    assert completed.returncode == 2
+    assert "outside.txt" in completed.stderr
+    assert "second.txt" in completed.stderr
+    assert "allowed_paths ['adapter.py']" in completed.stderr
+    assert not (tmp_path / "outside-bundle").exists()
+
+
+def test_verify_refuses_baseline_records_that_do_not_match_tree_digest(
+    tmp_path: Path,
+) -> None:
+    manifest, baseline, control, _ = _fixture(tmp_path)
+    bundle = tmp_path / "bundle"
+    built = _build(
+        _request(manifest, baseline, control, "control"),
+        tmp_path / "request.json",
+        bundle,
+    )
+    assert built.returncode == 0, built.stderr
+    record_path = bundle / "bundle.json"
+    record_path.chmod(0o644)
+    record = json.loads(record_path.read_text())
+    record["source"]["baseline_files"][0]["sha256"] = "0" * 64
+    record_path.write_text(
+        json.dumps(record, indent=2, sort_keys=True) + "\n", encoding="utf-8"
+    )
+    record_path.chmod(0o444)
+
+    verified = subprocess.run(
+        [sys.executable, str(CANDIDATE), "verify", str(bundle)],
+        cwd=ROOT,
+        text=True,
+        capture_output=True,
+        check=False,
+    )
+
+    assert verified.returncode == 2
+    assert "baseline_files differ" in verified.stderr
 
 
 def test_build_and_verify_refuse_symbolic_link_roots(tmp_path: Path) -> None:
@@ -1497,6 +1554,9 @@ def test_composer_refuses_incompatible_winner_changes(
     tmp_path: Path,
 ) -> None:
     manifest, baseline, all_request, sources, _ = _composition_fixture(tmp_path)
+    manifest_value = json.loads(manifest.read_text())
+    manifest_value["mini_probes"][1]["allowed_paths"].append("feature_a.py")
+    _write_json(manifest, manifest_value)
     (sources["selector-variation"] / "feature_a.py").write_text(
         "def value():\n    return 'selector-a'\n", encoding="utf-8"
     )
@@ -1885,7 +1945,10 @@ def test_whole_process_stops_after_probe_failure_and_preserves_probe_evidence(
 def test_whole_process_stops_after_composition_conflict_and_preserves_probe_evidence(
     tmp_path: Path,
 ) -> None:
-    _, baseline, all_request, sources, _ = _composition_fixture(tmp_path)
+    manifest, baseline, all_request, sources, _ = _composition_fixture(tmp_path)
+    manifest_value = json.loads(manifest.read_text())
+    manifest_value["mini_probes"][1]["allowed_paths"].append("feature_a.py")
+    _write_json(manifest, manifest_value)
     (sources["selector-variation"] / "feature_a.py").write_text(
         "def value():\n    return 'selector-a'\n", encoding="utf-8"
     )

@@ -138,6 +138,21 @@ def _snapshot_source(path: Path, label: str) -> tuple[dict[str, bytes], list[dic
     return payloads, files, _digest(_canonical(files))
 
 
+def _changed_paths(baseline: dict[str, bytes], candidate: dict[str, bytes]) -> list[str]:
+    return sorted(
+        path
+        for path in set(baseline) | set(candidate)
+        if baseline.get(path) != candidate.get(path)
+    )
+
+
+def _within(path: str, boundaries: list[str]) -> bool:
+    return any(
+        path == boundary or path.startswith(boundary + "/")
+        for boundary in boundaries
+    )
+
+
 def _check_execution(value: object) -> dict[str, Any]:
     execution = _exact(value, "execution", {"protocol", "command"})
     if execution["protocol"] != PROTOCOL:
@@ -231,32 +246,74 @@ def _check_bundle_shape(bundle: object, manifest: dict[str, Any]) -> dict[str, A
     source = _exact(
         root["source"],
         "bundle.source",
-        {"baseline_sha256", "candidate_sha256", "root", "entrypoint", "files"},
+        {
+            "baseline_sha256",
+            "candidate_sha256",
+            "root",
+            "entrypoint",
+            "baseline_files",
+            "files",
+            "changed_paths",
+        },
     )
     _digest_field(source["baseline_sha256"], "bundle.source.baseline_sha256")
     _digest_field(source["candidate_sha256"], "bundle.source.candidate_sha256")
     if source["root"] != "source":
         raise CandidateError("bundle.source.root must be exactly 'source'")
     _relative(source["entrypoint"], "bundle.source.entrypoint")
-    files = source["files"]
-    if type(files) is not list or not files:
-        raise CandidateError("bundle.source.files must be a nonempty list")
-    paths: list[str] = []
-    for index, value in enumerate(files):
-        item = _exact(value, f"bundle.source.files[{index}]", {"path", "sha256", "size"})
-        path = _relative(item["path"], f"bundle.source.files[{index}].path")
-        if path in paths:
-            raise CandidateError(f"bundle.source.files repeats path {path!r}")
-        paths.append(path)
-        _digest_field(item["sha256"], f"bundle.source.files[{index}].sha256")
-        if type(item["size"]) is not int or item["size"] < 0:
-            raise CandidateError(
-                f"bundle.source.files[{index}].size must be a nonnegative integer"
+    recorded_paths: dict[str, list[str]] = {}
+    for field in ("baseline_files", "files"):
+        records = source[field]
+        if type(records) is not list or not records:
+            raise CandidateError(f"bundle.source.{field} must be a nonempty list")
+        paths: list[str] = []
+        for index, value in enumerate(records):
+            item = _exact(
+                value,
+                f"bundle.source.{field}[{index}]",
+                {"path", "sha256", "size"},
             )
-    if paths != sorted(paths):
-        raise CandidateError("bundle.source.files must be sorted by path")
+            path = _relative(item["path"], f"bundle.source.{field}[{index}].path")
+            if path in paths:
+                raise CandidateError(f"bundle.source.{field} repeats path {path!r}")
+            paths.append(path)
+            _digest_field(item["sha256"], f"bundle.source.{field}[{index}].sha256")
+            if type(item["size"]) is not int or item["size"] < 0:
+                raise CandidateError(
+                    f"bundle.source.{field}[{index}].size must be a nonnegative integer"
+                )
+        if paths != sorted(paths):
+            raise CandidateError(f"bundle.source.{field} must be sorted by path")
+        recorded_paths[field] = paths
+    paths = recorded_paths["files"]
     if source["entrypoint"] not in paths:
         raise CandidateError("bundle source entrypoint is absent from recorded files")
+    baseline_by_path = {item["path"]: item for item in source["baseline_files"]}
+    candidate_by_path = {item["path"]: item for item in source["files"]}
+    actual_baseline_sha256 = _digest(_canonical(source["baseline_files"]))
+    if source["baseline_sha256"] != actual_baseline_sha256:
+        raise CandidateError(
+            "bundle.source.baseline_files differ from the recorded baseline tree digest"
+        )
+    derived_changes = sorted(
+        path
+        for path in set(baseline_by_path) | set(candidate_by_path)
+        if baseline_by_path.get(path) != candidate_by_path.get(path)
+    )
+    changed_paths = source["changed_paths"]
+    if type(changed_paths) is not list or changed_paths != derived_changes:
+        raise CandidateError(
+            f"bundle.source.changed_paths must be exact sorted delta {derived_changes!r}"
+        )
+    outside = [
+        path for path in changed_paths if not _within(path, probe["allowed_paths"])
+    ]
+    if outside:
+        raise CandidateError(
+            f"candidate changed paths {outside!r} outside mini-probe "
+            f"{identity['probe_id']!r} allowed_paths {probe['allowed_paths']!r}; "
+            "change only declared paths"
+        )
     _check_execution(root["execution"])
 
     inputs = _exact(root["inputs"], "bundle.inputs", {"case_ids"})
@@ -407,8 +464,19 @@ def build_bundle(request_path: Path, output: Path) -> dict[str, object]:
     baseline_path = _resolve_path(source["baseline"], base, "source.baseline")
     candidate_path = _resolve_path(source["candidate"], base, "source.candidate")
     entrypoint = _relative(source["entrypoint"], "source.entrypoint")
-    _, _, baseline_sha256 = _snapshot_source(baseline_path, "baseline source")
+    baseline_payloads, baseline_files, baseline_sha256 = _snapshot_source(
+        baseline_path, "baseline source"
+    )
     payloads, files, candidate_sha256 = _snapshot_source(candidate_path, "candidate source")
+    changed_paths = _changed_paths(baseline_payloads, payloads)
+    outside = [
+        path for path in changed_paths if not _within(path, probe["allowed_paths"])
+    ]
+    if outside:
+        raise CandidateError(
+            f"candidate changed paths {outside!r} outside mini-probe {probe_id!r} "
+            f"allowed_paths {probe['allowed_paths']!r}; change only declared paths"
+        )
     if entrypoint not in payloads:
         raise CandidateError(f"source.entrypoint {entrypoint!r} is absent from candidate source")
     execution = _check_execution(request["execution"])
@@ -425,7 +493,9 @@ def build_bundle(request_path: Path, output: Path) -> dict[str, object]:
             "candidate_sha256": candidate_sha256,
             "root": "source",
             "entrypoint": entrypoint,
+            "baseline_files": baseline_files,
             "files": files,
+            "changed_paths": changed_paths,
         },
         "execution": execution,
         "inputs": {"case_ids": [item["case_id"] for item in probe["inputs"]]},

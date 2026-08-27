@@ -8,7 +8,7 @@ import copy
 import json
 import re
 import sys
-from pathlib import Path
+from pathlib import Path, PurePosixPath
 from typing import Any
 
 CONTRACT = 1
@@ -57,6 +57,21 @@ def _identifier(value: object, path: str) -> str:
     return text
 
 
+def _relative_path(value: object, path: str) -> str:
+    text = _text(value, path)
+    relative = PurePosixPath(text)
+    if (
+        relative.is_absolute()
+        or ".." in relative.parts
+        or relative.as_posix() != text
+        or text in {"", "."}
+    ):
+        raise ValueError(
+            f"{path} is {text!r}; provide a safe repository-relative POSIX path"
+        )
+    return text.rstrip("/")
+
+
 def _enum(value: object, path: str, choices: set[str]) -> str:
     text = _text(value, path)
     if text not in choices:
@@ -91,6 +106,7 @@ def _check_probe_shape(value: object, path: str) -> None:
             "practical_value",
             "work_type",
             "work_type_reason",
+            "allowed_paths",
             "inputs",
             "approaches",
             "proof",
@@ -102,6 +118,19 @@ def _check_probe_shape(value: object, path: str) -> None:
     for name in ("goal", "practical_value", "work_type_reason"):
         _text(probe[name], f"{path}.{name}")
     _enum(probe["work_type"], f"{path}.work_type", {"code", "model", "hybrid"})
+    allowed_paths = _list(probe["allowed_paths"], f"{path}.allowed_paths")
+    if not allowed_paths:
+        raise ValueError(
+            f"{path}.allowed_paths is empty; declare what this mini-probe may change"
+        )
+    normalized_paths = [
+        _relative_path(value, f"{path}.allowed_paths[{index}]")
+        for index, value in enumerate(allowed_paths)
+    ]
+    if len(set(normalized_paths)) != len(normalized_paths):
+        raise ValueError(
+            f"{path}.allowed_paths contains duplicates; keep every boundary once"
+        )
     for index, input_value in enumerate(_list(probe["inputs"], f"{path}.inputs")):
         item_path = f"{path}.inputs[{index}]"
         if isinstance(input_value, dict) and set(input_value) != {"case_id"}:

@@ -34,6 +34,7 @@ def _probe(probe_id: str, artifact: str) -> dict:
         "practical_value": f"The atomic implementation gains {probe_id} behavior.",
         "work_type": "code",
         "work_type_reason": "The boundary is deterministic.",
+        "allowed_paths": [f"skills/{probe_id}"],
         "inputs": [{"case_id": "works"}, {"case_id": "refuses"}],
         "approaches": [
             {
@@ -178,6 +179,22 @@ def test_complete_parallel_manifest_is_accepted_without_mutating_input() -> None
                 {"implementation": "Build identity indexes before validation."}
             ),
             "different implementation",
+        ),
+        (
+            lambda value: value["mini_probes"][0].update({"allowed_paths": []}),
+            "declare what this mini-probe may change",
+        ),
+        (
+            lambda value: value["mini_probes"][0].update(
+                {"allowed_paths": ["../outside"]}
+            ),
+            "repository-relative",
+        ),
+        (
+            lambda value: value["mini_probes"][0].update(
+                {"allowed_paths": ["skills/source-reader", "skills/source-reader"]}
+            ),
+            "duplicates",
         ),
         (
             lambda value: value["mini_probes"][0]["inputs"].append(

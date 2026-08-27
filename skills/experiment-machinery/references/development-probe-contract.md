@@ -44,6 +44,7 @@ Every mini-probe records:
 
 - its goal and practical contribution to the atomic outcome;
 - whether code, a model, or both own its decision and why;
+- the complete repository-relative paths its candidate is allowed to add, change, or delete;
 - captured-case inputs only;
 - at least two distinct approaches with hypothesis, implementation mechanism, and tradeoff;
 - observable success and failure criteria;
@@ -91,8 +92,10 @@ exact whole arguments; `{candidate-entrypoint}` is mandatory.
 
 The bundle is write-once and contains exactly the canonical development manifest, a deterministic
 read-only source snapshot, and `bundle.json`. The latter binds the atomic step, probe, approach,
-manifest digest, baseline digest, exact per-file candidate hashes and sizes, candidate tree digest,
-entrypoint, command, declared captured cases, and ordered evaluation metrics.
+manifest digest, baseline digest, exact per-file baseline and candidate hashes and sizes, the
+derived changed paths, candidate tree digest, entrypoint, command, declared captured cases, and
+ordered evaluation metrics. Build refuses before writing a bundle when any added, changed, or
+deleted path falls outside the mini-probe's declared boundary, and names every offending path.
 
 Run `verify` before use. It rejects changed, missing, extra, writable, linked, or relocated source
 evidence; undeclared identities or cases; mismatched metrics; and unsafe command shapes. Run

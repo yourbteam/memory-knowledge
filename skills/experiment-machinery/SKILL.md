@@ -27,6 +27,11 @@ python3 scripts/development_probe_candidate.py build <request.json> <new-bundle-
 python3 scripts/development_probe_candidate.py verify <bundle-directory>
 ```
 
+Every mini-probe declares its complete repository-relative `allowed_paths`. Candidate packaging
+derives the full add/change/delete delta against the recorded baseline and refuses every path
+outside that boundary before an experiment launches. Accepted bundles preserve the baseline file
+records and exact changed paths so the scope decision can be verified again from immutable evidence.
+
 Use the bundle executor as the experiment variant command. Its configuration contains exactly the
 declared captured `case_id`; code verifies the bundle and frozen input before launching the copied
 candidate, then verifies the bundle again after execution. The canonical product source is never
