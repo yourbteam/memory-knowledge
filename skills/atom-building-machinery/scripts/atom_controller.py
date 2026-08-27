@@ -67,7 +67,7 @@ SUMMARY_FIELDS = {
     "stages",
     "promotion_applied",
 }
-STAGE_FIELDS = {
+LEGACY_STAGE_FIELDS = {
     "schema_version",
     "stage",
     "status",
@@ -78,6 +78,15 @@ STAGE_FIELDS = {
     "result",
     "result_sha256",
     "promotion_applied",
+}
+CURRENT_STAGE_FIELDS = LEGACY_STAGE_FIELDS | {
+    "duration_ms",
+    "timeout_ms",
+    "timed_out",
+    "stdout_sha256",
+    "stderr_sha256",
+    "timeout",
+    "timeout_sha256",
 }
 LEGACY_PROMOTION_FIELDS = {
     "schema_version",
@@ -718,7 +727,10 @@ def _validate_stage_receipts(value: object) -> None:
     if type(value) is not list or len(value) != len(EXPERIMENT_STAGES):
         raise AtomError(stage, f"stages is not the complete ordered set {EXPERIMENT_STAGES!r}")
     for index, raw in enumerate(value):
-        receipt = _exact(raw, f"stages[{index}]", STAGE_FIELDS, stage)
+        if type(raw) is not dict:
+            raise AtomError(stage, f"stages[{index}] is {type(raw).__name__}; provide one object")
+        fields = CURRENT_STAGE_FIELDS if "duration_ms" in raw else LEGACY_STAGE_FIELDS
+        receipt = _exact(raw, f"stages[{index}]", fields, stage)
         expected_stage = EXPERIMENT_STAGES[index]
         if receipt["schema_version"] != CONTRACT or receipt["stage"] != expected_stage:
             raise AtomError(stage, f"stages[{index}] does not identify schema 1 stage {expected_stage!r}")
@@ -726,6 +738,17 @@ def _validate_stage_receipts(value: object) -> None:
             raise AtomError(stage, f"stage {expected_stage!r} did not complete successfully")
         if receipt["promotion_applied"] is not False:
             raise AtomError(stage, f"stage {expected_stage!r} applied promotion; experiments must remain isolated")
+        if fields is CURRENT_STAGE_FIELDS:
+            if type(receipt["duration_ms"]) is not int or receipt["duration_ms"] < 0:
+                raise AtomError(stage, f"stages[{index}].duration_ms must be one nonnegative integer")
+            if type(receipt["timeout_ms"]) is not int or receipt["timeout_ms"] <= 0:
+                raise AtomError(stage, f"stages[{index}].timeout_ms must be one positive integer")
+            if receipt["timed_out"] is not False:
+                raise AtomError(stage, f"successful stage {expected_stage!r} cannot be timed out")
+            _sha(receipt["stdout_sha256"], f"stages[{index}].stdout_sha256", stage)
+            _sha(receipt["stderr_sha256"], f"stages[{index}].stderr_sha256", stage)
+            if receipt["timeout"] is not None or receipt["timeout_sha256"] is not None:
+                raise AtomError(stage, f"successful stage {expected_stage!r} cannot carry timeout evidence")
         for field in ("output", "evidence", "evidence_sha256", "result", "result_sha256"):
             if field.endswith("sha256"):
                 _sha(receipt[field], f"stages[{index}].{field}", stage)

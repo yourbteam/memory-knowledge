@@ -548,3 +548,29 @@ def test_tampered_review_blocks_promotion_resume(
 
     assert result.returncode == 2
     assert "recorded promotion review has SHA-256" in result.stderr
+
+
+def test_current_experiment_stage_receipts_advance(
+    tmp_path: Path, assembly_fixture: tuple[Path, dict[str, object], str]
+) -> None:
+    run = start(tmp_path, assembly_fixture)
+    experiment_path = tmp_path / "current-experiment"
+    experiment(experiment_path, assembly_fixture)
+    summary_path = experiment_path / "development-probe-summary.json"
+    summary = json.loads(summary_path.read_text())
+    for receipt in summary["stages"]:
+        receipt.update({
+            "duration_ms": 1,
+            "timeout_ms": 2700000,
+            "timed_out": False,
+            "stdout_sha256": "2" * 64,
+            "stderr_sha256": "3" * 64,
+            "timeout": None,
+            "timeout_sha256": None,
+        })
+    write_json(summary_path, summary)
+
+    result = invoke("record-experiment", run, experiment_path)
+
+    assert result.returncode == 0, result.stderr
+    assert json.loads(result.stdout)["stage"] == "promotion"
