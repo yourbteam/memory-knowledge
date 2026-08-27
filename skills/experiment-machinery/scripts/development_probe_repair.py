@@ -164,6 +164,30 @@ def _normalize(request_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     except Exception as error:
         raise RepairError("validate-request", f"whole_run is invalid: {error}") from None
     manifest = validate_manifest(_load(whole_paths["manifest"], "development manifest", "validate-request"))
+    evaluators: dict[str, dict[str, Any]] = {}
+    for probe_request in whole_normalized["probe_requests"]:
+        source_path = Path(probe_request["request"])
+        source = _load(source_path, f"probe {probe_request['probe_id']!r} request", "validate-request")
+        evaluator = _exact(
+            source.get("evaluator"),
+            f"probe {probe_request['probe_id']!r} evaluator",
+            {"adapter", "command"},
+            "validate-request",
+        )
+        adapter = _exact(
+            evaluator["adapter"],
+            f"probe {probe_request['probe_id']!r} evaluator adapter",
+            {"path", "sha256"},
+            "validate-request",
+        )
+        evaluators[probe_request["probe_id"]] = {
+            "adapter": {
+                "path": str(_resolve(adapter["path"], source_path.parent, "evaluator adapter")),
+                "sha256": adapter["sha256"],
+            },
+            "command": evaluator["command"],
+        }
+    whole_paths["evaluators"] = evaluators
     budget = request["repair_budget"]
     if type(budget) is not int or budget < 1:
         raise RepairError("validate-request", f"repair_budget is {budget!r}; provide a positive integer")
@@ -212,6 +236,7 @@ def _normalize(request_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
         "planner": planner,
         "builder": builder,
         "routing": routing,
+        "evaluators": evaluators,
     }
 
 
@@ -394,6 +419,7 @@ def _run_probe_experiment(
     original_bundle: dict[str, Any],
     baseline: Path,
     builds: list[dict[str, Any]],
+    evaluator: dict[str, Any],
 ) -> tuple[dict[str, Any], Path]:
     experiment_root = round_root / probe["id"] / "experiment"
     repair_manifest = _repair_manifest(manifest, probe, [item["approach"] for item in builds])
@@ -427,6 +453,7 @@ def _run_probe_experiment(
             "development_manifest": str(manifest_path),
             "probe_id": probe["id"],
             "approach_build_requests": requests,
+            "evaluator": evaluator,
         },
     )
     script = Path(__file__).parent / "development_probe_cross_case.py"
@@ -561,7 +588,15 @@ def _repair_probe(
             problems.append(f"approach {item['approach']['id']!r} changed {outside!r}; change only {item['approach']['allowed_paths']!r}")
     if problems:
         raise RepairError("build-repairs", "; ".join(problems))
-    _, selected = _run_probe_experiment(round_root, probe, manifest, original_bundle, baseline, ordered)
+    _, selected = _run_probe_experiment(
+        round_root,
+        probe,
+        manifest,
+        original_bundle,
+        baseline,
+        ordered,
+        whole_paths["evaluators"][probe_id],
+    )
     replacement = _repackage(round_root, probe, current, selected, original_bundle, whole_paths)
     return probe_id, replacement
 

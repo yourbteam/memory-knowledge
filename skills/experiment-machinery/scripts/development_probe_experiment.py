@@ -81,6 +81,37 @@ def _resolve(value: object, base: Path, label: str, stage: str) -> Path:
     return (path if path.is_absolute() else base / path).absolute()
 
 
+def _normalize_evaluator(value: object, base: Path) -> dict[str, Any]:
+    evaluator = _exact(
+        value,
+        "evaluator",
+        {"adapter", "command"},
+        "validate-request",
+    )
+    adapter = _exact(
+        evaluator["adapter"],
+        "evaluator.adapter",
+        {"path", "sha256"},
+        "validate-request",
+    )
+    path = _resolve(adapter["path"], base, "evaluator.adapter.path", "validate-request")
+    expected = adapter["sha256"]
+    if type(expected) is not str or len(expected) != 64:
+        raise LaunchError("validate-request", "evaluator.adapter.sha256 must be 64 lowercase hex characters")
+    if path.is_symlink() or not path.is_file():
+        raise LaunchError("validate-request", f"evaluator adapter is unavailable or linked: {path}")
+    actual = _digest(path.read_bytes())
+    if actual != expected:
+        raise LaunchError(
+            "validate-request",
+            f"evaluator adapter changed: recorded {expected}, actual {actual}",
+        )
+    command = evaluator["command"]
+    if type(command) is not list or any(type(item) is not str or not item for item in command):
+        raise LaunchError("validate-request", "evaluator.command must be a nonempty string array")
+    return {"adapter": {"path": str(path), "sha256": actual}, "command": command}
+
+
 def _write_once(path: Path, value: object) -> str:
     payload = _document(value)
     path.parent.mkdir(parents=True, exist_ok=True)
@@ -400,13 +431,14 @@ def _run_experiment(
     case: dict[str, Any],
     case_path: Path,
     mappings: list[dict[str, Any]],
+    evaluator: dict[str, Any],
 ) -> dict[str, Any]:
     scripts = Path(__file__).parent
     runner = scripts / "run_experiment.py"
     candidate = scripts / "development_probe_candidate.py"
     experiment_id = _experiment_id(manifest, probe["id"], case["id"], mappings)
     spec = {
-        "schema_version": CONTRACT,
+        "schema_version": 3,
         "experiment_id": experiment_id,
         "hypothesis": (
             f"Every approach declared by mini-probe {probe['id']!r} can run against "
@@ -431,11 +463,18 @@ def _run_experiment(
                     "execute",
                     str(item["bundle"]),
                 ],
+                "adapter": {
+                    "path": str(candidate),
+                    "sha256": _digest(candidate.read_bytes()),
+                },
                 "configuration": {"case_id": case["id"]},
             }
             for item in mappings
         ],
-        "evaluation": {"metrics": probe["evaluation"]["metrics"]},
+        "evaluation": {
+            "metrics": probe["evaluation"]["metrics"],
+            "evaluator": evaluator,
+        },
     }
     _write_once(output / "experiment.json", spec)
     _write_once(
@@ -580,6 +619,7 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
             "probe_id",
             "case_id",
             "approach_build_requests",
+            "evaluator",
         },
         "validate-request",
     )
@@ -615,8 +655,9 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
         )
         results = _prepare_bundles(tasks, output, manifest, probe_id)
         mappings = _variant_map(results)
+        evaluator = _normalize_evaluator(request["evaluator"], request_path.parent)
         summary = _run_experiment(
-            output, manifest, probe, case, case_path, mappings
+            output, manifest, probe, case, case_path, mappings, evaluator
         )
         recommendation = _bind_recommendation(
             output, manifest, probe_id, case_id, summary, mappings

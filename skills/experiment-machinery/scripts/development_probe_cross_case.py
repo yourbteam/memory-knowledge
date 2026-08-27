@@ -198,6 +198,7 @@ def _run_cases(
     manifest_path: Path,
     probe: dict[str, Any],
     approach_requests: list[dict[str, str]],
+    evaluator: object,
 ) -> list[dict[str, Any]]:
     launcher = Path(__file__).with_name("development_probe_experiment.py")
     case_ids = [item["case_id"] for item in probe["inputs"]]
@@ -214,6 +215,7 @@ def _run_cases(
                 "probe_id": probe["id"],
                 "case_id": case_id,
                 "approach_build_requests": approach_requests,
+                "evaluator": evaluator,
             },
         )
         tasks.append((index, case_id, request_path))
@@ -479,7 +481,13 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
     request = _exact(
         _load(request_path, "cross-case experiment request", "validate-request"),
         "cross-case experiment request",
-        {"schema_version", "development_manifest", "probe_id", "approach_build_requests"},
+        {
+            "schema_version",
+            "development_manifest",
+            "probe_id",
+            "approach_build_requests",
+            "evaluator",
+        },
     )
     if type(request["schema_version"]) is not int or request["schema_version"] != CONTRACT:
         raise CrossCaseError(
@@ -504,8 +512,31 @@ def run_launcher(request_path: Path, output: Path) -> dict[str, Any]:
         approach_requests = _approach_requests(
             probe["approaches"], request["approach_build_requests"], request_path.parent
         )
+        evaluator = _exact(
+            request["evaluator"],
+            "evaluator",
+            {"adapter", "command"},
+        )
+        evaluator_adapter = _exact(
+            evaluator["adapter"],
+            "evaluator.adapter",
+            {"path", "sha256"},
+        )
+        normalized_evaluator = {
+            "adapter": {
+                "path": str(
+                    _resolve(
+                        evaluator_adapter["path"],
+                        request_path.parent,
+                        "evaluator.adapter.path",
+                    )
+                ),
+                "sha256": evaluator_adapter["sha256"],
+            },
+            "command": evaluator["command"],
+        }
         case_ids = [item["case_id"] for item in probe["inputs"]]
-        _run_cases(output, manifest_path, probe, approach_requests)
+        _run_cases(output, manifest_path, probe, approach_requests, normalized_evaluator)
         scores, mappings = _case_metrics(output, probe, case_ids)
         aggregate = _aggregate(probe, case_ids, scores)
         aggregate_sha256 = _write_once(output / "aggregated-summary.json", aggregate)

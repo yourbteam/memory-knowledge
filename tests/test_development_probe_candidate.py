@@ -64,7 +64,7 @@ result = {{
     "schema_version": 1,
     "variant_id": variant_id,
     "status": "completed",
-    "outcome": {{"value": payload["value"]}},
+    "outcome": {{"value": payload["value"], "observed_quality": {quality}}},
     "metrics": {{"quality": {quality}}},
     "error": None,
 }}
@@ -73,9 +73,16 @@ result_path.write_text(json.dumps(result, sort_keys=True) + "\\n", encoding="utf
 
 
 def _case_scored_adapter(scores: dict[str, int]) -> str:
-    return _adapter(0).replace(
-        '"metrics": {"quality": 0}',
-        f'"metrics": {{"quality": {scores!r}[payload["value"]]}}',
+    return (
+        _adapter(0)
+        .replace(
+            '"observed_quality": 0',
+            f'"observed_quality": {scores!r}[payload["value"]]',
+        )
+        .replace(
+            '"metrics": {"quality": 0}',
+            f'"metrics": {{"quality": {scores!r}[payload["value"]]}}',
+        )
     )
 
 
@@ -209,6 +216,39 @@ def _write_json(path: Path, value: object) -> None:
     path.write_text(json.dumps(value, indent=2, sort_keys=True) + "\n", encoding="utf-8")
 
 
+def _evaluator(root: Path) -> dict:
+    path = root / "independent-evaluator.py"
+    if not path.exists():
+        path.write_text(
+            """from __future__ import annotations
+import json
+import sys
+from pathlib import Path
+
+request = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+scores = []
+for candidate in request["candidates"]:
+    outcome = candidate["outcome"]
+    if "observed_quality" in outcome:
+        quality = outcome["observed_quality"]
+    else:
+        quality = sum(value not in {"base-a", "base-b"} for value in outcome.get("features", []))
+    scores.append({"variant_id": candidate["variant_id"], "metrics": {"quality": quality}})
+Path(sys.argv[2]).write_text(json.dumps({"schema_version": 1, "scores": scores}, sort_keys=True) + "\\n", encoding="utf-8")
+""",
+            encoding="utf-8",
+        )
+    return {
+        "adapter": {"path": str(path), "sha256": _digest(path)},
+        "command": [
+            "{python}",
+            "{evaluation-adapter}",
+            "{evaluation-request}",
+            "{evaluation-response}",
+        ],
+    }
+
+
 def _launcher_request(
     root: Path,
     manifest: Path,
@@ -226,6 +266,7 @@ def _launcher_request(
         "probe_id": "runner",
         "case_id": "works",
         "approach_build_requests": requests,
+        "evaluator": _evaluator(root),
     }
     launch_path = root / "launch.json"
     _write_json(launch_path, launch)
@@ -303,6 +344,7 @@ def _all_probe_request(
             "development_manifest": str(manifest_path),
             "probe_id": probe_id,
             "approach_build_requests": build_requests,
+            "evaluator": _evaluator(root),
         }
         cross_path = root / f"cross-{probe_id}.json"
         _write_json(cross_path, cross)
@@ -489,6 +531,7 @@ def _composition_fixture(
                 "development_manifest": str(manifest_path),
                 "probe_id": probe_id,
                 "approach_build_requests": approaches,
+                "evaluator": _evaluator(root),
             },
         )
         cross_requests[probe_id] = cross_path
@@ -937,7 +980,7 @@ def test_two_real_bundles_run_as_one_experiment_and_undeclared_case_is_refused(
         bundles[approach_id] = bundle
 
     spec = {
-        "schema_version": 1,
+        "schema_version": 3,
         "experiment_id": "candidate-bundle-real-comparison",
         "hypothesis": "Both immutable candidates run and the declared quality metric selects variation.",
         "target": {
@@ -957,11 +1000,15 @@ def test_two_real_bundles_run_as_one_experiment_and_undeclared_case_is_refused(
             {
                 "id": approach_id,
                 "command": [sys.executable, str(CANDIDATE), "execute", str(bundle)],
+                "adapter": {"path": str(CANDIDATE), "sha256": _digest(CANDIDATE)},
                 "configuration": {"case_id": "works"},
             }
             for approach_id, bundle in bundles.items()
         ],
-        "evaluation": {"metrics": [{"name": "quality", "direction": "maximize"}]},
+        "evaluation": {
+            "metrics": [{"name": "quality", "direction": "maximize"}],
+            "evaluator": _evaluator(tmp_path),
+        },
     }
     spec_path = tmp_path / "experiment.json"
     spec_path.write_text(json.dumps(spec, indent=2, sort_keys=True) + "\n", encoding="utf-8")

@@ -150,7 +150,13 @@ def _normalize_cross_request(
     value = _exact(
         _load(source_path, f"probe {task['probe_id']!r} request", "validate-request"),
         f"probe {task['probe_id']!r} request",
-        {"schema_version", "development_manifest", "probe_id", "approach_build_requests"},
+        {
+            "schema_version",
+            "development_manifest",
+            "probe_id",
+            "approach_build_requests",
+            "evaluator",
+        },
     )
     if value["schema_version"] != CONTRACT or type(value["schema_version"]) is not int:
         raise AllProbeError(
@@ -201,11 +207,34 @@ def _normalize_cross_request(
                 ),
             }
         )
+    evaluator = _exact(
+        value["evaluator"],
+        f"probe {task['probe_id']!r} evaluator",
+        {"adapter", "command"},
+    )
+    adapter = _exact(
+        evaluator["adapter"],
+        f"probe {task['probe_id']!r} evaluator adapter",
+        {"path", "sha256"},
+    )
     return {
         "schema_version": CONTRACT,
         "development_manifest": str(manifest_path),
         "probe_id": task["probe_id"],
         "approach_build_requests": normalized,
+        "evaluator": {
+            "adapter": {
+                "path": str(
+                    _resolve(
+                        adapter["path"],
+                        source_path.parent,
+                        f"probe {task['probe_id']!r} evaluator adapter path",
+                    )
+                ),
+                "sha256": adapter["sha256"],
+            },
+            "command": evaluator["command"],
+        },
     }
 
 

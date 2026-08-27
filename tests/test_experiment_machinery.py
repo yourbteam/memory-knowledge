@@ -90,6 +90,24 @@ def _write_spec(
     *,
     input_sha256: str | None = None,
 ) -> Path:
+    evaluator = root / "evaluator.py"
+    evaluator.write_text(
+        """from __future__ import annotations
+import json
+import sys
+from pathlib import Path
+
+request = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+scores = []
+for candidate in request["candidates"]:
+    telemetry = next(item["path"] for item in candidate["evidence"] if item["id"] == "telemetry")
+    events = [json.loads(line) for line in Path(telemetry).read_text(encoding="utf-8").splitlines()]
+    finished = next(item for item in events if item["event"] == "phase_finished")
+    scores.append({"variant_id": candidate["variant_id"], "metrics": finished["metrics"]})
+Path(sys.argv[2]).write_text(json.dumps({"schema_version": 1, "scores": scores}, sort_keys=True) + "\\n", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
     frozen = root / "purpose-input.json"
     frozen.write_text(
         json.dumps(
@@ -109,7 +127,7 @@ def _write_spec(
     spec.write_text(
         json.dumps(
             {
-                "schema_version": 1,
+                "schema_version": 3,
                 "experiment_id": "intake-purpose-assessment",
                 "hypothesis": (
                     "The unchanged Intake purpose phase can compare isolated setups from one "
@@ -136,6 +154,10 @@ def _write_spec(
                             sys.executable,
                             str(ADAPTER),
                         ],
+                        "adapter": {
+                            "path": str(ADAPTER),
+                            "sha256": _digest(ADAPTER),
+                        },
                         "configuration": {"answers": answers},
                     }
                     for variant_id, answers in variants
@@ -145,7 +167,19 @@ def _write_spec(
                         {"name": "reached-expected-boundary", "direction": "maximize"},
                         {"name": "rejected-answer-count", "direction": "minimize"},
                         {"name": "answer-count", "direction": "minimize"},
-                    ]
+                    ],
+                    "evaluator": {
+                        "adapter": {
+                            "path": str(evaluator),
+                            "sha256": _digest(evaluator),
+                        },
+                        "command": [
+                            "{python}",
+                            "{evaluation-adapter}",
+                            "{evaluation-request}",
+                            "{evaluation-response}"
+                        ]
+                    }
                 },
             },
             indent=2,
@@ -240,6 +274,8 @@ def test_real_intake_phase_runs_three_isolated_variants_and_repeats_champion(
         "variant_finished",
         "variant_finished",
         "variant_finished",
+        "evaluator_started",
+        "evaluator_finished",
         "evaluation_completed",
     ]
     assert ledger[-1]["promotion_applied"] is False
@@ -304,4 +340,116 @@ def test_wrong_frozen_input_hash_is_refused_before_any_run_artifact(tmp_path: Pa
 
     assert completed.returncode == 2
     assert "does not match the exact input bytes" in completed.stderr
+    assert not output.exists()
+
+
+def _independent_scoring_spec(tmp_path: Path) -> tuple[Path, Path]:
+    target = tmp_path / "target"
+    target.mkdir()
+    (target / "entry.py").write_text("VALUE = 'target'\n", encoding="utf-8")
+    frozen = tmp_path / "input.json"
+    frozen.write_text('{"case":"self-score"}\n', encoding="utf-8")
+    candidate = tmp_path / "candidate.py"
+    candidate.write_text(
+        """from __future__ import annotations
+import json
+import os
+from pathlib import Path
+
+variant = json.loads(Path(os.environ["EXPERIMENT_VARIANT_PATH"]).read_text(encoding="utf-8"))
+configuration = variant["configuration"]
+result = {
+    "schema_version": 1,
+    "variant_id": variant["variant_id"],
+    "status": "completed",
+    "outcome": {"correct": configuration["correct"]},
+    "metrics": {"quality": configuration["claimed_quality"]},
+    "error": None,
+}
+Path(os.environ["EXPERIMENT_RESULT_PATH"]).write_text(json.dumps(result, sort_keys=True) + "\\n", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
+    evaluator = tmp_path / "evaluator.py"
+    evaluator.write_text(
+        """from __future__ import annotations
+import json
+import sys
+from pathlib import Path
+
+request = json.loads(Path(sys.argv[1]).read_text(encoding="utf-8"))
+scores = [
+    {"variant_id": item["variant_id"], "metrics": {"quality": 1 if item["outcome"]["correct"] else 0}}
+    for item in request["candidates"]
+]
+Path(sys.argv[2]).write_text(json.dumps({"schema_version": 1, "scores": scores}, sort_keys=True) + "\\n", encoding="utf-8")
+""",
+        encoding="utf-8",
+    )
+    spec = {
+        "schema_version": 3,
+        "experiment_id": "independent-self-score",
+        "hypothesis": "Candidate claims cannot determine the winner.",
+        "target": {
+            "machinery": "experiment-machinery",
+            "phase": "independent-scoring",
+            "source": {"path": str(target), "sha256": _source_sha256(target)},
+            "entrypoint": "entry.py",
+        },
+        "frozen_input": {"path": str(frozen), "sha256": _digest(frozen)},
+        "variants": [
+            {
+                "id": "control",
+                "command": [sys.executable, str(candidate)],
+                "adapter": {"path": str(candidate), "sha256": _digest(candidate)},
+                "configuration": {"correct": True, "claimed_quality": 1},
+            },
+            {
+                "id": "inflated",
+                "command": [sys.executable, str(candidate)],
+                "adapter": {"path": str(candidate), "sha256": _digest(candidate)},
+                "configuration": {"correct": False, "claimed_quality": 999},
+            },
+        ],
+        "evaluation": {
+            "metrics": [{"name": "quality", "direction": "maximize"}],
+            "evaluator": {
+                "adapter": {"path": str(evaluator), "sha256": _digest(evaluator)},
+                "command": [
+                    "{python}",
+                    "{evaluation-adapter}",
+                    "{evaluation-request}",
+                    "{evaluation-response}",
+                ],
+            },
+        },
+    }
+    spec_path = tmp_path / "independent-experiment.json"
+    spec_path.write_text(json.dumps(spec, indent=2, sort_keys=True) + "\n", encoding="utf-8")
+    return spec_path, evaluator
+
+
+def test_independent_evaluator_ignores_inflated_candidate_score(tmp_path: Path) -> None:
+    spec, _ = _independent_scoring_spec(tmp_path)
+    output = tmp_path / "run"
+
+    completed = _run(spec, output)
+
+    assert completed.returncode == 0, completed.stderr
+    summary = json.loads((output / "summary.json").read_text(encoding="utf-8"))
+    assert summary["champion"] == "control"
+    inflated = next(item for item in summary["variants"] if item["variant_id"] == "inflated")
+    assert inflated["reported_metrics"] == {"quality": 999}
+    assert inflated["metrics"] == {"quality": 0.0}
+
+
+def test_changed_evaluator_is_refused_before_variant_execution(tmp_path: Path) -> None:
+    spec, evaluator = _independent_scoring_spec(tmp_path)
+    evaluator.write_text(evaluator.read_text(encoding="utf-8") + "# changed\n", encoding="utf-8")
+    output = tmp_path / "run"
+
+    completed = _run(spec, output)
+
+    assert completed.returncode == 2
+    assert "evaluation.evaluator.adapter changed" in completed.stderr
     assert not output.exists()

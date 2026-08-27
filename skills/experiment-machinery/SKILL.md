@@ -141,8 +141,9 @@ failed or inconclusive results return the evidence to the affected probe or comp
 ## Run one experiment
 
 1. Freeze one hypothesis, target machinery and phase, exact input file, constants, control,
-   variations, and ordered ranking metrics in one JSON specification. Do not edit the specification
-   after execution begins. Generate the target source-tree hash mechanically:
+   variations, ordered ranking metrics, every variant adapter, and one independent evaluation
+   adapter in one JSON specification. Bind every adapter by path and SHA-256. Do not edit the
+   specification after execution begins. Generate the target source-tree hash mechanically:
 
    ```bash
    python3 scripts/run_experiment.py --hash-source <machinery-source-directory>
@@ -172,8 +173,14 @@ failed or inconclusive results return the evidence to the affected probe or comp
 - Variant commands are argument arrays, never shell strings.
 - The parent runner alone writes the experiment ledger. Variant processes write only inside their
   assigned directory.
-- Declare all ranking metrics before launch. Missing, non-numeric, or non-finite metrics make a
-  variant ineligible; do not invent replacement values after seeing results.
+- Candidate adapters report outcomes and may preserve claimed metrics for audit, but claimed
+  metrics never participate in ranking. The one frozen independent evaluator receives all
+  eligible outcomes in one code-owned request and must return one exact finite score set per
+  variant and declared metric. Missing, reordered, unknown, non-numeric, or non-finite scores
+  refuse evaluation.
+- Changed variant-adapter or evaluator bytes fail closed. When a variant adapter is inside the
+  target source tree, execute it from that complete read-only snapshot so its imports remain bound;
+  otherwise execute its frozen standalone copy.
 - Select a champion only from completed, integrity-valid variants. Break a true metric tie by the
   stable variant id so the same evidence yields the same recommendation.
 - Treat a recommendation as evidence for a later implementation decision, not as a machinery

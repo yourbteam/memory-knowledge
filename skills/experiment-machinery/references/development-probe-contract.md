@@ -108,7 +108,10 @@ Use one launcher request containing exactly:
 - `development_manifest`;
 - one declared `probe_id` and one captured `case_id` used by that probe;
 - `approach_build_requests`, with one approach id and candidate-build request path for every
-  approach declared by the selected probe.
+  approach declared by the selected probe;
+- one independent evaluator adapter, its SHA-256, and the code-controlled command containing
+  `{python}`, `{evaluation-adapter}`, `{evaluation-request}`, and `{evaluation-response}` exactly
+  once. Cross-case, all-probe, complete-run, and repair controllers preserve this exact evaluator.
 
 Run:
 
@@ -120,7 +123,8 @@ The launcher reconciles the complete approach set in manifest order, prepares bu
 with a fixed worker bound, and preserves every build's output and error evidence. It generates
 collision-free runner variant ids (`control`, then numbered variations) while recording their exact
 approach mapping. One real Experiment Machinery run compares every bundle against byte-identical
-captured input and the probe's ordered metrics.
+captured input. Candidates cannot choose their scores: the frozen evaluator scores all completed
+outcomes in one pass against the probe's ordered metrics.
 
 A recommendation is written only when every declared variant completed and remained integrity
 valid. The rank-one champion must map to exactly one bundle whose probe, case membership, and fresh
