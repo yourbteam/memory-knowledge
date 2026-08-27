@@ -15,6 +15,25 @@
         "claude"
       ]
     },
+    "atom-building-machinery": {
+      "canonical_tree_sha256": "699484f5dad4e767132f1ce35888480fd71c1d08cbcc572aa91259a10c3aa161",
+      "disposition": "GENERATED_CLIENT_PROJECTION",
+      "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
+      "generator": "machinery-client-model-v1",
+      "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
+      "projected_tree_sha256": null,
+      "projected_tree_sha256_by_client": {
+        "claude": "1549c55dbaa68ecf11b3c6751bb64b3826afb8f514a1dfa59fe87b61d1374f5c",
+        "codex": "882eaaa3f3c2c35d92572389243703c40b3b0636102fb9fbebaa20b9d6f61505"
+      },
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
     "auto-capture": {
       "canonical_tree_sha256": "74bb43fd5d60ef2d2bc06b0f6aff1ae3726614ac8eb1750221b7dd0704f459ee",
       "disposition": "SHARED_IDENTICAL",
