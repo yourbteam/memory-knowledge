@@ -7,8 +7,10 @@ import argparse
 import hashlib
 import json
 import os
+import signal
 import subprocess
 import sys
+import time
 from collections import Counter
 from pathlib import Path
 from typing import Any
@@ -20,6 +22,13 @@ from development_probe_manifest import ManifestError, validate_manifest
 
 CONTRACT = 1
 STAGES = ["run-probes", "compose-winners", "final-validation"]
+BASE_STAGE_TIMEOUT_MS = {
+    "run-probes": 2_700_000,
+    "compose-winners": 600_000,
+    "final-validation": 2_700_000,
+}
+STAGE_CONCURRENCY = 4
+TERMINATION_GRACE_SECONDS = 0.25
 VERDICTS = {"passed", "failed", "inconclusive"}
 FINAL_FIELDS = {
     "schema_version",
@@ -148,6 +157,19 @@ def _baseline_record(value: object, base: Path) -> tuple[Path, dict[str, str]]:
     return path, {"path": str(path), "sha256": actual}
 
 
+def _stage_timeouts(manifest: dict[str, Any]) -> dict[str, int]:
+    probe_waves = max(1, (len(manifest["mini_probes"]) + STAGE_CONCURRENCY - 1) // STAGE_CONCURRENCY)
+    largest_probe_case_count = max(len(probe["inputs"]) for probe in manifest["mini_probes"])
+    probe_case_waves = max(1, (largest_probe_case_count + STAGE_CONCURRENCY - 1) // STAGE_CONCURRENCY)
+    final_case_count = len(manifest["composition"]["final_validation"]["case_ids"])
+    final_case_waves = max(1, (final_case_count + STAGE_CONCURRENCY - 1) // STAGE_CONCURRENCY)
+    return {
+        "run-probes": BASE_STAGE_TIMEOUT_MS["run-probes"] * probe_waves * probe_case_waves,
+        "compose-winners": BASE_STAGE_TIMEOUT_MS["compose-winners"],
+        "final-validation": BASE_STAGE_TIMEOUT_MS["final-validation"] * final_case_waves,
+    }
+
+
 def _normalize_request(request_path: Path) -> tuple[dict[str, Any], dict[str, Any]]:
     request = _exact(
         _load(request_path, "development-probe request", "validate-request"),
@@ -254,6 +276,7 @@ def _normalize_request(request_path: Path) -> tuple[dict[str, Any], dict[str, An
         "manifest": manifest_path,
         "baseline": baseline_path,
         "adapter": adapter_path,
+        "stage_timeouts": _stage_timeouts(manifest),
     }
     return normalized, paths
 
@@ -284,30 +307,111 @@ def _stage_paths(output: Path, stage: str) -> tuple[Path, Path, Path]:
     )
 
 
-def _run_stage(output: Path, stage: str, command: list[str]) -> dict[str, Any]:
+def _signal_process_group(process: subprocess.Popen[str], selected_signal: signal.Signals) -> None:
+    try:
+        os.killpg(process.pid, selected_signal)
+    except (ProcessLookupError, PermissionError):
+        if process.poll() is None:
+            if selected_signal == signal.SIGTERM:
+                process.terminate()
+            else:
+                process.kill()
+
+
+def _merge_partial(partial: str | bytes | None, complete: str) -> str:
+    value = partial.decode() if isinstance(partial, bytes) else (partial or "")
+    return complete if not value or value in complete else value + complete
+
+
+def _run_stage(
+    output: Path,
+    stage: str,
+    command: list[str],
+    timeout_ms: int | None = None,
+) -> dict[str, Any]:
     stage_output, evidence_path, result_path = _stage_paths(output, stage)
-    completed = subprocess.run(command, text=True, capture_output=True, check=False)
+    deadline_ms = BASE_STAGE_TIMEOUT_MS[stage] if timeout_ms is None else timeout_ms
+    if type(deadline_ms) is not int or deadline_ms <= 0:
+        raise DevelopmentProbeRunError(
+            stage,
+            f"stage {stage!r} timeout is {deadline_ms!r}; require one positive integer millisecond deadline",
+        )
+    started_ns = time.monotonic_ns()
+    process = subprocess.Popen(
+        command,
+        text=True,
+        stdout=subprocess.PIPE,
+        stderr=subprocess.PIPE,
+        start_new_session=True,
+    )
+    timed_out = False
+    try:
+        stdout, stderr = process.communicate(timeout=deadline_ms / 1000)
+    except subprocess.TimeoutExpired as error:
+        timed_out = True
+        _signal_process_group(process, signal.SIGTERM)
+        try:
+            stdout, stderr = process.communicate(timeout=TERMINATION_GRACE_SECONDS)
+        except subprocess.TimeoutExpired:
+            _signal_process_group(process, signal.SIGKILL)
+            stdout, stderr = process.communicate()
+        stdout = _merge_partial(error.stdout, stdout)
+        stderr = _merge_partial(error.stderr, stderr)
+    duration_ms = (time.monotonic_ns() - started_ns) // 1_000_000
     receipt_root = output / "stage-receipts" / stage
-    _write_bytes(receipt_root / "stdout.txt", completed.stdout.encode("utf-8"))
-    _write_bytes(receipt_root / "stderr.txt", completed.stderr.encode("utf-8"))
+    stdout_path = receipt_root / "stdout.txt"
+    stderr_path = receipt_root / "stderr.txt"
+    stdout_sha256 = _write_bytes(stdout_path, stdout.encode("utf-8"))
+    stderr_sha256 = _write_bytes(stderr_path, stderr.encode("utf-8"))
     evidence_sha256 = _digest(evidence_path.read_bytes()) if evidence_path.is_file() else None
     result_sha256 = _digest(result_path.read_bytes()) if result_path.is_file() else None
+    timeout_path = receipt_root / "timeout.json"
+    timeout_sha256 = None
+    if timed_out:
+        timeout_sha256 = _write_json(
+            timeout_path,
+            {
+                "schema_version": CONTRACT,
+                "stage": stage,
+                "status": "timed-out",
+                "timeout_ms": deadline_ms,
+                "duration_ms": duration_ms,
+                "exit_code": process.returncode,
+                "stdout_sha256": stdout_sha256,
+                "stderr_sha256": stderr_sha256,
+            },
+        )
     receipt = {
         "schema_version": CONTRACT,
         "stage": stage,
-        "status": "completed" if completed.returncode == 0 else "failed",
-        "exit_code": completed.returncode,
+        "status": "timed-out" if timed_out else ("completed" if process.returncode == 0 else "failed"),
+        "exit_code": process.returncode,
+        "duration_ms": duration_ms,
+        "timeout_ms": deadline_ms,
+        "timed_out": timed_out,
         "output": str(stage_output.relative_to(output)),
         "evidence": str(evidence_path.relative_to(output)) if evidence_sha256 else None,
         "evidence_sha256": evidence_sha256,
         "result": str(result_path.relative_to(output)) if result_sha256 else None,
         "result_sha256": result_sha256,
+        "stdout_sha256": stdout_sha256,
+        "stderr_sha256": stderr_sha256,
+        "timeout": str(timeout_path.relative_to(output)) if timeout_sha256 else None,
+        "timeout_sha256": timeout_sha256,
         "promotion_applied": False,
     }
     receipt_path = receipt_root / "receipt.json"
     _write_json(receipt_path, receipt)
-    if completed.returncode != 0:
-        detail = completed.stderr.strip() or completed.stdout.strip() or "stage returned no diagnostic"
+    if timed_out:
+        relative_receipt = str(receipt_path.relative_to(output))
+        raise DevelopmentProbeRunError(
+            stage,
+            f"stage {stage!r} exceeded its controller-owned {deadline_ms} ms deadline; "
+            f"inspect {relative_receipt}",
+            relative_receipt,
+        )
+    if process.returncode != 0:
+        detail = stderr.strip() or stdout.strip() or "stage returned no diagnostic"
         relative_receipt = str(receipt_path.relative_to(output))
         raise DevelopmentProbeRunError(
             stage,
@@ -442,6 +546,7 @@ def run(request_path: Path, output: Path) -> dict[str, Any]:
             str(all_probe_path),
             str(output / "probes"),
         ],
+        timeout_ms=paths["stage_timeouts"]["run-probes"],
     )
     _run_stage(
         output,
@@ -453,6 +558,7 @@ def run(request_path: Path, output: Path) -> dict[str, Any]:
             str(composition_path),
             str(output / "composition"),
         ],
+        timeout_ms=paths["stage_timeouts"]["compose-winners"],
     )
     final_receipt = _run_stage(
         output,
@@ -464,6 +570,7 @@ def run(request_path: Path, output: Path) -> dict[str, Any]:
             str(final_path),
             str(output / "validation"),
         ],
+        timeout_ms=paths["stage_timeouts"]["final-validation"],
     )
     verdict = _bind_final_result(output, normalized, final_receipt)
     _write_json(

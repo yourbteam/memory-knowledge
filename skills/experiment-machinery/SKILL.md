@@ -114,8 +114,13 @@ Bind the manifest, every per-probe request, baseline source tree, and assessment
 declared SHA-256 values in the request. Code validates and normalizes the complete input set before
 launching anything, then runs all probes, composition, and final validation in fixed order. Each
 stage has its own output and durable receipt. A failure stops before the next stage, preserves all
-earlier evidence, and identifies its exact boundary. The final verdict is read from, rehashed, and
-bound to the verified assembly rather than trusted from process output. The launcher never promotes.
+earlier evidence, and identifies its exact boundary. Code freezes a 45-minute budget per concurrent
+wave of up to four probes and four cases, 10 minutes for composition, and 45 minutes per concurrent
+final-validation wave of up to four cases. Every stage runs in its own process group; an overrun
+terminates that group, preserves partial stdout and stderr plus a timeout record, and writes a
+terminal failed run summary. The final verdict is read from,
+rehashed, and bound to the verified assembly rather than trusted from process output. The launcher
+never promotes.
 
 When that complete run returns a semantic failed verdict that maps to a probe, run the opt-in
 self-contained repair controller:

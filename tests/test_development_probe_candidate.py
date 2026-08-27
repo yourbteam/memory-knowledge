@@ -6,6 +6,7 @@ import json
 import os
 import subprocess
 import sys
+import time
 from copy import deepcopy
 from pathlib import Path
 
@@ -1860,6 +1861,91 @@ def test_whole_process_runs_from_probe_experiments_to_passed_verdict(
     assert (output / "probes" / "promotion-candidates.json").is_file()
     assert (output / "composition" / "assembly" / "assembly.json").is_file()
     assert (output / "validation" / "final-verdict.json").is_file()
+
+
+def test_whole_process_stage_controller_preserves_normal_completion(tmp_path: Path) -> None:
+    module = _whole_process_module()
+    stage = "run-probes"
+    _, evidence_path, result_path = module._stage_paths(tmp_path, stage)
+    payload = json.dumps({"schema_version": 1, "status": "completed", "promotion_applied": False})
+    command = [
+        sys.executable,
+        "-c",
+        (
+            "from pathlib import Path; "
+            f"Path({str(evidence_path)!r}).parent.mkdir(parents=True, exist_ok=True); "
+            f"Path({str(evidence_path)!r}).write_text({payload!r}); "
+            f"Path({str(result_path)!r}).write_text({payload!r}); "
+            "print('stage-completed', flush=True)"
+        ),
+    ]
+
+    receipt = module._run_stage(tmp_path, stage, command, timeout_ms=2_000)
+
+    assert receipt["status"] == "completed"
+    assert receipt["timed_out"] is False
+    assert receipt["timeout_ms"] == 2_000
+    assert receipt["timeout"] is None
+    assert "stage-completed" in (tmp_path / "stage-receipts" / stage / "stdout.txt").read_text()
+
+
+def test_whole_process_stage_deadlines_scale_with_declared_parallel_work() -> None:
+    module = _whole_process_module()
+    manifest = {
+        "mini_probes": [{"inputs": [{"case_id": str(index)} for index in range(5)]} for _ in range(5)],
+        "composition": {"final_validation": {"case_ids": [str(index) for index in range(5)]}},
+    }
+
+    timeouts = module._stage_timeouts(manifest)
+
+    assert timeouts == {
+        "run-probes": 10_800_000,
+        "compose-winners": 600_000,
+        "final-validation": 5_400_000,
+    }
+
+
+@pytest.mark.parametrize(
+    ("stage", "process_tree"),
+    [
+        ("run-probes", False),
+        ("compose-winners", True),
+        ("final-validation", False),
+    ],
+)
+def test_whole_process_stage_controller_terminates_overruns_with_evidence(
+    tmp_path: Path,
+    stage: str,
+    process_tree: bool,
+) -> None:
+    module = _whole_process_module()
+    marker = tmp_path / f"{stage}-descendant.txt"
+    if process_tree:
+        child = (
+            "import subprocess,sys,time; "
+            f"subprocess.Popen([sys.executable, '-c', \"import time; from pathlib import Path; "
+            f"time.sleep(0.5); Path({str(marker)!r}).write_text('alive')\"]); "
+            "print('stage-started', flush=True); time.sleep(60)"
+        )
+    else:
+        child = "import time; print('stage-started', flush=True); time.sleep(60)"
+
+    with pytest.raises(module.DevelopmentProbeRunError, match="controller-owned") as failure:
+        module._run_stage(tmp_path, stage, [sys.executable, "-c", child], timeout_ms=100)
+
+    receipt_root = tmp_path / "stage-receipts" / stage
+    receipt = json.loads((receipt_root / "receipt.json").read_text())
+    timeout = json.loads((receipt_root / "timeout.json").read_text())
+    assert failure.value.stage == stage
+    assert receipt["status"] == "timed-out"
+    assert receipt["timed_out"] is True
+    assert receipt["timeout_ms"] == 100
+    assert timeout["stage"] == stage
+    assert timeout["status"] == "timed-out"
+    assert "stage-started" in (receipt_root / "stdout.txt").read_text()
+    if process_tree:
+        time.sleep(0.6)
+        assert not marker.exists()
 
 
 def test_whole_process_returns_semantic_failed_verdict_without_treating_it_as_a_run_error(

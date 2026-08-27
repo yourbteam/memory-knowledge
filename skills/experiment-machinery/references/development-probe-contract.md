@@ -281,7 +281,13 @@ order, baseline, adapter, and assessment-command shape. It preserves that normal
 top-level run request. The fixed stage order is all probes, composition, then final validation.
 Each stage receives an isolated directory and a receipt containing its exit status, stdout and
 stderr, evidence path and digest, and result path and digest. A failed stage prevents every later
-stage from launching while retaining prior receipts and artifacts.
+stage from launching while retaining prior receipts and artifacts. Controller-owned deadlines use
+a 45-minute budget per concurrent wave of up to four probes and four cases, 10 minutes for
+composition, and 45 minutes per final-validation wave of up to four cases. Each stage runs in a new
+process group. When a deadline expires, code terminates the complete group,
+escalates to a kill after the fixed grace interval, preserves partial stdout and stderr, writes a
+hash-bound timeout artifact and timed-out stage receipt, and makes the complete run terminally fail
+at that exact stage.
 
 After final validation, code ignores stdout as verdict authority. It freshly hashes and validates
 the final artifact, binds its atomic-step identity and assembly digest to a freshly verified
