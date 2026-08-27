@@ -1,0 +1,42 @@
+{
+ "note": "The 22 obligations atom 4 produced from the ten admitted pages. Frozen here so every approach is judged on the same material.",
+ "lines": [
+  "Deliverable Approved One-Page Client Intake Brief + Approved Measurement Brief",
+  "Success & measurement; Scope & logistics) + one-page Measurement Brief. Both PDF-locked with written",
+  "final-brief gate + the mandatory Measurement Brief (baseline, target, source, owner \u2014 see Step 10). Evidence-",
+  "measurement brief are approved in writing.",
+  "set; the brief AND the measurement brief are approved in writing by the decision-maker. No downstream work",
+  "Outtakes \u2192 Outcomes \u2192 Impact) with the vertical rule. The Measurement Brief (approved at Step 3). The KPI",
+  "Quality gate (three Measurement gate: no brief approved without baseline, target, source, owner. Optimization gate: weekly",
+  "This is a hard stop. No research starts before the brief and the measurement brief are approved. It's the",
+  "\u25cf The brief \u2014 and the measurement brief (baseline, target, source, owner) \u2014 are approved in writing by the",
+  "baseline+target+result+trend always shown \u2014 the system won't render a report that breaks them.",
+  "brief (baseline, target, source, owner) \u2014 so a novice can't skip it.",
+  "\u25cf The Measurement Brief is a hard gate. No campaign enters creative development without an approved",
+  "Communication What must people know, feel or Max three SMART objectives, baseline & Awareness, understanding,",
+  "The vertical rule. Every activity must connect vertically to an objective. If a metric cannot be connected to an",
+  "audience or organizational objective, it belongs in the appendix \u2014 not the executive scorecard.",
+  "objectives do? target preference, trust, intent, advocacy,",
+  "Audience / market breakdown Attribution method Known limitations",
+  "Data source Collection frequency Owner",
+  "Definition & calculation Baseline Target",
+  "Measurement design \u2014 record for every KPI",
+  "Account director Owns the measurement brief and client alignment",
+  "\u25cf Measurement gate: brief cannot be approved without baseline, target, source and owner."
+ ],
+ "must_keep": [
+  7,
+  17,
+  18,
+  19,
+  20,
+  22
+ ],
+ "must_keep_why": "7 and 22 say in the page's own words that a brief cannot be approved without baseline, target, source and owner. 17-20 are page 82's 'Measurement design - record for every KPI' table: definition and calculation, baseline, target, data source, collection frequency, owner, audience and market breakdown, attribution method, known limitations. Nine named fields a finished brief either records or does not.",
+ "must_drop": [
+  13,
+  16,
+  21
+ ],
+ "must_drop_why": "13 and 16 are fragments of a table row that state nothing on their own - 'objectives do? target preference, trust, intent, advocacy,'. 21 names who owns the brief, which is a role, not something a finished brief contains or fails."
+}

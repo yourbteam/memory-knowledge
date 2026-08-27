@@ -20,7 +20,7 @@ remote-mcp-operator
 remote-mcp-user-admin
 reproduce-first-verify
 requirements-coverage-gap-loop
-requirements-machine
+requirements-machinery
 requirements-playbook
 requirements-satisfaction-gap-loop
 research-playbook

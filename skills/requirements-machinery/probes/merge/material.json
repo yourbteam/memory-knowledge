@@ -1,0 +1,300 @@
+{
+ "note": "The picks the four-cut obligations pass actually produced over the fourteen pieces the relevance pass handed on — line, indent, sentence and cell, each asked on its own and each recorded on its own. Frozen here so every merge rule is judged on the same picks.",
+ "pages": {
+  "p-0009": " Step 3 — Final Brief (the Task for AI)\nSource guide: Client Intake & Briefing Toolkit (Pass 3 — Close). This is a hard stop — the cheapest gate in the engine,\npreventing the most expensive failure.\n Purpose                      Reconcile everything gathered, fill or consciously park every gap, and lock a single approved brief — the\n                              definitive task the AI engine will build the strategy from. No research starts until the brief and the\n                              measurement brief are approved in writing.\n Frameworks & tools           The gap register (required field × have it? × source × owner × by when) covering: business problem/objective;\n                              priority audiences & current state; reputation problem/desired perception; decision-maker & approval path;\n                              baseline data & measurement access; constraints, guardrails & AI permissions; budget, timeline & markets. The\n                              final-brief gate + the mandatory Measurement Brief (baseline, target, source, owner — see Step 10). Evidence-\n                              readiness screen (below).\n What the AI drafts           Assembles the one-page Client Intake Brief from Steps 1–2; maintains the gap register and flags which required\n                              fields are still empty; drafts the Measurement Brief skeleton.\n What the human owns          Confirms the problem is stated at reputation/company level — not as a tactic; confirms there are no material\n                              unknowns; sets the engagement tier, governance and AI-status; secures written approval from the decision-\n                              maker.\n Quality gate (HARD STOP)     The problem is at company/reputation level; no undisclosed risk remains; tier, governance and AI-status are\n                              set; the brief AND the measurement brief are approved in writing by the decision-maker. No downstream work\n                              begins otherwise.\n Deliverable                  Approved One-Page Client Intake Brief + Approved Measurement Brief\n Document format              Word/PDF: the one-page brief (Client & context; Organizational objective; Reputation problem/opportunity;\n                              Priority audiences; Desired change; Stakeholders & alignment; Constraints & guardrails; Assets & access;\n                              Success & measurement; Scope & logistics) + one-page Measurement Brief. Both PDF-locked with written\n                              approval recorded. Google Drive.\n\nEvidence readiness & gap check (from CD-S-002 · Phase 2)\n1. Inventory known, verifiable facts (high-trust inputs).\n2. List missing inputs that block a locked strategy.\n3. Flag inconsistencies — do not resolve by assertion.\n4. Separate fact vs. agency-proposal vs. situation/trigger.\n5. Run compliance / MNPI / confidentiality screen GATE.\n6. State strategic judgment: is input strong enough for a first build?\n\f",
+  "p-0017": " Step 10 — Measurement & Evaluation\nSource guide: Campaign Measurement Framework (AMEC-based). Start with the business change, then work backwards to\nactivities and metrics. Not advisory — adjudicated.\nPurpose                    Demonstrate not just that a campaign was visible, but whether the intended audience noticed it, understood\n                           it, acted differently, and contributed to a meaningful client outcome — the same way, whoever ran it.\nFrameworks & tools         The AMEC chain (Organizational objectives → Communication objectives → Inputs → Activities → Outputs →\n                           Outtakes → Outcomes → Impact) with the vertical rule. The Measurement Brief (approved at Step 3). The KPI\n                           ladder (measures on ≥ 3 levels, incl. one outtake/outcome); Quality Coverage Rate (replaces clip counts);\n                           engagement quality; disciplined SOV. KPI modules by campaign type (corporate reputation, employer\n                           branding, crisis in scope). PESO measurement chain. Reporting cadence: baseline before launch; daily/weekly\n                           during; one-page executive scorecard after. Attribution wording auto-matched to confidence (generated /\n                           contributed to / coincided with).\nWhat the AI drafts         Selects KPIs from the vetted set per campaign type; wires tagging/UTM/CRM fields; assembles daily/weekly\n                           reports and the executive scorecard; matches attribution wording to the evidence confidence level; flags any\n                           KPI without a baseline/target.\nWhat the human owns        Approves the organizational objective and success criteria; establishes baseline, KPI definitions and\n                           interpretation; turns weekly findings into execution decisions; judges attribution and alternative explanations.\nQuality gate (three        Measurement gate: no brief approved without baseline, target, source, owner. Optimization gate: weekly\ncheckpoints)               performance must produce a documented decision. Learning gate: closure adds ≥ 3 findings to the benchmark\n                           & learning library. Non-negotiables enforced: no AVEs; no impressions-as-reach; positive sentiment ≠ impact;\n                           show baseline/target/result/trend together; distinguish what UP delivered vs what audiences did vs what\n                           changed for the client.\nDeliverable                Ongoing performance reports + the One-Page Executive Scorecard\nDocument format            Weekly headline-KPI report (5 KPIs vs target, action required) + a one-page scorecard (Objective/KPI × baseline\n                           × target × result × status × insight × decision) followed by the eight-part evaluation narrative. Dashboard +\n                           Word/PDF. Google Drive.\n\f",
+  "p-0019": "AI Automation Alignment — Summary Map\nEvery step of the AI automation maps one-to-one to the UP agency flow and its source guide. This is the\nchecklist the engine build is held against.\nUP Step                                   Source Guide / Framework → Locked Deliverable\n1 · Brief from client                     Client Intake Toolkit (Prepare) → Pre-Engagement Briefing Pack + Hypothesis\n2 · Debrief (Q&A) + elicitation           Client Intake Toolkit (Ask, 8-set bank) + founder elicitation → Debrief Write-Up + Client Alignment\n                                          Map\n3 · Final brief (task for AI)             Client Intake Toolkit (Close, hard gate) + evidence-readiness → Approved Intake Brief +\n                                          Measurement Brief\n4 · Research & analysis                   Research & Audit (buckets, PESTLE, 5 audits) → Research & Insight Pack\n5 · Frame problem → Insights              Discovering Insights (5 T's, Sweet Spot, gates) → 1–3 Killer Insight Cards\n(opt) Creative Big Idea                   Idea Haus (6 steps, Big Idea Criteria) → Validated Big Idea Concept\n6 · Strategic approach                    Strategic Approach (SMART+I, GET/WHO/TO/BY, options→recommend→prioritise) → Strategy\n                                          One-Pager\n7 · Narrative, messages, pillars → LOCK   Narrative & Messages (template, Trident, Hero/Hub/Hygiene) → Message Architecture (locked)\n8 · Platform architecture                 Communications Platform (5 criteria, PESO, Activation Cards) → Communications Platform\n9 · Engagement & rollout                  Execution Toolkit (phases, calendar, collateral, governance) → Engagement Plan + Toolkit\n10 · Measurement & evaluation             AMEC Framework (chain, KPI ladder, scorecard) → Reports + Executive Scorecard\n11 · Annual review & update               AMEC long-term review + reputation tracking → Annual Review + Refreshed One-Pager\n\n\nCD-S-002 · Core spine applies to all clients; Enterprise/SME and B2B/B2C forks show where the path diverges.\nEach step is enforced by its own quality gate and delivers a defined artifact in a defined format — so a junior\noperator, or the engine itself, produces work at the standard a senior strategist would sign. Measurement\nstandard: AMEC Barcelona Principles 4.0 + AMEC IEF.\n\f",
+  "p-0022": "2. The map — which guide to open at each step\nStep                              You deliver                       Open this guide                             Core frameworks inside\n1–3 · Frame (Brief · Debrief ·    Briefing pack · Alignment Map     Client Intake & Briefing Toolkit            6 pre-audits · 8-set question bank · gap register ·\nFinal Brief)                      · Approved Brief +                                                            final-brief hard stop\n                                  Measurement Brief\n4 · Research & Analysis           The Research & Insight Pack       Research & Audit Guide                      Buckets & Questions · Comms-PESTLE · the 5\n                                                                                                                audits · reputation & trust audit\n5 · Frame Problem → Insights      1–3 Killer Insight Cards          Discovering & Defining Insights Guide       Insight-or-not · the 5 T's · Sweet Spot ·\n                                                                                                                Distinctiveness & Validation gates\n(opt) Creative Big Idea           A Validated Big Idea Concept      The Creative Idea — Idea Haus Guide         6-step Idea Haus · Big Idea Criteria · lateral-\n                                                                                                                thinking tools\n6 · Strategic Approach            The Strategy One-Pager            Building the Strategic Approach Guide Strategy cascade · SMART+I · GET/WHO/TO/BY ·\n                                                                                                          options → recommend\n7 · Narrative, Messages &         The Message Architecture          Narrative, Messages & Pillars Guide         Narrative Template · 6-type messaging · Trident\nPillars                           (locked)                                                                      ladder · Hero/Hub/Hygiene\n8 · Platform Architecture         The Communications Platform       Communications Platform Guide               5 platform criteria · PESO (earned-led) ·\n                                                                                                                Activation Cards\n9 · Engagement & Rollout          The Engagement Plan +             Execution Toolkit Guide                     Toolkit anatomy · phasing · editorial calendar ·\n                                  Execution Toolkit                                                             collateral library\n10 · Measurement &                Reports + Executive Scorecard     Campaign Measurement Framework              AMEC chain · KPI ladder · Quality Coverage Rate ·\nEvaluation                                                          (AMEC)                                      three gates\n11 · Annual Review & Update       Annual Review + Refreshed         Measurement (long-term) + Strategic         Reputation tracking · say-do gap · approach re-\n                                  One-Pager                         Approach guides                             test · learning library\n\n\n\n3. The documents that apply throughout\nDocument                                   What it is                                                                  When to use it\nMaster Blueprint (Consolidated)            The whole-system overview: the method, the four layers, the quality         Onboarding; understanding how the\n                                           design                                                                      engine works as a whole\nAdversarial Review Board (M3)              AI reviewers (Competitor, CFO, Journalist, GC, Audience, Activist,          At the insight gate and before anything\n                                           Employee) that attack the work before it ships                              ships\nLanguage Requirements (Section 5,          The standard every document must meet — wording and whole text              Every document, every step — checked at\nbelow)                                                                                                                 every gate\n\f",
+  "p-0030": "Techniques to get more, and better\n    ●     Research first. Every question should show you already know the brand, industry and market.\n    ●     Open, then probe. Ask broad, then ladder down with “why?” and “so what?” until you reach the real\n          answer, not the rehearsed one.\n    ●     Talk to several people. One contact gives one truth; the C-suite gives the real, conflicting picture.\n    ●     Ask for documents and data. Annual report, research, tracking, past campaigns, and analytics/CRM\n          access — evidence beats opinion.\n    ●     Listen for the unsaid. The tension, the hesitation, the misperception they downplay — that's often\n          where the insight lives.\n    ●     Reflect back. Play the problem back in your words before you leave — misunderstandings surface\n          immediately.\n\n\nPass 3 — Close: fill gaps, validate, approve\nThe completeness check — the gap register\nThe brief is not final until every required field is filled or consciously parked. Track it:\nRequired field                                Have it?   Source                    Owner           By when\nBusiness problem / organizational objective\n\nPriority audiences & current state\n\nReputation problem / desired perception\n\nDecision-maker & approval path\n\nBaseline data & measurement access\n\nConstraints, guardrails & AI permissions\n\nBudget, timeline & markets\n\n\nThe final-brief gate (Step 3)\nBefore any strategy work begins, confirm:\n    ●     The problem is stated at reputation / company level — not as a tactic (“we need a press release” is not a\n          brief).\n    ●     There are no material unknowns; any undisclosed risk has been surfaced and discussed.\n    ●     The engagement tier, governance and AI-status are set.\n    ●     The brief — and the measurement brief (baseline, target, source, owner) — are approved in writing by the\n          decision-maker.\nThis is a hard stop. No research starts before the brief and the measurement brief are approved. It's the\ncheapest gate in the whole engine and it prevents the most expensive failure — building a brilliant strategy for\nthe wrong problem.\n\f",
+  "p-0080": "How this fits the engine\nThis is the definitive methodology for the CUBE's Measurement face and Step 13 of the guided flow. It replaces\nthe lighter measurement summary in the Master Blueprint (§13) and becomes the engine's measurement\nstandard.\nCentral rule: start with the business change, then work backwards to activities and metrics. Reach and coverage\nremain useful diagnostics, but success is judged through audience response, behaviour change and\norganizational impact.\n\nWhy it is operator-independent\n    ●   The Measurement Brief is a hard gate. No campaign enters creative development without an approved\n        brief (baseline, target, source, owner) — so a novice can't skip it.\n    ●   The KPI ladder and campaign-type modules are fill-in templates. The operator selects the right KPIs\n        from a vetted set rather than judging what to measure.\n    ●   The non-negotiables are enforced rules. No AVEs, no impressions-as-reach,\n        baseline+target+result+trend always shown — the system won't render a report that breaks them.\n    ●   The attribution wording is auto-matched to the evidence. “Generated / contributed to / coincided\n        with” is set by the confidence level, not the operator's optimism.\nEnforced by the Review Board. The Adversarial Review Board's CFO persona attacks any KPI without a\nbaseline/target/benchmark, and the Journalist persona attacks any impact claim that outruns its evidence — so\nthis framework is not advisory, it is adjudicated.\n\f",
+  "p-0082": "2. Mandatory measurement brief\nNo campaign enters creative development until the account lead and client approve this one-page brief.\n\nBusiness definition\n    ●     Business problem or opportunity · Organizational objective\n    ●     Priority audiences and their current state · Desired audience change\n    ●     Campaign period and relevant markets · Commercial, regulatory or reputational constraints\n\nObjective formula\n  Write every objective this way\n  By [date], increase/decrease [audience change] among [specific audience] from [baseline] to [target],\n  contributing to [organizational objective].\n  Example: By 30 September, increase aided awareness of Brand X's sustainability commitment among urban\n  consumers aged 25–44 from 28% to 38%, contributing to stronger brand preference.\nUse no more than: one organizational objective · three communication objectives · five executive KPIs.\n\nMeasurement design — record for every KPI\nField                                   Field                                    Field\nDefinition & calculation                Baseline                                 Target\nData source                             Collection frequency                     Owner\nAudience / market breakdown             Attribution method                       Known limitations\nTargets should reflect the starting baseline, market maturity, available resources and the client's control over\nexecution. Multi-market campaigns combine a small number of global KPIs with locally appropriate targets.\n\f",
+  "p-0087": "7. Attribution & evidence standards\nAssign each impact claim a confidence level, and match the wording to it.\nConfidence                 Evidence                                                                          Permitted wording\nHigh                       Controlled experiment, matched markets, exposed-vs-unexposed research, or         “The campaign generated…”\n                           strong CRM attribution\nMedium                     Time-series change supported by multiple data sources and a credible              “The campaign contributed to…”\n                           campaign linkage\nLow                        Correlation or directional evidence without control for other factors             “The result coincided with the campaign\n                                                                                                             and suggests…”\n\nGuard against false causation. Never claim causation from media coverage, engagement or before-and-after\ndata alone. Record product changes, price promotions, competitor activity, seasonality and major news events as\npossible alternative explanations.\n\n\n8. Governance inside United Partners\nRole                                           Accountability\nClient lead                                    Approves organizational objective, business data and success criteria\nAccount director                               Owns the measurement brief and client alignment\nStrategy / Insights lead                       Establishes baseline, KPI definitions, methodology and interpretation\nChannel leads                                  Implement tagging, collect data and optimize activity\nAnalyst                                        Maintains data quality, dashboard and evaluation\nCampaign lead                                  Turns weekly findings into execution decisions\n\n\nThree checkpoints\n       ●      Measurement gate: brief cannot be approved without baseline, target, source and owner.\n       ●      Optimization gate: weekly performance must produce a documented decision.\n       ●      Learning gate: campaign closure must add at least three findings to the shared benchmark & learning\n              library.\nThese are the engine's gates. The Measurement gate is the Step-13 gate; the Learning gate feeds the Outcome\nLibrary (M4). Measurement is built into the flow, not bolted on at the end.\n\f",
+  "p-0101": "2. The personas\nEach persona owns one failure mode. Together they cover the ways a reputation strategy dies.\n The Competitor “I can say that too.”\nCatches: Table-stakes positioning; weak distinctiveness and ownability.\nAttacks: Which of your claims could I make word-for-word? How do I counter-position you tomorrow? What's your\ndefensible ground versus mine? Is your “white space” actually contested?\nPass when: At least one position no named competitor can credibly claim, plus a stated defense against counter-\npositioning.\n The CFO / Board “So what — where's the business and the number?”\nCatches: No business linkage; vanity or vague measurement; unrealistic budget/timeline; over-claimed value.\nAttacks: How does this move the business objective? What's the KPI, baseline, target and benchmark? Prove the\nreputation-to-value link — or stop claiming it. Why fund this over the alternative?\nPass when: Every objective traces to a business goal; measurement has baseline/target/benchmark; value stated as\ncontribution, not attribution; budget realistic.\n The Journalist “Where's the substance? I'm going to check.”\nCatches: Unsubstantiated claims; the gap between narrative and behaviour; greenwashing / hypocrisy exposure; spin.\nAttacks: What's the proof behind this line? What does your actual record show? Where does the narrative outrun the\ntruth? What's the story when I dig?\nPass when: Every claim carries a proof point; no demonstrable gap between narrative and behaviour; no\ngreenwashing exposure (CSRD-safe).\n The General Counsel / Risk “Can you substantiate that — and what's the exposure?”\nCatches: Legal/regulatory exposure; unsubstantiated or regulated claims; defamation; a stand that invites an\nunwinnable fight; hidden tripwires.\nAttacks: Is this claim substantiable and compliant? Does it create liability? Does the stand invite a fight we can't win?\nIs there a litigation / disclosure / deal tripwire hiding here?\nPass when: Claims substantiable; do-not-say guardrails intact; no undisclosed tripwire; the stand fits the company's\nrisk appetite and character.\n\f"
+ },
+ "picks": {
+  "p-0009": [
+   "measurement brief are approved in writing.",
+   "final-brief gate + the mandatory Measurement Brief (baseline, target, source, owner — see Step 10). Evidence-",
+   "fields are still empty; drafts the Measurement Brief skeleton.",
+   "set; the brief AND the measurement brief are approved in writing by the decision-maker. No downstream work",
+   "Deliverable Approved One-Page Client Intake Brief + Approved Measurement Brief",
+   "Success & measurement; Scope & logistics) + one-page Measurement Brief. Both PDF-locked with written",
+   "preventing the most expensive failure. Purpose Reconcile everything gathered, fill or consciously park every gap, and lock a single approved brief — the definitive task the AI engine will build the strategy from. No research starts until the brief and the measurement brief are approved in writing. Frameworks & tools The gap register (required field × have it? × source × owner × by when) covering: business problem/objective; priority audiences & current state; reputation problem/desired perception; decision-maker & approval path; baseline data & measurement access; constraints, guardrails & AI permissions; budget, timeline & markets. The final-brief gate + the mandatory Measurement Brief (baseline, target, source, owner — see Step 10). Evidence- readiness screen (below). What the AI drafts Assembles the one-page Client Intake Brief from Steps 1–2; maintains the gap register and flags which required fields are still empty; drafts the Measurement Brief skeleton. What the human owns Confirms the problem is stated at reputation/company level — not as a tactic; confirms there are no material unknowns; sets the engagement tier, governance and AI-status; secures written approval from the decision- maker. Quality gate (HARD STOP) The problem is at company/reputation level; no undisclosed risk remains; tier, governance and AI-status are set; the brief AND the measurement brief are approved in writing by the decision-maker. No downstream work begins otherwise. Deliverable Approved One-Page Client Intake Brief + Approved Measurement Brief Document format Word/PDF: the one-page brief (Client & context; Organizational objective; Reputation problem/opportunity; Priority audiences; Desired change; Stakeholders & alignment; Constraints & guardrails; Assets & access; Success & measurement; Scope & logistics) + one-page Measurement Brief. Both PDF-locked with written approval recorded. Google Drive.",
+   "No research starts until the brief and the measurement brief are approved in writing.",
+   "The final-brief gate + the mandatory Measurement Brief (baseline, target, source, owner — see Step 10).",
+   "Quality gate (HARD STOP) The problem is at company/reputation level; no undisclosed risk remains; tier, governance and AI-status are set; the brief AND the measurement brief are approved in writing by the decision-maker.",
+   "Deliverable Approved One-Page Client Intake Brief + Approved Measurement Brief Document format Word/PDF: the one-page brief (Client & context; Organizational objective; Reputation problem/opportunity; Priority audiences; Desired change; Stakeholders & alignment; Constraints & guardrails; Assets & access; Success & measurement; Scope & logistics) + one-page Measurement Brief.",
+   "Both PDF-locked with written approval recorded.",
+   "Reconcile everything gathered, fill or consciously park every gap, and lock a single approved brief — the definitive task the AI engine will build the strategy from. No research starts until the brief and the measurement brief are approved in writing.",
+   "The gap register (required field × have it? × source × owner × by when) covering: business problem/objective; priority audiences & current state; reputation problem/desired perception; decision-maker & approval path; baseline data & measurement access; constraints, guardrails & AI permissions; budget, timeline & markets. The final-brief gate + the mandatory Measurement Brief (baseline, target, source, owner — see Step 10). Evidence- readiness screen (below).",
+   "Confirms the problem is stated at reputation/company level — not as a tactic; confirms there are no material unknowns; sets the engagement tier, governance and AI-status; secures written approval from the decision- maker.",
+   "The problem is at company/reputation level; no undisclosed risk remains; tier, governance and AI-status are set; the brief AND the measurement brief are approved in writing by the decision-maker. No downstream work begins otherwise.",
+   "Approved One-Page Client Intake Brief + Approved Measurement Brief",
+   "Word/PDF: the one-page brief (Client & context; Organizational objective; Reputation problem/opportunity; Priority audiences; Desired change; Stakeholders & alignment; Constraints & guardrails; Assets & access; Success & measurement; Scope & logistics) + one-page Measurement Brief. Both PDF-locked with written approval recorded. Google Drive."
+  ],
+  "p-0017": [
+   "Outtakes → Outcomes → Impact) with the vertical rule. The Measurement Brief (approved at Step 3). The KPI",
+   "ladder (measures on ≥ 3 levels, incl. one outtake/outcome); Quality Coverage Rate (replaces clip counts);",
+   "KPI without a baseline/target.",
+   "Quality gate (three Measurement gate: no brief approved without baseline, target, source, owner. Optimization gate: weekly",
+   "checkpoints) performance must produce a documented decision. Learning gate: closure adds ≥ 3 findings to the benchmark",
+   "Frameworks & tools The AMEC chain (Organizational objectives → Communication objectives → Inputs → Activities → Outputs → Outtakes → Outcomes → Impact) with the vertical rule. The Measurement Brief (approved at Step 3). The KPI ladder (measures on ≥ 3 levels, incl. one outtake/outcome); Quality Coverage Rate (replaces clip counts); engagement quality; disciplined SOV. KPI modules by campaign type (corporate reputation, employer branding, crisis in scope). PESO measurement chain. Reporting cadence: baseline before launch; daily/weekly during; one-page executive scorecard after. Attribution wording auto-matched to confidence (generated / contributed to / coincided with).",
+   "checkpoints) performance must produce a documented decision. Learning gate: closure adds ≥ 3 findings to the benchmark & learning library. Non-negotiables enforced: no AVEs; no impressions-as-reach; positive sentiment ≠ impact; show baseline/target/result/trend together; distinguish what UP delivered vs what audiences did vs what changed for the client.",
+   "The Measurement Brief (approved at Step 3).",
+   "Quality gate (three Measurement gate: no brief approved without baseline, target, source, owner.",
+   "The AMEC chain (Organizational objectives → Communication objectives → Inputs → Activities → Outputs → Outtakes → Outcomes → Impact) with the vertical rule. The Measurement Brief (approved at Step 3). The KPI ladder (measures on ≥ 3 levels, incl. one outtake/outcome); Quality Coverage Rate (replaces clip counts); engagement quality; disciplined SOV. KPI modules by campaign type (corporate reputation, employer branding, crisis in scope). PESO measurement chain. Reporting cadence: baseline before launch; daily/weekly during; one-page executive scorecard after. Attribution wording auto-matched to confidence (generated / contributed to / coincided with).",
+   "Measurement gate: no brief approved without baseline, target, source, owner. Optimization gate: weekly"
+  ],
+  "p-0019": [
+   "3 · Final brief (task for AI) Client Intake Toolkit (Close, hard gate) + evidence-readiness → Approved Intake Brief + Measurement Brief"
+  ],
+  "p-0022": [
+   "Language Requirements (Section 5, The standard every document must meet — wording and whole text Every document, every step — checked at"
+  ],
+  "p-0030": [
+   "● The brief — and the measurement brief (baseline, target, source, owner) — are approved in writing by the",
+   "This is a hard stop. No research starts before the brief and the measurement brief are approved. It's the",
+   "● The brief — and the measurement brief (baseline, target, source, owner) — are approved in writing by the decision-maker.",
+   "Source Owner By when Business problem / organizational objective Priority audiences & current state Reputation problem / desired perception Decision-maker & approval path Baseline data & measurement access Constraints, guardrails & AI permissions Budget, timeline & markets The final-brief gate (Step 3) Before any strategy work begins, confirm: ● The problem is stated at reputation / company level — not as a tactic (“we need a press release” is not a brief).",
+   "No research starts before the brief and the measurement brief are approved."
+  ],
+  "p-0080": [
+   "● The Measurement Brief is a hard gate. No campaign enters creative development without an approved",
+   "brief (baseline, target, source, owner) — so a novice can't skip it.",
+   "● The non-negotiables are enforced rules. No AVEs, no impressions-as-reach,",
+   "baseline+target+result+trend always shown — the system won't render a report that breaks them.",
+   "● The Measurement Brief is a hard gate. No campaign enters creative development without an approved brief (baseline, target, source, owner) — so a novice can't skip it.",
+   "No campaign enters creative development without an approved brief (baseline, target, source, owner) — so a novice can't skip it.",
+   "No AVEs, no impressions-as-reach, baseline+target+result+trend always shown — the system won't render a report that breaks them."
+  ],
+  "p-0082": [
+   "No campaign enters creative development until the account lead and client approve this one-page brief.",
+   "Measurement design — record for every KPI",
+   "Definition & calculation Baseline Target",
+   "Data source Collection frequency Owner",
+   "Audience / market breakdown Attribution method Known limitations",
+   "Targets should reflect the starting baseline, market maturity, available resources and the client's control over",
+   "execution. Multi-market campaigns combine a small number of global KPIs with locally appropriate targets.",
+   "Mandatory measurement brief No campaign enters creative development until the account lead and client approve this one-page brief.",
+   "Business definition ● Business problem or opportunity · Organizational objective ● Priority audiences and their current state · Desired audience change ● Campaign period and relevant markets · Commercial, regulatory or reputational constraints Objective formula Write every objective this way By [date], increase/decrease [audience change] among [specific audience] from [baseline] to [target], contributing to [organizational objective].",
+   "Example: By 30 September, increase aided awareness of Brand X's sustainability commitment among urban consumers aged 25–44 from 28% to 38%, contributing to stronger brand preference.",
+   "Use no more than: one organizational objective · three communication objectives · five executive KPIs.",
+   "Measurement design — record for every KPI Field Field Field Definition & calculation Baseline Target Data source Collection frequency Owner Audience / market breakdown Attribution method Known limitations Targets should reflect the starting baseline, market maturity, available resources and the client's control over execution.",
+   "Multi-market campaigns combine a small number of global KPIs with locally appropriate targets."
+  ],
+  "p-0087": [
+   "Account director Owns the measurement brief and client alignment",
+   "● Measurement gate: brief cannot be approved without baseline, target, source and owner.",
+   "Governance inside United Partners Role Accountability Client lead Approves organizational objective, business data and success criteria Account director Owns the measurement brief and client alignment Strategy / Insights lead Establishes baseline, KPI definitions, methodology and interpretation Channel leads Implement tagging, collect data and optimize activity Analyst Maintains data quality, dashboard and evaluation Campaign lead Turns weekly findings into execution decisions Three checkpoints ● Measurement gate: brief cannot be approved without baseline, target, source and owner.",
+   "Owns the measurement brief and client alignment",
+   "Measurement gate: brief cannot be approved without baseline, target, source and owner."
+  ],
+  "p-0101": [
+   "What's the KPI, baseline, target and benchmark?",
+   "Pass when: Every objective traces to a business goal; measurement has baseline/target/benchmark; value stated as contribution, not attribution; budget realistic."
+  ]
+ },
+ "picks_by_cut": {
+  "p-0009": {
+   "line": [
+    "measurement brief are approved in writing.",
+    "final-brief gate + the mandatory Measurement Brief (baseline, target, source, owner — see Step 10). Evidence-",
+    "fields are still empty; drafts the Measurement Brief skeleton.",
+    "set; the brief AND the measurement brief are approved in writing by the decision-maker. No downstream work",
+    "Deliverable Approved One-Page Client Intake Brief + Approved Measurement Brief",
+    "Success & measurement; Scope & logistics) + one-page Measurement Brief. Both PDF-locked with written"
+   ],
+   "indent": [
+    "preventing the most expensive failure. Purpose Reconcile everything gathered, fill or consciously park every gap, and lock a single approved brief — the definitive task the AI engine will build the strategy from. No research starts until the brief and the measurement brief are approved in writing. Frameworks & tools The gap register (required field × have it? × source × owner × by when) covering: business problem/objective; priority audiences & current state; reputation problem/desired perception; decision-maker & approval path; baseline data & measurement access; constraints, guardrails & AI permissions; budget, timeline & markets. The final-brief gate + the mandatory Measurement Brief (baseline, target, source, owner — see Step 10). Evidence- readiness screen (below). What the AI drafts Assembles the one-page Client Intake Brief from Steps 1–2; maintains the gap register and flags which required fields are still empty; drafts the Measurement Brief skeleton. What the human owns Confirms the problem is stated at reputation/company level — not as a tactic; confirms there are no material unknowns; sets the engagement tier, governance and AI-status; secures written approval from the decision- maker. Quality gate (HARD STOP) The problem is at company/reputation level; no undisclosed risk remains; tier, governance and AI-status are set; the brief AND the measurement brief are approved in writing by the decision-maker. No downstream work begins otherwise. Deliverable Approved One-Page Client Intake Brief + Approved Measurement Brief Document format Word/PDF: the one-page brief (Client & context; Organizational objective; Reputation problem/opportunity; Priority audiences; Desired change; Stakeholders & alignment; Constraints & guardrails; Assets & access; Success & measurement; Scope & logistics) + one-page Measurement Brief. Both PDF-locked with written approval recorded. Google Drive."
+   ],
+   "sentence": [
+    "No research starts until the brief and the measurement brief are approved in writing.",
+    "The final-brief gate + the mandatory Measurement Brief (baseline, target, source, owner — see Step 10).",
+    "Quality gate (HARD STOP) The problem is at company/reputation level; no undisclosed risk remains; tier, governance and AI-status are set; the brief AND the measurement brief are approved in writing by the decision-maker.",
+    "Deliverable Approved One-Page Client Intake Brief + Approved Measurement Brief Document format Word/PDF: the one-page brief (Client & context; Organizational objective; Reputation problem/opportunity; Priority audiences; Desired change; Stakeholders & alignment; Constraints & guardrails; Assets & access; Success & measurement; Scope & logistics) + one-page Measurement Brief.",
+    "Both PDF-locked with written approval recorded."
+   ],
+   "cell": [
+    "Reconcile everything gathered, fill or consciously park every gap, and lock a single approved brief — the definitive task the AI engine will build the strategy from. No research starts until the brief and the measurement brief are approved in writing.",
+    "The gap register (required field × have it? × source × owner × by when) covering: business problem/objective; priority audiences & current state; reputation problem/desired perception; decision-maker & approval path; baseline data & measurement access; constraints, guardrails & AI permissions; budget, timeline & markets. The final-brief gate + the mandatory Measurement Brief (baseline, target, source, owner — see Step 10). Evidence- readiness screen (below).",
+    "Confirms the problem is stated at reputation/company level — not as a tactic; confirms there are no material unknowns; sets the engagement tier, governance and AI-status; secures written approval from the decision- maker.",
+    "The problem is at company/reputation level; no undisclosed risk remains; tier, governance and AI-status are set; the brief AND the measurement brief are approved in writing by the decision-maker. No downstream work begins otherwise.",
+    "Approved One-Page Client Intake Brief + Approved Measurement Brief",
+    "Word/PDF: the one-page brief (Client & context; Organizational objective; Reputation problem/opportunity; Priority audiences; Desired change; Stakeholders & alignment; Constraints & guardrails; Assets & access; Success & measurement; Scope & logistics) + one-page Measurement Brief. Both PDF-locked with written approval recorded. Google Drive."
+   ]
+  },
+  "p-0017": {
+   "line": [
+    "Outtakes → Outcomes → Impact) with the vertical rule. The Measurement Brief (approved at Step 3). The KPI",
+    "ladder (measures on ≥ 3 levels, incl. one outtake/outcome); Quality Coverage Rate (replaces clip counts);",
+    "KPI without a baseline/target.",
+    "Quality gate (three Measurement gate: no brief approved without baseline, target, source, owner. Optimization gate: weekly",
+    "checkpoints) performance must produce a documented decision. Learning gate: closure adds ≥ 3 findings to the benchmark"
+   ],
+   "indent": [
+    "Frameworks & tools The AMEC chain (Organizational objectives → Communication objectives → Inputs → Activities → Outputs → Outtakes → Outcomes → Impact) with the vertical rule. The Measurement Brief (approved at Step 3). The KPI ladder (measures on ≥ 3 levels, incl. one outtake/outcome); Quality Coverage Rate (replaces clip counts); engagement quality; disciplined SOV. KPI modules by campaign type (corporate reputation, employer branding, crisis in scope). PESO measurement chain. Reporting cadence: baseline before launch; daily/weekly during; one-page executive scorecard after. Attribution wording auto-matched to confidence (generated / contributed to / coincided with).",
+    "Quality gate (three Measurement gate: no brief approved without baseline, target, source, owner. Optimization gate: weekly",
+    "checkpoints) performance must produce a documented decision. Learning gate: closure adds ≥ 3 findings to the benchmark & learning library. Non-negotiables enforced: no AVEs; no impressions-as-reach; positive sentiment ≠ impact; show baseline/target/result/trend together; distinguish what UP delivered vs what audiences did vs what changed for the client."
+   ],
+   "sentence": [
+    "The Measurement Brief (approved at Step 3).",
+    "Quality gate (three Measurement gate: no brief approved without baseline, target, source, owner."
+   ],
+   "cell": [
+    "The AMEC chain (Organizational objectives → Communication objectives → Inputs → Activities → Outputs → Outtakes → Outcomes → Impact) with the vertical rule. The Measurement Brief (approved at Step 3). The KPI ladder (measures on ≥ 3 levels, incl. one outtake/outcome); Quality Coverage Rate (replaces clip counts); engagement quality; disciplined SOV. KPI modules by campaign type (corporate reputation, employer branding, crisis in scope). PESO measurement chain. Reporting cadence: baseline before launch; daily/weekly during; one-page executive scorecard after. Attribution wording auto-matched to confidence (generated / contributed to / coincided with).",
+    "Measurement gate: no brief approved without baseline, target, source, owner. Optimization gate: weekly"
+   ]
+  },
+  "p-0019": {
+   "line": [],
+   "indent": [
+    "3 · Final brief (task for AI) Client Intake Toolkit (Close, hard gate) + evidence-readiness → Approved Intake Brief + Measurement Brief"
+   ],
+   "sentence": [],
+   "cell": []
+  },
+  "p-0022": {
+   "line": [],
+   "indent": [
+    "Language Requirements (Section 5, The standard every document must meet — wording and whole text Every document, every step — checked at"
+   ],
+   "sentence": [],
+   "cell": []
+  },
+  "p-0030": {
+   "line": [
+    "● The brief — and the measurement brief (baseline, target, source, owner) — are approved in writing by the",
+    "This is a hard stop. No research starts before the brief and the measurement brief are approved. It's the"
+   ],
+   "indent": [
+    "● The brief — and the measurement brief (baseline, target, source, owner) — are approved in writing by the decision-maker.",
+    "This is a hard stop. No research starts before the brief and the measurement brief are approved. It's the"
+   ],
+   "sentence": [
+    "Source Owner By when Business problem / organizational objective Priority audiences & current state Reputation problem / desired perception Decision-maker & approval path Baseline data & measurement access Constraints, guardrails & AI permissions Budget, timeline & markets The final-brief gate (Step 3) Before any strategy work begins, confirm: ● The problem is stated at reputation / company level — not as a tactic (“we need a press release” is not a brief).",
+    "● The brief — and the measurement brief (baseline, target, source, owner) — are approved in writing by the decision-maker.",
+    "No research starts before the brief and the measurement brief are approved."
+   ],
+   "cell": []
+  },
+  "p-0080": {
+   "line": [
+    "● The Measurement Brief is a hard gate. No campaign enters creative development without an approved",
+    "brief (baseline, target, source, owner) — so a novice can't skip it.",
+    "● The non-negotiables are enforced rules. No AVEs, no impressions-as-reach,",
+    "baseline+target+result+trend always shown — the system won't render a report that breaks them."
+   ],
+   "indent": [
+    "● The Measurement Brief is a hard gate. No campaign enters creative development without an approved brief (baseline, target, source, owner) — so a novice can't skip it."
+   ],
+   "sentence": [
+    "No campaign enters creative development without an approved brief (baseline, target, source, owner) — so a novice can't skip it.",
+    "No AVEs, no impressions-as-reach, baseline+target+result+trend always shown — the system won't render a report that breaks them."
+   ],
+   "cell": []
+  },
+  "p-0082": {
+   "line": [
+    "No campaign enters creative development until the account lead and client approve this one-page brief.",
+    "Measurement design — record for every KPI",
+    "Definition & calculation Baseline Target",
+    "Data source Collection frequency Owner",
+    "Audience / market breakdown Attribution method Known limitations",
+    "Targets should reflect the starting baseline, market maturity, available resources and the client's control over",
+    "execution. Multi-market campaigns combine a small number of global KPIs with locally appropriate targets."
+   ],
+   "indent": [
+    "Definition & calculation Baseline Target",
+    "Data source Collection frequency Owner",
+    "Audience / market breakdown Attribution method Known limitations",
+    "Targets should reflect the starting baseline, market maturity, available resources and the client's control over",
+    "execution. Multi-market campaigns combine a small number of global KPIs with locally appropriate targets."
+   ],
+   "sentence": [
+    "Mandatory measurement brief No campaign enters creative development until the account lead and client approve this one-page brief.",
+    "Business definition ● Business problem or opportunity · Organizational objective ● Priority audiences and their current state · Desired audience change ● Campaign period and relevant markets · Commercial, regulatory or reputational constraints Objective formula Write every objective this way By [date], increase/decrease [audience change] among [specific audience] from [baseline] to [target], contributing to [organizational objective].",
+    "Example: By 30 September, increase aided awareness of Brand X's sustainability commitment among urban consumers aged 25–44 from 28% to 38%, contributing to stronger brand preference.",
+    "Use no more than: one organizational objective · three communication objectives · five executive KPIs.",
+    "Measurement design — record for every KPI Field Field Field Definition & calculation Baseline Target Data source Collection frequency Owner Audience / market breakdown Attribution method Known limitations Targets should reflect the starting baseline, market maturity, available resources and the client's control over execution.",
+    "Multi-market campaigns combine a small number of global KPIs with locally appropriate targets."
+   ],
+   "cell": []
+  },
+  "p-0087": {
+   "line": [
+    "Account director Owns the measurement brief and client alignment",
+    "● Measurement gate: brief cannot be approved without baseline, target, source and owner."
+   ],
+   "indent": [
+    "Account director Owns the measurement brief and client alignment",
+    "● Measurement gate: brief cannot be approved without baseline, target, source and owner."
+   ],
+   "sentence": [
+    "Governance inside United Partners Role Accountability Client lead Approves organizational objective, business data and success criteria Account director Owns the measurement brief and client alignment Strategy / Insights lead Establishes baseline, KPI definitions, methodology and interpretation Channel leads Implement tagging, collect data and optimize activity Analyst Maintains data quality, dashboard and evaluation Campaign lead Turns weekly findings into execution decisions Three checkpoints ● Measurement gate: brief cannot be approved without baseline, target, source and owner."
+   ],
+   "cell": [
+    "Owns the measurement brief and client alignment",
+    "Measurement gate: brief cannot be approved without baseline, target, source and owner."
+   ]
+  },
+  "p-0101": {
+   "line": [],
+   "indent": [],
+   "sentence": [
+    "What's the KPI, baseline, target and benchmark?",
+    "Pass when: Every objective traces to a business goal; measurement has baseline/target/benchmark; value stated as contribution, not attribution; budget realistic."
+   ],
+   "cell": []
+  }
+ },
+ "anchors": [
+  {
+   "piece": "p-0009",
+   "text": "No research starts until the brief and the measurement brief are approved in writing."
+  },
+  {
+   "piece": "p-0009",
+   "text": "the brief AND the measurement brief are approved in writing by the decision-maker"
+  },
+  {
+   "piece": "p-0009",
+   "text": "the mandatory Measurement Brief (baseline, target, source, owner"
+  },
+  {
+   "piece": "p-0017",
+   "text": "no brief approved without baseline, target, source, owner"
+  },
+  {
+   "piece": "p-0030",
+   "text": "The brief — and the measurement brief (baseline, target, source, owner) — are approved in writing by the decision-maker."
+  },
+  {
+   "piece": "p-0080",
+   "text": "No campaign enters creative development without an approved brief (baseline, target, source, owner)"
+  },
+  {
+   "piece": "p-0082",
+   "text": "No campaign enters creative development until the account lead and client approve this one-page brief."
+  },
+  {
+   "piece": "p-0082",
+   "text": "Use no more than: one organizational objective · three communication objectives · five executive KPIs."
+  },
+  {
+   "piece": "p-0082",
+   "text": "Definition & calculation Baseline Target Data source Collection frequency Owner Audience / market breakdown Attribution method Known limitations"
+  },
+  {
+   "piece": "p-0082",
+   "text": "By [date], increase/decrease [audience change] among [specific audience] from [baseline] to [target], contributing to [organizational objective]."
+  },
+  {
+   "piece": "p-0087",
+   "text": "brief cannot be approved without baseline, target, source and owner."
+  },
+  {
+   "piece": "p-0101",
+   "text": "measurement has baseline/target/benchmark"
+  }
+ ]
+}

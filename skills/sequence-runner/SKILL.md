@@ -27,7 +27,7 @@ resulting `index.lock` denial as a repository defect. Host permission does not r
 controller's exact-scope display and numbered authorization gate.
 
 Do not wrap a self-contained local controller skill that already owns launch, ordering,
-monitoring, retries, verification, and stopping. In particular, invoke `requirements-machine`,
+monitoring, retries, verification, and stopping. In particular, invoke `requirements-machinery`,
 `implementation-machine`, and `description-machinery` directly; their internal worker/reader loop
 does not require sequence selection or discovery. This skill applies only if that controller's
 concrete operation independently crosses the governed operational boundary.

@@ -214,5 +214,44 @@ class ProjectionManifestTests(unittest.TestCase):
         self.assertEqual(payload_errors, [], result.stdout)
 
 
+    def test_versioned_requirements_projection_adds_reader_command_without_changing_v1(self):
+        with TemporaryDirectory() as td:
+            base = Path(td)
+            skills, manifest = make_repo(base, ["requirements-machinery"])
+            policy_source = skills / "requirements-machinery" / "client-model-policy.json"
+            policy_source.write_text("{}\n")
+            policy_source.chmod(0o444)
+            (skills / "requirements-machinery" / "SKILL.md").chmod(0o444)
+            projections = base / "client-skill-projections.json"
+            projections.write_text(json.dumps({
+                "schema_version": 1,
+                "entries": {
+                    "requirements-machinery": {
+                        "disposition": "GENERATED_CLIENT_PROJECTION",
+                        "targets": ["codex", "claude"],
+                        "scenario_groups": ["CAP-SHARED"],
+                        "canonical_tree_sha256": None,
+                        "projected_tree_sha256": None,
+                        "projected_tree_sha256_by_client": None,
+                        "generator": "machinery-client-model-v2",
+                        "generator_sha256": None,
+                        "divergence_reason": "Reader runtime is client-owned.",
+                    }
+                },
+            }) + "\n")
+            generated = run_tool("generate", "--skills-root", str(skills),
+                                 "--projections", str(projections))
+            self.assertEqual(generated.returncode, 0, generated.stderr)
+            for client, required in (("codex", "codex exec"), ("claude", "claude -p")):
+                staging = base / f"staging-{client}"
+                built = run_tool("build", "--client", client, "--skills-root", str(skills),
+                                 "--projections", str(projections),
+                                 "--staging-root", str(staging))
+                self.assertEqual(built.returncode, 0, built.stderr)
+                policy = json.loads((staging / "requirements-machinery" /
+                                     "client-model-policy.json").read_text())
+                self.assertEqual(policy["recommended_reader_command"], required)
+
+
 if __name__ == "__main__":
     unittest.main()

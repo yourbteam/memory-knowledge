@@ -79,7 +79,7 @@ def test_sequence_runner_dispatches_by_persisted_selection_mode():
 
 def test_self_contained_machinery_is_managed_and_bypasses_sequence_discovery():
     names = manifest_names()
-    for name in ("description-machinery", "implementation-machine", "requirements-machine"):
+    for name in ("description-machinery", "implementation-machine", "requirements-machinery"):
         assert name in names
 
     routing_docs = {
@@ -97,9 +97,9 @@ def test_self_contained_machinery_is_managed_and_bypasses_sequence_discovery():
     assert "complete local controller" in machine
     assert "do not put\n`task-intake`, `sequence-runner`, registry selection, or sequence discovery around it" in machine
 
-    requirements = (SKILLS / "requirements-machine" / "SKILL.md").read_text()
-    assert "complete local controller" in requirements
-    assert "do not\nput `task-intake`, `sequence-runner`, registry selection, or sequence discovery around it" in requirements
+    requirements = (SKILLS / "requirements-machinery" / "SKILL.md").read_text()
+    assert "## The front door" in requirements
+    assert "nothing comes out while any part of the source is" in requirements
 
     description = (SKILLS / "description-machinery" / "SKILL.md").read_text()
     assert "complete local controller" in description
@@ -107,7 +107,7 @@ def test_self_contained_machinery_is_managed_and_bypasses_sequence_discovery():
 
 
 def test_all_machinery_projects_fail_closed_to_the_invoking_client_model():
-    machinery = {"description-machinery", "implementation-machine", "requirements-machine"}
+    machinery = {"description-machinery", "implementation-machine", "requirements-machinery"}
     rows = json.loads(PROJECTIONS.read_text())["entries"]
     assert all(rows[name]["disposition"] == "GENERATED_CLIENT_PROJECTION" for name in machinery)
     for client, required, forbidden in (
@@ -124,13 +124,16 @@ def test_all_machinery_projects_fail_closed_to_the_invoking_client_model():
             assert completed.returncode == 0, completed.stderr
             for name in machinery:
                 policy = json.loads((staged / name / "client-model-policy.json").read_text())
-                assert policy == {
+                expected = {
                     "schema_version": 1,
                     "client": client,
                     "required_runtime": required,
                     "forbidden_runtime": forbidden,
                     "fail_closed": True,
                 }
+                if name == "requirements-machinery":
+                    expected["recommended_reader_command"] = required
+                assert policy == expected
 
 
 def test_pdi_skill_is_managed_and_discoverable_from_skill_md():

@@ -24,6 +24,7 @@ SCENARIO_GROUPS = {
 }
 GENERATOR_FILES = {
     "machinery-client-model-v1": Path(__file__).resolve().with_name("machinery-client-model-v1.json"),
+    "machinery-client-model-v2": Path(__file__).resolve().with_name("machinery-client-model-v2.json"),
 }
 
 
@@ -57,6 +58,13 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
     shutil.copytree(source, destination)
     if row.get("disposition") != "GENERATED_CLIENT_PROJECTION":
         return
+    destination.chmod(0o755)
+    for generated_path in (
+        destination / "client-model-policy.json",
+        destination / "SKILL.md",
+    ):
+        if generated_path.exists():
+            generated_path.chmod(0o644)
     generator = row.get("generator")
     spec_path = GENERATOR_FILES.get(generator)
     if spec_path is None or not spec_path.is_file():
@@ -71,6 +79,17 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
     policy = spec["clients"].get(client)
     if policy is None:
         raise RuntimeError(f"generator {generator} has no {client} policy")
+    policy_fields = {"display_name", "required_runtime", "forbidden_runtime"}
+    if generator == "machinery-client-model-v2":
+        policy_fields.add("recommended_reader_command")
+    if set(policy) != policy_fields or any(
+        not isinstance(policy[field], str) or not policy[field].strip()
+        for field in policy_fields
+    ):
+        raise RuntimeError(
+            f"generator {generator} {client} policy must contain exactly "
+            f"{sorted(policy_fields)} as non-empty strings"
+        )
     installed_policy = {
         "schema_version": 1,
         "client": client,
@@ -78,6 +97,8 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
         "forbidden_runtime": policy["forbidden_runtime"],
         "fail_closed": True,
     }
+    if generator == "machinery-client-model-v2":
+        installed_policy["recommended_reader_command"] = policy["recommended_reader_command"]
     (destination / "client-model-policy.json").write_text(
         json.dumps(installed_policy, indent=2, sort_keys=True) + "\n")
     instructions = destination / "SKILL.md"
@@ -87,7 +108,8 @@ def project_skill(source: Path, destination: Path, client: str, row: dict) -> No
         f"This is the **{policy['display_name']}** projection. Every model-backed builder, "
         "reader, checker, and requirements-enumeration agent started or handed back by this "
         f"machinery must use this client. Reader commands must resolve to "
-        f"`{policy['required_runtime']}`; reject `{policy['forbidden_runtime']}` before launch. "
+        f"`{policy.get('recommended_reader_command', policy['required_runtime'])}`; "
+        f"reject `{policy['forbidden_runtime']}` before launch. "
         "If the invoking client or reader runtime cannot be verified, stop without starting the "
         "worker. This boundary controls model selection only; all machinery behavior and outputs "
         "remain governed by the shared skill.\n"

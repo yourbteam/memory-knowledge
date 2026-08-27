@@ -38,7 +38,7 @@ diffs, linters, type checks, bounded unit tests, and local installation of an ap
 artifact. The fast path is G26 preflight, the approved action, and direct verification only.
 
 A self-contained local controller skill is also fast-path machinery when it owns its own launch,
-ordering, monitoring, retry, verification, and stop conditions. Invoke `requirements-machine`,
+ordering, monitoring, retry, verification, and stop conditions. Invoke `requirements-machinery`,
 `implementation-machine`, and `description-machinery` directly. Their internal worker/reader loop
 is not a `workflow-drive`, so do not put `task-intake`, `sequence-runner`, registry selection, or
 sequence discovery around it solely because the skill drives agents or runs for a long time. Cross
