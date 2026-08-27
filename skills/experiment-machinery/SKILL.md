@@ -139,6 +139,8 @@ The manifest validator, candidate bundler, single-case launcher, cross-case laun
 launcher, composer, and final validator enforce these contract boundaries. None promotes winners
 or edits canonical product code. Only a `passed` final result proves the complete atomic outcome;
 failed or inconclusive results return the evidence to the affected probe or composition boundary.
+The manifest is refused before launch unless final validation names every captured case exactly
+once in the same declared order.
 
 ## Run one experiment
 

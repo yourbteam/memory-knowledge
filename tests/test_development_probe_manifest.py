@@ -97,6 +97,13 @@ def manifest() -> dict:
                     "kind": "failure",
                     "expected_outcome": "The unreadable unit remains an explicit gap.",
                 },
+                {
+                    "id": "also-works",
+                    "source": "captured/also-works.json",
+                    "sha256": "3" * 64,
+                    "kind": "success",
+                    "expected_outcome": "The second readable source is also preserved.",
+                },
             ],
         },
         "mini_probes": probes,
@@ -108,7 +115,7 @@ def manifest() -> dict:
             "assembly_contract": "Link both promotion candidates behind one operator entrypoint.",
             "final_validation": {
                 "operator_path": "development-probe validate manifest.json",
-                "case_ids": ["works", "refuses"],
+                "case_ids": ["works", "refuses", "also-works"],
                 "success_criterion": "The composed path produces the approved atomic outcome.",
                 "failure_criterion": "The composed path preserves the explicit failure outcome.",
             },
@@ -192,7 +199,31 @@ def test_complete_parallel_manifest_is_accepted_without_mutating_input() -> None
             lambda value: value["composition"]["final_validation"].update(
                 {"case_ids": ["works"]}
             ),
-            "success and failure",
+            "exact captured case order",
+        ),
+        (
+            lambda value: value["composition"]["final_validation"].update(
+                {"case_ids": ["works", "refuses"]}
+            ),
+            "exact captured case order",
+        ),
+        (
+            lambda value: value["composition"]["final_validation"].update(
+                {"case_ids": ["works", "also-works", "refuses"]}
+            ),
+            "exact captured case order",
+        ),
+        (
+            lambda value: value["composition"]["final_validation"].update(
+                {"case_ids": ["works", "refuses", "refuses"]}
+            ),
+            "exact captured case order",
+        ),
+        (
+            lambda value: value["composition"]["final_validation"].update(
+                {"case_ids": ["works", "refuses", "unknown"]}
+            ),
+            "exact captured case order",
         ),
     ],
 )

@@ -53,8 +53,9 @@ Every mini-probe records:
 - one uniquely named winner artifact and its meaning.
 
 Composition records every mini-probe id and exact winner artifact once, states how the winners form
-the atomic behavior, and names the operator path plus captured success and failure cases that prove
-the assembled result.
+the atomic behavior, and names the operator path plus every captured case exactly once in its
+declared order. Final validation cannot select only representative success and failure cases; its
+case list is the complete atomic evidence boundary.
 
 ## Validate
 
@@ -67,8 +68,8 @@ python3 scripts/development_probe_manifest.py validate <manifest.json>
 The validator returns a small JSON confirmation for a complete parallel manifest. It refuses
 malformed fields, duplicate identities, fewer than two approaches, duplicate mechanisms, missing
 or duplicate winner-selection metrics, missing or reordered cross-case methods, unknown captured
-inputs, inter-probe inputs, missing winner artifacts, and incomplete final validation with an
-actionable explanation. Cross-case `sum` adds observations, `mean` takes their arithmetic mean,
+inputs, inter-probe inputs, missing winner artifacts, and any final-validation case list that
+differs from the exact declared captured-case sequence. Cross-case `sum` adds observations, `mean` takes their arithmetic mean,
 and `worst` takes the minimum for a maximized metric or maximum for a minimized metric.
 
 This first contract atom validates the plan for the whole process. Parallel experiment launch,

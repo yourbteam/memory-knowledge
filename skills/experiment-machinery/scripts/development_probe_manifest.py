@@ -346,20 +346,13 @@ def _check_composition(manifest: dict[str, Any]) -> None:
                 f"composition probe {probe_id!r} uses artifact {actual!r}; use winning artifact {expected!r}"
             )
     final = composition["final_validation"]
-    known_cases = {
-        case["id"]: case["kind"]
-        for case in manifest["atomic_step"]["captured_cases"]
-    }
-    selected: set[str] = set()
-    for case_id in final["case_ids"]:
-        if case_id not in known_cases:
-            raise ValueError(
-                f"final_validation cites missing case {case_id!r}; use a captured case id"
-            )
-        selected.add(known_cases[case_id])
-    if selected != {"success", "failure"}:
+    declared_case_ids = [
+        case["id"] for case in manifest["atomic_step"]["captured_cases"]
+    ]
+    if final["case_ids"] != declared_case_ids:
         raise ValueError(
-            "final_validation case_ids must include both success and failure captured cases"
+            f"final_validation case_ids are {final['case_ids']!r}; "
+            f"require exact captured case order {declared_case_ids!r}"
         )
 
 
