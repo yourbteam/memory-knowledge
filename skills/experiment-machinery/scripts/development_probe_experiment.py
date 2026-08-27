@@ -310,6 +310,7 @@ def _build_one(
         "status": "built",
         "bundle": bundle_path,
         "bundle_sha256": verified["bundle_sha256"],
+        "candidate_sha256": bundle["source"]["candidate_sha256"],
         "probe_id": identity["probe_id"],
         "case_ids": bundle["inputs"]["case_ids"],
         "error": None,
@@ -379,6 +380,20 @@ def _prepare_bundles(
         raise LaunchError(
             "build-candidates",
             f"candidate bundle preparation failed; preserved all build results: {details}",
+        )
+    by_candidate: dict[str, list[str]] = {}
+    for item in results:
+        by_candidate.setdefault(item["candidate_sha256"], []).append(item["approach_id"])
+    duplicates = [
+        approach_ids
+        for approach_ids in by_candidate.values()
+        if len(approach_ids) > 1
+    ]
+    if duplicates:
+        raise LaunchError(
+            "validate-distinct-candidates",
+            "byte-identical candidate implementations cannot be compared as distinct approaches: "
+            + "; ".join(", ".join(approach_ids) for approach_ids in duplicates),
         )
     return results
 

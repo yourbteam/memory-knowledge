@@ -120,7 +120,9 @@ python3 scripts/development_probe_experiment.py run <request.json> <new-output-d
 ```
 
 The launcher reconciles the complete approach set in manifest order, prepares bundles concurrently
-with a fixed worker bound, and preserves every build's output and error evidence. It generates
+with a fixed worker bound, and preserves every build's output and error evidence. Before any
+variant is created, code compares the already verified candidate source-tree digests and refuses
+different approach identities backed by byte-identical implementations. It generates
 collision-free runner variant ids (`control`, then numbered variations) while recording their exact
 approach mapping. One real Experiment Machinery run compares every bundle against byte-identical
 captured input. Candidates cannot choose their scores: the frozen evaluator scores all completed

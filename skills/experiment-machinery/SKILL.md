@@ -40,8 +40,10 @@ python3 scripts/development_probe_experiment.py run <request.json> <new-output-d
 
 The request supplies the validated development manifest, selected probe and case, and exactly one
 candidate-build request per declared approach. Code builds every candidate concurrently, launches
-the real Experiment Machinery runner, requires every approach to complete and remain integrity
-valid, and binds the rank-one champion to its freshly verified bundle digest. It preserves every
+the real Experiment Machinery runner only after every approach completes, remains integrity valid,
+and has a distinct verified candidate source-tree digest. Byte-identical implementations under
+different approach names are refused with their build evidence preserved and no recommendation.
+The launcher binds the rank-one champion to its freshly verified bundle digest. It preserves every
 build and experiment result and never promotes the recommendation.
 
 Run that mini-probe across every case declared by its manifest with:

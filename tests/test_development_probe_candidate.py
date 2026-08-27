@@ -1092,6 +1092,7 @@ def test_launcher_runs_every_approach_and_preserves_exact_recommendation(
     assert (output / "bundles" / "variation" / "bundle.json").is_file()
     build_results = json.loads((output / "build-results.json").read_text())
     assert [item["status"] for item in build_results["results"]] == ["built", "built"]
+    assert len({item["candidate_sha256"] for item in build_results["results"]}) == 2
     summary = json.loads((output / "experiment" / "summary.json").read_text())
     assert summary["champion"] == "variation-2"
     assert all(row["eligible"] for row in summary["variants"])
@@ -1131,6 +1132,30 @@ def test_launcher_refuses_incomplete_approaches_or_undeclared_case_with_evidence
     assert message in failure["error"]
     assert not (output / "recommendation.json").exists()
     assert not (output / "experiment").exists()
+
+
+def test_launcher_refuses_byte_identical_candidates_before_experiment(
+    tmp_path: Path,
+) -> None:
+    manifest, baseline, control, variation = _fixture(tmp_path)
+    (variation / "adapter.py").write_bytes((control / "adapter.py").read_bytes())
+    request_path, _ = _launcher_request(
+        tmp_path, manifest, baseline, {"control": control, "variation": variation}
+    )
+    output = tmp_path / "launch-output"
+
+    completed = _launch(request_path, output)
+
+    assert completed.returncode == 2
+    assert "byte-identical" in completed.stderr
+    failure = json.loads((output / "launch-summary.json").read_text())
+    assert failure["status"] == "failed"
+    assert failure["stage"] == "validate-distinct-candidates"
+    build_results = json.loads((output / "build-results.json").read_text())
+    assert [item["status"] for item in build_results["results"]] == ["built", "built"]
+    assert len({item["candidate_sha256"] for item in build_results["results"]}) == 1
+    assert not (output / "experiment").exists()
+    assert not (output / "recommendation.json").exists()
 
 
 def test_launcher_preserves_all_build_results_and_does_not_run_incomplete_set(
