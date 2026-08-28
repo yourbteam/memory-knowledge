@@ -1,4 +1,0 @@
-interface:
-  display_name: "Document Gap Closure Loop"
-  short_description: "Loop doc gaps to readiness"
-  default_prompt: "Use $doc-gap-closure-loop to assess this document, close gaps, and repeat until it is implementation-plan ready."

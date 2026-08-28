@@ -113,21 +113,6 @@
         "claude"
       ]
     },
-    "doc-gap-closure-loop": {
-      "canonical_tree_sha256": "47df376599f88da70a49c1c925b05cfb94c30af214b796ef5a388ebc10f9d99e",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "47df376599f88da70a49c1c925b05cfb94c30af214b796ef5a388ebc10f9d99e",
-      "scenario_groups": [
-        "CAP-VERIFY"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
     "experiment-machinery": {
       "canonical_tree_sha256": "39eb1921a94bcc005137fde0323d03cc3694f498734d3bb8a47a077f30f3a766",
       "disposition": "SHARED_IDENTICAL",
@@ -208,12 +193,12 @@
       ]
     },
     "plan-playbook": {
-      "canonical_tree_sha256": "0fd5b38aec1843d3b21255355c2c3ec8371a8f3baf223a3207b0ded9e8f003b4",
+      "canonical_tree_sha256": "d2ec271a5af8ce649f9a0b93868270a0694cdc4c1002411dd10dc5618be134c1",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "0fd5b38aec1843d3b21255355c2c3ec8371a8f3baf223a3207b0ded9e8f003b4",
+      "projected_tree_sha256": "d2ec271a5af8ce649f9a0b93868270a0694cdc4c1002411dd10dc5618be134c1",
       "scenario_groups": [
         "CAP-PDI"
       ],
@@ -297,21 +282,6 @@
         "claude"
       ]
     },
-    "requirements-coverage-gap-loop": {
-      "canonical_tree_sha256": "b8ab22dc85144569ae13bf0a356315043d830e9175aeb03e0c350c62b516fe7d",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "b8ab22dc85144569ae13bf0a356315043d830e9175aeb03e0c350c62b516fe7d",
-      "scenario_groups": [
-        "CAP-VERIFY"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
     "requirements-machinery": {
       "canonical_tree_sha256": "9143bc622a4f835066f5f55c3a4b1ae123a02f2bb5f80ec12a96e4e217481585",
       "disposition": "GENERATED_CLIENT_PROJECTION",
@@ -325,21 +295,6 @@
       },
       "scenario_groups": [
         "CAP-SHARED"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
-    "requirements-satisfaction-gap-loop": {
-      "canonical_tree_sha256": "c72658504bd165d70d89e89cc64ee467b3e3b9be3359e5652a5e8024fcbc6c76",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "c72658504bd165d70d89e89cc64ee467b3e3b9be3359e5652a5e8024fcbc6c76",
-      "scenario_groups": [
-        "CAP-VERIFY"
       ],
       "targets": [
         "codex",
@@ -392,12 +347,12 @@
       ]
     },
     "task-intake": {
-      "canonical_tree_sha256": "79a2bc23bd127c12b462b01fc44ec4fec6faabb241c304e1c16b5f27b5ba50e6",
+      "canonical_tree_sha256": "5482c045bfa24f1f00511ee591592ea350e69d33e97a5b7b6baa65e0ed4d1acc",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "79a2bc23bd127c12b462b01fc44ec4fec6faabb241c304e1c16b5f27b5ba50e6",
+      "projected_tree_sha256": "5482c045bfa24f1f00511ee591592ea350e69d33e97a5b7b6baa65e0ed4d1acc",
       "scenario_groups": [
         "CAP-GOVERNANCE"
       ],
@@ -407,12 +362,12 @@
       ]
     },
     "task-workflow": {
-      "canonical_tree_sha256": "e78ae33dd1da85ac746e83e9a25914183cc14af93dc3256550c02b086c32f55f",
+      "canonical_tree_sha256": "4f1df169635d9af38ba4cd75c293d141cde6596fa42b2c10d0f1e5faaa2ee39f",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "e78ae33dd1da85ac746e83e9a25914183cc14af93dc3256550c02b086c32f55f",
+      "projected_tree_sha256": "4f1df169635d9af38ba4cd75c293d141cde6596fa42b2c10d0f1e5faaa2ee39f",
       "scenario_groups": [
         "CAP-GOVERNANCE"
       ],
@@ -430,21 +385,6 @@
       "projected_tree_sha256": "1ac2bf7b99bfd6f30efec4a6c272584ceffe4f7e5fc14f8008503b2301a29c25",
       "scenario_groups": [
         "CAP-PERSONAS"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
-    "verify-analysis": {
-      "canonical_tree_sha256": "6cb1aa7caeecfbaf632b628072c1d564fbe197182a3e6cb402139695d757f0f2",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "6cb1aa7caeecfbaf632b628072c1d564fbe197182a3e6cb402139695d757f0f2",
-      "scenario_groups": [
-        "CAP-VERIFY"
       ],
       "targets": [
         "codex",

@@ -148,7 +148,7 @@ For planning or workflow features, grounding should be explicit whenever the tas
 
 Declare which stages are required:
 
-- `verify-analysis`
+- direct evidence review of the analysis
 - `verify-plan`
 
 For code-bearing work, Prototype-Driven Implementation owns retained-surface validation internally; it is not a separate selectable verification stage.
@@ -156,7 +156,7 @@ For code-bearing work, Prototype-Driven Implementation owns retained-surface val
 Default expectation:
 
 - `light`: all optional unless risk is higher than it first appears
-- `standard`: `verify-plan` required; `verify-analysis` risk-based
+- `standard`: `verify-plan` required; direct evidence review is risk-based
 - `heavy`: both required
 
 ### 6. Rollout Requirements

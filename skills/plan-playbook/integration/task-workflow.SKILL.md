@@ -87,7 +87,7 @@ Default expectations:
 
 - normal `analysis.md`
 - Planner selects and enforces the applicable planning profile and all plan hardening
-- `verify-analysis` used when justified by risk or change size; PDI owns retained-surface validation during implementation
+- direct evidence review used when justified by risk or change size; PDI owns retained-surface validation during implementation
 
 ### `heavy`
 
@@ -102,7 +102,7 @@ Use for:
 Default expectations:
 
 - detailed `analysis.md`
-- `verify-analysis` required
+- direct evidence review required
 - Planner selects and enforces the applicable planning profile and all plan hardening
 - PDI retained-surface validation required for code-bearing work
 - rollout and closeout sections required
@@ -137,7 +137,7 @@ For `heavy` tasks, also include:
 - remote state dependencies
 - operator or environment assumptions
 
-### 3. Harden the analysis
+### 3. Review the analysis directly
 
 After `analysis.md` has a serious first pass:
 
@@ -145,11 +145,9 @@ After `analysis.md` has a serious first pass:
 - `standard`: recommended when the analysis drives implementation choices
 - `heavy`: required
 
-If used, invoke:
-
-```text
-Use $verify-analysis to verify and harden the analysis in Tasks/<task-name>/analysis.md.
-```
+When required, perform a direct evidence review of `analysis.md` against the declared real
+repository evidence. Correct unsupported claims, missing in-scope surfaces, and conclusions that
+do not follow from the evidence before planning.
 
 Do not stop to ask for permission to continue unless the user asked to pause.
 
@@ -309,5 +307,5 @@ Use $task-workflow to continue Tasks/<task-name>.
 To continue a heavy task with explicit analysis and work verification:
 
 ```text
-Use $task-workflow to continue Tasks/<task-name>, then use $verify-analysis when required. Prototype-Driven Implementation owns retained-surface validation for code; Planner owns all plan hardening.
+Use $task-workflow to continue Tasks/<task-name>. Direct evidence review is required for the analysis. Prototype-Driven Implementation owns retained-surface validation for code; Planner owns all plan hardening.
 ```

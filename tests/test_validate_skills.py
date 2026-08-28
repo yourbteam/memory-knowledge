@@ -68,6 +68,38 @@ class ValidatorTests(unittest.TestCase):
         self.assertNotIn("research-playbook-v2",managed)
         self.assertFalse((ROOT/"skills/research-playbook").exists())
 
+    def test_doc_gap_closure_loop_is_retired(self):
+        managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
+        projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
+        self.assertNotIn("doc-gap-closure-loop",managed)
+        self.assertNotIn('"doc-gap-closure-loop"',projections)
+        self.assertFalse((ROOT/"skills/doc-gap-closure-loop").exists())
+
+    def test_verify_analysis_is_retired(self):
+        managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
+        projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
+        self.assertNotIn("verify-analysis",managed)
+        self.assertNotIn('"verify-analysis"',projections)
+        self.assertFalse((ROOT/"skills/verify-analysis").exists())
+
+    def test_requirements_coverage_gap_loop_is_retired(self):
+        managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
+        projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
+        plan=(ROOT/"skills/plan-playbook/SKILL.md").read_text()
+        self.assertNotIn("requirements-coverage-gap-loop",managed)
+        self.assertNotIn('"requirements-coverage-gap-loop"',projections)
+        self.assertFalse((ROOT/"skills/requirements-coverage-gap-loop").exists())
+        self.assertIn("REQUIREMENTS_COVERAGE",plan)
+
+    def test_requirements_satisfaction_gap_loop_is_retired(self):
+        managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
+        projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
+        plan=(ROOT/"skills/plan-playbook/SKILL.md").read_text()
+        self.assertNotIn("requirements-satisfaction-gap-loop",managed)
+        self.assertNotIn('"requirements-satisfaction-gap-loop"',projections)
+        self.assertFalse((ROOT/"skills/requirements-satisfaction-gap-loop").exists())
+        self.assertIn("REQUIREMENTS_SATISFACTION",plan)
+
     def test_policy_accepts_exact_unquoted_yaml_booleans(self):
         for value in ("true","false"):
             with self.subTest(value=value):

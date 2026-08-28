@@ -5,7 +5,6 @@ blocker-catalog
 corpus-add
 critic-foundry
 description-machinery
-doc-gap-closure-loop
 experiment-machinery
 info-intake-machinery
 phase-categorization-foundry
@@ -17,16 +16,13 @@ prototype-driven-implementation
 remote-mcp-operator
 remote-mcp-user-admin
 reproduce-first-verify
-requirements-coverage-gap-loop
 requirements-machinery
-requirements-satisfaction-gap-loop
 sequence-runner
 shell-canary-foundry
 shell-canary-runner
 task-intake
 task-workflow
 verifier-foundry
-verify-analysis
 verify-plan
 working-agreement
 write-code-playbook
