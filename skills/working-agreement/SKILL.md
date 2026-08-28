@@ -21,14 +21,15 @@ For brief in-progress updates, apply the directives without a compliance header.
 
 Classify the task and use the matching playbook when relevant:
 
-- Research: `research-playbook`
+- Research: direct inspection of declared real evidence; no selectable research controller
 - Plan: `plan-playbook`
 - Write code: `prototype-driven-implementation`
-- Review: `review-playbook`
+- Review: direct evidence inspection; no selectable review controller
 
 For Write-code tasks, `prototype-driven-implementation` owns the lifecycle and pulls bounded
-Research, Plan, Write-code, and Review support projections only when observed evidence requires
-them. For standalone non-implementation tasks, retain the matching playbook above.
+support only when observed evidence requires it. Its retained-surface check and live validation
+remain internal to PDI. For standalone Review tasks, inspect the declared evidence directly without
+invoking a selectable review controller.
 
 ## Work-Memory Gate
 
@@ -38,8 +39,8 @@ diffs, linters, type checks, bounded unit tests, and local installation of an ap
 artifact. The fast path is G26 preflight, the approved action, and direct verification only.
 
 A self-contained local controller skill is also fast-path machinery when it owns its own launch,
-ordering, monitoring, retry, verification, and stop conditions. Invoke `requirements-machinery`,
-`implementation-machine`, and `description-machinery` directly. Their internal worker/reader loop
+ordering, monitoring, retry, verification, and stop conditions. Invoke `requirements-machinery`
+and `description-machinery` directly. Their internal worker/reader loop
 is not a `workflow-drive`, so do not put `task-intake`, `sequence-runner`, registry selection, or
 sequence discovery around it solely because the skill drives agents or runs for a long time. Cross
 the governed boundary only when the controller's concrete operation independently touches one of

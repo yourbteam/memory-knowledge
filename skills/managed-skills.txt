@@ -7,7 +7,6 @@ critic-foundry
 description-machinery
 doc-gap-closure-loop
 experiment-machinery
-implementation-machine
 info-intake-machinery
 phase-categorization-foundry
 phase-ledger-category-contract-foundry
@@ -21,10 +20,7 @@ remote-mcp-user-admin
 reproduce-first-verify
 requirements-coverage-gap-loop
 requirements-machinery
-requirements-playbook
 requirements-satisfaction-gap-loop
-research-playbook
-review-playbook
 sequence-runner
 shell-canary-foundry
 shell-canary-runner

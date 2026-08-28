@@ -1,6 +1,6 @@
 ---
 name: prototype-driven-implementation
-description: Central controller for every code implementation, from routine mechanical changes to uncertain features and root fixes. Drive the work through a bounded, adaptive sequence of runnable prototypes grounded in real code paths and captured real cases, pulling generated Research, Plan, Write-code, and Review support projections only when observed gaps require them. Do not use for standalone research, document-only planning, or review with no implementation.
+description: Central controller for every code implementation, from routine mechanical changes to uncertain features and root fixes. Drive the work through a bounded, adaptive sequence of runnable prototypes grounded in real code paths and captured real cases, pulling bounded Plan and Write-code support plus PDI-owned blocking-evidence and retained-surface validation only when observed gaps require them. Do not use for standalone research, document-only planning, or review with no implementation.
 ---
 
 # Prototype-Driven Implementation
@@ -67,13 +67,14 @@ every incomplete atom state returns `next_skill: prototype-driven-implementation
 
 ## Pull bounded playbook support
 
-The standalone playbooks remain authoritative for standalone Research, Plan, Write-code, and
-Review tasks. During implementation, use only their generated support projections:
+The standalone playbooks remain authoritative for standalone Plan and Write-code tasks. During
+implementation, use only their generated support projections plus PDI's internal blocking-evidence
+and retained-surface validation projections:
 
-- `references/research-support.md` for one blocking evidence question;
+- `references/research-support.md` for PDI-owned investigation of one blocking evidence question;
 - `references/plan-support.md` for one observed delta that needs implementation-ready decisions;
 - `references/write-code-support.md` for one approved product-code delta;
-- `references/review-support.md` for one retained delta or the final accumulated surface.
+- `references/review-support.md` for PDI-owned inspection of one retained delta or the final accumulated surface.
 
 Read a projection only when the current observed gap needs that capability. Supply the approved
 outcome and envelope, prototype identity and observed gap, concrete evidence, exact support
@@ -92,7 +93,7 @@ controller; it is not an automatic next milestone.
 - Retain only code that belongs in the final implementation. Temporary instrumentation is allowed
   when needed for proof, but remove it unless it remains useful operational telemetry.
 - Use focused checks during discovery. After promotion, run the relevant regression surface.
-- Before completion, use the Review support projection on the accumulated retained surface and run
+- Before completion, use PDI's retained-surface support projection on the accumulated surface and run
   one end-to-end confirmation through the path the user will use.
 
 ## Stop and report

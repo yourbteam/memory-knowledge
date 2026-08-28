@@ -52,14 +52,14 @@ If spawn fails before an id, abandon the reservation by slot id. If bind fails a
 
 Read each named skill when its stage begins:
 
-1. `research-playbook`
+1. Direct evidence collection against the declared real repository, runtime, and primary-source boundary
 2. `doc-gap-closure-loop` in delegated assessment-only mode until PASS
 3. `requirements-coverage-gap-loop` in delegated assessment-only mode until PASS
 4. `requirements-satisfaction-gap-loop` in delegated assessment-only mode until PASS
 5. `plan-playbook` once; Planner owns verify-plan, internal readiness, requirements coverage, requirements satisfaction, revision invalidation, and terminal package emission
 6. `write-code-playbook`
 7. independent execution verification using the plan package's commands and success criteria
-8. `review-playbook`
+8. PDI-owned retained-surface inspection against the approved outcome and real-path evidence
 9. `verify-work` using parent-managed reviewer -> critic -> orchestrator-fix cycles
 
 Every stage returns `PASS`, `GAPS`, `BLOCKED`, or `CAP_REACHED`.

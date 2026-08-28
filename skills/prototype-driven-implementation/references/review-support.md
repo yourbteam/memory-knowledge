@@ -2,8 +2,8 @@
 
 # Review Support Projection
 
-Source: `skills/review-playbook/SKILL.md`
-Pinned SHA-256: `7af04e52186cd9ed983866f736b1d4faebcf718112a73b531c82c0a026106656`
+Source: `skills/prototype-driven-implementation/contracts/retained-surface-review.md`
+Pinned SHA-256: `b148b3d8e5928f2ade2d78526d092ba29e4e884c9c0c25b1e93cba40b1a1431a`
 
 ## Purpose
 
@@ -27,7 +27,8 @@ If any input is missing, return that as unresolved uncertainty; do not broaden t
 1. Review the supplied surface against the approved outcome, observed gap, and governing evidence.
 2. Lead with actionable correctness, security, regression, and requirement-coverage findings.
 3. Distinguish a blocking defect from optional improvement and cite exact evidence.
-4. Return findings to the controller; only the controller combines review with end-to-end proof and decides completion.
+4. Require confirmation through the real operator path before completion.
+5. Return findings to the controller; only the controller combines review with end-to-end proof and decides completion.
 
 ## Required return
 

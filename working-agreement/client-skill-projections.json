@@ -95,15 +95,15 @@
       ]
     },
     "description-machinery": {
-      "canonical_tree_sha256": "b4a731b4f7ddc1a2eab7187327fa0405401e22ef29994c53583cbe72a64d276b",
+      "canonical_tree_sha256": "1843ca7232ac0d192b0e91c15cb0fb42f12489798d1c34ab122ff73a30f7d6e7",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
       "generator": "machinery-client-model-v1",
       "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "c91fda8f22243253d9cc8d85b54d755952b69f08829a86b2237a964145c0fb3d",
-        "codex": "2151b602acc09d3236183400106815f1f7554ed4d1cf89daf5fadbde72b6eec1"
+        "claude": "29cf2384c45be6d1f46bef0556ce6c0c90802f113ec0b54402518a211eefc402",
+        "codex": "8d4247bde91d3a1dd6d08ccb5fe4522f28c6b66639da906437b401e5bf023545"
       },
       "scenario_groups": [
         "CAP-PDI"
@@ -135,25 +135,6 @@
       "generator": null,
       "generator_sha256": null,
       "projected_tree_sha256": "39eb1921a94bcc005137fde0323d03cc3694f498734d3bb8a47a077f30f3a766",
-      "scenario_groups": [
-        "CAP-PDI"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
-    "implementation-machine": {
-      "canonical_tree_sha256": "3cde23b33a730056284c97ed788ad847dd617ed66de69ae339558c094a75810e",
-      "disposition": "GENERATED_CLIENT_PROJECTION",
-      "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
-      "generator": "machinery-client-model-v1",
-      "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
-      "projected_tree_sha256": null,
-      "projected_tree_sha256_by_client": {
-        "claude": "353e4633366aeba1b4db498b903cc34ddad94b86fa4ec36f45a9b38ac184bcee",
-        "codex": "f39d5feb0e2e318663b2788bfaa9a3cb8e609b10f9bd17ebdedcc713223a7d75"
-      },
       "scenario_groups": [
         "CAP-PDI"
       ],
@@ -227,12 +208,12 @@
       ]
     },
     "plan-playbook": {
-      "canonical_tree_sha256": "1024f50c1850e3643e94b8932dd0feba7c9e63a4b96549800828b4bed43f3daa",
+      "canonical_tree_sha256": "ced19a3afac5dac8383bbbddb5ddbaa1004bdf1ec546c828a46e6d18a8ab1ad9",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "1024f50c1850e3643e94b8932dd0feba7c9e63a4b96549800828b4bed43f3daa",
+      "projected_tree_sha256": "ced19a3afac5dac8383bbbddb5ddbaa1004bdf1ec546c828a46e6d18a8ab1ad9",
       "scenario_groups": [
         "CAP-PDI"
       ],
@@ -242,12 +223,12 @@
       ]
     },
     "playbook-convergence-loop": {
-      "canonical_tree_sha256": "df225177d3d76afcd6eb568b4de753223e422edb4d4066c0bb91f410533186c8",
+      "canonical_tree_sha256": "7269976317f2538ae6cdc259ba224a29b347ba97e539fc5847a8bbfeb2e4e054",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "df225177d3d76afcd6eb568b4de753223e422edb4d4066c0bb91f410533186c8",
+      "projected_tree_sha256": "7269976317f2538ae6cdc259ba224a29b347ba97e539fc5847a8bbfeb2e4e054",
       "scenario_groups": [
         "CAP-PDI"
       ],
@@ -272,12 +253,12 @@
       ]
     },
     "prototype-driven-implementation": {
-      "canonical_tree_sha256": "b42c8d7c39f980b27885b6fab7aed9c5167789aa98e3e56a6c031c9410546e9f",
+      "canonical_tree_sha256": "242599ffdb1d135c8552ea685d2957582482eb0d6f07978405878b7235dcb7c3",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "b42c8d7c39f980b27885b6fab7aed9c5167789aa98e3e56a6c031c9410546e9f",
+      "projected_tree_sha256": "242599ffdb1d135c8552ea685d2957582482eb0d6f07978405878b7235dcb7c3",
       "scenario_groups": [
         "CAP-PDI"
       ],
@@ -365,21 +346,6 @@
         "claude"
       ]
     },
-    "requirements-playbook": {
-      "canonical_tree_sha256": "1e9206bef12ee15dfa6c764a9858fc44f5f98d89702dd86558b374c17619ac16",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "1e9206bef12ee15dfa6c764a9858fc44f5f98d89702dd86558b374c17619ac16",
-      "scenario_groups": [
-        "CAP-PDI"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
     "requirements-satisfaction-gap-loop": {
       "canonical_tree_sha256": "6838d24a5b393ba22a1e75a187d17c64fb17c0e0e0895e7e765b01989a8ad1ee",
       "disposition": "SHARED_IDENTICAL",
@@ -395,43 +361,13 @@
         "claude"
       ]
     },
-    "research-playbook": {
-      "canonical_tree_sha256": "951d81538af9a5722d40bc9ae7b4f5f20aea1ab566c70988f29b80ae171ea71e",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "951d81538af9a5722d40bc9ae7b4f5f20aea1ab566c70988f29b80ae171ea71e",
-      "scenario_groups": [
-        "CAP-PDI"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
-    "review-playbook": {
-      "canonical_tree_sha256": "edbc7ddc6e22bed96484f0f53bbda7781be7121635d033229e40761adcd2190e",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "edbc7ddc6e22bed96484f0f53bbda7781be7121635d033229e40761adcd2190e",
-      "scenario_groups": [
-        "CAP-PDI"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
     "sequence-runner": {
-      "canonical_tree_sha256": "775eac258a7db14f13b703239fe5042923818ac959c700f121048b4ea9bb5a1a",
+      "canonical_tree_sha256": "f8a76687530aa4c15e8e65bb530f902a6cfd1a27a86d4441edf178b7612da437",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "775eac258a7db14f13b703239fe5042923818ac959c700f121048b4ea9bb5a1a",
+      "projected_tree_sha256": "f8a76687530aa4c15e8e65bb530f902a6cfd1a27a86d4441edf178b7612da437",
       "scenario_groups": [
         "CAP-OPERATIONS"
       ],
@@ -471,12 +407,12 @@
       ]
     },
     "task-intake": {
-      "canonical_tree_sha256": "9d8bbeba862c551f2ee3e0794a5e5f7f728d810aef01d40d5b980c2ddae71c8d",
+      "canonical_tree_sha256": "6a3485be8db44160ec8852361629502090d32a5aa5db917a3a9b52dfb285c218",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "9d8bbeba862c551f2ee3e0794a5e5f7f728d810aef01d40d5b980c2ddae71c8d",
+      "projected_tree_sha256": "6a3485be8db44160ec8852361629502090d32a5aa5db917a3a9b52dfb285c218",
       "scenario_groups": [
         "CAP-GOVERNANCE"
       ],
@@ -561,12 +497,12 @@
       ]
     },
     "working-agreement": {
-      "canonical_tree_sha256": "8fffda880d13bc58ff5eb1af5ba9d89f85c0e173e831a89e8f8367319bbe354f",
+      "canonical_tree_sha256": "341d147c275f5cc16696e7d3c149430a1fd12aadafbb608048ea3139ca402837",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "8fffda880d13bc58ff5eb1af5ba9d89f85c0e173e831a89e8f8367319bbe354f",
+      "projected_tree_sha256": "341d147c275f5cc16696e7d3c149430a1fd12aadafbb608048ea3139ca402837",
       "scenario_groups": [
         "CAP-GOVERNANCE"
       ],

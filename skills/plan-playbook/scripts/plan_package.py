@@ -377,7 +377,7 @@ def shared_contracts() -> tuple[Any, Any, Any]:
 
 def research_owner() -> Any:
     module = module_from_path(
-        "plan_v2_research_package", SKILLS_ROOT / "research-playbook" / "scripts" / "research_package.py"
+        "plan_v2_research_package", SCRIPT.parent / "research_package.py"
     )
     if not hasattr(module, "validate_package"):
         raise PlanPackageError("OWNER_CONTRACT_UNAVAILABLE", "research validate_package API is unavailable")

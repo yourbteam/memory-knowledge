@@ -25,13 +25,11 @@ class ContractTests(unittest.TestCase):
         convergence=(ROOT/"playbook-convergence-loop/SKILL.md").read_text()
         self.assertIn("bounded autonomy",convergence); self.assertIn("close_agent",convergence); self.assertIn("guard-baseline",convergence)
         stage_order=convergence.split("## Stage Order",1)[1].split("## Review Loop",1)[0]
-        playbooks=("research-playbook","plan-playbook","write-code-playbook","review-playbook")
+        playbooks=("plan-playbook","write-code-playbook")
         positions=[stage_order.index(f"`{name}`") for name in playbooks]
         self.assertEqual(positions,sorted(positions))
-        self.assertLess(stage_order.index("`review-playbook`"),stage_order.index("`verify-work`"))
-        review=(ROOT/"review-playbook/SKILL.md").read_text()
-        for phrase in ("playbook-convergence-loop","guard-baseline","assessment-only","stage-result envelope","Default commit policy is `none`"):
-            self.assertIn(phrase,review)
+        self.assertNotIn("standalone review controller",stage_order)
+        self.assertLess(stage_order.index("PDI-owned retained-surface inspection"),stage_order.index("`verify-work`"))
         verify=(ROOT/"verify-work/SKILL.md").read_text()
         for phrase in ("staged changes","unstaged changes","untracked files","assessment-only","Do not commit by default"):
             self.assertIn(phrase,verify)

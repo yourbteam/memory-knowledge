@@ -56,12 +56,12 @@ class ProjectionManifestTests(unittest.TestCase):
     def test_generated_machinery_projection_binds_each_client_and_fails_closed(self):
         with TemporaryDirectory() as td:
             base = Path(td)
-            skills, manifest = make_repo(base, ["implementation-machine"])
+            skills, manifest = make_repo(base, ["atom-building-machinery"])
             projections = base / "client-skill-projections.json"
             projections.write_text(json.dumps({
                 "schema_version": 1,
                 "entries": {
-                    "implementation-machine": {
+                    "atom-building-machinery": {
                         "disposition": "GENERATED_CLIENT_PROJECTION",
                         "targets": ["codex", "claude"],
                         "scenario_groups": ["CAP-SHARED"],
@@ -80,7 +80,7 @@ class ProjectionManifestTests(unittest.TestCase):
             self.assertEqual(generated.returncode, 0, generated.stderr)
 
             data = json.loads(projections.read_text())
-            row = data["entries"]["implementation-machine"]
+            row = data["entries"]["atom-building-machinery"]
             self.assertEqual(set(row["projected_tree_sha256_by_client"]), {"codex", "claude"})
             self.assertNotEqual(row["projected_tree_sha256_by_client"]["codex"],
                                 row["projected_tree_sha256_by_client"]["claude"])
@@ -94,13 +94,13 @@ class ProjectionManifestTests(unittest.TestCase):
                                   "--projections", str(projections),
                                   "--staging-root", str(staging))
                 self.assertEqual(result.returncode, 0, result.stderr)
-                policy = json.loads((staging / "implementation-machine" /
+                policy = json.loads((staging / "atom-building-machinery" /
                                      "client-model-policy.json").read_text())
                 self.assertEqual(policy["client"], client)
                 self.assertEqual(policy["required_runtime"], required)
                 self.assertEqual(policy["forbidden_runtime"], forbidden)
                 self.assertTrue(policy["fail_closed"])
-                instructions = (staging / "implementation-machine" / "SKILL.md").read_text()
+                instructions = (staging / "atom-building-machinery" / "SKILL.md").read_text()
                 self.assertIn(f"must resolve to `{required}`", instructions)
                 self.assertIn(f"reject `{forbidden}`", instructions)
 

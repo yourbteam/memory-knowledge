@@ -8,10 +8,10 @@ Treat agent-specific wording in that file as applying to Codex in this environme
 
 Route tasks through the matching Codex skill when relevant:
 
-- Research: `research-playbook`
+- Research: direct inspection of declared real evidence; no selectable controller
 - Plan: `plan-playbook`
 - Write code: `prototype-driven-implementation`
-- Review: `review-playbook`
+- Review: direct evidence inspection; PDI owns implementation review and live validation
 
 For durable working-agreement knowledge or rationale, use the `memory-knowledge` MCP tools when available. Do not write directly to the database or vector store as a substitute for the MCP corpus workflow.
 
@@ -24,7 +24,7 @@ For durable working-agreement knowledge or rationale, use the `memory-knowledge`
 # Working Agreement — Directives
 <!-- Authority: Kamen authors. Claude proposes; nothing is binding until Kamen confirms. -->
 <!-- Confirm word: "lock it" promotes a proposed rule to live. Nothing else counts as confirmation. -->
-<!-- Last reviewed: 2026-08-03 -->
+<!-- Last reviewed: 2026-08-10 -->
 
 **Prime directive:** Before acting, consult these directives and follow them. They override default behavior.
 
@@ -35,12 +35,13 @@ At the start of a task, name its mode and follow the matching playbook:
 
 | Mode | When | Playbook |
 | --- | --- | --- |
-| **Research** | gather/verify info, no code shipped | `research-playbook` |
+| **Research** | gather/verify info, no code shipped | direct inspection of declared real evidence; no selectable controller |
 | **Plan** | turn a goal into a buildable plan | `plan-playbook` |
 | **Write code** | implement a change in the codebase | `prototype-driven-implementation` |
-| **Review** | audit code / a diff / a doc | `review-playbook` |
+| **Review** | audit code / a diff / a doc | direct evidence inspection; no selectable controller |
 
-Modes chain: Research → Plan → Write code → Review (each rests on the one before).
+Modes chain: Research → Plan → Write code. Standalone Review inspects the declared evidence
+directly; implementation review remains inside Prototype-Driven Implementation.
 
 Before Write code takes an issue that is **not the first of its kind**, run `direction-check`
 (G31): it weighs the issue against the approach on recorded evidence and hands the chosen path
@@ -529,12 +530,14 @@ the existing playbooks remain available as bounded sources of rigor.
   proof, and final review.
 - ✅ Start with Prototype 0 on the real code path to reproduce, characterize, or directly prove
   the current behavior before broad implementation research or planning.
-- ✅ Pull Research, Plan, Write-code, and Review support only when an observed gap requires it.
-  Use the generated support projection for that role, not the full standalone playbook as a
-  competing controller.
-- ✅ Keep `research-playbook`, `plan-playbook`, `write-code-playbook`, and `review-playbook`
-  unchanged for their standalone task modes. Generate their bounded implementation-support
-  projections from a pinned manifest and fail drift checks when a source playbook changes.
+- ✅ Pull Plan and Write-code support only when an observed gap requires it. Use the generated
+  support projection for that role, not the full standalone playbook as a competing controller.
+  PDI's blocking-evidence and accumulated-surface checks come from its own non-selectable internal contracts.
+- ✅ Keep `plan-playbook` and `write-code-playbook` unchanged for their standalone task modes. Do
+  not install or select standalone research or review controllers; standalone research and review
+  inspect declared evidence directly, while PDI owns implementation evidence and real-path validation.
+  Generate bounded implementation-support projections from pinned sources and fail drift checks
+  when a source changes.
 - ✅ A support projection must receive the approved outcome and envelope, current prototype and
   observed gap, concrete evidence, exact support question, and allowed scope or budget. It must
   return evidence, conclusion, unresolved uncertainty, and the recommended next delta.

@@ -1,4 +1,0 @@
-interface:
-  display_name: "Research Playbook"
-  short_description: "Bounded research for one-shot plans"
-  default_prompt: "Use $research-playbook to produce a planner-ready research package."

@@ -62,14 +62,11 @@ class ValidatorTests(unittest.TestCase):
         )
         self.assertEqual(errors,[])
 
-    def test_research_playbook_is_managed_canonical_entrypoint(self):
+    def test_research_playbook_is_retired(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
-        self.assertIn("research-playbook",managed)
+        self.assertNotIn("research-playbook",managed)
         self.assertNotIn("research-playbook-v2",managed)
-        metadata=(ROOT/"skills/research-playbook/agents/openai.yaml").read_text()
-        self.assertIn("$research-playbook",metadata)
-        self.assertNotIn("allow_implicit_invocation: false",metadata)
-        self.assertEqual(v.validate_openai(ROOT/"skills/research-playbook/agents/openai.yaml"),[])
+        self.assertFalse((ROOT/"skills/research-playbook").exists())
 
     def test_policy_accepts_exact_unquoted_yaml_booleans(self):
         for value in ("true","false"):

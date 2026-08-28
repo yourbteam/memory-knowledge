@@ -142,7 +142,7 @@ class InstallerTests(unittest.TestCase):
     def test_generated_projection_install_keeps_each_client_provider_bound(self):
         with tempfile.TemporaryDirectory() as raw:
             root = Path(raw); source = root/"source"; state = root/"state"
-            name = "implementation-machine"
+            name = "atom-building-machinery"
             (source/name).mkdir(parents=True)
             (source/name/"SKILL.md").write_text(
                 f"---\nname: {name}\ndescription: test\n---\nbody\n")

@@ -26,7 +26,6 @@ ALLOWED_CODEX_REFERENCES = {
     "skills/playbook-convergence-loop/SKILL.md",
     "skills/plan-playbook/integration/playbook-convergence-loop.SKILL.md",
     "skills/reproduce-first-verify/SKILL.md",
-    "skills/research-playbook/scripts/research_run.py",
 }
 
 
@@ -79,7 +78,7 @@ def test_sequence_runner_dispatches_by_persisted_selection_mode():
 
 def test_self_contained_machinery_is_managed_and_bypasses_sequence_discovery():
     names = manifest_names()
-    for name in ("description-machinery", "implementation-machine", "requirements-machinery"):
+    for name in ("description-machinery", "requirements-machinery"):
         assert name in names
 
     routing_docs = {
@@ -93,10 +92,6 @@ def test_self_contained_machinery_is_managed_and_bypasses_sequence_discovery():
     assert "Do not wrap a self-contained local controller skill" in routing_docs["sequence-runner"]
     assert "does not require sequence selection or discovery" in routing_docs["sequence-runner"]
 
-    machine = (SKILLS / "implementation-machine" / "SKILL.md").read_text()
-    assert "complete local controller" in machine
-    assert "do not put\n`task-intake`, `sequence-runner`, registry selection, or sequence discovery around it" in machine
-
     requirements = (SKILLS / "requirements-machinery" / "SKILL.md").read_text()
     assert "## The front door" in requirements
     assert "nothing comes out while any part of the source is" in requirements
@@ -107,7 +102,7 @@ def test_self_contained_machinery_is_managed_and_bypasses_sequence_discovery():
 
 
 def test_all_machinery_projects_fail_closed_to_the_invoking_client_model():
-    machinery = {"description-machinery", "implementation-machine", "requirements-machinery"}
+    machinery = {"description-machinery", "requirements-machinery"}
     rows = json.loads(PROJECTIONS.read_text())["entries"]
     assert all(rows[name]["disposition"] == "GENERATED_CLIENT_PROJECTION" for name in machinery)
     for client, required, forbidden in (
