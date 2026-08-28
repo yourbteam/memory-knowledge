@@ -5,10 +5,6 @@ description: This skill should be used when a plan, research, or findings docume
 
 # Requirements Satisfaction Gap Loop
 
-## Convergence Delegation
-
-When called by `playbook-convergence-loop`, use `assessment-only` mode after coverage PASS: inspect real runtime/stored-data and sibling-feature evidence, return the shared stage-result envelope, and make no edits. The parent alone fixes and records state. Fresh reasoning excludes producer rationale while preserving authoritative evidence access.
-
 ## Goal
 
 Drive a plan to **end-to-end satisfaction readiness** through repeated assess-plan-execute cycles. Stop only when every requirement the plan addresses is traced to concrete evidence that, once built, it will actually be satisfied against the real runtime, the live/stored data, and the sibling features it must interoperate with — and no producer/consumer or read/write invariant is broken.

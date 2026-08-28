@@ -51,7 +51,7 @@
     {
       "role": "write-code",
       "source": "skills/write-code-playbook/SKILL.md",
-      "source_sha256": "03b095f40bc979140146bb5d10329b69f4a252c4ead184be51220871080dc6d4",
+      "source_sha256": "144d768e9ce69205d4bd0507089ae2c328690285e86b59788394ffd107a20cea",
       "output": "write-code-support.md",
       "purpose": "Implement one controller-approved product-code delta safely.",
       "instructions": [

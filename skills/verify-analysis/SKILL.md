@@ -7,10 +7,6 @@ metadata:
 
 # Verify Analysis
 
-## Convergence Delegation
-
-When called by `playbook-convergence-loop`, verifier and critic agents are assessment-only and use the shared stage-result envelope. They can inspect authoritative evidence but receive no producer rationale or hidden answers. The parent alone edits the analysis and state; nested agents never commit or fix.
-
 ## Overview
 
 This skill verifies an existing analysis from the current conversation, then hardens it through a front-loaded inventory, deterministic checks, and progressive verification passes until no actionable findings remain and the in-scope coverage queue is exhausted or the iteration cap is reached.

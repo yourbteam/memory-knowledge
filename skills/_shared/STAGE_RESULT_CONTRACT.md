@@ -1,6 +1,6 @@
 # Convergence Stage Result Contract
 
-When a stage is delegated by `playbook-convergence-loop`, run in assessment-only mode: inspect and report, but do not edit, commit, or mutate task state. The parent orchestrator is the only fixer and state writer.
+When a stage is delegated in assessment-only mode, inspect and report, but do not edit, commit, or mutate task state. The parent orchestrator is the only fixer and state writer.
 
 End with one fenced `stage-result` JSON object:
 

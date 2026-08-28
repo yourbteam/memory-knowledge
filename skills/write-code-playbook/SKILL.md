@@ -25,9 +25,7 @@ reveals the plan was wrong, pause and re-plan rather than coding around it.
   `uv run pytest`, `python -m pytest`, or `pytest` directly there.
 - Browser verification for local frontend changes when the target page or port is known.
 - A manual code-review pass over the diff before reporting done.
-- `verify-work` when Kamen asks for an independent review/fix convergence loop. Commits require separate commit-scoped approval.
-
-When called by `playbook-convergence-loop`, the approved hardened plan authorizes edits inside its recorded paths. Run `guard-baseline` immediately before each source edit or verification command. The parent orchestrator is the only fixer/state writer; nested verification agents remain assessment-only and return the shared stage-result envelope. Default commit policy is `none`.
+- PDI's retained-surface validation for one retained delta and the final accumulated implementation surface.
 
 ## Task-scoped directive
 

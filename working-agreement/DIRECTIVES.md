@@ -198,9 +198,6 @@ to `prototype-driven-implementation`.
 ## G11 · Make code changes granular and approval-gated
 **Why:** large, unreviewed changes get approved blind and ship drift; Kamen needs to see each change and its rationale before it lands. (Distilled from `~/.claude/CLAUDE.md`, 2026-06-20; the `write-code-playbook` is the mechanism this standing rule relies on.)
 - ✅ Present code changes as a granular, change-by-change plan — each change with the reason for it — and wait for Kamen's approval before applying.
-- ✅ An explicit invocation of `playbook-convergence-loop` authorizes the approved plan's edits
-  inside its recorded objective, requirements, repositories, and allowed paths. The loop may
-  research, plan, implement, verify, and fix validated findings without asking again for each edit.
 - ✅ An explicit invocation of `prototype-driven-implementation`, followed by approval of its
   recorded autonomy envelope, authorizes adaptive prototype edits and verification inside its
   approved outcome, repositories, paths, and time or attempt limits without asking again for each
@@ -357,7 +354,7 @@ to `prototype-driven-implementation`.
     assign it downstream, and continue without launching remediation in the current task.
 - ✅ A required catalog entry must include the practical symptom, confirmed evidence, practical impact, blocker type, task/run ids when available, and the suspected or confirmed stable boundary.
 - ✅ When a blocker fix is implemented, update the same catalog entry with the solution summary, changed files or artifacts, verification evidence, remaining work, and whether it was verified through the same path Kamen uses.
-- ✅ When `playbook-convergence-loop` or a remediation lane is launched for a blocker, record the blocker id in the catalog first and carry that id through research, plan, implementation, review, and final reporting.
+- ✅ When a remediation lane is launched for a blocker, record the blocker id in the catalog first and carry that id through correction and final reporting.
 - ✅ Before resuming goal pursuit after a deliverable blocker, check the catalog entry and state whether the blocker is `open`, `fixed-awaiting-verification`, `verified`, `closed`, `superseded`, or `non-gap`. An incidental system defect may remain open in its downstream assignment without blocking the current deliverable.
 - ✅ If no catalog helper exists for the repo, create a minimal catalog document or helper before continuing; do not rely on chat, terminal history, or scattered run notes as the control surface.
 - 🚫 No fixing a deliverable blocker, or a repeated execution error, without a catalog entry.
@@ -372,8 +369,7 @@ to `prototype-driven-implementation`.
   **grounded root fix** and do not present the shortcut as an option.
 - ✅ When the grounded fix is large, divide it into bounded user-visible deliverables that preserve
   the root-fix boundary and can each be completed and verified independently. Use only the phases
-  required by unresolved evidence. `playbook-convergence-loop` runs only when Kamen explicitly
-  invokes it; task size alone never triggers it.
+  required by unresolved evidence.
 - ✅ A bounded deliverable is complete when every approved in-scope behavior works end-to-end
   without a known workaround. Related capabilities outside that explicit deliverable must be
   identified, but they do not automatically expand or block it.

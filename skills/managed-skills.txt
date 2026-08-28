@@ -12,7 +12,6 @@ phase-categorization-foundry
 phase-ledger-category-contract-foundry
 phase-ledger-contract-hardener
 plan-playbook
-playbook-convergence-loop
 producer-foundry
 prototype-driven-implementation
 remote-mcp-operator
@@ -29,6 +28,5 @@ task-workflow
 verifier-foundry
 verify-analysis
 verify-plan
-verify-work
 working-agreement
 write-code-playbook

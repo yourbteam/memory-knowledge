@@ -5,10 +5,6 @@ description: This skill should be used when the user asks to iteratively harden 
 
 # Doc Gap Closure Loop
 
-## Convergence Delegation
-
-When called by `playbook-convergence-loop`, inspect the document and authoritative evidence in assessment-only mode and do not edit. Return `PASS`, `GAPS`, `BLOCKED`, or `CAP_REACHED` using `skills/_shared/STAGE_RESULT_CONTRACT.md`. The parent alone fixes the artifact and records state. Reasoning isolation excludes producer rationale and hidden answers, not verification evidence.
-
 ## Goal
 
 Drive a document to implementation-planning readiness through repeated assess-plan-execute cycles. Stop only when the assessment finds no gaps that would prevent a follow-up implementation plan from producing a one-shot successful, quality implementation.

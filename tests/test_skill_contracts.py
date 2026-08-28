@@ -21,19 +21,6 @@ class ContractTests(unittest.TestCase):
         self.assertIn("discard",prototype)
         self.assertIn("prototype-driven-implementation",managed)
 
-    def test_convergence_contracts(self):
-        convergence=(ROOT/"playbook-convergence-loop/SKILL.md").read_text()
-        self.assertIn("bounded autonomy",convergence); self.assertIn("close_agent",convergence); self.assertIn("guard-baseline",convergence)
-        stage_order=convergence.split("## Stage Order",1)[1].split("## Review Loop",1)[0]
-        playbooks=("plan-playbook","write-code-playbook")
-        positions=[stage_order.index(f"`{name}`") for name in playbooks]
-        self.assertEqual(positions,sorted(positions))
-        self.assertNotIn("standalone review controller",stage_order)
-        self.assertLess(stage_order.index("PDI-owned retained-surface inspection"),stage_order.index("`verify-work`"))
-        verify=(ROOT/"verify-work/SKILL.md").read_text()
-        for phrase in ("staged changes","unstaged changes","untracked files","assessment-only","Do not commit by default"):
-            self.assertIn(phrase,verify)
-
     def test_working_agreement_has_no_range(self):
         text=(ROOT/"working-agreement/SKILL.md").read_text()
         self.assertNotIn("G0-G6",text); self.assertIn("all current",text); self.assertIn("projectless",text)
@@ -48,13 +35,6 @@ class ContractTests(unittest.TestCase):
             self.assertIn("focused",text)
         self.assertIn("evidence-backed absence",entry)
         self.assertIn("no native full-suite command exists",package)
-
-    def test_delegated_skills_preserve_evidence_but_not_rationale(self):
-        for name in ("doc-gap-closure-loop","requirements-coverage-gap-loop","requirements-satisfaction-gap-loop","verify-plan","verify-analysis","verify-work"):
-            text=(ROOT/name/"SKILL.md").read_text()
-            self.assertIn("assessment-only",text,name); self.assertIn("evidence",text,name)
-        convergence=(ROOT/"playbook-convergence-loop/SKILL.md").read_text()
-        self.assertIn("excludes producer rationale",convergence); self.assertIn("authoritative source roots",convergence)
 
     def test_no_automatic_commit_in_weekly_job(self):
         text=(Path(__file__).parents[1]/"working-agreement/weekly-review.sh").read_text()
@@ -94,7 +74,7 @@ class ContractTests(unittest.TestCase):
             shutil.copytree(candidate,skills/"plan-playbook")
             shutil.rmtree(skills/"plan-playbook"/"integration")
             shutil.copytree(ROOT/"_shared",skills/"_shared")
-            for name in ("task-workflow","playbook-convergence-loop"):
+            for name in ("task-workflow",):
                 destination=skills/name
                 destination.mkdir()
                 shutil.copy2(candidate/"integration"/f"{name}.SKILL.md",destination/"SKILL.md")
@@ -113,38 +93,23 @@ class ContractTests(unittest.TestCase):
             outer_commands=set(re.findall(r"\b[a-z][a-z-]+\b",outer_help))
 
             task=(skills/"task-workflow"/"SKILL.md").read_text()
-            convergence=(skills/"playbook-convergence-loop"/"SKILL.md").read_text()
-            for text in (task,convergence):
+            for text in (task,):
                 referenced=set(re.findall(
                     r"skills/plan-playbook/scripts/plan_package\.py ([a-z][a-z-]+)",text,
                 ))
                 self.assertTrue(referenced)
                 self.assertEqual(referenced-provider_commands,set())
 
-            referenced_outer=set(re.findall(
-                r"skills/_shared/convergence_state\.py ([a-z][a-z-]+)",convergence,
-            ))
-            self.assertTrue(referenced_outer)
-            self.assertEqual(referenced_outer-outer_commands,set())
             self.assertEqual(task.count("Invoke canonical `$plan-playbook` exactly once"),1)
-            self.assertEqual(convergence.count("Invoke canonical `plan-playbook` exactly once"),1)
             self.assertIn("analysis.md` is a non-package sibling",task)
             self.assertIn("<task-root>/.plan-playbook/",task)
             self.assertIn("IMPLEMENTATION_APPROVAL_REQUIRED",task)
             self.assertIn("validate-package",task)
             self.assertIn("validate-implementation-authorization",task)
-            self.assertIn("never asks the user twice",convergence)
-            self.assertIn("Pass its result file unchanged",convergence)
-            self.assertIn("Do not invoke `verify-plan`",convergence)
-            research_stages=convergence.split("## Stage Order",1)[1].split(
-                "## Planner Integration",1
-            )[0]
-            self.assertIn("research-owned and are not plan gates",research_stages)
-            for text in (task,convergence):
+            for text in (task,):
                 self.assertNotIn("$plan-playbook-v2",text)
                 self.assertNotIn("skills/plan-playbook-v2/",text)
             self.assertTrue((repo/"skills/task-workflow/SKILL.md").is_file())
-            self.assertTrue((repo/"skills/playbook-convergence-loop/SKILL.md").is_file())
 
 
 if __name__ == "__main__": unittest.main()

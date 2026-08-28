@@ -7,10 +7,6 @@ metadata:
 
 # Verify Plan
 
-## Convergence Delegation
-
-When called by `playbook-convergence-loop`, verifier and critic agents are assessment-only. They receive the objective, requirements, plan, authoritative evidence, and raw findings, but not producer rationale or hidden answers. The parent guards the baseline, applies fixes, writes state, and returns the shared `PASS|GAPS|BLOCKED|CAP_REACHED` envelope. No commits by default.
-
 ## Overview
 
 This skill verifies an existing plan from the current conversation or a plan file, then hardens it through a front-loaded implementation-surface map, a finite inventory of checkable plan obligations, deterministic checks, and progressive implementation-readiness passes until every in-scope obligation is supported or the iteration cap is reached.

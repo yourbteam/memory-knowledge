@@ -87,7 +87,7 @@ Default expectations:
 
 - normal `analysis.md`
 - Planner selects and enforces the applicable planning profile and all plan hardening
-- `verify-analysis` and `verify-work` used when justified by risk or change size
+- `verify-analysis` used when justified by risk or change size; PDI owns retained-surface validation during implementation
 
 ### `heavy`
 
@@ -104,7 +104,7 @@ Default expectations:
 - detailed `analysis.md`
 - `verify-analysis` required
 - Planner selects and enforces the applicable planning profile and all plan hardening
-- `verify-work` required
+- PDI retained-surface validation required for code-bearing work
 - rollout and closeout sections required
 
 The task-workflow size is an execution and analysis classification. It does not select a separate plan-hardening path or bypass the profile that Planner derives from grounded plan characteristics.
@@ -189,8 +189,6 @@ python3 skills/plan-playbook/scripts/plan_package.py validate-implementation-aut
 
 `EMITTED/AWAITING_RESPONSE` is `IMPLEMENTATION_APPROVAL_REQUIRED`. `EMITTED/AUTHORIZED` permits Write Code only after `validate-package` and `validate-implementation-authorization` both succeed. On restart, `AWAITING_RESPONSE` reuses the same request and remains blocked; `AUTHORIZED` resumes without another prompt only after revalidating the request, receipt, package, and controller state.
 
-When task-workflow is delegated by `playbook-convergence-loop`, pass the frozen convergence state to `record-implementation-authorization`. The controller derives the same bounded authorization receipt from the outer authorization and task-workflow creates no second prompt.
-
 Denial, missing evidence, changed package revision, changed scope, source-state drift, receipt tamper, or an invalidation marker blocks implementation.
 
 ### 6. Execute the plan
@@ -228,10 +226,8 @@ After implementation:
 If used, invoke:
 
 ```text
-Use $verify-work to review every in-scope change surface, let the parent apply validated fixes, and repeat until convergence. Commit only when separately authorized for the exact repositories.
+During implementation, use Prototype-Driven Implementation's retained-surface validation on every in-scope change surface; PDI applies validated fixes and repeats until no blocking finding remains. Commit only when separately authorized for the exact repositories.
 ```
-
-When delegated by `playbook-convergence-loop`, the hardened Planner package supplies bounded edit approval. Run its baseline guard before every edit, verification, review spawn, install, or projection write; use the shared stage-result verdicts; and keep the parent as sole fixer/state writer.
 
 ## Blocker Taxonomy
 
@@ -313,5 +309,5 @@ Use $task-workflow to continue Tasks/<task-name>.
 To continue a heavy task with explicit analysis and work verification:
 
 ```text
-Use $task-workflow to continue Tasks/<task-name>, then use $verify-analysis and $verify-work at the appropriate stages. Planner owns all plan hardening.
+Use $task-workflow to continue Tasks/<task-name>, then use $verify-analysis when required. Prototype-Driven Implementation owns retained-surface validation for code; Planner owns all plan hardening.
 ```

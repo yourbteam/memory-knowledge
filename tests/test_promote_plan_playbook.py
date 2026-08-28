@@ -116,10 +116,9 @@ def fake_repository(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
     for name in ("_shared", "research-playbook"):
         write(repo / f"skills/{name}/placeholder.txt", name)
     write(repo / "skills/task-workflow/SKILL.md", "legacy task workflow\n")
-    write(repo / "skills/playbook-convergence-loop/SKILL.md", "legacy convergence\n")
     write(
         repo / "skills/managed-skills.txt",
-        "_shared\nplan-playbook\nplan-playbook-v2\nplaybook-convergence-loop\n"
+        "_shared\nplan-playbook\nplan-playbook-v2\n"
         "research-playbook\ntask-workflow\n",
     )
 
@@ -189,7 +188,7 @@ def fake_repository(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
 
     for name in (
         "_shared", "plan-playbook", "plan-playbook-v2", "research-playbook",
-        "task-workflow", "playbook-convergence-loop",
+        "task-workflow",
     ):
         source = repo / f"skills/{name}"
         if source.exists():
@@ -200,7 +199,6 @@ def fake_repository(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
 def install_from_source(repo: Path, installed: Path, _state: Path) -> None:
     for name in (
         "_shared", "plan-playbook", "research-playbook", "task-workflow",
-        "playbook-convergence-loop",
     ):
         destination = installed / name
         if destination.exists():

@@ -150,13 +150,14 @@ Declare which stages are required:
 
 - `verify-analysis`
 - `verify-plan`
-- `verify-work`
+
+For code-bearing work, Prototype-Driven Implementation owns retained-surface validation internally; it is not a separate selectable verification stage.
 
 Default expectation:
 
 - `light`: all optional unless risk is higher than it first appears
-- `standard`: `verify-plan` required, others risk-based
-- `heavy`: all three required
+- `standard`: `verify-plan` required; `verify-analysis` risk-based
+- `heavy`: both required
 
 ### 6. Rollout Requirements
 

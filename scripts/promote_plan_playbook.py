@@ -303,13 +303,11 @@ def tracked_paths(repo_root: Path, installed_root: Path) -> dict[str, Path]:
         "validator_tests": repo_root / "tests/test_validate_skills.py",
         "legacy_fixture": repo_root / "tests/fixtures/plan-playbook-legacy",
         "task_workflow_source": repo_root / "skills/task-workflow/SKILL.md",
-        "convergence_source": repo_root / "skills/playbook-convergence-loop/SKILL.md",
         "installed_canonical": installed_root / CANONICAL,
         "installed_candidate": installed_root / CANDIDATE,
         "installed_shared": installed_root / "_shared",
         "installed_research": installed_root / "research-playbook",
         "installed_task_workflow": installed_root / "task-workflow",
-        "installed_convergence": installed_root / "playbook-convergence-loop",
     }
 
 
@@ -350,7 +348,6 @@ def _assert_candidate_inputs(paths: dict[str, Path]) -> None:
         "skill_contract_tests",
         "validator_tests",
         "task_workflow_source",
-        "convergence_source",
     ):
         if not paths[name].exists():
             raise PromotionError(f"required-path-missing:{name}")
@@ -546,9 +543,6 @@ def transformed_files(paths: dict[str, Path]) -> dict[str, str]:
     transformed["task_workflow_source"] = (
         paths["candidate_source"] / "integration/task-workflow.SKILL.md"
     ).read_text(encoding="utf-8")
-    transformed["convergence_source"] = (
-        paths["candidate_source"] / "integration/playbook-convergence-loop.SKILL.md"
-    ).read_text(encoding="utf-8")
     return transformed
 
 
@@ -695,7 +689,7 @@ def install_canonical(repo_root: Path, installed_root: Path, state_dir: Path) ->
         repo_root / "skills/managed-skills.txt",
         [installed_root],
         state_dir,
-        only=["_shared", CANONICAL, "research-playbook", "task-workflow", "playbook-convergence-loop"],
+        only=["_shared", CANONICAL, "research-playbook", "task-workflow"],
     )
 
 
@@ -733,7 +727,6 @@ def apply_plan(
             "installed_canonical": paths["canonical_source"],
             "installed_research": repo_root / "skills/research-playbook",
             "installed_task_workflow": repo_root / "skills/task-workflow",
-            "installed_convergence": repo_root / "skills/playbook-convergence-loop",
         }
         for installed_name, source in source_installed_pairs.items():
             if tree_hash(paths[installed_name]) != tree_hash(source):
@@ -895,7 +888,6 @@ def verify_structure(
             managed.count(CANONICAL) == 1
             and tree_hash(paths["installed_canonical"]) == canonical_hash
             and tree_hash(paths["installed_task_workflow"]) == tree_hash(paths["task_workflow_source"].parent)
-            and tree_hash(paths["installed_convergence"]) == tree_hash(paths["convergence_source"].parent)
             and "$plan-playbook" in metadata
             and "allow_implicit_invocation: false" not in metadata
             and "skills/plan-playbook-v2/" not in paths["evaluator"].read_text(encoding="utf-8")

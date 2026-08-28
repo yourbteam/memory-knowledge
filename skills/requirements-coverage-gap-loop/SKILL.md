@@ -5,10 +5,6 @@ description: This skill should be used when a plan, research, or findings docume
 
 # Requirements Coverage Gap Loop
 
-## Convergence Delegation
-
-When called by `playbook-convergence-loop`, use `assessment-only` mode: read the complete requirements and authoritative artifact/source evidence, report coverage gaps in the shared stage-result envelope, and make no edits. The parent is the only fixer/state writer. Fresh reasoning excludes producer rationale, not evidence.
-
 ## Goal
 
 Drive a document to **full requirements coverage** through repeated assess-plan-execute cycles. Stop only when the requirement set is demonstrably complete and every requirement — decomposed into its constituent obligations — is either addressed by a specific part of the plan or explicitly and deliberately marked out of scope.

@@ -42,10 +42,6 @@
       "status": "shared-identical"
     },
     {
-      "name": "playbook-convergence-loop",
-      "status": "shared-identical"
-    },
-    {
       "name": "producer-foundry",
       "status": "shared-identical"
     },
@@ -99,10 +95,6 @@
     },
     {
       "name": "verify-plan",
-      "status": "shared-identical"
-    },
-    {
-      "name": "verify-work",
       "status": "shared-identical"
     },
     {
