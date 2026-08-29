@@ -193,12 +193,12 @@
       ]
     },
     "prototype-driven-implementation": {
-      "canonical_tree_sha256": "43f7feffa2ded13b12b5b1dc7d96ba8f40608a307be70b6746e43b06ceb5ae99",
+      "canonical_tree_sha256": "d9c3d525057b3fcd3fd2b9707d191cf11e9cf5433c87a7fc3a28762dfb1bb360",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "43f7feffa2ded13b12b5b1dc7d96ba8f40608a307be70b6746e43b06ceb5ae99",
+      "projected_tree_sha256": "d9c3d525057b3fcd3fd2b9707d191cf11e9cf5433c87a7fc3a28762dfb1bb360",
       "scenario_groups": [
         "CAP-PDI"
       ],
@@ -231,21 +231,6 @@
       "projected_tree_sha256": "b4e43e25d22d3c3de0baad516e9fabd815507feb68807d73c615ecf5c8d6bf84",
       "scenario_groups": [
         "CAP-REMOTE"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
-    "reproduce-first-verify": {
-      "canonical_tree_sha256": "f403af3b537eeec13f3bb5006f831bd2b56e7c3b07ceaae3a25ecf11ddfcf46d",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "f403af3b537eeec13f3bb5006f831bd2b56e7c3b07ceaae3a25ecf11ddfcf46d",
-      "scenario_groups": [
-        "CAP-OPERATIONS"
       ],
       "targets": [
         "codex",

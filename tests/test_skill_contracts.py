@@ -33,13 +33,22 @@ class ContractTests(unittest.TestCase):
         text=(Path(__file__).parents[1]/"working-agreement/weekly-review.sh").read_text()
         self.assertNotIn("git commit",text); self.assertNotIn("git add",text)
 
-    def test_reproduce_first_skill_matches_handoff(self):
-        text=(ROOT/"reproduce-first-verify/SKILL.md").read_text()
-        for phrase in ("### 1. CAPTURE","### 2. REPRODUCE","### 3. TRUSTWORTHINESS GATE","### 4. VERIFY","### 5. INSERT + ONE Live Confirmation","### 6. REPORT","GF-N3-LEASE-ORPHAN","GF-N3-RESEARCH-ACTIVE-RUN-NOT-ADOPTED","runtime close_agent"):
-            self.assertIn(phrase,text)
-        self.assertIn("red-before / green-after",text.lower())
-        for flag in ("--resume-from-checkpoint","--expected-spec-hash","--validate-only","--start-validation-round","--start-feature-index"):
-            self.assertIn(flag,text)
+    def test_reproduce_first_is_internal_pdi_support_not_selectable(self):
+        pdi=(ROOT/"prototype-driven-implementation/SKILL.md").read_text()
+        contract=" ".join((ROOT/"prototype-driven-implementation/contracts/reproduce-first-support.md").read_text().split())
+        managed=(ROOT/"managed-skills.txt").read_text().splitlines()
+        self.assertFalse((ROOT/"reproduce-first-verify/SKILL.md").exists())
+        self.assertNotIn("reproduce-first-verify",managed)
+        self.assertIn("contracts/reproduce-first-support.md",pdi)
+        for phrase in (
+            "captured live failing state",
+            "same real code path",
+            "red-before / green-after",
+            "one closest valid live confirmation",
+            "normal direct prototype proof",
+            "PDI retains lifecycle control",
+        ):
+            self.assertIn(phrase,contract)
 
     def test_plan_playbook_is_retired_into_direct_planning_and_pdi_support(self):
         repo=Path(__file__).parents[1]

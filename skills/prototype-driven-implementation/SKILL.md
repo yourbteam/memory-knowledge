@@ -84,6 +84,14 @@ Never let a projection widen scope, launch a successor phase or package, take li
 or declare the implementation complete. A projection's recommendation is evidence for the
 controller; it is not an automatic next milestone.
 
+## Use internal reproduce-first support when live proof is expensive
+
+When a recurring defect has captured live failing state and its live verification point is far
+into an expensive run, read `contracts/reproduce-first-support.md` and apply that bounded
+verification technique inside the current prototype. PDI retains lifecycle control and the
+approved envelope throughout. Do not invoke it for a cheap one-off or without captured failing
+state; keep those cases on the normal direct prototype proof.
+
 ## Preserve the stable boundary
 
 - Prototype through production seams rather than reimplementing product logic in a test harness.

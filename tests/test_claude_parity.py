@@ -23,7 +23,6 @@ ALLOWED_CODEX_REFERENCES = {
     "skills/_shared/host_agent_runtime.py",
     "skills/shell-canary-foundry/SKILL.md",
     "skills/shell-canary-runner/SKILL.md",
-    "skills/reproduce-first-verify/SKILL.md",
 }
 
 
