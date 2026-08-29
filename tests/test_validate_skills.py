@@ -124,6 +124,18 @@ class ValidatorTests(unittest.TestCase):
         self.assertIn("contracts/write-code-support.md",support)
         self.assertIn("Central controller for every code implementation",pdi)
 
+    def test_auto_capture_is_retired_while_explicit_corpus_add_remains(self):
+        managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
+        projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
+        agreement=(ROOT/"skills/working-agreement/SKILL.md").read_text()
+        setup=(ROOT/"working-agreement/SETUP-claude.md").read_text()
+        self.assertNotIn("auto-capture",managed)
+        self.assertNotIn('"auto-capture"',projections)
+        self.assertFalse((ROOT/"skills/auto-capture").exists())
+        self.assertNotIn("auto-capture",agreement+setup)
+        self.assertIn("corpus-add",managed)
+        self.assertTrue((ROOT/"skills/corpus-add/SKILL.md").is_file())
+
     def test_requirements_coverage_gap_loop_is_retired(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
         projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()

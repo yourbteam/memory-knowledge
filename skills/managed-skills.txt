@@ -1,6 +1,5 @@
 _shared
 atom-building-machinery
-auto-capture
 blocker-catalog
 corpus-add
 critic-foundry

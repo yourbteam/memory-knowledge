@@ -57,10 +57,8 @@ receipt-backed selection, and `sequence_guard.py activate` before commands.
 When a command fails, classify it under G20. Correct a first execution error immediately; invoke
 `blocker-catalog` before fixing a deliverable blocker or a repeated execution error. Record a
 qualifying correction, update the reusable sequence/script when behavior changed, and require a
-fresh same-path successor verification before the correction becomes reusable. At substantive
-closeout invoke `auto-capture`; only evidence-backed work lessons may enter candidate
-review. Never persist people, preferences, diary/activity, transcript, or conversation
-history as memory.
+fresh same-path successor verification before the correction becomes reusable. Never persist
+people, preferences, diary/activity, transcript, or conversation history as memory.
 
 ## Tier-2 Corpus
 

@@ -34,21 +34,6 @@
         "claude"
       ]
     },
-    "auto-capture": {
-      "canonical_tree_sha256": "74bb43fd5d60ef2d2bc06b0f6aff1ae3726614ac8eb1750221b7dd0704f459ee",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "74bb43fd5d60ef2d2bc06b0f6aff1ae3726614ac8eb1750221b7dd0704f459ee",
-      "scenario_groups": [
-        "CAP-MEMORY"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
     "blocker-catalog": {
       "canonical_tree_sha256": "769b2c7fe0d02c4ff9c8941441021d2e71a1484680af90fcf4a425522d19f46e",
       "disposition": "SHARED_IDENTICAL",
@@ -377,12 +362,12 @@
       ]
     },
     "working-agreement": {
-      "canonical_tree_sha256": "341d147c275f5cc16696e7d3c149430a1fd12aadafbb608048ea3139ca402837",
+      "canonical_tree_sha256": "2af0e1c9da0929fc0e925023a15edf759a9100b944eb09302cee9d0cc3c9c025",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "341d147c275f5cc16696e7d3c149430a1fd12aadafbb608048ea3139ca402837",
+      "projected_tree_sha256": "2af0e1c9da0929fc0e925023a15edf759a9100b944eb09302cee9d0cc3c9c025",
       "scenario_groups": [
         "CAP-GOVERNANCE"
       ],

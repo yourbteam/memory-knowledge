@@ -62,8 +62,8 @@ internal error lets the call or turn through, so a defect in a gate can never we
 | `require-directive-anchor.sh` | `Stop` | The reply does not open with a well-formed G0 anchor, names a controller never invoked, declares `envelope=none` on a turn that edited files, or declares a word count below the real one. |
 
 Register them alongside the injectors, in this order (absolute paths, merged into the existing
-`hooks` block — `PreToolUse` runs the read gate then the delivery gate; `Stop` runs
-`auto-capture-stop.sh` then the anchor gate).
+`hooks` block — `PreToolUse` runs the read gate then the delivery gate; `Stop` runs the anchor
+gate).
 
 `trigger-rules.json` is the delivery table: each entry names the tools it watches, a regex over
 the tool input, the G-ids to deliver, and why that moment needs them. Setting `"on": "repeat"`
