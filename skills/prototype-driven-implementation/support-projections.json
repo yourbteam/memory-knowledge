@@ -38,7 +38,7 @@
     {
       "role": "plan",
       "source": "skills/plan-playbook/SKILL.md",
-      "source_sha256": "4591ca3acca0d703b5004a23ad0ae90be4ffd5bb0ca12a044adf98168f1b537b",
+      "source_sha256": "d36655b0de7bd732c3ea06c976460b6ee64bfd8530916a37213a9ce10ed7d996",
       "output": "plan-support.md",
       "purpose": "Make one observed implementation delta decision-complete.",
       "instructions": [
@@ -50,8 +50,8 @@
     },
     {
       "role": "write-code",
-      "source": "skills/write-code-playbook/SKILL.md",
-      "source_sha256": "144d768e9ce69205d4bd0507089ae2c328690285e86b59788394ffd107a20cea",
+      "source": "skills/prototype-driven-implementation/contracts/write-code-support.md",
+      "source_sha256": "9bf38bba4692ff176df9bdab9c9375ba7da658f353d16acc01667d0aa9ac5815",
       "output": "write-code-support.md",
       "purpose": "Implement one controller-approved product-code delta safely.",
       "instructions": [

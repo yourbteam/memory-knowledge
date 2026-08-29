@@ -219,7 +219,7 @@ to `prototype-driven-implementation`.
 ---
 
 ## G11 · Make code changes granular and approval-gated
-**Why:** large, unreviewed changes get approved blind and ship drift; Kamen needs to see each change and its rationale before it lands. (Distilled from `~/.claude/CLAUDE.md`, 2026-06-20; the `write-code-playbook` is the mechanism this standing rule relies on.)
+**Why:** large, unreviewed changes get approved blind and ship drift; Kamen needs to see each change and its rationale before it lands. (Distilled from `~/.claude/CLAUDE.md`, 2026-06-20; Prototype-Driven Implementation is the mechanism this standing rule relies on.)
 - ✅ Present code changes as a granular, change-by-change plan — each change with the reason for it — and wait for Kamen's approval before applying.
 - ✅ An explicit invocation of `prototype-driven-implementation`, followed by approval of its
   recorded autonomy envelope, authorizes adaptive prototype edits and verification inside its
@@ -529,11 +529,11 @@ the existing playbooks remain available as bounded sources of rigor.
 - ✅ Pull Plan and Write-code support only when an observed gap requires it. Use the generated
   support projection for that role, not the full standalone playbook as a competing controller.
   PDI's blocking-evidence and accumulated-surface checks come from its own non-selectable internal contracts.
-- ✅ Keep `plan-playbook` and `write-code-playbook` unchanged for their standalone task modes. Do
-  not install or select standalone research or review controllers; standalone research and review
-  inspect declared evidence directly, while PDI owns implementation evidence and real-path validation.
-  Generate bounded implementation-support projections from pinned sources and fail drift checks
-  when a source changes.
+- ✅ Keep `plan-playbook` authoritative for standalone Plan tasks. Do not install or select
+  standalone research, Write-code, or review controllers; standalone research and review inspect
+  declared evidence directly, while PDI owns implementation, its internal write-code support,
+  implementation evidence, and real-path validation. Generate bounded implementation-support
+  projections from pinned sources and fail drift checks when a source changes.
 - ✅ A support projection must receive the approved outcome and envelope, current prototype and
   observed gap, concrete evidence, exact support question, and allowed scope or budget. It must
   return evidence, conclusion, unresolved uncertainty, and the recommended next delta.

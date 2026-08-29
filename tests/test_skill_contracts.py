@@ -10,16 +10,20 @@ ROOT=Path(__file__).parents[1]/"skills"
 
 
 class ContractTests(unittest.TestCase):
-    def test_write_code_routes_grounded_prototype_work(self):
-        write_code=(ROOT/"write-code-playbook/SKILL.md").read_text()
+    def test_pdi_owns_grounded_write_code_work_and_internal_support(self):
         prototype=(ROOT/"prototype-driven-implementation/SKILL.md").read_text()
+        write_support=(ROOT/"prototype-driven-implementation/references/write-code-support.md").read_text()
         managed=(ROOT/"managed-skills.txt").read_text().splitlines()
-        self.assertIn("`prototype-driven-implementation`",write_code)
+        self.assertFalse((ROOT/"write-code-playbook").exists())
+        self.assertNotIn("write-code-playbook",managed)
         self.assertIn("real captured success and failure cases",prototype)
         self.assertIn("promote",prototype)
         self.assertIn("revise",prototype)
         self.assertIn("discard",prototype)
         self.assertIn("prototype-driven-implementation",managed)
+        self.assertIn("contracts/write-code-support.md",write_support)
+        self.assertIn("Change only the approved delta",write_support)
+        self.assertIn("Return control",write_support)
 
     def test_working_agreement_has_no_range(self):
         text=(ROOT/"working-agreement/SKILL.md").read_text()

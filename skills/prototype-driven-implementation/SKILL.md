@@ -67,9 +67,9 @@ every incomplete atom state returns `next_skill: prototype-driven-implementation
 
 ## Pull bounded playbook support
 
-The standalone playbooks remain authoritative for standalone Plan and Write-code tasks. During
-implementation, use only their generated support projections plus PDI's internal blocking-evidence
-and retained-surface validation projections:
+Plan Playbook remains authoritative for standalone Plan tasks. During implementation, use only
+its generated plan-support projection plus PDI's internal research, write-code, and retained-surface
+validation projections:
 
 - `references/research-support.md` for PDI-owned investigation of one blocking evidence question;
 - `references/plan-support.md` for one observed delta that needs implementation-ready decisions;

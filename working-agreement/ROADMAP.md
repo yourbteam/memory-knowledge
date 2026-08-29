@@ -44,9 +44,8 @@ from "proposed" to live.
       build-critical ones. Directives P1 (one-shot test) and P2 (lock decisions, don't list options).
       Upstream link locked (Option 1): a plan rests on *sufficient understanding*, not a mandatory
       research step — research only when understanding is missing; loop back when planning hits an unknown.
-- [x] **Write code** playbook (`~/.claude/skills/write-code-playbook/SKILL.md`). Rests on sufficient
-      plan/understanding; reach for `verify` / `code-review` / `simplify` / `review-fix-loop`.
-      Directive WC1 (verify before "done"). Deliberately no "smallest change" rule — that's G3 for code.
+- [x] **Write code** is now owned by `prototype-driven-implementation`; its bounded coding guidance
+      is retained as an internal support contract rather than a selectable competing playbook.
 - [x] **Review** playbook (`~/.claude/skills/review-playbook/SKILL.md`). Rests on knowing intent
       (the plan, when one exists); reach for `code-review` / `security-review` / `review` /
       `review-fix-loop`. Directives RV1 (real over many) and RV2 (cover the plan).

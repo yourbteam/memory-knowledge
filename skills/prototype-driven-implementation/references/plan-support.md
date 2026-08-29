@@ -3,7 +3,7 @@
 # Plan Support Projection
 
 Source: `skills/plan-playbook/SKILL.md`
-Pinned SHA-256: `4591ca3acca0d703b5004a23ad0ae90be4ffd5bb0ca12a044adf98168f1b537b`
+Pinned SHA-256: `d36655b0de7bd732c3ea06c976460b6ee64bfd8530916a37213a9ce10ed7d996`
 
 ## Purpose
 

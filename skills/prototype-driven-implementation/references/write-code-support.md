@@ -2,8 +2,8 @@
 
 # Write Code Support Projection
 
-Source: `skills/write-code-playbook/SKILL.md`
-Pinned SHA-256: `144d768e9ce69205d4bd0507089ae2c328690285e86b59788394ffd107a20cea`
+Source: `skills/prototype-driven-implementation/contracts/write-code-support.md`
+Pinned SHA-256: `9bf38bba4692ff176df9bdab9c9375ba7da658f353d16acc01667d0aa9ac5815`
 
 ## Purpose
 

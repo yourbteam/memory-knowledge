@@ -39,12 +39,17 @@ def test_generated_projections_are_current_and_sources_are_pinned():
     ]
     review = next(item for item in manifest["projections"] if item["role"] == "review")
     research = next(item for item in manifest["projections"] if item["role"] == "research")
+    write_code = next(item for item in manifest["projections"] if item["role"] == "write-code")
     assert research["source"] == (
         "skills/prototype-driven-implementation/contracts/blocking-evidence-research.md"
     )
     assert review["source"] == (
         "skills/prototype-driven-implementation/contracts/retained-surface-review.md"
     )
+    assert write_code["source"] == (
+        "skills/prototype-driven-implementation/contracts/write-code-support.md"
+    )
+    assert not (ROOT / "skills/write-code-playbook").exists()
     for item in manifest["projections"]:
         source = ROOT / item["source"]
         assert hashlib.sha256(source.read_bytes()).hexdigest() == item["source_sha256"]

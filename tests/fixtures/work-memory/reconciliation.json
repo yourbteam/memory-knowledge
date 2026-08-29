@@ -96,10 +96,6 @@
     {
       "name": "working-agreement",
       "status": "shared-identical"
-    },
-    {
-      "name": "write-code-playbook",
-      "status": "shared-identical"
     }
   ]
 }

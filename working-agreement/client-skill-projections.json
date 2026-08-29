@@ -223,12 +223,12 @@
       ]
     },
     "prototype-driven-implementation": {
-      "canonical_tree_sha256": "afba7262ebfca819d8379413a69bd23c7cabcd4a5adc730ae6c06e20ed6c5110",
+      "canonical_tree_sha256": "e98c543b440ef214ca343d11d12224b1643a845bbbfd5d1d832ee47ca83b2e1c",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "afba7262ebfca819d8379413a69bd23c7cabcd4a5adc730ae6c06e20ed6c5110",
+      "projected_tree_sha256": "e98c543b440ef214ca343d11d12224b1643a845bbbfd5d1d832ee47ca83b2e1c",
       "scenario_groups": [
         "CAP-PDI"
       ],
@@ -268,12 +268,12 @@
       ]
     },
     "reproduce-first-verify": {
-      "canonical_tree_sha256": "e5252fdb64497cca0e3b3ca3d0f3db72c9801d5bae51ba004ba6faada61ae1b3",
+      "canonical_tree_sha256": "f403af3b537eeec13f3bb5006f831bd2b56e7c3b07ceaae3a25ecf11ddfcf46d",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "e5252fdb64497cca0e3b3ca3d0f3db72c9801d5bae51ba004ba6faada61ae1b3",
+      "projected_tree_sha256": "f403af3b537eeec13f3bb5006f831bd2b56e7c3b07ceaae3a25ecf11ddfcf46d",
       "scenario_groups": [
         "CAP-OPERATIONS"
       ],
@@ -385,21 +385,6 @@
       "projected_tree_sha256": "341d147c275f5cc16696e7d3c149430a1fd12aadafbb608048ea3139ca402837",
       "scenario_groups": [
         "CAP-GOVERNANCE"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
-    "write-code-playbook": {
-      "canonical_tree_sha256": "7ec5b40148fbe477ad5348fb771bef7504d9df175504ed575bec2dde440187f2",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "7ec5b40148fbe477ad5348fb771bef7504d9df175504ed575bec2dde440187f2",
-      "scenario_groups": [
-        "CAP-PDI"
       ],
       "targets": [
         "codex",

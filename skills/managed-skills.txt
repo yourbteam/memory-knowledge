@@ -23,4 +23,3 @@ shell-canary-runner
 task-intake
 verifier-foundry
 working-agreement
-write-code-playbook

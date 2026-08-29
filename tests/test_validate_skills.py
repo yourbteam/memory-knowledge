@@ -110,6 +110,20 @@ class ValidatorTests(unittest.TestCase):
         self.assertIn("name: plan-playbook",plan)
         self.assertIn("name: prototype-driven-implementation",pdi)
 
+    def test_write_code_playbook_is_retired_into_pdi_internal_support(self):
+        managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
+        projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
+        pdi=(ROOT/"skills/prototype-driven-implementation/SKILL.md").read_text()
+        support=(ROOT/"skills/prototype-driven-implementation/references/write-code-support.md").read_text()
+        directives=(ROOT/"working-agreement/DIRECTIVES.md").read_text()
+        self.assertNotIn("write-code-playbook",managed)
+        self.assertNotIn('"write-code-playbook"',projections)
+        self.assertFalse((ROOT/"skills/write-code-playbook").exists())
+        self.assertNotIn("standalone Plan and Write-code",pdi)
+        self.assertNotIn("write-code-playbook",pdi+directives)
+        self.assertIn("contracts/write-code-support.md",support)
+        self.assertIn("Central controller for every code implementation",pdi)
+
     def test_requirements_coverage_gap_loop_is_retired(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
         projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()

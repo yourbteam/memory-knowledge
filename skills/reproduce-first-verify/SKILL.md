@@ -14,7 +14,7 @@ Use only when both conditions hold:
 1. The live verification point is minutes or hours into a run.
 2. The defect is a recurring class, so the reproduction will be reused or materially reduce repeated live runs.
 
-This skill governs verification technique. It composes with the working agreement and `write-code-playbook`; it does not expand edit, commit, deployment, or live-run authorization.
+This skill governs verification technique. It composes with the working agreement and `prototype-driven-implementation`; it does not expand edit, commit, deployment, or live-run authorization.
 
 ## Workflow
 
