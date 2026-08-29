@@ -23,6 +23,5 @@ shell-canary-runner
 task-intake
 task-workflow
 verifier-foundry
-verify-plan
 working-agreement
 write-code-playbook

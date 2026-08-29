@@ -193,12 +193,12 @@
       ]
     },
     "plan-playbook": {
-      "canonical_tree_sha256": "d2ec271a5af8ce649f9a0b93868270a0694cdc4c1002411dd10dc5618be134c1",
+      "canonical_tree_sha256": "e93bdc21cd15fe3385cb36a0e2de28416748e414d336257ac778c887a7cfee51",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "d2ec271a5af8ce649f9a0b93868270a0694cdc4c1002411dd10dc5618be134c1",
+      "projected_tree_sha256": "e93bdc21cd15fe3385cb36a0e2de28416748e414d336257ac778c887a7cfee51",
       "scenario_groups": [
         "CAP-PDI"
       ],
@@ -347,12 +347,12 @@
       ]
     },
     "task-intake": {
-      "canonical_tree_sha256": "5482c045bfa24f1f00511ee591592ea350e69d33e97a5b7b6baa65e0ed4d1acc",
+      "canonical_tree_sha256": "3346f621bc703aaa18fa2728291319f750c3c5f3024614b2c64fce151517341a",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "5482c045bfa24f1f00511ee591592ea350e69d33e97a5b7b6baa65e0ed4d1acc",
+      "projected_tree_sha256": "3346f621bc703aaa18fa2728291319f750c3c5f3024614b2c64fce151517341a",
       "scenario_groups": [
         "CAP-GOVERNANCE"
       ],
@@ -362,12 +362,12 @@
       ]
     },
     "task-workflow": {
-      "canonical_tree_sha256": "4f1df169635d9af38ba4cd75c293d141cde6596fa42b2c10d0f1e5faaa2ee39f",
+      "canonical_tree_sha256": "d11af63f8a5b973abede0ecfa2fba3c57cdfc170ffd7ce3ae6feb7e8b20cc020",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "4f1df169635d9af38ba4cd75c293d141cde6596fa42b2c10d0f1e5faaa2ee39f",
+      "projected_tree_sha256": "d11af63f8a5b973abede0ecfa2fba3c57cdfc170ffd7ce3ae6feb7e8b20cc020",
       "scenario_groups": [
         "CAP-GOVERNANCE"
       ],
@@ -385,21 +385,6 @@
       "projected_tree_sha256": "1ac2bf7b99bfd6f30efec4a6c272584ceffe4f7e5fc14f8008503b2301a29c25",
       "scenario_groups": [
         "CAP-PERSONAS"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
-    "verify-plan": {
-      "canonical_tree_sha256": "c15e8991ec012ff192f45865a43d9e6a009503bae4cb7341c92ec8224b290573",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "c15e8991ec012ff192f45865a43d9e6a009503bae4cb7341c92ec8224b290573",
-      "scenario_groups": [
-        "CAP-VERIFY"
       ],
       "targets": [
         "codex",

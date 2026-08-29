@@ -153,7 +153,7 @@ Do not stop to ask for permission to continue unless the user asked to pause.
 
 ### 4. Run the canonical planning lifecycle once
 
-Invoke canonical `$plan-playbook` exactly once for the task root. Give it the objective, evidence, allowed repositories and paths, constraints, exclusions, and the existing caller-owned `Tasks/<task-name>/` directory. Do not run a second task-workflow planning path, direct `verify-plan`, requirements-coverage gate, or requirements-satisfaction gate over the same plan; Planner owns those stages and their revision lineage.
+Invoke canonical `$plan-playbook` exactly once for the task root. Give it the objective, evidence, allowed repositories and paths, constraints, exclusions, and the existing caller-owned `Tasks/<task-name>/` directory. Do not run a second planning or hardening path over the same plan; Planner owns every stage and its revision lineage.
 
 Planner owns drafting, its fixed hardening order, revision receipts, the implementation-approval payload, and package emission. Consume `plan.md` only when controller state is `EMITTED`, `.plan-package-invalidated.json` is absent, and this canonical read-only boundary succeeds:
 

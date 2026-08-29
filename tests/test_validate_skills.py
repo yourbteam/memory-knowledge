@@ -82,6 +82,20 @@ class ValidatorTests(unittest.TestCase):
         self.assertNotIn('"verify-analysis"',projections)
         self.assertFalse((ROOT/"skills/verify-analysis").exists())
 
+    def test_verify_plan_is_retired_into_plan_playbook(self):
+        managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
+        projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
+        intake=(ROOT/"skills/task-intake/SKILL.md").read_text()
+        workflow=(ROOT/"skills/task-workflow/SKILL.md").read_text()
+        plan=(ROOT/"skills/plan-playbook/SKILL.md").read_text()
+        self.assertNotIn("verify-plan",managed)
+        self.assertNotIn('"verify-plan"',projections)
+        self.assertFalse((ROOT/"skills/verify-plan").exists())
+        self.assertNotIn("`verify-plan`",intake)
+        self.assertNotIn("`verify-plan`",workflow)
+        self.assertIn("`plan-playbook`",intake)
+        self.assertIn("VERIFY_PLAN",plan)
+
     def test_requirements_coverage_gap_loop_is_retired(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
         projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()

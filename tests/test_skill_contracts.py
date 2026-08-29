@@ -48,23 +48,23 @@ class ContractTests(unittest.TestCase):
         for flag in ("--resume-from-checkpoint","--expected-spec-hash","--validate-only","--start-validation-round","--start-feature-index"):
             self.assertIn(flag,text)
 
-    def test_verify_plan_owns_obligation_level_completion(self):
-        text=(ROOT/"verify-plan/SKILL.md").read_text()
+    def test_plan_playbook_owns_obligation_level_completion(self):
+        lifecycle=(ROOT/"plan-playbook/references/hardening-lifecycle.md").read_text()
+        ledger=(ROOT/"_shared/verification_ledger.py").read_text()
+        for phrase in (
+            "VERIFY_PLAN=PASS",
+            "approved finite inventory",
+            "critic-approved `SUPPORTED`",
+            "zero GAP/BLOCKED obligations",
+            "Coarse section coverage cannot pass this gate",
+        ):
+            self.assertIn(phrase,lifecycle)
         for phrase in (
             "--plan-sha256",
             "--evidence-revision-sha256",
             "next-assignment",
-            "assigned obligation IDs",
-            "SUPPORTED",
-            "GAP",
-            "BLOCKED",
-            "inventory completeness",
-            ".verify-plan/critic-outputs/",
-            "BLOCKED never counts as complete",
-            "section, evidence, and dependency bindings",
         ):
-            self.assertIn(phrase,text)
-        self.assertIn("coarse coverage status cannot establish completion",text)
+            self.assertIn(phrase,ledger)
 
     def test_planner_v2_staged_consumers_share_one_canonical_provider(self):
         repo=Path(__file__).parents[1]
