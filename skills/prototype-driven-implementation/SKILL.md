@@ -1,6 +1,6 @@
 ---
 name: prototype-driven-implementation
-description: Central controller for every code implementation, from routine mechanical changes to uncertain features and root fixes. Drive the work through a bounded, adaptive sequence of runnable prototypes grounded in real code paths and captured real cases, pulling bounded Plan and Write-code support plus PDI-owned blocking-evidence and retained-surface validation only when observed gaps require them. Do not use for standalone research, document-only planning, or review with no implementation.
+description: Central controller for every code implementation, from routine mechanical changes to uncertain features and root fixes. Drive the work through a bounded, adaptive sequence of runnable prototypes grounded in real code paths and captured real cases, pulling PDI-owned bounded planning, coding, blocking-evidence, and retained-surface support only when observed gaps require them. Do not use for standalone research, document-only planning, or review with no implementation.
 ---
 
 # Prototype-Driven Implementation
@@ -65,11 +65,10 @@ prototype loop, promotion decision, and completion responsibility throughout. Re
 promotion, or real-path validation. Do not interpret `required_capability` as a lifecycle handoff;
 every incomplete atom state returns `next_skill: prototype-driven-implementation`.
 
-## Pull bounded playbook support
+## Pull bounded internal support
 
-Plan Playbook remains authoritative for standalone Plan tasks. During implementation, use only
-its generated plan-support projection plus PDI's internal research, write-code, and retained-surface
-validation projections:
+Standalone planning directly inspects the declared real evidence and has no selectable controller.
+During implementation, use only PDI's generated internal support projections:
 
 - `references/research-support.md` for PDI-owned investigation of one blocking evidence question;
 - `references/plan-support.md` for one observed delta that needs implementation-ready decisions;

@@ -9,7 +9,7 @@ Treat agent-specific wording in that file as applying to Codex in this environme
 Route tasks through the matching Codex skill when relevant:
 
 - Research: direct inspection of declared real evidence; no selectable controller
-- Plan: `plan-playbook`
+- Plan: direct inspection of declared real evidence; no selectable controller
 - Write code: `prototype-driven-implementation`
 - Review: direct evidence inspection; PDI owns implementation review and live validation
 
@@ -36,12 +36,12 @@ At the start of a task, name its mode and follow the matching playbook:
 | Mode | When | Playbook |
 | --- | --- | --- |
 | **Research** | gather/verify info, no code shipped | direct inspection of declared real evidence; no selectable controller |
-| **Plan** | turn a goal into a buildable plan | `plan-playbook` |
+| **Plan** | turn a goal into a buildable plan | direct inspection of declared real evidence; no selectable controller |
 | **Write code** | implement a change in the codebase | `prototype-driven-implementation` |
 | **Review** | audit code / a diff / a doc | direct evidence inspection; no selectable controller |
 
-Modes chain: Research → Plan → Write code. Standalone Review inspects the declared evidence
-directly; implementation review remains inside Prototype-Driven Implementation.
+Modes chain: Research → Plan → Write code. Standalone Plan and Review inspect the declared evidence
+directly; implementation planning and review remain inside Prototype-Driven Implementation.
 
 Before Write code takes an issue that is **not the first of its kind**, run `direction-check`
 (G31): it weighs the issue against the approach on recorded evidence and hands the chosen path
@@ -529,11 +529,11 @@ the existing playbooks remain available as bounded sources of rigor.
 - ✅ Pull Plan and Write-code support only when an observed gap requires it. Use the generated
   support projection for that role, not the full standalone playbook as a competing controller.
   PDI's blocking-evidence and accumulated-surface checks come from its own non-selectable internal contracts.
-- ✅ Keep `plan-playbook` authoritative for standalone Plan tasks. Do not install or select
-  standalone research, Write-code, or review controllers; standalone research and review inspect
-  declared evidence directly, while PDI owns implementation, its internal write-code support,
-  implementation evidence, and real-path validation. Generate bounded implementation-support
-  projections from pinned sources and fail drift checks when a source changes.
+- ✅ Do not install or select standalone research, Plan, Write-code, or review controllers.
+  Standalone research, planning, and review inspect declared evidence directly, while PDI owns
+  implementation, its internal plan and write-code support, implementation evidence, and real-path
+  validation. Generate bounded implementation-support projections from pinned internal sources and
+  fail drift checks when a source changes.
 - ✅ A support projection must receive the approved outcome and envelope, current prototype and
   observed gap, concrete evidence, exact support question, and allowed scope or budget. It must
   return evidence, conclusion, unresolved uncertainty, and the recommended next delta.

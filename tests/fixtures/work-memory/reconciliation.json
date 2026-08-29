@@ -34,10 +34,6 @@
       "status": "shared-identical"
     },
     {
-      "name": "plan-playbook",
-      "status": "shared-identical"
-    },
-    {
       "name": "producer-foundry",
       "status": "shared-identical"
     },

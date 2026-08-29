@@ -27,7 +27,7 @@ If the receipt says `operational`, hand the receipt to `sequence-runner` before 
 says `fast-path`, return to the Working Agreement mode route:
 
 - direct evidence inspection for Research or Review;
-- `plan-playbook` for Plan;
+- direct evidence inspection for Plan;
 - `prototype-driven-implementation` for Write code.
 
 ## Boundary

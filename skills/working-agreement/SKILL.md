@@ -22,14 +22,15 @@ For brief in-progress updates, apply the directives without a compliance header.
 Classify the task and use the matching playbook when relevant:
 
 - Research: direct inspection of declared real evidence; no selectable research controller
-- Plan: `plan-playbook`
+- Plan: direct inspection of declared real evidence; no selectable planning controller
 - Write code: `prototype-driven-implementation`
 - Review: direct evidence inspection; no selectable review controller
 
 For Write-code tasks, `prototype-driven-implementation` owns the lifecycle and pulls bounded
 support only when observed evidence requires it. Its retained-surface check and live validation
-remain internal to PDI. For standalone Review tasks, inspect the declared evidence directly without
-invoking a selectable review controller.
+remain internal to PDI. For standalone Plan and Review tasks, inspect the declared evidence directly
+without invoking a selectable controller. Planning produces only the decision-complete plan Kamen
+requested; it does not launch an autonomous hardening lifecycle.
 
 ## Work-Memory Gate
 

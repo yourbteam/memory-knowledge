@@ -82,33 +82,43 @@ class ValidatorTests(unittest.TestCase):
         self.assertNotIn('"verify-analysis"',projections)
         self.assertFalse((ROOT/"skills/verify-analysis").exists())
 
-    def test_verify_plan_is_retired_into_plan_playbook(self):
+    def test_verify_plan_is_retired_with_standalone_direct_planning(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
         projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
         intake=(ROOT/"skills/task-intake/SKILL.md").read_text()
-        plan=(ROOT/"skills/plan-playbook/SKILL.md").read_text()
         self.assertNotIn("verify-plan",managed)
         self.assertNotIn('"verify-plan"',projections)
         self.assertFalse((ROOT/"skills/verify-plan").exists())
         self.assertNotIn("`verify-plan`",intake)
-        self.assertIn("`plan-playbook`",intake)
-        self.assertIn("VERIFY_PLAN",plan)
+        self.assertIn("direct evidence inspection for Plan",intake)
 
     def test_task_workflow_is_retired_into_direct_mode_routes(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
         projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
         intake=(ROOT/"skills/task-intake/SKILL.md").read_text()
-        plan=(ROOT/"skills/plan-playbook/SKILL.md").read_text()
         pdi=(ROOT/"skills/prototype-driven-implementation/SKILL.md").read_text()
-        promoter=(ROOT/"scripts/promote_plan_playbook.py").read_text()
         self.assertNotIn("task-workflow",managed)
         self.assertNotIn('"task-workflow"',projections)
         self.assertFalse((ROOT/"skills/task-workflow").exists())
-        self.assertFalse((ROOT/"skills/plan-playbook/integration/task-workflow.SKILL.md").exists())
-        self.assertNotIn("task-workflow",intake+plan+promoter)
+        self.assertNotIn("task-workflow",intake+pdi)
         self.assertIn("sequence-runner",intake)
-        self.assertIn("name: plan-playbook",plan)
         self.assertIn("name: prototype-driven-implementation",pdi)
+
+    def test_plan_playbook_is_retired_into_direct_planning_and_pdi_support(self):
+        managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
+        projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
+        intake=(ROOT/"skills/task-intake/SKILL.md").read_text()
+        pdi=(ROOT/"skills/prototype-driven-implementation/SKILL.md").read_text()
+        support=(ROOT/"skills/prototype-driven-implementation/references/plan-support.md").read_text()
+        contract=(ROOT/"skills/prototype-driven-implementation/contracts/plan-support.md").read_text()
+        directives=(ROOT/"working-agreement/DIRECTIVES.md").read_text()
+        self.assertNotIn("plan-playbook",managed)
+        self.assertNotIn('"plan-playbook"',projections)
+        self.assertFalse((ROOT/"skills/plan-playbook").exists())
+        self.assertNotIn("plan-playbook",intake+pdi+support+directives)
+        self.assertIn("direct evidence inspection for Plan",intake)
+        self.assertIn("contracts/plan-support.md",support)
+        self.assertIn("PDI alone",contract)
 
     def test_write_code_playbook_is_retired_into_pdi_internal_support(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
@@ -139,20 +149,16 @@ class ValidatorTests(unittest.TestCase):
     def test_requirements_coverage_gap_loop_is_retired(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
         projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
-        plan=(ROOT/"skills/plan-playbook/SKILL.md").read_text()
         self.assertNotIn("requirements-coverage-gap-loop",managed)
         self.assertNotIn('"requirements-coverage-gap-loop"',projections)
         self.assertFalse((ROOT/"skills/requirements-coverage-gap-loop").exists())
-        self.assertIn("REQUIREMENTS_COVERAGE",plan)
 
     def test_requirements_satisfaction_gap_loop_is_retired(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
         projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
-        plan=(ROOT/"skills/plan-playbook/SKILL.md").read_text()
         self.assertNotIn("requirements-satisfaction-gap-loop",managed)
         self.assertNotIn('"requirements-satisfaction-gap-loop"',projections)
         self.assertFalse((ROOT/"skills/requirements-satisfaction-gap-loop").exists())
-        self.assertIn("REQUIREMENTS_SATISFACTION",plan)
 
     def test_policy_accepts_exact_unquoted_yaml_booleans(self):
         for value in ("true","false"):

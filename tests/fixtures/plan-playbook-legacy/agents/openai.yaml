@@ -1,4 +1,0 @@
-interface:
-  display_name: "Plan Playbook"
-  short_description: "Create a checkable implementation plan"
-  default_prompt: "Use $plan-playbook to turn this goal into a buildable plan."

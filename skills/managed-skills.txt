@@ -9,7 +9,6 @@ info-intake-machinery
 phase-categorization-foundry
 phase-ledger-category-contract-foundry
 phase-ledger-contract-hardener
-plan-playbook
 producer-foundry
 prototype-driven-implementation
 remote-mcp-operator
