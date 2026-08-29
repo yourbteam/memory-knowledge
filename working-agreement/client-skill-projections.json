@@ -132,21 +132,6 @@
         "claude"
       ]
     },
-    "phase-categorization-foundry": {
-      "canonical_tree_sha256": "c3b261e89669a814719ccda58ecf3620c7b5e8b1e5915a0db8fa5453f36021c4",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "c3b261e89669a814719ccda58ecf3620c7b5e8b1e5915a0db8fa5453f36021c4",
-      "scenario_groups": [
-        "CAP-PERSONAS"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
     "phase-ledger-category-contract-foundry": {
       "canonical_tree_sha256": "d24aefa2719e3ac169e9544774139e09be3dab2fdcf4fe2ae45a84c50af0e3e9",
       "disposition": "SHARED_IDENTICAL",

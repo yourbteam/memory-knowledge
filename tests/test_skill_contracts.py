@@ -50,6 +50,24 @@ class ContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase,contract)
 
+    def test_legacy_phase_categorization_foundry_is_retired(self):
+        managed=(ROOT/"managed-skills.txt").read_text().splitlines()
+        current=" ".join((ROOT/"phase-ledger-category-contract-foundry/SKILL.md").read_text().split())
+        self.assertFalse((ROOT/"phase-categorization-foundry/SKILL.md").exists())
+        self.assertNotIn("phase-categorization-foundry",managed)
+        self.assertIn("phase-ledger-category-contract-foundry",managed)
+        for phrase in (
+            "phase_purpose",
+            "input_context",
+            "upstream inputs",
+            "downstream consumers",
+            "universal orchestration contract",
+            "general hollow personas",
+            "general contract manager",
+            "without phase-specific persona instructions",
+        ):
+            self.assertIn(phrase,current)
+
     def test_plan_playbook_is_retired_into_direct_planning_and_pdi_support(self):
         repo=Path(__file__).parents[1]
         pdi=(ROOT/"prototype-driven-implementation/SKILL.md").read_text()

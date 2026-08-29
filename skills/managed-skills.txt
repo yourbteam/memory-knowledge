@@ -6,7 +6,6 @@ critic-foundry
 description-machinery
 experiment-machinery
 info-intake-machinery
-phase-categorization-foundry
 phase-ledger-category-contract-foundry
 phase-ledger-contract-hardener
 producer-foundry
