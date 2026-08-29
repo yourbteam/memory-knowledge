@@ -70,10 +70,6 @@
       "status": "shared-identical"
     },
     {
-      "name": "task-intake",
-      "status": "shared-identical"
-    },
-    {
       "name": "verifier-foundry",
       "status": "shared-identical"
     },

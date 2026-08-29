@@ -730,7 +730,7 @@ def test_codex_projection_runner_derives_immutable_attachment_and_delimits_promp
     assert argv[-2] == "--"
     assert command[0] in argv[-1]
     assert "self-contained local controller" in argv[-1]
-    assert "do not invoke task intake" in argv[-1]
+    assert "do not invoke operational classification" in argv[-1]
     assert "red rectangle" not in argv[-1]
     assert "arrow" not in argv[-1]
 

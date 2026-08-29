@@ -62,6 +62,17 @@ class ValidatorTests(unittest.TestCase):
         )
         self.assertEqual(errors,[])
 
+    def test_task_intake_is_retired_into_working_agreement_classifier(self):
+        managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
+        projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
+        agreement=(ROOT/"skills/working-agreement/SKILL.md").read_text()
+        runner=(ROOT/"skills/sequence-runner/SKILL.md").read_text()
+        self.assertFalse((ROOT/"skills/task-intake").exists())
+        self.assertNotIn("task-intake",managed)
+        self.assertNotIn('"task-intake"',projections)
+        self.assertIn("python3 scripts/work_memory.py classify",agreement)
+        self.assertIn("`operational` receipt",runner)
+
     def test_research_playbook_is_retired(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
         self.assertNotIn("research-playbook",managed)
@@ -85,17 +96,17 @@ class ValidatorTests(unittest.TestCase):
     def test_verify_plan_is_retired_with_standalone_direct_planning(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
         projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
-        intake=(ROOT/"skills/task-intake/SKILL.md").read_text()
+        intake=(ROOT/"skills/working-agreement/SKILL.md").read_text()
         self.assertNotIn("verify-plan",managed)
         self.assertNotIn('"verify-plan"',projections)
         self.assertFalse((ROOT/"skills/verify-plan").exists())
         self.assertNotIn("`verify-plan`",intake)
-        self.assertIn("direct evidence inspection for Plan",intake)
+        self.assertIn("Plan: direct inspection of declared real evidence",intake)
 
     def test_task_workflow_is_retired_into_direct_mode_routes(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
         projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
-        intake=(ROOT/"skills/task-intake/SKILL.md").read_text()
+        intake=(ROOT/"skills/working-agreement/SKILL.md").read_text()
         pdi=(ROOT/"skills/prototype-driven-implementation/SKILL.md").read_text()
         self.assertNotIn("task-workflow",managed)
         self.assertNotIn('"task-workflow"',projections)
@@ -107,7 +118,7 @@ class ValidatorTests(unittest.TestCase):
     def test_plan_playbook_is_retired_into_direct_planning_and_pdi_support(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
         projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
-        intake=(ROOT/"skills/task-intake/SKILL.md").read_text()
+        intake=(ROOT/"skills/working-agreement/SKILL.md").read_text()
         pdi=(ROOT/"skills/prototype-driven-implementation/SKILL.md").read_text()
         support=(ROOT/"skills/prototype-driven-implementation/references/plan-support.md").read_text()
         contract=(ROOT/"skills/prototype-driven-implementation/contracts/plan-support.md").read_text()
@@ -116,7 +127,7 @@ class ValidatorTests(unittest.TestCase):
         self.assertNotIn('"plan-playbook"',projections)
         self.assertFalse((ROOT/"skills/plan-playbook").exists())
         self.assertNotIn("plan-playbook",intake+pdi+support+directives)
-        self.assertIn("direct evidence inspection for Plan",intake)
+        self.assertIn("Plan: direct inspection of declared real evidence",intake)
         self.assertIn("contracts/plan-support.md",support)
         self.assertIn("PDI alone",contract)
 

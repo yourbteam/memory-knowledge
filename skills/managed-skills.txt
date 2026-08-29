@@ -16,6 +16,5 @@ requirements-machinery
 sequence-runner
 shell-canary-foundry
 shell-canary-runner
-task-intake
 verifier-foundry
 working-agreement

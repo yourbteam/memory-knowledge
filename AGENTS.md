@@ -320,14 +320,14 @@ to `prototype-driven-implementation`.
   repository-local formatting or generation limited to approved files, diffs, linters, type checks,
   bounded unit tests, and local installation of an approved managed artifact. The fast path requires
   G26 preflight, the approved action, and direct verification only.
-- ✅ Do not invoke task intake, sequence selection, activation, work-memory run lifecycle, or
+- ✅ Do not invoke operational classification, sequence selection, activation, work-memory run lifecycle, or
   blocker bookkeeping for fast-path work merely because it uses a shell command or has three or
   more local steps.
 - ✅ Enter the governed operational path when work touches deployments, remote systems, databases
   or migrations, containers or images, authentication or secrets, package/environment mutation,
   destructive cleanup, workflow drives, long live tests, a proven recurrent command sequence, or
-  the same execution failure fingerprint twice. When the boundary is genuinely unclear, task
-  intake decides it.
+  the same execution failure fingerprint twice. When the boundary is genuinely unclear, run the
+  canonical code classifier.
 - ✅ Before starting any repeatable multi-step operational sequence, invoke `sequence-runner`.
 - ✅ Treat ANY turn that builds/runs an image, recreates a container, seeds auth, deploys, or drives a workflow as sequence-triggered by DEFAULT — grep `SEQUENCES.md` for a match FIRST, even when it feels like a one-off. (Amended 2026-07-10: the miss that motivated this was hand-running the greenfield build→container→auth→drive chain from memory instead of checking the catalog — where `local-workflow-orch-image` existed and the `greenfield-full-drive` sequence now does.)
 - ✅ On a governed operational-sequence turn, the G0 compliance anchor must STATE the sequence checked (its `sequence-id`, or "no match → discovery log") BEFORE the first operational command, so a skip is visible to Kamen instead of buried mid-flow.

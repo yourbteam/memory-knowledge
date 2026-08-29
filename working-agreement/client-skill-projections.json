@@ -80,15 +80,15 @@
       ]
     },
     "description-machinery": {
-      "canonical_tree_sha256": "1843ca7232ac0d192b0e91c15cb0fb42f12489798d1c34ab122ff73a30f7d6e7",
+      "canonical_tree_sha256": "12bc03dafa1e9f684235e299b399c59422676543d9f306acd15665e4f6a3ce1a",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
       "generator": "machinery-client-model-v1",
       "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "29cf2384c45be6d1f46bef0556ce6c0c90802f113ec0b54402518a211eefc402",
-        "codex": "8d4247bde91d3a1dd6d08ccb5fe4522f28c6b66639da906437b401e5bf023545"
+        "claude": "3cfa2636b1e8e3ee142b4cfbdcab6da7f206e88b1955e7bf8e57f7f0c04b5ccc",
+        "codex": "28962fcf4a1903e3cee3015c7ac87e3bbf3f2f721ae38cb94f4400c1e8569975"
       },
       "scenario_groups": [
         "CAP-PDI"
@@ -114,15 +114,15 @@
       ]
     },
     "info-intake-machinery": {
-      "canonical_tree_sha256": "0b6fdd8f7b460e75b23067578344d595df1a81cd916cb49cac569a572643ecf6",
+      "canonical_tree_sha256": "c59411144246427846d9ac7c5428a718c7f665d7f4509921ceef61e4a24d057a",
       "disposition": "GENERATED_CLIENT_PROJECTION",
       "divergence_reason": "The invoking client owns the model runtime while the machinery remains shared.",
       "generator": "machinery-client-model-v1",
       "generator_sha256": "6caf1ffac0dfde72a874f6fa5dcb39db33dee60a0b71bf83e5e198cd91e2571a",
       "projected_tree_sha256": null,
       "projected_tree_sha256_by_client": {
-        "claude": "f9810b3082a4e6cdbafaa4ae24bbf43b528a2eef9df1c344dee5fbdc52cca973",
-        "codex": "8d9dc0c02f12551f4b6abc77a59207c54c7700d1e5e29a336009d5623530bf43"
+        "claude": "697d84dc19819ceb008d68a08c57dd05f817c0010bf8490ec47e697552eb8f04",
+        "codex": "a40a07c4ab1768255821e32ffc7a5893e88d0152d04f14572b42fa7b70d6a718"
       },
       "scenario_groups": [
         "CAP-PDI"
@@ -242,12 +242,12 @@
       ]
     },
     "sequence-runner": {
-      "canonical_tree_sha256": "f8a76687530aa4c15e8e65bb530f902a6cfd1a27a86d4441edf178b7612da437",
+      "canonical_tree_sha256": "5cc3abdfe6546bb9cfdc5da3723b20d10f988794c0ee5627416963aa74ed73b1",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "f8a76687530aa4c15e8e65bb530f902a6cfd1a27a86d4441edf178b7612da437",
+      "projected_tree_sha256": "5cc3abdfe6546bb9cfdc5da3723b20d10f988794c0ee5627416963aa74ed73b1",
       "scenario_groups": [
         "CAP-OPERATIONS"
       ],
@@ -286,21 +286,6 @@
         "claude"
       ]
     },
-    "task-intake": {
-      "canonical_tree_sha256": "73c19397d677d33b71ac9990ca8e1e64ec0aa925cd0e97ee502798f00a2a5234",
-      "disposition": "SHARED_IDENTICAL",
-      "divergence_reason": null,
-      "generator": null,
-      "generator_sha256": null,
-      "projected_tree_sha256": "73c19397d677d33b71ac9990ca8e1e64ec0aa925cd0e97ee502798f00a2a5234",
-      "scenario_groups": [
-        "CAP-GOVERNANCE"
-      ],
-      "targets": [
-        "codex",
-        "claude"
-      ]
-    },
     "verifier-foundry": {
       "canonical_tree_sha256": "1ac2bf7b99bfd6f30efec4a6c272584ceffe4f7e5fc14f8008503b2301a29c25",
       "disposition": "SHARED_IDENTICAL",
@@ -317,12 +302,12 @@
       ]
     },
     "working-agreement": {
-      "canonical_tree_sha256": "b1f4e1149d2930e83f633ba6f693394b1da7edb85524666e75a8c0429b587932",
+      "canonical_tree_sha256": "80995a961de80adddbd5d5654cf44ac5990ba3a740745a9941db63d05dc6225f",
       "disposition": "SHARED_IDENTICAL",
       "divergence_reason": null,
       "generator": null,
       "generator_sha256": null,
-      "projected_tree_sha256": "b1f4e1149d2930e83f633ba6f693394b1da7edb85524666e75a8c0429b587932",
+      "projected_tree_sha256": "80995a961de80adddbd5d5654cf44ac5990ba3a740745a9941db63d05dc6225f",
       "scenario_groups": [
         "CAP-GOVERNANCE"
       ],

@@ -34,7 +34,7 @@ requested; it does not launch an autonomous hardening lifecycle.
 
 ## Work-Memory Gate
 
-Use the local-development fast path without `task-intake` for repository reads/searches,
+Use the local-development fast path without operational classification for repository reads/searches,
 approved file edits, repository-local formatting or generation limited to approved files,
 diffs, linters, type checks, bounded unit tests, and local installation of an approved managed
 artifact. The fast path is G26 preflight, the approved action, and direct verification only.
@@ -42,18 +42,27 @@ artifact. The fast path is G26 preflight, the approved action, and direct verifi
 A self-contained local controller skill is also fast-path machinery when it owns its own launch,
 ordering, monitoring, retry, verification, and stop conditions. Invoke `requirements-machinery`
 and `description-machinery` directly. Their internal worker/reader loop
-is not a `workflow-drive`, so do not put `task-intake`, `sequence-runner`, registry selection, or
-sequence discovery around it solely because the skill drives agents or runs for a long time. Cross
+is not a `workflow-drive`, so do not put operational classification, `sequence-runner`, registry
+selection, or sequence discovery around it solely because the skill drives agents or runs for a long time. Cross
 the governed boundary only when the controller's concrete operation independently touches one of
 the external or stateful surfaces below.
 
-Invoke `task-intake` before crossing the governed operational boundary: deployments, remote
+Before crossing the governed operational boundary, the Working Agreement runs the canonical
+code classifier directly from the `memory-knowledge` root:
+
+```bash
+python3 scripts/work_memory.py classify --task-id "<task-id>" --operation-kind "<kind>" --repeatable "<yes|no>" --meaningful-steps <N>
+```
+
+Operation kinds are `image|container|auth|deploy|workflow-drive|package|database|remote-operator|cleanup|publish|other|read-only|single-test|single-build`.
+Use the actual command flow and the classifier's declared kinds; prose classification is not a
+substitute. A receipt verdict of `operational` requires `sequence-runner`, receipt-backed
+selection, and `sequence_guard.py activate` before commands. A verdict of `non-operational`
+returns directly to the current Working Agreement mode route. Classify deployments, remote
 systems, databases or migrations, containers or images, authentication or secrets,
 package/environment mutation, destructive cleanup, workflow drives, long live tests, a proven
 recurrent command sequence, the same execution failure fingerprint twice, or a genuinely unclear
-boundary. It must run the canonical classifier in `memory-knowledge/scripts/work_memory.py`;
-prose classification is not a substitute. An operational receipt requires `sequence-runner`, a
-receipt-backed selection, and `sequence_guard.py activate` before commands.
+boundary.
 
 When a command fails, classify it under G20. Correct a first execution error immediately; invoke
 `blocker-catalog` before fixing a deliverable blocker or a repeated execution error. Record a

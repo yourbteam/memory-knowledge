@@ -80,12 +80,12 @@ def test_self_contained_machinery_is_managed_and_bypasses_sequence_discovery():
 
     routing_docs = {
         name: " ".join((SKILLS / name / "SKILL.md").read_text().split())
-        for name in ("working-agreement", "task-intake", "sequence-runner")
+        for name in ("working-agreement", "sequence-runner")
     }
     assert "self-contained local controller skill is also fast-path machinery" in routing_docs["working-agreement"]
-    assert "do not put `task-intake`, `sequence-runner`, registry selection, or sequence discovery around it" in routing_docs["working-agreement"]
-    assert "It does not mean a self-contained local controller skill's own bounded worker loop" in routing_docs["task-intake"]
-    assert "Do not classify or sequence-wrap them" in routing_docs["task-intake"]
+    assert "do not put operational classification, `sequence-runner`, registry selection, or sequence discovery around it" in routing_docs["working-agreement"]
+    assert "work_memory.py classify" in routing_docs["working-agreement"]
+    assert "`operational` receipt" in routing_docs["sequence-runner"]
     assert "Do not wrap a self-contained local controller skill" in routing_docs["sequence-runner"]
     assert "does not require sequence selection or discovery" in routing_docs["sequence-runner"]
 
@@ -95,7 +95,7 @@ def test_self_contained_machinery_is_managed_and_bypasses_sequence_discovery():
 
     description = (SKILLS / "description-machinery" / "SKILL.md").read_text()
     assert "complete local controller" in description
-    assert "do not\nput `task-intake`, `sequence-runner`, registry selection, or sequence discovery around it" in description
+    assert "do not\nput operational classification, `sequence-runner`, registry selection, or sequence discovery around it" in description
 
 
 def test_all_machinery_projects_fail_closed_to_the_invoking_client_model():

@@ -110,7 +110,7 @@ hand-edit or hand-copy them.
    post-install tree hashes, and recovers from its journal if interrupted.
 3. **Fresh-session verification.** Open a new Claude session and confirm: the G0 anchor cites
    the current directives revision; a write-code request routes to `prototype-driven-implementation`;
-   an operational request routes through `task-intake`/`sequence-runner` with zero-argument
+   an operational request is code-classified by Working Agreement and routes through `sequence-runner` with zero-argument
    `scripts/sequence_intake_launch.py` intake.
 4. **Rollback.** A failed or interrupted install restores from the transaction journal in
    `${XDG_STATE_HOME:-~/.local/state}/kamen-managed-skills`; rerunning the installer completes

@@ -18,10 +18,12 @@ except ImportError:  # direct script execution
     import work_memory  # type: ignore
 
 
-SKILLS = ("working-agreement", "task-intake", "sequence-runner", "blocker-catalog")
+SKILLS = ("working-agreement", "sequence-runner", "blocker-catalog")
 REQUIRED = {
-    "working-agreement": ("task-intake", "sequence-runner", "blocker-catalog", "auto-capture"),
-    "task-intake": ("work_memory.py classify", "operation receipt"),
+    "working-agreement": (
+        "work_memory.py classify", "operational", "non-operational",
+        "sequence-runner", "blocker-catalog",
+    ),
     "sequence-runner": ("work_memory.py select", "--task-id", "run-start", "same-path"),
     "blocker-catalog": ("blocker_catalog.py open", "work_memory.py correct", "same-path"),
 }

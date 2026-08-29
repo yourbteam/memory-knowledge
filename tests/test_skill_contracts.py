@@ -68,22 +68,38 @@ class ContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase,current)
 
+    def test_task_intake_is_retired_without_losing_code_classification(self):
+        agreement=(ROOT/"working-agreement/SKILL.md").read_text()
+        runner=(ROOT/"sequence-runner/SKILL.md").read_text()
+        managed=(ROOT/"managed-skills.txt").read_text().splitlines()
+        self.assertFalse((ROOT/"task-intake").exists())
+        self.assertNotIn("task-intake",managed)
+        self.assertIn("python3 scripts/work_memory.py classify",agreement)
+        self.assertIn("`non-operational`",agreement)
+        self.assertIn("canonical code classifier",runner)
+        for kind in (
+            "image", "container", "auth", "deploy", "workflow-drive", "package",
+            "database", "remote-operator", "cleanup", "publish", "other", "read-only",
+            "single-test", "single-build",
+        ):
+            self.assertIn(kind,agreement)
+
     def test_plan_playbook_is_retired_into_direct_planning_and_pdi_support(self):
         repo=Path(__file__).parents[1]
         pdi=(ROOT/"prototype-driven-implementation/SKILL.md").read_text()
         plan_support=(ROOT/"prototype-driven-implementation/references/plan-support.md").read_text()
         plan_contract=(ROOT/"prototype-driven-implementation/contracts/plan-support.md").read_text()
-        intake=(ROOT/"task-intake/SKILL.md").read_text()
+        intake=(ROOT/"working-agreement/SKILL.md").read_text()
         managed=(ROOT/"managed-skills.txt").read_text().splitlines()
         self.assertFalse((ROOT/"plan-playbook").exists())
         self.assertNotIn("plan-playbook",managed)
         self.assertNotIn("plan-playbook",intake+pdi+plan_support)
-        self.assertIn("direct evidence inspection for Plan",intake)
+        self.assertIn("Plan: direct inspection of declared real evidence",intake)
         self.assertIn("contracts/plan-support.md",plan_support)
         self.assertIn("behavioral boundary",plan_support)
         self.assertIn("PDI alone",plan_contract)
         self.assertIn("name: prototype-driven-implementation",pdi)
-        self.assertIn("`prototype-driven-implementation` for Write code",intake)
+        self.assertIn("Write code: `prototype-driven-implementation`",intake)
         self.assertFalse((repo/"skills/task-workflow").exists())
         self.assertIn("prototype-driven-implementation",managed)
 

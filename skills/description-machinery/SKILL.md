@@ -12,7 +12,7 @@ builder note.
 
 This skill is the complete local controller for its description loops. Invoke the applicable front
 door directly: do not
-put `task-intake`, `sequence-runner`, registry selection, or sequence discovery around it solely
+put operational classification, `sequence-runner`, registry selection, or sequence discovery around it solely
 because it launches readers or resumes. Its work/output directory is its state and telemetry.
 
 ## Front door 1 — intent and context
