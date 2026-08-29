@@ -68,6 +68,18 @@ class ContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase,current)
 
+    def test_blocker_catalog_is_code_owned_not_selectable(self):
+        agreement=(ROOT/"working-agreement/SKILL.md").read_text()
+        pdi=(ROOT/"prototype-driven-implementation/SKILL.md").read_text()
+        runner=(ROOT/"sequence-runner/SKILL.md").read_text()
+        managed=(ROOT/"managed-skills.txt").read_text().splitlines()
+        self.assertFalse((ROOT/"blocker-catalog").exists())
+        self.assertNotIn("blocker-catalog",managed)
+        for owner in (agreement,pdi,runner):
+            self.assertIn("python3 scripts/blocker_catalog.py open",owner)
+        self.assertIn("first execution error once immediately",agreement)
+        self.assertIn("same-path verification",runner)
+
     def test_task_intake_is_retired_without_losing_code_classification(self):
         agreement=(ROOT/"working-agreement/SKILL.md").read_text()
         runner=(ROOT/"sequence-runner/SKILL.md").read_text()

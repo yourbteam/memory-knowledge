@@ -349,7 +349,7 @@ to `prototype-driven-implementation`.
     once immediately, cataloguing it and entering the governed operational path only when the same
     failure fingerprint occurs twice;
   - **deliverable blocker:** the requested outcome cannot be produced or verified without a fix;
-    create or update its durable blocker-catalog entry before fixing it;
+    create or update its durable blocker-ledger entry through `scripts/blocker_catalog.py` before fixing it;
   - **incidental system defect:** a real issue outside the current deliverable; record it once,
     assign it downstream, and continue without launching remediation in the current task.
 - ✅ A required catalog entry must include the practical symptom, confirmed evidence, practical impact, blocker type, task/run ids when available, and the suspected or confirmed stable boundary.

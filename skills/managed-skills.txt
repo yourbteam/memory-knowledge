@@ -1,6 +1,5 @@
 _shared
 atom-building-machinery
-blocker-catalog
 corpus-add
 critic-foundry
 description-machinery

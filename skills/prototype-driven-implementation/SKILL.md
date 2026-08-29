@@ -56,6 +56,15 @@ existing task artifact or plan mechanism when one exists. This skill is the cont
 create a second task-specific controller, installer, or supporting documentation merely to run the
 loop.
 
+## Own implementation blockers through code
+
+When a deliverable blocker prevents the approved outcome, classify it under the Working
+Agreement and invoke `python3 scripts/blocker_catalog.py open` before changing the confirmed
+failing boundary. Retain the returned blocker and occurrence identities through correction and
+same-path verification. Correct a first execution error once immediately without opening a
+blocker; assign an incidental system defect downstream. Do not select a separate blocker skill or
+let blocker recording widen the approved envelope.
+
 ## Use the atomic capability protocol when required
 
 When an approved implementation is one atom built through Development-Probe experiments, invoke

@@ -73,9 +73,11 @@ under G20 and preserve approval boundaries.
      re-enter its semantic inputs unless it reports that the active selection changed.
 10. Treat argument-bearing commands in runbooks, help, generated retry text, and the registry
     automation column as machine compatibility evidence, not operator instructions.
-11. If a command fails, classify it under G20. Invoke `blocker-catalog` before changing a
-    deliverable blocker or a repeated execution error; assign an incidental system defect
-    downstream without blocking the current deliverable.
+11. If a command fails, classify it under G20. For a deliverable blocker or a repeated
+    execution error, this controller invokes `python3 scripts/blocker_catalog.py open` before
+    changing the failing boundary and retains the returned identities for correction and same-path
+    verification. A first execution error is corrected once without cataloguing; assign an
+    incidental system defect downstream without blocking the current deliverable.
 12. Record corrections with `work_memory.py correct`; when the bundle changes, close the original run failed and select a fresh B-bound successor with paired `--verification-successor-of/--verifies-correction-id`.
 13. Record verification with explicit quality `same-path` when it exercised the real
     corrected route, then close the run. Only discovery-mode runs call discovery `check`

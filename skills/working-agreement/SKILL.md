@@ -64,10 +64,12 @@ package/environment mutation, destructive cleanup, workflow drives, long live te
 recurrent command sequence, the same execution failure fingerprint twice, or a genuinely unclear
 boundary.
 
-When a command fails, classify it under G20. Correct a first execution error immediately; invoke
-`blocker-catalog` before fixing a deliverable blocker or a repeated execution error. Record a
-qualifying correction, update the reusable sequence/script when behavior changed, and require a
-fresh same-path successor verification before the correction becomes reusable. Never persist
+When a command fails, classify it under G20. Correct a first execution error once immediately.
+For a deliverable blocker or a repeated execution error, the active controller invokes
+`python3 scripts/blocker_catalog.py open` before changing the failing boundary; no separate blocker
+skill is selected. Record a qualifying correction through the same code-owned ledger, update the
+reusable sequence or script when behavior changed, and require a fresh same-path successor
+verification before the correction becomes reusable. Never persist
 people, preferences, diary/activity, transcript, or conversation history as memory.
 
 ## Tier-2 Corpus

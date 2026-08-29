@@ -62,6 +62,19 @@ class ValidatorTests(unittest.TestCase):
         )
         self.assertEqual(errors,[])
 
+    def test_blocker_catalog_skill_is_retired_without_losing_ledger_ownership(self):
+        managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
+        projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()
+        agreement=(ROOT/"skills/working-agreement/SKILL.md").read_text()
+        pdi=(ROOT/"skills/prototype-driven-implementation/SKILL.md").read_text()
+        runner=(ROOT/"skills/sequence-runner/SKILL.md").read_text()
+        self.assertFalse((ROOT/"skills/blocker-catalog").exists())
+        self.assertTrue((ROOT/"scripts/blocker_catalog.py").is_file())
+        self.assertNotIn("blocker-catalog",managed)
+        self.assertNotIn('"blocker-catalog"',projections)
+        for owner in (agreement,pdi,runner):
+            self.assertIn("python3 scripts/blocker_catalog.py open",owner)
+
     def test_task_intake_is_retired_into_working_agreement_classifier(self):
         managed=(ROOT/"skills/managed-skills.txt").read_text().splitlines()
         projections=(ROOT/"working-agreement/client-skill-projections.json").read_text()

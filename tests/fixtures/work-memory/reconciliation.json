@@ -6,10 +6,6 @@
       "status": "shared-identical"
     },
     {
-      "name": "blocker-catalog",
-      "status": "shared-identical"
-    },
-    {
       "name": "corpus-add",
       "status": "shared-identical"
     },
