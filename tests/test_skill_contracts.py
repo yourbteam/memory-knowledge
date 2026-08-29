@@ -66,50 +66,28 @@ class ContractTests(unittest.TestCase):
         ):
             self.assertIn(phrase,ledger)
 
-    def test_planner_v2_staged_consumers_share_one_canonical_provider(self):
+    def test_planner_and_pdi_are_direct_lifecycle_owners(self):
         repo=Path(__file__).parents[1]
-        candidate=ROOT/"plan-playbook"
-        with tempfile.TemporaryDirectory() as raw:
-            skills=Path(raw)/"skills"
-            shutil.copytree(candidate,skills/"plan-playbook")
-            shutil.rmtree(skills/"plan-playbook"/"integration")
-            shutil.copytree(ROOT/"_shared",skills/"_shared")
-            for name in ("task-workflow",):
-                destination=skills/name
-                destination.mkdir()
-                shutil.copy2(candidate/"integration"/f"{name}.SKILL.md",destination/"SKILL.md")
+        plan=(ROOT/"plan-playbook/SKILL.md").read_text()
+        pdi=(ROOT/"prototype-driven-implementation/SKILL.md").read_text()
+        intake=(ROOT/"task-intake/SKILL.md").read_text()
+        managed=(ROOT/"managed-skills.txt").read_text().splitlines()
+        provider=ROOT/"plan-playbook/scripts/plan_package.py"
+        provider_help=subprocess.run(
+            [sys.executable,str(provider),"--help"],
+            cwd=repo,capture_output=True,text=True,check=True,
+        ).stdout
 
-            provider=skills/"plan-playbook"/"scripts"/"plan_package.py"
-            outer=skills/"_shared"/"convergence_state.py"
-            provider_help=subprocess.run(
-                [sys.executable,str(provider),"--help"],
-                cwd=Path(raw),capture_output=True,text=True,check=True,
-            ).stdout
-            outer_help=subprocess.run(
-                [sys.executable,str(outer),"--help"],
-                cwd=Path(raw),capture_output=True,text=True,check=True,
-            ).stdout
-            provider_commands=set(re.findall(r"\b[a-z][a-z-]+\b",provider_help))
-            outer_commands=set(re.findall(r"\b[a-z][a-z-]+\b",outer_help))
-
-            task=(skills/"task-workflow"/"SKILL.md").read_text()
-            for text in (task,):
-                referenced=set(re.findall(
-                    r"skills/plan-playbook/scripts/plan_package\.py ([a-z][a-z-]+)",text,
-                ))
-                self.assertTrue(referenced)
-                self.assertEqual(referenced-provider_commands,set())
-
-            self.assertEqual(task.count("Invoke canonical `$plan-playbook` exactly once"),1)
-            self.assertIn("analysis.md` is a non-package sibling",task)
-            self.assertIn("<task-root>/.plan-playbook/",task)
-            self.assertIn("IMPLEMENTATION_APPROVAL_REQUIRED",task)
-            self.assertIn("validate-package",task)
-            self.assertIn("validate-implementation-authorization",task)
-            for text in (task,):
-                self.assertNotIn("$plan-playbook-v2",text)
-                self.assertNotIn("skills/plan-playbook-v2/",text)
-            self.assertTrue((repo/"skills/task-workflow/SKILL.md").is_file())
+        self.assertIn("validate-package",provider_help)
+        self.assertIn("validate-implementation-authorization",provider_help)
+        self.assertIn("name: plan-playbook",plan)
+        self.assertIn("name: prototype-driven-implementation",pdi)
+        self.assertIn("`plan-playbook` for Plan",intake)
+        self.assertIn("`prototype-driven-implementation` for Write code",intake)
+        self.assertNotIn("task-workflow",plan+intake)
+        self.assertFalse((repo/"skills/task-workflow").exists())
+        self.assertIn("plan-playbook",managed)
+        self.assertIn("prototype-driven-implementation",managed)
 
 
 if __name__ == "__main__": unittest.main()

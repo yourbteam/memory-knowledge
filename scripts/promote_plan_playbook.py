@@ -302,12 +302,10 @@ def tracked_paths(repo_root: Path, installed_root: Path) -> dict[str, Path]:
         "skill_contract_tests": repo_root / "tests/test_skill_contracts.py",
         "validator_tests": repo_root / "tests/test_validate_skills.py",
         "legacy_fixture": repo_root / "tests/fixtures/plan-playbook-legacy",
-        "task_workflow_source": repo_root / "skills/task-workflow/SKILL.md",
         "installed_canonical": installed_root / CANONICAL,
         "installed_candidate": installed_root / CANDIDATE,
         "installed_shared": installed_root / "_shared",
         "installed_research": installed_root / "research-playbook",
-        "installed_task_workflow": installed_root / "task-workflow",
     }
 
 
@@ -347,7 +345,6 @@ def _assert_candidate_inputs(paths: dict[str, Path]) -> None:
         "plan_revision_tests",
         "skill_contract_tests",
         "validator_tests",
-        "task_workflow_source",
     ):
         if not paths[name].exists():
             raise PromotionError(f"required-path-missing:{name}")
@@ -540,9 +537,6 @@ def transformed_files(paths: dict[str, Path]) -> dict[str, str]:
             )
         transformed[name] = text
     transformed["validator_tests"] = paths["validator_tests"].read_text(encoding="utf-8")
-    transformed["task_workflow_source"] = (
-        paths["candidate_source"] / "integration/task-workflow.SKILL.md"
-    ).read_text(encoding="utf-8")
     return transformed
 
 
@@ -689,7 +683,7 @@ def install_canonical(repo_root: Path, installed_root: Path, state_dir: Path) ->
         repo_root / "skills/managed-skills.txt",
         [installed_root],
         state_dir,
-        only=["_shared", CANONICAL, "research-playbook", "task-workflow"],
+        only=["_shared", CANONICAL, "research-playbook"],
     )
 
 
@@ -726,7 +720,6 @@ def apply_plan(
             "installed_shared": repo_root / "skills/_shared",
             "installed_canonical": paths["canonical_source"],
             "installed_research": repo_root / "skills/research-playbook",
-            "installed_task_workflow": repo_root / "skills/task-workflow",
         }
         for installed_name, source in source_installed_pairs.items():
             if tree_hash(paths[installed_name]) != tree_hash(source):
@@ -887,7 +880,6 @@ def verify_structure(
         "canonical-routing-and-install": (
             managed.count(CANONICAL) == 1
             and tree_hash(paths["installed_canonical"]) == canonical_hash
-            and tree_hash(paths["installed_task_workflow"]) == tree_hash(paths["task_workflow_source"].parent)
             and "$plan-playbook" in metadata
             and "allow_implicit_invocation: false" not in metadata
             and "skills/plan-playbook-v2/" not in paths["evaluator"].read_text(encoding="utf-8")

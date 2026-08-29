@@ -21,7 +21,6 @@ sequence-runner
 shell-canary-foundry
 shell-canary-runner
 task-intake
-task-workflow
 verifier-foundry
 working-agreement
 write-code-playbook

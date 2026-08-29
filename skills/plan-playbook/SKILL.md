@@ -12,7 +12,7 @@ Produce a controller-bound plan package that a competent implementer can execute
 1. Freeze the charter: objective, repositories, allowed paths, supplied-input root, exclusions, deliverables, approval boundaries, and change characteristics.
 2. Select exactly one entry mode from [entry-and-evidence.md](references/entry-and-evidence.md): `DIRECT` or `RESEARCH_PACKAGE`.
 3. Require grounded evidence for every requirement and non-empty implementation and verification anchors for every planner obligation. Insufficient evidence returns `BLOCKED/RESEARCH_REQUIRED`; do not draft around it.
-4. For direct invocation, derive the deterministic task root described in [entry-and-evidence.md](references/entry-and-evidence.md). A caller such as task-workflow supplies its already-created task root instead.
+4. Derive the deterministic task root described in [entry-and-evidence.md](references/entry-and-evidence.md), or use an existing caller-owned task root when one was explicitly supplied.
 5. Initialize the controller with that exact existing task root. The controller owns state, hashes, snapshots, attempts, findings, stage records, package emission, and authorization receipts.
 6. The canonical controller root is `<task-root>/.plan-playbook/`. When an existing task has only `<task-root>/.plan-playbook-v2/`, run `plan_package.py migrate-run-root --task-directory <task-root>` once before continuing. Never alias or dual-read the legacy root. The migration fails closed while an attempt, revision, emission transaction, blocked-state resume, or capped continuation is in flight; finish that operation with the legacy controller first.
 

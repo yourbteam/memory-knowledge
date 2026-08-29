@@ -82,10 +82,6 @@
       "status": "shared-identical"
     },
     {
-      "name": "task-workflow",
-      "status": "shared-identical"
-    },
-    {
       "name": "verifier-foundry",
       "status": "shared-identical"
     },

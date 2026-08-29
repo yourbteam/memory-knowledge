@@ -115,11 +115,10 @@ def fake_repository(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
     write(repo / "skills/plan-playbook/agents/openai.yaml", "interface:\n  display_name: Legacy\n")
     for name in ("_shared", "research-playbook"):
         write(repo / f"skills/{name}/placeholder.txt", name)
-    write(repo / "skills/task-workflow/SKILL.md", "legacy task workflow\n")
     write(
         repo / "skills/managed-skills.txt",
         "_shared\nplan-playbook\nplan-playbook-v2\n"
-        "research-playbook\ntask-workflow\n",
+        "research-playbook\n",
     )
 
     write(repo / "scripts/evaluate_plan_playbook_v2.py", "skills/plan-playbook-v2/scripts/plan_package.py\n")
@@ -188,7 +187,6 @@ def fake_repository(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
 
     for name in (
         "_shared", "plan-playbook", "plan-playbook-v2", "research-playbook",
-        "task-workflow",
     ):
         source = repo / f"skills/{name}"
         if source.exists():
@@ -198,7 +196,7 @@ def fake_repository(tmp_path: Path) -> tuple[Path, Path, Path, Path]:
 
 def install_from_source(repo: Path, installed: Path, _state: Path) -> None:
     for name in (
-        "_shared", "plan-playbook", "research-playbook", "task-workflow",
+        "_shared", "plan-playbook", "research-playbook",
     ):
         destination = installed / name
         if destination.exists():
@@ -235,10 +233,8 @@ def test_apply_installs_canonical_and_retires_alias(tmp_path: Path, monkeypatch:
     assert not (installed / "plan-playbook-v2").exists()
     assert PROMOTION.tree_hash(repo / "skills/plan-playbook") == PROMOTION.tree_hash(installed / "plan-playbook")
     assert "plan-playbook-v2" not in (repo / "skills/managed-skills.txt").read_text().splitlines()
-    task_workflow = (repo / "skills/task-workflow/SKILL.md").read_text()
-    assert "Planner owns" in task_workflow
-    assert "Planner v2" not in task_workflow
-    assert ".plan-playbook-v2" not in task_workflow
+    assert not (repo / "skills/task-workflow").exists()
+    assert not (installed / "task-workflow").exists()
 
 
 def test_apply_failure_restores_every_tracked_path(tmp_path: Path, monkeypatch: pytest.MonkeyPatch) -> None:
