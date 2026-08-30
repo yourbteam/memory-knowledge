@@ -15,5 +15,6 @@ requirements-machinery
 sequence-runner
 shell-canary-foundry
 shell-canary-runner
+system-alignment-assessment-machinery
 verifier-foundry
 working-agreement

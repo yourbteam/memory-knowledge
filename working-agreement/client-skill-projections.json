@@ -271,6 +271,21 @@
         "claude"
       ]
     },
+    "system-alignment-assessment-machinery": {
+      "canonical_tree_sha256": "abe3258e7619a5b9b8dd148c867de9e1211b961b6188d72a255503fb57161835",
+      "disposition": "SHARED_IDENTICAL",
+      "divergence_reason": null,
+      "generator": null,
+      "generator_sha256": null,
+      "projected_tree_sha256": "abe3258e7619a5b9b8dd148c867de9e1211b961b6188d72a255503fb57161835",
+      "scenario_groups": [
+        "CAP-PDI"
+      ],
+      "targets": [
+        "codex",
+        "claude"
+      ]
+    },
     "verifier-foundry": {
       "canonical_tree_sha256": "1ac2bf7b99bfd6f30efec4a6c272584ceffe4f7e5fc14f8008503b2301a29c25",
       "disposition": "SHARED_IDENTICAL",

@@ -194,6 +194,24 @@ class ProjectionManifestTests(unittest.TestCase):
             self.assertEqual(drifted.returncode, 1)
             self.assertIn("canonical tree changed after projection", drifted.stderr)
 
+    def test_python_cache_artifacts_do_not_create_projection_drift(self):
+        with TemporaryDirectory() as td:
+            base = Path(td)
+            skills, manifest = make_repo(base, ["alpha"])
+            projections = seed_projections(base, skills, ["alpha"])
+            generated = run_tool("generate", "--skills-root", str(skills),
+                                 "--projections", str(projections))
+            self.assertEqual(generated.returncode, 0, generated.stderr)
+            cache = skills / "alpha" / "scripts" / "__pycache__" / "probe.cpython-314.pyc"
+            cache.parent.mkdir(parents=True)
+            cache.write_bytes(b"transient interpreter cache")
+            staging = base / "staging"
+            built = run_tool("build", "--client", "codex", "--skills-root", str(skills),
+                             "--projections", str(projections),
+                             "--staging-root", str(staging))
+            self.assertEqual(built.returncode, 0, built.stderr)
+            self.assertTrue((staging / "alpha" / "SKILL.md").is_file())
+
     def test_blocked_disposition_prevents_build(self):
         with TemporaryDirectory() as td:
             base = Path(td)

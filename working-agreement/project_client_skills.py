@@ -31,7 +31,10 @@ GENERATOR_FILES = {
 def tree_hash(path: Path) -> str | None:
     if not path.exists(): return None
     h = hashlib.sha256()
-    for item in sorted(p for p in path.rglob("*") if p.is_file()):
+    for item in sorted(
+        p for p in path.rglob("*")
+        if p.is_file() and "__pycache__" not in p.parts and p.suffix not in {".pyc", ".pyo"}
+    ):
         h.update(item.relative_to(path).as_posix().encode() + b"\0"); h.update(item.read_bytes())
     return h.hexdigest()
 
